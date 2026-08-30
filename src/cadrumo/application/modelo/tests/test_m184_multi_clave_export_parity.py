@@ -27,7 +27,7 @@ from ....domain.calculations.registry.export import derive_export_layouts_from_b
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.loader import load_registry_tree
 from ....domain.calculations.registry.schema_exports import ExportRecordDefinition
-from ....domain.modelos import Modelo184MemberRow
+from ....domain.modelos.row_models import Modelo184MemberRow
 from ...filing._record_renderer import _record_render_rows
 from ...filing._record_types import RecordRenderRow
 from .._action_errors import ModeloAggregationBindingError

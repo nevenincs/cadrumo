@@ -12,7 +12,9 @@ from ....application.modelo._result_summary import calculation_result_summary
 from ....application.workflow.persistence import workflow_state_repository
 from ....core import Period
 from ....core.config import override_settings
-from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id, upsert_work_unit
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.repository import upsert_work_unit
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,

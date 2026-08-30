@@ -27,7 +27,7 @@ from __future__ import annotations
 
 from typing import override
 
-from ....application.modelo._edit_models import ModeloEditMutationResultReceiptV1
+from ....application.modelo.edit_contract import ModeloEditMutationResultReceiptV1
 from ..storage import MODELO_EDIT_RECEIPT_NAMESPACE, SecureBoundRepository
 
 

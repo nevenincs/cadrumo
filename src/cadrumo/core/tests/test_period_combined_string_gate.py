@@ -532,7 +532,7 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
             r")\.json$"
         ),
         reason="captured CLI sequence preserves the WorkUnit.name display-name field as a JSON "
-        "string; `work create` derives it from _default_name (application/modelo/_work_lifecycle.py) "
+        "string; `work create` derives it from _default_name (application/modelo/work_lifecycle.py) "
         "as <modelo>-<year>-<period>, so it is generated output, not period input grammar. Scoped "
         "by text to the name field alone rather than added to the looser sibling bucket above, so a "
         "genuine combined-period token appearing elsewhere in these same captures still fails.",

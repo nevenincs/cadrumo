@@ -17,20 +17,16 @@ from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogu
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import CasillaId, Period, validated_casilla_id
-from ....domain.modelos import (
-    ExternalEvidenceKind,
-    ModeloRecord,
-    WorkUnit,
-    derive_filing_record_id,
-    upsert_calculation_revision,
-    upsert_filing_record,
-)
+from ....domain.modelos.calculation_repository import upsert_calculation_revision
+from ....domain.modelos.filing_record import ExternalEvidenceKind, ModeloRecord, derive_filing_record_id
+from ....domain.modelos.filing_repository import upsert_filing_record
+from ....domain.modelos.work_unit import WorkUnit
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from .._calculation_actions import get_calculation_revision
-from .._work_lifecycle import create_work_unit
+from ..work_lifecycle import create_work_unit
 from ..external_import_actions import import_external_filing_evidence
 from .justificante_metadata import persist_justificante_metadata
 

@@ -11,11 +11,11 @@ modules that call nothing here at all, which is worse than naming none: a reader
 auditing the staleness refusal went looking in the wrong package, found nothing,
 and had every reason to conclude the enforcement did not exist.
 
-The pure records live in :mod:`domain.modelos._ledger_filing_snapshot`.
+The pure records live in :mod:`domain.modelos.ledger_filing_snapshot`.
 This application module holds the Transaction-aware halves:
 computing a contributor's content fingerprint from the live
 :class:`~domain.transactions.TransactionCatalogue`, building a
-:class:`~domain.modelos._ledger_filing_snapshot.LedgerFilingSnapshot` for a
+:class:`~domain.modelos.ledger_filing_snapshot.LedgerFilingSnapshot` for a
 :class:`~domain.modelos.calculation_revision.CalculationRevision`'s ``source_transaction_ids``,
 and evaluating drift between a filed snapshot and the current ledger state.
 
@@ -28,7 +28,7 @@ Cosmetic fields (description, counterparty, notes) are deliberately excluded so
 staleness fires on material change, not on a relabel.
 
 This module uses
-:class:`~domain.modelos._ledger_filing_snapshot.LedgerFilingStalenessVerdict`
+:class:`~domain.modelos.ledger_filing_snapshot.LedgerFilingStalenessVerdict`
 for drift evaluation.
 """
 
@@ -42,16 +42,7 @@ from pydantic import TypeAdapter, ValidationError
 from ...core import CasillaId
 from ...core.hashing import sha256_hex
 from ...domain.calculations.registry.ids import LegalRefId, SourceRefId
-from ...domain.modelos import (
-    LedgerEvidenceRow,
-    LedgerFilingEvidence,
-    LedgerFilingSnapshot,
-    LedgerFilingStalenessVerdict,
-    LedgerRowFingerprint,
-    ManualFactBasisEntry,
-    diff_ledger_fingerprints,
-    snapshot_fingerprint,
-)
+from ...domain.modelos.ledger_filing_snapshot import LedgerEvidenceRow, LedgerFilingEvidence, LedgerFilingSnapshot, LedgerFilingStalenessVerdict, LedgerRowFingerprint, ManualFactBasisEntry, diff_ledger_fingerprints, snapshot_fingerprint
 from ...domain.modelos.calculation_revision import SEALED_REVISION_STATES, CalculationRevision
 from ...domain.modelos.errors import ModeloValidationError
 from ...domain.transactions.models import Transaction, TransactionCatalogue

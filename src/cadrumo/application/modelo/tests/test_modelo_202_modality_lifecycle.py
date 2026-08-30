@@ -25,16 +25,10 @@ from ....adapters.persistence.profile.modelos_verification_reports import Verifi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
-from ....domain.deadlines import (
-    EntityType,
-    IVARegime,
-    LegalEntityForm,
-    M303RegimeComposition,
-    M303TaxTerritory,
-    ModeloIVAProfile,
-    TaxpayerProfile,
-)
-from ....domain.modelos import ExternalEvidenceKind, WorkUnit, upsert_calculation_revision
+from ....domain.deadlines.models import EntityType, IVARegime, LegalEntityForm, M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile, TaxpayerProfile
+from ....domain.modelos.calculation_repository import upsert_calculation_revision
+from ....domain.modelos.filing_record import ExternalEvidenceKind
+from ....domain.modelos.work_unit import WorkUnit
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -58,7 +52,7 @@ from .._export import (
 )
 from .._filing_actions import file_modelo_revision
 from .._verification_actions import verify_modelo_revision
-from .._work_lifecycle import create_work_unit
+from ..work_lifecycle import create_work_unit
 from ..external_import_actions import import_external_filing_evidence
 from .justificante_metadata import persist_justificante_metadata
 

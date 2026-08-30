@@ -18,8 +18,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ...core.logging import get_logger
-from ._verification_report import VerificationReport, VerificationReportCatalogue
 from .errors import ModeloError
+from .verification_report import VerificationReport, VerificationReportCatalogue
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     pass

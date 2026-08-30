@@ -25,12 +25,9 @@ import pytest
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....application.workflow.persistence import workflow_state_repository
 from ....core import Period
-from ....domain.modelos import (
-    ModeloCode,
-    WorkUnit,
-    derive_work_unit_id,
-    upsert_work_unit,
-)
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.repository import upsert_work_unit
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....tests.cli_runner import invoke_cached_cli
 from ._strict_cli_fixture_support import binding_isolated_backend
 

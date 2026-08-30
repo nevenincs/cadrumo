@@ -14,7 +14,7 @@ See Also:
     :func:`cadrumo.application.filing.import_filing_from_justificante`
         Builds a companion :class:`ModeloPresentado` when an offline
         justificante PDF is imported.
-    :class:`cadrumo.domain.modelos.ModeloRecord`
+    :class:`~ModeloRecord`
         Work-unit filing record used by the modelo application facade.
     :mod:`cadrumo.application.live`
         Read-only live-capture surface that may attach AEAT evidence to

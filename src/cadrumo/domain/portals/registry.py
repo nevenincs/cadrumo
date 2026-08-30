@@ -17,7 +17,7 @@ from ...core.logging import get_logger
 from ..calculations.registry.authority import bundled_authority
 from ..calculations.registry.errors import RegistryError, RegistrySnapshotError
 from ..calculations.registry.ids import RevisionId
-from ..modelos import ModeloCode
+from ..modelos.codes import ModeloCode
 from ..modelos.errors import ModeloValidationError
 from ._entries import (
     portal_calendario_contribuyente,
@@ -322,7 +322,7 @@ def portals_for_modelo(code: ModeloCode | str) -> tuple[PortalMetadata, ...]:
     with :func:`portals_by_category` when needed.
 
     Args:
-        code: A :class:`cadrumo.domain.modelos.ModeloCode` member or its string value.
+        code: A :class:`~ModeloCode` member or its string value.
 
     Returns:
         A tuple of matching :class:`PortalMetadata` entries declared by

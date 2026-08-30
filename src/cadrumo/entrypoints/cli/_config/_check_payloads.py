@@ -77,7 +77,7 @@ class CheckPreflightPayload(OutputSchema):
     ``registry:referential-integrity``); ``severity`` renders the
     :class:`HealthSeverity` verdict
     (``ok`` / ``warn`` / ``error``). Machine facts are preserved without
-    forwarding producer prose. Until S66 gives these rows typed verdicts, an
+    forwarding producer prose. Until these rows carry typed verdicts, an
     unhealthy row carries an explicit no-recovery outcome. These rows are reported
     for operator visibility and do not, on their own, change the
     command's ``ok`` verdict — the capability/dependency contract owns

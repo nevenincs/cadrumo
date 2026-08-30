@@ -24,7 +24,7 @@ from decimal import Decimal
 
 from ...core import CasillaId
 from ..calculations.registry.errors import RegistryValidationError
-from ._row_models import Modelo232VinculadaRow
+from .row_models import Modelo232VinculadaRow
 
 M232_MAX_RELATED_PARTY_ROWS = 5
 """Row slots the M232 form declares (vinculada 1-5, positions 144-748, page_01)."""

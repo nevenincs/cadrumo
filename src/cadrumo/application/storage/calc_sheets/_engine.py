@@ -8,7 +8,7 @@ The result is renderer-neutral: Google Sheets and offline XLSX renderers both
 consume the same :class:`SheetExportPlan`. The engine stamps registry identity,
 formula provenance, relation prefills, styling facets, and row-set layout; the
 ledger-evidence facet is supplied separately when the caller has bundled
-:class:`cadrumo.domain.modelos._ledger_filing_snapshot.LedgerFilingEvidence`.
+:class:`cadrumo.domain.modelos.ledger_filing_snapshot.LedgerFilingEvidence`.
 """
 
 from __future__ import annotations

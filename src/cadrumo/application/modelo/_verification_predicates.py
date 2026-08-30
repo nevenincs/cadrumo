@@ -13,7 +13,7 @@ See Also:
         Registry-authored predicate records evaluated here.
     :class:`~domain.calculations.registry.RegistryCalculationUnresolvedOutcome`
         Typed unresolved engine outcomes converted into verification findings.
-    :class:`~domain.modelos.ModeloVerificationFinding`
+    :class:`~ModeloVerificationFinding`
         Finding records returned to the verification report.
 """
 
@@ -38,12 +38,8 @@ from ...domain.calculations.registry.schema_verification import (
     VerificationPredicateOperator,
     parse_verification_predicate_expression,
 )
-from ...domain.deadlines import FiscalResidency, TaxpayerProfile
-from ...domain.modelos import (
-    ModeloVerificationFinding,
-    ModeloVerificationFindingKind,
-    ModeloVerificationFindingSeverity,
-)
+from ...domain.deadlines.models import FiscalResidency, TaxpayerProfile
+from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ...domain.modelos.errors import ModeloError
 from ._action_errors import ModeloApplicabilityFilterError
 from ._m210_rate import resolve_m210_rate as _resolve_m210_rate
@@ -824,10 +820,10 @@ def _evaluate_verification_predicates(
     ``predicates`` are
     :class:`~domain.calculations.registry.VerificationPredicateDefinition`
     entries from the selected registry snapshot. The returned records are
-    :class:`~domain.modelos.ModeloVerificationFinding` values.
+    :class:`~ModeloVerificationFinding` values.
 
     ``text_values`` carries operator-entered raw strings (e.g.
-    :attr:`~domain.modelos.CalculationRevision.input_values_by_casilla_id`),
+    :attr:`~CalculationRevision.input_values_by_casilla_id`),
     independent of the Decimal ``casilla_values`` projection. It defaults to an
     empty mapping and is consumed by text-aware ADVISORY operators such as
     ``casilla_equals_implies_nonzero``; every other operator ignores it.

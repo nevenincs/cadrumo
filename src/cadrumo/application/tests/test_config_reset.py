@@ -158,12 +158,8 @@ def _persist_filing(
     """
     from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ...core import Period
-    from ...domain.modelos import (
-        ModeloCode,
-        ModeloRecord,
-        ModeloRecordCatalogue,
-        derive_filing_record_id,
-    )
+    from ...domain.modelos.codes import ModeloCode
+    from ...domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue, derive_filing_record_id
     from ..filing import try_record_filing_retention_snapshot
 
     work_unit_id = (seed * 64)[:64]
@@ -425,7 +421,7 @@ def test_a_profile_from_the_seeding_door_alone_is_deletion_assessable(
     while destroying the distinction, so the paired assertion is that a
     profile whose recorded snapshot is REMOVED refuses again.
     """
-    from ...domain.buckets import BucketDeleteRefusedError
+    from ...domain.buckets.errors import BucketDeleteRefusedError
     from ..bucket_maintenance import AssessBucketDeletionCommand, BucketMaintenanceService
     from ..filing import FilingRetentionAuthority
 

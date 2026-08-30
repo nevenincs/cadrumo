@@ -25,7 +25,7 @@ from ....core import (
     Period,
 )
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.modelos import derive_work_unit_id
+from ....domain.modelos.work_unit import derive_work_unit_id
 from ...operations.frontend_contracts import (
     OperationWorkspaceRefreshTargetRefusalCode,
     OperationWorkspaceRefreshTargetRefusalV1,

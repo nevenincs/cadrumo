@@ -25,11 +25,7 @@ from decimal import Decimal
 
 from ...core import CasillaId
 from ...core.external_constants import MODELO_100_ART_20_TRABAJO_REDUCCION_RNT_CEILING_EUR
-from ...domain.modelos import (
-    ModeloVerificationFinding,
-    ModeloVerificationFindingKind,
-    ModeloVerificationFindingSeverity,
-)
+from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ...domain.modelos.errors import ModeloError
 from ._semantic_role_resolution import (
     AmbiguousSemanticRoleCasillaError,

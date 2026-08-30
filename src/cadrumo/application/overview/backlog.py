@@ -23,11 +23,9 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time import now, today_madrid
-from ...domain.deadlines import DeadlineEngine, TaxpayerProfile
-from ...domain.modelos import (
-    WorkUnit,
-    WorkUnitState,
-)
+from ...domain.deadlines.engine import DeadlineEngine
+from ...domain.deadlines.models import TaxpayerProfile
+from ...domain.modelos.work_unit import WorkUnit, WorkUnitState
 from .calendar import build_overview_calendar
 from .calendar_models import (
     CalendarCompleteness,

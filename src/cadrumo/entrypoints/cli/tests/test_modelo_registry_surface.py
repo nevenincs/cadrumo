@@ -446,7 +446,7 @@ def test_discovery_bad_parameter_lists_declared_ids_as_facts_not_an_action() -> 
 def test_work_calculate_missing_m200_m202_relation_prefill_is_advisory(tmp_path) -> None:
     """The live M200 relation-prefill path warns rather than refusing calculation."""
 
-    from ....application.modelo._work_lifecycle import create_work_unit
+    from ....application.modelo.work_lifecycle import create_work_unit
     from ....core import Period
     from ....domain.user_profile.values import UserProfileFact, UserProfileRecord
     from ....tests.profile_capsule import seed_test_profile_record
@@ -562,7 +562,7 @@ def test_evidence_kind_accepts_canonical_and_hyphenated_values() -> None:
     The import command parses the alias and normalises it before
     dispatching the application action."""
 
-    from ....domain.modelos import ExternalEvidenceKind
+    from ....domain.modelos.filing_record import ExternalEvidenceKind
 
     cases = (
         ("aeat_justificante_pdf", "aeat_justificante_pdf"),
@@ -582,7 +582,7 @@ def test_evidence_kind_rejects_unrelated_token() -> None:
     """``--evidence-kind`` still rejects values that aren't a valid
     enum member after hyphen-to-underscore normalisation."""
 
-    from ....domain.modelos import ExternalEvidenceKind
+    from ....domain.modelos.filing_record import ExternalEvidenceKind
 
     raw = "aeat_bogus_evidence"
     with pytest.raises(ValueError, match="aeat_bogus_evidence"):

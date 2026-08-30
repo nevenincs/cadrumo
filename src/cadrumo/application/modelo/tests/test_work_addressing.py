@@ -22,13 +22,9 @@ from ....core import (
     Period,
     validated_casilla_id,
 )
-from ....domain.modelos import (
-    WorkUnit,
-    WorkUnitCatalogue,
-    derive_work_unit_id,
-    upsert_calculation_revision,
-    upsert_work_unit,
-)
+from ....domain.modelos.calculation_repository import upsert_calculation_revision
+from ....domain.modelos.repository import upsert_work_unit
+from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -40,7 +36,7 @@ from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from .._action_errors import CalculationRevisionNotFoundError
 from .._selectors import ModeloCalculationRevisionSelector
-from .._work_lifecycle import (
+from ..work_lifecycle import (
     create_work_unit,
     discard_work_unit,
 )

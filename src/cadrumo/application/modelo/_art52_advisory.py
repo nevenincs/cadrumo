@@ -7,7 +7,7 @@ with no plan-de-empleo worker contribution (casilla 0426), no contribución
 empresarial (casilla 0427), and no autónomo/empresario-individual aportación
 (casilla 0499) backing an art. 52.1 increment — is bound by the lower EUR 1.500
 general limit, not a higher combined ceiling. This module emits a non-blocking
-:class:`~domain.modelos.ModeloVerificationFinding` when the granted reducción
+:class:`~ModeloVerificationFinding` when the granted reducción
 exceeds the individual sub-limit with no backing casilla declared, but does not
 block a legitimate employer-backed, plan-de-empleo-backed, or autónomo-backed
 reducción above EUR 1.500.
@@ -36,11 +36,7 @@ from decimal import Decimal
 
 from ...core import CasillaId
 from ...core.external_constants import MODELO_100_ART_52_INDIVIDUAL_SUBLIMIT_EUR
-from ...domain.modelos import (
-    ModeloVerificationFinding,
-    ModeloVerificationFindingKind,
-    ModeloVerificationFindingSeverity,
-)
+from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ...domain.modelos.errors import ModeloError
 from ._semantic_role_resolution import (
     AmbiguousSemanticRoleCasillaError,

@@ -7,10 +7,10 @@ See Also:
         Encrypted profile repository receiving the definitive prorrata state.
     :class:`~domain.prorrata_register.ProrrataRegisterEntry`
         Per-ejercicio row updated with definitive percentage and annual volumes.
-    :class:`~domain.modelos.CalculationRevision`
+    :class:`~CalculationRevision`
         Verified Modelo 303 revision whose casilla observations supply the
         settlement values.
-    :class:`~domain.modelos.TransactionRevisionParticipationIndex`
+    :class:`~TransactionRevisionParticipationIndex`
         Sibling filing co-write whose atomicity pattern the prorrata writeback
         follows.
 """
@@ -39,7 +39,10 @@ from ....core import (
 )
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import CasillaObservation
-from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id, upsert_calculation_revision, upsert_work_unit
+from ....domain.modelos.calculation_repository import upsert_calculation_revision
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.repository import upsert_work_unit
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,

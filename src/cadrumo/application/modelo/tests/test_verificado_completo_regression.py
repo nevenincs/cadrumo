@@ -40,14 +40,11 @@ from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.schema_input_kind import InputKind
-from ....domain.deadlines import IVARegime, TaxpayerProfile
+from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.justificante import Justificante
-from ....domain.modelos import (
-    ExternalEvidenceKind,
-    ModeloVerificationFindingKind,
-    VerificationCompletenessStatus,
-    WorkUnit,
-)
+from ....domain.modelos.filing_record import ExternalEvidenceKind
+from ....domain.modelos.verification_report import ModeloVerificationFindingKind, VerificationCompletenessStatus
+from ....domain.modelos.work_unit import WorkUnit
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ....tests.env_scope import ready_clave_settings
@@ -58,7 +55,7 @@ from ...calculations import CalculationObservationRepository, cross_period_depen
 from .._action_errors import StoredCalculationDriftError
 from .._calculation_actions import calculate_modelo_revision
 from .._verification_actions import verify_modelo_revision
-from .._work_lifecycle import create_work_unit
+from ..work_lifecycle import create_work_unit
 from ..external_import_actions import import_external_filing_evidence
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

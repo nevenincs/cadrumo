@@ -6,7 +6,7 @@ justificantes that consumed it. This concrete repository is the persistence
 adapter behind the pure :mod:`~domain.modelos` index model: it stores one
 :class:`~adapters.persistence.storage.Envelope` per transaction at
 :class:`~adapters.persistence.storage.SensitivityClass` FINANCIAL under the
-active profile bucket, mirroring the :class:`~domain.modelos.CalculationRevision`
+active profile bucket, mirroring the :class:`~CalculationRevision`
 catalogue repository.
 
 Living in the persistence adapter (not in :mod:`~domain.modelos`) keeps the
@@ -25,11 +25,7 @@ from ....core.bucket_pointer import resolve_repository_bucket_id
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
 from ....core.time import now
-from ....domain.modelos import (
-    TransactionParticipationIndexPersistenceError,
-    TransactionRevisionParticipationIndex,
-    derive_participation_index_id,
-)
+from ....domain.modelos.participation_index import TransactionParticipationIndexPersistenceError, TransactionRevisionParticipationIndex, derive_participation_index_id
 from ..storage import TRANSACTION_PARTICIPATION_INDEX_NAMESPACE, secure_object_repository_for_bucket
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
@@ -53,7 +49,7 @@ _PARTICIPATION_PERSISTENCE_MESSAGE = "errors.fail.fail_modelo_calculation_revisi
 class TransactionParticipationIndexRepository:
     """Read / write one transaction's participation index in encrypted storage.
 
-    Mirrors the :class:`~domain.modelos.CalculationRevision` catalogue
+    Mirrors the :class:`~CalculationRevision` catalogue
     repository: persistence is delegated to
     :class:`~adapters.persistence.storage.SecureObjectRepository` at
     :class:`~adapters.persistence.storage.SensitivityClass` FINANCIAL under

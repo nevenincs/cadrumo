@@ -11,17 +11,17 @@ from ...core.identity import SubjectTaxId
 from ..calculations.registry.schema import RegistrySnapshot
 from ..calculations.registry.schema_references import SourceReference
 from ..justificante import Justificante
-from ._calculation_revision_amendment import (
+from .calculation_revision import CalculationRevision
+from .calculation_revision_amendment import (
     CalculationRevisionAmendmentIdentity,
     CalculationRevisionAmendmentKind,
     M303RectificativaMotive,
     m303_rectificativa_motive_is_applicable,
 )
-from ._calculation_revision_m303_handoff import M303FilingInstanceEvidence
-from ._filing_record import ModeloRecordCatalogue, is_justificante_backed_external_evidence
-from ._work_unit import WorkUnit, WorkUnitCatalogue
-from .calculation_revision import CalculationRevision
+from .calculation_revision_m303_handoff import M303FilingInstanceEvidence
 from .errors import ModeloValidationError
+from .filing_record import ModeloRecordCatalogue, is_justificante_backed_external_evidence
+from .work_unit import WorkUnit, WorkUnitCatalogue
 
 CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY = "calculation_revision_aggregate_context"
 
@@ -52,7 +52,7 @@ def validate_calculation_revision_aggregate(
     *,
     context: CalculationRevisionAggregateContext,
 ) -> ValidatedM303RectificativaEvidence | None:
-    """Validate one amendment revision against its parent and persisted evidence chain."""
+    """Validate one amendment :class:`~CalculationRevision` against its parent and evidence chain."""
     identity = _rectificativa_identity(revision)
     if identity is None:
         return None

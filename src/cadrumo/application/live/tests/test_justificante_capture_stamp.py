@@ -15,11 +15,8 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....core import Modelo, Period
-from ....domain.buckets import BucketEventType
-from ....domain.modelos import (
-    ExternalEvidence,
-    ExternalEvidenceKind,
-)
+from ....domain.buckets.event import BucketEventType
+from ....domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind
 from ....domain.user_profile.values import UserProfileFact
 from ..justificante import register_capture_as_filing_evidence
 from ..snapshot_base import SnapshotLifecycleState

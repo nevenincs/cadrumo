@@ -50,9 +50,11 @@ from ...adapters.persistence.profile.submission import SubmissionRepository
 from ...application.auth.providers import select_provider
 from ...core import AuthProviderKind, Period
 from ...core.config import Settings, load_settings
-from ...domain.deadlines import DeadlineEngine, TaxpayerProfile, resolve_filing_window
-from ...domain.filing import ModeloInputs
-from ...domain.modelos import WorkUnit
+from ...domain.deadlines.engine import DeadlineEngine
+from ...domain.deadlines.models import TaxpayerProfile
+from ...domain.deadlines.plazo import resolve_filing_window
+from ...domain.filing.protocols import ModeloInputs
+from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.submission import DeadlineWindowChecker, ModeloDraftStatus, SubmissionEngine
 from ...domain.transactions.models import TransactionCatalogue

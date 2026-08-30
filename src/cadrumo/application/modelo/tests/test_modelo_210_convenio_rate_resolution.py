@@ -37,8 +37,8 @@ from ....domain.calculations.registry.formula_runtime import RegistryCalculation
 from ....domain.calculations.registry.formula_runtime_ops import RegistryUnresolvedOutcomeReason
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
-from ....domain.deadlines import FiscalResidency, IVARegime, TaxpayerProfile
-from ....domain.modelos import ModeloVerificationFindingKind
+from ....domain.deadlines.models import FiscalResidency, IVARegime, TaxpayerProfile
+from ....domain.modelos.verification_report import ModeloVerificationFindingKind
 from .._action_errors import ModeloApplicabilityFilterError
 from .._m210_rate import resolve_m210_rate as _resolve_m210_rate
 from .._verification_actions import (

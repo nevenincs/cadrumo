@@ -15,10 +15,8 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from typing import Protocol
 
-from ...domain.modelos import (
-    TransactionParticipationIndexRepositoryProtocol,
-    TransactionRevisionParticipationIndex,
-)
+from ...domain.modelos.participation_index import TransactionRevisionParticipationIndex
+from ...domain.modelos.protocols import TransactionParticipationIndexRepositoryProtocol
 
 
 class TransactionParticipationIndexRepositoryFactory(Protocol):

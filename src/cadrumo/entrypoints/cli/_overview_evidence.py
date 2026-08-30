@@ -26,7 +26,7 @@ from ...core.hashing import sha256_hex
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.logging import get_logger
-from ...domain.modelos import WorkUnit
+from ...domain.modelos.work_unit import WorkUnit
 from ._common import resolve_notice_action
 
 if TYPE_CHECKING:
@@ -163,7 +163,7 @@ def _local_modelo_work_units(bucket_id: str) -> tuple[tuple[WorkUnit, ...], Noti
     """
     try:
         from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-        from ...application.modelo._work_lifecycle import list_work_units
+        from ...application.modelo.work_lifecycle import list_work_units
 
         repository = WorkUnitCatalogueRepository(bucket_id=bucket_id)
         return list_work_units(bucket_id=bucket_id, include_discarded=False, repository=repository), None
@@ -263,7 +263,7 @@ def _local_calendar_filing_evidence(
     WARNING notice rather than refusing the whole calendar.
     """
     try:
-        from ...adapters.outbound.aeat.sede import FiledDeclaracionObservationStore
+        from ...adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
         from ...adapters.persistence.profile.justificante import JustificanteRepository
         from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
         from ...application.calculations.observations_repository import CalculationObservationRepository

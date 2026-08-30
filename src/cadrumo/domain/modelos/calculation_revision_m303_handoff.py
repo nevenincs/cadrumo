@@ -17,14 +17,9 @@ from ..calculations.registry.ids import RevisionId
 from ..calculations.registry.m303_orden_projection_models import M303RegimenSimplificadoSnapshot
 from ..filing_evidence import FilingEvidenceReference
 from ..identifiers import canonical_decimal_string as _canonical_decimal
-from ..iva import (
-    ActividadNoAgricolaSimplificado,
-    M303RegimenSimplificadoScopeDecision,
-    RegimenSimplificadoActivity,
-    RegimenSimplificadoFilingRows,
-    is_last_filing_period_of_year,
-)
-from ._calculation_revision_m303_evidence import (
+from ..iva.refund_eligibility import is_last_filing_period_of_year
+from ..iva.regimen_simplificado_rows import ActividadNoAgricolaSimplificado, M303RegimenSimplificadoScopeDecision, RegimenSimplificadoActivity, RegimenSimplificadoFilingRows
+from .calculation_revision_m303_evidence import (
     M303DANA2024EligibilityEvidence,
     M303Exonerado390FilingEvidence,
     M303InsolvencyFilingFact,

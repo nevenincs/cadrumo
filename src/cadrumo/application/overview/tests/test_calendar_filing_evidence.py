@@ -8,12 +8,12 @@ from datetime import UTC, date, datetime
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.outbound.aeat.sede import Declaracion
+from ....adapters.outbound.aeat.sede.declarations_schema import Declaracion
 from ....core import Period
 from ....core.hashing import sha256_hex
 from ....domain.calculations.registry.applicability import ApplicabilityVerdict
-from ....domain.deadlines import ObligationStatus
-from ....domain.modelos import ExternalEvidenceKind
+from ....domain.deadlines.models import ObligationStatus
+from ....domain.modelos.filing_record import ExternalEvidenceKind
 from ...live.expedientes import PersistedExpedientesSnapshot
 from ...live.justificante import JustificanteCaptureSnapshot, derive_justificante_capture_snapshot_id
 from ...live.snapshot_base import SnapshotLifecycleState

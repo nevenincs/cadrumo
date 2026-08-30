@@ -50,6 +50,27 @@ def _executed_count(terminalreporter: TerminalReporter) -> int:
     return sum(len(terminalreporter.stats.get(key, [])) for key in _OUTCOME_KEYS)
 
 
+def _remediation(expression: str) -> str:
+    """Return advice that cannot reproduce the run that just selected nothing.
+
+    Naming a fixed lane is wrong precisely when the operator already chose
+    it: following "re-run with -m integration" after running -m integration
+    reproduces the identical empty selection, so the remediation completes
+    the defect instead of resolving it. When the selected lane is already
+    the one that would otherwise be suggested, point at the selector that
+    cannot be empty for a module that collected anything at all.
+    """
+    if "integration" in expression:
+        return (
+            "You already selected 'integration', so these tests carry a different marker: "
+            "re-run with -m '' to select every lane, or `just test-both-lanes`."
+        )
+    return (
+        "If you targeted a specific module, its tests likely carry a different marker: "
+        "re-run with -m integration (or `just test-integration`)."
+    )
+
+
 def apply(
     terminalreporter: TerminalReporter,
     exitstatus: int,
@@ -93,10 +114,7 @@ def apply(
             "A green result here means the selection matched nothing, NOT that the code is sound.",
             red=True,
         )
-        terminalreporter.write_line(
-            "If you targeted a specific module, its tests likely carry a different marker: "
-            "re-run with -m integration (or `just test-integration`).",
-        )
+        terminalreporter.write_line(_remediation(expression))
         return
 
     if not deselected:

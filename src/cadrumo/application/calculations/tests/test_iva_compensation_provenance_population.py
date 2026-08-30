@@ -51,11 +51,7 @@ from decimal import Decimal
 import pytest
 from pydantic import AnyHttpUrl
 
-from ....adapters.outbound.aeat.sede import (
-    FiledDeclaracionArtefact,
-    FiledDeclaracionObservation,
-    ObservedCasillaValue,
-)
+from ....adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue
 from ....core import (
     CasillaId,
     CasillaValueKind,
@@ -68,8 +64,9 @@ from ....core import (
 )
 from ....core.config import Settings
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.iva_compensation import IvaCompensationPeriodState
-from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
+from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,

@@ -15,7 +15,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....domain.modelos import Modelo347ContraparteRow, Modelo349OperadorRow, Modelo349RectificacionRow
+from ....domain.modelos.row_models import Modelo347ContraparteRow, Modelo349OperadorRow, Modelo349RectificacionRow
 from .._edit_execution import _reconstruct_detail_rows
 from .._edit_models import (
     ModeloDetailRowEditIntentV1,

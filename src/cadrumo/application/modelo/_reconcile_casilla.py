@@ -25,7 +25,7 @@ See Also:
     :mod:`~application.modelo.reconciliation`
         Reconciliation workflow that loads work-unit state and delegates
         casilla comparison to this pure primitive.
-    :class:`~domain.modelos.CalculationRevision`
+    :class:`~CalculationRevision`
         Persisted computed revision whose ``casilla_values`` are compared.
     :class:`~domain.calculations.registry.RegistryVerificationPolicy`
         Registry-declared scope and tolerance used before divergences are
@@ -104,7 +104,7 @@ def detect_casilla_divergences(
 
     Args:
         computed: Canonical ``{casilla_id: value}`` read from the persisted
-            :class:`~domain.modelos.CalculationRevision`
+            :class:`~CalculationRevision`
             (``revision.casilla_values``).
         filed: ``{casilla_id: value}`` printed on the filed declaration, decoded
             from the declaration parser's

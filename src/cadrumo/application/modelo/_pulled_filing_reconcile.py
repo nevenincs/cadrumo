@@ -47,7 +47,7 @@ See Also:
         The pure comparison this delegates to.
     :func:`~application.modelo.resolve_casilla_population_scope`
         Supplies the casilla scope that keeps an empty bucket silent.
-    :class:`~domain.modelos.CalculationRevision`
+    :class:`~CalculationRevision`
         The local side of the comparison.
     :class:`ModeloRevision`
         Law-resolved from the work unit's own triple, never from a stored
@@ -65,11 +65,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...domain.calculations.registry.verification_tolerance import verification_tolerance_or_exact
-from ...domain.modelos import (
-    ModeloVerificationFinding,
-    ModeloVerificationFindingKind,
-    ModeloVerificationFindingSeverity,
-)
+from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ._reconcile_casilla import detect_casilla_divergences
 from ._reconcile_population import resolve_casilla_population_scope
 
@@ -77,7 +73,7 @@ if TYPE_CHECKING:
     from ...core import CasillaId
     from ...domain.calculations.registry.schema import RegistrySnapshot
     from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
-    from ...domain.modelos import WorkUnit
+    from ...domain.modelos.work_unit import WorkUnit
     from ...domain.modelos.calculation_revision import CalculationRevision
     from ..calculations import CalculationObservationRepository
 
@@ -134,7 +130,7 @@ def pulled_filing_divergence_findings(
         work_unit: The work unit being verified. Supplies the modelo and period
             the pulled observation is looked up by, and the triple the registry
             revision is law-resolved from.
-        target: The :class:`~domain.modelos.CalculationRevision` under
+        target: The :class:`~CalculationRevision` under
             verification, supplying the local side and the supplied-input
             evidence the scope is resolved from.
         observation_repository: Injection point for the pulled-observation

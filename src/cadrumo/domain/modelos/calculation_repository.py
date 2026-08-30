@@ -7,7 +7,7 @@ schema-version constants that name the persisted envelope contract. The concrete
 encrypted SQL repository lives in the persistence adapter
 :class:`~cadrumo.adapters.persistence.profile.modelos_calculation.CalculationRevisionCatalogueRepository`,
 behind the read-side
-:class:`~cadrumo.domain.modelos.CalculationRevisionCatalogueRepositoryProtocol`; the
+:class:`~CalculationRevisionCatalogueRepositoryProtocol`; the
 domain package depends only on the structural port.
 """
 
@@ -20,7 +20,7 @@ from .calculation_revision import CalculationRevision, CalculationRevisionCatalo
 from .errors import ModeloError
 
 if TYPE_CHECKING:
-    from ._calculation_revision_aggregate import CalculationRevisionAggregateContext
+    from .calculation_revision_aggregate import CalculationRevisionAggregateContext
 
 _LOGGER = get_logger(__name__)
 _CALCULATION_PERSISTENCE_MESSAGE = "errors.fail.fail_modelo_calculation_revision_persistence"
@@ -53,7 +53,7 @@ def upsert_calculation_revision(
     mapping[revision.calculation_revision_id] = revision
     if aggregate_context is None:
         return CalculationRevisionCatalogue(revisions=mapping)
-    from ._calculation_revision_aggregate import CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY
+    from .calculation_revision_aggregate import CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY
 
     return CalculationRevisionCatalogue.model_validate(
         {"revisions": mapping},

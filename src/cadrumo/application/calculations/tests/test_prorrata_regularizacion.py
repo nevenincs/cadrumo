@@ -43,16 +43,14 @@ from ....domain.calculations.registry.casilla_membership import (
     declared_casilla_ids,
 )
 from ....domain.calculations.registry.ledger_bindings import IvaLedgerObservation
-from ....domain.iva import (
-    IvaCategory,
-    IvaDeductionClassificationProvenance,
-    IvaExemptionArticle,
-    IvaFlowDirection,
-    IvaLedgerObservationRole,
-    IvaRateKind,
-    RegularizacionProrrataDireccion,
-)
-from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id, upsert_calculation_revision, upsert_work_unit
+from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
+from ....domain.iva.flow import IvaFlowDirection
+from ....domain.iva.prorrata import RegularizacionProrrataDireccion
+from ....domain.iva.schema import IvaCategory, IvaExemptionArticle, IvaLedgerObservationRole, IvaRateKind
+from ....domain.modelos.calculation_repository import upsert_calculation_revision
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.repository import upsert_work_unit
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,

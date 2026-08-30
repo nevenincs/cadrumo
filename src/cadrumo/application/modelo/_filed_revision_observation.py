@@ -6,7 +6,7 @@ NOT introduce a parallel write path: it is an additional projection of the
 single-writer filing transition
 (:func:`~cadrumo.application.modelo._revision_persistence.persist_filed_revision`),
 co-emitted with ``MODELO_FILED``, that records the filed
-:class:`~cadrumo.domain.modelos.CalculationRevision` outputs into the
+:class:`~CalculationRevision` outputs into the
 cross-period observation store so a later period's ``calculate`` can carry them
 forward automatically via the ``previous_filing`` resolver.
 
@@ -26,7 +26,7 @@ single-filer ``(modelo, filing_year, period)`` row only. It does not stamp a
 aggregation enumerates; member-row persistence for the local filing flow is out
 of scope and remains a live-capture concern.
 
-The projection reads :class:`~cadrumo.domain.modelos.CalculationRevision`
+The projection reads :class:`~CalculationRevision`
 observations, rewrites the affected
 :class:`~cadrumo.domain.calculations.registry.CasillaObservation` rows for refunded
 Modelo 303 filings, and persists a
@@ -54,7 +54,7 @@ from typing import Final
 
 from ...core import IvaCompensationStateProvenance, Modelo, ResultDisposition
 from ...domain.calculations.registry.bindings import RegistryModeloObservation
-from ...domain.modelos import WorkUnit
+from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ..calculations import (
     CalculationObservationRepository,
@@ -159,7 +159,7 @@ def persist_filed_revision_observation(
     """Persist a filed revision's casilla observations as a cross-period record.
 
     Projects the filed revision's provenance-bearing
-    :class:`~cadrumo.domain.modelos.CalculationRevision` ``observations`` (every
+    :class:`~CalculationRevision` ``observations`` (every
     casilla — inputs, bound, and computed alike, each already carrying
     ``legal_refs`` / ``source_refs`` / formula provenance) into a single
     :class:`~cadrumo.domain.calculations.registry.RegistryModeloObservation` keyed
@@ -170,10 +170,10 @@ def persist_filed_revision_observation(
 
     Args:
         revision: The just-filed
-            :class:`~cadrumo.domain.modelos.CalculationRevision` whose typed
+            :class:`~CalculationRevision` whose typed
             observations are projected.
         work_unit: The revision's parent
-            :class:`~cadrumo.domain.modelos.WorkUnit`, supplying the ``(modelo,
+            :class:`~WorkUnit`, supplying the ``(modelo,
             filing_year, period)`` key.
         repository: The bucket-scoped observation repository (the same instance
             the filing transition threads through, so the write lands in the

@@ -28,7 +28,7 @@ See Also:
     :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`:
         Active taxpayer profile the advisory reads ``attribution_received``
         facts from.
-    :class:`~cadrumo.domain.modelos.WorkUnit`:
+    :class:`~WorkUnit`:
         Supplies the modelo, filing year, and bucket that bound the advisory.
 """
 
@@ -41,11 +41,7 @@ from typing import TYPE_CHECKING
 
 from ...core import Modelo
 from ...core.decimal import coerce_decimal_strict
-from ...domain.modelos import (
-    ModeloVerificationFinding,
-    ModeloVerificationFindingKind,
-    ModeloVerificationFindingSeverity,
-)
+from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.values import UserProfileFact, UserProfileRecord
 from ..user_profile.profile_record_repository import ProfileRecordRepository
@@ -55,7 +51,7 @@ if TYPE_CHECKING:
     from ...core import CasillaId
     from ...domain.calculations.registry.ids import LegalRefId
     from ...domain.calculations.registry.schema import RegistrySnapshot
-    from ...domain.modelos import WorkUnit
+    from ...domain.modelos.work_unit import WorkUnit
 
 _ATRIBUCION_ACT_ECO_ROLE = "irpf_rendimiento_act_eco_atribuido_rdto_neto"
 _RECEIVED_FACT_RE = re.compile(r"^attribution_received\.(?P<index>[0-9]+)\.(?P<field>[a-z][a-z0-9_]*)$")

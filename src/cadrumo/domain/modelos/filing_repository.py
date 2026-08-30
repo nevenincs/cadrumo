@@ -7,15 +7,15 @@ constants that name the persisted envelope contract. The concrete encrypted
 SQL repository lives in the persistence adapter
 :class:`~cadrumo.adapters.persistence.profile.modelos_filing.ModeloRecordCatalogueRepository`,
 behind the read-side
-:class:`~cadrumo.domain.modelos.ModeloRecordCatalogueRepositoryProtocol`; the
+:class:`~ModeloRecordCatalogueRepositoryProtocol`; the
 domain package depends only on the structural port.
 """
 
 from __future__ import annotations
 
 from ...core.logging import get_logger
-from ._filing_record import ModeloRecord, ModeloRecordCatalogue
 from .errors import ModeloError
+from .filing_record import ModeloRecord, ModeloRecordCatalogue
 
 _LOGGER = get_logger(__name__)
 _FILING_PERSISTENCE_MESSAGE = "errors.fail.fail_modelo_filing_record_persistence"

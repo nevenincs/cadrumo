@@ -1,7 +1,7 @@
 """Convenio doble imposición limitation-of-benefits (LOB) advisory tests.
 
 Covers the ``m210_convenio_lob_advisory`` non-blocking
-:class:`~domain.modelos.ModeloVerificationFinding` this module surfaces
+:class:`~ModeloVerificationFinding` this module surfaces
 whenever a Modelo 210 rate actually applies a matched treaty override row (per
 the treaty-eligibility policy: residence-certificate and
 limitation-of-benefits checks surface as non-blocking advisory notices rather
@@ -34,8 +34,8 @@ __all__ = ["m210_snapshot"]
 
 from ....core import validated_casilla_id
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ....domain.deadlines import FiscalResidency, IVARegime, TaxpayerProfile
-from ....domain.modelos import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
+from ....domain.deadlines.models import FiscalResidency, IVARegime, TaxpayerProfile
+from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from .._m210_convenio_lob_advisory import _m210_convenio_lob_advisory_finding
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

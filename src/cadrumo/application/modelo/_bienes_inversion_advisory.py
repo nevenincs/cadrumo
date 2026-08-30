@@ -54,7 +54,7 @@ from __future__ import annotations
 from ...core import Modelo, Period
 from ...domain.bienes_inversion import BienInversionRecordError
 from ...domain.calculations.registry.schema import ModeloRevision
-from ...domain.iva import is_m303_annual_settlement_period
+from ...domain.iva.m303_settlement import is_m303_annual_settlement_period
 from ..aggregation import CalculationSourceDiagnostic
 from ..bienes_inversion import BienesInversionIvaRegisterRepository
 from ..calculations import (

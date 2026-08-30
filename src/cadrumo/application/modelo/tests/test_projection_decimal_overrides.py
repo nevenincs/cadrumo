@@ -10,7 +10,7 @@ text whose numeric meaning is not what it appears.
 See Also:
     :func:`~core.decimal.try_parse_canonical_decimal`
         The canonical grammar both channels enforce.
-    :class:`~domain.modelos.CalculationRevision`
+    :class:`~CalculationRevision`
         The stored revision whose casilla values these overrides feed.
 """
 

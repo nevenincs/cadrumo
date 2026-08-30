@@ -18,16 +18,11 @@ from __future__ import annotations
 from datetime import datetime
 
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
-from ...domain.buckets import (
-    BucketEvent,
-    BucketEventHistoryRepositoryProtocol,
-    BucketEventObjectType,
-    BucketEventType,
-)
-from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepositoryProtocol
-from ...domain.modelos import (
-    CalculationRevisionCatalogueRepositoryProtocol,
-)
+from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
+from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.invoices.models import InvoiceCatalogue
+from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
+from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions.enums import BusinessClassification, TransactionLifecycleState
 from ...domain.transactions.errors import TransactionValidationError

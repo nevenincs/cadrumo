@@ -32,7 +32,7 @@ See Also:
         Domain helper for modelo-to-portal cross-references.
     :class:`domain.portals.PortalMetadata`
         Canonical domain metadata record projected by this facade.
-    :class:`domain.modelos.ModeloCode`
+    :class:`~ModeloCode`
         Modelo identifier used by the optional portal filter.
 """
 

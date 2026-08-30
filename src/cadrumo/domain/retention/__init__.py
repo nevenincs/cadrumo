@@ -15,7 +15,7 @@ Public surface:
   ``blocks_erase`` and ``latest_safe_erase_date``.
 * :class:`RetentionBlockingRecord` — one record still inside its window.
 * :class:`RetainableFilingRecord` — structural view the assessment consumes
-  (satisfied by :class:`domain.modelos.ModeloRecord`).
+  (satisfied by :class:`~ModeloRecord`).
 * :class:`RetentionFloorError` / :class:`RetentionError` — the refusal
   RESERVED for an erase that would destroy a still-retained record without an
   override. Nothing raises it today; the erase it guarded was withdrawn with
@@ -23,7 +23,7 @@ Public surface:
   rather than erasing one it cannot assess.
 
 See Also:
-    :class:`domain.modelos.ModeloRecord`
+    :class:`~ModeloRecord`
         The filed-record aggregate the floor assesses.
     :mod:`application.bucket_maintenance`
         The surface that once enforced the floor. Its destructive erase is

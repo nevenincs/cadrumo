@@ -33,7 +33,8 @@ import pytest
 
 from ....core import Period
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.invoices import InvoiceCatalogue, InvoicePersistenceError
+from ....domain.invoices.errors import InvoicePersistenceError
+from ....domain.invoices.models import InvoiceCatalogue
 from .._modelo_bindings import (
     CalculationSourceContext,
     _raise_if_invoice_iva_would_be_silent,

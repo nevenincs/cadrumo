@@ -64,16 +64,14 @@ from ....core import (
 )
 from ....core.errors import CadrumoError
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.deadlines import EntityType, IVARegime, LegalEntityForm, TaxpayerProfile
-from ....domain.invoices import InvoiceCatalogue
-from ....domain.iva import (
-    EUMemberState,
-    InvoiceKind,
-    IvaCategory,
-    IvaDeductionClassificationProvenance,
-)
-from ....domain.iva_compensation import IvaCompensationReconciliationDecision
-from ....domain.modelos import VerificationCompletenessStatus, VerificationReport, WorkUnit
+from ....domain.deadlines.models import EntityType, IVARegime, LegalEntityForm, TaxpayerProfile
+from ....domain.invoices.models import InvoiceCatalogue
+from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
+from ....domain.iva.schema import EUMemberState, IvaCategory
+from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
+from ....domain.modelos.verification_report import VerificationCompletenessStatus, VerificationReport
+from ....domain.modelos.work_unit import WorkUnit
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
@@ -94,7 +92,7 @@ from .._export import (
 from .._filed_revision_observation import persist_filed_revision_observation
 from .._filing_actions import file_modelo_revision
 from .._verification_actions import verify_modelo_revision
-from .._work_lifecycle import create_work_unit
+from ..work_lifecycle import create_work_unit
 from ._export_modelo_303_support import _MODELO_303_MANUAL_RESULTADO_CASILLA_ZEROS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

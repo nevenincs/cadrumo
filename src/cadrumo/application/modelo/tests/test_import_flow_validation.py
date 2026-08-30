@@ -8,7 +8,7 @@ import pytest
 
 from ....core import Period
 from .._action_errors import ExternalModeloImportError
-from .._work_lifecycle import create_work_unit
+from ..work_lifecycle import create_work_unit
 from ._import_flow_support import (
     _IMPORT_INCOME_CASILLA,
     _M303_PRINTED_RESULT_TOKEN,

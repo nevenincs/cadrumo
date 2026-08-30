@@ -18,7 +18,7 @@ See Also:
         model-specific adjustments.
     :class:`~domain.calculations.registry.CasillaObservation`
         Provenance-bearing observation rows filtered with M349 template fields.
-    :class:`~domain.modelos.WorkUnit`
+    :class:`~WorkUnit`
         Modelo, filing year, and period context selecting each adjustment.
 """
 
@@ -48,16 +48,8 @@ from ...domain.calculations.registry.schema import (
     ModeloRevision,
     RegistrySnapshot,
 )
-from ...domain.modelos import (
-    Modelo184MemberRow,
-    Modelo210AgrupacionRentaRow,
-    Modelo232VinculadaRow,
-    Modelo347ContraparteRow,
-    Modelo349OperadorRow,
-    Modelo349RectificacionRow,
-    ModeloDetailRow,
-    WorkUnit,
-)
+from ...domain.modelos.row_models import Modelo184MemberRow, Modelo210AgrupacionRentaRow, Modelo232VinculadaRow, Modelo347ContraparteRow, Modelo349OperadorRow, Modelo349RectificacionRow, ModeloDetailRow
+from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.errors import ModeloError
 from ._action_errors import ModeloAggregationBindingError, ModeloCrossPeriodCleanStateError
 from ._preconditions import build_modelo_precondition_failure

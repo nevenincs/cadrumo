@@ -27,9 +27,11 @@ from ....core.resources import bundled_path
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.loader import load_modelo_directory
 from ....domain.calculations.registry.temporal import select_revision
-from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
-from ....domain.iva import InvoiceKind, IvaCategory
-from ....domain.modelos import Modelo349CountryPrefixContextError
+from ....domain.invoices.enums import IvaRate, PaymentStatus
+from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import IvaCategory
+from ....domain.modelos.row_models import Modelo349CountryPrefixContextError
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_tree import bundled_registry_tree
@@ -98,7 +100,7 @@ def _invoice(
     fx_rate_source: str | None = None,
     operation_type: IntracomOperationType | None = None,
 ) -> Invoice:
-    from ....domain.invoices import derive_invoice_id
+    from ....domain.invoices.models import derive_invoice_id
 
     invoice_id = derive_invoice_id(
         kind=kind,
@@ -165,7 +167,7 @@ def _domestic_invoice(
     record: M347 declares the GROSS total, so a fixture whose base and total
     coincide cannot tell the two apart.
     """
-    from ....domain.invoices import derive_invoice_id
+    from ....domain.invoices.models import derive_invoice_id
 
     grand_total = base_total + iva_total
     return Invoice(
@@ -840,7 +842,7 @@ def test_m347_declarable_facts_are_reachable_on_the_canonical_path(
     M347's declaration floor is the gross total, so a proof whose base and total
     coincide would not detect the two being confused.
     """
-    from ....domain.invoices import derive_invoice_id
+    from ....domain.invoices.models import derive_invoice_id
     from .._source_resolver import _invoice_observation
 
     context = CalculationSourceContext(
@@ -1084,7 +1086,7 @@ def test_capability_parity_m349_declares_every_intracommunity_capability(
         ),
     )
 
-    from ....domain.modelos import Modelo349OperadorRow
+    from ....domain.modelos.row_models import Modelo349OperadorRow
 
     rows = [row for row in resolution.detail_rows if isinstance(row, Modelo349OperadorRow)]
     by_clave = {row.clave_operacion: row for row in rows}
@@ -1801,7 +1803,7 @@ def test_the_intra_community_service_categories_exist_and_map_to_their_claves() 
 
 def _same_facts_invoice(*, with_category: bool):
     """One economic record, expressed with and without an IVA category."""
-    from ....domain.invoices import derive_invoice_id
+    from ....domain.invoices.models import derive_invoice_id
 
     kind = InvoiceKind.ISSUED
     number = "PARITY-2026-001"
@@ -1854,7 +1856,7 @@ def test_the_only_decomposition_divergence_across_the_fold_is_the_iva_category()
     to declare the treatment, not left with a record that quietly contributes
     nothing.
     """
-    from ....domain.invoices import InvoiceDecompositionDefect, decompose_invoice
+    from ....domain.invoices.decomposition import InvoiceDecompositionDefect, decompose_invoice
 
     grounded = decompose_invoice(_same_facts_invoice(with_category=True))
     ungrounded = decompose_invoice(_same_facts_invoice(with_category=False))
@@ -1906,7 +1908,7 @@ def test_the_renta_lane_is_where_the_divergence_actually_bites() -> None:
     behaviour, since an untagged operation cannot be told apart from an exempt
     one.
     """
-    from ....domain.invoices import InvoiceDecompositionDefect, decompose_invoice
+    from ....domain.invoices.decomposition import InvoiceDecompositionDefect, decompose_invoice
 
     verdict = decompose_invoice(_same_facts_invoice(with_category=False))
 

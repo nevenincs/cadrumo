@@ -1,7 +1,7 @@
 """Lifecycle mutations for modelo work units.
 
 This module creates, lists, renames, and discards
-:class:`cadrumo.domain.modelos.WorkUnit` records in the
+:class:`~WorkUnit` records in the
 :class:`adapters.persistence.profile.modelos_work_units.WorkUnitCatalogueRepository`.
 Each mutating action emits a typed event through
 :class:`BucketEventHistoryRepository`, giving
@@ -48,24 +48,14 @@ from ...core import (
 from ...core.identifier_grammar import NamespacedId
 from ...core.identity import CalculationRevisionId
 from ...core.time import now as _utc_now
-from ...domain.buckets import (
-    BucketEventHistoryRepositoryProtocol,
-    BucketEventObjectType,
-    BucketEventType,
-)
-from ...domain.buckets import (
-    bucket_event_history_write as _bucket_event_write,
-)
+from ...domain.buckets.event import BucketEventObjectType, BucketEventType
+from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.buckets.event_repository import bucket_event_history_write as _bucket_event_write
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.contribuyente.ccaa import CCAA
-from ...domain.modelos import (
-    ModeloCode,
-    WorkUnit,
-    WorkUnitCatalogue,
-    WorkUnitState,
-    derive_work_unit_id,
-    upsert_work_unit,
-)
+from ...domain.modelos.codes import ModeloCode
+from ...domain.modelos.repository import upsert_work_unit
+from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..operator_actions import (
     ActionArgumentBinding,

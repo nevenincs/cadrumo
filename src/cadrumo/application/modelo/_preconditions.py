@@ -18,7 +18,7 @@ from ...core import (
 )
 from ...core.identifier_grammar import NamespacedId
 from ...core.identity import CalculationRevisionId
-from ...domain.modelos import WorkUnit
+from ...domain.modelos.work_unit import WorkUnit
 from ..operator_actions import (
     ActionArgumentBinding,
     ActionReference,

@@ -20,23 +20,12 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.export_parse import parse_export_payload
 from ....domain.calculations.registry.ledger_bindings import OssIossLedgerObservation
-from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.invoices import (
-    Invoice,
-    InvoiceCatalogue,
-    InvoiceLine,
-    InvoiceOperationDateRole,
-    IvaRate,
-    PaymentStatus,
-    derive_invoice_id,
-)
-from ....domain.iva import (
-    EUMemberState,
-    InvoiceKind,
-    IvaRateKind,
-    OssIossRegime,
-    TransactionKind,
-)
+from ....domain.deadlines.models import IVARegime, TaxpayerProfile
+from ....domain.invoices.enums import InvoiceOperationDateRole, IvaRate, PaymentStatus
+from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
+from ....domain.iva.classification import InvoiceKind, TransactionKind
+from ....domain.iva.oss import OssIossRegime
+from ....domain.iva.schema import EUMemberState, IvaRateKind
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....tests.secure_sql import isolated_injected_secure_object_repository, isolated_runtime_profile
 from ...aggregation import (
@@ -58,7 +47,7 @@ from .._export import (
     export_modelo_revision,
 )
 from .._verification_actions import verify_modelo_revision
-from .._work_lifecycle import create_work_unit
+from ..work_lifecycle import create_work_unit
 from ._dormant_resolver_live_support import _T0, _T1, _revision, _seed_ready_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

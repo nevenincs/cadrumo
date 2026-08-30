@@ -27,7 +27,7 @@ from .errors import ModeloApplicationError
 
 if TYPE_CHECKING:
     from ...adapters.persistence.storage import SecureObjectRepository
-    from ...domain.modelos import ModeloRecordCatalogueRepositoryProtocol
+    from ...domain.modelos.protocols import ModeloRecordCatalogueRepositoryProtocol
 
 
 def resolve_application_filing_bucket_id(bucket_id: str | None) -> str:

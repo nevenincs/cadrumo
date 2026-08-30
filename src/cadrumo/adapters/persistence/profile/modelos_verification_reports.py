@@ -8,7 +8,7 @@ catalogue is stored as a single encrypted BLOB per profile bucket, wrapped in
 :class:`~adapters.persistence.storage.Envelope` before serialisation.
 
 This concrete repository is the persistence adapter behind the read-side
-:class:`~domain.modelos.VerificationReportCatalogueRepositoryProtocol`. It
+:class:`~VerificationReportCatalogueRepositoryProtocol`. It
 lives in the persistence adapter (not in :mod:`~domain.modelos`) because its
 secure-object coupling is SQL/crypto-bound; the domain package owns only the
 typed :class:`VerificationReportCatalogue` model and its pure mutators.
@@ -17,9 +17,9 @@ See Also:
     :mod:`~adapters.persistence.profile._modelo_runtime`
         Bucket-id resolution and runtime secure-object factory shared by modelo
         persistence adapters.
-    :class:`~domain.modelos.VerificationReportCatalogue`
+    :class:`~VerificationReportCatalogue`
         Domain catalogue payload encrypted by this repository.
-    :class:`~domain.modelos.VerificationReportCatalogueRepositoryProtocol`
+    :class:`~VerificationReportCatalogueRepositoryProtocol`
         Domain port this concrete persistence adapter implements.
     :data:`~adapters.persistence.storage.MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE`
         Central namespace, sensitivity, schema-version, and singleton-key
@@ -39,7 +39,8 @@ from typing import TYPE_CHECKING
 from ....core.bucket_pointer import resolve_repository_bucket_id
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
-from ....domain.modelos import VerificationReportCatalogue, VerificationReportPersistenceError
+from ....domain.modelos.verification_report import VerificationReportCatalogue
+from ....domain.modelos.verification_repository import VerificationReportPersistenceError
 from ....domain.modelos.errors import raise_catalogue_integrity_error
 from ..storage import MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE, secure_object_repository_for_bucket
 from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
@@ -66,7 +67,7 @@ class VerificationReportCatalogueRepository:
     into :class:`VerificationReportPersistenceError` via
     :func:`~domain.modelos.raise_catalogue_integrity_error`. This class is
     the concrete load/save implementation behind
-    :class:`~domain.modelos.VerificationReportCatalogueRepositoryProtocol`.
+    :class:`~VerificationReportCatalogueRepositoryProtocol`.
     """
 
     def __init__(self, *, bucket_id: str | None = None, objects: SecureObjectRepository | None = None) -> None:
@@ -111,7 +112,7 @@ class VerificationReportCatalogueRepository:
         """Refuse reports whose parent calculation revision is not in this bucket.
 
         A verification report is a decision *about* one
-        :class:`~domain.modelos.CalculationRevision`; detached from that parent
+        :class:`~CalculationRevision`; detached from that parent
         it asserts an audit outcome nothing in the bucket can be checked
         against. The sibling calculation catalogue is derived from this
         repository's own secure-object store rather than resolved

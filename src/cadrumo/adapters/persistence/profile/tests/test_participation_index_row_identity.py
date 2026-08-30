@@ -23,11 +23,8 @@ from datetime import UTC, datetime
 import pytest
 
 from .....core import Period
-from .....domain.modelos import (
-    ModeloCode,
-    TransactionRevisionParticipation,
-    TransactionRevisionParticipationIndex,
-)
+from .....domain.modelos.codes import ModeloCode
+from .....domain.modelos.participation_index import TransactionRevisionParticipation, TransactionRevisionParticipationIndex
 from ...storage import TRANSACTION_PARTICIPATION_INDEX_NAMESPACE, Envelope, SecureObjectRowIdentityError
 from ...storage.sql.secure_objects import SecureObjectRepository
 from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture

@@ -424,7 +424,7 @@ def _worksheet_row_resolution(
     context: CalculationSourceContext,
     observations: tuple[Modelo720RowObservation, ...],
 ) -> CalculationSourceResolution:
-    """Carry S90 worksheet rows through M720's established resolver.
+    """Carry worksheet rows through M720's established resolver.
 
     The row-set assembler has already validated these observations against the
     selected snapshot.  This resolver remains the sole M720 source-mesh owner;

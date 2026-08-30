@@ -23,7 +23,8 @@ from uuid import UUID
 import pytest
 
 from ....core import Period
-from ....domain.modelos import ModeloCode, ModeloRecord, derive_filing_record_id
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.filing_record import ModeloRecord, derive_filing_record_id
 from ....domain.retention import TAX_RECORD_RETENTION_FLOOR_YEARS
 from .._profile_filing_retention import FilingRetentionAuthority
 

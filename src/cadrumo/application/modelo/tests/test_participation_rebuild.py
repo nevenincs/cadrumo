@@ -20,20 +20,13 @@ from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogu
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ....core import CasillaId, Period, validated_casilla_id
-from ....domain.modelos import (
-    ModeloCode,
-    ModeloRecord,
-    ModeloRecordStatus,
-    TransactionRevisionParticipation,
-    TransactionRevisionParticipationIndex,
-    WorkUnit,
-    derive_filing_record_id,
-    derive_work_unit_id,
-    upsert_calculation_revision,
-    upsert_filing_record,
-    upsert_transaction_participation,
-    upsert_work_unit,
-)
+from ....domain.modelos.calculation_repository import upsert_calculation_revision
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.filing_record import ModeloRecord, ModeloRecordStatus, derive_filing_record_id
+from ....domain.modelos.filing_repository import upsert_filing_record
+from ....domain.modelos.participation_index import TransactionRevisionParticipation, TransactionRevisionParticipationIndex, upsert_transaction_participation
+from ....domain.modelos.repository import upsert_work_unit
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,

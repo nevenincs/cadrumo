@@ -46,11 +46,7 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl
 
-from ....adapters.outbound.aeat.sede import (
-    FiledDeclaracionArtefact,
-    FiledDeclaracionObservation,
-    ObservedCasillaValue,
-)
+from ....adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -67,7 +63,7 @@ from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...live.filed_observation_persistence import persist_filed_calculation_observation
 from ...modelo._calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
-from ...modelo._work_lifecycle import create_work_unit
+from ...modelo.work_lifecycle import create_work_unit
 from ..observations_repository import CalculationObservationRepository, ObservationSourceKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

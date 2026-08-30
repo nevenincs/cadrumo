@@ -13,8 +13,9 @@ from __future__ import annotations
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import ActionEvidenceProvenance, Modelo
-from ...domain.iva import IvaCategory
-from ...domain.modelos import Modelo349OperadorRow, ModeloDetailRow, WorkUnit
+from ...domain.iva.schema import IvaCategory
+from ...domain.modelos.row_models import Modelo349OperadorRow, ModeloDetailRow
+from ...domain.modelos.work_unit import WorkUnit
 from ...domain.transactions.enums import TransactionLifecycleState
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ._action_errors import ModeloAggregationBindingError

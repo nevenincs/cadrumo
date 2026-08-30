@@ -26,7 +26,7 @@ See Also:
         Registry-authored predicate type loaded from the M303 revisions.
     :func:`~application.modelo._verification_actions.evaluate_verification_predicates`
         Verification predicate evaluator exercised directly by these tests.
-    :class:`~domain.modelos.ModeloVerificationFindingKind`
+    :class:`~ModeloVerificationFindingKind`
         Finding-kind enum proving the guard remains advisory, not blocking.
     :func:`~application.modelo.tests._verification_substance_support._workflow_profile`
         Real workflow-profile fixture used by the predicate evaluator.
@@ -46,7 +46,7 @@ from ....core import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
-from ....domain.modelos import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
+from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from .._verification_actions import evaluate_verification_predicates
 from ._verification_substance_support import _workflow_profile
 

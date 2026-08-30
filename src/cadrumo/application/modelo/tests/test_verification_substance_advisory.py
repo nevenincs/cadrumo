@@ -8,7 +8,7 @@ import pytest
 
 from ....core import CasillaId
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
-from ....domain.modelos import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
+from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ....domain.modelos.errors import ModeloError
 from .._verification_actions import (
     evaluate_advisory_predicate_fires,

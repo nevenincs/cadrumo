@@ -80,28 +80,16 @@ from ...domain.calculations.registry.ledger_impatriado_bindings import (
 from ...domain.calculations.registry.retenciones_bindings import resolve_retenciones_aggregation_binding_values
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
-from ...domain.invoices import (
-    Invoice,
-    InvoiceCatalogueRepositoryProtocol,
-    InvoiceLine,
-    InvoicePersistenceError,
-    IvaRate,
-    invoice_line_to_iva_observation,
-    iva_rate_kind,
-    iva_rate_slot_percentage,
-)
-from ...domain.iva import (
-    EUMemberState,
-    InvoiceKind,
-    IvaCategory,
-    IvaFlowDirection,
-    IvaLedgerObservationRole,
-    IvaRateKind,
-    derive_flow_for_classification,
-    is_deducible_flow,
-    recargo_rate_for_applied_rate,
-)
-from ...domain.modelos import Modelo210AgrupacionRentaRow
+from ...domain.invoices.enums import IvaRate, iva_rate_kind, iva_rate_slot_percentage
+from ...domain.invoices.errors import InvoicePersistenceError
+from ...domain.invoices.models import Invoice, InvoiceLine
+from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
+from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.flow import IvaFlowDirection, derive_flow_for_classification, is_deducible_flow
+from ...domain.iva.invoice_classification import invoice_line_to_iva_observation
+from ...domain.iva.recargo_equivalencia import recargo_rate_for_applied_rate
+from ...domain.iva.schema import EUMemberState, IvaCategory, IvaLedgerObservationRole, IvaRateKind
+from ...domain.modelos.row_models import Modelo210AgrupacionRentaRow
 from ...domain.prorrata_register import ProrrataRegisterRepositoryProtocol
 from ...domain.renta import (
     RENTA_130_RETENCIONES_BINDING_ID,

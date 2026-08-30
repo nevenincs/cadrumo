@@ -38,14 +38,15 @@ from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogu
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.errors import SecureObjectRevisionConflictError
 from ....core import CasillaId, Period, validated_casilla_id
-from ....domain.buckets import BucketEventObjectType, BucketEventType
-from ....domain.modelos import ExternalEvidenceKind, WorkUnit
+from ....domain.buckets.event import BucketEventObjectType, BucketEventType
+from ....domain.modelos.filing_record import ExternalEvidenceKind
+from ....domain.modelos.work_unit import WorkUnit
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ....tests.write_unit_recorder import WriteUnitRecorder
-from .._work_lifecycle import (
+from ..work_lifecycle import (
     create_work_unit,
     discard_work_unit,
     get_work_unit,

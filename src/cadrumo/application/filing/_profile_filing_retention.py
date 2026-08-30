@@ -21,7 +21,7 @@ from ...core.filing_year import FilingYear
 from ...core.identity import FilingRecordId, PrefixedContentDigest
 from ...core.logging import get_logger
 from ...core.time import validate_utc_aware
-from ...domain.modelos import ModeloRecord
+from ...domain.modelos.filing_record import ModeloRecord
 from ...domain.retention import RetentionFloorAssessment, assess_retention_floor
 from ..profile_deletion_hold_contract import ProfileDeletionHoldOwnerProjection
 from ..user_profile.custody_ports import (

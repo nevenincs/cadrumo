@@ -1,7 +1,7 @@
 """The Modelo 232 coded fields resolve to ONE declaration of each code set.
 
 Modelo 232 declares an operación vinculada twice in this codebase, and both
-declarations are load-bearing: :class:`~domain.modelos.Modelo232VinculadaRow`
+declarations are load-bearing: :class:`~Modelo232VinculadaRow`
 carries the operator's ``--row vinculada`` input, and
 ``RelatedPartyOperationObservation`` carries what the registry's
 ``related_party_operation`` binding family resolves. They are declared
@@ -32,7 +32,7 @@ import pytest
 from ..core import MetodoValoracion, TipoOperacionVinculada, TipoVinculacion
 from ..core.directory_scan import scan_directory
 from ..domain.calculations.registry.detail_record_bindings import RelatedPartyOperationObservation
-from ..domain.modelos import Modelo232VinculadaRow
+from ..domain.modelos.row_models import Modelo232VinculadaRow
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

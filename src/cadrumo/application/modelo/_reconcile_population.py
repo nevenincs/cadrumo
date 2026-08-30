@@ -6,7 +6,7 @@ profile against a pulled AEAT filing is the case where that matters: the local
 calculation computes zero nearly everywhere, so every reconciled casilla
 diverges and the operator learns nothing except that the bucket is empty. This
 module supplies the missing predicate — which casillas of a persisted
-:class:`~domain.modelos.CalculationRevision` carry enough locally-sourced input
+:class:`~CalculationRevision` carry enough locally-sourced input
 that a divergence means genuine disagreement rather than emptiness — as a scope
 the existing comparison already accepts, so no second differ is created.
 
@@ -40,7 +40,7 @@ a false negative, and again the safe direction.
 See Also:
     :func:`~application.modelo.detect_casilla_divergences`
         The pure comparison this scope is passed to.
-    :class:`~domain.modelos.CalculationRevision`
+    :class:`~CalculationRevision`
         Persisted revision whose supplied inputs are read.
     :class:`~domain.calculations.registry.ModeloRevision`
         Registry revision supplying the formula graph walked here.

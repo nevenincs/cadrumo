@@ -69,8 +69,8 @@ from ....core import (
     validated_casilla_id,
 )
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.deadlines import FiscalResidency, IVARegime, TaxpayerProfile
-from ....domain.modelos import ModeloVerificationFindingKind, VerificationReport
+from ....domain.deadlines.models import FiscalResidency, IVARegime, TaxpayerProfile
+from ....domain.modelos.verification_report import ModeloVerificationFindingKind, VerificationReport
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
@@ -79,7 +79,7 @@ from ...calculations import CalculationObservationRepository
 from ...tests import register_wizard_catalogue
 from .._calculation_actions import calculate_modelo_revision
 from .._verification_actions import verify_modelo_revision
-from .._work_lifecycle import create_work_unit
+from ..work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

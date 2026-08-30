@@ -20,12 +20,8 @@ from uuid import UUID
 import pytest
 
 from ....core import Period
-from ....domain.modelos import (
-    ModeloCode,
-    ModeloRecord,
-    ModeloRecordCatalogue,
-    derive_filing_record_id,
-)
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue, derive_filing_record_id
 from ...filing import FilingRetentionAuthority
 from .._revision_persistence import _refresh_filing_retention_snapshot
 

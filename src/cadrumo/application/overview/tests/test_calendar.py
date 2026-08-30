@@ -9,19 +9,15 @@ from decimal import Decimal
 import pytest
 from pydantic import AnyHttpUrl, ValidationError
 
-from ....adapters.outbound.aeat.sede import Declaracion, RemoteNotification
+from ....adapters.outbound.aeat.sede.declarations_schema import Declaracion
+from ....adapters.outbound.aeat.sede.notifications import RemoteNotification
 from ....core import Period
 from ....domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.deadlines import (
-    DeadlineEngine,
-    EntityType,
-    IVARegime,
-    LegalEntityForm,
-    ObligationStatus,
-    TaxpayerProfile,
-)
-from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
+from ....domain.deadlines.engine import DeadlineEngine
+from ....domain.deadlines.models import EntityType, IVARegime, LegalEntityForm, ObligationStatus, TaxpayerProfile
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ...live.expedientes import PersistedExpedientesSnapshot
 from ...live.notifications import PersistedNotificationsSnapshot
 from ..calendar import (

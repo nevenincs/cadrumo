@@ -1,7 +1,7 @@
 """Frontend-neutral Modelo work-wizard discovery and flow construction.
 
 The guided work wizard is an application-owned projection of the outstanding
-registry input surface for one :class:`~cadrumo.domain.modelos.WorkUnit`.
+registry input surface for one :class:`~WorkUnit`.
 It discovers only manual casillas and the remaining promptable binding or
 relation inputs, attaches the registry grounding that explains each question,
 and builds one runtime :class:`~cadrumo.application.flows.definition.FlowDefinition`.
@@ -39,7 +39,7 @@ from .registry_discovery import registry_bindings_for_scope, registry_casillas_f
 
 if TYPE_CHECKING:
     from ...application.flows.engine import FlowState
-    from ...domain.modelos import WorkUnit
+    from ...domain.modelos.work_unit import WorkUnit
 
 
 ModeloWorkWizardPromptChannel = Literal["casilla", "binding", "relation"]

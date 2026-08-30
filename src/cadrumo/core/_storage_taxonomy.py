@@ -240,7 +240,7 @@ EXTERNAL_PATH_SETTINGS_FIELDS: Final[dict[str, ExternalPathDeclaration]] = {
             reason=(
                 "The bundled AEAT Manual practico corpus ships inside the package and the "
                 "*running application* never writes there -- it fails the write test from the "
-                "operator's chair. But domain.manuals._fetch demonstrably does write there: it "
+                "operator's chair. But domain.manuals.fetch demonstrably does write there: it "
                 "streams a manual part's PDF plus a manifest to disk under this root. That "
                 "module has no entrypoints/ surface (grep confirms only a test references it), "
                 "so it reads as maintainer tooling that refreshes the bundled corpus before a "

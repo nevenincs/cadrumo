@@ -50,7 +50,7 @@ TAX_RECORD_RETENTION_FLOOR_YEARS: Final[int] = 4
 class RetainableFilingRecord(Protocol):
     """Structural view of a filed record the retention floor assesses.
 
-    :class:`~domain.modelos.ModeloRecord` satisfies this view. Only the
+    :class:`~ModeloRecord` satisfies this view. Only the
     fields the floor needs are declared so the retention domain does not couple
     to the full filing-record schema.
     """

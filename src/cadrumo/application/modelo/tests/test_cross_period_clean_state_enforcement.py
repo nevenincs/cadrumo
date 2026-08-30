@@ -18,26 +18,11 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
-from ....domain.deadlines import (
-    CrossPeriodGroupMemberRoster,
-    EntityType,
-    IrpfIncomeCategory,
-    IVARegime,
-    M303RegimeComposition,
-    M303TaxTerritory,
-    ModeloIVAProfile,
-    TaxpayerProfile,
-)
-from ....domain.modelos import (
-    ExternalEvidence,
-    ExternalEvidenceKind,
-    ModeloRecord,
-    ModeloRecordStatus,
-    ModeloVerificationFindingKind,
-    derive_filing_record_id,
-    upsert_calculation_revision,
-    upsert_filing_record,
-)
+from ....domain.deadlines.models import CrossPeriodGroupMemberRoster, EntityType, IVARegime, IrpfIncomeCategory, M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile, TaxpayerProfile
+from ....domain.modelos.calculation_repository import upsert_calculation_revision
+from ....domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind, ModeloRecord, ModeloRecordStatus, derive_filing_record_id
+from ....domain.modelos.filing_repository import upsert_filing_record
+from ....domain.modelos.verification_report import ModeloVerificationFindingKind
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -69,7 +54,7 @@ from .._export import (
 from .._filed_revision_observation import APP_FILING_SOURCE_KIND
 from .._filing_actions import file_modelo_revision
 from .._verification_actions import verify_modelo_revision
-from .._work_lifecycle import create_work_unit
+from ..work_lifecycle import create_work_unit
 from ..external_import_actions import import_external_filing_evidence
 from .justificante_metadata import persist_justificante_metadata
 

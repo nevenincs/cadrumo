@@ -21,9 +21,9 @@ from ....core import (
     validated_casilla_id,
 )
 from ....core.errors import resolve_error_message
-from ....domain.buckets import BucketEventType
-from ....domain.iva import IvaDeductionClassificationProvenance
-from ....domain.iva_compensation import IvaCompensationDecisionReason, IvaCompensationReconciliationDecision
+from ....domain.buckets.event import BucketEventType
+from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
+from ....domain.iva_compensation.reconciliation import IvaCompensationDecisionReason, IvaCompensationReconciliationDecision
 from ....domain.modelos.calculation_revision import CalculationRevision, FilingInstanceEvidence
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
@@ -34,7 +34,7 @@ from ....tests.profile_capsule import seed_test_profile_record
 from ...calculations import IvaWalletDecisionRepository
 from .._action_errors import ModeloAggregationBindingError
 from .._calculation_actions import calculate_modelo_revision_from_bucket_aggregation
-from .._work_lifecycle import create_work_unit
+from ..work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

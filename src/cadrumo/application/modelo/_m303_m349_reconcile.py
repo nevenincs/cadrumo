@@ -12,7 +12,7 @@ operator error to resolve before filing (a missing or duplicated operator row on
 the 349, a mis-booked intra-community invoice on the 303).
 
 This module surfaces that divergence as a non-blocking WARNING advisory on the
-verify path (a :class:`~domain.modelos.ModeloVerificationFinding` of kind
+verify path (a :class:`~ModeloVerificationFinding` of kind
 ``reconciliation_mismatch``). It is deliberately advisory rather than blocking:
 legitimate scope/timing differences (triangular operations, rectifications
 carried in a separate 349 resumen field, cadence quirks) can produce small,
@@ -33,15 +33,10 @@ from ...domain.calculations.registry.ids import (
     LegalRefId,
     SourceRefId,
 )
-from ...domain.modelos import (
-    CalculationRevisionCatalogueRepositoryProtocol,
-    ModeloCode,
-    ModeloVerificationFinding,
-    ModeloVerificationFindingKind,
-    ModeloVerificationFindingSeverity,
-    WorkUnit,
-    WorkUnitCatalogue,
-)
+from ...domain.modelos.codes import ModeloCode
+from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
+from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
+from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -168,14 +163,14 @@ def m303_m349_intracom_reconcile_findings(
     revision, compares the 303 intra-community total (box 10 + box 59) against the
     349 resumen total (``decl.importe-operaciones``). A gap beyond
     :data:`_M303_M349_RECONCILE_DEMINIMIS_EUR` yields one non-blocking WARNING
-    :class:`~domain.modelos.ModeloVerificationFinding`; otherwise the list is
+    :class:`~ModeloVerificationFinding`; otherwise the list is
     empty. The reconcile is skipped (empty list) when the modelo is neither 303
     nor 349, the counterpart work unit or its revision is absent, or both totals
     are zero (nothing intra-community declared on either side).
 
     Args:
         work_unit: The work unit being verified (the reconcile anchor).
-        target: The draft :class:`~domain.modelos.CalculationRevision` under
+        target: The draft :class:`~CalculationRevision` under
             verification, supplying the anchor modelo's own totals.
         work_unit_repository: Source of the counterpart work unit.
         calculation_repository: Source of the counterpart's persisted revision.

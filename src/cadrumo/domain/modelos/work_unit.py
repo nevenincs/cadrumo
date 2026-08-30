@@ -36,7 +36,7 @@ from ...core.identity import BucketId, WorkUnitId
 from ...core.time import UtcInstant
 from ..calculations.registry.ids import RevisionId
 from ..contribuyente.ccaa import CCAA
-from ._codes import ModeloCode
+from .codes import ModeloCode
 from .errors import ModeloValidationError
 from .filing_text import ModeloActorLabel, OperatorReason
 
@@ -280,9 +280,11 @@ class WorkUnitCatalogue(BaseModel):
         return iter(self.work_units.values())
 
     def __len__(self) -> int:
+        """How many work units the catalogue holds."""
         return len(self.work_units)
 
     def __contains__(self, key: object) -> bool:
+        """Whether the catalogue holds this work unit, by record or by id."""
         if isinstance(key, WorkUnit):
             return key.work_unit_id in self.work_units
         if isinstance(key, str):

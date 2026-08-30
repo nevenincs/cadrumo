@@ -11,27 +11,20 @@ import pytest
 from pydantic import AnyHttpUrl
 
 from ....adapters.inbound.justificante import parse_justificante_bytes
-from ....adapters.outbound.aeat.sede import (
-    Declaracion,
-    FiledDeclaracionArtefact,
-    FiledDeclaracionObservation,
-    FiledDeclaracionObservationStore,
-    ObservedCasillaValue,
-)
+from ....adapters.outbound.aeat.sede.declarations_schema import Declaracion
+from ....adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
+from ....adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....core import CasillaValueKind, IvaCompensationStateProvenance, Period, validated_casilla_id
 from ....core.config import Settings
 from ....core.json_contract import NoticeSeverity
-from ....domain.buckets import BucketEventType
+from ....domain.buckets.event import BucketEventType
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.errors import RegistryValidationError
-from ....domain.iva_compensation import IvaCompensationPeriodState
-from ....domain.modelos import (
-    ExternalEvidence,
-    ExternalEvidenceKind,
-)
+from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
+from ....domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import read_db_at_rest_bytes
 from ...calculations import (

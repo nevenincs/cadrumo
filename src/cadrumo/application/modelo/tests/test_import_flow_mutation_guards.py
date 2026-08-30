@@ -13,13 +13,10 @@ from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogu
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.modelos import (
-    ExternalEvidenceKind,
-    WorkUnit,
-    derive_work_unit_id,
-    upsert_calculation_revision,
-    upsert_work_unit,
-)
+from ....domain.modelos.calculation_repository import upsert_calculation_revision
+from ....domain.modelos.filing_record import ExternalEvidenceKind
+from ....domain.modelos.repository import upsert_work_unit
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionAmendmentKind,
@@ -40,7 +37,7 @@ from .._calculation_actions import (
     get_calculation_revision,
     mark_revision_verificado_completo,
 )
-from .._work_lifecycle import (
+from ..work_lifecycle import (
     create_work_unit,
     discard_work_unit,
 )

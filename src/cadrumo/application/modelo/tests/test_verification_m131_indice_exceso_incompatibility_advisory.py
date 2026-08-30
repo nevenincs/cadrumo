@@ -49,11 +49,8 @@ from ....core.resources import bundled_path
 from ....domain.calculations.registry.loader import load_modelo_path
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
-from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.modelos import (
-    ModeloVerificationFindingKind,
-    ModeloVerificationFindingSeverity,
-)
+from ....domain.deadlines.models import IVARegime, TaxpayerProfile
+from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from .._verification_actions import _evaluate_advisory_predicate_fires, evaluate_verification_predicates
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

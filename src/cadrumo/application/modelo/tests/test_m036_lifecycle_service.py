@@ -19,7 +19,7 @@ import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.storage import LIVE_M036_DECLARATION_NAMESPACE
-from ....domain.buckets import BucketEventType
+from ....domain.buckets.event import BucketEventType
 from ....domain.calculations.registry.censo_modelos import CensoModeloEventKind
 from ....tests.secure_sql import isolated_runtime_profile
 from ....tests.write_unit_recorder import WriteUnitRecorder

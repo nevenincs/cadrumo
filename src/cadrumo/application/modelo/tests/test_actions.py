@@ -26,9 +26,10 @@ from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.schema_references import PeriodSelector
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
-from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.iva_compensation import IvaCompensationDivergence, IvaCompensationReconciliationDecision
-from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
+from ....domain.deadlines.models import IVARegime, TaxpayerProfile
+from ....domain.iva_compensation.reconciliation import IvaCompensationDivergence, IvaCompensationReconciliationDecision
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,

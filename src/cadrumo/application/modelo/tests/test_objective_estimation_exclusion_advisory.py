@@ -7,14 +7,10 @@ from typing import Any
 import pytest
 
 from ....core import Period
-from ....domain.deadlines import IrpfEstimationRegime, IVARegime, TaxpayerProfile
-from ....domain.modelos import (
-    ModeloCode,
-    ModeloVerificationFindingKind,
-    ModeloVerificationFindingSeverity,
-    WorkUnit,
-    derive_work_unit_id,
-)
+from ....domain.deadlines.models import IVARegime, IrpfEstimationRegime, TaxpayerProfile
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,

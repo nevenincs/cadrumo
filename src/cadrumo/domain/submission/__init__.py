@@ -16,7 +16,7 @@ record persisted through the :class:`SubmissionRepositoryProtocol` port —
 implemented by the adapter
 :class:`~cadrumo.adapters.persistence.profile.submission.SubmissionRepository` — as
 encrypted AUDIT data under ``cadrumo.domain.submission.records``. It is distinct from
-:class:`domain.modelos.ModeloRecord`:
+:class:`~ModeloRecord`:
 :func:`application.modelo.file_modelo_revision` creates a local work-unit filing
 record with ``aeat_accepted=False`` and no external evidence, while
 :func:`application.filing.import_filing_from_justificante` imports historical
@@ -44,7 +44,7 @@ Major declarations:
 See Also:
     :func:`application.modelo.file_modelo_revision`
         Local work-unit filing action that creates
-        :class:`domain.modelos.ModeloRecord` entries without AEAT
+        :class:`~ModeloRecord` entries without AEAT
         acceptance.
     :mod:`application.live`
         Read-only AEAT evidence capture and justificante verification surface;
@@ -56,7 +56,7 @@ See Also:
         without becoming casilla-value authority.
     :func:`application.modelo.import_external_filing_evidence`
         Separate work-unit path that stamps
-        :class:`domain.modelos.ExternalEvidence` on current filing records;
+        :class:`~ExternalEvidence` on current filing records;
         it does not create :class:`ModeloPresentado` audit records.
     :mod:`domain.filing`
         Draft construction and review records used before preflight or evidence

@@ -29,18 +29,14 @@ from ...core import Modelo
 from ...core.decimal import coerce_decimal_strict
 from ...core.resources import bundled_path
 from ...domain.calculations.registry.loader import load_legal_parameters_only
-from ...domain.deadlines import IrpfEstimationRegime, TaxpayerProfile
-from ...domain.modelos import (
-    ModeloVerificationFinding,
-    ModeloVerificationFindingKind,
-    ModeloVerificationFindingSeverity,
-)
+from ...domain.deadlines.models import IrpfEstimationRegime, TaxpayerProfile
+from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ...domain.modelos.errors import ModeloValidationError
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.ids import SourceRefId
     from ...domain.calculations.registry.schema_references import LegalParameter
-    from ...domain.modelos import WorkUnit
+    from ...domain.modelos.work_unit import WorkUnit
 
 _SETTLED_YEAR_MIN = 2016
 _SETTLED_YEAR_MAX = 2026

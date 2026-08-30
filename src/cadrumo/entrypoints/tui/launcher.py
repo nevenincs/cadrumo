@@ -8,7 +8,7 @@ from contextlib import ExitStack, asynccontextmanager, contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from ...domain.modelos import WorkUnitCatalogue
+from ...domain.modelos.work_unit import WorkUnitCatalogue
 
 if TYPE_CHECKING:
     from textual.app import AutopilotCallbackType

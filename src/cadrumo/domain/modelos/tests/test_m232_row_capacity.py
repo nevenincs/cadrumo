@@ -3,7 +3,8 @@ from decimal import Decimal
 import pytest
 
 from ...calculations.registry.errors import RegistryValidationError
-from .. import M232_MAX_RELATED_PARTY_ROWS, Modelo232VinculadaRow, m232_related_party_row_casilla_values
+from ..m232_row_materialisation import M232_MAX_RELATED_PARTY_ROWS, m232_related_party_row_casilla_values
+from ..row_models import Modelo232VinculadaRow
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -29,7 +29,7 @@ from pathlib import Path
 
 import pytest
 
-from .....domain.modelos import CalculationRevisionCatalogueRepositoryProtocol
+from .....domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from .....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from .....tests.secure_sql import isolated_runtime_profile
 from ...storage.errors import SecureObjectRevisionConflictError

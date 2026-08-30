@@ -2,7 +2,7 @@
 
 :func:`revision_filing_replay_inputs` converts a filed or verified
 :class:`CalculationRevision` plus its
-:class:`~domain.modelos._work_unit.WorkUnit` into the flat Modelo-input map
+:class:`~domain.modelos.work_unit.WorkUnit` into the flat Modelo-input map
 the filing runtime accepts. Stored operator inputs, binding overrides, and
 relation overrides are replayed directly; calculated informational casillas are
 recovered from the :class:`~domain.calculations.registry.RegistrySnapshot`
@@ -26,7 +26,6 @@ from decimal import Decimal
 
 from ...core import CasillaId, Modelo
 from ...core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS, BindingSourceKind
-from ...domain import filing as filing_domain
 from ...domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
     derive_modelo_applicability,
@@ -41,17 +40,18 @@ from ...domain.calculations.registry.ids import (
 from ...domain.calculations.registry.schema import DataBindingDefinition, RegistrySnapshot
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
-from ...domain.deadlines import TaxpayerProfile
+from ...domain.deadlines.models import TaxpayerProfile
+from ...domain.filing.protocols import ModeloInputs, ModeloInputScalar
 from ...domain.identifiers import canonical_decimal_string
-from ...domain.modelos import (
+from ...domain.modelos.calculation_revision import CalculationRevision
+from ...domain.modelos.m232_row_materialisation import m232_related_party_row_casilla_values
+from ...domain.modelos.row_models import (
     Modelo232VinculadaRow,
     Modelo349OperadorRow,
     Modelo349RectificacionRow,
-    WorkUnit,
-    m232_related_party_row_casilla_values,
     m349_nif_number_for_export,
 )
-from ...domain.modelos.calculation_revision import CalculationRevision
+from ...domain.modelos.work_unit import WorkUnit
 
 _ZERO_DECIMAL_TEXT = canonical_decimal_string(Decimal("0"))
 _M349_OPERADOR_ROW_BINDINGS: dict[BindingId, str] = {
@@ -78,7 +78,7 @@ def revision_filing_replay_inputs(
     revision: CalculationRevision,
     work_unit: WorkUnit,
     workflow_profile: TaxpayerProfile | None = None,
-) -> filing_domain.ModeloInputs:
+) -> ModeloInputs:
     """Return replayable filing inputs for one :class:`CalculationRevision`.
 
     The returned flat map is ordered by merge precedence: calculated
@@ -245,7 +245,7 @@ def _m349_detail_row_replay_inputs(
     *,
     revision: CalculationRevision,
     work_unit: WorkUnit,
-) -> dict[BindingId, dict[str, filing_domain.ModeloInputScalar]]:
+) -> dict[BindingId, dict[str, ModeloInputScalar]]:
     """Project persisted Modelo 349 detail rows into indexed binding maps.
 
     The filing runtime accepts repeating-row values as ``binding_id -> row-index
@@ -259,9 +259,9 @@ def _m349_detail_row_replay_inputs(
     rectification_rows = tuple(row for row in revision.detail_rows if isinstance(row, Modelo349RectificacionRow))
     if not operador_rows and not rectification_rows:
         return {}
-    replay_inputs: dict[BindingId, dict[str, filing_domain.ModeloInputScalar]] = {}
+    replay_inputs: dict[BindingId, dict[str, ModeloInputScalar]] = {}
     for binding_id, attr in _M349_OPERADOR_ROW_BINDINGS.items():
-        values: dict[str, filing_domain.ModeloInputScalar] = {}
+        values: dict[str, ModeloInputScalar] = {}
         for index, row in enumerate(operador_rows, start=1):
             if attr == "nif_comunitario":
                 value = m349_nif_number_for_export(row.nif_comunitario, row.codigo_pais)
@@ -287,7 +287,7 @@ def _m232_detail_row_replay_inputs(
     *,
     revision: CalculationRevision,
     work_unit: WorkUnit,
-) -> dict[CasillaId, filing_domain.ModeloInputScalar]:
+) -> dict[CasillaId, ModeloInputScalar]:
     """Project persisted Modelo 232 related-party rows into positional casillas.
 
     M232 declares its related parties as five positional row slots rather than a

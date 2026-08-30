@@ -79,8 +79,8 @@ def test_non_registry_modelos_have_no_registry_source_paths() -> None:
 
 
 def test_modelo_members_are_valid_modelo_codes() -> None:
-    """Every :class:`Modelo` value passes the :class:`~cadrumo.domain.modelos.ModeloCode` shape validator."""
-    from ...domain.modelos import ModeloCode
+    """Every :class:`Modelo` value passes the :class:`~ModeloCode` shape validator."""
+    from ...domain.modelos.codes import ModeloCode
 
     for member in Modelo:
         result = ModeloCode(member.value)

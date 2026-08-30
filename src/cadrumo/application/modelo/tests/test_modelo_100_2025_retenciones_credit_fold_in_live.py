@@ -78,7 +78,7 @@ from .._calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from .._filed_revision_observation import APP_FILING_SOURCE_KIND
-from .._work_lifecycle import create_work_unit
+from ..work_lifecycle import create_work_unit
 from ._fold_in_assertions_support import _assert_distinct_positive
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

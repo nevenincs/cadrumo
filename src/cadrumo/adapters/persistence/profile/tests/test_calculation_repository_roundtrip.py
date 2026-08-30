@@ -35,12 +35,8 @@ from .....domain.calculations.registry.formula_runtime import RegistryCalculatio
 from .....domain.calculations.registry.formula_runtime_ops import RegistryUnresolvedOutcomeReason
 from .....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from .....domain.filing_evidence import FilingEvidenceReference
-from .....domain.iva import (
-    M303RegimenSimplificadoScope,
-    M303RegimenSimplificadoScopeDecision,
-    RegimenSimplificadoFilingRows,
-)
-from .....domain.modelos import CalculationRevisionPersistenceError
+from .....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision, RegimenSimplificadoFilingRows
+from .....domain.modelos.calculation_repository import CalculationRevisionPersistenceError
 from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,

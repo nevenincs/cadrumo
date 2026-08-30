@@ -72,7 +72,7 @@ from ....core.aggregation import RetencionClave
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
-from ....domain.deadlines import IVARegime, TaxpayerProfile
+from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.env_scope import ready_clave_settings
 from ....tests.profile_capsule import load_test_profile_record, replace_test_profile_record, seed_test_profile_record
@@ -92,7 +92,7 @@ from .._calculation_actions import (
 from .._filed_revision_observation import APP_FILING_SOURCE_KIND
 from .._revision_persistence import persist_filed_revision
 from .._verification_actions import verify_modelo_revision
-from .._work_lifecycle import create_work_unit
+from ..work_lifecycle import create_work_unit
 from ._fold_in_assertions_support import _assert_distinct_positive
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

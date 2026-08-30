@@ -40,11 +40,7 @@ from ...domain.calculations.registry.bindings import CasillaObservation, Registr
 from ...domain.calculations.registry.bindings_previous_filing import previous_filing_binding_source_casilla_ids
 from ...domain.calculations.registry.detail_record_bindings import foreign_asset_binding_row_field
 from ...domain.calculations.registry.schema import ModeloRevision
-from ...domain.modelos import (
-    ModeloVerificationFinding,
-    ModeloVerificationFindingKind,
-    ModeloVerificationFindingSeverity,
-)
+from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ...domain.modelos.calculation_revision import CalculationRevision
 from .._foreign_asset_thresholds import foreign_asset_declaration_thresholds
 
@@ -241,7 +237,7 @@ def modelo_720_declared_observation(
     """Project what the operator actually DECLARED on a Modelo 720 draft.
 
     The declared set is read from
-    :attr:`~domain.modelos.CalculationRevision.input_values_by_casilla_id` —
+    :attr:`~CalculationRevision.input_values_by_casilla_id` —
     the operator-supplied inputs — and deliberately NOT from
     ``casilla_values``. The engine materialises every declared casilla in
     ``casilla_values``, emitting ``0`` for a valuation the operator never

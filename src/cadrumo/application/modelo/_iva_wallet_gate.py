@@ -5,9 +5,9 @@ generic previous-filing source mesh. This module uses the calculation
 :class:`~cadrumo.domain.calculations.registry.RegistrySnapshot` and
 :class:`~cadrumo.domain.calculations.registry.ModeloRevision` to route the wallet
 decision into the prior-compensation binding, then checks a persisted
-:class:`~cadrumo.domain.iva_compensation._reconciliation.IvaCompensationReconciliationDecision`
+:class:`~cadrumo.domain.iva_compensation.reconciliation.IvaCompensationReconciliationDecision`
 against the exported or filed
-:class:`~cadrumo.domain.modelos.CalculationRevision`.
+:class:`~CalculationRevision`.
 
 The gate is deliberately repository-backed: transient wallet decisions cannot
 feed the Modelo 303 engine unless the same decision is already present in
@@ -20,7 +20,7 @@ amount-mismatched decisions raise
 before a revision, filing record, or fichero-BOE artefact can be persisted.
 
 The only lazy path is local-authority derivation for a bucket-scoped
-:class:`~cadrumo.domain.modelos.WorkUnit`: it can persist a non-blocking local
+:class:`~WorkUnit`: it can persist a non-blocking local
 recurrence decision, and a ``first_period_zero`` decision is accepted only when
 profile activity-start evidence and the
 :class:`~cadrumo.domain.calculations.registry.RegistrySnapshot` prove every prior
@@ -55,8 +55,8 @@ from ...domain.calculations.registry.schema import (
     ModeloRevision,
     RegistrySnapshot,
 )
-from ...domain.iva_compensation import IvaCompensationDecisionReason, IvaCompensationReconciliationDecision
-from ...domain.modelos import WorkUnit
+from ...domain.iva_compensation.reconciliation import IvaCompensationDecisionReason, IvaCompensationReconciliationDecision
+from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.errors import ModeloError
 from ..calculations import (
@@ -279,12 +279,12 @@ def resolve_iva_compensation_decision_for_calculation(
 ) -> object | None:
     """Resolve the Modelo 303 IVA wallet decision that may feed calculation bindings.
 
-    The :class:`~cadrumo.domain.modelos.WorkUnit` fixes the bucket, taxpayer profile
+    The :class:`~WorkUnit` fixes the bucket, taxpayer profile
     lookup, target period, and registry revision; the
     :class:`~cadrumo.domain.calculations.registry.RegistrySnapshot` is passed to the
     lazy reconciliation path when no caller-supplied or persisted wallet decision
     exists. A supplied decision must match the persisted
-    :class:`~cadrumo.domain.iva_compensation._reconciliation.IvaCompensationReconciliationDecision`.
+    :class:`~cadrumo.domain.iva_compensation.reconciliation.IvaCompensationReconciliationDecision`.
     If the caller supplied a prior-compensation binding or casilla without a
     decision, the function tries only the local-authority zero path and otherwise
     returns ``None`` so calculation surfaces the seed/reconcile guidance instead
@@ -553,9 +553,9 @@ def require_persisted_iva_compensation_decision_for_work_unit(
 
     The optional :class:`~cadrumo.domain.calculations.registry.RegistrySnapshot`
     grounds first-period-zero decisions; when omitted, the function resolves the
-    snapshot from the supplied :class:`~cadrumo.domain.modelos.WorkUnit`. This check
+    snapshot from the supplied :class:`~WorkUnit`. This check
     prevents a transient or stale
-    :class:`~cadrumo.domain.iva_compensation._reconciliation.IvaCompensationReconciliationDecision`
+    :class:`~cadrumo.domain.iva_compensation.reconciliation.IvaCompensationReconciliationDecision`
     from feeding calculation values unless the repository contains the same
     authority record.
     """
@@ -595,7 +595,7 @@ def load_persisted_iva_compensation_decision_for_work_unit(
     *,
     repository: IvaWalletDecisionRepository | None = None,
 ) -> IvaCompensationReconciliationDecision | None:
-    """Load the persisted IVA compensation decision for a :class:`~cadrumo.domain.modelos.WorkUnit`.
+    """Load the persisted IVA compensation decision for a :class:`~WorkUnit`.
 
     Returns:
         The persisted :class:`IvaCompensationReconciliationDecision` for Modelo
@@ -904,7 +904,7 @@ def lazily_reconcile_local_iva_compensation_for_work_unit(
     """Auto-derive and persist the local-authority Modelo 303 compensation decision.
 
     Calculate's prior-compensation gate requires a persisted
-    :class:`~cadrumo.domain.iva_compensation._reconciliation.IvaCompensationReconciliationDecision`.
+    :class:`~cadrumo.domain.iva_compensation.reconciliation.IvaCompensationReconciliationDecision`.
     In the seed-only local authority case, the local Modelo 303 recurrence is the
     authority, so derive and persist the decision here instead of refusing
     calculation.
@@ -1073,7 +1073,7 @@ def require_persisted_iva_compensation_decision_matches_revision(
     """Return the IVA compensation decision when it matches the revision.
 
     The check reads the supplied
-    :class:`~cadrumo.domain.modelos.CalculationRevision` and blocks verification,
+    :class:`~CalculationRevision` and blocks verification,
     internal filing, or export when its Modelo 303
     prior-compensation amount differs from the persisted wallet decision, when
     the decision targets another period, or when the decision is blocked/missing.
@@ -1179,7 +1179,7 @@ def require_persisted_iva_compensation_decision_matches_revision(
 def revision_iva_compensation_amount(revision: CalculationRevision) -> Decimal | None:
     """Return the Modelo 303 prior-compensation amount carried by a revision.
 
-    Reads the :class:`~cadrumo.domain.modelos.CalculationRevision` casilla values
+    Reads the :class:`~CalculationRevision` casilla values
     first, then binding overrides, matching the persisted calculation payload.
     """
     casilla_value = dict(revision.casilla_values).get(_M303_PRIOR_COMPENSATION_CASILLA_ID)

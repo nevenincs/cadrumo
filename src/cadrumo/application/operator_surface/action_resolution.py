@@ -2,7 +2,7 @@
 
 The application action catalogue owns stable action identities and the sources
 that may provide their arguments.  The reconciled operator surface owns the
-live command target and its required S05 inputs.  This module joins those two
+live command target and its required verb inputs.  This module joins those two
 authorities before projecting a next action onto a successful notice.
 """
 

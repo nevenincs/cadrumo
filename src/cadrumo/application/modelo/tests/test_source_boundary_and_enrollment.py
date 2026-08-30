@@ -37,7 +37,7 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import BindingSourceKind, Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import ModeloRevision
-from ....domain.modelos import Modelo184MemberRow
+from ....domain.modelos.row_models import Modelo184MemberRow
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
@@ -53,7 +53,7 @@ from .._calculation_actions import (
     assert_no_novel_source_kinds,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from .._work_lifecycle import create_work_unit
+from ..work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

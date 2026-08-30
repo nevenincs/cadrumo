@@ -28,18 +28,9 @@ from ....adapters.persistence.profile.modelos_verification_reports import Verifi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import AuthProviderKind, CasillaId, Period, validated_casilla_id
 from ....core.config import Settings
-from ....domain.buckets import BucketEventType
+from ....domain.buckets.event import BucketEventType
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.modelos import (
-    ExternalEvidence,
-    ExternalEvidenceKind,
-    ModeloRecord,
-    ModeloRecordStatus,
-    WorkUnit,
-    derive_filing_record_id,
-    upsert_calculation_revision,
-    upsert_filing_record,
-)
+from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionAmendmentKind,
@@ -47,7 +38,17 @@ from ....domain.modelos.calculation_revision import (
     FilingInstanceEvidence,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.filing_record import (
+    ExternalEvidence,
+    ExternalEvidenceKind,
+    ModeloRecord,
+    ModeloRecordStatus,
+    derive_filing_record_id,
+)
+from ....domain.modelos.filing_repository import upsert_filing_record
+from ....domain.modelos.work_unit import WorkUnit
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....tests.cross_period_seeding import seed_clean_cross_period_sources
 from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
@@ -66,12 +67,11 @@ from .._calculation_actions import (
 )
 from .._filing_actions import get_filing_record
 from .._verification_actions import verify_modelo_revision
-from .._work_lifecycle import (
+from ..work_lifecycle import (
     create_work_unit,
     get_work_unit,
 )
 from ._file_flow_support import (
-    seed_clean_cross_period_sources,
     workflow_profile,
 )
 

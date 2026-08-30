@@ -21,6 +21,7 @@ class ModeloCode(str):
     """
 
     def __new__(cls, value: str) -> ModeloCode:
+        """Build a code, refusing anything but three digits."""
         raw = str(value)
         if len(raw) != 3 or not raw.isdigit():
             raise ModeloValidationError(f"modelo code must be a three-digit string, got {value!r}")
@@ -32,5 +33,6 @@ class ModeloCode(str):
         source_type: type[object],
         handler: GetCoreSchemaHandler,
     ) -> core_schema.CoreSchema:
+        """Teach pydantic to run the three-digit check on validation."""
         del source_type, handler
         return core_schema.no_info_after_validator_function(cls, core_schema.str_schema())

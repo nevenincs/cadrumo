@@ -18,7 +18,7 @@ emits a typed payload such as :class:`OverviewStatusResult`,
 :class:`OverviewBacklogResult`, :class:`OverviewExplainResult`,
 :class:`OverviewPrepareResult`, or :class:`OverviewPipelineResult` through
 :func:`emit_envelope`. The ``pipeline`` verb resolves each period work
-unit's current :class:`~cadrumo.domain.modelos.CalculationRevision` to derive its
+unit's current :class:`~CalculationRevision` to derive its
 readiness row.
 """
 
@@ -44,7 +44,7 @@ from ...core.json_contract import Notice, strict_round_trip
 from ...core.logging import get_logger
 from ...core.time import today_madrid
 from ...domain.calculations.registry.authority import bundled_authority
-from ...domain.modelos import WorkUnit
+from ...domain.modelos.work_unit import WorkUnit
 from ._common import (
     _bad,
     _declared_tax_id,
@@ -93,7 +93,7 @@ if TYPE_CHECKING:
     from ...application.user_profile.profile_record_repository import ProfileRecordRepository
     from ...application.workflow.profile_bucket_models import ProfileBucketPointer as _ProfileBucketPointer
     from ...application.workflow.state_models import WorkflowState
-    from ...domain.deadlines import TaxpayerProfile
+    from ...domain.deadlines.models import TaxpayerProfile
     from .errors import CliRefusedBoundaryError
 
 logger = get_logger(__name__)
@@ -182,7 +182,7 @@ def _undeclared_taxpayer_model_refusal(profile: TaxpayerProfile) -> CliRefusedBo
     )
     from ...application.user_profile.preflight import format_profile_selector_requirements
     from ...domain.calculations.registry.profile_grounding import build_profile_grounding_index
-    from ...domain.deadlines import EntityType
+    from ...domain.deadlines.models import EntityType
     from ...domain.user_profile.loader import load_user_profile_schema
     from ._common import attach_cli_policy_verdict
     from .errors import CliRefusedBoundaryError
@@ -847,9 +847,9 @@ def overview_pipeline(
     from ...application.ledger.actions_manual import summarize_manual_transactions
     from ...application.modelo._calculation_actions import get_calculation_revision
     from ...application.modelo._filing_actions import list_verification_reports
-    from ...application.modelo._work_lifecycle import list_work_units
+    from ...application.modelo.work_lifecycle import list_work_units
     from ...application.overview.pipeline_health import build_pipeline_health_report
-    from ...domain.modelos import VerificationReport
+    from ...domain.modelos.verification_report import VerificationReport
     from ...domain.modelos.calculation_revision import CalculationRevision
     from ._ledger_payloads import LedgerStatusResult
 

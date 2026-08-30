@@ -14,6 +14,7 @@ import pytest
 from textual.app import App, ComposeResult
 from textual.widgets import Button, Static
 
+from .....tests.terminal_sizes import SUPPORTED_TERMINAL_SIZE_IDS, SUPPORTED_TERMINAL_SIZES
 from ..widgets import (
     DisclosureGroup,
     RequirementBadge,
@@ -48,7 +49,7 @@ def test_stage_strip_refuses_an_empty_or_out_of_range_construction() -> None:
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("size", [(80, 24), (100, 30), (160, 48)], ids=["narrow", "medium", "wide"])
+@pytest.mark.parametrize("size", SUPPORTED_TERMINAL_SIZES, ids=SUPPORTED_TERMINAL_SIZE_IDS)
 async def test_stage_strip_shows_every_stage_with_a_distinct_non_colour_glyph(size: tuple[int, int]) -> None:
     """Done, current, and upcoming stages each carry their own glyph, not only a colour class."""
     app = _StageHarness(current_index=2)

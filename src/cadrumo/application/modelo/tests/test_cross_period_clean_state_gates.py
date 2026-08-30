@@ -20,21 +20,14 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
-from ....domain.deadlines import IVARegime, TaxpayerProfile
+from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.justificante import Justificante
-from ....domain.modelos import (
-    ExternalEvidence,
-    ExternalEvidenceKind,
-    ModeloCode,
-    ModeloRecord,
-    ModeloRecordStatus,
-    WorkUnit,
-    derive_filing_record_id,
-    derive_work_unit_id,
-    upsert_calculation_revision,
-    upsert_filing_record,
-    upsert_work_unit,
-)
+from ....domain.modelos.calculation_repository import upsert_calculation_revision
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind, ModeloRecord, ModeloRecordStatus, derive_filing_record_id
+from ....domain.modelos.filing_repository import upsert_filing_record
+from ....domain.modelos.repository import upsert_work_unit
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -56,7 +49,7 @@ from ...calculations import (
 )
 from .._verification_actions import verify_modelo_revision
 from .._verification_cross_period import _cross_period_clean_state_findings
-from .._work_lifecycle import create_work_unit
+from ..work_lifecycle import create_work_unit
 from ..external_import_actions import import_external_filing_evidence
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

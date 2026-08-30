@@ -9,17 +9,11 @@ from pathlib import Path
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
-from ....domain.modelos import (
-    ExternalEvidence,
-    ModeloCode,
-    ModeloRecord,
-    ModeloRecordStatus,
-    WorkUnit,
-    derive_filing_record_id,
-    derive_work_unit_id,
-    upsert_filing_record,
-    upsert_work_unit,
-)
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.filing_record import ExternalEvidence, ModeloRecord, ModeloRecordStatus, derive_filing_record_id
+from ....domain.modelos.filing_repository import upsert_filing_record
+from ....domain.modelos.repository import upsert_work_unit
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....tests import FIXTURES_DIR
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root

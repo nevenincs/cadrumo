@@ -28,6 +28,7 @@ import pytest
 from pydantic import BaseModel
 from textual.containers import ScrollableContainer
 from textual.css.query import NoMatches
+from textual.screen import Screen
 from textual.widgets import Button, Input, Static
 
 from ....application.flows.definition import CopyRef, FlowDefinition, FlowPage, FlowSection
@@ -39,12 +40,15 @@ from ....application.user_profile.status_projection import StatusFactRow, Status
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from ....core.presentation import FormField, FormPage
+from ....entrypoints.tui.modelo.view.work_review import ModeloWorkReviewApp
 from ....entrypoints.tui.profile.overview import ProfileManagerScreen
 from ....entrypoints.tui.profile.status import StatusScreen
 from ....entrypoints.tui.secret.login import LoginScreen
 from ....entrypoints.tui.secret.registration import RegistrationScreen
+from ....tests.modelo_work_review import build_real_modelo_work_review
 from ....tests.profile_capsule import load_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.terminal_sizes import SUPPORTED_TERMINAL_SIZES, TERMINAL_ORDINARY
 from ..components.form_screen import FormApp
 from ..components.host import ScreenHostApp
 from ..components.theme import (
@@ -52,6 +56,7 @@ from ..components.theme import (
     CADRUMO_LIGHT_THEME_NAME,
 )
 from ..components.widgets import ContentScroll
+from ..devtools.frame import geometry_band, key_band
 from ..flows.app import FlowScreen
 
 pytestmark = [
@@ -78,23 +83,19 @@ class _VisualAnswers(BaseModel):
     """Trivial answers model; only its type identity is consumed."""
 
 
-_SIZES = [(80, 24), (120, 40), (200, 50)]
-"""A minimum-size terminal, an ordinary one, and a wide one.
-
-80x24 is the floor a real terminal can be, and the size at which an
-overflowing layout stops being cosmetic and starts hiding controls.
-"""
+_SIZES = SUPPORTED_TERMINAL_SIZES
+"""The shared supported set; each size's reason lives with the declaration."""
 
 _THEMES = [CADRUMO_LIGHT_THEME_NAME, CADRUMO_DARK_THEME_NAME]
 
 
 @contextmanager
-def _registration(tmp_path: Path) -> Iterator[RegistrationScreen]:
+def _registration(tmp_path: Path) -> Iterator[ScreenHostApp[None]]:
     from ....core.credentials import assess_profile_password
     from ..devtools.fixture import registration_attempt
 
     del tmp_path  # unused: this surface writes nothing until a real submit, which no gate here does
-    yield RegistrationScreen(assess=assess_profile_password, register=registration_attempt)
+    yield ScreenHostApp(RegistrationScreen(assess=assess_profile_password, register=registration_attempt))
 
 
 @contextmanager
@@ -111,18 +112,20 @@ def _form(tmp_path: Path) -> Iterator[FormApp]:
 
 
 @contextmanager
-def _status(tmp_path: Path) -> Iterator[StatusScreen]:
+def _status(tmp_path: Path) -> Iterator[ScreenHostApp[None]]:
     del tmp_path  # unused: the projection is hand-built, matching this file's existing status fixture
-    yield StatusScreen(
-        StatusPageData(
-            active_profile_label="Subject",
-            facts=(StatusFactRow(label="Field", value="Value"),),
-        ),
+    yield ScreenHostApp(
+        StatusScreen(
+            StatusPageData(
+                active_profile_label="Subject",
+                facts=(StatusFactRow(label="Field", value="Value"),),
+            ),
+        )
     )
 
 
 @contextmanager
-def _manager(tmp_path: Path) -> Iterator[ProfileManagerScreen]:
+def _manager(tmp_path: Path) -> Iterator[ScreenHostApp[None]]:
     """The manager, composed the way ``present_profile_manager`` composes it.
 
     ``manager`` was absent from every gate in this module -- the geometry
@@ -160,15 +163,17 @@ def _manager(tmp_path: Path) -> Iterator[ProfileManagerScreen]:
         async def launch_source(source: object) -> None:  # pragma: no cover - not exercised by this gate
             del source
 
-        yield ProfileManagerScreen(
-            build_profile_overview(record, label=_VISUAL_LABEL),
-            persist=persist,
-            launch_source=launch_source,
+        yield ScreenHostApp(
+            ProfileManagerScreen(
+                build_profile_overview(record, label=_VISUAL_LABEL),
+                persist=persist,
+                launch_source=launch_source,
+            )
         )
 
 
 @contextmanager
-def _login(tmp_path: Path) -> Iterator[LoginScreen]:
+def _login(tmp_path: Path) -> Iterator[ScreenHostApp[None]]:
     """The login screen, composed through the application interaction contract.
 
     Needs a real profile that exists but is LOCKED -- registration leaves it
@@ -195,15 +200,17 @@ def _login(tmp_path: Path) -> Iterator[LoginScreen]:
             passphrase=_VISUAL_PASSWORD,
         )
         logout_active_profile()
-        yield LoginScreen(
-            choices=profile_login_choices(),
-            authenticate=attempt_profile_login,
-            preselected=preselected_profile_login_id(None),
+        yield ScreenHostApp(
+            LoginScreen(
+                choices=profile_login_choices(),
+                authenticate=attempt_profile_login,
+                preselected=preselected_profile_login_id(None),
+            )
         )
 
 
 @contextmanager
-def _status_populated(tmp_path: Path) -> Iterator[StatusScreen]:
+def _status_populated(tmp_path: Path) -> Iterator[ScreenHostApp[None]]:
     """The status page with its NOTICES region genuinely populated.
 
     Built through the real production door, ``build_status_page_data()``,
@@ -229,11 +236,11 @@ def _status_populated(tmp_path: Path) -> Iterator[StatusScreen]:
             label=_VISUAL_LABEL,
             passphrase=_VISUAL_PASSWORD,
         )
-        yield StatusScreen(build_status_page_data())
+        yield ScreenHostApp(StatusScreen(build_status_page_data()))
 
 
 @contextmanager
-def _manager_populated(tmp_path: Path) -> Iterator[ProfileManagerScreen]:
+def _manager_populated(tmp_path: Path) -> Iterator[ScreenHostApp[None]]:
     """The manager with a REPEATABLE section's row count grown past one.
 
     ``manager`` (:func:`_manager`) always renders its full declared field
@@ -279,15 +286,17 @@ def _manager_populated(tmp_path: Path) -> Iterator[ProfileManagerScreen]:
         async def launch_source(source: object) -> None:  # pragma: no cover - not exercised by this gate
             del source
 
-        yield ProfileManagerScreen(
-            build_profile_overview(record, label=_VISUAL_LABEL),
-            persist=persist,
-            launch_source=launch_source,
+        yield ScreenHostApp(
+            ProfileManagerScreen(
+                build_profile_overview(record, label=_VISUAL_LABEL),
+                persist=persist,
+                launch_source=launch_source,
+            )
         )
 
 
 @contextmanager
-def _question(tmp_path: Path) -> Iterator[FlowScreen]:
+def _question(tmp_path: Path) -> Iterator[ScreenHostApp[None]]:
     """The wizard question screen, carrying more content than a short terminal holds.
 
     Enrolled here because it is the surface the operator sees on every page
@@ -319,7 +328,7 @@ def _question(tmp_path: Path) -> Iterator[FlowScreen]:
             FlowMode.MODIFY: CheckpointAvailability.UNAVAILABLE,
         },
     )
-    yield FlowScreen(definition, mode=FlowMode.MODIFY, registered_values={})
+    yield ScreenHostApp(FlowScreen(definition, mode=FlowMode.MODIFY, registered_values={}))
 
 
 def _many_page_flow() -> FlowScreen:
@@ -361,6 +370,20 @@ def _many_page_flow() -> FlowScreen:
     return FlowScreen(definition, mode=FlowMode.MODIFY, registered_values={})
 
 
+@contextmanager
+def _modelo_review(tmp_path: Path) -> Iterator[ModeloWorkReviewApp]:
+    """The real M100 review surface, built from genuine registry data.
+
+    Enrolled because it was covered by NONE of these gates while carrying
+    a live layout bound: its summary panel is capped as a fraction of the
+    viewport so it cannot evict the casillas table at the 80-column floor,
+    and nothing here or anywhere else was proving that bound holds.
+    """
+    yield ModeloWorkReviewApp(
+        build_real_modelo_work_review(tmp_path, modelo="100", filing_year=2024, period_code="0A"),
+    )
+
+
 _SURFACES = [
     pytest.param(_registration, id="registration"),
     pytest.param(_form, id="form"),
@@ -370,6 +393,7 @@ _SURFACES = [
     pytest.param(_manager, id="manager"),
     pytest.param(_manager_populated, id="manager-populated"),
     pytest.param(_login, id="login"),
+    pytest.param(_modelo_review, id="modelo-review"),
 ]
 """Every builder here takes ``tmp_path`` and is a context manager, uniformly
 -- ``manager`` and ``login`` need it live for the whole test body (their
@@ -578,12 +602,30 @@ _INTERACTIVE_SURFACES = [
     pytest.param(_registration, id="registration"),
     pytest.param(_form, id="form"),
     pytest.param(_manager, id="manager"),
+    pytest.param(_manager_populated, id="manager-populated"),
     pytest.param(_login, id="login"),
+    pytest.param(_modelo_review, id="modelo-review"),
 ]
-"""Surfaces with a real tab cycle. ``status`` and ``question`` are excluded
-deliberately: ``status`` is read-only chrome with no operator input, and
-``question`` is driven by the flow engine's own paged navigation rather
-than a plain tab cycle -- neither is what this gate exists to pin."""
+"""Surfaces whose controls an operator reaches by tabbing.
+
+THE PREDICATE, NOT A LIST OF INSTANCES: a surface belongs here when moving
+between its controls is a tab cycle. Two shapes fall outside it. Read-only
+chrome has nothing to tab through -- ``status`` and its populated variant
+each expose a single table. And engine-paged navigation moves the flow's
+own cursor between pages rather than a tab cycle between controls, which
+is what ``question`` does.
+
+Stated as a predicate deliberately, because the previous rationale named
+the two surfaces excluded when it was written. Both its reasons still
+held. But the enrolled set grew, and three further surfaces fell outside
+the gate without anyone deciding they should: two populated variants and
+the modelo review. A rationale that enumerates instances goes stale with
+no edit, no failure and no signal, and a well-argued one is the worst
+kind, because a reader who checks it finds sound reasons and stops.
+
+Anything added to ``_SURFACES`` belongs here too unless it matches one of
+the two shapes above; if the reason it does not fit cannot be stated in
+those terms, that is evidence the exclusion is incidental."""
 
 
 @pytest.mark.asyncio
@@ -618,10 +660,28 @@ async def test_tab_visits_every_control_and_comes_back(build, tmp_path: Path) ->
                 await pilot.press("tab")
                 visited.append(app.focused)
 
-            assert visited[-1] is chain[0], f"tab did not close the cycle: {[type(w).__name__ for w in visited]}"
+            # Identity, not type name: a stalled cycle lands on ONE widget
+            # repeatedly, and repeated type names hide that behind what reads
+            # like a short cycle.
+            stalled = len({id(widget) for widget in visited}) == 1 and len(chain) > 1
+            remedy = (
+                " DO NOT RESOLVE THIS BY REMOVING THIS SURFACE FROM THE INTERACTIVE PREDICATE:"
+                " the predicate is correct and the surface does have a tab cycle to prove."
+                " The defect is the screen's focus routing, and un-enrolling it restores exactly"
+                " the invisibility that let this survive."
+            )
+            assert not stalled, (
+                f"focus never advances: every tab landed on the same widget, "
+                f"{type(visited[0]).__name__}, while the chain holds "
+                f"{[type(w).__name__ for w in chain]}. Nothing after the first focusable is "
+                f"reachable by keyboard on this surface.{remedy}"
+            )
+            assert visited[-1] is chain[0], (
+                f"tab did not close the cycle: {[type(w).__name__ for w in visited]}{remedy}"
+            )
             assert set(visited) == set(chain), (
                 f"tab skipped a control: chain={[type(w).__name__ for w in chain]} "
-                f"visited={[type(w).__name__ for w in visited]}"
+                f"visited={[type(w).__name__ for w in visited]}{remedy}"
             )
             app.exit(None)
 
@@ -792,3 +852,119 @@ async def test_a_flow_surface_has_exactly_one_visible_vertical_scroll_owner(
             f"{[type(widget).__name__ for widget in visible_owners]}"
         )
         host.exit(None)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("build", _SURFACES)
+@pytest.mark.parametrize(("width", "height"), _SIZES)
+async def test_every_surface_reports_no_geometry_findings(build, width: int, height: int, tmp_path: Path) -> None:
+    """Drive the canonical geometry reader over every enrolled surface.
+
+    ``devtools.frame.geometry_band`` already judges the three painted-layout
+    properties, and until now nothing executed it: its only caller was the
+    standalone replay tool, which runs when a human chooses to and never in
+    CI. A reader with no gate is weaker than an orphan, because an unused-
+    symbol sweep clears it and it looks covered.
+
+    This is not a fourth copy of the gates above. Those prove side-edge
+    overflow, scrollability and theme rendering per surface, and exactly one
+    of them -- the flow surface's -- proves the single-scroll-owner property,
+    with a bespoke fixture because that is where the defect was found. Here
+    that property is proven for EVERY enrolled surface, which is what caught
+    nothing when a summary panel gained ``overflow-y: auto`` inside an
+    existing scroll host.
+
+    Reported as a set rather than one finding at a time: a surface with two
+    geometry defects should fail once naming both, not twice.
+    """
+    with build(tmp_path) as app:
+        async with app.run_test(size=(width, height)) as pilot:
+            await pilot.pause()
+            findings = geometry_band(app, width)
+            assert not findings, f"{width}x{height} painted geometry is defective: {findings}"
+            app.exit(None)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("build", _SURFACES)
+async def test_every_declared_binding_is_actually_offered(build, tmp_path: Path) -> None:
+    """A key a surface declares must be a key the operator can press.
+
+    Drives ``devtools.frame.key_band``, which reads ``active_bindings`` --
+    what is offered on THIS screen in THIS state, not what the class
+    declared. The two can disagree: a binding declared on a host whose
+    content lives on sibling screens never resolves, because the host is
+    never the active screen. That happened on the flow surface, and the
+    workaround was to duplicate the binding onto both page screens.
+
+    So this gate pins the workaround's EFFECT rather than its shape: if a
+    redesign stops duplicating, the binding silently stops resolving and
+    nothing else in this suite would notice. A declared-but-unreachable
+    affordance is invisible to geometry, focus order and rendered text
+    alike -- it is not painted, so no pixel changes.
+
+    Not parametrised over sizes, deliberately: bindings do not vary with
+    terminal geometry, and multiplying nine surfaces by four sizes would
+    buy thirty-six cases proving one size-invariant property.
+    """
+    with build(tmp_path) as app:
+        async with app.run_test(size=TERMINAL_ORDINARY) as pilot:
+            await pilot.pause()
+            offered = key_band(app)
+            declared = [binding.key for binding in getattr(type(app.screen), "BINDINGS", ())]
+            unresolved = [key for key in declared if not any(entry.startswith(f"{key}=") for entry in offered)]
+
+            assert declared, "a surface that declares no bindings makes this gate vacuous for it"
+            assert not unresolved, (
+                f"declared but never offered to the operator: {unresolved}; the surface offers {sorted(offered)}"
+            )
+            app.exit(None)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("build", _SURFACES)
+async def test_every_surface_keeps_the_affordances_textual_gives_a_screen(build, tmp_path: Path) -> None:
+    """Focus movement and copy belong to every screen, declared by none of them.
+
+    ``Screen`` binds tab, shift+tab and copy for free, and a subclass's
+    runtime table starts as a copy of the merged class table carrying
+    them. A screen that REPLACES that table -- the obvious way to attach
+    translated footer descriptions at mount -- keeps only the keys it
+    named and drops the ones it never had to name. Four surfaces shipped
+    that way: tab was not bound at all, so focus could not leave the
+    first control on a page whose focus chain was healthy and whose
+    widgets were all focusable.
+
+    Nothing else here could see it. The sibling gate above checks that
+    every DECLARED binding is offered, and these were never declared;
+    focus order, geometry and rendered text were all clean, because an
+    unbound key paints nothing.
+
+    Read from Textual's own ``Screen.BINDINGS`` rather than a list
+    repeated here, which would pass vacuously the day Textual adds a
+    fourth.
+
+    Asserted over KEYS rather than actions, because a focused widget may
+    legitimately own a key the screen also binds: with a text cursor in
+    an input, copy means copy the selection, so ``Input`` answers the
+    copy key instead of the screen. The operator still has the
+    affordance, which is what this gate is about. A key answered by the
+    WRONG action is a different question; the tab-cycle gate asks it for
+    the two focus keys, where the answer does have to be the screen's,
+    on the surfaces carrying enough controls for a cycle to mean
+    anything.
+    """
+    inherited = {key for binding in Screen.BINDINGS for key in binding.key.split(",")}
+    with build(tmp_path) as app:
+        async with app.run_test(size=TERMINAL_ORDINARY) as pilot:
+            await pilot.pause()
+            offered = set(app.screen.active_bindings)
+            missing = sorted(inherited - offered)
+
+            assert inherited, "Textual stopped binding anything on Screen; this gate has nothing left to protect"
+            assert not missing, (
+                f"the surface dropped the bindings Textual gives every Screen: {missing}. "
+                "Do not fix this by re-declaring them on the screen -- the cause is a runtime "
+                "binding table replaced wholesale instead of re-described in place."
+            )
+            app.exit(None)

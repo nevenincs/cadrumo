@@ -8,7 +8,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import M210PayerMode
-from .. import (
+from ..row_models import (
     Modelo210AgrupacionRentaRow,
     Modelo210AgrupacionRentaRowsError,
     validate_m210_agrupacion_renta_rows,

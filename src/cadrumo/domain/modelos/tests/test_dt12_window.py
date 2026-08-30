@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import pytest
 
-from ...modelos._dt12_reduccion import (
+from ...modelos.dt12_reduccion import (
     Dt12WindowBranch,
     dt12_regime_window_eligibility,
 )

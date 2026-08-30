@@ -2,7 +2,7 @@
 
 The nitpicky ``-n -W`` Sphinx build proves a reference RESOLVES against the
 built object inventory. That inventory is assembled from the API stubs, and a
-role written as ``:func:`domain.deadlines._engine``` resolves happily when the
+role written as ``:func:`domain.deadlines.engine``` resolves happily when the
 inventory holds *something* under that name -- so a role can name the wrong
 KIND of object, or a symbol that moved to a sibling module, and still build
 clean. The sibling gate

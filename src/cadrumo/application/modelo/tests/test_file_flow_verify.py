@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ....core import CasillaId
+from ....tests.cross_period_seeding import seed_clean_cross_period_sources
 from ...workflow.run_models import WorkflowDeadlineContextDetails
 from ._file_flow_support import (
     DEFAULT_130_BASELINE_INPUTS,
@@ -52,7 +53,6 @@ from ._file_flow_support import (
     mark_revision_verificado_completo,
     registry_required_manual_casillas,
     registry_required_manual_casillas_for,
-    seed_clean_cross_period_sources,
     seed_modelo_180_work_unit,
     seed_work_unit,
     upsert_work_unit,
@@ -455,7 +455,7 @@ def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
     # year that predates the modelo's earliest revision, so verify's
     # registry-snapshot resolution still fails.
     from ....domain.calculations.registry.bindings import CasillaObservation
-    from ....domain.modelos import upsert_calculation_revision
+    from ....domain.modelos.calculation_repository import upsert_calculation_revision
     from ....domain.modelos.calculation_revision import CalculationRevision, derive_calculation_revision_id
 
     inputs: dict[CasillaId, str] = {M180_PERCEPTOR_BASE_CASILLA: "1"}

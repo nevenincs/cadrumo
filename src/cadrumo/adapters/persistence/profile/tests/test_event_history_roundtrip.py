@@ -16,14 +16,8 @@ from pathlib import Path
 
 import pytest
 
-from .....domain.buckets import (
-    BucketEvent,
-    BucketEventHistoryCatalogue,
-    BucketEventHistoryPersistenceError,
-    BucketEventObjectType,
-    BucketEventType,
-    derive_bucket_event_id,
-)
+from .....domain.buckets.event import BucketEvent, BucketEventHistoryCatalogue, BucketEventObjectType, BucketEventType, derive_bucket_event_id
+from .....domain.buckets.event_repository import BucketEventHistoryPersistenceError
 from .....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ...storage import Envelope, SensitivityClass
 from ..buckets import (

@@ -64,8 +64,8 @@ from ....core import BindingSourceKind, CasillaId, Modelo, Period, validated_cas
 from ....core.aggregation import ForeignAssetClass
 from ....domain.calculations.registry.binding_selector_utils import selector_as_dict
 from ....domain.calculations.registry.schema import ModeloRevision
-from ....domain.deadlines import FiscalResidency, IVARegime, TaxpayerProfile
-from ....domain.modelos import VerificationReport
+from ....domain.deadlines.models import FiscalResidency, IVARegime, TaxpayerProfile
+from ....domain.modelos.verification_report import VerificationReport
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
@@ -74,7 +74,7 @@ from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import ForeignAssetIngestObservation
 from ...modelo._calculation_actions import calculate_modelo_revision_from_bucket_aggregation
 from ...modelo._verification_actions import verify_modelo_revision
-from ...modelo._work_lifecycle import create_work_unit
+from ...modelo.work_lifecycle import create_work_unit
 from .._foreign_asset_redeclaration import modelo_720_evidence_observation
 from ..observations_repository import CalculationObservationRepository
 

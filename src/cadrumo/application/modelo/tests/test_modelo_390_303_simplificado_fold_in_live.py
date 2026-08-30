@@ -30,25 +30,12 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.binding_selector_utils import selector_as_dict
 from ....domain.calculations.registry.bindings import m303_regimen_simplificado_annual_summary_requirement
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
-from ....domain.deadlines import IVARegime, TaxpayerProfile
+from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.filing_evidence import FilingEvidenceReference
-from ....domain.iva import (
-    ActividadAgricolaSimplificado,
-    ActividadNoAgricolaSimplificado,
-    EntradaModuloSimplificado,
-    HechoActividadSimplificado,
-    M303RegimenSimplificadoScope,
-    M303RegimenSimplificadoScopeDecision,
-    RegimenSimplificadoFilingRows,
-)
-from ....domain.modelos import (
-    ModeloRecord,
-    ModeloRecordCatalogue,
-    ModeloRecordStatus,
-    derive_filing_record_id,
-    upsert_calculation_revision,
-    upsert_work_unit,
-)
+from ....domain.iva.regimen_simplificado_rows import ActividadAgricolaSimplificado, ActividadNoAgricolaSimplificado, EntradaModuloSimplificado, HechoActividadSimplificado, M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision, RegimenSimplificadoFilingRows
+from ....domain.modelos.calculation_repository import upsert_calculation_revision
+from ....domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue, ModeloRecordStatus, derive_filing_record_id
+from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.calculation_revision import (
     M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS,
     CalculationRevision,
@@ -69,7 +56,7 @@ from .._export import (
 from .._filing_actions import file_modelo_revision
 from .._registry_helpers import assert_revision_content_integrity
 from .._verification_actions import verify_modelo_revision
-from .._work_lifecycle import create_work_unit
+from ..work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

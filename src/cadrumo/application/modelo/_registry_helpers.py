@@ -8,7 +8,7 @@ operator/imported casilla maps against the selected
 non-canonical printed-number tokens before the calculation engine or
 persistence layer sees them.
 
-It also verifies stored :class:`~cadrumo.domain.modelos.CalculationRevision`
+It also verifies stored :class:`~CalculationRevision`
 payloads by re-deriving their content-addressed identifiers and checking
 :class:`~cadrumo.domain.calculations.registry.CasillaObservation`/value consistency
 before stored payloads are trusted by verification or filing workflows.
@@ -548,7 +548,7 @@ def verification_predicates_for_revision(
 def assert_revision_content_integrity(revision: CalculationRevision) -> None:
     """Check revision integrity; raise stored-calculation drift on mismatch.
 
-    The supplied :class:`~cadrumo.domain.modelos.CalculationRevision` is re-hashed
+    The supplied :class:`~CalculationRevision` is re-hashed
     from its persisted inputs, bindings, relations, casilla values, and source
     metadata before its provenance observations are compared with
     ``casilla_values``. This is a defense-in-depth read-side check for raw

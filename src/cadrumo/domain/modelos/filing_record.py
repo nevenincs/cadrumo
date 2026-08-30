@@ -37,7 +37,7 @@ from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId, CalculationRevisionId, FilingRecordId, TransactionId, WorkUnitId
 from ...core.time import UtcInstant
-from ._codes import ModeloCode
+from .codes import ModeloCode
 from .errors import ModeloValidationError
 from .filing_text import EvidenceReference, FilingNotes, ModeloActorLabel
 

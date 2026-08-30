@@ -37,8 +37,8 @@ See Also:
         Read-only capture surface that persists the live evidence this package
         can display without opening AEAT again.
     :mod:`domain.modelos`
-        Local :class:`domain.modelos.ModeloRecord` and
-        :class:`domain.modelos.ExternalEvidence` records projected into
+        Local :class:`~ModeloRecord` and
+        :class:`~ExternalEvidence` records projected into
         overview calendar evidence.
     :mod:`application.workflow`
         Active-profile and pending-obligation state that remains upstream of

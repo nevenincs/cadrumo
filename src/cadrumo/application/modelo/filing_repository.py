@@ -7,7 +7,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from typing import Protocol
 
-from ...domain.modelos import ModeloRecordCatalogueRepositoryProtocol
+from ...domain.modelos.protocols import ModeloRecordCatalogueRepositoryProtocol
 
 
 class ModeloRecordCatalogueRepositoryFactory(Protocol):

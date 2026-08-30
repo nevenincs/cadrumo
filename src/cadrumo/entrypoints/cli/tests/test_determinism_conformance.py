@@ -42,14 +42,9 @@ from ....application.ledger.models import ManualLedgerTransactionCommand
 from ....application.ledger.review_projection import ledger_transaction_review_status
 from ....core.directory_scan import scan_directory
 from ....core.json_contract import Notice, NoticeSeverity, emit_json_success
-from ....core.observability import (
-    canonicalise,
-    capture_envelopes,
-    compute_db_sha256,
-    differing_field_names,
-    differing_paths,
-    mask_document,
-)
+from ....core.observability.capture import capture_envelopes
+from ....core.observability.fingerprint import compute_db_sha256
+from ....core.observability.golden import canonicalise, differing_field_names, differing_paths, mask_document
 from ....core.time import frozen_clock
 from ....domain.transactions.enums import TransactionDirection
 from ....tests.env_scope import scoped_cwd

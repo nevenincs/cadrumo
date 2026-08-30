@@ -22,19 +22,20 @@ from ....core import Period
 from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_input_kind import InputKind
-from ....domain.modelos import ModeloCode, WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from .. import _edit_execution, _edit_facade, _edit_models, _edit_services, _revision_persistence
 from .._edit_models import (
     ModeloEditAdmissionRequestV1,
     ModeloEditAdmittedV1,
     ModeloEditBaselineV1,
-    ModeloEditCompatibilityTupleV1,
     ModeloEditMutationFamily,
     ModeloEditMutationResultReceiptV1,
     ModeloEditStaleBaselineRefusalV1,
 )
 from .._edit_services import admit_modelo_edit, modelo_edit_request_schema_identity, modelo_edit_result_schema_identity
+from ..edit_contract import ModeloEditCompatibilityTupleV1
 from ..work_addressing import ModeloExactWorkUnitTarget
 from ..workspace_models import ModeloWorkspaceExactWorkUnitTargetV1, ModeloWorkspaceTargetV1
 

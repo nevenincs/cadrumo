@@ -14,8 +14,10 @@ from datetime import UTC, date, datetime, timedelta
 import pytest
 
 from ....core import Period
-from ....domain.deadlines import build_recovery_for_overdue, resolve_filing_closes_on
-from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
+from ....domain.deadlines.plazo import resolve_filing_closes_on
+from ....domain.deadlines.recargo import build_recovery_for_overdue
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from .._work_plazo import modelo_work_deadline_posture
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

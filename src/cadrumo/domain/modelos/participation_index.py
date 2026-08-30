@@ -37,7 +37,7 @@ from pydantic import BaseModel, ConfigDict, StringConstraints, TypeAdapter, Vali
 from ...core import Period
 from ...core.filing_year import FilingYear
 from ...core.identity import CalculationRevisionId, FilingRecordId, TransactionId, WorkUnitId
-from ._codes import ModeloCode
+from .codes import ModeloCode
 from .errors import ModeloError, ModeloValidationError
 
 _JustificanteReference = Annotated[

@@ -14,7 +14,7 @@ and source hash. A justificante is official submission evidence, but it is not a
 filing copy and it does not carry per-casilla values. Application import paths
 may compose a :class:`Justificante` into a draft scaffold, a local
 :class:`domain.submission.ModeloPresentado` audit baseline, or a
-:class:`domain.modelos.ExternalEvidence` reference, but casilla-complete
+:class:`~ExternalEvidence` reference, but casilla-complete
 declaración, borrador, and predeclaración parsing belongs to their own inbound
 adapter surfaces.
 
@@ -42,7 +42,7 @@ See Also:
     :mod:`domain.submission`
         Local-only :class:`domain.submission.ModeloPresentado` audit trail
         populated by imported or historical receipt evidence.
-    :class:`domain.modelos.ExternalEvidence`
+    :class:`~ExternalEvidence`
         Work-unit filing-record evidence reference that may point at a persisted
         justificante without embedding receipt bytes in the model record.
     :mod:`adapters.inbound.justificante`

@@ -65,7 +65,7 @@ from .errors import (
 )
 
 if TYPE_CHECKING:
-    from ..google import DriveAppProperties
+    from ..google.records import DriveAppProperties
 
 _FOLDER_MIME = "application/vnd.google-apps.folder"
 _FILE_EXTENSION = ".bin"
@@ -706,7 +706,7 @@ class GoogleDriveProvider:
         existing = self._find_file(namespace_folder_id, hmac_clean)
 
         media_body = _build_media_body(payload)
-        from ..google import DriveAppProperties
+        from ..google.records import DriveAppProperties
 
         app_properties = DriveAppProperties(
             cadrumo_vault_app=_OWNERSHIP_VALUE,
@@ -1334,7 +1334,7 @@ def _drive_storage_app_properties(entry: dict[str, Any]) -> DriveAppProperties:
     """Return the validated app-owned metadata for a Drive storage object."""
     from pydantic import ValidationError
 
-    from ..google import DriveAppProperties
+    from ..google.records import DriveAppProperties
 
     try:
         return DriveAppProperties.model_validate(entry.get("appProperties"))

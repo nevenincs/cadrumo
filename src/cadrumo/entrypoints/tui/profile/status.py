@@ -27,12 +27,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, override
 
 from textual.app import ComposeResult
-from textual.binding import Binding, BindingsMap
+from textual.binding import Binding
 from textual.containers import Vertical
 from textual.screen import Screen
 from textual.widgets import Footer, Static
 
 from ....core.i18n import tr
+from ....entrypoints.tui.components.keyboard import localize_key_descriptions
 from ....entrypoints.tui.components.theme import (
     BASE_CSS,
     NOTICE_BAND_CSS,
@@ -107,17 +108,7 @@ class StatusScreen(Screen[None]):
         toggle_appearance(self.app)
 
     def _localize_bindings(self) -> None:
-        self._bindings = BindingsMap(
-            [
-                Binding("q", "quit", tr("flows.status.binding_quit")),
-                Binding("escape", "quit", tr("flows.status.binding_quit")),
-                # Rebuilt here too: this map REPLACES the class-level BINDINGS
-                # wholesale, so a binding omitted from this list is dropped at
-                # mount rather than merged.
-                Binding("f3", "toggle_appearance", "", show=False),
-            ],
-        )
-        self.refresh_bindings()
+        localize_key_descriptions(self, {"quit": tr("flows.status.binding_quit")})
 
     # ── zone (0): operator-facing advisories ────────────────────────────
 

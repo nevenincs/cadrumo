@@ -172,7 +172,7 @@ def reject_binding_channel_mismatch(
     arrive through
     ``enum_binding_values``; decimal operands must arrive through
     ``binding_values``. A mismatch raises
-    :class:`~cadrumo.domain.modelos.ModeloError` before the engine sees an
+    :class:`~ModeloError` before the engine sees an
     apparently missing binding.
 
     See Also:
@@ -235,7 +235,7 @@ def resolve_declaration_period_inputs(
     registry token (``"1T"``, ``"EXT-1T"``), which is the form AEAT accepts and
     the only representation total over every declared period. A
     non-informational role target raises
-    :class:`~cadrumo.domain.modelos.ModeloError`.
+    :class:`~ModeloError`.
 
     See Also:
         :func:`~cadrumo.application.modelo._semantic_role_resolution.casilla_id_for_unique_revision_semantic_role`:

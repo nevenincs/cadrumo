@@ -29,7 +29,7 @@ from ....core import (
     SourceConnectivityProofFailureCause,
     SourceConnectivityResolverOwnershipProof,
 )
-from ....domain.modelos import CalculationRevisionPersistenceError
+from ....domain.modelos.calculation_repository import CalculationRevisionPersistenceError
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,

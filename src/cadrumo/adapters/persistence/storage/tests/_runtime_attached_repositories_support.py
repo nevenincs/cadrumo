@@ -60,22 +60,14 @@ from .....domain.calculations.registry.schema_references import RegistrySnapshot
 from .....domain.categories.spending_category import SpendingCategory
 from .....domain.contribuyente.assets import AmortizacionEntry, AmortizacionLedger, AssetClass, AssetRecord
 from .....domain.contribuyente.inventory import InventoryLedger, ValuationMethod
-from .....domain.filing import (
-    AmendmentKind,
-    CasillaChange,
-    ModeloComplementaria,
-    ModeloDraft,
-    ModeloValue,
-    ModeloValueKind,
-    compute_modelo_draft_id,
-    make_amendment_id,
-    registry_schema_version,
-)
+from .....domain.filing.amendment import AmendmentKind, CasillaChange, ModeloComplementaria, make_amendment_id
+from .....domain.filing.schema import ModeloDraft, ModeloValue, ModeloValueKind, compute_modelo_draft_id, registry_schema_version
 from .....domain.identifiers import ModeloIdentifier
 from .....domain.invoices.enums import IvaRate, PaymentStatus
 from .....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
-from .....domain.iva import InvoiceKind
-from .....domain.iva_compensation import IvaCompensationPeriodState, IvaCompensationReconciliationDecision
+from .....domain.iva.classification import InvoiceKind
+from .....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
+from .....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from .....domain.justificante import Justificante
 from .....domain.modelos.codes import ModeloCode
 from .....domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind, ModeloRecord, ModeloRecordCatalogue, derive_filing_record_id

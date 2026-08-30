@@ -8,7 +8,7 @@ confirmation prose while leaving the machine surface (the
 These tests drive the exact emit boundary the flag flows through
 (:func:`_emit_work_create_result`) and the shared transport it relies on
 (:func:`emit_envelope`) with a real
-:class:`~cadrumo.domain.modelos.WorkUnit`, a real registered result model,
+:class:`~WorkUnit`, a real registered result model,
 and a real Typer/Click context, capturing stdout. No mocks, stubs, or
 skips.
 
@@ -35,7 +35,8 @@ from typer._click.core import Command as TyperCommand
 from typer.core import TyperGroup, TyperOption
 
 from ....core import Period
-from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli, semantic_cli_output
 from .._common import emit_envelope
 from .._modelo_payloads import WorkCreateResult

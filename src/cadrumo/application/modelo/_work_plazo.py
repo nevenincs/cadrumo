@@ -12,9 +12,9 @@ posture, logs the validation problem, and lets the rendering layer emit the
 generic extemporaneous-filing warning.
 
 See Also:
-    :func:`cadrumo.domain.deadlines._plazo.resolve_filing_closes_on`:
+    :func:`cadrumo.domain.deadlines.plazo.resolve_filing_closes_on`:
         Registry-backed lookup for the plazo voluntario close date.
-    :func:`cadrumo.domain.deadlines._recargo.build_recovery_for_overdue`:
+    :func:`cadrumo.domain.deadlines.recargo.build_recovery_for_overdue`:
         Resolves the Art. 27 LGT recargo band for overdue filing.
     :func:`cadrumo.entrypoints.cli._modelo_rendering.work_unit_deadline_output`:
         Projects this summary onto JSON payloads and warning notices.
@@ -31,8 +31,8 @@ from typing import Literal
 from ...core import Modelo
 from ...core.logging import get_logger
 from ...core.time import today_madrid
-from ...domain.deadlines import TaxpayerProfile
-from ...domain.modelos import WorkUnit
+from ...domain.deadlines.models import TaxpayerProfile
+from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.calculation_revision import CalculationRevision
 
 _LOG = get_logger(__name__)
@@ -170,7 +170,9 @@ def modelo_work_deadline_posture(
         :func:`cadrumo.entrypoints.cli._modelo_rendering._work_unit_deadline_output_from_posture`:
             Converts the summary into operator-facing payloads and notices.
     """
-    from ...domain.deadlines import DeadlineValidationError, build_recovery_for_overdue, resolve_filing_closes_on
+    from ...domain.deadlines.errors import DeadlineValidationError
+    from ...domain.deadlines.plazo import resolve_filing_closes_on
+    from ...domain.deadlines.recargo import build_recovery_for_overdue
 
     closes_on = resolve_filing_closes_on(
         str(work_unit.modelo),
@@ -244,7 +246,7 @@ def calculated_m210_plazo_resolution(
     if work_unit.modelo != Modelo.M210:
         return None
 
-    from ...domain.deadlines import resolve_filing_window
+    from ...domain.deadlines.plazo import resolve_filing_window
     from ._result_disposition_resolution import resolve_modelo_result_disposition
 
     resultado = resolve_modelo_result_disposition(

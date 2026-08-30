@@ -17,7 +17,7 @@ because they are the surfaces where two spellings of one identifier can actually
 meet.
 
 See Also:
-    :class:`~domain.modelos.ModeloRecord`
+    :class:`~ModeloRecord`
         The filing record whose external evidence these comparisons resolve.
 """
 
@@ -33,14 +33,8 @@ from pydantic import AnyHttpUrl, TypeAdapter
 from ....adapters.inbound.pdf import source_pdf_reference_path
 from ....core import Period
 from ....domain.justificante import Justificante
-from ....domain.modelos import (
-    ExternalEvidence,
-    ExternalEvidenceKind,
-    ModeloCode,
-    ModeloRecord,
-    ModeloRecordStatus,
-    derive_filing_record_id,
-)
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind, ModeloRecord, ModeloRecordStatus, derive_filing_record_id
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ..filed_observation_persistence import (
     _existing_justificante_evidence_matches,

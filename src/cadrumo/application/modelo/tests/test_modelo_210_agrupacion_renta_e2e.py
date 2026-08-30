@@ -16,7 +16,7 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core import M210PayerMode, Period
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.modelos import Modelo210AgrupacionRentaRow
+from ....domain.modelos.row_models import Modelo210AgrupacionRentaRow
 from ....domain.modelos.errors import ModeloError
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_envelope import unwrap_envelope_notices
@@ -27,7 +27,7 @@ from ...tests import register_wizard_catalogue
 from .._calculate_input import WorkCalculateInputBundle, calculate_modelo_work_revision
 from .._calculation_actions import calculate_modelo_revision
 from .._m303_regimen_simplificado_scope import active_taxpayer_profile
-from .._work_lifecycle import create_work_unit
+from ..work_lifecycle import create_work_unit
 from .._work_plazo import calculated_m210_plazo_resolution
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

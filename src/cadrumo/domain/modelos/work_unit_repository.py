@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
-from ._work_unit import WorkUnitCatalogue
+from .work_unit import WorkUnitCatalogue
 
 if TYPE_CHECKING:
     from collections.abc import Callable

@@ -10,7 +10,7 @@ from pydantic import ValidationError
 
 from ....core import CasillaId, validated_casilla_id
 from ...calculations.registry.ids import LegalRefId, SourceRefId
-from .._ledger_filing_snapshot import LedgerEvidenceRow, LedgerFilingEvidence, ManualFactBasisEntry
+from ..ledger_filing_snapshot import LedgerEvidenceRow, LedgerFilingEvidence, ManualFactBasisEntry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

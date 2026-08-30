@@ -19,14 +19,15 @@ from ....domain.calculations.registry.schema_verification import (
     KNOWN_VERIFICATION_PREDICATE_OPERATORS,
     parse_verification_predicate_expression,
 )
-from ....domain.modelos import ModeloVerificationFindingKind, upsert_calculation_revision
+from ....domain.modelos.calculation_repository import upsert_calculation_revision
+from ....domain.modelos.verification_report import ModeloVerificationFindingKind
 from ....domain.modelos.calculation_revision import CalculationRevision, derive_calculation_revision_id
 from ....domain.modelos.errors import ModeloValidationError
 from ....tests.secure_sql import isolated_runtime_profile
 from .._action_errors import StoredCalculationDriftError
 from .._calculation_actions import calculate_modelo_revision
 from .._verification_actions import verify_modelo_revision
-from .._work_lifecycle import create_work_unit
+from ..work_lifecycle import create_work_unit
 from ._verification_substance_support import (
     _ABSENT_REGISTRY_CASILLA,
     _CASILLA_01,

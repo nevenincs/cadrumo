@@ -8,9 +8,9 @@ from pathlib import Path
 import pytest
 
 from ....core import Period
-from ....domain.deadlines import IVARegime, M303RegimeComposition, TaxpayerProfile
-from ....domain.iva import M303RegimenSimplificadoScope
-from ....domain.modelos import WorkUnit, derive_work_unit_id
+from ....domain.deadlines.models import IVARegime, M303RegimeComposition, TaxpayerProfile
+from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile

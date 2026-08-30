@@ -24,8 +24,9 @@ from ....core import (
 )
 from ....core.errors import SiteHealthError, SiteHealthState, resolve_error_message
 from ....domain.calculations.registry.bindings import CasillaObservation
-from ....domain.deadlines import ObligationStatus
-from ....domain.modelos import upsert_calculation_revision, upsert_work_unit
+from ....domain.deadlines.models import ObligationStatus
+from ....domain.modelos.calculation_repository import upsert_calculation_revision
+from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -36,7 +37,7 @@ from ....tests.aeat_literal_fixtures import aeat_url
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo._selectors import ModeloCalculationRevisionSelector
-from ...modelo._work_lifecycle import create_work_unit
+from ...modelo.work_lifecycle import create_work_unit
 from ...modelo._workflow_gate import workflow_period_for_work_unit
 from ...modelo.work_addressing import ModeloExactWorkUnitTarget, ModeloVisibleFilingTarget
 from ...operator_actions import (

@@ -23,13 +23,11 @@ from datetime import UTC, date, datetime
 import pytest
 
 from ....core import Period
-from ....domain.deadlines import (
-    ObligationStatus,
-    classify_obligation_status,
-    resolve_filing_closes_on,
-    resolve_filing_window,
-)
-from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
+from ....domain.deadlines.engine import classify_obligation_status
+from ....domain.deadlines.models import ObligationStatus
+from ....domain.deadlines.plazo import resolve_filing_closes_on, resolve_filing_window
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ..calendar import _local_work_unit_status, _registry_window_for_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

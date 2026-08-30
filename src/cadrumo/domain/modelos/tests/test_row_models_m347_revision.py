@@ -9,13 +9,13 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import M347_THRESHOLD_EUR
-from .._row_models import (
+from ..calculation_revision import derive_calculation_revision_id
+from ..row_models import (
     Modelo184MemberRow,
     Modelo232VinculadaRow,
     Modelo347ContraparteRow,
     Modelo349OperadorRow,
 )
-from ..calculation_revision import derive_calculation_revision_id
 from ._row_model_support import (
     _assert_validation_error,
     _BaseRevisionIdKwargs,

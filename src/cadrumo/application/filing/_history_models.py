@@ -6,7 +6,7 @@ aggregate in encrypted AUDIT-class persistence.
 
 The payload is intentionally narrower than the modelo filing-record catalogue:
 it records local filing history rows by modelo and period, while
-:class:`domain.modelos.ModeloRecord` carries the richer current /
+:class:`~ModeloRecord` carries the richer current /
 superseded filing lifecycle for calculation revisions.
 
 See Also:
@@ -15,7 +15,7 @@ See Also:
     :mod:`domain.modelos`
         Work-unit filing records and supersession history for calculation
         revisions.
-    :class:`domain.modelos.ModeloRecordCatalogue`
+    :class:`~ModeloRecordCatalogue`
         Current/superseded filing-record catalogue that owns the authoritative
         work-unit filing lifecycle.
     :mod:`application.calculations`

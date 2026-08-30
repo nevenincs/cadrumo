@@ -245,12 +245,20 @@ def _observe_in_process(
     lock_entered: Event,
     results: Queue[str],
 ) -> None:
-    """Read one real observation and signal entry to its actual lock context."""
+    """Read one real observation and signal entry to its actual lock context.
+
+    The observation read holds the journal lock through the awaitable
+    acquisition, because its caller is a UI poll worker that must not
+    stall its event loop. Both acquisition names are accepted so this
+    probe tracks the lock context rather than one spelling of it; either
+    way it fires only on entry to a real acquisition.
+    """
+    acquisitions = {"exclusive_file_lock", "exclusive_file_lock_async"}
 
     def trace(frame: object, event: str, argument: object) -> object:
         del argument
         code = getattr(frame, "f_code", None)
-        if event == "call" and getattr(code, "co_name", None) == "exclusive_file_lock":
+        if event == "call" and getattr(code, "co_name", None) in acquisitions:
             lock_entered.set()
         return trace
 

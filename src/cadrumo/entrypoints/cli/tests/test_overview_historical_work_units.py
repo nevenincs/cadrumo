@@ -11,12 +11,9 @@ from ....core import Period
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.time import now
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.modelos import (
-    ModeloCode,
-    WorkUnit,
-    derive_work_unit_id,
-    upsert_work_unit,
-)
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.repository import upsert_work_unit
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.profile_capsule import open_test_profile_session
 from ._modelo_work_ux_support import _create_profile, _invoke

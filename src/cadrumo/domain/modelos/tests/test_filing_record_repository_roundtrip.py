@@ -26,8 +26,8 @@ from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogu
 from ....adapters.persistence.storage import MODELO_FILING_RECORD_CATALOGUE_NAMESPACE, SensitivityClass
 from ....core import Period
 from ....tests.secure_sql import isolated_runtime_profile
-from .._codes import ModeloCode
-from .._filing_record import (
+from ..codes import ModeloCode
+from ..filing_record import (
     ExternalEvidence,
     ExternalEvidenceKind,
     ModeloRecord,
@@ -35,7 +35,7 @@ from .._filing_record import (
     ModeloRecordStatus,
     derive_filing_record_id,
 )
-from .._filing_repository import ModeloRecordPersistenceError
+from ..filing_repository import ModeloRecordPersistenceError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

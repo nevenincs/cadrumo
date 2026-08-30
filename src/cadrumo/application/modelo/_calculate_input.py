@@ -6,10 +6,10 @@ This module converts CLI override tokens into a
 canonical :class:`~cadrumo.core.CasillaId` values,
 binding channels, relation ids, and shortcut-derived semantic-role casillas
 before the calculate service persists a
-:class:`~cadrumo.domain.modelos.CalculationRevision`.
+:class:`~CalculationRevision`.
 
 The application result pairs that persisted revision with its parent
-:class:`~cadrumo.domain.modelos.WorkUnit` and any non-blocking
+:class:`~WorkUnit` and any non-blocking
 :class:`~cadrumo.application.aggregation.CalculationSourceDiagnostic` rows
 surfaced by bucket aggregation or post-calculation advisory collectors.
 
@@ -74,21 +74,10 @@ from ...domain.calculations.registry.schema_scalars import (
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.calculations.registry.temporal import select_revision
 from ...domain.contribuyente.descendant_facts import descendant_list_from_facts
-from ...domain.modelos import (
-    Dt12WindowEligibility,
-    Modelo184MemberRow,
-    Modelo184ShareSumError,
-    Modelo347ContraparteRow,
-    Modelo347ThresholdError,
-    ModeloDetailRow,
-    WorkUnit,
-    WorkUnitCatalogue,
-    compute_dt12_reduccion_plan_pensiones,
-    compute_sal_reserva_especial_dotacion,
-    dt12_regime_window_eligibility,
-    validate_m184_member_share_sum,
-    validate_m347_threshold,
-)
+from ...domain.modelos.dt12_reduccion import Dt12WindowEligibility, compute_dt12_reduccion_plan_pensiones, dt12_regime_window_eligibility
+from ...domain.modelos.row_models import Modelo184MemberRow, Modelo184ShareSumError, Modelo347ContraparteRow, Modelo347ThresholdError, ModeloDetailRow, validate_m184_member_share_sum, validate_m347_threshold
+from ...domain.modelos.sal_reserva_especial import compute_sal_reserva_especial_dotacion
+from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.calculation_revision import CalculationRevision, FilingInstanceEvidence
 from ...domain.modelos.errors import ModeloError
 from ..aggregation import CalculationSourceDiagnostic
@@ -175,7 +164,7 @@ class WorkCalculateInputBundle:
     a channel parallel to ``casilla_inputs``: the registry engine's
     ``calculate_registry_snapshot(text_inputs=...)`` reads it for categorical
     formula dispatch, and it rides into the persisted
-    :class:`~cadrumo.domain.modelos.CalculationRevision`
+    :class:`~CalculationRevision`
     ``input_values_by_casilla_id`` field so the verification layer's
     required-casilla and
     ``casilla_equals_implies_nonzero`` predicate checks can see it. It is never
@@ -286,8 +275,8 @@ class ModeloWorkCalculationServiceResult:
     """Application-owned result for one `modelo work calculate` command.
 
     ``revision`` is the persisted
-    :class:`~cadrumo.domain.modelos.CalculationRevision`; ``work_unit`` is the
-    parent :class:`~cadrumo.domain.modelos.WorkUnit` loaded after persistence so
+    :class:`~CalculationRevision`; ``work_unit`` is the
+    parent :class:`~WorkUnit` loaded after persistence so
     renderers do not have to repeat the lookup. The optional advisory summaries
     are presentation data derived from registry applicability and authorization
     metadata.
@@ -321,7 +310,7 @@ def calculate_modelo_work_revision(
 
     The function forwards the already validated :class:`WorkCalculateInputBundle`
     into the bucket-aggregation calculation path, reloads the parent
-    :class:`~cadrumo.domain.modelos.WorkUnit`, and attaches any Modelo 202
+    :class:`~WorkUnit`, and attaches any Modelo 202
     modality, authorization, or non-blocking source diagnostics needed by the
     CLI payload.
 

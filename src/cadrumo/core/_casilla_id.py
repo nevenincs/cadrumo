@@ -6,7 +6,7 @@ Its public home is :mod:`cadrumo.core`; it anchors
 :class:`~domain.calculations.registry.CasillaDefinition`,
 :class:`~domain.calculations.registry.CalculationCompletenessCasilla`,
 and filing snapshot facts such as
-:class:`~domain.modelos._ledger_filing_snapshot.ManualFactBasisEntry`.
+:class:`~domain.modelos.ledger_filing_snapshot.ManualFactBasisEntry`.
 
 Use :func:`validated_casilla_id` or :func:`validated_casilla_id_map`
 at boundaries so display numbers, labels, and export metadata do not

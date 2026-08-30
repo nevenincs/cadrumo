@@ -16,7 +16,7 @@ from decimal import Decimal
 import pytest
 
 from ....core.json_contract import NoticeSeverity
-from ....domain.modelos import Modelo184MemberRow, Modelo349OperadorRow, ModeloDetailRow
+from ....domain.modelos.row_models import Modelo184MemberRow, Modelo349OperadorRow, ModeloDetailRow
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,

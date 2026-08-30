@@ -46,8 +46,9 @@ from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import BindingId
-from ....domain.deadlines import IVARegime, M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile, TaxpayerProfile
-from ....domain.modelos import ExternalEvidenceKind, ModeloVerificationFindingKind
+from ....domain.deadlines.models import IVARegime, M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile, TaxpayerProfile
+from ....domain.modelos.filing_record import ExternalEvidenceKind
+from ....domain.modelos.verification_report import ModeloVerificationFindingKind
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.env_scope import ready_clave_settings
@@ -56,7 +57,7 @@ from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo._calculation_actions import calculate_modelo_revision
 from ...modelo._verification_actions import verify_modelo_revision
-from ...modelo._work_lifecycle import create_work_unit
+from ...modelo.work_lifecycle import create_work_unit
 from ...modelo.external_import_actions import import_external_filing_evidence
 from ...modelo.tests.justificante_metadata import persist_justificante_metadata
 from .._binding_prefill import resolve_bindings_from_local_store

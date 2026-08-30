@@ -9,7 +9,7 @@ from pydantic import ValidationError
 
 from ....core import IntracomOperationType
 from ....core.errors import CadrumoError, get_registered_error_code, resolve_error_message
-from .._row_models import (
+from ..row_models import (
     Modelo349CountryPrefixContextError,
     Modelo349OperadorRow,
     Modelo349RectificacionRow,

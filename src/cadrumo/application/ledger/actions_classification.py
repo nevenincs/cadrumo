@@ -35,13 +35,9 @@ if TYPE_CHECKING:
 
 from ...core.errors import CadrumoError, resolve_error_message
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
-from ...domain.buckets import (
-    BucketEvent,
-    BucketEventHistoryRepositoryProtocol,
-)
-from ...domain.modelos import (
-    CalculationRevisionCatalogueRepositoryProtocol,
-)
+from ...domain.buckets.event import BucketEvent
+from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions.enums import BusinessClassification, TransactionLifecycleState, is_classified
 from ...domain.transactions.errors import TransactionValidationError

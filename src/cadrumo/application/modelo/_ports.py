@@ -44,7 +44,7 @@ class FicheroBoeRecordRenderer(Protocol):
     row of a larger file, and the registry declares the terminator separately
     on ``record.line_ending``.
 
-    Implementations raise :class:`domain.modelos.ModeloExportError` when the
+    Implementations raise :class:`~ModeloExportError` when the
     record cannot be rendered - a field missing its fixed-width coordinates, a
     value that does not parse as its declared ``data_type``, or a rendered body
     whose length contradicts the declaration. The error's ``context`` names the

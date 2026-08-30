@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
-from ....application.modelo._work_lifecycle import create_work_unit
+from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo._workflow_gate import workflow_period_for_work_unit
 from ....application.operator_actions import (
     ActionArgumentBinding,
@@ -36,7 +36,7 @@ from ....core import (
     Period,
 )
 from ....core.bucket_pointer import resolve_active_bucket_id
-from ....domain.deadlines import ObligationStatus
+from ....domain.deadlines.models import ObligationStatus
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session, seed_test_profile_record

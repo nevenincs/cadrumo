@@ -144,7 +144,7 @@ _RECONCILED_APPLICATION_TO_ADAPTERS_SOURCES = frozenset(
         "cadrumo.application.modelo._selectors",
         "cadrumo.application.modelo._taxation_comparison",
         "cadrumo.application.modelo._verification_actions",
-        "cadrumo.application.modelo._work_lifecycle",
+        "cadrumo.application.modelo.work_lifecycle",
         "cadrumo.application.modelo._workflow_gate",
         "cadrumo.application.operator_output._sandbox_notice",
         "cadrumo.application.prorrata_register",

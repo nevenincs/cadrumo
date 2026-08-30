@@ -8,7 +8,7 @@ using an :class:`~adapters.persistence.storage.Envelope` wrapper. The
 catalogue is stored as a single encrypted BLOB per profile bucket.
 
 This concrete repository is the persistence adapter behind the read-side
-:class:`~domain.modelos.ModeloRecordCatalogueRepositoryProtocol`. It lives
+:class:`~ModeloRecordCatalogueRepositoryProtocol`. It lives
 in the persistence adapter (not in :mod:`~domain.modelos`) because its
 secure-object coupling is SQL/crypto-bound; the domain package owns only the
 typed :class:`ModeloRecordCatalogue` model and its pure mutators.
@@ -17,9 +17,9 @@ See Also:
     :mod:`~adapters.persistence.profile._modelo_runtime`
         Bucket-id resolution and runtime secure-object factory shared by modelo
         persistence adapters.
-    :class:`~domain.modelos.ModeloRecordCatalogue`
+    :class:`~ModeloRecordCatalogue`
         Domain catalogue payload encrypted by this repository.
-    :class:`~domain.modelos.ModeloRecordCatalogueRepositoryProtocol`
+    :class:`~ModeloRecordCatalogueRepositoryProtocol`
         Domain port this concrete persistence adapter implements.
     :data:`~adapters.persistence.storage.MODELO_FILING_RECORD_CATALOGUE_NAMESPACE`
         Central namespace, sensitivity, schema-version, and singleton-key
@@ -39,7 +39,8 @@ from typing import TYPE_CHECKING
 from ....core.bucket_pointer import resolve_repository_bucket_id
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
-from ....domain.modelos import ModeloRecordCatalogue, ModeloRecordPersistenceError
+from ....domain.modelos.filing_record import ModeloRecordCatalogue
+from ....domain.modelos.filing_repository import ModeloRecordPersistenceError
 from ....domain.modelos.errors import raise_catalogue_integrity_error
 from ..storage import MODELO_FILING_RECORD_CATALOGUE_NAMESPACE, secure_object_repository_for_bucket
 from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
@@ -73,7 +74,7 @@ class ModeloRecordCatalogueRepository:
     :func:`~domain.modelos.raise_catalogue_integrity_error`, a translation the
     shared kernel does not perform. This class exposes the concrete load/save
     implementation behind
-    :class:`~domain.modelos.ModeloRecordCatalogueRepositoryProtocol`.
+    :class:`~ModeloRecordCatalogueRepositoryProtocol`.
     """
 
     def __init__(self, *, bucket_id: str | None = None, objects: SecureObjectRepository | None = None) -> None:

@@ -24,7 +24,7 @@ from ....core.config import override_settings
 from ....core.errors import ERROR_REGISTRY, DecimalFormatError, ErrorCategory, ErrorEnvelope, render_error_text
 from ....core.i18n import tr
 from ....core.json_contract import ENVELOPE_SCHEMA_VERSION, EnvelopeStatus, ResolvedPreconditionAction
-from ....core.observability import RunContextMissingError
+from ....core.observability.errors import RunContextMissingError
 from ....domain.portals.errors import PortalIntegrityError
 from ....tests.cli_envelope import require_error_document
 from ....tests.cli_runner import invoke_cached_cli

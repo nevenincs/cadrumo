@@ -9,7 +9,7 @@ import pytest
 
 from ....core import OperatorActionAxis
 from ....core.directory_scan import scan_directory
-from .. import (
+from ..verification_report import (
     OPERATOR_ACTION_BY_MODELO_VERIFICATION_FINDING_KIND,
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,

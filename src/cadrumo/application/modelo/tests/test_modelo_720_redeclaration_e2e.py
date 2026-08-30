@@ -57,13 +57,8 @@ from ....core import BindingSourceKind, CasillaId, Modelo, Period, validated_cas
 from ....domain.calculations.registry.binding_selector_utils import selector_as_dict
 from ....domain.calculations.registry.schema import DataBindingDefinition
 from ....domain.calculations.registry.schema_input_kind import InputKind
-from ....domain.deadlines import FiscalResidency, IVARegime, TaxpayerProfile
-from ....domain.modelos import (
-    ModeloVerificationFinding,
-    ModeloVerificationFindingKind,
-    ModeloVerificationFindingSeverity,
-    VerificationReport,
-)
+from ....domain.deadlines.models import FiscalResidency, IVARegime, TaxpayerProfile
+from ....domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity, VerificationReport
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
@@ -72,7 +67,7 @@ from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository, modelo_720_prior_baseline_observation
 from .._calculation_actions import _resolve_bucket_source_mesh, calculate_modelo_revision
 from .._verification_actions import verify_modelo_revision
-from .._work_lifecycle import create_work_unit
+from ..work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

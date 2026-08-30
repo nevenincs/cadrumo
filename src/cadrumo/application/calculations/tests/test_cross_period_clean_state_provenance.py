@@ -12,13 +12,14 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....core import Period
-from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.modelos import ExternalEvidenceKind, ModeloVerificationFindingKind, VerificationCompletenessStatus
+from ....domain.deadlines.models import IVARegime, TaxpayerProfile
+from ....domain.modelos.filing_record import ExternalEvidenceKind
+from ....domain.modelos.verification_report import ModeloVerificationFindingKind, VerificationCompletenessStatus
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo._calculation_actions import calculate_modelo_revision
 from ...modelo._verification_actions import verify_modelo_revision
-from ...modelo._work_lifecycle import create_work_unit
+from ...modelo.work_lifecycle import create_work_unit
 from .. import (
     CalculationObservationRepository,
     CrossPeriodCleanStateBlocker,

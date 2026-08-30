@@ -389,6 +389,7 @@ class Modelo349CountryPrefixContextError(CadrumoError, ValueError):
         period: str,
         reason: str,
     ) -> None:
+        """Record the prefix, the operation and the period that made it invalid."""
         self.country_code = country_code
         self.clave_operacion = clave_operacion
         self.filing_year = filing_year
@@ -819,6 +820,7 @@ class Modelo210AgrupacionRentaRowsError(CadrumoError, ValueError):
     """A Modelo 210 annual grouped-renta set violates Article 2 compatibility."""
 
     def __init__(self, *, reason: str, detail: str) -> None:
+        """Record which Article 2 compatibility rule the row set broke."""
         self.reason = reason
         self.detail = detail
         super().__init__(f"Modelo 210 annual agrupación rows are invalid ({reason}): {detail}")
@@ -944,6 +946,7 @@ class Modelo347ThresholdError(CadrumoError, ValueError):
     """A Modelo 347 contraparte row falls at or below the declarability threshold."""
 
     def __init__(self, *, nif: str, total: Decimal) -> None:
+        """Record the counterparty and the total that fell short of the threshold."""
         self.nif = nif
         self.total = total
         super().__init__(
@@ -956,6 +959,7 @@ class Modelo184ShareSumError(CadrumoError, ValueError):
     """Modelo 184 member share percentages do not sum to exactly 100%."""
 
     def __init__(self, *, total: Decimal, count: int) -> None:
+        """Record the share total the miembro rows reached, and over how many rows."""
         self.total = total
         self.count = count
         super().__init__(

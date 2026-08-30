@@ -20,7 +20,7 @@ See Also:
         ledger contributors drifted.
     :func:`~application.ledger.actions_manual.update_manual_transaction_fields`
         Ledger mutation path whose finalized-modelo write guard is exercised.
-    :class:`~domain.modelos.CalculationRevision`
+    :class:`~CalculationRevision`
         Revision record that carries the optional ledger filing snapshot.
     :class:`~domain.transactions.TransactionCatalogue`
         Live ledger catalogue used to recompute contributor fingerprints.
@@ -50,8 +50,9 @@ from ..application.aggregation import (
 from ..application.ledger.actions_manual import update_manual_transaction_fields
 from ..application.ledger.models import ManualLedgerTransactionPatch
 from ..core import CasillaId, Period, validated_casilla_id
-from ..domain.iva import IvaCategory
-from ..domain.modelos import ModeloCode, WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+from ..domain.iva.schema import IvaCategory
+from ..domain.modelos.codes import ModeloCode
+from ..domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ..domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,

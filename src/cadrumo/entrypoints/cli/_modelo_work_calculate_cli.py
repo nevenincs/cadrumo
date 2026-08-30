@@ -66,7 +66,7 @@ from .errors import CliOutboundPayloadBoundaryError
 if TYPE_CHECKING:
     from ...application.aggregation import CalculationSourceDiagnostic
     from ...application.modelo._calculate_input import ModeloWorkCalculationServiceResult
-    from ...domain.modelos import WorkUnit
+    from ...domain.modelos.work_unit import WorkUnit
     from ...domain.modelos.calculation_revision import CalculationRevision
 
 

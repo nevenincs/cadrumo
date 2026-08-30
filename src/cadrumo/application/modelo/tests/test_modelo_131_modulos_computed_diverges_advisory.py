@@ -22,8 +22,8 @@ import pytest
 
 from ....core import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
-from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.modelos import ModeloVerificationFindingKind
+from ....domain.deadlines.models import IVARegime, TaxpayerProfile
+from ....domain.modelos.verification_report import ModeloVerificationFindingKind
 from .._verification_actions import _evaluate_advisory_predicate_fires, _evaluate_verification_predicates
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

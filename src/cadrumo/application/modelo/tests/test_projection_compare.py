@@ -13,7 +13,8 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.modelos import WorkUnit, upsert_calculation_revision
+from ....domain.modelos.calculation_repository import upsert_calculation_revision
+from ....domain.modelos.work_unit import WorkUnit
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -24,7 +25,7 @@ from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from .._projection import ModeloCompareDeltaRow, ModeloProjectionCasillaObservation, compare_modelo_years
-from .._work_lifecycle import create_work_unit
+from ..work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

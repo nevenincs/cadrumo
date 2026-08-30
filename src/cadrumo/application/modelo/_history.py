@@ -13,9 +13,9 @@ emitted :class:`cadrumo.domain.buckets.BucketEvent` streams in
 chronological order.
 
 The normalized records remain the source of relational truth:
-:class:`cadrumo.domain.modelos.WorkUnit` selects the lifecycle root,
+:class:`~WorkUnit` selects the lifecycle root,
 :class:`CalculationRevision` identifies calculation attempts under it,
-:class:`cadrumo.domain.modelos.VerificationReport` identifies verification outcomes
+:class:`~VerificationReport` identifies verification outcomes
 for those revisions, and :class:`ModeloRecord` identifies local filing records.
 The event history explains how those records changed; it does not replace their
 catalogues.
@@ -46,20 +46,10 @@ from ...adapters.persistence.profile.modelos_verification_reports import Verific
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.identity import BucketId, WorkUnitId
-from ...domain.buckets import (
-    BucketActorLabel,
-    BucketEventHistoryRepositoryProtocol,
-    BucketEventId,
-    BucketEventObjectType,
-    BucketEventType,
-    bucket_event_order_key,
-)
-from ...domain.modelos import (
-    CalculationRevisionCatalogueRepositoryProtocol,
-    ModeloRecordCatalogueRepositoryProtocol,
-    VerificationReportCatalogueRepositoryProtocol,
-    WorkUnitCatalogue,
-)
+from ...domain.buckets.event import BucketActorLabel, BucketEventId, BucketEventObjectType, BucketEventType, bucket_event_order_key
+from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol, ModeloRecordCatalogueRepositoryProtocol, VerificationReportCatalogueRepositoryProtocol
+from ...domain.modelos.work_unit import WorkUnitCatalogue
 from ._action_errors import WorkUnitNotFoundError
 from .work_addressing import (
     ModeloWorkResolution,
@@ -99,7 +89,7 @@ class WorkUnitHistoryEvent(BaseModel):
 
 
 class WorkUnitHistory(BaseModel):
-    """Chronologically ordered event timeline for one :class:`cadrumo.domain.modelos.WorkUnit`."""
+    """Chronologically ordered event timeline for one :class:`~WorkUnit`."""
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -133,7 +123,7 @@ def assemble_work_unit_history(
     :class:`cadrumo.domain.buckets.BucketEvent` streams and ordered by
     ``occurred_at`` ascending. The work unit itself is loaded to confirm it
     exists (raising :class:`WorkUnitNotFoundError` if not) and to discover every
-    :class:`CalculationRevision`, :class:`cadrumo.domain.modelos.VerificationReport`,
+    :class:`CalculationRevision`, :class:`~VerificationReport`,
     and :class:`ModeloRecord` id that belongs to its lifecycle.
 
     The returned :class:`WorkUnitHistoryEvent` rows copy event payloads into a

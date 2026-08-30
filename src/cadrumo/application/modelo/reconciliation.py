@@ -27,7 +27,7 @@ degrading to header-only comparison.
 
 The path-based service is local-only: it never contacts AEAT and never invokes
 ``require_live_read`` — the computed result is read from the already-persisted
-:class:`~domain.modelos.CalculationRevision`, never a fresh calculation.
+:class:`~CalculationRevision`, never a fresh calculation.
 Authenticated live pulls use ``modelo_reconcile_bytes`` after storing captured
 justificante bytes in secure storage.
 
@@ -98,7 +98,7 @@ if TYPE_CHECKING:
     from ...core import Period
     from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
     from ...domain.justificante import Justificante
-    from ...domain.modelos import WorkUnit, WorkUnitCatalogue
+    from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
     from ...domain.modelos.calculation_revision import CalculationRevision
 
 _DECLARATION_CASILLA_RECONCILE_MODELOS: frozenset[Modelo] = frozenset(
@@ -304,7 +304,7 @@ def _require_declaration_enrolled_modelo(
     file is opened, rather than only after a parse attempt happens to fail for
     an unrelated reason.
 
-    Returns the loaded :class:`~domain.modelos.WorkUnit` so the caller can
+    Returns the loaded :class:`~WorkUnit` so the caller can
     reuse its already-known modelo/filing_year/period as evidence-parser
     overrides, rather than reloading the catalogue a second time.
     """
@@ -631,12 +631,7 @@ def _finalise_reconciliation(
     an event log claiming a reconciliation whose detail was never stored, or a
     record with no event.
     """
-    from ...domain.buckets import (
-        BucketEvent,
-        BucketEventObjectType,
-        BucketEventType,
-        derive_bucket_event_id,
-    )
+    from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType, derive_bucket_event_id
 
     verdict = ModeloReconciliationVerdict.MATCHES if not diffs else ModeloReconciliationVerdict.MISMATCHES
     narrative = (
@@ -791,7 +786,7 @@ def _reconcile_receipt_totals(
     Resolves the registry snapshot for ``work_unit``, reads the
     ``reconciliation_total_casilla_ids`` map its verification expectations
     declare (the same map ``calculation_result_summary`` consumes), loads the
-    filed / verified persisted :class:`~domain.modelos.CalculationRevision`,
+    filed / verified persisted :class:`~CalculationRevision`,
     and compares the receipt's printed total against
     ``revision.casilla_values[target_casilla]`` at the expectation's declared
     tolerance. A divergence is a typed ``total`` diff carrying the reconciling
@@ -914,7 +909,7 @@ def _reconcile_declaracion_casillas(
     denominator — so it never surfaces ``MISSING_IN_FILED``).
 
     Reads the persisted filed / verified
-    :class:`~domain.modelos.CalculationRevision` (never a fresh
+    :class:`~CalculationRevision` (never a fresh
     calculation), decodes the declaración's
     :class:`ReconciliationCasillaObservation` rows into decimals, and
     delegates the comparison to

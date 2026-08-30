@@ -34,6 +34,7 @@ from itertools import pairwise
 
 import pytest
 
+from .....core.resources import bundled_path
 from ..authority import bundled_authority
 from ..schema_formula import BracketEntry, ParameterDefinition
 
@@ -42,21 +43,39 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 #: Rounding band. See the module docstring: cents, not a defect budget.
 _TOLERANCE = Decimal("0.02")
 
-#: Known breaks, each with the reason it is not fixed here. An entry is a debt,
-#: not a dispensation: `test_no_stale_accumulated_cuota_exemptions` fails when a
-#: listed row becomes consistent, so a repair cannot leave its entry behind.
+#: Rows whose accumulated column contradicts their own tranches, each with the
+#: reason. Entries fall into two kinds and the difference decides what to do:
+#:
+#: - a DEBT, where the registry misstates a consistent published scale. Repair
+#:   it, then delete the entry.
+#: - FAITHFUL TO SOURCE, where the published norm is itself discontinuous and
+#:   the registry transcribes it correctly. Never repair it; the entry is
+#:   permanent, because "fixing" it would make the engine disagree with the law.
+#:
+#: `test_no_stale_accumulated_cuota_exemptions` fails when a listed row becomes
+#: consistent, so a repair cannot leave its entry behind. Note what that means
+#: for a faithful-to-source row: editing its value to satisfy the arithmetic
+#: SILENCES this gate and trips the staleness check instead, whose message then
+#: reads as an instruction to delete the entry. Do not follow it. Establish the
+#: figure against the cited authority before touching any row listed here.
 _KNOWN_BREAKS: dict[tuple[str, str], str] = {
     ("renta-2022-escala-autonomica-murcia-base-general", "2022"): (
-        "Top rung declares fixed_addition 8716.67 where the rows beneath it produce "
-        "8625.84, over-charging every filer with base general above 60.000 EUR by "
-        "90,83 EUR. Murcia deflated its 2022 scale by 4,1 %: the three lower bounds "
-        "are the standard 12.450/20.200/34.000 times exactly 1,041 while the top "
-        "bound stayed 60.000, and recomputing the accumulated cuota with the same "
-        "rates but the un-deflated bounds reproduces 8716.67 to the cent, so the top "
-        "row was carried over from the un-deflated scale. Two repairs are each "
-        "self-consistent (fixed_addition to 8625.84, or top bound to 62.460 with the "
-        "addition recomputed) and choosing between them is a tax review against the "
-        "published 2022 scale for the Region de Murcia, which is not bundled."
+        "FAITHFUL TO SOURCE -- do not repair. The discontinuity is in the norm, not "
+        "in this table. Decreto-ley 4/2022 de la Region de Murcia, de 22 de "
+        "septiembre (BORM 29-09-2022, art. unico, amending DA quinta.4 del Decreto "
+        "Legislativo 1/2010), states verbatim: 'Cuando la base liquidable sea "
+        "superior a 60.000,00 euros la cuota integra sera de 8.716,67 euros mas la "
+        "cantidad resultante de aplicar el tipo del 22,70 % a la parte de base "
+        "liquidable que exceda de 60.000 euros.' The AEAT Manual practico Renta 2022 "
+        "reproduces that sentence and the four tranches above it verbatim at page "
+        "979, bundled at corpus/manuals/renta/2022/part1/source.pdf -- 8.716,67 is "
+        "present there and 8.625,84 occurs nowhere in the corpus tree. Murcia "
+        "deflated the bounds and rates by 4,1 % (12.450/20.200/34.000 times exactly "
+        "1,041) and carried the un-deflated accumulated cuota into the closing "
+        "sentence, so the published scale implies 8.625,84 at 60.000 while stating "
+        "8.716,67. Both figures are the legislator's; only 8.716,67 is enacted, and "
+        "it is what AEAT applies. Encoding the arithmetic instead would compute a "
+        "cuota no authority states."
     ),
 }
 
@@ -123,9 +142,73 @@ def test_no_stale_accumulated_cuota_exemptions() -> None:
     stale = sorted(key for key in _KNOWN_BREAKS if key not in breaks)
 
     assert not stale, (
-        "these rows are consistent now, so their _KNOWN_BREAKS entries are stale and must be deleted:\n"
+        "these rows are consistent now, so their _KNOWN_BREAKS entries look stale.\n"
+        "Read the entry before deleting it: for a DEBT that is the right move, but a row marked\n"
+        "FAITHFUL TO SOURCE became consistent only because someone changed a value the published\n"
+        "norm states, and the fix is to restore the value, not to remove the record of why:\n"
         + "\n".join(f"  {parameter_id} [{revision_id}]" for parameter_id, revision_id in stale)
     )
+
+
+# ---------------------------------------------------------------------------
+# Region de Murcia 2022 -- the enacted top-rung cuota, pinned to its source.
+#
+# The continuity gate above cannot defend this value: editing it to satisfy the
+# arithmetic makes the table self-consistent and turns that gate GREEN. These
+# two tests are what stands between a plausible "repair" and a cuota no
+# authority states. The corpus half is the load-bearing one -- a bare literal
+# is something a future author edits to match a wrong change, while a phrase
+# that must appear in the bundled AEAT manual cannot be satisfied that way.
+# ---------------------------------------------------------------------------
+
+#: Cuota integra at 60.000,00 EUR, as enacted by Decreto-ley 4/2022 de la Region
+#: de Murcia. See the _KNOWN_BREAKS entry for why it exceeds what the tranches
+#: beneath it accumulate.
+_MURCIA_2022_TOP_RUNG_CUOTA = Decimal("8716.67")
+
+#: The same figure in the Spanish decimal notation the AEAT manual prints.
+_MURCIA_2022_TOP_RUNG_CUOTA_AS_PRINTED = "8.716,67"
+
+#: Marginal rate above 60.000,00 EUR: "el tipo del 22,70 %".
+_MURCIA_2022_TOP_RUNG_RATE = Decimal("0.227")
+
+
+def _murcia_2022_top_rung() -> BracketEntry:
+    """Return the open top bracket of the Region de Murcia 2022 autonomic scale."""
+    for modelo in bundled_authority().modelos:
+        for revision_id, revision in modelo.revisions.items():
+            if str(revision_id) != "2022":
+                continue
+            for parameter in getattr(revision, "parameters", ()) or ():
+                if parameter.id != "renta-2022-escala-autonomica-murcia-base-general":
+                    continue
+                top = max(parameter.brackets or (), key=lambda entry: entry.lower_bound)
+                return top
+    raise AssertionError("renta-2022-escala-autonomica-murcia-base-general [2022] is not in the registry")
+
+
+def test_murcia_2022_top_rung_matches_the_enacted_cuota() -> None:
+    """The registry must state the cuota the norm enacts, not the one its tranches imply."""
+    top = _murcia_2022_top_rung()
+
+    assert top.lower_bound == Decimal("60000.00")
+    assert top.fixed_addition == _MURCIA_2022_TOP_RUNG_CUOTA
+    assert top.marginal_rate == _MURCIA_2022_TOP_RUNG_RATE
+
+
+def test_murcia_2022_top_rung_cuota_is_printed_in_the_bundled_aeat_manual() -> None:
+    """Anchor the pin: the figure must be readable in the bundled source, not merely asserted.
+
+    The AEAT Manual practico Renta 2022 reproduces the Region de Murcia scale and
+    its closing sentence at page 979. Without this half, the test above is a
+    literal a future author can edit to match a wrong registry change.
+    """
+    manual = bundled_path("corpus", "manuals", "renta", "2022", "part1") / "source.pdf.extracted.md"
+    body = manual.read_text(encoding="utf-8")
+
+    assert _MURCIA_2022_TOP_RUNG_CUOTA_AS_PRINTED in body
+    assert "Región de Murcia" in body
+    assert "22,70" in body
 
 
 def _scale(top_fixed_addition: str) -> ParameterDefinition:

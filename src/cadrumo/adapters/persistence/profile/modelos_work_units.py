@@ -19,7 +19,7 @@ See Also:
     :mod:`~adapters.persistence.profile._modelo_runtime`
         Bucket-id resolution and runtime secure-object factory shared by modelo
         persistence adapters.
-    :class:`~domain.modelos.WorkUnitCatalogue`
+    :class:`~WorkUnitCatalogue`
         Domain catalogue payload encrypted by this repository.
     :class:`~domain.modelos.work_unit_repository.WorkUnitCatalogueRepositoryProtocol`
         Domain port this concrete persistence adapter implements.
@@ -40,7 +40,8 @@ from typing import TYPE_CHECKING
 
 from ....core.bucket_pointer import resolve_repository_bucket_id
 from ....core.logging import get_logger
-from ....domain.modelos import WorkUnitCatalogue, WorkUnitPersistenceError
+from ....domain.modelos.repository import WorkUnitPersistenceError
+from ....domain.modelos.work_unit import WorkUnitCatalogue
 from ....domain.modelos.errors import raise_catalogue_integrity_error
 from ..storage import MODELO_WORK_UNIT_CATALOGUE_NAMESPACE, secure_object_repository_for_bucket
 from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence

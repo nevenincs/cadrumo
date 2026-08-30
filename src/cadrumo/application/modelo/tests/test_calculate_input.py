@@ -22,7 +22,7 @@ from .._calculate_input import (
     WorkCalculateInputBundle,
     build_work_calculate_input_bundle,
 )
-from .._work_lifecycle import create_work_unit
+from ..work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

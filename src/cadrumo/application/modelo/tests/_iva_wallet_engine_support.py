@@ -9,7 +9,7 @@ from decimal import Decimal
 from functools import cache
 from pathlib import Path
 
-from ....adapters.outbound.aeat.sede import IVA_COMPENSATION_WALLET_URL, parse_iva_compensation_wallet_html
+from ....adapters.outbound.aeat.sede.iva_compensation_wallet import IVA_COMPENSATION_WALLET_URL, parse_iva_compensation_wallet_html
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -19,9 +19,10 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.iva_compensation import IvaCompensationReconciliationDecision
-from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
+from ....domain.deadlines.models import IVARegime, TaxpayerProfile
+from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -34,7 +35,7 @@ from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository, IvaWalletDecisionRepository
-from .._work_lifecycle import create_work_unit
+from ..work_lifecycle import create_work_unit
 
 _BUCKET_ID = "11111111-1111-4111-8111-111111111111"
 _TAXPAYER_NIF = "12345678Z"

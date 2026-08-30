@@ -32,7 +32,8 @@ import pytest
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import bundled_path
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from .._calculation_source_staging import (
     _PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS,
     materialise_registry_values_for_source_resolution,

@@ -8,7 +8,7 @@ EXCEPT for prestaciones por invalidez, which are exempt from the two-year antiqu
 requirement. The calculate-shortcut path
 (:func:`~application.modelo._calculate_input.apply_calculation_shortcut_inputs`)
 already gates the DT 12ª apartado-3 TIME WINDOW (the post-2014 contingencia-year
-window in :mod:`~domain.modelos._dt12_reduccion`), but the engine does not model
+window in :mod:`~domain.modelos.dt12_reduccion`), but the engine does not model
 the antiquity condition: no casilla captures "years since the first aportación" or
 an invalidez flag, so a rescate whose contributions were made within two years of the
 rescate could still receive the 40% reducción with no operator signal.
@@ -38,11 +38,7 @@ from collections.abc import Mapping
 from decimal import Decimal
 
 from ...core import CasillaId
-from ...domain.modelos import (
-    ModeloVerificationFinding,
-    ModeloVerificationFindingKind,
-    ModeloVerificationFindingSeverity,
-)
+from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ...domain.modelos.errors import ModeloError
 from ._semantic_role_resolution import (
     AmbiguousSemanticRoleCasillaError,

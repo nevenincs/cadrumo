@@ -13,7 +13,7 @@ canonical tax-region parser so the CLI renders the same refusal text as profile
 setup. Once these CLI policy guards pass,
 :func:`cadrumo.application.modelo.create_work_unit` performs the application
 readiness and registry revision checks before inserting the
-:class:`cadrumo.domain.modelos.WorkUnit`.
+:class:`~WorkUnit`.
 
 See Also:
     :mod:`cadrumo.entrypoints.cli._modelo_work_lifecycle_cli`:

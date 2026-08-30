@@ -32,7 +32,8 @@ from ....adapters.persistence.profile.bienes_inversion import BienesInversionIva
 from ....core import BindingSourceKind, CasillaId, Period, validated_casilla_id
 from ....domain.bienes_inversion import BienInversionIvaRecord, BienInversionKind
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....tests.secure_sql import isolated_runtime_profile
 from .._calculation_actions import _resolve_bucket_source_mesh
 

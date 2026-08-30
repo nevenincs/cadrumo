@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import pytest
 
+from ....tests.cross_period_seeding import seed_clean_cross_period_sources
 from ._file_flow_support import (
     DEFAULT_180_BINDING_VALUES,
     DEFAULT_180_RELATION_VALUES,
@@ -26,7 +27,6 @@ from ._file_flow_support import (
     calculate_modelo_revision,
     list_verification_reports,
     registry_required_manual_casillas,
-    seed_clean_cross_period_sources,
     seed_modelo_180_work_unit,
     verify_modelo_revision,
     workflow_profile,

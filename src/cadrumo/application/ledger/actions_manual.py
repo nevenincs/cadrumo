@@ -33,10 +33,7 @@ from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.currency.service import CurrencyNormalizationService
 from ...domain.invoices.errors import InvoiceLinkError
 from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
-from ...domain.iva import (
-    IvaDeductionClassificationProvenance,
-    required_deduction_evidence_authority,
-)
+from ...domain.iva.deduction_facts import IvaDeductionClassificationProvenance, required_deduction_evidence_authority
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState

@@ -10,8 +10,9 @@ from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ...domain.calculations.registry.schema import RegistrySnapshot
-from ...domain.iva import is_last_filing_period_of_year, validate_regimen_simplificado_rows
-from ...domain.modelos import WorkUnit
+from ...domain.iva.refund_eligibility import is_last_filing_period_of_year
+from ...domain.iva.regimen_simplificado_rows import validate_regimen_simplificado_rows
+from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.calculation_revision import FilingInstanceEvidence, M303FilingInstanceEvidence
 from ..calculations import calculate_m303_regimen_simplificado_result
 from ._action_errors import M303FilingEvidenceError

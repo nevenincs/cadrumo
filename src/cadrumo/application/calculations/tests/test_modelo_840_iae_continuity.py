@@ -41,11 +41,7 @@ from ....core import (
     validated_casilla_id,
 )
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
-from ....domain.modelos import (
-    Modelo840IaeExemptionAssessment,
-    Modelo840IaeExemptionStatus,
-    assess_modelo_840_iae_cifra_negocios_exemption,
-)
+from ....domain.modelos.iae_exemption import Modelo840IaeExemptionAssessment, Modelo840IaeExemptionStatus, assess_modelo_840_iae_cifra_negocios_exemption
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest

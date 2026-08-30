@@ -10,15 +10,15 @@ import pytest
 from ....core import OutputLanguage, Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_input_kind import InputKind
-from ....domain.modelos import ModeloCode, WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ...operations.registry import OperationSchemaIdentityV1
 from .._edit_models import (
     ModeloEditAdmissionRequestV1,
     ModeloEditAdmittedV1,
     ModeloEditBindingIntentKind,
     ModeloEditCompatibilityRefusalV1,
-    ModeloEditCompatibilityTupleV1,
     ModeloEditDomainRefusalV1,
     ModeloEditExistingRowAddressV1,
     ModeloEditMutationFamily,
@@ -52,6 +52,7 @@ from .._edit_services import (
     preflight_modelo_edit,
     reconfirm_modelo_edit_baseline,
 )
+from ..edit_contract import ModeloEditCompatibilityTupleV1
 from ..work_addressing import ModeloExactWorkUnitTarget
 from ..workspace_models import ModeloWorkspaceExactWorkUnitTargetV1, ModeloWorkspaceTargetV1
 

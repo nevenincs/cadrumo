@@ -40,6 +40,7 @@ from ....core import (
 from ....core.directory_scan import (
     scan_directory,
 )
+from ....core.locks import exclusive_file_lock_async
 from ..storage import RepositoryError
 from ._journal_validation import OperationJournalRecord, validate_advance
 from .lease import OperationLeaseStorage
@@ -125,13 +126,30 @@ class _SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
         if not self._validate_existing_root():
             return None
         with exclusive_file_lock(self.lock_target):
-            try:
-                record = super().load(operation_id)
-            except RepositoryError:
-                if self._is_absent(operation_id):
-                    return None
-                raise
-            return _observation_materialization_from_record(record, request)
+            return self._read_observation_unlocked(operation_id, request)
+
+    def read_observation_root_present(self) -> bool:
+        """Tell whether the journal root exists, without taking the lock."""
+        return self._validate_existing_root()
+
+    def _read_observation_unlocked(
+        self,
+        operation_id: str,
+        request: _OperationReplayRequest,
+    ) -> OperationObservationMaterialization | None:
+        """Read one record and its observation with the journal lock already held.
+
+        Split out so an awaitable caller can hold the same lock through
+        :func:`exclusive_file_lock_async` instead of blocking its event
+        loop inside the synchronous acquisition.
+        """
+        try:
+            record = super().load(operation_id)
+        except RepositoryError:
+            if self._is_absent(operation_id):
+                return None
+            raise
+        return _observation_materialization_from_record(record, request)
 
     def _is_absent(self, operation_id: str) -> bool:
         """Tell a missing record from a present but unreadable one."""
@@ -295,11 +313,21 @@ class OperationJournalRepository(OperationJournal, OperationEventStream, Operati
         *,
         limit: OperationReplayLimit,
     ) -> OperationObservationMaterialization:
-        """Return snapshot, replay, and progress facts anchored to one locked record."""
-        materialization = self._repository.read_observation(
-            operation_id,
-            _OperationReplayRequest(cursor=after_cursor, limit=limit),
-        )
+        """Return snapshot, replay, and progress facts anchored to one locked record.
+
+        The lock is acquired through the awaitable twin because the sole
+        caller is a UI poll worker on the interface event loop: the
+        synchronous acquisition parks that loop in ``time.sleep`` for the
+        whole contention window, stalling every other task on it, and
+        cannot be cancelled when the operator closes the surface.
+        """
+        if not self._repository.read_observation_root_present():
+            raise OperationObservationUnknownOperationError(operation_id)
+        async with exclusive_file_lock_async(self._repository.lock_target):
+            materialization = self._repository._read_observation_unlocked(
+                operation_id,
+                _OperationReplayRequest(cursor=after_cursor, limit=limit),
+            )
         if materialization is None:
             raise OperationObservationUnknownOperationError(operation_id)
         return materialization

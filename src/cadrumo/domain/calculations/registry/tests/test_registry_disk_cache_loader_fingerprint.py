@@ -281,7 +281,7 @@ def test_selector_models_contribute_types_the_schema_annotations_cannot_see() ->
     # IvaCategory is the named specimen because the selector families embed it
     # and no schema annotation reaches it; it is asserted on both sides so a
     # derivation that simply returned everything would not satisfy this.
-    assert "cadrumo.domain.iva._schema.IvaCategory" in table_only
+    assert "cadrumo.domain.iva.schema.IvaCategory" in table_only
     assert _marker_of(Modelo) in full
 
 
@@ -298,7 +298,7 @@ def test_every_foreign_type_in_the_compiled_payload_is_covered_by_the_derivation
 
     assert len(observed) > 10, "anti-vacuity: the compiled tree embeds many foreign types"
     assert _marker_of(Modelo) in observed, "anti-vacuity: the ledger selectors embed real Modelo members"
-    assert "cadrumo.domain.iva._schema.IvaCategory" in observed, "anti-vacuity: the IVA selectors embed categories"
+    assert "cadrumo.domain.iva.schema.IvaCategory" in observed, "anti-vacuity: the IVA selectors embed categories"
 
     missing = observed - _derived_markers()
     assert not missing, f"embedded in the compiled payload but absent from the cache key: {sorted(missing)}"

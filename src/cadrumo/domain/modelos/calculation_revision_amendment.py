@@ -89,7 +89,7 @@ def m303_rectificativa_motive_is_applicable(
 def m303_rectificativa_record_design_from_snapshot(
     snapshot: RegistrySnapshot,
 ) -> SourceReference | None:
-    """Resolve the sole admitted record-design source owned by one snapshot."""
+    """Resolve the sole admitted record-design source owned by one :class:`~RegistrySnapshot`."""
     candidates = tuple(
         source
         for source in snapshot.sources.values()

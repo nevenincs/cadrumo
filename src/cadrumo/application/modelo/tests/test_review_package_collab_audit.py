@@ -48,9 +48,10 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....core import Period, validated_casilla_id
-from ....domain.buckets import BucketEventObjectType, BucketEventType
+from ....domain.buckets.event import BucketEventObjectType, BucketEventType
 from ....domain.calculations.registry.bindings import CasillaObservation
-from ....domain.modelos import ModeloCode, WorkUnit, WorkUnitState, derive_work_unit_id
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,

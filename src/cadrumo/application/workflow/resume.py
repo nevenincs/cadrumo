@@ -60,7 +60,7 @@ from pydantic import BaseModel, Field
 
 from ...core import HEX_PATTERN_16, HEX_PATTERN_64, STRICT_FROZEN_CONFIG, Period
 from ...core.identity import CalculationRevisionId, WorkUnitId
-from ...domain.modelos import WorkUnitCatalogue
+from ...domain.modelos.work_unit import WorkUnitCatalogue
 from .errors import WorkflowError
 from .persistence import list_runs, load_run
 from .run_models import WorkflowAbortReason, WorkflowObligationFacts, WorkflowResult, WorkflowStage
@@ -79,7 +79,7 @@ if TYPE_CHECKING:
     #: ``CalculationRevisionId`` instead -- a pydantic field WOULD need the
     #: symbol at model-build time and could not be deferred this way.
     from ...domain.calculations.registry.ids import RevisionId
-    from ...domain.modelos import WorkUnit
+    from ...domain.modelos.work_unit import WorkUnit
     from ..modelo.work_addressing import ModeloResolvedRevisionProjection, ModeloWorkTarget
 
 
@@ -346,7 +346,7 @@ def _resolve_resume_from_calculation_revision(
     calculation_revision_id: CalculationRevisionId,
 ) -> WorkflowResumeTargetResolution:
     from ..modelo._calculation_actions import get_calculation_revision
-    from ..modelo._work_lifecycle import get_work_unit
+    from ..modelo.work_lifecycle import get_work_unit
 
     revision = get_calculation_revision(calculation_revision_id)
     work_unit = get_work_unit(revision.work_unit_id)

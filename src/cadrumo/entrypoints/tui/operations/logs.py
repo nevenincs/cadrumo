@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import BaseModel, model_validator
 
 from ....application.operations.event_replay import OperationEventCursor
 from ....application.operations.events import OperationEventCode, OperationLogSeverity
@@ -23,9 +23,8 @@ from ....application.operations.frontend_contracts import (
 )
 from ....application.operations.models import OperationDiagnosticReference, OperationId
 from ....application.operations.persistence.replay import RESYNCHRONIZING_REPLAY_STATUSES, OperationReplayStatus
+from ....core import STRICT_FROZEN_CONFIG
 from ....core.operations import OperationEventKind
-
-_LOG_VIEW_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 _DEFAULT_MAX_ROWS = 500
 
@@ -33,7 +32,7 @@ _DEFAULT_MAX_ROWS = 500
 class OperationModalLogRowV1(BaseModel):
     """One renderer-neutral row folded from a public operation event."""
 
-    model_config = _LOG_VIEW_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     sequence: OperationEventCursor
     timestamp: datetime
@@ -46,7 +45,7 @@ class OperationModalLogRowV1(BaseModel):
 class OperationModalLogViewV1(BaseModel):
     """Bounded, append-only public log view anchored to one observation cursor."""
 
-    model_config = _LOG_VIEW_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     operation_id: OperationId
     anchor_cursor: OperationEventCursor

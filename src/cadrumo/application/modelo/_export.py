@@ -1,7 +1,7 @@
 """Modelo declaration export: write a verified-complete or filed calculation revision to a local AEAT-compatible file.
 
 :func:`~cadrumo.application.modelo.export_modelo_revision` accepts a
-:class:`~cadrumo.domain.modelos.CalculationRevision` id, rebuilds and approves a
+:class:`~CalculationRevision` id, rebuilds and approves a
 :class:`~domain.filing.ModeloDraft` from the revision replay inputs,
 then writes a fichero-BOE-formatted artefact to the operator-supplied output
 path. A ``MODELO_EXPORTED`` event is appended to the
@@ -69,30 +69,32 @@ from ...core.filing_year import FilingYear
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, PrefixedContentDigest, WorkUnitId
 from ...core.time import now as _utc_now
-from ...domain import filing as filing_domain
 from ...domain.bienes_inversion import (
     BienesInversionIvaRegister,
     RegistroRegularizacionResult,
     compute_registro_regularizacion,
 )
-from ...domain.buckets import BucketEvent, BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
+from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
+from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
 from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.schema import DataBindingDefinition
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
-from ...domain.deadlines import ModeloIVAProfile, TaxpayerProfile
-from ...domain.filing import ModeloDraft
-from ...domain.iva_compensation import IvaCompensationReconciliationDecision
+from ...domain.deadlines.models import ModeloIVAProfile, TaxpayerProfile
+from ...domain.filing.errors import FilingExportError
+from ...domain.filing.protocols import ModeloInputs
+from ...domain.filing.schema import ModeloCasillaProvenance, ModeloDraft
+from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ...domain.justificante import JustificanteRepositoryProtocol
-from ...domain.modelos import (
+from ...domain.modelos.calculation_revision import SEALED_REVISION_STATES, CalculationRevision
+from ...domain.modelos.errors import ModeloError, ModeloExportError
+from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
     ModeloRecordCatalogueRepositoryProtocol,
     VerificationReportCatalogueRepositoryProtocol,
-    WorkUnit,
 )
-from ...domain.modelos.calculation_revision import SEALED_REVISION_STATES, CalculationRevision
-from ...domain.modelos.errors import ModeloError, ModeloExportError
+from ...domain.modelos.work_unit import WorkUnit
 from ...domain.prorrata_register import ProrrataRegister
 from ..aggregation import (
     IvaDifferentiatedDeductionContribution,
@@ -423,7 +425,7 @@ class ModeloExportResult(BaseModel):
             election=PriorDomiciliationElection.KEEP,
         ),
     )
-    casilla_provenance: tuple[filing_domain.ModeloCasillaProvenance, ...] = Field(default_factory=tuple)
+    casilla_provenance: tuple[ModeloCasillaProvenance, ...] = Field(default_factory=tuple)
     iva_wallet_decision_provenance: ModeloIvaWalletDecisionProvenance | None = None
     local_evidence_status: str = Field(default=_LOCAL_EXPORT_EVIDENCE_STATUS, min_length=1)
     official_evidence_message: str = Field(default=_LOCAL_EXPORT_OFFICIAL_EVIDENCE_MESSAGE, min_length=1)
@@ -621,7 +623,7 @@ def _approve_export_draft(
     period: Period,
     schema_provider: RegistrySchemaAccessor,
 ) -> tuple[Period, ModeloDraft]:
-    """Build and approve the export draft for one :class:`~cadrumo.domain.modelos.CalculationRevision`.
+    """Build and approve the export draft for one :class:`~CalculationRevision`.
 
     The :class:`~cadrumo.domain.deadlines.TaxpayerProfile` is forwarded to
     :func:`~cadrumo.application.modelo._revision_replay_inputs.revision_filing_replay_inputs`
@@ -629,7 +631,7 @@ def _approve_export_draft(
     workflow gate. Returns the resolved :class:`~cadrumo.core.Period` and approved
     :class:`~domain.filing.ModeloDraft`.
     """
-    inputs: filing_domain.ModeloInputs = revision_filing_replay_inputs(
+    inputs: ModeloInputs = revision_filing_replay_inputs(
         revision=revision,
         work_unit=work_unit,
         workflow_profile=workflow_profile,
@@ -650,7 +652,7 @@ def _approve_export_draft(
             schema_provider=schema_provider,
             approved_at=approved_at,
         )
-    except filing_domain.FilingExportError as exc:
+    except FilingExportError as exc:
         raise ModeloExportError(
             translated_message="application.modelo.errors.export_draft_approval_failed",
             context={"calculation_revision_id": revision.calculation_revision_id},
@@ -1049,7 +1051,7 @@ def _write_export_staging(
             product_software_identity=product_software_identity,
             schema_provider=schema_provider,
         )
-    except filing_domain.FilingExportError as exc:
+    except FilingExportError as exc:
         # Surface the underlying FilingExportError cause in the typed context
         # (aeat-cli-contract: structured provenance
         # rides on context). The generic write-failed message otherwise masks

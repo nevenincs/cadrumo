@@ -10,7 +10,7 @@ See Also:
     :class:`~application.aggregation.CalculationSourceResolution`
         Source-mesh envelope that carries row-indexed Modelo 720 values into
         the calculate path.
-    :class:`~domain.modelos.CalculationRevision`
+    :class:`~CalculationRevision`
         Draft calculation record whose content hash and replay surface include
         the row-binding values.
 """

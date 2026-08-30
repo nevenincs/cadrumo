@@ -15,9 +15,9 @@ from decimal import Decimal
 import pytest
 
 from ....core.errors import CoreValidationError, get_registered_error_code
-from .._dt12_reduccion import compute_dt12_reduccion_plan_pensiones
-from .._sal_reserva_especial import compute_sal_reserva_especial_dotacion
+from ..dt12_reduccion import compute_dt12_reduccion_plan_pensiones
 from ..errors import PensionReduccionError
+from ..sal_reserva_especial import compute_sal_reserva_especial_dotacion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -12,12 +12,12 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import BindingSourceKind, Period, RegistrySchemaFamilyDisposition
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.modelos import WorkUnit
+from ....domain.modelos.work_unit import WorkUnit
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...registry.source_connectivity import load_source_connectivity_census
-from .._work_lifecycle import create_work_unit
+from ..work_lifecycle import create_work_unit
 from ..work_addressing import ModeloWorkRegistryYearMismatchError
 from ..workspace import (
     STATIC_INSPECTION_WORK_REVIEW_FACET,
@@ -34,7 +34,7 @@ from ..workspace import (
     graded_snapshot_provenance_facet,
     graded_snapshot_readiness,
     modelo_work_selector_request_for_target,
-    paginate_static_inspection_schema_facet,
+    paginate_modelo_workspace_facet,
     parameter_schema_records,
     relation_schema_records,
     relation_source_endpoints_for_casilla,
@@ -52,12 +52,19 @@ from ..workspace import (
 )
 from ..workspace_models import (
     ModeloVisibleFilingTarget,
+    ModeloWorkspaceBoundedFacetV1,
     ModeloWorkspaceCapabilityDisposition,
     ModeloWorkspaceCapabilityName,
     ModeloWorkspaceExactWorkUnitTargetV1,
+    ModeloWorkspaceFacetName,
     ModeloWorkspaceLocaleDisposition,
+    ModeloWorkspaceMaterializationRecordV1,
+    ModeloWorkspaceProvenanceRecordV1,
     ModeloWorkspaceRevisionAssertionDisposition,
     ModeloWorkspaceRevisionAssertionSource,
+    ModeloWorkspaceScalarMaterializationRecordV1,
+    ModeloWorkspaceScalarMaterializationV1,
+    ModeloWorkspaceSchemaRecordV1,
     ModeloWorkspaceVisibleFilingTargetV1,
 )
 from ..workspace_producers import ModeloWorkspaceRegistryProjectionV1
@@ -220,7 +227,7 @@ def _corrupt_stored_revision(
     generation-superseding write: by constructing the catalogue directly,
     never by asking Workspace to accept a hand-picked mismatch.
     """
-    from ....domain.modelos import WorkUnitCatalogue, derive_work_unit_id
+    from ....domain.modelos.work_unit import WorkUnitCatalogue, derive_work_unit_id
 
     payload = work_unit.model_dump()
     payload.update(
@@ -824,8 +831,10 @@ def test_schema_facet_pagination_round_trips_a_cursor_across_all_pages(
     cursor = None
     pages = 0
     while True:
-        page = paginate_static_inspection_schema_facet(
+        page = paginate_modelo_workspace_facet(
+            ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1],
             records,
+            facet=ModeloWorkspaceFacetName.SCHEMA,
             target=target,
             schema_identity=schema_identity,
             baseline=baseline,
@@ -858,8 +867,10 @@ def test_schema_facet_stale_cursor_refuses_rather_than_returning_a_different_pag
     )
     records = static_inspection_casilla_schema_records(inspection, target, output_language=OutputLanguage.ES)
 
-    first_page = paginate_static_inspection_schema_facet(
+    first_page = paginate_modelo_workspace_facet(
+        ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1],
         records,
+        facet=ModeloWorkspaceFacetName.SCHEMA,
         target=target,
         schema_identity=schema_identity,
         baseline=baseline,
@@ -877,8 +888,10 @@ def test_schema_facet_stale_cursor_refuses_rather_than_returning_a_different_pag
     moved_baseline = baseline.model_copy(update={"contributor_epoch_digest": "9" * 64})
 
     with pytest.raises(ModeloWorkspaceStaleCursorError):
-        paginate_static_inspection_schema_facet(
+        paginate_modelo_workspace_facet(
+            ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1],
             records,
+            facet=ModeloWorkspaceFacetName.SCHEMA,
             target=target,
             schema_identity=schema_identity,
             baseline=moved_baseline,
@@ -1213,7 +1226,7 @@ def _real_calculation_revision_with_row_materialization():
     from ....core import BindingSourceKind, validated_casilla_id
     from ....domain.calculations import DirectRowMaterializationProvenance, RowSourceIdentity
     from ....domain.calculations.registry.bindings import CasillaObservation
-    from ....domain.modelos import derive_work_unit_id
+    from ....domain.modelos.work_unit import derive_work_unit_id
     from ....domain.modelos.calculation_revision import (
         CalculationRevision,
         CalculationRevisionState,
@@ -1322,7 +1335,7 @@ def test_graded_snapshot_materialization_facet_refuses_a_row_value_with_no_prove
     from decimal import Decimal
 
     from ....core import validated_casilla_id
-    from ....domain.modelos import derive_work_unit_id
+    from ....domain.modelos.work_unit import derive_work_unit_id
     from ....domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
     from ..workspace import ModeloWorkspaceMaterializationProvenanceMissingError
 
@@ -1494,9 +1507,245 @@ def test_graded_snapshot_provenance_facet_fans_out_by_linked_casilla_and_marks_u
     assert unlinked_records[0].calculation_source is unlinked_ref
 
 
+def _production_default_page_size() -> int:
+    """Read the page size the graded assembly actually ships with.
+
+    Taken from the function's own signature rather than restated here, so
+    this proof follows the production default instead of pinning a literal
+    that could drift away from it.
+    """
+    import inspect
+
+    from ..workspace import resolve_graded_snapshot_result
+
+    default = inspect.signature(resolve_graded_snapshot_result).parameters["page_size"].default
+    assert isinstance(default, int)
+    return default
+
+
+def _real_303_casilla_ids() -> tuple[str, ...]:
+    """Return every casilla id the bundled M303 2026/1T revision declares.
+
+    The bundled registry drives the count: this revision declares more
+    casillas than the graded assembly's own page size, which is what makes
+    it the honest anchor for a paging proof. The overflow is the shipped
+    registry's shape, not a number these tests chose.
+    """
+    return tuple(_real_303_inspection().casilla_ids)
+
+
+def _paging_coordinate(bucket_id: str, repository: WorkUnitCatalogueRepository):
+    """Return the (target, schema_identity, baseline, contributors) paging pins.
+
+    Reuses the real-capture static assembly because the paginator is
+    admission-agnostic: it pins a baseline coordinate and mints a cursor
+    against it, and never inspects which admission produced that baseline.
+    Admission-versus-facet coherence is :class:`ModeloWorkspaceProjectionV1`'s
+    invariant, proven separately, not this helper's.
+    """
+    _inspection, target, schema_identity, baseline, contributors = _assemble_static_inspection_pieces(
+        bucket_id, repository
+    )
+    return target, schema_identity, baseline, contributors
+
+
+def _drain_pages(facet_type, records, *, facet, target, schema_identity, baseline, contributors, page_size):
+    """Page the whole sequence through the real paginator, returning every page."""
+    pages = []
+    cursor = None
+    while True:
+        page = paginate_modelo_workspace_facet(
+            facet_type,
+            records,
+            facet=facet,
+            target=target,
+            schema_identity=schema_identity,
+            baseline=baseline,
+            contributors=contributors,
+            disposition=ModeloWorkspaceCapabilityDisposition.AVAILABLE,
+            page_size=page_size,
+            cursor=cursor,
+        )
+        pages.append(page)
+        if page.next_cursor is None:
+            return tuple(pages)
+        cursor = page.next_cursor
+
+
+def test_materialization_facet_pages_a_real_revision_that_exceeds_the_page_size(
+    workspace_repos: tuple[str, WorkUnitCatalogueRepository],
+) -> None:
+    """A real M303 revision overflows one page and paginates instead of refusing.
+
+    Before the shared paginator, the graded assembly truncated to
+    ``page_size`` and set ``has_more`` without minting the matching cursor,
+    so ``ModeloWorkspaceBoundedFacetV1`` refused the facet outright and took
+    the whole projection down. This modelo's own casilla set is past the
+    page size, so the failure was reachable with shipped registry data.
+    """
+    from decimal import Decimal
+
+    from ....core import validated_casilla_id
+
+    bucket_id, repository = workspace_repos
+    _seed_work_unit(repository, bucket_id=bucket_id)
+    target, schema_identity, baseline, contributors = _paging_coordinate(bucket_id, repository)
+    page_size = _production_default_page_size()
+
+    casilla_ids = _real_303_casilla_ids()
+    assert len(casilla_ids) > page_size, "the paging proof needs a real revision past the production page size"
+
+    records = tuple(
+        ModeloWorkspaceScalarMaterializationRecordV1(
+            scalar=ModeloWorkspaceScalarMaterializationV1(
+                casilla_id=validated_casilla_id(casilla_id), value=Decimal("1.00")
+            )
+        )
+        for casilla_id in casilla_ids
+    )
+
+    pages = _drain_pages(
+        ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceMaterializationRecordV1],
+        records,
+        facet=ModeloWorkspaceFacetName.MATERIALIZATION,
+        target=target,
+        schema_identity=schema_identity,
+        baseline=baseline,
+        contributors=contributors,
+        page_size=page_size,
+    )
+
+    assert len(pages) > 1
+    assert pages[0].has_more is True
+    assert pages[0].next_cursor is not None
+    assert pages[0].next_cursor.facet is ModeloWorkspaceFacetName.MATERIALIZATION
+    assert len(pages[0].records) == page_size
+    assert pages[-1].has_more is False
+    assert pages[-1].next_cursor is None
+    collected = tuple(record for page in pages for record in page.records)
+    assert collected == records
+
+
+def test_provenance_facet_pages_a_real_revision_that_exceeds_the_page_size(
+    workspace_repos: tuple[str, WorkUnitCatalogueRepository],
+) -> None:
+    """The provenance facet carried the same defect and is proven on the same real set."""
+    from ....core import CalculationSourceLineageRole, validated_casilla_id
+    from ....core.aggregation import BindingSourceKind
+    from ....domain.modelos.calculation_revision import CalculationSourceRef
+
+    bucket_id, repository = workspace_repos
+    _seed_work_unit(repository, bucket_id=bucket_id)
+    target, schema_identity, baseline, contributors = _paging_coordinate(bucket_id, repository)
+    page_size = _production_default_page_size()
+
+    casilla_ids = _real_303_casilla_ids()
+    assert len(casilla_ids) > page_size, "the paging proof needs a real revision past the production page size"
+
+    # One real ref fans out to one record per casilla it names, so the
+    # bundled casilla set drives the record count here exactly as it does
+    # for materialization.
+    ref = CalculationSourceRef(
+        resolver_id="invoice_catalogue",
+        resolved_binding_source=BindingSourceKind.COLLECTIBLE_INVOICE,
+        contributor_source_kind="collectible_invoice",
+        contributor_binding_source=BindingSourceKind.COLLECTIBLE_INVOICE,
+        lineage_role=CalculationSourceLineageRole.PRIMARY,
+        source_ref="collectible_invoice:inv-0001",
+        parent_source_ref=None,
+        source_casilla_ids=tuple(validated_casilla_id(casilla_id) for casilla_id in casilla_ids),
+    )
+    records = graded_snapshot_provenance_facet((ref,))
+    assert len(records) > page_size
+
+    pages = _drain_pages(
+        ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceProvenanceRecordV1],
+        records,
+        facet=ModeloWorkspaceFacetName.PROVENANCE,
+        target=target,
+        schema_identity=schema_identity,
+        baseline=baseline,
+        contributors=contributors,
+        page_size=page_size,
+    )
+
+    assert len(pages) > 1
+    assert pages[0].next_cursor is not None
+    assert pages[0].next_cursor.facet is ModeloWorkspaceFacetName.PROVENANCE
+    assert pages[-1].next_cursor is None
+    collected = tuple(record for page in pages for record in page.records)
+    assert collected == records
+
+
+def test_an_overflowing_facet_built_without_a_cursor_still_refuses(
+    workspace_repos: tuple[str, WorkUnitCatalogueRepository],
+) -> None:
+    """Anti-tautology: the invariant the paginator satisfies still bites when violated.
+
+    Two proofs, so the paging tests above cannot pass vacuously. First the
+    pre-fix construction shape -- truncate to ``page_size``, declare
+    ``has_more``, mint no cursor -- is rejected, which is exactly the live
+    defect and shows those tests target something real. Second a genuine
+    paginated page has its cursor stripped and is rejected too, so the
+    agreement is enforced on the model rather than merely produced by the
+    helper.
+    """
+    from decimal import Decimal
+
+    from pydantic import ValidationError
+
+    from ....core import validated_casilla_id
+
+    bucket_id, repository = workspace_repos
+    _seed_work_unit(repository, bucket_id=bucket_id)
+    target, schema_identity, baseline, contributors = _paging_coordinate(bucket_id, repository)
+    page_size = _production_default_page_size()
+
+    records = tuple(
+        ModeloWorkspaceScalarMaterializationRecordV1(
+            scalar=ModeloWorkspaceScalarMaterializationV1(
+                casilla_id=validated_casilla_id(casilla_id), value=Decimal("1.00")
+            )
+        )
+        for casilla_id in _real_303_casilla_ids()
+    )
+    assert len(records) > page_size
+
+    with pytest.raises(ValidationError, match="has_more must agree with next_cursor"):
+        ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceMaterializationRecordV1](
+            selected_revision_id=target.law_selected_revision_id,
+            schema_identity=schema_identity,
+            baseline=baseline,
+            contributor_epoch_digest=baseline.contributor_epoch_digest,
+            contributors=contributors,
+            facet=ModeloWorkspaceFacetName.MATERIALIZATION,
+            disposition=ModeloWorkspaceCapabilityDisposition.AVAILABLE,
+            records=records[:page_size],
+            page_size=page_size,
+            has_more=len(records) > page_size,
+        )
+
+    page = paginate_modelo_workspace_facet(
+        ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceMaterializationRecordV1],
+        records,
+        facet=ModeloWorkspaceFacetName.MATERIALIZATION,
+        target=target,
+        schema_identity=schema_identity,
+        baseline=baseline,
+        contributors=contributors,
+        disposition=ModeloWorkspaceCapabilityDisposition.AVAILABLE,
+        page_size=page_size,
+    )
+    assert page.next_cursor is not None
+    with pytest.raises(ValidationError, match="has_more must agree with next_cursor"):
+        ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceMaterializationRecordV1].model_validate(
+            {**page.model_dump(), "next_cursor": None}
+        )
+
+
 def _resolved_target_with_work_unit(*, work_unit_id: str, revision_id: str = "2022"):
     from ....core import RevisionReviewStatus
-    from ....domain.modelos import WorkUnitState
+    from ....domain.modelos.work_unit import WorkUnitState
     from ..workspace_models import (
         ModeloWorkspaceResolvedTargetV1,
         ModeloWorkspaceRevisionAssertionV1,
@@ -1675,7 +1924,9 @@ def test_resolve_graded_snapshot_result_refuses_when_the_target_has_no_calculati
     from ....core import OutputLanguage, RegistryAuthorityGrade
     from ....domain.calculations.registry.authority import bundled_authority
     from ....domain.calculations.registry.temporal import select_revision
-    from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id, upsert_work_unit
+    from ....domain.modelos.codes import ModeloCode
+    from ....domain.modelos.repository import upsert_work_unit
+    from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
     from ..workspace import resolve_graded_snapshot_result
     from ..workspace_models import ModeloWorkspaceRefusalCode, ModeloWorkspaceRefusedResultV1
 
@@ -1782,7 +2033,9 @@ def test_resolve_graded_snapshot_result_assembles_a_complete_projection_over_a_r
     from ....core import ModeloWorkProgressState, OutputLanguage, RegistryAuthorityGrade
     from ....domain.calculations.registry.authority import bundled_authority
     from ....domain.calculations.registry.temporal import select_revision
-    from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id, upsert_work_unit
+    from ....domain.modelos.codes import ModeloCode
+    from ....domain.modelos.repository import upsert_work_unit
+    from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
     from ..workspace import resolve_graded_snapshot_result
     from ..workspace_models import ModeloWorkspaceGradedSnapshotResultV1
     from ._file_flow_support import (
@@ -1911,7 +2164,9 @@ def test_resolve_graded_snapshot_result_refuses_authority_grade_unavailable(
     from ....core import OutputLanguage, RegistryAuthorityGrade
     from ....domain.calculations.registry.authority import bundled_authority
     from ....domain.calculations.registry.temporal import select_revision
-    from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id, upsert_work_unit
+    from ....domain.modelos.codes import ModeloCode
+    from ....domain.modelos.repository import upsert_work_unit
+    from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
     from ..workspace import resolve_graded_snapshot_result
     from ..workspace_models import ModeloWorkspaceRefusalCode, ModeloWorkspaceRefusedResultV1
 
@@ -1997,7 +2252,9 @@ def test_resolve_graded_snapshot_result_reraises_a_non_grade_registry_validation
         RegistryValidationError,
     )
     from ....domain.calculations.registry.temporal import select_revision
-    from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id, upsert_work_unit
+    from ....domain.modelos.codes import ModeloCode
+    from ....domain.modelos.repository import upsert_work_unit
+    from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
     from ..workspace import resolve_graded_snapshot_result
 
     work_repo, calculation_repo, _filing_repo, verification_repo, _bucket_event_repo = repos
@@ -2093,7 +2350,9 @@ def test_resolve_graded_snapshot_result_reads_the_work_catalogue_before_any_writ
     from ....core import OutputLanguage, RegistryAuthorityGrade
     from ....domain.calculations.registry.authority import bundled_authority
     from ....domain.calculations.registry.temporal import select_revision
-    from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id, upsert_work_unit
+    from ....domain.modelos.codes import ModeloCode
+    from ....domain.modelos.repository import upsert_work_unit
+    from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
     from ..workspace import resolve_graded_snapshot_result
     from ..workspace_models import ModeloWorkspaceGradedSnapshotResultV1
     from ._file_flow_support import DEFAULT_130_BASELINE_INPUTS, DEFAULT_130_BINDING_VALUES
@@ -2199,7 +2458,9 @@ def test_resolve_graded_snapshot_result_baseline_reflects_a_real_contributor_cha
     from ....core import OutputLanguage, RegistryAuthorityGrade
     from ....domain.calculations.registry.authority import bundled_authority
     from ....domain.calculations.registry.temporal import select_revision
-    from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id, upsert_work_unit
+    from ....domain.modelos.codes import ModeloCode
+    from ....domain.modelos.repository import upsert_work_unit
+    from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
     from ..workspace import resolve_graded_snapshot_result
     from ..workspace_models import ModeloWorkspaceGradedSnapshotResultV1
     from ._file_flow_support import DEFAULT_130_BASELINE_INPUTS, DEFAULT_130_BINDING_VALUES
@@ -2311,17 +2572,13 @@ def test_resolve_graded_snapshot_result_baseline_reflects_a_real_contributor_cha
 def test_workspace_assembly_has_one_public_module_and_no_private_or_package_binding_remnant() -> None:
     """The assembly/dispatch module is the sole public home, with no package binding.
 
-    Mirrors ``test_workspace_models_have_one_public_module_and_no_private_or_package_binding_remnant``
-    and ``test_workspace_producers_have_one_public_module_and_no_private_or_package_binding_remnant``
-    -- the same fixed point proved for the model and producer
-    families, applied to the assembly/dispatch family's own case.
-    ``workspace.py`` never had a private predecessor (unlike
-    ``_workspace_models.py``/``_workspace_producers.py``), so there is no
-    retired private module to assert against; what remains to prove is that
-    ``application.modelo`` stays inert with respect to every Workspace
-    assembly symbol, and that the two private paths this module's own
-    docstring names as forbidden (``_workspace.py``, a private predecessor of
-    this module, and ``_workspace_projection.py``, an explicitly rejected
+    The model and producer families each prove the same fixed point in their
+    own suites; this is the assembly/dispatch family's case. ``workspace.py``
+    has no retired private predecessor to assert against, so what remains to
+    prove is that ``application.modelo`` stays inert with respect to every
+    Workspace assembly symbol, and that the two private paths this module's
+    own docstring names as forbidden (``_workspace.py``, a private predecessor
+    of this module, and ``_workspace_projection.py``, an explicitly rejected
     intermediate design) have not reappeared anywhere in the tracked tree.
     """
     import importlib

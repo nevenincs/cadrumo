@@ -860,7 +860,7 @@ class Modelo349OperadorTotalsParity(BaseModel):
     groups them into per-``(country, party_tax_id, clave)`` rows
     (:func:`_build_operator_clave_rows`). Nothing in the registry
     cross-checks that the two paths agree, so a defect in either aggregator —
-    or a manual-entry :class:`~domain.modelos.Modelo349OperadorRow` set
+    or a manual-entry :class:`~Modelo349OperadorRow` set
     that omits an operator the summary already counted — would silently
     under- or over-declare one side without detection.
 
@@ -1276,7 +1276,7 @@ def _build_operator_clave_period_rows(
 
 
 def _m349_export_nif_number(party_tax_id: str, country_code: str) -> str:
-    from ...modelos import m349_nif_number_for_export
+    from ...modelos.row_models import m349_nif_number_for_export
 
     try:
         return m349_nif_number_for_export(party_tax_id, country_code)

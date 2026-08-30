@@ -74,7 +74,7 @@ from ....core import (
     validated_casilla_id,
 )
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
-from ....domain.modelos import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
+from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ....tests.registry_observations import registry_grounded_observation_rows
 from ....tests.secure_sql import isolated_runtime_profile
 from ..._foreign_asset_thresholds import foreign_asset_declaration_thresholds

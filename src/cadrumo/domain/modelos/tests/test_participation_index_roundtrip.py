@@ -30,8 +30,8 @@ from ....adapters.persistence.profile.participation_index import TransactionPart
 from ....adapters.persistence.storage import TRANSACTION_PARTICIPATION_INDEX_NAMESPACE, SensitivityClass
 from ....core import Period
 from ....tests.secure_sql import isolated_runtime_profile
-from .._codes import ModeloCode
-from .._participation_index import (
+from ..codes import ModeloCode
+from ..participation_index import (
     TransactionParticipationIndexPersistenceError,
     TransactionRevisionParticipation,
     TransactionRevisionParticipationIndex,

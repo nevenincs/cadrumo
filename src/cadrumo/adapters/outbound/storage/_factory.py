@@ -123,7 +123,7 @@ def build_google_credentials(*, profile: str) -> Credentials:
     Imports the upstream Google libraries lazily so unit tests for the
     local backend do not pay the cost.
     """
-    from ..google import load_credential_source_selection
+    from ..google.session_store import load_credential_source_selection
 
     selection = load_credential_source_selection(profile)
     kind = selection.kind if selection is not None else GoogleCredentialSourceKind.OAUTH_DESKTOP
@@ -133,7 +133,7 @@ def build_google_credentials(*, profile: str) -> Credentials:
         # guarantees `impersonation` is populated whenever `kind` is
         # `SERVICE_ACCOUNT_IMPERSONATION`.
         assert selection is not None and selection.impersonation is not None
-        from ..google import resolve_impersonated_credentials
+        from ..google.impersonation import resolve_impersonated_credentials
 
         return resolve_impersonated_credentials(selection.impersonation)
 
@@ -150,10 +150,7 @@ def _build_oauth_desktop_credentials(*, profile: str) -> Credentials:
     upstream library lazily so unit tests for the local backend do not pay the
     cost.
     """
-    from ..google import (
-        load_client,
-        load_token,
-    )
+    from ..google.session_store import load_client, load_token
 
     client = load_client(profile)
     if client is None:
@@ -198,13 +195,13 @@ def _build_oauth_desktop_credentials(*, profile: str) -> Credentials:
 
 
 def _required_scopes() -> tuple[str, ...]:
-    from ..google import REQUIRED_SCOPES
+    from ..google.records import REQUIRED_SCOPES
 
     return REQUIRED_SCOPES
 
 
 def _resolve_profile() -> str:
-    from ..google import resolve_active_profile
+    from ..google.active_profile import resolve_active_profile
 
     return resolve_active_profile()
 
@@ -222,7 +219,7 @@ def resolve_drive_root_folder_id(*, profile: str, settings: Settings) -> str:
 
     Returns the empty string when neither source is configured.
     """
-    from ..google import load_drive_config
+    from ..google.session_store import load_drive_config
 
     override = str(settings.cadrumo_google_drive_root_folder_id or "").strip()
     if override:

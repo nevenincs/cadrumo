@@ -23,7 +23,7 @@ from ...core import (
     SourceConnectivityGroundingLocatorKind,
     SourceConnectivityOperatorReachabilityProof,
 )
-from ...domain.modelos import CalculationRevisionCatalogueRepositoryProtocol
+from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ..aggregation import BindingSourceDisposition
 from ..modelo.calculation_route import (
     CALCULATION_ROUTE_ID,

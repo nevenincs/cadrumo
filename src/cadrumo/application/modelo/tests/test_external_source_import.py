@@ -10,8 +10,8 @@ import pytest
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.storage import SecureObjectRevisionConflictError, SecureObjectWrite
 from ....core import Period
-from ....domain.buckets import BucketEventType
-from ....domain.modelos import ExternalEvidenceKind
+from ....domain.buckets.event import BucketEventType
+from ....domain.modelos.filing_record import ExternalEvidenceKind
 from ....domain.modelos.calculation_revision import CalculationRevisionAmendmentKind
 from ...calculations import (
     CalculationObservationRepository,
@@ -25,7 +25,7 @@ from ...calculations import (
 from .._action_errors import ExternalModeloImportError
 from .._amendment_actions import amend_modelo_revision
 from .._calculation_actions import get_calculation_revision
-from .._work_lifecycle import create_work_unit
+from ..work_lifecycle import create_work_unit
 from ..external_import_actions import (
     ExternalFilingBaselineSource,
     _validated_source_lexicals,

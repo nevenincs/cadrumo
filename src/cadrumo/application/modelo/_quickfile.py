@@ -51,8 +51,9 @@ from ...core.errors import CadrumoError
 from ...core.identity import BucketId
 from ...core.logging import get_logger
 from ...domain.calculations.registry.ids import RevisionId
-from ...domain.deadlines import TaxpayerProfile
-from ...domain.modelos import VerificationReport, WorkUnit
+from ...domain.deadlines.models import TaxpayerProfile
+from ...domain.modelos.verification_report import VerificationReport
+from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.calculation_revision import CalculationRevision, FilingInstanceEvidence
 from ._calculate_input import WorkCalculateInputBundle, calculate_modelo_work_revision
 from ._export import ModeloExportCommand, ModeloExportResult, export_modelo_revision

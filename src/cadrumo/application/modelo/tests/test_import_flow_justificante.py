@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....domain.modelos import ExternalEvidenceKind
+from ....domain.modelos.filing_record import ExternalEvidenceKind
 from .._action_errors import ExternalModeloImportError
 from ._import_flow_support import (
     _T1,

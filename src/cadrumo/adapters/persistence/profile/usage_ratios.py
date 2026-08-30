@@ -26,9 +26,7 @@ from pydantic import ValidationError
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
 from ....core.time import now
-from ....domain.categories import (
-    home_office_categories,
-)
+from ....domain.categories.spending_category import home_office_categories
 from ....domain.usage_ratios import (
     ELIGIBLE_USAGE_RATIO_CATEGORIES,
     CensoRatioMismatchError,

@@ -96,7 +96,7 @@ def test_ratios_set_emits_ledger_ratios_set_event() -> None:
     history so downstream auditors can replay the override sequence."""
 
     from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-    from ....domain.buckets import BucketEventType
+    from ....domain.buckets.event import BucketEventType
 
     set_result = _invoke_ratios(["set", "vehiculo_combustible", "0.5"])
     assert set_result.exit_code == 0, set_result.output
@@ -118,7 +118,7 @@ def test_ratios_unset_emits_ledger_ratios_unset_event() -> None:
     only from the secure-object snapshot."""
 
     from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-    from ....domain.buckets import BucketEventType
+    from ....domain.buckets.event import BucketEventType
 
     _invoke_ratios(["set", "vehiculo_combustible", "0.5"])
     unset_result = _invoke_ratios(["unset", "vehiculo_combustible"])
@@ -162,7 +162,7 @@ def test_ratios_set_emits_censo_override_warning_when_suministros_diverges() -> 
     model a planned change — but the divergence is recorded."""
 
     from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-    from ....domain.buckets import BucketEventType
+    from ....domain.buckets.event import BucketEventType
 
     _capture_censo_with_vivienda_office(office_m2="20", total_m2="100")
 
@@ -192,7 +192,7 @@ def test_ratios_set_silent_when_suministros_override_matches_30pct_of_raw() -> N
     emitted on every HOME_OFFICE set."""
 
     from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-    from ....domain.buckets import BucketEventType
+    from ....domain.buckets.event import BucketEventType
 
     _capture_censo_with_vivienda_office(office_m2="20", total_m2="100")
 
@@ -229,7 +229,7 @@ def test_ratios_set_silent_for_non_home_office_category() -> None:
     other categories don't carry the censo-binding contract."""
 
     from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-    from ....domain.buckets import BucketEventType
+    from ....domain.buckets.event import BucketEventType
 
     _capture_censo_with_vivienda_office(office_m2="20", total_m2="100")
 

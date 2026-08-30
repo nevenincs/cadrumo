@@ -56,12 +56,12 @@ CORE_STRUCTS: dict[str, str] = {
     # Financial-input aggregates and their repositories
     "TransactionCatalogue": "cadrumo.domain.transactions.models",
     "TransactionCatalogueRepository": "cadrumo.adapters.persistence.profile.transactions",
-    "InvoiceCatalogue": "cadrumo.domain.invoices._models",
+    "InvoiceCatalogue": "cadrumo.domain.invoices.models",
     # Profile, deadlines, and filing records
-    "TaxpayerProfile": "cadrumo.domain.deadlines._models",
-    "Schedule": "cadrumo.domain.deadlines._models",
+    "TaxpayerProfile": "cadrumo.domain.deadlines.models",
+    "Schedule": "cadrumo.domain.deadlines.models",
     "UserProfileRecord": "cadrumo.domain.user_profile.values",
-    "ModeloDraft": "cadrumo.domain.filing._schema",
+    "ModeloDraft": "cadrumo.domain.filing.schema",
     "ModeloRecord": "cadrumo.domain.modelos.filing_record",
 }
 
