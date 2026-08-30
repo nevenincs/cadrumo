@@ -112,9 +112,10 @@ class ResultSchemaInventoryRow(BaseModel):
 
 
 class InputSchemaInventoryRow(BaseModel):
-    """The required-input identity projection of one S05 input schema.
+    """The required-input identity projection of one registered input schema.
 
-    S05 remains the authority for the full parameter models.  This row carries
+    The registered command spec remains the authority for the full parameter
+    models.  This row carries
     the stable leaf identity and every required parameter name so this pure
     join can prove that the input-schema projection was considered without
     importing the entrypoint-owned ``VerbInputSchema`` type.
@@ -708,7 +709,7 @@ def reconcile_operator_surface_inventory(
     """Join every live leaf to all surface projections by stable identity.
 
     This is intentionally a pure application function.  Click traversal, JSON
-    result-schema registration, S05 parameter projection, profile policy
+    result-schema registration, parameter projection, profile policy
     discovery and external enumeration remain adapter concerns. Their typed
     rows are joined here so a missing row, orphan, duplicate, path ambiguity,
     silent omission, or policy/exposure conflict is a hard failure rather than
@@ -814,10 +815,10 @@ def resolve_action_catalogue(
     """Resolve every canonical catalogue target against the live schemas.
 
     All catalogue entries are checked, including entries not yet referenced by
-    a manifest action profile during incremental migration.  The S06 input row
+    a manifest action profile during incremental migration.  The input row
     exposes the complete set of required names, so sufficiency means each of
     those names has one canonical source specification.  Additional
-    specifications are retained: S06 deliberately does not claim an inventory
+    specifications are retained: it deliberately does not claim an inventory
     of optional parameter names and this layer cannot soundly reject them.
     """
     live_by_key = _index_reconciled_leaves(reconciliation)

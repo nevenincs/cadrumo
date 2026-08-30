@@ -753,7 +753,7 @@ if set(OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE) != set(IvaLedgerAggregat
 # raises all twenty members, and preflight runs two of the screens and never
 # enters the rest. Thirteen members therefore have no preflight counterpart to
 # map onto, and inventing one would ship an operator-facing message for a
-# condition this layer cannot detect -- the failure S200 was written against.
+# condition this layer cannot detect -- the failure this guard was written against.
 # The partition records that reachability fact per member instead. Its sibling
 # is right that an exemption ROW would be the worse shape on an axis where
 # severity is a product choice; here the second side is a structural fact about

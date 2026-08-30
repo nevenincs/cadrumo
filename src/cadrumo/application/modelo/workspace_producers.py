@@ -242,7 +242,7 @@ class ModeloWorkspaceAtomicProjectionPortV1[ProjectionT: BaseModel](Protocol):
         ...
 
     def read_current_stamp_and_epoch(self) -> tuple[ModeloWorkspaceProducerStampV1, ModeloWorkspaceEpochV1]:
-        """Return the current consistency coordinates for S128's second validation pass."""
+        """Return the current consistency coordinates for the second validation pass."""
         ...
 
 
@@ -328,7 +328,7 @@ def _producer_contract_inventory_digest(
     )
 
 
-# --- S167: one application-owned port realization per contributor kind ---
+# --- one application-owned port realization per contributor kind ---
 #
 # Every envelope below is a THIN adapter only: it exists because
 # ModeloWorkspaceAtomicProjectionPortV1 binds ProjectionT to BaseModel, and a
@@ -346,7 +346,7 @@ def _producer_contract_inventory_digest(
 # graded snapshot), never both -- a discriminated envelope, not a tuple or
 # dataclass, is what a single fixed projection type needs here.
 #
-# S274 corrected the fingerprint to admit Decimal-bearing projections, which
+# The fingerprint was corrected to admit Decimal-bearing projections, which
 # is what makes REGISTRY, BOUNDED_REVIEW (ModeloWorkReview) and CALCULATION
 # (CalculationRevision) registerable at all.
 
@@ -857,7 +857,7 @@ class ModeloWorkspaceLocaleCataloguePortV1:
 class ModeloWorkspaceFieldManifestPortV1:
     """Application-owned port realization delegating to the sole FIELD_MANIFEST capture.
 
-    S278: a static inspection and a graded snapshot make different authority
+    A static inspection and a graded snapshot make different authority
     claims and generate over different type universes -- this port accepts
     either admission's own authority object and dispatches to the matching
     generator, never filtering one universe's manifest down for the other.
