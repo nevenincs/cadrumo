@@ -5,7 +5,7 @@ tags:
 date: '2026-08-30'
 modified: '2026-08-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:de76426fbae4fae7243f72a04e44915d15e7a5ab5629473d58add0f34379560a'
+body_hash: 'sha256:bedf5899873cc3eccd2ed78607657859c45d55f48d2508f0eeabed91cf3f2a4e'
 step_id: 'S61'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
@@ -20,9 +20,9 @@ related:
 
 - `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_165_historical_layout_authority.py`
 - `verify:` `uv run --no-sync pytest --noconftest -n 0 -q src/cadrumo/domain/calculations/registry/tests/test_narrow_mechanism_admissions.py src/cadrumo/domain/calculations/registry/tests/test_modelo_165_historical_layout_authority.py` -> `pass`
+- `verify:` `uv run --no-sync pytest -n 0 -q src/cadrumo/domain/calculations/registry/tests/test_narrow_mechanism_admissions.py src/cadrumo/domain/calculations/registry/tests/test_modelo_165_historical_layout_authority.py` -> `pass` (23 passed, 56.27s)
 
 ## Notes
 
-The normal focused pytest invocation was blocked by the shared worktree's unrelated half-landed declaracion relocation: `cadrumo.adapters.inbound.declaracion._detect` cannot import `extract_pages_text` from `_parsers`. The two selected S61 modules need no fixtures and passed with the repository conftest excluded; the normal invocation is recorded as a persistent external failure rather than a pass.
-
+The normal focused pytest invocation was initially blocked by the shared worktree's unrelated half-landed declaracion relocation: `cadrumo.adapters.inbound.declaracion._detect` could not import `extract_pages_text` from `_parsers`. The normal rerun now passes (23 passed, 56.27s); the earlier `--noconftest` result is retained as historical troubleshooting evidence rather than the sole verification.
 
