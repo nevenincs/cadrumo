@@ -2274,3 +2274,51 @@ relative ones and must not be acted on. Independently, a de-export is proven by
 importing the affected package, not by re-reading the census that proposed it:
 the census and the deletion share an assumption, so only execution is a second
 opinion.
+
+### Measured 2026-08-31: the TUI route census claim does not hold
+
+**Pathway:** `src/cadrumo/entrypoints/tui/modelo/routes.py`, and the C2
+accessibility suite that consumes it.
+
+Reported in this family as "a TUI route census built on a hardcoded literal
+set". REFUTED at current HEAD, on reading rather than on relay.
+`declared_destination_ids()` returns
+`frozenset(get_args(ModeloWorkspaceDestinationIdV1.__value__))` -- derived from
+the type alias the view models already address -- and its docstring states the
+reason a literal was rejected: "A literal copy here would be a second
+definition that agrees with the first only until someone edits one of them."
+
+`_require_total_destination_table` then compares the routed table against that
+derived set in BOTH directions, naming missing and extra ids separately, and
+additionally refuses two destinations resolving to one factory. The C2 suite
+asserts the same equality. That is the shape this family holds up as the
+counter-example, not an instance of the defect.
+
+**Remediation.** None. Recorded so the claim is not re-actioned: the second of
+the family's relayed instances to dissolve on measurement, after the sixth that
+this row already records as refuted.
+
+### Actioned 2026-08-31: the workspace remnant scanner carried a stale exclusion
+
+**Pathway:** `dev/tests/test_workspace_assembly_forbidden_paths.py`.
+
+Reported as "a workspace remnant scanner whose pass condition contradicts a
+legitimate docstring". The contradiction itself was already resolved -- three
+files legitimately name the rejected `_workspace_projection.py` and were
+excluded with a stated reason, and the scan matches whole filenames rather than
+substrings, so the live `test_workspace_projection.py` does not false-fire.
+
+What measurement found instead is the failure mode one level along:
+`src/cadrumo/application/modelo/workspace.py` was on the exclusion list and NO
+LONGER NAMES the forbidden module at all. The exclusion suppressed nothing, and
+would have gone on suppressing that file on the day its docstring named the
+module again -- an allowlist entry that has outlived its reason is invisible
+precisely because the gate stays green either way.
+
+**Remediation, landed.** The stale entry is removed, so `workspace.py` is
+scanned like any other module, and each surviving exclusion now asserts that it
+still contains the forbidden token. An exclusion that stops excluding anything
+fails loudly instead of persisting. Proven both directions against the real
+population: the assertion fails for the removed entry and holds for the two
+that remain, which is the both-directions discipline this family's own
+counter-example is praised for.
