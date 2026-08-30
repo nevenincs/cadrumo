@@ -31,8 +31,8 @@ from ...application.operations.projection_services import (
 )
 from ...core.time import now
 from ...tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
-from .. import build_production_operation_registry
-from .._operation_composition import compose_operation_dependencies
+from ..operation_composition import build_production_operation_registry
+from ..operation_composition import compose_operation_dependencies
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

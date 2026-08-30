@@ -26,7 +26,7 @@ import pytest
 from ...application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS, CENSO_SOURCE_TAG
 from ...application.user_profile.profile_record_repository import ProfileRecordRepository
 from ...application.user_profile.projections import record_to_effective_facts
-from .._censal_review import _run as run_censal_review_through_services
+from ..censal_review import _run as run_censal_review_through_services
 from .test_registered_executor_conformance import _CloseWitness, _runtime
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

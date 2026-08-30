@@ -74,8 +74,8 @@ from ...core.time import now
 from ...domain.user_profile.values import UserProfileFact
 from ...tests.aeat_literal_fixtures import aeat_url
 from ...tests.secure_sql import isolated_profile_storage_root
-from .. import build_production_operation_registry
-from .._censal_review import _run as run_censal_review_through_services
+from ..operation_composition import build_production_operation_registry
+from ..censal_review import _run as run_censal_review_through_services
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

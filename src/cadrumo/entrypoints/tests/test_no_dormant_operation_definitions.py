@@ -8,7 +8,7 @@ from typing import Final
 
 import pytest
 
-from .._operation_composition import build_production_operation_registry
+from ..operation_composition import build_production_operation_registry
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

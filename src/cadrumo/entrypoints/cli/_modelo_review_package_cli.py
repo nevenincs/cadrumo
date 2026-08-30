@@ -84,13 +84,6 @@ from ...application.modelo._export import (
     export_modelo_revision,
 )
 from ...application.modelo._iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
-from ...application.modelo.review_package import (
-    ReviewPackageError,
-    ReviewPackageIntegrityError,
-    ReviewPackageRevisionStateError,
-    build_review_package,
-    verify_review_package,
-)
 from ...application.modelo._review_package_collab_audit import emit_collab_feedback_countersign_attached_event
 from ...application.modelo._review_package_counter_sign import (
     CounterSignedReceipt,
@@ -132,6 +125,13 @@ from ...application.modelo._selectors import (
     ModeloCalculationRevisionSelectorStateError,
 )
 from ...application.modelo._work_lifecycle import get_work_unit
+from ...application.modelo.review_package import (
+    ReviewPackageError,
+    ReviewPackageIntegrityError,
+    ReviewPackageRevisionStateError,
+    build_review_package,
+    verify_review_package,
+)
 from ...application.modelo.work_addressing import (
     ModeloWorkAddressNotFoundError,
     ModeloWorkPeriodTokenError,

@@ -180,7 +180,7 @@ def test_every_exported_definition_reaches_the_production_registry() -> None:
     definition that cannot be reached is indistinguishable from one that does
     not exist, except that it still has to be maintained.
     """
-    from ....entrypoints._operation_composition import build_production_operation_registry
+    from ....entrypoints.operation_composition import build_production_operation_registry
 
     exported = {definition.definition_id for definition in _definitions().values()}
     composed = {definition.definition_id for definition in build_production_operation_registry().definitions}

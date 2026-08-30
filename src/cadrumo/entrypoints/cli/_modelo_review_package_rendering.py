@@ -40,10 +40,6 @@ from ._modelo_review_package_payloads import (
 )
 
 if TYPE_CHECKING:
-    from ...application.modelo.review_package import (
-        ReviewPackageBuildResult,
-        ReviewPackageVerification,
-    )
     from ...application.modelo._review_package_counter_sign import CounterSignedReceipt
     from ...application.modelo._review_package_feedback import ImportedFeedback
     from ...application.modelo._review_package_recipient_encryption import (
@@ -51,6 +47,10 @@ if TYPE_CHECKING:
         RecipientEncryptedPackage,
     )
     from ...application.modelo._review_package_signing import SignedReviewPackage
+    from ...application.modelo.review_package import (
+        ReviewPackageBuildResult,
+        ReviewPackageVerification,
+    )
 
 
 def review_package_build_result_payload(build_result: ReviewPackageBuildResult) -> ModeloReviewPackageBuildResult:

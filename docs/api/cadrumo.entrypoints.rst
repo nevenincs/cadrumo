@@ -21,7 +21,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.entrypoints._censal_review
    cadrumo.entrypoints._cli_main
-   cadrumo.entrypoints._operation_composition
    cadrumo.entrypoints.adapter_composition
+   cadrumo.entrypoints.censal_review
+   cadrumo.entrypoints.operation_composition

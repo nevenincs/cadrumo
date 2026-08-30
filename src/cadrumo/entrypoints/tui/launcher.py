@@ -70,7 +70,7 @@ async def operation_services_scope() -> AsyncGenerator[OperationComposedServices
     this package would oblige every other frontend to import the TUI to reach
     it, which is the dependency the TUI boundary exists to forbid.
     """
-    from .._operation_composition import compose_operation_dependencies
+    from ..operation_composition import compose_operation_dependencies
 
     services = compose_operation_dependencies()
     try:

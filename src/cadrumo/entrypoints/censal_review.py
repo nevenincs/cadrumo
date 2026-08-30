@@ -34,7 +34,7 @@ from ..core.operations import (
     OperationTerminalCondition,
 )
 from ..core.time import now
-from ._operation_composition import compose_operation_dependencies
+from .operation_composition import compose_operation_dependencies
 
 _OBSERVATION_LIMIT = 256
 _SETTLEMENT_POLLS = 500
