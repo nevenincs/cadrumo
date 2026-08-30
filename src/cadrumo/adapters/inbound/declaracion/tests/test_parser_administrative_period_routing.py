@@ -20,7 +20,7 @@ from __future__ import annotations
 import pytest
 
 from .....core import Period, accepted_filing_period_codes, accepted_period_codes
-from .._parser import _filing_period_for_observation
+from ..parser import _filing_period_for_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 

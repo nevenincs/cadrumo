@@ -23,7 +23,7 @@ Major declaration:
 
 from __future__ import annotations
 
-from ._parser import parse_justificante, parse_justificante_bytes
+from .parser import parse_justificante, parse_justificante_bytes
 
 __all__ = [
     "parse_justificante",

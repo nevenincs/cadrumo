@@ -97,8 +97,6 @@ def _unreachable_attribute_reads() -> dict[str, list[str]]:
     findings: dict[str, list[str]] = {}
     for path in sorted(_SRC.rglob("*.py")):
         relative = path.relative_to(_SRC).as_posix()
-        if "tests" in path.relative_to(_SRC).parts or path.name.startswith("test_"):
-            continue
         try:
             tree = ast.parse(path.read_text(encoding="utf-8"))
         except SyntaxError:
@@ -121,7 +119,11 @@ def _unreachable_attribute_reads() -> dict[str, list[str]]:
         for binding, attributes in reads.items():
             package = bound_packages[binding]
             reachable = _reachable_names(package / "__init__.py")
-            missing = sorted(attribute for attribute in attributes if attribute not in reachable)
+            missing = sorted(
+                attribute
+                for attribute in attributes
+                if attribute not in reachable and not attribute.startswith("__")
+            )
             if missing:
                 package_name = package.relative_to(_SRC).as_posix()
                 findings.setdefault(relative, []).extend(f"{package_name}.{attribute}" for attribute in missing)
@@ -133,7 +135,7 @@ def test_no_attribute_is_read_through_a_namespace_that_lacks_it() -> None:
     findings = _unreachable_attribute_reads()
     assert not findings, (
         "these modules read an attribute through a package namespace that does "
-        "not expose it, which raises AttributeError only when the path runs. "
+        "not expose it, which raises AttributeError only when the path runs. Test modules are scanned too: a test reaching through a retired namespace fails at collection, which is the same defect arriving one step earlier, and three such reads survived a retirement because this check used to skip them. "
         "Import the owning submodule directly: "
         f"{findings}"
     )

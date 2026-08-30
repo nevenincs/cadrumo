@@ -8,7 +8,8 @@ from uuid import UUID
 
 import pytest
 
-from .. import KeyringUnavailableError, build_profile_login_session_port, custody, master_key
+from ..custody.acceleration_receipt import PersistedProfileSession, ProfileSessionResumeOutcome, profile_session_path
+from .. import KeyringUnavailableError, build_profile_login_session_port, master_key
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -71,7 +72,7 @@ def test_receipt_lifecycle_preserves_exact_metadata_and_wipeable_key_buffer(tmp_
         return
 
     try:
-        assert isinstance(minted, custody.PersistedProfileSession)
+        assert isinstance(minted, PersistedProfileSession)
         assert minted.profile_id == _PROFILE_ID
         assert minted.custody_generation == 3
         assert minted.dek_epoch == "epoch-3"
@@ -86,7 +87,7 @@ def test_receipt_lifecycle_preserves_exact_metadata_and_wipeable_key_buffer(tmp_
             dek_epoch="epoch-3",
             now=_NOW + timedelta(minutes=1),
         )
-        assert isinstance(resumed, custody.ProfileSessionResumeOutcome)
+        assert isinstance(resumed, ProfileSessionResumeOutcome)
         assert resumed.resumed is True
         assert resumed.refusal is None
         assert resumed.record == minted
@@ -101,7 +102,7 @@ def test_receipt_lifecycle_preserves_exact_metadata_and_wipeable_key_buffer(tmp_
             record=minted,
             new_idle_deadline=_NOW + timedelta(minutes=20),
         )
-        assert isinstance(renewed, custody.PersistedProfileSession)
+        assert isinstance(renewed, PersistedProfileSession)
         assert renewed.session_id == minted.session_id
         assert renewed.issued_at == minted.issued_at
         assert renewed.idle_deadline == _NOW + timedelta(minutes=20)
@@ -114,7 +115,7 @@ def test_receipt_lifecycle_preserves_exact_metadata_and_wipeable_key_buffer(tmp_
             dek_epoch="epoch-3",
             now=_NOW + timedelta(minutes=16),
         )
-        assert isinstance(resumed_after_renewal, custody.ProfileSessionResumeOutcome)
+        assert isinstance(resumed_after_renewal, ProfileSessionResumeOutcome)
         assert resumed_after_renewal.resumed is True
         assert resumed_after_renewal.record == renewed
         assert isinstance(renewed_key_buffer, bytearray)
@@ -135,5 +136,5 @@ def test_receipt_path_and_absent_delete_use_the_canonical_custody_location(tmp_p
     assert port.acceleration_receipt_path(
         storage_root=tmp_path,
         profile_id=_PROFILE_ID,
-    ) == custody.profile_session_path(storage_root=tmp_path, profile_id=_PROFILE_ID)
+    ) == profile_session_path(storage_root=tmp_path, profile_id=_PROFILE_ID)
     port.delete_acceleration_receipt(storage_root=tmp_path, profile_id=_PROFILE_ID)

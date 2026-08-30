@@ -28,8 +28,6 @@ kernels are consumed from their defining child modules directly:
   :class:`domain.filing.ModeloAmendmentRepositoryProtocol` port.
 """
 
-from .sync_runs import SyncRunRecordRepository
+from __future__ import annotations
 
-__all__: list[str] = [
-    "SyncRunRecordRepository",
-]
+__all__: tuple[str, ...] = ()
