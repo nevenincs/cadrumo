@@ -25,12 +25,8 @@ from cryptography.x509.oid import NameOID
 from pydantic import SecretStr
 
 from ...core import BindingSourceKind
-from ...core.errors import (
-    ERROR_REGISTRY,
-    CadrumoError,
-    build_error_envelope,
-    get_registered_error_code,
-)
+from ...core.errors.error_codes import ERROR_REGISTRY, build_error_envelope, get_registered_error_code
+from ...core.errors.hierarchy import CadrumoError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

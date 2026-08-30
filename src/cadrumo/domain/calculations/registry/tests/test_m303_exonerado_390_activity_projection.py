@@ -15,11 +15,7 @@ from .....core import (
     validated_casilla_id,
 )
 from ....filing_evidence import FilingEvidenceReference
-from ....modelos.calculation_revision import (
-    M303Exonerado390ActivityRowEvidence,
-    M303Exonerado390EndpointEvidence,
-    M303Exonerado390FilingEvidence,
-)
+from ....modelos.calculation_revision_m303_evidence import M303Exonerado390ActivityRowEvidence, M303Exonerado390EndpointEvidence, M303Exonerado390FilingEvidence
 from ..m303_exonerado_390_projection import project_m303_exonerado_390_activity_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

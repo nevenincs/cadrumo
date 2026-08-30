@@ -42,16 +42,10 @@ from ...domain.bienes_inversion import (
 from ...domain.calculations.registry.schema_references import SourceReference
 from ...domain.deadlines.models import ChargeAccount, ModeloIVAProfile, RefundAccount, TaxpayerProfile
 from ...domain.modelos.calculation_revision_amendment import m303_rectificativa_motive_is_applicable
-from ...domain.modelos.calculation_revision import (
-    CalculationRevisionAmendmentKind,
-    FilingInstanceEvidence,
-    M303Exonerado390FilingEvidence,
-    M303InsolvencyFilingFact,
-    M303InsolvencyFilingSubtype,
-    M303RectificativaMotive,
-    M303RegimenSimplificadoCalculationResult,
-    M303RegimenSimplificadoFilingEvidence,
-)
+from ...domain.modelos.calculation_revision import CalculationRevisionAmendmentKind, FilingInstanceEvidence
+from ...domain.modelos.calculation_revision_amendment import M303RectificativaMotive
+from ...domain.modelos.calculation_revision_m303_evidence import M303Exonerado390FilingEvidence, M303InsolvencyFilingFact, M303InsolvencyFilingSubtype, M303RegimenSimplificadoCalculationResult
+from ...domain.modelos.calculation_revision_m303_handoff import M303RegimenSimplificadoFilingEvidence
 from ...domain.prorrata_register import ProrrataRegister
 from ..aggregation import (
     IvaDifferentiatedDeductionContribution,

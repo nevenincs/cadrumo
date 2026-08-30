@@ -12,7 +12,7 @@ from decimal import Decimal
 from typing import ClassVar
 
 from ...core import BindingSourceKind, CalculationSourceLineageRole, CasillaId, Modelo, Period, RegistryAuthorityGrade
-from ...core.errors import CoreValidationError
+from ...core.errors.hierarchy import CoreValidationError
 from ...core.resources import bundled_path
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings import m303_regimen_simplificado_annual_summary_requirement
@@ -25,15 +25,9 @@ from ...domain.iva.regimen_simplificado_rows import ActividadAgricolaSimplificad
 from ...domain.modelos.filing_record import ModeloRecordStatus
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol, ModeloRecordCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit import WorkUnit
-from ...domain.modelos.calculation_revision import (
-    M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS,
-    CalculationRevision,
-    CalculationRevisionState,
-    M303FilingInstanceEvidence,
-    M303RegimenSimplificadoActivityCalculationResult,
-    M303RegimenSimplificadoAnnualSummaryHandoff,
-    M303RegimenSimplificadoCalculationResult,
-)
+from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState, M303RegimenSimplificadoAnnualSummaryHandoff, M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS
+from ...domain.modelos.calculation_revision_m303_evidence import M303RegimenSimplificadoActivityCalculationResult, M303RegimenSimplificadoCalculationResult
+from ...domain.modelos.calculation_revision_m303_handoff import M303FilingInstanceEvidence
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..aggregation import CalculationSourceContext, CalculationSourceProvenance, CalculationSourceResolution
 

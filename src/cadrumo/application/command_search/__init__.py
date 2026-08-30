@@ -14,11 +14,4 @@ queries the stemmer cannot bridge on its own.
 
 from __future__ import annotations
 
-from ._index import CommandDoc, CommandHit, CommandIndex, build_command_index
-
-__all__ = [
-    "CommandDoc",
-    "CommandHit",
-    "CommandIndex",
-    "build_command_index",
-]
+__all__: tuple[str, ...] = ()

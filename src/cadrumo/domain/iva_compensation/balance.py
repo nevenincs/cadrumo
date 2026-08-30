@@ -10,7 +10,7 @@ builds the report lives in the application layer.
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Final
+from typing import Annotated, Final
 
 from pydantic import BaseModel, Field
 
@@ -24,6 +24,21 @@ from .carry_forward import (
 _FOUR_YEAR_WINDOW: Final[int] = 4
 
 
+CompensationExpiryYear = Annotated[int, Field(ge=2000, le=2200)]
+"""The year an unused compensation lot lapses.
+
+Deliberately wider than :obj:`~cadrumo.core.filing_year.FilingYear`. This is a
+DERIVED year -- ``source_filing_year + 4`` for the earliest still-active lot --
+so it may legitimately fall beyond the last year a return can be filed for, and
+narrowing it to the filing-year range would refuse a balance the engine can
+correctly produce.
+
+Declared once because the CLI wallet payload projects the same field. The bound
+was written out at both sites identically, which is the shape that drifts: the
+payload can loosen or tighten without the model noticing.
+"""
+
+
 class IvaWalletBalanceReport(BaseModel):
     """Aggregated IVA compensation carry-forward balance as of a reference year."""
 
@@ -34,7 +49,7 @@ class IvaWalletBalanceReport(BaseModel):
     active_balance: Decimal = Field(ge=Decimal("0"))
     expired_balance: Decimal = Field(ge=Decimal("0"))
     lot_count: int = Field(ge=0)
-    next_expiry_year: int | None = Field(default=None, ge=2000, le=2200)
+    next_expiry_year: CompensationExpiryYear | None = None
     unallocated_applied_amount: Decimal = Field(ge=Decimal("0"))
 
 

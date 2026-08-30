@@ -45,7 +45,8 @@ from uuid import UUID
 
 import pytest
 
-from ....adapters.persistence.storage import custody
+from ....adapters.persistence.storage.custody.errors import ProfileCustodyRecordError
+from ....adapters.persistence.storage.custody.filesystem import profile_custody_local_lock
 from ....core import StorageCategory, storage_location
 from ....core.paths import effective_storage_root
 from ..custody_repository import profile_custody_transaction_lock
@@ -83,11 +84,11 @@ def _hold_root_lock_in_sibling(root_text: str, release_event: Any, result_queue:
     """
     from pathlib import Path as _Path
 
-    from ....adapters.persistence.storage import custody as _custody
+    from ....adapters.persistence.storage.custody.filesystem import profile_custody_root_lock
     from ....core.paths import effective_storage_root as _effective_root
 
     result_queue.put("ready")
-    with _custody.profile_custody_root_lock(_effective_root(_Path(root_text))):
+    with profile_custody_root_lock(_effective_root(_Path(root_text))):
         result_queue.put("locked")
         release_event.wait(30)
 
@@ -141,7 +142,7 @@ def test_the_root_lock_is_taken_before_the_profile_lock(tmp_path: Path) -> None:
         # The proof. A free profile lock means the blocked transaction has not
         # taken it, so root is genuinely first. Released before the root lock
         # is, or the transaction would block again on this very handle.
-        with custody.profile_custody_local_lock(_profile_lock_path(tmp_path), timeout_seconds=_PROBE_SECONDS):
+        with profile_custody_local_lock(_profile_lock_path(tmp_path), timeout_seconds=_PROBE_SECONDS):
             pass
     finally:
         release_root.set()
@@ -181,9 +182,9 @@ def test_the_probe_fails_when_the_profile_lock_is_genuinely_held(tmp_path: Path)
     # same wording, so the match is platform-neutral. Matching the message is
     # the established practice for this class in `custody/tests/test_capsule.py`.
     with (
-        custody.profile_custody_local_lock(target, timeout_seconds=_PROBE_SECONDS),
-        pytest.raises(custody.ProfileCustodyRecordError, match="cannot be exclusively opened"),
-        custody.profile_custody_local_lock(target, timeout_seconds=0.5),
+        profile_custody_local_lock(target, timeout_seconds=_PROBE_SECONDS),
+        pytest.raises(ProfileCustodyRecordError, match="cannot be exclusively opened"),
+        profile_custody_local_lock(target, timeout_seconds=0.5),
     ):
         pass
 

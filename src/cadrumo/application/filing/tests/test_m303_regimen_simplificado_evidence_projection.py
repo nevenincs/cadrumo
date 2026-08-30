@@ -33,7 +33,7 @@ from ....domain.calculations.registry.schema_exports import (
 )
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva.regimen_simplificado_rows import ActividadNoAgricolaSimplificado, EntradaModuloSimplificado, HechoActividadSimplificado, M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision, RegimenSimplificadoFilingRows
-from ....domain.modelos.calculation_revision import M303RegimenSimplificadoFilingEvidence
+from ....domain.modelos.calculation_revision_m303_handoff import M303RegimenSimplificadoFilingEvidence
 from .test_producer_snapshot import _elections, _m303_filing_facts, _m303_profile, _presenter, _taxpayer_identity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

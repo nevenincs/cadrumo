@@ -44,15 +44,8 @@ from ....domain.modelos.calculation_revision_aggregate import CALCULATION_REVISI
 from ....domain.modelos.calculation_revision_amendment import m303_rectificativa_motive_is_applicable, m303_rectificativa_record_design_from_snapshot
 from ....domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind, ModeloRecord, ModeloRecordCatalogue, derive_filing_record_id
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
-from ....domain.modelos.calculation_revision import (
-    CalculationRevision,
-    CalculationRevisionAmendmentIdentity,
-    CalculationRevisionAmendmentKind,
-    CalculationRevisionCatalogue,
-    CalculationRevisionState,
-    M303RectificativaMotive,
-    derive_calculation_revision_id,
-)
+from ....domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionAmendmentIdentity, CalculationRevisionAmendmentKind, CalculationRevisionCatalogue, CalculationRevisionState, derive_calculation_revision_id
+from ....domain.modelos.calculation_revision_amendment import M303RectificativaMotive
 from ....tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.filing_evidence import general_m303_filing_evidence_from_regimen_snapshot

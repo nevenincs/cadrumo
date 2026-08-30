@@ -2,7 +2,8 @@
 
 import pytest
 
-from ....core import errors, logging
+from ....core import logging
+from ....core.errors.hierarchy import CadrumoError
 from .. import __all__ as modelos_all
 from .. import __doc__ as modelos_doc
 from ..codes import ModeloCode
@@ -13,7 +14,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 def test_smoke_modelos() -> None:
     """Asserts the subpackage is importable and conventions hold."""
     assert modelos_doc is not None
-    assert issubclass(errors.CadrumoError, Exception)
+    assert issubclass(CadrumoError, Exception)
     assert logging.get_logger(__name__).name == __name__
 
 

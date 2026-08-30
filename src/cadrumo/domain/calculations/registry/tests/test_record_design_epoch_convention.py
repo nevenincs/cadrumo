@@ -213,7 +213,7 @@ def test_the_filed_artefact_refuses_an_epoch_the_registry_would_refuse() -> None
     Asserted through the shared pattern rather than a restated one: a second copy is
     exactly the drift this closes.
     """
-    from ....modelos.calculation_revision import M303RegimenSimplificadoCalculationResult
+    from ....modelos.calculation_revision_m303_evidence import M303RegimenSimplificadoCalculationResult
 
     field = M303RegimenSimplificadoCalculationResult.model_fields["record_design_epoch"]
     patterns = [getattr(item, "pattern", None) for item in field.metadata]

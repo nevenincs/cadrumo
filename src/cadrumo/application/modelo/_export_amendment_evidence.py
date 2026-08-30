@@ -13,12 +13,8 @@ from ...domain.modelos.calculation_revision_aggregate import CalculationRevision
 from ...domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue, is_justificante_backed_external_evidence
 from ...domain.modelos.protocols import ModeloRecordCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit import WorkUnit
-from ...domain.modelos.calculation_revision import (
-    CalculationRevision,
-    CalculationRevisionAmendmentIdentity,
-    CalculationRevisionAmendmentKind,
-    M303RectificativaMotive,
-)
+from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionAmendmentIdentity, CalculationRevisionAmendmentKind
+from ...domain.modelos.calculation_revision_amendment import M303RectificativaMotive
 from ...domain.modelos.errors import ModeloExportError
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 
