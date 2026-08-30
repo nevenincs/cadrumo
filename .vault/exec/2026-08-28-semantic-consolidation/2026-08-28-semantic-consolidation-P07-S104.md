@@ -5,7 +5,7 @@ tags:
 date: '2026-08-30'
 modified: '2026-08-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:3987001b75a450328368374c16ea855fe1d25ebeeef08577d8be1f8a913e2b25'
+body_hash: 'sha256:40e5b0cb0ba847951d4a59ce52dad62d9d081c30ebbfeb45c07b94a69fd92841'
 step_id: 'S104'
 related:
   - "[[2026-08-28-semantic-consolidation-plan]]"
@@ -19,13 +19,19 @@ related:
 
 ## Changes
 
-- `M` `src/cadrumo/domain/modelos/calculation_revision.py`
-- `M` 32 consumer modules across `src/cadrumo/`
-- `verify:` `pytest src/cadrumo/domain/modelos -n 0 -m unit` -> `pass` (245)
+- (no code change: the split was backed out)
 
 ## Notes
 
-A first pass over-collected: names appearing exactly twice were treated as pure
-re-exports, but six of the nineteen appear twice because they are used once in
-the body -- `ModeloError` as a base class among them. Those were restored and
-the criterion narrowed to names that appear only in the import and in `__all__`.
+The hierarchy split was applied and then reverted by the concurrent git session,
+which restored tracked files underneath it. Between those two points a commit
+landed on the half-applied state, leaving a HEAD that imported
+`core.errors.hierarchy` without tracking the module -- a clean checkout could
+not import `domain/fincas/errors.py`. The git owner reverted it and HEAD is
+consistent again.
+
+Four untracked modules from the attempt remain on disk and are unreferenced by
+HEAD, but the tree-walking gates import every module under `src/`, so
+`hierarchy.py`'s registered exception subclasses fail to bind and four tests in
+`test_exception_base_hygiene` and `test_registry_enforcement` fail. They need
+removing; that was left to the operator.

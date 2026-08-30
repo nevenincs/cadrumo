@@ -9,7 +9,7 @@ related:
   - '[[2026-08-28-semantic-consolidation-cli-payload-projection-adr]]'
 modified: '2026-08-30'
 body_schema: body-v2
-body_hash: 'sha256:9243179f023233fd6303ad2002fdc7bd5200dbfa27c99e27213f88192ec4ef6a'
+body_hash: 'sha256:00bc724ba28979084ab94e51c4631711a7cb1af38e191d3c952e402d495a5b1d'
 ---
 
 # `semantic-consolidation` plan
@@ -56,6 +56,8 @@ Six package namespaces carry a PEP 562 __getattr__ resolver, four of them byte-i
 - [ ] `P02.S59` - Rule on the four free-text note bounds, which carry five hundred, two thousand and four thousand characters for the same operator commentary with no canonical among them; `src/cadrumo/entrypoints/cli/`.
 - [ ] `P02.S60` - Reconcile the actor concept, declared at sixty-four on the filing label and a hundred and twenty-eight on the review package while both are fed by the same operator resolver; `src/cadrumo/`.
 - [ ] `P02.S61` - Publicise the preflight issue detail, whose canonical alias elides at five hundred and twelve where the payload rejects, so the two disagree about what an over-long detail should do; `src/cadrumo/application/ledger/preflight.py`.
+- [x] `P02.S102` - Declare the evidence-bundle notes bound once and adopt the canonical unit fraction on the manifest model, which restated both by hand beside the CLI payload that projects it; `src/cadrumo/application/evidence/`.
+- [x] `P02.S103` - Declare the compensation expiry year once beside the balance model, and adopt the canonical bucket event id where the M036 payload had invented a looser one; `src/cadrumo/domain/iva_compensation/, src/cadrumo/entrypoints/cli/`.
 
 ### Phase `P03` - Consolidate the repeated secure-repository configuration shape
 
@@ -110,6 +112,7 @@ The lazy-export ADR assembled its population by searching for one identifier, _L
 - [x] `P07.S91` - Retire the censo, attachments, categories, invoices and buckets facades, dissolving the invoices-iva import cycle the invoices namespace made spellable; `src/cadrumo/domain/`.
 - [x] `P07.S95` - Retire the deadlines, Google outbound and AEAT sede facades, repointing module-object imports and their body uses together; `src/cadrumo/`.
 - [x] `P07.S99` - Retire the three largest domain facades: iva at 179 names across 26 modules, filing at 43 and iva_compensation at 36; `src/cadrumo/domain/`.
+- [ ] `P07.S104` - Sequence the core errors hierarchy split with whoever owns git rather than applying it incrementally, since a commit landing on a half-applied state produced a HEAD that could not import; `src/cadrumo/core/errors/`.
 
 ### Phase `P08` - Consolidate the repeated constrained scalar shapes
 

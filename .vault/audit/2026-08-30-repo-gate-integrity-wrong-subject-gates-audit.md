@@ -5,7 +5,7 @@ tags:
 date: '2026-08-30'
 modified: '2026-08-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:a3c1c4a7aee7373fdea5914299300d7d6c972a392252dcc021f638aadec83314'
+body_hash: 'sha256:0c333660c913b4e949006bb75d5b049d56402f5802fa8966d584a921fb7da7f0'
 related: []
 ---
 
@@ -1544,7 +1544,6 @@ only the focus-enrolled subset. The remaining generalisation is greppable: any
 screen assigning `_bindings` wholesale silently loses `tab`, `shift+tab` and
 copy.
 
-
 ### the-host-load-stamp-invalidates-a-measurement-and-was-printed-in-the-log-being-read | high | a hang was nearly attributed as a real defect three times, and the line refuting each attempt was in the same output
 
 Two tests in `entrypoints/tui/operations/tests/test_operation_modal_lifecycle.py`
@@ -1842,6 +1841,341 @@ producer is present but inert"**. Three probes reached that state by accident,
 which also means it can be induced deliberately — so it has a testable subject
 even though the original hang does not.
 
+### a-gate-that-imports-the-tree-it-guards-cannot-run-when-that-tree-is-broken | high | the parse gate reused the project's canonical scanner and was therefore unimportable in exactly the state it exists to detect
+
+The syntax gate was written to reuse `_project_inventory._python_files`, which
+wraps the project's canonical `scan_directory`. Reuse over re-implementation is
+the correct instinct and the rule this campaign has applied all day.
+
+**It made the gate useless in the only state that matters.** While an in-flight
+peer sweep left `core/redaction/__init__.py` unparseable, importing the gate
+failed:
+
+```
+dev.tests.test_every_source_file_parses
+  -> cadrumo.core.directory_scan -> cadrumo.core.errors._registry
+  -> cadrumo.core.redaction -> IndentationError
+```
+
+A gate whose own import traverses the package cannot report on a package that
+cannot be imported. The reuse that is right everywhere else is wrong here, and
+the distinguishing property is narrow: **this gate's subject is the tree's
+ability to be parsed at all**, so it must owe that tree nothing.
+
+Rewritten to walk with `os.walk` and the standard library only, with the reason
+in its docstring so the next reader does not "fix" it back to the shared helper.
+It then ran against the broken tree and reported four offenders.
+
+**And the population moved under the measurement.** Those four were reported at
+one moment; three consecutive samples fourteen seconds later returned ZERO. The
+sweep producing them was still running and its owner was fixing them as fast as
+they appeared.
+
+That amends an earlier finding in this document. `re-run-the-detector-after-the-sweep`
+treats serial rediscovery — fix one, re-run, find the next — as evidence the
+population was never enumerated. **That inference holds only for a STATIC
+population.** Against a live producer, enumeration cannot converge: every list is
+stale by the next save, and fixing entries is competing with the thing creating
+them. The tell is the same in both cases and the correct action is opposite —
+enumerate harder, or stop and let the producer finish.
+
+**How:** distinguish the two before acting. A population that changes between two
+consecutive samples is being produced, not merely under-enumerated; the response
+is to identify the producer and wait, not to sweep. And run a whole-tree gate at
+a SETTLE POINT rather than during a sweep, because during one it reports a
+snapshot that was already wrong when printed.
+
+### a-settle-condition-is-the-wrong-gate-on-recording-durable-work | high | a rule written to answer "has this producer stopped" was applied to block a record whose truth did not depend on any producer
+
+A three-part settle condition was agreed for deciding when a tree-wide sweep had
+finished: parse clean, no new untracked modules across two checks minutes apart,
+no source mtimes inside the last several minutes. It is correct for the question
+it was written for.
+
+It was then applied to a different question — may an execution record be written
+for a completed gate — and blocked it. That was wrong, for a reason the executor
+identified and the author had not:
+
+**In a shared worktree with several active lanes, a globally quiet tree may never
+occur.** Waiting for one makes an unrelated lane's activity block an unrelated
+record, indefinitely, with no mechanism to end the wait. The condition was
+measured settled at one moment and unsettled four minutes later by a DIFFERENT
+lane editing unrelated files — not the sweep the condition was written about.
+
+**The fix is to split the claim rather than wait or overstate it.** A record can
+state two different kinds of thing:
+
+- properties of the ARTEFACT — the gate is import-independent, the injected cases
+  bite, the failure path was itself defective and is fixed, its first real outing
+  caught four live offenders. None of these depend on the tree being quiet, and
+  all remain true tomorrow.
+- properties of the ENVIRONMENT — the tree currently parses, the suite currently
+  passes. These are snapshots and were already stale when written.
+
+The record as written asserts the first, explicitly disclaims the second, names
+the files that failed the condition, and calls its passing runs snapshots. That
+is both honest and unblocked.
+
+**The general form:** before letting a condition gate an action, ask whether the
+action's TRUTH depends on the condition or only its CONVENIENCE. A settle
+condition governs whether a MEASUREMENT of the tree is meaningful. It does not
+govern whether a proof about an artefact may be recorded — and conflating the two
+produces an indefinite block that looks like rigour.
+
+See also `a-closing-condition-stated-as-a-measured-number-goes-stale-when-you-change-the-thing-measured`:
+the same failure one level up. There a criterion decayed because the campaign
+changed what it measured; here a criterion blocked because it measured something
+the work did not depend on.
+
+### the-corrections-ran-both-ways-and-each-direction-caught-a-different-class | high | the executor caught what the delegating view had compressed away; the lead caught what the local view could not see was miscounted
+
+Recorded because the pattern is structural rather than a matter of who was more
+careful, and it predicts where to look next time.
+
+**Executor to lead — three refused instructions, all correctly.** A redundant
+guard ordered by the lead, which would have passed the lead's own acceptance
+criteria while leaving the real cause live. A plan Step id the lead told the
+executor to put in shipped source — the exact mandate violation the executor had
+swept from seventeen sites hours earlier. And a settle condition the lead used to
+block a record whose truth did not depend on it.
+
+The executor's own account of why is better than "good judgement": in each case
+**it held local context the delegating view had compressed away.** It had read
+the three existing escapes, so it could see the gap the lead described was not
+there. It had swept seventeen instances of the violation, so the collision was
+unmissable. It had just measured the condition failing against an unrelated lane.
+That is an argument for the executor RAISING such things, not for the executor
+being right by disposition.
+
+**Lead to executor — four corrected figures and one refuted theory.** A
+six-consumer count that was one. A `wc -l` reporting line-matches as files. A
+coverage-gap claim generalised from testing one check of seven. And an
+environmental theory about a timeout that was really an uncached tree parse —
+which would otherwise have consumed a quiet-host investigation that could only
+have found nothing.
+
+These are the inverse class: not context the lead lacked, but claims whose SUBJECT
+or UNIT was wrong in ways invisible from inside the work that produced them. A
+figure looks right to its author precisely because they know what they meant.
+
+**The common root under almost every error tonight, in both directions:** a
+measurement taken correctly and then reported as something adjacent — a different
+unit, a different subject, a different moment. Reasoning held nearly everywhere;
+provenance did not. Every finding in this document is a variation on that.
+
+**How:** delegate with the expectation that the executor will refuse some
+instructions, and treat a refusal as information about compressed context rather
+than as friction. Review returning claims for their unit and subject rather than
+their logic, because the logic will usually be sound. And expect the two failure
+classes to be asymmetric: the delegating view loses detail, the local view loses
+perspective, and neither is corrected by the other trying harder.
+
+### the-timeout-everyone-attributed-to-the-share-was-an-uncached-full-tree-parse | high | four observations were read as I/O stalls; the cause was a gate re-parsing 6396 files three times and walking every tree per symbol
+
+`test_relocation_parity.py` timed out repeatedly and was read across four
+observations as an environmental stall on the network-backed worktree — the
+failure mode `aeat-local-execution` names for this checkout.
+
+**It is CPU-bound.** Measured, host at 50%:
+
+```
+discover 6396 files             0.35s
+read + parse all files         24.30s      (x3 uncached = 72.9s)
+one full ast.walk, all trees    4.05s      6,198,901 nodes
+8 canonical symbols x 4.05s    32.4s
+```
+
+`_source_trees()` read and `ast.parse`d every file under three roots with **no
+cache**, from **three** call sites; `_class_definition_sites` then walked every
+tree once per symbol. ~105s of work before the module asserts anything, which is
+exactly the 110s runs and 240s timeouts.
+
+Fixed with `@lru_cache(maxsize=1)` — the parse is pure over a tree the tests do
+not mutate. The stack moved off `ast.walk` entirely; the module is now 4 passed
+in 243s.
+
+**The disproof was already in the session.** A whole-tree `ast.parse` had been
+run earlier for an unrelated syntax sweep: 6487 files, seconds. That established
+reading this tree is cheap, so a scan taking minutes was never explicable by read
+latency. Two measured facts, both held by the same agents, never joined.
+
+**How:** before accepting an environmental explanation for a timeout, measure the
+COST OF THE WORK independently of the run that was slow. An environmental story
+is unfalsifiable by the observation it explains; only a measurement of what the
+code does can test it.
+
+### a-gate-pinning-a-consumer-tally-reddened-on-correct-work | high | a check named for "exactly seven direct consumers" failed because legitimate work removed one, and updating seven to six would have re-armed it
+
+`test_manager_pilot_has_one_canonical_home_and_exactly_seven_direct_consumers`
+hardcoded seven consumer filenames AND pinned the count in its own name. It
+failed because the visual suite's populated fixture stopped driving the UI seam
+— its docstring says "the property under test is rendering, not the seam" — and no
+longer needs the settling barrier. Verified gone at HEAD, not just the working
+tree.
+
+So a CORRECT change reddened the gate, which is what `aeat-quality-gates` forbids
+pinning a tally for: a count encodes a moment, trains everyone to update the
+constant, and then detects nothing.
+
+**The tempting fix re-arms the trap.** Seven to six is one edit, leaves the
+identical gate waiting for the next legitimate consumer change, and is attractive
+because it is smaller than asking what the check is for.
+
+Rewritten to the property: one definition site, and every consumer a level-1
+from-import of the canonical module from inside the canonical package — plus an
+explicit **non-vacuity** assertion, because a property gate can pass over an
+empty population where a tally gate cannot. Five predicates bite-proved
+individually: healthy passes; empty, wrong level, wrong module, outside-package
+and plain-import each red.
+
+**How:** when a gate fails on a count, ask first whether the change that moved the
+count was correct. If it was, the count is the defect — fix the assertion's
+SUBJECT, and add a non-emptiness check, because the property version can pass
+over nothing.
+
+### the-session-held-the-refutation-of-its-own-claim-and-did-not-join-it | high | three times, the measurement disproving a live conclusion had already been taken, by the same agents, in the same session
+
+The failure that recurred most was not a missing measurement. It was a
+measurement already in hand and never connected to the claim it refuted.
+
+**One — the load stamp.** A hang was twice about to be attributed to a code defect
+on the strength of "it reproduces at low load". The `CADRUMO-HOST-LOAD` line
+reading `python_processes=52`, and later `cpu=100.0%`, was printed in the same log
+being read, above the traceback being quoted.
+
+**Two — the tree parse.** A module's timeout was attributed across four
+observations to I/O stalls. Earlier in the same session, for an unrelated sweep,
+every tracked file had been parsed in seconds — establishing that reading this
+tree is cheap, and therefore that a minutes-long scan could not be read latency.
+
+**Three — the two readings.** A property was queried two ways in two scripts; only
+one was run, and its answer produced a complete and wrong root cause. The second
+query existed, was one line, and had the same author.
+
+**What makes this class distinct** from the search-and-count failures: there the
+instrument was defective. Here every instrument worked and every number was
+correct. What failed was ASSOCIATION — holding two true facts and not putting them
+in the same sentence. No discipline about measurement quality touches it.
+
+**It concentrates on environmental explanations** for a structural reason: "the
+share is slow", "the host is loaded", "it is flaky" fit every symptom, so they
+survive every observation. Explanatory reach reads as confirmation when it is the
+property that should provoke suspicion.
+
+**How:** before accepting an environmental or intermittency explanation, state
+what measurement would refute it, then check whether that measurement has already
+been taken in this session. Twice it had, and once it was in the file being quoted
+from.
+
+### every-file-parses-and-every-import-resolves-are-different-properties | medium | a gate written after a broken sweep covers only the breakage class that produced it, and its name invites the wider inference
+
+`test_every_source_file_parses` was written after an in-flight sweep left four
+files syntactically invalid. It does what it says and was proven to do it.
+
+**It cannot see a deleted module whose importers remain.** That sweep later moved
+on to removing modules while their consumers still imported them, and the gate
+reported **zero unparseable files** throughout — correctly, because every file
+still parses perfectly. `ast.parse` is a syntax check; an unresolvable import is
+not a syntax error.
+
+So "every source file parses" and "every import resolves" are different
+properties, and only the first is gated. The gate's name states the first
+accurately, which is exactly what makes the wider inference tempting: **"the parse
+gate covers broken sweeps"** is the sentence a reader forms, and it is wrong for
+two of the three breakage classes one sweep produced in a single evening — invalid
+syntax, deleted modules with live importers, and a registry whose entries no
+longer match its consumers.
+
+This is the document's own subject applied to a gate written by its authors, an
+hour after writing it: the check is correct about its subject and the reader
+generalises to the subject they wanted. It was caught only because the executor
+CHECKED whether the parse gate covered the new breakage instead of assuming the
+gate it had just verified would.
+
+**No second gate is proposed.** The suite itself detects unresolvable imports —
+noisily, as a collection error attributed to whichever module happens to import
+first, which is the attribution problem recorded elsewhere in this document. A
+gate could assert every first-party module imports, but that is expensive, it
+duplicates what collection already does, and nobody has established that the
+noisy detection is insufficient rather than merely unpleasant.
+
+**How:** state a gate's scope in terms of what it does NOT cover when the
+adjacent failure modes are plausible. A gate named for a property invites the
+reader to credit it with the CATEGORY the property belongs to, and the name alone
+cannot carry that distinction.
+
+### the-wrong-inference-was-free-and-the-right-answer-cost-one-command | high | in every case the correct check was cheap and got skipped, because the reasoning already felt complete
+
+The closing observation of the session, and the one that unifies most of this
+document.
+
+Three times in the final hours, a conclusion about a system was drawn from one of
+its parts. Each time the correct answer was available for the cost of a single
+command, and each time that command was skipped:
+
+- **Is this module CLI-specific?** A grep found zero framework references. The
+  right check was to BLOCK the package at the meta-path and import it — the
+  dependency was in the package `__init__`, invisible to any question about the
+  module.
+- **Is the taxonomy the home for this field?** The remedy was read and accepted.
+  The right check was to READ THE GUARD around it — it fires only when a parent
+  setting is overridden, and the field in question has no parent.
+- **Does the parse gate cover this breakage?** The gate had just been verified.
+  The right check was to RUN IT against the new breakage — a deleted module whose
+  importers remain is not a syntax error, and the gate reported clean throughout.
+
+**None of these were difficult.** They were steps that felt SKIPPABLE because the
+reasoning already felt complete — which is precisely the mechanism recorded in
+`a-retraction-is-timestamped-exactly-like-the-claim-it-withdraws`: a wrong
+explanation that fits ends the search. Here the explanation that fits is the
+reader's own inference, and what it ends is the verification.
+
+The economics are the point. A wrong inference costs nothing at the moment it is
+formed and is indistinguishable from a right one until something forces the
+check. The check costs one command. **The asymmetry is enormous and runs entirely
+against the intuition**, because the inference arrives feeling finished and the
+command feels like confirming what you already know.
+
+**How:** when a conclusion is about a SYSTEM and the evidence is about a PART,
+name the command that would settle it and run that command. If naming it is easy
+and running it is cheap, the reasoning-only path was never the economical one —
+it only felt that way. And treat "this feels already established" as the signal
+to check rather than the licence to skip: every instance in this document
+arrived wearing that feeling.
+
+### a-truncating-write-on-a-flaky-mount-is-a-data-loss-risk-with-a-two-line-fix | medium | an edit to a shared plan file failed with OSError, and the same call could have emptied it
+
+An edit to the interface plan failed with `OSError: [Errno 22] Invalid argument`
+— the network-backed mount, or a concurrent lock. `Path.write_text` opens with
+TRUNCATE, so a failure between the truncate and the write leaves an empty file.
+
+Nothing was lost: the author checked integrity before doing anything else and
+found 96 rows intact with the edit absent, meaning `open()` failed BEFORE
+truncating. The rewrite then went through a temporary file and `os.replace`
+rather than retrying the truncating write.
+
+**The exposure was general, not incidental.** Every `write_text` and every
+whole-file rewrite performed against a tracked file on this mount tonight — by
+either agent, across gates, hooks and conftest edits — carried the same failure
+mode. It never fired, which is why nobody noticed it was there.
+
+**And it is the same outcome as the loss already recorded in this document,
+reached from the opposite direction.** Five plan rows were destroyed by a peer
+committing a stale copy. A half-completed truncating write destroys the same file
+without any peer involved. One is a coordination failure and the other is a
+durability failure; the artefact is equally gone, and no check in this repository
+reports either.
+
+**How:** write a shared file by creating a temporary sibling and calling
+`os.replace`, which is atomic on both POSIX and Windows — the reader sees the old
+content or the new, never a truncated file. It costs two lines. On a mount whose
+flakiness under concurrent I/O is already documented in this project's own
+execution rules, the truncating form is not a reasonable default.
+
+**And check integrity BEFORE retrying a failed write.** A retry that succeeds
+over an emptied file produces a plausible-looking result and destroys what was
+there; the author checked first, which is the only reason the distinction between
+"failed before truncating" and "failed after" was recoverable at all.
 
 ## Recommendations
 

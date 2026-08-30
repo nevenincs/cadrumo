@@ -5,7 +5,7 @@ tags:
 date: '2026-08-30'
 modified: '2026-08-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:53b8a0939011de6188af383cc6862cac86be5f3dd4dbd2a20713e1596f4eb80e'
+body_hash: 'sha256:c542daf703f235fdf0279a19d491cd0a7947c8f39cfb93013a0a3b4a3f278287'
 step_id: 'S103'
 related:
   - "[[2026-08-28-semantic-consolidation-plan]]"
@@ -19,14 +19,20 @@ related:
 
 ## Changes
 
-- `M` `src/cadrumo/entrypoints/cli/_modelo_cli_support.py`
-- `A` `src/cadrumo/entrypoints/cli/tests/test_refusal_bounds_match_the_validator.py`
-- `verify:` `pytest src/cadrumo/entrypoints/cli/tests/test_refusal_bounds_match_the_validator.py -n 0 -m ""` -> `pass`
+- `M` `src/cadrumo/domain/iva_compensation/balance.py`
+- `M` `src/cadrumo/entrypoints/cli/_modelo_iva_wallet_payloads.py`
+- `M` `src/cadrumo/entrypoints/cli/_modelo_payloads_m036.py`
+- `M` `src/cadrumo/entrypoints/cli/tests/test_cli_payload_constraint_authority.py`
+- `verify:` `pytest src/cadrumo/domain/iva_compensation -n 0 -m ""` -> `pass`
 
 ## Notes
 
-The bounds were only ever printed in refusal text, never enforced, so a drift
-from the type would have told operators the wrong limit with nothing failing.
-The new test probes the validator rather than restating the number: one
-character over the quoted bound must refuse, exactly at it must not. Proved by
-replacing the derivation with a wrong literal (127) and confirming it reds.
+The expiry-year bound is deliberately wider than a filing year, because the
+value is derived as `source_filing_year + 4`; that reasoning is now recorded on
+the alias rather than implied by a bare literal. Probed rather than restated:
+2200 accepts, 2201 and 1999 refuse, None accepts.
+
+The M036 event id ran the other way again -- the payload declared a looser
+`1..128` string where the model it projects declares `BucketEventId`, a 64-char
+hex. Tightening it aligns the projection with the only values its source
+produces.
