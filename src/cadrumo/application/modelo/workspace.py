@@ -1392,6 +1392,35 @@ def static_inspection_schema_records(
     return tuple(sorted(records, key=lambda record: (record.reference.kind, str(record.reference))))
 
 
+_GRADED_SNAPSHOT_PAGINATED_FACETS: frozenset[ModeloWorkspaceFacetName] = frozenset(
+    {
+        ModeloWorkspaceFacetName.SCHEMA,
+        ModeloWorkspaceFacetName.MATERIALIZATION,
+        ModeloWorkspaceFacetName.PROVENANCE,
+    }
+)
+"""The facets a graded snapshot actually paginates.
+
+``WORK_REVIEW`` is deliberately absent: it is assembled as its own facet type
+and never routed through the shared paginator, so a cursor naming it can never
+be redeemed and must refuse rather than silently return a first page.
+"""
+
+
+def _facet_cursor(
+    cursor: ModeloWorkspaceCursorV1 | None,
+    facet: ModeloWorkspaceFacetName,
+) -> ModeloWorkspaceCursorV1 | None:
+    """Return ``cursor`` when it addresses ``facet``, otherwise ``None``.
+
+    A result assembles several facets from one call, so a caller holds at
+    most one cursor at a time and the cursor itself names which facet it
+    continues. Routing on that name keeps the other facets at their first
+    page instead of applying one facet's offset to another's records.
+    """
+    return cursor if cursor is not None and cursor.facet is facet else None
+
+
 def paginate_modelo_workspace_facet[RecordT](
     facet_type: type[ModeloWorkspaceBoundedFacetV1[RecordT]],
     records: tuple[RecordT, ...],
@@ -1539,6 +1568,7 @@ def resolve_static_inspection_result(
     authority: ValidatedRegistryAuthority,
     output_language: OutputLanguage,
     page_size: int = 200,
+    cursor: ModeloWorkspaceCursorV1 | None = None,
 ) -> ModeloWorkspaceStaticInspectionResultV1:
     """Assemble the complete, single-page STATIC_INSPECTION result for one target.
 
@@ -1555,6 +1585,11 @@ def resolve_static_inspection_result(
     the fixed work_review facet, and the capability denominator. No second
     registry or work read occurs anywhere in this function.
     """
+    if cursor is not None and cursor.facet is not ModeloWorkspaceFacetName.SCHEMA:
+        raise ModeloWorkspaceStaleCursorError(
+            f"static inspection paginates only the schema facet; cursor names {cursor.facet.value}"
+        )
+
     work_capture, registry_capture, axes = capture_modelo_workspace_target_captures(
         target,
         bucket_id=bucket_id,
@@ -1613,6 +1648,7 @@ def resolve_static_inspection_result(
         ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1],
         records,
         facet=ModeloWorkspaceFacetName.SCHEMA,
+        cursor=_facet_cursor(cursor, ModeloWorkspaceFacetName.SCHEMA),
         target=resolved_target,
         schema_identity=schema_identity,
         baseline=baseline,
@@ -1657,6 +1693,7 @@ def resolve_graded_snapshot_result(
     as_of: date,
     output_language: OutputLanguage,
     page_size: int = 200,
+    cursor: ModeloWorkspaceCursorV1 | None = None,
 ) -> ModeloWorkspaceResultV1:
     """Assemble the complete GRADED_SNAPSHOT result for one target, or refuse honestly.
 
@@ -1698,6 +1735,12 @@ def resolve_graded_snapshot_result(
     inspection is not), so this never reuses
     ``STATIC_INSPECTION_WORK_REVIEW_FACET``.
     """
+    if cursor is not None and cursor.facet not in _GRADED_SNAPSHOT_PAGINATED_FACETS:
+        raise ModeloWorkspaceStaleCursorError(
+            "graded snapshot paginates the schema, materialization and provenance facets; "
+            f"cursor names {cursor.facet.value}"
+        )
+
     request = modelo_work_selector_request_for_target(target, bucket_id=bucket_id)
     work_port = ModeloWorkspaceWorkPortV1(
         request=request,
@@ -1876,6 +1919,7 @@ def resolve_graded_snapshot_result(
         ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1],
         records,
         facet=ModeloWorkspaceFacetName.SCHEMA,
+        cursor=_facet_cursor(cursor, ModeloWorkspaceFacetName.SCHEMA),
         target=resolved_target,
         schema_identity=schema_identity,
         baseline=baseline,
@@ -1895,6 +1939,7 @@ def resolve_graded_snapshot_result(
         ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceMaterializationRecordV1],
         materialization_records,
         facet=ModeloWorkspaceFacetName.MATERIALIZATION,
+        cursor=_facet_cursor(cursor, ModeloWorkspaceFacetName.MATERIALIZATION),
         target=resolved_target,
         schema_identity=schema_identity,
         baseline=baseline,
@@ -1908,6 +1953,7 @@ def resolve_graded_snapshot_result(
         ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceProvenanceRecordV1],
         provenance_records,
         facet=ModeloWorkspaceFacetName.PROVENANCE,
+        cursor=_facet_cursor(cursor, ModeloWorkspaceFacetName.PROVENANCE),
         target=resolved_target,
         schema_identity=schema_identity,
         baseline=baseline,
