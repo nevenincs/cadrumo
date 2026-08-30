@@ -1019,7 +1019,7 @@ def verification_report_payload(
                 expectation_id=finding.expectation_id,
                 message=_render_verification_finding_message(finding),
                 action=action,
-                legal_refs=list(finding.legal_refs),
+                legal_refs=tuple(finding.legal_refs),
                 source_refs=list(finding.source_refs),
             ),
         )

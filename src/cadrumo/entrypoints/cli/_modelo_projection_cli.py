@@ -73,8 +73,8 @@ def _delta_row_payload(row: ModeloCompareDeltaRow) -> DeltaRowPayload:
         delta=_decimal_wire(row.delta),
         pct_change=_decimal_wire(row.pct_change) if row.pct_change is not None else None,
         formula_id=row.formula_id,
-        legal_refs=list(row.legal_refs),
-        source_refs=list(row.source_refs),
+        legal_refs=tuple(row.legal_refs),
+        source_refs=tuple(row.source_refs),
     )
 
 
@@ -133,8 +133,8 @@ def modelo_project(
                 casilla_id=entry.casilla_id,
                 value=_decimal_wire(entry.value),
                 formula_id=entry.formula_id,
-                legal_refs=list(entry.legal_refs),
-                source_refs=list(entry.source_refs),
+                legal_refs=tuple(entry.legal_refs),
+                source_refs=tuple(entry.source_refs),
             )
             for entry in service_result.casilla_observations
         ],
