@@ -17,7 +17,9 @@ from pydantic import ValidationError
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import M210PayerMode
 from ...core.i18n import tr
-from ...domain.transactions import M210IncomeClassification, TransactionDirection, TransactionValidationError
+from ...domain.transactions.enums import TransactionDirection
+from ...domain.transactions.errors import TransactionValidationError
+from ...domain.transactions.m210_income_classification import M210IncomeClassification
 from ._common import _bad
 from ._ledger_support import _ledger_transaction_validation_no_recovery, _ledger_validation_bad, _parse_decimal
 

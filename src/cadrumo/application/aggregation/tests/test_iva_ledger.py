@@ -39,16 +39,9 @@ from ....domain.iva import (
     ProrrataKind,
     ProrrataRegime,
 )
-from ....domain.transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-    TransactionLifecycleState,
-)
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.secure_sql import isolated_two_bucket_runtime
 from ...ledger.preflight import OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE
 from .. import (

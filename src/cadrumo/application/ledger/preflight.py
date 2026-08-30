@@ -41,17 +41,11 @@ from ...domain.categories import (
     home_office_categories,
 )
 from ...domain.iva import IvaCategory
-from ...domain.transactions import (
-    BusinessClassification,
-    Transaction,
-    TransactionCatalogue,
-    TransactionCatalogueRepositoryProtocol,
-    TransactionDirection,
-    TransactionLifecycleState,
-    TransactionValidationError,
-    has_employment_irpf_category,
-    is_classified,
-)
+from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState, is_classified
+from ...domain.transactions.errors import TransactionValidationError
+from ...domain.transactions.irpf_categories import has_employment_irpf_category
+from ...domain.transactions.models import Transaction, TransactionCatalogue
+from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.usage_ratios import CensoRatioMismatchError
 from ..aggregation import (
     IVA_LEDGER_COUNTERPARTY_GATE_REASONS,

@@ -22,7 +22,8 @@ from ...domain.invoices import (
     InvoiceLinkError,
     link_transaction,
 )
-from ...domain.transactions import TransactionCatalogue, link_invoice
+from ...domain.transactions.models import TransactionCatalogue
+from ...domain.transactions.service import link_invoice
 
 
 class InvoiceTransactionLinkResult(BaseModel):

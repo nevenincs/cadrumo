@@ -35,28 +35,17 @@ from pydantic import ValidationError
 
 from .....core import StorageCategory, storage_path
 from .....domain.iva import IvaCashAccountingPaymentEvidence, IvaCashAccountingTreatment, IvaCategory
-from .....domain.transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    StoredTransactionDriftError,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-    derive_transaction_id,
-)
+from .....domain.transactions.enums import BusinessClassification, TransactionDirection
+from .....domain.transactions.errors import StoredTransactionDriftError
+from .....domain.transactions.models import Transaction, TransactionCatalogue, derive_transaction_id
+from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .....tests.secure_sql import isolated_runtime_profile
 from ...storage import SecureObjectRepository, SensitivityClass
 from ...storage.bucket import bucket_paths
 from ...storage.errors import ClassificationError, EnvelopeVersionError, SecureObjectRowIdentityError
 from ...storage.sql import SecureObjectRawRow
-from ..transactions import (
-    _TX_CATALOGUE_VERSION,
-    TX_BUCKET_NAMESPACE,
-    TransactionCatalogueRepository,
-    transaction_object_key,
-)
+from ..transactions import transaction_object_key
+from ..transactions import TX_BUCKET_NAMESPACE, TransactionCatalogueRepository, _TX_CATALOGUE_VERSION
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -912,13 +901,8 @@ def test_transaction_timestamp_witness_rejects_missing_modified_at_from_decoded_
 
     import json as _json
 
-    from ..transactions import (
-        _TX_CATALOGUE_VERSION,
-        TX_BUCKET_NAMESPACE,
-        _decode_persisted_transaction_row,
-        _validate_persisted_transaction_timestamps,
-        transaction_object_key,
-    )
+    from ..transactions import transaction_object_key
+    from ..transactions import TX_BUCKET_NAMESPACE, _TX_CATALOGUE_VERSION, _decode_persisted_transaction_row, _validate_persisted_transaction_timestamps
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)

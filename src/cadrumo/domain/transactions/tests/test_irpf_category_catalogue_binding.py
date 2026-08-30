@@ -24,14 +24,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .. import (
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionDirection,
-)
-from .._irpf_categories import (
+from ..enums import TransactionDirection
+from ..irpf_categories import (
     IRPF_CATEGORY_ACTIVIDAD_ECONOMICA,
     IRPF_CATEGORY_TRABAJO,
     has_activity_irpf_category,
@@ -40,6 +34,8 @@ from .._irpf_categories import (
     ledger_irpf_category,
     ledger_irpf_category_ids,
 )
+from ..models import Transaction
+from ..raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

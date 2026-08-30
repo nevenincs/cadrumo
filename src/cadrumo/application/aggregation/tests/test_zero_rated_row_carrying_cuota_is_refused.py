@@ -38,16 +38,9 @@ import pytest
 
 from ....core import Period
 from ....domain.calculations.registry.ledger_bindings import IvaLedgerObservation
-from ....domain.transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-    TransactionLifecycleState,
-)
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .._iva_ledger import IvaLedgerAggregationIssueReason
 from ._iva_authority_support import aggregate_iva_ledger_observations
 

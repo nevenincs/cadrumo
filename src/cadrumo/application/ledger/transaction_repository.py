@@ -7,7 +7,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from typing import Protocol
 
-from ...domain.transactions import TransactionCatalogueRepositoryProtocol
+from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 
 
 class TransactionCatalogueRepositoryFactory(Protocol):

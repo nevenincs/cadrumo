@@ -100,14 +100,9 @@ from ....domain.categories import SpendingCategory
 from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
 from ....domain.iva import InvoiceKind, IvaCashAccountingTreatment, IvaRateKind, OssIossRegime, TransactionKind
 from ....domain.renta import RentaDeductibilityContext, RentaDeductibleExpenseObservation
-from ....domain.transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionDirection,
-)
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection
+from ....domain.transactions.models import Transaction
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .._impatriado_income_ledger import (
     ImpatriadoIncomeLedgerAggregationIssue,
     _classify_impatriado_income_transaction,

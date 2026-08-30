@@ -13,7 +13,7 @@ from __future__ import annotations
 from decimal import Decimal
 
 from ...core.external_constants import DEFAULT_CURRENCY
-from ...domain.transactions import Transaction
+from ...domain.transactions.models import Transaction
 from .errors import AggregationConfigError, t
 
 

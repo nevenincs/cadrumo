@@ -21,16 +21,9 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....application.ledger.models import ManualLedgerTransactionResult
 from ....application.review.filter import LedgerReviewFilterSpec
 from ....core import LedgerSortField, LedgerSortOrder
-from ....domain.transactions import (
-    BucketTransactionRef,
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-)
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection
+from ....domain.transactions.models import BucketTransactionRef, Transaction, TransactionCatalogue
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.secure_sql import isolated_runtime_profile
 from .._ledger_list import _sort_results, project_ledger_list
 

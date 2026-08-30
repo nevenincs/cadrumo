@@ -29,15 +29,10 @@ from ...domain.modelos import (
     CalculationRevisionCatalogueRepositoryProtocol,
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from ...domain.transactions import (
-    BusinessClassification,
-    Transaction,
-    TransactionCatalogue,
-    TransactionCatalogueRepositoryProtocol,
-    TransactionLifecycleLineageEntry,
-    TransactionLifecycleState,
-    TransactionValidationError,
-)
+from ...domain.transactions.enums import BusinessClassification, TransactionLifecycleState
+from ...domain.transactions.errors import TransactionValidationError
+from ...domain.transactions.models import Transaction, TransactionCatalogue, TransactionLifecycleLineageEntry
+from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from .actions_common import (
     blocking_modelo_references,
     build_ledger_bucket_event,

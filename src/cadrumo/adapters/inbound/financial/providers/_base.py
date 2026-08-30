@@ -63,7 +63,8 @@ from .....core.logging import get_logger
 from .....core.parsing import normalise_iso_4217_currency
 from .....core.tabular import coerce_cell_text
 from .....core.time import now
-from .....domain.transactions import RawProvenance, RawTransaction, SourceFormat, TransactionDirection
+from .....domain.transactions.enums import TransactionDirection
+from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
 LOGGER = get_logger(__name__)
 

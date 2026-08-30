@@ -62,17 +62,10 @@ from .....application.aggregation import aggregate_renta_income_ledger
 from .....core import CasillaId, Period, validated_casilla_id
 from .....core.aggregation import LedgerIncomeGrounding, LedgerWithholdingDerivation
 from ....iva import IvaCategory
-from ....transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-    TransactionLifecycleState,
-    load_retencion_actividades_rates,
-)
+from ....transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ....transactions.models import Transaction, TransactionCatalogue
+from ....transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ....transactions.retencion_parameters import load_retencion_actividades_rates
 from ..ledger_bindings import (
     resolve_ledger_renta_income_aggregation_binding_values,
     ungrounded_ledger_renta_income_observations,

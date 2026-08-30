@@ -22,10 +22,8 @@ from ...core import LinkInconsistencyDirection
 from ...core.identity import InvoiceId, TransactionId
 from ...core.logging import get_logger
 from ..iva import InvoiceKind
-from ..transactions import (
-    TransactionCatalogue,
-    TransactionDirection,
-)
+from ..transactions.enums import TransactionDirection
+from ..transactions.models import TransactionCatalogue
 from ._models import Invoice, InvoiceCatalogue
 from .errors import (
     InvoiceLinkError,

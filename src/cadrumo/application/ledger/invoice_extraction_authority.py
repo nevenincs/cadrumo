@@ -164,7 +164,7 @@ def resolve_invoice_extraction_authority_values(*, period: Period) -> InvoiceExt
         TransactionValidationError: When the retención parameters cannot be read.
     """
     from ...domain.iva import NO_PRINTED_TAX_IVA_CATEGORIES, regime_legend_phrases
-    from ...domain.transactions import statutory_activity_retencion_rates
+    from ...domain.transactions.retencion_parameters import statutory_activity_retencion_rates
 
     return InvoiceExtractionAuthorityValues(
         period=period,

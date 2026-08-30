@@ -40,19 +40,11 @@ from ...domain.currency import (
     CurrencyNormalizationStatus,
     MonetaryAmount,
 )
-from ...domain.transactions import (
-    BucketTransactionRef,
-    ImportSummary,
-    RawTransaction,
-    Transaction,
-    TransactionCatalogue,
-    TransactionCatalogueRepositoryProtocol,
-    TransactionValidationError,
-    derive_import_fingerprint,
-    derive_movement_day_key,
-    derive_transaction_id,
-    existing_transaction_import_fingerprints,
-)
+from ...domain.transactions.errors import TransactionValidationError
+from ...domain.transactions.models import BucketTransactionRef, Transaction, TransactionCatalogue, derive_import_fingerprint, derive_movement_day_key, derive_transaction_id, existing_transaction_import_fingerprints
+from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ...domain.transactions.raw_transaction import RawTransaction
+from ...domain.transactions.repository import ImportSummary
 from ..transactions import LedgerImportDiagnostic, classify_import_row, import_ledger_with_diagnostics
 from .actions_common import (
     build_ledger_bucket_event,

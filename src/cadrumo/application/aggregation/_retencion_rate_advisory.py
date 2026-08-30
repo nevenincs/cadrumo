@@ -133,13 +133,7 @@ from ...core.aggregation import (
 )
 from ...core.money import CENT
 from ...domain.calculations.registry.ids import LegalRefId
-from ...domain.transactions import (
-    administrador_retencion_legal_refs,
-    load_administrador_retencion_rates,
-    professional_activity_retencion_rates,
-    rirpf_art95_retencion_legal_refs,
-    statutory_activity_retencion_rates,
-)
+from ...domain.transactions.retencion_parameters import administrador_retencion_legal_refs, load_administrador_retencion_rates, professional_activity_retencion_rates, rirpf_art95_retencion_legal_refs, statutory_activity_retencion_rates
 from ._renta_income_ledger import RentaIncomeObservation
 from ._retenciones import RetencionObservation
 from ._source_mesh import CalculationSourceDiagnostic

@@ -27,7 +27,7 @@ from typing import TYPE_CHECKING
 from ..iva import IvaCashAccountingTreatment
 
 if TYPE_CHECKING:  # pragma: no cover — typing-only import
-    from ._models import Transaction
+    from .models import Transaction
 
 __all__ = ["transaction_eligible_date_span", "transaction_filing_date"]
 

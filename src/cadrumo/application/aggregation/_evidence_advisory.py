@@ -42,11 +42,8 @@ from ...domain.iva import (
     is_deducible_flow,
     is_devengada_flow,
 )
-from ...domain.transactions import (
-    BUSINESS_BEARING_STATES,
-    Transaction,
-    TransactionLifecycleState,
-)
+from ...domain.transactions.enums import BUSINESS_BEARING_STATES, TransactionLifecycleState
+from ...domain.transactions.models import Transaction
 from ._invoice_kind import invoice_kind_for_direction
 from ._source_mesh import CalculationSourceDiagnostic
 

@@ -108,11 +108,9 @@ from ...domain.renta import (
     RENTA_130_RETENCIONES_OUTPUT_CASILLA,
     RentaDeductibleExpenseObservation,
 )
-from ...domain.transactions import (
-    OutOfWindowTransactionSummary,
-    TransactionCatalogueRepositoryProtocol,
-    TransactionPersistenceError,
-)
+from ...domain.transactions.errors import TransactionPersistenceError
+from ...domain.transactions.models import OutOfWindowTransactionSummary
+from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.usage_ratios import UsageRatioPersistenceError
 from ..user_profile.usage_ratio_resolution import resolve_effective_usage_ratios
 from ._impatriado_income_ledger import aggregate_impatriado_income_ledger_from_repositories

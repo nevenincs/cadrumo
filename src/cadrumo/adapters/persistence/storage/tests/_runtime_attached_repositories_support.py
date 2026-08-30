@@ -111,14 +111,9 @@ from .....domain.submission import (
     SubmissionStatus,
     make_submission_id,
 )
-from .....domain.transactions import (
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-)
+from .....domain.transactions.enums import TransactionDirection
+from .....domain.transactions.models import Transaction, TransactionCatalogue
+from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .....domain.usage_ratios import UsageRatioProfile
 from .....llm.models import LLMProvider, LLMRequest, LLMResponse, UsageRecord
 from .....tests.aeat_literal_fixtures import (

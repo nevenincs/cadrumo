@@ -49,16 +49,9 @@ from ....domain.iva import (
     IvaRateKind,
     rate_kinds_for_declared_rate,
 )
-from ....domain.transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-    TransactionLifecycleState,
-)
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .._iva_ledger import resolve_iva_ledger_binding_values
 from ._iva_authority_support import aggregate_iva_ledger_observations
 

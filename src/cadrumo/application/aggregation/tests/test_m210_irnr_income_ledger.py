@@ -17,7 +17,8 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.loader import load_modelo_directory
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.modelos import Modelo210AgrupacionRentaRow
-from ....domain.transactions import BusinessClassification, M210IncomeClassification, TransactionDirection
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection
+from ....domain.transactions.m210_income_classification import M210IncomeClassification
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.env_scope import ready_clave_settings
 from ....tests.profile_capsule import seed_test_profile_record

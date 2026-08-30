@@ -7,13 +7,8 @@ from decimal import Decimal
 
 import pytest
 
-from ....domain.transactions import (
-    BusinessClassification,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-    TransactionLifecycleState,
-)
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ..preflight import LedgerPreflightIssueReason, preflight_transaction_catalogue
 from ._preflight_test_support import _BUCKET_ID, _Q2_2026, _raw_transaction, _transaction
 

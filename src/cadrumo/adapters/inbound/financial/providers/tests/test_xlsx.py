@@ -15,7 +15,7 @@ from zipfile import ZIP_DEFLATED, ZipFile
 import pytest
 from openpyxl import load_workbook
 
-from ......domain.transactions import TransactionDirection
+from ......domain.transactions.enums import TransactionDirection
 from ......tests import FIXTURES_DIR
 from .. import XlsxProvider
 from .._base import InvalidFinancialSourceError

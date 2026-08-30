@@ -59,7 +59,7 @@ def test_bulk_classify_from_oracle_resolved_at_runtime(tmp_path: Path) -> None:
 
 def test_single_classify_intracommunity_with_eu_state() -> None:
     from ....domain.iva import EUMemberState, IvaCategory
-    from ....domain.transactions import BusinessClassification
+    from ....domain.transactions.enums import BusinessClassification
 
     _import_corpus()
     rows = _list_rows()
@@ -92,7 +92,7 @@ def test_single_classify_intracommunity_with_eu_state() -> None:
 def test_allocate_records_business_proportion() -> None:
     from decimal import Decimal
 
-    from ....domain.transactions import BusinessClassification
+    from ....domain.transactions.enums import BusinessClassification
 
     _import_bbva()
     internet = _find(_list_rows(), "Factura internet fibra oficina enero")

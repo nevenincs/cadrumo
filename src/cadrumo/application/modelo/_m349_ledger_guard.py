@@ -15,7 +15,8 @@ from ...adapters.persistence.profile.transactions import TransactionCatalogueRep
 from ...core import ActionEvidenceProvenance, Modelo
 from ...domain.iva import IvaCategory
 from ...domain.modelos import Modelo349OperadorRow, ModeloDetailRow, WorkUnit
-from ...domain.transactions import TransactionCatalogueRepositoryProtocol, TransactionLifecycleState
+from ...domain.transactions.enums import TransactionLifecycleState
+from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ._action_errors import ModeloAggregationBindingError
 from ._preconditions import build_modelo_precondition_failure
 

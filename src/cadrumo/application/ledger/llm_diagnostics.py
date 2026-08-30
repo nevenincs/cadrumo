@@ -44,7 +44,7 @@ from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 from ...adapters.outbound.llm import UsageRecorder
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core.bucket_pointer import resolve_active_bucket_id
-from ...domain.transactions import Transaction
+from ...domain.transactions.models import Transaction
 from ...llm.models import UsageRecord
 
 __all__ = [

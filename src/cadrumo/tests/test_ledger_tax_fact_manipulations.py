@@ -35,16 +35,9 @@ from ..domain.bienes_inversion import BienesInversionIvaRegister
 from ..domain.categories import SpendingCategory
 from ..domain.invoices import InvoiceCatalogue
 from ..domain.iva import IvaCategory
-from ..domain.transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-    TransactionLifecycleState,
-)
+from ..domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ..domain.transactions.models import Transaction, TransactionCatalogue
+from ..domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

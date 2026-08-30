@@ -20,14 +20,9 @@ from ....domain.invoices import (
     PaymentStatus,
 )
 from ....domain.iva import InvoiceKind
-from ....domain.transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionDirection,
-)
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection
+from ....domain.transactions.models import Transaction
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..enums import ReviewItemKind, ReviewSeverity
 from ..models import FindingReviewItem, InvoiceReviewItem, ReviewItem, TransactionReviewItem
 

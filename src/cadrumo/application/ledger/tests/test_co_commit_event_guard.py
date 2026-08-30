@@ -37,7 +37,7 @@ from ....domain.buckets import (
     build_bucket_event,
     emit_bucket_events,
 )
-from ....domain.transactions import TransactionCatalogue
+from ....domain.transactions.models import TransactionCatalogue
 from ....tests.secure_sql import isolated_runtime_profile
 from ..actions_common import _commit_with_guarded_events
 

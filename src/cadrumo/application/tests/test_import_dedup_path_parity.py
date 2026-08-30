@@ -23,15 +23,9 @@ from pathlib import Path
 import pytest
 
 from ...adapters.inbound.financial.providers import ParsedLedgerRow
-from ...domain.transactions import (
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    TransactionCatalogue,
-    TransactionDirection,
-    derive_import_fingerprint,
-    derive_transaction_id,
-)
+from ...domain.transactions.enums import TransactionDirection
+from ...domain.transactions.models import TransactionCatalogue, derive_import_fingerprint, derive_transaction_id
+from ...domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..ledger.actions_import import _evaluate_import_rows
 from ..transactions import import_ledger_with_diagnostics
 

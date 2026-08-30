@@ -25,16 +25,10 @@ from ....adapters.outbound.llm import UsageRecorder
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....core.config import override_settings
 from ....core.i18n import clear_output_language_cache, tr
-from ....domain.transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-    set_classification,
-)
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection
+from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ....domain.transactions.service import set_classification
 from ....llm.models import LLMProvider, LLMResponse
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.cli_envelope import unwrap_cli_result as _json_result

@@ -45,15 +45,16 @@ from ..iva import (
     IvaDeductionClassificationProvenance,
     IvaExemptionArticle,
 )
-from ._enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
-from ._irpf_categories import (
+from .enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from .errors import TransactionValidationError
+from .irpf_categories import (
     PROFESSIONAL_SERVICE_CATEGORIES_PAID_NET_OF_WITHHOLDING,
     RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING,
     has_activity_irpf_category,
     has_non_work_irpf_category,
     has_rent_irpf_category,
 )
-from ._lineage_models import (
+from .lineage_models import (
     ClassificationHistoryEntry,
     DecisionProvenance,
     SplitLineage,
@@ -64,7 +65,7 @@ from ._lineage_models import (
     _string_keyed_mapping,
     derive_split_group_id,
 )
-from ._m210_income_classification import M210IncomeClassification
+from .m210_income_classification import M210IncomeClassification
 from .model_validation import (
     coerce_raw_transaction,
     normalize_identifier_tuple,
@@ -74,9 +75,8 @@ from .model_validation import (
     validate_confidence_range,
     validate_non_negative_decimal,
 )
-from ._raw_transaction import RawTransaction
-from ._retencion_parameters import maximum_supported_activity_retencion_rate
-from .errors import TransactionValidationError
+from .raw_transaction import RawTransaction
+from .retencion_parameters import maximum_supported_activity_retencion_rate
 
 __all__ = ["DecisionProvenance", "derive_split_group_id"]
 
@@ -207,7 +207,7 @@ class Transaction(BaseModel):
             from the wrapped raw record by :func:`derive_transaction_id`.
             Re-validated on every parse to detect tampering.
         raw: The verbatim
-            :class:`domain.transactions._raw_transaction.RawTransaction`.
+            :class:`domain.transactions.raw_transaction.RawTransaction`.
         direction: Closed :class:`TransactionDirection`.
         business_classification: Current :class:`BusinessClassification`
             decision; defaults to
@@ -263,7 +263,7 @@ class Transaction(BaseModel):
             without this axis the same rows would feed both and double-count. It
             also selects the RIRPF art. 95 retención partition through the
             registry correspondence in
-            :mod:`~domain.transactions._tipo_actividad_partitions`. ``None`` for a
+            :mod:`~domain.transactions.tipo_actividad_partitions`. ``None`` for a
             row whose activity is undeclared or that carries no activity income at
             all; an aggregation that needs the split must treat ``None`` as
             unknown rather than as any particular activity.

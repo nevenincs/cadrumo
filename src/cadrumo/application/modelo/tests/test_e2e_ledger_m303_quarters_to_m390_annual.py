@@ -75,15 +75,9 @@ from ....domain.iva import (
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 from ....domain.modelos import VerificationCompletenessStatus, VerificationReport, WorkUnit
 from ....domain.modelos.calculation_revision import CalculationRevision
-from ....domain.transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-)
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection
+from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.env_scope import ready_clave_settings
 from ....tests.filing_evidence import general_m303_filing_evidence

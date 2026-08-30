@@ -20,14 +20,9 @@ from ..invoices import (
     PaymentStatus,
 )
 from ..iva import InvoiceKind
-from ..transactions import (
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-)
+from ..transactions.enums import TransactionDirection
+from ..transactions.models import Transaction, TransactionCatalogue
+from ..transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

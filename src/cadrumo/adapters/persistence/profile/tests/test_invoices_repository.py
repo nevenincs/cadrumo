@@ -19,14 +19,9 @@ import pytest
 from .....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from .....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
 from .....domain.iva import InvoiceKind
-from .....domain.transactions import (
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-)
+from .....domain.transactions.enums import TransactionDirection
+from .....domain.transactions.models import Transaction, TransactionCatalogue
+from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ..invoices import InvoiceCatalogueRepository
 

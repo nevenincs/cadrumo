@@ -9,16 +9,10 @@ from pathlib import Path
 import pytest
 
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
-from ....domain.transactions import (
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-    TransactionEditLineageEntry,
-    TransactionIdPrefixError,
-)
+from ....domain.transactions.enums import TransactionDirection
+from ....domain.transactions.errors import TransactionIdPrefixError
+from ....domain.transactions.models import Transaction, TransactionCatalogue, TransactionEditLineageEntry
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..id_resolution import (
     MINIMUM_DISPLAY_ID_WIDTH,
     compute_display_id_width,

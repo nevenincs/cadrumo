@@ -29,15 +29,8 @@ import asyncio
 
 from ..core import LLM_EXTRA, build_provenance_stamp, require_optional_extra
 from ..core.config import Settings, load_settings
-from ..domain.transactions import (
-    LLMClassificationResponse,
-    LLMSplitResponse,
-    PromptSpec,
-    Transaction,
-    build_split_prompt,
-    parse_response,
-    parse_split_response,
-)
+from ..domain.transactions.llm import LLMClassificationResponse, LLMSplitResponse, PromptSpec, build_split_prompt, parse_response, parse_split_response
+from ..domain.transactions.models import Transaction
 from .client import LLMClient
 from .models import LLMProvider, LLMRequest
 

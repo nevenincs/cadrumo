@@ -14,7 +14,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from typing import Protocol
 
-from ...domain.transactions import LedgerClassificationRule
+from ...domain.transactions.classification_rule import LedgerClassificationRule
 
 
 def ledger_classification_rule_object_key(rule: LedgerClassificationRule) -> str:

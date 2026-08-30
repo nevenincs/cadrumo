@@ -19,11 +19,9 @@ from ....domain.calculations.registry.ledger_bindings import resolve_ledger_rent
 from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
-from ....domain.transactions import (
-    BusinessClassification,
-    TransactionCatalogue,
-    load_retencion_actividades_rates,
-)
+from ....domain.transactions.enums import BusinessClassification
+from ....domain.transactions.models import TransactionCatalogue
+from ....domain.transactions.retencion_parameters import load_retencion_actividades_rates
 from .._modelo_bindings import LedgerRentaIncomeAggregationSourceResolver
 from .._renta_income_ledger import RentaIncomeLedgerAggregationIssueReason, aggregate_renta_income_ledger
 from .._source_mesh import CalculationSourceContext, CalculationSourceDiagnostic, CalculationSourceResolution

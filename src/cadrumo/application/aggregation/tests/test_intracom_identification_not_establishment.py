@@ -33,16 +33,9 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.ledger_bindings import resolve_ledger_iva_aggregation_binding_values
 from ....domain.iva import EUMemberState, IvaCategory
-from ....domain.transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-    TransactionLifecycleState,
-)
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .. import IvaLedgerAggregationIssueReason
 from .._iva_ledger import IvaLedgerAggregation
 from ._iva_authority_support import aggregate_iva_ledger_observations

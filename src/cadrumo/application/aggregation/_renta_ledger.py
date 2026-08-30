@@ -68,14 +68,9 @@ from ...domain.renta import (
     resolve_region_category_profiles,
     select_deductibility_profile,
 )
-from ...domain.transactions import (
-    BusinessClassification,
-    Transaction,
-    TransactionCatalogue,
-    TransactionCatalogueRepositoryProtocol,
-    TransactionDirection,
-    TransactionLifecycleState,
-)
+from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ...domain.transactions.models import Transaction, TransactionCatalogue
+from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.loader import load_user_profile_schema
 from ...domain.user_profile.values import UserProfileRecord

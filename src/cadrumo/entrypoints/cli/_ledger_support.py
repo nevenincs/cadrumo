@@ -31,7 +31,8 @@ from ...domain.categories import SpendingCategory
 from ...domain.contribuyente.renta_codes import FiscalResidency
 from ...domain.deadlines import IrpfSpecialRegime
 from ...domain.invoices import InvoiceValidationError
-from ...domain.transactions import Transaction, TransactionIdPrefixError, TransactionValidationError
+from ...domain.transactions.errors import TransactionIdPrefixError, TransactionValidationError
+from ...domain.transactions.models import Transaction
 from ._common import _bad, attach_cli_policy_verdict, emit_envelope
 from ._decimal_parsing import parse_decimal_amount, parse_optional_decimal_amount
 

@@ -10,12 +10,8 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....domain.iva import IvaCategory
-from ....domain.transactions import (
-    BusinessClassification,
-    SplitRole,
-    TransactionLifecycleState,
-    TransactionValidationError,
-)
+from ....domain.transactions.enums import BusinessClassification, SplitRole, TransactionLifecycleState
+from ....domain.transactions.errors import TransactionValidationError
 from ....llm.suggestions import LLMSplitApplyResult
 from ..actions_split_merge import split_transaction_with_classified_children
 from ..llm_classification import apply_evidence_split, suggest_evidence_split

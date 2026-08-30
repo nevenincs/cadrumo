@@ -24,15 +24,9 @@ from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.categories import SpendingCategory
 from ....domain.invoices import InvoiceCatalogue
 from ....domain.iva import EUMemberState, IvaCategory, IvaDeductionClassificationProvenance
-from ....domain.transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-)
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection
+from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.usage_ratios import UsageRatioProfile
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.cli_envelope import unwrap_envelope_notices

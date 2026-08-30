@@ -45,15 +45,10 @@ from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepositoryProto
 from ...domain.modelos import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.calculation_revision import SEALED_REVISION_STATES, CalculationRevisionState
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from ...domain.transactions import (
-    BucketTransactionRef,
-    BusinessClassification,
-    Transaction,
-    TransactionCatalogue,
-    TransactionCatalogueRepositoryProtocol,
-    TransactionNotFoundError,
-    TransactionValidationError,
-)
+from ...domain.transactions.enums import BusinessClassification
+from ...domain.transactions.errors import TransactionNotFoundError, TransactionValidationError
+from ...domain.transactions.models import BucketTransactionRef, Transaction, TransactionCatalogue
+from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.usage_ratios import (
     UsageRatioProfile,
     UsageRatioValidationError,

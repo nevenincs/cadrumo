@@ -21,14 +21,9 @@ import pytest
 
 from ....domain.iva import CUOTA_LESS_M303_IVA_CATEGORIES, IvaCategory
 from ....domain.modelos import ModeloVerificationFindingSeverity
-from ....domain.transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionDirection,
-)
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection
+from ....domain.transactions.models import Transaction
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .._verification_actions import _cuota_less_without_base_findings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

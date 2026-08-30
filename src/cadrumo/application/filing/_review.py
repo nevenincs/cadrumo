@@ -52,7 +52,7 @@ from ...domain.filing import (
 from ...domain.identifiers import canonical_decimal_string
 from ...domain.invoices import InvoiceCatalogue
 from ...domain.submission import ModeloDraftStatus
-from ...domain.transactions import Transaction, TransactionCatalogue
+from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ..user_profile.profile_record_repository import ProfileRecordRepository
 from ..user_profile.projections import record_to_path_values

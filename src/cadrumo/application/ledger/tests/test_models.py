@@ -10,10 +10,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....domain.transactions import (
-    BusinessClassification,
-    TransactionDirection,
-)
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ..models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch, _ManualLedgerTransactionInput
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

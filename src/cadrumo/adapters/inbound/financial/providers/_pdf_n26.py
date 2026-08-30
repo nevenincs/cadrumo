@@ -25,7 +25,7 @@ from typing import TypedDict, override
 
 from .....core.external_constants import DEFAULT_CURRENCY
 from .....core.logging import get_logger
-from .....domain.transactions import SourceFormat
+from .....domain.transactions.raw_transaction import SourceFormat
 from ._base import (
     FinancialProvider,
     InvalidFinancialSourceError,

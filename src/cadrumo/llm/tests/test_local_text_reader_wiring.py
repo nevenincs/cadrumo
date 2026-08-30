@@ -65,7 +65,7 @@ def test_the_local_text_reader_requests_the_local_provider_and_carries_no_images
     fall through to whatever the settings default happens to be -- which is how
     a document ends up leaving the host by accident rather than by decision.
     """
-    from ...domain.transactions import prompt_spec_with_every_spending_category
+    from ...domain.transactions.llm import prompt_spec_with_every_spending_category
 
     reader = LocalTextLLMClassifier(spec=prompt_spec_with_every_spending_category(year=2025))
     request = reader._request("classify this")
@@ -87,7 +87,7 @@ def test_the_provenance_stamp_names_the_local_text_transport() -> None:
     off-host reading returned behind a consent gate -- and the readers that took
     a provider back are held to stamping the transport they actually used.
     """
-    from ...domain.transactions import prompt_spec_with_every_spending_category
+    from ...domain.transactions.llm import prompt_spec_with_every_spending_category
 
     reader = LocalTextLLMClassifier(
         spec=prompt_spec_with_every_spending_category(year=2025),

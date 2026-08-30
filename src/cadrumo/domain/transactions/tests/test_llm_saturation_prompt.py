@@ -26,20 +26,17 @@ import pytest
 from pydantic import ValidationError
 
 from ...iva import IvaCategory
-from .. import (
-    BusinessClassification,
+from ..enums import BusinessClassification, TransactionDirection
+from ..llm import (
     LLMClassificationResponse,
     LLMClassifierError,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionDirection,
     default_iva_category_choices,
     default_prompt_spec,
     parse_response,
     prompt_spec_with_saturation_fields,
 )
+from ..models import Transaction
+from ..raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

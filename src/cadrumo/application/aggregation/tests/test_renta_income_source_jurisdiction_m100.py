@@ -16,7 +16,7 @@ from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....domain.calculations.registry.ledger_bindings import resolve_ledger_renta_income_aggregation_binding_values
-from ....domain.transactions import TransactionCatalogue
+from ....domain.transactions.models import TransactionCatalogue
 from .._renta_income_ledger import (
     RentaIncomeLedgerAggregationIssueReason,
     aggregate_renta_income_ledger,

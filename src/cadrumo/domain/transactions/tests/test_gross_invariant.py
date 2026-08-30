@@ -25,16 +25,10 @@ import pytest
 from pydantic import ValidationError
 
 from ...iva import IvaCategory
-from .. import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionDirection,
-    normalize_irpf_category,
-)
-from .._irpf_categories import ledger_irpf_category
+from ..enums import BusinessClassification, TransactionDirection
+from ..irpf_categories import ledger_irpf_category, normalize_irpf_category
+from ..models import Transaction
+from ..raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

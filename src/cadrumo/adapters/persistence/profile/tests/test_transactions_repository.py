@@ -10,17 +10,10 @@ import pytest
 from sqlalchemy import delete, select
 
 from .....core.errors import get_registered_error_code
-from .....domain.transactions import (
-    BusinessClassification,
-    LedgerNoActiveBucketError,
-    LedgerStorageError,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-)
+from .....domain.transactions.enums import BusinessClassification, TransactionDirection
+from .....domain.transactions.errors import LedgerNoActiveBucketError, LedgerStorageError
+from .....domain.transactions.models import Transaction, TransactionCatalogue
+from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .....tests.secure_sql import TestRuntimeProfile
 from ...storage.sql import _orm
 from ...storage.sql.session import session_scope

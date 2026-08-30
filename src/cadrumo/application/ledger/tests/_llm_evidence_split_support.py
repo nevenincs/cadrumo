@@ -17,17 +17,10 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....domain.categories import SpendingCategory
 from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
 from ....domain.iva import InvoiceKind, IvaCategory
-from ....domain.transactions import (
-    LLMSplitChild,
-    LLMSplitResponse,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-    prompt_spec_with_saturation_fields,
-)
+from ....domain.transactions.enums import TransactionDirection
+from ....domain.transactions.llm import LLMSplitChild, LLMSplitResponse, prompt_spec_with_saturation_fields
+from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.secure_sql import isolated_runtime_profile
 from ._subprocess_classifier_support import SubprocessLLMClassifier
 

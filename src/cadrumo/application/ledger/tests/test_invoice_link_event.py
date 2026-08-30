@@ -27,14 +27,9 @@ from ....adapters.persistence.storage.errors import SecureObjectRevisionConflict
 from ....domain.buckets import BucketEventObjectType, BucketEventType
 from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, InvoiceLinkError, IvaRate, PaymentStatus
 from ....domain.iva import InvoiceKind
-from ....domain.transactions import (
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-)
+from ....domain.transactions.enums import TransactionDirection
+from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.secure_sql import isolated_runtime_profile
 from ...invoices import link_invoice_transaction_catalogues, link_invoice_transaction_repositories
 from ..actions_manual import link_manual_transaction_invoice

@@ -21,14 +21,14 @@ from ...core.directory_scan import DirectoryEntryKind, scan_directory
 from ...core.external_constants import XLS_EXTENSION, XLSX_EXTENSION
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ...domain.transactions import TransactionValidationError
+from ...domain.transactions.errors import TransactionValidationError
 from ._common import _bad, _state, _tx_repo, emit_envelope
 from ._ledger_support import _ledger_transaction_validation_no_recovery
 from ._period_parsing import _optional_canonical_period
 
 if TYPE_CHECKING:
     from ...domain.currency import CurrencyNormalizationService
-    from ...domain.transactions import TransactionCatalogueRepositoryProtocol
+    from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 
 
 def _known_import_providers() -> tuple[str, ...]:

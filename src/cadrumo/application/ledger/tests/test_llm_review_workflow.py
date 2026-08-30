@@ -21,18 +21,11 @@ from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....domain.buckets import BucketEvent, BucketEventType
 from ....domain.categories import SpendingCategory
 from ....domain.iva import IvaCategory
-from ....domain.transactions import (
-    BusinessClassification,
-    LLMSplitResponse,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-    TransactionLifecycleState,
-    TransactionValidationError,
-)
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ....domain.transactions.errors import TransactionValidationError
+from ....domain.transactions.llm import LLMSplitResponse
+from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....llm.suggestions import (
     LLMClassificationSuggestion,
     LLMSaturatedSuggestion,

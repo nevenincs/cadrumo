@@ -58,17 +58,10 @@ from ..domain.modelos.calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from ..domain.transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-    TransactionLifecycleState,
-    TransactionValidationError,
-)
+from ..domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ..domain.transactions.errors import TransactionValidationError
+from ..domain.transactions.models import Transaction, TransactionCatalogue
+from ..domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .filing_evidence import general_m303_filing_evidence
 from .registry_observations import registry_grounded_observations
 from .secure_objects_fixture import secure_objects

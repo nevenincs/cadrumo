@@ -44,22 +44,11 @@ from ...domain.modelos import (
     CalculationRevisionCatalogueRepositoryProtocol,
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from ...domain.transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionCatalogueRepositoryProtocol,
-    TransactionDirection,
-    TransactionEditLineageEntry,
-    TransactionEvidenceProvenanceEntry,
-    TransactionLifecycleLineageEntry,
-    TransactionLifecycleState,
-    TransactionValidationError,
-    derive_import_fingerprint,
-)
+from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ...domain.transactions.errors import TransactionValidationError
+from ...domain.transactions.models import Transaction, TransactionCatalogue, TransactionEditLineageEntry, TransactionEvidenceProvenanceEntry, TransactionLifecycleLineageEntry, derive_import_fingerprint
+from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ...domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...domain.usage_ratios import (
     UsageRatioProfile,
 )

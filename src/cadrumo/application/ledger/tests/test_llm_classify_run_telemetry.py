@@ -19,15 +19,10 @@ import pytest
 
 from ....adapters.outbound.llm import LLMRunTelemetryRecorder
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....domain.transactions import (
-    LLMClassifierError,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-)
+from ....domain.transactions.enums import TransactionDirection
+from ....domain.transactions.llm import LLMClassifierError
+from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..llm_classification import suggest_llm_classification
 from ._subprocess_classifier_support import SubprocessLLMClassifier

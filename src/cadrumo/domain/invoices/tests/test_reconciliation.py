@@ -14,14 +14,9 @@ from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped
 from ....application.invoices import link_invoice_transaction_repositories
 from ....core import LinkInconsistencyDirection
 from ...iva import InvoiceKind
-from ...transactions import (
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-)
+from ...transactions.enums import TransactionDirection
+from ...transactions.models import Transaction, TransactionCatalogue
+from ...transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .._enums import IvaRate, PaymentStatus
 from .._models import Invoice, InvoiceCatalogue, InvoiceLine
 from .._service import (

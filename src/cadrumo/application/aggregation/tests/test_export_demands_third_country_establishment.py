@@ -30,14 +30,9 @@ from pathlib import Path
 import pytest
 
 from ....domain.iva import EUMemberState, IvaCategory
-from ....domain.transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionDirection,
-)
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection
+from ....domain.transactions.models import Transaction
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha2
 from .._iva_ledger import (
     IVA_LEDGER_COUNTERPARTY_GATE_REASONS,

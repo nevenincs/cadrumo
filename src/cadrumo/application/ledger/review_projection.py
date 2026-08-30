@@ -12,11 +12,8 @@ from __future__ import annotations
 from collections.abc import Callable
 
 from ...domain.buckets import BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
-from ...domain.transactions import (
-    BusinessClassification,
-    Transaction,
-    TransactionCatalogue,
-)
+from ...domain.transactions.enums import BusinessClassification
+from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ..bucket_event_repository import bucket_event_history_repository
 from ..review.filter import LedgerReviewStatus
 from .actions_common import display_decimal, require_transaction

@@ -26,12 +26,9 @@ from ...domain.buckets import (
     BucketEventObjectType,
     BucketEventType,
 )
-from ...domain.transactions import (
-    Transaction,
-    TransactionCatalogue,
-    TransactionCatalogueRepositoryProtocol,
-    TransactionLifecycleState,
-)
+from ...domain.transactions.enums import TransactionLifecycleState
+from ...domain.transactions.models import Transaction, TransactionCatalogue
+from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..export import serialize_tabular_rows
 from .actions_common import (
     build_ledger_bucket_event,

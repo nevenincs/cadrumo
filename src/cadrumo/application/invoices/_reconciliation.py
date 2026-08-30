@@ -22,11 +22,9 @@ from ...domain.invoices import (
     link_transaction,
     suggest_reconciliations,
 )
-from ...domain.transactions import (
-    TransactionCatalogue,
-    TransactionError,
-    link_invoice,
-)
+from ...domain.transactions.errors import TransactionError
+from ...domain.transactions.models import TransactionCatalogue
+from ...domain.transactions.service import link_invoice
 
 
 class ReconciliationSkippedSuggestion(BaseModel):

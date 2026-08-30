@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 from ..categories import SpendingCategory, SpendingCategoryFamily, categories_for_family
-from ._enums import TransactionDirection
+from .enums import TransactionDirection
 
 LedgerIrpfCategoryPurpose = Literal[
     "activity_income_withholding",

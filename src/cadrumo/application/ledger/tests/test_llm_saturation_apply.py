@@ -9,7 +9,8 @@ import pytest
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....domain.iva import IvaCategory
-from ....domain.transactions import BusinessClassification, TransactionValidationError
+from ....domain.transactions.enums import BusinessClassification
+from ....domain.transactions.errors import TransactionValidationError
 from ..llm_classification import apply_saturated_llm_classification, saturate_llm_classification
 from ._llm_saturation_support import (
     _BUCKET,

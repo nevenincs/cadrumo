@@ -17,7 +17,7 @@ from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.config import override_settings
 from ...core.errors import NoActiveProfileError
 from ...core.logging import get_logger
-from ...domain.transactions import TransactionCatalogueRepositoryProtocol
+from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from .profile_bucket_scan import resolve_profile_bucket
 
 if TYPE_CHECKING:
@@ -95,7 +95,7 @@ def active_transaction_catalogue_repository[RepositoryT: TransactionCatalogueRep
     repository_factory: Callable[[str], RepositoryT],
 ) -> RepositoryT:
     """Compose the active bucket's transaction catalogue through an outward factory."""
-    from ...domain.transactions import LedgerNoActiveBucketError
+    from ...domain.transactions.errors import LedgerNoActiveBucketError
 
     try:
         bucket_id = require_active_profile_bucket_id()

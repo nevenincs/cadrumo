@@ -21,10 +21,7 @@ import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....domain.buckets import BucketEventType
-from ....domain.transactions import (
-    SplitRole,
-    TransactionLifecycleState,
-)
+from ....domain.transactions.enums import SplitRole, TransactionLifecycleState
 from ..actions_split_merge import merge_transactions
 from ._merge_test_support import _BUCKET_ID, _repositories, _split_setup
 

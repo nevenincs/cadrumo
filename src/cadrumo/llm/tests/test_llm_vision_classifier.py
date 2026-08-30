@@ -20,11 +20,8 @@ from ...core import AcceleratorKind, ImageMediaType, model_candidate
 from ...core.config import load_settings
 from ...domain.categories import SpendingCategory
 from ...domain.iva import IvaCategory
-from ...domain.transactions import (
-    BusinessClassification,
-    LLMClassificationResponse,
-    prompt_spec_with_saturation_fields,
-)
+from ...domain.transactions.enums import BusinessClassification
+from ...domain.transactions.llm import LLMClassificationResponse, prompt_spec_with_saturation_fields
 from ...tests.llm_vision_evidence_support import (
     _json_array,
     _json_object,

@@ -35,7 +35,7 @@ from ...core.i18n import Translatable as tr
 from ...core.time import validate_utc_aware
 from ...domain.filing import ModeloValidationFinding
 from ...domain.invoices import Invoice
-from ...domain.transactions import Transaction
+from ...domain.transactions.models import Transaction
 from ..workflow.review_models import InvoiceReviewRecord, LedgerReviewRecord
 from .enums import ReviewItemKind, ReviewSeverity
 

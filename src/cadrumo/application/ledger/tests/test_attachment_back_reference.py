@@ -30,7 +30,7 @@ from ....domain.attachments import (
     list_attachments,
     load_attachment,
 )
-from ....domain.transactions import find_transaction
+from ....domain.transactions.service import find_transaction
 from ._action_test_support import (
     _BUCKET_ID,
     UTC,

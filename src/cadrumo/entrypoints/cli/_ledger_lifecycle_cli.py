@@ -30,11 +30,8 @@ from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity, strict_round_trip
 from ...core.time import now
 from ...domain.attachments import AttachmentSource, DocumentLinkSource
-from ...domain.transactions import (
-    BusinessClassification,
-    TransactionValidationError,
-    is_classified,
-)
+from ...domain.transactions.enums import BusinessClassification, is_classified
+from ...domain.transactions.errors import TransactionValidationError
 from ...llm.suggestions import LLMSplitApplyResult
 from ._common import _bad, _state, _tx_repo, emit_envelope
 from ._decimal_parsing import parse_decimal_amount

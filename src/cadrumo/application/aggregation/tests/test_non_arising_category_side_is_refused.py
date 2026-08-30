@@ -54,16 +54,9 @@ from ....domain.iva import (
     IvaDeductionClassificationProvenance,
     IvaKindApplicability,
 )
-from ....domain.transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-    TransactionLifecycleState,
-)
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .._invoice_kind import invoice_kind_for_direction
 from .._iva_ledger import IvaLedgerAggregationIssueReason
 from ._iva_authority_support import aggregate_iva_ledger_observations

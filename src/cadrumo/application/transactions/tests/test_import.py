@@ -36,16 +36,9 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.errors import BaseSeverity
-from ....domain.transactions import (
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-    derive_import_fingerprint,
-    derive_transaction_id,
-)
+from ....domain.transactions.enums import TransactionDirection
+from ....domain.transactions.models import Transaction, TransactionCatalogue, derive_import_fingerprint, derive_transaction_id
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .._diagnostics import (
     LedgerImportDiagnosticKind,
 )

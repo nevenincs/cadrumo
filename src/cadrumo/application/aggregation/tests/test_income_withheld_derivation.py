@@ -33,17 +33,10 @@ import pytest
 from ....core import Period
 from ....core.aggregation import LedgerIncomeGrounding, LedgerWithholdingDerivation
 from ....domain.iva import IvaCategory
-from ....domain.transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-    TransactionLifecycleState,
-    maximum_supported_activity_retencion_rate,
-)
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ....domain.transactions.retencion_parameters import maximum_supported_activity_retencion_rate
 from .._renta_income_ledger import RentaIncomeObservation, aggregate_renta_income_ledger
 from .._renta_income_ledger import _income_withheld_amount as income_withheld_amount
 

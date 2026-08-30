@@ -24,7 +24,7 @@ import pytest
 from ....core.config import override_settings
 from ....core.i18n import clear_output_language_cache
 from ...categories import SpendingCategory
-from .._llm import _category_hint
+from ..llm import _category_hint
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

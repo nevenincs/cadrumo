@@ -22,7 +22,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from ...domain.transactions import BusinessClassification
+from ...domain.transactions.enums import BusinessClassification
 
 
 def business_proportion(

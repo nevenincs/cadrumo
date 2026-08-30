@@ -35,7 +35,8 @@ from .....core.tabular import (
     decode_tabular_bytes,
     detect_tabular_delimiter,
 )
-from .....domain.transactions import SourceFormat, TransactionDirection
+from .....domain.transactions.enums import TransactionDirection
+from .....domain.transactions.raw_transaction import SourceFormat
 from ._base import (
     FinancialProvider,
     FinancialValidationError,

@@ -21,13 +21,8 @@ from decimal import Decimal
 import pytest
 
 from ....core import ConceptoIngreso, Period, TipoActividad
-from ....domain.transactions import (
-    BusinessClassification,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-    TransactionLifecycleState,
-)
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ....domain.transactions.models import Transaction, TransactionCatalogue
 from .._renta_income_ledger import aggregate_renta_m131_agrario_income_ledger
 from ._renta_income_aggregation_support import _raw_transaction
 

@@ -40,16 +40,9 @@ from ....domain.calculations.registry.ledger_bindings import structurally_unrout
 from ....domain.calculations.registry.loader import load_registry_tree
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.iva import CUOTA_LESS_M303_IVA_CATEGORIES, IvaCategory
-from ....domain.transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-    TransactionLifecycleState,
-)
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.secure_sql import isolated_runtime_profile
 from .._modelo_bindings import LedgerIvaAggregationSourceResolver
 from .._source_mesh import CalculationSourceContext

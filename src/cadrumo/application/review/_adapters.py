@@ -30,12 +30,8 @@ from ...domain.invoices import (
     PaymentStatus,
 )
 from ...domain.submission import ModeloDraftStatus
-from ...domain.transactions import (
-    BusinessClassification,
-    Transaction,
-    TransactionCatalogue,
-    is_classified,
-)
+from ...domain.transactions.enums import BusinessClassification, is_classified
+from ...domain.transactions.models import Transaction, TransactionCatalogue
 from .enums import ReviewSeverity
 from .errors import ReviewSourceLoadError
 from .models import (

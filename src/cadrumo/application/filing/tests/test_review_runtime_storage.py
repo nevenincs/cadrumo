@@ -15,14 +15,9 @@ from ....core.config import override_settings
 from ....core.hashing import content_hash_hex
 from ....domain.filing import ModeloDraft
 from ....domain.submission import ModeloDraftStatus
-from ....domain.transactions import (
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-)
+from ....domain.transactions.enums import TransactionDirection
+from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.filing import build_registry_filing_draft_from_decimals
 from ....tests.secure_sql import isolated_runtime_profile
 from ....tests.secure_sql import isolated_storage_root as _isolated_storage  # noqa: F401 - autouse fixture

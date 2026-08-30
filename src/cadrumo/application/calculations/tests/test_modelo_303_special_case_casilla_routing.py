@@ -46,15 +46,9 @@ from ....domain.calculations.registry.formula_runtime import calculate_registry_
 from ....domain.iva import (
     IvaCategory,
 )
-from ....domain.transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-)
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection
+from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import (
     IvaLedgerAggregationIssueReason,
@@ -181,7 +175,7 @@ def test_intracom_cuota_is_not_silently_dropped_from_deducible(tmp_path: Path) -
 
 def _recargo_purchase() -> Transaction:
     """A recargo-equivalencia retailer purchase: input IVA + RE surcharge, non-deductible."""
-    from ....domain.transactions import derive_transaction_id
+    from ....domain.transactions.models import derive_transaction_id
 
     raw = RawTransaction(
         provider_transaction_id="recargo-purchase-001",

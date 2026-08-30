@@ -22,21 +22,11 @@ from ...domain.modelos import (
     CalculationRevisionCatalogueRepositoryProtocol,
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from ...domain.transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    SplitLineage,
-    SplitRole,
-    Transaction,
-    TransactionCatalogue,
-    TransactionCatalogueRepositoryProtocol,
-    TransactionLifecycleLineageEntry,
-    TransactionLifecycleState,
-    TransactionValidationError,
-    derive_split_group_id,
-)
+from ...domain.transactions.enums import BusinessClassification, SplitRole, TransactionLifecycleState
+from ...domain.transactions.errors import TransactionValidationError
+from ...domain.transactions.models import SplitLineage, Transaction, TransactionCatalogue, TransactionLifecycleLineageEntry, derive_split_group_id
+from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ...domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .actions_common import (
     blocking_modelo_references,
     build_ledger_bucket_event,

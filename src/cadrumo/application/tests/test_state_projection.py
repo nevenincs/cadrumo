@@ -37,7 +37,7 @@ from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...core import Period
 from ...core.config import SecretStoreBackend, Settings, override_settings
 from ...domain.categories import SpendingCategory
-from ...domain.transactions import BusinessClassification, TransactionDirection
+from ...domain.transactions.enums import BusinessClassification, TransactionDirection
 from ...tests.bucket_layout import provision_bucket_directory
 from ...tests.registry_revision import active_registry_revision_id
 from ...tests.user_profile import register_minimal_profile

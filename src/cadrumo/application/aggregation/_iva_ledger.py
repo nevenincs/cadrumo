@@ -94,15 +94,9 @@ from ...domain.iva import (
     validate_prorrata_reference,
 )
 from ...domain.prorrata_register import ProrrataRegister, ProrrataRegisterRepositoryProtocol
-from ...domain.transactions import (
-    BusinessClassification,
-    OutOfWindowTransactionSummary,
-    Transaction,
-    TransactionCatalogue,
-    TransactionCatalogueRepositoryProtocol,
-    TransactionDirection,
-    TransactionLifecycleState,
-)
+from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ...domain.transactions.models import OutOfWindowTransactionSummary, Transaction, TransactionCatalogue
+from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from . import _shared_issue_reasons
 from ._business_proportion import business_proportion
 from ._invoice_kind import invoice_kind_for_direction

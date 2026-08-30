@@ -53,15 +53,9 @@ from ....domain.iva import (
     InvoiceKind as IvaInvoiceKind,
 )
 from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
-from ....domain.transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-)
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection
+from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .. import (
     AggregationValidationError,
     CalculationSourceContext,
@@ -947,7 +941,7 @@ def test_iva_source_mesh_resolver_degrades_on_unreadable_storage(
 def test_transaction_catalogue_refuses_new_legacy_drift_fixture(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    from ....domain.transactions import transaction_index_object_key
+    from ....domain.transactions.repository import transaction_index_object_key
 
     with pytest.raises(EnvelopeVersionError):
         secure_objects.save(

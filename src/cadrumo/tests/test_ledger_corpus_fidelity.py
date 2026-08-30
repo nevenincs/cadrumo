@@ -53,13 +53,8 @@ from ..domain.currency import (
     MonetaryAmount,
 )
 from ..domain.iva import EUMemberState, IvaCategory, IvaFlowDirection
-from ..domain.transactions import (
-    BusinessClassification,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-    TransactionLifecycleState,
-)
+from ..domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ..domain.transactions.models import Transaction, TransactionCatalogue
 from .ecb_stub import ecb_csv_fetch
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

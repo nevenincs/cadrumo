@@ -27,18 +27,11 @@ from ...domain.iva import (
     InputClassification,
     IvaCategory,
 )
-from ...domain.transactions import (
-    BucketTransactionRef,
-    BusinessClassification,
-    ImportSummary,
-    M210IncomeClassification,
-    Transaction,
-    TransactionDirection,
-    TransactionEditLineageEntry,
-    TransactionEvidenceProvenanceEntry,
-    TransactionLifecycleLineageEntry,
-    TransactionValidationError,
-)
+from ...domain.transactions.enums import BusinessClassification, TransactionDirection
+from ...domain.transactions.errors import TransactionValidationError
+from ...domain.transactions.m210_income_classification import M210IncomeClassification
+from ...domain.transactions.models import BucketTransactionRef, Transaction, TransactionEditLineageEntry, TransactionEvidenceProvenanceEntry, TransactionLifecycleLineageEntry
+from ...domain.transactions.repository import ImportSummary
 from ...domain.transactions.model_validation import validate_business_pct_coupling
 from ..export import ExportSerializationFormat, verify_export_metadata
 from ..review.filter import LedgerReviewStatus

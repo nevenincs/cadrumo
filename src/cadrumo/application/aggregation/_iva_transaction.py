@@ -31,7 +31,8 @@ from ...domain.iva import (
     domestic_categories_by_rate_kind,
     rate_table_covers_any_positive_tier,
 )
-from ...domain.transactions import BusinessClassification, Transaction
+from ...domain.transactions.enums import BusinessClassification
+from ...domain.transactions.models import Transaction
 from ._currency_predicates import is_non_eur_without_conversion
 from ._invoice_kind import invoice_kind_for_direction
 from ._iva_ledger import (

@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 
 from ......core import OFX_EXTRA, optional_extra_available
-from ......domain.transactions import TransactionDirection
+from ......domain.transactions.enums import TransactionDirection
 from ......tests import FIXTURES_DIR
 from .. import InvalidFinancialSourceError, OfxProvider
 

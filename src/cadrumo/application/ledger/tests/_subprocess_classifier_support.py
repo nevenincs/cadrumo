@@ -28,17 +28,8 @@ import shutil
 import subprocess
 from dataclasses import dataclass, field
 
-from ....domain.transactions import (
-    LLMClassificationResponse,
-    LLMClassifierError,
-    LLMSplitResponse,
-    PromptSpec,
-    Transaction,
-    build_split_prompt,
-    default_prompt_spec,
-    parse_response,
-    parse_split_response,
-)
+from ....domain.transactions.llm import LLMClassificationResponse, LLMClassifierError, LLMSplitResponse, PromptSpec, build_split_prompt, default_prompt_spec, parse_response, parse_split_response
+from ....domain.transactions.models import Transaction
 
 __all__ = ["SubprocessLLMClassifier"]
 

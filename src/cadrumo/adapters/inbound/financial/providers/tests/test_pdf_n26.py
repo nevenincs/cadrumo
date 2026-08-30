@@ -31,7 +31,7 @@ from pathlib import Path
 import pytest
 from pydantic import TypeAdapter
 
-from ......domain.transactions import TransactionDirection
+from ......domain.transactions.enums import TransactionDirection
 from ......tests import FIXTURES_DIR
 from .. import PdfN26Provider
 from .._detection import detect_provider

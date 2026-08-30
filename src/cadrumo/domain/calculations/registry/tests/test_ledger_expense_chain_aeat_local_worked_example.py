@@ -58,16 +58,9 @@ from .....core import CasillaId, Period, validated_casilla_id
 from .....core.resources import bundled_path
 from ....categories import SpendingCategory
 from ....invoices import InvoiceCatalogue
-from ....transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-    TransactionLifecycleState,
-)
+from ....transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ....transactions.models import Transaction, TransactionCatalogue
+from ....transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..ledger_bindings import resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values
 from ..schema import ModeloRevision
 from ..snapshot import build_snapshot

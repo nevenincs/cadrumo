@@ -1,7 +1,7 @@
-cadrumo.domain.transactions._models module
+cadrumo.domain.transactions.service module
 ==========================================
 
-.. automodule:: cadrumo.domain.transactions._models
+.. automodule:: cadrumo.domain.transactions.service
    :members:
    :show-inheritance:
    :ignore-module-all:

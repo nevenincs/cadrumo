@@ -35,13 +35,8 @@ from ...domain.iva import (
     InputClassification,
     IvaCategory,
 )
-from ...domain.transactions import (
-    BusinessClassification,
-    TransactionDirection,
-    TransactionIdPrefixError,
-    TransactionValidationError,
-    is_classified,
-)
+from ...domain.transactions.enums import BusinessClassification, TransactionDirection, is_classified
+from ...domain.transactions.errors import TransactionIdPrefixError, TransactionValidationError
 from ._common import _bad, _profile_to_taxpayer, _state, _tx_repo, emit_envelope
 from ._date_parsing import _parse_iso_date
 from ._ledger_classify_cli import ledger_classify_bulk_csv, require_single_ledger_classification_request

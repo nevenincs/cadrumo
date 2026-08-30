@@ -60,23 +60,12 @@ from ...domain.buckets import (
 )
 from ...domain.categories import SpendingCategory
 from ...domain.iva import IvaCategory, resolve_category_rate, split_gross_at_rate
-from ...domain.transactions import (
-    BUSINESS_BEARING_STATES,
-    BusinessClassification,
-    LLMClassificationResponse,
-    LLMClassifier,
-    LLMSplitProposer,
-    LLMSplitResponse,
-    PromptSpec,
-    Transaction,
-    TransactionCatalogueRepositoryProtocol,
-    TransactionLifecycleState,
-    TransactionNotFoundError,
-    TransactionValidationError,
-    prompt_spec_with_every_spending_category,
-    prompt_spec_with_saturation_fields,
-    set_classification,
-)
+from ...domain.transactions.enums import BUSINESS_BEARING_STATES, BusinessClassification, TransactionLifecycleState
+from ...domain.transactions.errors import TransactionNotFoundError, TransactionValidationError
+from ...domain.transactions.llm import LLMClassificationResponse, LLMClassifier, LLMSplitProposer, LLMSplitResponse, PromptSpec, prompt_spec_with_every_spending_category, prompt_spec_with_saturation_fields
+from ...domain.transactions.models import Transaction
+from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ...domain.transactions.service import set_classification
 from ...llm.models import MultimodalImageInput
 from ...llm.providers import rasterise_pdf_pages_to_base64_png
 from ...llm.suggestions import (
@@ -328,7 +317,7 @@ def _run_on_host_or_refuse[T](run: Callable[[], T], *, settings: Settings) -> T:
     """
     import httpx
 
-    from ...domain.transactions import LLMClassifierError
+    from ...domain.transactions.llm import LLMClassifierError
     from ...llm.errors import LLMProviderError
 
     try:

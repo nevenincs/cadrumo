@@ -1,16 +1,17 @@
 """Unit tests for the model-capability tier system.
 
-Exercises :func:`cadrumo.domain.transactions._model_tier.resolve_profile`
+Exercises :func:`cadrumo.domain.transactions.model_tier.resolve_profile`
 against the per-provider catalogue, the :data:`MINIMUM_CLASSIFICATION_TIER`
 floor, and frozen-dataclass invariants on
-:class:`cadrumo.domain.transactions._model_tier.ModelProfile`.
+:class:`cadrumo.domain.transactions.model_tier.ModelProfile`.
 """
 
 from __future__ import annotations
 
 import pytest
 
-from .._model_tier import (
+from ..errors import TransactionError
+from ..model_tier import (
     MINIMUM_CLASSIFICATION_TIER,
     ModelCapability,
     ModelTier,
@@ -18,7 +19,6 @@ from .._model_tier import (
     profiles_for_provider,
     resolve_profile,
 )
-from ..errors import TransactionError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

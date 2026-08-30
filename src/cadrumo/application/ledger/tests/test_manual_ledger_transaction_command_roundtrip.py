@@ -39,7 +39,7 @@ from pydantic import ValidationError
 
 from ....core import Art104TresExclusion
 from ....domain.iva import InputClassification
-from ....domain.transactions import BusinessClassification, TransactionDirection
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ..models import ManualLedgerTransactionCommand
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

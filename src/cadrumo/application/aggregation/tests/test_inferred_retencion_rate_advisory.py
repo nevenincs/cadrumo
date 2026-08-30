@@ -47,18 +47,10 @@ import pytest
 from ....core import Period
 from ....core.aggregation import LedgerWithholdingDerivation
 from ....domain.iva import IvaCategory
-from ....domain.transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-    TransactionLifecycleState,
-    load_retencion_actividades_rates,
-    statutory_activity_retencion_rates,
-)
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ....domain.transactions.retencion_parameters import load_retencion_actividades_rates, statutory_activity_retencion_rates
 from .._renta_income_ledger import RentaIncomeObservation, aggregate_renta_income_ledger
 from .._retencion_rate_advisory import (
     INFERRED_ACTIVIDAD_RETENCION_RATE_SOURCE_KIND,

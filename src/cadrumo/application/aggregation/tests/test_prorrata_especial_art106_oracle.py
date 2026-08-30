@@ -67,7 +67,7 @@ _INPUT_CUOTA = Decimal("10.50")
 
 
 def _raw(provider_id: str):
-    from ....domain.transactions import RawProvenance, RawTransaction, SourceFormat
+    from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
     return RawTransaction(
         provider_transaction_id=provider_id,
@@ -90,7 +90,8 @@ def _raw(provider_id: str):
 
 
 def _classified_purchase(provider_id: str, classification: InputClassification):
-    from ....domain.transactions import BusinessClassification, Transaction, TransactionDirection
+    from ....domain.transactions.enums import BusinessClassification, TransactionDirection
+    from ....domain.transactions.models import Transaction
 
     return Transaction.model_validate(
         {
@@ -134,7 +135,7 @@ def _seed_register(objects: SecureObjectRepository, regime: ProrrataRegisterRegi
 
 
 def _deducible_cuota(objects: SecureObjectRepository) -> Decimal:
-    from ....domain.transactions import TransactionCatalogue
+    from ....domain.transactions.models import TransactionCatalogue
 
     revision = bundled_authority().modelo("303").revisions["2022"]
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
@@ -198,7 +199,7 @@ def test_each_art106_regla_isolated(
     expected: Decimal,
 ) -> None:
     """Each art. 106.Uno regla, isolated, deducts at its lawful rate (100 / 0 / general)."""
-    from ....domain.transactions import TransactionCatalogue
+    from ....domain.transactions.models import TransactionCatalogue
 
     revision = bundled_authority().modelo("303").revisions["2022"]
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:

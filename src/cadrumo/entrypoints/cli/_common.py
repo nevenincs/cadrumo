@@ -141,7 +141,7 @@ if TYPE_CHECKING:
     from ...domain.deadlines import TaxpayerProfile
     from ...domain.filing import ModeloDraft
     from ...domain.invoices import InvoiceCatalogue
-    from ...domain.transactions import TransactionCatalogue
+    from ...domain.transactions.models import TransactionCatalogue
     from ...domain.user_profile.values import UserProfileRecord
     from ._verb_input_schema import VerbInputSchema
 
@@ -1080,7 +1080,7 @@ def _active_bucket_id_or_bad(state: WorkflowState) -> str:
 def _tx_repo(state: WorkflowState) -> TransactionCatalogueRepository:
     from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ...application.workflow.active_profile import active_transaction_catalogue_repository
-    from ...domain.transactions import LedgerNoActiveBucketError
+    from ...domain.transactions.errors import LedgerNoActiveBucketError
 
     try:
         return active_transaction_catalogue_repository(

@@ -35,18 +35,11 @@ from ....domain.invoices import (
     iva_rate_percentage,
 )
 from ....domain.iva import InvoiceKind, IvaCategory
-from ....domain.transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-    TransactionLifecycleState,
-    link_invoice,
-    statutory_activity_retencion_rates,
-)
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ....domain.transactions.retencion_parameters import statutory_activity_retencion_rates
+from ....domain.transactions.service import link_invoice
 from .._renta_income_ledger import (
     SalesInvoiceEvidenceRefusal,
     aggregate_renta_income_ledger,

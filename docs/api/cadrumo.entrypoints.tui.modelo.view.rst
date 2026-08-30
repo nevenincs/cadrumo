@@ -13,5 +13,6 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   cadrumo.entrypoints.tui.modelo.view.models
    cadrumo.entrypoints.tui.modelo.view.work_review
    cadrumo.entrypoints.tui.modelo.view.work_select

@@ -13,7 +13,7 @@ and compared against the registry parameter, so a drift in either the excerpt
 or the parameter reds the gate rather than agreeing with itself.
 
 See Also:
-    :mod:`domain.transactions._retencion_parameters`
+    :mod:`domain.transactions.retencion_parameters`
         The loader under test.
     :mod:`domain.iva.tests.test_legal_basis_rate_grounding`
         The sibling corpus → registry → substrate chain for IVA rates.
@@ -29,7 +29,7 @@ import pytest
 
 from ....core.directory_scan import scan_directory
 from ....core.resources import bundled_path
-from .._retencion_parameters import (
+from ..retencion_parameters import (
     RirpfArt95RetencionRates,
     load_retencion_actividades_rates,
     maximum_supported_activity_retencion_rate,

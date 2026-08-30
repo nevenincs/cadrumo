@@ -53,10 +53,10 @@ from ...core.logging import get_logger
 from ...core.unit_proportion import UNIT_PROPORTION_MAX, UNIT_PROPORTION_MIN, is_unit_proportion
 from ..categories import SpendingCategory, resolve_category_profiles
 from ..iva import IvaCategory
-from ._enums import BusinessClassification
-from ._model_tier import MINIMUM_CLASSIFICATION_TIER, ModelProfile, ModelTier
-from ._models import Transaction
+from .enums import BusinessClassification
 from .errors import LLMClassifierError, TransactionValidationError
+from .model_tier import MINIMUM_CLASSIFICATION_TIER, ModelProfile, ModelTier
+from .models import Transaction
 
 _logger = get_logger(__name__)
 

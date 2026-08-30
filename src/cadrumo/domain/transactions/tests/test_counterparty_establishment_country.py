@@ -34,13 +34,9 @@ from ...iva import (
     stated_country_code_status,
     territorial_scope_for_country,
 )
-from .. import (
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionDirection,
-)
+from ..enums import TransactionDirection
+from ..models import Transaction
+from ..raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

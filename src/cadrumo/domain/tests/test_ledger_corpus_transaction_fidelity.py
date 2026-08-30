@@ -3,7 +3,7 @@
 import pytest
 
 from ...tests.test_ledger_corpus_fidelity import _BUILT
-from ..transactions import Transaction
+from ..transactions.models import Transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

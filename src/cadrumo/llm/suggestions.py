@@ -73,7 +73,7 @@ from ..core import FieldOrigin
 from ..core.identity import BucketId, TaxIdIdentityToken, TransactionId
 from ..domain.categories import SpendingCategory
 from ..domain.iva import IvaCategory
-from ..domain.transactions import BusinessClassification
+from ..domain.transactions.enums import BusinessClassification
 
 
 class LLMClassificationSuggestion(BaseModel):

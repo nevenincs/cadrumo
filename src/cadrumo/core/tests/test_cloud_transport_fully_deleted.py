@@ -342,7 +342,7 @@ def _transport_of(stamp: str) -> str:
 
 
 def _text_classifier_transport() -> str:
-    from ...domain.transactions import prompt_spec_with_every_spending_category
+    from ...domain.transactions.llm import prompt_spec_with_every_spending_category
     from ...llm.text_classifier import LocalTextLLMClassifier
 
     spec = prompt_spec_with_every_spending_category(year=2025)
@@ -350,7 +350,7 @@ def _text_classifier_transport() -> str:
 
 
 def _vision_classifier_transport() -> str:
-    from ...domain.transactions import prompt_spec_with_every_spending_category
+    from ...domain.transactions.llm import prompt_spec_with_every_spending_category
     from ...llm.vision_classifier import LocalVisionLLMClassifier
 
     spec = prompt_spec_with_every_spending_category(year=2025)

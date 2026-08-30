@@ -33,15 +33,9 @@ from sqlalchemy import delete, event, select
 from sqlalchemy import inspect as sa_inspect
 
 from .....domain.iva import IvaCashAccountingPaymentEvidence, IvaCashAccountingTreatment, IvaCategory
-from .....domain.transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-)
+from .....domain.transactions.enums import BusinessClassification, TransactionDirection
+from .....domain.transactions.models import Transaction, TransactionCatalogue
+from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .....tests.secure_sql import isolated_runtime_profile
 from ...storage.sql import _orm
 from ...storage.sql.session import session_scope

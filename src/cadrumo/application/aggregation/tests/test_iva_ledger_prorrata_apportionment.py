@@ -42,15 +42,9 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.iva import InputClassification, IvaDeductionClassificationProvenance
 from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry, SectorDefinition
-from ....domain.transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-)
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection
+from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import AggregationValidationError
 from .. import aggregate_iva_ledger_observations_from_repositories as _aggregate_from_repositories

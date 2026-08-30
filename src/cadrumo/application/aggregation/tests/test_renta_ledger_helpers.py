@@ -23,7 +23,7 @@ import pytest
 
 from ....core import PROSE_ELISION_MARKER
 from ....domain.renta import RentaExpenseDirection
-from ....domain.transactions import BusinessClassification, TransactionDirection
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from .._business_proportion import business_proportion
 from .._renta_ledger import (
     RentaLedgerAggregationIssue,

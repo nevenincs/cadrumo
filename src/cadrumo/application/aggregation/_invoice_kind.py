@@ -41,7 +41,7 @@ yet settled; when it is, it changes this function and nothing else.
 from __future__ import annotations
 
 from ...domain.iva import InvoiceKind
-from ...domain.transactions import TransactionDirection
+from ...domain.transactions.enums import TransactionDirection
 
 __all__ = ["invoice_kind_for_direction"]
 

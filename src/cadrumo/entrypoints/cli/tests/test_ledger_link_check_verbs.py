@@ -243,7 +243,7 @@ def test_check_reports_a_one_sided_invoice_link(tmp_path: Path) -> None:
     """
     from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
     from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-    from ....domain.transactions import TransactionCatalogue
+    from ....domain.transactions.models import TransactionCatalogue
 
     added = _invoke(
         [

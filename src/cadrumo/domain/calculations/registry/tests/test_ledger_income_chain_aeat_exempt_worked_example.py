@@ -84,16 +84,9 @@ from .....core import CasillaId, Period, validated_casilla_id
 from .....core.aggregation import LedgerIncomeGrounding
 from .....core.resources import bundled_path
 from ....iva import InvoiceKind, IvaCategory, category_cuota_is_zero_by_law
-from ....transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-    TransactionLifecycleState,
-)
+from ....transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ....transactions.models import Transaction, TransactionCatalogue
+from ....transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..ledger_bindings import (
     resolve_ledger_renta_income_aggregation_binding_values,
     ungrounded_ledger_renta_income_observations,

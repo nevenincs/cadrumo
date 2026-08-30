@@ -15,7 +15,7 @@ import pytest
 
 from ......core import FieldRole
 from ......core.tabular import NormalizedTable
-from ......domain.transactions import TransactionDirection
+from ......domain.transactions.enums import TransactionDirection
 from ......tests import FIXTURES_DIR
 from .. import CsvProvider, MappedTabularProvider
 from .._base import InvalidFinancialSourceError

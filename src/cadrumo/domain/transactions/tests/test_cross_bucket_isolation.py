@@ -18,15 +18,9 @@ import pytest
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage import SecureObjectRepository
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import (
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-    TransactionLifecycleState,
-)
+from ..enums import TransactionDirection, TransactionLifecycleState
+from ..models import Transaction, TransactionCatalogue
+from ..raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

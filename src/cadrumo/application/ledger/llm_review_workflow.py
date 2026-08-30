@@ -35,10 +35,8 @@ from ...core.config import Settings, load_settings
 from ...core.identity import BucketId, TransactionId
 from ...core.time import now
 from ...domain.buckets import BucketEventHistoryRepositoryProtocol
-from ...domain.transactions import (
-    TransactionCatalogueRepositoryProtocol,
-    TransactionValidationError,
-)
+from ...domain.transactions.errors import TransactionValidationError
+from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...llm.suggestions import (
     LLMClassificationSuggestion,
     LLMSaturatedSuggestion,

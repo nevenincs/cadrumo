@@ -8,7 +8,7 @@ from decimal import Decimal
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....domain.transactions import TransactionDirection
+from ....domain.transactions.enums import TransactionDirection
 from ..actions_manual import create_manual_transaction
 from ..models import ManualLedgerTransactionCommand
 

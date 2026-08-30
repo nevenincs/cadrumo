@@ -37,16 +37,9 @@ from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate,
 from ....domain.iva import InvoiceKind
 from ....domain.prorrata_register import ProrrataRegisterEntry
 from ....domain.renta import RentaExpenseDirection
-from ....domain.transactions import (
-    BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-    TransactionLifecycleState,
-)
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.usage_ratios import UsageRatioProfile
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import RENTA_REGIMEN_CITATION_URL_FIXTURE

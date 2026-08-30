@@ -11,15 +11,10 @@ import pytest
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....domain.transactions import (
-    LedgerNoActiveBucketError,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
-    TransactionDirection,
-)
+from ....domain.transactions.enums import TransactionDirection
+from ....domain.transactions.errors import LedgerNoActiveBucketError
+from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
 from ..active_profile import active_transaction_catalogue_repository
 
