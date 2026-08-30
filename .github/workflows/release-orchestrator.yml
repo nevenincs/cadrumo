@@ -204,7 +204,26 @@ jobs:
     # dependency would otherwise skip this job too. The resume branch supplies
     # its own campaign run instead of building one.
     if: ${{ always() && needs.preflight.result == 'success' && needs.bump.result != 'failure' }}
-    runs-on: [self-hosted, Linux, X64]
+    # HOSTED, and this is a deadlock fix rather than a cost preference.
+    #
+    # This job dispatches a packaging workflow and then BLOCKS until that run
+    # concludes. Every packaging lane runs on `[self-hosted, Linux, X64]`, and
+    # this fleet has exactly one such runner. Waiting here on a fleet runner
+    # therefore occupied the only machine the dispatched run needed, and the two
+    # waited on each other until the conclude budget expired:
+    #
+    #     campaign          in_progress, holding cadrumo-linux-x64-1
+    #     packaging-quick   queued 52 minutes, never started
+    #
+    # Observed on run 33335781162. The wait is pure polling - `gh` and a Python
+    # module - so it needs nothing the fleet provides, and moving it off frees
+    # that runner to execute the very work being waited on.
+    #
+    # This is a sanctioned exception to the no-hosted-runner mandate, which is a
+    # mandate about COST: this repository is public, and GitHub-hosted runners
+    # are free for public repositories. `test_every_job_runs_on_the_self_hosted_fleet`
+    # pins the exception to exactly these two polling jobs.
+    runs-on: ubuntu-latest
     timeout-minutes: 180
     permissions:
       actions: write
@@ -286,7 +305,11 @@ jobs:
   acquire:
     name: Cadrumo / run the acquisition lanes the claimed channels require
     needs: [preflight, campaign]
-    runs-on: [self-hosted, Linux, X64]
+    # HOSTED, for the same reason as `campaign` above: this job dispatches the
+    # acquisition lanes and blocks on them, and those lanes run on the same
+    # single self-hosted Linux runner, so waiting here would deadlock against
+    # the lanes it just dispatched.
+    runs-on: ubuntu-latest
     timeout-minutes: 180
     permissions:
       actions: write
