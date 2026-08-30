@@ -245,7 +245,7 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="kind",
                 declarations=("--kind",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.iva", "InvoiceKind")),
+                value=ValueContract(DeferredTarget("cadrumo.domain.iva.classification", "InvoiceKind")),
                 default=ParameterDefault.required(),
                 help_key=TranslationKey("cli.app.ledger.invoice.kind_help"),
                 metavar=None,
@@ -300,7 +300,7 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="kind",
                 declarations=("--kind",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.iva", "InvoiceKind")),
+                value=ValueContract(DeferredTarget("cadrumo.domain.iva.classification", "InvoiceKind")),
                 default=ParameterDefault.required(),
                 help_key=TranslationKey("cli.app.ledger.invoice.kind_help"),
                 metavar=None,
@@ -492,7 +492,7 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="supply_nature",
                 declarations=("--supply-nature",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.iva", "SupplyNature")),
+                value=ValueContract(DeferredTarget("cadrumo.domain.iva.supply_nature", "SupplyNature")),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.app.ledger.evidence.confirm_supply_nature_help"),
                 metavar=None,
@@ -508,7 +508,7 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="invoice_class",
                 declarations=("--invoice-class",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.invoices", "InvoiceClass")),
+                value=ValueContract(DeferredTarget("cadrumo.domain.invoices.enums", "InvoiceClass")),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.app.ledger.evidence.confirm_invoice_class_help"),
                 metavar=None,

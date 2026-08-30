@@ -94,17 +94,14 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core import CasillaId, Period, validated_casilla_id
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-from cadrumo.domain.invoices import InvoiceCatalogue
-from cadrumo.domain.transactions import (
+from cadrumo.domain.invoices.models import InvoiceCatalogue
+from cadrumo.domain.transactions.enums import (
     BusinessClassification,
-    RawProvenance,
-    RawTransaction,
-    SourceFormat,
-    Transaction,
-    TransactionCatalogue,
     TransactionDirection,
     TransactionLifecycleState,
 )
+from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
+from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.tests.profile_capsule import seed_test_profile_record
 from cadrumo.tests.registry_observations import registry_grounded_observations

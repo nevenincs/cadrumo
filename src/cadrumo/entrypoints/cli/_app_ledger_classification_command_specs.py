@@ -46,7 +46,7 @@ LEDGER_CLASSIFICATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="classification",
                 declarations=("--classification",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.transactions", "BusinessClassification")),
+                value=ValueContract(DeferredTarget("cadrumo.domain.transactions.enums", "BusinessClassification")),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.ledger.classify.classification_help"),
                 metavar=None,
@@ -273,7 +273,7 @@ LEDGER_CLASSIFICATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="iva_category",
                 declarations=("--iva-category",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.iva", "IvaCategory")),
+                value=ValueContract(DeferredTarget("cadrumo.domain.iva.schema", "IvaCategory")),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.ledger.classify.iva_category_help"),
                 metavar=None,
@@ -321,7 +321,7 @@ LEDGER_CLASSIFICATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="counterparty_identification_state",
                 declarations=("--counterparty-identification-state",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.iva", "EUMemberState")),
+                value=ValueContract(DeferredTarget("cadrumo.domain.iva.schema", "EUMemberState")),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.ledger.classify.counterparty_identification_state_help"),
                 metavar=None,

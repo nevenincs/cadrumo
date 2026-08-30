@@ -18,9 +18,9 @@ from cadrumo.application.modelo._preconditions import (
     build_modelo_precondition_failure_for_scenario,
 )
 from cadrumo.application.operator_actions import OPERATOR_ACTION_CATALOGUE, ActionCatalogue
-from cadrumo.application.operator_surface import (
+from cadrumo.application.operator_surface.errors import OperatorSurfaceContractError
+from cadrumo.application.operator_surface.manifest import (
     ManifestActionResolution,
-    OperatorSurfaceContractError,
     resolve_manifest_action_profiles,
 )
 from cadrumo.core import ActionEvidenceProvenance

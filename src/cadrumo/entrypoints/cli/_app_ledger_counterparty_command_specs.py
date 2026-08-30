@@ -46,7 +46,7 @@ LEDGER_COUNTERPARTY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="scope",
                 declarations=("--scope",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.iva", "IvaTerritorialScope")),
+                value=ValueContract(DeferredTarget("cadrumo.domain.iva.classification", "IvaTerritorialScope")),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.app.ledger.counterparty.scope_help"),
                 metavar=None,
@@ -62,7 +62,7 @@ LEDGER_COUNTERPARTY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="identification_state",
                 declarations=("--identification-state",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.iva", "EUMemberState")),
+                value=ValueContract(DeferredTarget("cadrumo.domain.iva.schema", "EUMemberState")),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.app.ledger.counterparty.identification_state_help"),
                 metavar=None,
@@ -172,7 +172,7 @@ LEDGER_COUNTERPARTY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="evidenced_scope",
                 declarations=("--evidenced-scope",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.iva", "IvaTerritorialScope")),
+                value=ValueContract(DeferredTarget("cadrumo.domain.iva.classification", "IvaTerritorialScope")),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.app.ledger.counterparty.evidenced_scope_help"),
                 metavar=None,

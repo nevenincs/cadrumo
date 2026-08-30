@@ -9,11 +9,9 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from cadrumo.application.operator_surface import (
-    CommandSchemaRef,
-    OperatorSurfaceContract,
-    get_operator_surface_contract,
-)
+from cadrumo.application.operator_surface.contract import get_operator_surface_contract
+from cadrumo.application.operator_surface.manifest import CommandSchemaRef
+from cadrumo.application.operator_surface.models import OperatorSurfaceContract
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 

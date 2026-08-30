@@ -38,7 +38,7 @@ LEDGER_INVOICE_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="kind",
                 declarations=("--kind",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.iva", "InvoiceKind")),
+                value=ValueContract(DeferredTarget("cadrumo.domain.iva.classification", "InvoiceKind")),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.app.ledger.invoice.kind_help"),
                 metavar=None,
@@ -182,7 +182,7 @@ LEDGER_INVOICE_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="iva_category",
                 declarations=("--iva-category",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.iva", "IvaCategory")),
+                value=ValueContract(DeferredTarget("cadrumo.domain.iva.schema", "IvaCategory")),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.app.ledger.invoice.iva_category_help"),
                 metavar=None,
@@ -262,7 +262,7 @@ LEDGER_INVOICE_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="invoice_class",
                 declarations=("--invoice-class",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.invoices", "InvoiceClass")),
+                value=ValueContract(DeferredTarget("cadrumo.domain.invoices.enums", "InvoiceClass")),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.app.ledger.invoice.invoice_class_help"),
                 metavar=None,
@@ -364,7 +364,7 @@ LEDGER_INVOICE_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="kind",
                 declarations=("--kind",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.iva", "InvoiceKind")),
+                value=ValueContract(DeferredTarget("cadrumo.domain.iva.classification", "InvoiceKind")),
                 default=ParameterDefault.required(),
                 help_key=TranslationKey("cli.app.ledger.invoice.kind_help"),
                 metavar=None,
@@ -572,7 +572,7 @@ LEDGER_INVOICE_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="invoice_class",
                 declarations=("--invoice-class",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.invoices", "InvoiceClass")),
+                value=ValueContract(DeferredTarget("cadrumo.domain.invoices.enums", "InvoiceClass")),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.app.ledger.invoice.invoice_class_help"),
                 metavar=None,
@@ -636,7 +636,7 @@ LEDGER_INVOICE_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="iva_category",
                 declarations=("--iva-category",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.iva", "IvaCategory")),
+                value=ValueContract(DeferredTarget("cadrumo.domain.iva.schema", "IvaCategory")),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.app.ledger.invoice.iva_category_help"),
                 metavar=None,

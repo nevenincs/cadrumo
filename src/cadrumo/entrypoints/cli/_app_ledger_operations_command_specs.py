@@ -124,7 +124,7 @@ LEDGER_OPERATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="source",
                 declarations=("--source",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.attachments", "DocumentLinkSource")),
+                value=ValueContract(DeferredTarget("cadrumo.domain.attachments.enums", "DocumentLinkSource")),
                 default=ParameterDefault.required(),
                 help_key=TranslationKey("cli.app.ledger.evidence.pull_source_help"),
                 metavar=None,

@@ -54,7 +54,7 @@ LIVE_PORTALS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="category",
                 declarations=("--category",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.portals", "PortalCategory")),
+                value=ValueContract(DeferredTarget("cadrumo.domain.portals.categories", "PortalCategory")),
                 default=ParameterDefault.value(None),
                 help_key=_key("cli.app.live.portals.category_help"),
                 multiple=False,

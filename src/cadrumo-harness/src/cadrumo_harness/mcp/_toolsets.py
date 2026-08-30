@@ -27,9 +27,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict
 
-from cadrumo.application.operator_surface import (
-    MountedCommandDomain,
-)
+from cadrumo.application.operator_surface.models import MountedCommandDomain
 from cadrumo.core.json_contract import ENVELOPE_SCHEMA_VERSION
 from cadrumo.entrypoints.cli.command_api import is_exposable_command
 

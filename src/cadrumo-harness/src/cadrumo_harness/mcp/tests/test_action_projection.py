@@ -11,7 +11,7 @@ from cadrumo.application.operator_actions import (
     ActionCatalogueEntry,
     build_action_catalogue,
 )
-from cadrumo.application.operator_surface import OperatorSurfaceContractError
+from cadrumo.application.operator_surface.errors import OperatorSurfaceContractError
 from cadrumo.core.json_contract import Notice
 from cadrumo.entrypoints.cli.command_api import (
     build_verb_input_schemas,

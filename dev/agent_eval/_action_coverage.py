@@ -12,7 +12,10 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from cadrumo.application.operator_surface import ManifestActionResolution, ResolvedManifestActionProfile
+from cadrumo.application.operator_surface.manifest import (
+    ManifestActionResolution,
+    ResolvedManifestActionProfile,
+)
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -96,7 +99,7 @@ def production_leaf_condition_scenario_matrix() -> LeafConditionScenarioMatrix:
     """Build the current matrix from live CLI surface and production declarations."""
     from cadrumo.application.modelo._preconditions import MODELO_PRECONDITION_PROFILES
     from cadrumo.application.operator_actions import OPERATOR_ACTION_CATALOGUE
-    from cadrumo.application.operator_surface import resolve_manifest_action_profiles
+    from cadrumo.application.operator_surface.manifest import resolve_manifest_action_profiles
     from cadrumo.entrypoints.cli import current_operator_surface_reconciliation
 
     resolution = resolve_manifest_action_profiles(

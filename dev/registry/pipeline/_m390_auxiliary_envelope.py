@@ -25,7 +25,7 @@ from cadrumo.domain.calculations.registry.record_design_schema import (
     RecordDesignAuxiliaryEnvelopeHeaderRole,
 )
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
-from cadrumo.domain.filing import FilingExportValidationError
+from cadrumo.domain.filing.errors import FilingExportValidationError
 
 from ._provenance_manifest import ExportFragmentTarget
 from ._record_design_ir import (
