@@ -1,7 +1,0 @@
-cadrumo.domain.modelos._calculation_revision_aggregate module
-=============================================================
-
-.. automodule:: cadrumo.domain.modelos._calculation_revision_aggregate
-   :members:
-   :show-inheritance:
-   :ignore-module-all:

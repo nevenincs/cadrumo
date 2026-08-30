@@ -13,11 +13,11 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.domain.invoices._decomposition
-   cadrumo.domain.invoices._enums
-   cadrumo.domain.invoices._models
    cadrumo.domain.invoices._payload_normalisation
-   cadrumo.domain.invoices._protocols
-   cadrumo.domain.invoices._service
-   cadrumo.domain.invoices._validators
+   cadrumo.domain.invoices.decomposition
+   cadrumo.domain.invoices.enums
    cadrumo.domain.invoices.errors
+   cadrumo.domain.invoices.models
+   cadrumo.domain.invoices.protocols
+   cadrumo.domain.invoices.service
+   cadrumo.domain.invoices.validators

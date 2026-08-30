@@ -21,8 +21,8 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.domain.filing._amendment
-   cadrumo.domain.filing._protocols
-   cadrumo.domain.filing._schema
-   cadrumo.domain.filing._validator
+   cadrumo.domain.filing.amendment
    cadrumo.domain.filing.errors
+   cadrumo.domain.filing.protocols
+   cadrumo.domain.filing.schema
+   cadrumo.domain.filing.validator

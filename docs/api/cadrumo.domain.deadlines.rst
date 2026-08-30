@@ -13,10 +13,10 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.domain.deadlines._engine
-   cadrumo.domain.deadlines._festivos
-   cadrumo.domain.deadlines._models
-   cadrumo.domain.deadlines._plazo
-   cadrumo.domain.deadlines._profiles
-   cadrumo.domain.deadlines._recargo
+   cadrumo.domain.deadlines.engine
    cadrumo.domain.deadlines.errors
+   cadrumo.domain.deadlines.festivos
+   cadrumo.domain.deadlines.models
+   cadrumo.domain.deadlines.plazo
+   cadrumo.domain.deadlines.profiles
+   cadrumo.domain.deadlines.recargo

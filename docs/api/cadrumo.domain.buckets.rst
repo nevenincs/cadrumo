@@ -13,7 +13,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.domain.buckets._event_repository
-   cadrumo.domain.buckets._protocols
    cadrumo.domain.buckets.errors
    cadrumo.domain.buckets.event
+   cadrumo.domain.buckets.event_repository
+   cadrumo.domain.buckets.protocols

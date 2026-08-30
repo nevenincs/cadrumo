@@ -13,4 +13,4 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.domain.censo._certificado
+   cadrumo.domain.censo.certificado

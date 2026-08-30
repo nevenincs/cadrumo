@@ -109,13 +109,13 @@ Submodules
    cadrumo.application.modelo._verification_preconditions
    cadrumo.application.modelo._verification_predicates
    cadrumo.application.modelo._work_create_policy
-   cadrumo.application.modelo._work_lifecycle
    cadrumo.application.modelo._work_plazo
    cadrumo.application.modelo._workflow_gate
    cadrumo.application.modelo.borrador_binding
    cadrumo.application.modelo.calculation
    cadrumo.application.modelo.calculation_repository
    cadrumo.application.modelo.calculation_route
+   cadrumo.application.modelo.edit_contract
    cadrumo.application.modelo.external_import_actions
    cadrumo.application.modelo.filing_repository
    cadrumo.application.modelo.justificante_repository
@@ -129,6 +129,7 @@ Submodules
    cadrumo.application.modelo.review_package
    cadrumo.application.modelo.verify_selector
    cadrumo.application.modelo.work_addressing
+   cadrumo.application.modelo.work_lifecycle
    cadrumo.application.modelo.work_review
    cadrumo.application.modelo.work_unit_repository
    cadrumo.application.modelo.work_wizard
