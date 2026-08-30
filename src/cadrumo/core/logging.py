@@ -107,6 +107,9 @@ class LogExtra(RootModel[dict[str, LogExtraValue]]):
     iterable the way :meth:`logging.Logger.makeRecord` requires.
     """
 
+    # NOT the canonical STRICT_FROZEN_CONFIG: this is a RootModel, and pydantic
+    # refuses `extra` on one outright, while the canonical carries
+    # extra="forbid". A constraint-shape divergence, not a weaker config.
     model_config = ConfigDict(frozen=True)
 
     def for_logging(self) -> dict[str, LogExtraValue]:

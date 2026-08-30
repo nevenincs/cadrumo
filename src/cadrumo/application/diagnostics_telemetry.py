@@ -72,9 +72,17 @@ __all__ = [
     "flush_telemetry",
 ]
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True)
 
 _FLUSH_COMMAND = "diagnostics.llm_run"
+
+
+#: Deliberately NOT the canonical ``STRICT_FROZEN_CONFIG``: the records below are
+#: ``RootModel`` subclasses, and pydantic refuses ``extra`` on a root model
+#: outright -- ``PydanticUserError: RootModel does not support setting
+#: model_config['extra']``. The canonical config carries ``extra="forbid"``, so it
+#: cannot be applied here at all. This is a constraint-shape divergence, not a
+#: weaker config nobody chose.
+_STRICT_FROZEN = ConfigDict(strict=True, frozen=True)
 
 
 class TelemetryStatusReport(BaseModel):

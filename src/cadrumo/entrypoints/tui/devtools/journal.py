@@ -14,18 +14,16 @@ import json
 from pathlib import Path
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.models import STRICT_FROZEN_CONFIG
-
-_STRICT = ConfigDict(frozen=True, extra="forbid")
 
 
 class Press(BaseModel):
     """Key chords delivered through the real key pipeline."""
 
-    model_config = _STRICT
+    model_config = STRICT_FROZEN_CONFIG
     kind: Literal["press"] = "press"
     keys: tuple[str, ...]
 
@@ -38,7 +36,7 @@ class Type(BaseModel):
     one assignment would skip exactly the behaviour under evaluation.
     """
 
-    model_config = _STRICT
+    model_config = STRICT_FROZEN_CONFIG
     kind: Literal["type"] = "type"
     text: str
 
@@ -51,7 +49,7 @@ class Fill(BaseModel):
     :class:`Type` so a replay never misreports which path produced a value.
     """
 
-    model_config = _STRICT
+    model_config = STRICT_FROZEN_CONFIG
     kind: Literal["fill"] = "fill"
     selector: str
     value: str
@@ -60,7 +58,7 @@ class Fill(BaseModel):
 class Click(BaseModel):
     """A mouse click on a selector."""
 
-    model_config = _STRICT
+    model_config = STRICT_FROZEN_CONFIG
     kind: Literal["click"] = "click"
     selector: str
 

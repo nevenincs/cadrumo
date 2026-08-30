@@ -40,7 +40,9 @@ import sys
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
+
+from ...core.models import STRICT_FROZEN_CONFIG
 
 from ..config import LIVE_READ_TEST_OPT_IN_ENV_VAR as _LIVE_READ_TEST_OPT_IN_ENV_VAR
 from ._authorization import (
@@ -86,7 +88,7 @@ class AeatGateEnvSnapshot(BaseModel):
             is the signal - the value is recorded for traceability).
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     cadrumo_live_tests_enabled: str
     pytest_current_test: str

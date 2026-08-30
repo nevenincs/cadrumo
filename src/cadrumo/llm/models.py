@@ -248,7 +248,7 @@ class PromptRegistry(BaseModel):
     # Diverges from STRICT_FROZEN_CONFIG deliberately: this registry exposes a
     # ``register`` mutator, so declaring it frozen would advertise an immutability
     # the class does not have.
-    model_config = ConfigDict(strict=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     definitions: dict[str, PromptDefinition] = Field(
         default_factory=dict,
