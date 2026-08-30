@@ -47,6 +47,7 @@ from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryPr
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState, CalculationSourceRef
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..ledger.preflight import LedgerPreflightIssue
+from ..operator_actions._models import ActionReference
 from ..registry.closure import RegistryClosureLimb
 from ..state_projection import ModeloReadinessRequest, ProjectionModeloReadiness
 from .work_addressing import (
@@ -1717,6 +1718,7 @@ def resolve_graded_snapshot_result(
                 selected_target=None,
                 responsible_owner=_GRADED_SNAPSHOT_RESPONSIBLE_OWNER,
                 reconsideration_condition="create a work unit for this target, then request a graded snapshot again",
+                recovery_action=ActionReference(action_id="operator.modelo.work.create"),
             )
         )
     if work_unit.current_calculation_revision_id is None:
@@ -1728,6 +1730,7 @@ def resolve_graded_snapshot_result(
                 selected_target=None,
                 responsible_owner=_GRADED_SNAPSHOT_RESPONSIBLE_OWNER,
                 reconsideration_condition="calculate this work unit, then request a graded snapshot again",
+                recovery_action=ActionReference(action_id="operator.modelo.work.calculate"),
             )
         )
 
