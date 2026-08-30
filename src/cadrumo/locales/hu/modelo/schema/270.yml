@@ -144,7 +144,7 @@ modelo:
                 title: null
           field:
             label: null
-        2023-2024:
+        2023-y-siguientes:
           casilla:
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
               help: C jelölés, ha a bevallás olyan rekordokat tartalmaz, amelyek egy

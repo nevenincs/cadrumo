@@ -112,6 +112,7 @@ flows:
           bienes_inversion_regularizacion: Regularització de béns d'inversió
           borrador: Esborrany de l'AEAT
           collectible_invoice: Factura emesa
+          design_constant: Constant del disseny
           donativo_donor: Donant
           foreign_asset: Actiu estranger
           gasto193_contributor: Despeses per contribuent (model 193)
@@ -201,9 +202,11 @@ flows:
       unresolved: Sense resoldre
     summary:
       calculation_revision: Revisió del càlcul
+      denominator_source: Font del denominador
       lifecycle_state: Estat del cicle de vida
       progress: Progrés
       registry_revision: Revisió del registre
+      section: Resum
       verification_outcome: Resultat de la verificació
       work_unit: Unitat de treball
     title: Modelo {modelo} · {filing_year} · {period}
@@ -216,6 +219,114 @@ flows:
       state: Estat
     empty: Encara no hi ha cap unitat de treball registrada en aquest perfil.
     title: Seleccionar una unitat de treball de model
+  modelo_workspace_filing:
+    column:
+      capability: Capacitat
+      disposition: Disposició
+      producer: Productor
+      why: Motiu
+    handoff: La presentació es fa fora d'aquesta aplicació. Construïu, verifiqueu
+      i exporteu aquí, i presenteu vosaltres mateixos davant l'AEAT.
+    state_not_carried: Aquesta lectura no inclou l'estat ni l'historial de presentació.
+      Cap productor els aporta.
+    title: Presentació — model {modelo}
+    why:
+      draft_structural: 'Sense mesurar de manera permanent: la construcció de l''esborrany
+        no desa estat, així que cap productor registra un veredicte que es pugui llegir.'
+      export_pending_port: Sense mesurar a l'espera d'un contribuïdor que llegeixi
+        l'historial d'exportació.
+  modelo_workspace_inputs:
+    column:
+      address: Adreça
+      input_kind: Tipus d'entrada declarat
+      label: Etiqueta
+      value: Valor
+    empty: Aquesta revisió no declara valors materialitzats.
+    input_kind_unmeasured: sense mesurar
+    page_bounded: Es mostren {shown} files d'un conjunt més gran; les restants no
+      són accessibles des d'aquesta lectura.
+    section:
+      unsectioned: Sense secció
+    title: Entrades — model {modelo}
+    values_unmeasured: En aquesta lectura no s'ha mesurat cap valor. La inspecció
+      estàtica només llegeix l'esquema.
+  modelo_workspace_overview:
+    actions_not_carried: Cap productor aporta accions de recuperació per a aquesta
+      lectura. No afirma que no n'existeixin.
+    column:
+      capability: Capacitat
+      disposition: Disposició
+      field: Camp
+      producer: Productor
+      value: Valor
+    label:
+      filing_year: Exercici
+      law_selected: Revisió seleccionada per norma
+      modelo: Model
+      period: Període
+      requested_assertion: Asserció de revisió sol·licitada
+      review_status: Estat de revisió
+      stored_assertion: Asserció de revisió emmagatzemada
+      work_state: Estat de la unitat
+      work_unit: Unitat de treball
+    section:
+      address: Adreça
+      capabilities: Capacitats
+      revision: Coordenades de revisió
+    title: Resum — model {modelo}
+    value:
+      no_work_unit: encara sense unitat de treball
+  modelo_workspace_provenance:
+    column:
+      resolver: Resolutor
+      source_ref: Referència d'origen
+      subject: Subjecte
+    empty: Aquest càlcul no ha registrat fonts contribuents.
+    not_applicable: No aplicable a aquesta lectura. Aquesta admissió no inclou faceta
+      de procedència.
+    page_bounded: Es mostren {shown} d'un conjunt més gran. Una font pot aportar moltes
+      files, així que el nombre de files no indica completesa.
+    title: Procedència — model {modelo}
+    value:
+      unattributed: sense atribuir
+  modelo_workspace_results:
+    column:
+      casilla: Casella
+      formula: Fórmula
+      value: Valor
+    empty: Aquest càlcul no ha produït cap casella calculada.
+    not_applicable: No aplicable a aquesta lectura. Separar els resultats calculats
+      de les entrades de l'operador requereix la revisió de treball, que una inspecció
+      estàtica no inclou.
+    page_bounded: Es mostren {shown} files d'un conjunt més gran; les restants no
+      són accessibles des d'aquesta lectura.
+    title: Resultats — model {modelo}
+  modelo_workspace_verification:
+    axis:
+      binding_ready: Vincles preparats
+      ledger_ready: Llibre preparat
+      profile_ready: Perfil preparat
+      ready: Preparat (veredicte del productor)
+      registry_ready: Registre preparat
+    capability_line: 'Preparació de verificació: {glyph} {disposition} (de {producer})'
+    column:
+      axis: Eix
+      casilla: Casella
+      kind: Tipus
+      severity: Severitat
+      value: Valor
+    evidence_not_carried: Cap productor aporta evidència ni accions de recuperació
+      en aquests registres. No afirma que no n'existeixin.
+    findings_none: La revisió de treball no ha registrat cap troballa.
+    findings_unmeasured: En aquesta lectura no s'ha mesurat cap troballa. Aquesta
+      admissió no inclou revisió de treball.
+    readiness_unmeasured: La preparació no s'ha mesurat en aquesta lectura.
+    section:
+      findings: Troballes
+      readiness: Eixos de preparació
+    title: Verificació — model {modelo}
+    value:
+      unmeasured: sense mesurar
   passphrase:
     cancel_button: Cancel·la
     change_button: Canvia la contrasenya
