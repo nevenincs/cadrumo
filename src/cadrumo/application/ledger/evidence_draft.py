@@ -153,7 +153,7 @@ from ...domain.iva import (
 )
 from ...llm.errors import LLMPdfRasterisationError, LLMProviderError
 from ...llm.models import MultimodalImageInput
-from ...llm.providers import rasterise_pdf_pages_to_base64_png
+from ...llm.providers.local import rasterise_pdf_pages_to_base64_png
 from ..provisioning import probe_ollama_vision
 from ..user_profile.capabilities import resolve_active_capability
 from .document_transcription import DocumentTranscription

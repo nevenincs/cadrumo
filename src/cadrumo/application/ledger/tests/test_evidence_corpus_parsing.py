@@ -26,7 +26,7 @@ from ....adapters.inbound.pdf import extract_pages_text_from_bytes
 from ....core import STR_KEYED_MAPPING_ADAPTER, STRUCTURED_DOCUMENT_SHAPES, DocumentShape
 from ....core.directory_scan import scan_directory
 from ....llm.errors import LLMPdfRasterisationError
-from ....llm.providers import rasterise_pdf_pages_to_base64_png
+from ....llm.providers.local import rasterise_pdf_pages_to_base64_png
 from ....tests.fixtures import (
     FIXTURE_PROVENANCE_REAL,
     RECOGNISED_FIXTURE_PROVENANCES,

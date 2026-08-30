@@ -16,9 +16,9 @@ from ...core.config import load_settings
 from ...core.logging import get_logger
 from ..models import LLMProvider
 from .base import (
+    ProviderAdapter,
     ProviderCompletion,
     ProviderRequest,
-    _ProviderAdapter,
     require_provider_response_item,
 )
 
@@ -85,7 +85,7 @@ class _OpenAIResponse(BaseModel):
     usage: _OpenAIUsage
 
 
-class OpenAIAdapter(_ProviderAdapter):
+class OpenAIAdapter(ProviderAdapter):
     """Provider adapter that invokes the OpenAI Chat Completions API.
 
     A non-empty ``api_key`` is mandatory; the adapter refuses to construct

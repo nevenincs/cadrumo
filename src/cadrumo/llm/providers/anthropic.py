@@ -1,7 +1,7 @@
 """Anthropic Messages API adapter for the LLM outbound port.
 
 Implements the
-:class:`~llm.providers.base._ProviderAdapter` contract
+:class:`~llm.providers.base.ProviderAdapter` contract
 by translating a normalized
 :class:`~llm.providers.base.ProviderRequest` into an
 :class:`anthropic.AsyncAnthropic` ``messages.create`` call and converting the
@@ -21,7 +21,7 @@ from ...core import ActionEvidenceProvenance
 from ..errors import LLMConfigError, LLMProviderError, LLMTransientTransportError
 from ..models import LLMProvider
 from ..preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
-from .base import ProviderCompletion, ProviderRequest, _ProviderAdapter, raise_rate_limit
+from .base import ProviderAdapter, ProviderCompletion, ProviderRequest, raise_rate_limit
 
 if TYPE_CHECKING:
     # Typing-only: the Anthropic SDK is an optional runtime dependency (the
@@ -156,7 +156,7 @@ def build_message_kwargs(request: ProviderRequest) -> dict[str, Any]:
     return kwargs
 
 
-class AnthropicAdapter(_ProviderAdapter):
+class AnthropicAdapter(ProviderAdapter):
     """Provider adapter that talks to Anthropic's Messages API.
 
     Holds a bound :class:`anthropic.AsyncAnthropic` client configured with

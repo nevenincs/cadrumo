@@ -17,9 +17,9 @@ from ...core.config import load_settings
 from ...core.logging import get_logger
 from ..models import LLMProvider
 from .base import (
+    ProviderAdapter,
     ProviderCompletion,
     ProviderRequest,
-    _ProviderAdapter,
     require_provider_response_item,
 )
 
@@ -78,7 +78,7 @@ class _GeminiResponse(BaseModel):
     usage_metadata: _GeminiUsage = Field(default_factory=_GeminiUsage, alias="usageMetadata")
 
 
-class GeminiAdapter(_ProviderAdapter):
+class GeminiAdapter(ProviderAdapter):
     """Provider adapter that invokes the Gemini ``generateContent`` HTTP API.
 
     A non-empty ``api_key`` is mandatory; the adapter refuses to construct

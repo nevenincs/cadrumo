@@ -54,13 +54,10 @@ if TYPE_CHECKING:
     from ..application.provisioning import HardwareProfile, RuntimeResident
 from .models import LLMProvider, LLMRequest, LLMResponse, PromptRegistry
 from .pricing import estimate_cost_usd
-from .providers import (
-    GeminiAdapter,
-    LocalAdapter,
-    OpenAIAdapter,
-    ProviderRequest,
-)
-from .providers.base import ProviderCompletion, _ProviderAdapter
+from .providers.base import ProviderAdapter, ProviderCompletion, ProviderRequest
+from .providers.gemini import GeminiAdapter
+from .providers.local import LocalAdapter
+from .providers.openai import OpenAIAdapter
 
 # AnthropicAdapter stays lazy here so provider construction remains behind the
 # optional-extra guard in _build_adapter.
@@ -646,7 +643,7 @@ class LLMClient:
 
     async def _complete_with_retries(
         self,
-        adapter: _ProviderAdapter,
+        adapter: ProviderAdapter,
         provider_request: ProviderRequest,
     ) -> ProviderCompletion:
         """Run one dispatch, re-sending it only while the taxonomy permits.
@@ -843,7 +840,7 @@ class LLMClient:
         )
 
     @staticmethod
-    def _omit_unsupported_parameters(adapter: _ProviderAdapter, request: ProviderRequest) -> ProviderRequest:
+    def _omit_unsupported_parameters(adapter: ProviderAdapter, request: ProviderRequest) -> ProviderRequest:
         """Clear request parameters the resolved model does not accept.
 
         Enforced at the same single dispatch point as the image boundary, and
@@ -867,7 +864,7 @@ class LLMClient:
         return request.model_copy(update=cleared)
 
     @staticmethod
-    def _require_image_support(adapter: _ProviderAdapter, request: ProviderRequest) -> None:
+    def _require_image_support(adapter: ProviderAdapter, request: ProviderRequest) -> None:
         """Refuse a vision request routed at an adapter that cannot carry images.
 
         :class:`~llm.providers.base.ProviderRequest` carries ``images`` for
@@ -974,7 +971,7 @@ class LLMClient:
         }
         return defaults[provider]
 
-    def _build_adapter(self, provider: LLMProvider) -> _ProviderAdapter:
+    def _build_adapter(self, provider: LLMProvider) -> ProviderAdapter:
         timeout_s = self.settings.cadrumo_llm_default_timeout_s
         if provider is LLMProvider.ANTHROPIC:
             # The Anthropic-API provider needs the optional `anthropic` extra. Guard

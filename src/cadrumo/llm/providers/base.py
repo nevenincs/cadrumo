@@ -93,8 +93,14 @@ class ProviderCompletion(BaseModel):
     provider_request_id: str | None = Field(default=None, description="Provider-native request or message id.")
 
 
-class _ProviderAdapter(ABC):
-    """Private interface every concrete provider adapter implements.
+class ProviderAdapter(ABC):
+    """The interface every concrete provider adapter implements.
+
+    Public because it is a shared contract, not an implementation detail: the
+    client type-hints against it, each vendor module subclasses it, and the
+    outbound-adapter tests build their own conforming double. A name that says
+    private while four packages depend on it teaches the wrong thing about
+    where the boundary is.
 
     Concrete subclasses bind :attr:`provider` to a member of
     :class:`~llm.LLMProvider` and implement

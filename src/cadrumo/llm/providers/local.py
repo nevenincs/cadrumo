@@ -28,9 +28,9 @@ from ...core.config import load_settings
 from ..errors import LLMPdfRasterisationError
 from ..models import LLMProvider
 from .base import (
+    ProviderAdapter,
     ProviderCompletion,
     ProviderRequest,
-    _ProviderAdapter,
     check_http_error,
     parse_provider_response,
     post_provider_request,
@@ -143,7 +143,7 @@ class _LocalResponse(BaseModel):
     eval_count: int = Field(default=0, ge=0)
 
 
-class LocalAdapter(_ProviderAdapter):
+class LocalAdapter(ProviderAdapter):
     """Provider adapter that invokes a local Ollama-compatible HTTP endpoint."""
 
     provider = LLMProvider.LOCAL

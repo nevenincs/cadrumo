@@ -79,9 +79,9 @@ def test_provider_package_facade_does_not_reexport_private_adapters() -> None:
     """Private adapter types must stay on their owning modules."""
     from .. import providers as _providers
 
-    assert "_ProviderAdapter" not in _providers.__dict__
+    assert "ProviderAdapter" not in _providers.__dict__
     assert all(not name.startswith("_") for name in _providers.__all__)
-    assert not hasattr(_providers, "_ProviderAdapter")
+    assert not hasattr(_providers, "ProviderAdapter")
 
 
 def test_client_uses_cache_before_calling_provider(tmp_path: Path) -> None:

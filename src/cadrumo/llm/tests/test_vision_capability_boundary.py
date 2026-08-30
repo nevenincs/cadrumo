@@ -42,8 +42,11 @@ from ...tests.loopback_llm import (
 from ..client import LLMClient
 from ..errors import LLMConfigError
 from ..models import LLMRequest, MultimodalImageInput
-from ..providers import GeminiAdapter, LocalAdapter, OpenAIAdapter, ProviderRequest
 from ..providers.anthropic import build_user_content
+from ..providers.base import ProviderRequest
+from ..providers.gemini import GeminiAdapter
+from ..providers.local import LocalAdapter
+from ..providers.openai import OpenAIAdapter
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

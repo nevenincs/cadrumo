@@ -40,12 +40,11 @@ import pytest
 from .....core.config import Settings
 from .....core.external_constants import UTF_8_ENCODING
 from .....domain.evidence_consent import EvidenceConsentLedgerEntry
-from .....llm.providers.base import _ProviderAdapter
 from .....llm.client import LLMClient
 from .....llm.consent import EvidenceConsentToken
 from .....llm.errors import LLMConsentError
 from .....llm.models import LLMProvider, LLMRequest
-from .....llm.providers.base import ProviderCompletion, ProviderRequest
+from .....llm.providers.base import ProviderAdapter, ProviderCompletion, ProviderRequest
 from ....persistence.storage import (
     LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE,
     close_active_bucket_session,
@@ -61,7 +60,7 @@ _PROMPT = "Read the invoice total from this document, DISTINCTIVE-PROMPT-TOKEN."
 _COMPLETION_TEXT = "DISTINCTIVE-RESPONSE-TOKEN: 1.234,56 EUR"
 
 
-class _CapturingAdapter(_ProviderAdapter):
+class _CapturingAdapter(ProviderAdapter):
     """An off-host adapter that records the dispatch instead of calling a vendor."""
 
     provider = LLMProvider.ANTHROPIC
@@ -96,7 +95,7 @@ class _CapturingClient(LLMClient):
         self.adapter = _CapturingAdapter()
 
     @override
-    def _build_adapter(self, provider: LLMProvider) -> _ProviderAdapter:
+    def _build_adapter(self, provider: LLMProvider) -> ProviderAdapter:
         return self.adapter
 
 
