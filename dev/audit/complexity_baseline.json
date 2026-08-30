@@ -341,7 +341,7 @@
             "src/cadrumo/entrypoints/cli/registry.py::_diff_revisions_lines": 13,
             "src/cadrumo/llm/_column_role_mapping.py::_role_descriptions": 11,
             "src/cadrumo/llm/_column_role_mapping.py::parse_column_role_mapping_response": 13,
-            "src/cadrumo/llm/_providers/anthropic.py::AnthropicAdapter.complete": 13,
+            "src/cadrumo/llm/_providers/anthropic.py::AnthropicAdapter.complete": 13
         },
         "maintainability": {
             "src/cadrumo/adapters/persistence/storage/custody/_filesystem.py": 2.19,
@@ -349,7 +349,7 @@
             "src/cadrumo/application/operations/_supervisor.py": 8.35,
             "src/cadrumo/application/overview/_calendar_evidence.py": 18.13,
             "src/cadrumo/domain/calculations/registry/_loader.py": 11.02,
-            "src/cadrumo/domain/calculations/registry/_record_design.py": 0.0,
+            "src/cadrumo/domain/calculations/registry/_record_design.py": 0.0
         },
         "cognitive": {
             "src/cadrumo/adapters/inbound/declaracion/_parser.py::_resolve_value_word": 22,
@@ -392,8 +392,8 @@
             "src/cadrumo/entrypoints/cli/_ledger_read_cli.py::_register_ledger_categories_command": 30,
             "src/cadrumo/entrypoints/cli/_modelo_cli_support.py::parse_row_spec": 23,
             "src/cadrumo/entrypoints/cli/_modelo_projection_cli.py::_register_modelo_compare_command": 21,
-            "src/cadrumo/entrypoints/cli/_verb_input_schema.py::cli_argv_for": 26,
-        },
+            "src/cadrumo/entrypoints/cli/_verb_input_schema.py::cli_argv_for": 26
+        }
     },
     "tests": {
         "cyclomatic": {
@@ -709,7 +709,7 @@
             "src/cadrumo/tests/test_system_built_prose_elides.py::_system_built": 11,
             "src/cadrumo/tests/test_tipo_actividad_single_home.py::_stored_tipo_actividad_fields": 11,
             "src/cadrumo/tests/test_utc_validator_enrollment_inventory.py::_tree_has_inline_tzinfo_guard": 18,
-            "src/cadrumo/tests/test_wizard_prompter_singularity.py::prompter_export_map": 11,
+            "src/cadrumo/tests/test_wizard_prompter_singularity.py::prompter_export_map": 11
         },
         "maintainability": {
             "src/cadrumo/entrypoints/cli/tests/test_config_storage_surface.py": 13.58,
@@ -719,8 +719,8 @@
             "src/cadrumo/entrypoints/cli/tests/test_overview_calendar_verb.py": 17.25,
             "src/cadrumo/entrypoints/cli/tests/test_registry_cli_live.py": 17.08,
             "src/cadrumo/entrypoints/cli/tests/test_repair_privacy_contract.py": 17.75,
-            "src/cadrumo/entrypoints/cli/tests/test_workflow_surface.py": 14.62,
+            "src/cadrumo/entrypoints/cli/tests/test_workflow_surface.py": 14.62
         },
-        "cognitive": {},
-    },
+        "cognitive": {}
+    }
 }
