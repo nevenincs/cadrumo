@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#compatibility-checkpoint'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:0e0e91d77e138cbfe0858b774c7693b20920759d789620a38b772108d76bad84'
 related:
   - '[[2026-07-25-compatibility-checkpoint-adr]]'

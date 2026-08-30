@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#silent-zero-base-aggregation'
 date: '2026-08-16'
-modified: '2026-08-28'
+modified: '2026-08-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:d10f3d33721c8a4ea82bc371ec676c63b3c231119e001c4eb7a155f36358554f'
+body_hash: 'sha256:867b1489a30d7c38a8c5a1e9f4a26ba358bae0e98df93afcf8af06ab1a9942c7'
 related:
   - '[[2026-06-19-silent-zero-base-aggregation-adr]]'
   - '[[2026-06-19-silent-zero-base-aggregation-audit]]'
@@ -16,6 +16,7 @@ related:
   - '[[2026-06-20-silent-zero-base-aggregation-research]]'
   - '[[2026-07-02-silent-zero-base-aggregation-audit]]'
   - '[[2026-07-05-silent-zero-base-aggregation-audit]]'
+  - '[[2026-08-28-silent-zero-base-aggregation-m303-box-45-deducible-addends-audit]]'
 ---
 
 # `silent-zero-base-aggregation` feature index
@@ -33,6 +34,7 @@ Auto-generated index of all documents tagged with `#silent-zero-base-aggregation
 - `2026-06-19-silent-zero-base-aggregation-audit` - `silent-zero-base-aggregation` audit: `Adversarial aggregation audit: cuota-side drops, recargo, annual coverage, reverse-charge symmetry`
 - `2026-07-02-silent-zero-base-aggregation-audit` - `silent-zero-base-aggregation` audit: `Wave 1 D9 close-blocker audit`
 - `2026-07-05-silent-zero-base-aggregation-audit` - `silent-zero-base-aggregation` audit: `campaign close honesty review`
+- `2026-08-28-silent-zero-base-aggregation-m303-box-45-deducible-addends-audit` - `silent-zero-base-aggregation` audit: `Modelo 303 box 45 omits five official deducible addends`
 
 ### exec
 
@@ -46,4 +48,3 @@ Auto-generated index of all documents tagged with `#silent-zero-base-aggregation
 
 - `2026-06-19-silent-zero-base-aggregation-research` - `silent-zero-base-aggregation` research: `Silent-zero regulated-base aggregation inventory`
 - `2026-06-20-silent-zero-base-aggregation-research` - `silent-zero-base-aggregation` research: `M130 agrarian estimacion-objetiva income classification axis`
-- `2026-08-28-silent-zero-base-aggregation-m303-box-45-deducible-addends-research` - `silent-zero-base-aggregation` research: `Modelo 303 box 45 omits five official deducible addends`

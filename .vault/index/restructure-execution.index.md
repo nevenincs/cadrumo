@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#restructure-execution'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:93e4d05ec0903541493741c83d1ec7b671507118aa24f9dd5a3ef42df5191507'
 related:
   - '[[2026-06-04-restructure-execution-adr]]'

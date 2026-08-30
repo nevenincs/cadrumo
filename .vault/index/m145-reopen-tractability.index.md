@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#m145-reopen-tractability'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:65fc1a8c07c953513acec0129ebbf3f2d94b41fddb1ebd96c30572004fac2dec'
 related:
   - '[[2026-06-03-m145-reopen-tractability-research]]'

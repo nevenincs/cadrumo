@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#m200-erd-tipo-is'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:3edcb3cb5d2551c7c9c7e7ecb51d0a6861605623ef37addcf4748baa2aa43c72'
 related:
   - '[[2026-06-04-m200-erd-tipo-is-adr]]'

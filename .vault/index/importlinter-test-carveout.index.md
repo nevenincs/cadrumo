@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#importlinter-test-carveout'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:827219dc49b7cfbe1964eb59533ca5cfde8fcdf4072f3c2112a4f030739b0812'
 related:
   - '[[2026-07-08-importlinter-test-carveout-adr]]'

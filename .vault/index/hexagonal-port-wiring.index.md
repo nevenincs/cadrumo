@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#hexagonal-port-wiring'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:e4fa3dd4b6002caf91b47124b5ed4cf73ec381d106199c1dd7472249978a1d33'
 related:
   - '[[2026-06-01-hexagonal-port-wiring-plan]]'

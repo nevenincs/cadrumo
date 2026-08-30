@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#llm-ledger-classification'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:bedf089613e95a58c0dd307f7433b5db32778f6bb5e384df8a9789ea0d15d854'
 related:
   - '[[2026-06-03-llm-ledger-classification-adr]]'

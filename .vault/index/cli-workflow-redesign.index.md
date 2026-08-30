@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#cli-workflow-redesign'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:b9d25019ed22e8173e39574749cd39386f5383f923bcbb1e89c935e825ff291a'
 related:
   - '[[2026-05-14-cli-workflow-redesign-exec]]'

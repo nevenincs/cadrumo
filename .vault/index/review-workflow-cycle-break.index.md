@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#review-workflow-cycle-break'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:8a2df7666a80884af34892616c4249a20595f50a036422778629fb28241953c0'
 related:
   - '[[2026-07-03-review-workflow-cycle-break-adr]]'

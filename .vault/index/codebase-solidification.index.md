@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#codebase-solidification'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:1b78b152311c8fd9d849b073f4da7391732763c8bda7a85ae19bef2258236565'
 related:
   - '[[2026-05-28-codebase-solidification-exec]]'

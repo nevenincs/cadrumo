@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#modelo-303-regimen-simplificado'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:e3a5f4e90071f20c22e1aabe0384c1d85fa0a7e095522a2966f1edcdb400206b'
 related:
   - '[[2026-07-01-modelo-303-regimen-simplificado-adr]]'

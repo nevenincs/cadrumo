@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#schema-hardening'
 date: '2026-08-16'
-modified: '2026-08-26'
-body_schema: 'body-v1'
-body_hash: 'sha256:5e9fd171f2a699c2fc2de6b4868e0134aeebb9359dfe5af341ad349431816564'
+modified: '2026-08-30'
+body_schema: 'body-v2'
+body_hash: 'sha256:7f0007b8543f5a1665208b1e610ac289b3510a39e02b584a4353bc8c7a7c95db'
 related:
   - '[[2026-05-27-schema-hardening-label-artifact-inventory-exec]]'
   - '[[2026-05-27-schema-hardening-m100-marriage-citation-repair-exec]]'
@@ -51,9 +51,11 @@ related:
   - '[[2026-06-02-registry-hardening-next-work-plan]]'
   - '[[2026-06-02-schema-hardening-P05-summary]]'
   - '[[2026-06-02-schema-hardening-audit]]'
+  - '[[2026-06-02-schema-hardening-ledger]]'
   - '[[2026-06-02-schema-hardening-m100-label-legal-continuity-candidate-research]]'
   - '[[2026-06-02-schema-hardening-m100-legal-ref-continuity-candidate-research]]'
   - '[[2026-06-03-schema-hardening-P03-summary]]'
+  - '[[2026-06-03-schema-hardening-ledger]]'
   - '[[2026-06-03-validator-decomposition-boundary-audit]]'
   - '[[2026-06-03-validator-decomposition-code-review-audit]]'
   - '[[2026-06-04-registry-reviewability-gate-code-review-audit]]'
@@ -120,35 +122,10 @@ Auto-generated index of all documents tagged with `#schema-hardening`.
 - `2026-06-02-registry-hardening-next-work-P02-S12` - P02.S12 Execution Record
 - `2026-06-02-registry-hardening-next-work-P02-S13` - P02.S13 Execution Record
 - `2026-06-02-registry-hardening-next-work-P02-S14` - P02.S14 Execution Record
-- `2026-06-02-schema-hardening-P03-S15` - Re-audit M347 singleton marker state
-- `2026-06-02-schema-hardening-P03-S16` - Verify M349 base intracomunitaria role coverage
-- `2026-06-02-schema-hardening-P03-S17` - Verify signed cuota role coverage
-- `2026-06-02-schema-hardening-P04-S18` - Audit registry Python module size and ownership boundaries
-- `2026-06-02-schema-hardening-P04-S19` - Assess loader fragment compiler extraction boundaries
-- `2026-06-02-schema-hardening-P04-S20` - Assess binding resolver extraction boundaries
-- `2026-06-02-schema-hardening-P04-S21` - Assess schema model extraction boundaries and ADR need
-- `2026-06-02-schema-hardening-P04-S22` - Assess record-design extraction boundaries
-- `2026-06-02-schema-hardening-P04-S23` - Assess applicability extraction boundaries
-- `2026-06-02-schema-hardening-P04-S24` - Assess workbook parity extraction boundaries
-- `2026-06-02-schema-hardening-P04-S25` - Assess formula runtime extraction boundaries
-- `2026-06-02-schema-hardening-P04-S26` - Audit oversized registry test module decomposition
-- `2026-06-02-schema-hardening-P04-S27` - Audit M123 revision file for directory-mode fragmentation need
-- `2026-06-02-schema-hardening-P05-S28` - Split residual M200 export fragments below pressure ceiling
-- `2026-06-02-schema-hardening-P05-S29` - Split M303 casilla and export pressure fragments
-- `2026-06-02-schema-hardening-P05-S30` - Re-run corpus fragment headroom audit after residual pressure splits
 - `2026-06-02-schema-hardening-P05-summary` - `schema-hardening` `P05` summary
-- `2026-06-03-registry-hardening-next-work-W02-P06-S31` - W02.P06.S31 Validator Decomposition Boundary Audit
-- `2026-06-03-registry-hardening-next-work-W02-P06-S33` - W02.P06.S33 Cross-Revision Advisory Summary Extraction
-- `2026-06-03-schema-hardening-P01-S01` - Audit M200 construct fragment split boundaries
-- `2026-06-03-schema-hardening-P02-S02` - Split M200 constructs part 002
-- `2026-06-03-schema-hardening-P03-S03` - Re-run construct-pressure corpus headroom audit
+- `2026-06-02-schema-hardening-ledger` - `schema-hardening` ledger
 - `2026-06-03-schema-hardening-P03-summary` - `registry-construct-pressure` `P03` summary
-- `2026-06-02-registry-hardening-next-work-W03-P07-S35` - `schema-hardening` `W03.P07.S35` step record
-- `2026-06-02-registry-hardening-next-work-W03-P07-S36` - `schema-hardening` `W03.P07.S36` step record
-- `2026-06-02-registry-hardening-next-work-W03-P07-S37` - `schema-hardening` `W03.P07.S37` step record
-- `2026-06-02-registry-hardening-next-work-W04-P08-S38` - `schema-hardening` `W04.P08.S38` step record
-- `2026-06-02-registry-hardening-next-work-W04-P08-S39` - `schema-hardening` `W04.P08.S39` step record
-- `2026-06-02-registry-hardening-next-work-W04-P08-S40` - `schema-hardening` `W04.P08.S40` step record
+- `2026-06-03-schema-hardening-ledger` - `schema-hardening` ledger
 
 ### plan
 

@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#fichero-boe-export-layouts'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:868f504b7d7ebaecdbd7f922467521eafd090f51fb048aab71407a00e9b4087a'
 related:
   - '[[2026-06-04-fichero-boe-export-layouts-adr]]'

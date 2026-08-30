@@ -4,14 +4,15 @@ tags:
   - '#index'
   - '#calendar-filing-semantics'
 date: '2026-08-16'
-modified: '2026-08-26'
-body_schema: 'body-v1'
-body_hash: 'sha256:a0c1ab92620952a945faaeb9bdec44d1e350e9000b48400abbe844ffa3aa23c6'
+modified: '2026-08-30'
+body_schema: 'body-v2'
+body_hash: 'sha256:9be02a67e92a1b5178cc203d9cb2a774dabd75f1e8ff029a873414f82a51d9eb'
 related:
   - '[[2026-06-05-calendar-filing-semantics-W01-P01-summary]]'
   - '[[2026-06-05-calendar-filing-semantics-W02-P02-summary]]'
   - '[[2026-06-05-calendar-filing-semantics-adr]]'
   - '[[2026-06-05-calendar-filing-semantics-code-review-audit]]'
+  - '[[2026-06-05-calendar-filing-semantics-ledger]]'
   - '[[2026-06-05-calendar-filing-semantics-plan]]'
   - '[[2026-06-05-calendar-filing-semantics-reference]]'
 ---
@@ -32,14 +33,9 @@ Auto-generated index of all documents tagged with `#calendar-filing-semantics`.
 
 ### exec
 
-- `2026-06-05-calendar-filing-semantics-W01-P01-S01` - `calendar-filing-semantics` `W01.P01.S01`
-- `2026-06-05-calendar-filing-semantics-W01-P01-S02` - `calendar-filing-semantics` `W01.P01.S02`
 - `2026-06-05-calendar-filing-semantics-W01-P01-summary` - `calendar-filing-semantics` `W01.P01` summary
-- `2026-06-05-calendar-filing-semantics-W02-P02-S03` - `calendar-filing-semantics` `W02.P02.S03`
-- `2026-06-05-calendar-filing-semantics-W02-P02-S04` - `calendar-filing-semantics` `W02.P02.S04`
 - `2026-06-05-calendar-filing-semantics-W02-P02-summary` - `calendar-filing-semantics` `W02.P02` summary
-- `2026-06-05-calendar-filing-semantics-W03-P03-S05` - `calendar-filing-semantics` `W03.P03.S05` exec - taxpayer-bound justificante verification
-- `2026-06-05-calendar-filing-semantics-W03-P03-S06` - `calendar-filing-semantics` `W03.P03.S06` exec - live filed taxpayer binding
+- `2026-06-05-calendar-filing-semantics-ledger` - `calendar-filing-semantics` ledger
 
 ### plan
 

@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#identity-primitives'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:afec0e3eae5e2e7027367bd40cdaec53c2ae9de61f76cb842784924439062c86'
 related:
   - '[[2026-06-04-identity-primitives-research]]'

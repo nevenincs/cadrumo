@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#renta-region-deductibility'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:2b9a916cd11e433beeaaba8453d74bdb3e680547e93bfa05ffb9a00d45238cca'
 related:
   - '[[2026-07-04-renta-region-deductibility-adr]]'

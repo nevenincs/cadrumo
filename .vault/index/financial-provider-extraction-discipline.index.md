@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#financial-provider-extraction-discipline'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:614f827093f09dfbcd563199f9535736faf9babe2b67bded6d13109a0ed7dc3f'
 related:
   - '[[2026-06-04-financial-provider-extraction-discipline-research]]'

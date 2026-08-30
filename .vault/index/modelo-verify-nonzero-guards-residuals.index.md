@@ -4,11 +4,12 @@ tags:
   - '#index'
   - '#modelo-verify-nonzero-guards-residuals'
 date: '2026-08-16'
-modified: '2026-08-26'
-body_schema: 'body-v1'
-body_hash: 'sha256:49bbe019b694df4a749f45b8ba3787299d2353a850a8e943bba480d65ff37186'
+modified: '2026-08-30'
+body_schema: 'body-v2'
+body_hash: 'sha256:d034fb97b6df2d6e52c70fcc4b265d1792b6209da707d9b77951979ae2aae5dd'
 related:
   - '[[2026-07-01-modelo-verify-nonzero-guards-residuals-adr]]'
+  - '[[2026-07-01-modelo-verify-nonzero-guards-residuals-ledger]]'
   - '[[2026-07-01-modelo-verify-nonzero-guards-residuals-plan]]'
   - '[[2026-07-01-modelo-verify-nonzero-guards-residuals-research]]'
 ---
@@ -25,8 +26,7 @@ Auto-generated index of all documents tagged with `#modelo-verify-nonzero-guards
 
 ### exec
 
-- `2026-07-01-modelo-verify-nonzero-guards-residuals-P01-S01` - Author DA-14 corpus excerpt and is.toml legal entry and add to casilla 33 legal_refs on all three revisions
-- `2026-07-01-modelo-verify-nonzero-guards-residuals-P02-S02` - Add canary tests pinning the three documented non-guards, each citing the residuals research by name
+- `2026-07-01-modelo-verify-nonzero-guards-residuals-ledger` - `modelo-verify-nonzero-guards-residuals` ledger
 
 ### plan
 

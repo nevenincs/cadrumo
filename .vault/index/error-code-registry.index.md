@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#error-code-registry'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:6ece5cb8a4eff028f262bbd26a7416dad3785eeaac205216d70886eb755fc52f'
 related:
   - '[[2026-08-08-error-code-registry-refusal-funnels-audit]]'

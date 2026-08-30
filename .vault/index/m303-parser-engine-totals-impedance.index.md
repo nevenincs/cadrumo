@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#m303-parser-engine-totals-impedance'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:f13f5cd949cd7a15fc47aa3512cfb60937beba89afb74e06bd595dd91f5ae7de'
 related:
   - '[[2026-06-02-m303-parser-engine-totals-impedance-adr]]'

@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#registry-period-code-union'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:4c427c3b74dbf78a131574e6682a5bc2adb6a35c0732eae1e5b6447145818bf8'
 related:
   - '[[2026-06-01-registry-period-code-union-cli-boundary-adr]]'

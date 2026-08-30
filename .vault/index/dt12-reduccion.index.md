@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#dt12-reduccion'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:7caeb66c6860cdd32ad00035c44ea11e7e4ed84c653c24a4af71f0556a5721cb'
 related:
   - '[[2026-06-04-dt12-reduccion-adr]]'

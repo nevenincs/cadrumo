@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#censo-regimen-adoption'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:86cb81ccb1b82ad3c954e9aa66cec02a718cb5adbdef5ff370de8adaf95f0bdf'
 related:
   - '[[2026-08-08-censo-regimen-adoption-adr]]'

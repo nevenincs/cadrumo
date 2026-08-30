@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#registry-m123-fragmentation'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:e5989f15fe8854a86d50423bf338b3fdf1a6638e8310afef53e4590fd5788c10'
 related:
   - '[[2026-06-02-registry-m123-fragmentation-audit]]'

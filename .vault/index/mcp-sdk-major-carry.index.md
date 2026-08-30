@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#mcp-sdk-major-carry'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:65a06f814089b15c8bdaeedabf9ccafbfa32ddd83dadc8cd3056fb823c8a2b8a'
 related:
   - '[[2026-07-31-mcp-sdk-major-carry-adr]]'

@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#m303-cross-period-carry-continuity'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:26a62ec46e717053ae789fa118f25c532ca988c5820d219822224f11ca87aff4'
 related:
   - '[[2026-06-03-m303-cross-period-carry-continuity-P01-S01]]'

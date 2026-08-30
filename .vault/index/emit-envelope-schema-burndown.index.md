@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#emit-envelope-schema-burndown'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:f781c4309f8d5a055ab2224e43f82687fa14b45ac95c9bceafb8cd0da774af8e'
 related:
   - '[[2026-06-02-emit-envelope-schema-burndown-adr]]'

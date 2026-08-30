@@ -4,12 +4,13 @@ tags:
   - '#index'
   - '#legal-grounding-centralization'
 date: '2026-08-16'
-modified: '2026-08-26'
-body_schema: 'body-v1'
-body_hash: 'sha256:a974734d226730082c9684ef53de82b9b7d7e995c6a3b59b70113e09c06a13e8'
+modified: '2026-08-30'
+body_schema: 'body-v2'
+body_hash: 'sha256:c71448f8e1c92a2804ac04e5195aaeef6f08daf40ad2b014621e81e79ed08b90'
 related:
   - '[[2026-06-14-legal-grounding-centralization-adr]]'
   - '[[2026-06-14-legal-grounding-centralization-audit]]'
+  - '[[2026-06-14-legal-grounding-centralization-ledger]]'
   - '[[2026-06-14-legal-grounding-centralization-plan]]'
   - '[[2026-06-14-legal-grounding-centralization-research]]'
 ---
@@ -30,13 +31,7 @@ Auto-generated index of all documents tagged with `#legal-grounding-centralizati
 
 ### exec
 
-- `2026-06-14-legal-grounding-centralization-P01-S01` - F6: promote LIRPF art.58/59 family thresholds (max-age 25, max-age 3, custodia 0.5) to external_constants grounded on the cited articles
-- `2026-06-14-legal-grounding-centralization-P01-S02` - F5: promote DT12 40% rescate reducción and Ley 44/2015 SAL 10% dotación + 2x cap factor to registry/external_constants with legal_refs->corpus_ref
-- `2026-06-14-legal-grounding-centralization-P01-S03` - F2-interim: promote prorrata art.103.Dos (1.10) and art.9.1.c (50pp) thresholds to external_constants with legal_refs, value-identical
-- `2026-06-14-legal-grounding-centralization-P02-S04` - F1: wire resolve_reduccion to the dormant _resolve_tier_reduccion_rate registry reader
-- `2026-06-14-legal-grounding-centralization-P03-S05` - F3: resolve M303/M390 compensación casilla ids through the registry snapshot casilla definitions instead of inline numeric literals
-- `2026-06-14-legal-grounding-centralization-P03-S06` - F4: author the ledger_iva_aggregation base_amount_sum bindings (INTRA_COMMUNITY_SUPPLY->59, EXPORT_THIRD_COUNTRY_ZERO_RATED->60) and delete the dormant casilla_59/60 Python helpers
-- `2026-06-14-legal-grounding-centralization-P03-S07` - F2-final: decide prorrata subsystem fate — enroll as registry-declared aggregation source on 303/390 casillas OR delete the dormant subsystem per no-legacy-compatibility
+- `2026-06-14-legal-grounding-centralization-ledger` - `legal-grounding-centralization` ledger
 
 ### plan
 

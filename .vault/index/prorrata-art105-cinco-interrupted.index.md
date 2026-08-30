@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#prorrata-art105-cinco-interrupted'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:18906468015e1d23d2b092d9afe835c414271a617e76567d5510367b2bca4cdc'
 related:
   - '[[2026-07-07-prorrata-art105-cinco-interrupted-adr]]'

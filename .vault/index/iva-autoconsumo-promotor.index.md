@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#iva-autoconsumo-promotor'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:740ac5d0680c7a30dac6edcc980cb74fbf38bf293f03109f4161dcdfb9bb6762'
 related:
   - '[[2026-05-27-iva-autoconsumo-promotor-task-222-exec]]'

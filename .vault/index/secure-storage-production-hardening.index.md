@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#secure-storage-production-hardening'
 date: '2026-08-16'
-modified: '2026-08-25'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:3a6af7874e605ab9a8456b29cdd2cd555e085f5dd8d8659b35e20c9e73f4915a'
 related:
   - '[[2026-06-02-secure-storage-production-hardening-code-review-audit]]'

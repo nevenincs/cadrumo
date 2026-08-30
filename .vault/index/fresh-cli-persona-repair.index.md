@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#fresh-cli-persona-repair'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:f62eedcd7b1f2e046f96a0158fdabfd2f3054dd7c29bbc705a21fbb05f36cfc9'
 related:
   - '[[2026-06-04-fresh-cli-persona-repair-adr]]'

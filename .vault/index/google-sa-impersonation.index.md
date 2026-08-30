@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#google-sa-impersonation'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:64635f8c819bda289eb832325b2c02f886db69a41ab6f1f228af47f54b9bc6f8'
 related:
   - '[[2026-07-04-google-sa-impersonation-adr]]'

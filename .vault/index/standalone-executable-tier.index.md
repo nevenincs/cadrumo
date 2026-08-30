@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#standalone-executable-tier'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:e402d092511324c333a9db01aef8caa955801e1c5114549243c028121a2255ab'
 related:
   - '[[2026-07-25-standalone-executable-tier-adr]]'

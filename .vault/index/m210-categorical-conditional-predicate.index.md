@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#m210-categorical-conditional-predicate'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:18af1c13692ea13f5c25fe2dcc424098eba3d97b9ca5e4897dcf35870dc56569'
 related:
   - '[[2026-06-30-m210-categorical-conditional-predicate-adr]]'

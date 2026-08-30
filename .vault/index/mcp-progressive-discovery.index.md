@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#mcp-progressive-discovery'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:ad6ae6062b839b7ca0cc0a3bc578b20a5a9b17a47bdd2a6d3e11d1c92b2bd04b'
 related:
   - '[[2026-07-08-mcp-progressive-discovery-adr]]'

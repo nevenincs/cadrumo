@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#modelo-721-cripto-data-fidelity'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:428eb15f52f388d8d1673c09d4082f8912434f20332737c33b91cc042dc9de7e'
 related:
   - '[[2026-06-02-modelo-721-cripto-data-fidelity-adr]]'

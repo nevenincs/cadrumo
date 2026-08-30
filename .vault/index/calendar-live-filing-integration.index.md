@@ -4,12 +4,13 @@ tags:
   - '#index'
   - '#calendar-live-filing-integration'
 date: '2026-08-16'
-modified: '2026-08-26'
-body_schema: 'body-v1'
-body_hash: 'sha256:75c91e8149fd10bc8f77d2f301bead0ffa28f01142187ce004c52a4ddd81af32'
+modified: '2026-08-30'
+body_schema: 'body-v2'
+body_hash: 'sha256:d50d1fbe25b94cc91a86206b69eed97935c7860cb8d2112e5b655839b5e86258'
 related:
   - '[[2026-06-04-calendar-live-filing-integration-adr]]'
   - '[[2026-06-04-calendar-live-filing-integration-code-review-audit]]'
+  - '[[2026-06-04-calendar-live-filing-integration-ledger]]'
   - '[[2026-06-04-calendar-live-filing-integration-live-verification-audit]]'
   - '[[2026-06-04-calendar-live-filing-integration-p03-summary-exec]]'
   - '[[2026-06-04-calendar-live-filing-integration-plan]]'
@@ -34,14 +35,7 @@ Auto-generated index of all documents tagged with `#calendar-live-filing-integra
 
 ### exec
 
-- `2026-06-04-calendar-live-filing-integration-P01-S04` - `calendar-live-filing-integration` `P01.S04`
-- `2026-06-04-calendar-live-filing-integration-P01-S05` - `calendar-live-filing-integration` `P01.S05`
-- `2026-06-04-calendar-live-filing-integration-P01-S07` - `calendar-live-filing-integration` `P01.S07`
-- `2026-06-04-calendar-live-filing-integration-P02-S01` - `calendar-live-filing-integration` `P02.S01`
-- `2026-06-04-calendar-live-filing-integration-P02-S02` - `calendar-live-filing-integration` `P02.S02`
-- `2026-06-04-calendar-live-filing-integration-P02-S03` - `calendar-live-filing-integration` `P02.S03`
-- `2026-06-04-calendar-live-filing-integration-P03-S09` - `calendar-live-filing-integration` `P03.S09`
-- `2026-06-04-calendar-live-filing-integration-P03-S10` - `calendar-live-filing-integration` `P03.S10`
+- `2026-06-04-calendar-live-filing-integration-ledger` - `calendar-live-filing-integration` ledger
 - `2026-06-04-calendar-live-filing-integration-p03-summary-exec` - `calendar-live-filing-integration` phase summary
 
 ### plan

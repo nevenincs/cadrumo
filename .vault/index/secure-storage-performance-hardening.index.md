@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#secure-storage-performance-hardening'
 date: '2026-08-23'
-modified: '2026-08-27'
+modified: '2026-08-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:f5e6c9f55755496f8c474dae246dee544e765086083e9f35cfa33d00a7d53ca8'
+body_hash: 'sha256:1a7a21837e3fa25235277877ea9c499feb8b57d40af2e26fe8ab48eec2761af8'
 related:
   - '[[2026-08-22-secure-storage-performance-hardening-W01-P02-summary]]'
   - '[[2026-08-22-secure-storage-performance-hardening-adr]]'
@@ -103,7 +103,7 @@ Auto-generated index of all documents tagged with `#secure-storage-performance-h
 - `2026-08-23-secure-storage-performance-hardening-w02-p03-s11-registration-metadata-review-audit` - `secure-storage-performance-hardening` audit: `W02.P03.S11 registration metadata review`
 - `2026-08-23-secure-storage-performance-hardening-w02-p04-s13-config-demand-loading-review-audit` - `secure-storage-performance-hardening` audit: `w02 p04 s13 config demand loading review`
 - `2026-08-27-secure-storage-performance-hardening-closure-honesty-review-audit` - `secure-storage-performance-hardening` audit: closure honesty review
-- `2026-08-27-secure-storage-performance-hardening-eight-axis-structural-sweep-audit` - `secure-storage-performance-hardening` audit: `Eight-axis structural sweep of the campaign surface`
+- `2026-08-27-secure-storage-performance-hardening-eight-axis-structural-sweep-audit` - `secure-storage-performance-hardening` audit: eight-axis structural sweep
 - `2026-08-27-secure-storage-performance-hardening-w02-demand-loading-residue-audit` - `secure-storage-performance-hardening` audit: W02 demand-loading residue
 
 ### exec

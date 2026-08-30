@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#multi-bucket-test-fixture'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:806328863db012d7b6c50113c256d8b14aae18575ab29ae39217035375f32c5f'
 related:
   - '[[2026-06-03-multi-bucket-test-fixture-adr]]'

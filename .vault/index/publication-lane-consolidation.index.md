@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#publication-lane-consolidation'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:bd783368f7dd52bb3571a9bcf8aedc640692cd2049108e43f6cb26a43a8095e4'
 related:
   - '[[2026-07-27-publication-lane-consolidation-adr]]'

@@ -4,11 +4,12 @@ tags:
   - '#index'
   - '#registry-hardening-next-work'
 date: '2026-08-16'
-modified: '2026-08-26'
-body_schema: 'body-v1'
-body_hash: 'sha256:41c7e01605f0f469e3581811dcac687540241d518046e15c37ed011e4aace7b5'
+modified: '2026-08-30'
+body_schema: 'body-v2'
+body_hash: 'sha256:39c10acf311663c9b568ac602a55f21b32ffc849fb296e9825602d6ddafb9dcf'
 related:
   - '[[2026-06-02-registry-hardening-next-work-audit]]'
+  - '[[2026-06-02-registry-hardening-next-work-ledger]]'
   - '[[2026-06-04-registry-completeness-code-review-audit]]'
   - '[[2026-06-04-registry-generic-fragmentation-contract-audit]]'
   - '[[2026-06-04-registry-generic-fragmentation-contract-code-review-audit]]'
@@ -44,18 +45,7 @@ Auto-generated index of all documents tagged with `#registry-hardening-next-work
 
 ### exec
 
-- `2026-06-02-registry-hardening-next-work-W05-P09-S41` - `registry-hardening-next-work` `W05.P09.S41` audit
-- `2026-06-02-registry-hardening-next-work-W05-P09-S42` - `registry-hardening-next-work` `W05.P09.S42` repair
-- `2026-06-02-registry-hardening-next-work-W05-P09-S43` - `registry-hardening-next-work` `W05.P09.S43` verification
-- `2026-06-02-registry-hardening-next-work-W06-P10-S44` - `registry-hardening-next-work` `W06.P10.S44` audit
-- `2026-06-02-registry-hardening-next-work-W06-P10-S45` - `registry-hardening-next-work` `W06.P10.S45` repair
-- `2026-06-02-registry-hardening-next-work-W06-P10-S46` - `registry-hardening-next-work` `W06.P10.S46` verification
-- `2026-06-02-registry-hardening-next-work-W07-P11-S47` - `registry-hardening-next-work` `W07.P11.S47` audit
-- `2026-06-02-registry-hardening-next-work-W07-P11-S48` - `registry-hardening-next-work` `W07.P11.S48` verification
-- `2026-06-02-registry-hardening-next-work-W08-P12-S49` - `registry-hardening-next-work` `W08.P12.S49` wireframe
-- `2026-06-04-registry-hardening-next-work-W09-P13-S50` - `registry-hardening-next-work` `W09.P13.S50` audit
-- `2026-06-04-registry-hardening-next-work-W09-P13-S51` - `registry-hardening-next-work` `W09.P13.S51` regression
-- `2026-06-04-registry-hardening-next-work-W09-P13-S52` - `registry-hardening-next-work` `W09.P13.S52` verification
+- `2026-06-02-registry-hardening-next-work-ledger` - `registry-hardening-next-work` ledger
 - `2026-06-04-registry-hardening-next-work-W09-P13-summary` - `registry-hardening-next-work` `W09.P13` summary
 
 ### research

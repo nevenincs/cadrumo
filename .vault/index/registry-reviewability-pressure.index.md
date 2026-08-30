@@ -4,14 +4,15 @@ tags:
   - '#index'
   - '#registry-reviewability-pressure'
 date: '2026-08-16'
-modified: '2026-08-26'
-body_schema: 'body-v1'
-body_hash: 'sha256:d9fdb4a0fef4e2ff65e9558d26fe171a294344349b1c042fb9a5cf9118eaf553'
+modified: '2026-08-30'
+body_schema: 'body-v2'
+body_hash: 'sha256:5c82af1bc2c9dd64e2c101aa5d50072dec96fc742dd1c1e762c1e624df1dbf7d'
 related:
   - '[[2026-06-04-registry-reviewability-pressure-P03-summary]]'
   - '[[2026-06-04-registry-reviewability-pressure-adr]]'
   - '[[2026-06-04-registry-reviewability-pressure-audit]]'
   - '[[2026-06-04-registry-reviewability-pressure-code-review-audit]]'
+  - '[[2026-06-04-registry-reviewability-pressure-ledger]]'
   - '[[2026-06-04-registry-reviewability-pressure-plan]]'
   - '[[2026-06-04-registry-reviewability-pressure-research]]'
   - '[[2026-06-04-registry-reviewability-split-decision-audit]]'
@@ -35,14 +36,8 @@ Auto-generated index of all documents tagged with `#registry-reviewability-press
 
 ### exec
 
-- `2026-06-04-registry-reviewability-pressure-P01-S01` - `registry-reviewability-pressure` `P01.S01` audit
-- `2026-06-04-registry-reviewability-pressure-P01-S02` - `registry-reviewability-pressure` `P01.S02` decision
-- `2026-06-04-registry-reviewability-pressure-P02-S03` - `registry-reviewability-pressure` `P02.S03` split
-- `2026-06-04-registry-reviewability-pressure-P02-S04` - `registry-reviewability-pressure` `P02.S04` deferral
-- `2026-06-04-registry-reviewability-pressure-P02-S05` - `registry-reviewability-pressure` `P02.S05` gate
-- `2026-06-04-registry-reviewability-pressure-P03-S06` - `registry-reviewability-pressure` `P03.S06` verification
-- `2026-06-04-registry-reviewability-pressure-P03-S07` - `registry-reviewability-pressure` `P03.S07` review
 - `2026-06-04-registry-reviewability-pressure-P03-summary` - `registry-reviewability-pressure` `P03` summary
+- `2026-06-04-registry-reviewability-pressure-ledger` - `registry-reviewability-pressure` ledger
 
 ### plan
 

@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#modelo-project-0505-fix'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:0833f30e8eaa527c1d6800dfc2dc1d95f593fa7136b07830ea376d33494b3205'
 related:
   - '[[2026-06-04-modelo-project-0505-fix-adr]]'

@@ -4,11 +4,12 @@ tags:
   - '#index'
   - '#docs-tooling-separation'
 date: '2026-08-16'
-modified: '2026-08-26'
-body_schema: 'body-v1'
-body_hash: 'sha256:cb5ecbf6a6ddd1b5ef1ea39614d4245c02fc437e1eabe8cdabc0e86b3a086299'
+modified: '2026-08-30'
+body_schema: 'body-v2'
+body_hash: 'sha256:925966dfb88875b89993dc31159035d155f4860e708a4beb821c807a0f02fda1'
 related:
   - '[[2026-06-14-docs-tooling-separation-adr]]'
+  - '[[2026-06-14-docs-tooling-separation-ledger]]'
   - '[[2026-06-14-docs-tooling-separation-plan]]'
   - '[[2026-06-14-docs-tooling-separation-research]]'
 ---
@@ -25,7 +26,7 @@ Auto-generated index of all documents tagged with `#docs-tooling-separation`.
 
 ### exec
 
-- `2026-06-14-docs-tooling-separation-S01` - Move the package: `git mv src/aeat/terminology dev/docs/terminology_handbook` (code, tests, fixtures)
+- `2026-06-14-docs-tooling-separation-ledger` - `docs-tooling-separation` ledger
 
 ### plan
 

@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#m130-casilla-15-override'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:e9df25f5a7498965282944a82084840c73a1701d2f9fde15fd1aeb5a2b09c858'
 related:
   - '[[2026-06-04-m130-casilla-15-override-adr]]'

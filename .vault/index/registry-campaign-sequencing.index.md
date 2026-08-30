@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#registry-campaign-sequencing'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
-body_hash: 'sha256:03bdf560b3057512a45607e2fce05fa55bc59c21b146411c1ba4d8dd9adc5bcd'
+modified: '2026-08-30'
+body_schema: 'body-v2'
+body_hash: 'sha256:f4517fed3204258da3ebdeef9d04d6d632ea61dce5ed5bda0e31e8d050b8f2cb'
 related:
   - '[[2026-08-14-registry-campaign-sequencing-adr]]'
   - '[[2026-08-14-registry-campaign-sequencing-audit]]'
@@ -24,6 +24,8 @@ related:
   - '[[2026-08-15-registry-campaign-sequencing-m303-envelope-declaration-causal-fiction-audit]]'
   - '[[2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr]]'
   - '[[2026-08-16-registry-campaign-sequencing-export-layout-authoring-backlog-audit]]'
+  - '[[2026-08-19-registry-campaign-sequencing-deadline-window-reach-adr]]'
+  - '[[2026-08-19-registry-campaign-sequencing-record-length-declaration-adr]]'
 ---
 
 # `registry-campaign-sequencing` feature index
@@ -36,6 +38,8 @@ Auto-generated index of all documents tagged with `#registry-campaign-sequencing
 
 - `2026-08-14-registry-campaign-sequencing-adr` - `registry-campaign-sequencing` adr: `export layout withdrawal is deleted; registry build refuses any revision with no export layout` | (**status:** `accepted`)
 - `2026-08-16-registry-campaign-sequencing-designless-modelo-registry-membership-adr` - `registry-campaign-sequencing` adr: `registry membership requires an AEAT-published machine filing format` | (**status:** `accepted`)
+- `2026-08-19-registry-campaign-sequencing-deadline-window-reach-adr` - `registry-campaign-sequencing` adr: `A deadline window may reach past its revision, and its calendar must be citable` | (**status:** `proposed`)
+- `2026-08-19-registry-campaign-sequencing-record-length-declaration-adr` - `registry-campaign-sequencing` adr: `Fixed-width record length must be declared, not inferred from field extent` | (**status:** `proposed`)
 
 ### audit
 

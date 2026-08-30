@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#m390-annual-autoconsumo-promotor-source'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:78a7a85e47bd855486e1ab1c07ad63441e0d2942bc15950e3ef9e9b5e2aa208b'
 related:
   - '[[2026-06-02-m390-annual-autoconsumo-promotor-source-adr]]'

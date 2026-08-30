@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#m100-marriage-date-axis'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:320b028df16c4fa266436c858595d675f876d77166b7e7d5e491e10de703f753'
 related:
   - '[[2026-06-04-m100-marriage-date-axis-adr]]'

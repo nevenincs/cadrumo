@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#docs-architecture'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:5b96a36a891b9f4113cb8a7179beecb81509b647a57cf65828f74f00d6f576c4'
 related:
   - '[[2026-06-01-docs-architecture-audit]]'

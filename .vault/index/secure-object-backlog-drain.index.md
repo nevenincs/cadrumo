@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#secure-object-backlog-drain'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:9b9274fad75f1944d8e281ff0c0b375a4f76769c735511fb8de6f04058eca6a5'
 related:
   - '[[2026-06-04-secure-object-backlog-drain-adr]]'

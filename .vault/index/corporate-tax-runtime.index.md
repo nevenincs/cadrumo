@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#corporate-tax-runtime'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:1514d3016aa92c3e59a3a15903a9f56a003f98a4a89d67a0c6399df464b6ca19'
 related:
   - '[[2026-06-04-corporate-tax-runtime-adr]]'

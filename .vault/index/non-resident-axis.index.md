@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#non-resident-axis'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:bc5cc16b812730eee1b8b72a0264c23a06119bb690f4904252e993b0f826eef1'
 related:
   - '[[2026-06-04-non-resident-axis-adr]]'

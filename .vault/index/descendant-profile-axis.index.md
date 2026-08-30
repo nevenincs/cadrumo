@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#descendant-profile-axis'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:7b18ef3a6f5a3cb61022e9b4a536c48773cf07b206c9848c19ef14e32c2c3474'
 related:
   - '[[2026-06-04-descendant-profile-axis-research]]'

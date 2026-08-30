@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#purchase-invoice-ocr-extraction-discipline'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:e4f26d7f9dd4261c7cda640b5f5d580c397f67b7d65ce630bd109727bde707e2'
 related:
   - '[[2026-06-04-purchase-invoice-ocr-extraction-discipline-research]]'

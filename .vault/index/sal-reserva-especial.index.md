@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#sal-reserva-especial'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:b57247d13deed94c30b1c53ef8fdcc8d9fbe5c8782962c845166a1c70f60ad3c'
 related:
   - '[[2026-06-04-sal-reserva-especial-adr]]'

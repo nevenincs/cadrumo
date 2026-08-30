@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#modelo-export-workbook-parity'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:eab7018d41d08440ea46e171d787d4af5e304c7af0a24b1cce86e059ded032b5'
 related:
   - '[[2026-06-03-modelo-export-workbook-parity-adr]]'

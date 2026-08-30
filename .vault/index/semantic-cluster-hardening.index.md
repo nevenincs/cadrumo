@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#semantic-cluster-hardening'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:5f70450a9feecbfe3ad70f4bebf88400346c83ca1c1a0452eddf069207c12d4d'
 related:
   - '[[2026-06-01-semantic-cluster-hardening-adr]]'

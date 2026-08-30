@@ -4,12 +4,13 @@ tags:
   - '#index'
   - '#quality-gate-zero-closure'
 date: '2026-08-24'
-modified: '2026-08-26'
-body_schema: 'body-v1'
-body_hash: 'sha256:da95f013c4fe0a3d45921a2e3ed3a04328bf3a70edbf78efe256b35540f66837'
+modified: '2026-08-30'
+body_schema: 'body-v2'
+body_hash: 'sha256:81280c50f431fa31ca3e886a182635c70057c163014cbc5997d1338c5039f9d9'
 related:
   - '[[2026-08-24-quality-gate-zero-closure-adr]]'
   - '[[2026-08-24-quality-gate-zero-closure-failure-cluster-topology-reference]]'
+  - '[[2026-08-24-quality-gate-zero-closure-ledger]]'
   - '[[2026-08-24-quality-gate-zero-closure-live-rag-redeclaration-audit]]'
   - '[[2026-08-24-quality-gate-zero-closure-plan]]'
   - '[[2026-08-24-quality-gate-zero-closure-static-gate-matrix-research]]'
@@ -28,12 +29,10 @@ Auto-generated index of all documents tagged with `#quality-gate-zero-closure`.
 ### audit
 
 - `2026-08-24-quality-gate-zero-closure-live-rag-redeclaration-audit` - `quality-gate-zero-closure` audit: `live RAG redeclaration`
-- `2026-08-24-quality-gate-zero-closure-s94-rag-canonical-home-redeclaration-audit` - `quality-gate-zero-closure` audit: `S94 live RAG canonical-home and consumer-ownership redeclaration`
 
 ### exec
 
-- `2026-08-24-quality-gate-zero-closure-W07-P20-S93` - Observe the current branch revision, dirty paths, ownership context, and gate state, recording revision-scoped evidence without treating any result as a baseline (Luna max audit and mechanical)
-- `2026-08-24-quality-gate-zero-closure-W07-P20-S94` - Redeclare semantic canonical homes and consumer ownership against the indexed live source, persisting only current RAG evidence (Luna max audit)
+- `2026-08-24-quality-gate-zero-closure-ledger` - `quality-gate-zero-closure` ledger
 
 ### plan
 

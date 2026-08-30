@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#registry-applicability-boundary'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:83bf4b4f725d55ae4818cb27a169be130f9e267a3365db8b46c0c146b5e284b2'
 related:
   - '[[2026-06-02-registry-applicability-boundary-audit]]'

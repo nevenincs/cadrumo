@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#eliminate-shims'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:6bf4bd0381221e183452657d96a51a9ff5a515560ac84f970593756981cb892e'
 related:
   - '[[2026-06-04-eliminate-shims-adr]]'

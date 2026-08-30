@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#live-iva-compensation-wallet'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:4a299f88677e9ed97488e8d7d3ba020add5d6e97beb1ee1c3a1a1c3833b7868c'
 related:
   - '[[2026-06-02-live-iva-compensation-consultation-research]]'

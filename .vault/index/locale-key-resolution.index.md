@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#locale-key-resolution'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:b0d4370e53700bdb702b709c1c1a26638e91e6fd012637fcfbd7aeae04786ea2'
 related:
   - '[[2026-07-21-locale-key-resolution-adr]]'

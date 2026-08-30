@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#profile-lifecycle-cli'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:628455b72c95a1c190885445589e7b5a55a008d95aa6cee3e0531ae4aebef79d'
 related:
   - '[[2026-06-04-profile-lifecycle-cli-adr]]'

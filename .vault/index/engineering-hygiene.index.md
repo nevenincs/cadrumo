@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#engineering-hygiene'
 date: '2026-08-24'
-modified: '2026-08-24'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:8a6f79642c60964a7bb6b8cb91a67249bfc3da37f58b70a8429186a7156e81a4'
 related:
   - '[[2026-08-24-engineering-hygiene-gate-and-environment-reference]]'

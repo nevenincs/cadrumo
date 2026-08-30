@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#inss-art7h-exempt'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:7cd10f7586a07e1b814c209563a59a5a90d4ee6b004480f94ff757f4e2fdb8c5'
 related:
   - '[[2026-06-04-inss-art7h-exempt-adr]]'

@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#settings-di-deferred'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:b899ad1786574373923d636fbdc8757e713cee7c864117ce9721249cd5863d9e'
 related:
   - '[[2026-06-03-settings-di-deferred-test-migration-adr]]'

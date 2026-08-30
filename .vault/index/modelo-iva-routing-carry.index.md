@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#modelo-iva-routing-carry'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:e10106ad9a19fb818a8471305174f1d03a574c84a9050f4f86647f866dfc58d0'
 related:
   - '[[2026-06-09-modelo-iva-routing-carry-adr]]'

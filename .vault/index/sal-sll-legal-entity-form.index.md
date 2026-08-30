@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#sal-sll-legal-entity-form'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:9811b06c55611cbbc9d2ca42f18e9b76020b24eed86269a0c3b949aa79be8418'
 related:
   - '[[2026-06-04-sal-sll-legal-entity-form-research]]'

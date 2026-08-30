@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#profile-bucket-lifecycle'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:c274a48f4ec6f63cb347397339acbab3bf710d6ac953f092ba2a11ba0ab2f738'
 related:
   - '[[2026-06-04-profile-bucket-lifecycle-research]]'

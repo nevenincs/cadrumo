@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#fichero-boe-golden-sha-contract-shape'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:3e51ca85e530c9d3773c97666e82e375d87c243ce8beebec8c65ac769d290d17'
 related:
   - '[[2026-06-03-fichero-boe-golden-sha-contract-shape-adr]]'

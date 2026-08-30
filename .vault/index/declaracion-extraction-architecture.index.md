@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#declaracion-extraction-architecture'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:c5127de87d9e90ce370b7911897fe8e3378821e53ef0f5363223c4ec4f8e5afc'
 related:
   - '[[2026-05-21-declaracion-extraction-architecture-exec]]'

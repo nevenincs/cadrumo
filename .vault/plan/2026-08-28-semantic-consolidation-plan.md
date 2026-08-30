@@ -9,7 +9,7 @@ related:
   - '[[2026-08-28-semantic-consolidation-cli-payload-projection-adr]]'
 modified: '2026-08-30'
 body_schema: body-v2
-body_hash: 'sha256:227c7a0560265701af31b08239c62781ec115f3001fcc9fd1341d8e80f5840e3'
+body_hash: 'sha256:bf38a686d2ac406db09010d0945c5e3beb38ce917b88227586ac9f9769cc322c'
 ---
 
 # `semantic-consolidation` plan
@@ -107,6 +107,7 @@ The lazy-export ADR assembled its population by searching for one identifier, _L
 - [x] `P07.S85` - Remove the orphan docstring describing the retired lazy map in application/registry and correct the module docstring that still claimed 87 lazy re-exports; `src/cadrumo/application/registry/__init__.py`.
 - [x] `P07.S86` - Retire the core observability facade: sixty-one names across eleven modules, with the replay canonicity gate's pinned module literal moved in the same change; `src/cadrumo/core/observability/`.
 - [x] `P07.S87` - Retire the currency, manuals and fincas facades, one package per commit; `src/cadrumo/domain/`.
+- [x] `P07.S91` - Retire the censo, attachments, categories, invoices and buckets facades, dissolving the invoices-iva import cycle the invoices namespace made spellable; `src/cadrumo/domain/`.
 
 ### Phase `P08` - Consolidate the repeated constrained scalar shapes
 
@@ -144,6 +145,9 @@ An AST census of every pydantic Field constraint in production code found the sa
 - [x] `P08.S88` - Repoint the thirty-eight gate path pins the campaign's renames left naming deleted files, which made those gates scan an empty set and pass while blind; `src/cadrumo/, dev/`.
 - [x] `P08.S89` - Fix the violations the unblinded gates exposed: a CLI payload re-implementing ISO date parsing, two stale persisted-version exemptions, and one over-granted bool exemption; `src/cadrumo/`.
 - [x] `P08.S90` - Add a tree-wide relative-import resolver as a standing check, so a repoint that emits the wrong dot depth is caught before it reaches a commit; `src/cadrumo/tests/`.
+- [x] `P08.S92` - Sweep the second stale-pin class the path sweep could not see: gates naming their canonical module by bare basename, distinguishing those from assertions that a retired module is absent; `src/cadrumo/, dev/`.
+- [x] `P08.S93` - Run both stale-pin sweeps after every namespace retirement rather than once, since each retirement creates new stale pins; `src/cadrumo/, dev/`.
+- [ ] `P08.S94` - Rule on the two application/modelo edit-execution functions that compose a secure-object write without asserting a revision, a pre-existing finding the composing-write gate reports; `src/cadrumo/application/modelo/_edit_execution.py`.
 
 ## Parallelization
 

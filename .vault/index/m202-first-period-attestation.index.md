@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#m202-first-period-attestation'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:5bca1a01b05bc5495fa8ea435f9811e280c7500b6d7ad2b438e10cd1eb3f1156'
 related:
   - '[[2026-06-19-m202-first-period-attestation-adr]]'

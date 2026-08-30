@@ -4,15 +4,16 @@ tags:
   - '#index'
   - '#issue-620-external-pdf-signal'
 date: '2026-08-23'
-modified: '2026-08-26'
-body_schema: 'body-v1'
-body_hash: 'sha256:2983454d131165426603b3260402414e41abaec48378a1dfd33e462a71d5ae76'
+modified: '2026-08-30'
+body_schema: 'body-v2'
+body_hash: 'sha256:c40fd2c23396969d660ec9900feb3272e722be13b45899fccdd0d2e171c8dd88'
 related:
   - '[[2026-08-23-issue-620-external-pdf-signal-adr]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-authority-adjudication-adr]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-authority-adjudication-final-review-audit]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-authority-adjudication-research]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-inventory-review-audit]]'
+  - '[[2026-08-23-issue-620-external-pdf-signal-ledger]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-plan]]'
   - '[[2026-08-23-issue-620-external-pdf-signal-research]]'
 ---
@@ -35,22 +36,7 @@ Auto-generated index of all documents tagged with `#issue-620-external-pdf-signa
 
 ### exec
 
-- `2026-08-23-issue-620-external-pdf-signal-S01` - Inventory and fingerprint the externally sourced Modelo 130 plain and fillable PDFs
-- `2026-08-23-issue-620-external-pdf-signal-S02` - Inventory and fingerprint the externally sourced Modelo 131 plain and fillable PDFs
-- `2026-08-23-issue-620-external-pdf-signal-S03` - Inventory and fingerprint the externally sourced Modelo 303 plain and fillable PDFs
-- `2026-08-23-issue-620-external-pdf-signal-S04` - Inventory and fingerprint the externally sourced Modelo 036 plain and fillable PDFs
-- `2026-08-23-issue-620-external-pdf-signal-S05` - Inventory and fingerprint the externally sourced Modelo 349 plain and fillable PDFs
-- `2026-08-23-issue-620-external-pdf-signal-S06` - Implement typed source classification and physical-byte validation for external layout candidates
-- `2026-08-23-issue-620-external-pdf-signal-S07` - Add Modelo 130 production-parser regressions for printed-box discovery and zero fabricated blank values
-- `2026-08-23-issue-620-external-pdf-signal-S08` - Add the cross-model external-layout outcome matrix with explicit unsupported and unavailable results
-- `2026-08-23-issue-620-external-pdf-signal-S09` - Correct Modelo 130 extraction-profile evidence claims and lock the operator advisory
-- `2026-08-23-issue-620-external-pdf-signal-S10` - Resolve final review findings for the M036 route, exact candidate topology, and synthetic-corpus terminology
-- `2026-08-23-issue-620-external-pdf-signal-S11` - Define the three-axis authority-adjudication contract and offline official-source evidence schema
-- `2026-08-23-issue-620-external-pdf-signal-S12` - Adjudicate all ten candidates against pinned official bases and registry applicability
-- `2026-08-23-issue-620-external-pdf-signal-S13` - Correct cross-model outcomes to select applicable revisions or refuse current-form alignment
-- `2026-08-23-issue-620-external-pdf-signal-S14` - Verify authority adjudication through only the affected registry and parser unit modules
-- `2026-08-23-issue-620-external-pdf-signal-S15` - Run fresh review, feature-surface gates, and close issue 620 with the candidate verdict matrix
-- `2026-08-23-issue-620-external-pdf-signal-S16` - Resolve review findings by locking official evidence coordinates and physical counterpart digests
+- `2026-08-23-issue-620-external-pdf-signal-ledger` - `issue-620-external-pdf-signal` ledger
 
 ### plan
 

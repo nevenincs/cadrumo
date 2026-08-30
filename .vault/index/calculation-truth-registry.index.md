@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#calculation-truth-registry'
 date: '2026-08-16'
-modified: '2026-08-26'
-body_schema: 'body-v1'
-body_hash: 'sha256:4483c7518465772bb2037f62a1f1b0a41c0de1f52164a1f211ff191e40e7e706'
+modified: '2026-08-30'
+body_schema: 'body-v2'
+body_hash: 'sha256:492e72c6fee4fe314fe5c3883357a7aeca12881cfaa6a6d511b44951f44c428e'
 related:
   - '[[2026-05-05-calculation-truth-registry-adjacent-modelo-registry-closure-exec]]'
   - '[[2026-05-05-calculation-truth-registry-phase4r-modelo-100-scaffold-exec]]'
@@ -24,9 +24,11 @@ related:
   - '[[2026-05-05-calculation-truth-registry-wave6-step1-exec]]'
   - '[[2026-07-12-calculation-truth-registry-P01-summary]]'
   - '[[2026-07-12-calculation-truth-registry-audit]]'
+  - '[[2026-07-12-calculation-truth-registry-ledger]]'
   - '[[2026-07-12-calculation-truth-registry-plan]]'
   - '[[2026-07-12-calculation-truth-registry-reference]]'
   - '[[2026-07-14-calculation-truth-registry-audit]]'
+  - '[[2026-07-14-calculation-truth-registry-ledger]]'
   - '[[2026-07-14-calculation-truth-registry-plan]]'
 ---
 
@@ -57,15 +59,9 @@ Auto-generated index of all documents tagged with `#calculation-truth-registry`.
 - `2026-05-05-calculation-truth-registry-wave5-step6-exec` - `calculation-truth-registry` `wave5` `step6`
 - `2026-05-05-calculation-truth-registry-wave5-step7-exec` - `calculation-truth-registry` `wave5` `step7`
 - `2026-05-05-calculation-truth-registry-wave6-step1-exec` - `calculation-truth-registry` `wave6` `step1`
-- `2026-07-12-calculation-truth-registry-P01-S01` - Classify each legacy unchecked item against current source, accepted decisions, and recorded execution evidence
-- `2026-07-12-calculation-truth-registry-P01-S02` - Publish the disposition ledger distinguishing delivered, superseded, blocked, and genuinely actionable registry work
 - `2026-07-12-calculation-truth-registry-P01-summary` - `calculation-truth-registry` `P01` summary
-- `2026-07-12-calculation-truth-registry-P02-S03` - Write the canonical registry implementation backlog from the classified residual ledger
-- `2026-07-14-calculation-truth-registry-P01-S01` - Author the Modelo 131 2024 modulos-engine formula, parameter, and casilla fragments mirroring the 2025 and 2026 revisions
-- `2026-07-14-calculation-truth-registry-P01-S02` - Land the Modelo 131 2024 export-roundtrip, historical date-axis, and live-filed-data-parser behaviour tests the legacy plan's own sub-bullets still list open
-- `2026-07-14-calculation-truth-registry-P02-S03` - Build the Modelo 100 capital gains and losses calculation chain against BOE/AEAT worked examples
-- `2026-07-14-calculation-truth-registry-P02-S04` - Build the Modelo 100 base reductions, minimums, and bracket calculation chain against BOE/AEAT worked examples
-- `2026-07-14-calculation-truth-registry-P02-S05` - Build the CCAA deduction and final-settlement calculation chain closing Modelo 100's Wave 21 residual scope
+- `2026-07-12-calculation-truth-registry-ledger` - `calculation-truth-registry` ledger
+- `2026-07-14-calculation-truth-registry-ledger` - `calculation-truth-registry` ledger
 
 ### plan
 

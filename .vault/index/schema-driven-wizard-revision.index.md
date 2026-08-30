@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#schema-driven-wizard-revision'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:1989e9f9bee5c1c7763fd14d01851b3728b45548226461cfc6b6a84431a7f29c'
 related:
   - '[[2026-06-04-schema-driven-wizard-revision-research]]'

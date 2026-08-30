@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#pareja-de-hecho-civil-status'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:2a200209313df362fd01c5315dbe555ac3175070c51261ef549132dc2e23a065'
 related:
   - '[[2026-06-03-pareja-de-hecho-civil-status-adr]]'

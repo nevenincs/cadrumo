@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#modelo-100-casilla'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:99bf5b094c5c8bf28e98d087afe0646ebfc75bf1f5415c4b6e84ecf3fe3d8e8f'
 related:
   - '[[2026-08-04-modelo-100-casilla-implementation-audit]]'

@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#m210-export-authority'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:6e29e3e92ff0467b2dd13af57c211d031d1ce538bea1ca372a36887904a4b4d3'
 related:
   - '[[2026-08-16-m210-export-authority-adr]]'

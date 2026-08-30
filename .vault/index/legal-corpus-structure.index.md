@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#legal-corpus-structure'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:4120c2c591b92929d9143208d3989af89f77d87c3e4adbb75a09274735790cb6'
 related:
   - '[[2026-06-08-legal-corpus-structure-audit]]'

@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#fu-200-row-model'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:72abb37dcbfe5f070bb5fb81776c063c7234689c650e8bb1208e2200848476f5'
 related:
   - '[[2026-05-27-fu-200-row-model-m349-m347-task-224-exec]]'

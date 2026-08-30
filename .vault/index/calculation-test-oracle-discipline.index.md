@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#calculation-test-oracle-discipline'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:e4341127f9acb0f0581bf658a3741efd62940744db7e92feb3ca6108636a590a'
 related:
   - '[[2026-06-01-calculation-test-oracle-discipline-adr]]'

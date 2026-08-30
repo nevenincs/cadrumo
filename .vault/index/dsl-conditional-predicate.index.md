@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#dsl-conditional-predicate'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:a322c82fa446c2af41157fec81f58944f9118e01d739b1a4c01f86142f4cfb76'
 related:
   - '[[2026-06-04-dsl-conditional-predicate-research]]'

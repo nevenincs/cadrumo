@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#registry-evidence-window-axes'
 date: '2026-08-19'
-modified: '2026-08-19'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:78d704407cc1e2935780c97190a7d030de46d574445fb4b502a8b57653e0fb3e'
 related:
   - '[[2026-08-19-registry-evidence-window-axes-adr]]'

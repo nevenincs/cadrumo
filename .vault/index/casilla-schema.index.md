@@ -4,13 +4,14 @@ tags:
   - '#index'
   - '#casilla-schema'
 date: '2026-08-16'
-modified: '2026-08-26'
-body_schema: 'body-v1'
-body_hash: 'sha256:0190e444cc113189c916322f85c53329299ac982755d0129d74dd628d8afd5dd'
+modified: '2026-08-30'
+body_schema: 'body-v2'
+body_hash: 'sha256:fbc3af9157c4fba3c02aba47b2c5987065b75c9651a828bed4f6216fd24f8439'
 related:
   - '[[2026-08-10-casilla-schema-blocker-spine-adr]]'
   - '[[2026-08-10-casilla-schema-canonical-derivations-adr]]'
   - '[[2026-08-10-casilla-schema-dead-surface-adr]]'
+  - '[[2026-08-10-casilla-schema-ledger]]'
   - '[[2026-08-10-casilla-schema-plan]]'
   - '[[2026-08-10-casilla-schema-read-model-adr]]'
   - '[[2026-08-10-casilla-schema-research]]'
@@ -124,58 +125,7 @@ Auto-generated index of all documents tagged with `#casilla-schema`.
 
 ### exec
 
-- `2026-08-10-casilla-schema-W01-P01-S02` - confirm the registry restructure (91 to 94 revisions, the M303 split) is committed, pin that commit as the measurement SHA, and re-take the six basis-tracked numbers (registry revisions, relation pairs, relation-declaring revisions, export-exemption casillas, manifest-bearing revisions, manifest-less revisions) with a bundled-authority probe, recording the command and outputs in the exec record
-- `2026-08-10-casilla-schema-W01-P01-S01` - Land the NoRecoveryOutcome import fix and prove clean collection
-- `2026-08-10-casilla-schema-W01-P02-S03` - Widen the XML dictionary casilla identifier parser
-- `2026-08-10-casilla-schema-W01-P02-S04` - Make binding-derived export layouts safe to scan repeatedly
-- `2026-08-10-casilla-schema-W01-P02-S05` - Normalize completeness-manifest authoring to one shape
-- `2026-08-10-casilla-schema-W01-P02-S06` - Remove phantom constant-value source kind
-- `2026-08-10-casilla-schema-W01-P02-S07` - Reconcile internal-only completeness manifest rows
-- `2026-08-10-casilla-schema-W01-P02-S08` - Confirm manifest authoring worklist and tranches
-- `2026-08-10-casilla-schema-W02-P03-S09` - Canonicalize the binding-to-casilla reverse join
-- `2026-08-10-casilla-schema-W02-P03-S10` - Retarget M390 M303 reconciliation to the canonical reverse join
-- `2026-08-10-casilla-schema-W02-P03-S11` - Centralize registry relations by target binding
-- `2026-08-10-casilla-schema-W02-P04-S12` - Promote the canonical relation consumption predicate
-- `2026-08-10-casilla-schema-W02-P04-S13` - Carry relation consumption channels into handoffs and prefill
-- `2026-08-10-casilla-schema-W02-P05-S14` - Add the canonical official-box status vocabulary
-- `2026-08-10-casilla-schema-W02-P05-S15` - Classify official boxes through one registry authority
-- `2026-08-10-casilla-schema-W02-P06-S16` - Add the canonical operator action axis
-- `2026-08-10-casilla-schema-W02-P06-S17` - Project cross-period blockers onto operator action classes
-- `2026-08-10-casilla-schema-W02-P06-S18` - Project verification and readiness blockers onto operator action classes
-- `2026-08-10-casilla-schema-W02-P06-S19` - Project IVA ledger and confirmation blockers onto operator action classes
-- `2026-08-10-casilla-schema-W02-P06-S20` - 2026-08-10-casilla-schema-W02-P06-S20
-- `2026-08-10-casilla-schema-W02-P06-S21` - 2026-08-10-casilla-schema-W02-P06-S21
-- `2026-08-10-casilla-schema-W03-P07-S22` - 2026-08-10-casilla-schema-W03-P07-S22
-- `2026-08-10-casilla-schema-W03-P07-S23` - 2026-08-10-casilla-schema-W03-P07-S23
-- `2026-08-10-casilla-schema-W03-P07-S25` - implement the owner-ruled progress counts: typed state plus counts against the named manifest denominator, UNDEFINED when no manifest exists, never a bare percentage
-- `2026-08-10-casilla-schema-W05-P11-S80` - Reconcile the invalid S08 manifest worklist and retire its false-positive steps
-- `2026-08-10-casilla-schema-W03-P07-S24` - Finding-to-casilla attribution sweep
-- `2026-08-10-casilla-schema-W03-P07-S26` - register the modelo.work.review envelope wrapping the record, with the spine axis and machine facts riding Notice context
-- `2026-08-10-casilla-schema-W03-P07-S27` - widen the modelo.requires classifier to bucket previous_filing, relation_prefill and live_observation sources, read alternate bindings, and surface unbucketed sources as an advisory
-- `2026-08-10-casilla-schema-W03-P08-S28` - S28 pipeline-health persisted-readiness authority
-- `2026-08-10-casilla-schema-W04-P09-S29` - adjudicate verify_declaracion against the live reconcile flow and record the overlap outcome in the exec record
-- `2026-08-10-casilla-schema-W04-P09-S30` - delete the application verification package, its tests and the registry application-links consumer rows in one commit, absorbing any missing semantics into reconcile first
-- `2026-08-10-casilla-schema-W04-P09-S31` - Delete the strict bound-input resolver
-- `2026-08-10-casilla-schema-W04-P09-S32` - Enforce export verification after the write
-- `2026-08-10-casilla-schema-W04-P09-S33` - Centralise binding-source readiness wording
-- `2026-08-10-casilla-schema-W04-P10-S34` - build the TUI review screen consuming the review record through the application modelo facade
-- `2026-08-10-casilla-schema-W04-P10-S35` - add faceted filtering over the record's closed axes
-- `2026-08-10-casilla-schema-W05-P11-S37` - reconcile the stale export-exemption docstring describing M720 design positions 5-8 against the layout whose records carry zero inline fields
-- `2026-08-10-casilla-schema-W05-P11-S38` - adjudicate the dormant enum members (profile_schedule, UNRESOLVED_BINDING, INVALID_WAIVER, and the two unused exemption reasons): wire each, pin it dormant with a stated reason, or delete it
-- `2026-08-10-casilla-schema-W05-P11-S41` - correct the standing collect gate to measure every tracked test root
-- `2026-08-10-casilla-schema-W05-P11-S82` - destructively rename the OfficialBoxStatus, official_box_status, and classify_official_boxes family to one Spanish casilla-stem authority, sweep every consumer, and prove zero English-name references without aliases or compatibility exports
-- `2026-08-10-casilla-schema-W05-P11-S83` - repair the real M303-quarter-to-M390 end-to-end suite to law-select each live split M303 revision and make all four scenarios pass without restoring or tolerating the retired revision id
-- `2026-08-10-casilla-schema-W05-P11-S84` - remove the five retired application.verification.errors locale leaves from all four catalogues through dev.locales and prove no deleted-package key remains
-- `2026-08-10-casilla-schema-W05-P11-S85` - replace the relation-handoff applicability hard counts with count-free semantic invariants and a bite proof, making the complete owning module green
-- `2026-08-10-casilla-schema-W05-P11-S86` - correct the two S33 audit IVA-stem violations and fill the checked S02 execution Description through VaultSpec CLI, then pass the IVA-stem and feature body-section gates
-- `2026-08-10-casilla-schema-W05-P11-S87` - regenerate the casilla-schema feature index through the owning VaultSpec CLI after all other close findings settle and require the feature check to pass
-- `2026-08-10-casilla-schema-W05-P11-S88` - retire every stale Modelo 303 reference to the deleted revision id and tighten the cutover gate's modelo attribution so a sibling modelo's legitimate identically-named revision is not flagged, making the cutover gate, the registry diff module and the reconcile verb green - EXCLUDES the two M303 application modules whose deducible-IVA fold changed underneath them, which the standing goal still requires and which S91 now carries
-- `2026-08-10-casilla-schema-W05-P11-S90` - populate the 84 shared M303 continuity casilla-label keys the revision split left unresolved so the four currently-filing revisions render every casilla label in all four catalogues through dev.locales
-- `2026-08-10-casilla-schema-W05-P11-S91` - adjudicate where the Modelo 303 deducible-IVA evidence gate binds - the ledger-to-casilla aggregation fold or the verify grant - since an unevidenced purchase now folds to zero at calculate while two committed modules still contract for the fold-then-block shape, then repair those modules against the adjudicated contract
-- `2026-08-10-casilla-schema-W05-P11-S92` - add a tree-wide gate asserting every casilla label resolves in the mandatory Spanish source for every modelo and every revision, measured through resolve_modelo_localization and the production resolver chain and never by reading catalogue YAML, and prove the gate bites
-- `2026-08-10-casilla-schema-W05-P12-S36` - run the fresh-context honesty review of the campaign close and record it as a vault audit with every finding actioned or deferred
-- `2026-08-10-casilla-schema-W05-P12-S39` - retire the casilla-schema-buildout campaign rule and sync the provider copies in the same action as the closing review
-- `2026-08-10-casilla-schema-W05-P12-S40` - confirm every step in this plan is checked with an exec record or formally deferred with a follow-up reference, and only then declare the campaign structurally complete
+- `2026-08-10-casilla-schema-ledger` - `casilla-schema` ledger
 
 ### plan
 

@@ -4,13 +4,14 @@ tags:
   - '#index'
   - '#registry-m100-2025-row-width'
 date: '2026-08-16'
-modified: '2026-08-26'
-body_schema: 'body-v1'
-body_hash: 'sha256:c377fcd3dfc06e5c86e570594f5c08013790a19807b38fc910c3609b90a5b800'
+modified: '2026-08-30'
+body_schema: 'body-v2'
+body_hash: 'sha256:f7be600b9effeaebd7c3ba388675a626be7a83f9b13965b7ae5ba3b3ef4a0cfe'
 related:
   - '[[2026-06-04-registry-m100-2025-row-width-adr]]'
   - '[[2026-06-04-registry-m100-2025-row-width-audit]]'
   - '[[2026-06-04-registry-m100-2025-row-width-code-review-audit]]'
+  - '[[2026-06-04-registry-m100-2025-row-width-ledger]]'
   - '[[2026-06-04-registry-m100-2025-row-width-plan]]'
   - '[[2026-06-04-registry-m100-2025-row-width-research]]'
   - '[[2026-06-04-registry-m100-2025-row-width-summary-exec]]'
@@ -33,11 +34,7 @@ Auto-generated index of all documents tagged with `#registry-m100-2025-row-width
 
 ### exec
 
-- `2026-06-04-registry-m100-2025-row-width-S01` - S01 M100 2025 Row-Width Inventory
-- `2026-06-04-registry-m100-2025-row-width-S02` - S02 M100 2025 Legal-Refs Formatting
-- `2026-06-04-registry-m100-2025-row-width-S03` - S03 Row-Width Baseline Tightening
-- `2026-06-04-registry-m100-2025-row-width-S04` - S04 M100 2025 Row-Width Verification
-- `2026-06-04-registry-m100-2025-row-width-S05` - S05 M100 2025 Row-Width Review
+- `2026-06-04-registry-m100-2025-row-width-ledger` - `registry-m100-2025-row-width` ledger
 - `2026-06-04-registry-m100-2025-row-width-summary-exec` - `registry-m100-2025-row-width` summary
 
 ### plan

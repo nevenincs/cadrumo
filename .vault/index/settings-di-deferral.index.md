@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#settings-di-deferral'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:8d485f27062556c264feceb0b597a3127dc453fa12b5025758a58815266a4775'
 related:
   - '[[2026-06-03-settings-di-deferral-adr]]'

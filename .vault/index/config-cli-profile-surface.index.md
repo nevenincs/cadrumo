@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#config-cli-profile-surface'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:27bb0121c2d596c653063b3687b4b8ae54a5e153bc1fd24c96e65f9825a7a53c'
 related:
   - '[[2026-06-04-config-cli-profile-surface-research]]'

@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#mcp-closed-value-axes'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:08c4d2fa13b2966926aa9a557d4854a445000125477aa51d7f48c66abe14647b'
 related:
   - '[[2026-08-08-mcp-closed-value-axes-audit]]'

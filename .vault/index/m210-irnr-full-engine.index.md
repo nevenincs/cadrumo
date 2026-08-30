@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#m210-irnr-full-engine'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:bb2c32eacfc75397586acf64c702f36987be8b74e1a2c1863f81d47be9eea8b3'
 related:
   - '[[2026-06-04-m210-irnr-full-engine-research]]'

@@ -4,12 +4,13 @@ tags:
   - '#index'
   - '#calculation-engine-foundations'
 date: '2026-08-16'
-modified: '2026-08-26'
-body_schema: 'body-v1'
-body_hash: 'sha256:7178ee1770ae22e04dfb9febac5aba927321a473b4d59f0b8eb1bee9202cdd59'
+modified: '2026-08-30'
+body_schema: 'body-v2'
+body_hash: 'sha256:4ffac4790bafbbb152e7574dec964d2c660592fce6a27488420066e3ba3a76be'
 related:
   - '[[2026-06-10-calculation-engine-foundations-adr]]'
   - '[[2026-06-10-calculation-engine-foundations-audit]]'
+  - '[[2026-06-10-calculation-engine-foundations-ledger]]'
   - '[[2026-06-10-calculation-engine-foundations-plan]]'
   - '[[2026-06-10-calculation-engine-foundations-research]]'
   - '[[2026-06-11-calculation-engine-foundations-closeout-audit]]'
@@ -36,11 +37,7 @@ Auto-generated index of all documents tagged with `#calculation-engine-foundatio
 
 ### exec
 
-- `2026-06-10-calculation-engine-foundations-W04-P10-S16` - `calculation-engine-foundations` `W04.P10.S16` exec
-- `2026-06-10-calculation-engine-foundations-W04-P11-S35` - `calculation-engine-foundations` `W04.P11.S35` exec
-- `2026-06-10-calculation-engine-foundations-W04-P12-S29` - `calculation-engine-foundations` `W04.P12.S29` exec
-- `2026-06-10-calculation-engine-foundations-W04-P12-S31` - W04.P12.S31 Unresolved Relation Robustness
-- `2026-06-10-calculation-engine-foundations-W04-P12-S38` - W04.P12.S38 OSS/IOSS Live Projection
+- `2026-06-10-calculation-engine-foundations-ledger` - `calculation-engine-foundations` ledger
 
 ### plan
 

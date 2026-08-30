@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#ledger-hardening-close'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:ffcc07e37b33c12a8242d1fecb15045e12c9ad1e9e65ae29f23d9216839974e0'
 related:
   - '[[2026-06-11-ledger-hardening-close-audit]]'

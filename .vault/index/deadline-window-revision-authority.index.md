@@ -4,13 +4,14 @@ tags:
   - '#index'
   - '#deadline-window-revision-authority'
 date: '2026-08-25'
-modified: '2026-08-26'
-body_schema: 'body-v1'
-body_hash: 'sha256:7e350a3a0e617f1adaf2af8ecfb376618e517006fc4df7928b8c316f0bed169c'
+modified: '2026-08-30'
+body_schema: 'body-v2'
+body_hash: 'sha256:e9a08a9fb00dc032c2a65426ba2b58cb64af3067a75d1e176b8670f4925f08f0'
 related:
   - '[[2026-08-24-deadline-window-revision-authority-adr]]'
   - '[[2026-08-24-deadline-window-revision-authority-audit]]'
   - '[[2026-08-24-deadline-window-revision-authority-engine-projection-audit]]'
+  - '[[2026-08-24-deadline-window-revision-authority-ledger]]'
   - '[[2026-08-24-deadline-window-revision-authority-m202-s42-review-audit]]'
   - '[[2026-08-24-deadline-window-revision-authority-m216-s43-review-audit]]'
   - '[[2026-08-24-deadline-window-revision-authority-m303-historical-calendar-review-audit]]'
@@ -102,55 +103,7 @@ Auto-generated index of all documents tagged with `#deadline-window-revision-aut
 
 ### exec
 
-- `2026-08-24-deadline-window-revision-authority-W01-P01-S01` - Record the canonical shared temporal-coverage dependency in the approved deadline architecture
-- `2026-08-24-deadline-window-revision-authority-W01-P01-S02` - Add optional typed deadline qualifiers reusing ResultDisposition and official M210 tipo-renta code authority without a lossy TipoRentaIrnr projection
-- `2026-08-24-deadline-window-revision-authority-W01-P01-S03` - Define the canonical deadline semantic coordinate from modelo, Period, ResultDisposition, and official tipo-renta code scope using existing period authorities
-- `2026-08-24-deadline-window-revision-authority-W01-P01-S04` - Extend deadline-window loading and serialization for typed qualifiers while preserving unqualified rows and fragmented authoring ownership
-- `2026-08-24-deadline-window-revision-authority-W01-P02-S05` - Enforce equality between deadline filing_year and Period.filing_year while preserving following-calendar-year physical dates
-- `2026-08-24-deadline-window-revision-authority-W01-P02-S06` - Enforce globally unique deadline IDs and semantic coordinates across every revision with independent bite tests
-- `2026-08-24-deadline-window-revision-authority-W01-P02-S07` - Enforce exact-one deadline ownership through canonical select_revision including period-sensitive cutovers
-- `2026-08-24-deadline-window-revision-authority-W01-P02-S09` - Prove deadline validation under cold construction and fingerprint-backed warm-load verdict paths with planted mutations
-- `2026-08-24-deadline-window-revision-authority-W02-P03-S10` - Re-adjudicate and repair Modelo 190 deadline identity against bundled and official AEAT authority while retaining following-January physical dates
-- `2026-08-24-deadline-window-revision-authority-W02-P03-S11` - Re-adjudicate and repair Modelo 193 deadline identity against bundled and official AEAT authority while retaining following-January physical dates
-- `2026-08-24-deadline-window-revision-authority-W02-P04-S12` - Re-adjudicate Modelo 303 deadlines, remove every non-owner copy, preserve the 2024 cutover, and materialise every supported monthly and quarterly row
-- `2026-08-24-deadline-window-revision-authority-W02-P04-S13` - Re-adjudicate Modelo 322 deadlines and materialise every officially evidenced periodic row
-- `2026-08-24-deadline-window-revision-authority-W02-P04-S14` - Re-adjudicate Modelo 353 deadlines, remove stale 2025 copies, and materialise every supported periodic row
-- `2026-08-24-deadline-window-revision-authority-W02-P04-S15` - Re-adjudicate Modelo 369 deadlines and materialise every supported periodic row without modelo-specific cadence logic
-- `2026-08-24-deadline-window-revision-authority-W02-P05-S17` - Re-adjudicate every Modelo 210 plazo case against bundled Orden EHA 3316/2010 article 5 and official authority including presentation versus domiciliacion
-- `2026-08-24-deadline-window-revision-authority-W02-P05-S18` - Replace invalid M210 quarter identities with canonical EVENT-N or 0A identities and author ResultDisposition plus official-code-qualified variants
-- `2026-08-24-deadline-window-revision-authority-W02-P05-S19` - Keep M210 tipo 28 event-shaped without a numeric offset until RD 1776/2004 article 14 is bundled and verified
-- `2026-08-24-deadline-window-revision-authority-W02-P05-S20` - Prove M210 qualifiers accept canonical ResultDisposition and official codes while rejecting lossy conceptual tipo authoring
-- `2026-08-24-deadline-window-revision-authority-W02-P14-S37` - Re-adjudicate Modelo 111 deadlines for supported filing years 2022-2026 and materialise all 48 measured missing periodic cells only from bundled official-source evidence, using Vaultspec RAG plus exact-symbol confirmation to prove no selector, resolver, parser, cadence authority, horizon, or deadline catalogue is redeclared and never inferring a date
-- `2026-08-24-deadline-window-revision-authority-W02-P14-S38` - Re-adjudicate Modelo 115 deadlines for supported filing years 2022-2026 and materialise all 16 measured missing periodic cells only from bundled official-source evidence, using Vaultspec RAG plus exact-symbol confirmation to prove no selector, resolver, parser, cadence authority, horizon, or deadline catalogue is redeclared and never inferring a date
-- `2026-08-24-deadline-window-revision-authority-W02-P14-S39` - Re-adjudicate Modelo 123 deadlines for supported filing years 2022-2026 and materialise all 12 measured missing periodic cells only from bundled official-source evidence, using Vaultspec RAG plus exact-symbol confirmation to prove no selector, resolver, parser, cadence authority, horizon, or deadline catalogue is redeclared and never inferring a date
-- `2026-08-24-deadline-window-revision-authority-W02-P14-S40` - Re-adjudicate Modelo 130 deadlines for supported filing years 2022-2026 and materialise all 8 measured missing periodic cells only from bundled official-source evidence, using Vaultspec RAG plus exact-symbol confirmation to prove no selector, resolver, parser, cadence authority, horizon, or deadline catalogue is redeclared and never inferring a date
-- `2026-08-24-deadline-window-revision-authority-W02-P14-S41` - Re-adjudicate Modelo 131 deadlines for supported filing years 2022-2026 and materialise all 4 measured missing periodic cells only from bundled official-source evidence, using Vaultspec RAG plus exact-symbol confirmation to prove no selector, resolver, parser, cadence authority, horizon, or deadline catalogue is redeclared and never inferring a date
-- `2026-08-24-deadline-window-revision-authority-W02-P14-S42` - Re-adjudicate Modelo 202 deadlines for supported filing years 2022-2026 and materialise all 9 measured missing periodic cells only from bundled official-source evidence, using Vaultspec RAG plus exact-symbol confirmation to prove no selector, resolver, parser, cadence authority, horizon, or deadline catalogue is redeclared and never inferring a date
-- `2026-08-24-deadline-window-revision-authority-W02-P14-S43` - Re-adjudicate Modelo 216 deadlines for supported filing years 2022-2026 and materialise all 4 measured missing periodic cells only from bundled official-source evidence, using Vaultspec RAG plus exact-symbol confirmation to prove no selector, resolver, parser, cadence authority, horizon, or deadline catalogue is redeclared and never inferring a date
-- `2026-08-24-deadline-window-revision-authority-W02-P14-S44` - Re-adjudicate Modelo 349 deadlines for supported filing years 2022-2026 and materialise all 32 measured missing periodic cells only from bundled official-source evidence, using Vaultspec RAG plus exact-symbol confirmation to prove no selector, resolver, parser, cadence authority, horizon, or deadline catalogue is redeclared and never inferring a date
-- `2026-08-24-deadline-window-revision-authority-W03-P08-S21` - Rewrite ValidatedRegistryAuthority.deadline_windows to project canonical owners through select_revision with deterministic qualifier-aware ordering and no deduplication
-- `2026-08-24-deadline-window-revision-authority-W03-P08-S22` - Add a fleet authority test proving canonical ownership, exact multiplicity, qualifier distinction, and modelo-filter invariance
-- `2026-08-24-deadline-window-revision-authority-W03-P10-S23` - Extend resolve_filing_window with optional ResultDisposition and official tipo-code context using one exact matcher and ambiguity refusal
-- `2026-08-24-deadline-window-revision-authority-W03-P10-S24` - Keep resolve_filing_closes_on as the unqualified convenience and route post-calculation M210 plazo through the same matcher
-- `2026-08-24-deadline-window-revision-authority-W03-P10-S25` - Prove qualified resolution wildcard and exact scopes, official-code distinction, ambiguity refusal, and no year borrowing
-- `2026-08-24-deadline-window-revision-authority-W03-P11-S26` - Keep DeadlineEngine.compute thin and prove exact-one complete monthly and quarterly emission without local selection or deduplication
-- `2026-08-24-deadline-window-revision-authority-W03-P11-S27` - Route calculated M210 ResultDisposition and official tipo code into canonical deadline resolution and the existing typed Notice channel
-- `2026-08-24-deadline-window-revision-authority-W03-P11-S28` - Prove M210 calculate and verify envelopes emit grounded qualified plazo notices and never claim an ungrounded tipo-28 offset
-- `2026-08-24-deadline-window-revision-authority-W02-P04-S16` - Generate an auditable 555-cell before-and-after census for supported filing years 2022-2026 that accounts for all 294 measured missing cells and every removed, corrected, retained, materialised, or still-blocked deadline coordinate with its official source, reconciling M369 60, M111 48, M322 42, M353 37, M349 32, M303 22, M115 16, M123 12, M202 9, M130 8, M131 4, and M216 4 exactly
-- `2026-08-24-deadline-window-revision-authority-W02-P05-S46` - Adjudicate why Modelo 210 ejercicio 2025 projects presentation through 2030 while its declared design authority ends in 2025, then correct the deadline horizon, design scope, or axis selection from official evidence and prove the whole-tree claimed-year layout-design gate no longer reports Modelo 210
-- `2026-08-24-deadline-window-revision-authority-W04-P12-S29` - Audit overview, workflow, and filing-window consumers for exclusive canonical deadline API use
-- `2026-08-24-deadline-window-revision-authority-W04-P12-S30` - Add overview and workflow regressions comparing ordered semantic coordinates without multiplicity-erasing assertions
-- `2026-08-24-deadline-window-revision-authority-W04-P12-S31` - Add real CLI JSON regressions for calendar, agenda, backlog, workflow, and explain including exactly four M303 quarterly obligations for 2025
-- `2026-08-24-deadline-window-revision-authority-W04-P12-S32` - Add all-modelo parity coverage across registry, DeadlineEngine, overview, workflow, and real CLI for every supported filing year
-- `2026-08-24-deadline-window-revision-authority-W04-P13-S33` - Run the bundled-registry invariant proving zero ownership, identity, uniqueness, qualifier, period, and completeness violations
-- `2026-08-24-deadline-window-revision-authority-W04-P13-S34` - Run exact historical engine and CLI scenarios for every repaired modelo against the adjudicated registry census
-- `2026-08-24-deadline-window-revision-authority-W04-P13-S35` - Run feature-scoped Ruff, formatting, focused tests, Vaultspec, cold and warm registry validation, generated-reference drift, locale, and real CLI smoke gates, then run the applicable repository-wide gates, attribute every failure to the current revision and owning paths, block feature closure on failures caused by or overlapping this feature, and record unrelated shared-worktree failures separately
-- `2026-08-24-deadline-window-revision-authority-W04-P13-S36` - Perform formal code and architecture review
-- `2026-08-24-deadline-window-revision-authority-W04-P13-S45` - Make deadline reference-date semantics canonical and deterministic. Correct stale date.today() documentation, replace direct wall-clock reads in deadline-path tests with explicit or frozen today_madrid() input, and derive exercised filing years from the supported-filing-year catalogue while preserving literal official dates only in source-fidelity tests
-- `2026-08-24-deadline-window-revision-authority-W04-P13-S47` - Restore canonical formatting on the shared registry authority after concurrent capture work introduced mixed line endings, then rerun focused authority Ruff, format, and deadline ownership tests without changing behavior
-- `2026-08-24-deadline-window-revision-authority-W04-P13-S48` - Restore canonical formatting on the M210 claimed-year design-axis proof introduced by S46, preserving its generalized mutation-bite semantics
-- `2026-08-24-deadline-window-revision-authority-W04-P13-S49` - Restore canonical formatting after the concurrent authority-reset fix landed unformatted on the registry authority and its native-capture proof, preserving reset linearization behavior
-- `2026-08-24-deadline-window-revision-authority-W04-P13-S50` - Restore real CLI calendar parity for canonical filing evidence and locked-profile rendering after concurrent projection changes, keeping the CLI a thin consumer of overview and registry deadline authority
+- `2026-08-24-deadline-window-revision-authority-ledger` - `deadline-window-revision-authority` ledger
 - `2026-08-25-deadline-window-revision-authority-exec` - Fleet periodic deadline completeness hard gate
 
 ### plan

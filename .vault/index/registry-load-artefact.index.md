@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#registry-load-artefact'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:4ed0c1222c824df16421f4db44547dab0786cbe9b11448e4c153e70b495de27c'
 related:
   - '[[2026-08-16-registry-load-artefact-adr]]'

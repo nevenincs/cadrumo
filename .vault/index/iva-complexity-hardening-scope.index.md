@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#iva-complexity-hardening-scope'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:326860c788610bc5ebe4c284acd7f3c14d0726604dce3aaae22e836dee1b506a'
 related:
   - '[[2026-07-01-iva-complexity-hardening-scope-adr]]'

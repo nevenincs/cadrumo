@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#settings-route-derivation-cost'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:9585dab5b83e8eb033c2663a6a730f18bb51f46797ccdac60b7c582bd60ba2d4'
 related:
   - '[[2026-07-25-settings-route-derivation-cost-research]]'

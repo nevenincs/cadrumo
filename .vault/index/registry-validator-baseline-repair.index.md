@@ -4,12 +4,13 @@ tags:
   - '#index'
   - '#registry-validator-baseline-repair'
 date: '2026-08-16'
-modified: '2026-08-26'
-body_schema: 'body-v1'
-body_hash: 'sha256:abfbc8a69d3aff56fa5923593595093b6db3aa7eef26bfe8d43fcb060cf8207f'
+modified: '2026-08-30'
+body_schema: 'body-v2'
+body_hash: 'sha256:f65c61cec6bdf8e7c984500dc8a5a33cc151dffba2c75e59c4a679ffd2ebdbb1'
 related:
   - '[[2026-06-04-registry-validator-baseline-repair-adr]]'
   - '[[2026-06-04-registry-validator-baseline-repair-code-review-audit]]'
+  - '[[2026-06-04-registry-validator-baseline-repair-ledger]]'
   - '[[2026-06-04-registry-validator-baseline-repair-plan]]'
   - '[[2026-06-04-registry-validator-baseline-repair-research]]'
   - '[[2026-06-04-registry-validator-baseline-repair-summary-exec]]'
@@ -31,9 +32,7 @@ Auto-generated index of all documents tagged with `#registry-validator-baseline-
 
 ### exec
 
-- `2026-06-04-registry-validator-baseline-repair-S01` - `registry-validator-baseline-repair` `S01` repair
-- `2026-06-04-registry-validator-baseline-repair-S02` - `registry-validator-baseline-repair` `S02` verification
-- `2026-06-04-registry-validator-baseline-repair-S03` - `registry-validator-baseline-repair` `S03` review
+- `2026-06-04-registry-validator-baseline-repair-ledger` - `registry-validator-baseline-repair` ledger
 - `2026-06-04-registry-validator-baseline-repair-summary-exec` - `registry-validator-baseline-repair` summary
 
 ### plan

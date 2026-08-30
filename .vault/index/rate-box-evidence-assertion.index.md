@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#rate-box-evidence-assertion'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:911f7b11dba4613e248359a0ebbe73d42aedb6cd77319a553432fc651cdbdcfd'
 related:
   - '[[2026-08-07-rate-box-evidence-assertion-adr]]'

@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#dev-harness-bleed'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:9dcc41a829cce41304b6dd83381d04e72ef862b25568d9b695d6742b9be3f8ef'
 related:
   - '[[2026-08-07-dev-harness-bleed-adr]]'

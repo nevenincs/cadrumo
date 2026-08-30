@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#registry-casilla-identity'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:a638dfe7570fb94a219c5510ef5ed020ecd9c40cd1314dca575789ee1d11dc91'
 related:
   - '[[2026-05-21-registry-casilla-identity-exec]]'

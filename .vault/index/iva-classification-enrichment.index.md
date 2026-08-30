@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#iva-classification-enrichment'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:d2f14428cfa7d1937f928e7f04957bcf1cb3254915f98d5b3fea534520e42d68'
 related:
   - '[[2026-06-04-iva-classification-enrichment-research]]'

@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#renta-cuota-chain-rollout'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:c2f3f60e41883f080f2578c6166bd3d72956091dc6e87ff9cb41f18b4723bdf2'
 related:
   - '[[2026-06-04-renta-cuota-chain-rollout-research]]'

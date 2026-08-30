@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#tui-interface'
 date: '2026-08-16'
-modified: '2026-08-26'
+modified: '2026-08-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:420cdddee96d93ddbdc4b68002918343a629bfa3600ff9cc307c100ffcc51e6a'
+body_hash: 'sha256:6ab3327683188ec25624d2f9c65dee3f44a709f3b70666ad7838a579aa625a09'
 related:
   - '[[2026-08-11-tui-interface-W01-P01-S01]]'
   - '[[2026-08-11-tui-interface-W01-P01-S02]]'
@@ -38,6 +38,16 @@ related:
   - '[[2026-08-11-tui-interface-W05-P10-S24]]'
   - '[[2026-08-11-tui-interface-W05-P10-S25]]'
   - '[[2026-08-11-tui-interface-W05-P10-S38]]'
+  - '[[2026-08-11-tui-interface-W05-P11-S27]]'
+  - '[[2026-08-11-tui-interface-W05-P11-S50]]'
+  - '[[2026-08-11-tui-interface-W05-P11-S51]]'
+  - '[[2026-08-11-tui-interface-W05-P11-S52]]'
+  - '[[2026-08-11-tui-interface-W05-P11-S53]]'
+  - '[[2026-08-11-tui-interface-W05-P11-S54]]'
+  - '[[2026-08-11-tui-interface-W05-P11-S55]]'
+  - '[[2026-08-11-tui-interface-W05-P11-S56]]'
+  - '[[2026-08-11-tui-interface-W05-P11-S57]]'
+  - '[[2026-08-11-tui-interface-W05-P11-S58]]'
   - '[[2026-08-11-tui-interface-adr]]'
   - '[[2026-08-11-tui-interface-plan]]'
   - '[[2026-08-11-tui-interface-research]]'
@@ -85,6 +95,16 @@ Auto-generated index of all documents tagged with `#tui-interface`.
 - `2026-08-11-tui-interface-W05-P10-S24` - Register modelo.work.select and the sole C1 modelo.work.review destination over the architecture-relocated view, consuming the exact public ModeloWorkReview without a second producer or legacy route
 - `2026-08-11-tui-interface-W05-P10-S25` - Prove C1 review outliers, stable keyboard order, non-colour status, and all four locales, three geometries, and two themes before its route can become callable
 - `2026-08-11-tui-interface-W05-P10-S38` - Emit and validate ModeloWorkspaceC1ExitReceiptV1 with the accepted-companion prefix, migration evidence, denominator digest, C1 accessibility matrix, production route, and availability fence
+- `2026-08-11-tui-interface-W05-P11-S27` - Atomically replace the C1 review selection outcome with modelo.workspace.overview, register the closed destination and route-factory census, and prove zero remaining modelo.work.review routes or aliases
+- `2026-08-11-tui-interface-W05-P11-S50` - Define frozen callback-free Workspace chrome, destination, section, scalar, repeated-row, provenance, capability, refusal, validation, and action view models keyed only by semantic identity
+- `2026-08-11-tui-interface-W05-P11-S51` - Implement ModeloWorkspaceReadSession and the read controller with exact version admission, baseline-pinned facet traversal, bounded paging, locale-only refresh proof, and whole-session stale invalidation
+- `2026-08-11-tui-interface-W05-P11-S52` - Render the workspace overview destination with natural and exact address disclosure, the REVISION COORDINATES, status, capability summary, refusals, safe actions, and collapsible narrow-terminal chrome. NARROWED: 'revision timeline' means the coordinates, not a chronology -- law_selected_revision_id plus the requested-versus-stored POINT assertions and review_status. Workspace V1 exposes no sequence-over-time anywhere, so a view rendering a chronology would author a temporal claim the application layer never made, which is the same violation class as synthesising provenance edges. EXCLUDED FROM THIS ROW: an actual revision history over time remains unrepresented. If operators need one it is an application-layer producer, not a view, and it needs its own row rather than being smuggled into this one
+- `2026-08-11-tui-interface-W05-P11-S53` - Render modelo.workspace.inputs from bounded section, scalar, and repeated-row facets with stable keys and explicit edit dispositions but no edit control before C3
+- `2026-08-11-tui-interface-W05-P11-S54` - Render modelo.workspace.results for the current Workspace session and an explicitly selected read-only ModeloRevisionPick without mixing historical and current capability
+- `2026-08-11-tui-interface-W05-P11-S55` - Render the workspace provenance destination as FLAT BOUNDED ATTRIBUTION: the existing provenance facet plus the per-value nested provenance on scalar and repeated-row records, with no locally synthesised edges. NARROWED, and the dropped half was verified absent rather than deferred: 'producer-supplied cycle and depth dispositions' are removed because ModeloWorkspaceProvenanceRecordV1 is a flat subject-or-None plus calculation-source row, and cycle and depth appear ZERO times in the workspace projection module. The TUI must not compute them either -- a locally derived depth or cycle marker is a causal claim no producer made, which the no-synthesised-edges half of this same row already forbids. PAGING IS THE NORMAL CASE HERE, NOT THE EXCEPTION: the graded-snapshot provenance facet fans one CalculationSourceRef out into one record PER CASILLA IT NAMES, so the count is sources times casillas rather than either alone, and a single ref touching 208 casillas yields 208 records unaided. The view must let an operator distinguish a bounded page from a complete set. THE TWO PROVENANCE SURFACES TRUNCATE AT DIFFERENT THRESHOLDS -- the facet pages at 200 and the nested per-value provenance is bounded at 64 by _MAX_PROVENANCE_RECORDS in the workspace models module -- so 'all the provenance for this value' and 'all the provenance in this facet' are DIFFERENT CLAIMS and the view must not let either read as the other. EXCLUDED FROM THIS ROW: causal-graph expansion with cycle and depth semantics remains unbuilt and requires an application-layer amendment before any view can present it
+- `2026-08-11-tui-interface-W05-P11-S56` - Render modelo.workspace.verification from canonical findings, readiness axes, capability dispositions, evidence, and recovery actions without deriving a second readiness verdict
+- `2026-08-11-tui-interface-W05-P11-S57` - Render the workspace filing destination from what a Workspace admission can actually attest: the two capability rows WITH their producer attribution, the evidence-backed refusals, and the human-handoff facts, with no remote AEAT submission. The view must state the readiness axes are UNMEASURED rather than letting absence imply not-ready. TWO UNMEASURED DISPOSITIONS THAT MUST NOT BE CONFLATED: FILING_DRAFT_READINESS is PERMANENTLY unmeasured in the producer's own words -- the draft builder is pure and stateless, persists nothing, emits no event and stamps no revision field, so there is no producer to read a verdict from, and the module states this is a structural finding rather than a placeholder pending future wiring. FILING_EXPORT_READINESS is genuinely unblockable, pending a ninth contributor port reading the export bucket event that carries the exact revision id. A view that renders both as the same kind of blank misreports one of them. EXCLUDED FROM THIS ROW, and the exclusion is about REACHABILITY not absence: filing history data EXISTS with typed public projections under the operations parent (the filed-history operation module, carrying FiledHistoryPublicResultV1, FiledPeriodSelectionPublicRowV1 and its operation-definition builder) and is NOT reachable from a Workspace admission because no contributor port supplies it -- filed_history appears zero times in the workspace producers module. A future wiring job MUST NOT CONFLATE THE TWO: that projection carries AEAT-sourced FILED history pulled from the sede, which is not the local filing state of a work target
+- `2026-08-11-tui-interface-W05-P11-S58` - Prove C2 route replacement, destination and factory census, projection-kind coverage, large and deep schemas, empty and paged rows, overflow, provenance, refusals, capabilities, keyboard focus, all locales, geometries, and themes before availability
 
 ### plan
 

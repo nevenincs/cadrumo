@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#dt-12-rescate-plan-pensiones'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:5460772fba9db923a5bae9cb230757f5e273fddc3b93c8ab4bc57f1a6a074d3b'
 related:
   - '[[2026-06-04-dt-12-rescate-plan-pensiones-research]]'

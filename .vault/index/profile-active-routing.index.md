@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#profile-active-routing'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:ad1d6530a9053de4fc6989967b32e204606928ac942d98189c9ab55b09d006d4'
 related:
   - '[[2026-08-10-profile-active-routing-code-review-audit]]'

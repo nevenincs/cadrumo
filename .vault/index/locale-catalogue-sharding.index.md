@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#locale-catalogue-sharding'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:bc5ad341474a3d7856d425cf263befc9223c44962b79db6853e4d953f08385ca'
 related:
   - '[[2026-08-16-locale-catalogue-sharding-adr]]'

@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#profile-keys-i18n-migration'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:a66cd0f3682407f69e48a928b889f91a248ff360e3513321d42548417ae23921'
 related:
   - '[[2025-02-13-profile-keys-i18n-migration-exec]]'

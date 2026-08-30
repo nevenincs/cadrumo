@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#integration-fixture-drift'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:4130c7e9ef96d4257b62129f976ec15b6310f16f75b53d78facbbc661924ffaf'
 related:
   - '[[2026-07-08-integration-fixture-drift-audit]]'

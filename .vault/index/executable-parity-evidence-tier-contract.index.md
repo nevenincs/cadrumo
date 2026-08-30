@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#executable-parity-evidence-tier-contract'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:cc1dfeecf9f0b190f90f48735e8cf699e2c99497eb264e836ef444601a6c8c1a'
 related:
   - '[[2026-06-03-executable-parity-evidence-tier-contract-adr]]'

@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#product-packaging'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:83f27a229339157373daea948f50d3074625846b7f3ee72c9630587f25936e27'
 related:
   - '[[2026-06-28-product-packaging-adr]]'

@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#live-parity-oracle'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:447366f04f6add4c95591344b43760f3dcf2fc964f0f241e281364afc5a78aeb'
 related:
   - '[[2026-05-07-live-parity-oracle-exec]]'

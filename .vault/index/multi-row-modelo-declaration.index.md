@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#multi-row-modelo-declaration'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:0a7601928d81714ce7317ae4b76112dad6ed460d646309db75096b75acb4a82d'
 related:
   - '[[2026-06-04-multi-row-modelo-declaration-research]]'

@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#packaging-smoke-architecture'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:1c9092e6294305f9db9d475e6d6553debed4d089327c24dfdf1d1322cdefb127'
 related:
   - '[[2026-08-05-packaging-smoke-architecture-adr]]'

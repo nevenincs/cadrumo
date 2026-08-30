@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#cli-root-help-profile-identity'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:d4ea5c89f703bcd974d73b1ef23386f48ac0aaae79f692b5787cbda52c39f9fa'
 related:
   - '[[2026-08-10-cli-root-help-profile-identity-audit]]'

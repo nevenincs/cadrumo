@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#docs-sphinx-build'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:fd16ce0bcee70d3a26bdde8ca3eef364a13fd703c33b01fd6150ff3a361e80bd'
 related:
   - '[[2026-06-04-docs-sphinx-build-research]]'

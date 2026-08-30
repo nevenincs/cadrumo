@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#cross-domain-continuity'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:18c3d0f9ae5c27bccc4da6a1843ceef599d3a5ae436dbfa1e501fc70e15c3e3c'
 related:
   - '[[2026-05-27-cross-domain-continuity-exec]]'

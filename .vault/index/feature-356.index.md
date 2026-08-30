@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#feature-356'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:0074db8755d9d64953cabfb33e610c93b2011fb1d0c5aabf66ed4e9530fa1587'
 related:
   - '[[2026-06-04-feature-356-research]]'

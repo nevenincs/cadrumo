@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#plan-triage-approach'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:1d7150813ef846419a35c72e902c775916f180a63e25f430f5c918436c607798'
 related:
   - '[[2026-06-03-plan-triage-approach-adr]]'

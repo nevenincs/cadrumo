@@ -4,13 +4,14 @@ tags:
   - '#index'
   - '#registry-construct-pressure'
 date: '2026-08-16'
-modified: '2026-08-26'
-body_schema: 'body-v1'
-body_hash: 'sha256:c25f59e5d42dffea9f32f477333d6daada0ec57053861965f7a01bc16b48da48'
+modified: '2026-08-30'
+body_schema: 'body-v2'
+body_hash: 'sha256:930b40b9fe5140277ab4ab088e4592131f8a2ec8037224a17cb6a2e25687e9b5'
 related:
   - '[[2026-06-03-registry-construct-pressure-audit]]'
   - '[[2026-06-03-registry-construct-pressure-code-review-audit]]'
   - '[[2026-06-03-registry-construct-pressure-headroom-audit]]'
+  - '[[2026-06-03-registry-construct-pressure-ledger]]'
   - '[[2026-06-03-registry-construct-pressure-plan]]'
   - '[[2026-06-04-registry-construct-pressure-adr]]'
   - '[[2026-06-04-registry-construct-pressure-research]]'
@@ -34,9 +35,7 @@ Auto-generated index of all documents tagged with `#registry-construct-pressure`
 
 ### exec
 
-- `2026-06-03-registry-construct-pressure-P01-S01` - `registry-construct-pressure` `P01.S01` step record
-- `2026-06-03-registry-construct-pressure-P02-S02` - `registry-construct-pressure` `P02.S02` step record
-- `2026-06-03-registry-construct-pressure-P03-S03` - `registry-construct-pressure` `P03.S03` step record
+- `2026-06-03-registry-construct-pressure-ledger` - `registry-construct-pressure` ledger
 
 ### plan
 

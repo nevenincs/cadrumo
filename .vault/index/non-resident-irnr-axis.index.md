@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#non-resident-irnr-axis'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:fc76f37d025d8fe684e01115ac21e4c406e930cc5aeb1452e7eeb51b2b867158'
 related:
   - '[[2026-06-04-non-resident-irnr-axis-research]]'

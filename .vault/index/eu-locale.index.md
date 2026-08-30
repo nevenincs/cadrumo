@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#eu-locale'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:58ed81cd513fdf26d173b39da144da1a5b84c93dbf3ca4a7f23e008e8e066ade'
 related:
   - '[[2026-06-04-eu-locale-adr]]'

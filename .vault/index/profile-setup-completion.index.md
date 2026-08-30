@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#profile-setup-completion'
 date: '2026-08-19'
-modified: '2026-08-19'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:0f1926cd2b29d3412e40427ce46699fb423abaeddb849eba9384f9cf057acbdf'
 related:
   - '[[2026-08-19-profile-setup-completion-adr]]'

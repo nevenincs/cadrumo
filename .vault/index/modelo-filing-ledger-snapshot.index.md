@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#modelo-filing-ledger-snapshot'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:f944f94bc9b528a8fbf1d5bebf644166c3c03a80538a7e107dacd883d8a230db'
 related:
   - '[[2026-06-02-modelo-filing-ledger-snapshot-adr]]'

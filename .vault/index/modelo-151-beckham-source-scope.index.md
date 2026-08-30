@@ -4,11 +4,12 @@ tags:
   - '#index'
   - '#modelo-151-beckham-source-scope'
 date: '2026-08-16'
-modified: '2026-08-26'
-body_schema: 'body-v1'
-body_hash: 'sha256:1a69dfb0c691ef3c2ac8180d33b8fa25beb3dcdc2cb55b123e0e98c476e6421e'
+modified: '2026-08-30'
+body_schema: 'body-v2'
+body_hash: 'sha256:5849e852c3359c31c28f916946931483831db09ba69e1099071fefcf9d2dda18'
 related:
   - '[[2026-07-01-modelo-151-beckham-source-scope-adr]]'
+  - '[[2026-07-01-modelo-151-beckham-source-scope-ledger]]'
   - '[[2026-07-01-modelo-151-beckham-source-scope-plan]]'
   - '[[2026-07-10-modelo-151-beckham-source-scope-research]]'
 ---
@@ -25,8 +26,7 @@ Auto-generated index of all documents tagged with `#modelo-151-beckham-source-sc
 
 ### exec
 
-- `2026-07-01-modelo-151-beckham-source-scope-P01-S01` - Add ledger_impatriado_income_aggregation source kind, ES-source classifier, M151 base binding, mesh resolver + enrollment, and non-tautological tests (ES folds in, foreign segregated, None fails loud, trabajo admitted)
-- `2026-07-01-modelo-151-beckham-source-scope-P02-S02` - Ingest the art. 93.2.e.2 savings-band corpus and add the source-scoped base del ahorro and its escala
+- `2026-07-01-modelo-151-beckham-source-scope-ledger` - `modelo-151-beckham-source-scope` ledger
 
 ### plan
 

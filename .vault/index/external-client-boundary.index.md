@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#external-client-boundary'
 date: '2026-08-23'
-modified: '2026-08-23'
-body_schema: 'body-v1'
-body_hash: 'sha256:a66311f429ed9a51c36b51d79d43f893392650a006569d2ecb758ba9e7947ba9'
+modified: '2026-08-30'
+body_schema: 'body-v2'
+body_hash: 'sha256:c2b583b14873b4be7c7525175451c784020cedaecb58e986ed0526798d37fbe0'
 related:
   - '[[2026-08-23-external-client-boundary-adr]]'
   - '[[2026-08-23-external-client-boundary-research]]'
@@ -20,7 +20,7 @@ Auto-generated index of all documents tagged with `#external-client-boundary`.
 
 ### adr
 
-- `2026-08-23-external-client-boundary-adr` - `external-client-boundary` adr: `base product is client-blind` | (**status:** `accepted`)
+- `2026-08-23-external-client-boundary-adr` - `external-client-boundary` adr: `base product is client-blind` | (**status:** `rejected`)
 
 ### research
 

@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#multilang-externalization'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:5f14b07d4a1b243de721eb6f132b2a9a30d0778784030b21dd86a5923207d847'
 related:
   - '[[2026-07-12-multilang-externalization-adr]]'

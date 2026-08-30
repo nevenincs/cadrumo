@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#cli-pull-file-standard'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:cbf82a8999c0a3d19e2aeff3c722a4655a6b25af5b1bee04a6bba7b94d15a54b'
 related:
   - '[[2026-06-10-cli-pull-file-standard-adr]]'

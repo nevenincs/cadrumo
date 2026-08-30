@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#registry-localization-backend'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:8064b26be00dfda8b36bd5fef98e28711f440d283ac480b10f18e24ad52acd0a'
 related:
   - '[[2026-06-08-registry-localization-backend-P01-S01]]'

@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#iva-franquicia-2026-scope'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:77a4a758e1e011224e7f7504c54eb6be9ec9c3fd3d1b8ea77e8285f322464dfd'
 related:
   - '[[2026-07-01-iva-franquicia-2026-scope-adr]]'

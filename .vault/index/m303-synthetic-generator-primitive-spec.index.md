@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#m303-synthetic-generator-primitive-spec'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:9e8daa1611d0fc8c007b4c3405d662dc9e7bfe9438efd74632308e901ba83706'
 related:
   - '[[2026-06-03-m303-synthetic-generator-primitive-spec-adr]]'

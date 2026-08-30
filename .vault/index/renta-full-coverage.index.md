@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#renta-full-coverage'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:1e477962f9dfbfc642223df394aeac2d91e8bf0d50f77645121af565cfab5706'
 related:
   - '[[2026-06-04-renta-full-coverage-research]]'

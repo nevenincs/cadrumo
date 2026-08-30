@@ -4,13 +4,14 @@ tags:
   - '#index'
   - '#registry-drift-validator-blocking-gap'
 date: '2026-08-16'
-modified: '2026-08-26'
-body_schema: 'body-v1'
-body_hash: 'sha256:775ebeef6e2abd2abcac83030fff20fe3f917fdf51a44924158f38d0cffcd265'
+modified: '2026-08-30'
+body_schema: 'body-v2'
+body_hash: 'sha256:650036a8db57c7e98aa66df1f20cd81fc1a1231bcf9f35deee23138ea86ee945'
 related:
   - '[[2026-06-04-registry-drift-validator-blocking-gap-adr]]'
   - '[[2026-06-04-registry-drift-validator-blocking-gap-audit]]'
   - '[[2026-06-04-registry-drift-validator-blocking-gap-closeout-audit]]'
+  - '[[2026-06-04-registry-drift-validator-blocking-gap-ledger]]'
   - '[[2026-06-04-registry-drift-validator-blocking-gap-plan]]'
   - '[[2026-06-04-registry-drift-validator-blocking-gap-research]]'
 ---
@@ -32,10 +33,7 @@ Auto-generated index of all documents tagged with `#registry-drift-validator-blo
 
 ### exec
 
-- `2026-06-04-registry-drift-validator-blocking-gap-S01` - S01 Drift Validator Blocking-Gap Audit
-- `2026-06-04-registry-drift-validator-blocking-gap-S02` - S02 Typo-Twin Warning Gap Regression
-- `2026-06-04-registry-drift-validator-blocking-gap-S03` - S03 - Promote semantic-role typo twins to registry-scope failures
-- `2026-06-04-registry-drift-validator-blocking-gap-S04` - S04 - Verify drift-validator blocking-gap gates
+- `2026-06-04-registry-drift-validator-blocking-gap-ledger` - `registry-drift-validator-blocking-gap` ledger
 
 ### plan
 

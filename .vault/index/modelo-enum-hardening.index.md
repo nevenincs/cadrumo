@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#modelo-enum-hardening'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:9a1e5f3482eb9d3750317236cb5ea67a2f8023dc141ba6aa171c294230e80bc6'
 related:
   - '[[2026-06-10-modelo-enum-hardening-adr]]'

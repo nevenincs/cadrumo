@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#recovery-mnemonic-surface'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:fcbe9e3e394ae5370b8f0fbe0ab8e3a72c1c003f28d52e24beec81e34282f17e'
 related:
   - '[[2026-08-08-recovery-mnemonic-surface-adr]]'

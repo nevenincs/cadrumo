@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#cli-ledger-testimonials'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:d186cb61da764fc75bf4e7bcc1982ae6538cb3fc6e2f08dd181ef72ae6eeb025'
 related:
   - '[[2026-06-03-cli-ledger-testimonials-adr]]'

@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#modelo-100-trabajo-casilla-compute'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:6960df8e8365da78a997d8fc3f39f11683307a0bf09c1feea68cf11e4f054a69'
 related:
   - '[[2026-07-01-modelo-100-trabajo-casilla-compute-adr]]'

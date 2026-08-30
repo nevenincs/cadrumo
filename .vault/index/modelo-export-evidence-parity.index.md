@@ -4,13 +4,14 @@ tags:
   - '#index'
   - '#modelo-export-evidence-parity'
 date: '2026-08-16'
-modified: '2026-08-26'
-body_schema: 'body-v1'
-body_hash: 'sha256:4716085d290b2cae23f0dc67b457c7859f9681d473ab7c5ff6d97fdcf5c70101'
+modified: '2026-08-30'
+body_schema: 'body-v2'
+body_hash: 'sha256:cf76bdfc3249ff538b2401b7d7841083a766dd0806aa007bcf2e704fbb508ecc'
 related:
   - '[[2026-06-03-modelo-export-evidence-parity-W01-P01-summary]]'
   - '[[2026-06-03-modelo-export-evidence-parity-adr]]'
   - '[[2026-06-03-modelo-export-evidence-parity-code-review-audit]]'
+  - '[[2026-06-03-modelo-export-evidence-parity-ledger]]'
   - '[[2026-06-03-modelo-export-evidence-parity-plan]]'
   - '[[2026-06-03-modelo-export-evidence-parity-research]]'
 ---
@@ -31,31 +32,8 @@ Auto-generated index of all documents tagged with `#modelo-export-evidence-parit
 
 ### exec
 
-- `2026-06-03-modelo-export-evidence-parity-W01-P01-S01` - `modelo-export-evidence-parity` `W01.P01.S01` step record
-- `2026-06-03-modelo-export-evidence-parity-W01-P01-S02` - `modelo-export-evidence-parity` `W01.P01.S02` step record
-- `2026-06-03-modelo-export-evidence-parity-W01-P01-S03` - `modelo-export-evidence-parity` `W01.P01.S03` step record
-- `2026-06-03-modelo-export-evidence-parity-W01-P01-S04` - `modelo-export-evidence-parity` `W01.P01.S04` step record
-- `2026-06-03-modelo-export-evidence-parity-W01-P01-S05` - `modelo-export-evidence-parity` `W01.P01.S05` step record
 - `2026-06-03-modelo-export-evidence-parity-W01-P01-summary` - `modelo-export-evidence-parity` `W01.P01` summary
-- `2026-06-03-modelo-export-evidence-parity-W02-P02-S06` - `modelo-export-evidence-parity` `W02.P02.S06` step record
-- `2026-06-03-modelo-export-evidence-parity-W02-P02-S07` - `modelo-export-evidence-parity` `W02.P02.S07` step record
-- `2026-06-03-modelo-export-evidence-parity-W02-P02-S08` - `modelo-export-evidence-parity` `W02.P02.S08` step record
-- `2026-06-03-modelo-export-evidence-parity-W02-P02-S09` - `modelo-export-evidence-parity` `W02.P02.S09` step record
-- `2026-06-03-modelo-export-evidence-parity-W02-P02-S10` - `modelo-export-evidence-parity` `W02.P02.S10` step record
-- `2026-06-03-modelo-export-evidence-parity-W03-P03-S11` - `modelo-export-evidence-parity` `W03.P03.S11` step record
-- `2026-06-03-modelo-export-evidence-parity-W03-P04-S14` - `modelo-export-evidence-parity` `W03.P04.S14` step record
-- `2026-06-03-modelo-export-evidence-parity-W03-P04-S15` - `modelo-export-evidence-parity` `W03.P04.S15` step record
-- `2026-06-03-modelo-export-evidence-parity-W03-P04-S16` - `modelo-export-evidence-parity` `W03.P04.S16` step record
-- `2026-06-03-modelo-export-evidence-parity-W04-P05-S17` - `modelo-export-evidence-parity` `W04.P05.S17` step record
-- `2026-06-03-modelo-export-evidence-parity-W04-P05-S18` - `modelo-export-evidence-parity` `W04.P05.S18` step record
-- `2026-06-03-modelo-export-evidence-parity-W04-P05-S19` - `modelo-export-evidence-parity` `W04.P05.S19` step record
-- `2026-06-03-modelo-export-evidence-parity-W04-P05-S20` - `modelo-export-evidence-parity` `W04.P05.S20` step record
-- `2026-06-03-modelo-export-evidence-parity-W04-P05-S21` - `modelo-export-evidence-parity` `W04.P05.S21` step record
-- `2026-06-03-modelo-export-evidence-parity-W05-P06-S23` - `modelo-export-evidence-parity` `W05.P06.S23` step record
-- `2026-06-03-modelo-export-evidence-parity-W05-P06-S24` - `modelo-export-evidence-parity` `W05.P06.S24` step record
-- `2026-06-03-modelo-export-evidence-parity-W03-P03-S12` - `modelo-export-evidence-parity` `W03.P03.S12` step record
-- `2026-06-03-modelo-export-evidence-parity-W03-P03-S13` - `modelo-export-evidence-parity` `W03.P03.S13` step record
-- `2026-06-03-modelo-export-evidence-parity-W05-P06-S22` - `modelo-export-evidence-parity` `W05.P06.S22` step record
+- `2026-06-03-modelo-export-evidence-parity-ledger` - `modelo-export-evidence-parity` ledger
 
 ### plan
 

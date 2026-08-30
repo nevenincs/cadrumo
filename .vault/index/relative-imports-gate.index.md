@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#relative-imports-gate'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:c39b5594450c3080d00442071f1c522de4e401a03e08cd8b61344be50e346b4c'
 related:
   - '[[2026-08-13-relative-imports-gate-audit]]'

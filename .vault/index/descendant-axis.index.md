@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#descendant-axis'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:4a795954e153f5436daed6309e85c5a41223c7df32eb2a49868b502c9f529e32'
 related:
   - '[[2026-06-04-descendant-axis-adr]]'

@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#marcos-214'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:5678d01ecc0e356b81292e2bb3fbefff366dd6ba59f192a6dffe45063e464e6a'
 related:
   - '[[2026-06-04-marcos-214-adr]]'

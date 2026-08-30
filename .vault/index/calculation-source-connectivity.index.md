@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#calculation-source-connectivity'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:7233dc1b4809680f09963700535d67994b380b8311de3cc36e62446888c0553a'
 related:
   - '[[2026-07-04-calculation-source-connectivity-audit]]'

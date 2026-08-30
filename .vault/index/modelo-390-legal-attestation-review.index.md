@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#modelo-390-legal-attestation-review'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:b7e4a274aaf699ae7d56cb2e7b7b395da106a6dac3131a13272a06c02a2d6baf'
 related:
   - '[[2026-08-14-modelo-390-legal-attestation-review-reference]]'

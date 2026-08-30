@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#m210-irnr-phase-2-engine'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-30'
+body_schema: 'body-v2'
 body_hash: 'sha256:3ea1200f60e9d49c1f52fbc6390241e7a1b9e423c208e7f318a6c5ad36018a4b'
 related:
   - '[[2026-06-04-m210-irnr-phase-2-engine-research]]'

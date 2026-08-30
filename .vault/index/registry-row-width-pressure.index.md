@@ -4,14 +4,15 @@ tags:
   - '#index'
   - '#registry-row-width-pressure'
 date: '2026-08-16'
-modified: '2026-08-26'
-body_schema: 'body-v1'
-body_hash: 'sha256:d4037640f416715fc015ec17102a863b3b401b83912337aa80f14ea186ecd0af'
+modified: '2026-08-30'
+body_schema: 'body-v2'
+body_hash: 'sha256:c4e90d445ed62d3769abffd90ffe7828250a715600b394501f3b85d54b291986'
 related:
   - '[[2026-06-04-registry-row-width-pressure-P03-summary]]'
   - '[[2026-06-04-registry-row-width-pressure-adr]]'
   - '[[2026-06-04-registry-row-width-pressure-audit]]'
   - '[[2026-06-04-registry-row-width-pressure-code-review-audit]]'
+  - '[[2026-06-04-registry-row-width-pressure-ledger]]'
   - '[[2026-06-04-registry-row-width-pressure-plan]]'
   - '[[2026-06-04-registry-row-width-pressure-research]]'
   - '[[2026-06-04-registry-row-width-pressure-verification-blocker-audit]]'
@@ -35,14 +36,8 @@ Auto-generated index of all documents tagged with `#registry-row-width-pressure`
 
 ### exec
 
-- `2026-06-04-registry-row-width-pressure-P01-S01` - `registry-row-width-pressure` `P01.S01` audit
-- `2026-06-04-registry-row-width-pressure-P02-S02` - `registry-row-width-pressure` `P02.S02` format
-- `2026-06-04-registry-row-width-pressure-P02-S03` - P02.S03 Non-M100 Row-Width Formatting
-- `2026-06-04-registry-row-width-pressure-P02-S04` - P02.S04 Row-Width Deferrals
-- `2026-06-04-registry-row-width-pressure-P02-S05` - P02.S05 Row-Width Baseline Tightening
-- `2026-06-04-registry-row-width-pressure-P03-S06` - `registry-row-width-pressure` `P03.S06` verification
-- `2026-06-04-registry-row-width-pressure-P03-S07` - `registry-row-width-pressure` `P03.S07` review
 - `2026-06-04-registry-row-width-pressure-P03-summary` - `registry-row-width-pressure` `P03` summary
+- `2026-06-04-registry-row-width-pressure-ledger` - `registry-row-width-pressure` ledger
 
 ### plan
 
