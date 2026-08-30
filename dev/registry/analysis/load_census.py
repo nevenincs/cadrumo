@@ -85,7 +85,7 @@ REGISTRY_DIR: Final[Path] = SOURCE_ROOT / "cadrumo" / "domain" / "calculations" 
 #: the authority-flow rule admits.
 LOAD_ENTRY_POINTS: Final[tuple[str, ...]] = (
     REGISTRY_PACKAGE,
-    f"{REGISTRY_PACKAGE}._authority",
+    f"{REGISTRY_PACKAGE}.authority",
 )
 
 #: Directories scanned for symbol references. ``dev`` is included because the
@@ -128,7 +128,16 @@ def build_runtime_graph() -> grimp.ImportGraph:
     Returns:
         The :class:`grimp.ImportGraph` for the ``cadrumo`` root package.
     """
-    return grimp.build_graph(ROOT_PACKAGE, include_external_packages=False, exclude_type_checking_imports=True)
+    # Caching is off deliberately: grimp keys its cache on file mtimes and does not
+    # evict a module whose file was deleted, so after any relocation the cached graph
+    # still carries the retired module and the closure gate reds on a ghost. A census
+    # of what a running interpreter imports has to be read from the tree, not a cache.
+    return grimp.build_graph(
+        ROOT_PACKAGE,
+        include_external_packages=False,
+        exclude_type_checking_imports=True,
+        cache_dir=None,
+    )
 
 
 def static_load_closure(graph: grimp.ImportGraph) -> frozenset[str]:
