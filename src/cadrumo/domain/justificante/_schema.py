@@ -9,6 +9,7 @@ explicit :meth:`pydantic.BaseModel.model_copy`.
 
 from __future__ import annotations
 
+from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
@@ -69,7 +70,15 @@ class Justificante(BaseModel):
     ejercicio: str | None = Field(default=None, max_length=8)
     period: Period
     presentation_id: AeatPresentationId | None = None
-    presented_at: UtcInstant
+    presented_at: datetime
+    """Naive by design: the receipt prints a Europe/Madrid wall-clock time.
+
+    AEAT stamps the local time on the justificante without an offset, and the
+    extractor reads it with ``strptime``, so no instant is available to
+    validate. Typing this as a UTC instant refuses every real receipt --
+    which is what it did until this line was corrected -- and inventing an
+    offset here would be guessing at a timezone the document never states.
+    """
     tax_id: SubjectTaxId
     total_a_ingresar: Decimal | None = None
     total_a_devolver: Decimal | None = None
