@@ -5,16 +5,11 @@ tags:
 date: '2026-08-30'
 modified: '2026-08-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:dedc5307333ff5bc46c61bfb8522739b9ec5764e53978d88ca2b26778c7b42a1'
+body_hash: 'sha256:4494982a0a51b5f3e48a0137d835f0db9f2baa3acc3e0d3ad5f90b56b091835b'
 step_id: 'S354'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Rename the workspace schema record's section_path, which collides with an established field of the same name and type carrying a different meaning. Verified: the workspace projection HARDCODES a record-family label at six sites -- casillas twice, then bindings, formulas, relations and parameters -- while the calc-sheets layout module DERIVES section_path from the casilla's own declared section at two sites. Same name, same type, one a record-family label and the other the modelo's declared structure. This is the same collision class as the cli_path family already documented. Cheap to rename before the C2 destinations consume it, expensive after
 

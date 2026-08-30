@@ -5,7 +5,7 @@ tags:
 date: '2026-08-30'
 modified: '2026-08-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:ee1f035d0953b96fbb6c6e8c9f0ea0e5ed71020f39258c8e6466194d48ad842d'
+body_hash: 'sha256:7c3e418a3c58f9fbce0e7f3f78ffde1ee3bf3bbb47b4125a9e3f2fd03d8ea035'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
   - "[[2026-08-05-ci-lane-deconflation-P02-S64]]"
@@ -26,8 +26,8 @@ The literal values and generated provenance agree with the M184 authority at the
 
 ### multiline-labelled-alternative-escape | high | An alternative after a newline still bypasses the corrective guard
 
-Corrective commit `82524a31a7c6655341265e3a3e119320feff5f06` changes the alternative pattern at `dev/registry/pipeline/_export_tree.py:291` but does not compile it with `re.DOTALL`; the labelled pattern at `dev/registry/pipeline/_export_tree.py:296` does. Therefore `Constante "E". rentas.\no "S".` fails the alternative matcher but matches the labelled matcher and the renderer again emits `E`. The review executed those two matchers against the committed current module. The correction's renderer-level regression case covers only a same-line trailing alternative, so its pass does not prove the claimed any-trailing-alternative boundary.
+Corrective commit `82524a31a7c6655341265e3a3e119320feff5f06` changes the alternative pattern at `dev/registry/pipeline/_export_tree.py:291` but does not compile it with `re.DOTALL`; the labelled pattern at `dev/registry/pipeline/_export_tree.py:296` does. Therefore `Constante "E". rentas.\no "S".` fails the alternative matcher but matches the labelled matcher and the renderer again emits `E`. The review executed those two matchers against the committed current module. The correction's renderer-level regression case covers only a same-line trailing alternative, so its pass does not prove the claimed any-trailing-alternative boundary. Resolved by `365a2cc2b5140567ca2c0c5d377288e198b4fa34`: the alternative matcher now uses `re.DOTALL`, and both matcher- and renderer-level coverage include the newline form.
 
 ## Recommendations
 
-- Retain the same-line correction and make its alternative detector cover newline-separated content, or normalize the content before both literal matchers. Add a renderer-level refusal case for `Constante "E". rentas.\no "S".` while retaining the actual M184 acceptance proof. The fix must preserve P02.S69's boundary: do not repurpose a runtime `RecordDiscriminator` or introduce a filing-content inference to resolve this generated-authority parsing case.
+No open P02.S64 review recommendation remains. Final review of `365a2cc2b5140567ca2c0c5d377288e198b4fa34` verified the newline alternative selects the ambiguity guard, the M184 2025 official sentence remains a labelled `E` literal, the change is limited to the two intended paths, and the reported focused suites are 8/8 and 6/6.

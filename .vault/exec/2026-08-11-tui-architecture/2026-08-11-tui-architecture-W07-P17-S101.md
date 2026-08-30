@@ -5,16 +5,11 @@ tags:
 date: '2026-08-30'
 modified: '2026-08-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:6ee8ec98e93ec53631df5f389b7665fac3c6b3d17556cc63b24b4b39755d405e'
+body_hash: 'sha256:3f4fd98eeac19e1a24bab6c36a72472b3892e9a8b2d1f0c5a9dd77ea759aa504'
 step_id: 'S101'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Run the packaged TUI through its installed console and module entrypoints without importing CLI internals
 

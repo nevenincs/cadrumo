@@ -9,7 +9,7 @@ related:
   - '[[2026-08-28-semantic-consolidation-cli-payload-projection-adr]]'
 modified: '2026-08-30'
 body_schema: body-v2
-body_hash: 'sha256:c18b79ca3b0618b352428044f76f24b5ad9c1d61cca739a2ad5ccfa6f0e93dac'
+body_hash: 'sha256:b432003aca9111b8bc56a46886aacd210fc65e23a497874beae4383cbe6c08a4'
 ---
 
 # `semantic-consolidation` plan
@@ -65,6 +65,7 @@ Six package namespaces carry a PEP 562 __getattr__ resolver, four of them byte-i
 - [x] `P02.S113` - Rehome the ledger folder-import fold beside the function that produces the per-file results, asserting the invocation-wide fields agree rather than silently taking the first file's; `src/cadrumo/application/ledger/actions_import.py`.
 - [ ] `P02.S115` - Widen the folder-import fold so a directory import reports every file's validation and verification report, not only the first; `src/cadrumo/application/ledger/models.py`.
 - [x] `P02.S117` - Rehome the Drive object-label derivation beside the hmac half of the same naming scheme, keeping it distinct from the manifest label whose policy differs; `src/cadrumo/adapters/outbound/storage/, src/cadrumo/entrypoints/cli/_config/`.
+- [x] `P02.S119` - Adopt ModeloCode on the aggregation contract and result payloads, leaving the operator-input command untyped so its registry-driven refusal can still name the supported set; `src/cadrumo/application/aggregation/_service.py, src/cadrumo/entrypoints/cli/_modelo_payloads.py`.
 
 ### Phase `P03` - Consolidate the repeated secure-repository configuration shape
 
@@ -172,6 +173,7 @@ An AST census of every pydantic Field constraint in production code found the sa
 - [x] `P08.S101` - Repoint the two application/modelo files reading filing contracts off the package object, which the reachability gate caught as an AttributeError that only fires when the path runs; `src/cadrumo/application/modelo/`.
 - [ ] `P08.S108` - Detect a name imported from a genuinely inert namespace, distinguishing it from one reached through a live lazy export map; `src/cadrumo/tests/`.
 - [x] `P08.S116` - Refuse a name imported from a namespace that exports nothing, the failure that has landed three times and takes a package down at collection rather than at use; `src/cadrumo/tests/test_inert_namespace_imports_resolve.py`.
+- [x] `P08.S120` - Stop the payload gate reading an empty-string presence check as a declared rule, which was flagging a validator that only delegates; `src/cadrumo/entrypoints/cli/tests/test_cli_payload_constraint_authority.py`.
 
 ## Parallelization
 
