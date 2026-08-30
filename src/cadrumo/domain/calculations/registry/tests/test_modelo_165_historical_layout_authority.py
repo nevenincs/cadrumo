@@ -161,8 +161,8 @@ def test_modelo_165_complete_designs_have_distinct_2016_and_2026_type_one_geomet
         )
 
 
-def test_modelo_165_incomplete_2013_design_is_never_silently_promoted_to_layout_authority() -> None:
-    """The original type-two hole remains an explicit no-layout boundary."""
+def test_modelo_165_corrected_2013_design_stays_applicability_only_without_layout() -> None:
+    """The sourced filler correction closes the hole without creating a filing claim."""
     modelo, catalogue = _modelo_and_catalogue()
     source, design = _design(catalogue, "aeat-dr-165-2013-2015")
 
@@ -172,8 +172,14 @@ def test_modelo_165_incomplete_2013_design_is_never_silently_promoted_to_layout_
         date(2015, 12, 31),
     )
     assert modelo.revisions["2013-2015"].export_layouts == ()
-    with pytest.raises(RegistryValidationError, match=r"102-103 were not read"):
-        design.require_complete()
+    type_two = next(sheet for sheet in design.require_complete() if sheet.name == "Tipo 2 - Registro De Socios O Partícipes")
+    assert [(field.offset, field.length) for field in type_two.fields if field.offset >= 97] == [
+        (97, 5),
+        (102, 399),
+    ]
+    assert [(correction.kind, correction.declared_start, correction.corrected_start) for correction in type_two.corrections] == [
+        ("range_start", 104, 102),
+    ]
 
 
 def test_modelo_165_2016_coverage_refuses_removing_the_historical_pre_trailer_amount() -> None:
