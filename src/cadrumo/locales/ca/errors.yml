@@ -398,8 +398,8 @@ errors:
     modelo_projection: Ha fallat la projecció del model.
     modelo_work_address_not_found: No hi ha cap unitat de treball de model activa
       que coincideixi amb el model, l'exercici i el període sol·licitats.
-    modelo_work_selector: El selector de treball de modelo ha fallat.
-    modelo_work_selector_unit_not_found: No s'ha trobat la unitat de treball de modelo
+    modelo_work_selector: El selector de treball de model ha fallat.
+    modelo_work_selector_unit_not_found: No s'ha trobat la unitat de treball de model
       seleccionada.
   fail:
     censo_sync: La sincronització del cens del Model 036 ha fallat.
@@ -831,13 +831,13 @@ errors:
       l'exercici fiscal sol·licitat.
     modelo_work_review_capture_not_current: La revisio de treball ja no es actual.
       Torneu a llegir l'objectiu de treball i proveu-ho de nou.
-    modelo_work_selector_ambiguous: Més d'una unitat de treball de modelo coincideix
+    modelo_work_selector_ambiguous: Més d'una unitat de treball de model coincideix
       amb el selector.
-    modelo_work_selector_contradiction: Els arguments del selector de treball de modelo
+    modelo_work_selector_contradiction: Els arguments del selector de treball de model
       es contradiuen.
     modelo_work_selector_no_active_bucket: Seleccioneu un perfil actiu abans de resoldre
-      una unitat de treball de modelo.
-    modelo_work_selector_revision_conflict: La unitat de treball de modelo seleccionada
+      una unitat de treball de model.
+    modelo_work_selector_revision_conflict: La unitat de treball de model seleccionada
       pertany a una altra revisió.
     modelo_workspace_manifest_capture_not_current: El manifest de camps ha canviat
       mentre es llegia; torneu a capturar-lo.

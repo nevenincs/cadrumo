@@ -107,12 +107,11 @@ adapters:
         period_unresolved: No s'ha pogut resoldre el període de la declaració a partir
           del text del PDF.
         profile_count_invalid: 'S''esperava exactament un perfil d''extracció de PDF
-          de declaració per a modelo={modelo}; disponibles: {available}.'
+          de declaració per a model={modelo}; disponibles: {available}.'
         profile_unavailable: El perfil d'extracció de declaració {profile!r} no està
-          disponible per a modelo={modelo}.
+          disponible per a model={modelo}.
         registry_snapshot_required: 'L''extracció de declaració requereix un snapshot
-          validat del registre per a modelo={modelo} any={year} període={period}:
-          {error}'
+          validat del registre per a model={modelo} any={year} període={period}: {error}'
         snapshot_modelo_conflict: El model del snapshot del registre {snapshot_modelo!r}
           entra en conflicte amb el detectat {detected!r}.
         tax_id_unresolved: No s'ha pogut resoldre l'identificador fiscal de la declaració
