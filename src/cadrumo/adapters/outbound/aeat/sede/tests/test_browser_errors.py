@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import pytest
 
-from ......core.errors import ERROR_REGISTRY, build_error_envelope
+from ......core.errors.error_codes import ERROR_REGISTRY, build_error_envelope
 from .._adapter_utils import require_playwright_page
 from ..errors import BrowserAdapterTypeError
 

@@ -25,7 +25,7 @@ from .identity import BucketId
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Callable
 
-    from .errors import CadrumoError
+    from .errors.hierarchy import CadrumoError
 
 POINTER_SCHEMA_VERSION: Final[Literal[2]] = 2
 
@@ -221,7 +221,7 @@ def resolve_active_bucket_id() -> str | None:
 
 def require_active_bucket_id() -> str:
     """Return the selected bucket or raise the canonical no-profile refusal."""
-    from .errors import NoActiveProfileError
+    from .errors.hierarchy import NoActiveProfileError
 
     bucket_id = resolve_active_bucket_id()
     if bucket_id is None:

@@ -76,7 +76,7 @@ from cadrumo.application.operator_surface import help as _help_module
 from cadrumo.core import BindingSourceKind
 from cadrumo.core.aggregation import COUNTERPART_SOURCE_KINDS
 from cadrumo.core.config import override_settings
-from cadrumo.core.errors import get_registered_error_code
+from cadrumo.core.errors.error_codes import get_registered_error_code
 from cadrumo.core.external_constants import OutputLanguage
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

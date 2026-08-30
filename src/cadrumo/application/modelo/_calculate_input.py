@@ -47,7 +47,7 @@ from ...core import (
     RescateType,
 )
 from ...core.decimal import try_parse_canonical_decimal
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 from ...core.resources import bundled_path
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.binding_selector_utils import boolean_binding_encoded_values

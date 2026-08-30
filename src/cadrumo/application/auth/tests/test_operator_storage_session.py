@@ -21,7 +21,7 @@ from ....adapters.persistence.storage.master_key import current_active_bucket_se
 from ....application.wizard.catalogue import WIZARD_FLOWS
 from ....core import AuthProviderKind
 from ....core.config import load_settings, override_settings
-from ....core.errors import ERROR_REGISTRY, build_error_envelope, resolve_error_message
+from ....core.errors.error_codes import ERROR_REGISTRY, build_error_envelope, resolve_error_message
 from ....domain.contribuyente.keys import required_profile_keys
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -439,7 +439,7 @@ def test_revoking_a_locked_profile_refuses_and_says_the_session_is_still_live(tm
     the fact the operator cannot otherwise discover -- that the session is still
     usable -- rather than that the profile is locked, which they already know.
     """
-    from ....core.errors import resolve_error_message
+    from ....core.errors.error_codes import resolve_error_message
     from ..operator_results import AuthOperationRequiresCustodySessionError
 
     with isolated_profile_storage_root(tmp_path=tmp_path):

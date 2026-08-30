@@ -23,7 +23,7 @@ from pydantic import BaseModel, ConfigDict, Field, SecretStr
 
 from ..core import ActionEvidenceProvenance
 from ..core.config import Settings
-from ..core.errors import get_registered_error_code
+from ..core.errors.error_codes import get_registered_error_code
 from ..core.hashing import content_hash_hex
 from ..core.logging import get_logger
 from ..core.time import now

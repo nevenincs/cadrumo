@@ -29,7 +29,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from ....application.operator_actions import PreconditionVerdict
-from ....core.errors import CadrumoError, CoreError, TerminalPreconditionErrorMixin
+from ....core.errors.hierarchy import CadrumoError, CoreError, TerminalPreconditionErrorMixin
 
 
 class OutboundStorageError(TerminalPreconditionErrorMixin[PreconditionVerdict], CadrumoError):

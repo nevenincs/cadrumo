@@ -43,7 +43,7 @@ from ._config_state_root import (
     platform_user_data_root,
 )
 from .directory_scan import DirectoryEntryKind, iter_directory
-from .errors import CoreValidationError
+from .errors.hierarchy import CoreValidationError
 
 if TYPE_CHECKING:
     from .config import Settings

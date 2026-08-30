@@ -25,7 +25,8 @@ from .....application.operator_actions import PreconditionVerdict
 from .....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....core.atomic_write import atomic_write_text
 from .....core.directory_scan import iter_directory, scan_directory
-from .....core.errors import ERROR_REGISTRY, TerminalPreconditionErrorMixin, build_error_envelope, resolve_error_message
+from .....core.errors.error_codes import ERROR_REGISTRY, build_error_envelope, resolve_error_message
+from .....core.errors.hierarchy import TerminalPreconditionErrorMixin
 from .....core.i18n import tr
 from .....tests.path_obstruction import obstructed_path
 from .. import (

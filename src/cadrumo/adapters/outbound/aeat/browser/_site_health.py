@@ -37,7 +37,7 @@ from pydantic import (
 )
 
 from .....core import STRICT_FROZEN_CONFIG
-from .....core.errors import SiteHealthState
+from .....core.errors.hierarchy import SiteHealthState
 from .....core.redaction import redact_for_log
 from .errors import BrowserValidationError
 

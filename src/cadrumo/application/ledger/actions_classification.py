@@ -33,7 +33,8 @@ if TYPE_CHECKING:
     from .models import LedgerRemovalBlocker
     from .rule_repository import LedgerClassificationRuleRepositoryProtocol
 
-from ...core.errors import CadrumoError, resolve_error_message
+from ...core.errors.error_codes import resolve_error_message
+from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...domain.buckets.event import BucketEvent
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol

@@ -28,7 +28,7 @@ from ._storage_taxonomy import (
     StorageScope,
     _location,
 )
-from .errors import CoreValidationError
+from .errors.hierarchy import CoreValidationError
 from .product_identity import PRODUCT_IDENTITY
 
 if TYPE_CHECKING:

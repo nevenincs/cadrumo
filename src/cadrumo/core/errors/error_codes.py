@@ -142,8 +142,20 @@ class ErrorEnvelope(BaseModel):
     trace_id: str | None
 
 
-def _complete_error_envelope_model() -> None:
-    """Resolve the canonical action DTO after the core package import cycle closes."""
+def complete_error_envelope_model() -> None:
+    """Resolve the canonical action DTO into the envelope model.
+
+    ``ErrorEnvelope`` names ``ResolvedPreconditionAction``, which lives in
+    :mod:`cadrumo.core.json_contract`. This module cannot import that at
+    definition time: the exception hierarchy binds its codes here while it is
+    still being defined, so reaching for ``json_contract`` from module scope
+    re-enters a half-built hierarchy.
+
+    ``json_contract`` calls this at the bottom of its own module, once both
+    halves exist. :func:`build_error_envelope` calls it too, so a caller that
+    never touches ``json_contract`` still gets a complete model; it is
+    idempotent and returns immediately when already complete.
+    """
     if ErrorEnvelope.__pydantic_complete__:
         return
     from ..json_contract import ResolvedPreconditionAction
@@ -357,7 +369,7 @@ def build_error_envelope(
         A frozen :class:`ErrorEnvelope` suitable for serialisation to
         the machine-readable stderr payload.
     """
-    _complete_error_envelope_model()
+    complete_error_envelope_model()
     code = get_registered_error_code(error)
     merged_context = _merge_error_context(error, context)
     return ErrorEnvelope(

@@ -11,7 +11,7 @@ from pydantic import ValidationError
 
 from .....core import StorageCustodyProfile
 from .....core.classification import SensitivityClass
-from .....core.errors import ERROR_REGISTRY, build_error_envelope
+from .....core.errors.error_codes import ERROR_REGISTRY, build_error_envelope
 from .....core.product_identity import PRODUCT_IDENTITY
 from .....tests import (
     ast_for_path,

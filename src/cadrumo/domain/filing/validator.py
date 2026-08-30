@@ -43,7 +43,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...core import CasillaId, Modelo
-from ...core.errors import BaseSeverity
+from ...core.errors.severity import BaseSeverity
 from ...core.i18n import Translatable as tr
 from ...core.logging import get_logger
 from ...core.time import now

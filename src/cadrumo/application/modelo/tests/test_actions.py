@@ -847,14 +847,14 @@ class TestWorkflowInputMismatchError:
 
     def test_error_is_core_validation_error_and_value_error(self) -> None:
         """WorkflowInputMismatchError is a CoreValidationError and ValueError subclass."""
-        from ....core.errors import CoreValidationError
+        from ....core.errors.hierarchy import CoreValidationError
 
         assert issubclass(WorkflowInputMismatchError, CoreValidationError)
         assert issubclass(WorkflowInputMismatchError, ValueError)
 
     def test_error_code_is_registered(self) -> None:
         """WorkflowInputMismatchError maps to a stable error code in the registry."""
-        from ....core.errors import get_registered_error_code
+        from ....core.errors.error_codes import get_registered_error_code
 
         work_unit = _minimal_work_unit(modelo="100", period="0A")
         revision = _minimal_calculation_revision(work_unit)

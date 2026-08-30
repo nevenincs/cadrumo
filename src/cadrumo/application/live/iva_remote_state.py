@@ -72,7 +72,7 @@ from ...core.access_gate import AeatAccessGate as _AeatAccessGate
 from ...core.bucket_pointer import resolve_active_bucket_id as _resolve_active_bucket_id
 from ...core.config import Settings as _Settings
 from ...core.config import load_settings as _load_settings
-from ...core.errors import CadrumoError as _CadrumoError
+from ...core.errors.hierarchy import CadrumoError as _CadrumoError
 from ...core.hashing import sha256_hex as _sha256_hex
 from ...core.identity import tax_id_identity_token as _tax_id_identity_token
 from ...core.time import now

@@ -30,7 +30,7 @@ from pydantic import SecretStr
 from ...adapters.outbound.llm import LLMCache, LLMRunTelemetryRecorder, UsageRecorder
 from ...core.config import LLMProvider, override_settings
 from ...core.directory_scan import scan_directory
-from ...core.errors import build_error_envelope
+from ...core.errors.error_codes import build_error_envelope
 from ...tests.fixtures.settings import EnvFileFreeSettings
 from ...tests.loopback_llm import (
     SilentLoopbackHandler,

@@ -20,7 +20,8 @@ from __future__ import annotations
 
 import pytest
 
-from ......core.errors import ERROR_REGISTRY, CadrumoError, get_registered_error_code
+from ......core.errors.error_codes import ERROR_REGISTRY, get_registered_error_code
+from ......core.errors.hierarchy import CadrumoError
 from ..errors import (
     BucketAlreadyPresentError,
     BucketBusyError,

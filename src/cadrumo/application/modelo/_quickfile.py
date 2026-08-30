@@ -47,7 +47,7 @@ from pydantic import BaseModel
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import AeatProductSoftwareIdentity, PaymentElection, Period, PriorDomiciliationElection, RefundElection
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 from ...core.identity import BucketId
 from ...core.logging import get_logger
 from ...domain.calculations.registry.ids import RevisionId

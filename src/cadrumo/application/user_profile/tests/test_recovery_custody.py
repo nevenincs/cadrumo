@@ -28,7 +28,7 @@ from ....adapters.persistence.storage.custody.errors import ProfileCustodyRecord
 from ....adapters.persistence.storage.custody.records import ProfileCustodyEnvelope
 from ....adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
 from ....core.config import override_settings
-from ....core.errors import build_error_envelope, render_error_text
+from ....core.errors.error_codes import build_error_envelope, render_error_text
 from ....core.i18n import tr
 from ....domain.user_profile.values import ProfileSetupState, UserProfileRecord
 from ..authentication import ProfileAuthenticationRefusedError

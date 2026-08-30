@@ -1064,7 +1064,7 @@ def active_bucket_id_or_refuse() -> str:
     delegates here.
     """
     from ...core.bucket_pointer import require_active_bucket_id
-    from ...core.errors import NoActiveProfileError
+    from ...core.errors.hierarchy import NoActiveProfileError
 
     try:
         return require_active_bucket_id()

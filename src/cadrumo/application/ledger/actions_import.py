@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from ...adapters.inbound.financial.providers import ParsedLedgerRow, ProviderValidation
 
 from ...adapters.persistence.storage import TRANSACTION_CATALOGUE_NAMESPACE
-from ...core.errors import resolve_error_message
+from ...core.errors.error_codes import resolve_error_message
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import canonical_json_bytes, sha256_file
 from ...core.i18n import tr

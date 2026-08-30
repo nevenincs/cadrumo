@@ -42,7 +42,7 @@ async def _load_active_clave_session():
     from ......application.auth.sessions import ensure_authenticated_aeat_session
     from ......core import AuthProviderKind
     from ......core.config import load_settings
-    from ......core.errors import CadrumoError
+    from ......core.errors.hierarchy import CadrumoError
 
     settings = load_settings()
     try:

@@ -8,7 +8,7 @@ from the AEAT *Manual práctico* corpus inherits from
 
 from __future__ import annotations
 
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 
 
 class ManualError(CadrumoError):

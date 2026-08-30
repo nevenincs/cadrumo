@@ -26,7 +26,7 @@ from typing import TYPE_CHECKING
 import pytest
 from pydantic import ValidationError
 
-from ...errors import get_registered_error_code
+from ...errors.error_codes import get_registered_error_code
 from .. import (
     CorpusBundleError,
     CorpusBundleVerificationError,
@@ -44,7 +44,7 @@ from .. import (
 )
 
 if TYPE_CHECKING:
-    from ...errors import CadrumoError
+    from ...errors.hierarchy import CadrumoError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

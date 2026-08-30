@@ -301,7 +301,7 @@ def test_render_browser_connectivity_text_resolves_row_label_keys() -> None:
         SiteHealthEvidence,
         SiteHealthStatus,
     )
-    from ...core.errors import SiteHealthState
+    from ...core.errors.hierarchy import SiteHealthState
     from ..diagnostics import render_browser_connectivity_text
 
     status = SiteHealthStatus(
@@ -961,7 +961,7 @@ def test_config_repair_report_marks_registry_integrity_internal() -> None:
 def test_diagnostic_model_error_is_registered_in_error_registry() -> None:
     """DiagnosticModelError must be reachable via the ERROR_REGISTRY by its code string."""
 
-    from ...core.errors import ERROR_REGISTRY, get_registered_error_code
+    from ...core.errors.error_codes import ERROR_REGISTRY, get_registered_error_code
     from ..errors import DiagnosticModelError
 
     code = get_registered_error_code(DiagnosticModelError)
@@ -972,7 +972,7 @@ def test_diagnostic_model_error_is_registered_in_error_registry() -> None:
 def test_diagnostic_model_error_round_trips_through_build_error_envelope() -> None:
     """build_error_envelope must produce a well-formed envelope for DiagnosticModelError."""
 
-    from ...core.errors import build_error_envelope
+    from ...core.errors.error_codes import build_error_envelope
     from ..errors import DiagnosticModelError
 
     err = DiagnosticModelError("invariant violated")

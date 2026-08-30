@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.errors import CadrumoError, get_registered_error_code, resolve_error_message
+from .....core.errors.error_codes import get_registered_error_code, resolve_error_message
+from .....core.errors.hierarchy import CadrumoError
 from ..bucket import BucketError
 from ..errors import (
     DecryptionError,

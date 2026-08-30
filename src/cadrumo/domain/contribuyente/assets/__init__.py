@@ -16,7 +16,7 @@ from enum import StrEnum
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
-from ....core.errors import CadrumoError as _CadrumoError
+from ....core.errors.hierarchy import CadrumoError as _CadrumoError
 from ....core.external_constants import DEFAULT_IVA_GENERAL_RATE_PCT as _DEFAULT_IVA_GENERAL_RATE_PCT
 from ....core.money import round_to_cents as _quantize
 from ....core.percentage import Percentage

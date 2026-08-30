@@ -42,7 +42,7 @@ from pydantic import BaseModel, Field, ValidationError, field_validator
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Hex64Str
 from ...core.directory_scan import scan_directory
-from ..errors import CoreValidationError as _CoreValidationError
+from ..errors.hierarchy import CoreValidationError as _CoreValidationError
 from ..hashing import canonical_json_bytes as _canonical_json_bytes
 from ..hashing import hash_file as _hash_file
 from ..hashing import sha256_hex as _sha256_hex

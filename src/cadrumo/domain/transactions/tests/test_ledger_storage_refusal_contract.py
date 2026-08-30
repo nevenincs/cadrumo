@@ -33,7 +33,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....core.errors import get_registered_error_code
+from ....core.errors.error_codes import get_registered_error_code
 from .. import repository as _repository_module
 from ..errors import LedgerNoActiveBucketError, LedgerStorageError
 from ..raw_transaction import RawProvenance, RawTransaction, SourceFormat

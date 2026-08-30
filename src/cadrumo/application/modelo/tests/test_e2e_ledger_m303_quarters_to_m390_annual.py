@@ -62,7 +62,7 @@ from ....core import (
     ResultDisposition,
     validated_casilla_id,
 )
-from ....core.errors import CadrumoError
+from ....core.errors.hierarchy import CadrumoError
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.deadlines.models import EntityType, IVARegime, LegalEntityForm, TaxpayerProfile
 from ....domain.invoices.models import InvoiceCatalogue

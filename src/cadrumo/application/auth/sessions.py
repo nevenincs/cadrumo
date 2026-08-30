@@ -31,7 +31,7 @@ from pydantic import BaseModel, ConfigDict, Field, SecretStr, SkipValidation, Ty
 
 from ...core import STRICT_FROZEN_CONFIG, AuthProviderKind, ClaveMovilRoute
 from ...core.async_cleanup import AsyncResourceCleanupError, close_async_resources
-from ...core.errors import AeatLoginAssertionError, CadrumoError
+from ...core.errors.hierarchy import AeatLoginAssertionError, CadrumoError
 from ...core.identity import (
     IdentityError,
     same_tax_identifier,

@@ -34,7 +34,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.errors import BaseSeverity
+from ....core.errors.severity import BaseSeverity
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.values import UserProfileFact
 from ..validation import DERIVED_FIELD_ISSUE_CODE, UNKNOWN_FIELD_ISSUE_CODE, ProfileValidationService

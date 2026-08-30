@@ -29,7 +29,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict
 
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 from ...core.identity import ProfileId
 from .aggregate import ProfileRestoreAuthority
 from .custody_ports import read_profile_custody_capsule_source

@@ -10,7 +10,7 @@ from pydantic import AnyUrl
 
 from ......application.auth.session_types import AeatSession, ClavePermanenteSessionDetail
 from ......core import AuthProviderKind
-from ......core.errors import AeatLoginAssertionError
+from ......core.errors.hierarchy import AeatLoginAssertionError
 from ......domain.calculations.registry.errors import RegistryValidationError
 from ......domain.calculations.registry.remote_state_guard import RemoteOperation, assert_remote_operation_allowed
 from ......tests.secure_sql import isolated_runtime_profile

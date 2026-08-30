@@ -287,7 +287,7 @@ class TestJustificanteErrorRehome:
         assert issubclass(JustificanteError, PdfModeloImportError)
 
     def test_justificante_error_still_cadrumo_error(self) -> None:
-        from .....core.errors import CadrumoError
+        from .....core.errors.hierarchy import CadrumoError
 
         assert issubclass(JustificanteError, CadrumoError)
 

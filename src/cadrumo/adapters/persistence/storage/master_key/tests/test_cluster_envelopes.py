@@ -14,7 +14,8 @@ from __future__ import annotations
 
 import pytest
 
-from ......core.errors import ERROR_REGISTRY, CadrumoError, build_error_envelope
+from ......core.errors.error_codes import ERROR_REGISTRY, build_error_envelope
+from ......core.errors.hierarchy import CadrumoError
 from ...errors import (
     EncryptionError,
     KeyDerivationError,

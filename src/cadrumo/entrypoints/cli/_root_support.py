@@ -277,7 +277,7 @@ def _normalize_active_profile_label_to_uuid(ctx: typer.Context) -> None:
     from ...application.workflow.profile_bucket_scan import resolve_profile_bucket
     from ...core.bucket_pointer import resolve_active_bucket_id
     from ...core.config import override_settings
-    from ...core.errors import CadrumoError
+    from ...core.errors.hierarchy import CadrumoError
     from .errors import CliRefusedBoundaryError
 
     active = resolve_active_bucket_id()

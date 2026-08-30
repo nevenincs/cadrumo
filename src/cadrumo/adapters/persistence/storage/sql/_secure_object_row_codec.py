@@ -36,7 +36,7 @@ from datetime import UTC, datetime
 from typing import Protocol, cast
 
 from .....core.classification import SensitivityClass
-from .....core.errors import resolve_error_message
+from .....core.errors.error_codes import resolve_error_message
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.logging import get_logger
 from .....core.time import coerce_utc_aware

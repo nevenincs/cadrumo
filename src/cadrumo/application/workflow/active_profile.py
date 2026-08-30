@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 from ...core import ProfileRecordUnavailability
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.config import override_settings
-from ...core.errors import NoActiveProfileError
+from ...core.errors.hierarchy import NoActiveProfileError
 from ...core.logging import get_logger
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from .profile_bucket_scan import resolve_profile_bucket

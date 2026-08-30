@@ -14,8 +14,8 @@ from __future__ import annotations
 
 import pytest
 
-from .. import CadrumoError, CoreError, CoreValidationError
-from .._not_found import CoreNotFoundError
+from ..hierarchy import CadrumoError, CoreError, CoreValidationError
+from ..not_found import CoreNotFoundError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -87,7 +87,7 @@ def test_core_error_does_not_catch_non_core_cadrumo_error() -> None:
     (NoActiveProfileError inherits CadrumoError directly, not CoreError)
     raised inside a try block is NOT caught by a CoreError handler.
     """
-    from .. import NoActiveProfileError
+    from ..hierarchy import NoActiveProfileError
 
     with pytest.raises(NoActiveProfileError):
         try:

@@ -45,7 +45,7 @@ import pytest
 
 from ......core import AuthProviderKind
 from ......core.config import Settings
-from ......core.errors import AeatLoginAssertionError
+from ......core.errors.hierarchy import AeatLoginAssertionError
 from ......tests.aeat_literal_fixtures import (
     INWINVOC_LANDING_PATH_CANARY,
     INWINVOC_SIBLING_PATH_CANARY,

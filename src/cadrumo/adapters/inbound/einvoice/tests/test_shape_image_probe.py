@@ -27,7 +27,7 @@ import pytest
 from PIL import Image
 
 from .....core import DocumentShape, ImageMediaType, detect_image_media_type
-from .....core.errors import CoreValidationError
+from .....core.errors.hierarchy import CoreValidationError
 from .._shape import probe_document_shape
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]

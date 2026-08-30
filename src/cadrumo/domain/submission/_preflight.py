@@ -20,7 +20,8 @@ from __future__ import annotations
 
 from datetime import date
 
-from ...core.errors import BaseSeverity, CadrumoError
+from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.severity import BaseSeverity
 from ...core.i18n import describe_auth_provider_operator_impact
 from ...core.logging import get_logger
 from ...core.parsing import enum_value as _enum_value

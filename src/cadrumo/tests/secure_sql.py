@@ -47,7 +47,7 @@ from ..adapters.persistence.storage.tests.profile_capsule_runtime import provisi
 from ..core import StorageCategory
 from ..core.config import Settings, load_settings, override_settings
 from ..core.directory_scan import DirectoryEntryKind, scan_directory
-from ..core.errors import CadrumoError
+from ..core.errors.hierarchy import CadrumoError
 from .master_key import EphemeralMasterKeyProvider
 from .storage_scope import storage_overrides
 

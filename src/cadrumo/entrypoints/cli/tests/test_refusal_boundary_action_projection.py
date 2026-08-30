@@ -31,7 +31,8 @@ from ....core import (
     OptionalExtra,
 )
 from ....core.config import Settings, override_settings
-from ....core.errors import CoreValidationError, ErrorCategory, get_error_exit_code
+from ....core.errors.error_codes import ErrorCategory, get_error_exit_code
+from ....core.errors.hierarchy import CoreValidationError
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES
 from ....llm.models import LLMRequest, PromptDefinition
 from ....tests.cli_runner import invoke_cached_cli, invoke_typer_app, semantic_cli_output

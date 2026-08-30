@@ -7,7 +7,8 @@ from datetime import datetime
 from typing import NoReturn
 
 from ...core import ActionEvidenceProvenance, NoRecoveryOutcome
-from ...core.errors import SiteHealthError, build_error_envelope
+from ...core.errors.error_codes import build_error_envelope
+from ...core.errors.hierarchy import SiteHealthError
 from ...core.logging import get_logger
 from ...core.time import now as _utcnow
 from ..operator_actions import PreconditionVerdict, no_action_precondition_verdict

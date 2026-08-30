@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from ..errors import DecimalFormatError
+from ..errors.hierarchy import DecimalFormatError
 from ..logging import get_logger
 
 _logger = get_logger(__name__)

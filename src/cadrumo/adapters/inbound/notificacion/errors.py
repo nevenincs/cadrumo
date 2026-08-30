@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ....core.errors import CadrumoError
+from ....core.errors.hierarchy import CadrumoError
 
 
 class NotificacionParseError(CadrumoError):

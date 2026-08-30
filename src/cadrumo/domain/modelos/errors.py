@@ -12,7 +12,7 @@ from __future__ import annotations
 from logging import Logger
 from typing import NoReturn
 
-from ...core.errors import CadrumoError, CoreValidationError
+from ...core.errors.hierarchy import CadrumoError, CoreValidationError
 
 
 class ModeloError(CadrumoError):

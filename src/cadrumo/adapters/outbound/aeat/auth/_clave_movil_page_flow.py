@@ -26,7 +26,7 @@ from urllib.parse import urlsplit
 
 from .....application.auth.protocols import BrowserPagePort
 from .....core.config import unwrap_optional_secret
-from .....core.errors import AeatLoginAssertionError
+from .....core.errors.hierarchy import AeatLoginAssertionError
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.logging import get_logger
 from .....core.time import now

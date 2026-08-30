@@ -5,7 +5,7 @@ import inspect
 
 import pytest
 
-from ......core.errors import AuthError
+from ......core.errors.hierarchy import AuthError
 from ..authenticator import AeatAuthenticator
 from ..clave_movil import ClaveMovilAuthProvider
 from ..provider_selection import select_provider

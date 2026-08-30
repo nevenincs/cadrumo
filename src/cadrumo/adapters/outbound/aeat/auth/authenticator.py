@@ -58,7 +58,7 @@ from .....core import AuthProviderDescription, AuthProviderKind
 from .....core.async_cleanup import close_async_resources
 from .....core.config import AEAT_CERTIFICATE_PROTECTED_URL
 from .....core.config import Settings as _Settings
-from .....core.errors import AeatLoginAssertionError
+from .....core.errors.hierarchy import AeatLoginAssertionError
 from .....core.logging import get_logger
 from .....core.time import now
 from . import session_store as session_store

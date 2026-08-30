@@ -8,7 +8,7 @@ operator answers never ride in error context.
 
 from __future__ import annotations
 
-from ...core.errors import CadrumoError, CoreValidationError
+from ...core.errors.hierarchy import CadrumoError, CoreValidationError
 
 
 class FlowError(CadrumoError):

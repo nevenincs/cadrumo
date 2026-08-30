@@ -12,7 +12,7 @@ from collections.abc import Mapping
 from enum import StrEnum
 
 from ...core import ActionEvidenceProvenance, NoRecoveryOutcome
-from ...core.errors import CadrumoError, CoreValidationError, ProfileAnswerTypeError, TerminalPreconditionErrorMixin
+from ...core.errors.hierarchy import CadrumoError, CoreValidationError, ProfileAnswerTypeError, TerminalPreconditionErrorMixin
 from ..operator_actions import PreconditionVerdict, no_action_precondition_verdict
 
 

@@ -14,7 +14,8 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.errors import CoreValidationError, get_registered_error_code
+from ....core.errors.error_codes import get_registered_error_code
+from ....core.errors.hierarchy import CoreValidationError
 from ..dt12_reduccion import compute_dt12_reduccion_plan_pensiones
 from ..errors import PensionReduccionError
 from ..sal_reserva_especial import compute_sal_reserva_especial_dotacion

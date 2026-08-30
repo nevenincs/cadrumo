@@ -12,7 +12,7 @@ from typing import override
 import pytest
 
 from ....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
-from ....core.errors import TerminalPreconditionErrorMixin
+from ....core.errors.hierarchy import TerminalPreconditionErrorMixin
 from ...user_profile.registration import ProfileRegistrationError
 from ...workflow.state_models import WorkflowState
 from .. import commands as commands_module

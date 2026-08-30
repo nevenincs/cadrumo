@@ -4,7 +4,7 @@ All exceptions extend :class:`~cadrumo.core.errors.CadrumoError` so callers can
 catch either the domain-specific type or the project-wide base class.
 """
 
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 
 
 class CurrencyError(CadrumoError):

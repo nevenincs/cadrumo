@@ -2,7 +2,8 @@
 
 import pytest
 
-from ..errors import CadrumoError, build_error_envelope, get_registered_error_code
+from ..errors.error_codes import build_error_envelope, get_registered_error_code
+from ..errors.hierarchy import CadrumoError
 from ..setup_answers import ProjectAnswersNotRegisteredError
 from ..wizard_catalogue import WizardCatalogueAlreadyRegisteredError, WizardCatalogueNotRegisteredError
 

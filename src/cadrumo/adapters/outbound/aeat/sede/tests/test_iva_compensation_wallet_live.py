@@ -17,7 +17,7 @@ import pytest
 from ......application.auth.sessions import ensure_authenticated_aeat_session
 from ......core import AuthProviderKind, Modelo, Period
 from ......core.config import Settings, load_settings
-from ......core.errors import CadrumoError
+from ......core.errors.hierarchy import CadrumoError
 from ......tests.live_gate import requires_live_enabled
 from .._iva_compensation_wallet_parsing import is_aeat_wallet_read_url
 from ..errors import SedeError

@@ -44,7 +44,7 @@ def preselected_profile_login_id(name: str | None) -> str | None:
 
 def attempt_profile_login(profile_id: str, passphrase: str) -> ProfileLoginAttempt:
     """Unlock a chosen profile, converting expected operator refusals to data."""
-    from ...core.errors import resolve_error_message
+    from ...core.errors.error_codes import resolve_error_message
     from ...domain.user_profile.errors import ProfileNotFoundError
     from .authentication import ProfileAuthenticationRefusedError
     from .login_session import ProfileLoginThrottledError

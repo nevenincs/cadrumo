@@ -4,7 +4,7 @@ from collections.abc import Callable
 
 import pytest
 
-from ....core.errors import ProfileAnswerTypeError
+from ....core.errors.hierarchy import ProfileAnswerTypeError
 from ..ccaa import CCAA
 from ..descendant_facts import parse_descendiente_flag
 from ..marriage_facts import parse_marriage_date_flag

@@ -14,7 +14,7 @@ from typing import override
 import pytest
 
 from ....core import ActionConditionality, ActionEvidenceProvenance, BindingSourceKind, NoRecoveryOutcome, Period
-from ....core.errors import TerminalPreconditionErrorMixin
+from ....core.errors.hierarchy import TerminalPreconditionErrorMixin
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ledger_bindings import IvaLedgerObservation
 from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision

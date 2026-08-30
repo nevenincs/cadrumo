@@ -110,7 +110,7 @@ class TestDeclaredPeriodTokensAutocomplete:
         RegistryValidationError is the most likely subtype. This test asserts
         the function returns () rather than propagating the error to Click.
         """
-        from ....core.errors import CadrumoError
+        from ....core.errors.hierarchy import CadrumoError
         from .._modelo_behavior_support import _declared_period_tokens
 
         # Both the "totally unknown" and the "empty" paths return () silently.

@@ -11,7 +11,7 @@ from stat import S_ISDIR
 from typing import Final
 
 from .config import Settings, load_settings
-from .errors import CoreValidationError
+from .errors.hierarchy import CoreValidationError
 
 STORAGE_ROOT_MODE: Final[int] = 0o700
 """Permission mode :func:`ensure_storage_tree` requests on the state root."""

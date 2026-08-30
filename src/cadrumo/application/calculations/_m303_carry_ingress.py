@@ -14,7 +14,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...core import Modelo, ResultDisposition, result_disposition_is_refund
-from ...core.errors import CoreValidationError, TerminalPreconditionErrorMixin
+from ...core.errors.hierarchy import CoreValidationError, TerminalPreconditionErrorMixin
 from ...core.resources import bundled_path
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.casilla_membership import casillas_by_id

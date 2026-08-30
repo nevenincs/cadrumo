@@ -16,7 +16,7 @@ See Also:
 
 from __future__ import annotations
 
-from ..errors import CoreError
+from ..errors.hierarchy import CoreError
 
 __all__ = ["TelemetrySchemaError"]
 

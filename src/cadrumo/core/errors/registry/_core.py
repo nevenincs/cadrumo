@@ -4,7 +4,7 @@ Rows map core exception qualnames to stable
 :class:`~core.errors.ErrorCategory` values and locale message keys.
 """
 
-from .._registry import ErrorCategory, ErrorCode
+from ..error_codes import ErrorCategory, ErrorCode
 
 _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
@@ -38,7 +38,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.errors.CoreError",
+        "cadrumo.core.errors.hierarchy.CoreError",
         ErrorCode(
             code="ERROR_CADRUMO_CORE",
             category=ErrorCategory.ERROR,
@@ -68,7 +68,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.errors.DecimalFormatError",
+        "cadrumo.core.errors.hierarchy.DecimalFormatError",
         ErrorCode(
             code="ERROR_DECIMAL_FORMAT",
             category=ErrorCategory.ERROR,
@@ -78,7 +78,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.errors.RedactionError",
+        "cadrumo.core.errors.hierarchy.RedactionError",
         ErrorCode(
             code="ERROR_REDACTION",
             category=ErrorCategory.ERROR,
@@ -88,7 +88,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.errors._not_found.CoreNotFoundError",
+        "cadrumo.core.errors.not_found.CoreNotFoundError",
         ErrorCode(
             code="ERROR_CADRUMO_CORE_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -98,7 +98,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.errors.CoreValidationError",
+        "cadrumo.core.errors.hierarchy.CoreValidationError",
         ErrorCode(
             code="INTEGRITY_CADRUMO_CORE_VALIDATION",
             category=ErrorCategory.INTEGRITY,
@@ -138,7 +138,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.errors.ProfileAnswerTypeError",
+        "cadrumo.core.errors.hierarchy.ProfileAnswerTypeError",
         ErrorCode(
             code="INTEGRITY_PROFILE_ANSWER_TYPE",
             category=ErrorCategory.INTEGRITY,
@@ -148,7 +148,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.errors.CadrumoObservabilityError",
+        "cadrumo.core.errors.hierarchy.CadrumoObservabilityError",
         ErrorCode(
             code="ERROR_CADRUMO_OBSERVABILITY",
             category=ErrorCategory.ERROR,
@@ -158,7 +158,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.errors.SiteHealthError",
+        "cadrumo.core.errors.hierarchy.SiteHealthError",
         ErrorCode(
             code="FAIL_SITE_HEALTH",
             category=ErrorCategory.FAIL,
@@ -468,7 +468,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.errors.NoActiveProfileError",
+        "cadrumo.core.errors.hierarchy.NoActiveProfileError",
         ErrorCode(
             code="REFUSED_NO_ACTIVE_PROFILE",
             category=ErrorCategory.REFUSED,
@@ -478,7 +478,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.errors.ActiveProfilePointerError",
+        "cadrumo.core.errors.hierarchy.ActiveProfilePointerError",
         ErrorCode(
             code="INTEGRITY_ACTIVE_PROFILE_POINTER",
             category=ErrorCategory.INTEGRITY,

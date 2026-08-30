@@ -21,7 +21,7 @@ import keyring
 import pytest
 
 from ......core import ProfileSessionRefusalReason
-from ......core.errors import CoreValidationError
+from ......core.errors.hierarchy import CoreValidationError
 from ...custody.filesystem import (
     compare_and_replace_profile_custody_local_record,
     ensure_profile_custody_local_directory,

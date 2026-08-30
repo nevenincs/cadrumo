@@ -34,7 +34,7 @@ from typing import TYPE_CHECKING
 
 from ...core import ART_58_2_ENTITLING_RELACIONES, DescendantRelacion
 from ...core.decimal import try_parse_canonical_decimal
-from ...core.errors import ProfileAnswerTypeError
+from ...core.errors.hierarchy import ProfileAnswerTypeError
 from ...core.flows import REPEATING_INSTANCE_SEPARATOR, CopyRefKind, FlowWidgetKind
 from ...core.identity import IdentityError, validate_identity
 from ...core.parsing import parse_iso8601_date
@@ -447,7 +447,7 @@ def _validate_gastos_mensuales_grammar(page: FlowPage, canonical: str) -> Valida
     """
     if not canonical.strip():
         return ValidationVerdict.passed()
-    from ...core.errors import ProfileAnswerTypeError
+    from ...core.errors.hierarchy import ProfileAnswerTypeError
     from ...domain.contribuyente.guarderia_mensual import parse_guarderia_mensual
 
     try:

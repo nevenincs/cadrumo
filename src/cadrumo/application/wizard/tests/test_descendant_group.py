@@ -213,7 +213,7 @@ def test_the_wizard_grammar_is_the_domain_grammar() -> None:
     shapes the domain parser decides keeps them one rule rather than two that
     agree today.
     """
-    from ....core.errors import ProfileAnswerTypeError
+    from ....core.errors.hierarchy import ProfileAnswerTypeError
     from ....domain.contribuyente.guarderia_mensual import parse_guarderia_mensual
 
     definition = _probe_definition()

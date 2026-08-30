@@ -20,7 +20,7 @@ from urllib.parse import unquote
 
 from ._config_state_root import PRODUCT_DATABASE_FILENAME
 from ._storage_taxonomy import StorageCategory, storage_location, storage_path
-from .errors import CoreValidationError
+from .errors.hierarchy import CoreValidationError
 
 if TYPE_CHECKING:
     from .config import Settings, StorageRouteClassification

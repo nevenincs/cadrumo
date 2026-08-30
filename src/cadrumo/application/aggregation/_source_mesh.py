@@ -42,7 +42,7 @@ from ...core import (
 )
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.decimal import coerce_decimal
-from ...core.errors import CoreValidationError
+from ...core.errors.hierarchy import CoreValidationError
 from ...core.filing_year import FilingYear
 from ...core.i18n import tr
 from ...core.identity import BucketId, SnapshotId, WorkUnitId

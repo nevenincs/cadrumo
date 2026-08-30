@@ -9,7 +9,7 @@ misses to Python's mapping-style missing-key contract).
 
 from __future__ import annotations
 
-from . import CoreError
+from .hierarchy import CoreError
 
 
 class CoreNotFoundError(CoreError, KeyError):

@@ -14,7 +14,7 @@ from ......application.auth.session_types import (
     ClavePermanenteSessionDetail,
 )
 from ......core.config import Settings
-from ......core.errors import AeatLoginAssertionError
+from ......core.errors.hierarchy import AeatLoginAssertionError
 from ...browser import Profile, create_browser_session
 from ...tests import wait_for_process_exit
 from ..browser_lifecycle import (

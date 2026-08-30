@@ -27,7 +27,7 @@ from .. import (
     result_disposition_casilla_ids,
     validated_casilla_id,
 )
-from ..errors import CoreValidationError
+from ..errors.hierarchy import CoreValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

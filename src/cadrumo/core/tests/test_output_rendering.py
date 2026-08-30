@@ -11,7 +11,7 @@ import pytest
 from pydantic import BaseModel, ConfigDict
 
 from ..config import override_settings
-from ..errors import get_registered_error_code, render_error_text
+from ..errors.error_codes import get_registered_error_code, render_error_text
 from ..output_rendering import OutputFormatRefusedError, OutputRenderingError, render_command_output
 from ..redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_OBJECT_KEY_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 

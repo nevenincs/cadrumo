@@ -36,7 +36,7 @@ from ...tests.aeat_literal_fixtures import (
     REMOTE_GUARD_LITERAL_SCAN_TOKENS,
 )
 from ..config import Settings
-from ..errors import CoreValidationError
+from ..errors.hierarchy import CoreValidationError
 from ..external_constants import (
     AeatSection,
     ExternalConstants,

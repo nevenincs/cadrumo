@@ -44,7 +44,7 @@ import pytest
 
 from ....core import ActionConditionality, NoRecoveryOutcome
 from ....core.directory_scan import scan_directory
-from ....core.errors import TerminalPreconditionErrorMixin
+from ....core.errors.hierarchy import TerminalPreconditionErrorMixin
 from ....domain.filing.errors import FilingExportError, ModeloBuilderError, ModeloImportError
 from ..errors import FilingPreconditionCondition, ModeloApplicationError
 

@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings, load_settings
-from ...core.errors import BaseSeverity
+from ...core.errors.severity import BaseSeverity
 from ...core.i18n import tr
 from ...core.logging import get_logger
 from .errors import ManifestError, ManualNotFoundError, ManualParseError, ManualReviewRequiredError

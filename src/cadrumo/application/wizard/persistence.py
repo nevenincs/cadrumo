@@ -483,7 +483,7 @@ def _safe_guarderia_spend(row: Mapping[str, str]) -> _GuarderiaSpend:
       it, which is the safe direction while the verdict brings the operator back
       to fix the text.
     """
-    from ...core.errors import ProfileAnswerTypeError
+    from ...core.errors.hierarchy import ProfileAnswerTypeError
     from ...domain.contribuyente.guarderia_mensual import parse_guarderia_mensual
 
     annual_raw = row.get("gastos-guarderia") or ""

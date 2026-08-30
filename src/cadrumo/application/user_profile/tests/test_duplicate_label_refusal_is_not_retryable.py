@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.errors import get_registered_error_code
+from ....core.errors.error_codes import get_registered_error_code
 from ..custody_transactions import ProfileCustodyDuplicateLabelError, ProfileCustodyTransactionConflictError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

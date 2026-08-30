@@ -25,7 +25,7 @@ from ...core import (
     ActionEvidenceProvenance,
     NoRecoveryOutcome,
 )
-from ...core.errors import CadrumoError, TerminalPreconditionErrorMixin
+from ...core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin
 from ..operator_actions import PreconditionVerdict, no_action_precondition_verdict
 
 if TYPE_CHECKING:

@@ -22,7 +22,8 @@ from ..application.storage.calc_sheets import (
     CalcSheetsParityError,
     CalcSheetsRecordError,
 )
-from ..core.errors import CadrumoError, ErrorEnvelope, build_error_envelope, get_registered_error_code
+from ..core.errors.error_codes import ErrorEnvelope, build_error_envelope, get_registered_error_code
+from ..core.errors.hierarchy import CadrumoError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

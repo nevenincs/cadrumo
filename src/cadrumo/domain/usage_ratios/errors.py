@@ -8,7 +8,7 @@ upcoming domain-level failure modes.
 
 from __future__ import annotations
 
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 
 __all__ = [
     "CensoRatioMismatchError",

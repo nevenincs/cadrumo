@@ -86,7 +86,7 @@ def _guarded_read_errors() -> tuple[type[BaseException], ...]:
     """Return the bounded refusal family a read-only status zone may absorb."""
     from sqlalchemy.exc import StatementError
 
-    from ...core.errors import CadrumoError
+    from ...core.errors.hierarchy import CadrumoError
 
     return (CadrumoError, OSError, StatementError)
 

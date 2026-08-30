@@ -12,7 +12,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
 from .....core import CasillaId, Period, validated_casilla_id
-from .....core.errors import CadrumoError
+from .....core.errors.hierarchy import CadrumoError
 from .....core.money import round_to_cents
 from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.justificante import PdfModeloImportError

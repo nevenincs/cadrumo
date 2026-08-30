@@ -14,7 +14,7 @@ from typing import Annotated
 from pydantic import BaseModel, Field, StringConstraints, field_validator
 
 from ....core import STRICT_FROZEN_CONFIG
-from ....core.errors import CadrumoError
+from ....core.errors.hierarchy import CadrumoError
 from ....core.resources import bundled_path
 
 _DEFAULT_CATALOGUE_PATH = bundled_path("registry", "aeat", "apoderamientos", "scopes.toml")

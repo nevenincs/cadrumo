@@ -7,7 +7,8 @@ from decimal import Decimal
 import pytest
 
 from ....core import CasillaId, validated_casilla_id
-from ....core.errors import ERROR_REGISTRY, CadrumoError, ErrorCategory, build_error_envelope, get_registered_error_code
+from ....core.errors.error_codes import ERROR_REGISTRY, ErrorCategory, build_error_envelope, get_registered_error_code
+from ....core.errors.hierarchy import CadrumoError
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos.errors import ModeloError
 from .._action_errors import ModeloLocalObservationError

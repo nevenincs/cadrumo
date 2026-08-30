@@ -12,7 +12,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from enum import StrEnum
 
-from .....core.errors import CadrumoError, CoreError
+from .....core.errors.hierarchy import CadrumoError, CoreError
 
 
 class SedeError(CadrumoError):

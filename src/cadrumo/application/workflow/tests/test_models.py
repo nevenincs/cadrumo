@@ -29,7 +29,7 @@ from ....core import (
     NoRecoveryOutcome,
     Period,
 )
-from ....core.errors import SiteHealthState
+from ....core.errors.hierarchy import SiteHealthState
 from ....domain.deadlines.models import ModeloDeadline, ObligationStatus, RecargoBand, Recovery
 from ....tests.aeat_literal_fixtures import aeat_url
 from ...operator_actions import (

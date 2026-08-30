@@ -42,7 +42,7 @@ from functools import lru_cache
 from urllib.parse import urlparse
 
 from ....core.config import load_settings
-from ....core.errors import CoreValidationError
+from ....core.errors.hierarchy import CoreValidationError
 from ....core.external_constants import DEFAULT_CURRENCY, UTF_8_ENCODING
 from ....core.parsing import normalise_iso_4217_currency, parse_iso8601_date
 from ....domain.currency.errors import ExchangeRateProviderError

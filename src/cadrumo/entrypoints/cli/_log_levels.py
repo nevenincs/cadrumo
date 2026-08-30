@@ -19,7 +19,7 @@ from enum import StrEnum
 
 from ...application.operator_actions import PreconditionVerdict
 from ...core import ActionEvidenceProvenance, FormerProductStateError, NoRecoveryOutcome
-from ...core.errors import CadrumoError, TerminalPreconditionErrorMixin
+from ...core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin
 from ...core.logging import set_log_level
 
 

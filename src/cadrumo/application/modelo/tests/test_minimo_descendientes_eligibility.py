@@ -401,7 +401,7 @@ def test_an_unreadable_rentas_figure_refuses_rather_than_restoring_the_minimo() 
     Silently dropping an unparseable figure would restore the full mínimo — the
     exact silent over-claim the Art. 58.1 ceiling exists to prevent.
     """
-    from ....core.errors import ProfileAnswerTypeError
+    from ....core.errors.hierarchy import ProfileAnswerTypeError
     from ....domain.contribuyente.descendant_facts import descendant_list_from_facts
 
     with pytest.raises(ProfileAnswerTypeError):

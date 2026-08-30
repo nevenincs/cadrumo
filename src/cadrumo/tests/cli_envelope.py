@@ -15,7 +15,7 @@ from typing import Any, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter
 
-from ..core.errors import ErrorEnvelope
+from ..core.errors.error_codes import ErrorEnvelope
 from ..core.json_contract import ENVELOPE_SCHEMA_VERSION, EnvelopeStatus, Notice, OutputSchema, SchemaEnvelope
 
 

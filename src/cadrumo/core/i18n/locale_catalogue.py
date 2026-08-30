@@ -27,7 +27,7 @@ from dataclasses import dataclass
 from secrets import token_bytes
 from threading import RLock
 
-from ..errors import CoreError
+from ..errors.hierarchy import CoreError
 from ._catalogue_cache import compute_directory_source_digest
 from ._render import _locale_map, _normalise_supported_language, lookup_translation_entry
 

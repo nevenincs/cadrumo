@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import Final
 
-from ...core.errors import BaseSeverity
+from ...core.errors.severity import BaseSeverity
 from ...domain.user_profile.schema import (
     ProfileFieldDefinition,
     ProfileSchemaDefinition,

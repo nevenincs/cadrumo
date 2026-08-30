@@ -9,7 +9,7 @@ invariant failures through the typed error registry.
 
 from __future__ import annotations
 
-from ...core.errors import CoreError, CoreValidationError
+from ...core.errors.hierarchy import CoreError, CoreValidationError
 
 
 class ExportFormatError(CoreError):

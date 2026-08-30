@@ -30,7 +30,7 @@ from typing import Annotated
 from pydantic import BaseModel, Field, field_serializer
 
 from ...core import STRICT_FROZEN_CONFIG, ElidedProse, Hex64Str
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, FilingRecordId, WorkUnitId

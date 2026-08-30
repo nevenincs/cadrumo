@@ -154,7 +154,7 @@ class CredentialScreen[OutcomeT](Screen[OutcomeT | None]):
     def _resolved_worker_failure(self, error: BaseException) -> str:
         """Render an unexpected failure without leaking diagnostic prose."""
         try:
-            from ....core.errors import resolve_error_message
+            from ....core.errors.error_codes import resolve_error_message
 
             detail = resolve_error_message(error, locale=self.output_locale()).strip()
         except (LookupError, TypeError, ValueError):

@@ -20,7 +20,7 @@ from datetime import date
 
 import pytest
 
-from ....core.errors import ProfileAnswerTypeError
+from ....core.errors.hierarchy import ProfileAnswerTypeError
 from ..descendant import DescendantInfo
 from ..descendant_facts import (
     descendant_facts_from_list,

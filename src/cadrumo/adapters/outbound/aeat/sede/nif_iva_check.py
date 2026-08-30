@@ -34,7 +34,7 @@ from pydantic import AnyUrl, Field
 
 from .....core.async_cleanup import close_async_resources
 from .....core.config import Settings
-from .....core.errors import SiteHealthError
+from .....core.errors.hierarchy import SiteHealthError
 from .....core.identity import normalise_nif_iva
 from .....core.logging import get_logger
 from .....domain.calculations.registry.checker_oracle_flow import CheckerObservation

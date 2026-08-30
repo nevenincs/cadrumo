@@ -64,7 +64,7 @@ from ...adapters.persistence.storage import (
     SensitivityClass,
 )
 from ...core import STRICT_FROZEN_CONFIG, ClassifierInputSource
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import sha256_hex
 from ...core.identity import ContentDigest
 from ...core.time import now

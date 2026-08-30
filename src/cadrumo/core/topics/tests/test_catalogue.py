@@ -88,7 +88,7 @@ def test_catalogue_rejects_unknown_slug_with_typed_error() -> None:
     exception directly. Asserting the absence is what makes re-introducing a
     sentence at this raise site fail.
     """
-    from ...errors import get_registered_error_code, resolve_error_message
+    from ...errors.error_codes import get_registered_error_code, resolve_error_message
 
     catalogue = resources().topics.singleton
     with pytest.raises(TopicNotFoundError) as raised:
@@ -115,7 +115,7 @@ def test_empty_catalogue_directory_refuses_with_its_own_locale_key(tmp_path: Pat
     against re-introduced English prose; ``str(exc)`` degrading to the key is
     what proves this raise site authors no sentence.
     """
-    from ...errors import get_registered_error_code, resolve_error_message
+    from ...errors.error_codes import get_registered_error_code, resolve_error_message
 
     with pytest.raises(TopicCatalogueEmptyError) as raised:
         load_topic_catalogue(tmp_path)

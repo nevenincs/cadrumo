@@ -23,7 +23,7 @@ from typing import Final
 
 import pytest
 
-from ......core.errors import build_error_envelope
+from ......core.errors.error_codes import build_error_envelope
 from .._keystore_paths import (
     keystore_path,
     keystore_root,

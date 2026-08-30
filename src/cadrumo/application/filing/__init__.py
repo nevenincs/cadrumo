@@ -72,7 +72,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 
-from ...core.errors import BaseSeverity as _BaseSeverity
+from ...core.errors.severity import BaseSeverity as _BaseSeverity
 from ...domain.filing.protocols import CasillaSchemaProvider as _CasillaSchemaProvider
 from ...domain.filing.protocols import DeadlineChecker as _DeadlineChecker
 from ...domain.filing.schema import ModeloDraft as _ModeloDraft

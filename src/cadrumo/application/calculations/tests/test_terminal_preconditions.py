@@ -22,7 +22,7 @@ from ....core import (
     Period,
     ResultDisposition,
 )
-from ....core.errors import TerminalPreconditionErrorMixin
+from ....core.errors.hierarchy import TerminalPreconditionErrorMixin
 from ....core.resources import bundled_path
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ....domain.calculations.registry.loader import load_registry_tree

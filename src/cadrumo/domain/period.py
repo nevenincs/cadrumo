@@ -30,7 +30,7 @@ from datetime import date
 
 from ..core import Period
 from ..core import PeriodError as CorePeriodError
-from ..core.errors import CadrumoError
+from ..core.errors.hierarchy import CadrumoError
 
 
 class RegistryPeriodError(CadrumoError):

@@ -24,7 +24,7 @@ from enum import StrEnum
 
 from .....application.operator_actions import PreconditionVerdict, no_action_precondition_verdict
 from .....core import ActionEvidenceProvenance, NoRecoveryOutcome
-from .....core.errors import CadrumoError, TerminalPreconditionErrorMixin
+from .....core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin
 
 
 class BrowserPreconditionCondition(StrEnum):

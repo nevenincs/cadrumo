@@ -24,14 +24,8 @@ from ...json_contract import (
     ResolvedPreconditionAction,
 )
 from ...locks_errors import LockAcquisitionError
-from .. import (
-    ActiveProfilePointerError,
-    CadrumoError,
-    ErrorEnvelope,
-    build_error_envelope,
-    render_error_json,
-    render_error_text,
-)
+from ..error_codes import ErrorEnvelope, build_error_envelope, render_error_json, render_error_text
+from ..hierarchy import ActiveProfilePointerError, CadrumoError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -235,7 +229,7 @@ def test_scrub_error_context_strips_internal_keys_from_rendered_output() -> None
     inspect them.
     """
 
-    from .._registry import _INTERNAL_CONTEXT_KEYS
+    from ..error_codes import _INTERNAL_CONTEXT_KEYS
 
     error = LockAcquisitionError(
         context={

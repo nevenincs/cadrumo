@@ -16,7 +16,7 @@ from datetime import date
 import pytest
 
 from ....application.state_projection import build_pending_obligations
-from ....core.errors import ErrorCategory, build_error_envelope
+from ....core.errors.error_codes import ErrorCategory, build_error_envelope
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.deadlines.engine import DeadlineEngine, compute_obligation_schedule
 from ....domain.deadlines.errors import ScheduleComputationError

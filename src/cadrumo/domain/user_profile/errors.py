@@ -7,7 +7,7 @@ from typing import Final
 
 from pydantic import ValidationError
 
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 
 #: Registered operator text for a user-profile schema that cannot be loaded.
 #: Stated once so the refusal and the gate that pins it read the same spelling,

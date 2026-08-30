@@ -33,7 +33,7 @@ from collections.abc import Callable, Mapping
 from typing import cast
 
 from ...core import ActionEvidenceProvenance
-from ...core.errors import CoreNotFoundError
+from ...core.errors.not_found import CoreNotFoundError
 from ...domain.modelos.errors import ModeloError
 from ..operator_actions import PreconditionVerdict
 from ..workflow.run_models import WorkflowResult

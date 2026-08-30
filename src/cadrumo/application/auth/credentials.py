@@ -11,7 +11,7 @@ from pydantic import SecretStr
 
 from ...core import AuthProviderKind
 from ...core.config import Settings, load_settings, override_settings
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 from ..auth_credentials import (
     ActiveCertificateCredentials,
     unnamed_certificate_credentials,

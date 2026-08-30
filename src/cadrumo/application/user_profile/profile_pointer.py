@@ -16,7 +16,7 @@ from pathlib import Path
 
 from ...core.bucket_pointer import BucketPointer, read_pointer, write_pointer
 from ...core.config import load_settings
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 from ...core.locks_errors import LockAcquisitionError
 from ...core.paths import effective_storage_root
 from .custody_ports import default_profile_custody_local_record_store

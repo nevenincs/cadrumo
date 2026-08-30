@@ -23,7 +23,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ....core.errors import CadrumoError
+from ....core.errors.hierarchy import CadrumoError
 from ....core.logging import get_logger
 from ....domain.prorrata_register import (
     ProrrataActivityRow,

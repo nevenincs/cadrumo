@@ -38,7 +38,7 @@ from datetime import date
 from typing import Protocol, override, runtime_checkable
 
 from ...core import AuthProviderDescription, Period
-from ...core.errors import BaseSeverity
+from ...core.errors.severity import BaseSeverity
 from ...domain.deadlines.models import Schedule, TaxpayerProfile
 
 # ``ModeloInputs`` and its element aliases are domain-owned input contracts.

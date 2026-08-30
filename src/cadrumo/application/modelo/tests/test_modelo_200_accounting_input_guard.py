@@ -22,7 +22,7 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import CasillaId, Period, RegistryAuthorityGrade, validated_casilla_id
-from ....core.errors import resolve_error_message
+from ....core.errors.error_codes import resolve_error_message
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue

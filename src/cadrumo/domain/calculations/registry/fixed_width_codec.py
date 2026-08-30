@@ -11,7 +11,7 @@ from pydantic import BeforeValidator
 
 from ....core import CasillaId
 from ....core.decimal import coerce_fixed_width_decimal
-from ....core.errors import CadrumoError
+from ....core.errors.hierarchy import CadrumoError
 from ....core.money import round_to_cents
 from .errors import RegistryValidationError
 from .export_value_policy import (

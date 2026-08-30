@@ -19,7 +19,7 @@ from ....core import (
     result_disposition_casilla_ids,
     validated_casilla_id,
 )
-from ....core.errors import ERROR_REGISTRY, build_error_envelope
+from ....core.errors.error_codes import ERROR_REGISTRY, build_error_envelope
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import (
     RegistryModeloObservation,

@@ -42,7 +42,7 @@ from ...core import (
 )
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.config import load_settings, override_settings
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 from ...core.logging import get_logger
 from ..operator_actions import (
     ActionArgumentBinding,

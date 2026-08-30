@@ -15,7 +15,7 @@ import pytest
 from pydantic import ValidationError
 
 from .....core import CasillaId, validated_casilla_id
-from .....core.errors import CadrumoError
+from .....core.errors.hierarchy import CadrumoError
 from .. import ExtractedCasilla, PdfModeloImportError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]

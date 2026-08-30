@@ -560,7 +560,7 @@ def test_record_refuses_when_a_required_numeric_casilla_is_absent() -> None:
     prose into tracebacks and logs; pinning ``str(exc)`` to the key is what
     makes a re-introduced sentence at any of these raise sites fail.
     """
-    from .....core.errors import get_registered_error_code, resolve_error_message
+    from .....core.errors.error_codes import get_registered_error_code, resolve_error_message
 
     with pytest.raises(FixedWidthRecordRenderError) as excinfo:
         render_fixed_width_export_record_body(

@@ -51,7 +51,7 @@ from ..core import (
     FieldOrigin,
 )
 from ..core.decimal import coerce_finite_european_decimal, european_thousands_reading_is_ambiguous
-from ..core.errors import CoreValidationError
+from ..core.errors.hierarchy import CoreValidationError
 from ..core.identity import (
     IdentityError,
     nif_iva_format_for_country,

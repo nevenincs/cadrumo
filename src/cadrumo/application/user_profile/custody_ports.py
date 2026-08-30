@@ -21,7 +21,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ...core import SecureObjectWrite, StorageCategory, StorageCustodyProfile, storage_location
 from ...core.classification import SensitivityClass
-from ...core.errors import CoreError
+from ...core.errors.hierarchy import CoreError
 
 if TYPE_CHECKING:
     from ...domain.buckets.event import BucketEventHistoryCatalogue

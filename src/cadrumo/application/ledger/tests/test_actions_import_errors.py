@@ -38,7 +38,7 @@ def test_import_rejects_zero_amount_row_at_parse_boundary(tmp_path: Path) -> Non
 
 def test_import_ledger_source_missing_file_raises_localised_error(tmp_path: Path) -> None:
     """A missing source file raises a tr()-localised error, not naked English."""
-    from ....core.errors import resolve_error_message
+    from ....core.errors.error_codes import resolve_error_message
 
     missing = tmp_path / "no-such-statement.csv"
     with pytest.raises(TransactionValidationError) as excinfo:
@@ -59,7 +59,7 @@ def test_import_ledger_source_auto_missing_file_is_clean_refusal_without_probe_n
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """``--provider auto`` on a missing file refuses cleanly without probe noise."""
-    from ....core.errors import resolve_error_message
+    from ....core.errors.error_codes import resolve_error_message
 
     missing = tmp_path / "no-such-statement.csv"
     with (
@@ -86,7 +86,7 @@ def test_import_ledger_source_auto_missing_file_is_clean_refusal_without_probe_n
 
 def test_import_ledger_source_auto_unsupported_file_raises_localised_import_error(tmp_path: Path) -> None:
     """Auto-detection failures use the translated import refusal contract."""
-    from ....core.errors import resolve_error_message
+    from ....core.errors.error_codes import resolve_error_message
 
     unsupported = tmp_path / "statement.txt"
     unsupported.write_text("not a bank statement\n", encoding="utf-8")
@@ -185,7 +185,7 @@ def test_import_dedup_keeps_same_numeric_amount_in_different_currencies(
 
 def test_import_ledger_source_verify_missing_original_file_raises_localised_error(tmp_path: Path) -> None:
     """A missing verification source is reported through the financial-source key."""
-    from ....core.errors import resolve_error_message
+    from ....core.errors.error_codes import resolve_error_message
 
     statement = tmp_path / "bank.csv"
     statement.write_text(

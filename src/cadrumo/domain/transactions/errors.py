@@ -6,7 +6,8 @@ from collections.abc import Mapping
 
 from pydantic import ValidationError
 
-from ...core.errors import CadrumoError, get_registered_error_code
+from ...core.errors.error_codes import get_registered_error_code
+from ...core.errors.hierarchy import CadrumoError
 
 
 class TransactionError(CadrumoError):

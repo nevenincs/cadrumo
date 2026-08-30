@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 
 from .._config_state_root import StateRootInputs, platform_user_data_root
-from ..errors import CoreValidationError
+from ..errors.hierarchy import CoreValidationError
 from ..paths import (
     WINDOWS_MAX_PATH,
     effective_storage_root,

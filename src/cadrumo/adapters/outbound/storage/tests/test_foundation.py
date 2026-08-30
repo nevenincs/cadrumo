@@ -15,7 +15,7 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
-from .....core.errors import CadrumoError, CoreError
+from .....core.errors.hierarchy import CadrumoError, CoreError
 from .. import (
     OutboundStorageConflictError,
     OutboundStorageError,

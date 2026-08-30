@@ -45,7 +45,8 @@ from ...core import (
     validated_casilla_id,
 )
 from ...core.decimal import try_parse_canonical_decimal
-from ...core.errors import CadrumoError, resolve_error_message
+from ...core.errors.error_codes import resolve_error_message
+from ...core.errors.hierarchy import CadrumoError
 from ...core.i18n import tr
 from ...core.identity import CalculationRevisionId
 from ...core.logging import get_logger

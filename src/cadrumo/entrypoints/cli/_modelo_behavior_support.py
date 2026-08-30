@@ -26,7 +26,7 @@ from ...application.modelo.work_addressing import (
 )
 from ...core import Period, PeriodError
 from ...core.bucket_pointer import resolve_active_bucket_id
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 from ...core.i18n import tr
 from ...core.logging import get_logger
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue

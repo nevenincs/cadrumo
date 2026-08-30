@@ -57,7 +57,7 @@ from ...adapters.persistence.storage import (
 )
 from ...core import HEX_PATTERN_64 as _HEX_PATTERN_64
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.time import now as _utc_now

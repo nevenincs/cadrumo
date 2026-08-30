@@ -22,7 +22,7 @@ from ......core import AuthProviderKind
 from ......core.async_cleanup import AsyncResourceCleanupError
 from ......core.auth_session_keys import aeat_auth_session_storage_state_path
 from ......core.config import AEAT_CERTIFICATE_PROTECTED_URL, Settings
-from ......core.errors import AeatLoginAssertionError, AuthError
+from ......core.errors.hierarchy import AeatLoginAssertionError, AuthError
 from ......tests.secure_sql import isolated_runtime_profile
 from ...browser.tests.real_http_boundary import LocalHttpBoundary, opened_http_boundary, real_browser_factory
 from .. import session_store as session_store

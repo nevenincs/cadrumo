@@ -67,7 +67,7 @@ from ..core import (
     ActionEvidenceProvenance,
     Hex64Str,
 )
-from ..core.errors import CoreError
+from ..core.errors.hierarchy import CoreError
 from ..core.hashing import content_hash_hex
 from ..core.logging import get_logger
 from .diagnostics import DiagnosticCheck

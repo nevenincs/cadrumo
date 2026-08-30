@@ -41,7 +41,7 @@ from ...core import (
     Modelo,
     Period,
 )
-from ...core.errors import SiteHealthState, SiteHealthStatusLike
+from ...core.errors.hierarchy import SiteHealthState, SiteHealthStatusLike
 from ...core.hashing import sha256_hex
 from ...core.identifier_grammar import NamespacedId
 from ...core.logging import get_logger

@@ -24,7 +24,7 @@ from ....adapters.persistence.storage.runtime_repository import secure_object_re
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.classification import SensitivityClass
 from ....core.config import Settings
-from ....core.errors import BaseSeverity
+from ....core.errors.severity import BaseSeverity
 from ....core.i18n import Translatable as tr
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.filing.schema import ModeloDraft, ModeloValidationFinding, ModeloValue, ModeloValueKind, compute_modelo_draft_id, registry_schema_version

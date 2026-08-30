@@ -28,7 +28,8 @@ from pathlib import Path
 import pytest
 
 from ....core.directory_scan import scan_directory
-from ....core.errors import CadrumoError, get_registered_error_code
+from ....core.errors.error_codes import get_registered_error_code
+from ....core.errors.hierarchy import CadrumoError
 from ....core.i18n import tr
 from ....domain.portals.registry import PORTAL_REGISTRY
 from .. import PortalNotFoundError, PortalsService

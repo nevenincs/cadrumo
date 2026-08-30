@@ -18,7 +18,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import NameOID
 
-from ......core.errors import CadrumoError
+from ......core.errors.hierarchy import CadrumoError
 from ..certificate import (
     CertificateBundle,
     CertificateHealth,

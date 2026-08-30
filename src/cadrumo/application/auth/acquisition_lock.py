@@ -36,7 +36,7 @@ from ...core import (
     pid_is_alive,
     unlink_lockfile,
 )
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.logging import get_logger
 from ...core.time import coerce_utc_aware

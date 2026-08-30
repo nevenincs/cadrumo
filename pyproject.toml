@@ -725,8 +725,7 @@ convention = "google"
 # to break circular imports. E402 (module-import-not-at-top) is structurally
 # unavoidable here.
 "src/cadrumo/application/auth/__init__.py" = ["E402"]
-"src/cadrumo/core/errors/__init__.py" = ["E402"]
-"src/cadrumo/core/errors/_registry.py" = ["E402"]
+"src/cadrumo/core/errors/error_codes.py" = ["E402"]
 "src/cadrumo/entrypoints/cli/__init__.py" = ["E402"]
 "src/cadrumo/entrypoints/cli/_config/__init__.py" = ["E402"]
 # Mid-file imports in these modules sit after a forward-reference-resolving

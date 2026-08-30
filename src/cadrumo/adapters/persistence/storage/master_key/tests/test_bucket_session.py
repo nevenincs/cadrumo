@@ -8,7 +8,7 @@ from typing import TypedDict
 
 import pytest
 
-from ......core.errors import CoreValidationError
+from ......core.errors.hierarchy import CoreValidationError
 from ...bucket import BucketLockedError
 from ...errors import StorageValidationError
 from .._active_session import (

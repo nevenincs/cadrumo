@@ -9,7 +9,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Final, NamedTuple
 
-from .errors import CoreError
+from .errors.hierarchy import CoreError
 from .external_constants import UTF_8_ENCODING
 from .text_fold import fold_diacritics
 

@@ -119,7 +119,7 @@ def test_wizard_catalogue_exports_are_callable() -> None:
     """All public symbols in cadrumo.core.wizard_catalogue are importable and callable."""
 
     from .. import wizard_catalogue
-    from ..errors import CoreError
+    from ..errors.hierarchy import CoreError
 
     assert callable(wizard_catalogue.register_wizard_catalogue)
     assert callable(wizard_catalogue.get_setup_flow)

@@ -8,7 +8,7 @@ from uuid import UUID
 
 from ..core.bucket_pointer import BucketPointer
 from ..core.config import load_settings
-from ..core.errors import CadrumoError
+from ..core.errors.hierarchy import CadrumoError
 from ..core.time import now
 from ..domain.retention import RetentionFloorAssessment, RetentionFloorError
 from ._config_reset_models import (

@@ -44,7 +44,7 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 from ...core.time import now as _utc_now
 from .review_package import ReviewPackageManifest
 from ._review_package_recipient_encryption import RecipientDecryptedPackage

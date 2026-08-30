@@ -20,7 +20,7 @@ import pytest
 from PIL import Image
 
 from .. import ImageMediaType, detect_image_media_type
-from ..errors import CoreValidationError
+from ..errors.hierarchy import CoreValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

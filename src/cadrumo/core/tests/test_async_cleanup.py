@@ -7,7 +7,8 @@ import asyncio
 import pytest
 
 from ..async_cleanup import AsyncResourceCleanupError, await_cancellation_complete, close_async_resources
-from ..errors import CoreError, get_registered_error_code
+from ..errors.error_codes import get_registered_error_code
+from ..errors.hierarchy import CoreError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

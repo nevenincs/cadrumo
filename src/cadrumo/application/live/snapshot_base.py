@@ -45,7 +45,7 @@ from typing import Protocol, runtime_checkable
 
 from pydantic import BaseModel
 
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 from .errors import LiveApplicationInputError
 
 

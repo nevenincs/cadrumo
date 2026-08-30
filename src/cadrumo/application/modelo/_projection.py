@@ -26,7 +26,7 @@ from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import CasillaId, Modelo, Period, validated_casilla_id
 from ...core.decimal import try_parse_canonical_decimal
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 from ...core.logging import get_logger
 from ...core.money import round_to_cents
 from ...core.resources import bundled_path

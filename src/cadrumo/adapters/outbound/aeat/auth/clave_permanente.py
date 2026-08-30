@@ -71,7 +71,7 @@ from .....core.auth_session_keys import aeat_auth_session_storage_state_path
 from .....core.bucket_pointer import require_active_bucket_id
 from .....core.config import Settings as _Settings
 from .....core.config import unwrap_optional_secret
-from .....core.errors import AeatLoginAssertionError
+from .....core.errors.hierarchy import AeatLoginAssertionError
 from .....core.logging import get_logger
 from .....core.remote_authority import canonical_remote_hostname
 from .....core.time import now

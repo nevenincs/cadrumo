@@ -36,7 +36,7 @@ from decimal import Decimal
 import pytest
 
 from ....application.calculations import resolve_maritime_exemption
-from ....core.errors import get_registered_error_code
+from ....core.errors.error_codes import get_registered_error_code
 from ....core.i18n import tr
 from ....domain.renta import (
     MaritimeExemptionInactiveError,

@@ -23,7 +23,7 @@ from ...application.ledger.actions_manual import ledger_transaction_payload, lis
 from ...application.ledger.id_resolution import resolve_transaction_id
 from ...application.ledger.review_projection import ledger_transaction_review_status
 from ...core.decimal import format_decimal
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 from ...core.i18n import tr
 from ...core.json_contract import Notice, OutputSchema
 from ...core.unit_proportion import is_unit_proportion

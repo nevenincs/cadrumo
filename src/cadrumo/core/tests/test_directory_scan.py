@@ -24,7 +24,7 @@ from pathlib import Path
 import pytest
 
 from ..directory_scan import DirectoryEntryKind, iter_directory, scan_directory
-from ..errors import CoreValidationError
+from ..errors.hierarchy import CoreValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

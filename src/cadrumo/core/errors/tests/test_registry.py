@@ -18,18 +18,20 @@ from ...access_gate import LiveSubmitForbiddenError
 from ...i18n import UnmatchedPlaceholderError, tr
 from ...logging import SecretScrubbingFilter, configure_logging
 from ...observability.errors import RunContextMissingError, RunTracePersistenceError
-from .. import (
+from ..error_codes import (
+    _DEFERRED_BIND,
     ERROR_REGISTRY,
     ErrorCategory,
     ErrorCode,
+    _category_text_prefix,
+    _flush_deferred_binds,
     get_error_exit_code,
     get_registered_error_code,
     register,
     render_error_json,
     render_error_text,
 )
-from .._registry import _DEFERRED_BIND, _category_text_prefix, _flush_deferred_binds
-from .._registry import logger as _registry_logger
+from ..error_codes import logger as _registry_logger
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -162,7 +164,7 @@ def test_deferred_bind_flushes_on_get_registered_error_code() -> None:
 
     # Simulate the deferred state: remove from _CLASS_CODE_REGISTRY and
     # add to _DEFERRED_BIND (as if __init_subclass__ fired mid-init).
-    from .._registry import _CLASS_CODE_REGISTRY
+    from ..error_codes import _CLASS_CODE_REGISTRY
 
     saved_code = _CLASS_CODE_REGISTRY.pop(UnmatchedPlaceholderError, None)
     _DEFERRED_BIND.add(UnmatchedPlaceholderError)
@@ -193,7 +195,7 @@ def test_bind_error_code_refusal_carries_diagnostic_hints() -> None:
     pointing the operator at ``git status`` for the collision case.
     """
 
-    from .. import CadrumoError
+    from ..hierarchy import CadrumoError
 
     # bind_error_code fires from __init_subclass__ during class
     # creation, so the diagnostic ValueError lands on the ``class``
@@ -252,7 +254,7 @@ def test_error_registry_logger_is_module_level() -> None:
     assert isinstance(_registry_logger, logging.Logger), (
         f"Expected a logging.Logger instance; got {type(_registry_logger)!r}"
     )
-    assert _registry_logger.name == "cadrumo.core.errors._registry", f"Logger name mismatch: {_registry_logger.name!r}"
+    assert _registry_logger.name == "cadrumo.core.errors.error_codes", f"Logger name mismatch: {_registry_logger.name!r}"
 
 
 def test_error_registry_debug_log_scrubs_sensitive_context(

@@ -15,7 +15,7 @@ boundary-specific.
 
 from __future__ import annotations
 
-from ..errors import CoreValidationError
+from ..errors.hierarchy import CoreValidationError
 
 _ISO_4217_LENGTH: int = 3
 _ISO_3166_ALPHA2_LENGTH: int = 2

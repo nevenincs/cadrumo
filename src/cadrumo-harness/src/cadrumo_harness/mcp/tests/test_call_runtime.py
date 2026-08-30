@@ -40,7 +40,7 @@ def _typed_error_envelope(envelope: dict[str, object]) -> dict[str, object]:
 
 def _wire_action(error: dict[str, object]) -> dict[str, object]:
     """Validate a native error projection and return its explicit wire form."""
-    from cadrumo.core.errors import ErrorEnvelope
+    from cadrumo.core.errors.error_codes import ErrorEnvelope
 
     action = ErrorEnvelope.model_validate(error).action
     assert action is not None

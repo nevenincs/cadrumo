@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.errors import CoreValidationError
+from ....core.errors.hierarchy import CoreValidationError
 from .. import normalise_iso_3166_alpha2_jurisdiction, normalise_iso_4217_currency
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

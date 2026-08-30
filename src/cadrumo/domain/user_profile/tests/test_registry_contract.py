@@ -10,7 +10,7 @@ import pytest
 from pydantic import BaseModel, ValidationError
 
 from ....core import BindingSourceKind
-from ....core.errors import BaseSeverity
+from ....core.errors.severity import BaseSeverity
 from ...calculations.registry.authority import bundled_authority
 from ...calculations.registry.bindings import ProfileSelector
 from ...calculations.registry.schema import DataBindingDefinition

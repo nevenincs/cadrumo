@@ -7,7 +7,7 @@ from datetime import timedelta, timezone
 import pytest
 
 from ......core import SecureObjectWrite
-from ......core.errors import CoreValidationError
+from ......core.errors.hierarchy import CoreValidationError
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ...errors import DecryptionError
 from ...tests.engine_bootstrap import bootstrap_sqlite_engine

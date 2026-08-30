@@ -40,7 +40,7 @@ if TYPE_CHECKING:
 from .....core import CasillaId
 from .....core.async_cleanup import close_async_resources
 from .....core.config import Settings
-from .....core.errors import SiteHealthError
+from .....core.errors.hierarchy import SiteHealthError
 from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....domain.calculations.registry.errors import RegistryValidationError

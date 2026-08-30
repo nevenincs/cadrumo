@@ -18,7 +18,7 @@ from pydantic import AnyHttpUrl
 from ....adapters.inbound.pdf import source_pdf_reference_path
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.config import override_settings
-from ....core.errors import resolve_error_message
+from ....core.errors.error_codes import resolve_error_message
 from ....domain.filing.errors import ModeloImportError
 from ....domain.justificante import Justificante, JustificanteParseError
 from ....domain.submission import make_submission_id

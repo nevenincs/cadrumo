@@ -30,7 +30,7 @@ from contextvars import ContextVar
 from datetime import UTC, date, datetime
 from zoneinfo import ZoneInfo
 
-from ..errors import CoreValidationError
+from ..errors.hierarchy import CoreValidationError
 from ._utc import validate_utc_aware
 
 _FROZEN_INSTANT: ContextVar[datetime | None] = ContextVar(

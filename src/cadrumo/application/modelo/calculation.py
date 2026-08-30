@@ -25,7 +25,7 @@ from secrets import token_bytes
 from threading import RLock
 from typing import TYPE_CHECKING
 
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import content_hash_hex
 from ._calculation_actions import get_calculation_revision
 

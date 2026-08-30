@@ -61,7 +61,7 @@ from .....application.auth.session_types import (
 from .....core import AuthProviderDescription, AuthProviderKind
 from .....core.config import Settings as _Settings
 from .....core.config import unwrap_optional_secret
-from .....core.errors import AeatLoginAssertionError, AuthError
+from .....core.errors.hierarchy import AeatLoginAssertionError, AuthError
 from .....core.i18n import tr
 from .....core.identity import same_tax_identifier, tax_id_identity_token
 from .....core.logging import get_logger

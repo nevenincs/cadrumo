@@ -19,7 +19,7 @@ from ....core import (
     IvaDeductionFactKind,
     Period,
 )
-from ....core.errors import ERROR_REGISTRY
+from ....core.errors.error_codes import ERROR_REGISTRY
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.invoices.models import InvoiceCatalogue

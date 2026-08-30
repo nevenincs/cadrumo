@@ -38,7 +38,7 @@ from .._storage_taxonomy import (
 )
 from ..bucket_pointer import pointer_path
 from ..config import Settings, override_settings
-from ..errors import CoreValidationError
+from ..errors.hierarchy import CoreValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

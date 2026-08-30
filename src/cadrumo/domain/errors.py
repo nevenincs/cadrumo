@@ -13,7 +13,7 @@ importing a larger package-specific authority would be the wrong dependency.
 
 from __future__ import annotations
 
-from ..core.errors import CadrumoError
+from ..core.errors.hierarchy import CadrumoError
 
 
 class DomainValidationError(CadrumoError, ValueError):

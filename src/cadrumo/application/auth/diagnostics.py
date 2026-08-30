@@ -30,7 +30,7 @@ from ...adapters.persistence.storage import (
 )
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import ActionEvidenceProvenance, NoRecoveryOutcome
-from ...core.errors import CoreValidationError
+from ...core.errors.hierarchy import CoreValidationError
 from ...core.external_constants import UTF_8_ENCODING, load_external_constants
 from ...core.hashing import canonical_json_bytes, sha256_hex
 from ...core.time import now, validate_utc_aware

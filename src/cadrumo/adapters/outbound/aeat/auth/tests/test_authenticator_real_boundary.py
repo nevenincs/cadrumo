@@ -14,7 +14,7 @@ from ......application.auth.session_types import AeatSession, CertificateSession
 from ......application.auth_credentials import ActiveCertificateCredentials, unnamed_certificate_credentials
 from ......core.auth_session_keys import aeat_auth_session_storage_state_path
 from ......core.config import AEAT_CERTIFICATE_PROTECTED_URL, Settings
-from ......core.errors import AeatLoginAssertionError
+from ......core.errors.hierarchy import AeatLoginAssertionError
 from ......tests.secure_sql import isolated_runtime_profile
 from ...browser import DefaultBrowserSession
 from ...browser.tests.real_http_boundary import opened_http_boundary, real_browser_factory

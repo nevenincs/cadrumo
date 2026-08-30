@@ -41,7 +41,7 @@ from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.storage import M145_COMMUNICATION_RECORD_NAMESPACE
 from ...core import STRICT_FROZEN_CONFIG, CasillaId, ExportLayoutFormat, Hex64Str, validated_casilla_id_map
 from ...core.decimal import coerce_decimal_strict
-from ...core.errors import resolve_error_message
+from ...core.errors.error_codes import resolve_error_message
 from ...core.hashing import content_hash_hex, sha256_hex
 from ...core.identity import BucketId, ContentDigest, IdentityError, validate_spanish_tax_id
 from ...core.logging import get_logger

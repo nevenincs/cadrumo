@@ -14,7 +14,7 @@ from typing import Protocol, runtime_checkable
 
 from pydantic import SecretStr
 
-from .....core.errors import AeatLoginAssertionError
+from .....core.errors.hierarchy import AeatLoginAssertionError
 from .certificate import CertificateHealth
 
 

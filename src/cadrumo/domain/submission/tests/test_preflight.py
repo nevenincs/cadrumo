@@ -14,7 +14,7 @@ from datetime import date
 import pytest
 
 from ....core import AuthProviderDescription, Period
-from ....core.errors import BaseSeverity
+from ....core.errors.severity import BaseSeverity
 from .. import ModeloDraftStatus, ModeloFinding, ModeloFindingLike, Preflight, SubmissionPreflightError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

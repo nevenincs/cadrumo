@@ -109,7 +109,7 @@ def _law_resolved_snapshot(work_unit: WorkUnit) -> RegistrySnapshot | None:
     comparison tolerance is published on the snapshot's verification policy, not
     on the revision.
     """
-    from ...core.errors import CadrumoError
+    from ...core.errors.hierarchy import CadrumoError
     from ._calculation_helpers import resolve_registry_snapshot_for_work_unit
 
     try:

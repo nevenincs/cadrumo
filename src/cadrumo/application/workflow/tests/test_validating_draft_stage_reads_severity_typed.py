@@ -27,7 +27,7 @@ from typing import Any, cast
 
 import pytest
 
-from ....core.errors import BaseSeverity
+from ....core.errors.severity import BaseSeverity
 from ....domain.submission import ModeloFinding
 from ..engine import WorkflowEngine
 from ..errors import WorkflowAbortSignalError

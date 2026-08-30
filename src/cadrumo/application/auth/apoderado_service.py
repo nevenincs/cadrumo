@@ -43,7 +43,7 @@ from ...adapters.persistence.storage import (
     safe_repository_id,
 )
 from ...core.config import Settings
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 from ...core.identity import BucketId, canonical_bucket_id
 from ...core.time import now
 from ...domain.auth import (

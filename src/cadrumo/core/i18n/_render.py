@@ -23,7 +23,7 @@ import yaml
 
 from .._config_state_root import FormerProductStateError
 from ..config import _settings_override, coerce_output_language_setting, load_settings
-from ..errors import CoreError
+from ..errors.hierarchy import CoreError
 from ..external_constants import DEFAULT_OUTPUT_LANGUAGE, OUTPUT_LANGUAGE_ENV_VAR, SUPPORTED_OUTPUT_LANGUAGES
 from ..logging import get_logger
 from ..product_identity import PRODUCT_IDENTITY, normalise_product_identity_references

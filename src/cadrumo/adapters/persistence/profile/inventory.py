@@ -25,7 +25,7 @@ from typing import ClassVar
 
 from pydantic import ValidationError
 
-from ....core.errors import CadrumoError
+from ....core.errors.hierarchy import CadrumoError
 from ....core.logging import get_logger
 from ....domain.contribuyente.inventory import (
     InventoryClosingAuthorityRecord,

@@ -20,7 +20,7 @@ from ....core import (
     Period,
     validated_casilla_id,
 )
-from ....core.errors import resolve_error_message
+from ....core.errors.error_codes import resolve_error_message
 from ....domain.buckets.event import BucketEventType
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva_compensation.reconciliation import IvaCompensationDecisionReason, IvaCompensationReconciliationDecision

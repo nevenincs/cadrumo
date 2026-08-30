@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import pytest
 
-from ......core.errors import ERROR_REGISTRY, ErrorEnvelope, build_error_envelope, get_registered_error_code
+from ......core.errors.error_codes import ERROR_REGISTRY, ErrorEnvelope, build_error_envelope, get_registered_error_code
 from ..errors import (
     BucketAlreadyPresentError,
     BucketBusyError,

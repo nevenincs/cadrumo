@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ..errors import CadrumoObservabilityError
+from ..errors.hierarchy import CadrumoObservabilityError
 
 
 class RunContextMissingError(CadrumoObservabilityError):

@@ -27,7 +27,7 @@ from collections.abc import Mapping
 from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
 
-from .....core.errors import SiteHealthState
+from .....core.errors.hierarchy import SiteHealthState
 from .....core.time import coerce_utc_aware, now
 from ._site_health import (
     SiteHealthEvidence,

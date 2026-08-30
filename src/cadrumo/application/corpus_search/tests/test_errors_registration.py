@@ -13,7 +13,8 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.errors import CadrumoError, ErrorCategory, build_error_envelope
+from ....core.errors.error_codes import ErrorCategory, build_error_envelope
+from ....core.errors.hierarchy import CadrumoError
 from ..errors import CorpusSearchError, CorpusSearchInputError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

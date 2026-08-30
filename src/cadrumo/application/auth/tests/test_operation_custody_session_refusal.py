@@ -21,7 +21,7 @@ from ....adapters.persistence.storage.master_key import current_active_bucket_se
 from ....core import AuthProviderKind
 from ....core.bucket_pointer import BucketPointer, write_pointer
 from ....core.config import load_settings, override_settings
-from ....core.errors import get_registered_error_code, resolve_error_message
+from ....core.errors.error_codes import get_registered_error_code, resolve_error_message
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile

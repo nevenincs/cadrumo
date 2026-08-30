@@ -15,7 +15,7 @@ from pathlib import Path
 
 from ..core import StorageCategory, exclusive_file_lock, storage_location
 from ..core.config import Settings
-from ..core.errors import CadrumoError
+from ..core.errors.hierarchy import CadrumoError
 from ..core.paths import effective_storage_root
 from ._config_reset_models import (
     ConfigResetOperation,

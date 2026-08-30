@@ -28,7 +28,7 @@ from typing import cast
 
 from cadrumo.adapters.persistence.storage import close_active_bucket_session
 from cadrumo.core import PRODUCT_IDENTITY, ActionEvidenceProvenance, NoRecoveryOutcome
-from cadrumo.core.errors import ErrorEnvelope
+from cadrumo.core.errors.error_codes import ErrorEnvelope
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.i18n import tr
 from cadrumo.core.json_contract import (

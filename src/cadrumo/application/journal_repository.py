@@ -36,7 +36,7 @@ from ..core import (
 )
 from ..core.atomic_write import atomic_write_hardened_text
 from ..core.directory_scan import scan_directory
-from ..core.errors import CadrumoError
+from ..core.errors.hierarchy import CadrumoError
 from ..core.external_constants import UTF_8_ENCODING
 
 JOURNAL_OPERATION_ID_PATTERN = re.compile(HEX_PATTERN_64)

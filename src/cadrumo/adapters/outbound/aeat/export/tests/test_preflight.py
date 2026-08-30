@@ -6,7 +6,7 @@ from datetime import date
 
 import pytest
 
-from ......core.errors import BaseSeverity
+from ......core.errors.severity import BaseSeverity
 from ......core.i18n import Translatable as tr
 from ......domain.filing.schema import ModeloValidationFinding
 from ......domain.submission import ModeloDraftStatus, Preflight, SubmissionPreflightError

@@ -21,7 +21,7 @@ import pytest
 
 from ..core import STORAGE_TAXONOMY, StorageCategory, StorageOverridePolicy, StorageScope, storage_path
 from ..core.config import Settings, override_settings
-from ..core.errors import CoreValidationError
+from ..core.errors.hierarchy import CoreValidationError
 from .env_scope import isolated_aeat_env, settings_without_env_file
 from .storage_scope import relocated_storage_path, storage_env_overrides, storage_overrides
 

@@ -104,7 +104,7 @@ class TestActionableMessages:
     """
 
     def test_checksum_message_names_correct_letter(self) -> None:
-        from ...errors import resolve_error_message
+        from ...errors.error_codes import resolve_error_message
 
         cases = (
             ("12345678A", "12345678", "Z"),
@@ -118,7 +118,7 @@ class TestActionableMessages:
             assert expected_letter in message
 
     def test_malformed_document_messages_state_expected_shape(self) -> None:
-        from ...errors import resolve_error_message
+        from ...errors.error_codes import resolve_error_message
 
         cases = (
             # The NIF shape rule must be stated: 8 digits + a check letter.
@@ -158,7 +158,7 @@ class TestCifKindCatalogue:
 
 class TestErrorCodeBinding:
     def test_class_binds_to_registered_code(self) -> None:
-        from ...errors import bind_error_code
+        from ...errors.error_codes import bind_error_code
 
         bound = bind_error_code(IdentityError)
         assert bound is not None

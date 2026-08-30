@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.errors import CoreValidationError
+from ....core.errors.hierarchy import CoreValidationError
 from ....core.parsing import normalise_iso_3166_alpha2_jurisdiction
 from ....domain.transactions.errors import TransactionValidationError
 from ....domain.transactions.models import Transaction

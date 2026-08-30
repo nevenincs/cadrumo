@@ -45,7 +45,7 @@ from typing import TYPE_CHECKING
 # evaluated lazily, and pydantic resolves it when it builds the envelope schema.
 from pydantic import BaseModel
 
-from ....core.errors import CadrumoError
+from ....core.errors.hierarchy import CadrumoError
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.time import now
 from ..storage import (

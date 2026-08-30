@@ -11,7 +11,7 @@ and :class:`core.errors.ErrorEnvelope` rendering path.
 
 from __future__ import annotations
 
-from ..core.errors import CoreValidationError
+from ..core.errors.hierarchy import CoreValidationError
 
 
 class DiagnosticModelError(CoreValidationError):

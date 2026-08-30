@@ -112,7 +112,7 @@ class TestConfigure:
         English reaches tracebacks and logs in every locale. Pinning
         ``str(exc)`` to the key is what fails a re-introduced sentence.
         """
-        from ....core.errors import get_registered_error_code, resolve_error_message
+        from ....core.errors.error_codes import get_registered_error_code, resolve_error_message
 
         svc = ApoderadoService(settings=isolated_settings)
         with pytest.raises(ApoderadoRepresentedNifInvalidError) as excinfo:
@@ -529,7 +529,7 @@ class TestStoredConfigurationOwnership:
         fails a re-introduced positional sentence, which resolution would hide
         while tracebacks and logs still carried it in English.
         """
-        from ....core.errors import get_registered_error_code, resolve_error_message
+        from ....core.errors.error_codes import get_registered_error_code, resolve_error_message
 
         repo = ApoderadoConfigRepository(bucket_id=_PROFILE_BUCKET_ID, settings=isolated_profile.settings)
         foreign = self._foreign_configuration()

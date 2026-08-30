@@ -16,7 +16,7 @@ See Also:
 
 from __future__ import annotations
 
-from .....core.errors import AuthError
+from .....core.errors.hierarchy import AuthError
 
 
 class AuthConfigurationError(AuthError):

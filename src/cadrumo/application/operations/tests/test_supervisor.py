@@ -26,7 +26,8 @@ from ....adapters.persistence.storage import (
 from ....core import STRICT_FROZEN_CONFIG
 from ....core.access_gate import AeatLiveReadNotEnabledError
 from ....core.directory_scan import scan_directory
-from ....core.errors import CoreError, get_registered_error_code
+from ....core.errors.error_codes import get_registered_error_code
+from ....core.errors.hierarchy import CoreError
 from ....core.operations import (
     OperationCancellation,
     OperationClosePolicy,

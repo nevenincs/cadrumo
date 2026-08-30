@@ -27,7 +27,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core.errors import get_registered_error_code
+from ....core.errors.error_codes import get_registered_error_code
 from ..registration import ProfileRegistrationConflictError, ProfileRegistrationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

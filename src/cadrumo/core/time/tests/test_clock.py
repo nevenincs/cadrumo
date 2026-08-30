@@ -7,7 +7,7 @@ from datetime import UTC, date, datetime
 import pytest
 
 from ...config import override_settings
-from ...errors import CoreValidationError
+from ...errors.hierarchy import CoreValidationError
 from .. import MADRID_TZ, clock_is_frozen, frozen_clock, now, today_madrid
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

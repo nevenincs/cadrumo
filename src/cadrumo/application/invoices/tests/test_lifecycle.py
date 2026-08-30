@@ -352,7 +352,7 @@ def test_no_lifecycle_refusal_carries_an_authored_sentence(tmp_path: Path) -> No
     the operator-facing text comes from the catalogue. Re-introducing prose at
     any of the five raise sites makes ``str(exc)`` that sentence and fails here.
     """
-    from ....core.errors import resolve_error_message
+    from ....core.errors.error_codes import resolve_error_message
 
     transaction_id = "b" * 64
     catalogue = InvoiceCatalogue.from_invoices([_build("2026-0142")])

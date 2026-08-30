@@ -45,7 +45,7 @@ from ...adapters.persistence.storage import (
 from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings, load_settings
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId, ContentDigest
 from ...core.time import now, validate_utc_aware

@@ -18,7 +18,7 @@ from ....application.wizard.descendant_door import (
     persist_descendant_door_answers,
     run_descendant_door,
 )
-from ....core.errors import CadrumoError
+from ....core.errors.hierarchy import CadrumoError
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.serial]

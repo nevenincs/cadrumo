@@ -21,7 +21,7 @@ from datetime import datetime
 from pydantic import BaseModel, Field, field_validator
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from .....core.errors import CoreValidationError
+from .....core.errors.hierarchy import CoreValidationError
 from .....core.identity import BucketId, ContentDigest
 from .....core.product_identity import PRODUCT_IDENTITY
 from .....core.time import validate_utc_aware

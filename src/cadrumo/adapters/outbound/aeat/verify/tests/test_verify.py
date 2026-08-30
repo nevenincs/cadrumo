@@ -138,14 +138,14 @@ def test_verify_browser_session_type_guard_rejects_incompatible_object() -> None
 
 def test_browser_adapter_type_error_is_registered() -> None:
     """The adapter mismatch remains bound to the central error registry."""
-    from ......core.errors import ERROR_REGISTRY
+    from ......core.errors.error_codes import ERROR_REGISTRY
 
     assert "ERROR_SEDE_BROWSER_ADAPTER_TYPE" in ERROR_REGISTRY
 
 
 def test_browser_adapter_type_error_round_trips_build_error_envelope() -> None:
     """The registered adapter mismatch builds a typed public envelope."""
-    from ......core.errors import build_error_envelope
+    from ......core.errors.error_codes import build_error_envelope
     from ...sede.errors import BrowserAdapterTypeError
 
     exc = BrowserAdapterTypeError("default_browser_session_factory returned an incompatible type")

@@ -198,7 +198,7 @@ def test_non_cadrumo_error_cause_chain_reaches_config_boundary_error(tmp_path: P
             assert isinstance(cause, ConfigBoundaryError)
             # Real-failure trigger raises a SQLAlchemy DatabaseError or
             # similar; the wrapped original_exception is non-CadrumoError.
-            from .....core.errors import CadrumoError
+            from .....core.errors.hierarchy import CadrumoError
 
             assert not isinstance(cause.original_exception, CadrumoError)
 
@@ -293,7 +293,8 @@ def test_config_boundary_error_is_registered_cadrumo_error_subclass() -> None:
     must have a registered ErrorCode or __init_subclass__ raises. Verify
     the class was successfully declared by instantiating it.
     """
-    from .....core.errors import CadrumoError, get_registered_error_code
+    from .....core.errors.error_codes import get_registered_error_code
+    from .....core.errors.hierarchy import CadrumoError
 
     err = ConfigBoundaryError(RuntimeError("probe"))
     assert isinstance(err, CadrumoError)
@@ -365,7 +366,7 @@ def test_pre_resolution_error_envelope_command_stays_null() -> None:
     before any command callback runs (an argv parse failure) therefore carries
     null, so the field is never a fabricated command name.
     """
-    from .....core.errors import render_error_json
+    from .....core.errors.error_codes import render_error_json
     from .....core.locks_errors import LockAcquisitionError
 
     document = json.loads(render_error_json(LockAcquisitionError()))

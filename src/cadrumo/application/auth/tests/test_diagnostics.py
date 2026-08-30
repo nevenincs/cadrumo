@@ -16,7 +16,7 @@ from ....adapters.persistence.storage import (
     SensitivityClass,
 )
 from ....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
-from ....core.errors import ERROR_REGISTRY, build_error_envelope
+from ....core.errors.error_codes import ERROR_REGISTRY, build_error_envelope
 from ....core.external_constants import UTF_8_ENCODING, load_external_constants
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ....tests.secure_sql import isolated_runtime_profile
@@ -267,7 +267,7 @@ def test_diagnostic_payload_rejects_non_object_json() -> None:
     """
     import json as _json
 
-    from ....core.errors import get_registered_error_code, resolve_error_message
+    from ....core.errors.error_codes import get_registered_error_code, resolve_error_message
     from ..diagnostics import _payload
 
     with pytest.raises(AuthDiagnosticPayloadError) as raised:
@@ -357,7 +357,7 @@ def test_diagnostic_payload_refusals_author_no_sentence(
     would not, because resolution prefers the key while ``str(exc)`` prefers
     the sentence.
     """
-    from ....core.errors import get_registered_error_code, resolve_error_message
+    from ....core.errors.error_codes import get_registered_error_code, resolve_error_message
 
     payload = _DiagnosticPayload.model_validate(build_payload())
     with pytest.raises(AuthDiagnosticPayloadError) as raised:
@@ -380,7 +380,7 @@ def test_record_phone_state_refusal_authors_no_sentence() -> None:
     fact behind the registered key, and ``str(exc)`` degrading to that key is
     what proves the raise site authors no sentence.
     """
-    from ....core.errors import get_registered_error_code, resolve_error_message
+    from ....core.errors.error_codes import get_registered_error_code, resolve_error_message
 
     with pytest.raises(AuthDiagnosticPhoneStateError) as raised:
         record_auth_diagnostic_phone_state("diag-1", "not_a_known_state")

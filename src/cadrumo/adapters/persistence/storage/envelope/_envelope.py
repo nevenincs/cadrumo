@@ -43,7 +43,7 @@ from pydantic import BaseModel, Field, ValidationError, field_validator
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.atomic_write import atomic_write_text
 from .....core.classification import SensitivityClass
-from .....core.errors import CoreValidationError
+from .....core.errors.hierarchy import CoreValidationError
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.logging import get_logger
 from .....core.time import validate_utc_aware
