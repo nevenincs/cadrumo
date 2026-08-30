@@ -2455,3 +2455,44 @@ no consumer at all -- see the refusal-union reachability finding: the
 disposition is computed, attached to the resolved target, and read by nothing
 in production. Consolidating the comparison does not fix that; it makes the two
 gaps independent, which is what lets each be closed on its own evidence.
+
+### Semantic sweep 2026-08-31: `facts` names three different shapes across the refusal surfaces
+
+**Pathway:** `ModeloWorkspaceDomainRefusalV1.facts`,
+`ModeloEditDomainRefusalV1.facts`, and the work-review blocker's `facts`.
+
+The two domain-refusal types share SEVEN field names -- code, evidence, facts,
+kind, reconsideration_condition, recovery_action, responsible_owner -- and
+three of the seven carry different types. `code` differing is correct: the two
+contracts have distinct refusal vocabularies. `facts` differing is not.
+
+Measured shapes for one concept name:
+
+- Workspace: `tuple[ModeloWorkspaceEvidenceFactV1, ...]`, typed name/value
+  evidence facts.
+- Edit: `tuple[_BoundedText, ...]`, bounded by `_MAX_MESSAGE_ARGUMENTS`.
+- Work-review blocker: consumed as `dict(blocker.facts)`, so a mapping.
+
+The edit ADR settles what the middle one IS, and it is not facts: decision D3
+specifies findings carrying "approved MESSAGE ARGUMENTS, and safe evidence
+references". A field holding message arguments is named `facts`, sitting beside
+another refusal type whose `facts` holds typed evidence, and a third surface
+whose `facts` is a mapping. This is the same collision class as the
+`section_path` case: one name, one type-shaped slot, three meanings, and prose
+as the only thing distinguishing them.
+
+**A second, independent finding at the same site.** All FOUR production
+constructions of `ModeloEditDomainRefusalV1` pass `code`,
+`reconsideration_condition`, `responsible_owner` and sometimes `address` -- and
+none passes `evidence`, `facts` or `recovery_action`. Decision D5 of the same
+ADR requires each refusal to carry "a stable code, affected address or
+boundary, safe requested and selected coordinates, owner, reconsideration
+condition, and safe evidence reference". The evidence reference is therefore an
+UNBUILT MANDATE in the edit contract exactly as it is in the Workspace one, and
+must not be deleted on a zero-population measurement.
+
+**Remediation.** Rename the edit contract's `facts` to what the ADR calls it,
+so the three surfaces stop sharing a name for three shapes; and treat the
+absent evidence reference as a build, tracked with the Workspace's equivalent
+rather than separately -- the two are one gap in two contracts, and closing
+either alone leaves an operator-facing refusal that still cannot say why.
