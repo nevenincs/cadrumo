@@ -26,7 +26,7 @@ from .....tests.fixtures.external_layout_candidates import (
     external_layout_source_class_is_non_authoritative,
     load_external_layout_candidate,
 )
-from ..parser import (
+from .._parser import (
     _classify_target,
     _extract_pages_words,
     _numeric_casilla_anchors,

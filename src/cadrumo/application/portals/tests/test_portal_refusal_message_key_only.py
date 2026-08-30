@@ -32,7 +32,7 @@ from ....core.errors.error_codes import get_registered_error_code
 from ....core.errors.hierarchy import CadrumoError
 from ....core.i18n import tr
 from ....domain.portals.registry import PORTAL_REGISTRY
-from .. import PortalNotFoundError, PortalsService
+from ..service import PortalNotFoundError, PortalsService
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

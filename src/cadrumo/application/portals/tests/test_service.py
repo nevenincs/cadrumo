@@ -9,7 +9,7 @@ import pytest
 
 from ....core.i18n import tr
 from ....domain.portals.registry import PORTAL_REGISTRY
-from .. import (
+from ..service import (
     PortalNotFoundError,
     PortalRow,
     PortalsService,
@@ -106,7 +106,7 @@ class TestNoLiveOrWriteSurface:
         script = """
 import sys
 
-from cadrumo.application.portals import PortalsService
+from cadrumo.application.portals.service import PortalsService
 
 service = PortalsService()
 service.list_portals()

@@ -248,7 +248,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.portals._service.PortalNotFoundError",
+        "cadrumo.application.portals.service.PortalNotFoundError",
         ErrorCode(
             code="REFUSED_LIVE_PORTAL_NOT_FOUND",
             category=ErrorCategory.REFUSED,

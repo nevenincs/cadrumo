@@ -5,7 +5,7 @@ tags:
 date: '2026-08-30'
 modified: '2026-08-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:0c333660c913b4e949006bb75d5b049d56402f5802fa8966d584a921fb7da7f0'
+body_hash: 'sha256:e8c1c885bc353f273fb0e1b9f0b0af3026ec06709025d828963bfbabf79e3ba9'
 related: []
 ---
 
@@ -2176,6 +2176,47 @@ execution rules, the truncating form is not a reasonable default.
 over an emptied file produces a plausible-looking result and destroys what was
 there; the author checked first, which is the only reason the distinction between
 "failed before truncating" and "failed after" was recoverable at all.
+
+### a-ranking-query-cannot-answer-an-absence-question | high | an enumeration piped through `head` was read as complete, and absence-from-the-visible-portion was asserted as absence
+
+The fifth and last counting failure of the session, and the only one where the
+command was correct and the answer was broken on the way to reading it.
+
+An enumeration of positional CLI declarations was piped through `head -12` to keep
+the output readable. One name sat below the cut, with a single occurrence. Its
+absence from the VISIBLE portion was read as absence from the data — and then
+asserted, in a plan row, as the reason another agent's example was wrong. It was
+not wrong; it was present at `_custody_command_specs.py:118`.
+
+**This completes a family of five, all producing believable numbers from commands
+that ran without error:**
+
+- `wc -l` counting LINE MATCHES and reported as FILES
+- `grep -h` stripping the filenames a downstream path filter needed, so the filter
+  passed everything
+- a predicate that could not match the shape it sought, so absence read as clean
+- `-c` and `-o` not composing, returning a uniform zero
+- and this: a correct query, a correct unit, a correct filter, TRUNCATED for
+  display and then read as the data
+
+The first four are defects in the query. **This one is a defect in the reading**,
+which is why it survived an evening of watching for the other four: nothing about
+the command was wrong.
+
+**The corollary is narrow and actionable: `head -N` answers "what is most
+common" and never "is X present".** A ranking query and an absence query are
+different questions, and a truncated ranking cannot answer the second. Where the
+claim is that something does NOT occur, query for that thing specifically —
+`grep -c 'name="name"'` — rather than scanning a shortened list for its absence.
+
+**And the distinction that matters more than the error:** the example was not
+WRONG, it was TOO WEAK — one positional declaration against two bindings does not
+establish that the bound name targets that command, whereas twenty-two bindings
+against six declarations does. Collapsing "wrong" into "weak" is what produced
+confidence in a refutation that had not actually been made. The two failures need
+different responses: a wrong example is replaced, a weak one is strengthened, and
+only the first justifies overturning the claim it supported.
+
 
 ## Recommendations
 
