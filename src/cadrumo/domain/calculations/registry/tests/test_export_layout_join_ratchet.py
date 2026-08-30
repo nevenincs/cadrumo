@@ -51,15 +51,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 #: ``(modelo, revision_id, design_sheet_name)`` for every design sheet whose
 #: record join cannot currently be established, so its byte-coverage verdict
 #: comes from the weaker any-record fallback. Shrink this; never grow it.
-_UNJOINED_DESIGN_SHEETS: frozenset[tuple[str, str, str]] = frozenset(
-    (
-        # Modelo 184's 2023 and 2025 entidad/socio sheets now join through
-        # their AEAT-derived tipo-hoja literals. Modelo 296 remains the sole
-        # unresolved fallback: its candidate discriminator span is optional at
-        # runtime, so it cannot honestly identify a filed record.
-        ("296", "2024-y-siguientes", "Tipo 2 - Registro De Perceptor"),  # 5-record layout
-    )
-)
+_UNJOINED_DESIGN_SHEETS: frozenset[tuple[str, str, str]] = frozenset()
 
 #: A scan resolving almost nothing would satisfy the equality assertion
 #: perfectly. This floor sits far below the real figure so ordinary authoring
