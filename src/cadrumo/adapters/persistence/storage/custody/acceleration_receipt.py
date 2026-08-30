@@ -67,7 +67,6 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
-from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core import ProfileSessionRefusalReason
 from .....core.base64_codec import b64_decode, b64_encode
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
@@ -78,6 +77,7 @@ from .....core.hashing import (
 )
 from .....core.identity import canonical_profile_bucket_id
 from .....core.logging import get_logger
+from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.time import validate_utc_aware
 from .._storage_path_definitions import PROFILE_SESSION_FILENAME, PROFILE_SESSION_RETIREMENT_FILENAME
 from ..crypto.aead import KEY_SIZE, EncryptedBlob, decrypt_record, encrypt_record

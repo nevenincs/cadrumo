@@ -11,7 +11,6 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 
-from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.credentials import assess_profile_password
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.hashing import (
@@ -20,6 +19,7 @@ from .....core.hashing import (
     reject_duplicate_json_members,
     reject_json_constant,
 )
+from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..crypto.aead import GCM_TAG_SIZE, KEY_SIZE, NONCE_SIZE
 from .errors import ProfileCustodyPasswordError, ProfileCustodyRecordError
 

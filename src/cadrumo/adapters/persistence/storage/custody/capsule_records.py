@@ -7,12 +7,11 @@ import re
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Final, Literal, cast
+from typing import TYPE_CHECKING, ClassVar, Final, Literal, cast
 from uuid import UUID
 
 from pydantic import BaseModel, ValidationError, field_validator, model_validator
 
-from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.hashing import (
     bounded_canonical_json_bytes,
     canonical_json_digest,
@@ -21,7 +20,9 @@ from .....core.hashing import (
     validate_prefixed_digest,
 )
 from .....core.identity import PrefixedContentDigest, ProfileLabel, canonical_profile_bucket_id
+from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.time import now as _now
+from .digest_model import CustodyDigestModel
 from .errors import ProfileCustodyRecordError
 from .filesystem import ProfileCustodyPasswordReadOperation
 from .records import ProfileCustodyEnvelope
@@ -320,8 +321,12 @@ class ProfileCustodyCommit(_ProfileCustodyCommitPayload):
             raise ProfileCustodyRecordError("cannot construct a profile capsule commit") from exc
 
 
-class ProfileCustodyDeletionMarker(BaseModel):
+class ProfileCustodyDeletionMarker(CustodyDigestModel):
     """Transaction ownership proof carried with a capsule during local deletion."""
+
+    _digest_maximum_bytes: ClassVar[int] = PROFILE_CUSTODY_COMMIT_MAX_BYTES
+    _digest_subject: ClassVar[str] = "profile custody deletion marker"
+    _digest_mismatch_message: ClassVar[str] = "profile deletion marker self_digest does not match"
 
     model_config = _STRICT_FROZEN
 
@@ -332,36 +337,8 @@ class ProfileCustodyDeletionMarker(BaseModel):
     inventory_digest: str
     self_digest: str
 
-    @model_validator(mode="after")
-    def _verify_self_digest(self) -> ProfileCustodyDeletionMarker:
-        if self.self_digest != self.computed_self_digest:
-            raise ValueError("profile deletion marker self_digest does not match")
-        return self
 
-    @property
-    def computed_self_digest(self) -> str:
-        """Recompute the digest a tamper check compares against ``self_digest``.
 
-        The marker travels WITH a capsule during local deletion as its
-        ownership proof (see the class docstring); this is what a reader on
-        the receiving side re-derives to confirm the marker was not forged or
-        altered in transit.
-        """
-        payload = self.model_dump(mode="json")
-        del payload["self_digest"]
-        return canonical_json_digest(
-            payload,
-            maximum_bytes=PROFILE_CUSTODY_COMMIT_MAX_BYTES,
-            subject="profile deletion marker",
-        )
-
-    def canonical_json_bytes(self) -> bytes:
-        """Serialise to the exact canonical bytes this marker's identity is pinned to."""
-        return bounded_canonical_json_bytes(
-            self.model_dump(mode="json"),
-            maximum_bytes=PROFILE_CUSTODY_COMMIT_MAX_BYTES,
-            subject="profile deletion marker",
-        )
 
     @classmethod
     def create(cls, *, profile_id: UUID, transaction_id: UUID, inventory_digest: str) -> ProfileCustodyDeletionMarker:

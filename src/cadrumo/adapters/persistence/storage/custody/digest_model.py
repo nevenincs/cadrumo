@@ -21,9 +21,9 @@ base silently accepting a record whose inner digest nobody checked.
 
 from __future__ import annotations
 
-from typing import Any, ClassVar, TypeVar, cast
+from typing import Any, ClassVar, Self, TypeVar, cast
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ValidationError, model_validator
 
 from .....core.hashing import bounded_canonical_json_bytes, canonical_json_digest
 from .....core.models import STRICT_FROZEN_CONFIG
@@ -40,11 +40,20 @@ def payload_without_self_digest(model: BaseModel) -> dict[str, object]:
 
 
 class CustodyDigestModel(BaseModel):
-    """Shared canonical digest and JSON behavior for self-verifying custody records."""
+    """Shared canonical digest and JSON behavior for self-verifying custody records.
+
+    A subclass declares the three ClassVars and its own ``self_digest`` field.
+    It keeps its own field validator for the digest's SHAPE, because those
+    genuinely differ: one record accepts a bare sha256, two accept the
+    ``sha256:``-prefixed form, and a third spells the check inline. Only the
+    computation and the mismatch refusal are shared.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
+    self_digest: str
     _digest_maximum_bytes: ClassVar[int]
     _digest_subject: ClassVar[str]
+    _digest_mismatch_message: ClassVar[str]
 
     @property
     def canonical_payload(self) -> dict[str, object]:
@@ -59,6 +68,18 @@ class CustodyDigestModel(BaseModel):
             maximum_bytes=self._digest_maximum_bytes,
             subject=self._digest_subject,
         )
+
+    @model_validator(mode="after")
+    def _verify_self_digest(self) -> Self:
+        """Refuse a record whose stored digest does not describe what it holds.
+
+        This runs on every construction, including every load, which is what
+        makes the digest a check rather than a decoration: a record altered
+        after it was written cannot be parsed back.
+        """
+        if self.self_digest != self.computed_self_digest:
+            raise ValueError(self._digest_mismatch_message)
+        return self
 
     def canonical_json_bytes(self) -> bytes:
         """Serialise the complete record in its unique canonical JSON form."""

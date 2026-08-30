@@ -10,7 +10,6 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 
-from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.hashing import (
     bounded_canonical_json_bytes,
@@ -20,6 +19,7 @@ from .....core.hashing import (
     validate_prefixed_digest,
 )
 from .....core.identity import canonical_profile_bucket_id
+from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .errors import ProfileCustodyRecordError
 from .kdf_supervision import unlock_profile_custody_recovery_material, wrap_profile_custody_recovery_material
 from .records import (
