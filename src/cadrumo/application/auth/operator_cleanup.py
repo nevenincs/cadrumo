@@ -463,7 +463,7 @@ def auth_cleanup_bucket_events(
     certificate_names: tuple[str, ...],
 ) -> tuple[_BucketEventSpec, ...]:
     """Project durable bucket events for one completed auth cleanup intent."""
-    from ...domain.buckets import BucketEventType
+    from ...domain.buckets.event import BucketEventType
 
     common = {"operation": "reset", "operation_id": intent.operation_id}
     events: list[_BucketEventSpec] = []

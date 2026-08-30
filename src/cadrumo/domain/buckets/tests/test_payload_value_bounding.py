@@ -25,7 +25,7 @@ from pathlib import Path
 import pytest
 
 from ....tests import production_ast_items, repo_relative
-from .. import BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH, payload_value_fits
+from ..event import BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH, payload_value_fits
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -63,14 +63,14 @@ from ._schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 
 if TYPE_CHECKING:
     from ..calculations.registry.ledger_bindings import IvaLedgerObservation
-    from ..invoices import IvaRate
+    from ..invoices.enums import IvaRate
 else:
     IvaRate = object
 
 
 def _invoice_validation_error(message: str) -> Exception:
     """Build the invoice-domain validation error without importing invoices at module load."""
-    from ..invoices import InvoiceValidationError
+    from ..invoices.errors import InvoiceValidationError
 
     return InvoiceValidationError(message)
 
@@ -180,8 +180,8 @@ def classify_invoice_line_for_iva(
             which has no rate-tier classification and cannot be
             handled by the standard-case helper.
     """
-    from ..invoices import IvaRate as _IvaRate
-    from ..invoices import iva_rate_kind
+    from ..invoices.enums import IvaRate as _IvaRate
+    from ..invoices.enums import iva_rate_kind
 
     if iva_rate is _IvaRate.NOT_SUBJECT:
         raise _invoice_validation_error(
@@ -277,7 +277,7 @@ def invoice_line_to_iva_observation(
             recorded at whatever the tier happened to mean.
     """
     from ..calculations.registry.ledger_bindings import IvaLedgerObservation
-    from ..invoices import iva_rate_percentage
+    from ..invoices.enums import iva_rate_percentage
 
     classification = classify_invoice_line_for_iva(iva_rate=iva_rate, invoice_kind=invoice_kind)
     if classification.rate_kind is None:

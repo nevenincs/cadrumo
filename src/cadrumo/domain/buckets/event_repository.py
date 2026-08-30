@@ -18,6 +18,7 @@ from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime
 from typing import TYPE_CHECKING
 
+from .errors import BucketEventValidationError, BucketsError
 from .event import (
     BucketEvent,
     BucketEventHistoryCatalogue,
@@ -25,8 +26,7 @@ from .event import (
     BucketEventType,
     derive_bucket_event_id,
 )
-from ._protocols import BucketEventHistoryRepositoryProtocol
-from .errors import BucketEventValidationError, BucketsError
+from .protocols import BucketEventHistoryRepositoryProtocol
 
 if TYPE_CHECKING:
     from ...core.secure_object_write import SecureObjectWrite

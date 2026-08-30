@@ -48,7 +48,9 @@ from ...core import CasillaId, ElidedProse, Modelo, Period, PeriodKind, TipoActi
 from ...core.aggregation import LedgerIncomeGrounding, LedgerWithholdingDerivation
 from ...core.identity import TransactionId
 from ...core.money import round_to_cents
-from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepositoryProtocol, decompose_invoice
+from ...domain.invoices.decomposition import decompose_invoice
+from ...domain.invoices.models import InvoiceCatalogue
+from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.iva import InvoiceKind, category_cuota_is_zero_by_law
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.irpf_categories import has_activity_irpf_category, has_employment_irpf_category

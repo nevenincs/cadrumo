@@ -630,7 +630,8 @@ def _emit_export_event(operation: ProfileBundleExportOperation) -> None:
     content-addressed event catalogue then collapses the re-emission to one
     entry.
     """
-    from ...domain.buckets import BucketEventObjectType, BucketEventType, emit_bucket_event
+    from ...domain.buckets.event import BucketEventObjectType, BucketEventType
+    from ...domain.buckets.event_repository import emit_bucket_event
     from .profile_record_repository import require_profile_record_session
 
     require_profile_record_session(operation.profile_id)

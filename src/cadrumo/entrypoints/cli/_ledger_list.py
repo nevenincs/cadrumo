@@ -24,7 +24,7 @@ from ...application.ledger.review_projection import ledger_transaction_review_st
 from ...application.review.filter import LedgerReviewFilterSpec
 from ...core import LedgerSortField, LedgerSortOrder
 from ...core.i18n import tr
-from ...domain.buckets import BucketEventHistoryCatalogue, BucketEventObjectType, BucketEventType
+from ...domain.buckets.event import BucketEventHistoryCatalogue, BucketEventObjectType, BucketEventType
 from ...domain.transactions.models import Transaction
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ._ledger_payloads import LedgerListRowPayload

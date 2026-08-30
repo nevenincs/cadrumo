@@ -111,7 +111,7 @@ def _decides_invoice_kind(node: ast.AST) -> bool:
     Both halves are required, and the direction of the derivation matters.
 
     Co-occurrence alone is too loose: ``suggest_reconciliations``
-    (:mod:`cadrumo.domain.invoices._service`) names both enums in one ternary,
+    (:mod:`cadrumo.domain.invoices.service`) names both enums in one ternary,
     but it runs the correspondence BACKWARDS — it picks the bank direction an
     already-known invoice kind should reconcile against. That is the matcher's
     own question, not this mapping, and it could not delegate here even if it

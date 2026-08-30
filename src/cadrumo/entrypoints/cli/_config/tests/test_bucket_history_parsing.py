@@ -8,12 +8,7 @@ import pytest
 import typer
 from pydantic import ValidationError
 
-from .....domain.buckets import (
-    BucketEvent,
-    BucketEventObjectType,
-    BucketEventType,
-    derive_bucket_event_id,
-)
+from .....domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType, derive_bucket_event_id
 from ..._config_bucket_history_payloads import BucketHistoryEventPayload
 from .._bucket_history import (
     _bucket_history_event_matches,

@@ -22,13 +22,8 @@ from ...core import ABSENT_SECURE_OBJECT_REVISION_ID, SecureObjectWrite
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import canonical_json_bytes, sha256_hex
 from ...core.paths import effective_storage_root
-from ...domain.buckets import (
-    BucketEvent,
-    BucketEventObjectType,
-    BucketEventType,
-    append_bucket_event,
-    build_bucket_event,
-)
+from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
+from ...domain.buckets.event_repository import append_bucket_event, build_bucket_event
 from ...domain.user_profile.errors import UserProfileError
 from ...domain.user_profile.values import UserProfileRecord
 from .custody_ports import (
@@ -600,7 +595,7 @@ def _assert_event_binding(
     event_id: str,
     event: object,
 ) -> None:
-    from ...domain.buckets import BucketEvent
+    from ...domain.buckets.event import BucketEvent
 
     if not isinstance(event, BucketEvent):
         raise ProfileRecordIntegrityError("profile record event history returned an invalid event")

@@ -52,12 +52,8 @@ from ...core import PDF_CONTAINER_SHAPES, ImageMediaType, detect_image_media_typ
 from ...core.config import Settings, load_settings
 from ...core.logging import get_logger
 from ...core.time import coerce_utc_aware, now
-from ...domain.buckets import (
-    BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH,
-    BucketEventHistoryRepositoryProtocol,
-    BucketEventObjectType,
-    BucketEventType,
-)
+from ...domain.buckets.event import BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH, BucketEventObjectType, BucketEventType
+from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.categories.spending_category import SpendingCategory
 from ...domain.iva import IvaCategory, resolve_category_rate, split_gross_at_rate
 from ...domain.transactions.enums import BUSINESS_BEARING_STATES, BusinessClassification, TransactionLifecycleState

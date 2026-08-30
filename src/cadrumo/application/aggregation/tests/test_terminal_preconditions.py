@@ -19,7 +19,8 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ledger_bindings import IvaLedgerObservation
 from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
-from ....domain.invoices import Invoice, InvoiceLine, IvaRate, PaymentStatus
+from ....domain.invoices.enums import IvaRate, PaymentStatus
+from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva import (
     InvoiceKind,
     IvaCashAccountingTreatment,

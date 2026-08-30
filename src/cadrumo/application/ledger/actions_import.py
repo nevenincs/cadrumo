@@ -28,13 +28,9 @@ from ...core.errors import resolve_error_message
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import canonical_json_bytes, sha256_file
 from ...core.i18n import tr
-from ...domain.buckets import (
-    BucketEvent,
-    BucketEventHistoryRepositoryProtocol,
-    BucketEventObjectType,
-    BucketEventType,
-    emit_bucket_events,
-)
+from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
+from ...domain.buckets.event_repository import emit_bucket_events
+from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.currency.models import CurrencyNormalizationStatus, MonetaryAmount
 from ...domain.currency.service import CurrencyNormalizationService
 from ...domain.transactions.errors import TransactionValidationError

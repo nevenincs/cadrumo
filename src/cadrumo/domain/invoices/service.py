@@ -24,12 +24,12 @@ from ...core.logging import get_logger
 from ..iva import InvoiceKind
 from ..transactions.enums import TransactionDirection
 from ..transactions.models import TransactionCatalogue
-from ._models import Invoice, InvoiceCatalogue
 from .errors import (
     InvoiceLinkError,
     InvoiceNotFoundError,
     InvoiceValidationError,
 )
+from .models import Invoice, InvoiceCatalogue
 
 _LOGGER = get_logger(__name__)
 #: Default closeness for proposing an invoice-to-transaction link.

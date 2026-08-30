@@ -118,11 +118,11 @@ _WRITES_WITHOUT_A_REVISION: dict[tuple[str, str], str] = {
     ): "per-transaction rows as above; the singleton invoice catalogue beside it IS guarded",
     (
         "src/cadrumo/application/ledger/actions_common.py",
-        "_save_transaction_catalogue_and_events",
+        "save_transaction_catalogue_and_events",
     ): "the transaction catalogue arrives as a parameter; its EVENT side is guarded by _commit_with_guarded_events",
     (
         "src/cadrumo/application/ledger/actions_common.py",
-        "_save_transaction_catalogue_invoices_and_events",
+        "save_transaction_catalogue_invoices_and_events",
     ): "transaction and invoice catalogues arrive as parameters; the event side is guarded",
     (
         "src/cadrumo/application/modelo/_amendment_actions.py",
@@ -145,7 +145,7 @@ _WRITES_WITHOUT_A_REVISION: dict[tuple[str, str], str] = {
     ): "the envelope arrives as a parameter and the history state is projected fresh from it, so neither "
     "write derives from a read this function performed",
     (
-        "src/cadrumo/domain/buckets/_event_repository.py",
+        "src/cadrumo/domain/buckets/event_repository.py",
         "bucket_event_history_write",
     ): "the narrow-port fallback: the domain protocol promises only exists/load/save, so an injected "
     "alternative may offer no revisioned read",

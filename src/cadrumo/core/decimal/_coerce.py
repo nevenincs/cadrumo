@@ -2,7 +2,7 @@
 
 Consolidates three independent ``_coerce_decimal`` copies that previously
 lived in :mod:`_calc_sheets_pull`, :mod:`_row_set_assembly`, and
-:mod:`invoices._models`. All call-sites use :func:`coerce_decimal`,
+:mod:`invoices.models`. All call-sites use :func:`coerce_decimal`,
 :func:`coerce_decimal_strict`, or :func:`normalize_decimal_separators` from this
 module rather than open-coding decimal parsing.
 
@@ -13,7 +13,7 @@ Variant analysis
   Callers checked for ``None`` explicitly to detect empty cells.
 * ``_row_set_assembly`` — took a required ``default: Decimal`` keyword
   argument and always returned ``Decimal``.  Callers passed ``Decimal("0")``.
-* ``invoices._models`` — raised ``TypeError`` on unparseable input (strict
+* ``invoices.models`` — raised ``TypeError`` on unparseable input (strict
   pydantic-validator context).
 
 Canonical resolution

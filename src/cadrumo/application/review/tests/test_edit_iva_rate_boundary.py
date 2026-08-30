@@ -26,7 +26,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....domain.invoices import numeric_iva_rate_percentages
+from ....domain.invoices.enums import numeric_iva_rate_percentages
 from .._edit import InvoiceEditSpec
 from ..errors import EditParseError
 

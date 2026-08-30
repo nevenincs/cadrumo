@@ -7,7 +7,7 @@ extra fields; identity-bearing fields on :class:`Invoice` are
 canonicalised in a ``model_validator`` and the stable
 :attr:`Invoice.invoice_id` is derived via :func:`derive_invoice_id`.
 Counterparty identity validation is delegated to
-:mod:`cadrumo.domain.invoices._validators`.
+:mod:`cadrumo.domain.invoices.validators`.
 """
 
 from __future__ import annotations
@@ -55,7 +55,8 @@ from ..iva import (
     TransactionKind,
     identification_state_for_printed_tax_identifier,
 )
-from ._enums import (
+from ._payload_normalisation import normalise_invoice_enum_fields, normalise_invoice_string_fields
+from .enums import (
     InvoiceClass,
     InvoiceLegalMention,
     InvoiceOperationDateRole,
@@ -64,12 +65,11 @@ from ._enums import (
     iva_rate_percentage,
     iva_rate_slot_percentage,
 )
-from ._payload_normalisation import normalise_invoice_enum_fields, normalise_invoice_string_fields
 from .errors import InvoiceValidationError
 
 if TYPE_CHECKING:
     pass
-from ._validators import (
+from .validators import (
     is_eu_member_state_code,
     validate_country_code,
     validate_iva_number,
@@ -1273,7 +1273,7 @@ class Invoice(BaseModel):
         intra-community classification, OSS classifier dispatch) work
         with the closed substrate enum without a per-call lowercase /
         membership check. Anchored to
-        :data:`domain.invoices._validators.EU_MEMBER_STATE_CODES` which
+        :data:`domain.invoices.validators.EU_MEMBER_STATE_CODES` which
         derives from :class:`cadrumo.domain.iva.EUMemberState`.
         """
         if not is_eu_member_state_code(self.counterparty_country):

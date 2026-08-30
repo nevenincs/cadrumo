@@ -21,7 +21,8 @@ from typing import Any
 import pytest
 
 from ....core.json_contract import NoticeSeverity
-from ....domain.invoices import Invoice, InvoiceClass, InvoiceLine, IvaRate, PaymentStatus
+from ....domain.invoices.enums import InvoiceClass, IvaRate, PaymentStatus
+from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva import InvoiceKind
 from .._ledger_business_invoice_cli import _simplificada_tax_id_notices
 

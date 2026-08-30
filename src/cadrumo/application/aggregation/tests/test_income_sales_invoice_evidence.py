@@ -26,14 +26,8 @@ import pytest
 
 from ....core import Period
 from ....core.aggregation import LedgerIncomeGrounding, LedgerWithholdingDerivation
-from ....domain.invoices import (
-    Invoice,
-    InvoiceCatalogue,
-    InvoiceLine,
-    IvaRate,
-    PaymentStatus,
-    iva_rate_percentage,
-)
+from ....domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
+from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ....domain.iva import InvoiceKind, IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue

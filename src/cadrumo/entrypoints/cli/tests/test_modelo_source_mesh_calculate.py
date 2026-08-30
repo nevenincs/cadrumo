@@ -22,7 +22,7 @@ from ....core import (
 from ....core.errors import ERROR_REGISTRY
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.categories.spending_category import SpendingCategory
-from ....domain.invoices import InvoiceCatalogue
+from ....domain.invoices.models import InvoiceCatalogue
 from ....domain.iva import EUMemberState, IvaCategory, IvaDeductionClassificationProvenance
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue

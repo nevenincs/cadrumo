@@ -10,7 +10,7 @@ from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.config import Settings
 from ....domain.attachments.service import load_attachment
-from ....domain.buckets import BucketEventType
+from ....domain.buckets.event import BucketEventType
 from ..evidence import (
     PurchaseInvoiceEvidencePatch,
     PurchaseInvoiceEvidenceService,

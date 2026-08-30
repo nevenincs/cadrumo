@@ -66,7 +66,7 @@ from .errors import AggregationValidationError, t
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping, Sequence
 
-    from ...domain.invoices import Invoice
+    from ...domain.invoices.models import Invoice
 
 _SPANISH_COUNTRY_CODE: Final[str] = "ES"
 

@@ -52,7 +52,7 @@ from ...domain.filing import (
     derive_validation_status,
 )
 from ...domain.identifiers import canonical_decimal_string
-from ...domain.invoices import InvoiceCatalogue
+from ...domain.invoices.models import InvoiceCatalogue
 from ...domain.submission import ModeloDraftStatus
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.user_profile.errors import ProfileNotFoundError

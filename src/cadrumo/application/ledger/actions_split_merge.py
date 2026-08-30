@@ -17,7 +17,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ...core.hashing import sha256_hex
-from ...domain.buckets import BucketEvent, BucketEventHistoryRepositoryProtocol, BucketEventType
+from ...domain.buckets.event import BucketEvent, BucketEventType
+from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions.enums import BusinessClassification, SplitRole, TransactionLifecycleState
@@ -54,7 +55,7 @@ from .models import (
 
 if TYPE_CHECKING:
     from ...domain.attachments.protocols import AttachmentStoreProtocol
-    from ...domain.invoices import InvoiceCatalogueRepositoryProtocol
+    from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 
 
 def split_transaction(

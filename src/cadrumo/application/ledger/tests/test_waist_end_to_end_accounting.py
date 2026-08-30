@@ -57,7 +57,7 @@ from ....domain.attachments.enums import AttachmentKind, AttachmentSource
 from ....domain.attachments.service import AttachmentFileContent, AttachmentIngestionRequest, add_attachment
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import ModeloRevision
-from ....domain.invoices import Invoice
+from ....domain.invoices.models import Invoice
 from ....domain.iva import InvoiceKind
 from ....tests.secure_sql import TestRuntimeProfile
 from ..closure_findings import closure_findings

@@ -687,7 +687,7 @@ def ledger_link(
     """Bind a transaction to one reconciliation-catalogue invoice, atomically."""
     from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
     from ...application.ledger.actions_manual import link_manual_transaction_invoice
-    from ...domain.invoices import InvoiceLinkError
+    from ...domain.invoices.errors import InvoiceLinkError
 
     state = _state()
     transaction_repository = _tx_repo(state)

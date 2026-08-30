@@ -12,7 +12,7 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.logging import get_logger
 from ...core.time import now
-from ...domain.buckets import BucketEventType
+from ...domain.buckets.event import BucketEventType
 from ...domain.categories.spending_category import SpendingCategory
 from ._common import _bad, emit_envelope
 from ._common import activate_subcommand_output_language as _activate_subcommand_output_language
@@ -41,7 +41,8 @@ def _emit_ratios_event(
     """Append a ratios mutation event to the bucket-event-history catalogue."""
     from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ...adapters.persistence.storage import secure_object_repository_for_bucket
-    from ...domain.buckets import BucketEventObjectType, emit_bucket_event
+    from ...domain.buckets.event import BucketEventObjectType
+    from ...domain.buckets.event_repository import emit_bucket_event
 
     occurred_at = now()
     payload = {
@@ -71,7 +72,8 @@ def _emit_ratios_censo_override_warning(
     """Append LEDGER_RATIOS_CENSO_OVERRIDE_WARNING to the bucket catalogue."""
     from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ...adapters.persistence.storage import secure_object_repository_for_bucket
-    from ...domain.buckets import BucketEventObjectType, emit_bucket_event
+    from ...domain.buckets.event import BucketEventObjectType
+    from ...domain.buckets.event_repository import emit_bucket_event
 
     emit_bucket_event(
         repository=BucketEventHistoryRepository(objects=secure_object_repository_for_bucket(bucket_id)),

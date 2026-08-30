@@ -10,21 +10,21 @@ from pydantic import ValidationError
 
 from ....core.identity import IdentityError
 from ...iva import EUMemberState, InvoiceKind, IvaRateKind, OssIossRegime, TransactionKind
-from .._enums import (
+from ..enums import (
     IvaRate,
     PaymentStatus,
     iva_rate_percentage,
     iva_rate_slot_percentage,
     numeric_iva_rate_percentages,
 )
-from .._models import (
+from ..errors import InvoiceValidationError
+from ..models import (
     Invoice,
     InvoiceCatalogue,
     InvoiceLine,
     _normalise_invoice_monetary_fields,
     derive_invoice_id,
 )
-from ..errors import InvoiceValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

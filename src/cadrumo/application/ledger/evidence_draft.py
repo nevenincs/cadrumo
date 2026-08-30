@@ -137,14 +137,10 @@ from ...domain.attachments.errors import AttachmentNotFoundError
 from ...domain.attachments.models import normalize_media_type
 from ...domain.attachments.service import link_attachment_invoice
 from ...domain.currency.service import ExchangeRateProvider
-from ...domain.invoices import (
-    Invoice,
-    InvoiceCatalogue,
-    InvoiceCatalogueRepositoryProtocol,
-    InvoiceClass,
-    InvoiceLine,
-    InvoiceValidationError,
-)
+from ...domain.invoices.enums import InvoiceClass
+from ...domain.invoices.errors import InvoiceValidationError
+from ...domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.iva import (
     EUMemberState,
     InvoiceKind,

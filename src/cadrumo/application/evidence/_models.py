@@ -34,7 +34,7 @@ from ...core.errors import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, FilingRecordId, WorkUnitId
-from ...domain.buckets import BucketEventObjectType
+from ...domain.buckets.event import BucketEventObjectType
 
 
 class EvidenceBundleNotFoundError(CadrumoError):

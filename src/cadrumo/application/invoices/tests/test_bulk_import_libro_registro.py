@@ -78,7 +78,7 @@ def test_the_libro_registro_is_refused_whole_without_a_mapping() -> None:
     meaningful — without it, a passing import could simply mean the headers
     happened to match all along.
     """
-    from ....domain.invoices import InvoiceValidationError
+    from ....domain.invoices.errors import InvoiceValidationError
 
     with pytest.raises(InvoiceValidationError) as caught:
         read_bulk_invoice_import_source(_LIBRO)

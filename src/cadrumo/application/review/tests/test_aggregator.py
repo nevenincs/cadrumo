@@ -24,7 +24,8 @@ from ....domain.filing import (
     compute_modelo_draft_id,
     registry_schema_version,
 )
-from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
+from ....domain.invoices.enums import IvaRate, PaymentStatus
+from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ....domain.iva import InvoiceKind
 from ....domain.submission import ModeloDraftStatus
 from ....domain.transactions.enums import TransactionDirection

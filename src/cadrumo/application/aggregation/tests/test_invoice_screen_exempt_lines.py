@@ -35,7 +35,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....domain.invoices import IvaRate
+from ....domain.invoices.enums import IvaRate
 from ....domain.iva import (
     InvoiceKind,
     IvaCategory,

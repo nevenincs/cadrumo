@@ -30,7 +30,7 @@ from ....adapters.persistence.storage.custody.records import (
 from ....adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
 from ....adapters.persistence.storage.custody.sentinel_contract import ProfileCustodySentinelRecord
 from ....core.bucket_pointer import read_pointer
-from ....domain.buckets import BucketEventType
+from ....domain.buckets.event import BucketEventType
 from ....domain.user_profile.errors import ProfileNotFoundError
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord

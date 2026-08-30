@@ -32,16 +32,11 @@ from pydantic import BaseModel, ConfigDict
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core import IntracomOperationType
 from ...core.time import now
-from ...domain.buckets import BucketEventHistoryRepositoryProtocol
-from ...domain.invoices import (
-    Invoice,
-    InvoiceCatalogue,
-    InvoiceCatalogueRepositoryProtocol,
-    InvoiceClass,
-    InvoiceNotFoundError,
-    InvoiceValidationError,
-    PaymentStatus,
-)
+from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.invoices.enums import InvoiceClass, PaymentStatus
+from ...domain.invoices.errors import InvoiceNotFoundError, InvoiceValidationError
+from ...domain.invoices.models import Invoice, InvoiceCatalogue
+from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.iva import IvaCategory
 from ._catalogue_mutation import mutate_catalogue
 

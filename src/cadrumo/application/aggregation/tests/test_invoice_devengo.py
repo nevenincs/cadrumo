@@ -20,7 +20,8 @@ import pytest
 
 from ....core import Period
 from ....core.aggregation import InvoiceDevengoRank
-from ....domain.invoices import Invoice, InvoiceLine, InvoiceOperationDateRole, IvaRate, PaymentStatus
+from ....domain.invoices.enums import InvoiceOperationDateRole, IvaRate, PaymentStatus
+from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva import InvoiceKind
 from .. import (
     DIAGNOSTIC_MESSAGE_MAX_LENGTH,

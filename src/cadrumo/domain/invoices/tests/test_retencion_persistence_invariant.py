@@ -45,7 +45,8 @@ from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage import INVOICE_CATALOGUE_NAMESPACE
 from ....tests.secure_sql import isolated_runtime_profile
 from ...iva import InvoiceKind, IvaCategory
-from .. import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus, iva_rate_percentage
+from ..enums import IvaRate, PaymentStatus, iva_rate_percentage
+from ..models import Invoice, InvoiceCatalogue, InvoiceLine
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

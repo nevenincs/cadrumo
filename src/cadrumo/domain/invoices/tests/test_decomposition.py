@@ -30,7 +30,7 @@ from ...iva import (
     OssIossRegime,
     TransactionKind,
 )
-from .._decomposition import (
+from ..decomposition import (
     INVOICE_DECOMPOSITION_DEFECT_GUIDANCE,
     InvoiceComponents,
     InvoiceDecomposition,
@@ -38,8 +38,8 @@ from .._decomposition import (
     decompose_invoice,
     partition_invoices,
 )
-from .._enums import IvaRate, PaymentStatus, iva_rate_percentage
-from .._models import Invoice, InvoiceLine
+from ..enums import IvaRate, PaymentStatus, iva_rate_percentage
+from ..models import Invoice, InvoiceLine
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

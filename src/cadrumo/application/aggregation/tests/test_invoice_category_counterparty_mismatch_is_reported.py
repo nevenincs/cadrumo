@@ -41,7 +41,7 @@ from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import IntracomOperationType, Period
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.invoices import InvoiceCatalogue
+from ....domain.invoices.models import InvoiceCatalogue
 from ....domain.iva import InvoiceKind, IvaCategory
 from ...invoices import build_catalogue_invoice
 from .._modelo_bindings import (

@@ -53,7 +53,8 @@ from ...domain.contribuyente.seguro_enfermedad_insured import (
     seguro_enfermedad_insured_counts_from_facts,
 )
 from ...domain.deadlines import IVARegime
-from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepositoryProtocol
+from ...domain.invoices.models import InvoiceCatalogue
+from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.iva import InvoiceKind
 from ...domain.prorrata_register import ProrrataRegisterRepositoryProtocol
 from ...domain.renta import (

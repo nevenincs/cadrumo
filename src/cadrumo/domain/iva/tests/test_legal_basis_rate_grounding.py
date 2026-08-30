@@ -35,7 +35,7 @@ import pytest
 
 from ....core.resources import bundled_path
 from ...calculations.registry.authority import bundled_authority
-from ...invoices import IvaRate, iva_rate_kind, iva_rate_percentage
+from ...invoices.enums import IvaRate, iva_rate_kind, iva_rate_percentage
 from .. import (
     EUMemberState,
     IvaCatalogueError,

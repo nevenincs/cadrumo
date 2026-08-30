@@ -22,7 +22,7 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
-from ....domain.buckets import BucketEventObjectType, BucketEventType
+from ....domain.buckets.event import BucketEventObjectType, BucketEventType
 from .._modelo_payloads import M130AccumulatedPayload, ModeloHistoryResult, ModeloLifecycleEventPayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

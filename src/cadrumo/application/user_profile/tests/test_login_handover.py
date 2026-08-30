@@ -44,7 +44,7 @@ from ....core.bucket_pointer import BucketPointer, read_pointer, write_pointer
 from ....core.config import Settings
 from ....core.directory_scan import iter_directory
 from ....core.time import now as _now
-from ....domain.buckets import BucketEventHistoryPersistenceError
+from ....domain.buckets.event_repository import BucketEventHistoryPersistenceError
 from ....tests.secure_sql import isolated_profile_storage_root
 from ..authentication import ProfileAuthenticationRefusedError
 from ..custody_ports import bind_profile_custody_port

@@ -34,7 +34,7 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.config import Settings, load_settings
 from ...core.identity import BucketId, TransactionId
 from ...core.time import now
-from ...domain.buckets import BucketEventHistoryRepositoryProtocol
+from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...llm.suggestions import (
@@ -378,7 +378,7 @@ def _decline_invoice_draft(
     repository's secure-write batch, so it would not bind to the operation
     bucket's store at all.
     """
-    from ...domain.buckets import BucketEventType
+    from ...domain.buckets.event import BucketEventType
     from .actions_common import resolve_bucket_event_repository
     from .evidence import emit_evidence_event as _emit_evidence_event
 

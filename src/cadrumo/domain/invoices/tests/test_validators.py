@@ -11,7 +11,7 @@ from ....core.identity import (
     validate_spanish_tax_id,
 )
 from ...iva import EUMemberState
-from .._validators import validate_country_code, validate_iva_number
+from ..validators import validate_country_code, validate_iva_number
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

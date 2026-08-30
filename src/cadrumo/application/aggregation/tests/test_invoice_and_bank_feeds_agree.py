@@ -38,7 +38,8 @@ import pytest
 
 from ....core import Period
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.invoices import Invoice, IvaRate
+from ....domain.invoices.enums import IvaRate
+from ....domain.invoices.models import Invoice
 from ....domain.iva import EUMemberState, InvoiceKind, IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue

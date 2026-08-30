@@ -54,13 +54,7 @@ from .....core import CasillaId, IvaCompensationStateProvenance, validated_casil
 from .....core import Period as _Period
 from .....core.config import override_settings
 from .....domain.attachments.errors import AttachmentNotFoundError
-from .....domain.buckets import (
-    BucketEvent,
-    BucketEventHistoryCatalogue,
-    BucketEventObjectType,
-    BucketEventType,
-    derive_bucket_event_id,
-)
+from .....domain.buckets.event import BucketEvent, BucketEventHistoryCatalogue, BucketEventObjectType, BucketEventType, derive_bucket_event_id
 from .....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from .....domain.categories.spending_category import SpendingCategory
@@ -78,7 +72,8 @@ from .....domain.filing import (
     registry_schema_version,
 )
 from .....domain.identifiers import ModeloIdentifier
-from .....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus, derive_invoice_id
+from .....domain.invoices.enums import IvaRate, PaymentStatus
+from .....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
 from .....domain.iva import InvoiceKind
 from .....domain.iva_compensation import IvaCompensationPeriodState, IvaCompensationReconciliationDecision
 from .....domain.justificante import Justificante

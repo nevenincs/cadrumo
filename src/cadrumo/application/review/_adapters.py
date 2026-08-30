@@ -24,11 +24,8 @@ from ...core.errors import BaseSeverity, CadrumoError
 from ...core.i18n import Translatable as tr
 from ...core.logging import get_logger
 from ...domain.filing import ModeloDraft, ModeloValidationFinding
-from ...domain.invoices import (
-    Invoice,
-    InvoiceCatalogue,
-    PaymentStatus,
-)
+from ...domain.invoices.enums import PaymentStatus
+from ...domain.invoices.models import Invoice, InvoiceCatalogue
 from ...domain.submission import ModeloDraftStatus
 from ...domain.transactions.enums import BusinessClassification, is_classified
 from ...domain.transactions.models import Transaction, TransactionCatalogue

@@ -27,15 +27,12 @@ from ...core.decimal import format_decimal
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...domain.attachments.protocols import AttachmentStoreProtocol as _AttachmentStoreProtocol
 from ...domain.attachments.service import link_attachment_transaction
-from ...domain.buckets import (
-    BucketEvent,
-    BucketEventHistoryRepositoryProtocol,
-    BucketEventObjectType,
-    BucketEventType,
-    bucket_event_history_write,
-)
+from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
+from ...domain.buckets.event_repository import bucket_event_history_write
+from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.currency.service import CurrencyNormalizationService
-from ...domain.invoices import InvoiceCatalogueRepositoryProtocol, InvoiceLinkError
+from ...domain.invoices.errors import InvoiceLinkError
+from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.iva import (
     IvaDeductionClassificationProvenance,
     required_deduction_evidence_authority,

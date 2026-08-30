@@ -34,12 +34,7 @@ from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, Fil
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
 from ...core.text_bounds import NonEmptyStr, PositiveCount
 from ...core.unit_proportion import UnitFraction
-from ...domain.buckets import (
-    BucketActorLabel,
-    BucketEventId,
-    BucketEventObjectType,
-    BucketEventType,
-)
+from ...domain.buckets.event import BucketActorLabel, BucketEventId, BucketEventObjectType, BucketEventType
 from ...domain.buckets.event import BucketObjectId
 from ...domain.calculations.registry.ids import LegalRefId, SourceRefId
 from ...domain.calculations.registry.query_reports import ModeloDescribeReport

@@ -40,12 +40,8 @@ from ...core import STRICT_FROZEN_CONFIG
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId, ContentDigest, ProfileId
 from ...core.time import now
-from ...domain.buckets import (
-    BucketEventObjectType,
-    BucketEventType,
-    bucket_event_history_write,
-    build_bucket_event,
-)
+from ...domain.buckets.event import BucketEventObjectType, BucketEventType
+from ...domain.buckets.event_repository import bucket_event_history_write, build_bucket_event
 from ...domain.calculations.registry.censo_modelos import CensoModeloEventKind
 from ...domain.modelos.errors import Modelo036PriorAltaRequiredError, Modelo036TerminalStateError
 

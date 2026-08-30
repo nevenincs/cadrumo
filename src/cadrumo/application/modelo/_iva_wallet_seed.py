@@ -340,11 +340,8 @@ def _emit_iva_wallet_corrected_event(
     """Append the ``MODELO_IVA_WALLET_CORRECTED`` audit event for a correction."""
     from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ...core.time import now
-    from ...domain.buckets import (
-        BucketEventObjectType,
-        BucketEventType,
-        emit_bucket_event,
-    )
+    from ...domain.buckets.event import BucketEventObjectType, BucketEventType
+    from ...domain.buckets.event_repository import emit_bucket_event
 
     occurred_at = now()
     object_id = f"303:{period.filing_year}:{period.registry_token}"
@@ -514,11 +511,8 @@ def _emit_iva_wallet_override_event(
     """Append the ``MODELO_IVA_WALLET_OVERRIDE_RECORDED`` audit event for an override."""
     from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ...core.time import now
-    from ...domain.buckets import (
-        BucketEventObjectType,
-        BucketEventType,
-        emit_bucket_event,
-    )
+    from ...domain.buckets.event import BucketEventObjectType, BucketEventType
+    from ...domain.buckets.event_repository import emit_bucket_event
 
     occurred_at = now()
     object_id = f"303:{period.filing_year}:{period.registry_token}"

@@ -29,7 +29,8 @@ from decimal import Decimal
 
 import pytest
 
-from .....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
+from .....domain.invoices.enums import IvaRate, PaymentStatus
+from .....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from .....domain.iva import InvoiceKind
 from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ..invoices import InvoiceCatalogueRepository

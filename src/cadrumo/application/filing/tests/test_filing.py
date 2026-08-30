@@ -24,7 +24,7 @@ from ....domain.filing import (
     ModeloValueKind,
     compute_modelo_draft_id,
 )
-from ....domain.invoices import InvoiceCatalogue
+from ....domain.invoices.models import InvoiceCatalogue
 from ....domain.submission import ModeloDraftStatus
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue

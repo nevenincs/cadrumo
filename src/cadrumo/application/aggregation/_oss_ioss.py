@@ -42,7 +42,9 @@ from ...domain.calculations.registry.ledger_bindings import (
     unsupported_ledger_oss_observations,
 )
 from ...domain.calculations.registry.schema import ModeloRevision
-from ...domain.invoices import Invoice, InvoiceCatalogueRepositoryProtocol, InvoiceLine, iva_rate_kind
+from ...domain.invoices.enums import iva_rate_kind
+from ...domain.invoices.models import Invoice, InvoiceLine
+from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.iva import (
     EUMemberState,
     InvoiceKind,

@@ -26,7 +26,7 @@ from decimal import Decimal
 import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....domain.buckets import BucketEventType
+from ....domain.buckets.event import BucketEventType
 from ....domain.transactions.enums import BusinessClassification, SplitRole, TransactionDirection, TransactionLifecycleState
 from ..actions_lifecycle import archive_manual_transaction
 from ..actions_manual import create_manual_transaction

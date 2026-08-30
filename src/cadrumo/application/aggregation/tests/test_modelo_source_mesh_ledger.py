@@ -30,14 +30,8 @@ from ....domain.bienes_inversion import BienesInversionIvaRegister
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.categories.spending_category import SpendingCategory
-from ....domain.invoices import (
-    Invoice,
-    InvoiceCatalogue,
-    InvoiceLine,
-    InvoiceOperationDateRole,
-    IvaRate,
-    PaymentStatus,
-)
+from ....domain.invoices.enums import InvoiceOperationDateRole, IvaRate, PaymentStatus
+from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ....domain.iva import (
     EUMemberState,
     IvaCategory,

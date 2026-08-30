@@ -37,25 +37,14 @@ from ...core import IntracomOperationType
 from ...core.money import round_to_cents
 from ...core.parsing import normalise_iso_4217_currency
 from ...core.time import now
-from ...domain.buckets import (
-    BucketEventHistoryRepositoryProtocol,
-    BucketEventObjectType,
-    BucketEventType,
-    emit_bucket_event,
-)
+from ...domain.buckets.event import BucketEventObjectType, BucketEventType
+from ...domain.buckets.event_repository import emit_bucket_event
+from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.currency.service import ExchangeRateProvider, resolve_fx_conversion_stamp
-from ...domain.invoices import (
-    Invoice,
-    InvoiceCatalogue,
-    InvoiceCatalogueRepositoryProtocol,
-    InvoiceClass,
-    InvoiceLine,
-    InvoiceOperationDateRole,
-    InvoiceValidationError,
-    IvaRate,
-    PaymentStatus,
-    numeric_iva_rate_slots,
-)
+from ...domain.invoices.enums import InvoiceClass, InvoiceOperationDateRole, IvaRate, PaymentStatus, numeric_iva_rate_slots
+from ...domain.invoices.errors import InvoiceValidationError
+from ...domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.iva import InvoiceKind, IvaCategory
 from ._catalogue_mutation import mutate_catalogue
 
@@ -393,7 +382,7 @@ def build_catalogue_invoice(
     identity. The model re-checks that identity exactly, so a stated recargo
     the lines do not support refuses rather than being balanced silently.
     """
-    from ...domain.invoices import iva_rate_slot_percentage
+    from ...domain.invoices.enums import iva_rate_slot_percentage
 
     # Normalise once, before either the persisted payload or the FX lookup
     # reads it: a padded or lowercase token ("gbp", " gbp ") must resolve the

@@ -30,7 +30,7 @@ from ...core.unit_proportion import is_unit_proportion
 from ...domain.categories.spending_category import SpendingCategory
 from ...domain.contribuyente.renta_codes import FiscalResidency
 from ...domain.deadlines import IrpfSpecialRegime
-from ...domain.invoices import InvoiceValidationError
+from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.transactions.errors import TransactionIdPrefixError, TransactionValidationError
 from ...domain.transactions.models import Transaction
 from ._common import _bad, attach_cli_policy_verdict, emit_envelope

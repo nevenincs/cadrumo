@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....domain.invoices import InvoiceLinkError
+from ....domain.invoices.errors import InvoiceLinkError
 from ..actions_manual import link_manual_transaction_invoice
 from ._action_test_support import (
     _BUCKET_ID,

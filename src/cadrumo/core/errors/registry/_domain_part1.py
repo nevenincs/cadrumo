@@ -128,7 +128,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.buckets._event_repository.BucketEventHistoryPersistenceError",
+        "cadrumo.domain.buckets.event_repository.BucketEventHistoryPersistenceError",
         ErrorCode(
             code="FAIL_DOMAIN_BUCKET_EVENT_HISTORY_PERSISTENCE",
             category=ErrorCategory.FAIL,

@@ -25,7 +25,7 @@ from datetime import date
 import pytest
 
 from ...iva import IvaRateNotFoundError
-from .. import IvaRate, iva_rate_percentage
+from ..enums import IvaRate, iva_rate_percentage
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -35,7 +35,9 @@ from ...core import FieldRole, IntracomOperationType
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ...domain.invoices import Invoice, InvoiceClass, InvoiceValidationError
+from ...domain.invoices.enums import InvoiceClass
+from ...domain.invoices.errors import InvoiceValidationError
+from ...domain.invoices.models import Invoice
 from ...domain.iva import InvoiceKind, IvaCategory
 from ._common import _bad, emit_envelope
 from ._common import (

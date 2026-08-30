@@ -11,7 +11,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from ...domain.buckets import BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
+from ...domain.buckets.event import BucketEventObjectType, BucketEventType
+from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.transactions.enums import BusinessClassification
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ..bucket_event_repository import bucket_event_history_repository

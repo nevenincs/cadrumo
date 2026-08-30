@@ -28,7 +28,9 @@ from pathlib import Path
 
 import pytest
 
-from .....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, InvoicePersistenceError, IvaRate, PaymentStatus
+from .....domain.invoices.enums import IvaRate, PaymentStatus
+from .....domain.invoices.errors import InvoicePersistenceError
+from .....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from .....domain.iva import InvoiceKind
 from .....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..invoices import InvoiceCatalogueRepository

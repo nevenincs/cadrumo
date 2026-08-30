@@ -31,7 +31,7 @@ from ..iva import (
     OssIossRegime,
     TransactionKind,
 )
-from ._enums import (
+from .enums import (
     InvoiceClass,
     InvoiceLegalMention,
     InvoiceOperationDateRole,

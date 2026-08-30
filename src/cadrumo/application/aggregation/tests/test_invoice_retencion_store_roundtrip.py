@@ -41,7 +41,8 @@ from pydantic import ValidationError
 
 from ....adapters.persistence.storage import RETENCION_OBSERVATIONS_NAMESPACE
 from ....core import AggregationCaptureKind, BindingSourceKind, Period
-from ....domain.invoices import Invoice, InvoiceLine, IvaRate, PaymentStatus, iva_rate_percentage
+from ....domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
+from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva import InvoiceKind, IvaCategory
 from ....tests.secure_sql import isolated_runtime_profile
 from .._invoice_retencion import route_invoice_retenciones

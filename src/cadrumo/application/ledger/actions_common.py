@@ -33,15 +33,11 @@ from ...adapters.persistence.storage import TRANSACTION_CATALOGUE_NAMESPACE
 from ...core.time import coerce_utc_aware
 from ...domain.attachments.errors import AttachmentNotFoundError, AttachmentValidationError
 from ...domain.attachments.protocols import AttachmentStoreProtocol as _AttachmentStoreProtocol
-from ...domain.buckets import (
-    BucketEvent,
-    BucketEventHistoryRepositoryProtocol,
-    BucketEventObjectType,
-    BucketEventType,
-    append_bucket_event,
-    build_bucket_event,
-)
-from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepositoryProtocol
+from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
+from ...domain.buckets.event_repository import append_bucket_event, build_bucket_event
+from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.invoices.models import InvoiceCatalogue
+from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.calculation_revision import SEALED_REVISION_STATES, CalculationRevisionState
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol

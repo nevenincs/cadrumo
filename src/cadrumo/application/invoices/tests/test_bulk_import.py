@@ -28,7 +28,7 @@ from openpyxl import Workbook
 from pydantic import ValidationError
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ....domain.invoices import InvoiceValidationError
+from ....domain.invoices.errors import InvoiceValidationError
 from ....domain.iva import InvoiceKind
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (

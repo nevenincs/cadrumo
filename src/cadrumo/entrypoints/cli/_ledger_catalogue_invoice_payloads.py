@@ -29,7 +29,8 @@ from ...core.country_code import CountryCodeAlpha2
 from ...core.identity import BucketId, InvoiceId, TaxIdIdentityToken, TransactionId, validate_spanish_tax_id
 from ...core.json_contract import OutputSchema
 from ...core.text_bounds import NonEmptyStr, NonNegativeDecimal, PositiveCount
-from ...domain.invoices import PaymentStatus, validate_country_code, validate_iva_number
+from ...domain.invoices.enums import PaymentStatus
+from ...domain.invoices.validators import validate_country_code, validate_iva_number
 from ...domain.iva import InvoiceKind
 
 

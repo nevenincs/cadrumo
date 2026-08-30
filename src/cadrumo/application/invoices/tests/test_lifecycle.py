@@ -21,15 +21,9 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ....domain.invoices import (
-    Invoice,
-    InvoiceCatalogue,
-    InvoiceLine,
-    InvoiceNotFoundError,
-    InvoiceValidationError,
-    IvaRate,
-    PaymentStatus,
-)
+from ....domain.invoices.enums import IvaRate, PaymentStatus
+from ....domain.invoices.errors import InvoiceNotFoundError, InvoiceValidationError
+from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ....domain.iva import InvoiceKind
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
@@ -193,7 +187,7 @@ def _linked_invoice(bucket_id: str):
     """A persisted invoice already bound to a transaction."""
     from datetime import date as _date
 
-    from ....domain.invoices import derive_invoice_id
+    from ....domain.invoices.models import derive_invoice_id
 
     kind = InvoiceKind.RECEIVED
     number = "UPD-2026-001"

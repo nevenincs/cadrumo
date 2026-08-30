@@ -34,7 +34,7 @@ from ..application.filing import (
 from ..core import CasillaId, Period, validated_casilla_id
 from ..domain.calculations.registry.ids import BindingId
 from ..domain.filing import ModeloBuilderError, ModeloDraft, ModeloInputs
-from ..domain.invoices import InvoiceCatalogue
+from ..domain.invoices.models import InvoiceCatalogue
 from ..domain.submission import ModeloDraftStatus
 from ..domain.transactions.models import TransactionCatalogue
 

@@ -27,12 +27,9 @@ from ...adapters.persistence.storage import secure_object_repository_for_bucket
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings
 from ...core.time import now as _now_utc
-from ...domain.buckets import (
-    BucketEventHistoryRepositoryProtocol,
-    BucketEventObjectType,
-    BucketEventType,
-    emit_bucket_event,
-)
+from ...domain.buckets.event import BucketEventObjectType, BucketEventType
+from ...domain.buckets.event_repository import emit_bucket_event
+from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.contribuyente.inventory import (
     InventoryAcquisitionCost,
     InventoryClosingAuthorityRecord,

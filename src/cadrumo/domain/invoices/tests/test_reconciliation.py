@@ -17,9 +17,9 @@ from ...iva import InvoiceKind
 from ...transactions.enums import TransactionDirection
 from ...transactions.models import Transaction, TransactionCatalogue
 from ...transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from .._enums import IvaRate, PaymentStatus
-from .._models import Invoice, InvoiceCatalogue, InvoiceLine
-from .._service import (
+from ..enums import IvaRate, PaymentStatus
+from ..models import Invoice, InvoiceCatalogue, InvoiceLine
+from ..service import (
     suggest_reconciliations,
     verify_link_consistency,
 )

@@ -82,7 +82,7 @@ def test_a_record_loaded_from_disk_is_never_refused(tmp_path: Path) -> None:
 
         assert "setup_state" in replacement.model_fields_set
 
-        from ....domain.buckets import BucketEventType
+        from ....domain.buckets.event import BucketEventType
         from ..capsule_record import ProfileRecordCommandEvent
 
         # The actual second SAVE, through the real writer. Asserting the field

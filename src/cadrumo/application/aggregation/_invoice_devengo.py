@@ -65,7 +65,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
 
     from ...core import Period
-    from ...domain.invoices import Invoice
+    from ...domain.invoices.models import Invoice
 
 __all__ = [
     "InvoiceDevengo",

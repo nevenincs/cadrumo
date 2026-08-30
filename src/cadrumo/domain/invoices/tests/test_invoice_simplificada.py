@@ -23,7 +23,8 @@ import pytest
 from pydantic import ValidationError
 
 from ....domain.iva import InvoiceKind, IvaCategory
-from .. import Invoice, InvoiceClass, InvoiceLine, IvaRate, PaymentStatus
+from ..enums import InvoiceClass, IvaRate, PaymentStatus
+from ..models import Invoice, InvoiceLine
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

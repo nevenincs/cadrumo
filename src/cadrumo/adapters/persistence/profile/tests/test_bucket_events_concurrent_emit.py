@@ -24,13 +24,8 @@ from datetime import UTC, datetime
 
 import pytest
 
-from .....domain.buckets import (
-    BucketEventObjectType,
-    BucketEventType,
-    append_bucket_event,
-    build_bucket_event,
-    emit_bucket_events,
-)
+from .....domain.buckets.event import BucketEventObjectType, BucketEventType
+from .....domain.buckets.event_repository import append_bucket_event, build_bucket_event, emit_bucket_events
 from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ..buckets import BucketEventHistoryRepository
 

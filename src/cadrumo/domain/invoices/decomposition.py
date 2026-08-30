@@ -69,7 +69,7 @@ from .errors import InvoiceValidationError
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping
 
-    from ._models import Invoice
+    from .models import Invoice
 
 
 class InvoiceDecompositionDefect(StrEnum):

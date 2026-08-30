@@ -41,9 +41,10 @@ from ....core import CasillaId, Period, validated_casilla_id
 from ....core.aggregation import BindingSourceKind
 from ....domain.attachments.enums import AttachmentKind, AttachmentSource
 from ....domain.attachments.models import Attachment
-from ....domain.buckets import BucketEvent, BucketEventObjectType, BucketEventType
+from ....domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ....domain.categories.spending_category import SpendingCategory
-from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
+from ....domain.invoices.enums import IvaRate, PaymentStatus
+from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ....domain.iva import InvoiceKind
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id

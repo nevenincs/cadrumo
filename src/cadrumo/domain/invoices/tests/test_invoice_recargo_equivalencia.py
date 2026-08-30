@@ -27,7 +27,9 @@ from pydantic import ValidationError
 
 from ....adapters.outbound.fx import ECB_RATE_SOURCE_ID
 from ....domain.iva import InvoiceKind, IvaCategory
-from .. import Invoice, InvoiceLine, IvaRate, PaymentStatus, decompose_invoice
+from ..decomposition import decompose_invoice
+from ..enums import IvaRate, PaymentStatus
+from ..models import Invoice, InvoiceLine
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

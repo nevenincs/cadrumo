@@ -7,7 +7,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from typing import Protocol
 
-from ..domain.buckets import BucketEventHistoryRepositoryProtocol
+from ..domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 
 
 class BucketEventHistoryRepositoryFactory(Protocol):

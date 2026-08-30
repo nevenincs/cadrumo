@@ -18,7 +18,8 @@ from typing import TYPE_CHECKING, Protocol, runtime_checkable
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepositoryProtocol
+    from ...domain.invoices.models import InvoiceCatalogue
+    from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 
 
 @runtime_checkable

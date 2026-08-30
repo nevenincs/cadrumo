@@ -10,7 +10,9 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, InvoiceValidationError, IvaRate, PaymentStatus
+from ....domain.invoices.enums import IvaRate, PaymentStatus
+from ....domain.invoices.errors import InvoiceValidationError
+from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ....domain.iva import InvoiceKind
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.cli_runner import invoke_cached_cli

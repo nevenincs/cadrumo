@@ -21,7 +21,7 @@ from .....adapters.outbound.storage import OutboundStorageValidationError
 from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from .....adapters.persistence.profile.sync_runs import SyncRunRecordRepository
 from .....core import SyncSurface
-from .....domain.buckets import BucketEventType
+from .....domain.buckets.event import BucketEventType
 from .....domain.calculations.registry.authority import bundled_authority
 from .....tests.secure_sql import isolated_runtime_profile
 from .._engine import build_export_plan

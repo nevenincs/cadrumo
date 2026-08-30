@@ -25,7 +25,7 @@ from ....core.credentials import (
     PROFILE_PASSWORD_MIN_SCALARS,
     ProfilePasswordRefusalReason,
 )
-from ....domain.buckets import BucketEventType
+from ....domain.buckets.event import BucketEventType
 from ....tests.secure_sql import isolated_profile_storage_root
 from ..custody_ports import (
     profile_custody_recovery_envelope_path,

@@ -12,13 +12,8 @@ from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...adapters.persistence.storage.bucket import bucket_paths
 from ...tests.secure_sql import isolated_runtime_profile
-from ..invoices import (
-    Invoice,
-    InvoiceCatalogue,
-    InvoiceLine,
-    IvaRate,
-    PaymentStatus,
-)
+from ..invoices.enums import IvaRate, PaymentStatus
+from ..invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ..iva import InvoiceKind
 from ..transactions.enums import TransactionDirection
 from ..transactions.models import Transaction, TransactionCatalogue

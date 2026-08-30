@@ -46,13 +46,9 @@ from ...core.hashing import content_hash_hex, sha256_hex
 from ...core.identity import BucketId, ContentDigest, IdentityError, validate_spanish_tax_id
 from ...core.logging import get_logger
 from ...core.time import now
-from ...domain.buckets import (
-    BucketEvent,
-    BucketEventHistoryRepositoryProtocol,
-    BucketEventObjectType,
-    BucketEventType,
-    bucket_event_history_write,
-)
+from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
+from ...domain.buckets.event_repository import bucket_event_history_write
+from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.casilla_membership import (
     casillas_by_id,

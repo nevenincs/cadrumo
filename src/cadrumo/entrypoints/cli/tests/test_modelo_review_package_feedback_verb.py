@@ -51,7 +51,7 @@ from ....application.modelo._review_package_recipient_encryption import (
 )
 from ....application.modelo._review_package_recipient_registry import RecipientFingerprintRegistryRepository
 from ....core import STR_KEYED_MAPPING_ADAPTER, CasillaId, validated_casilla_id
-from ....domain.buckets import BucketEventType
+from ....domain.buckets.event import BucketEventType
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload

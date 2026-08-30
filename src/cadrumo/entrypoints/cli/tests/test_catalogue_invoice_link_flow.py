@@ -31,7 +31,7 @@ from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage import INVOICE_CATALOGUE_NAMESPACE, Envelope, SecureObjectRepository
 from ....application.invoices import build_catalogue_invoice
 from ....core import IntracomOperationType
-from ....domain.invoices import InvoiceCatalogue
+from ....domain.invoices.models import InvoiceCatalogue
 from ....domain.iva import InvoiceKind, IvaCategory
 from ....tests.cli_runner import invoke_cached_cli
 from ._cli_text_output_support import _line_value

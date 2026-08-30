@@ -36,7 +36,7 @@ from ..application.user_profile.profile_record_repository import (
 )
 from ..core.identity import canonical_profile_bucket_id
 from ..core.paths import effective_storage_root
-from ..domain.buckets import BucketEventType
+from ..domain.buckets.event import BucketEventType
 from ..domain.user_profile.errors import ProfileSchemaValidationError
 from ..domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 

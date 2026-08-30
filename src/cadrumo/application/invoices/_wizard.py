@@ -50,14 +50,11 @@ from ...core.decimal import try_parse_canonical_decimal
 from ...core.errors import CoreValidationError, resolve_error_message
 from ...core.identity import IdentityError, validate_spanish_tax_id
 from ...core.parsing import normalise_iso_4217_currency, parse_iso8601_date
-from ...domain.invoices import (
-    Invoice,
-    InvoiceCatalogueRepositoryProtocol,
-    InvoiceValidationError,
-    numeric_iva_rate_slots,
-    validate_country_code,
-    validate_iva_number,
-)
+from ...domain.invoices.enums import numeric_iva_rate_slots
+from ...domain.invoices.errors import InvoiceValidationError
+from ...domain.invoices.models import Invoice
+from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
+from ...domain.invoices.validators import validate_country_code, validate_iva_number
 from ...domain.iva import (
     EUMemberState,
     InvoiceKind,

@@ -16,14 +16,8 @@ from pydantic import BaseModel, ConfigDict
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core.identity import InvoiceId
-from ...domain.invoices import (
-    Invoice,
-    InvoiceCatalogue,
-    LinkInconsistency,
-    find_invoice,
-    find_unmatched,
-    verify_link_consistency,
-)
+from ...domain.invoices.models import Invoice, InvoiceCatalogue
+from ...domain.invoices.service import LinkInconsistency, find_invoice, find_unmatched, verify_link_consistency
 from ...domain.iva import InvoiceKind
 
 

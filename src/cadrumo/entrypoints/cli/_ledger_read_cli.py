@@ -46,9 +46,9 @@ from ...core.json_contract import (
     strict_round_trip,
 )
 from ...core.unit_proportion import is_unit_proportion
-from ...domain.buckets import BucketEvent, BucketEventObjectType, BucketEventType
+from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.categories.spending_category import CATEGORY_FAMILY_MEMBERS, SpendingCategory, SpendingCategoryFamily
-from ...domain.invoices import LinkInconsistency
+from ...domain.invoices.service import LinkInconsistency
 from ...domain.transactions.irpf_categories import ledger_irpf_category_catalogue
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ._common import _bad, _state, _tx_repo, active_profile_label, emit_envelope, resolve_notice_action

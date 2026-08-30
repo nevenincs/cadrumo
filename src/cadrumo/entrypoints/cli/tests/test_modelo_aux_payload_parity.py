@@ -22,7 +22,7 @@ from pydantic import ValidationError
 
 from ....application.evidence import BundleVerificationState
 from ....core.aggregation import RetencionClave
-from ....domain.buckets import BucketEventObjectType, BucketEventType
+from ....domain.buckets.event import BucketEventObjectType, BucketEventType
 from .._modelo_aux_payloads import (
     EvidenceRecordRefPayload,
     ModeloAuditViewResult,

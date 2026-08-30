@@ -20,7 +20,7 @@ from decimal import Decimal
 import pytest
 
 from ...iva import EUMemberState, IvaRateKind, IvaRateNotFoundError, load_iva_rate_table, lookup_rate
-from .._enums import (
+from ..enums import (
     IvaRate,
     iva_rate_kind,
     iva_rate_percentage,

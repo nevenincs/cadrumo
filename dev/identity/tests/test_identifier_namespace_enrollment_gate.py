@@ -481,7 +481,7 @@ _ADJUDICATED: Final[tuple[_Adjudication, ...]] = (
         ),
     ),
     _Adjudication(
-        path="src/cadrumo/domain/invoices/_service.py",
+        path="src/cadrumo/domain/invoices/service.py",
         model="LinkInconsistency",
         field="invoice_id",
         group="mixed-source diagnostic references",

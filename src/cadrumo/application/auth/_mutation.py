@@ -6,12 +6,7 @@ from collections.abc import Mapping
 from datetime import datetime
 from typing import NamedTuple
 
-from ...domain.buckets import (
-    BucketEvent,
-    BucketEventObjectType,
-    BucketEventType,
-    derive_bucket_event_id,
-)
+from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType, derive_bucket_event_id
 
 
 class AuthBucketEventSpec(NamedTuple):

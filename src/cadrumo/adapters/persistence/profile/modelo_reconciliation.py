@@ -11,7 +11,8 @@ from ....application.modelo.reconciliation_records import (
     ModeloReconciliationPersistencePort,
     ModeloReconciliationRecord,
 )
-from ....domain.buckets import BucketEvent, append_bucket_event
+from ....domain.buckets.event import BucketEvent
+from ....domain.buckets.event_repository import append_bucket_event
 from ..storage import (
     MODELO_RECONCILIATION_RECORDS_NAMESPACE,
     SecureBoundRepository,

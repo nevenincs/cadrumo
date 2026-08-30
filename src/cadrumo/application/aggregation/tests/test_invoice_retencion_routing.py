@@ -28,7 +28,8 @@ from ....core import BindingSourceKind, Modelo, Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.retenciones_bindings import resolve_retenciones_aggregation_binding_values
 from ....domain.calculations.registry.schema import ModeloRevision
-from ....domain.invoices import Invoice, InvoiceLine, IvaRate, PaymentStatus, iva_rate_percentage
+from ....domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
+from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva import InvoiceKind, IvaCategory, IvaRetencionRole, category_components
 from ....tests.secure_sql import isolated_runtime_profile
 from .._invoice_retencion import (

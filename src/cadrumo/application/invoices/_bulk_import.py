@@ -50,7 +50,8 @@ from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.parsing import parse_iso8601_date
 from ...core.tabular import TabularSourceError, coerce_cell_text, normalize_tabular_bytes
 from ...core.workbook import FORMULA_CELL_REFUSAL, WorkbookCell, first_formula_cell_column
-from ...domain.invoices import InvoiceCatalogueRepositoryProtocol, InvoiceValidationError
+from ...domain.invoices.errors import InvoiceValidationError
+from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.iva import InvoiceKind
 from ._bulk_import_columns import (
     BulkImportColumnResolution,

@@ -13,12 +13,8 @@ from ....core import CasillaId, validated_casilla_id
 from ....core.errors import BaseSeverity
 from ....core.i18n import Translatable as tr
 from ....domain.filing import ModeloValidationFinding
-from ....domain.invoices import (
-    Invoice,
-    InvoiceLine,
-    IvaRate,
-    PaymentStatus,
-)
+from ....domain.invoices.enums import IvaRate, PaymentStatus
+from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva import InvoiceKind
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction

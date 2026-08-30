@@ -40,7 +40,7 @@ from ...iva import (
     rate_table_covers,
     rate_table_covers_any_positive_tier,
 )
-from .. import IvaRate, iva_rate_percentage
+from ..enums import IvaRate, iva_rate_percentage
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

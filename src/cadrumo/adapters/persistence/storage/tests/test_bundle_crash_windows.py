@@ -34,7 +34,7 @@ from pathlib import Path
 
 import pytest
 
-from .....domain.buckets import BucketExportError, BucketImportError
+from .....domain.buckets.errors import BucketExportError, BucketImportError
 from ..bucket import ARCHIVE_SCHEMA_VERSION, ExportArchiveHeader, read_sealed_archive, write_sealed_archive
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

@@ -18,7 +18,7 @@ from ....core import StorageCategory, storage_path
 from ....core.config import load_settings, override_settings
 from ....core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
-from ....domain.buckets import BucketEventType
+from ....domain.buckets.event import BucketEventType
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session, set_active_test_profile_facts
 from ....tests.secure_sql import isolated_profile_storage_root, read_db_at_rest_bytes

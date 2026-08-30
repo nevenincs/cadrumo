@@ -36,7 +36,8 @@ from decimal import Decimal
 
 import pytest
 
-from ....domain.invoices import Invoice, InvoiceLine, IvaRate, PaymentStatus
+from ....domain.invoices.enums import IvaRate, PaymentStatus
+from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva import InvoiceKind, IvaRateKind, OssIossRegime, TransactionKind
 from .._modelo_bindings import _screened_invoice_line_observations
 from .._oss_ioss import _candidate_for_invoice_line

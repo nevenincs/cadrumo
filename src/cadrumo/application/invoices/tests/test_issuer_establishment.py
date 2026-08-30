@@ -16,7 +16,8 @@ from typing import Any
 import pytest
 
 from ....domain.deadlines import FiscalResidency, IVARegime, TaxpayerProfile
-from ....domain.invoices import Invoice, InvoiceClass, InvoiceLine, IvaRate, PaymentStatus
+from ....domain.invoices.enums import InvoiceClass, IvaRate, PaymentStatus
+from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva import InvoiceKind
 from .. import issuer_established_in_tai, simplificada_requires_tax_id_for_domestic_issuer
 
