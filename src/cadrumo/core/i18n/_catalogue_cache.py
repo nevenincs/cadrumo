@@ -52,7 +52,9 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
+
+from ...core.models import STRICT_FROZEN_CONFIG
 
 from .._storage_taxonomy import StorageCategory
 from .._storage_taxonomy_locations import storage_path
@@ -77,7 +79,7 @@ class _FlatCatalogueCache(BaseModel):
     still matches (see the module docstring's integrity-shape paragraph).
     """
 
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     schema_version: str
     locale: str

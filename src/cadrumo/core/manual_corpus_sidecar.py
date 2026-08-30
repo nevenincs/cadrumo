@@ -21,7 +21,9 @@ from __future__ import annotations
 
 from typing import Final, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, Field, field_validator
+
+from ..core.models import STRICT_FROZEN_CONFIG
 
 from ._hex import HEX_PATTERN_64
 
@@ -74,7 +76,7 @@ class ManualCorpusTextSidecar(BaseModel):
             extraction is a failed extraction, not a document with no text.
     """
 
-    model_config = ConfigDict(frozen=True, strict=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     schema_version: ManualCorpusTextSchemaVersion
     corpus_path: str = Field(min_length=len(MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX) + 1, max_length=1024)

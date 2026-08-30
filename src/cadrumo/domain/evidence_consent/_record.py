@@ -17,14 +17,14 @@ confidentiality problem it exists to document.
 
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ...core.identity import BucketId
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time import UtcInstant
 
 __all__ = ["EvidenceConsentLedgerEntry", "evidence_consent_ledger_entry_object_key"]
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True)
 
 
 class EvidenceConsentLedgerEntry(BaseModel):
@@ -35,7 +35,7 @@ class EvidenceConsentLedgerEntry(BaseModel):
     field for prompt or response text.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     entry_id: str = Field(min_length=1, description="Stable id for this ledger entry (a UUID4 hex).")
     profile_bucket_id: BucketId

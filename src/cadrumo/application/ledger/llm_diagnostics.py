@@ -55,7 +55,6 @@ __all__ = [
     "build_llm_diagnostics_report",
 ]
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True)
 
 #: Default confidence floor below which an LLM classification is reported as
 #: low-confidence. Operator-facing display threshold, overridable per call.
@@ -74,6 +73,15 @@ _MEAN_QUANTUM = Decimal("0.0001")
 
 LlmProviderName = Annotated[str, StringConstraints(min_length=1)]
 """The LLM provider a diagnostics row is attributed to."""
+
+#: Deliberately NOT the canonical ``STRICT_FROZEN_CONFIG``: the records below are
+#: ``RootModel`` subclasses, and pydantic refuses ``extra`` on a root model
+#: outright -- ``PydanticUserError: RootModel does not support setting
+#: model_config['extra']``. The canonical config carries ``extra="forbid"``, so it
+#: cannot be applied here at all. This is a constraint-shape divergence, not a
+#: weaker config nobody chose.
+_STRICT_FROZEN = ConfigDict(strict=True, frozen=True)
+
 
 class LlmUsageCostProviderMetrics(BaseModel):
     """Per-provider aggregate of the LLM usage/cost log.

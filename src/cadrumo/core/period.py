@@ -44,6 +44,8 @@ from typing import Annotated, override
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, TypeAdapter, ValidationError
 
+from ..core.models import STRICT_FROZEN_CONFIG
+
 from .errors.hierarchy import CadrumoError
 
 
@@ -375,7 +377,7 @@ class Period(BaseModel):
             coordinates that address a revision rather than a filing period.
     """
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     filing_year: int = Field(ge=1980, le=2200)
     """Deliberately wider than the registry's authored filing-year window.
