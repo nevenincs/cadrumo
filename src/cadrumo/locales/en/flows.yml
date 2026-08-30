@@ -228,7 +228,7 @@ flows:
       then file with the AEAT yourself.
     state_not_carried: Filing state and filing history are not carried by this reading.
       No producer supplies them.
-    title: Filing — modelo {modelo}
+    title: "Filing - modelo {modelo}\r"
     why:
       draft_structural: 'Permanently unmeasured: draft building is stateless, so no
         producer records a verdict to read.'
@@ -245,7 +245,7 @@ flows:
       from this reading.
     section:
       unsectioned: Unsectioned
-    title: Inputs — modelo {modelo}
+    title: "Inputs - modelo {modelo}\r"
     values_unmeasured: No values were measured for this reading. Static inspection
       reads the schema only.
   modelo_workspace_overview:
@@ -271,7 +271,7 @@ flows:
       address: Address
       capabilities: Capabilities
       revision: Revision coordinates
-    title: Overview — modelo {modelo}
+    title: "Overview - modelo {modelo}\r"
     value:
       no_work_unit: no work unit yet
   modelo_workspace_provenance:
@@ -284,7 +284,7 @@ flows:
       facet.
     page_bounded: Showing {shown} of a larger set. One source can contribute many
       rows, so the row count does not indicate completeness.
-    title: Provenance — modelo {modelo}
+    title: "Provenance - modelo {modelo}\r"
     value:
       unattributed: unattributed
   modelo_workspace_results:
@@ -297,7 +297,7 @@ flows:
       operator inputs needs the work review, which a static inspection does not carry.
     page_bounded: Showing {shown} of a larger set; the remaining rows are not reachable
       from this reading.
-    title: Results — modelo {modelo}
+    title: "Results - modelo {modelo}\r"
   modelo_workspace_verification:
     axis:
       binding_ready: Bindings ready
@@ -321,7 +321,7 @@ flows:
     section:
       findings: Findings
       readiness: Readiness axes
-    title: Verification — modelo {modelo}
+    title: "Verification - modelo {modelo}\r"
     value:
       unmeasured: not measured
   passphrase:

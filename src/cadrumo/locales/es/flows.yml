@@ -228,7 +228,7 @@ flows:
       y exporte aquí, y presente usted mismo ante la AEAT.
     state_not_carried: Esta lectura no incluye el estado ni el historial de presentación.
       Ningún productor los aporta.
-    title: Presentación — modelo {modelo}
+    title: "Presentación - modelo {modelo}\r"
     why:
       draft_structural: 'Sin medir de forma permanente: la construcción del borrador
         no guarda estado, así que ningún productor registra un veredicto que leer.'
@@ -246,7 +246,7 @@ flows:
       son accesibles desde esta lectura.
     section:
       unsectioned: Sin sección
-    title: Entradas — modelo {modelo}
+    title: "Entradas - modelo {modelo}\r"
     values_unmeasured: En esta lectura no se ha medido ningún valor. La inspección
       estática solo lee el esquema.
   modelo_workspace_overview:
@@ -272,7 +272,7 @@ flows:
       address: Dirección
       capabilities: Capacidades
       revision: Coordenadas de revisión
-    title: Resumen — modelo {modelo}
+    title: "Resumen - modelo {modelo}\r"
     value:
       no_work_unit: aún sin unidad de trabajo
   modelo_workspace_provenance:
@@ -285,7 +285,7 @@ flows:
       procedencia.
     page_bounded: Se muestran {shown} de un conjunto mayor. Una fuente puede aportar
       muchas filas, así que el número de filas no indica completitud.
-    title: Procedencia — modelo {modelo}
+    title: "Procedencia - modelo {modelo}\r"
     value:
       unattributed: sin atribuir
   modelo_workspace_results:
@@ -299,7 +299,7 @@ flows:
       estática no incluye.
     page_bounded: Se muestran {shown} filas de un conjunto mayor; las restantes no
       son accesibles desde esta lectura.
-    title: Resultados — modelo {modelo}
+    title: "Resultados - modelo {modelo}\r"
   modelo_workspace_verification:
     axis:
       binding_ready: Vínculos preparados
@@ -323,7 +323,7 @@ flows:
     section:
       findings: Hallazgos
       readiness: Ejes de preparación
-    title: Verificación — modelo {modelo}
+    title: "Verificación - modelo {modelo}\r"
     value:
       unmeasured: sin medir
   passphrase:
