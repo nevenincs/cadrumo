@@ -1171,14 +1171,13 @@ def assert_work_target_revision(
         if axis not in diverging or candidate is None:
             continue
         asserted = candidate.strip()
-        if True:
-            raise ModeloWorkRegistryYearMismatchError(
-                f"{axis} registry revision {asserted!r} is not the law-determined revision "
-                f"for this filing target. The law-determined revision is {law_revision_id!r}. "
-                f"The period-to-revision binding is fixed by law (AEAT orden ministerial); "
-                f"you cannot override it. Re-create the work unit without --revision to use "
-                f"the correct revision, or omit --revision to accept the law-determined default.",
-            )
+        raise ModeloWorkRegistryYearMismatchError(
+            f"{axis} registry revision {asserted!r} is not the law-determined revision "
+            f"for this filing target. The law-determined revision is {law_revision_id!r}. "
+            f"The period-to-revision binding is fixed by law (AEAT orden ministerial); "
+            f"you cannot override it. Re-create the work unit without --revision to use "
+            f"the correct revision, or omit --revision to accept the law-determined default.",
+        )
     return law_revision_id
 
 
