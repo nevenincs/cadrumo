@@ -33,7 +33,6 @@ from ...application.calculations.observations_repository import (
     ObservationSourceKind,
     PriorDomiciliationElectionProjection,
 )
-from ...application.ledger.preflight import IssueDetail
 from ...application.modelo._work_plazo import validate_modelo_work_deadline_posture
 from ...application.modelo.work_review import (
     BlockerRef,
@@ -55,6 +54,7 @@ from ...core.identity import (
 )
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
 from ...core.period import Period
+from ...core.prose_elision import IssueDetail
 from ...core.text_bounds import NonEmptyStr
 from ...domain.buckets.event import (
     BucketActorLabel,

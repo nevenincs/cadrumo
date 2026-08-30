@@ -26,7 +26,7 @@ from collections.abc import Mapping, Sequence
 from decimal import Decimal
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Annotated, Final, Literal
+from typing import Final, Literal
 
 from pydantic import BaseModel, Field, computed_field, field_serializer, field_validator
 
@@ -35,7 +35,7 @@ from ...core.identity import BucketId, TransactionId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.operator_action_enums import OperatorActionAxis
 from ...core.period import Period
-from ...core.prose_elision import ElidedProse
+from ...core.prose_elision import IssueDetail
 from ...domain.categories.spending_category import (
     HOME_OFFICE_FAMILIES,
     SpendingCategory,
@@ -110,16 +110,6 @@ class LedgerPreflightIssueReason(StrEnum):
     ANOMALY_NON_DECLARABLE_RECARGO_EQUIVALENCIA = "anomaly_non_declarable_recargo_equivalencia"
 
 
-#: The traceable-exclusion ``detail`` annotation: elides rather than refusing.
-#: Public because the CLI payload projecting this field must elide too: a
-#: payload that REFUSES an over-length detail reintroduces exactly the
-#: failure described below, one layer further out.
-#:
-#: These issues explain why a ledger row was excluded, so refusing one over its
-#: length would drop the explanation for the exclusion AND fail the aggregation
-#: that produced it -- a silent under-declaration dressed as a validation error.
-#: Shortening the sentence is strictly the lesser loss.
-IssueDetail = Annotated[str, ElidedProse(512)]
 
 
 class LedgerPreflightIssue(BaseModel):
@@ -810,7 +800,6 @@ def _preflight_detail_for_iva_issue(reason: IvaLedgerAggregationIssueReason) -> 
 
 __all__ = [
     "OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE",
-    "IssueDetail",
     "LedgerPreflightIssue",
     "LedgerPreflightIssueReason",
     "LedgerPreflightReport",

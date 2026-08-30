@@ -44,7 +44,6 @@ from ...application.ledger.models import (
     DiagnosticSeverity,
     IsoDateText,
 )
-from ...application.ledger.preflight import IssueDetail
 from ...core import LinkInconsistencyDirection
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.identity import (
@@ -59,6 +58,7 @@ from ...core.identity import (
 from ...core.json_contract import OutputRootSchema, OutputSchema
 from ...core.parsing import IsoCurrencyCode, parse_iso8601_date
 from ...core.period import Period
+from ...core.prose_elision import IssueDetail
 from ...core.text_bounds import NonEmptyStr
 from ._ledger_business_payloads import (
     AttachmentReviewPayload,

@@ -53,11 +53,11 @@ from ...core.identity import TransactionId
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period, PeriodKind
+from ...core.prose_elision import IssueDetail
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.irpf_categories import has_activity_irpf_category, has_employment_irpf_category
 from ...domain.transactions.models import OutOfWindowTransactionSummary, Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
-from ..ledger.preflight import IssueDetail
 from . import _shared_issue_reasons
 from ._business_proportion import business_proportion
 from ._currency_predicates import effective_eur_amount, effective_eur_taxable_base, is_non_eur_without_conversion

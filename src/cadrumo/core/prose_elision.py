@@ -175,3 +175,17 @@ class ElidedProse:
                 strip_whitespace=self.strip_whitespace,
             )
         )
+
+#: The traceable-exclusion ``detail`` annotation: elides rather than refusing.
+#:
+#: Homed here rather than beside its first consumer because BOTH the ledger
+#: preflight surface and the aggregation income ledgers annotate a field with
+#: it, and the ledger-side home made that a cycle: preflight imports the
+#: aggregation package, whose modules imported this name back out of a
+#: half-initialised preflight.
+#:
+#: These issues explain why a ledger row was excluded, so refusing one over its
+#: length would drop the explanation for the exclusion AND fail the aggregation
+#: that produced it -- a silent under-declaration dressed as a validation error.
+#: Shortening the sentence is strictly the lesser loss.
+IssueDetail = Annotated[str, ElidedProse(512)]
