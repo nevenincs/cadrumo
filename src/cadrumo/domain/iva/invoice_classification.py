@@ -49,9 +49,9 @@ from ...core import STRICT_FROZEN_CONFIG, IvaDeductionFactKind
 # ``_enums`` ban (clause 5 of the structural enum-import placement check).
 # At runtime the helpers are called only after the invoices package init
 # finishes, so the public-package import resolves cleanly.
-from ._classification import InvoiceKind, domestic_categories_by_rate_kind
-from ._deduction_facts import IvaDeductionClassificationProvenance
-from ._flow import (
+from .classification import InvoiceKind, domestic_categories_by_rate_kind
+from .deduction_facts import IvaDeductionClassificationProvenance
+from .flow import (
     IvaFlowDirection,
     IvaSettlementSide,
     flow_direction_for_invoice_kind,
@@ -59,7 +59,7 @@ from ._flow import (
     is_devengada_flow,
     settlement_sides_for_flow,
 )
-from ._schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
+from .schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 
 if TYPE_CHECKING:
     from ..calculations.registry.ledger_bindings import IvaLedgerObservation

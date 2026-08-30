@@ -25,7 +25,8 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.directory_scan import scan_directory
-from .._prorrata import (
+from ..errors import ProrrataInputError, ProrrataSectorError
+from ..prorrata import (
     InputClassification,
     ProrrataInputDeduction,
     ProrrataInputs,
@@ -43,7 +44,6 @@ from .._prorrata import (
     sum_deductible_amounts,
     validate_prorrata_reference,
 )
-from ..errors import ProrrataInputError, ProrrataSectorError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -640,7 +640,7 @@ def test_sum_deductible_amounts_returns_zero_for_empty_iterable() -> None:
 
 
 def test_no_parallel_prorrata_implementation_exists() -> None:
-    """Only ``cadrumo.domain.iva._prorrata`` owns prorrata semantics.
+    """Only ``cadrumo.domain.iva.prorrata`` owns prorrata semantics.
 
     Walk the source tree and assert that ``compute_prorrata_general``,
     ``classify_input_deduction``, ``is_especial_mandatory``, and
@@ -654,7 +654,7 @@ def test_no_parallel_prorrata_implementation_exists() -> None:
 
     repo_root = Path(__file__).resolve().parents[4]
     source_root = repo_root / "src" / "cadrumo"
-    canonical_module = source_root / "domain" / "iva" / "_prorrata.py"
+    canonical_module = source_root / "domain" / "iva" / "prorrata.py"
 
     canonical_symbols = (
         "compute_prorrata_general",
@@ -672,12 +672,12 @@ def test_no_parallel_prorrata_implementation_exists() -> None:
             assert f"def {symbol}" not in text, (
                 f"shadow prorrata implementation detected: "
                 f"{py_file} defines `def {symbol}`; the canonical "
-                f"owner is `cadrumo.domain.iva._prorrata`."
+                f"owner is `cadrumo.domain.iva.prorrata`."
             )
 
 
 def test_no_usage_ratios_to_prorrata_shim_exists() -> None:
-    """``domain.usage_ratios`` and ``cadrumo.domain.iva._prorrata`` are
+    """``domain.usage_ratios`` and ``cadrumo.domain.iva.prorrata`` are
     distinct concepts. No module may translate usage-ratios values into
     prorrata percentages: usage-ratios is the proportional-expense
     allocation surface (LIRPF deductibility), prorrata is the LIVA

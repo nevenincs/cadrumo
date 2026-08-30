@@ -24,7 +24,7 @@ from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.errors import InvoiceNotFoundError, InvoiceValidationError
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
-from ....domain.iva import InvoiceKind
+from ....domain.iva.classification import InvoiceKind
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     CatalogueInvoicePatch,

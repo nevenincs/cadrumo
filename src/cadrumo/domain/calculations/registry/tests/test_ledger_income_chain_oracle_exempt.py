@@ -51,7 +51,9 @@ import pytest
 from .....application.aggregation import aggregate_renta_income_ledger
 from .....core import CasillaId, Period, validated_casilla_id
 from .....core.aggregation import LedgerIncomeGrounding, LedgerWithholdingDerivation
-from ....iva import InvoiceKind, IvaCategory, category_cuota_is_zero_by_law
+from ....iva.classification import InvoiceKind
+from ....iva.components import category_cuota_is_zero_by_law
+from ....iva.schema import IvaCategory
 from ....transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....transactions.models import Transaction, TransactionCatalogue
 from ....transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

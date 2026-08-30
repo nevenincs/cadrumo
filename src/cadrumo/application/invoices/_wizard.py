@@ -55,13 +55,9 @@ from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.models import Invoice
 from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.invoices.validators import validate_country_code, validate_iva_number
-from ...domain.iva import (
-    EUMemberState,
-    InvoiceKind,
-    IvaCategory,
-    domestic_categories_by_rate_kind,
-    rate_kinds_for_declared_rate,
-)
+from ...domain.iva.classification import InvoiceKind, domestic_categories_by_rate_kind
+from ...domain.iva.lookup import rate_kinds_for_declared_rate
+from ...domain.iva.schema import EUMemberState, IvaCategory
 from ._creation import build_catalogue_invoice, create_catalogue_invoice
 
 __all__ = [

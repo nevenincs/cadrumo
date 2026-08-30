@@ -13,7 +13,7 @@ from ....adapters.persistence.storage.errors import StorageValidationError
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.config import override_settings
 from ....core.hashing import content_hash_hex
-from ....domain.filing import ModeloDraft
+from ....domain.filing.schema import ModeloDraft
 from ....domain.submission import ModeloDraftStatus
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue

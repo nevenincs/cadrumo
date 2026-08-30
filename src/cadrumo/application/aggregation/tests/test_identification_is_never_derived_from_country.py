@@ -27,7 +27,7 @@ from pathlib import Path
 import pytest
 
 from ....core import Period
-from ....domain.iva import EUMemberState, IvaCategory
+from ....domain.iva.schema import EUMemberState, IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

@@ -60,8 +60,8 @@ from pydantic import BaseModel, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.text_fold import fold_printed_phrase
-from ._regime_legend import REGIME_LEGENDS, RegimeLegend
-from ._schema import IvaCategory
+from .regime_legend import REGIME_LEGENDS, RegimeLegend
+from .schema import IvaCategory
 
 __all__ = [
     "LegendDerivation",

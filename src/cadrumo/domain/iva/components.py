@@ -40,12 +40,12 @@ gate red until the author promotes the row — the marker retires itself instead
 of rotting.
 
 See Also:
-    :mod:`domain.iva._schema`
+    :mod:`domain.iva.schema`
         Owns :class:`~domain.iva.IvaCategory` and the canonical
         :data:`~domain.iva.CUOTA_LESS_M303_IVA_CATEGORIES` /
         :data:`~domain.iva.EVIDENCE_EXEMPT_IVA_CATEGORIES` frozensets this
         table is cross-checked against.
-    :mod:`domain.iva._recargo_equivalencia`
+    :mod:`domain.iva.recargo_equivalencia`
         Registry-backed LIVA art. 161 recargo rates; this table declares
         *whether* a recargo may exist, that module declares *how much*.
 """
@@ -58,14 +58,14 @@ from typing import TYPE_CHECKING, Final
 
 from pydantic import Field, model_validator
 
-from ._classification import InvoiceKind
-from ._schema import (
+from .classification import InvoiceKind
+from .errors import IvaValidationError
+from .schema import (
     CUOTA_LESS_M303_IVA_CATEGORIES,
     IvaCategory,
     IvaStrictFrozen,
     _RegistryLegalRef,  # pyright: ignore[reportPrivateUsage] -- intra-package reuse of this package's own constrained legal-ref alias
 )
-from .errors import IvaValidationError
 
 if TYPE_CHECKING:
     from collections.abc import Mapping

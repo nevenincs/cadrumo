@@ -49,7 +49,8 @@ from ....core import (
     SectorDiferenciadoLetra,
 )
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.iva import InputClassification, IvaDeductionClassificationProvenance
+from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
+from ....domain.iva.prorrata import InputClassification
 from ....domain.prorrata_register import ProrrataRegisterEntry, SectorDefinition
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue

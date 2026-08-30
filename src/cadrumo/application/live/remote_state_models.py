@@ -23,7 +23,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from ...core import IvaCompensationStateProvenance, Period
 from ...core.identity import AeatExpedienteId, BucketId
 from ...core.json_contract import Notice
-from ...domain.iva_compensation import IvaCompensationDecisionReason
+from ...domain.iva_compensation.reconciliation import IvaCompensationDecisionReason
 from ..storage.sync_runs import SyncRunRecordReference
 from .errors import LiveIvaAcquisitionFailureMode
 

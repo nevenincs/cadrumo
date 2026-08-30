@@ -29,8 +29,8 @@ from ....core.resources import bundled_path
 from ....core.validity_window import ValidityWindow
 from ...calculations.registry.loader import load_registry_tree
 from ...calculations.registry.schema_references import LegalReference
-from .._catalogue import bundled_iva_catalogue
-from .._place_of_supply import load_place_of_supply_table
+from ..catalogue import bundled_iva_catalogue
+from ..place_of_supply import load_place_of_supply_table
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

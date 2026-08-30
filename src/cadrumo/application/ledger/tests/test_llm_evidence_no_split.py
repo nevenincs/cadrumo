@@ -10,7 +10,7 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....domain.categories.spending_category import SpendingCategory
-from ....domain.iva import IvaCategory
+from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionLifecycleState
 from ....domain.transactions.errors import TransactionValidationError
 from ..llm_classification import apply_evidence_classification, apply_evidence_split, suggest_evidence_split

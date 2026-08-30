@@ -18,7 +18,7 @@ from ....core.config import Settings, load_settings, override_settings
 from ....core.time import frozen_clock
 from ....domain.buckets.event import BucketEventType
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.filing import ModeloDraft, compute_modelo_draft_id, registry_schema_version
+from ....domain.filing.schema import ModeloDraft, compute_modelo_draft_id, registry_schema_version
 from ....domain.submission import ModeloDraftStatus
 from ....tests.profile_storage_root_fixture import bucket_session_storage_fixture
 from ....tests.user_profile import register_minimal_profile

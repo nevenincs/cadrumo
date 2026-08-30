@@ -372,7 +372,7 @@ def _pinned_authority_values() -> InvoiceExtractionAuthorityValues:
         InvoiceExtractionAuthorityValues,
         default_invoice_extraction_period,
     )
-    from ...domain.iva import IvaCategory
+    from ...domain.iva.schema import IvaCategory
 
     return InvoiceExtractionAuthorityValues(
         period=default_invoice_extraction_period(),

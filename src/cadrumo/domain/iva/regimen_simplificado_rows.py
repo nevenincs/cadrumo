@@ -16,8 +16,8 @@ from pydantic import BaseModel, Field, StringConstraints, field_validator, model
 from ...core import M303_MESA_FACTS, M303_REPEATING_FACTS, STRICT_FROZEN_CONFIG, M303RegimenSimplificadoFact
 from ...core.filing_year import FilingYear
 from ..filing_evidence import FilingEvidenceReference
-from ._schema import validate_orden_module_identities
 from .errors import IvaValidationError
+from .schema import validate_orden_module_identities
 
 _Token = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=160)]
 _OfficialActivityName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=500)]
@@ -200,7 +200,7 @@ class AutoridadAgricolaOrdenAnualNoResuelta(BaseModel):
 
 
 class M303RegimenSimplificadoScope(StrEnum):
-    """Closed M303 simplified-regime scope outcomes available before S58 evidence."""
+    """Closed M303 simplified-regime scope outcomes available before the simplified-regime evidence is resolved."""
 
     REGIMEN_SIMPLIFICADO_NOT_CLAIMED = "regimen_simplificado_not_claimed"
     REGIMEN_SIMPLIFICADO_EVIDENCE_REQUIRED = "regimen_simplificado_evidence_required"

@@ -21,14 +21,9 @@ from ....domain.calculations.registry.schema import DataBindingDefinition, Model
 from ....domain.calculations.registry.schema_references import PeriodSelector
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceLine
-from ....domain.iva import (
-    InvoiceKind,
-    IvaCashAccountingTreatment,
-    IvaCategory,
-    IvaLedgerObservationRole,
-    IvaRateKind,
-    derive_flow_for_classification,
-)
+from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.flow import derive_flow_for_classification
+from ....domain.iva.schema import IvaCashAccountingTreatment, IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import _modelo_bindings as modelo_bindings_module
 from .. import _service as service_module

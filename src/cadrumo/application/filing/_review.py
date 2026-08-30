@@ -43,14 +43,10 @@ from ...domain.calculations.registry.bindings import RegistryModeloObservation
 from ...domain.categories.profile import CategoryProfile
 from ...domain.categories.registry import resolve_category_profiles
 from ...domain.categories.spending_category import SpendingCategory
-from ...domain.filing import (
-    CasillaSchemaProvider,
-    ModeloApprovalBasis,
-    ModeloDraft,
-    ModeloDraftError,
-    ModeloValidator,
-    derive_validation_status,
-)
+from ...domain.filing.errors import ModeloDraftError
+from ...domain.filing.protocols import CasillaSchemaProvider
+from ...domain.filing.schema import ModeloApprovalBasis, ModeloDraft
+from ...domain.filing.validator import ModeloValidator, derive_validation_status
 from ...domain.identifiers import canonical_decimal_string
 from ...domain.invoices.models import InvoiceCatalogue
 from ...domain.submission import ModeloDraftStatus

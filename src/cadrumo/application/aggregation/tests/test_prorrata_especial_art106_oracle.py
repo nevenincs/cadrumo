@@ -50,7 +50,8 @@ from ....core import (
 from ....domain.bienes_inversion import BienesInversionIvaRegister
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ids import BindingId
-from ....domain.iva import InputClassification, IvaDeductionClassificationProvenance
+from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
+from ....domain.iva.prorrata import InputClassification
 from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import build_prorrata_especial_mandatory_advisory

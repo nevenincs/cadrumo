@@ -36,15 +36,9 @@ from ...core.money import round_to_cents
 from ...core.parsing import normalise_iso_3166_alpha2_jurisdiction, parse_iso8601_date
 from ...core.time import now, parse_iso_datetime
 from ..identifiers import canonical_decimal_string
-from ..iva import (
-    EUMemberState,
-    InputClassification,
-    IvaCashAccountingPaymentEvidence,
-    IvaCashAccountingTreatment,
-    IvaCategory,
-    IvaDeductionClassificationProvenance,
-    IvaExemptionArticle,
-)
+from ..iva.deduction_facts import IvaDeductionClassificationProvenance
+from ..iva.prorrata import InputClassification
+from ..iva.schema import EUMemberState, IvaCashAccountingPaymentEvidence, IvaCashAccountingTreatment, IvaCategory, IvaExemptionArticle
 from .enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from .errors import TransactionValidationError
 from .irpf_categories import (

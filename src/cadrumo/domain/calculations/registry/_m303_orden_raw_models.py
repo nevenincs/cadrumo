@@ -11,7 +11,7 @@ from pydantic import Field, model_validator
 from ....core.filing_year import FilingYear
 from ....core.identity import ContentDigest
 from ....core.percentage import Percentage
-from ....domain.iva import IaeEpigrafe
+from ....domain.iva.regimen_simplificado_rows import IaeEpigrafe
 from ._m303_orden_constants import (
     EXPECTED_ACTIVITY_COUNT,
     EXPECTED_AGRICULTURAL_AXIS_COUNTS,

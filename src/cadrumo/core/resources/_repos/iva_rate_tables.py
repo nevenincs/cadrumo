@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, override
 from .._repository import ResourceCacheRepository
 
 if TYPE_CHECKING:
-    from ....domain.iva import EUMemberState, IvaRateRecord
+    from ....domain.iva.schema import EUMemberState, IvaRateRecord
 
 
 class IvaRateTableRepository(ResourceCacheRepository[Mapping["EUMemberState", "tuple[IvaRateRecord, ...]"], None]):
@@ -25,7 +25,7 @@ class IvaRateTableRepository(ResourceCacheRepository[Mapping["EUMemberState", "t
 
     @override
     def _load(self, key: None) -> Mapping[EUMemberState, tuple[IvaRateRecord, ...]]:
-        from ....domain.iva import load_iva_rate_table
+        from ....domain.iva.rates import load_iva_rate_table
 
         return load_iva_rate_table()
 

@@ -29,7 +29,7 @@ from pydantic import ValidationError
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....domain.invoices.errors import InvoiceValidationError
-from ....domain.iva import InvoiceKind
+from ....domain.iva.classification import InvoiceKind
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     BulkInvoiceImportRow,

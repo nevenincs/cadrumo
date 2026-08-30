@@ -34,7 +34,7 @@ import pytest
 from pydantic import ValidationError
 
 from .....core import StorageCategory, storage_path
-from .....domain.iva import IvaCashAccountingPaymentEvidence, IvaCashAccountingTreatment, IvaCategory
+from .....domain.iva.schema import IvaCashAccountingPaymentEvidence, IvaCashAccountingTreatment, IvaCategory
 from .....domain.transactions.enums import BusinessClassification, TransactionDirection
 from .....domain.transactions.errors import StoredTransactionDriftError
 from .....domain.transactions.models import Transaction, TransactionCatalogue, derive_transaction_id

@@ -21,15 +21,8 @@ from ....adapters.persistence.storage.errors import ClassificationError
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.filing import (
-    CasillaChange,
-    ModeloComplementaria,
-    ModeloDraft,
-    ModeloValue,
-    ModeloValueKind,
-    compute_modelo_draft_id,
-    registry_schema_version,
-)
+from ....domain.filing.amendment import CasillaChange, ModeloComplementaria
+from ....domain.filing.schema import ModeloDraft, ModeloValue, ModeloValueKind, compute_modelo_draft_id, registry_schema_version
 from ....domain.submission import ModeloDraftStatus
 from ....tests.secure_sql import TestRuntimeProfile
 from ..conftest import _BUCKET_ID

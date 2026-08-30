@@ -33,7 +33,7 @@ from ...core import ConfirmationBlockReason, DraftDiscrepancyKind, FindingResolu
 from ...core.config import load_settings
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ...domain.iva import StatedCountryCodeStatus
+from ...domain.iva.establishment import StatedCountryCodeStatus
 from ._common import _bad, _state, _tx_repo, emit_envelope, resolve_notice_action
 from ._ledger_business_payloads import (
     EvidenceReviewBlockerPayload,

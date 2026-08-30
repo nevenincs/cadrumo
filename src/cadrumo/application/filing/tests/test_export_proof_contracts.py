@@ -11,7 +11,7 @@ from pydantic import ValidationError
 
 from ....core import Period, sha256_hex
 from ....core.time import now
-from ....domain.filing import FilingExportValidationError
+from ....domain.filing.errors import FilingExportValidationError
 from .. import (
     DeclaracionExportResult,
     FilingExportConformanceRequest,

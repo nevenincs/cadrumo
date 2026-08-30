@@ -40,7 +40,8 @@ from ...core.identity import SubjectTaxId
 from ...core.logging import get_logger
 from ...domain.deadlines.engine import DeadlineEngine
 from ...domain.deadlines.models import Schedule, TaxpayerProfile
-from ...domain.filing import CasillaSchemaProvider, ModeloDraft
+from ...domain.filing.protocols import CasillaSchemaProvider
+from ...domain.filing.schema import ModeloDraft
 from ...domain.submission import SubmissionEngine
 from ..filing import build_draft
 from .engine import WorkflowEngine

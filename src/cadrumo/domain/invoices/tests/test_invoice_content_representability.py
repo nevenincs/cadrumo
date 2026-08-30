@@ -26,7 +26,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.resources import bundled_path
-from ....domain.iva import InvoiceKind
+from ....domain.iva.classification import InvoiceKind
 from ..enums import InvoiceLegalMention, IvaRate, PaymentStatus, invoice_legal_mention_text
 from ..models import Invoice, InvoiceLine
 
@@ -175,7 +175,7 @@ def test_legal_mentions_are_never_derived_from_iva_category() -> None:
     ``exemption_reference``, so a caller that never states them gets exactly
     that -- an honest gap, not a fabricated one.
     """
-    from ....domain.iva import IvaCategory
+    from ....domain.iva.schema import IvaCategory
 
     invoice = _invoice(
         iva_category=IvaCategory.DOMESTIC_EXEMPT,

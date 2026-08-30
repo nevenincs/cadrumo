@@ -69,13 +69,9 @@ from ....domain.calculations.registry.ledger_bindings import (
     resolve_ledger_iva_aggregation_binding_values,
 )
 from ....domain.calculations.registry.relations import materialize_relation_binding_values
-from ....domain.iva import (
-    IvaCategory,
-    IvaDeductionClassificationProvenance,
-    IvaFlowDirection,
-    IvaLedgerObservationRole,
-    IvaRateKind,
-)
+from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
+from ....domain.iva.flow import IvaFlowDirection
+from ....domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext
 from .._iva_compensation_annual_partition import IvaCompensationAnnualPartitionSourceResolver

@@ -54,9 +54,9 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.money import round_to_cents
-from ._lookup import coexisting_tier_rates, lookup_rate
-from ._schema import EUMemberState, IvaCategory, IvaRateKind, IvaRateRecord
 from .errors import IvaRateNotFoundError
+from .lookup import coexisting_tier_rates, lookup_rate
+from .schema import EUMemberState, IvaCategory, IvaRateKind, IvaRateRecord
 
 _ONE_HUNDRED = Decimal("100")
 _ONE = Decimal("1")

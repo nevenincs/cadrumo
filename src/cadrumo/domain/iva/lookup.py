@@ -12,10 +12,10 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 
-from ._catalogue import resolve_catalogue
-from ._rates import load_iva_rate_table
-from ._schema import EUMemberState, IvaCatalogue, IvaCategory, IvaRateKind, IvaRateRecord
+from .catalogue import resolve_catalogue
 from .errors import IvaCatalogueError, IvaCategoryNotFoundError, IvaRateNotFoundError
+from .rates import load_iva_rate_table
+from .schema import EUMemberState, IvaCatalogue, IvaCategory, IvaRateKind, IvaRateRecord
 
 
 def lookup_rate(

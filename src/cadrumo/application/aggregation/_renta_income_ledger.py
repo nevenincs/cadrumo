@@ -51,7 +51,8 @@ from ...core.money import round_to_cents
 from ...domain.invoices.decomposition import decompose_invoice
 from ...domain.invoices.models import InvoiceCatalogue
 from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
-from ...domain.iva import InvoiceKind, category_cuota_is_zero_by_law
+from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.components import category_cuota_is_zero_by_law
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.irpf_categories import has_activity_irpf_category, has_employment_irpf_category
 from ...domain.transactions.models import OutOfWindowTransactionSummary, Transaction, TransactionCatalogue

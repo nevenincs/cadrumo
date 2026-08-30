@@ -22,7 +22,7 @@ from ....core import Period
 from ....core.aggregation import InvoiceDevengoRank
 from ....domain.invoices.enums import InvoiceOperationDateRole, IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceLine
-from ....domain.iva import InvoiceKind
+from ....domain.iva.classification import InvoiceKind
 from .. import (
     DIAGNOSTIC_MESSAGE_MAX_LENGTH,
     invoice_devengo_in_period,

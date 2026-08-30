@@ -14,7 +14,7 @@ from ...adapters.persistence.storage.bucket import bucket_paths
 from ...tests.secure_sql import isolated_runtime_profile
 from ..invoices.enums import IvaRate, PaymentStatus
 from ..invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
-from ..iva import InvoiceKind
+from ..iva.classification import InvoiceKind
 from ..transactions.enums import TransactionDirection
 from ..transactions.models import Transaction, TransactionCatalogue
 from ..transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

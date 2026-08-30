@@ -28,11 +28,11 @@ from __future__ import annotations
 import pytest
 
 from ....core.text_fold import fold_printed_phrase
-from .._legend_derivation import (
+from ..legend_derivation import (
     index_regime_legends,
     match_regime_legend,
 )
-from .._regime_legend import REGIME_LEGENDS, RegimeLegend
+from ..regime_legend import REGIME_LEGENDS, RegimeLegend
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

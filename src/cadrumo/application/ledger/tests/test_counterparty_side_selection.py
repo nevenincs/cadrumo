@@ -43,7 +43,7 @@ import pytest
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.config import Settings
-from ....domain.iva import InvoiceKind
+from ....domain.iva.classification import InvoiceKind
 from ....tests.pdf_fixtures import text_pdf_bytes
 from ..evidence import PurchaseInvoiceEvidenceInputError
 from ..evidence_draft import confirm_invoice_draft_from_evidence

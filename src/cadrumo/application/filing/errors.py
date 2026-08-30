@@ -28,7 +28,7 @@ from typing import ClassVar
 
 from ...core import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.errors import TerminalPreconditionErrorMixin
-from ...domain.filing import FilingExportError, ModeloBuilderError, ModeloImportError
+from ...domain.filing.errors import FilingExportError, ModeloBuilderError, ModeloImportError
 from ..operator_actions import PreconditionVerdict, no_action_precondition_verdict
 
 

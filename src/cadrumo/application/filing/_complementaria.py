@@ -36,22 +36,10 @@ from ...adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from ...core import Period
 from ...core.identity import AeatCsv, IdentityError, SubjectTaxId, validate_spanish_tax_id
 from ...core.logging import get_logger
-from ...domain.filing import (
-    AmendmentKind,
-    CasillaChange,
-    CasillaDelta,
-    CasillaInputs,
-    CasillaSchemaProvider,
-    ModeloAmendmentError,
-    ModeloCode,
-    ModeloComplementaria,
-    ModeloDraft,
-    ModeloInputs,
-    ModeloInputValue,
-    ModeloSustitutiva,
-    ModeloValueKind,
-    make_amendment_id,
-)
+from ...domain.filing.amendment import AmendmentKind, CasillaChange, CasillaDelta, CasillaInputs, ModeloCode, ModeloComplementaria, ModeloSustitutiva, make_amendment_id
+from ...domain.filing.errors import ModeloAmendmentError
+from ...domain.filing.protocols import CasillaSchemaProvider, ModeloInputValue, ModeloInputs
+from ...domain.filing.schema import ModeloDraft, ModeloValueKind
 from .errors import ModeloApplicationError as ModeloBuilderError
 
 _logger = get_logger(__name__)

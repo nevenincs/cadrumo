@@ -28,14 +28,10 @@ from .....domain.bienes_inversion import (
     RegistroRegularizacionResult,
     RegistroRegularizacionRow,
 )
-from .....domain.iva import (
-    InputClassification,
-    IvaCategory,
-    IvaDeductionClassificationProvenance,
-    IvaFlowDirection,
-    IvaLedgerObservationRole,
-    IvaRateKind,
-)
+from .....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
+from .....domain.iva.flow import IvaFlowDirection
+from .....domain.iva.prorrata import InputClassification
+from .....domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from .....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry, SectorDefinition
 from ..corpus_catalogue import resolve_record_design_binary
 from ..errors import RegistryValidationError

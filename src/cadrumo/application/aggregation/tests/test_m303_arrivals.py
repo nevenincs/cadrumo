@@ -11,13 +11,8 @@ from pydantic import ValidationError
 from ....core import Period, ProrrataEspecialTransitionKind, ProrrataRegisterRegime, SectorDiferenciadoLetra
 from ....core.resources import bundled_path
 from ....domain.calculations.registry.ledger_bindings import IvaLedgerObservation
-from ....domain.iva import (
-    IvaCashAccountingTreatment,
-    IvaCategory,
-    IvaFlowDirection,
-    IvaLedgerObservationRole,
-    IvaRateKind,
-)
+from ....domain.iva.flow import IvaFlowDirection
+from ....domain.iva.schema import IvaCashAccountingTreatment, IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from ....domain.prorrata_register import (
     ProrrataEspecialTransitionEvidence,
     ProrrataRegister,

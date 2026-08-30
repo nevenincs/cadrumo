@@ -41,7 +41,7 @@ from decimal import Decimal
 import pytest
 
 from ....core import ConfirmationBlockReason, DraftDiscrepancyKind
-from ....domain.iva import REGIME_LEGENDS, RegimeLegend
+from ....domain.iva.regime_legend import REGIME_LEGENDS, RegimeLegend
 from ..confirmation_gate import BLOCKING_REASON_BY_DISCREPANCY_KIND, confirmation_blockers
 from ..evidence_draft import InvoiceDraft
 from ..regime_contradiction import draft_prints_a_repercutido_line, regime_contradiction_finding

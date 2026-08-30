@@ -27,7 +27,8 @@ from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.invoices.enums import InvoiceClass
 from ...domain.invoices.errors import InvoiceValidationError
-from ...domain.iva import InvoiceKind, SupplyNature
+from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.supply_nature import SupplyNature
 from ...llm.consent import EvidenceConsentToken, mint_evidence_consent_token
 from ...llm.models import LLMProvider
 from ._common import _bad, _state, _tx_repo, emit_envelope

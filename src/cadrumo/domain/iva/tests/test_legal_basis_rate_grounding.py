@@ -36,13 +36,10 @@ import pytest
 from ....core.resources import bundled_path
 from ...calculations.registry.authority import bundled_authority
 from ...invoices.enums import IvaRate, iva_rate_kind, iva_rate_percentage
-from .. import (
-    EUMemberState,
-    IvaCatalogueError,
-    IvaRateKind,
-    load_recargo_rates,
-    lookup_rate,
-)
+from ..errors import IvaCatalogueError
+from ..lookup import lookup_rate
+from ..recargo_equivalencia import load_recargo_rates
+from ..schema import EUMemberState, IvaRateKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -199,7 +196,7 @@ def test_liva_art_161_recargo_matches_iva_tier_alignment() -> None:
 
 
 def test_liva_art_161_missing_recargo_parameter_raises_iva_catalogue_error() -> None:
-    from .._recargo_equivalencia import _rates_from_catalogue
+    from ..recargo_equivalencia import _rates_from_catalogue
 
     parameters = dict(bundled_authority().catalogues.parameters)
     del parameters["liva-art-161:recargo-rate-tabaco"]
@@ -249,7 +246,7 @@ def test_liva_art_103_substrate_margins_match_the_two_boe_redactions() -> None:
         PRORRATA_ESPECIAL_MANDATORY_MULTIPLE_FROM_2015,
         PRORRATA_ESPECIAL_MANDATORY_MULTIPLE_UNTIL_2014,
     )
-    from .._prorrata import especial_mandatory_rule
+    from ..prorrata import especial_mandatory_rule
 
     declared = (
         PRORRATA_ESPECIAL_MANDATORY_MULTIPLE_FROM_2015,

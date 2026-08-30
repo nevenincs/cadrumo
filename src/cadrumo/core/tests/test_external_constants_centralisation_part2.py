@@ -324,7 +324,8 @@ def test_default_iva_general_rate_pct_matches_registry() -> None:
 
     from datetime import date
 
-    from ...domain.iva import EUMemberState, IvaRateKind, lookup_rate
+    from ...domain.iva.lookup import lookup_rate
+    from ...domain.iva.schema import EUMemberState, IvaRateKind
     from ..external_constants import DEFAULT_IVA_GENERAL_RATE_PCT
 
     registry_rate = lookup_rate(EUMemberState.ES, IvaRateKind.GENERAL, date(2026, 1, 1))

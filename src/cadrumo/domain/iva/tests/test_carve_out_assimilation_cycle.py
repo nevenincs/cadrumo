@@ -25,8 +25,8 @@ from __future__ import annotations
 
 import pytest
 
-from .._establishment import _carve_out_rows_from_payload
 from ..errors import IvaCatalogueError
+from ..establishment import _carve_out_rows_from_payload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -99,6 +99,6 @@ def test_the_bundled_table_is_free_of_rings() -> None:
     correct on synthetic input while refusing the real one, and the real table
     is the only one that ships.
     """
-    from .._establishment import _territory_carve_outs
+    from ..establishment import _territory_carve_outs
 
     assert _territory_carve_outs()["MC"].assimilated_to == "FR"

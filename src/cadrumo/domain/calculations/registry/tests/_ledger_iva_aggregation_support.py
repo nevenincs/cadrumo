@@ -27,15 +27,9 @@ from .....core import (
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
-from ....iva import (
-    IvaCategory,
-    IvaDeductionClassificationProvenance,
-    IvaExemptionArticle,
-    IvaFlowDirection,
-    IvaLedgerObservationRole,
-    IvaRateKind,
-    required_deduction_evidence_authority,
-)
+from ....iva.deduction_facts import IvaDeductionClassificationProvenance, required_deduction_evidence_authority
+from ....iva.flow import IvaFlowDirection
+from ....iva.schema import IvaCategory, IvaExemptionArticle, IvaLedgerObservationRole, IvaRateKind
 from ..authority import bundled_authority
 from ..binding_selector_utils import selector_as_dict
 from ..bindings import (

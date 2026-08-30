@@ -44,7 +44,7 @@ from ...domain.deadlines.models import Schedule, TaxpayerProfile
 # ``ModeloInputs`` and its element aliases are domain-owned input contracts.
 # This module consumes them for its protocol annotations; callers import them
 # directly from :mod:`cadrumo.domain.filing`.
-from ...domain.filing import ModeloInputs
+from ...domain.filing.protocols import ModeloInputs
 from ...domain.submission import ModeloDraftLike
 
 

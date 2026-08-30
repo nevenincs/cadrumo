@@ -61,13 +61,9 @@ from ....domain.calculations.registry.ledger_bindings import (
     IvaLedgerObservation,
     resolve_ledger_iva_aggregation_binding_values,
 )
-from ....domain.iva import (
-    IvaCategory,
-    IvaDeductionClassificationProvenance,
-    IvaFlowDirection,
-    IvaLedgerObservationRole,
-    IvaRateKind,
-)
+from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
+from ....domain.iva.flow import IvaFlowDirection
+from ....domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from ....tests.secure_sql import isolated_runtime_profile
 from .._binding_prefill import resolve_bindings_from_local_store
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest

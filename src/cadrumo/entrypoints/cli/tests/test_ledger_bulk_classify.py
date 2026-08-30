@@ -203,7 +203,7 @@ def test_classify_from_csv_rejects_unknown_column(tmp_path: Path) -> None:
 
 def test_classify_from_csv_accepts_iva_category_column(tmp_path: Path) -> None:
     """Bulk CSV accepts the same IVA category field as single-row classify."""
-    from ....domain.iva import IvaCategory
+    from ....domain.iva.schema import IvaCategory
 
     tx1, _tx2 = _import_two_transactions(tmp_path)
     csv_file = tmp_path / "iva_category.csv"

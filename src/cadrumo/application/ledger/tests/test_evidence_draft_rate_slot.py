@@ -40,7 +40,7 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.config import Settings
 from ....domain.invoices.enums import IvaRate, numeric_iva_rate_slots
 from ....domain.invoices.errors import InvoiceValidationError
-from ....domain.iva import InvoiceKind
+from ....domain.iva.classification import InvoiceKind
 from ....tests.pdf_fixtures import text_pdf_bytes
 from ..evidence_draft import confirm_invoice_draft_from_evidence
 from ._evidence_test_support import _BUCKET_ID, _make_svc

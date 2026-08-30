@@ -35,8 +35,8 @@ from ...core import CasillaId, Period
 from ...core.hashing import content_hash_hex
 from ...core.identity import AeatCsv
 from ...core.time import UtcInstant
-from ._protocols import ModeloInputs
-from ._schema import ModeloDraft
+from .protocols import ModeloInputs
+from .schema import ModeloDraft
 
 type ModeloCode = str
 type CasillaInputs = ModeloInputs

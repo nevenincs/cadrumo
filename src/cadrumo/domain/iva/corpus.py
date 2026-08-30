@@ -10,8 +10,8 @@ from __future__ import annotations
 from datetime import date
 
 from ...core.config import Settings
-from ._catalogue import resolve_catalogue
-from ._schema import IvaCatalogue
+from .catalogue import resolve_catalogue
+from .schema import IvaCatalogue
 
 
 def load_iva_rules_from_manual(

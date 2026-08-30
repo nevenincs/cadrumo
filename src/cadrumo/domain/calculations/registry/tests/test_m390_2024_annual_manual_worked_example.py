@@ -172,12 +172,8 @@ from decimal import Decimal
 import pytest
 
 from .....core import CasillaId, IvaDeductionFactKind, validated_casilla_id
-from ....iva import (
-    IvaCategory,
-    IvaFlowDirection,
-    IvaLedgerObservationRole,
-    IvaRateKind,
-)
+from ....iva.flow import IvaFlowDirection
+from ....iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from ..authority import ValidatedRegistryAuthority, bundled_authority
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot

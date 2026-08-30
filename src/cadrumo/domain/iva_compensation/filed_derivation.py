@@ -29,7 +29,7 @@ from decimal import Decimal
 from typing import Literal
 
 from ...core import CasillaId, validated_casilla_id
-from ._carry_forward import derive_303_compensation_available
+from .carry_forward import derive_303_compensation_available
 
 _ZERO = Decimal("0")
 

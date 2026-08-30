@@ -14,15 +14,9 @@ from ....adapters.outbound.aeat.sede.schema import IvaCompensationWalletObservat
 from ....core import BindingSourceKind, IvaCompensationStateProvenance, Period
 from ....core.errors import ERROR_REGISTRY, build_error_envelope
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.iva_compensation import (
-    IvaCompensationAuthoritySource,
-    IvaCompensationDecisionReason,
-    IvaCompensationOverride,
-    IvaCompensationPeriodState,
-    IvaCompensationReconciliationInputError,
-    IvaCompensationWalletObservationProtocol,
-    IvaWalletReconciliationError,
-)
+from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
+from ....domain.iva_compensation.errors import IvaCompensationReconciliationInputError, IvaWalletReconciliationError
+from ....domain.iva_compensation.reconciliation import IvaCompensationAuthoritySource, IvaCompensationDecisionReason, IvaCompensationOverride, IvaCompensationWalletObservationProtocol
 from ....tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
 from ...aggregation import CalculationSourceContext
 from .._iva_wallet_reconciliation import (

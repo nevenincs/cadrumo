@@ -23,7 +23,7 @@ from ...core.config import Settings
 from ...core.errors import BaseSeverity, CadrumoError
 from ...core.i18n import Translatable as tr
 from ...core.logging import get_logger
-from ...domain.filing import ModeloDraft, ModeloValidationFinding
+from ...domain.filing.schema import ModeloDraft, ModeloValidationFinding
 from ...domain.invoices.enums import PaymentStatus
 from ...domain.invoices.models import Invoice, InvoiceCatalogue
 from ...domain.submission import ModeloDraftStatus

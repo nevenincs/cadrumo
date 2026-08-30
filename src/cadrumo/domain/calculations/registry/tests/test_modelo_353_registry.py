@@ -9,7 +9,7 @@ import pytest
 
 from .....core import IvaDeductionFactKind
 from .....core.resources import bundled_path
-from ....iva import IvaLedgerObservationRole
+from ....iva.schema import IvaLedgerObservationRole
 from .._validate import RegistryValidator
 from ..authority import bundled_authority
 from ..bindings_previous_filing import previous_filing_source_reference
@@ -626,7 +626,8 @@ def test_modelo_353_declares_322_group_settlement_treatment(revision_id: str, de
 def test_modelo_353_iva_bindings_resolve_against_substrate_observations() -> None:
     from decimal import Decimal
 
-    from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
+    from ....iva.flow import IvaFlowDirection
+    from ....iva.schema import IvaCategory, IvaRateKind
     from ..ledger_bindings import (
         IvaLedgerObservation,
         resolve_ledger_iva_aggregation_binding_values,

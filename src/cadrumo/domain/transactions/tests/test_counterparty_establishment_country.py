@@ -27,13 +27,9 @@ import pytest
 from pydantic import ValidationError
 
 from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha2
-from ...iva import (
-    EUMemberState,
-    IvaTerritorialScope,
-    StatedCountryCodeStatus,
-    stated_country_code_status,
-    territorial_scope_for_country,
-)
+from ...iva.classification import IvaTerritorialScope
+from ...iva.establishment import StatedCountryCodeStatus, stated_country_code_status, territorial_scope_for_country
+from ...iva.schema import EUMemberState
 from ..enums import TransactionDirection
 from ..models import Transaction
 from ..raw_transaction import RawProvenance, RawTransaction, SourceFormat

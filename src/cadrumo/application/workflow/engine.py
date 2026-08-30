@@ -34,7 +34,7 @@ from ...core.parsing import enum_value as _enum_value
 from ...core.time import now as _utcnow
 from ...core.time import today_madrid
 from ...domain.deadlines.models import ModeloDeadline, ObligationStatus, TaxpayerProfile
-from ...domain.filing import ModeloBuilderError
+from ...domain.filing.errors import ModeloBuilderError
 from ...domain.submission import ModeloDraftStatus, SubmissionPreflightError
 from ..filing.runtime import build_runtime_schema_provider
 from ..operator_actions import (

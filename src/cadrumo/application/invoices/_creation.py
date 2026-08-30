@@ -45,7 +45,8 @@ from ...domain.invoices.enums import InvoiceClass, InvoiceOperationDateRole, Iva
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
-from ...domain.iva import InvoiceKind, IvaCategory
+from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.schema import IvaCategory
 from ._catalogue_mutation import mutate_catalogue
 
 

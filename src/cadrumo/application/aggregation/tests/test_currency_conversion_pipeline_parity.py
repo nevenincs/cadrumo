@@ -99,7 +99,9 @@ from ....core.resources import resources
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
-from ....domain.iva import InvoiceKind, IvaCashAccountingTreatment, IvaRateKind, OssIossRegime, TransactionKind
+from ....domain.iva.classification import InvoiceKind, TransactionKind
+from ....domain.iva.oss import OssIossRegime
+from ....domain.iva.schema import IvaCashAccountingTreatment, IvaRateKind
 from ....domain.renta import RentaDeductibilityContext, RentaDeductibleExpenseObservation
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction

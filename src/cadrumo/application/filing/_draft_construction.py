@@ -51,51 +51,21 @@ from ...domain.calculations.registry.schema_scalars import (
     validate_registry_text_scalar as _validate_registry_text_scalar,
 )
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition as _CasillaDefinition
-from ...domain.filing import (
-    CasillaCollection as _CasillaCollection,
-)
-from ...domain.filing import (
-    CasillaSchemaProvider as _CasillaSchemaProvider,
-)
-from ...domain.filing import (
-    DeadlineChecker as _DeadlineChecker,
-)
-from ...domain.filing import (
-    ModeloBindingValue as _ModeloBindingValue,
-)
-from ...domain.filing import (
-    ModeloCasillaProvenance as _ModeloCasillaProvenance,
-)
-from ...domain.filing import (
-    ModeloDraft as _ModeloDraft,
-)
-from ...domain.filing import (
-    ModeloInputs as _ModeloInputs,
-)
-from ...domain.filing import (
-    ModeloProfile as _ModeloProfile,
-)
-from ...domain.filing import (
-    ModeloScalar as _ModeloScalar,
-)
-from ...domain.filing import (
-    ModeloValidator as _ModeloValidator,
-)
-from ...domain.filing import (
-    ModeloValue as _ModeloValue,
-)
-from ...domain.filing import (
-    ModeloValueKind as _ModeloValueKind,
-)
-from ...domain.filing import (
-    apply_validation as _apply_validation,
-)
-from ...domain.filing import (
-    compute_modelo_draft_id as _compute_modelo_draft_id,
-)
-from ...domain.filing import (
-    registry_schema_version as _registry_schema_version,
-)
+from ...domain.filing.protocols import CasillaCollection as _CasillaCollection
+from ...domain.filing.protocols import CasillaSchemaProvider as _CasillaSchemaProvider
+from ...domain.filing.protocols import DeadlineChecker as _DeadlineChecker
+from ...domain.filing.schema import ModeloBindingValue as _ModeloBindingValue
+from ...domain.filing.schema import ModeloCasillaProvenance as _ModeloCasillaProvenance
+from ...domain.filing.schema import ModeloDraft as _ModeloDraft
+from ...domain.filing.protocols import ModeloInputs as _ModeloInputs
+from ...domain.filing.protocols import ModeloProfile as _ModeloProfile
+from ...domain.filing.schema import ModeloScalar as _ModeloScalar
+from ...domain.filing.validator import ModeloValidator as _ModeloValidator
+from ...domain.filing.schema import ModeloValue as _ModeloValue
+from ...domain.filing.schema import ModeloValueKind as _ModeloValueKind
+from ...domain.filing.validator import apply_validation as _apply_validation
+from ...domain.filing.schema import compute_modelo_draft_id as _compute_modelo_draft_id
+from ...domain.filing.schema import registry_schema_version as _registry_schema_version
 from ...domain.period import calculation_filing_date as _calculation_filing_date
 from ...domain.submission import ModeloDraftStatus as _ModeloDraftStatus
 from .errors import ModeloApplicationError

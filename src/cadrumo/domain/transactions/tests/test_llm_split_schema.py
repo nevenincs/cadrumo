@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ...iva import IvaCategory
+from ...iva.schema import IvaCategory
 from ..enums import TransactionDirection
 from ..llm import (
     LLMClassifierError,

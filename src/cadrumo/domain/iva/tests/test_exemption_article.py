@@ -14,7 +14,8 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from .. import IvaCategory, IvaClassificationResult, IvaExemptionArticle
+from ..classification import IvaClassificationResult
+from ..schema import IvaCategory, IvaExemptionArticle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

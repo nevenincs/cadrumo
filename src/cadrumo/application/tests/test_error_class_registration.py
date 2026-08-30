@@ -85,26 +85,26 @@ def test_session_deserialization_error_raised_on_bad_type() -> None:
 
 
 def test_iva_compensation_year_range_error_is_registered_and_roundtrips() -> None:
-    from ...domain.iva_compensation import IvaCompensationYearRangeError
+    from ...domain.iva_compensation.errors import IvaCompensationYearRangeError
 
     _assert_registered_and_roundtrip(IvaCompensationYearRangeError)
 
 
 def test_iva_compensation_decimal_parse_error_is_registered_and_roundtrips() -> None:
-    from ...domain.iva_compensation import IvaCompensationDecimalParseError
+    from ...domain.iva_compensation.errors import IvaCompensationDecimalParseError
 
     _assert_registered_and_roundtrip(IvaCompensationDecimalParseError)
 
 
 def test_iva_compensation_casilla_reference_error_is_registered_and_roundtrips() -> None:
-    from ...domain.iva_compensation import IvaCompensationCasillaReferenceError
+    from ...domain.iva_compensation.errors import IvaCompensationCasillaReferenceError
 
     _assert_registered_and_roundtrip(IvaCompensationCasillaReferenceError)
 
 
 def test_iva_compensation_year_range_error_raised_on_out_of_range_filing_year() -> None:
     from ...core import Period
-    from ...domain.iva_compensation import IvaCompensationYearRangeError
+    from ...domain.iva_compensation.errors import IvaCompensationYearRangeError
     from ..calculations import iva_compensation_period_key
 
     with pytest.raises(IvaCompensationYearRangeError):
@@ -112,7 +112,8 @@ def test_iva_compensation_year_range_error_raised_on_out_of_range_filing_year() 
 
 
 def test_iva_compensation_year_range_error_raised_on_out_of_range_as_of_year() -> None:
-    from ...domain.iva_compensation import IvaCompensationYearRangeError, build_iva_compensation_carry_forward_report
+    from ...domain.iva_compensation.carry_forward import build_iva_compensation_carry_forward_report
+    from ...domain.iva_compensation.errors import IvaCompensationYearRangeError
 
     with pytest.raises(IvaCompensationYearRangeError):
         build_iva_compensation_carry_forward_report((), as_of_year=2100)

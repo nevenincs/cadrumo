@@ -19,7 +19,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from ....domain.iva import InvoiceKind
+from ....domain.iva.classification import InvoiceKind
 from ..enums import InvoiceOperationDateRole, IvaRate, PaymentStatus
 from ..models import Invoice, InvoiceLine
 

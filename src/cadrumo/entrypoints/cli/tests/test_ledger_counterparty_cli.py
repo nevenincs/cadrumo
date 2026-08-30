@@ -35,7 +35,8 @@ from typing import Any
 import pytest
 from click.testing import Result
 
-from ....domain.iva import EUMemberState, IvaTerritorialScope
+from ....domain.iva.classification import IvaTerritorialScope
+from ....domain.iva.schema import EUMemberState
 from ._cli_surface_profile_fixture import _isolated_backend
 from ._cli_surface_support import (
     _invoke,

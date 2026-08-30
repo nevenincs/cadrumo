@@ -31,8 +31,8 @@ from ...domain.calculations.registry.m303_regimen_simplificado_projection import
 )
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition, ExportRecordDefinition
-from ...domain.filing import FilingExportValidationError
-from ...domain.iva import ActividadNoAgricolaSimplificado
+from ...domain.filing.errors import FilingExportValidationError
+from ...domain.iva.regimen_simplificado_rows import ActividadNoAgricolaSimplificado
 from ._m303_exonerado_390 import project_m303_exonerado_390_value_arrival
 from ._producer_snapshot import FilingProducerSnapshot, M303FilingFacts
 

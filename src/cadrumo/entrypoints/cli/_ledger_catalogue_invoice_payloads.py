@@ -31,7 +31,7 @@ from ...core.json_contract import OutputSchema
 from ...core.text_bounds import NonEmptyStr, NonNegativeDecimal, PositiveCount
 from ...domain.invoices.enums import PaymentStatus
 from ...domain.invoices.validators import validate_country_code, validate_iva_number
-from ...domain.iva import InvoiceKind
+from ...domain.iva.classification import InvoiceKind
 
 
 class CatalogueInvoiceRecordPayload(OutputSchema):

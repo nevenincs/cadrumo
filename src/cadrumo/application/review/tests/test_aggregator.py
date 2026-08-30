@@ -16,17 +16,10 @@ from ....core.config import Settings
 from ....core.errors import BaseSeverity
 from ....core.i18n import Translatable as tr
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.filing import (
-    ModeloDraft,
-    ModeloValidationFinding,
-    ModeloValue,
-    ModeloValueKind,
-    compute_modelo_draft_id,
-    registry_schema_version,
-)
+from ....domain.filing.schema import ModeloDraft, ModeloValidationFinding, ModeloValue, ModeloValueKind, compute_modelo_draft_id, registry_schema_version
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
-from ....domain.iva import InvoiceKind
+from ....domain.iva.classification import InvoiceKind
 from ....domain.submission import ModeloDraftStatus
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue

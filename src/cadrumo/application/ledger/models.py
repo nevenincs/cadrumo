@@ -22,11 +22,8 @@ from ...core.external_constants import (
 from ...core.filing_year import FilingYear
 from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, TransactionId, WorkUnitId
 from ...core.parsing import normalise_iso_3166_alpha2_jurisdiction, normalise_iso_4217_currency
-from ...domain.iva import (
-    EUMemberState,
-    InputClassification,
-    IvaCategory,
-)
+from ...domain.iva.prorrata import InputClassification
+from ...domain.iva.schema import EUMemberState, IvaCategory
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.m210_income_classification import M210IncomeClassification

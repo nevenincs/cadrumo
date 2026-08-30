@@ -22,14 +22,9 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.outbound.fx import ECB_RATE_SOURCE_ID
-from ...iva import (
-    EUMemberState,
-    InvoiceKind,
-    IvaCategory,
-    IvaRateKind,
-    OssIossRegime,
-    TransactionKind,
-)
+from ...iva.classification import InvoiceKind, TransactionKind
+from ...iva.oss import OssIossRegime
+from ...iva.schema import EUMemberState, IvaCategory, IvaRateKind
 from ..decomposition import (
     INVOICE_DECOMPOSITION_DEFECT_GUIDANCE,
     InvoiceComponents,

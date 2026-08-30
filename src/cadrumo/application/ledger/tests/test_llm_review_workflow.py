@@ -20,7 +20,7 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....domain.buckets.event import BucketEvent, BucketEventType
 from ....domain.categories.spending_category import SpendingCategory
-from ....domain.iva import IvaCategory
+from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.errors import TransactionValidationError
 from ....domain.transactions.llm import LLMSplitResponse

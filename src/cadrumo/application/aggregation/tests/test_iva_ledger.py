@@ -28,17 +28,10 @@ from ....domain.bienes_inversion import (
 from ....domain.calculations.registry.ledger_bindings import resolve_ledger_iva_aggregation_binding_values
 from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
-from ....domain.iva import (
-    IvaCashAccountingTreatment,
-    IvaCategory,
-    IvaDeductionClassificationProvenance,
-    IvaExemptionArticle,
-    IvaFlowDirection,
-    IvaLedgerObservationRole,
-    IvaRateKind,
-    ProrrataKind,
-    ProrrataRegime,
-)
+from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
+from ....domain.iva.flow import IvaFlowDirection
+from ....domain.iva.prorrata import ProrrataKind, ProrrataRegime
+from ....domain.iva.schema import IvaCashAccountingTreatment, IvaCategory, IvaExemptionArticle, IvaLedgerObservationRole, IvaRateKind
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

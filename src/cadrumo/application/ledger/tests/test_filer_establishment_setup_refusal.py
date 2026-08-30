@@ -32,7 +32,7 @@ from __future__ import annotations
 import pytest
 
 from ....core import NoRecoveryOutcome
-from ....domain.iva import IvaTerritorialScope
+from ....domain.iva.classification import IvaTerritorialScope
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ..confirm_establishment import _filer_scope
 from ..evidence_draft import PurchaseInvoiceEvidenceInputError

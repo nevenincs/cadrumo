@@ -9,7 +9,7 @@ import pytest
 
 from .....core import IvaDeductionFactKind
 from .....core.resources import bundled_path
-from ....iva import IvaLedgerObservationRole
+from ....iva.schema import IvaLedgerObservationRole
 from .._validate import RegistryValidator
 from ..loader import _load_shared_catalogue_files, load_modelo_directory
 from ..schema import ModeloDefinition, RegistryCatalogues
@@ -111,7 +111,8 @@ def test_modelo_309_declares_autorepercutido_and_recargo_soportado_bindings() ->
 def test_modelo_309_autorepercutido_binding_resolves_against_substrate() -> None:
     from decimal import Decimal
 
-    from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
+    from ....iva.flow import IvaFlowDirection
+    from ....iva.schema import IvaCategory, IvaRateKind
     from ..ledger_bindings import IvaLedgerObservation, resolve_ledger_iva_aggregation_binding_values
 
     modelo, _ = _load_modelo_309()

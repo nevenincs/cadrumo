@@ -22,9 +22,9 @@ carries no amounts. The assertions are structural, referential, and
 cross-declaration, per ``aeat-quality-gates``.
 
 See Also:
-    :mod:`domain.iva._components`
+    :mod:`domain.iva.components`
         The table under test.
-    :mod:`domain.iva._schema`
+    :mod:`domain.iva.schema`
         Owns the canonical frozensets this module cross-checks the table
         against.
 """
@@ -39,12 +39,9 @@ from pydantic import ValidationError
 
 from ....core.directory_scan import scan_directory
 from ....core.resources import bundled_path
-from .. import (
-    CUOTA_LESS_M303_IVA_CATEGORIES,
-    EVIDENCE_EXEMPT_IVA_CATEGORIES,
+from ..classification import InvoiceKind
+from ..components import (
     IVA_CATEGORY_COMPONENTS,
-    InvoiceKind,
-    IvaCategory,
     IvaCategoryComponents,
     IvaComponentPresence,
     IvaCuotaSettlement,
@@ -57,6 +54,7 @@ from .. import (
     category_cuota_is_zero_by_law,
     cuota_less_m303_categories_from_table,
 )
+from ..schema import CUOTA_LESS_M303_IVA_CATEGORIES, EVIDENCE_EXEMPT_IVA_CATEGORIES, IvaCategory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

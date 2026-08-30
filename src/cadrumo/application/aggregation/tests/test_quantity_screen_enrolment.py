@@ -36,7 +36,7 @@ from ....domain.bienes_inversion import BienesInversionIvaRegister
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.quantity_screen_enrolment import screened_quantity_families
 from ....domain.calculations.registry.schema import ModeloRevision
-from ....domain.iva import IvaCategory
+from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

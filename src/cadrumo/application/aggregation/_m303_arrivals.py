@@ -23,7 +23,7 @@ from ...core import (
     StandardPeriodCode,
 )
 from ...domain.calculations.registry.ledger_bindings import IvaLedgerObservation
-from ...domain.iva import IvaCashAccountingTreatment
+from ...domain.iva.schema import IvaCashAccountingTreatment
 from ...domain.prorrata_register import (
     ProrrataRegister,
     ProrrataRegisterEntry,

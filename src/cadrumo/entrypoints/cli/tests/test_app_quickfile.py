@@ -36,13 +36,9 @@ from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind, Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.filing_evidence import FilingEvidenceReference
-from ....domain.iva import (
-    IvaDeductionClassificationProvenance,
-    M303RegimenSimplificadoScope,
-    M303RegimenSimplificadoScopeDecision,
-    RegimenSimplificadoFilingRows,
-)
-from ....domain.iva_compensation import IvaCompensationReconciliationDecision
+from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
+from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision, RegimenSimplificadoFilingRows
+from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ....domain.modelos.calculation_revision import (
     FilingInstanceEvidence,
     M303Exonerado390FilingEvidence,
@@ -263,7 +259,7 @@ def _seed_m303_ledger_and_wallet(bucket_id: str) -> None:
     from ....application.invoices import build_catalogue_invoice
     from ....domain.invoices.models import InvoiceCatalogue
     from ....domain.invoices.service import link_transaction
-    from ....domain.iva import InvoiceKind
+    from ....domain.iva.classification import InvoiceKind
 
     purchase_invoice = build_catalogue_invoice(
         bucket_id=bucket_id,

@@ -56,14 +56,10 @@ from datetime import date
 import pytest
 
 from ....core import ClassifierInputSource, DraftDiscrepancyKind
-from ....domain.iva import (
-    CustomerTaxStatus,
-    InvoiceKind,
-    IvaCategory,
-    IvaTerritorialScope,
-    StatedCountryCodeStatus,
-    SupplyNature,
-)
+from ....domain.iva.classification import CustomerTaxStatus, InvoiceKind, IvaTerritorialScope
+from ....domain.iva.establishment import StatedCountryCodeStatus
+from ....domain.iva.schema import IvaCategory
+from ....domain.iva.supply_nature import SupplyNature
 from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha2
 from ..classification_assembly import (
     DeclaredFact,

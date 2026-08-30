@@ -25,8 +25,8 @@ from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER, read_toml
 from ...core.citation_grounding import CitationGrounding
 from ...core.resources import bundled_path
 from ...core.validity_window import years_covered_by_every_group
-from ._schema import IvaCatalogue, IvaCategory, IvaCitation, IvaRegulation
 from .errors import IvaCatalogueError
+from .schema import IvaCatalogue, IvaCategory, IvaCitation, IvaRegulation
 
 
 def load_iva_catalogue(path: Path) -> IvaCatalogue:

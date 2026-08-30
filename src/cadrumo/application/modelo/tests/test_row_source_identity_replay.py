@@ -11,13 +11,7 @@ import pytest
 from ....core import BindingSourceKind, Period
 from ....domain.calculations import RowSourceIdentity
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.filing import (
-    ModeloBindingValue,
-    ModeloDraft,
-    ModeloValueKind,
-    compute_modelo_draft_id,
-    registry_schema_version,
-)
+from ....domain.filing.schema import ModeloBindingValue, ModeloDraft, ModeloValueKind, compute_modelo_draft_id, registry_schema_version
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.modelos.errors import ModeloValidationError
 from ....domain.submission import ModeloDraftStatus

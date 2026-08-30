@@ -47,20 +47,19 @@ from datetime import date
 
 import pytest
 
-from .. import (
+from ..classification import (
     CustomerTaxStatus,
-    EUMemberState,
     InvoiceKind,
-    IvaCategory,
     IvaInvoiceClassificationCriteria,
     IvaTerritorialScope,
     PartyFact,
     TransactionKind,
-    category_cuota_is_zero_by_law,
     classify_iva,
-    country_code_for_printed_tax_identifier,
-    identification_state_for_printed_tax_identifier,
 )
+from ..components import category_cuota_is_zero_by_law
+from ..establishment import country_code_for_printed_tax_identifier
+from ..identification import identification_state_for_printed_tax_identifier
+from ..schema import EUMemberState, IvaCategory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

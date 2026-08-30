@@ -28,13 +28,9 @@ from __future__ import annotations
 import pytest
 
 from ....core import ClassifierInputSource
-from ....domain.iva import (
-    InvoiceKind,
-    IvaCategory,
-    IvaTerritorialScope,
-    SupplyNature,
-    supply_nature_implied_by_category,
-)
+from ....domain.iva.classification import InvoiceKind, IvaTerritorialScope
+from ....domain.iva.schema import IvaCategory
+from ....domain.iva.supply_nature import SupplyNature, supply_nature_implied_by_category
 from ...ledger.classification_assembly import DeclaredFact
 from ...ledger.confirm_establishment import _declared_facts
 from ...ledger.establishment_ladder import CounterpartyEstablishment

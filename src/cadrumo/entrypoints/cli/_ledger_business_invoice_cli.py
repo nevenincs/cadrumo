@@ -38,7 +38,8 @@ from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.invoices.enums import InvoiceClass
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.models import Invoice
-from ...domain.iva import InvoiceKind, IvaCategory
+from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.schema import IvaCategory
 from ._common import _bad, emit_envelope
 from ._common import (
     active_bucket_id_or_refuse as _business_invoice_bucket_id,

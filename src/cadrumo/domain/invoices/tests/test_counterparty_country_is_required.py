@@ -22,7 +22,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.identity import IdentityError
-from ...iva import InvoiceKind
+from ...iva.classification import InvoiceKind
 from ..enums import IvaRate, PaymentStatus
 from ..errors import InvoiceValidationError
 from ..models import Invoice, InvoiceLine, _normalise_invoice_counterparty

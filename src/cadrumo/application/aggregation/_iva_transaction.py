@@ -13,24 +13,13 @@ from decimal import Decimal
 
 from ...core import IvaDeductionFactKind, Period
 from ...domain.calculations.registry.ledger_bindings import IvaLedgerObservation
-from ...domain.iva import (
-    EUMemberState,
-    InputClassification,
-    InvoiceKind,
-    IvaCashAccountingTreatment,
-    IvaCategory,
-    IvaDeductionClassificationProvenance,
-    IvaExemptionArticle,
-    IvaFlowDirection,
-    IvaKindApplicability,
-    IvaLedgerObservationRole,
-    IvaRateKind,
-    category_components,
-    category_cuota_is_zero_by_law,
-    derive_flow_for_classification,
-    domestic_categories_by_rate_kind,
-    rate_table_covers_any_positive_tier,
-)
+from ...domain.iva.classification import InvoiceKind, domestic_categories_by_rate_kind
+from ...domain.iva.components import IvaKindApplicability, category_components, category_cuota_is_zero_by_law
+from ...domain.iva.deduction_facts import IvaDeductionClassificationProvenance
+from ...domain.iva.flow import IvaFlowDirection, derive_flow_for_classification
+from ...domain.iva.lookup import rate_table_covers_any_positive_tier
+from ...domain.iva.prorrata import InputClassification
+from ...domain.iva.schema import EUMemberState, IvaCashAccountingTreatment, IvaCategory, IvaExemptionArticle, IvaLedgerObservationRole, IvaRateKind
 from ...domain.transactions.enums import BusinessClassification
 from ...domain.transactions.models import Transaction
 from ._currency_predicates import is_non_eur_without_conversion

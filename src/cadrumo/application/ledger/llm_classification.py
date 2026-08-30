@@ -55,7 +55,8 @@ from ...core.time import coerce_utc_aware, now
 from ...domain.buckets.event import BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH, BucketEventObjectType, BucketEventType
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.categories.spending_category import SpendingCategory
-from ...domain.iva import IvaCategory, resolve_category_rate, split_gross_at_rate
+from ...domain.iva.saturation import resolve_category_rate, split_gross_at_rate
+from ...domain.iva.schema import IvaCategory
 from ...domain.transactions.enums import BUSINESS_BEARING_STATES, BusinessClassification, TransactionLifecycleState
 from ...domain.transactions.errors import TransactionNotFoundError, TransactionValidationError
 from ...domain.transactions.llm import (

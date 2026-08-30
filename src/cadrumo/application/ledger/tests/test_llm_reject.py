@@ -21,7 +21,7 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....domain.buckets.event import BucketEvent, BucketEventType
 from ....domain.categories.spending_category import SpendingCategory
-from ....domain.iva import IvaCategory
+from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.errors import TransactionNotFoundError
 from ....domain.transactions.models import Transaction, TransactionCatalogue

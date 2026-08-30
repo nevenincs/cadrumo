@@ -40,14 +40,14 @@ import tomllib
 import pytest
 
 from ....core.resources import bundled_path
-from .. import (
-    EUMemberState,
-    IvaTerritorialScope,
+from ..classification import IvaTerritorialScope
+from ..errors import IvaCatalogueError
+from ..establishment import (
+    _index_country_names,
     country_code_for_printed_country_name,
     territorial_scope_for_printed_country_name,
 )
-from .._establishment import _index_country_names
-from ..errors import IvaCatalogueError
+from ..schema import EUMemberState
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -199,7 +199,7 @@ class TestThePrintedVariantsARealDocumentCarries:
         the fold reddened nothing here until the twins came out. Refusing the
         redundancy is what stops it coming back.
         """
-        from .._establishment import _normalise_printed_country_name
+        from ..establishment import _normalise_printed_country_name
 
         for code, names in _vocabulary():
             seen: dict[str, str] = {}

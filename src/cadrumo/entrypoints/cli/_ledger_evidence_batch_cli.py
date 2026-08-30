@@ -40,7 +40,7 @@ from ...application.operator_actions import ActionReference
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedNoticeAction
 from ...core.output_rendering import OutputFormat
-from ...domain.iva import InvoiceKind
+from ...domain.iva.classification import InvoiceKind
 from ._common import (
     _bad,
     _format_of,

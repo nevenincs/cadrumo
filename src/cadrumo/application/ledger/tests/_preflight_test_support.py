@@ -8,7 +8,7 @@ from pathlib import Path
 
 from ....core import BindingSourceKind, Period
 from ....domain.categories.spending_category import SpendingCategory
-from ....domain.iva import EUMemberState, IvaCategory
+from ....domain.iva.schema import EUMemberState, IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

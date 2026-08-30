@@ -45,16 +45,11 @@ from ...core.parsing import normalise_iso_4217_currency
 from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
 from ...core.time import UtcInstant
 from ..identifiers import canonical_decimal_string
-from ..iva import (
-    EUMemberState,
-    InvoiceKind,
-    IvaCategory,
-    IvaRateKind,
-    IvaRateNotFoundError,
-    OssIossRegime,
-    TransactionKind,
-    identification_state_for_printed_tax_identifier,
-)
+from ..iva.classification import InvoiceKind, TransactionKind
+from ..iva.errors import IvaRateNotFoundError
+from ..iva.identification import identification_state_for_printed_tax_identifier
+from ..iva.oss import OssIossRegime
+from ..iva.schema import EUMemberState, IvaCategory, IvaRateKind
 from ._payload_normalisation import normalise_invoice_enum_fields, normalise_invoice_string_fields
 from .enums import (
     InvoiceClass,

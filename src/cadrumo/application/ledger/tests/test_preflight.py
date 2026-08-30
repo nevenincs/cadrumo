@@ -10,7 +10,7 @@ import pytest
 from ....core.config import override_settings
 from ....core.i18n import clear_output_language_cache
 from ....domain.categories.spending_category import SpendingCategory
-from ....domain.iva import EUMemberState, IvaCategory
+from ....domain.iva.schema import EUMemberState, IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import TransactionCatalogue
 from ...aggregation import IvaLedgerAggregationIssueReason

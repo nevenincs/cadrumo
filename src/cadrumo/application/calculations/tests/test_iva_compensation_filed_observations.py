@@ -11,14 +11,8 @@ from ....adapters.outbound.aeat.sede.errors import SedeError
 from ....adapters.outbound.aeat.sede.schema import ObservedCasillaValue
 from ....core import CasillaValueKind, IvaCompensationStateProvenance, ObservedHeaderFact, Period
 from ....core.errors import ERROR_REGISTRY, build_error_envelope
-from ....domain.iva_compensation import (
-    IvaCompensationCasillaReferenceError,
-    IvaCompensationExpiryReviewState,
-    IvaCompensationSeedConflictError,
-    IvaCompensationYearRangeError,
-    build_iva_compensation_carry_forward_report,
-    enforce_iva_compensation_four_year_window,
-)
+from ....domain.iva_compensation.carry_forward import IvaCompensationExpiryReviewState, build_iva_compensation_carry_forward_report, enforce_iva_compensation_four_year_window
+from ....domain.iva_compensation.errors import IvaCompensationCasillaReferenceError, IvaCompensationSeedConflictError, IvaCompensationYearRangeError
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from .._m303_carry_ingress import M303CarryIngressError

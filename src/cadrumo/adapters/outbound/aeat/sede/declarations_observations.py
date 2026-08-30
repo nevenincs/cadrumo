@@ -59,14 +59,7 @@ from .....domain.calculations.registry.runtime_graph import expression_casilla_r
 from .....domain.calculations.registry.schema import RegistrySnapshot
 from .....domain.calculations.registry.schema_exports import ExportFieldDefinition
 from .....domain.calculations.registry.schema_surfaces import CasillaDefinition
-from .....domain.iva_compensation import (
-    M303_COMPENSATION_AVAILABLE_CASILLA,
-    M303_COMPENSATION_GENERADA_CASILLA,
-    M303_COMPENSATION_POSTERIOR_CASILLA,
-    M303_COMPENSATION_RESULTADO_CASILLA,
-    M303CompensationAvailableDerivation,
-    derive_m303_compensation_available_from_casillas,
-)
+from .....domain.iva_compensation.filed_derivation import M303CompensationAvailableDerivation, M303_COMPENSATION_AVAILABLE_CASILLA, M303_COMPENSATION_GENERADA_CASILLA, M303_COMPENSATION_POSTERIOR_CASILLA, M303_COMPENSATION_RESULTADO_CASILLA, derive_m303_compensation_available_from_casillas
 from ....inbound.declaracion import DeclaracionParseError, parse_declaracion_bytes
 from .declarations_schema import Declaracion
 from .errors import SedeParseError, SedeValidationError

@@ -29,7 +29,7 @@ from ....core import LinkInconsistencyDirection
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ....domain.invoices.service import verify_link_consistency
-from ....domain.iva import InvoiceKind
+from ....domain.iva.classification import InvoiceKind
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

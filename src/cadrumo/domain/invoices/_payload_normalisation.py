@@ -24,13 +24,9 @@ from enum import StrEnum
 from typing import Final, NamedTuple
 
 from ...core import IntracomOperationType
-from ..iva import (
-    EUMemberState,
-    InvoiceKind,
-    IvaCategory,
-    OssIossRegime,
-    TransactionKind,
-)
+from ..iva.classification import InvoiceKind, TransactionKind
+from ..iva.oss import OssIossRegime
+from ..iva.schema import EUMemberState, IvaCategory
 from .enums import (
     InvoiceClass,
     InvoiceLegalMention,

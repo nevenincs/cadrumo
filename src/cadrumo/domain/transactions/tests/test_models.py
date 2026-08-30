@@ -11,11 +11,8 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import Art104TresExclusion, ConceptoIngreso, TipoActividad
-from ...iva import (
-    InputClassification,
-    IvaCategory,
-    IvaExemptionArticle,
-)
+from ...iva.prorrata import InputClassification
+from ...iva.schema import IvaCategory, IvaExemptionArticle
 from ..enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ..models import (
     ClassificationHistoryEntry,

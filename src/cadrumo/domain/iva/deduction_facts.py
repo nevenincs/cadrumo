@@ -12,9 +12,9 @@ from ...core import (
     IvaDeductionFactKind,
 )
 from ...core.identity import ContentDigest
-from ._flow import IvaFlowDirection, is_deducible_flow
-from ._schema import IvaCategory, IvaRateKind
 from .errors import IvaValidationError
+from .flow import IvaFlowDirection, is_deducible_flow
+from .schema import IvaCategory, IvaRateKind
 
 
 class IvaDeductionClassificationProvenance(BaseModel):

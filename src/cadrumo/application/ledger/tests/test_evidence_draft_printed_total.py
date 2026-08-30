@@ -32,7 +32,8 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import FindingResolutionAction
 from ....core.config import Settings
 from ....domain.invoices.enums import InvoiceClass
-from ....domain.iva import InvoiceKind, IvaCategory
+from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import IvaCategory
 from ....tests.pdf_fixtures import text_pdf_bytes
 from ..confirmation_gate import FindingResolution, confirmation_blockers
 from ..evidence_draft import confirm_invoice_draft_from_evidence, extract_invoice_draft_from_evidence

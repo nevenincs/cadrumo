@@ -14,7 +14,7 @@ from ....application.invoices import (
     CatalogueInvoiceUpdateResult,
     build_catalogue_invoice,
 )
-from ....domain.iva import InvoiceKind
+from ....domain.iva.classification import InvoiceKind
 from .._command_schema import command_schema_types
 from .._ledger_business_invoice_cli import _catalogue_invoice_payload
 from .._ledger_catalogue_invoice_payloads import (

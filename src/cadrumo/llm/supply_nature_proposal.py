@@ -56,7 +56,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ..core import LLM_EXTRA, ModelRole, build_provenance_stamp, require_optional_extra
 from ..core.config import Settings, load_settings
-from ..domain.iva import SupplyNature
+from ..domain.iva.supply_nature import SupplyNature
 from .client import LLMClient
 from .errors import LLMConfigError
 from .models import LLMProvider, LLMRequest

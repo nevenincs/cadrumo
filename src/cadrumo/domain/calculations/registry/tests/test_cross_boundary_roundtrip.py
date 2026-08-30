@@ -23,14 +23,7 @@ from pydantic import ValidationError
 
 from .....core import CasillaId, Period, validated_casilla_id
 from .....core.identity import SubjectTaxId
-from ....filing import (
-    ModeloBindingValue,
-    ModeloDraft,
-    ModeloValidationFinding,
-    ModeloValue,
-    ModeloValueKind,
-    registry_schema_version,
-)
+from ....filing.schema import ModeloBindingValue, ModeloDraft, ModeloValidationFinding, ModeloValue, ModeloValueKind, registry_schema_version
 from ....modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,

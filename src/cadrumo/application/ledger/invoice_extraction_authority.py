@@ -45,7 +45,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG, Period
-from ...domain.iva import IvaCategory
+from ...domain.iva.schema import IvaCategory
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -123,7 +123,8 @@ def _overlapping_iva_rate_pcts(period: Period) -> tuple[Decimal, ...]:
     force when the process started. The same import-time-snapshot trap already
     caught the template scanner in this feature once.
     """
-    from ...domain.iva import EUMemberState, load_iva_rate_table
+    from ...domain.iva.rates import load_iva_rate_table
+    from ...domain.iva.schema import EUMemberState
 
     start = period.start_date
     end = period.end_date
@@ -163,7 +164,8 @@ def resolve_invoice_extraction_authority_values(*, period: Period) -> InvoiceExt
         IvaCatalogueError: When the bundled IVA rate registry cannot be read.
         TransactionValidationError: When the retención parameters cannot be read.
     """
-    from ...domain.iva import NO_PRINTED_TAX_IVA_CATEGORIES, regime_legend_phrases
+    from ...domain.iva.regime_legend import regime_legend_phrases
+    from ...domain.iva.schema import NO_PRINTED_TAX_IVA_CATEGORIES
     from ...domain.transactions.retencion_parameters import statutory_activity_retencion_rates
 
     return InvoiceExtractionAuthorityValues(

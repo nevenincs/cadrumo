@@ -141,14 +141,10 @@ from ...domain.invoices.enums import InvoiceClass
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
-from ...domain.iva import (
-    EUMemberState,
-    InvoiceKind,
-    IvaCategory,
-    IvaRateKind,
-    SupplyNature,
-    rate_kinds_for_declared_rate,
-)
+from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.lookup import rate_kinds_for_declared_rate
+from ...domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind
+from ...domain.iva.supply_nature import SupplyNature
 from ...llm.errors import LLMPdfRasterisationError, LLMProviderError
 from ...llm.models import MultimodalImageInput
 from ...llm.providers.local import rasterise_pdf_pages_to_base64_png

@@ -35,18 +35,17 @@ from typing import Any
 import pytest
 
 from ....core.resources import bundled_path
-from .. import (
+from ..classification import (
     CustomerTaxStatus,
-    EUMemberState,
     InvoiceKind,
-    IvaCategory,
     IvaInvoiceClassificationCriteria,
     IvaTerritorialScope,
-    SupplyNature,
     TransactionKind,
     classify_iva,
-    place_of_supply_rule,
 )
+from ..place_of_supply import place_of_supply_rule
+from ..schema import EUMemberState, IvaCategory
+from ..supply_nature import SupplyNature
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

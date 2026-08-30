@@ -17,7 +17,8 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
-from ....domain.iva import InvoiceKind, IvaCategory
+from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.llm import LLMSplitChild, LLMSplitResponse, prompt_spec_with_saturation_fields
 from ....domain.transactions.models import Transaction, TransactionCatalogue

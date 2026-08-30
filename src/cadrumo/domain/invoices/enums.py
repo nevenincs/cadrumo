@@ -25,13 +25,9 @@ from decimal import Decimal
 from enum import StrEnum
 
 from ...core.time import today_madrid
-from ..iva import (
-    EUMemberState,
-    IvaRateKind,
-    IvaRateNotFoundError,
-    rate_kinds_for_declared_rate,
-    rate_table_covers,
-)
+from ..iva.errors import IvaRateNotFoundError
+from ..iva.lookup import rate_kinds_for_declared_rate, rate_table_covers
+from ..iva.schema import EUMemberState, IvaRateKind
 
 
 class IvaRate(StrEnum):

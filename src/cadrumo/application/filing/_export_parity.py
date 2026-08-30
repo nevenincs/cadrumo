@@ -81,7 +81,8 @@ from ...domain.calculations.registry.rate_box_partition import (
 )
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition, ExportRecordDefinition
 from ...domain.calculations.registry.schema_surfaces import CalculationCompletenessManifest
-from ...domain.filing import CasillaCollection, ModeloDraft
+from ...domain.filing.protocols import CasillaCollection
+from ...domain.filing.schema import ModeloDraft
 from .errors import ModeloApplicationError as FilingExportError
 from .runtime import CasillaRecordMetadata, RegistrySchemaAccessor
 

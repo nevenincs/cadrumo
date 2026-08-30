@@ -8,11 +8,8 @@ from decimal import Decimal
 import pytest
 
 from .....core import CasillaId, IvaDeductionFactKind
-from ....iva import (
-    IvaCategory,
-    IvaFlowDirection,
-    IvaRateKind,
-)
+from ....iva.flow import IvaFlowDirection
+from ....iva.schema import IvaCategory, IvaRateKind
 from ._ledger_iva_aggregation_support import (
     _M303_COMPENSACION_GENERADA_PERIODO_CASILLA,
     _M303_CUOTA_DEVENGADA_TOTAL_CASILLA,

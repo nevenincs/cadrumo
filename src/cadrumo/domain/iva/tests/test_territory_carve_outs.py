@@ -39,8 +39,8 @@ from __future__ import annotations
 
 import pytest
 
-from .._classification import IvaTerritorialScope
-from .._establishment import (
+from ..classification import IvaTerritorialScope
+from ..establishment import (
     StatedCountryCodeStatus,
     stated_country_code_status,
     territorial_scope_for_country,

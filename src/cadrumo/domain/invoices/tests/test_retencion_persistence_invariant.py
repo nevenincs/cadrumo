@@ -44,7 +44,8 @@ from pydantic import ValidationError
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage import INVOICE_CATALOGUE_NAMESPACE
 from ....tests.secure_sql import isolated_runtime_profile
-from ...iva import InvoiceKind, IvaCategory
+from ...iva.classification import InvoiceKind
+from ...iva.schema import IvaCategory
 from ..enums import IvaRate, PaymentStatus, iva_rate_percentage
 from ..models import Invoice, InvoiceCatalogue, InvoiceLine
 

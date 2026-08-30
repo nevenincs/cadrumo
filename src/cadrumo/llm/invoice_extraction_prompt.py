@@ -99,7 +99,7 @@ if TYPE_CHECKING:
     from collections.abc import Collection, Iterable
 
     from ..application.ledger.invoice_extraction_authority import InvoiceExtractionAuthorityValues
-    from ..domain.iva import IvaCategory
+    from ..domain.iva.schema import IvaCategory
 
 __all__ = [
     "INVOICE_EXTRACTION_PROMPT_ID",
@@ -356,7 +356,7 @@ def template_unsourced_legend_phrases(template: str | None = None) -> tuple[str,
         The phrases found hardcoded, in declaration order. Empty is the passing
         state, because the compiler substitutes them from the one declaration.
     """
-    from ..domain.iva import regime_legend_phrases
+    from ..domain.iva.regime_legend import regime_legend_phrases
 
     scanned = (
         invoice_extraction_prompt_registry().get(INVOICE_EXTRACTION_PROMPT_ID).template

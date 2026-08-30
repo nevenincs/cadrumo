@@ -59,11 +59,8 @@ from decimal import Decimal
 
 from ...core import BindingSourceKind, CasillaId, Modelo, Period, ProrrataRegisterRegime
 from ...domain.calculations.registry.schema import ModeloRevision
-from ...domain.iva import (
-    especial_mandatory_rule,
-    is_m303_annual_settlement_period,
-    m303_annual_settlement_order_key,
-)
+from ...domain.iva.m303_settlement import is_m303_annual_settlement_period, m303_annual_settlement_order_key
+from ...domain.iva.prorrata import especial_mandatory_rule
 from ...domain.prorrata_register import ProrrataRegisterError
 from ..aggregation import CalculationSourceDiagnostic, compute_annual_deducible_totals_by_regime
 from ..calculations import (

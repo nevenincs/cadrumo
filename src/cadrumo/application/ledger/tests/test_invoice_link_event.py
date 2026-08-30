@@ -24,9 +24,11 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.errors import SecureObjectRevisionConflictError
-from ....domain.buckets import BucketEventObjectType, BucketEventType
-from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, InvoiceLinkError, IvaRate, PaymentStatus
-from ....domain.iva import InvoiceKind
+from ....domain.buckets.event import BucketEventObjectType, BucketEventType
+from ....domain.invoices.enums import IvaRate, PaymentStatus
+from ....domain.invoices.errors import InvoiceLinkError
+from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ....domain.iva.classification import InvoiceKind
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

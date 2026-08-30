@@ -29,7 +29,8 @@ import pytest
 
 from ....core import Period
 from ....domain import iva as _iva_module
-from ....domain.iva import EUMemberState, IvaCategory, load_iva_rate_table
+from ....domain.iva.rates import load_iva_rate_table
+from ....domain.iva.schema import EUMemberState, IvaCategory
 from ....tests.attribute_scope import scoped_attribute
 from ..invoice_extraction_authority import (
     InvoiceExtractionAuthorityValues,

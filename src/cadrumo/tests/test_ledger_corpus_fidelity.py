@@ -49,7 +49,8 @@ from ..core import Period
 from ..domain.bienes_inversion import BienesInversionIvaRegister
 from ..domain.currency.models import CurrencyNormalizationStatus, MonetaryAmount
 from ..domain.currency.service import CurrencyNormalizationService
-from ..domain.iva import EUMemberState, IvaCategory, IvaFlowDirection
+from ..domain.iva.flow import IvaFlowDirection
+from ..domain.iva.schema import EUMemberState, IvaCategory
 from ..domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ..domain.transactions.models import Transaction, TransactionCatalogue
 from .ecb_stub import ecb_csv_fetch

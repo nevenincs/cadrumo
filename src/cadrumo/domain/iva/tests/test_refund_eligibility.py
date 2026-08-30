@@ -14,7 +14,7 @@ from __future__ import annotations
 import pytest
 
 from ....core import Period
-from .. import (
+from ..refund_eligibility import (
     RefundEligibilityReason,
     is_last_filing_period_of_year,
     refund_disposition_available,

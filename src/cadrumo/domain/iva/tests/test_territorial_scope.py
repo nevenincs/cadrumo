@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from .. import IvaTerritorialScope
+from ..classification import IvaTerritorialScope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

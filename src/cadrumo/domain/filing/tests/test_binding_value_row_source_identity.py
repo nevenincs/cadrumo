@@ -16,7 +16,8 @@ from ....core import BindingSourceKind, Period
 from ....tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
 from ...calculations import RowSourceIdentity
 from ...calculations.registry.schema_references import RegistrySnapshotRef
-from .._schema import (
+from ..errors import FilingValidationError
+from ..schema import (
     ModeloBindingValue,
     ModeloDraft,
     ModeloDraftStatus,
@@ -24,7 +25,6 @@ from .._schema import (
     compute_modelo_draft_id,
     registry_schema_version,
 )
-from ..errors import FilingValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -18,15 +18,7 @@ from ....core import (
     M303RegimenSimplificadoModuleProjectionRef,
     M303RegimenSimplificadoModuleValue,
 )
-from ...iva import (
-    ActividadAgricolaSimplificado,
-    ActividadNoAgricolaSimplificado,
-    ActividadOrdenAnual,
-    AutoridadAgricolaOrdenAnualNoResuelta,
-    RegimenSimplificadoActivity,
-    RegimenSimplificadoFilingRows,
-    validate_regimen_simplificado_rows,
-)
+from ...iva.regimen_simplificado_rows import ActividadAgricolaSimplificado, ActividadNoAgricolaSimplificado, ActividadOrdenAnual, AutoridadAgricolaOrdenAnualNoResuelta, RegimenSimplificadoActivity, RegimenSimplificadoFilingRows, validate_regimen_simplificado_rows
 from .errors import RegistryValidationError
 
 if TYPE_CHECKING:

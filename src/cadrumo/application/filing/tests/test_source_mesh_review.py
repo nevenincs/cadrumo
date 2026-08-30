@@ -37,9 +37,10 @@ import pytest
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....core import Period
-from ....domain.filing import CasillaSchemaProvider, ModeloDraft
+from ....domain.filing.protocols import CasillaSchemaProvider
+from ....domain.filing.schema import ModeloDraft
 from ....domain.invoices.models import Invoice, InvoiceCatalogue
-from ....domain.iva import InvoiceKind
+from ....domain.iva.classification import InvoiceKind
 from ....domain.submission import ModeloDraftStatus
 from ....tests.secure_sql import TestRuntimeProfile
 from ...invoices import build_catalogue_invoice

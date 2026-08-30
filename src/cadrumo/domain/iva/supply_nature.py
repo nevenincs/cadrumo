@@ -62,7 +62,7 @@ from typing import Final, Self
 from pydantic import BaseModel, Field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG
-from ._schema import IvaCategory
+from .schema import IvaCategory
 
 __all__ = [
     "LIVA_CITATION_QUALIFIERS",
@@ -463,7 +463,7 @@ def _category_supply_nature_citations(category: IvaCategory) -> tuple[StatutoryC
     # classification modules, so a module-scope import would make this lean
     # module pay for them. The sanctioned cycle-break shape, and it changes only
     # WHEN the owning module executes.
-    from ._components import IVA_CATEGORY_COMPONENTS
+    from .components import IVA_CATEGORY_COMPONENTS
 
     grounding = {
         reference

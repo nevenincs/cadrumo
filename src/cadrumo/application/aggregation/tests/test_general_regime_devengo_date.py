@@ -25,7 +25,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import Period
-from ....domain.iva import IvaCashAccountingTreatment, IvaCategory
+from ....domain.iva.schema import IvaCashAccountingTreatment, IvaCategory
 from ....domain.transactions.dates import transaction_eligible_date_span
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue

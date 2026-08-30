@@ -33,7 +33,8 @@ from ....adapters.persistence.storage import (
 )
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import ClassifierInputSource
-from ....domain.iva import EUMemberState, IvaTerritorialScope
+from ....domain.iva.classification import IvaTerritorialScope
+from ....domain.iva.schema import EUMemberState
 from ..counterparty_establishment import (
     ConfirmedCounterpartyFacts,
     ConfirmedCounterpartyFactsRepository,

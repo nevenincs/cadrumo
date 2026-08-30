@@ -41,7 +41,8 @@ import pytest
 from ....core.directory_scan import scan_directory
 from ....core.resources import bundled_path
 from ...calculations.registry.loader import load_catalogue_file
-from .. import iva_catalogue_years, place_of_supply_years
+from ..catalogue import iva_catalogue_years
+from ..place_of_supply import place_of_supply_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -55,7 +55,7 @@ from ...domain.contribuyente.seguro_enfermedad_insured import (
 from ...domain.deadlines.models import IVARegime
 from ...domain.invoices.models import InvoiceCatalogue
 from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
-from ...domain.iva import InvoiceKind
+from ...domain.iva.classification import InvoiceKind
 from ...domain.prorrata_register import ProrrataRegisterRepositoryProtocol
 from ...domain.renta import (
     RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS,

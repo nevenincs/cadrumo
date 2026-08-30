@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ....core import Period
-from ....domain.filing import ModeloBuilderError
+from ....domain.filing.errors import ModeloBuilderError
 from .._draft_construction import _load_registry_snapshot
 from ..runtime import build_runtime_schema_provider
 

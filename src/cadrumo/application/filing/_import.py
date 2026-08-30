@@ -19,8 +19,8 @@ command is a pure offline transform from (PDF bytes) → (draft, submission,
 warnings).
 
 This is not the production external-evidence import path for current filing
-records. It does not create a :class:`~domain.modelos.ModeloRecord`, attach
-:class:`~domain.modelos.ExternalEvidence`, or infer missing casilla values
+records. It does not create a :class:`~ModeloRecord`, attach
+:class:`~ExternalEvidence`, or infer missing casilla values
 from receipt metadata.
 
 See Also:
@@ -33,7 +33,7 @@ See Also:
         Amendment flow that can consume the imported submission baseline.
     :func:`application.modelo.import_external_filing_evidence`
         External-evidence import path that builds the current
-        :class:`~domain.modelos.ModeloRecord` baseline consumed by
+        :class:`~ModeloRecord` baseline consumed by
         work-unit amendments.
 """
 
@@ -48,7 +48,9 @@ from ...adapters.inbound.justificante import parse_justificante
 from ...core import Modelo, Period, PeriodError
 from ...core.logging import get_logger
 from ...core.time import MADRID_TZ
-from ...domain.filing import CasillaSchemaProvider, ModeloBuilderError, ModeloDraft
+from ...domain.filing.errors import ModeloBuilderError
+from ...domain.filing.protocols import CasillaSchemaProvider
+from ...domain.filing.schema import ModeloDraft
 from ...domain.justificante import Justificante
 from .errors import ModeloApplicationError as ModeloImportError
 from .runtime import ModeloOperatorProfile

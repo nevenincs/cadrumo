@@ -19,7 +19,7 @@ from __future__ import annotations
 import re
 
 from ...core.identity import nif_iva_format_for_country, normalise_nif_iva
-from ..iva import EUMemberState
+from ..iva.schema import EUMemberState
 from .errors import InvoiceValidationError
 
 __all__ = [

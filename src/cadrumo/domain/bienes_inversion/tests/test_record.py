@@ -9,13 +9,9 @@ import pydantic
 import pytest
 
 from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
-from ....domain.iva import (
-    IvaCategory,
-    IvaDeductionClassificationProvenance,
-    IvaFlowDirection,
-    IvaLedgerObservationRole,
-    IvaRateKind,
-)
+from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
+from ....domain.iva.flow import IvaFlowDirection
+from ....domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from ...calculations.registry.ledger_bindings import IvaLedgerObservation
 from .. import (
     BienesInversionIvaRegister,

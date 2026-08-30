@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.iva import IvaCategory
+from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

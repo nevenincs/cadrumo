@@ -27,13 +27,7 @@ from ....core.resources import bundled_path
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ....domain.calculations.registry.loader import load_registry_tree
 from ....domain.calculations.registry.temporal import select_revision
-from ....domain.iva_compensation import (
-    M303_COMPENSATION_AVAILABLE_CASILLA,
-    M303_COMPENSATION_GENERADA_CASILLA,
-    M303_COMPENSATION_POSTERIOR_CASILLA,
-    M303_COMPENSATION_RESULTADO_CASILLA,
-    M303CompensationAvailableDerivation,
-)
+from ....domain.iva_compensation.filed_derivation import M303CompensationAvailableDerivation, M303_COMPENSATION_AVAILABLE_CASILLA, M303_COMPENSATION_GENERADA_CASILLA, M303_COMPENSATION_POSTERIOR_CASILLA, M303_COMPENSATION_RESULTADO_CASILLA
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import _m303_carry_ingress as m303_module
 from .. import errors as errors_module

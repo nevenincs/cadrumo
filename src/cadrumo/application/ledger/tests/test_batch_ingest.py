@@ -13,7 +13,7 @@ import itertools
 import pytest
 from pydantic import ValidationError
 
-from ....domain.iva import InvoiceKind
+from ....domain.iva.classification import InvoiceKind
 from ...operator_actions import PreconditionVerdict
 from ..batch_ingest import (
     BATCH_ITEM_STATUSES,

@@ -11,14 +11,8 @@ from ...core.money import round_to_cents
 from ...domain.calculations.registry.m303_orden_projection_models import M303RegimenSimplificadoSnapshot
 from ...domain.calculations.registry.schema import RegistryCatalogues
 from ...domain.calculations.registry.schema_references import LegalParameter
-from ...domain.iva import (
-    ActividadNoAgricolaSimplificado,
-    ActividadOrdenAnual,
-    M303RegimenSimplificadoScopeDecision,
-    RegimenSimplificadoFilingRows,
-    is_last_filing_period_of_year,
-    validate_regimen_simplificado_rows,
-)
+from ...domain.iva.refund_eligibility import is_last_filing_period_of_year
+from ...domain.iva.regimen_simplificado_rows import ActividadNoAgricolaSimplificado, ActividadOrdenAnual, M303RegimenSimplificadoScopeDecision, RegimenSimplificadoFilingRows, validate_regimen_simplificado_rows
 from ...domain.modelos.calculation_revision import (
     M303DANA2024EligibilityEvidence,
     M303DANA2024ReductionResult,

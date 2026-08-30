@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from .. import EUMemberState, IvaCategory, IvaRateKind
+from ..schema import EUMemberState, IvaCategory, IvaRateKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

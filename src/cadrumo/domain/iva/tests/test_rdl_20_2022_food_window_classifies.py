@@ -26,7 +26,8 @@ from decimal import Decimal
 
 import pytest
 
-from .. import EUMemberState, IvaRateKind, rate_kinds_for_declared_rate
+from ..lookup import rate_kinds_for_declared_rate
+from ..schema import EUMemberState, IvaRateKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -9,7 +9,9 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import IntracomOperationType
-from ...iva import EUMemberState, InvoiceKind, IvaCategory, IvaRateKind, OssIossRegime, TransactionKind
+from ...iva.classification import InvoiceKind, TransactionKind
+from ...iva.oss import OssIossRegime
+from ...iva.schema import EUMemberState, IvaCategory, IvaRateKind
 from ..enums import (
     InvoiceClass,
     InvoiceLegalMention,

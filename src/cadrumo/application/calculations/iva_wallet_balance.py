@@ -19,11 +19,8 @@ See Also:
 
 from __future__ import annotations
 
-from ...domain.iva_compensation import (
-    IvaWalletBalanceReport,
-    build_iva_compensation_carry_forward_report,
-    build_iva_wallet_balance_report,
-)
+from ...domain.iva_compensation.balance import IvaWalletBalanceReport, build_iva_wallet_balance_report
+from ...domain.iva_compensation.carry_forward import build_iva_compensation_carry_forward_report
 from .iva_compensation_history import IvaCompensationHistoryRepository
 
 

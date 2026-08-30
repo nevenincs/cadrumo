@@ -77,13 +77,11 @@ from ...core.hashing import sha256_hex as _sha256_hex
 from ...core.identity import tax_id_identity_token as _tax_id_identity_token
 from ...core.time import now
 from ...domain.calculations.registry.authority import bundled_authority
-from ...domain.iva_compensation import IvaCompensationAuthoritySource as _IvaCompensationAuthoritySource
-from ...domain.iva_compensation import IvaCompensationCarryForwardLot as _IvaCompensationCarryForwardLot
-from ...domain.iva_compensation import IvaCompensationPeriodState as _IvaCompensationPeriodState
-from ...domain.iva_compensation import IvaCompensationReconciliationDecision as _IvaCompensationReconciliationDecision
-from ...domain.iva_compensation import (
-    build_iva_compensation_carry_forward_report as _build_iva_compensation_carry_forward_report,
-)
+from ...domain.iva_compensation.reconciliation import IvaCompensationAuthoritySource as _IvaCompensationAuthoritySource
+from ...domain.iva_compensation.carry_forward import IvaCompensationCarryForwardLot as _IvaCompensationCarryForwardLot
+from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState as _IvaCompensationPeriodState
+from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision as _IvaCompensationReconciliationDecision
+from ...domain.iva_compensation.carry_forward import build_iva_compensation_carry_forward_report as _build_iva_compensation_carry_forward_report
 from .errors import LiveApplicationError, LiveApplicationInputError, LiveIvaSurfaceTimeoutError
 from .filed_data_capture import capture_report_path as _capture_report_path
 from .filed_observation_persistence import latest_declarations_by_period as _latest_declarations_by_period

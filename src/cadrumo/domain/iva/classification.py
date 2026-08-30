@@ -52,8 +52,9 @@ from typing import Final, NamedTuple
 from pydantic import Field, model_validator
 
 from ...core.logging import get_logger
-from ._lookup import lookup_rate
-from ._schema import (
+from .errors import IvaRateNotFoundError, IvaValidationError
+from .lookup import lookup_rate
+from .schema import (
     EUMemberState,
     IvaArt69DosService,
     IvaCategory,
@@ -62,7 +63,6 @@ from ._schema import (
     IvaRateRecord,
     IvaStrictFrozen,
 )
-from .errors import IvaRateNotFoundError, IvaValidationError
 
 _logger = get_logger(__name__)
 

@@ -16,7 +16,7 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.filing_year import FilingYear
-from ._carry_forward import (
+from .carry_forward import (
     IvaCompensationCarryForwardReport,
     IvaCompensationExpiryReviewState,
 )

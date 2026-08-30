@@ -22,7 +22,7 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ids import FormulaId
 from ....domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistrySnapshot
 from ....domain.calculations.registry.validate_revision_identity import revision_reference_identity_failures
-from ....domain.filing import ModeloBuilderError
+from ....domain.filing.errors import ModeloBuilderError
 from ..runtime import (
     RegistryCasillaCollection,
     RegistryCasillaSchema,

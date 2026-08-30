@@ -24,7 +24,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ...iva import IvaCategory
+from ...iva.schema import IvaCategory
 from ..enums import BusinessClassification, TransactionDirection
 from ..irpf_categories import ledger_irpf_category, normalize_irpf_category
 from ..models import Transaction

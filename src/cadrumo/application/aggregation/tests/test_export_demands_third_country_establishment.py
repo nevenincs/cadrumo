@@ -29,7 +29,7 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.iva import EUMemberState, IvaCategory
+from ....domain.iva.schema import EUMemberState, IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

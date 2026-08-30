@@ -20,8 +20,8 @@ import pytest
 
 from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.filing import ModeloBuilderError
-from ....domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
+from ....domain.filing.errors import ModeloBuilderError
+from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from .. import build_draft, build_runtime_schema_provider
 from .._draft_construction import _filing_period_date
 from ..runtime import ModeloOperatorProfile

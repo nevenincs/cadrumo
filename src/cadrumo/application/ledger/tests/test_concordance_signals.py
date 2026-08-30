@@ -41,7 +41,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....domain.iva import IvaTerritorialScope
+from ....domain.iva.classification import IvaTerritorialScope
 from ..establishment_ladder import EstablishmentRung, RegistrationEstablishmentConflict, _printed_evidence
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

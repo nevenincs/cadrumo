@@ -6,7 +6,7 @@ import pytest
 
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.runtime_graph import expression_casilla_refs
-from ....domain.filing import ModeloBuilderError
+from ....domain.filing.errors import ModeloBuilderError
 from ..runtime import build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -11,11 +11,8 @@ import pytest
 from pydantic import ValidationError
 
 from .....core import CasillaId, IvaDeductionEvidenceAuthority, IvaDeductionFactKind, validated_casilla_id
-from ....iva import (
-    IvaCategory,
-    IvaFlowDirection,
-    IvaRateKind,
-)
+from ....iva.flow import IvaFlowDirection
+from ....iva.schema import IvaCategory, IvaRateKind
 from ..authority import bundled_authority
 from ..binding_selector_utils import selector_as_dict
 from ..bindings import resolve_available_bound_inputs_by_casilla_id

@@ -11,7 +11,7 @@ import pytest
 from ....core import Period
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
-from ....domain.iva import InvoiceKind
+from ....domain.iva.classification import InvoiceKind
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

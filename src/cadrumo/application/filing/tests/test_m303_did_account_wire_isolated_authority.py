@@ -42,16 +42,10 @@ from ....domain.calculations.registry.schema_exports import (
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.calculations.registry.snapshot import build_snapshot
 from ....domain.deadlines.models import ChargeAccount, IVARegime, M303RegimeComposition, M303TaxTerritory, RefundAccount, TaxpayerProfile
-from ....domain.filing import FilingExportValidationError, ModeloDraft
+from ....domain.filing.errors import FilingExportValidationError
+from ....domain.filing.schema import ModeloDraft
 from ....domain.filing_evidence import FilingEvidenceReference
-from ....domain.iva import (
-    ActividadNoAgricolaSimplificado,
-    EntradaModuloSimplificado,
-    HechoActividadSimplificado,
-    M303RegimenSimplificadoScope,
-    M303RegimenSimplificadoScopeDecision,
-    RegimenSimplificadoFilingRows,
-)
+from ....domain.iva.regimen_simplificado_rows import ActividadNoAgricolaSimplificado, EntradaModuloSimplificado, HechoActividadSimplificado, M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision, RegimenSimplificadoFilingRows
 from ....domain.modelos.calculation_revision import (
     M303Exonerado390FilingEvidence,
     M303RegimenSimplificadoFilingEvidence,

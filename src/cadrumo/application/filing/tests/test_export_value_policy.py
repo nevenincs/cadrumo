@@ -19,13 +19,8 @@ from ....domain.calculations.registry.schema_exports import (
     ExportRecordDefinition,
 )
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.filing import (
-    FilingExportValidationError,
-    ModeloDraft,
-    ModeloValue,
-    ModeloValueKind,
-    registry_schema_version,
-)
+from ....domain.filing.errors import FilingExportValidationError
+from ....domain.filing.schema import ModeloDraft, ModeloValue, ModeloValueKind, registry_schema_version
 from ....domain.submission import ModeloDraftStatus
 from .._export import _format_field, _mismatched_casilla_ids, _projection_field_value
 from ..runtime import build_runtime_schema_provider

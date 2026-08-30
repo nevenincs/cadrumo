@@ -88,8 +88,8 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-from ._classification import InvoiceKind
-from ._schema import IvaCategory
+from .classification import InvoiceKind
+from .schema import IvaCategory
 
 
 class IvaFlowDirection(StrEnum):

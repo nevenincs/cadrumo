@@ -47,12 +47,12 @@ import pytest
 
 from ....core.resources import bundled_path
 from ...calculations.registry.schema_references import LegalReference
-from .._establishment import _excluded_territories_by_prefix
 from .._grounding import registry_catalogues, verify_table_legal_refs
-from .._place_of_supply import load_place_of_supply_table
-from .._rates import load_iva_rate_table
-from .._recargo_equivalencia import load_recargo_rate_table
 from ..errors import IvaCatalogueError
+from ..establishment import _excluded_territories_by_prefix
+from ..place_of_supply import load_place_of_supply_table
+from ..rates import load_iva_rate_table
+from ..recargo_equivalencia import load_recargo_rate_table
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

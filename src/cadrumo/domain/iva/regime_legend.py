@@ -46,7 +46,7 @@ from typing import Final
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG
-from ._schema import IvaCategory
+from .schema import IvaCategory
 
 __all__ = [
     "REGIME_LEGENDS",

@@ -38,7 +38,8 @@ import pytest
 from ....core import Period
 from ....core.bucket_pointer import read_pointer
 from ....core.config import load_settings
-from ....domain.filing import CasillaSchemaProvider, ModeloDraft
+from ....domain.filing.protocols import CasillaSchemaProvider
+from ....domain.filing.schema import ModeloDraft
 from ....domain.submission import ModeloDraftStatus
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.profile_capsule import open_test_profile_session, set_active_test_profile_facts

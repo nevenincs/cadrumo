@@ -110,8 +110,9 @@ def _drive_ledger_lifecycle_round_trip(tmp_path: Path) -> _LedgerLifecycleOutcom
 def _seed_purchase_invoice_evidence(bucket_id: str) -> str:
     """Persist one RECEIVED purchase invoice and return its id."""
     from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-    from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
-    from ....domain.iva import InvoiceKind
+    from ....domain.invoices.enums import IvaRate, PaymentStatus
+    from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+    from ....domain.iva.classification import InvoiceKind
 
     purchase_line = InvoiceLine(
         description="Material oficina",

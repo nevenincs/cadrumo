@@ -38,8 +38,8 @@ from typing import Self
 from pydantic import BaseModel, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG
-from ...domain.invoices import Invoice, InvoiceCatalogue
-from ...domain.iva import InvoiceKind
+from ...domain.invoices.models import Invoice, InvoiceCatalogue
+from ...domain.iva.classification import InvoiceKind
 from .evidence import (
     PurchaseInvoiceEvidence,
     PurchaseInvoiceEvidenceInputError,

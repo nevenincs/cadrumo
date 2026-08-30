@@ -6,7 +6,9 @@ from datetime import date
 
 import pytest
 
-from .. import IvaCatalogue, IvaCategory, IvaCitation, IvaRegulation, resolve_catalogue, verify_catalogue
+from ..catalogue import resolve_catalogue
+from ..schema import IvaCatalogue, IvaCategory, IvaCitation, IvaRegulation
+from ..verify import verify_catalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

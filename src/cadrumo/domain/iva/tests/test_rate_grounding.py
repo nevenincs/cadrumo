@@ -15,7 +15,10 @@ import pytest
 from ....core import normalise_corpus_text
 from ....core.resources import bundled_path
 from ....tests.registry_tree import bundled_registry_tree
-from .. import EUMemberState, IvaRateKind, IvaRateNotFoundError, load_iva_rate_table, lookup_rate
+from ..errors import IvaRateNotFoundError
+from ..lookup import lookup_rate
+from ..rates import load_iva_rate_table
+from ..schema import EUMemberState, IvaRateKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

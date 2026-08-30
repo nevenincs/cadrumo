@@ -37,7 +37,7 @@ from ...domain.invoices.enums import InvoiceClass, PaymentStatus
 from ...domain.invoices.errors import InvoiceNotFoundError, InvoiceValidationError
 from ...domain.invoices.models import Invoice, InvoiceCatalogue
 from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
-from ...domain.iva import IvaCategory
+from ...domain.iva.schema import IvaCategory
 from ._catalogue_mutation import mutate_catalogue
 
 

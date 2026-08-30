@@ -59,7 +59,7 @@ from ..core.identity import (
     validate_spanish_tax_id,
 )
 from ..core.parsing import normalise_iso_4217_currency, parse_date
-from ..domain.iva import country_code_for_printed_country_name
+from ..domain.iva.establishment import country_code_for_printed_country_name
 from .invoice_field_contract import (
     ANCHOR_KEY_SUFFIX,
     INVOICE_FIELD_CONTRACTS,

@@ -36,14 +36,10 @@ from ....core.directory_scan import scan_directory
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ledger_bindings import OssIossLedgerObservation
 from ....domain.calculations.registry.schema import ModeloRevision
-from ....domain.iva import (
-    EUMemberState,
-    InvoiceKind,
-    IvaRateKind,
-    IvaRateNotFoundError,
-    OssIossRegime,
-    TransactionKind,
-)
+from ....domain.iva.classification import InvoiceKind, TransactionKind
+from ....domain.iva.errors import IvaRateNotFoundError
+from ....domain.iva.oss import OssIossRegime
+from ....domain.iva.schema import EUMemberState, IvaRateKind
 from ....tests import REPO_ROOT
 from .. import (
     OssIossLedgerCandidate,

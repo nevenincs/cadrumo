@@ -13,7 +13,7 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.resources import bundled_path
-from .....domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
+from .....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from .._m303_orden_source import extract_m303_annual_orden_source
 from ..authority import bundled_authority
 from ..errors import RegistryLoadError, RegistryValidationError

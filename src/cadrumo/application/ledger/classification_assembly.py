@@ -90,33 +90,16 @@ from ...core import (
     CounterpartyTaxablePersonStatus,
     IvaCategoryOutcome,
 )
-from ...domain.iva import (
-    SPAIN_COUNTRY_CODE,
-    CustomerTaxStatus,
-    EUMemberState,
-    InvoiceKind,
-    IvaCategory,
-    IvaInvoiceClassificationCriteria,
-    IvaRateKind,
-    IvaTerritorialScope,
-    PartyFact,
-    StatedCountryCodeStatus,
-    SupplyNature,
-    TransactionKind,
-    classify_iva,
-    domestic_categories_by_rate_kind,
-    domestic_rate_tier_is_required,
-    identification_state_for_printed_tax_identifier,
-    rate_kind_for_domestic_category,
-    stated_country_code_status,
-    territorial_scope_for_country,
-    territorial_scope_for_spanish_postal_code,
-)
+from ...domain.iva.classification import CustomerTaxStatus, InvoiceKind, IvaInvoiceClassificationCriteria, IvaTerritorialScope, PartyFact, TransactionKind, classify_iva, domestic_categories_by_rate_kind, domestic_rate_tier_is_required, rate_kind_for_domestic_category
+from ...domain.iva.establishment import SPAIN_COUNTRY_CODE, StatedCountryCodeStatus, stated_country_code_status, territorial_scope_for_country, territorial_scope_for_spanish_postal_code
+from ...domain.iva.identification import identification_state_for_printed_tax_identifier
+from ...domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind
+from ...domain.iva.supply_nature import SupplyNature
 
 if TYPE_CHECKING:
     from datetime import date
 
-    from ...domain.iva import IvaClassificationResult
+    from ...domain.iva.classification import IvaClassificationResult
     from .classifier_inputs import ClassifierInputs
 
 __all__ = [
@@ -1059,7 +1042,7 @@ def classify_from_assembled_criteria(
     judgement stays in :func:`~domain.iva.classify_iva`; this module's whole
     contribution is deciding whether the table may be consulted at all.
     """
-    from ...domain.iva import classify_iva
+    from ...domain.iva.classification import classify_iva
 
     if assembly.criteria is None:
         return None

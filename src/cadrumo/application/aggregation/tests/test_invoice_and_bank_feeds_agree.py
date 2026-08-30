@@ -40,7 +40,8 @@ from ....core import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.invoices.enums import IvaRate
 from ....domain.invoices.models import Invoice
-from ....domain.iva import EUMemberState, InvoiceKind, IvaCategory
+from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import EUMemberState, IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

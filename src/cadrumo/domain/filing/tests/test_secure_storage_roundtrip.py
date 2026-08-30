@@ -27,7 +27,7 @@ from ....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from ....core import CasillaId, Period, StorageCategory, storage_path, validated_casilla_id
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.registry.schema_references import RegistrySnapshotRef
-from .._schema import (
+from ..schema import (
     ModeloApprovalBasis,
     ModeloCasillaProvenance,
     ModeloDraft,

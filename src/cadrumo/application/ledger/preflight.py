@@ -35,7 +35,7 @@ from ...core import ElidedProse, OperatorActionAxis, Period
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.identity import BucketId, TransactionId
 from ...domain.categories.spending_category import HOME_OFFICE_FAMILIES, SpendingCategory, family_for, home_office_categories
-from ...domain.iva import IvaCategory
+from ...domain.iva.schema import IvaCategory
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState, is_classified
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.irpf_categories import has_employment_irpf_category

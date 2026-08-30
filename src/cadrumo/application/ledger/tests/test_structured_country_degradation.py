@@ -73,15 +73,10 @@ import pytest
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import ClassifierInputSource, FieldGroundingOutcome, FieldOrigin, IvaCategoryOutcome
 from ....core.config import Settings
-from ....domain.iva import (
-    CustomerTaxStatus,
-    InvoiceKind,
-    IvaCategory,
-    IvaTerritorialScope,
-    StatedCountryCodeStatus,
-    SupplyNature,
-    record_country_code_status,
-)
+from ....domain.iva.classification import CustomerTaxStatus, InvoiceKind, IvaTerritorialScope
+from ....domain.iva.establishment import StatedCountryCodeStatus, record_country_code_status
+from ....domain.iva.schema import IvaCategory
+from ....domain.iva.supply_nature import SupplyNature
 from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha2, an_uncatalogued_alpha3
 from ..classification_assembly import (
     DeclaredFact,

@@ -11,10 +11,7 @@ from pydantic import ValidationError
 from ....core import ActionConditionality, CasillaId, NoRecoveryOutcome, Period, validated_casilla_id
 from ....core.errors import BaseSeverity
 from ....core.i18n import Translatable as tr
-from ....domain.filing import (
-    ModeloDraft,
-    ModeloValidationFinding,
-)
+from ....domain.filing.schema import ModeloDraft, ModeloValidationFinding
 from ....domain.submission import ModeloDraftStatus
 from ....tests.filing import build_registry_filing_draft
 from .. import summarise_calculation

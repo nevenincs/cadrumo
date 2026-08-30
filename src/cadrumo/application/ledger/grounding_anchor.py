@@ -86,7 +86,7 @@ from pydantic import BaseModel
 
 from ...core import STRICT_FROZEN_CONFIG, DocumentShape, FieldGroundingOutcome, FieldOrigin, unicode_compose
 from ...core.decimal import coerce_finite_european_decimal
-from ...domain.iva import country_code_for_stated_country_code
+from ...domain.iva.establishment import country_code_for_stated_country_code
 from .document_transcription import DocumentTranscription
 from .evidence_draft import FieldAmbiguityCandidate, FieldProvenance
 

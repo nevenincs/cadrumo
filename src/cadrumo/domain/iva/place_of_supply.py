@@ -57,8 +57,8 @@ from ...core import STRICT_FROZEN_CONFIG, read_toml
 from ...core.resources import bundled_path
 from ...core.validity_window import ValidityWindow, years_covered_by_every_group
 from ._grounding import verify_table_legal_refs
-from ._supply_nature import SupplyNature
 from .errors import IvaCatalogueError
+from .supply_nature import SupplyNature
 
 __all__ = [
     "IvaPlaceOfSupplyRule",

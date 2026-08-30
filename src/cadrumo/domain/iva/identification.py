@@ -52,8 +52,8 @@ from __future__ import annotations
 from typing import Final
 
 from ...core.identity import IdentityError, validate_spanish_tax_id
-from ._establishment import country_code_for_printed_tax_identifier
-from ._schema import EUMemberState
+from .establishment import country_code_for_printed_tax_identifier
+from .schema import EUMemberState
 
 __all__ = ["identification_state_for_printed_tax_identifier"]
 

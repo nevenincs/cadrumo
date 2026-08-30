@@ -34,7 +34,7 @@ from pydantic import ValidationError
 
 from ....adapters.outbound.fx import ECB_RATE_SOURCE_ID, EcbReferenceRateProvider
 from ....domain.currency.service import resolve_fx_conversion_stamp
-from ....domain.iva import InvoiceKind
+from ....domain.iva.classification import InvoiceKind
 from ....tests.ecb_stub import ecb_csv_fetch
 from .._creation import build_catalogue_invoice
 

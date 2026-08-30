@@ -22,8 +22,8 @@ from ...core.decimal import coerce_decimal
 from ...core.paths import path_stat_fingerprint
 from ...core.resources import bundled_path
 from ._grounding import legal_ref_failures, registry_catalogues
-from ._schema import EUMemberState, IvaRateKind, IvaRateRecord
 from .errors import IvaCatalogueError, IvaRateOverlapError, IvaValidationError
+from .schema import EUMemberState, IvaRateKind, IvaRateRecord
 
 if TYPE_CHECKING:
     # Type-only: importing these at runtime would close the cycle the local

@@ -17,7 +17,7 @@ from pydantic import ValidationError
 from .....core import StorageCategory, storage_path
 from .....domain.invoices.enums import IvaRate, PaymentStatus
 from .....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
-from .....domain.iva import InvoiceKind
+from .....domain.iva.classification import InvoiceKind
 from .....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ..invoices import _INVOICE_NAMESPACE, InvoiceCatalogueRepository
 

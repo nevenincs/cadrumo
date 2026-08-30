@@ -17,13 +17,8 @@ import pytest
 
 from .....core import validated_casilla_id
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
-from .....domain.iva import (
-    IvaCashAccountingTreatment,
-    IvaCategory,
-    IvaFlowDirection,
-    IvaLedgerObservationRole,
-    IvaRateKind,
-)
+from .....domain.iva.flow import IvaFlowDirection
+from .....domain.iva.schema import IvaCashAccountingTreatment, IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from ..rate_box_partition import derive_rate_box_partitions, rate_box_coverage_shortfalls
 from ..schema import DataBindingDefinition, ModeloRevision
 from ..schema_references import PeriodSelector

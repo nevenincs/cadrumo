@@ -26,7 +26,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ...iva import InvoiceKind
+from ...iva.classification import InvoiceKind
 from ..enums import IvaRate, PaymentStatus, iva_rate_percentage
 from ..models import Invoice, InvoiceLine
 

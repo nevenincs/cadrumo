@@ -10,16 +10,7 @@ from pydantic import Field, model_validator
 from ....core.filing_year import FilingYear
 from ....core.identity import ContentDigest
 from ....core.percentage import Percentage
-from ....domain.iva import (
-    ActividadOrdenAnual,
-    ActividadOrdenAnualId,
-    AutoridadAgricolaOrdenAnualNoResuelta,
-    DificilJustificacionOrdenAnual,
-    IndiceTemporadaOrdenAnual,
-    M303RegimenSimplificadoScopeDecision,
-    PorcentajeIngresoCuentaIaeOrdenAnual,
-    ReduccionLorcaOrdenAnual,
-)
+from ....domain.iva.regimen_simplificado_rows import ActividadOrdenAnual, ActividadOrdenAnualId, AutoridadAgricolaOrdenAnualNoResuelta, DificilJustificacionOrdenAnual, IndiceTemporadaOrdenAnual, M303RegimenSimplificadoScopeDecision, PorcentajeIngresoCuentaIaeOrdenAnual, ReduccionLorcaOrdenAnual
 from ._m303_orden_constants import (
     EXPECTED_ACTIVITY_COUNT,
     EXPECTED_NON_AGRICULTURAL_INGRESO_A_CUENTA_COUNT,

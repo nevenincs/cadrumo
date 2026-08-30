@@ -21,7 +21,7 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import LinkInconsistencyDirection
 from ...core.identity import InvoiceId, TransactionId
 from ...core.logging import get_logger
-from ..iva import InvoiceKind
+from ..iva.classification import InvoiceKind
 from ..transactions.enums import TransactionDirection
 from ..transactions.models import TransactionCatalogue
 from .errors import (

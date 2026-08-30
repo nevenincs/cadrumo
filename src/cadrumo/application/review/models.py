@@ -33,7 +33,7 @@ from pydantic import BaseModel, Field, field_validator
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.i18n import Translatable as tr
 from ...core.time import validate_utc_aware
-from ...domain.filing import ModeloValidationFinding
+from ...domain.filing.schema import ModeloValidationFinding
 from ...domain.invoices.models import Invoice
 from ...domain.transactions.models import Transaction
 from ..workflow.review_models import InvoiceReviewRecord, LedgerReviewRecord

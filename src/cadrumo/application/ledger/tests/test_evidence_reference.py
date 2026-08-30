@@ -20,7 +20,7 @@ from pydantic import ValidationError
 
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
-from ....domain.iva import InvoiceKind
+from ....domain.iva.classification import InvoiceKind
 from ..evidence import MediaKind, PurchaseInvoiceEvidence
 from ..evidence_reference import (
     EvidenceReference,

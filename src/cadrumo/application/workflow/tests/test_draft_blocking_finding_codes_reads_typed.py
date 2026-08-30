@@ -27,7 +27,7 @@ import pytest
 
 from ....core.errors import BaseSeverity
 from ....core.i18n import Translatable as tr
-from ....domain.filing import ModeloValidationFinding
+from ....domain.filing.schema import ModeloValidationFinding
 from ..engine import _draft_blocking_finding_codes
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

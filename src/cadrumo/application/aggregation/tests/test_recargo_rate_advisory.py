@@ -34,7 +34,9 @@ from pydantic import ValidationError
 
 from ....domain.invoices.enums import IvaRate
 from ....domain.invoices.models import Invoice
-from ....domain.iva import InvoiceKind, IvaCategory, recargo_rate_for_applied_rate
+from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.recargo_equivalencia import recargo_rate_for_applied_rate
+from ....domain.iva.schema import IvaCategory
 from .._modelo_bindings import (
     _recargo_rate_divergence,
     _recargo_rate_mismatch_diagnostics,

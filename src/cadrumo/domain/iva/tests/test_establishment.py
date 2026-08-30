@@ -23,12 +23,9 @@ from __future__ import annotations
 
 import pytest
 
-from .. import (
-    SPAIN_COUNTRY_CODE,
-    EUMemberState,
-    IvaTerritorialScope,
-    territorial_scope_for_country,
-)
+from ..classification import IvaTerritorialScope
+from ..establishment import SPAIN_COUNTRY_CODE, territorial_scope_for_country
+from ..schema import EUMemberState
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

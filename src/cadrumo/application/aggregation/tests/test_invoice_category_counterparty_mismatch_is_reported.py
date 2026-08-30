@@ -42,7 +42,8 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import IntracomOperationType, Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.invoices.models import InvoiceCatalogue
-from ....domain.iva import InvoiceKind, IvaCategory
+from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import IvaCategory
 from ...invoices import build_catalogue_invoice
 from .._modelo_bindings import (
     _category_counterparty_mismatch_diagnostics,

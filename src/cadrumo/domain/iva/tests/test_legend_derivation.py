@@ -23,15 +23,14 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from .. import (
-    REGIME_LEGENDS,
-    IvaCategory,
+from ..legend_derivation import (
     LegendDerivation,
     LegendDerivationOutcome,
-    RegimeLegend,
     derive_category_from_regime_legend,
     match_regime_legend,
 )
+from ..regime_legend import REGIME_LEGENDS, RegimeLegend
+from ..schema import IvaCategory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

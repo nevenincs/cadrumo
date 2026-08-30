@@ -6,7 +6,7 @@ calculation layer. Seed and correction flows write
 :class:`~cadrumo.domain.iva_compensation.IvaCompensationPeriodState` records through
 ``seed_iva_compensation_period`` / ``correct_iva_compensation_period``; override
 flows persist an
-:class:`~cadrumo.domain.iva_compensation._reconciliation.IvaCompensationReconciliationDecision`
+:class:`~cadrumo.domain.iva_compensation.reconciliation.IvaCompensationReconciliationDecision`
 through ``reconcile_modelo_303_iva_compensation``. Every mutation appends a typed
 bucket event via :class:`~adapters.persistence.profile.buckets.BucketEventHistoryRepository`.
 
@@ -34,11 +34,8 @@ from decimal import Decimal
 
 from ...core import ActionEvidenceProvenance, Modelo, Period
 from ...domain.calculations.registry.authority import bundled_authority
-from ...domain.iva_compensation import (
-    IvaCompensationPeriodState,
-    IvaCompensationReconciliationDecision,
-    iva_compensation_period_sort_key,
-)
+from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState, iva_compensation_period_sort_key
+from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ...domain.modelos.calculation_revision import SEALED_REVISION_STATES
 from ...domain.modelos.errors import ModeloError
 from ..calculations import correct_iva_compensation_period, seed_iva_compensation_period
@@ -381,7 +378,7 @@ def record_iva_compensation_override_for_bucket(
     """Record an explicit taxpayer override for Modelo 303 prior compensation.
 
     Returns the persisted
-    :class:`~cadrumo.domain.iva_compensation._reconciliation.IvaCompensationReconciliationDecision`
+    :class:`~cadrumo.domain.iva_compensation.reconciliation.IvaCompensationReconciliationDecision`
     with the ``taxpayer_override`` source.
 
     The Modelo 303 reconciliation refuses to AUTO-apply a seeded or local-recurrence
@@ -466,7 +463,7 @@ def record_iva_compensation_override_for_bucket(
         )
 
     from ...core.time import now
-    from ...domain.iva_compensation import IvaCompensationOverride
+    from ...domain.iva_compensation.reconciliation import IvaCompensationOverride
 
     snapshot = bundled_authority().snapshot(
         Modelo.M303.value,

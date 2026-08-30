@@ -37,11 +37,7 @@ from typing import TYPE_CHECKING
 
 from ....core.logging import get_logger
 from ....core.time import now
-from ....domain.filing import (
-    BaseAmendment,
-    ModeloComplementaria,
-    ModeloSustitutiva,
-)
+from ....domain.filing.amendment import BaseAmendment, ModeloComplementaria, ModeloSustitutiva
 from ..storage import FILING_AMENDMENTS_NAMESPACE, secure_object_repository_for_bucket
 from ._filing_runtime import resolve_filing_repository_bucket_id
 

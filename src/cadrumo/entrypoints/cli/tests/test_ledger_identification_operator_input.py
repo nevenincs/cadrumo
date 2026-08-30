@@ -81,7 +81,7 @@ def _classify(transaction_id: str, *extra: str):
 
 def test_the_operator_can_record_the_identification_and_it_persists() -> None:
     """The option reaches the persisted record as a typed Member State."""
-    from ....domain.iva import EUMemberState
+    from ....domain.iva.schema import EUMemberState
 
     transaction_id = _intracom_transaction_id()
     result = _classify(transaction_id, "--counterparty-identification-state", "de")
@@ -102,7 +102,7 @@ def test_recording_the_identification_leaves_the_establishment_axis_alone() -> N
     under a German IVA number is an intra-community acquirer under art. 25 --
     is proven against the aggregation gate, where the money actually moves.
     """
-    from ....domain.iva import EUMemberState
+    from ....domain.iva.schema import EUMemberState
 
     transaction_id = _intracom_transaction_id()
     before = _active_repo().load().get(transaction_id)

@@ -26,7 +26,7 @@ separate concerns and live submit is permanently forbidden.
 This module is the draft-level renderer. The work-unit export service in
 :mod:`application.modelo._export` rebuilds an approved
 :class:`domain.filing.ModeloDraft` from a
-:class:`domain.modelos.CalculationRevision`, then delegates here to write
+:class:`~CalculationRevision`, then delegates here to write
 and verify the fichero-BOE bytes.
 
 See Also:
@@ -87,13 +87,8 @@ from ...domain.calculations.registry.schema_exports import (
     FilingEnvelopePrefixFieldDeclaration,
     FilingEnvelopePrefixRole,
 )
-from ...domain.filing import (
-    FilingExportError,
-    FilingExportValidationError,
-    ModeloCasillaProvenance,
-    ModeloDraft,
-    registry_schema_version,
-)
+from ...domain.filing.errors import FilingExportError, FilingExportValidationError
+from ...domain.filing.schema import ModeloCasillaProvenance, ModeloDraft, registry_schema_version
 from ...domain.submission import ModeloDraftStatus
 from ._envelope_modelo_policy import filing_envelope_modelo_policy
 from ._export_parity import (

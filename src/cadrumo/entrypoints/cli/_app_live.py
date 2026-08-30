@@ -62,7 +62,7 @@ from ...core import Period, PeriodError
 from ...core.errors import CadrumoError
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ...domain.iva_compensation import IvaCompensationDecisionReason
+from ...domain.iva_compensation.reconciliation import IvaCompensationDecisionReason
 from ._app_live_auth_preflight import _emit_live_auth_preflight
 from ._app_live_rendering import _filed_capture_lines, _metric_line, _source_filed_capture_lines
 from ._common import (

@@ -68,17 +68,10 @@ from pydantic import BaseModel
 
 from ...core import STRICT_FROZEN_CONFIG, ClassifierInputSource, ConfirmationBlockReason, IvaCategoryOutcome
 from ...core.parsing import parse_iso8601_date
-from ...domain.iva import (
-    InvoiceKind,
-    IvaCategory,
-    IvaRateKind,
-    IvaTerritorialScope,
-    SupplyNature,
-    SupplyNatureDerivationOutcome,
-    derive_supply_nature_from_citation,
-    record_country_code_status,
-    supply_nature_implied_by_category,
-)
+from ...domain.iva.classification import InvoiceKind, IvaTerritorialScope
+from ...domain.iva.establishment import record_country_code_status
+from ...domain.iva.schema import IvaCategory, IvaRateKind
+from ...domain.iva.supply_nature import SupplyNature, SupplyNatureDerivationOutcome, derive_supply_nature_from_citation, supply_nature_implied_by_category
 from .classification_assembly import (
     ClassificationAssembly,
     DeclaredFact,

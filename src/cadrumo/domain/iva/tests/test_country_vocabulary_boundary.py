@@ -36,8 +36,8 @@ from __future__ import annotations
 import pytest
 
 from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha2
-from .._classification import IvaTerritorialScope
-from .._establishment import (
+from ..classification import IvaTerritorialScope
+from ..establishment import (
     StatedCountryCodeStatus,
     country_code_for_stated_country_code,
     stated_country_code_status,

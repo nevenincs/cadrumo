@@ -13,7 +13,7 @@ from pydantic import ValidationError
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.errors import InvoiceValidationError
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
-from ....domain.iva import InvoiceKind
+from ....domain.iva.classification import InvoiceKind
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.cli_runner import invoke_cached_cli
 from .._common import cli_policy_refusal_projection

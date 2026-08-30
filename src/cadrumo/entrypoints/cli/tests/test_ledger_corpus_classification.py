@@ -58,7 +58,7 @@ def test_bulk_classify_from_oracle_resolved_at_runtime(tmp_path: Path) -> None:
 
 
 def test_single_classify_intracommunity_with_eu_state() -> None:
-    from ....domain.iva import EUMemberState, IvaCategory
+    from ....domain.iva.schema import EUMemberState, IvaCategory
     from ....domain.transactions.enums import BusinessClassification
 
     _import_corpus()

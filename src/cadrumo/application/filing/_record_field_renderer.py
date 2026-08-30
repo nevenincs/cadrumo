@@ -11,8 +11,9 @@ from ...domain.calculations.registry.export_semantics import ExportComputedKey, 
 from ...domain.calculations.registry.fixed_width_codec import render_fixed_width_export_field
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
-from ...domain.filing import FilingExportError, FilingExportValidationError, ModeloDraft
-from ...domain.iva import derive_sepa_marca
+from ...domain.filing.errors import FilingExportError, FilingExportValidationError
+from ...domain.filing.schema import ModeloDraft
+from ...domain.iva.sepa_marca import derive_sepa_marca
 from ._producer_snapshot import ChargeAccountSelection, FilingProducerSnapshot, RefundAccountSelection
 from ._projection import FilingRecordRenderContext
 from ._record_types import ProjectionAddress, RecordRenderRow

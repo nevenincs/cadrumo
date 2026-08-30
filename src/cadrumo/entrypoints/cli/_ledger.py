@@ -30,11 +30,8 @@ from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.logging import get_logger
-from ...domain.iva import (
-    EUMemberState,
-    InputClassification,
-    IvaCategory,
-)
+from ...domain.iva.prorrata import InputClassification
+from ...domain.iva.schema import EUMemberState, IvaCategory
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, is_classified
 from ...domain.transactions.errors import TransactionIdPrefixError, TransactionValidationError
 from ._common import _bad, _profile_to_taxpayer, _state, _tx_repo, emit_envelope

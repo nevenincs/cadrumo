@@ -500,13 +500,9 @@ def test_modelo_369_esquema_union_demonstrator_bindings_resolve_end_to_end() -> 
     Esquema Unión observations."""
     from decimal import Decimal
 
-    from ....iva import (
-        EUMemberState,
-        InvoiceKind,
-        IvaRateKind,
-        OssIossRegime,
-        TransactionKind,
-    )
+    from ....iva.classification import InvoiceKind, TransactionKind
+    from ....iva.oss import OssIossRegime
+    from ....iva.schema import EUMemberState, IvaRateKind
 
     modelo, _ = _load_modelo_369()
     revision = modelo.revisions["esquema-union"]
@@ -565,13 +561,9 @@ def test_modelo_369_esquema_importacion_ioss_binding_resolves_low_value_sale() -
     """
     from decimal import Decimal
 
-    from ....iva import (
-        EUMemberState,
-        InvoiceKind,
-        IvaRateKind,
-        OssIossRegime,
-        TransactionKind,
-    )
+    from ....iva.classification import InvoiceKind, TransactionKind
+    from ....iva.oss import OssIossRegime
+    from ....iva.schema import EUMemberState, IvaRateKind
 
     modelo, _ = _load_modelo_369()
     revision = modelo.revisions["esquema-importacion"]
@@ -646,13 +638,9 @@ def test_modelo_369_esquema_union_cuota_total_resolves_end_to_end() -> None:
     bound casillas → cuota-total formula sum."""
     from decimal import Decimal
 
-    from ....iva import (
-        EUMemberState,
-        InvoiceKind,
-        IvaRateKind,
-        OssIossRegime,
-        TransactionKind,
-    )
+    from ....iva.classification import InvoiceKind, TransactionKind
+    from ....iva.oss import OssIossRegime
+    from ....iva.schema import EUMemberState, IvaRateKind
     from ..formula_runtime import calculate_registry_snapshot
 
     modelo, _ = _load_modelo_369()
@@ -725,13 +713,9 @@ def test_modelo_369_esquema_union_cuota_total_resolves_end_to_end() -> None:
 def test_modelo_369_esquema_importacion_cuota_total_resolves_end_to_end() -> None:
     from decimal import Decimal
 
-    from ....iva import (
-        EUMemberState,
-        InvoiceKind,
-        IvaRateKind,
-        OssIossRegime,
-        TransactionKind,
-    )
+    from ....iva.classification import InvoiceKind, TransactionKind
+    from ....iva.oss import OssIossRegime
+    from ....iva.schema import EUMemberState, IvaRateKind
     from ..formula_runtime import calculate_registry_snapshot
 
     modelo, _ = _load_modelo_369()

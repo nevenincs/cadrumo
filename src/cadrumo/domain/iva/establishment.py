@@ -93,8 +93,8 @@ from ...core.identity import (
 from ...core.parsing import normalise_iso_3166_alpha2_jurisdiction
 from ...core.resources import bundled_path
 from ...core.text_fold import fold_printed_phrase
-from ._classification import IvaTerritorialScope
-from ._schema import EUMemberState
+from .classification import IvaTerritorialScope
+from .schema import EUMemberState
 
 __all__ = [
     "SPAIN_COUNTRY_CODE",

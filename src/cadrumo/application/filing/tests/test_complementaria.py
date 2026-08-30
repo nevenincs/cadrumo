@@ -12,16 +12,9 @@ import pytest
 
 from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.filing import (
-    ModeloAmendmentError,
-    ModeloBuilderError,
-    ModeloDraft,
-    ModeloInputs,
-    ModeloValue,
-    ModeloValueKind,
-    compute_modelo_draft_id,
-    registry_schema_version,
-)
+from ....domain.filing.errors import ModeloAmendmentError, ModeloBuilderError
+from ....domain.filing.protocols import ModeloInputs
+from ....domain.filing.schema import ModeloDraft, ModeloValue, ModeloValueKind, compute_modelo_draft_id, registry_schema_version
 from ....domain.submission import (
     ModeloDraftStatus,
     ModeloPresentado,

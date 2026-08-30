@@ -10,7 +10,7 @@ from ...core import STRICT_FROZEN_HIDDEN_INPUT_CONFIG, BindingSourceKind
 from ...core.identity import ContentDigest
 from ...domain.calculations import RowBindingKey
 from ...domain.calculations.registry.ids import BindingId
-from ...domain.filing import ModeloBindingValue, ModeloDraft, compute_modelo_draft_id
+from ...domain.filing.schema import ModeloBindingValue, ModeloDraft, compute_modelo_draft_id
 from ...domain.identifiers import canonical_decimal_string
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.errors import ModeloValidationError

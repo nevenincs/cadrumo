@@ -17,10 +17,8 @@ from .....core.aggregation import BindingAggregationOp, BindingSourceKind
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
 from .....tests.registry_observations import registry_grounded_modelo_observation
-from ....iva import (
-    IvaDeductionClassificationProvenance,
-    IvaLedgerObservationRole,
-)
+from ....iva.deduction_facts import IvaDeductionClassificationProvenance
+from ....iva.schema import IvaLedgerObservationRole
 from .._validate import RegistryValidator
 from ..authority import bundled_authority
 from ..binding_aggregation import binding_aggregation_op
@@ -624,11 +622,8 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
     ledger_iva_aggregation runtime resolver."""
     from decimal import Decimal
 
-    from ....iva import (
-        IvaCategory,
-        IvaFlowDirection,
-        IvaRateKind,
-    )
+    from ....iva.flow import IvaFlowDirection
+    from ....iva.schema import IvaCategory, IvaRateKind
     from ..ledger_bindings import (
         IvaLedgerObservation,
         resolve_ledger_iva_aggregation_binding_values,

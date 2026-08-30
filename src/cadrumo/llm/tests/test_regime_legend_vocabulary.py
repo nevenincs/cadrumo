@@ -42,7 +42,8 @@ from typing import Final
 import pytest
 
 from ...core import FieldOrigin
-from ...domain.iva import REGIME_LEGENDS, IvaCategory, RegimeLegend, regime_legend_phrases
+from ...domain.iva.regime_legend import REGIME_LEGENDS, RegimeLegend, regime_legend_phrases
+from ...domain.iva.schema import IvaCategory
 from ...tests.attribute_scope import scoped_attribute
 from .. import invoice_extraction_prompt as _invoice_extraction_prompt
 from ..invoice_extraction_prompt import (

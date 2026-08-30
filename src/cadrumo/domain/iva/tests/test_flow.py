@@ -8,7 +8,7 @@ that repercutido, soportado, and inversión del sujeto pasivo stay aligned acros
 the domain substrate, registry legal excerpts, and modelo aggregation bindings.
 
 See Also:
-    :mod:`~domain.iva._flow`
+    :mod:`~domain.iva.flow`
         Flow-direction enum, settlement-side mapping, and canonical predicates
         under test.
     :mod:`~application.aggregation._iva_ledger`
@@ -28,15 +28,15 @@ import pytest
 from ....core.resources import bundled_path
 from ...calculations.registry.authority import bundled_authority
 from ...calculations.registry.binding_selector_utils import selector_as_dict
-from .. import (
-    InvoiceKind,
-    IvaCategory,
+from ..classification import InvoiceKind
+from ..flow import (
     IvaFlowDirection,
     derive_flow_for_classification,
     is_deducible_flow,
     is_devengada_flow,
     settlement_sides_for_flow,
 )
+from ..schema import IvaCategory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -260,7 +260,7 @@ def test_received_eu_service_reaches_the_devengada_side_not_only_the_deducible()
     under-declaration on Modelo 303, not a casilla mix-up, and it is invisible
     from the value of any single casilla.
     """
-    from .. import IvaSettlementSide, is_deducible_flow, is_devengada_flow, settlement_sides_for_flow
+    from ..flow import IvaSettlementSide, is_deducible_flow, is_devengada_flow, settlement_sides_for_flow
 
     flow = derive_flow_for_classification(
         category=IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
@@ -343,7 +343,7 @@ def test_iva_settlement_side_enum_has_two_closed_members() -> None:
     """IVA settlement rests on two cornerstones — devengada (output IVA
     owed to the Treasury) and deducible (input IVA reclaimable from the
     Treasury). The enum must be closed at exactly these two members."""
-    from .. import IvaSettlementSide
+    from ..flow import IvaSettlementSide
 
     assert {s for s in IvaSettlementSide} == {
         IvaSettlementSide.DEVENGADA,
@@ -352,7 +352,7 @@ def test_iva_settlement_side_enum_has_two_closed_members() -> None:
 
 
 def test_iva_settlement_side_string_values_are_kebab_case() -> None:
-    from .. import IvaSettlementSide
+    from ..flow import IvaSettlementSide
 
     assert IvaSettlementSide.DEVENGADA.value == "devengada"
     assert IvaSettlementSide.DEDUCIBLE.value == "deducible"
@@ -361,7 +361,7 @@ def test_iva_settlement_side_string_values_are_kebab_case() -> None:
 def test_repercutido_flow_contributes_to_devengada_only() -> None:
     """LIVA art 88 — repercusión charges output IVA to the customer;
     nothing on the deducible side."""
-    from .. import IvaSettlementSide, settlement_sides_for_flow
+    from ..flow import IvaSettlementSide, settlement_sides_for_flow
 
     sides = settlement_sides_for_flow(IvaFlowDirection.REPERCUTIDO)
     assert sides == frozenset({IvaSettlementSide.DEVENGADA})
@@ -370,7 +370,7 @@ def test_repercutido_flow_contributes_to_devengada_only() -> None:
 def test_soportado_flow_contributes_to_deducible_only() -> None:
     """LIVA art 92 — cuotas tributarias deducibles; the sujeto pasivo
     bears IVA via direct repercusión and may deduct it."""
-    from .. import IvaSettlementSide, settlement_sides_for_flow
+    from ..flow import IvaSettlementSide, settlement_sides_for_flow
 
     sides = settlement_sides_for_flow(IvaFlowDirection.SOPORTADO)
     assert sides == frozenset({IvaSettlementSide.DEDUCIBLE})
@@ -381,14 +381,14 @@ def test_autorepercutido_flow_contributes_to_both_sides() -> None:
     self-assesses BOTH a devengada entry and a matching deducible entry
     on the same operation. The two cancel arithmetically inside Modelo
     303 but both must be booked."""
-    from .. import IvaSettlementSide, settlement_sides_for_flow
+    from ..flow import IvaSettlementSide, settlement_sides_for_flow
 
     sides = settlement_sides_for_flow(IvaFlowDirection.INVERSION_SUJETO_PASIVO)
     assert sides == frozenset({IvaSettlementSide.DEVENGADA, IvaSettlementSide.DEDUCIBLE})
 
 
 def test_devengada_flow_directions_set_matches_devengada_predicate() -> None:
-    from .. import DEVENGADA_FLOW_DIRECTIONS, is_devengada_flow
+    from ..flow import DEVENGADA_FLOW_DIRECTIONS, is_devengada_flow
 
     assert {
         IvaFlowDirection.REPERCUTIDO,
@@ -399,7 +399,7 @@ def test_devengada_flow_directions_set_matches_devengada_predicate() -> None:
 
 
 def test_deducible_flow_directions_set_matches_deducible_predicate() -> None:
-    from .. import DEDUCIBLE_FLOW_DIRECTIONS, is_deducible_flow
+    from ..flow import DEDUCIBLE_FLOW_DIRECTIONS, is_deducible_flow
 
     assert {
         IvaFlowDirection.SOPORTADO,
@@ -413,10 +413,7 @@ def test_devengada_and_deducible_flow_sets_intersect_at_autorepercutido() -> Non
     """The intersection of the two cornerstone flow sets is exactly
     INVERSION_SUJETO_PASIVO — the only flow that contributes to both sides on
     the same operation."""
-    from .. import (
-        DEDUCIBLE_FLOW_DIRECTIONS,
-        DEVENGADA_FLOW_DIRECTIONS,
-    )
+    from ..flow import DEDUCIBLE_FLOW_DIRECTIONS, DEVENGADA_FLOW_DIRECTIONS
 
     assert (
         frozenset({IvaFlowDirection.INVERSION_SUJETO_PASIVO}) == DEVENGADA_FLOW_DIRECTIONS & DEDUCIBLE_FLOW_DIRECTIONS
@@ -436,10 +433,7 @@ def test_devengada_and_deducible_flow_sets_union_to_every_settling_flow() -> Non
     is preserved and sharpened in the mapping-totality test below, which checks
     membership of the mapping rather than non-emptiness of its values.
     """
-    from .. import (
-        DEDUCIBLE_FLOW_DIRECTIONS,
-        DEVENGADA_FLOW_DIRECTIONS,
-    )
+    from ..flow import DEDUCIBLE_FLOW_DIRECTIONS, DEVENGADA_FLOW_DIRECTIONS
 
     settling = set(IvaFlowDirection) - {IvaFlowDirection.OPERACION_CON_INVERSION}
     assert settling == DEVENGADA_FLOW_DIRECTIONS | DEDUCIBLE_FLOW_DIRECTIONS
@@ -455,7 +449,7 @@ def test_settlement_sides_mapping_is_total_over_flow_directions() -> None:
     to settle on neither side. Asserting non-emptiness conflated the two and
     would forbid ever recording an operation that bears no cuota.
     """
-    from .. import settlement_sides_for_flow
+    from ..flow import settlement_sides_for_flow
 
     assert len(list(IvaFlowDirection)) > 0
     for flow in IvaFlowDirection:
@@ -472,10 +466,7 @@ def test_modelo_303_devengada_formula_matches_devengada_flow_set() -> None:
     tiers) + INVERSION_SUJETO_PASIVO — the same flows as DEVENGADA_FLOW_DIRECTIONS.
     This test is a contract gate: if the substrate's devengada set ever
     changes, this test fires unless 303's formula updates in lockstep."""
-    from .. import (
-        DEVENGADA_FLOW_DIRECTIONS,
-        IvaFlowDirection,
-    )
+    from ..flow import DEVENGADA_FLOW_DIRECTIONS, IvaFlowDirection
 
     m303 = bundled_authority().modelo("303")
     revision = m303.revisions["2022"]

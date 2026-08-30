@@ -39,7 +39,8 @@ from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.config import Settings
 from ....domain.invoices.decomposition import decompose_invoice
-from ....domain.iva import InvoiceKind, IvaCategory, IvaRateKind
+from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import IvaCategory, IvaRateKind
 from ..evidence_draft import (
     InvoiceDraft,
     InvoiceDraftRateBreakdown,

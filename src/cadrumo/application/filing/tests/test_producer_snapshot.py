@@ -33,17 +33,9 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.deadlines.models import ChargeAccount, IVARegime, M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile, RefundAccount, TaxpayerProfile
-from ....domain.filing import (
-    ModeloDraft,
-    compute_modelo_draft_id,
-    registry_schema_version,
-)
+from ....domain.filing.schema import ModeloDraft, compute_modelo_draft_id, registry_schema_version
 from ....domain.filing_evidence import FilingEvidenceReference
-from ....domain.iva import (
-    M303RegimenSimplificadoScope,
-    M303RegimenSimplificadoScopeDecision,
-    RegimenSimplificadoFilingRows,
-)
+from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision, RegimenSimplificadoFilingRows
 from ....domain.modelos.calculation_revision import (
     CalculationRevisionAmendmentKind,
     FilingInstanceEvidence,

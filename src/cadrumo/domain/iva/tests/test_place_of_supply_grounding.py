@@ -26,14 +26,14 @@ from datetime import date
 import pytest
 
 from ....core.resources import bundled_path
-from .. import SupplyNature
-from .._classification import _CLASSIFICATION_RULES, _R99_FALLTHROUGH_ID
-from .._place_of_supply import (
+from ..classification import _CLASSIFICATION_RULES, _R99_FALLTHROUGH_ID
+from ..place_of_supply import (
     IvaPlaceOfSupplyRule,
     load_place_of_supply_table,
     place_of_supply_rule,
     required_supply_nature_for_rule,
 )
+from ..supply_nature import SupplyNature
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -216,7 +216,7 @@ def test_the_enum_prose_does_not_attribute_a_nature_to_the_union_scheme_article(
     that misled -- a member described as a goods-or-services kind whose stated
     authority is the article that establishes neither.
     """
-    from .._classification import TransactionKind
+    from ..classification import TransactionKind
 
     doc = TransactionKind.__doc__ or ""
     assert doc, "the enum lost its docstring; this guard would pass vacuously"

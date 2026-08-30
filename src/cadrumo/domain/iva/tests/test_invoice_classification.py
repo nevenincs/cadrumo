@@ -15,20 +15,14 @@ from ....core.directory_scan import scan_directory
 from ...calculations.registry.authority import bundled_authority
 from ...calculations.registry.ledger_bindings import IvaLedgerObservation
 from ...invoices.enums import IvaRate
-from .. import (
-    InvoiceKind,
-    IvaCashAccountingTreatment,
-    IvaCategory,
-    IvaDeductionClassificationProvenance,
-    IvaFlowDirection,
-    IvaLedgerObservationRole,
-    IvaRateKind,
-    IvaSettlementSide,
-)
-from .._invoice_classification import (
+from ..classification import InvoiceKind
+from ..deduction_facts import IvaDeductionClassificationProvenance
+from ..flow import IvaFlowDirection, IvaSettlementSide
+from ..invoice_classification import (
     IvaInvoiceClassification,
     classify_invoice_line_for_iva,
 )
+from ..schema import IvaCashAccountingTreatment, IvaCategory, IvaLedgerObservationRole, IvaRateKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -137,7 +131,7 @@ def test_invoice_line_to_iva_observation_builds_repercutido_record_for_issued() 
     from datetime import date
     from decimal import Decimal
 
-    from .._invoice_classification import invoice_line_to_iva_observation
+    from ..invoice_classification import invoice_line_to_iva_observation
 
     obs = invoice_line_to_iva_observation(
         invoice_id="inv-001",
@@ -176,7 +170,7 @@ def test_invoice_observation_carries_the_rate_the_line_charged_not_its_tier_defa
     """
     from datetime import date
 
-    from .._invoice_classification import invoice_line_to_iva_observation
+    from ..invoice_classification import invoice_line_to_iva_observation
 
     in_window = date(2024, 11, 15)
     two_percent = invoice_line_to_iva_observation(
@@ -230,7 +224,7 @@ def test_invoice_sourced_rows_reach_their_own_rate_specific_box() -> None:
     from ...calculations.registry.ledger_bindings import resolve_ledger_iva_aggregation_binding_values
     from ...calculations.registry.schema import DataBindingDefinition, ModeloRevision
     from ...calculations.registry.schema_references import PeriodSelector
-    from .._invoice_classification import invoice_line_to_iva_observation
+    from ..invoice_classification import invoice_line_to_iva_observation
 
     def _rate_box(binding_id: str, rate: Decimal) -> DataBindingDefinition:
         return DataBindingDefinition(
@@ -303,7 +297,7 @@ def test_invoice_line_to_iva_observation_builds_soportado_record_for_received() 
     from datetime import date
     from decimal import Decimal
 
-    from .._invoice_classification import invoice_line_to_iva_observation
+    from ..invoice_classification import invoice_line_to_iva_observation
 
     obs = invoice_line_to_iva_observation(
         invoice_id="bill-77",
@@ -329,7 +323,7 @@ def test_invoice_line_to_iva_observation_refuses_received_input_without_exact_au
     """A received invoice cannot become deductible IVA by a domestic-current default."""
     from datetime import date
 
-    from .._invoice_classification import invoice_line_to_iva_observation
+    from ..invoice_classification import invoice_line_to_iva_observation
 
     with pytest.raises(TypeError, match=r"deduction_fact_kind|deduction_provenance"):
         cast(Any, invoice_line_to_iva_observation)(
@@ -356,7 +350,7 @@ def test_invoice_line_to_iva_observation_refuses_received_input_without_exact_au
 def test_invoice_line_to_iva_observation_rejects_non_decimal_amounts() -> None:
     from datetime import date
 
-    from .._invoice_classification import invoice_line_to_iva_observation
+    from ..invoice_classification import invoice_line_to_iva_observation
 
     with pytest.raises(ValidationError, match=r"base_amount|iva_amount|Decimal|decimal"):
         invoice_line_to_iva_observation(
@@ -380,7 +374,7 @@ def test_invoice_line_observation_feeds_modelo_303_binding_resolver_end_to_end()
     from decimal import Decimal
 
     from ...calculations.registry.ledger_bindings import resolve_ledger_iva_aggregation_binding_values
-    from .._invoice_classification import invoice_line_to_iva_observation
+    from ..invoice_classification import invoice_line_to_iva_observation
 
     m303 = bundled_authority().modelo("303")
     revision = m303.revisions["2022"]

@@ -40,7 +40,7 @@ imponible but still something the client owes -- a third position on the
 identity, joining neither ``taxable_base`` nor ``cuota``.
 
 See Also:
-    :mod:`cadrumo.domain.iva._components`
+    :mod:`cadrumo.domain.iva.components`
         Axis A -- which components an operation in each category has.
     :mod:`cadrumo.domain.transactions._retencion_parameters`
         The RIRPF art. 95 rates bounding the row-level retención inference.
@@ -57,13 +57,8 @@ from pydantic import BaseModel, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.identity import InvoiceId
-from ..iva import (
-    IvaCategory,
-    IvaComponentPresence,
-    IvaKindApplicability,
-    category_bears_taxable_base,
-    category_components,
-)
+from ..iva.components import IvaComponentPresence, IvaKindApplicability, category_bears_taxable_base, category_components
+from ..iva.schema import IvaCategory
 from .errors import InvoiceValidationError
 
 if TYPE_CHECKING:

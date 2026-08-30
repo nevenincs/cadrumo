@@ -45,7 +45,8 @@ from ...application.ledger.evidence import PurchaseInvoiceEvidenceInputError
 from ...application.ledger.evidence_draft import FieldProvenance, InvoiceDraft
 from ...core import FieldGroundingOutcome, FieldOrigin, Period
 from ...domain.calculations.registry.authority import bundled_authority
-from ...domain.iva import EUMemberState, load_iva_rate_table
+from ...domain.iva.rates import load_iva_rate_table
+from ...domain.iva.schema import EUMemberState
 from ..invoice_extraction_prompt import (
     INVOICE_EXTRACTION_PROMPT_ID,
     INVOICE_EXTRACTION_PROMPT_VERSION,

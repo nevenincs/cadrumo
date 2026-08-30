@@ -34,7 +34,8 @@ import pytest
 
 from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
-from ....domain.filing import CasillaSchemaProvider, ModeloDraft
+from ....domain.filing.protocols import CasillaSchemaProvider
+from ....domain.filing.schema import ModeloDraft
 from ....domain.submission import ModeloDraftStatus
 from ....tests.secure_sql import TestRuntimeProfile
 from ...calculations import CalculationObservationRepository

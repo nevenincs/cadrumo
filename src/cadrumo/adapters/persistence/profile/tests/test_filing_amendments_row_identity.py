@@ -26,15 +26,8 @@ import pytest
 
 from .....core import CasillaId, Period, validated_casilla_id
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from .....domain.filing import (
-    CasillaChange,
-    ModeloComplementaria,
-    ModeloDraft,
-    ModeloValue,
-    ModeloValueKind,
-    compute_modelo_draft_id,
-    registry_schema_version,
-)
+from .....domain.filing.amendment import CasillaChange, ModeloComplementaria
+from .....domain.filing.schema import ModeloDraft, ModeloValue, ModeloValueKind, compute_modelo_draft_id, registry_schema_version
 from .....domain.submission import ModeloDraftStatus
 from ...storage import FILING_AMENDMENTS_NAMESPACE, Envelope, SecureObjectRowIdentityError
 from ...storage.sql.secure_objects import SecureObjectRepository
