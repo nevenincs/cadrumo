@@ -5,7 +5,8 @@ from pathlib import Path
 import pytest
 import yaml
 
-from cadrumo.application.operator_surface import MOUNTED_COMMAND_FAMILIES, FamilyMountState
+from cadrumo.application.operator_surface.contract import MOUNTED_COMMAND_FAMILIES
+from cadrumo.application.operator_surface.models import FamilyMountState
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, OutputLanguage
 from cadrumo.tests.cli_runner import invoke_typer_app
