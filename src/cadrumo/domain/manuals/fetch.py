@@ -27,9 +27,9 @@ from ...core.hashing import hash_file
 from ...core.logging import get_logger
 from ...core.paths import resolve_relative_subpath
 from ...core.time import now
-from ._loader import resolve_part_root
-from ._schema import FetchedManualPart, ManualId, ManualPart
 from .errors import ManifestError
+from .loader import resolve_part_root
+from .schema import FetchedManualPart, ManualId, ManualPart
 
 _logger = get_logger(__name__)
 
@@ -205,7 +205,7 @@ def lookup_spec(manual_id: ManualId, year: int, part: ManualPart) -> PartSpec:
             return spec
     raise ManifestError(
         f"no canonical URL registered for {manual_id.value}/{year}/{part.value}; "
-        "add a PartSpec entry to cadrumo.domain.manuals._fetch.PART_SPECS",
+        "add a PartSpec entry to cadrumo.domain.manuals.fetch.PART_SPECS",
     )
 
 

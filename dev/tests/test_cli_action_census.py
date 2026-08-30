@@ -82,14 +82,14 @@ def test_census_observes_real_definition_producer_and_command_literal_sites(
     keys = {record.key for record in records}
 
     assert (
-        "src/cadrumo/application/overview/_data_prep.py",
+        "src/cadrumo/application/overview/data_prep.py",
         "DataPrepStep",
         "definition",
         "next_action",
         "<none>",
     ) in keys
     assert (
-        "src/cadrumo/application/overview/_data_prep.py",
+        "src/cadrumo/application/overview/data_prep.py",
         "_work_unit_step",
         "producer",
         "next_action",
@@ -110,7 +110,7 @@ def test_census_observes_current_action_producers_and_command_literals(
     records: tuple[CandidateRecord, ...],
 ) -> None:
     """Live overview and wizard action shapes remain first-class observations."""
-    overview_path = "src/cadrumo/application/overview/_pipeline_health.py"
+    overview_path = "src/cadrumo/application/overview/pipeline_health.py"
 
     assert {
         (

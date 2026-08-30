@@ -25,8 +25,8 @@ from decimal import Decimal
 
 import pytest
 
-from .. import Arrendamiento
-from .._tier_resolver import (
+from ..models import Arrendamiento
+from ..tier_resolver import (
     REHAB_LOOKBACK_YEARS,
     _qualifies_for_tier_60_rehab,
     _resolve_rehab_lookback_years,

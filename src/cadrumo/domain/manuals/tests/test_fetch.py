@@ -12,17 +12,9 @@ from pydantic import AnyHttpUrl
 from ....core.directory_scan import scan_directory
 from ....core.external_constants import load_external_constants
 from ....core.resources import bundled_path
-from .. import (
-    PART_SPECS,
-    FetchedManualPart,
-    ManualId,
-    ManualPart,
-    load_manifest,
-    lookup_spec,
-    verify_fetched_pdf,
-    write_manifest,
-)
 from ..errors import ManifestError
+from ..fetch import PART_SPECS, load_manifest, lookup_spec, verify_fetched_pdf, write_manifest
+from ..schema import FetchedManualPart, ManualId, ManualPart
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

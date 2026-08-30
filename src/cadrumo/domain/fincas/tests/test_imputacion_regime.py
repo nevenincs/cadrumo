@@ -13,7 +13,8 @@ from decimal import Decimal
 
 import pytest
 
-from .. import Finca, UseType
+from ..enums import UseType
+from ..models import Finca
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -1,7 +1,7 @@
 """Tests asserting LIRPF art. 85 imputación parameters live in the registry.
 
 The rates and lookback must derive from ``registry/aeat/legal/irpf.toml``
-rather than from Python literals on :mod:`cadrumo.domain.fincas._aggregates`.
+rather than from Python literals on :mod:`cadrumo.domain.fincas.aggregates`.
 """
 
 from __future__ import annotations
@@ -15,12 +15,12 @@ from pydantic import ValidationError
 
 from ....core.resources import bundled_path
 from ...calculations.registry.authority import bundled_authority
-from .._imputacion_parameters import (
+from ..errors import FincaValidationError
+from ..imputacion_parameters import (
     LirpfArt85ImputacionParameters,
     _parameters_from_catalogue,
     load_imputacion_parameters,
 )
-from ..errors import FincaValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

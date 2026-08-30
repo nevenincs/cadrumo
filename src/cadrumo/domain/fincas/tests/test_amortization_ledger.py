@@ -13,14 +13,10 @@ from decimal import Decimal
 
 import pytest
 
-from .. import (
-    AmortizationLedgerCapExceededError,
-    Finca,
-    FincaRendimientoRecord,
-    UseType,
-    computation_to_ledger_entry,
-    compute_amortization_for_year,
-)
+from ..amortization_ledger import computation_to_ledger_entry, compute_amortization_for_year
+from ..enums import UseType
+from ..errors import AmortizationLedgerCapExceededError
+from ..models import Finca, FincaRendimientoRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

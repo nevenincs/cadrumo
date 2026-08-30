@@ -22,16 +22,9 @@ from ....adapters.persistence.storage import (
 )
 from ....adapters.persistence.storage.sql.engine import get_engine
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import (
-    Arrendamiento,
-    ExpenseCategory,
-    Finca,
-    FincaGasto,
-    FincaRendimientoRecord,
-    ReduccionTier,
-    UseType,
-    compute_finca_aggregates,
-)
+from ..aggregates import compute_finca_aggregates
+from ..enums import ExpenseCategory, ReduccionTier, UseType
+from ..models import Arrendamiento, Finca, FincaGasto, FincaRendimientoRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -318,7 +318,7 @@ _ADJUDICATED: Final[tuple[_Adjudication, ...]] = (
         ),
     ),
     _Adjudication(
-        path="src/cadrumo/llm/_invoice_field_grounding.py",
+        path="src/cadrumo/llm/invoice_field_grounding.py",
         model="_ExtractedInvoiceFieldClaims",
         field="supplier_tax_id",
         group="raw/prevalidation tax inputs",
@@ -330,21 +330,21 @@ _ADJUDICATED: Final[tuple[_Adjudication, ...]] = (
         ),
     ),
     _Adjudication(
-        path="src/cadrumo/llm/_invoice_field_grounding.py",
+        path="src/cadrumo/llm/invoice_field_grounding.py",
         model="_ExtractedInvoiceFieldClaims",
         field="customer_tax_id",
         group="raw/prevalidation tax inputs",
         reason="As the supplier claim on this model: verbatim extraction, anchor matching.",
     ),
     _Adjudication(
-        path="src/cadrumo/llm/_invoice_field_grounding.py",
+        path="src/cadrumo/llm/invoice_field_grounding.py",
         model="ExtractedRoleEvidence",
         field="supplier_tax_id",
         group="raw/prevalidation tax inputs",
         reason="As the claim model: role evidence quotes the extracted text verbatim for anchoring.",
     ),
     _Adjudication(
-        path="src/cadrumo/llm/_invoice_field_grounding.py",
+        path="src/cadrumo/llm/invoice_field_grounding.py",
         model="ExtractedRoleEvidence",
         field="customer_tax_id",
         group="raw/prevalidation tax inputs",
@@ -528,7 +528,7 @@ _ADJUDICATED: Final[tuple[_Adjudication, ...]] = (
         ),
     ),
     _Adjudication(
-        path="src/cadrumo/domain/transactions/_models.py",
+        path="src/cadrumo/domain/transactions/models.py",
         model="Transaction",
         field="invoice_id",
         group="open ledger-source references",
@@ -538,7 +538,7 @@ _ADJUDICATED: Final[tuple[_Adjudication, ...]] = (
         ),
     ),
     _Adjudication(
-        path="src/cadrumo/domain/transactions/_raw_transaction.py",
+        path="src/cadrumo/domain/transactions/raw_transaction.py",
         model="RawTransaction",
         field="provider_transaction_id",
         group="verbatim external evidence",

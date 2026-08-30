@@ -23,16 +23,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
 
     from ....core.config import Settings
-    from ....domain.manuals import (
-        Manual,
-        ManualCasillaReference,
-        ManualCatalogue,
-        ManualId,
-        ManualPart,
-        Rule,
-        RuleKind,
-        Section,
-    )
+    from ....domain.manuals.schema import Manual, ManualCasillaReference, ManualCatalogue, ManualId, ManualPart, Rule, RuleKind, Section
 
 
 class ManualKey(TypedResourceKey):
@@ -60,7 +51,7 @@ class ManualKey(TypedResourceKey):
         quote regulatory text from. Failing closed at key construction keeps a
         mis-keyed lookup from ever selecting an authority.
         """
-        from ....domain.manuals import ManualPart
+        from ....domain.manuals.schema import ManualPart
 
         try:
             return str(ManualPart(value))
@@ -97,7 +88,8 @@ class ManualRepository(ResourceCacheRepository["Manual", ManualKey]):
 
     @override
     def _load(self, key: ManualKey) -> Manual:
-        from ....domain.manuals import ManualId, ManualPart, load_manual
+        from ....domain.manuals.loader import load_manual
+        from ....domain.manuals.schema import ManualId, ManualPart
 
         manual_id = ManualId(key.manual_id)
         # No fallback: ManualKey already refused any part outside the canonical
@@ -112,7 +104,7 @@ class ManualRepository(ResourceCacheRepository["Manual", ManualKey]):
 
     def catalogue(self, specs: Iterable[tuple[ManualId, int, ManualPart]]) -> ManualCatalogue:
         """Return a :class:`ManualCatalogue` aggregate for ``specs``."""
-        from ....domain.manuals import load_catalogue
+        from ....domain.manuals.loader import load_catalogue
 
         return load_catalogue(specs, settings=self._settings())
 
@@ -129,7 +121,7 @@ class ManualRepository(ResourceCacheRepository["Manual", ManualKey]):
         Yields each matching :class:`Rule` from the catalogue in
         encounter order.
         """
-        from ....domain.manuals import find_rules
+        from ....domain.manuals.loader import find_rules
 
         return find_rules(
             catalogue,
@@ -144,6 +136,6 @@ class ManualRepository(ResourceCacheRepository["Manual", ManualKey]):
 
         Yields each :class:`Section` from ``manual`` in document order.
         """
-        from ....domain.manuals import iter_sections
+        from ....domain.manuals.loader import iter_sections
 
         return iter_sections(manual, settings=self._settings())

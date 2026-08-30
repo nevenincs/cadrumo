@@ -25,8 +25,8 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.money import round_to_cents as _round_to_cents
-from ._enums import ExpenseCategory
-from ._models import FincaGasto
+from .enums import ExpenseCategory
+from .models import FincaGasto
 
 CARRY_FORWARD_MAX_YEARS: int = 4
 """LIRPF art. 23.1.a) párrafo segundo: ``en los cuatro años siguientes``."""

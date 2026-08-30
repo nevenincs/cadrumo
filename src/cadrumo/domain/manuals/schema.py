@@ -292,6 +292,7 @@ class ManualCatalogue(_ManualStrictFrozen):
     manuals: tuple[Manual, ...] = Field(default_factory=tuple)
 
     def __len__(self) -> int:
+        """How many manuals the aggregate holds."""
         return len(self.manuals)
 
 

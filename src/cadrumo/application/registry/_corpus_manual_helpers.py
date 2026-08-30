@@ -18,18 +18,10 @@ from ...domain.calculations.registry.authority import (
     bundled_authority,
 )
 from ...domain.calculations.registry.errors import RegistrySnapshotError
-from ...domain.manuals import (
-    ManualCasillaReference,
-    ManualId,
-    ManualPart,
-    ManualVerificationIssue,
-    ManualVerificationReport,
-    RuleKind,
-    iter_sections,
-    load_manifest,
-    load_manual,
-    resolve_part_root,
-)
+from ...domain.manuals.fetch import load_manifest
+from ...domain.manuals.loader import iter_sections, load_manual, resolve_part_root
+from ...domain.manuals.schema import ManualCasillaReference, ManualId, ManualPart, RuleKind
+from ...domain.manuals.verify import ManualVerificationIssue, ManualVerificationReport
 from .errors import RegistryPreconditionCondition, registry_terminal_refusal
 
 _LOGGER = get_logger(__name__)

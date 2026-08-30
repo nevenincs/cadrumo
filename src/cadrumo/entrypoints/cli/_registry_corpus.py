@@ -29,7 +29,7 @@ from ...application.registry.corpus import (
     verify_registry_manual,
 )
 from ...core.json_contract import strict_round_trip
-from ...domain.manuals import ManualPart
+from ...domain.manuals.schema import ManualPart
 from ._common import emit_envelope
 from ._registry_corpus_payloads import (
     CitationListResult,

@@ -73,7 +73,7 @@ _LITERAL_NON_PROFILE_EXCLUSIONS = (
         "blank IVA answers prove no block is claimed",
     ),
     _ProfileShapeExclusion(
-        "src/cadrumo/application/overview/_calendar_warnings.py",
+        "src/cadrumo/application/overview/calendar_warnings.py",
         None,
         "warning metadata",
     ),

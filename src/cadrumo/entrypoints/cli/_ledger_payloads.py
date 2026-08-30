@@ -33,7 +33,6 @@ sub-app payload families).
 
 from __future__ import annotations
 
-from datetime import date
 from typing import TYPE_CHECKING
 
 from pydantic import Field, NonNegativeInt, field_validator, model_validator
@@ -57,6 +56,7 @@ from ...core.identity import (
     WorkUnitId,
 )
 from ...core.json_contract import OutputRootSchema, OutputSchema
+from ...core.parsing import parse_iso8601_date
 from ...core.text_bounds import NonEmptyStr
 from ._ledger_business_payloads import (
     AttachmentReviewPayload,
@@ -826,10 +826,8 @@ class LedgerExportRowPayload(OutputSchema):
     @classmethod
     def _require_iso_date(cls, value: str) -> str:
         """Keep exported mandatory dates parseable without changing their JSON wire form."""
-        try:
-            date.fromisoformat(value)
-        except ValueError as exc:
-            raise ValueError("must be an ISO-8601 date") from exc
+        if parse_iso8601_date(value) is None:
+            raise ValueError("must be an ISO-8601 date")
         return value
 
     @field_validator("value_date")

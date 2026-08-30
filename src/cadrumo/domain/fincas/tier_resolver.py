@@ -41,9 +41,9 @@ from ...core.calendar_shift import shift_by_calendar_years
 from ...core.logging import get_logger
 from ...core.unit_proportion import UnitProportion
 from ..calculations.registry.ids import LegalRefId
-from ._enums import ReduccionTier, UseType
-from ._models import Arrendamiento, Finca
+from .enums import ReduccionTier, UseType
 from .errors import TierResolutionError
+from .models import Arrendamiento, Finca
 
 _logger = get_logger(__name__)
 

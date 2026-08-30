@@ -30,7 +30,7 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from ._models import (
+from .models import (
     Arrendamiento,
     Finca,
     FincaAmortizacionLedgerEntry,

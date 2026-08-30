@@ -183,12 +183,12 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "os.open",
     ): "lock maintenance creates lock files, not sensitive data records",
     (
-        "src/cadrumo/core/observability/_sink.py",
+        "src/cadrumo/core/observability/sink.py",
         "_open",
         "self._target.open",
     ): "redacted diagnostic event sink",
     (
-        "src/cadrumo/core/observability/_store.py",
+        "src/cadrumo/core/observability/store.py",
         "save_events_append",
         "target.open",
     ): "redacted diagnostic event store",

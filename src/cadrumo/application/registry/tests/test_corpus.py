@@ -17,7 +17,7 @@ from ....core.external_constants import OutputLanguage
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES
 from ....core.resources import resources
 from ....core.topics import Topic, TopicCatalogue
-from ....domain.manuals import ManualId, ManualPart
+from ....domain.manuals.schema import ManualId, ManualPart
 from ..corpus import (
     RegistryCitationArticleProjection,
     RegistryCitationReferenceProjection,

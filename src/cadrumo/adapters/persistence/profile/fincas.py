@@ -1,8 +1,8 @@
 """ORM-backed repositories for the rental-register record types.
 
 These concrete repositories are the persistence adapter behind the
-read-side ports declared in :mod:`domain.fincas._repository_ports`.
-They bridge the public :mod:`domain.fincas._models` records and the
+read-side ports declared in :mod:`domain.fincas.repository_ports`.
+They bridge the public :mod:`domain.fincas.models` records and the
 internal :mod:`adapters.persistence.storage.sql._orm` mapper rows;
 every method routes through ``_flush_or_wrap`` so DB integrity violations
 surface as :class:`RepositoryError`.
@@ -23,15 +23,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from ....core.logging import get_logger
-from ....domain.fincas import (
-    Arrendamiento,
-    ExpenseCategory,
-    Finca,
-    FincaAmortizacionLedgerEntry,
-    FincaGasto,
-    FincaRendimientoRecord,
-    UseType,
-)
+from ....domain.fincas.enums import ExpenseCategory, UseType
+from ....domain.fincas.models import Arrendamiento, Finca, FincaAmortizacionLedgerEntry, FincaGasto, FincaRendimientoRecord
 
 if TYPE_CHECKING:  # pragma: no cover — type-only imports
     from ..storage.sql import _orm

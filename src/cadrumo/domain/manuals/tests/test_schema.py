@@ -9,7 +9,9 @@ from pydantic import AnyHttpUrl, ValidationError
 
 from ....core import CasillaId, validated_casilla_id
 from ....tests.aeat_literal_fixtures import manual_practicos_url
-from .. import (
+from ..errors import ManualValidationError
+from ..rule_id import generate_rule_id
+from ..schema import (
     Chapter,
     FetchedManualPart,
     LLMProvenance,
@@ -24,9 +26,7 @@ from .. import (
     Section,
     SectionRef,
     SectionSource,
-    generate_rule_id,
 )
-from ..errors import ManualValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

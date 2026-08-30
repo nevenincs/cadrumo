@@ -12,18 +12,9 @@ from ....core import CasillaId, validated_casilla_id
 from ....core.config import Settings
 from ....tests.aeat_literal_fixtures import manual_practicos_url
 from ....tests.fixtures.settings import EnvFileFreeSettings
-from .. import (
-    ManualCasillaReference,
-    ManualCatalogue,
-    ManualId,
-    ManualPart,
-    find_rules,
-    load_catalogue,
-    load_manual,
-    load_section,
-    resolve_part_root,
-)
 from ..errors import ManualNotFoundError, ManualParseError
+from ..loader import find_rules, load_catalogue, load_manual, load_section, resolve_part_root
+from ..schema import ManualCasillaReference, ManualCatalogue, ManualId, ManualPart
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

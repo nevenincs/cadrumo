@@ -46,7 +46,7 @@ def test_complexity_baseline_keys_reference_current_owner_namespaces() -> None:
 
 def test_semantic_leak_classifier_uses_cadrumo_paths_and_keeps_aeat_as_authority() -> None:
     """Fixed-width coercion has no adapter-side semantic-leak exception."""
-    canonical_codec = "src/cadrumo/domain/calculations/registry/_fixed_width_codec.py"
+    canonical_codec = "src/cadrumo/domain/calculations/registry/fixed_width_codec.py"
 
     assert semantic.is_violation(canonical_codec) is False
     assert semantic.is_violation("src/cadrumo/adapters/outbound/google/_rounding_copy.py") is True

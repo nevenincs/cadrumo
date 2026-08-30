@@ -25,20 +25,20 @@ from pydantic import BaseModel, Field
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.logging import get_logger
 from ...core.money import round_to_cents as _round_to_cents
-from ._amortization_ledger import compute_amortization_for_year
-from ._enums import ReduccionTier, UseType
-from ._expense_rollup import CarryForwardEntry, compute_gastos_for_year
-from ._imputacion_parameters import load_imputacion_parameters
-from ._models import Arrendamiento, Finca
-from ._repository_ports import (
+from .amortization_ledger import compute_amortization_for_year
+from .enums import ReduccionTier, UseType
+from .errors import FincaAggregationError
+from .expense_rollup import CarryForwardEntry, compute_gastos_for_year
+from .imputacion_parameters import load_imputacion_parameters
+from .models import Arrendamiento, Finca
+from .repository_ports import (
     ArrendamientoReader,
     FincaAmortizacionLedgerReader,
     FincaGastoReader,
     FincaReader,
     FincaRendimientoReader,
 )
-from ._tier_resolver import TierResolution, resolve_reduccion
-from .errors import FincaAggregationError
+from .tier_resolver import TierResolution, resolve_reduccion
 
 _log = get_logger(__name__)
 
@@ -384,7 +384,7 @@ def _compute_finca_amortization(
     if total_dias_alquilados == 0:
         return Decimal("0.00")
     cumulative_prior = _cumulative_through_prior_year(ledger_repo, finca.id, period_year)
-    from ._models import FincaRendimientoRecord
+    from .models import FincaRendimientoRecord
 
     amortization_input = FincaRendimientoRecord(
         contract_id=finca.id,

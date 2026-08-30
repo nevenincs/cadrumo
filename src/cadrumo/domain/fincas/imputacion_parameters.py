@@ -2,7 +2,7 @@
 
 The LIRPF art. 85 imputación-de-rentas-inmobiliarias rates and the
 catastral-revision lookback window are no longer Python literals on
-:mod:`domain.fincas._aggregates`. They live in
+:mod:`domain.fincas.aggregates`. They live in
 ``registry/aeat/legal/irpf.toml`` under ``[parameters."lirpf-art-85:*"]``
 entries with explicit BOE citations and review metadata, and the
 rental aggregator imports them from this module.

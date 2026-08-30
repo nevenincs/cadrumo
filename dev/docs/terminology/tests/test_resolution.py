@@ -236,7 +236,7 @@ def test_code_module_resolves_to_its_api_stub(resolver: TargetResolver) -> None:
     """
     from .._resolution import GroundingSurface, ResolvedTarget
 
-    out = resolver.resolve(_hit("src/cadrumo/domain/calculations/registry/_temporal.py"))
+    out = resolver.resolve(_hit("src/cadrumo/domain/calculations/registry/temporal.py"))
     assert isinstance(out, ResolvedTarget)
     assert out.surface is GroundingSurface.CODEBASE
     assert out.record.target == "api/cadrumo.domain.calculations.registry.temporal.html"
@@ -529,7 +529,7 @@ def test_batch_resolution_partitions_resolved_and_dropped() -> None:
     from .._resolution import resolve_chunk_hits
 
     hits = (
-        _hit("src/cadrumo/domain/calculations/registry/_temporal.py"),
+        _hit("src/cadrumo/domain/calculations/registry/temporal.py"),
         _hit("docs/how-to/profile-setup.md"),
         _hit("totally/unmapped/path.bin"),
     )

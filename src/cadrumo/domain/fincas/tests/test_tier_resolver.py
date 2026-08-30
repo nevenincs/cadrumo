@@ -13,15 +13,10 @@ from decimal import Decimal
 
 import pytest
 
-from .. import (
-    LEY_12_2023_IN_FORCE_DATE,
-    Arrendamiento,
-    Finca,
-    ReduccionTier,
-    TierResolutionError,
-    UseType,
-    resolve_reduccion,
-)
+from ..enums import ReduccionTier, UseType
+from ..errors import TierResolutionError
+from ..models import Arrendamiento, Finca
+from ..tier_resolver import LEY_12_2023_IN_FORCE_DATE, resolve_reduccion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

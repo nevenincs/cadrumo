@@ -176,7 +176,7 @@ _MODELO_GROUP_LITERAL_CASES: tuple[tuple[str, tuple[str, ...], str], ...] = (
         "Bare foreign-asset-modelos tuple literal found in _service.py; use FOREIGN_ASSET_MODELOS from core",
     ),
     (
-        "src/cadrumo/application/overview/_calendar.py",
+        "src/cadrumo/application/overview/calendar.py",
         ("303", "390"),
         "Bare IVA-regime-modelos tuple literal found in _calendar.py; use IVA_REGIME_MODELOS from core",
     ),
@@ -199,33 +199,33 @@ _IRPF_INT_CONSTANT_IDS = (
 
 _IRPF_INT_ALIAS_CASES: tuple[tuple[str, str, str, str], ...] = (
     (
-        "cadrumo.domain.contribuyente._deduccion_maternidad",
+        "cadrumo.domain.contribuyente.deduccion_maternidad",
         "DEDUCCION_MATERNIDAD_MENSUAL_EUR",
         "DEDUCCION_MATERNIDAD_MENSUAL_EUR",
         "_deduccion_maternidad must import DEDUCCION_MATERNIDAD_MENSUAL_EUR from cadrumo.core.external_constants",
     ),
     (
-        "cadrumo.domain.contribuyente._deduccion_maternidad",
+        "cadrumo.domain.contribuyente.deduccion_maternidad",
         "DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR",
         "DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR",
         "_deduccion_maternidad must import DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR from cadrumo.core.external_constants",
     ),
     (
-        "cadrumo.domain.contribuyente._deduccion_maternidad",
+        "cadrumo.domain.contribuyente.deduccion_maternidad",
         "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_INCREMENTO_EUR",
         "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_INCREMENTO_EUR",
         "_deduccion_maternidad must import DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_INCREMENTO_EUR from "
         "cadrumo.core.external_constants",
     ),
     (
-        "cadrumo.domain.contribuyente._deduccion_maternidad",
+        "cadrumo.domain.contribuyente.deduccion_maternidad",
         "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_ANUAL_CAP_EUR",
         "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_ANUAL_CAP_EUR",
         "_deduccion_maternidad must import DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_ANUAL_CAP_EUR from "
         "cadrumo.core.external_constants",
     ),
     (
-        "cadrumo.domain.contribuyente._deduccion_maternidad",
+        "cadrumo.domain.contribuyente.deduccion_maternidad",
         "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_FIRST_FILING_YEAR",
         "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_FIRST_FILING_YEAR",
         "_deduccion_maternidad must import DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_FIRST_FILING_YEAR from "
@@ -242,7 +242,7 @@ _IRPF_INT_ALIAS_IDS = (
 
 _MIN_LITERAL_CASES: tuple[tuple[str, str, int, str, str], ...] = (
     (
-        "src/cadrumo/domain/contribuyente/_deduccion_maternidad.py",
+        "src/cadrumo/domain/contribuyente/deduccion_maternidad.py",
         "_deduccion_maternidad.py",
         1200,
         "DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR",
@@ -260,13 +260,13 @@ _DECIMAL_CONSTANT_IDS = ("default-iva-general-rate", "amortizacion-inmueble-rate
 
 _DECIMAL_ALIAS_CASES: tuple[tuple[str, str, str, str], ...] = (
     (
-        "cadrumo.domain.fincas._amortization_ledger",
+        "cadrumo.domain.fincas.amortization_ledger",
         "AMORTIZACION_INMUEBLE_RATE",
         "AMORTIZACION_INMUEBLE_RATE",
         "_amortization_ledger must import AMORTIZACION_INMUEBLE_RATE from cadrumo.core.external_constants",
     ),
     (
-        "cadrumo.domain.fincas._amortization_ledger",
+        "cadrumo.domain.fincas.amortization_ledger",
         "ART_23_1_F_RATE",
         "AMORTIZACION_INMUEBLE_RATE",
         "_amortization_ledger must expose ART_23_1_F_RATE alias",
@@ -282,7 +282,7 @@ _DECIMAL_ALIAS_IDS = ("amortization-rate", "amortization-art-23-alias", "rebeca-
 
 _DECIMAL_LITERAL_CASES: tuple[tuple[str, str, str, str, str], ...] = (
     (
-        "src/cadrumo/domain/fincas/_amortization_ledger.py",
+        "src/cadrumo/domain/fincas/amortization_ledger.py",
         "_amortization_ledger.py",
         "0.03",
         "AMORTIZACION_INMUEBLE_RATE",

@@ -195,7 +195,8 @@ def _verify_manual_structure(repo_root: Path, source: GeneratedArtifactSource) -
             part_str = parts[idx + 3]
 
             from ....core.config import Settings
-            from ...manuals import ManualId, ManualPart, load_manual
+            from ...manuals.loader import load_manual
+            from ...manuals.schema import ManualId, ManualPart
 
             manual_id = ManualId(manual_id_str)
             year = int(year_str)

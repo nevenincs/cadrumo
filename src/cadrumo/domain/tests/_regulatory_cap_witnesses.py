@@ -48,16 +48,10 @@ from ..contribuyente.deduccion_maternidad import compute_deduccion_maternidad_06
 from ..contribuyente.descendant import DescendantInfo
 from ..contribuyente.family_profile import RentaFamilyProfile
 from ..contribuyente.family_types import MinimoDescendientesThresholds
-from ..fincas import (
-    CarryForwardEntry,
-    ExpenseCategory,
-    Finca,
-    FincaGasto,
-    FincaRendimientoRecord,
-    UseType,
-    compute_amortization_for_year,
-    compute_gastos_for_year,
-)
+from ..fincas.amortization_ledger import compute_amortization_for_year
+from ..fincas.enums import ExpenseCategory, UseType
+from ..fincas.expense_rollup import CarryForwardEntry, compute_gastos_for_year
+from ..fincas.models import Finca, FincaGasto, FincaRendimientoRecord
 from ..renta import (
     MaritimeWorkerFacts,
     RentaDeductibilityContext,

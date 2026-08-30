@@ -83,7 +83,7 @@ _WRITES_WITHOUT_A_REVISION: dict[tuple[str, str], str] = {
         "save_decision",
     ): "builds a fresh decision envelope rather than deriving one from a read, so no revision exists to assert",
     (
-        "src/cadrumo/application/workflow/_persistence.py",
+        "src/cadrumo/application/workflow/persistence.py",
         "save",
     ): "a repository-shaped save over its own parameter; the guarded path beside it composes with load_revisioned",
     (

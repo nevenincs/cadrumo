@@ -48,7 +48,7 @@ def test_relative_imports_fixture_precedence_annotations_and_type_aliases_are_re
     """The census resolves relative references before categorizing every annotation form."""
     authority = RelocatedFamily(
         similarity=100,
-        old_path="src/cadrumo/domain/calculations/registry/_authority.py",
+        old_path="src/cadrumo/domain/calculations/registry/authority.py",
         new_path="src/cadrumo/domain/calculations/registry/authority.py",
     )
     tree = ast.parse(
@@ -167,12 +167,12 @@ def test_non_python_package_symbol_targets_are_attributed_to_the_exporting_row()
     """TOML/JSON/YAML package targets retain symbol-level ownership."""
     export = RelocatedFamily(
         100,
-        "src/cadrumo/domain/calculations/registry/_export.py",
+        "src/cadrumo/domain/calculations/registry/export.py",
         "src/cadrumo/domain/calculations/registry/export.py",
     )
     calculation = RelocatedFamily(
         100,
-        "src/cadrumo/domain/calculations/registry/_formula_runtime.py",
+        "src/cadrumo/domain/calculations/registry/formula_runtime.py",
         "src/cadrumo/domain/calculations/registry/formula_runtime.py",
     )
     text = (

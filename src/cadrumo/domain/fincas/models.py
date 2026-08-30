@@ -17,7 +17,7 @@ from decimal import Decimal
 from pydantic import BaseModel, Field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ._enums import ExpenseCategory, UseType
+from .enums import ExpenseCategory, UseType
 from .errors import FincaValidationError
 
 #: Current write version for each rental-register record shape.
