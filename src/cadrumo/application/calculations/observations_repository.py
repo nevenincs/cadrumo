@@ -57,8 +57,8 @@ from ...core import (
     Period,
     PriorDomiciliationElection,
     ResultDisposition,
-    SecureObjectWrite,
 )
+from ...core.secure_object_write import SecureObjectWrite
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.identity import FilingRecordId, same_tax_identifier, tax_id_identity_token

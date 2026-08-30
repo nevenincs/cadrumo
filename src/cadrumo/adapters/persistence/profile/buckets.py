@@ -55,7 +55,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
 
-from ....core import ABSENT_SECURE_OBJECT_REVISION_ID
+from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from ....core.logging import get_logger
 from ....domain.buckets.event import BucketEventHistoryCatalogue
 from ....domain.buckets.event_repository import BucketEventHistoryPersistenceError

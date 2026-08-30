@@ -45,7 +45,8 @@ from ....application.modelo._m145_communication_records import (
 )
 from ....application.user_profile.custody_ports import ProfileCustodyCarryMaterial
 from ....application.user_profile.repository import user_profile_snapshot_object_key
-from ....core import SecureObjectWrite, StorageCustodyProfile
+from ....core import StorageCustodyProfile
+from ....core.secure_object_write import SecureObjectWrite
 from ....core.external_constants import UTF_8_ENCODING as _UTF_8
 from ....core.hashing import canonical_json_bytes, sha256_hex
 from ....domain.evidence_consent import EvidenceConsentLedgerEntry, evidence_consent_ledger_entry_object_key

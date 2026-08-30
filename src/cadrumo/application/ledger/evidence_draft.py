@@ -122,11 +122,11 @@ from ...core import (
     FieldGroundingOutcome,
     FieldOrigin,
     ImageMediaType,
-    IntracomOperationType,
     MissingOptionalExtraError,
     ServiceCapability,
     detect_image_media_type,
 )
+from ...core.aggregation import IntracomOperationType
 from ...core.config import Settings
 from ...core.config import load_settings as _load_settings
 from ...core.external_constants import DEFAULT_CURRENCY, XML_MIME_TYPE

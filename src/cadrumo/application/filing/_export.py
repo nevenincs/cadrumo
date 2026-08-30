@@ -56,7 +56,6 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import STRICT_FROZEN_HIDDEN_INPUT_CONFIG as _STRICT_FROZEN_HIDDEN
 from ...core import (
-    AeatProductSoftwareIdentity,
     CasillaId,
     ExportLayoutFormat,
     FilingProducerKey,
@@ -64,6 +63,7 @@ from ...core import (
     Period,
     PriorDomiciliationElection,
 )
+from ...core.product_identity import AeatProductSoftwareIdentity
 from ...core.atomic_write import atomic_write_bytes
 from ...core.hashing import hash_file, sha256_file, sha256_hex
 from ...core.identity import ContentDigest

@@ -8,7 +8,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....core import IntracomOperationType
+from ....core.aggregation import IntracomOperationType
 from ...iva.classification import InvoiceKind, TransactionKind
 from ...iva.oss import OssIossRegime
 from ...iva.schema import EUMemberState, IvaCategory, IvaRateKind

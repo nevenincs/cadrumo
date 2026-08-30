@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from ....core import BindingSourceKind
+from ....core.aggregation import BindingSourceKind
 from ....core.errors.severity import BaseSeverity
 from ...calculations.registry.authority import bundled_authority
 from ...calculations.registry.bindings import ProfileSelector

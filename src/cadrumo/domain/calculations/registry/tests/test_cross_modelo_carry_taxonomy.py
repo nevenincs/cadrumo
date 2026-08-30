@@ -41,7 +41,7 @@ from typing import TypedDict
 
 import pytest
 
-from .....core import BindingSourceKind
+from .....core.aggregation import BindingSourceKind
 from ..authority import bundled_authority
 from ..binding_selector_utils import selector_as_dict
 from ..bindings_previous_filing import is_direct_previous_filing_binding

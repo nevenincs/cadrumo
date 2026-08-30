@@ -16,6 +16,7 @@ from ...core.decimal import coerce_decimal_strict
 from ...core.errors.error_codes import resolve_error_message
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
+from ...core.unit_proportion import is_unit_proportion
 from ._common import _bad, activate_subcommand_output_language, emit_envelope
 from ._review_payloads import ReviewQueueResult, ReviewQueueRowPayload, ReviewViewResult
 
@@ -51,16 +52,17 @@ def _row_to_payload(row: ReviewQueueRow) -> ReviewQueueRowPayload:
 def _resolve_confidence_threshold(value: float | None) -> Decimal | None:
     """Validate and lift the ``--confidence-below`` option to a Decimal.
 
-    ``classification_confidence`` is constrained to the inclusive ``[0, 1]``
-    range on the transaction model, so a threshold outside that range can
-    never match a stored confidence. The CLI gate names the accepted range
-    on a bad value rather than silently passing it through (the
-    instructive-gate mandate).
+    ``classification_confidence`` is a share of one, so a threshold outside
+    that range can never match a stored confidence. The bound itself comes from
+    :func:`~cadrumo.core.unit_proportion.is_unit_proportion`, the same predicate
+    the transaction model's own validator asks; what stays here is the
+    localised, instructive refusal that names the accepted range rather than
+    silently passing a bad value through.
     """
     if value is None:
         return None
     threshold = coerce_decimal_strict(value)
-    if threshold < 0 or threshold > 1:
+    if not is_unit_proportion(threshold):
         raise _bad(
             tr(
                 "cli.review.errors.invalid_confidence",

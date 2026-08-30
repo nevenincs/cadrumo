@@ -26,7 +26,8 @@ from typing import Annotated
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import CasillaId, ElidedProse, M210PayerMode, Modelo, Period, validated_casilla_id
+from ...core import CasillaId, M210PayerMode, Modelo, Period, validated_casilla_id
+from ...core.prose_elision import ElidedProse
 from ...core.country_code import CountryCodeAlpha2
 from ...core.i18n import tr
 from ...core.identity import TransactionId

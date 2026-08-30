@@ -16,7 +16,8 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
-from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind
+from ...core import STRICT_FROZEN_CONFIG
+from ...core.aggregation import BindingSourceKind
 
 
 class InventorySourceReadiness(BaseModel):

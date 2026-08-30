@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import ClassVar, cast
 
-from ...core import OperationCancellation, OperationInteractionKind, OperationLifecycle
+from ...core.operations import OperationCancellation, OperationInteractionKind, OperationLifecycle
 from .frontend_contracts import (
     OperationNoPendingInteractionV1,
     OperationObservationRefusalCode,

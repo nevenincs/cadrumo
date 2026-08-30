@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 
-from ....core import BindingSourceKind
+from ....core.aggregation import BindingSourceKind
 from ._validate_source_casilla_ids import source_casilla_id_reference_failure
 from .bindings_previous_filing import previous_filing_source_reference
 from .errors import RegistryValidationError

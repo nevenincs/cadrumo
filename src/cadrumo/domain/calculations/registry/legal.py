@@ -7,8 +7,8 @@ from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import Final
 
-from ....core import (
-    REVIEWED_LEGAL_STATUSES,
+from ....core import REVIEWED_LEGAL_STATUSES
+from ....core.corpus_text import (
     CorpusAnchorResolutionError,
     corpus_redaction_marks,
     extracted_unit_count,

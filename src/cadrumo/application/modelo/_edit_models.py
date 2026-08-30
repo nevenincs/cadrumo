@@ -22,7 +22,8 @@ from typing import Annotated, Literal
 
 from pydantic import Field, field_validator, model_validator
 
-from ...core import CasillaId, OutputLanguage, Period
+from ...core import CasillaId, Period
+from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FilingYear
 from ...core.identity import (
     BucketId,

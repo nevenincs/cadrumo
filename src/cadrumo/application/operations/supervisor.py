@@ -11,15 +11,15 @@ from typing import cast
 
 from pydantic import BaseModel
 
-from ...core import (
-    Hex64Str,
+from ...core import Hex64Str
+from ...core.hashing import content_hash_hex
+from ...core.operations import (
     OperationCancellation,
     OperationDeadline,
     OperationEffect,
     OperationInteractionKind,
     OperationLifecycle,
     OperationTerminalCondition,
-    content_hash_hex,
 )
 from ...core.async_cleanup import AsyncCloseable, close_async_resources
 from ...core.errors.error_codes import ErrorCategory, get_registered_error_code

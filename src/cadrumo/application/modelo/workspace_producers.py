@@ -8,14 +8,9 @@ from typing import TYPE_CHECKING, Annotated, Literal, Protocol, Self, TypedDict,
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core import (
-    STRICT_FROZEN_CONFIG,
-    Period,
-    RegistryAuthorityGrade,
-    RevisionReviewStatus,
-    SourceConnectivityProofAuthority,
-    content_hash_hex,
-)
+from ...core import STRICT_FROZEN_CONFIG, Period, RegistryAuthorityGrade, RevisionReviewStatus
+from ...core.hashing import content_hash_hex
+from ...core.source_connectivity import SourceConnectivityProofAuthority
 from ...core.identity import BucketId, CalculationRevisionId, ContentDigest
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.schema import RegistrySnapshot

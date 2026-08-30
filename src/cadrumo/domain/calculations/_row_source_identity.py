@@ -6,7 +6,8 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator
 
-from ...core import STRICT_FROZEN_HIDDEN_INPUT_CONFIG, BindingSourceKind
+from ...core import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...core.aggregation import BindingSourceKind
 from ...core.identity import ContentDigest
 from .registry.ids import BindingId
 

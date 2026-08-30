@@ -10,7 +10,8 @@ from typing import cast
 import pytest
 from pydantic import BaseModel, ConfigDict, PrivateAttr, ValidationError
 
-from ....core import STRICT_FROZEN_CONFIG, OperationEffect, OperationLifecycle, OperationTerminalCondition
+from ....core import STRICT_FROZEN_CONFIG
+from ....core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from ..models import (
     OperationIdentity,
     OperationRequest,

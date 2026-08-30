@@ -9,7 +9,7 @@ from .work_unit import WorkUnitCatalogue
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from ...core import SecureObjectWrite
+    from ...core.secure_object_write import SecureObjectWrite
 
 
 @runtime_checkable

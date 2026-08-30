@@ -329,7 +329,7 @@ def test_invoice_operation_type_renders_as_a_json_enum_on_every_writing_verb() -
     clave is added to the enum, and covering all three writing verbs stops one of
     them regressing to a hand-parsed ``str`` while its siblings stay typed.
     """
-    from cadrumo.core import IntracomOperationType
+    from cadrumo.core.aggregation import IntracomOperationType
 
     expected = [operation.value for operation in IntracomOperationType]
     by_key = {descriptor.command_key: descriptor for descriptor in build_tool_descriptors()}

@@ -16,16 +16,15 @@ from cadrumo.application.filing.tests._export_support import (
 from cadrumo.application.registry.filing_export_authority import FilingExportProofConflictError
 from cadrumo.application.registry.filing_export_coverage import compose_filing_export_coverage
 from cadrumo.core import (
-    AeatProductSoftwareEvidence,
-    AeatProductSoftwareIdentity,
     Modelo,
     PaymentElection,
     Period,
     PriorDomiciliationElection,
     RefundElection,
     ResultDisposition,
-    sha256_hex,
 )
+from cadrumo.core.hashing import sha256_hex
+from cadrumo.core.product_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 

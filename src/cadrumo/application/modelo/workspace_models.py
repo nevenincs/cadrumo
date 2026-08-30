@@ -9,14 +9,14 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import (
     STRICT_FROZEN_CONFIG,
-    BindingSourceKind,
     CasillaId,
-    OutputLanguage,
     Period,
     RegistryAuthorityGrade,
     RegistrySchemaFamilyDisposition,
     RevisionReviewStatus,
 )
+from ...core.aggregation import BindingSourceKind
+from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FilingYear
 from ...core.identity import BucketId, ContentDigest, ContinuidadId, ProfileId, TransactionId, WorkUnitId
 from ...domain.calculations.registry.ids import (

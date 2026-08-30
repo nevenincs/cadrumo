@@ -30,7 +30,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import PROSE_ELISION_MARKER as DIAGNOSTIC_MESSAGE_ELISION
+from ....core.prose_elision import PROSE_ELISION_MARKER as DIAGNOSTIC_MESSAGE_ELISION
 from .._source_mesh import DIAGNOSTIC_MESSAGE_MAX_LENGTH, CalculationSourceDiagnostic
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

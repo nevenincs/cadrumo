@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from .....core import BindingSourceKind, validated_casilla_id
+from .....core import validated_casilla_id
+from .....core.aggregation import BindingSourceKind
 from ..errors import RegistryValidationError
 from ..schema import DataBindingDefinition, FormulaDefinition
 from ..schema_formula import FormulaExpression

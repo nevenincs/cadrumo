@@ -20,8 +20,8 @@ from ....adapters.persistence.operations.journal import OperationJournalReposito
 from ....adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ....adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from ....adapters.persistence.profile.sync_runs import SyncRunRecordRepository
-from ....core import (
-    FiledHistoryDiscoverySignal,
+from ....core import FiledHistoryDiscoverySignal
+from ....core.operations import (
     OperationCancellation,
     OperationDeadline,
     OperationDurability,

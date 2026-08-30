@@ -25,8 +25,8 @@ from ...core import (
     ConceptoIngreso,
     IvaDeductionFactKind,
     TipoActividad,
-    fold_diacritics,
 )
+from ...core.text_fold import fold_diacritics
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.external_constants import CLASSIFIED_BY_AUTO, DEFAULT_CURRENCY

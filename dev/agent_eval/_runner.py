@@ -464,7 +464,8 @@ def _canonical_action_arguments(
     provenance; the command graph is the authority for positional versus option
     syntax.  This helper deliberately has no action- or command-specific branch.
     """
-    from cadrumo.core import PRODUCT_IDENTITY, ActionArgumentStatus
+    from cadrumo.core import ActionArgumentStatus
+    from cadrumo.core.product_identity import PRODUCT_IDENTITY
     from cadrumo.entrypoints.cli import command_graph
 
     values: dict[str, object] = {}

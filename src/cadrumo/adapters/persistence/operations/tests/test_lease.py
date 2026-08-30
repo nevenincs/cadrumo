@@ -23,7 +23,8 @@ from .....application.operations.persistence.leases import (
     OperationOwnerLease,
     operation_conflict_scope_reference,
 )
-from .....core import OperationEffect, OperationLifecycle, exclusive_file_lock
+from .....core.locks import exclusive_file_lock
+from .....core.operations import OperationEffect, OperationLifecycle
 from ...storage import RepositoryError
 from ..journal import OperationJournalRepository
 from ..lease import OperationLeaseFilesystemRepository, OperationLeaseStorage

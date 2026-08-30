@@ -36,12 +36,12 @@ from typing import Final
 
 from pydantic import ValidationError
 
-from cadrumo.core import (
+from cadrumo.core.corpus_text import normalise_corpus_text
+from cadrumo.core.manual_corpus_sidecar import (
     MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX,
     MANUAL_CORPUS_TEXT_SCHEMA_VERSION,
     MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX,
     ManualCorpusTextSidecar,
-    normalise_corpus_text,
 )
 from cadrumo.core.directory_scan import (
     scan_directory,

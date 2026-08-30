@@ -40,7 +40,8 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.persistence.storage import RETENCION_OBSERVATIONS_NAMESPACE
-from ....core import AggregationCaptureKind, BindingSourceKind, Period
+from ....core import Period
+from ....core.aggregation import AggregationCaptureKind, BindingSourceKind
 from ....domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
 from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.classification import InvoiceKind

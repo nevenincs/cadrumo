@@ -22,7 +22,8 @@ from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 from typing import TypedDict
 
-from ...core import Modelo, Period, ThirdPartyDeclarationRole
+from ...core import Modelo, Period
+from ...core.aggregation import ThirdPartyDeclarationRole
 from ...core.parsing import parse_bool as _parse_bool
 from ...core.parsing import parse_date as _parse_date_canonical
 from ...core.setup_answers import SetupAnswers, project_setup_answers

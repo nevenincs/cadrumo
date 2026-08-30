@@ -26,7 +26,8 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ...core import BindingSourceKind, NoRecoveryOutcome
+from ...core import NoRecoveryOutcome
+from ...core.aggregation import BindingSourceKind
 from ...core.aggregation import COUNTERPART_SOURCE_KIND_ORDER
 from ...core.identifier_grammar import NamespacedId
 from ...core.logging import LogExtra

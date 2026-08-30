@@ -20,7 +20,7 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict
 
 from ...core import ActionEvidenceProvenance, NoRecoveryOutcome
-from ...core import BindingSourceKind as _BindingSourceKind
+from ...core.aggregation import BindingSourceKind as _BindingSourceKind
 from ...core import CasillaId as _CasillaId
 from ...core import validated_casilla_id as _validated_casilla_id
 from ...core.resources import bundled_path as _bundled_path

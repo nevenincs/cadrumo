@@ -9,7 +9,8 @@ from __future__ import annotations
 
 import pytest
 
-from .....core import BindingSourceKind, Modelo
+from .....core import Modelo
+from .....core.aggregation import BindingSourceKind
 from ..authority import bundled_authority
 from ..errors import RegistryValidationError
 from ..profile_grounding import ProfileKeyGrounding, binding_profile_keys, build_profile_grounding_index

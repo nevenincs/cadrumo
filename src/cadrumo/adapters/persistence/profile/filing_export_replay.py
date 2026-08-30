@@ -13,7 +13,7 @@ from ....application.filing import (
     FilingExportSourcePinnedProbeExpectation,
     FilingExportValidatedPayload,
 )
-from ....core import sha256_hex
+from ....core.hashing import sha256_hex
 from ....core.time import now
 from ..storage import (
     FILING_EXPORT_REPLAY_PROOFS_NAMESPACE,

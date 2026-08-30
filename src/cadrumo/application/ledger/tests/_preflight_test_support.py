@@ -6,7 +6,8 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
-from ....core import BindingSourceKind, Period
+from ....core import Period
+from ....core.aggregation import BindingSourceKind
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.iva.schema import EUMemberState, IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState

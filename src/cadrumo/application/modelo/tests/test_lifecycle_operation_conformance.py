@@ -15,7 +15,7 @@ from typing import Any
 
 import pytest
 
-from ....core import OperationDurability, OperationEffect
+from ....core.operations import OperationDurability, OperationEffect
 from ...operations.capabilities import OperationRequestStoragePolicy
 from ...operations.models import CredentialFreeOperationRequest
 from ...operations.registry import OperationDefinition

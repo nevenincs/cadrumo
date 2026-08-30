@@ -14,14 +14,14 @@ from ....adapters.outbound.fx import ECB_RATE_SOURCE_ID
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage import StorageValidationError
 from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
-from ....core import (
-    M347_THRESHOLD_EUR,
+from ....core import Period
+from ....core.aggregation import (
     BindingSourceKind,
     IntracomOperationType,
-    Period,
     ThirdPartyDeclarationRole,
     TravelAgencyMediationType,
 )
+from ....core.external_constants import M347_THRESHOLD_EUR
 from ....core.errors.error_codes import get_registered_error_code, resolve_error_message
 from ....core.errors.hierarchy import CadrumoError
 from ....core.resources import bundled_path

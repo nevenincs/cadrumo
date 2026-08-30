@@ -43,7 +43,7 @@ from urllib.parse import urlsplit
 
 import pytest
 
-from cadrumo.core import normalise_corpus_text, resolve_anchored_extracted_unit
+from cadrumo.core.corpus_text import normalise_corpus_text, resolve_anchored_extracted_unit
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry.legal import (

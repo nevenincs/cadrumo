@@ -54,7 +54,6 @@ from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogue
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import (
     ActionEvidenceProvenance,
-    AeatProductSoftwareIdentity,
     ExportLayoutFormat,
     FilingProducerKey,
     Modelo,
@@ -64,6 +63,7 @@ from ...core import (
     RefundElection,
     ResultDisposition,
 )
+from ...core.product_identity import AeatProductSoftwareIdentity
 from ...core.atomic_write import StagedPublication, hardened_staged_publication
 from ...core.filing_year import FilingYear
 from ...core.hashing import sha256_hex

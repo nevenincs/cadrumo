@@ -10,7 +10,8 @@ from typing import Literal
 
 import pytest
 
-from ....core import BindingSourceKind, CasillaId, ObservedHeaderFact, Period, ResultDisposition
+from ....core import CasillaId, ObservedHeaderFact, Period, ResultDisposition
+from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.relations import materialize_relation_binding_values

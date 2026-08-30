@@ -6,7 +6,8 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import BindingSourceKind, Period
+from ....core import Period
+from ....core.aggregation import BindingSourceKind
 from .._retenciones import (
     RETENCIONES_MODELO_SCHEME_CATALOGUE,
     RetencionesAggregation,

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-30'
 modified: '2026-08-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:e8c1c885bc353f273fb0e1b9f0b0af3026ec06709025d828963bfbabf79e3ba9'
+body_hash: 'sha256:36b67de554083aa38c3b49c0572646838b8e6aa695deb2134ca8874a077fb736'
 related: []
 ---
 
@@ -2216,7 +2216,6 @@ against six declarations does. Collapsing "wrong" into "weak" is what produced
 confidence in a refutation that had not actually been made. The two failures need
 different responses: a wrong example is replaced, a weak one is strengthened, and
 only the first justifies overturning the claim it supported.
-
 
 ## Recommendations
 

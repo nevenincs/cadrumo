@@ -11,7 +11,8 @@ from collections.abc import Mapping
 from decimal import Decimal
 from typing import ClassVar
 
-from ...core import BindingSourceKind, CalculationSourceLineageRole, CasillaId, Modelo, Period, RegistryAuthorityGrade
+from ...core import CasillaId, Modelo, Period, RegistryAuthorityGrade
+from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.resources import bundled_path
 from ...domain.calculations.registry.authority import bundled_authority

@@ -28,8 +28,8 @@ from pydantic import (
 from pydantic.json_schema import JsonSchemaValue
 from pydantic_core import CoreSchema
 
-from ....core import (
-    STRICT_FROZEN_CONFIG,
+from ....core import STRICT_FROZEN_CONFIG
+from ....core.operations import (
     OperationCancellation,
     OperationClosePolicy,
     OperationDeadline,

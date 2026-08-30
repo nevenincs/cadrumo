@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import BindingSourceKind
+from ....core.aggregation import BindingSourceKind
 from ...aggregation import (
     DEFERRED_SOURCE_KINDS,
     RESERVED_SOURCE_KINDS,

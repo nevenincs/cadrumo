@@ -10,9 +10,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, SecretStr
 
-from ...core import (
-    STRICT_FROZEN_CONFIG,
-    AuthProviderKind,
+from ...core import STRICT_FROZEN_CONFIG, AuthProviderKind
+from ...core.operations import (
     OperationCancellation,
     OperationClosePolicy,
     OperationDeadline,

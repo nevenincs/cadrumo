@@ -28,7 +28,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from ....core import PRODUCT_IDENTITY, StorageCategory, storage_location
+from ....core import StorageCategory, storage_location
+from ....core.product_identity import PRODUCT_IDENTITY
 from ....core.bucket_pointer import pointer_path
 from ....core.directory_scan import iter_directory
 from ....tests.cli_runner import invoke_cached_cli

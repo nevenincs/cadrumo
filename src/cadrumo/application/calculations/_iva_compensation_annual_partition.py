@@ -15,14 +15,8 @@ from decimal import Decimal
 from typing import ClassVar, Final
 
 from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
-from ...core import (
-    BindingSourceKind,
-    CalculationSourceLineageRole,
-    CasillaId,
-    IvaCompensationStateProvenance,
-    Modelo,
-    Period,
-)
+from ...core import CasillaId, IvaCompensationStateProvenance, Modelo, Period
+from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.logging import get_logger
 from ...core.time import now
 from ...domain.calculations.registry.bindings import (

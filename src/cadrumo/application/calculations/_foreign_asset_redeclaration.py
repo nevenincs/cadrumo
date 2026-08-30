@@ -29,12 +29,12 @@ from urllib.parse import quote
 
 from ...core import (
     MODELO_720_FOREIGN_ASSET_CLASS_CODES,
-    BindingSourceKind,
     CasillaId,
     ForeignAssetObligationGroup,
     Modelo,
     foreign_asset_obligation_group,
 )
+from ...core.aggregation import BindingSourceKind
 from ...core.aggregation import ForeignAssetClass
 from ...domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ...domain.calculations.registry.bindings_previous_filing import previous_filing_binding_source_casilla_ids

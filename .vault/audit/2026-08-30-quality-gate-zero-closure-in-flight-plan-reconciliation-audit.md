@@ -5,30 +5,11 @@ tags:
 date: '2026-08-30'
 modified: '2026-08-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:5ac8e4cf080c47f59c7a4fd1d691d6159078dcbef2edd83c3776e0ef5437bf5f'
+body_hash: 'sha256:59876307061c75c000eb13d68a67ca0427ca64783432f7b8c23b32d20948fcc5'
 related:
   - '[[2026-08-24-quality-gate-zero-closure-plan]]'
   - '[[2026-08-24-quality-gate-zero-closure-adr]]'
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace quality-gate-zero-closure with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `quality-gate-zero-closure` audit: `in flight plan reconciliation`
 
@@ -54,7 +35,7 @@ The CI, export-generator, source-casilla, registry-completeness, and quality-gat
 
 ### in-flight-plan-reconciliation | high | execution-record integrity blocks CI closure independently of code state
 
-The CI plan reports 58 missing execution records among checked steps. The campaign-close rule requires a matching execution record or a close audit that records deferred carry-forward before a step can represent delivered work. Consequently the plan cannot be closed even if later code evidence satisfies every currently open row.
+The CI plan reports 58 missing execution records among checked steps. Its focused size gate is also currently red because `_modelo_payloads.py` is 1,548 lines against a 1,530-line limit, so `P02.S41`'s clean-HEAD zero-failure measurement is not met. The campaign-close rule requires a matching execution record or a close audit that records deferred carry-forward before a step can represent delivered work. Consequently the plan cannot be closed even if later code evidence satisfies every currently open row.
 
 ### in-flight-plan-reconciliation | medium | TUI interface plan is also structurally invalid
 

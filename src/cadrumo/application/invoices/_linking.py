@@ -14,7 +14,7 @@ from pydantic import BaseModel, ConfigDict
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...core import SecureObjectWrite
+from ...core.secure_object_write import SecureObjectWrite
 from ...core.identity import InvoiceId, TransactionId
 from ...domain.invoices.errors import InvoiceLinkError
 from ...domain.invoices.models import Invoice, InvoiceCatalogue

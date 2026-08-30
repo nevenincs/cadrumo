@@ -17,7 +17,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....core import Period, ThirdPartyDeclarationRole
+from ....core import Period
+from ....core.aggregation import ThirdPartyDeclarationRole
 from ...calculations.registry.applicability import derive_tax_route
 from ...calculations.registry.applicability_routes import TaxRoute
 from ..models import (

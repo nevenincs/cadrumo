@@ -381,7 +381,8 @@ def test_no_bare_json_or_csv_mime_literals_in_exporters(source_tree_ast: Mapping
 def test_threshold_consumers_alias_core_constants() -> None:
     """Threshold consumers import or re-export the core Decimal constants."""
 
-    from .. import M347_THRESHOLD_EUR, external_constants
+    from .. import external_constants
+    from ..external_constants import M347_THRESHOLD_EUR
 
     assert M347_THRESHOLD_EUR is external_constants.M347_THRESHOLD_EUR
 

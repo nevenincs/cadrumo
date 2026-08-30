@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core import (
+from .....core.compatibility_lifecycle import (
     COMPATIBILITY_REGIME,
     RELEASED_FORMAT_FLOORS,
     expected_floor,

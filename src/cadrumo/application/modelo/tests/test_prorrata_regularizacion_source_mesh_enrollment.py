@@ -30,7 +30,6 @@ import pytest
 
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....core import (
-    BindingSourceKind,
     CasillaId,
     Period,
     ProrrataProvisionalProvenance,
@@ -38,6 +37,7 @@ from ....core import (
     ResultDisposition,
     validated_casilla_id,
 )
+from ....core.aggregation import BindingSourceKind
 from ....core.resources import bundled_path
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.iva_compensation.filed_derivation import M303_COMPENSATION_RESULTADO_CASILLA

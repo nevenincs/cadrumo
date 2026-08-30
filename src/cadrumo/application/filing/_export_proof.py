@@ -16,10 +16,10 @@ from pydantic import BaseModel, Field, model_validator
 from ...core import (
     STRICT_FROZEN_CONFIG,
     STRICT_FROZEN_HIDDEN_INPUT_CONFIG,
-    AeatProductSoftwareIdentity,
     Period,
     PriorDomiciliationElection,
 )
+from ...core.product_identity import AeatProductSoftwareIdentity
 from ...core.filing_year import FilingYear
 from ...core.identity import CalculationRevisionId, ContentDigest
 from ...core.time import UtcInstant

@@ -38,7 +38,6 @@ from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogue
 from ...core import (
     FETCH_GATED_M210_TIPO_RENTA_CODES,
     M210_TIPO_RENTA_CODE_PROJECTION,
-    M347_THRESHOLD_EUR,
     CasillaId,
     DescendantRelacion,
     M210GrossIncomeSourceMode,
@@ -46,6 +45,7 @@ from ...core import (
     RegistryAuthorityGrade,
     RescateType,
 )
+from ...core.external_constants import M347_THRESHOLD_EUR
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.errors.hierarchy import CadrumoError
 from ...core.resources import bundled_path

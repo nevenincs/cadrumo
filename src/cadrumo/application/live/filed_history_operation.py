@@ -8,15 +8,14 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...core import (
-    FiledHistoryDiscoverySignal,
+from ...core import FiledHistoryDiscoverySignal, RegisterScopingSignal
+from ...core.operations import (
     OperationCancellation,
     OperationClosePolicy,
     OperationDeadline,
     OperationDurability,
     OperationEffect,
     OperationInteractionKind,
-    RegisterScopingSignal,
 )
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.filing_year import FilingYear

@@ -21,7 +21,8 @@ from ....adapters.persistence.profile.inventory import InventoryLedgerRepository
 from ....adapters.persistence.storage import PROFILE_INVENTORY_LEDGER_NAMESPACE
 from ....adapters.persistence.storage.sql import SecureObjectRow
 from ....adapters.persistence.storage.sql.engine import get_engine
-from ....core import BindingSourceKind, Period
+from ....core import Period
+from ....core.aggregation import BindingSourceKind
 from ....core.aggregation import BindingAggregation, BindingAggregationOp
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.inventory_bindings import InventoryProjectionOperation, InventorySelector

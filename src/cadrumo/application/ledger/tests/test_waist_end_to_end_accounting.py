@@ -51,7 +51,8 @@ from ....application.invoices import (
     build_catalogue_invoice,
     create_catalogue_invoice,
 )
-from ....core import STRUCTURED_DOCUMENT_SHAPES, BindingSourceKind, Period
+from ....core import STRUCTURED_DOCUMENT_SHAPES, Period
+from ....core.aggregation import BindingSourceKind
 from ....core.aggregation import INVOICE_BINDING_SOURCE_KINDS
 from ....domain.attachments.enums import AttachmentKind, AttachmentSource
 from ....domain.attachments.service import AttachmentFileContent, AttachmentIngestionRequest, add_attachment

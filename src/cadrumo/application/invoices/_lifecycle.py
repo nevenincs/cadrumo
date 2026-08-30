@@ -30,7 +30,7 @@ from decimal import Decimal
 from pydantic import BaseModel, ConfigDict
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ...core import IntracomOperationType
+from ...core.aggregation import IntracomOperationType
 from ...core.time import now
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.invoices.enums import InvoiceClass, PaymentStatus

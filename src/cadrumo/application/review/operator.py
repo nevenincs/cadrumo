@@ -14,7 +14,7 @@ from types import MappingProxyType
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import BindingSourceKind
+from ...core.aggregation import BindingSourceKind
 from ...core.aggregation import COUNTERPART_SOURCE_KINDS
 from ...core.config import Settings
 from ...core.i18n import tr

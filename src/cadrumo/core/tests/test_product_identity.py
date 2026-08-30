@@ -8,10 +8,10 @@ from pathlib import Path
 import pytest
 
 from ... import core as core_package
-from .. import (
-    PRODUCT_IDENTITY,
+from ..product_identity import (
     AeatProductSoftwareEvidence,
     AeatProductSoftwareIdentity,
+    PRODUCT_IDENTITY,
     normalise_product_identity_references,
 )
 from .. import __all__ as core_all

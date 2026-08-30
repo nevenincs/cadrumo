@@ -33,7 +33,7 @@ from datetime import date
 from secrets import token_bytes
 from threading import RLock
 
-from ...core import SourceConnectivityProofAuthority
+from ...core.source_connectivity import SourceConnectivityProofAuthority
 from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import content_hash_hex
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority

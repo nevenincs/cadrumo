@@ -21,7 +21,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
-from ....core import BindingSourceKind
+from ....core.aggregation import BindingSourceKind
 from ....domain.bienes_inversion import (
     BienInversionDisposal,
     BienInversionDisposalRegime,

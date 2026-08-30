@@ -297,7 +297,7 @@ def display_locale_keys() -> tuple[str, ...]:
     """
     from typing import get_args
 
-    from cadrumo.core import BindingSourceKind
+    from cadrumo.core.aggregation import BindingSourceKind
     from cadrumo.domain.calculations.registry.schema import ModeloDefinition
     from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
     from cadrumo.domain.calculations.registry.schema_surfaces import CasillaConstraints, CasillaDefinition

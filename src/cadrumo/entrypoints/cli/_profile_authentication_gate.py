@@ -229,7 +229,7 @@ def preflight_parsed_leaf(
         if active is not None and read_profile_bucket_by_id(active) is None:
             if root is not None:
                 _refuse("profile_secrets_inapplicable")
-            from ...core import ensure_storage_tree
+            from ...core.storage_materialization import ensure_storage_tree
 
             ensure_storage_tree()
             return
@@ -282,7 +282,7 @@ def _materialize_storage_for(spec: CommandSpec) -> None:
     # effect provably declares no write route either.
     if spec.policy.side_effects == frozenset({"none"}):
         return
-    from ...core import ensure_storage_tree
+    from ...core.storage_materialization import ensure_storage_tree
 
     ensure_storage_tree()
 

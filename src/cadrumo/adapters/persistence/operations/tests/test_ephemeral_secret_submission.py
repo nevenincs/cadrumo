@@ -41,8 +41,8 @@ from .....application.operations.secret_submission import (
     OperationSecretRequirement,
 )
 from .....application.operations.supervisor import OperationSupervisor
-from .....core import (
-    STRICT_FROZEN_CONFIG,
+from .....core import STRICT_FROZEN_CONFIG
+from .....core.operations import (
     OperationCancellation,
     OperationClosePolicy,
     OperationDeadline,

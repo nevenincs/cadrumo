@@ -22,7 +22,8 @@ from ...core.hashing import content_hash_hex
 if TYPE_CHECKING:
     from ..invoices import InvoiceTransactionLinkResult
 
-from ...core import BindingSourceKind, IvaDeductionEvidenceAuthority, Period
+from ...core import IvaDeductionEvidenceAuthority, Period
+from ...core.aggregation import BindingSourceKind
 from ...core.decimal import format_decimal
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...domain.attachments.protocols import AttachmentStoreProtocol as _AttachmentStoreProtocol

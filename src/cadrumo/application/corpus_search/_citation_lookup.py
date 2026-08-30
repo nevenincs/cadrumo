@@ -30,7 +30,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from pathlib import Path
 
-from ...core import CorpusAnchorResolutionError, resolve_anchored_extracted_unit
+from ...core.corpus_text import CorpusAnchorResolutionError, resolve_anchored_extracted_unit
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.schema_references import LegalReference
 from ._models import CitationResolution

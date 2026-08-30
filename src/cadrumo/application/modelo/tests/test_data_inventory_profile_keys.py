@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import BindingSourceKind
+from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.profile_grounding import binding_profile_keys
 from ...aggregation import AtribucionMemberSourceResolver

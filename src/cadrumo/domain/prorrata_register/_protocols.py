@@ -11,7 +11,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 if TYPE_CHECKING:  # pragma: no cover - typing-only boundary DTO (lives in core, not adapters)
-    from ...core import SecureObjectWrite
+    from ...core.secure_object_write import SecureObjectWrite
     from . import ProrrataRegister
 
 

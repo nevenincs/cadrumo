@@ -18,7 +18,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core import BindingSourceKind, CasillaId, Period, validated_casilla_id
+from ....core import CasillaId, Period, validated_casilla_id
+from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.handoffs import relation_consumption_channels, relation_consumption_index

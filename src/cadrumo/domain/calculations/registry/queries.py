@@ -19,13 +19,13 @@ from pydantic import BaseModel, ConfigDict, TypeAdapter, ValidationError
 
 from ....core import (
     OBJECT_TUPLE_ADAPTER,
-    BindingSourceKind,
     Modelo,
     Period,
     RegistryAuthorityGrade,
     RegistrySelectorPeriodCode,
     TaxDomain,
 )
+from ....core.aggregation import BindingSourceKind
 from ....core.i18n import output_language
 from .authority import ValidatedRegistryAuthority
 from .binding_selector_utils import boolean_binding_encoded_values

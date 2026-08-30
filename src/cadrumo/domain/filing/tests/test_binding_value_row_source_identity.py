@@ -12,7 +12,8 @@ from pydantic import ValidationError
 
 from ....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from ....adapters.persistence.storage import FILING_DRAFTS_NAMESPACE
-from ....core import BindingSourceKind, Period
+from ....core import Period
+from ....core.aggregation import BindingSourceKind
 from ....tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
 from ...calculations import RowSourceIdentity
 from ...calculations.registry.schema_references import RegistrySnapshotRef

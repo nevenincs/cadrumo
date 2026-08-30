@@ -42,7 +42,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final
 
-from cadrumo.core import PRODUCT_IDENTITY
+from cadrumo.core.product_identity import PRODUCT_IDENTITY
 
 from .._paths import REPO_ROOT, UTF_8
 from . import readiness, version_identity

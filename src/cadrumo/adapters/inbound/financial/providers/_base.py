@@ -54,7 +54,7 @@ from typing import ClassVar, Final, Literal
 from pydantic import BaseModel
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from .....core import fold_diacritics
+from .....core.text_fold import fold_diacritics
 from .....core.config import load_settings
 from .....core.decimal import coerce_decimal
 from .....core.errors.hierarchy import CadrumoError, CoreValidationError

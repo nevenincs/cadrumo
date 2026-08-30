@@ -27,7 +27,8 @@ from typing import ClassVar, Literal, Protocol
 
 from pydantic import BaseModel, field_validator, model_validator
 
-from ....core import STRICT_FROZEN_CONFIG, BindingSourceKind, CasillaId, RegistrySelectorPeriodCode
+from ....core import STRICT_FROZEN_CONFIG, CasillaId, RegistrySelectorPeriodCode
+from ....core.aggregation import BindingSourceKind
 from ....core.aggregation import BindingAggregationOp
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import invariant_diagnostics, selector_against_model

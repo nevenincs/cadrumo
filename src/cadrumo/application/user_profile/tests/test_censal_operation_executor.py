@@ -16,7 +16,7 @@ from ....adapters.persistence.operations.lease import OperationLeaseFilesystemRe
 from ....adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from ....adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from ....adapters.persistence.storage.custody.kdf_supervision import unlock_profile_custody
-from ....core import OperationEffect, OperationLifecycle, OperationTerminalCondition
+from ....core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from ....core.config import override_settings
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.aeat_literal_fixtures import aeat_url

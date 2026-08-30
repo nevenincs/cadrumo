@@ -42,7 +42,8 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import AggregationCaptureKind, CasillaId, Period, RegistryAuthorityGrade, validated_casilla_id
+from ....core import CasillaId, Period, RegistryAuthorityGrade, validated_casilla_id
+from ....core.aggregation import AggregationCaptureKind
 from ....core.aggregation import BindingSourceKind
 from ....core.resources import bundled_path
 from ....domain.calculations.registry.authority import bundled_authority

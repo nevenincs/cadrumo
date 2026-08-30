@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     # pragma: no cover - typing-only boundary DTO (lives in core, not adapters)
-    from ...core import SecureObjectWrite
+    from ...core.secure_object_write import SecureObjectWrite
 
 
 @runtime_checkable

@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from .. import CorpusAnchorResolutionError, normalise_corpus_text, resolve_anchored_extracted_unit
+from ..corpus_text import CorpusAnchorResolutionError, normalise_corpus_text, resolve_anchored_extracted_unit
 from ..corpus_text import normalise_corpus_text as normalise_corpus_text_owner
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

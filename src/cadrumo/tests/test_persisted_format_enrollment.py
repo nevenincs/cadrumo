@@ -52,12 +52,11 @@ from ..adapters.persistence.storage import (
     SecureObjectNamespaceDefinition,
     StoragePathKind,
 )
-from ..core import (
+from ..core import StorageCategory, storage_location
+from ..core.compatibility_lifecycle import (
     PERSISTED_FORMATS,
     PersistedFormatClass,
-    StorageCategory,
     stale_persisted_format_declarations,
-    storage_location,
     undeclared_persisted_formats,
 )
 from ._storage_path_grammar import literal_directory_runs

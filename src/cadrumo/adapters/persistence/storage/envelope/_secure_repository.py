@@ -29,7 +29,7 @@ from typing import ClassVar, cast
 
 from pydantic import BaseModel
 
-from .....core import SecureObjectWrite
+from .....core.secure_object_write import SecureObjectWrite
 from .....core.classification import SensitivityClass
 from .....core.config import Settings
 from .....core.logging import get_logger

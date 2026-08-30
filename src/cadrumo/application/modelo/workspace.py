@@ -26,7 +26,9 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from ...core import OutputLanguage, RegistryAuthorityGrade, RegistrySchemaFamilyDisposition, content_hash_hex
+from ...core import RegistryAuthorityGrade, RegistrySchemaFamilyDisposition
+from ...core.external_constants import OutputLanguage
+from ...core.hashing import content_hash_hex
 from ...domain.calculations.registry.errors import RegistryFailureCondition, RegistryValidationError
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.modelo_localization import casilla_occurrence_locale_key, revision_locale_key

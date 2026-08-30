@@ -27,7 +27,8 @@ from pathlib import Path
 from typing import cast
 
 from cadrumo.adapters.persistence.storage import close_active_bucket_session
-from cadrumo.core import PRODUCT_IDENTITY, ActionEvidenceProvenance, NoRecoveryOutcome
+from cadrumo.core import ActionEvidenceProvenance, NoRecoveryOutcome
+from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from cadrumo.core.errors.error_codes import ErrorEnvelope
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.i18n import tr

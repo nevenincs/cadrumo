@@ -9,7 +9,7 @@ related:
   - '[[2026-08-28-semantic-consolidation-cli-payload-projection-adr]]'
 modified: '2026-08-30'
 body_schema: body-v2
-body_hash: 'sha256:00bc724ba28979084ab94e51c4631711a7cb1af38e191d3c952e402d495a5b1d'
+body_hash: 'sha256:abd1428e12e5718f75045619428b014ede3754f4268f1bd1cdd0cb1fe28f2e16'
 ---
 
 # `semantic-consolidation` plan
@@ -58,6 +58,10 @@ Six package namespaces carry a PEP 562 __getattr__ resolver, four of them byte-i
 - [ ] `P02.S61` - Publicise the preflight issue detail, whose canonical alias elides at five hundred and twelve where the payload rejects, so the two disagree about what an over-long detail should do; `src/cadrumo/application/ledger/preflight.py`.
 - [x] `P02.S102` - Declare the evidence-bundle notes bound once and adopt the canonical unit fraction on the manifest model, which restated both by hand beside the CLI payload that projects it; `src/cadrumo/application/evidence/`.
 - [x] `P02.S103` - Declare the compensation expiry year once beside the balance model, and adopt the canonical bucket event id where the M036 payload had invented a looser one; `src/cadrumo/domain/iva_compensation/, src/cadrumo/entrypoints/cli/`.
+- [x] `P02.S105` - Keep ModeloCode on the review-package manifest and its CLI projection, both of which discarded the validated three-digit type for a hand-rolled one-to-eight string bound; `src/cadrumo/application/modelo/review_package.py, src/cadrumo/entrypoints/cli/`.
+- [x] `P02.S109` - Collapse the confidence bound onto the canonical unit-proportion predicate at both the transaction validator and the CLI gate, which restated the same zero-to-one range a third and fourth time; `src/cadrumo/domain/transactions/model_validation.py, src/cadrumo/entrypoints/cli/_review.py`.
+- [ ] `P02.S111` - Give the Spanish postcode format a domain-level home, since it is enforced only by the setup wizard and no other write path to address_postcode refuses a malformed value; `src/cadrumo/core/setup_answers.py`.
+- [ ] `P02.S112` - Rehome the ledger folder-import aggregation and the Drive remote-object label derivation, both of which the CLI computes with no application or adapter counterpart; `src/cadrumo/entrypoints/cli/`.
 
 ### Phase `P03` - Consolidate the repeated secure-repository configuration shape
 
@@ -112,7 +116,10 @@ The lazy-export ADR assembled its population by searching for one identifier, _L
 - [x] `P07.S91` - Retire the censo, attachments, categories, invoices and buckets facades, dissolving the invoices-iva import cycle the invoices namespace made spellable; `src/cadrumo/domain/`.
 - [x] `P07.S95` - Retire the deadlines, Google outbound and AEAT sede facades, repointing module-object imports and their body uses together; `src/cadrumo/`.
 - [x] `P07.S99` - Retire the three largest domain facades: iva at 179 names across 26 modules, filing at 43 and iva_compensation at 36; `src/cadrumo/domain/`.
-- [ ] `P07.S104` - Sequence the core errors hierarchy split with whoever owns git rather than applying it incrementally, since a commit landing on a half-applied state produced a HEAD that could not import; `src/cadrumo/core/errors/`.
+- [x] `P07.S104` - Sequence the core errors hierarchy split with whoever owns git rather than applying it incrementally, since a commit landing on a half-applied state produced a HEAD that could not import; `src/cadrumo/core/errors/`.
+- [x] `P07.S106` - Finish the errors hierarchy split the concurrent session left half-landed, repointing the five stragglers still reaching the namespace; `src/cadrumo/core/errors/`.
+- [x] `P07.S107` - Publicise the censo parser and repoint the portals service tests, the last names reached through namespaces already made inert; `src/cadrumo/adapters/inbound/censo/, src/cadrumo/application/portals/`.
+- [ ] `P07.S110` - Rule on which CIF leader-class policy is authoritative, after grounding it against the official norm, and collapse the two identity validators that currently answer the same input differently; `src/cadrumo/core/identity/`.
 
 ### Phase `P08` - Consolidate the repeated constrained scalar shapes
 
@@ -158,6 +165,7 @@ An AST census of every pydantic Field constraint in production code found the sa
 - [x] `P08.S98` - Repoint the setup-answers lazy module accessor at deadlines.models, and move the FiscalResidency reads to the renta-code module that actually defines them; `src/cadrumo/core/setup_answers.py`.
 - [x] `P08.S100` - Promote the post-retirement checks into a single reusable sweep covering all five stale-reference classes, so each retirement runs a written-down pass rather than ad-hoc checks; `dev/quality/namespace_retirement_sweep.py`.
 - [x] `P08.S101` - Repoint the two application/modelo files reading filing contracts off the package object, which the reachability gate caught as an AttributeError that only fires when the path runs; `src/cadrumo/application/modelo/`.
+- [ ] `P08.S108` - Detect a name imported from a genuinely inert namespace, distinguishing it from one reached through a live lazy export map; `src/cadrumo/tests/`.
 
 ## Parallelization
 

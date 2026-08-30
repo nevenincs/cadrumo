@@ -9,7 +9,7 @@ from typing import Any
 
 import pytest
 
-from ....core import BindingSourceKind
+from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_input_kind import InputKind

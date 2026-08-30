@@ -40,7 +40,8 @@ from cadrumo.application.registry.temporal_coverage import (
     TemporalRevisionCoverageSummary,
     compose_temporal_coverage,
 )
-from cadrumo.core import STRICT_FROZEN_CONFIG, RegistryAuthorityGrade, SourceConnectivityProofAuthority
+from cadrumo.core import STRICT_FROZEN_CONFIG, RegistryAuthorityGrade
+from cadrumo.core.source_connectivity import SourceConnectivityProofAuthority
 from cadrumo.domain.calculations.registry.authority import (
     ValidatedRegistryAuthority,
     bundled_authority,

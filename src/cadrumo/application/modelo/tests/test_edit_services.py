@@ -7,7 +7,8 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import OutputLanguage, Period
+from ....core import Period
+from ....core.external_constants import OutputLanguage
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue

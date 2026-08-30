@@ -23,14 +23,8 @@ from pydantic import (
     model_validator,
 )
 
-from ...core import (
-    STRICT_FROZEN_CONFIG,
-    STRICT_FROZEN_HIDDEN_INPUT_CONFIG,
-    BindingSourceKind,
-    CasillaId,
-    Hex16Str,
-    Period,
-)
+from ...core import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG, CasillaId, Hex16Str, Period
+from ...core.aggregation import BindingSourceKind
 from ...core.errors.severity import BaseSeverity
 from ...core.hashing import content_hash_hex
 from ...core.i18n import Translatable as tr

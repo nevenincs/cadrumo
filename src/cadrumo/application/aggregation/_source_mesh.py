@@ -33,13 +33,12 @@ from ...core import (
     OBJECT_TUPLE_ADAPTER,
     STR_KEYED_MAPPING_ADAPTER,
     STRICT_FROZEN_HIDDEN_INPUT_CONFIG,
-    BindingSourceKind,
-    CalculationSourceLineageRole,
     CasillaId,
-    ElidedProse,
     M210GrossIncomeSourceMode,
     Period,
 )
+from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
+from ...core.prose_elision import ElidedProse
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.decimal import coerce_decimal
 from ...core.errors.hierarchy import CoreValidationError

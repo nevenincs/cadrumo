@@ -30,7 +30,6 @@ import pytest
 
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....core import (
-    BindingSourceKind,
     CasillaId,
     Modelo,
     Period,
@@ -38,6 +37,7 @@ from ....core import (
     ProrrataRegisterRegime,
     validated_casilla_id,
 )
+from ....core.aggregation import BindingSourceKind
 from ....core.directory_scan import (
     scan_directory,
 )

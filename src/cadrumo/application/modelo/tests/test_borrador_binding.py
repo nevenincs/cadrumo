@@ -15,7 +15,8 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import BindingSourceKind, CasillaId, Period, validated_casilla_id
+from ....core import CasillaId, Period, validated_casilla_id
+from ....core.aggregation import BindingSourceKind
 from ....core.errors.error_codes import ErrorCategory, get_registered_error_code
 from ....domain.buckets.event import BucketEventType
 from ....domain.calculations.registry.authority import bundled_authority

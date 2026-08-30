@@ -21,6 +21,4 @@ from __future__ import annotations
 from ._secret_store import SecretRecord, SecretStore
 
 __all__ = [
-    "SecretRecord",
-    "SecretStore",
 ]

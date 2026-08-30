@@ -12,7 +12,11 @@ from sqlalchemy import Engine, Table, bindparam, delete, insert, inspect, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from .....core import ABSENT_SECURE_OBJECT_REVISION_ID, DEFAULT_WRITE_PROVENANCE, SecureObjectWrite
+from .....core.secure_object_write import (
+    ABSENT_SECURE_OBJECT_REVISION_ID,
+    DEFAULT_WRITE_PROVENANCE,
+    SecureObjectWrite,
+)
 from .....core.classification import SensitivityClass
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.hashing import sha256_hex

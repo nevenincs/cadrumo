@@ -41,8 +41,6 @@ from ...adapters.persistence.storage import (
     StorageValidationError,
 )
 from ...core import (
-    BindingSourceKind,
-    CalculationSourceLineageRole,
     CasillaId,
     M210GrossIncomeSourceMode,
     Modelo,
@@ -51,6 +49,7 @@ from ...core import (
     StandardPeriodCode,
     validated_casilla_id,
 )
+from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.money import round_to_cents
 from ...domain.bienes_inversion import BienesInversionIvaRegister
 from ...domain.calculations.registry.ids import BindingId

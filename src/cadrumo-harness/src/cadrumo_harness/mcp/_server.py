@@ -50,7 +50,8 @@ from typing import TYPE_CHECKING
 
 from cadrumo.adapters.persistence.storage import close_all_live_bucket_sessions
 from cadrumo.application.wizard.compiler import ensure_profile_keys_registered
-from cadrumo.core import PRODUCT_IDENTITY, FormerProductStateError
+from cadrumo.core import FormerProductStateError
+from cadrumo.core.product_identity import PRODUCT_IDENTITY
 
 from ._call_runtime import serving_capacity_limiter
 from ._completions import complete_prompt_argument

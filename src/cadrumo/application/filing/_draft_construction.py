@@ -18,7 +18,7 @@ from decimal import Decimal, InvalidOperation
 from typing import NamedTuple
 
 from ...core import STR_KEYED_MAPPING_ADAPTER
-from ...core import BindingSourceKind as _BindingSourceKind
+from ...core.aggregation import BindingSourceKind as _BindingSourceKind
 from ...core import CasillaId as _CasillaId
 from ...core import Period as _Period
 from ...core.parsing import parse_bool as _parse_bool

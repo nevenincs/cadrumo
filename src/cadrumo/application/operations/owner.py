@@ -13,7 +13,7 @@ from typing import Literal, Protocol, runtime_checkable
 
 from pydantic import BaseModel
 
-from ...core import OperationEffect
+from ...core.operations import OperationEffect
 from ...core.async_cleanup import AsyncCloseable
 from ...core.identity import ContentDigest
 from .capabilities import OperationOwnedResource

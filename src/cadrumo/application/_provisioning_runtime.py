@@ -62,11 +62,6 @@ def ollama_endpoint(chat_url: str, path: str) -> str:
 _UNREACHABLE_SINCE: dict[str, float] = {}
 
 
-def clear_runtime_endpoint_failure_cache() -> None:
-    """Forget every remembered unreachable endpoint, so the next read retries."""
-    _UNREACHABLE_SINCE.clear()
-
-
 def _read_runtime_json(settings: Settings, path: str) -> object | None:
     url = ollama_endpoint(settings.cadrumo_llm_ollama_chat_url, path)
     base = url.rsplit("/api/", 1)[0]

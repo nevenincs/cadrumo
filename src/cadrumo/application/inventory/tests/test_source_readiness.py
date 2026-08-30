@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import BindingSourceKind
+from ....core.aggregation import BindingSourceKind
 from .._source_readiness import inventory_source_readiness
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

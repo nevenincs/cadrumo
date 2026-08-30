@@ -27,17 +27,13 @@ from typing import TYPE_CHECKING, Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from ...core import (
-    STRICT_FROZEN_CONFIG,
-    M210PayerMode,
+from ...core import STRICT_FROZEN_CONFIG, M210PayerMode, PaymentElection, Period, RefundElection
+from ...core.operations import (
     OperationCancellation,
     OperationClosePolicy,
     OperationDeadline,
     OperationDurability,
     OperationInteractionKind,
-    PaymentElection,
-    Period,
-    RefundElection,
 )
 from ...core.country_code import CountryCodeAlpha2
 from ...core.errors.hierarchy import CadrumoError

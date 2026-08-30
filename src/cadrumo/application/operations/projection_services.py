@@ -12,13 +12,13 @@ from typing import Protocol, cast, runtime_checkable
 
 from pydantic import BaseModel, TypeAdapter, ValidationError
 
-from ...core import (
+from ...core.hashing import content_hash_hex
+from ...core.operations import (
     OperationCancellation,
     OperationClosePolicy,
     OperationInteractionKind,
     OperationLifecycle,
     OperationTerminalCondition,
-    content_hash_hex,
 )
 from ...core.identity import ContentDigest
 from .frontend_contracts import (

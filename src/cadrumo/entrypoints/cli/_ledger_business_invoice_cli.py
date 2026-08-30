@@ -31,7 +31,8 @@ from ...application.invoices import (
     resolve_catalogue_invoice_from_repository,
     update_catalogue_invoice,
 )
-from ...core import FieldRole, IntracomOperationType
+from ...core import FieldRole
+from ...core.aggregation import IntracomOperationType
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity

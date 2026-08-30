@@ -69,8 +69,5 @@ class BienesInversionRegisterService:
 
 
 __all__ = [
-    "BienInversionIvaRecord",
-    "BienesInversionIvaRegister",
-    "BienesInversionIvaRegisterRepository",
     "BienesInversionRegisterService",
 ]

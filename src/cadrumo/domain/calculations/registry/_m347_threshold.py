@@ -15,7 +15,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
-from ....core import M347_CLAVE_C_THRESHOLD_EUR, M347_THRESHOLD_EUR
+from ....core.external_constants import M347_CLAVE_C_THRESHOLD_EUR, M347_THRESHOLD_EUR
 
 __all__ = ["m347_clave_c_declarable_party_ids", "m347_declarable_party_ids"]
 

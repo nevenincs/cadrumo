@@ -10,14 +10,12 @@ from pathlib import Path
 
 from pydantic import ConfigDict, TypeAdapter, ValidationError
 
-from ....core import (
+from ....core import StorageCategory, storage_location, storage_path
+from ....core.corpus_text import normalise_corpus_text
+from ....core.manual_corpus_sidecar import (
     MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX,
     MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX,
     ManualCorpusTextSidecar,
-    StorageCategory,
-    normalise_corpus_text,
-    storage_location,
-    storage_path,
 )
 from ....core.atomic_write import atomic_write_best_effort_text
 from ....core.hashing import sha256_hex

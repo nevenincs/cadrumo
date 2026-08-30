@@ -16,15 +16,15 @@ from pydantic import (
     model_validator,
 )
 
-from ...core import (
-    STRICT_FROZEN_CONFIG,
+from ...core import STRICT_FROZEN_CONFIG
+from ...core.hashing import content_hash_hex
+from ...core.operations import (
     OperationCancellation,
     OperationClosePolicy,
     OperationDeadline,
     OperationDurability,
     OperationEffect,
     OperationInteractionKind,
-    content_hash_hex,
 )
 from ...core.identity import ContentDigest
 from ..operator_actions import ActionReference

@@ -17,7 +17,6 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....adapters.persistence.storage import TRANSACTION_CATALOGUE_NAMESPACE, EnvelopeVersionError
 from ....adapters.persistence.storage.sql import SecureObjectRepository, session_scope
 from ....core import (
-    BindingSourceKind,
     IvaDeductionEvidenceAuthority,
     IvaDeductionFactKind,
     NoRecoveryOutcome,
@@ -25,6 +24,7 @@ from ....core import (
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
 )
+from ....core.aggregation import BindingSourceKind
 from ....core.classification import SensitivityClass
 from ....domain.bienes_inversion import BienesInversionIvaRegister
 from ....domain.calculations.registry.authority import bundled_authority

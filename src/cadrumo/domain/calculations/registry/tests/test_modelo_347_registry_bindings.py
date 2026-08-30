@@ -22,7 +22,8 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import M347_THRESHOLD_EUR, BindingSourceKind
+from .....core.aggregation import BindingSourceKind
+from .....core.external_constants import M347_THRESHOLD_EUR
 from .....core.aggregation import BindingAggregationOp
 from ..binding_selector_utils import selector_as_dict
 from ..invoice_bindings import InvoiceObservation, resolve_invoice_binding_values

@@ -13,8 +13,8 @@ from datetime import date
 
 from pydantic import BaseModel, Field, ValidationError, computed_field, model_validator
 
-from ...core import (
-    STRICT_FROZEN_CONFIG,
+from ...core import STRICT_FROZEN_CONFIG
+from ...core.source_connectivity import (
     SourceConnectivityDisposition,
     SourceConnectivityExpiryPosture,
     SourceConnectivityProofAuthority,

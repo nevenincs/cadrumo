@@ -50,7 +50,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core import BindingSourceKind, CasillaId, Period, validated_casilla_id
+from ....core import CasillaId, Period, validated_casilla_id
+from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot

@@ -43,12 +43,12 @@ from .....application.operations.persistence.leases import (
     operation_conflict_scope_reference,
 )
 from .....application.operations.persistence.replay import OperationReplayStatus
-from .....core import (
+from .....core.locks import exclusive_file_lock
+from .....core.operations import (
     OperationEffect,
     OperationInteractionKind,
     OperationLifecycle,
     OperationTerminalCondition,
-    exclusive_file_lock,
 )
 from .....core.directory_scan import (
     scan_directory,

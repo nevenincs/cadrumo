@@ -48,7 +48,7 @@ from typing import Final
 
 import pytest
 
-from ....core import normalise_corpus_text, resolve_anchored_extracted_unit
+from ....core.corpus_text import normalise_corpus_text, resolve_anchored_extracted_unit
 from ....core.resources import bundled_path
 from ..classification import IvaTerritorialScope
 

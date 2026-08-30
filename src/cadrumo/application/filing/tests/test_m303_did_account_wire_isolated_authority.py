@@ -10,8 +10,6 @@ from pathlib import Path
 import pytest
 
 from ....core import (
-    AeatProductSoftwareEvidence,
-    AeatProductSoftwareIdentity,
     M303RegimenSimplificadoActivityField,
     M303RegimenSimplificadoActivityProjectionRef,
     M303RegimenSimplificadoCohort,
@@ -23,6 +21,7 @@ from ....core import (
     RefundElection,
     ResultDisposition,
 )
+from ....core.product_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
 from ....core.resources import bundled_path
 from ....domain.bienes_inversion import BienesInversionIvaRegister, RegistroRegularizacionResult
 from ....domain.calculations.export_field_kind import CasillaFieldKind

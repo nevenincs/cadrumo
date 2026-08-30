@@ -14,7 +14,9 @@ from typing import Annotated, Literal, TypeAliasType, TypeGuard, Union, cast, ge
 from pydantic import BaseModel, Field, field_validator, model_validator
 from pydantic.fields import FieldInfo
 
-from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, content_hash_hex
+from ...core import STRICT_FROZEN_CONFIG
+from ...core.aggregation import BindingSourceKind
+from ...core.hashing import content_hash_hex
 from ...core.errors.hierarchy import CadrumoError
 from ...core.identity import ContentDigest
 from ...domain.calculations.registry.bindings import selector_model_for_source

@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from ......core import SecureObjectWrite
+from ......core.secure_object_write import SecureObjectWrite
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ...crypto.encrypted_columns import secure_object_key_digest
 from ...errors import SecureObjectRevisionConflictError

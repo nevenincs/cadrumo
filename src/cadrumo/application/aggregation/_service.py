@@ -24,7 +24,8 @@ from functools import lru_cache
 from pydantic import BaseModel, Field, computed_field, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import BindingSourceKind, Modelo, Period
+from ...core import Modelo, Period
+from ...core.aggregation import BindingSourceKind
 from ...core.aggregation import COUNTERPART_SOURCE_KIND_ORDER
 from ...core.external_constants import COUNTERPART_MODELOS, FOREIGN_ASSET_MODELOS, RETENCIONES_MODELOS
 from ...core.logging import LogExtra, get_logger

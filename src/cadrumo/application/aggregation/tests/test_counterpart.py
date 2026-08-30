@@ -6,7 +6,8 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import M347_THRESHOLD_EUR, Period
+from ....core import Period
+from ....core.external_constants import M347_THRESHOLD_EUR
 from ....core.aggregation import BindingSourceKind
 from .._counterpart import (
     COUNTERPART_MODELO_KIND_CATALOGUE,

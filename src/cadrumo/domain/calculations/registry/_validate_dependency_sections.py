@@ -23,7 +23,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ....core import BindingSourceKind
+from ....core.aggregation import BindingSourceKind
 from ._validate_evidence import EvidenceValidator
 from ._validate_helpers import missing_refs
 from .bindings_previous_filing import previous_filing_source_reference

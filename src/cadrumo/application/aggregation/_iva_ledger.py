@@ -48,14 +48,14 @@ from pydantic import BaseModel, Field, StringConstraints, field_serializer, fiel
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import (
-    BindingSourceKind,
-    ElidedProse,
     IvaDeductionFactKind,
     Period,
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
     regime_apportions_deduction,
 )
+from ...core.aggregation import BindingSourceKind
+from ...core.prose_elision import ElidedProse
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n import tr
 from ...core.identity import TransactionId

@@ -6,7 +6,8 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field
 
-from ...core import STRICT_FROZEN_HIDDEN_INPUT_CONFIG, BindingSourceKind
+from ...core import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...core.aggregation import BindingSourceKind
 from ...core.identity import ContentDigest
 from ...domain.calculations import RowBindingKey
 from ...domain.calculations.registry.ids import BindingId

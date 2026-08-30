@@ -9,7 +9,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ....core import STRICT_FROZEN_CONFIG, BindingSourceKind, Period
+from ....core import STRICT_FROZEN_CONFIG, Period
+from ....core.aggregation import BindingSourceKind
 from ....core.aggregation import INVOICE_BINDING_SOURCE_KINDS, BindingAggregationOp
 from ....core.country_code import CountryCodeAlpha2
 from ....core.filing_year import FilingYear

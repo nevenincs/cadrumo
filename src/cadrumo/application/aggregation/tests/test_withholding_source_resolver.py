@@ -16,7 +16,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core import AggregationCaptureKind, Period
+from ....core import Period
+from ....core.aggregation import AggregationCaptureKind
 from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind, RetencionClave
 from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector

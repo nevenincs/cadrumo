@@ -31,7 +31,8 @@ from ......application.modelo.workspace_models import (
     ModeloWorkspaceVersionRefusalV1,
     ModeloWorkspaceVisibleFilingTargetV1,
 )
-from ......core import OutputLanguage, Period, RevisionReviewStatus
+from ......core import Period, RevisionReviewStatus
+from ......core.external_constants import OutputLanguage
 from ..models import (
     ModeloWorkspaceBoundedPageV1,
     ModeloWorkspaceCapabilityRowV1,

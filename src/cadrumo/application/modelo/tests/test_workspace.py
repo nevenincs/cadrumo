@@ -10,7 +10,8 @@ import pytest
 
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import BindingSourceKind, Period, RegistrySchemaFamilyDisposition
+from ....core import Period, RegistrySchemaFamilyDisposition
+from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos.work_unit import WorkUnit
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -413,7 +414,7 @@ def test_locale_summary_resolves_exact_for_a_real_authored_key(
     workspace_repos: tuple[str, WorkUnitCatalogueRepository],
 ) -> None:
     """modelo 130 / 2019-y-siguientes carries a real, non-null Spanish label."""
-    from ....core import OutputLanguage
+    from ....core.external_constants import OutputLanguage
 
     bucket_id, repository = workspace_repos
     authority = bundled_authority()
@@ -436,7 +437,7 @@ def test_locale_summary_falls_back_to_spanish_when_the_requested_language_has_no
     workspace_repos: tuple[str, WorkUnitCatalogueRepository],
 ) -> None:
     """modelo 130 / 2019-y-siguientes has a null (untranslated) English revision label."""
-    from ....core import OutputLanguage
+    from ....core.external_constants import OutputLanguage
 
     bucket_id, repository = workspace_repos
     authority = bundled_authority()
@@ -645,7 +646,7 @@ def test_static_inspection_work_review_facet_is_unmeasured_with_no_review() -> N
 def test_static_inspection_baseline_pins_the_exact_target_and_revision(
     workspace_repos: tuple[str, WorkUnitCatalogueRepository],
 ) -> None:
-    from ....core import OutputLanguage
+    from ....core.external_constants import OutputLanguage
 
     bucket_id, repository = workspace_repos
     _seed_work_unit(repository, bucket_id=bucket_id)
@@ -712,7 +713,7 @@ def test_static_inspection_baseline_pins_the_exact_target_and_revision(
 
 def _assemble_static_inspection_pieces(bucket_id: str, repository: WorkUnitCatalogueRepository):
     """Build every piece needed for schema_facet tests, real captures throughout."""
-    from ....core import OutputLanguage
+    from ....core.external_constants import OutputLanguage
     from ....domain.calculations.registry.static_inspection import RegistryRevisionInspection
     from ..workspace_producers import ModeloWorkspaceFieldManifestPortV1, ModeloWorkspaceLocaleCataloguePortV1
 
@@ -758,7 +759,7 @@ def _assemble_static_inspection_pieces(bucket_id: str, repository: WorkUnitCatal
 
 
 def test_static_inspection_casilla_schema_records_use_the_s277_joins_and_s283_absence() -> None:
-    from ....core import OutputLanguage
+    from ....core.external_constants import OutputLanguage
 
     authority = bundled_authority()
     capture = authority.capture_law_selected_projection("130", filing_year=2026, period="1T")
@@ -817,7 +818,7 @@ def test_static_inspection_casilla_schema_records_use_the_s277_joins_and_s283_ab
 def test_schema_facet_pagination_round_trips_a_cursor_across_all_pages(
     workspace_repos: tuple[str, WorkUnitCatalogueRepository],
 ) -> None:
-    from ....core import OutputLanguage
+    from ....core.external_constants import OutputLanguage
 
     bucket_id, repository = workspace_repos
     _seed_work_unit(repository, bucket_id=bucket_id)
@@ -858,7 +859,7 @@ def test_schema_facet_pagination_round_trips_a_cursor_across_all_pages(
 def test_schema_facet_stale_cursor_refuses_rather_than_returning_a_different_page(
     workspace_repos: tuple[str, WorkUnitCatalogueRepository],
 ) -> None:
-    from ....core import OutputLanguage
+    from ....core.external_constants import OutputLanguage
 
     bucket_id, repository = workspace_repos
     _seed_work_unit(repository, bucket_id=bucket_id)
@@ -963,7 +964,7 @@ def test_shared_schema_record_builders_are_identical_whether_fed_inspection_or_s
 
 def test_graded_casilla_schema_records_populate_what_static_correctly_leaves_absent() -> None:
     """The same casilla's legal_refs/constraints are None for static, real for graded."""
-    from ....core import OutputLanguage
+    from ....core.external_constants import OutputLanguage
 
     inspection = _real_303_inspection()
     snapshot = _real_303_snapshot()
@@ -1058,7 +1059,7 @@ def test_static_inspection_parameter_schema_records_key_off_dispatching_formulas
 
 
 def test_static_inspection_schema_records_covers_all_five_reference_kinds_deterministically() -> None:
-    from ....core import OutputLanguage
+    from ....core.external_constants import OutputLanguage
 
     inspection = _real_303_inspection()
     target = _minimal_resolved_target(inspection)
@@ -1121,7 +1122,7 @@ def test_static_inspection_family_dispositions_reports_only_declared_not_applica
 def test_resolve_static_inspection_result_assembles_a_complete_valid_projection(
     workspace_repos: tuple[str, WorkUnitCatalogueRepository],
 ) -> None:
-    from ....core import OutputLanguage
+    from ....core.external_constants import OutputLanguage
 
     bucket_id, repository = workspace_repos
     _seed_work_unit(repository, bucket_id=bucket_id)
@@ -1162,7 +1163,7 @@ def test_resolve_static_inspection_result_never_re_reads_the_work_catalogue(
     _seed_work_unit(repository, bucket_id=bucket_id)
     authority = bundled_authority()
 
-    from ....core import OutputLanguage
+    from ....core.external_constants import OutputLanguage
 
     caplog.clear()
     with caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.persistence.profile.modelos_work_units"):
@@ -1223,7 +1224,8 @@ def _real_calculation_revision_with_row_materialization():
     """
     from decimal import Decimal
 
-    from ....core import BindingSourceKind, validated_casilla_id
+    from ....core import validated_casilla_id
+    from ....core.aggregation import BindingSourceKind
     from ....domain.calculations import DirectRowMaterializationProvenance, RowSourceIdentity
     from ....domain.calculations.registry.bindings import CasillaObservation
     from ....domain.modelos.work_unit import derive_work_unit_id
@@ -1462,7 +1464,8 @@ def test_graded_snapshot_readiness_preserves_every_axis_and_the_ledger_issue_sub
 
 def test_graded_snapshot_provenance_facet_fans_out_by_linked_casilla_and_marks_unlinked_refs() -> None:
     """A source ref fans out to one record per linked casilla; an unlinked ref yields one subject=None record."""
-    from ....core import CalculationSourceLineageRole, validated_casilla_id
+    from ....core import validated_casilla_id
+    from ....core.aggregation import CalculationSourceLineageRole
     from ....core.aggregation import BindingSourceKind
     from ....domain.modelos.calculation_revision import CalculationSourceRef
     from ..workspace_models import ModeloWorkspaceCasillaReferenceV1
@@ -1630,7 +1633,8 @@ def test_provenance_facet_pages_a_real_revision_that_exceeds_the_page_size(
     workspace_repos: tuple[str, WorkUnitCatalogueRepository],
 ) -> None:
     """The provenance facet carried the same defect and is proven on the same real set."""
-    from ....core import CalculationSourceLineageRole, validated_casilla_id
+    from ....core import validated_casilla_id
+    from ....core.aggregation import CalculationSourceLineageRole
     from ....core.aggregation import BindingSourceKind
     from ....domain.modelos.calculation_revision import CalculationSourceRef
 
@@ -1921,7 +1925,8 @@ def test_resolve_graded_snapshot_result_refuses_when_the_target_has_no_calculati
     repos,
 ) -> None:
     """CALCULATION_UNAVAILABLE fires before REGISTRY grade admission, for a real never-calculated work unit."""
-    from ....core import OutputLanguage, RegistryAuthorityGrade
+    from ....core import RegistryAuthorityGrade
+    from ....core.external_constants import OutputLanguage
     from ....domain.calculations.registry.authority import bundled_authority
     from ....domain.calculations.registry.temporal import select_revision
     from ....domain.modelos.codes import ModeloCode
@@ -1994,7 +1999,8 @@ def test_resolve_graded_snapshot_result_refuses_target_not_found_when_no_work_un
     reaches this admission rather than being refused upstream by the
     selector itself.
     """
-    from ....core import OutputLanguage, RegistryAuthorityGrade
+    from ....core import RegistryAuthorityGrade
+    from ....core.external_constants import OutputLanguage
     from ....domain.calculations.registry.authority import bundled_authority
     from ..workspace import resolve_graded_snapshot_result
     from ..workspace_models import ModeloWorkspaceRefusalCode, ModeloWorkspaceRefusedResultV1
@@ -2030,7 +2036,8 @@ def test_resolve_graded_snapshot_result_assembles_a_complete_projection_over_a_r
     """The full assembly over a real work unit, calculation, and verification report."""
     from decimal import Decimal
 
-    from ....core import ModeloWorkProgressState, OutputLanguage, RegistryAuthorityGrade
+    from ....core import ModeloWorkProgressState, RegistryAuthorityGrade
+    from ....core.external_constants import OutputLanguage
     from ....domain.calculations.registry.authority import bundled_authority
     from ....domain.calculations.registry.temporal import select_revision
     from ....domain.modelos.codes import ModeloCode
@@ -2161,7 +2168,8 @@ def test_resolve_graded_snapshot_result_refuses_authority_grade_unavailable(
     touched -- the work unit only has to carry a non-``None`` id to pass the
     earlier ``CALCULATION_UNAVAILABLE`` gate.
     """
-    from ....core import OutputLanguage, RegistryAuthorityGrade
+    from ....core import RegistryAuthorityGrade
+    from ....core.external_constants import OutputLanguage
     from ....domain.calculations.registry.authority import bundled_authority
     from ....domain.calculations.registry.temporal import select_revision
     from ....domain.modelos.codes import ModeloCode
@@ -2244,7 +2252,8 @@ def test_resolve_graded_snapshot_result_reraises_a_non_grade_registry_validation
     registry cannot otherwise exercise is forced, to prove the except clause
     discriminates by condition rather than by type.
     """
-    from ....core import OutputLanguage, RegistryAuthorityGrade
+    from ....core import RegistryAuthorityGrade
+    from ....core.external_constants import OutputLanguage
     from ....domain.calculations.registry.authority import bundled_authority
     from ....domain.calculations.registry.errors import (
         RegistryFailureClassification,
@@ -2347,7 +2356,8 @@ def test_resolve_graded_snapshot_result_reads_the_work_catalogue_before_any_writ
     import logging
     from decimal import Decimal
 
-    from ....core import OutputLanguage, RegistryAuthorityGrade
+    from ....core import RegistryAuthorityGrade
+    from ....core.external_constants import OutputLanguage
     from ....domain.calculations.registry.authority import bundled_authority
     from ....domain.calculations.registry.temporal import select_revision
     from ....domain.modelos.codes import ModeloCode
@@ -2455,7 +2465,8 @@ def test_resolve_graded_snapshot_result_baseline_reflects_a_real_contributor_cha
     """
     from decimal import Decimal
 
-    from ....core import OutputLanguage, RegistryAuthorityGrade
+    from ....core import RegistryAuthorityGrade
+    from ....core.external_constants import OutputLanguage
     from ....domain.calculations.registry.authority import bundled_authority
     from ....domain.calculations.registry.temporal import select_revision
     from ....domain.modelos.codes import ModeloCode

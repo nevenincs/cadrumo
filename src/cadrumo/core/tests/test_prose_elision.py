@@ -18,7 +18,7 @@ from __future__ import annotations
 import pytest
 from pydantic import BaseModel, Field, ValidationError
 
-from .. import PROSE_ELISION_MARKER, elide_to_cap, elided_prose
+from ..prose_elision import PROSE_ELISION_MARKER, elide_to_cap, elided_prose
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

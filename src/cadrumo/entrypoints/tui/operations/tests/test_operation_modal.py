@@ -66,7 +66,7 @@ from .....application.user_profile.custody_ports import profile_custody_secure_o
 from .....application.user_profile.login_session import login_profile
 from .....application.user_profile.profile_record_repository import ProfileRecordRepository
 from .....application.user_profile.registration import register_profile_with_credentials
-from .....core import OperationEffect, OperationLifecycle, OperationTerminalCondition
+from .....core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from .....core.config import override_settings
 from .....core.i18n import clear_output_language_cache
 from .....core.time import now

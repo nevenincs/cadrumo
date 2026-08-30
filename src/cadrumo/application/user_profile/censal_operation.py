@@ -10,15 +10,15 @@ from typing import Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ...core import (
-    STRICT_FROZEN_CONFIG,
+from ...core import STRICT_FROZEN_CONFIG
+from ...core.hashing import content_hash_hex
+from ...core.operations import (
     OperationCancellation,
     OperationClosePolicy,
     OperationDeadline,
     OperationDurability,
     OperationEffect,
     OperationInteractionKind,
-    content_hash_hex,
 )
 from ...core.async_cleanup import AsyncCloseable
 from ...core.bucket_pointer import require_active_bucket_id

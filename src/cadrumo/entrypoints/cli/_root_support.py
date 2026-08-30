@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import typer
 
-from ...core import PRODUCT_IDENTITY as _PRODUCT_IDENTITY
+from ...core.product_identity import PRODUCT_IDENTITY as _PRODUCT_IDENTITY
 from ...core.cli_metadata import is_metadata_invocation as _is_metadata_invocation
 from ...core.json_contract import strict_round_trip as _strict_round_trip
 from ._command_specs import COMMAND_GRAPH as _COMMAND_GRAPH

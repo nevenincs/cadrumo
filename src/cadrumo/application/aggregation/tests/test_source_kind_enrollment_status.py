@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import BindingSourceKind
+from ....core.aggregation import BindingSourceKind
 from ...aggregation import DEFERRED_SOURCE_KINDS, BindingSourceDisposition
 from ...modelo.calculation_route import CALCULATION_ROUTE_SOURCE_DISPOSITIONS
 

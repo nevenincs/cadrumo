@@ -44,13 +44,13 @@ from pydantic import BaseModel, BeforeValidator, Field, StringConstraints, field
 
 from ...core import (
     M210_TIPO_RENTA_CODE_PROJECTION,
-    M347_THRESHOLD_EUR,
     STRICT_FROZEN_CONFIG,
     M210PayerMode,
     MetodoValoracion,
     TipoOperacionVinculada,
     TipoVinculacion,
 )
+from ...core.external_constants import M347_THRESHOLD_EUR
 from ...core.errors.hierarchy import CadrumoError
 from ...core.identity import nif_iva_format_for_country
 from ...core.unit_proportion import UnitProportion

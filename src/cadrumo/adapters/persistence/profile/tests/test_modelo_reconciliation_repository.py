@@ -47,7 +47,8 @@ from .....application.modelo.reconciliation_records import (
     list_modelo_reconciliations,
 )
 from .....application.workflow.persistence import workflow_state_repository
-from .....core import ABSENT_SECURE_OBJECT_REVISION_ID, Period
+from .....core import Period
+from .....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from .....domain.buckets.event import BucketEventType
 from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.modelos.codes import ModeloCode

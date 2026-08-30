@@ -176,7 +176,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
-from cadrumo.core import (
+from cadrumo.core.corpus_text import (
     CorpusAnchorResolutionError,
     normalise_corpus_text,
     resolve_anchored_extracted_unit,

@@ -24,7 +24,7 @@ from typing import Annotated, Protocol, Self, cast
 from pydantic import BaseModel, BeforeValidator, Field, PlainSerializer, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import ElidedProse
+from ...core.prose_elision import ElidedProse
 from ...core import NotificacionEstadoServicio as _NotificacionEstadoServicio
 from ...core import Period as _Period
 from ...core import PostFilingEventKind as _PostFilingEventKind

@@ -27,7 +27,6 @@ import re
 from collections.abc import Callable, Generator, Iterable, Sequence
 from contextlib import contextmanager
 from contextvars import ContextVar
-from enum import StrEnum
 from functools import cache, partial
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, cast
@@ -88,31 +87,6 @@ MODELO_CODE_CHOICE_ALL: typer_click_types.ParamType = cast(
     typer_click_types.ParamType,
     click.Choice([modelo.value for modelo in Modelo]),
 )
-
-
-def case_insensitive_choice(enum_class: type[StrEnum]) -> typer_click_types.ParamType:
-    """Build a case-insensitive click choice over ``enum_class``'s values.
-
-    Typer renders a bare enum annotation as a case-SENSITIVE choice. Several
-    options on this CLI previously hand-parsed their token with ``.upper()`` or
-    ``.strip().lower()`` before constructing the enum, so replacing that parser
-    with the annotation alone silently narrows the accepted spellings — a
-    behaviour change invisible at the declaration site and in every test that
-    only uses canonical forms.
-
-    Passing the result as ``click_type`` keeps the parameter's enum annotation
-    authoritative: the handler still receives a real member, not the raw token,
-    and external input-schema builders still read the closed value set off the
-    wrapped choice. Only the accepted spelling widens.
-    """
-    # CAST-RATIONALE-TYPER-CLICK-PARAMTYPE-DUALITY: typer vendors its own click, so
-    # click.Choice's click.types.ParamType and typer's typer._click.types.ParamType
-    # are the same runtime object behind two static names; the cast bridges only
-    # that static duality, with no Any escape.
-    return cast(
-        typer_click_types.ParamType,
-        click.Choice([member.value for member in enum_class], case_sensitive=False),
-    )
 
 
 # The application- and domain-layer symbols below are imported lazily,

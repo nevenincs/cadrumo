@@ -19,7 +19,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...core import SecureObjectWrite, StorageCategory, StorageCustodyProfile, storage_location
+from ...core import StorageCategory, StorageCustodyProfile, storage_location
+from ...core.secure_object_write import SecureObjectWrite
 from ...core.classification import SensitivityClass
 from ...core.errors.hierarchy import CoreError
 

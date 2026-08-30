@@ -8,12 +8,8 @@ from typing import ClassVar, Literal, Protocol, runtime_checkable
 
 from pydantic import BaseModel, model_validator
 
-from ....core import (
-    STRICT_FROZEN_CONFIG,
-    OperationEffect,
-    OperationLifecycle,
-    OperationTerminalCondition,
-)
+from ....core import STRICT_FROZEN_CONFIG
+from ....core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from ....core.identity import ContentDigest
 from ....core.operations import (
     LIFECYCLES_BEFORE_ANY_CANCELLATION_REQUEST,

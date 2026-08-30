@@ -23,7 +23,7 @@ from collections.abc import Callable, Sequence
 from enum import StrEnum
 from typing import Final, NamedTuple
 
-from ...core import IntracomOperationType
+from ...core.aggregation import IntracomOperationType
 from ..iva.classification import InvoiceKind, TransactionKind
 from ..iva.oss import OssIossRegime
 from ..iva.schema import EUMemberState, IvaCategory

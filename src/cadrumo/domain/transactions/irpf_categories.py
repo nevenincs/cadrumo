@@ -188,6 +188,3 @@ def has_employment_irpf_category(value: str | None, *, direction: TransactionDir
     return descriptor is not None and descriptor.purpose == "employment_income"
 
 
-def format_irpf_category_ids(ids: frozenset[str] | tuple[str, ...]) -> str:
-    """Render stable category ids for operator-facing validator messages."""
-    return ", ".join(sorted(ids))

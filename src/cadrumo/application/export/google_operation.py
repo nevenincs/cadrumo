@@ -16,16 +16,14 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from ...core import (
-    STRICT_FROZEN_CONFIG,
+from ...core import STRICT_FROZEN_CONFIG, Period, ServiceCapability
+from ...core.operations import (
     OperationCancellation,
     OperationClosePolicy,
     OperationDeadline,
     OperationDurability,
     OperationEffect,
     OperationInteractionKind,
-    Period,
-    ServiceCapability,
 )
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.filing_year import FilingYear

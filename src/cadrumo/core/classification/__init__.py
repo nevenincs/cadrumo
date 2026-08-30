@@ -428,13 +428,3 @@ def default_output_policy_for(output: OutputSensitivityClass) -> OutputClassific
     return _DEFAULT_OUTPUT_POLICY_TABLE[output]
 
 
-def default_policy_table() -> Mapping[SensitivityClass, ClassificationPolicy]:
-    """Return the immutable default-policy mapping for every class.
-
-    Returns:
-        The shared :class:`MappingProxyType` view mapping each
-        :class:`SensitivityClass` to its :class:`ClassificationPolicy`.
-        The mapping itself and every value are frozen; callers cannot
-        mutate either.
-    """
-    return _DEFAULT_POLICY_TABLE

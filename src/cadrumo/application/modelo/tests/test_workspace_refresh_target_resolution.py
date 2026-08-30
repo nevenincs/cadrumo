@@ -18,12 +18,8 @@ from pydantic import ValidationError
 
 from ....adapters.persistence.operations.journal import OperationJournalRepository
 from ....adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
-from ....core import (
-    OperationEffect,
-    OperationLifecycle,
-    OperationTerminalCondition,
-    Period,
-)
+from ....core import Period
+from ....core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos.work_unit import derive_work_unit_id
 from ...operations.frontend_contracts import (

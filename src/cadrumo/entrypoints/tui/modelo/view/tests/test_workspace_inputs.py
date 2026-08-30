@@ -13,7 +13,7 @@ from textual.app import App, ComposeResult
 from textual.widgets import Button, Checkbox, Input, RadioSet, SelectionList, Static
 
 from ......adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ......core import OutputLanguage
+from ......core.external_constants import OutputLanguage
 from ......core.i18n import tr
 from ....components.theme import install_cadrumo_themes
 from ..controller import ModeloWorkspaceReadSession, admit_workspace_session

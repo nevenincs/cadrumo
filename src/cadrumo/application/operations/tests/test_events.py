@@ -8,7 +8,7 @@ from typing import TypedDict
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
-from ....core import OperationEffect, OperationEventKind, OperationTerminalCondition
+from ....core.operations import OperationEffect, OperationEventKind, OperationTerminalCondition
 from ....tests.aeat_literal_fixtures import REDACTION_SESSION_QUERY_URL_CANARY
 from ..events import OperationLogSeverity
 from ..models import OperationIdentity, OperationReconciliationOutcome, OperationTerminalReceipt

@@ -12,8 +12,8 @@ from pydantic import BaseModel
 
 from ....adapters.persistence.operations.journal import OperationJournalRepository
 from ....adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
-from ....core import (
-    STRICT_FROZEN_CONFIG,
+from ....core import STRICT_FROZEN_CONFIG
+from ....core.operations import (
     OperationCancellation,
     OperationClosePolicy,
     OperationDeadline,

@@ -24,7 +24,7 @@ from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import NameOID
 from pydantic import SecretStr
 
-from ...core import BindingSourceKind
+from ...core.aggregation import BindingSourceKind
 from ...core.errors.error_codes import ERROR_REGISTRY, build_error_envelope, get_registered_error_code
 from ...core.errors.hierarchy import CadrumoError
 

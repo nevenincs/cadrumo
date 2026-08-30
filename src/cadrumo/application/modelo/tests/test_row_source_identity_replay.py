@@ -8,7 +8,8 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import BindingSourceKind, Period
+from ....core import Period
+from ....core.aggregation import BindingSourceKind
 from ....domain.calculations import RowSourceIdentity
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.filing.schema import ModeloBindingValue, ModeloDraft, ModeloValueKind, compute_modelo_draft_id, registry_schema_version

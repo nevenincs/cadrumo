@@ -28,13 +28,8 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
-from ....core import (
-    CasillaId,
-    Period,
-    RegistryAuthorityGrade,
-    fold_diacritics,
-    is_administrative_period_token,
-)
+from ....core import CasillaId, Period, RegistryAuthorityGrade, is_administrative_period_token
+from ....core.text_fold import fold_diacritics
 from ....core.decimal import european_thousands_reading_is_ambiguous
 from ....core.hashing import sha256_hex
 from ....core.identity import IdentityError, validate_spanish_tax_id

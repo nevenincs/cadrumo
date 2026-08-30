@@ -197,7 +197,7 @@ def _third_party_declaration_role_choice_values() -> list[str]:
     ``--declaration-roles`` flag choices never drift from the
     values the wizard catalogue and the profile schema validate against.
     """
-    from ...core import ThirdPartyDeclarationRole
+    from ...core.aggregation import ThirdPartyDeclarationRole
 
     return [member.value for member in ThirdPartyDeclarationRole]
 

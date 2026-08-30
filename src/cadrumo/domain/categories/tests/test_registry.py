@@ -18,12 +18,10 @@ from pathlib import Path
 
 import pytest
 
-from ..corpus import load_category_profiles_from_manual
-from ..registry import resolve_category_profiles
-from ..spending_category import SpendingCategory
 from ..errors import CategoryValidationError
 from ..proportionality import ProportionalityKind
-from ..registry import load_category_profiles
+from ..registry import load_category_profiles, resolve_category_profiles
+from ..spending_category import SpendingCategory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -83,13 +81,6 @@ def test_diet_profiles_preserve_condition_specific_daily_caps() -> None:
     }
 
 
-def test_load_category_profiles_from_manual_returns_2025_registry() -> None:
-    """The manual loader must resolve to the curated 2025 registry surface."""
-
-    loaded = load_category_profiles_from_manual(2025)
-    assert loaded.keys() == _PROFILES_2025.keys()
-
-
 def test_registry_preserves_conservative_semantics_for_special_categories() -> None:
     """Known edge categories must keep the intended non-numeric rule encoding."""
 
@@ -113,11 +104,11 @@ def test_registry_preserves_conservative_semantics_for_special_categories() -> N
     assert health.proportionality.statutory_cap_period.value == "year_per_person"
 
 
-def test_load_category_profiles_from_manual_rejects_unknown_year() -> None:
+def test_resolve_category_profiles_rejects_unknown_year() -> None:
     """Unsupported handbook years must fail loud."""
 
     with pytest.raises(ValueError, match=r"2099|year|unsupported|unknown"):
-        load_category_profiles_from_manual(2099)
+        resolve_category_profiles(2099)
 
 
 def test_load_category_profiles_wraps_missing_path_as_domain_error(tmp_path: Path) -> None:

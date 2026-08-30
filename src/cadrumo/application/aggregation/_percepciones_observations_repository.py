@@ -57,7 +57,8 @@ from ...adapters.persistence.storage import (
     SensitivityClass,
     safe_repository_id,
 )
-from ...core import STRICT_FROZEN_CONFIG, AggregationCaptureKind, Period
+from ...core import STRICT_FROZEN_CONFIG, Period
+from ...core.aggregation import AggregationCaptureKind
 from ...core.filing_year import FilingYear
 from ...core.time import UtcInstant, now
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation

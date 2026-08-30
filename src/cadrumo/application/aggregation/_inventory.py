@@ -8,7 +8,8 @@ from typing import ClassVar, Protocol, get_args
 
 from pydantic import ValidationError
 
-from ...core import BindingSourceKind, Modelo
+from ...core import Modelo
+from ...core.aggregation import BindingSourceKind
 from ...domain.calculations import RowSourceIdentity
 from ...domain.calculations.registry.inventory_bindings import InventorySelector
 from ...domain.calculations.registry.schema import DataBindingDefinition

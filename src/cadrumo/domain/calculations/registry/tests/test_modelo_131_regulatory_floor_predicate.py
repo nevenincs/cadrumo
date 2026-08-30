@@ -6,7 +6,7 @@ from functools import cache
 
 import pytest
 
-from .....core import normalise_corpus_text
+from .....core.corpus_text import normalise_corpus_text
 from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
 from ..schema import ModeloDefinition, RegistryCatalogues

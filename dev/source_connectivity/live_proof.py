@@ -42,13 +42,8 @@ from cadrumo.application.registry.source_connectivity_authority import (
     RepositoryRootEvidenceDigestVerifier,
     build_calculation_route_source_ownership_catalogue,
 )
-from cadrumo.core import (
-    BindingSourceKind,
-    CalculationSourceLineageRole,
-    IntracomOperationType,
-    Period,
-    validated_casilla_id,
-)
+from cadrumo.core import Period, validated_casilla_id
+from cadrumo.core.aggregation import BindingSourceKind, CalculationSourceLineageRole, IntracomOperationType
 from cadrumo.core._calculation_route import ModeloCalculationRouteId
 from cadrumo.core.resources import bundled_path
 from cadrumo.core.source_connectivity import SourceConnectivityConnectionIdentity
