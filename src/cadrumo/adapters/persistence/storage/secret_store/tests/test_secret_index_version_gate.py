@@ -40,7 +40,7 @@ from ......core.compatibility_lifecycle import PERSISTED_FORMATS, PersistedForma
 from ......core.classification import SensitivityClass
 from ......core.external_constants import UTF_8_ENCODING
 from ...errors import EnvelopeVersionError, StorageValidationError
-from .._secret_store import SECRET_INDEX_SCHEMA_VERSION, SecretRecord, SecretStore
+from ..store import SECRET_INDEX_SCHEMA_VERSION, SecretRecord, SecretStore
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

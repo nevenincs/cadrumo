@@ -60,7 +60,7 @@ precedent in :mod:`~cadrumo.tests.test_text_fold_enrollment_inventory`.
 """
 
 _CLASSIFICATION_COMPARE_EXEMPTIONS: Mapping[tuple[str, str], str] = {
-    ("adapters/persistence/storage/secret_store/_secret_store.py", "get"): (
+    ("adapters/persistence/storage/secret_store/store.py", "get"): (
         "Three-way peer-coherence check (index entry vs envelope vs sealed record) "
         "with no single 'expected' operand -- not the stored-vs-expected shape this "
         "predicate covers. See the surrounding comment for the class-triad rationale."
