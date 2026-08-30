@@ -6,7 +6,7 @@ import base64
 import binascii
 import json
 import re
-from typing import ClassVar, Final, Literal, cast
+from typing import Annotated, ClassVar, Final, Literal, cast
 from uuid import UUID
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
@@ -137,6 +137,20 @@ class ProfileCustodyWrappedDek(BaseModel):
         return _decode_canonical_b64(value, field_name="tag_b64", expected_bytes=GCM_TAG_SIZE)
 
 
+PasswordGeneration = Annotated[int, Field(ge=1, le=PROFILE_CUSTODY_PASSWORD_GENERATION_MAX)]
+"""A profile password generation counter: at least the first, never past the ceiling."""
+
+PostChangePasswordGeneration = Annotated[int, Field(ge=2, le=PROFILE_CUSTODY_PASSWORD_GENERATION_MAX)]
+"""The generation a profile reaches after a passphrase change.
+
+Narrower than :obj:`PasswordGeneration` at the bottom only: a profile starts at
+generation one, so the result of CHANGING the passphrase is two or more. The
+operator-facing result payload carried that lower bound and no ceiling at all,
+which let it report a generation the custody envelope itself would refuse to
+store. Both halves are declared here, beside the envelope that owns them.
+"""
+
+
 class _ProfileCustodyEnvelopePayload(BaseModel):
     """Validated v1 envelope fields before self-digest construction."""
 
@@ -144,7 +158,7 @@ class _ProfileCustodyEnvelopePayload(BaseModel):
 
     schema_version: Literal[1]
     profile_id: UUID
-    password_generation: int = Field(ge=1, le=PROFILE_CUSTODY_PASSWORD_GENERATION_MAX)
+    password_generation: PasswordGeneration
     dek_epoch: str
     password_encoding: Literal["utf-8"]
     key_schedule: Literal["profile-password-dek-wrap/v1"]

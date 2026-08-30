@@ -21,6 +21,8 @@ from typing import TYPE_CHECKING, Literal
 
 from pydantic import Field, NonNegativeInt, field_validator, model_validator
 
+from ...adapters.persistence.storage.custody.records import PostChangePasswordGeneration
+from ...application.auth.apoderado_service import RepresentedNif
 from ...application.auth.catalogue import AuthProviderListing
 from ...application.auth.diagnostics import AuthDiagnosticDetail, AuthDiagnosticPhoneState, AuthDiagnosticSummary
 from ...application.auth.operator_results import AuthLoginResult, AuthStatusResult, AuthTestResult
@@ -308,7 +310,7 @@ class ConfigPassphraseChangeResult(OutputSchema):
 
     profile_id: BucketId
     changed: bool
-    password_generation: int = Field(ge=2)
+    password_generation: PostChangePasswordGeneration
     dek_epoch_preserved: bool
     recovery_enrollment_retained: bool
 
@@ -851,7 +853,7 @@ class ApoderadoCheckResult(OutputSchema):
 
     bucket_id: BucketId
     configured: bool
-    represented_nif: str | None = Field(default=None, min_length=1, max_length=16)
+    represented_nif: RepresentedNif | None = None
     granted_scopes: list[str] | None = None
 
 
@@ -1058,7 +1060,7 @@ class ApoderadoStatusResult(OutputSchema):
 
     bucket_id: BucketId
     configured: bool
-    represented_nif: str | None = Field(default=None, min_length=1, max_length=16)
+    represented_nif: RepresentedNif | None = None
     granted_scopes: list[str] = []
     catalogue_version: NonEmptyStr | None = None
     configured_at: datetime | None = None
@@ -1074,7 +1076,7 @@ class ApoderadoConfigureResult(OutputSchema):
     """
 
     bucket_id: BucketId
-    represented_nif: str = Field(min_length=1, max_length=16)
+    represented_nif: RepresentedNif
     granted_scopes: list[str] = []
     catalogue_version: NonEmptyStr
     configured_at: datetime

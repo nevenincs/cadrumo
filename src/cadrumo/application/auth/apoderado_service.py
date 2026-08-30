@@ -30,9 +30,9 @@ the service has no verb that would write to AEAT.
 from __future__ import annotations
 
 from datetime import datetime
-from typing import ClassVar, override
+from typing import Annotated, ClassVar, override
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, StringConstraints
 
 from ...adapters.persistence.storage import (
     AUTH_APODERADO_CONFIGURATION_NAMESPACE,
@@ -88,13 +88,27 @@ class ApoderadoConfigurationIdentityError(CadrumoError):
     """
 
 
+RepresentedNif = Annotated[str, StringConstraints(min_length=1, max_length=16)]
+"""The tax identifier of the party an apoderamiento represents.
+
+The LENGTH bound only. Whether the value is a well-formed Spanish tax
+identifier is checked by the apoderamiento flow, through
+:func:`cadrumo.core.identity.validate_identity`, and is deliberately not
+attached here: the two identity validators in ``core.identity`` currently
+disagree about one CIF leader class, so typing this field with the canonical
+:data:`~cadrumo.core.identity.SubjectTaxId` alias would silently move it from
+the flow's policy to the opposite one. The length is uncontested and was
+written out at four sites; it is declared once here until that ruling lands.
+"""
+
+
 class ApoderadoConfiguration(BaseModel):
     """Persisted apoderado configuration for one bucket."""
 
     model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
-    represented_nif: str = Field(min_length=1, max_length=16)
+    represented_nif: RepresentedNif
     granted_scopes: tuple[str, ...] = Field(default_factory=tuple)
     catalogue_version: str = Field(min_length=1)
     configured_at: datetime
