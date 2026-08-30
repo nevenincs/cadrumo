@@ -196,7 +196,9 @@ def publish_validated_generated_export_tree(
                 publish_error=publish_error,
             )
             _delete_journal(journal_path)
-            raise AssertionError("unreachable after rollback restoration") from publish_error
+            raise RegistryValidationError(
+                f"generated export publication failed; the previous target was restored: {publish_error}",
+            ) from publish_error
         fsync_parent_dir(target_export_root)
         journal = journal.model_copy(update={"state": "candidate_live"})
         _write_journal(journal_path, journal)
@@ -598,9 +600,7 @@ def _restore_backup_or_raise(
             "generated export publication failed and the previous export could not be restored; "
             f"publication_error={publish_error}; restoration_error={restore_error}",
         ) from restore_error
-    raise RegistryValidationError(
-        f"generated export publication failed; the previous target was restored: {publish_error}",
-    ) from publish_error
+    return None
 
 
 def _delete_opaque_rollback_if_present(backup_export_root: Path) -> None:

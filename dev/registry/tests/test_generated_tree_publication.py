@@ -238,6 +238,7 @@ def test_publication_refuses_invalid_candidate_without_changing_live_export(
     assert _non_export_authority_bytes(context.target_export_root.parent) == before_authority
     assert candidate_export_root.exists()
     assert not _rollback_siblings(context.target_export_root)
+    assert not _tree_publication._journal_path(context).exists()
 
 
 @pytest.mark.parametrize(

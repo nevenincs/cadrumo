@@ -34,6 +34,7 @@ from cadrumo.domain.calculations.registry.static_inspection import (
 )
 
 from ..pipeline import _export_tree
+from ..pipeline._casilla_export_refs import write_generated_casilla_export_refs
 from ..pipeline._export_tree import ExportTreeTransportProfile, RenderedExportTree, render_complete_export_tree
 from ..pipeline._provenance_manifest import (
     EXPORT_FRAGMENT_PROVENANCE_FILENAME,
@@ -68,6 +69,35 @@ from .test_generated_export_trees import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+def test_generated_casilla_export_refs_replace_a_displaced_field_with_no_stale_reference(tmp_path: Path) -> None:
+    """Generator-owned refs are exactly the generated casilla field relation."""
+    casillas = tmp_path / "casillas"
+    casillas.mkdir()
+    path = casillas / "0001-casillas.toml"
+    path.write_text(
+        """[[revisions.current.casillas]]
+id = "addressed"
+source_refs = ["source"]
+
+[[revisions.current.casillas]]
+id = "displaced"
+source_refs = ["source"]
+export_refs = ["generated.displaced"]
+""",
+        encoding="utf-8",
+    )
+
+    written = write_generated_casilla_export_refs(
+        tmp_path,
+        export_refs_by_casilla={"addressed": ("generated.addressed",)},
+    )
+
+    assert written == (path,)
+    rendered = path.read_text(encoding="utf-8")
+    assert 'id = "addressed"\nsource_refs = ["source"]\nexport_refs = ["generated.addressed"]' in rendered
+    assert 'id = "displaced"\nsource_refs = ["source"]\nexport_refs' not in rendered
 
 
 def _intermediate(

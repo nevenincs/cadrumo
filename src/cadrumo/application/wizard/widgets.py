@@ -17,7 +17,6 @@ ends with ``-tax-id``) route through
 
 from __future__ import annotations
 
-import re
 from pathlib import Path
 
 from ...core.errors.error_codes import resolve_error_message
@@ -25,6 +24,7 @@ from ...core.i18n import tr
 from ...core.identity import IdentityError, validate_identity
 from ...core.parsing import parse_bool
 from ...core.redaction import redact_validation_context as _redact_validation_context
+from ...core.spanish_postcode import is_spanish_postcode
 from .errors import WizardValidationError
 from .models import WizardQuestion, WizardWidget
 
@@ -32,14 +32,6 @@ _TAX_ID_QUESTION_IDS: frozenset[str] = frozenset({"tax-id", "spouse-tax-id"})
 
 _POSTCODE_QUESTION_IDS: frozenset[str] = frozenset({"address-postcode"})
 """Question ids whose answer must be a Spanish 5-digit postcode."""
-
-_SPANISH_POSTCODE_RE = re.compile(r"^(0[1-9]|[1-4][0-9]|5[0-2])[0-9]{3}$")
-"""Spanish postcode: 5 digits whose first two are a province code 01-52.
-
-The field is a string throughout — leading zeros are significant
-(``01001`` is Vitoria-Gasteiz) and must never be int-coerced.
-"""
-
 
 def _fail(question: WizardQuestion, reason: str, **context: object) -> WizardValidationError:
     """Build a translated :class:`WizardValidationError` for ``question``.
@@ -100,7 +92,7 @@ def validate_text(raw: str, question: WizardQuestion) -> str:
                 raw=raw,
                 detail=resolve_error_message(exc),
             ) from exc
-    if value and question.id in _POSTCODE_QUESTION_IDS and not _SPANISH_POSTCODE_RE.match(value):
+    if value and question.id in _POSTCODE_QUESTION_IDS and not is_spanish_postcode(value):
         raise _fail(question, "invalid_postcode", raw=raw)
     return value
 
