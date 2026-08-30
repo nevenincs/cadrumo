@@ -50,9 +50,9 @@ from ..identity import AeatBoxNumber, ContentDigest, ContentDigestOrAbsent
 from ..time import validate_utc_aware
 
 #: Canonical shape of a run identifier: 16 lowercase hex characters, the form
-#: minted by :func:`core.observability._context._mint_run_id`. Declared once here
+#: minted by :func:`core.observability.context._mint_run_id`. Declared once here
 #: so the observability records, the workflow link, and the on-disk run-directory
-#: guard in :mod:`core.observability._store` describe one identity rather than
+#: guard in :mod:`core.observability.store` describe one identity rather than
 #: several independent conventions.
 RUN_ID_PATTERN = r"^[0-9a-f]{16}$"
 
@@ -138,7 +138,7 @@ class ArgumentRecord(BaseModel):
         cli_flag: Optional override carrying the actual Typer option
             spelling (e.g. ``"--json"``) when the Python parameter name
             differs from the user-facing flag. Without the override,
-            :func:`cadrumo.core.observability._replay._argv_from_arguments`
+            :func:`cadrumo.core.observability.replay._argv_from_arguments`
             derives the flag by replacing underscores with dashes —
             which is wrong for renamed options like
             ``typer.Option(False, "--json")`` bound to parameter

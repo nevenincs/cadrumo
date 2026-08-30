@@ -2,11 +2,11 @@
 
 Entering :func:`run_context` at the outermost CLI entry point mints a
 fresh ``run_id``, fingerprints the corpus / db / cert state, attaches a
-:class:`cadrumo.core.observability._sink.JsonlRunSink` to the root logger
+:class:`cadrumo.core.observability.sink.JsonlRunSink` to the root logger
 for the duration of the block, emits a
-:attr:`cadrumo.core.observability._models.RunEventKind.STEP_START` event,
+:attr:`cadrumo.core.observability.models.RunEventKind.STEP_START` event,
 and persists the final
-:class:`cadrumo.core.observability._models.RunTrace` on exit. Nesting is
+:class:`cadrumo.core.observability.models.RunTrace` on exit. Nesting is
 idempotent: an inner enter reuses the outer ``run_id`` and only pushes
 a new step identifier.
 """
@@ -26,13 +26,13 @@ from ..config import load_settings
 from ..identity import ContentDigest, ContentDigestOrAbsent
 from ..logging import attach_run_sink, detach_run_sink, get_logger
 from ..time import now
-from ._capture import _CAPTURE_SINK
-from ._fingerprint import (
+from .capture import _CAPTURE_SINK
+from .fingerprint import (
     compute_corpus_sha256,
     compute_data_root_sha256,
     read_cert_fingerprint,
 )
-from ._models import (
+from .models import (
     ArgumentRecord,
     RunEventKind,
     RunEventPayload,
@@ -40,8 +40,8 @@ from ._models import (
     RunTrace,
     StepBoundaryPayload,
 )
-from ._sink import JsonlRunSink
-from ._store import EVENTS_FILENAME, _run_dir, _validate_run_id, save_envelope, save_trace
+from .sink import JsonlRunSink
+from .store import EVENTS_FILENAME, _run_dir, _validate_run_id, save_envelope, save_trace
 
 _log = get_logger(__name__)
 
@@ -119,7 +119,7 @@ def _build_initial_context(
 
     A caller-supplied ``run_id`` is validated against the canonical
     shape (16 lowercase hex) by
-    :func:`cadrumo.core.observability._store._validate_run_id` before
+    :func:`cadrumo.core.observability.store._validate_run_id` before
     anything touches the filesystem — this prevents a malicious or
     buggy caller from escaping the configured runs directory through
     inputs like ``"../etc"``.
@@ -180,10 +180,10 @@ def run_context(
 
     The outermost enter mints a ``run_id``, fingerprints the corpus /
     db / cert state, attaches a
-    :class:`cadrumo.core.observability._sink.JsonlRunSink` to the root
+    :class:`cadrumo.core.observability.sink.JsonlRunSink` to the root
     logger, emits a ``STEP_START`` event, and on exit emits a
     ``STEP_END`` plus persists the finalised
-    :class:`cadrumo.core.observability._models.RunTrace` (even on
+    :class:`cadrumo.core.observability.models.RunTrace` (even on
     exception, with :attr:`RunOutcome.FAILED`).
 
     Inner enters reuse the outer ``run_id`` and only push a new
@@ -210,7 +210,7 @@ def run_context(
             successfully (outcome ``OK``).
     """
     # Local imports break the recorder ↔ context cycle.
-    from ._recorder import record_event
+    from .recorder import record_event
 
     outer = RUN_CONTEXT_VAR.get(None)
     if outer is not None:

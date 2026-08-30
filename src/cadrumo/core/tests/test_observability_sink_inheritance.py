@@ -4,7 +4,7 @@ import logging
 
 import pytest
 
-from ..observability import JsonlRunSink
+from ..observability.sink import JsonlRunSink
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

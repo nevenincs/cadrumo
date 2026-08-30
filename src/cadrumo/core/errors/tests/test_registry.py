@@ -17,10 +17,7 @@ from ....application.modelo._action_errors import (
 from ...access_gate import LiveSubmitForbiddenError
 from ...i18n import UnmatchedPlaceholderError, tr
 from ...logging import SecretScrubbingFilter, configure_logging
-from ...observability import (
-    RunContextMissingError,
-    RunTracePersistenceError,
-)
+from ...observability.errors import RunContextMissingError, RunTracePersistenceError
 from .. import (
     ERROR_REGISTRY,
     ErrorCategory,

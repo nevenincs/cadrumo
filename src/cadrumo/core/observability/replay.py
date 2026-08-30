@@ -17,10 +17,10 @@ from collections.abc import Callable
 
 from ..config import Settings
 from ..product_identity import PRODUCT_IDENTITY
-from ._fingerprint import compute_corpus_sha256
-from ._models import ArgumentRecord, ArgumentSource, RunTrace
-from ._store import load_trace
 from .errors import AeatCorpusDriftError, CadrumoObservabilityError
+from .fingerprint import compute_corpus_sha256
+from .models import ArgumentRecord, ArgumentSource, RunTrace
+from .store import load_trace
 
 # Marker environment variable set for the duration of ``replay_run``'s
 # re-entered CLI call so run_context can label the child trace.
@@ -132,7 +132,7 @@ def replay_run(
     the research F1 gap so replay proves "the same JSON came out", not
     only "the same argv re-runs". The capture/canonicalise/mask/compare
     logic lives in the shared substrate primitive
-    (:mod:`cadrumo.core.observability._golden`); the operator golden gate
+    (:mod:`cadrumo.core.observability.golden`); the operator golden gate
     reuses the same primitive.
 
     Args:
@@ -194,11 +194,11 @@ def replay_run(
 
     # Lazy imports keep the substrate seams out of the module-load graph
     # (and preserve the canonical ``REPLAY_ACTIVE_ENV_VAR`` line above).
-    from ._capture import capture_envelopes
+    from .capture import capture_envelopes
 
     expected_envelope: dict[str, object] | None = None
     if assert_envelope:
-        from ._store import load_envelope_document
+        from .store import load_envelope_document
 
         expected_envelope = load_envelope_document(run_id)
 
@@ -232,7 +232,7 @@ def replay_run(
     if expected_envelope is not None:
         _assert_replayed_envelope(run_id, expected_envelope, captured)
     if assert_db_state:
-        from ._fingerprint import compute_data_root_sha256
+        from .fingerprint import compute_data_root_sha256
 
         observed_db = compute_data_root_sha256(settings)
         _assert_db_state_unchanged(run_id, original.db_sha256, observed_db)
@@ -268,7 +268,7 @@ def _assert_replayed_envelope(
     diverge on masking. The lazy import keeps ``_golden`` (and its
     ``json_contract`` dependency) off the module-load graph.
     """
-    from ._golden import assert_golden_match
+    from .golden import assert_golden_match
 
     if not captured:
         raise CadrumoObservabilityError(

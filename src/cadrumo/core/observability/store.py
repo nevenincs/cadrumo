@@ -3,7 +3,7 @@
 One subdirectory per ``run_id`` under
 :attr:`core.config.Settings.cadrumo_runs_dir`, containing
 ``trace.json`` and ``events.jsonl``. Both files round-trip through the
-strict pydantic models in :mod:`core.observability._models`.
+strict pydantic models in :mod:`core.observability.models`.
 
 Run traces are DIAGNOSTIC class. The redaction rule set returned by
 :func:`core.redaction.default_rules_for_class` for
@@ -35,9 +35,9 @@ from ..directory_scan import scan_directory
 from ..logging import get_logger
 from ..paths import directory_byte_total, select_filesystem_retention_survivors
 from ..time import now
-from ._models import RUN_ID_PATTERN, RunEvent, RunTrace
-from ._redaction_rules import diagnostic_rules
 from .errors import RunTracePersistenceError, RunTraceValidationError
+from .models import RUN_ID_PATTERN, RunEvent, RunTrace
+from .redaction_rules import diagnostic_rules
 
 _logger = get_logger(__name__)
 
@@ -57,7 +57,7 @@ constants into their grammar rather than re-typing the names)."""
 _EVENTS_APPEND_LOCK = threading.Lock()
 
 
-# Run ids are minted by :func:`core.observability._context._mint_run_id`
+# Run ids are minted by :func:`core.observability.context._mint_run_id`
 # as ``uuid4().hex[:16]``. Validate every run_id reaching the filesystem
 # layer against the same shape so a crafted id (e.g. ``..`` or
 # ``/etc/passwd``) cannot cause ``runs_dir / run_id`` to escape the
@@ -72,7 +72,7 @@ def _validate_run_id(run_id: str) -> str:
 
     The canonical shape is 16 lowercase hex characters — the form
     minted by
-    :func:`core.observability._context._mint_run_id`. Validating
+    :func:`core.observability.context._mint_run_id`. Validating
     every id reaching this layer prevents path-traversal escapes
     through ``runs_dir / run_id``.
 
@@ -343,7 +343,7 @@ def save_events_append(
 
     ``newline=""`` pins the on-disk line terminator to ``\\n`` on every
     platform — mirroring
-    :class:`core.observability._sink.JsonlRunSink` — so
+    :class:`core.observability.sink.JsonlRunSink` — so
     ``events.jsonl`` is byte-stable across Windows and POSIX writers.
     Every string leaf in the event is redacted at DIAGNOSTIC class
     before serialisation so the on-disk record stays free of plaintext

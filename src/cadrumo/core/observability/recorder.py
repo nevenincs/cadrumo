@@ -1,9 +1,9 @@
 """The single :func:`record_event` emit primitive used by every call site.
 
-Routes structured :class:`cadrumo.core.observability._models.RunEvent`
+Routes structured :class:`cadrumo.core.observability.models.RunEvent`
 records through the standard :mod:`logging` machinery so any handler
 attached to the root logger — notably the per-run
-:class:`cadrumo.core.observability._sink.JsonlRunSink` — picks them up
+:class:`cadrumo.core.observability.sink.JsonlRunSink` — picks them up
 automatically while a :func:`cadrumo.core.observability.run_context` is
 active.
 """
@@ -14,9 +14,9 @@ import inspect
 
 from ..logging import get_logger
 from ..time import now
-from ._context import RUN_CONTEXT_VAR, STEP_CONTEXT_VAR
-from ._models import RunEvent, RunEventKind, RunEventPayload
+from .context import RUN_CONTEXT_VAR, STEP_CONTEXT_VAR
 from .errors import RunContextMissingError
+from .models import RunEvent, RunEventKind, RunEventPayload
 
 _logger = get_logger("cadrumo.core.observability")
 

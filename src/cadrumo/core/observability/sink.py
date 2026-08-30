@@ -33,9 +33,9 @@ from pathlib import Path
 from typing import TextIO, override
 
 from ..logging import get_logger
-from ._models import RunEvent
-from ._redaction_rules import diagnostic_rules
-from ._store import _EVENTS_APPEND_LOCK
+from .models import RunEvent
+from .redaction_rules import diagnostic_rules
+from .store import _EVENTS_APPEND_LOCK
 
 logger = get_logger(__name__)
 

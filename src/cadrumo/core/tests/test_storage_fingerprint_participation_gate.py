@@ -47,7 +47,7 @@ from .._storage_taxonomy import (
     StorageScope,
 )
 from ..config import override_settings
-from ..observability._fingerprint import compute_data_root_sha256, data_root_cache_exclusions
+from ..observability.fingerprint import compute_data_root_sha256, data_root_cache_exclusions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

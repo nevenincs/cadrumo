@@ -24,7 +24,7 @@ from ....tests.aeat_literal_fixtures import (
 from ....tests.storage_scope import storage_overrides
 from ... import StorageCategory
 from ...config import override_settings
-from .. import (
+from ..models import (
     ArgumentRecord,
     ArgumentSource,
     NavigationPayload,
@@ -33,10 +33,8 @@ from .. import (
     RunEventPayload,
     RunOutcome,
     RunTrace,
-    save_events_append,
-    save_trace,
 )
-from .._store import EVENTS_FILENAME, TRACE_FILENAME, runs_dir
+from ..store import EVENTS_FILENAME, TRACE_FILENAME, runs_dir, save_events_append, save_trace
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

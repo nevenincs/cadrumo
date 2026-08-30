@@ -22,8 +22,8 @@ from ....tests.storage_scope import relocated_storage_path, storage_overrides
 from ... import StorageCategory
 from ...config import override_settings
 from ...directory_scan import DirectoryEntryKind, scan_directory
-from .._models import RunOutcome, RunTrace
-from .._store import EVENTS_FILENAME, TRACE_FILENAME, prune_run_traces, save_trace
+from ..models import RunOutcome, RunTrace
+from ..store import EVENTS_FILENAME, TRACE_FILENAME, prune_run_traces, save_trace
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

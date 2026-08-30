@@ -13,7 +13,7 @@ This module deliberately has NO dependency on
 (:func:`core.json_contract.emit_json_success`) can feed it through a
 cheap lazy import without an import cycle. Typed re-validation of a
 captured document against the schema registry lives in
-:mod:`core.observability._golden`.
+:mod:`core.observability.golden`.
 """
 
 from __future__ import annotations

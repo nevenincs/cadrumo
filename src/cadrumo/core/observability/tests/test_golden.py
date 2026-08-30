@@ -26,23 +26,20 @@ import pytest
 from ....domain.user_profile.values import new_profile_snapshot_id
 from ...json_contract import OutputSchema, emit_json_success
 from ...time import frozen_clock, now
-from .. import (
+from ..capture import capture_envelopes, capture_is_armed, record_emitted_envelope
+from ..context import _mint_run_id
+from ..errors import GoldenCaptureError, GoldenReplayMismatchError
+from ..golden import (
     GOLDEN_MASK_FIELDS,
     GOLDEN_MASK_PATHS,
     MASK_SENTINEL,
-    GoldenCaptureError,
-    GoldenReplayMismatchError,
     assert_golden_match,
     canonicalise,
-    capture_envelopes,
-    capture_is_armed,
     differing_field_names,
     differing_paths,
     mask_document,
     validate_captured_envelope,
 )
-from .._capture import record_emitted_envelope
-from .._context import _mint_run_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

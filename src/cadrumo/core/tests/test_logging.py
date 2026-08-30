@@ -480,7 +480,7 @@ def test_attach_and_detach_run_sink_are_symmetric(tmp_path: Path) -> None:
     Real-behavior: wire a real JsonlRunSink, observe root-logger handler list and
     sink filter list before, during, and after the attach/detach cycle.
     """
-    from ..observability import JsonlRunSink
+    from ..observability.sink import JsonlRunSink
 
     run_id = "a1b2c3d4e5f60001"
     sink = JsonlRunSink(tmp_path / "events.jsonl", run_id=run_id)
@@ -517,7 +517,7 @@ def test_attach_and_detach_run_sink_are_symmetric(tmp_path: Path) -> None:
 
 def test_detach_run_sink_is_idempotent_on_filter_removal(tmp_path: Path) -> None:
     """detach_run_sink called twice must not raise and must leave the sink filter-clean."""
-    from ..observability import JsonlRunSink
+    from ..observability.sink import JsonlRunSink
 
     run_id = "b2c3d4e5f6070002"
     sink = JsonlRunSink(tmp_path / "events.jsonl", run_id=run_id)
@@ -535,7 +535,7 @@ def test_detach_run_sink_is_idempotent_on_filter_removal(tmp_path: Path) -> None
 
 def test_attach_run_sink_does_not_double_install_scrubbing_filter(tmp_path: Path) -> None:
     """Calling attach_run_sink twice must install SecretScrubbingFilter exactly once."""
-    from ..observability import JsonlRunSink
+    from ..observability.sink import JsonlRunSink
 
     root_logger = logging.getLogger()
     run_id = "c3d4e5f607080003"

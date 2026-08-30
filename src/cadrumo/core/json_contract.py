@@ -586,7 +586,7 @@ def _record_captured_envelope(envelope_payload: object) -> None:
     if not isinstance(envelope_payload, Mapping):
         return
     try:
-        from .observability import record_emitted_envelope
+        from .observability.capture import record_emitted_envelope
 
         # CAST-RATIONALE-ENVELOPE-CAPTURE-MAPPING: the isinstance check above
         # confirms only the erased runtime `Mapping` shape, not the `str, object`
