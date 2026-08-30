@@ -10,10 +10,10 @@ related:
   - '[[2026-06-01-registry-period-code-union-cli-boundary-adr]]'
   - '[[2026-08-05-ci-lane-deconflation-step-check-attribution-audit]]'
 modified: '2026-08-30'
-body_hash: 'sha256:c5dce137c455b6c360bbb0ebe59ce4d49804d1ad6360112cdf0ff47d2fa8cbb5'
+body_hash: 'sha256:202b459d8309ae524ee24d71e19983d4f2cea9e35446085392cddb8d0a6ca9d4'
 ---
 
-<!-- RETIRED: S01, S10, S181, S184 -->
+<!-- RETIRED: S01, S10, S181, S184, S186, S189, S191, S193, S194, S197, S199, S201, S203, S205, S207, S209, S211, S213, S215, S217, S219, S221 -->
 
 # `ci-lane-deconflation` plan
 
@@ -239,47 +239,30 @@ Decompose every live size-budget subject by its owning source file, then regener
 - [ ] `P05.S182` - Refactor the size-budget subjects in authority.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/authority.py`.
 - [ ] `P05.S183` - Refactor the size-budget subjects in bindings.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/bindings.py`.
 - [ ] `P05.S185` - Refactor the size-budget subjects in formula_runtime.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/formula_runtime.py`.
-- [ ] `P05.S186` - Refactor the size-budget subjects in _filing_projection_ref.py into cohesive siblings without raising any threshold.; `src/cadrumo/core/_filing_projection_ref.py`.
 - [ ] `P05.S187` - Refactor the size-budget subjects in invoice_bindings.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/invoice_bindings.py`.
 - [ ] `P05.S188` - Refactor the size-budget subjects in ledger_bindings.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/ledger_bindings.py`.
-- [ ] `P05.S189` - Refactor config.py below the default size ceiling without raising its stale threshold.; `src/cadrumo/core/config.py`.
 - [ ] `P05.S190` - Refactor the size-budget subjects in record_design.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/record_design.py`.
-- [ ] `P05.S191` - Refactor the size-budget subjects in _application_part2.py into cohesive siblings without raising any threshold.; `src/cadrumo/core/errors/registry/_application_part2.py`.
 - [ ] `P05.S192` - Refactor the size-budget subjects in schema.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/schema.py`.
-- [ ] `P05.S193` - Refactor the size-budget subjects in context.py into cohesive siblings without raising any threshold.; `src/cadrumo/core/observability/context.py`.
-- [ ] `P05.S194` - Refactor the size-budget subjects in _validate_revision_sections.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/_validate_revision_sections.py`.
 - [ ] `P05.S195` - Refactor the size-budget subjects in test_catalogue_verification.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/tests/test_catalogue_verification.py`.
 - [ ] `P05.S196` - Refactor the size-budget subjects in test_detail_record_observations.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/tests/test_detail_record_observations.py`.
-- [ ] `P05.S197` - Refactor the size-budget subjects in authority.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/authority.py`.
 - [ ] `P05.S198` - Refactor the size-budget subjects in test_modelo_100_registry_roles.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_registry_roles.py`.
-- [ ] `P05.S199` - Refactor the size-budget subjects in bindings.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/bindings.py`.
 - [ ] `P05.S200` - Refactor the size-budget subjects in test_modelo_303_registry.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/tests/test_modelo_303_registry.py`.
-- [ ] `P05.S201` - Refactor the size-budget subjects in formula_runtime.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/formula_runtime.py`.
 - [ ] `P05.S202` - Refactor the size-budget subjects in test_record_design.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/tests/test_record_design.py`.
-- [ ] `P05.S203` - Refactor the size-budget subjects in invoice_bindings.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/invoice_bindings.py`.
 - [ ] `P05.S204` - Refactor the size-budget subjects in test_revision_span_matches_published_designs.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/tests/test_revision_span_matches_published_designs.py`.
-- [ ] `P05.S205` - Refactor the size-budget subjects in ledger_bindings.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/ledger_bindings.py`.
 - [ ] `P05.S206` - Refactor the size-budget subjects in withholding_bindings.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/withholding_bindings.py`.
-- [ ] `P05.S207` - Refactor the size-budget subjects in record_design.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/record_design.py`.
 - [ ] `P05.S208` - Refactor the size-budget subjects in __init__.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/contribuyente/inventory/__init__.py`.
-- [ ] `P05.S209` - Refactor the size-budget subjects in schema.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/schema.py`.
 - [ ] `P05.S210` - Refactor the size-budget subjects in models.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/invoices/models.py`.
-- [ ] `P05.S211` - Refactor the size-budget subjects in test_catalogue_verification.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/tests/test_catalogue_verification.py`.
 - [ ] `P05.S212` - Refactor the size-budget subjects in classification.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/iva/classification.py`.
-- [ ] `P05.S213` - Refactor the size-budget subjects in test_detail_record_observations.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/tests/test_detail_record_observations.py`.
 - [ ] `P05.S214` - Refactor the size-budget subjects in components.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/iva/components.py`.
-- [ ] `P05.S215` - Refactor the size-budget subjects in test_modelo_100_registry_roles.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_registry_roles.py`.
 - [ ] `P05.S216` - Refactor the size-budget subjects in establishment.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/iva/establishment.py`.
-- [ ] `P05.S217` - Refactor the size-budget subjects in test_modelo_303_registry.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/tests/test_modelo_303_registry.py`.
 - [ ] `P05.S218` - Refactor the size-budget subjects in calculation_revision.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/modelos/calculation_revision.py`.
-- [ ] `P05.S219` - Refactor the size-budget subjects in test_record_design.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/tests/test_record_design.py`.
 - [ ] `P05.S220` - Refactor the size-budget subjects in test_calculation_revision.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/modelos/tests/test_calculation_revision.py`.
-- [ ] `P05.S221` - Refactor the size-budget subjects in test_revision_span_matches_published_designs.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/tests/test_revision_span_matches_published_designs.py`.
 - [ ] `P05.S222` - Refactor the size-budget subjects in models.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/transactions/models.py`.
 - [ ] `P05.S223` - Refactor _config_payloads.py below the default size ceiling without raising its stale threshold.; `src/cadrumo/entrypoints/cli/_config_payloads.py`.
 - [ ] `P05.S224` - Refactor the size-budget subjects in _modelo_payloads.py into cohesive siblings without raising any threshold.; `src/cadrumo/entrypoints/cli/_modelo_payloads.py`.
 - [ ] `P05.S225` - Refactor the size-budget subjects in test_machine_secret_channels_subprocess.py into cohesive siblings without raising any threshold.; `src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py`.
 - [ ] `P05.S226` - Refactor the size-budget subjects in app.py into cohesive siblings without raising any threshold.; `src/cadrumo/entrypoints/tui/flows/app.py`.
+- [ ] `P05.S227` - Regenerate only stale size-budget pins after every live source-file subject is compliant, verify no threshold is raised, and do not use --accept-growth.; `dev/audit/size_budget_baseline.json`.
 
 ## Parallelization
 
