@@ -253,8 +253,15 @@ jobs:
           if [[ "${DRY_RUN}" == "true" ]]; then
             campaign_workflow=".github/workflows/packaging-quick.yml"
           fi
+          # --dispatch-ref names a BRANCH. `workflow_dispatch` refuses a commit
+          # SHA outright - `HTTP 422: No ref found for: <sha>` - so dispatching
+          # the head SHA, which this did until now, could never start a run at
+          # all. The run is still identified by --head-sha, so a branch that
+          # advances between bump and dispatch produces no match and the
+          # resolver refuses, rather than silently watching the wrong commit.
           uv run --frozen python -m dev.release.run_resolution \
             --workflow "${campaign_workflow}" \
+            --dispatch-ref "${GITHUB_REF_NAME}" \
             --head-sha "${head_sha}" \
             --repository "${GITHUB_REPOSITORY}" \
             --resolve-seconds 1800 \
@@ -318,7 +325,7 @@ jobs:
             # nowhere to go was previously dropped at the job boundary, and the
             # publication would then run without its acquisition proof.
             echo "Dispatching acquisition lane ${lane} (-> ${output_name})"
-            uv run --frozen python -m dev.release.run_resolution               --workflow "${lane}"               --head-sha "${HEAD_SHA}"               --repository "${GITHUB_REPOSITORY}"               --input "source_run_id=${PACKAGING_RUN_ID}"               --input "source_commit=${HEAD_SHA}"               --resolve-seconds 1800               --output-name "${output_name}"
+            uv run --frozen python -m dev.release.run_resolution               --workflow "${lane}"               --dispatch-ref "${GITHUB_REF_NAME}"               --head-sha "${HEAD_SHA}"               --repository "${GITHUB_REPOSITORY}"               --input "source_run_id=${PACKAGING_RUN_ID}"               --input "source_commit=${HEAD_SHA}"               --resolve-seconds 1800               --output-name "${output_name}"
           done <<< "${lanes}"
 
   seal:
