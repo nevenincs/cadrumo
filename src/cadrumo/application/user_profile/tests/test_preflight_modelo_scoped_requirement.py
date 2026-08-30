@@ -87,10 +87,7 @@ def test_the_registry_declares_the_requirement_rather_than_a_code_branch() -> No
     """The shipped schema carries the axis, so no handler needs a modelo branch."""
     schema = load_user_profile_schema()
     declared = tuple(
-        field
-        for section in schema.sections
-        for field in section.fields
-        if Modelo.M111 in field.required_for_modelos
+        field for section in schema.sections for field in section.fields if Modelo.M111 in field.required_for_modelos
     )
     assert declared, "the shipped schema must declare the Modelo 111 requirement"
     assert all(not field.required for field in declared), (
