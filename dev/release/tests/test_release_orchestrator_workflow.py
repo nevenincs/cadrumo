@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import Final, Any, Final
+from typing import Any, Final
 
 import pytest
 import yaml
