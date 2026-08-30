@@ -5,7 +5,7 @@ tags:
 date: '2026-08-30'
 modified: '2026-08-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:9b6099701484831705696121976fa03f7aa18a533f9cf8a22772632d55330256'
+body_hash: 'sha256:2acf0339a4517af72751a5b087a51733fa3b301fa21d7e44c1db48ce1a921a4b'
 related: []
 ---
 
@@ -62,6 +62,36 @@ divergence is unpinned in both directions.
 Because the behaviour is filing-grade identity validation, the fix is a tax
 review against BOE or AEAT text and an ADR ruling, not a code judgement made
 from the shape of the duplication. **No behaviour was changed.**
+
+## The divergence is on a live path, not just in the module pair
+
+Found while attempting an unrelated consolidation, and it raises the severity.
+
+The apoderamiento flow validates the represented party's NIF through
+:func:`validate_identity` -- `application/auth/apoderado_flow.py:102`, which the
+module docstring names as the canonical authority for that field.
+:func:`validate_identity` is the ``_documents`` implementation, so it applies the
+DIGIT-ONLY policy.
+
+The canonical pydantic alias for the same concept, :data:`SubjectTaxId` in
+`core/identity/__init__.py:213`, runs :func:`validate_spanish_tax_id` -- the
+``_tax_id`` implementation, which applies the MIXED policy.
+
+    validate_identity("A1234567D")        -> IdentityError   (refused)
+    validate_spanish_tax_id("A1234567D")  -> "A1234567D"     (accepted)
+
+So the two policies are not merely co-resident in one package. One is reached by
+the interactive flow and the other by the field type any model would adopt for
+the same value. An operator entering an ABEH-leader CIF with a letter control
+is refused by the wizard; the same value validates if it arrives by any path
+that types the field instead.
+
+This also blocks an otherwise routine consolidation. ``represented_nif`` carries
+``min_length=1, max_length=16`` at three CLI sites and a fourth in
+``apoderado_service``, and the obvious fix is to adopt :data:`SubjectTaxId`.
+Doing so would move that field from the flow's policy to the opposite one
+without anyone deciding to. The length bound was consolidated instead, and the
+checksum policy left exactly where it is, pending the ruling below.
 
 ## Recommendation
 
