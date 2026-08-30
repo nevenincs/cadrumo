@@ -12,7 +12,7 @@ from ...application.modelo.reconciliation_parsing import (
 from ...domain.filing.reconciliation.errors import ReconciliationDeclaracionParseError
 from ...domain.justificante import Justificante
 from .declaracion import DeclaracionParseError, parse_declaracion
-from .justificante import parse_justificante, parse_justificante_bytes
+from .justificante.parser import parse_justificante, parse_justificante_bytes
 
 
 class InboundReconciliationEvidenceParser(ReconciliationEvidenceParserPort):

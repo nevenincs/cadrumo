@@ -560,7 +560,7 @@ def parse_capture_to_justificante(snapshot: JustificanteCaptureSnapshot) -> Just
     Used to register the captured receipt as official filing evidence and to
     reconcile against it.
     """
-    from ...adapters.inbound.justificante import parse_justificante_bytes
+    from ...adapters.inbound.justificante.parser import parse_justificante_bytes
 
     return parse_justificante_bytes(snapshot.decoded_pdf_bytes())
 

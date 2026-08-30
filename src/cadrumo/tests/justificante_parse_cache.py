@@ -5,7 +5,7 @@ from __future__ import annotations
 from functools import cache
 from pathlib import Path
 
-from ..adapters.inbound.justificante import parse_justificante
+from ..adapters.inbound.justificante.parser import parse_justificante
 from ..domain.justificante import Justificante
 
 

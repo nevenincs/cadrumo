@@ -26,7 +26,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
 
-from ...adapters.inbound.justificante import parse_justificante_bytes
+from ...adapters.inbound.justificante.parser import parse_justificante_bytes
 from ...adapters.outbound.aeat.sede.declarations_observations import registry_observation_from_filed_declaration
 from ...adapters.outbound.aeat.sede.declarations_remote import extract_csv_from_url
 from ...adapters.outbound.aeat.sede.declarations_schema import Declaracion
@@ -52,7 +52,13 @@ from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import emit_bucket_event
 from ...domain.iva_compensation.carry_forward import iva_compensation_period_sort_key
 from ...domain.justificante import Justificante
-from ...domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind, ModeloRecord, ModeloRecordCatalogue, is_justificante_backed_external_evidence
+from ...domain.modelos.filing_record import (
+    ExternalEvidence,
+    ExternalEvidenceKind,
+    ModeloRecord,
+    ModeloRecordCatalogue,
+    is_justificante_backed_external_evidence,
+)
 from ...domain.modelos.filing_repository import upsert_filing_record
 from ...domain.modelos.protocols import ModeloRecordCatalogueRepositoryProtocol
 from ..modelo.external_import_actions import (

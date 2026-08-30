@@ -44,7 +44,7 @@ from datetime import UTC
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol
 
-from ...adapters.inbound.justificante import parse_justificante
+from ...adapters.inbound.justificante.parser import parse_justificante
 from ...core import Modelo, Period, PeriodError
 from ...core.logging import get_logger
 from ...core.time import MADRID_TZ
