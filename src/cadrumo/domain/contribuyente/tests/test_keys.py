@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.errors import ERROR_REGISTRY, build_error_envelope
+from ....core.errors.error_codes import ERROR_REGISTRY, build_error_envelope
 from ....core.i18n import Translatable as tr
 from ..errors import ProfileKeysRegistrationError
 from ..keys import (

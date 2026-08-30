@@ -18,7 +18,8 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 from ...core import ActionEvidenceProvenance, NoRecoveryOutcome
-from ...core.errors import CadrumoError, TerminalPreconditionErrorMixin, get_registered_error_code
+from ...core.errors.error_codes import get_registered_error_code
+from ...core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin
 
 
 class PortalRegistryPrecondition(StrEnum):

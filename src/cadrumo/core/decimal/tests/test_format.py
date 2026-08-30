@@ -23,7 +23,7 @@ from decimal import Decimal
 
 import pytest
 
-from ...errors import DecimalFormatError
+from ...errors.hierarchy import DecimalFormatError
 from .. import format_decimal
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

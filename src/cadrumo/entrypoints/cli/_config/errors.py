@@ -9,7 +9,7 @@ swallowed or reported as bare Python exceptions.
 
 from __future__ import annotations
 
-from ....core.errors import CoreError
+from ....core.errors.hierarchy import CoreError
 
 
 class ConfigBoundaryError(CoreError):

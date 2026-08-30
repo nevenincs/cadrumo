@@ -19,7 +19,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 modelo_export = import_module("cadrumo.application.modelo._export")
 m303_filing_evidence = import_module("cadrumo.application.modelo._m303_filing_evidence")
 
-_CANONICAL_S56_OWNER = "cadrumo/domain/modelos/calculation_revision.py"
+#: The three Exonerado-390 evidence classes are defined here, not in
+#: calculation_revision. That module used to carry them and kept importing
+#: them solely to list them in its __all__ long after they moved, so this pin
+#: named a module that merely re-exported them.
+_CANONICAL_S56_OWNER = "cadrumo/domain/modelos/calculation_revision_m303_evidence.py"
 _S56_ACTIVITY_ROW_CLASS = "M303Exonerado390ActivityRowEvidence"
 _S56_FILING_EVIDENCE_CLASS = "M303Exonerado390FilingEvidence"
 _S56_FILING_EVIDENCE_FIELDS = frozenset(

@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ......core.access_gate import LiveSubmitForbiddenError
-from ......core.errors import CadrumoError
+from ......core.errors.hierarchy import CadrumoError
 from ......domain.submission import SubmissionError, SubmissionPreflightError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

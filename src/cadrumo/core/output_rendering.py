@@ -31,7 +31,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 
 from ..core import STRICT_FROZEN_CONFIG
-from .errors import CadrumoError
+from .errors.hierarchy import CadrumoError
 from .redaction import redact_for_cli_output, redact_structured_for_cli_output
 
 

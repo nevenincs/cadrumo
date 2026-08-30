@@ -29,7 +29,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-from ...core.errors import ProfileAnswerTypeError
+from ...core.errors.hierarchy import ProfileAnswerTypeError
 from ...core.logging import get_logger
 
 # Maps the 3-letter ISO-like codes from the former ``RentaCCAA`` enum to

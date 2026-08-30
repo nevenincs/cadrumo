@@ -20,7 +20,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from cadrumo.application.operator_surface.manifest import CommandSchemaRef
 from cadrumo.application.operator_surface.models import OperatorMutability
-from cadrumo.core.errors import ErrorEnvelope
+from cadrumo.core.errors.error_codes import ErrorEnvelope
 from cadrumo.core.json_contract import ENVELOPE_SCHEMA_VERSION, Notice
 from cadrumo.entrypoints.cli.command_api import VerbInputSchema, command_schema_type, is_exposable_command
 

@@ -36,14 +36,9 @@ from ....domain.deadlines.models import ChargeAccount, IVARegime, M303RegimeComp
 from ....domain.filing.schema import ModeloDraft, compute_modelo_draft_id, registry_schema_version
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision, RegimenSimplificadoFilingRows
-from ....domain.modelos.calculation_revision import (
-    CalculationRevisionAmendmentKind,
-    FilingInstanceEvidence,
-    M303Exonerado390ActivityRowEvidence,
-    M303Exonerado390EndpointEvidence,
-    M303Exonerado390FilingEvidence,
-    M303FilingInstanceEvidence,
-)
+from ....domain.modelos.calculation_revision import CalculationRevisionAmendmentKind, FilingInstanceEvidence
+from ....domain.modelos.calculation_revision_m303_evidence import M303Exonerado390ActivityRowEvidence, M303Exonerado390EndpointEvidence, M303Exonerado390FilingEvidence
+from ....domain.modelos.calculation_revision_m303_handoff import M303FilingInstanceEvidence
 from ....domain.prorrata_register import (
     ProrrataEspecialTransitionEvidence,
     ProrrataRegister,

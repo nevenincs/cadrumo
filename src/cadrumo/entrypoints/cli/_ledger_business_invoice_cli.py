@@ -577,7 +577,7 @@ def _invoice_column_role_mapper() -> tuple[Callable[[Sequence[str]], Sequence[Fi
     reasons: list[str] = []
 
     def resolve(headers: Sequence[str]) -> Sequence[FieldRole] | None:
-        from ...core.errors import CadrumoError
+        from ...core.errors.hierarchy import CadrumoError
 
         try:
             from ...llm.column_role_mapping import map_column_roles

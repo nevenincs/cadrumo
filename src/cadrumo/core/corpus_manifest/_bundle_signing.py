@@ -66,7 +66,7 @@ from ..ed25519_signing import (
     generate_ed25519_keypair_hex,
     sign_digest_hex,
 )
-from ..errors import CadrumoError
+from ..errors.hierarchy import CadrumoError
 from ..external_constants import UTF_8_ENCODING
 from ..time import now as _utc_now
 from ..time import validate_utc_aware as _validate_utc_aware

@@ -190,7 +190,7 @@ def test_project_answers_refuses_distinct_second_projector() -> None:
 
         from pydantic import BaseModel
 
-        from cadrumo.core.errors import build_error_envelope, get_registered_error_code
+        from cadrumo.core.errors.error_codes import build_error_envelope, get_registered_error_code
         from cadrumo.core.setup_answers import (
             ProjectAnswersRegistrationError,
             register_project_answers,

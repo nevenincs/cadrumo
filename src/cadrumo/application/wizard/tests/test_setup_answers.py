@@ -17,7 +17,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from ....core.errors import ERROR_REGISTRY, build_error_envelope
+from ....core.errors.error_codes import ERROR_REGISTRY, build_error_envelope
 from ....core.setup_answers import SetupAnswers
 from ..errors import WizardAnswerTypeError
 

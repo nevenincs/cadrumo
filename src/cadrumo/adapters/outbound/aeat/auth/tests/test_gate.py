@@ -11,7 +11,7 @@ from ......core.access_gate import (
     LiveSubmitForbiddenError,
 )
 from ......core.config import Settings, override_settings
-from ......core.errors import render_error_text
+from ......core.errors.error_codes import render_error_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

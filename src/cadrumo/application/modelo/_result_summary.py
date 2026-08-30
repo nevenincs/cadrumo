@@ -39,7 +39,7 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import CasillaId, Period
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 from ...core.i18n import output_language
 from ...core.logging import get_logger
 from ...domain.calculations.registry.schema import RegistrySnapshot

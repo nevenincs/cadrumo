@@ -20,11 +20,7 @@ from ....domain.calculations.registry.schema_references import SourceReference
 from ....domain.filing.errors import FilingExportError
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
-from ....domain.modelos.calculation_revision import (
-    M303Exonerado390ActivityRowEvidence,
-    M303Exonerado390EndpointEvidence,
-    M303Exonerado390FilingEvidence,
-)
+from ....domain.modelos.calculation_revision_m303_evidence import M303Exonerado390ActivityRowEvidence, M303Exonerado390EndpointEvidence, M303Exonerado390FilingEvidence
 from .. import project_m303_exonerado_390_value_arrival
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

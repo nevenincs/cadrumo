@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.errors import ErrorCategory, get_registered_error_code
+from ....core.errors.error_codes import ErrorCategory, get_registered_error_code
 from ..errors import ForalRegimeError, ProfileNotConfiguredError, TaxResidenceProfileError
 from ..tax_residence import parse_tax_region
 

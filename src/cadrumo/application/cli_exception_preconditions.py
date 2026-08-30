@@ -25,7 +25,8 @@ from .operator_actions import (
 def _registered_terminal_precondition_verdict(current: BaseException) -> PreconditionVerdict | None:
     """Extract one registered terminal verdict from a single exception."""
     from ..core import MissingOptionalExtraError
-    from ..core.errors import CadrumoError, CoreValidationError, get_registered_error_code
+    from ..core.errors.error_codes import get_registered_error_code
+    from ..core.errors.hierarchy import CadrumoError, CoreValidationError
 
     if not isinstance(current, CadrumoError):
         return None
@@ -106,7 +107,8 @@ def nested_terminal_precondition_verdict(error: BaseException) -> PreconditionVe
 def cli_exception_envelope_view(error: BaseException) -> BaseException:
     """Return the narrow envelope-safe view for the exception producer families."""
     from ..core import MissingOptionalExtraError
-    from ..core.errors import CadrumoError, CoreValidationError, get_registered_error_code
+    from ..core.errors.error_codes import get_registered_error_code
+    from ..core.errors.hierarchy import CadrumoError, CoreValidationError
 
     if isinstance(error, MissingOptionalExtraError):
         safe_context: Mapping[str, object] = {

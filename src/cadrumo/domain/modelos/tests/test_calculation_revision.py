@@ -29,19 +29,9 @@ from ...calculations.registry.ids import RelationId
 from ...calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ...filing_evidence import FilingEvidenceReference
 from ...iva.regimen_simplificado_rows import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision, RegimenSimplificadoFilingRows
-from ..calculation_revision import (
-    CalculationRevision,
-    CalculationRevisionState,
-    CalculationSourceRef,
-    FilingInstanceEvidence,
-    M303Exonerado390ActivityRowEvidence,
-    M303Exonerado390EndpointEvidence,
-    M303Exonerado390FilingEvidence,
-    M303FilingInstanceEvidence,
-    M303InsolvencyFilingFact,
-    M303InsolvencyFilingSubtype,
-    derive_calculation_revision_id,
-)
+from ..calculation_revision import CalculationRevision, CalculationRevisionState, CalculationSourceRef, FilingInstanceEvidence, derive_calculation_revision_id
+from ..calculation_revision_m303_evidence import M303Exonerado390ActivityRowEvidence, M303Exonerado390EndpointEvidence, M303Exonerado390FilingEvidence, M303InsolvencyFilingFact, M303InsolvencyFilingSubtype
+from ..calculation_revision_m303_handoff import M303FilingInstanceEvidence
 from ..errors import ModeloValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

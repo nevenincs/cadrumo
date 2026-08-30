@@ -7,7 +7,7 @@ import logging
 import pytest
 
 from ....core import ActionEvidenceProvenance, NoRecoveryOutcome
-from ....core.errors import TerminalPreconditionErrorMixin
+from ....core.errors.hierarchy import TerminalPreconditionErrorMixin
 from ....core.logging import configure_logging, set_log_level
 from .._log_levels import LogLevel, LogLevelResolutionError, apply_to_root_logger, resolve_log_level
 

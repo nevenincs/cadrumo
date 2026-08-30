@@ -5,7 +5,8 @@ from typing import cast
 
 import pytest
 
-from ..errors import ERROR_REGISTRY, RedactionError, get_registered_error_code
+from ..errors.error_codes import ERROR_REGISTRY, get_registered_error_code
+from ..errors.hierarchy import RedactionError
 from ..redaction import redact, redact_for_cli_output
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

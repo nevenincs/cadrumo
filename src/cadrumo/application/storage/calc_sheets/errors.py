@@ -7,7 +7,7 @@ to its declared :class:`cadrumo.core.errors.ErrorCode` row at import time.
 
 from __future__ import annotations
 
-from ....core.errors import CadrumoError, CoreValidationError
+from ....core.errors.hierarchy import CadrumoError, CoreValidationError
 
 
 class CalcSheetsEngineError(CadrumoError):

@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import Field, NonNegativeInt
+from pydantic import NonNegativeInt
 
 from ...application.modelo.reconciliation_records import (
     ModeloReconciliationEvidenceKind,
@@ -30,6 +30,7 @@ from ...application.modelo.reconciliation_records import (
 from ...core import IvaCompensationStateProvenance, Period
 from ...core.identity import BucketId, ProfileId, WorkUnitId
 from ...core.json_contract import OutputSchema
+from ...domain.buckets.event import BucketEventId
 from ...domain.modelos.filing_text import ModeloActorLabel
 
 
@@ -113,7 +114,7 @@ class ModeloReconciliationHistoryRowPayload(OutputSchema):
     instant.
     """
 
-    event_id: str = Field(min_length=1, max_length=128)
+    event_id: BucketEventId
     bucket_id: BucketId
     work_unit_id: WorkUnitId
     source_kind: ModeloReconciliationEvidenceKind

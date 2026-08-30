@@ -11,7 +11,7 @@ from ....application.registry.corpus import (
     RegistryCorpusIssueProjection,
     RegistryTopicProjection,
 )
-from ....core.errors import BaseSeverity
+from ....core.errors.severity import BaseSeverity
 from .._registry_corpus_payloads import CitationListResult, CitationShowResult, CitationVerifyResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

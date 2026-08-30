@@ -56,7 +56,7 @@ from ._precondition_action_invariants import (
     PreconditionEvidence,
     PreconditionOutcomeInvariant,
 )
-from .errors import CadrumoError
+from .errors.hierarchy import CadrumoError
 from .identifier_grammar import FIELD_KEY_PATTERN
 from .logging import get_logger
 from .output_rendering import jsonable_output_payload
@@ -636,7 +636,7 @@ def validate_registered_envelope_document(
 
 
 def _validated_error_envelope(typed_document: dict[str, object]) -> dict[str, object]:
-    from .errors import ErrorEnvelope
+    from .errors.error_codes import ErrorEnvelope
 
     required_keys = {"schema_version", "command", "active_profile", "status", "error", "notices"}
     if set(typed_document) != required_keys:
@@ -704,3 +704,12 @@ __all__ = [
     "validate_registered_envelope_document",
     "validate_registered_result",
 ]
+
+
+# ErrorEnvelope names ResolvedPreconditionAction, defined above. The errors
+# package cannot resolve that itself -- its hierarchy binds error codes while
+# still being defined, so reaching here from its module scope re-enters a
+# half-built module. This is the first point at which both halves exist.
+from .errors.error_codes import complete_error_envelope_model  # noqa: E402 - see comment above
+
+complete_error_envelope_model()

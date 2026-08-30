@@ -6,7 +6,7 @@ from importlib import import_module
 
 import pytest
 
-from cadrumo.core.errors import CadrumoError
+from cadrumo.core.errors.hierarchy import CadrumoError
 
 from .. import errors
 from ..errors import AlreadySanitizedError, SanitizationError, SanitizerSourceParseError

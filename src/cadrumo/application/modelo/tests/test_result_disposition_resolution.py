@@ -8,7 +8,7 @@ from decimal import Decimal
 import pytest
 
 from ....core import CasillaId, Period, ResultDisposition, validated_casilla_id
-from ....core.errors import CoreValidationError
+from ....core.errors.hierarchy import CoreValidationError
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile

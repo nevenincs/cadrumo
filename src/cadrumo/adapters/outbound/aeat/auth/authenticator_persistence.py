@@ -21,7 +21,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from .....core import STRICT_FROZEN_CONFIG
 from .....core.config import AEAT_CERTIFICATE_PROTECTED_URL, assert_canonical_protected_resource
-from .....core.errors import AeatLoginAssertionError
+from .....core.errors.hierarchy import AeatLoginAssertionError
 from .....core.identity import ContentDigest
 from .....core.time import validate_utc_aware
 

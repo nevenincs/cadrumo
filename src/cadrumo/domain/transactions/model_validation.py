@@ -28,7 +28,7 @@ from decimal import Decimal
 
 from pydantic import ValidationError
 
-from ...core.errors import CoreValidationError
+from ...core.errors.hierarchy import CoreValidationError
 from ...core.external_constants import CLASSIFIED_BY_AUTO, CLASSIFIED_BY_MANUAL
 from ...core.time import parse_iso_datetime, validate_utc_aware
 from ...core.unit_proportion import is_unit_proportion

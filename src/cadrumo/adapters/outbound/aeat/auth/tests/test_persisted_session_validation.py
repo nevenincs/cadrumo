@@ -10,7 +10,7 @@ from pydantic import SecretStr
 
 from ......application.auth_credentials import unnamed_certificate_credentials
 from ......core.config import Settings
-from ......core.errors import AeatLoginAssertionError
+from ......core.errors.hierarchy import AeatLoginAssertionError
 from ......tests.secure_sql import isolated_runtime_profile
 from .. import session_store as session_store
 from ..authenticator import AeatAuthenticator

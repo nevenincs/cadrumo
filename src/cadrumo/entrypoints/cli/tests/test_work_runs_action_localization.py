@@ -38,7 +38,7 @@ from ....core import (
     NoRecoveryOutcome,
     Period,
 )
-from ....core.errors import SiteHealthState
+from ....core.errors.hierarchy import SiteHealthState
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES
 from ....domain.deadlines.models import ObligationStatus
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord

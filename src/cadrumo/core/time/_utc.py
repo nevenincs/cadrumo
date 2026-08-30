@@ -23,7 +23,7 @@ from typing import Annotated
 
 from pydantic import AfterValidator
 
-from ..errors import CoreValidationError
+from ..errors.hierarchy import CoreValidationError
 
 
 def parse_iso_datetime(raw: str) -> datetime:

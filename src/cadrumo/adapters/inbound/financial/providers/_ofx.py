@@ -38,7 +38,7 @@ from pathlib import Path
 from typing import Protocol, override, runtime_checkable
 
 from .....core import OFX_EXTRA, MissingOptionalExtraError, optional_extra_available, require_optional_extra
-from .....core.errors import CoreValidationError
+from .....core.errors.hierarchy import CoreValidationError
 from .....core.logging import get_logger
 from .....core.parsing import normalise_iso_4217_currency
 from .....domain.transactions.raw_transaction import SourceFormat

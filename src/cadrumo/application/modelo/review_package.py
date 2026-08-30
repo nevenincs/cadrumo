@@ -56,7 +56,7 @@ from ...core.corpus_manifest import (
     build_corpus_bundle,
     verify_corpus_bundle,
 )
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.filing_year import FilingYear
 from ...core.identity import BucketId, CalculationRevisionId, WorkUnitId

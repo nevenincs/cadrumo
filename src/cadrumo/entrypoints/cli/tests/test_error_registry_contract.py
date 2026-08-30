@@ -21,7 +21,8 @@ from ....application.review.errors import ReviewKindReservedError
 from ....core import ActionArgumentStatus
 from ....core.access_gate import LiveSubmitForbiddenError
 from ....core.config import override_settings
-from ....core.errors import ERROR_REGISTRY, DecimalFormatError, ErrorCategory, ErrorEnvelope, render_error_text
+from ....core.errors.error_codes import ERROR_REGISTRY, ErrorCategory, ErrorEnvelope, render_error_text
+from ....core.errors.hierarchy import DecimalFormatError
 from ....core.i18n import tr
 from ....core.json_contract import ENVELOPE_SCHEMA_VERSION, EnvelopeStatus, ResolvedPreconditionAction
 from ....core.observability.errors import RunContextMissingError

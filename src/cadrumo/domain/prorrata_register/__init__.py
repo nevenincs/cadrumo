@@ -63,7 +63,7 @@ from ...core import (
 from ...core import (
     SectorDiferenciadoLetra as _SectorDiferenciadoLetra,
 )
-from ...core.errors import CadrumoError as _CadrumoError
+from ...core.errors.hierarchy import CadrumoError as _CadrumoError
 from ...core.filing_year import FilingYear
 from ._protocols import ProrrataRegisterRepositoryProtocol
 

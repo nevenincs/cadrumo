@@ -32,7 +32,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-from ...core.errors import ProfileAnswerTypeError
+from ...core.errors.hierarchy import ProfileAnswerTypeError
 from .guarderia_mensual import ENTRY_SEPARATOR, parse_month_spec
 
 #: The accepted form, quoted verbatim in every refusal so the operator is told

@@ -229,7 +229,7 @@ flows:
       és exportáljon, majd saját maga nyújtsa be az AEAT felé.
     state_not_carried: Ez az olvasás nem tartalmaz benyújtási állapotot vagy előzményt.
       Egyetlen előállító sem adja meg.
-    title: Benyújtás — {modelo} modelo
+    title: "Benyújtás - {modelo} modelo\r"
     why:
       draft_structural: 'Tartósan nincs mérve: a piszkozat építése állapotmentes,
         így egyetlen előállító sem rögzít kiolvasható verdiktet.'
@@ -246,7 +246,7 @@ flows:
       olvasásból nem érhető el.'
     section:
       unsectioned: Szakasz nélkül
-    title: Bemenetek — {modelo} modelo
+    title: "Bemenetek - {modelo} modelo\r"
     values_unmeasured: Ebben az olvasásban nem mértünk értéket. A statikus vizsgálat
       csak a sémát olvassa.
   modelo_workspace_overview:
@@ -272,7 +272,7 @@ flows:
       address: Cím
       capabilities: Képességek
       revision: Revíziós koordináták
-    title: Áttekintés — {modelo} modelo
+    title: "Áttekintés - {modelo} modelo\r"
     value:
       no_work_unit: még nincs munkaegység
   modelo_workspace_provenance:
@@ -285,7 +285,7 @@ flows:
       eredet-facettát.
     page_bounded: '{shown} sor látható egy nagyobb halmazból. Egy forrás sok sort
       adhat, ezért a sorszám nem jelzi a teljességet.'
-    title: Eredet — {modelo} modelo
+    title: "Eredet - {modelo} modelo\r"
     value:
       unattributed: nincs hozzárendelve
   modelo_workspace_results:
@@ -299,7 +299,7 @@ flows:
       a statikus vizsgálat nem tartalmaz.
     page_bounded: '{shown} sor látható egy nagyobb halmazból; a többi sor ebből az
       olvasásból nem érhető el.'
-    title: Eredmények — {modelo} modelo
+    title: "Eredmények - {modelo} modelo\r"
   modelo_workspace_verification:
     axis:
       binding_ready: Kötések készek
@@ -323,7 +323,7 @@ flows:
     section:
       findings: Megállapítások
       readiness: Készenléti tengelyek
-    title: Ellenőrzés — {modelo} modelo
+    title: "Ellenőrzés - {modelo} modelo\r"
     value:
       unmeasured: nincs mérve
   passphrase:

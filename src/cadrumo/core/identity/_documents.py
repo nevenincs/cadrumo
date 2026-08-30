@@ -30,7 +30,7 @@ from __future__ import annotations
 import re
 from enum import StrEnum
 
-from ..errors import CadrumoError
+from ..errors.hierarchy import CadrumoError
 
 _NIF_LETTERS = "TRWAGMYFPDXBNJZSQVHLCKE"
 _NIE_PREFIX_MAP = {"X": "0", "Y": "1", "Z": "2"}

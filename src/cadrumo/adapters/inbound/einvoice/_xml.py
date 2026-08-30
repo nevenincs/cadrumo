@@ -28,7 +28,7 @@ from xml.etree.ElementTree import Element
 from defusedxml.ElementTree import ParseError as _DefusedParseError
 from defusedxml.ElementTree import fromstring as _defused_fromstring
 
-from ....core.errors import CadrumoError
+from ....core.errors.hierarchy import CadrumoError
 
 __all__ = ["MAX_XML_DEPTH", "MAX_XML_PAYLOAD_BYTES", "EInvoiceXmlParseError", "parse_hardened_xml"]
 

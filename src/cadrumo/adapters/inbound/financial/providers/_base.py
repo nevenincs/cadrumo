@@ -57,7 +57,7 @@ from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core import fold_diacritics
 from .....core.config import load_settings
 from .....core.decimal import coerce_decimal
-from .....core.errors import CadrumoError, CoreValidationError
+from .....core.errors.hierarchy import CadrumoError, CoreValidationError
 from .....core.hashing import sha256_hex as _sha256_hex
 from .....core.logging import get_logger
 from .....core.parsing import normalise_iso_4217_currency

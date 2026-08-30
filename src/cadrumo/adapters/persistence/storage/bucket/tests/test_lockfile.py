@@ -20,7 +20,7 @@ from typing import Protocol, runtime_checkable
 
 import pytest
 
-from ......core.errors import build_error_envelope
+from ......core.errors.error_codes import build_error_envelope
 from ......core.external_constants import UTF_8_ENCODING
 from ......tests.bucket_layout import provision_bucket_directory
 from .._layout import (

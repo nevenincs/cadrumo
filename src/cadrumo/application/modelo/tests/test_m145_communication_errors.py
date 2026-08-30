@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core.errors import get_registered_error_code
+from ....core.errors.error_codes import get_registered_error_code
 from ....tests.secure_sql import isolated_runtime_profile
 from .._m145_communication_records import (
     M145CommunicationCreateCommand,

@@ -36,7 +36,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field, field_validator
 
 from ...core import STRICT_FROZEN_CONFIG
-from ...core.errors import BaseSeverity
+from ...core.errors.severity import BaseSeverity
 from ...core.i18n import Translatable as tr
 
 

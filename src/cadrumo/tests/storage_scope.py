@@ -69,7 +69,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ..core import STORAGE_TAXONOMY, StorageCategory, StorageOverridePolicy, StorageScope
-from ..core.errors import CoreValidationError
+from ..core.errors.hierarchy import CoreValidationError
 
 if TYPE_CHECKING:
     from pathlib import Path

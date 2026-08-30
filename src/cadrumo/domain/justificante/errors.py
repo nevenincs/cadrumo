@@ -13,7 +13,7 @@ from collections.abc import Mapping
 from decimal import Decimal
 from typing import cast
 
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 
 
 class PdfModeloImportError(CadrumoError):

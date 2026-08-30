@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ...core.errors import CadrumoError, CoreValidationError
+from ...core.errors.hierarchy import CadrumoError, CoreValidationError
 
 __all__ = [
     "InvoiceCatalogueError",

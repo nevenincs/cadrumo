@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import ast
 import importlib
+from functools import lru_cache
 from pathlib import Path
 
 import pytest
@@ -113,7 +114,16 @@ def _flow_definition() -> FlowDefinition:
     )
 
 
+@lru_cache(maxsize=1)
 def _source_trees() -> tuple[tuple[Path, ast.Module], ...]:
+    """Parse every scanned source file once per session.
+
+    Uncached, this re-read and re-parsed ~5600 files on each of its three
+    call sites, and each symbol query then walked every resulting tree --
+    which is why this module timed out and read as an I/O stall on the
+    backing share. The parse is pure over a tree the tests do not mutate,
+    so one cached result serves every caller.
+    """
     return tuple(
         (path, ast.parse(path.read_text(encoding="utf-8"), filename=str(path)))
         for root in _SOURCE_ROOTS
@@ -283,39 +293,36 @@ def test_relocated_symbols_have_single_canonical_defining_modules_and_inert_faca
         assert not imports, f"{namespace_name} is a forwarding facade: {imports}"
 
 
-def test_manager_pilot_has_one_canonical_home_and_exactly_seven_direct_consumers() -> None:
-    """The settling barrier lives in the TUI test package, not the old root."""
+def test_manager_pilot_has_one_canonical_home_reached_the_same_way_by_every_consumer() -> None:
+    """The settling barrier lives in the TUI test package, not the old root.
+
+    Gates the PROPERTY -- one definition site, and every consumer reaching it
+    by the same canonical route -- rather than the tally. An earlier version
+    pinned an exact set of seven consumer filenames, which `aeat-quality-gates`
+    forbids: a count encodes a moment, so legitimate work reds it. It duly
+    did. The visual suite stopped importing the barrier when its populated
+    fixture began mutating state directly instead of driving the button, which
+    is correct and left this gate asserting a consumer that should no longer
+    exist.
+    """
     old_home = _TUI_ROOT.parents[1] / "tests" / "manager_pilot.py"
     canonical_home = _TUI_ROOT / "tests" / "manager_pilot.py"
     assert not old_home.exists()
     assert canonical_home.is_file()
 
-    expected_consumers = {
-        "test_manager_field_editors.py",
-        "test_manager_language_switch.py",
-        "test_manager_masked_field_preservation.py",
-        "test_manager_masked_required_field.py",
-        "test_manager_required_field_refusal.py",
-        "test_manager_screen.py",
-        "test_visual_verification.py",
-    }
     trees = _source_trees()
-    expected_edges = tuple(
-        sorted(
-            (
-                (
-                    _repo_path(canonical_home.parent / consumer),
-                    "from",
-                    1,
-                    "manager_pilot",
-                    (("wait_until_settled", None),),
-                )
-                for consumer in expected_consumers
-            ),
-            key=repr,
-        )
-    )
-    assert _manager_import_edges(trees) == expected_edges
+    edges = _manager_import_edges(trees)
+
+    # Non-vacuity: a barrier nothing imports would satisfy every check below.
+    assert edges, "no consumer imports manager_pilot; this gate would pass vacuously"
+
+    canonical_dir = _repo_path(canonical_home.parent)
+    for path, kind, level, module, _names in edges:
+        assert kind == "from", f"{path} reaches manager_pilot by {kind}, not a from-import"
+        assert level == 1, f"{path} imports manager_pilot at level {level}, not as a sibling"
+        assert module == "manager_pilot", f"{path} imports {module}, not the canonical module"
+        assert str(path).startswith(str(canonical_dir)), f"{path} sits outside {canonical_dir}"
+
     assert _function_definition_sites(trees, _MANAGER_SYMBOL) == (canonical_home,)
 
     tests_init = _TUI_ROOT / "tests" / "__init__.py"

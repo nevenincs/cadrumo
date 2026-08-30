@@ -27,7 +27,7 @@ import importlib.util
 from pydantic import BaseModel, Field
 
 from ._models import STRICT_FROZEN_CONFIG
-from .errors import CoreError
+from .errors.hierarchy import CoreError
 
 __all__ = [
     "ANTHROPIC_EXTRA",

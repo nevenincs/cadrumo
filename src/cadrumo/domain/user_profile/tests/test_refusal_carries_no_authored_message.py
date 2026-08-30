@@ -28,7 +28,7 @@ from typing import Final
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from ....core.errors import get_registered_error_code
+from ....core.errors.error_codes import get_registered_error_code
 from ....core.json_contract import Notice, NoticeSeverity
 from ..errors import (
     SCHEMA_LOAD_MESSAGE_KEY,

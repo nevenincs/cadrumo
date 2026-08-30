@@ -24,7 +24,8 @@ import pytest
 
 from ...i18n import tr
 from ...identity import IdentityError
-from .. import CadrumoError, CoreValidationError, resolve_error_message
+from ..error_codes import resolve_error_message
+from ..hierarchy import CadrumoError, CoreValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

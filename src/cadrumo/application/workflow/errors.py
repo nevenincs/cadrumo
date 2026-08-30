@@ -10,7 +10,7 @@ exception-on-abort behaviour opt in by inspecting the result themselves.
 
 from __future__ import annotations
 
-from ...core.errors import CadrumoError, CoreValidationError
+from ...core.errors.hierarchy import CadrumoError, CoreValidationError
 from .abort import WorkflowAbortReason
 
 

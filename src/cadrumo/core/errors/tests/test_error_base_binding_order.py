@@ -1,18 +1,22 @@
-"""``_not_found`` may only be imported after its base class is bound.
+"""No module in the errors package may reach its own package namespace.
 
-``_not_found.py`` does ``from . import CoreError`` at module level — a facade
-import that resolves only because ``errors/__init__`` defines ``CoreError``
-BEFORE it imports ``_not_found``. Nothing states that ordering is load-bearing,
-so moving the import above the class definition would make
+``not_found.py`` used to do ``from . import CoreError`` — a facade import that
+resolved only because ``errors/__init__`` defined ``CoreError`` BEFORE it
+imported ``not_found``. Nothing stated that ordering was load-bearing, so
+moving the import above the class definition would have made
 ``import cadrumo.core.errors`` fail outright for the whole process.
 
-This is the same order-dependent shape as the settings-path facade imports,
-with one difference that decides the remedy: ``CoreError`` has no owning
-submodule to import from instead. It is defined in ``errors/__init__`` itself,
-and relocating it to a leaf would move ``CadrumoError.__init_subclass__`` —
-which drives the deferred-bind queue the lazy-import policy gate classifies as
-``ERROR_REGISTRY_BOOTSTRAP``, "a protected core-authority boundary". Pinning
-the ordering removes the silent-breakage risk without disturbing that.
+That was pinned rather than fixed, because the remedy looked unavailable:
+``CoreError`` had no owning submodule to import from instead. It was defined in
+``errors/__init__`` itself, and relocating it meant moving
+``CadrumoError.__init_subclass__``, which drives the deferred-bind queue.
+
+The hierarchy now lives in :mod:`cadrumo.core.errors.hierarchy` and the
+namespace is inert, so the remedy was available after all. This asserts the
+stronger property that replaces the pin: no module here imports from the
+package namespace, which makes the ordering question unanswerable rather than
+merely answered correctly. A facade import cannot be mis-ordered if there is no
+facade to import from.
 """
 
 from __future__ import annotations
@@ -26,58 +30,45 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _ERRORS_DIR = Path(__file__).resolve().parent.parent
 
-#: Names ``_not_found`` imports from the package facade at module scope.
-_FACADE_NAMES_NEEDED_BY_NOT_FOUND = ("CoreError",)
 
-
-def _module_tree(name: str) -> ast.Module:
-    return ast.parse((_ERRORS_DIR / name).read_text(encoding="utf-8"))
-
-
-def test_not_found_still_imports_its_base_from_the_facade() -> None:
-    """Anti-tautology: the ordering guard is only meaningful while this holds.
-
-    If ``_not_found`` ever stops importing from the facade — because
-    ``CoreError`` gained an owning submodule, say — the ordering constraint
-    below becomes vacuous, and this fails to say so rather than passing
-    silently.
-    """
-    imported: set[str] = set()
-    for node in ast.walk(_module_tree("_not_found.py")):
+def _namespace_imports(path: Path) -> list[str]:
+    """Names the module imports from its own package namespace, if any."""
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    found: list[str] = []
+    for node in ast.walk(tree):
         if isinstance(node, ast.ImportFrom) and node.level == 1 and node.module is None:
-            imported.update(alias.name for alias in node.names)
+            found.extend(alias.name for alias in node.names)
+    return found
 
-    assert set(_FACADE_NAMES_NEEDED_BY_NOT_FOUND) <= imported, (
-        "_not_found no longer imports these from the facade; if CoreError now has an "
-        "owning submodule, import it from there and delete this ordering guard"
+
+def test_no_module_imports_from_the_errors_namespace() -> None:
+    """The namespace exports nothing, so reaching for it can only be a mistake."""
+    offenders = {
+        path.name: names
+        for path in sorted(_ERRORS_DIR.glob("*.py"))
+        if path.name != "__init__.py" and (names := _namespace_imports(path))
+    }
+    assert not offenders, (
+        "these modules import from the errors package namespace, which is inert. "
+        f"Import from the module that defines the name instead: {offenders}"
     )
 
 
-def test_the_base_class_is_defined_before_not_found_is_imported() -> None:
-    """The load-bearing ordering, asserted so a line move fails loudly.
+def test_the_namespace_offers_nothing_to_import() -> None:
+    """Anti-tautology: the check above is vacuous if the namespace still exports."""
+    from ... import errors
 
-    ``_not_found`` asks the half-built package for ``CoreError``; that resolves
-    only while the class statement precedes the import.
-    """
-    tree = _module_tree("__init__.py")
-
-    definitions = {node.name: node.lineno for node in tree.body if isinstance(node, ast.ClassDef)}
-    not_found_import = next(
-        node.lineno for node in tree.body if isinstance(node, ast.ImportFrom) and node.module == "_not_found"
+    assert errors.__all__ == (), (
+        "the errors namespace exports names again; the check above stops being a "
+        "guard and becomes a description of a facade nobody is using yet"
     )
 
-    for name in _FACADE_NAMES_NEEDED_BY_NOT_FOUND:
-        assert name in definitions, f"{name} is no longer defined in errors/__init__"
-        assert definitions[name] < not_found_import, (
-            f"{name} is defined at line {definitions[name]} but _not_found is imported at "
-            f"line {not_found_import}; _not_found asks the half-built package for {name}, "
-            "so this ordering is load-bearing and the package will not import"
-        )
 
+def test_the_hierarchy_owns_the_base_classes() -> None:
+    """The relocation that made the guard possible must not be undone."""
+    from ..hierarchy import CadrumoError, CoreError
+    from ..not_found import CoreNotFoundError
 
-def test_the_package_actually_imports() -> None:
-    """The behaviour the ordering exists to protect, not just its shape."""
-    from ... import errors as errors_package
-
-    assert issubclass(errors_package.CoreNotFoundError, errors_package.CoreError)
-    assert issubclass(errors_package.CoreNotFoundError, KeyError)
+    assert issubclass(CoreError, CadrumoError)
+    assert issubclass(CoreNotFoundError, CoreError)
+    assert CoreError.__module__ == "cadrumo.core.errors.hierarchy"

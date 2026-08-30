@@ -39,7 +39,7 @@ from enum import StrEnum
 from typing import TYPE_CHECKING
 
 from ...core import ActionEvidenceProvenance, NoRecoveryOutcome
-from ...core.errors import CoreError, CoreValidationError, TerminalPreconditionErrorMixin
+from ...core.errors.hierarchy import CoreError, CoreValidationError, TerminalPreconditionErrorMixin
 
 if TYPE_CHECKING:
     from ..operator_actions import PreconditionVerdict

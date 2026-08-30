@@ -14,7 +14,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import TYPE_CHECKING
 
-from ..core.errors import CadrumoError, TerminalPreconditionErrorMixin
+from ..core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin
 
 if TYPE_CHECKING:
     from ..application.operator_actions import PreconditionVerdict

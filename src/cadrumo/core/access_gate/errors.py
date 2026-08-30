@@ -22,7 +22,7 @@ See Also:
 
 from __future__ import annotations
 
-from ..errors import CadrumoError
+from ..errors.hierarchy import CadrumoError
 
 
 class AccessGateSubmissionError(CadrumoError):

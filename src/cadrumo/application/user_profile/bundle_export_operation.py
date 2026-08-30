@@ -35,7 +35,7 @@ from pydantic import BaseModel, Field, model_validator
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Hex64Str, exclusive_file_lock
 from ...core.config import Settings
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.identity import ContentDigest, ProfileId
 from ...core.paths import effective_storage_root

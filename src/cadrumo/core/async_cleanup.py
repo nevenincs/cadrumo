@@ -13,7 +13,7 @@ import sys
 from collections.abc import Awaitable
 from typing import Protocol
 
-from .errors import CoreError
+from .errors.hierarchy import CoreError
 
 
 class AsyncCloseable(Protocol):

@@ -4,11 +4,11 @@ Rows map adapter-layer exception qualnames to stable
 :class:`~cadrumo.core.errors.ErrorCategory` values and locale message keys.
 """
 
-from .._registry import ErrorCategory, ErrorCode
+from ..error_codes import ErrorCategory, ErrorCode
 
 _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
-        "cadrumo.core.errors.AeatLoginAssertionError",
+        "cadrumo.core.errors.hierarchy.AeatLoginAssertionError",
         ErrorCode(
             code="AUTH_AEAT_LOGIN_ASSERTION",
             category=ErrorCategory.AUTH,

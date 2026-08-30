@@ -16,7 +16,7 @@ from ....core import (
 from .errors import RegistryValidationError
 
 if TYPE_CHECKING:
-    from ...modelos.calculation_revision import M303Exonerado390ActivityRowEvidence, M303Exonerado390FilingEvidence
+    from ...modelos.calculation_revision_m303_evidence import M303Exonerado390ActivityRowEvidence, M303Exonerado390FilingEvidence
 
 type _ExoneradoProjectionRef = M303Exonerado390ActivityProjectionRef | M303Exonerado390OperacionesTercerosProjectionRef
 

@@ -22,7 +22,7 @@ from pydantic import ValidationError
 
 from ......core.config import Settings
 from ......core.directory_scan import scan_directory
-from ......core.errors import SiteHealthState
+from ......core.errors.hierarchy import SiteHealthState
 from ......tests import FIXTURES_DIR
 from .. import (
     SiteHealthEvidence,

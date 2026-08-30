@@ -45,7 +45,7 @@ from ..core.config import Settings, load_settings
 from ..core.directory_scan import (
     iter_directory,
 )
-from ..core.errors import CadrumoError
+from ..core.errors.hierarchy import CadrumoError
 from ..core.paths import (
     WINDOWS_MAX_PATH,
     windows_long_paths_enabled,

@@ -17,7 +17,7 @@ from io import BytesIO
 from xml.etree.ElementTree import Element
 
 from ....core import DocumentShape, detect_image_media_type
-from ....core.errors import CoreValidationError
+from ....core.errors.hierarchy import CoreValidationError
 from ._xml import EInvoiceXmlParseError, parse_hardened_xml
 
 __all__ = ["EMBEDDED_XML_SUFFIXES", "iter_pdf_embedded_files", "probe_document_shape"]

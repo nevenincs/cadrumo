@@ -48,7 +48,7 @@ from ..config import (
     classify_storage_route,
     settings_for_active_profile_bucket,
 )
-from ..errors import ActiveProfilePointerError, CoreValidationError
+from ..errors.hierarchy import ActiveProfilePointerError, CoreValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

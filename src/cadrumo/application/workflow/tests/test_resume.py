@@ -22,7 +22,8 @@ from ....core import (
     Period,
     validated_casilla_id,
 )
-from ....core.errors import SiteHealthError, SiteHealthState, resolve_error_message
+from ....core.errors.error_codes import resolve_error_message
+from ....core.errors.hierarchy import SiteHealthError, SiteHealthState
 from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.deadlines.models import ObligationStatus
 from ....domain.modelos.calculation_repository import upsert_calculation_revision

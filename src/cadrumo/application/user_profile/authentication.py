@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 
 
 class ProfilePasswordProofOperation(StrEnum):

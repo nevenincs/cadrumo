@@ -39,7 +39,7 @@ from enum import StrEnum
 from typing import TYPE_CHECKING
 from urllib.parse import urlsplit
 
-from .....core.errors import AuthError
+from .....core.errors.hierarchy import AuthError
 from .....domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy
 from .errors import AuthConfigurationError
 

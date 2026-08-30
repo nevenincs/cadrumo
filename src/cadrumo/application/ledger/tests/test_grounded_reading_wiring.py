@@ -490,7 +490,7 @@ def test_the_reader_refusal_preserves_its_typed_no_recovery_outcome() -> None:
     no draft at all, so there is no provenance for a notice to describe; the
     non-blocking notice channel is for a draft that exists but degraded.
     """
-    from ....core.errors import build_error_envelope
+    from ....core.errors.error_codes import build_error_envelope
     from ..evidence_draft import _refuse_a_text_read_with_no_reader
 
     with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:

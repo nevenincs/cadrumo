@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 
 
 class SubmissionError(CadrumoError):

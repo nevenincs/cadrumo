@@ -20,7 +20,8 @@ from pathlib import Path
 from pydantic import ValidationError
 
 from ...core.config import Settings
-from ...core.errors import BaseSeverity, CadrumoError
+from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.severity import BaseSeverity
 from ...core.i18n import Translatable as tr
 from ...core.logging import get_logger
 from ...domain.filing.schema import ModeloDraft, ModeloValidationFinding

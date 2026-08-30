@@ -9,7 +9,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import ActionConditionality, CasillaId, NoRecoveryOutcome, Period, validated_casilla_id
-from ....core.errors import BaseSeverity
+from ....core.errors.severity import BaseSeverity
 from ....core.i18n import Translatable as tr
 from ....domain.filing.schema import ModeloDraft, ModeloValidationFinding
 from ....domain.submission import ModeloDraftStatus

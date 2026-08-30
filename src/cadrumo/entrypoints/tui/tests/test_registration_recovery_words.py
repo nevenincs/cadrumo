@@ -14,7 +14,7 @@ from __future__ import annotations
 from time import monotonic
 
 import pytest
-from textual.widgets import Input
+from textual.widgets import Button, Input
 from textual.worker import WorkerCancelled
 
 from ....application.user_profile.profile_repository import CommittedProfileRepository
@@ -24,6 +24,7 @@ from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....domain.user_profile.values import UserProfileFact
 from ....entrypoints.tui.components.host import ScreenHostApp
 from ....entrypoints.tui.secret.registration import (
+    RecoveryHandoverAbandonedError,
     RecoveryHandoverCancelledError,
     RecoveryWordsScreen,
     RegistrationAttempt,
@@ -58,6 +59,12 @@ def _attempt_registration(
             recovery_handover=recovery_handover,
         )
     except RecoveryHandoverCancelledError:
+        return RegistrationAttempt(
+            expected_refusal=RegistrationRefusal(
+                message_key="cli.config.profile.create_recovery_verification_cancelled",
+            )
+        )
+    except RecoveryHandoverAbandonedError:
         return RegistrationAttempt(
             expected_refusal=RegistrationRefusal(
                 message_key="cli.config.profile.create_recovery_verification_cancelled",
@@ -248,3 +255,58 @@ async def test_app_shutdown_releases_pending_handoff_without_publication(tmp_pat
             with pytest.raises(WorkerCancelled):
                 await pilot.app.workers.wait_for_complete()
         assert not any(view.label == "Shutdown Recovery Subject" for view in CommittedProfileRepository().list())
+
+
+@pytest.mark.asyncio
+async def test_a_words_screen_that_leaves_without_answering_refuses_instead_of_waiting(tmp_path) -> None:
+    """An unanswerable handoff must end the attempt, not outlive the process.
+
+    Every other release path keys on something the screen or the app DOES:
+    the words screen's own unmount refuses, the registration screen's unmount
+    drains its pending handoffs, and the wait gives up once the app stops.
+    None of them fire when the screen simply leaves the stack while still
+    mounted and the app keeps running -- and a worker blocked on an event
+    nobody can set waits for the lifetime of the process, with no error and
+    no diagnostic to say why the registration never finished.
+
+    The state is INDUCED rather than simulated: nothing is stubbed and no
+    guard is disabled. The screen is removed from the application's own stack
+    exactly as a defect would leave it -- off the stack, never unmounted --
+    and the assertion is that the attempt ends.
+
+    Removing the stack-membership check in ``_confirm_recovery_possession``
+    makes this test hang rather than fail, which is the proof it is the
+    guard under test and not the machinery around it.
+    """
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        app = _screen()
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
+            await _fill(
+                pilot,
+                username="Abandoned Recovery Subject",
+                password=_TYPED_PASSWORD,
+                confirm=_TYPED_PASSWORD,
+            )
+            await pilot.click("#btn-create")
+            words = await _wait_for_recovery_screen(pilot)
+
+            # Off the stack, still mounted: no unmount fires, so neither the
+            # screen's own refusal nor the host's drain releases the handoff.
+            # The public ``screen_stack`` property returns a COPY, so removing
+            # from it induces nothing; the live list is the private one.
+            pilot.app._screen_stack.remove(words)
+            assert words.is_mounted
+
+            # The create button is re-enabled only when the attempt settles,
+            # which is also the signal the operator sees: the door stops
+            # spinning and says something.
+            deadline = monotonic() + 10.0
+            while app.query_one("#btn-create", Button).disabled and monotonic() < deadline:
+                await pilot.pause(0.05)
+
+            assert not app.query_one("#btn-create", Button).disabled, (
+                "the registration worker was still waiting on a handoff nobody could answer"
+            )
+            assert app.outcome is None
+
+        assert not any(view.label == "Abandoned Recovery Subject" for view in CommittedProfileRepository().list())

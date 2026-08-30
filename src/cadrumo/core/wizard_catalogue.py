@@ -22,7 +22,7 @@ from __future__ import annotations
 
 from typing import Any, Protocol, runtime_checkable
 
-from .errors import CoreError
+from .errors.hierarchy import CoreError
 from .logging import get_logger
 
 _log = get_logger(__name__)

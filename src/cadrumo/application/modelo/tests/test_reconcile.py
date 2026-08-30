@@ -355,7 +355,7 @@ def test_modelo_reconcile_malformed_evidence_refusal_is_clean_and_instructive(
     Regression for audit reconcile m11 / docs-hardening m16: before the fix the
     refusal echoed the raw parser message verbatim.
     """
-    from ....core.errors import build_error_envelope, resolve_error_message
+    from ....core.errors.error_codes import build_error_envelope, resolve_error_message
 
     work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
     not_a_justificante = tmp_path / "garbage.pdf"

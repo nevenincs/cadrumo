@@ -21,7 +21,7 @@ from datetime import UTC, datetime, timedelta, timezone
 import pytest
 from pydantic import ValidationError
 
-from ....core.errors import CoreValidationError
+from ....core.errors.hierarchy import CoreValidationError
 from ..event import (
     BucketEvent,
     BucketEventObjectType,

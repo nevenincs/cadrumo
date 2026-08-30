@@ -29,7 +29,7 @@ from ...core import (
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.country_code import CountryCodeAlpha2
 from ...core.decimal import coerce_decimal
-from ...core.errors import CoreValidationError
+from ...core.errors.hierarchy import CoreValidationError
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import content_hash_hex
 from ...core.identity import (

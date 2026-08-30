@@ -229,7 +229,7 @@ flows:
       i exporteu aquí, i presenteu vosaltres mateixos davant l'AEAT.
     state_not_carried: Aquesta lectura no inclou l'estat ni l'historial de presentació.
       Cap productor els aporta.
-    title: Presentació — model {modelo}
+    title: "Presentació - model {modelo}\r"
     why:
       draft_structural: 'Sense mesurar de manera permanent: la construcció de l''esborrany
         no desa estat, així que cap productor registra un veredicte que es pugui llegir.'
@@ -247,7 +247,7 @@ flows:
       són accessibles des d'aquesta lectura.
     section:
       unsectioned: Sense secció
-    title: Entrades — model {modelo}
+    title: "Entrades - model {modelo}\r"
     values_unmeasured: En aquesta lectura no s'ha mesurat cap valor. La inspecció
       estàtica només llegeix l'esquema.
   modelo_workspace_overview:
@@ -273,7 +273,7 @@ flows:
       address: Adreça
       capabilities: Capacitats
       revision: Coordenades de revisió
-    title: Resum — model {modelo}
+    title: "Resum - model {modelo}\r"
     value:
       no_work_unit: encara sense unitat de treball
   modelo_workspace_provenance:
@@ -286,7 +286,7 @@ flows:
       de procedència.
     page_bounded: Es mostren {shown} d'un conjunt més gran. Una font pot aportar moltes
       files, així que el nombre de files no indica completesa.
-    title: Procedència — model {modelo}
+    title: "Procedència - model {modelo}\r"
     value:
       unattributed: sense atribuir
   modelo_workspace_results:
@@ -300,7 +300,7 @@ flows:
       estàtica no inclou.
     page_bounded: Es mostren {shown} files d'un conjunt més gran; les restants no
       són accessibles des d'aquesta lectura.
-    title: Resultats — model {modelo}
+    title: "Resultats - model {modelo}\r"
   modelo_workspace_verification:
     axis:
       binding_ready: Vincles preparats
@@ -324,7 +324,7 @@ flows:
     section:
       findings: Troballes
       readiness: Eixos de preparació
-    title: Verificació — model {modelo}
+    title: "Verificació - model {modelo}\r"
     value:
       unmeasured: sense mesurar
   passphrase:

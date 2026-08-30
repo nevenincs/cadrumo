@@ -31,12 +31,12 @@ from uuid import UUID
 
 import pytest
 
-from ....adapters.persistence.storage import custody
 from ....adapters.persistence.storage.custody.acceleration_receipt import (
     delete_profile_session,
     mint_profile_session,
     profile_session_path,
 )
+from ....adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from ....adapters.persistence.storage.master_key import (
     close_active_bucket_session,
     current_active_bucket_session,
@@ -475,7 +475,7 @@ class TestFailClosedRefusals:
         """Mint an actual current receipt with a deliberately old issue time."""
 
         profile_id = UUID(bucket_id)
-        envelope = custody.load_committed_profile_password_material(profile_id, root=storage_root).envelope
+        envelope = load_committed_profile_password_material(profile_id, root=storage_root).envelope
         mint_profile_session(
             storage_root=storage_root,
             profile_id=profile_id,

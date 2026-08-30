@@ -22,7 +22,7 @@ from ...core import (
     content_hash_hex,
 )
 from ...core.async_cleanup import AsyncCloseable, close_async_resources
-from ...core.errors import ErrorCategory, get_registered_error_code
+from ...core.errors.error_codes import ErrorCategory, get_registered_error_code
 from ...core.operations import LIFECYCLES_BEFORE_EXECUTOR_ENTRY
 from ._execution_context import DefinitionBoundContext
 from ._supervisor_lease import OperationSupervisorLeaseMixin

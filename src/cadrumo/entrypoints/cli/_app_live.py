@@ -59,7 +59,7 @@ from ...application.live.remote_state_models import (
 )
 from ...application.operator_actions import ActionReference
 from ...core import Period, PeriodError
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.iva_compensation.reconciliation import IvaCompensationDecisionReason

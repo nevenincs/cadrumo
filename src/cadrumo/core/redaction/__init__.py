@@ -483,7 +483,7 @@ def default_rules_for(policy: _ClassificationPolicy) -> tuple[_RedactionRule, ..
         RedactionError: If the policy names a rule the registry does not
             declare.
     """
-    from ..errors import RedactionError
+    from ..errors.hierarchy import RedactionError
 
     unresolvable = [name for name in policy.redaction_rules if name not in _DEFAULT_RULES]
     if unresolvable:
@@ -737,7 +737,7 @@ def redact(value: str, *, rules: tuple[_RedactionRule, ...]) -> str:
         RedactionError: When ``value`` is not a :class:`str`.
     """
     if not isinstance(value, str):
-        from ..errors import RedactionError
+        from ..errors.hierarchy import RedactionError
 
         raise RedactionError(f"redact() expects str; got {type(value).__name__}")
     result = value
@@ -1078,7 +1078,7 @@ def redact_for_cli_output(text: str, *, reveal_identifiers: bool = False) -> str
         RedactionError: When ``text`` is not a :class:`str`.
     """
     if not isinstance(text, str):
-        from ..errors import RedactionError
+        from ..errors.hierarchy import RedactionError
 
         raise RedactionError(f"redact_for_cli_output() expects str; got {type(text).__name__}")
     return _redact_cli_string(text, reveal_identifiers=reveal_identifiers)

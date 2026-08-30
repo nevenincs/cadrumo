@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from ...core.click_context import current_cli_flag
 from ...core.config import Settings
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 from ...core.tty import stderr_is_tty, stdin_is_tty, stdout_is_tty
 
 

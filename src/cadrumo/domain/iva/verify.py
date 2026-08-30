@@ -19,7 +19,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ...core.citation_grounding import CitationGrounding
-from ...core.errors import BaseSeverity
+from ...core.errors.severity import BaseSeverity
 from ...core.logging import get_logger
 from .schema import (
     IvaCatalogue,

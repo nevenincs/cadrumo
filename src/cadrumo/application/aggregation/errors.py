@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ...core.errors import CadrumoError, CoreError, CoreValidationError, TerminalPreconditionErrorMixin
+from ...core.errors.hierarchy import CadrumoError, CoreError, CoreValidationError, TerminalPreconditionErrorMixin
 from ...core.i18n import Translatable as tr
 from ..operator_actions import PreconditionVerdict
 

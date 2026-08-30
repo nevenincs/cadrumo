@@ -40,7 +40,7 @@ from ...core import (
     RefundElection,
 )
 from ...core.country_code import CountryCodeAlpha2
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 from ...core.filing_year import FilingYear
 from ...core.identity import (
     BucketId,
@@ -51,7 +51,8 @@ from ...core.identity import (
 )
 from ...core.operations import EFFECTS_WITHOUT_PARTIAL_COMMIT
 from ...domain.calculations.registry.ids import RevisionId
-from ...domain.modelos.calculation_revision import CalculationRevisionAmendmentKind, M303RectificativaMotive
+from ...domain.modelos.calculation_revision import CalculationRevisionAmendmentKind
+from ...domain.modelos.calculation_revision_amendment import M303RectificativaMotive
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.row_models import (
     M184Clave,

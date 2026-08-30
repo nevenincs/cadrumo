@@ -20,7 +20,7 @@ from pydantic import BaseModel, Field, TypeAdapter, ValidationError, field_valid
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.bucket_pointer import BucketPointer
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import (
     bounded_canonical_json_bytes,
     prefixed_digest,

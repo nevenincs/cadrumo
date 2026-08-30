@@ -6,7 +6,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import Modelo, Period
-from ....core.errors import BaseSeverity
+from ....core.errors.severity import BaseSeverity
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.profile_grounding import ProfileKeyGrounding
 from ....domain.user_profile.labels import profile_field_label

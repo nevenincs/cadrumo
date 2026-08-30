@@ -76,7 +76,8 @@ from ...domain.calculations.registry.withholding_bindings import WithholdingClav
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.filing_record import ExternalEvidenceKind, ModeloRecordStatus
 from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity, VerificationCompletenessStatus
-from ...domain.modelos.calculation_revision import CalculationRevisionState, M303RectificativaMotive
+from ...domain.modelos.calculation_revision import CalculationRevisionState
+from ...domain.modelos.calculation_revision_amendment import M303RectificativaMotive
 from ...domain.modelos.filing_text import EvidenceReference, FilingNotes, ModeloActorLabel
 from ._decimal_wire import DecimalWireText
 from ._modelo_aux_payloads import (

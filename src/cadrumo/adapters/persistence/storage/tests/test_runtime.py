@@ -11,7 +11,8 @@ import pytest
 
 from .....core.bucket_pointer import BucketPointer, write_pointer
 from .....core.config import Settings, StorageRouteKind, override_settings
-from .....core.errors import CadrumoError, resolve_error_message
+from .....core.errors.error_codes import resolve_error_message
+from .....core.errors.hierarchy import CadrumoError
 from .....core.external_constants import OutputLanguage
 from .._namespace_registry import STORAGE_NAMESPACE_REGISTRY, WORKFLOW_STATE_NAMESPACE
 from ..bucket import bucket_paths

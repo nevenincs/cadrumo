@@ -43,6 +43,8 @@ cli:
         scope_help: El territorio a efectos de IVA en el que está establecida la contraparte.
         tax_identifier_help: El identificador fiscal de la contraparte tal y como
           aparece impreso en el documento.
+        view_help: Muestra lo que la escalera de identificación de IVA respondería
+          para esta contraparte con lo confirmado hasta ahora.
         withdraw_help: Retira lo confirmado sobre una contraparte, declarando que
           la respuesta anterior era incorrecta.
       evidence:
@@ -284,6 +286,8 @@ cli:
           resolve_shape: Cada --resolve es <finding-id>=<choose|supply|attest>:<valor-o-motivo>.
             Un choose indica la lectura por su valor o por el resumen que mostró review.
           unknown_reference: No hay ningun borrador pendiente para esa referencia.
+          view_help: Muestra todos los campos revisables de un borrador pendiente,
+            junto con sus hallazgos bloqueantes.
         source_path_help: Ruta al PDF o imagen de la factura
         supplier_help: Nombre del proveedor
         taxable_base_help: Base imponible de la factura
@@ -685,6 +689,8 @@ cli:
           el paquete como incompleto.
         group_help: Verbos de auditoría del paquete de evidencia (show/check/export).
         output_help: Ruta de salida para el ZIP del paquete.
+        view_help: Muestra el manifiesto de un paquete de evidencia y su lista de
+          registros referenciados.
       bindings:
         app_help: Inspeccionar y previsualizar los bindings de un modelo tributario
         as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
@@ -1017,6 +1023,10 @@ cli:
           conciliar.
         import_help: Concilia una unidad de trabajo contra un PDF de justificante
           o declaración local. Solo local; nunca contacta con AEAT.
+        list_empty: No hay conciliaciones registradas todavía.
+        list_help: Lista las conciliaciones anteriores registradas en el perfil activo.
+        list_work_unit_id_help: Filtra las conciliaciones por identificador de unidad
+          de trabajo (SHA-256 o prefijo inequívoco).
         pull_help: Descarga de AEAT el justificante de una unidad de trabajo y concilia
           contra él. Contacta con AEAT (solo lectura).
         work_unit_id_help: Identificador de la unidad de trabajo (SHA-256 o prefijo
@@ -1761,6 +1771,8 @@ cli:
         report_help: Registrar el estado de la app Cl@ve observado por el operador
           para un diagnóstico de autenticación.
         show_help: Muestra un diagnóstico de autenticación cifrado y redactado.
+        view_help: Muestra un diagnóstico de autenticación cifrado por su identificador,
+          con los cuerpos sensibles ocultos.
       file_help: Ruta al archivo de credenciales (certificado o clave)
       help: Configurar el proveedor de autenticación activo
       login_fresh_help: Forzar una nueva autenticación en vivo en lugar de reutilizar
@@ -1947,6 +1959,8 @@ cli:
           en todo el dominio (opcional)
         target_principal_help: Correo de la cuenta de servicio a suplantar (obligatorio
           con --kind service_account_impersonation)
+        view_help: Muestra la selección de fuente de credenciales de Google guardada
+          para el perfil activo.
       detail:
         client_json_bad_wrapper: el JSON de cliente en {path} tiene un envoltorio
           "installed" que no es un objeto
@@ -2006,6 +2020,8 @@ cli:
         get_help: Muestra la carpeta raíz de Google Drive configurada
         help: Gestiona la carpeta raíz de Google Drive
         set_help: Vincula una carpeta de Google Drive al perfil activo
+        view_help: Muestra la carpeta raíz de Google Drive configurada para el perfil
+          activo.
       help: Gestionar la integración OAuth de Google Desktop para Drive y Sheets
       login_help: Ejecutar el flujo de consentimiento OAuth (o refrescar una credencial
         existente)
@@ -2153,6 +2169,8 @@ cli:
           perfil activo.
         state_help: Si activar (on) o desactivar (off) la capacidad.
         state_label: estado
+        view_help: Muestra el estado resuelto de cada capacidad de servicio para el
+          perfil activo.
       censo:
         apply_help: Registra los datos censales analizados en el perfil activo (por
           defecto solo previsualiza).
@@ -2632,6 +2650,10 @@ cli:
           empty: vacía
           populated: con datos
           unresolved: sin resolver
+      view:
+        area_argument_help: El área de almacenamiento a consultar (state, logs, cache
+          o exports).
+        area_help: Muestra en detalle una ubicación de almacenamiento declarada.
     unset:
       help: Eliminar el valor asignado a una clave de configuración
       key_help: Clave a limpiar
@@ -3382,6 +3404,8 @@ cli:
           declaración.
         modelo_audit_export: Exporta la auditoría de evidencias de una revisión de
           declaración.
+        modelo_audit_view: Muestra el manifiesto de un paquete de evidencias de una
+          revisión de declaración.
         modelo_bindings: Gestionar las vinculaciones de un modelo fiscal.
         modelo_describe: Describir la estructura de un modelo fiscal.
         modelo_list: Listar los modelos fiscales disponibles.
@@ -3433,6 +3457,7 @@ cli:
         profile_login: Inicia sesión en un perfil y lo convierte en el activo.
         profile_logout: Cierra la sesión del perfil activo.
         profile_status: Mostrar el estado del perfil activo.
+        profile_view: Mostrar los datos de un perfil (por defecto, el perfil activo).
         reset_resume: Continúa una operación de reinicio incompleta.
         reset_start: Inicia un nuevo reinicio irreversible de todos los perfiles locales.
         reset_status: Muestra el estado de una operación de reinicio sin modificar
@@ -3449,6 +3474,7 @@ cli:
         storage_list: Consulta dónde se guarda cada tipo de dato local
         storage_reclaim: Libera espacio eliminando un área que la aplicación puede
           reconstruir
+        storage_view: Consulta el detalle de una ubicación de almacenamiento concreta
       root:
         diagnostics_logs: Muestra la ruta del log y sus últimas líneas.
         diagnostics_overview_verbose: Muestra el estado general con más detalle.

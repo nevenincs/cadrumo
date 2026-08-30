@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import BindingSourceKind
-from ...core.errors import BaseSeverity
+from ...core.errors.severity import BaseSeverity
 from ..calculations.registry.bindings import ProfileSelector
 from ..calculations.registry.ids import RevisionId
 

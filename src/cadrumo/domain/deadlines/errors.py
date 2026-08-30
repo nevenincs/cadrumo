@@ -6,7 +6,7 @@ a single root they can catch when integrating with the deadline engine.
 
 from __future__ import annotations
 
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 
 
 class DeadlineError(CadrumoError):

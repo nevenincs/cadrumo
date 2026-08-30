@@ -51,7 +51,7 @@ from ...core import (
     FieldGroundingOutcome,
     FindingResolutionAction,
 )
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import content_hash_hex
 from .evidence_draft import FieldAmbiguityCandidate, InvoiceDraft
 from .preconditions import LedgerPreconditionCondition, LedgerPreconditionErrorMixin, ledger_no_recovery_verdict

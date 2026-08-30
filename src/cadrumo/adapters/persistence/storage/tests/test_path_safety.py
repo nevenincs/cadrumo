@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from .....core.config import override_settings
-from .....core.errors import build_error_envelope, resolve_error_message
+from .....core.errors.error_codes import build_error_envelope, resolve_error_message
 from .. import PathContainmentError
 from .._path_safety import safe_repository_id
 
@@ -70,7 +70,7 @@ class TestErrorCodeBinding:
     """``PathContainmentError`` binds to the registered INTEGRITY code."""
 
     def test_class_binds_to_registered_code(self) -> None:
-        from .....core.errors import bind_error_code
+        from .....core.errors.error_codes import bind_error_code
 
         bound = bind_error_code(PathContainmentError)
         assert bound is not None

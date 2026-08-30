@@ -8,7 +8,7 @@ root for coarse handling or branch on the specific subclasses.
 
 from __future__ import annotations
 
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 
 
 class AttachmentError(CadrumoError):

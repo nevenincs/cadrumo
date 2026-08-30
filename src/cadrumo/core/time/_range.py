@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from ..errors import CoreValidationError
+from ..errors.hierarchy import CoreValidationError
 
 
 def validate_inclusive_date_range(since: date | None, until: date | None) -> None:

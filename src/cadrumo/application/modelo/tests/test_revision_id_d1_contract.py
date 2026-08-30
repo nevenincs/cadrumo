@@ -34,7 +34,7 @@ import pytest
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
 from ....core.config import override_settings
-from ....core.errors import resolve_error_message
+from ....core.errors.error_codes import resolve_error_message
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id

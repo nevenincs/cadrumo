@@ -13,7 +13,7 @@ TTL/recovery state, or custody semantics that this primitive does not own.
 
 from __future__ import annotations
 
-from .errors import CadrumoError
+from .errors.hierarchy import CadrumoError
 
 
 class LockAcquisitionError(CadrumoError):

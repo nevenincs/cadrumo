@@ -31,7 +31,7 @@ from ...core import (
     Hex16Str,
     Period,
 )
-from ...core.errors import BaseSeverity
+from ...core.errors.severity import BaseSeverity
 from ...core.hashing import content_hash_hex
 from ...core.i18n import Translatable as tr
 from ...core.identity import ContentDigest, SubjectTaxId

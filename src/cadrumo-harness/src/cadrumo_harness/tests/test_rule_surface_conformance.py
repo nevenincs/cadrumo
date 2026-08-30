@@ -33,7 +33,7 @@ import pytest
 from cadrumo.application.operator_surface.contract import get_operator_surface_contract
 from cadrumo.application.operator_surface.manifest import CommandSchemaRef
 from cadrumo.core import ActionArgumentStatus, ActionConditionality, NoRecoveryOutcome
-from cadrumo.core.errors import ErrorEnvelope
+from cadrumo.core.errors.error_codes import ErrorEnvelope
 from cadrumo.core.json_contract import (
     ENVELOPE_SCHEMA_VERSION,
     Notice,

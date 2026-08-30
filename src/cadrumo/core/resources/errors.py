@@ -10,7 +10,8 @@ error.
 
 from __future__ import annotations
 
-from ..errors import CadrumoError, CoreNotFoundError
+from ..errors.hierarchy import CadrumoError
+from ..errors.not_found import CoreNotFoundError
 
 
 class ResourceLoadError(CadrumoError):

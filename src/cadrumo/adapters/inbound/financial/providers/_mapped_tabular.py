@@ -34,7 +34,8 @@ from pathlib import Path
 from typing import override
 
 from .....core import FieldRole, MissingOptionalExtraError
-from .....core.errors import CadrumoError, CoreValidationError, resolve_error_message
+from .....core.errors.error_codes import resolve_error_message
+from .....core.errors.hierarchy import CadrumoError, CoreValidationError
 from .....core.logging import get_logger
 from .....core.parsing import normalise_iso_4217_currency
 from .....core.tabular import NormalizedTable, TabularSourceError, normalize_tabular_bytes

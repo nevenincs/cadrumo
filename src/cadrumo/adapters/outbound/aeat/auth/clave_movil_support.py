@@ -18,7 +18,8 @@ from uuid import uuid4
 from pydantic import SecretStr
 
 from .....core import OperatorProgress
-from .....core.errors import AuthError, resolve_error_message
+from .....core.errors.error_codes import resolve_error_message
+from .....core.errors.hierarchy import AuthError
 from .....core.hashing import sha256_hex
 from .....core.identity import IdentityError, validate_spanish_tax_id
 from .....core.logging import get_logger

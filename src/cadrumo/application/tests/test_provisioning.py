@@ -19,7 +19,7 @@ import pytest
 
 from ...core import ExternalPathRole, MissingOptionalExtraError, OptionalExtra, require_optional_extra
 from ...core.config import override_settings
-from ...core.errors import CadrumoError, CoreError
+from ...core.errors.hierarchy import CadrumoError, CoreError
 from ...tests.loopback_llm import SilentLoopbackHandler, serving_loopback, write_raw_response
 from ..provisioning import (
     OPTIONAL_EXTRAS,

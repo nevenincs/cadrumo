@@ -24,7 +24,7 @@ import pytest
 
 from ....application.modelo._maritime_preview import maritime_facts_from_active_profile
 from ....core.config import override_settings
-from ....core.errors import ErrorCategory, get_error_exit_code
+from ....core.errors.error_codes import ErrorCategory, get_error_exit_code
 from ....tests.cli_envelope import unwrap_schema_envelope as _unwrap
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session

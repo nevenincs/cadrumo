@@ -58,7 +58,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ...core.identity import BucketId, CalculationRevisionId, WorkUnitId
 from ...core.time import UtcInstant

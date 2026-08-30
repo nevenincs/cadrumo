@@ -6,6 +6,4 @@ module docstring for the structure-only / unpinned-extraction posture.
 
 from __future__ import annotations
 
-from ._parser import parse_certificado_censal_bytes
-
-__all__ = ["parse_certificado_censal_bytes"]
+__all__: tuple[str, ...] = ()

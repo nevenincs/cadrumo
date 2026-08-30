@@ -1,6 +1,7 @@
 import pytest
 
-from ...errors import ERROR_REGISTRY, DecimalFormatError, get_registered_error_code
+from ...errors.error_codes import ERROR_REGISTRY, get_registered_error_code
+from ...errors.hierarchy import DecimalFormatError
 from .. import format_decimal
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

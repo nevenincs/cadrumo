@@ -37,15 +37,9 @@ from .....domain.calculations.registry.m303_orden_resolution import resolve_m303
 from .....domain.filing_evidence import FilingEvidenceReference
 from .....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision, RegimenSimplificadoFilingRows
 from .....domain.modelos.calculation_repository import CalculationRevisionPersistenceError
-from .....domain.modelos.calculation_revision import (
-    CalculationRevision,
-    CalculationRevisionCatalogue,
-    CalculationRevisionState,
-    FilingInstanceEvidence,
-    M303Exonerado390FilingEvidence,
-    M303FilingInstanceEvidence,
-    derive_calculation_revision_id,
-)
+from .....domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionCatalogue, CalculationRevisionState, FilingInstanceEvidence, derive_calculation_revision_id
+from .....domain.modelos.calculation_revision_m303_evidence import M303Exonerado390FilingEvidence
+from .....domain.modelos.calculation_revision_m303_handoff import M303FilingInstanceEvidence
 from .....tests.filing_evidence import regimen_simplificado_filing_evidence
 from .....tests.secure_sql import isolated_runtime_profile
 from ...storage import SensitivityClass

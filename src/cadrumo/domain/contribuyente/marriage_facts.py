@@ -23,7 +23,7 @@ from __future__ import annotations
 import re
 from datetime import date
 
-from ...core.errors import ProfileAnswerTypeError
+from ...core.errors.hierarchy import ProfileAnswerTypeError
 from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
 
 _MARRIAGE_DATE_PATH = "renta_taxpayer.marriage_date"

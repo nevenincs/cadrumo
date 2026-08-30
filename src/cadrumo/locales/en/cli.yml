@@ -40,6 +40,8 @@ cli:
         note_help: What the answer rests on, in your own words. Recorded, never consulted.
         scope_help: The IVA territory the counterparty is established in.
         tax_identifier_help: The counterparty's tax identifier as printed on the document.
+        view_help: Show what the VAT-identification ladder would answer for this counterparty
+          based on what is confirmed so far.
         withdraw_help: Withdraw what was confirmed about a counterparty, stating the
           earlier answer was wrong.
       evidence:
@@ -260,6 +262,8 @@ cli:
           resolve_shape: Each --resolve is <finding-id>=<choose|supply|attest>:<value-or-reason>.
             A choose names the reading by its value or by the digest review showed.
           unknown_reference: No pending draft for that reference.
+          view_help: Show every reviewable field of a pending draft, along with its
+            blocking findings.
         source_path_help: Path to the invoice PDF or image
         supplier_help: Supplier name
         taxable_base_help: Invoice taxable base
@@ -630,6 +634,7 @@ cli:
           incomplete.
         group_help: Evidence bundle audit verbs (show/check/export).
         output_help: Output path for the bundle ZIP archive.
+        view_help: Show an evidence bundle's manifest and its list of referenced records.
       bindings:
         app_help: Inspect and preview the bindings of an AEAT tax form
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
@@ -944,6 +949,10 @@ cli:
           against.
         import_help: Reconcile a work unit against a local justificante or declaración
           PDF. Local-only; never contacts AEAT.
+        list_empty: No reconciliations recorded yet.
+        list_help: List past reconciliations recorded in the active profile.
+        list_work_unit_id_help: Filter reconciliations by work unit identifier (SHA-256
+          or an unambiguous prefix).
         pull_help: Pull the justificante for a work unit from AEAT and reconcile against
           it. Contacts AEAT (read-only).
         work_unit_id_help: Work unit id (SHA-256 or unambiguous prefix).
@@ -1638,6 +1647,8 @@ cli:
           app_did_not_prompt, operator_did_not_check.'
         report_help: Record the operator-observed Cl@ve app state for one auth diagnostic.
         show_help: Show one redacted encrypted auth diagnostic.
+        view_help: Show one encrypted auth diagnostic by its identifier, with sensitive
+          bodies redacted.
       file_help: Path to the credential file (certificate or key)
       help: Configure the active authentication provider
       login_fresh_help: Force a new live authentication instead of reusing a saved
@@ -1802,6 +1813,7 @@ cli:
           (optional)
         target_principal_help: Service-account email to impersonate (required for
           --kind service_account_impersonation)
+        view_help: Show the active profile's saved Google credential-source selection.
       detail:
         client_json_bad_wrapper: client JSON at {path} has a non-object "installed"
           wrapper
@@ -1853,6 +1865,7 @@ cli:
         get_help: Show the configured Google Drive root folder
         help: Manage the Google Drive root folder binding
         set_help: Bind a Google Drive folder id to the active profile
+        view_help: Show the Google Drive root folder configured for the active profile.
       help: Manage the Google OAuth Desktop integration for Drive and Sheets
       login_help: Run the OAuth consent flow (or refresh an existing credential)
       logout_help: Clear the refresh token and metadata; preserve the registered client
@@ -1987,6 +2000,8 @@ cli:
           profile.
         state_help: Whether to enable (on) or disable (off) the capability.
         state_label: state
+        view_help: Show the resolved state of every service capability for the active
+          profile.
       censo:
         apply_help: Enroll the parsed censal facts onto the active profile (default
           is preview only).
@@ -2439,6 +2454,9 @@ cli:
           empty: empty
           populated: populated
           unresolved: unresolved
+      view:
+        area_argument_help: The storage area to inspect (state, logs, cache, or exports).
+        area_help: Show one declared storage location in full.
     unset:
       help: Clear the value of one configuration key
       key_help: Key to clear
@@ -3138,6 +3156,7 @@ cli:
           sweep.
         modelo_audit_check: Check bundled evidence for a filing revision.
         modelo_audit_export: Export the evidence audit for a filing revision.
+        modelo_audit_view: Show an evidence bundle's manifest for a filing review.
         modelo_bindings: Inspect registry binding coverage.
         modelo_describe: Describe one modelo revision.
         modelo_list: List supported modelos.
@@ -3184,6 +3203,7 @@ cli:
         profile_login: Log in to a profile and make it the active one.
         profile_logout: Close the active profile session.
         profile_status: Show active profile readiness.
+        profile_view: Show one profile's facts (defaults to the active profile).
         reset_resume: Continue an incomplete reset operation.
         reset_start: Start a new irreversible reset of every locally stored profile.
         reset_status: Show reset operation status without changing local data.
@@ -3197,6 +3217,7 @@ cli:
         storage_init: Create any storage directory that is missing
         storage_list: See where every kind of local data is kept
         storage_reclaim: Free space by deleting a storage area the app can rebuild
+        storage_view: See the full detail of one declared storage location
       root:
         diagnostics_logs: Show the log path and latest lines.
         diagnostics_overview_verbose: Show general state with additional detail.

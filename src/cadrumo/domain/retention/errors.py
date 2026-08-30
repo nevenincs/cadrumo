@@ -35,7 +35,7 @@ its constraint long enough to be read as current more than once.
 
 from __future__ import annotations
 
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 
 
 class RetentionError(CadrumoError):

@@ -11,7 +11,7 @@ from typing import get_args
 
 from ...core import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.config import Settings
-from ...core.errors import BaseSeverity
+from ...core.errors.severity import BaseSeverity
 from ...core.logging import get_logger
 from ...domain.calculations.registry.authority import (
     ValidatedRegistryAuthority,

@@ -20,6 +20,7 @@ from datetime import date, datetime
 from pydantic import Field, NonNegativeInt
 
 from ...application.evidence import BundleVerificationState
+from ...application.evidence.bundle_text import EvidenceBundleNotes
 from ...application.workflow.run_models import (
     SiteHealthAlert,
     WorkflowObligationFacts,
@@ -34,8 +35,13 @@ from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, Fil
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
 from ...core.text_bounds import NonEmptyStr, PositiveCount
 from ...core.unit_proportion import UnitFraction
-from ...domain.buckets.event import BucketActorLabel, BucketEventId, BucketEventObjectType, BucketEventType
-from ...domain.buckets.event import BucketObjectId
+from ...domain.buckets.event import (
+    BucketActorLabel,
+    BucketEventId,
+    BucketEventObjectType,
+    BucketEventType,
+    BucketObjectId,
+)
 from ...domain.calculations.registry.ids import LegalRefId, SourceRefId
 from ...domain.calculations.registry.query_reports import ModeloDescribeReport
 from ._decimal_wire import NonNegativeDecimalWireText
@@ -99,7 +105,7 @@ class ModeloAuditViewResult(OutputSchema):
     completeness_ratio: UnitFraction
     records: list[EvidenceRecordRefPayload]
     created_at: datetime
-    notes: str = Field(default="", max_length=2000)
+    notes: EvidenceBundleNotes = ""
 
 
 class ModeloAuditCheckResult(OutputSchema):

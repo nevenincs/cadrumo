@@ -35,7 +35,7 @@ from ...application.user_profile.aggregate import ProfileRestoreAuthority
 from ...application.user_profile.bundle_export_contracts import ProfileBundleExportPurpose, ProfileBundleExportTransport
 from ...application.workflow.profile_health import ProfileHealthStatus, ProfileSource
 from ...core import Hex64Str
-from ...core.errors import BaseSeverity
+from ...core.errors.severity import BaseSeverity
 from ...core.identity import BucketId, ProfileId, ProfileLabel
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
 from ...core.text_bounds import NonEmptyStr, PositiveCount

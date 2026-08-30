@@ -11,7 +11,7 @@ See Also:
 from __future__ import annotations
 
 from ...core import StorageArea
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 from ...core.i18n import tr
 
 

@@ -19,7 +19,7 @@ from enum import StrEnum
 from typing import Self
 
 from ....core import CasillaId, Modelo
-from ....core.errors import CadrumoError, CoreValidationError, TerminalPreconditionErrorMixin
+from ....core.errors.hierarchy import CadrumoError, CoreValidationError, TerminalPreconditionErrorMixin
 from .ids import BindingId, RelationId, RevisionId
 
 

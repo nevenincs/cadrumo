@@ -63,7 +63,7 @@ def normalize_ambient_profile(ctx: typer.Context) -> None:
     from ...application.workflow.profile_bucket_scan import resolve_profile_bucket
     from ...core.bucket_pointer import resolve_active_bucket_id
     from ...core.config import override_settings
-    from ...core.errors import CadrumoError
+    from ...core.errors.hierarchy import CadrumoError
 
     active = resolve_active_bucket_id()
     if active is None:

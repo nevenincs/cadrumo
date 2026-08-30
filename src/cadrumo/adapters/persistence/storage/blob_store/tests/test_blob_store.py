@@ -12,7 +12,7 @@ from pydantic import ValidationError
 
 from ......core.classification import SensitivityClass
 from ......core.config import override_settings
-from ......core.errors import build_error_envelope, resolve_error_message
+from ......core.errors.error_codes import build_error_envelope, resolve_error_message
 from ......core.external_constants import UTF_8_ENCODING
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ......tests.path_obstruction import obstructed_path

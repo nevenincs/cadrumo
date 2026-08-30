@@ -39,7 +39,7 @@ if TYPE_CHECKING:
 from .....core import NoRecoveryOutcome
 from .....core.async_cleanup import await_cancellation_complete
 from .....core.config import Settings
-from .....core.errors import SiteHealthError, SiteHealthState
+from .....core.errors.hierarchy import SiteHealthError, SiteHealthState
 from .....core.logging import get_logger
 from .....core.time import now
 from .._playwright import PlaywrightError, PlaywrightTimeoutError

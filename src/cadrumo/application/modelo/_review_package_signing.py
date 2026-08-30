@@ -64,7 +64,7 @@ from ...core.ed25519_signing import (
     generate_ed25519_keypair_hex,
     sign_digest_hex,
 )
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 from ...core.identity import BucketId, CalculationRevisionId, canonical_bucket_id
 from ...core.time import UtcInstant
 from ...core.time import now as _utc_now

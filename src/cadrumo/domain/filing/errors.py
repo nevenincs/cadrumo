@@ -6,7 +6,7 @@ callers can catch the project-wide base.
 
 from __future__ import annotations
 
-from ...core.errors import CadrumoError, CoreValidationError
+from ...core.errors.hierarchy import CadrumoError, CoreValidationError
 
 
 class ModeloDraftError(CadrumoError):

@@ -13,7 +13,7 @@ import secrets
 import pytest
 
 from ......core.config import override_settings
-from ......core.errors import ERROR_REGISTRY, build_error_envelope, render_error_text
+from ......core.errors.error_codes import ERROR_REGISTRY, build_error_envelope, render_error_text
 from ......core.i18n import clear_output_language_cache
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ...bucket import BucketLockedError

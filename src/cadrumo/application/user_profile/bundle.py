@@ -37,7 +37,7 @@ from collections.abc import Callable, Mapping
 from typing import TYPE_CHECKING, Final
 
 from ...core import STR_KEYED_MAPPING_ADAPTER, StorageCustodyProfile
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 from ...core.time import now
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import emit_bucket_event

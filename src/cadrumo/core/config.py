@@ -68,7 +68,7 @@ from ._config_support import default_clave_sede_access_url_template as _default_
 from ._config_support import default_sede_expedientes_path as _default_sede_expedientes_path
 from ._config_support import default_status_detail_url_template as _default_status_detail_url_template
 from ._config_support import default_status_notificaciones_path as _default_status_notificaciones_path
-from .errors import ActiveProfilePointerError, CoreValidationError
+from .errors.hierarchy import ActiveProfilePointerError, CoreValidationError
 from .external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from .paths import normalize_project_relative_path
 from .resources import bundled_path

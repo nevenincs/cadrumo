@@ -48,7 +48,7 @@ from ..classification import (
     default_output_policy_for,
     default_policy_for,
 )
-from ..errors import RedactionError
+from ..errors.hierarchy import RedactionError
 from ..redaction import default_rules, default_rules_for, default_rules_for_class
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

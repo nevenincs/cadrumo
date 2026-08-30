@@ -18,7 +18,7 @@ import pytest
 
 from .....core import ActionConditionality, ActionEvidenceProvenance, GoogleCredentialSourceKind, NoRecoveryOutcome
 from .....core.config import override_settings
-from .....core.errors import resolve_error_message
+from .....core.errors.error_codes import resolve_error_message
 from .....core.i18n import tr
 from .....tests.env_scope import scoped_env_var
 from .....tests.secure_sql import isolated_runtime_profile

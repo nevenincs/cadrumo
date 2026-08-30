@@ -46,10 +46,8 @@ from ....domain.filing.errors import FilingExportValidationError
 from ....domain.filing.schema import ModeloDraft
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva.regimen_simplificado_rows import ActividadNoAgricolaSimplificado, EntradaModuloSimplificado, HechoActividadSimplificado, M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision, RegimenSimplificadoFilingRows
-from ....domain.modelos.calculation_revision import (
-    M303Exonerado390FilingEvidence,
-    M303RegimenSimplificadoFilingEvidence,
-)
+from ....domain.modelos.calculation_revision_m303_evidence import M303Exonerado390FilingEvidence
+from ....domain.modelos.calculation_revision_m303_handoff import M303RegimenSimplificadoFilingEvidence
 from ....domain.prorrata_register import ProrrataRegister
 from ....domain.submission import ModeloDraftStatus
 from ...aggregation import M303ProrrataTransitionArrival, M303SupplierRegimeArrival

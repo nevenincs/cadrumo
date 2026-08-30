@@ -20,7 +20,7 @@ from datetime import UTC, datetime, timedelta, timezone
 
 import pytest
 
-from ...errors import CoreValidationError
+from ...errors.hierarchy import CoreValidationError
 from .. import coerce_utc_aware, validate_utc_aware
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

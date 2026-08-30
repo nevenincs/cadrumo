@@ -7,7 +7,7 @@ validation failures.
 
 from __future__ import annotations
 
-from ...core.errors import CoreValidationError
+from ...core.errors.hierarchy import CoreValidationError
 
 
 class AuthDiagnosticPhoneStateError(CoreValidationError):

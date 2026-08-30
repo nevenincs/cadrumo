@@ -10,7 +10,7 @@ category).
 
 from __future__ import annotations
 
-from ...core.errors import CadrumoError, CoreError
+from ...core.errors.hierarchy import CadrumoError, CoreError
 
 
 class IvaCompensationCarryForwardPolicyError(CadrumoError, ValueError):

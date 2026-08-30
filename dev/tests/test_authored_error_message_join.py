@@ -69,7 +69,7 @@ def test_join_rejects_an_unregistered_base_message_until_its_exact_site_is_exclu
         tmp_path,
         "src/cadrumo/demo.py",
         """
-        from cadrumo.core.errors import CadrumoError
+        from cadrumo.core.errors.hierarchy import CadrumoError
 
         def produce() -> None:
             CadrumoError("unregistered base detail")

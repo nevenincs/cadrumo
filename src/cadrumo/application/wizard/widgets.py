@@ -20,7 +20,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from ...core.errors import resolve_error_message
+from ...core.errors.error_codes import resolve_error_message
 from ...core.i18n import tr
 from ...core.identity import IdentityError, validate_identity
 from ...core.parsing import parse_bool

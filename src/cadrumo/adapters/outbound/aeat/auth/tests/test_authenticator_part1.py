@@ -13,7 +13,7 @@ from ......application.auth.session_types import (
     ClavePermanenteSessionDetail,
     is_exact_active_provider_session,
 )
-from ......core.errors import AeatLoginAssertionError
+from ......core.errors.hierarchy import AeatLoginAssertionError
 from ......core.i18n import tr
 from .. import authenticator as authenticator
 from ..authenticator import _require_exact_active_certificate_session

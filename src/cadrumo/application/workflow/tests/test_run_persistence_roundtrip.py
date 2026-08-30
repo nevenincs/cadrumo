@@ -40,7 +40,7 @@ from ....core import (
     storage_path,
 )
 from ....core.config import override_settings
-from ....core.errors import SiteHealthState
+from ....core.errors.hierarchy import SiteHealthState
 from ....core.external_constants import OutputLanguage
 from ....domain.deadlines.models import ObligationStatus
 from ....domain.submission import ModeloDraftStatus

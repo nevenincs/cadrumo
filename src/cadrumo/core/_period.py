@@ -44,7 +44,7 @@ from typing import Annotated, override
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, TypeAdapter, ValidationError
 
-from .errors import CadrumoError
+from .errors.hierarchy import CadrumoError
 
 
 class StandardPeriodCode(StrEnum):

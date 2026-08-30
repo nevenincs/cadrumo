@@ -40,7 +40,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Annotated
 
 if TYPE_CHECKING:
-    from ...core.errors import CadrumoError
+    from ...core.errors.hierarchy import CadrumoError
     from ...core.json_contract import Notice, ResolvedNoticeAction
     from ...domain.user_profile.values import UserProfileFact
     from .results import ConfigProfileCreateResult, ConfigProfileEditResult
@@ -1965,7 +1965,7 @@ def build_wizard_command(
     def _command(**kwargs: object) -> None:
         import contextlib
 
-        from ...core.errors import CadrumoError
+        from ...core.errors.hierarchy import CadrumoError
 
         with contextlib.ExitStack() as _language_stack:
             # When the operator supplies `--output-language` on the

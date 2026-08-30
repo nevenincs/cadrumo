@@ -9,7 +9,7 @@ from pydantic import ValidationError
 
 from ... import filing
 from ...filing_evidence import FilingEvidenceReference
-from ...modelos.calculation_revision import M303Exonerado390FilingEvidence
+from ...modelos.calculation_revision_m303_evidence import M303Exonerado390FilingEvidence
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

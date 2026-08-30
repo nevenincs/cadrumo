@@ -8,7 +8,7 @@ live-write refusal raised by :mod:`core.access_gate`.
 
 from __future__ import annotations
 
-from .....core.errors import CadrumoError
+from .....core.errors.hierarchy import CadrumoError
 
 
 class ExportError(CadrumoError):

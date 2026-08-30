@@ -13,7 +13,7 @@ from ...application.review.operator import (
     project_review_queue,
 )
 from ...core.decimal import coerce_decimal_strict
-from ...core.errors import resolve_error_message
+from ...core.errors.error_codes import resolve_error_message
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ._common import _bad, activate_subcommand_output_language, emit_envelope

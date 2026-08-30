@@ -30,7 +30,7 @@ import pytest
 from sqlalchemy import select
 
 from .....core.config import override_settings
-from .....core.errors import build_error_envelope, resolve_error_message
+from .....core.errors.error_codes import build_error_envelope, resolve_error_message
 from .....core.secure_object_write import SecureObjectWrite
 from .....domain.attachments.enums import AttachmentKind, AttachmentSource
 from .....domain.attachments.errors import AttachmentPersistenceError, AttachmentValidationError

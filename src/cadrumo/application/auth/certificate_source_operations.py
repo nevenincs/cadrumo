@@ -40,7 +40,7 @@ from typing import TYPE_CHECKING, Protocol
 from pydantic import SecretStr
 
 from ...core.config import Settings, load_settings
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.time import now

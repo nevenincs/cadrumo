@@ -44,7 +44,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict
 
 from ...core import PRODUCT_IDENTITY
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import bounded_canonical_json_bytes, sha256_hex
 from ...core.identity import BucketId

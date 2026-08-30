@@ -1,6 +1,7 @@
 import pytest
 
-from .. import DecimalFormatError, RedactionError, build_error_envelope
+from ..error_codes import build_error_envelope
+from ..hierarchy import DecimalFormatError, RedactionError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

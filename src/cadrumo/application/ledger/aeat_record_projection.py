@@ -42,7 +42,7 @@ See Also:
 from __future__ import annotations
 
 from ...adapters.inbound.einvoice import AeatParty, ParsedAeatRecord
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 
 __all__ = [
     "AeatRecordProjectionError",

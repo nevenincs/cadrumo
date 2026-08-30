@@ -1,7 +1,7 @@
 """Layered declarations for the public :class:`core.errors.ErrorCode` registry.
 
 Each child module contributes ordered ``(qualname, ErrorCode)`` rows for
-one architectural layer. :mod:`core.errors._registry` imports the
+one architectural layer. :mod:`core.errors.error_codes` imports the
 combined tuple and binds each :class:`core.errors.CadrumoError`
 subclass to its declared metadata.
 """
@@ -17,7 +17,7 @@ from ._domain import _DECLARED_ERROR_CODES as _DOMAIN_CODES
 from ._entrypoints import _DECLARED_ERROR_CODES as _ENTRYPOINTS_CODES
 
 if TYPE_CHECKING:
-    from .._registry import ErrorCode
+    from ..error_codes import ErrorCode
 
 _ALL_DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     *_DOMAIN_CODES,

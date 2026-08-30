@@ -54,7 +54,7 @@ from ...core import (
     result_disposition_casilla_ids,
     result_disposition_is_refund,
 )
-from ...core.errors import CoreValidationError
+from ...core.errors.hierarchy import CoreValidationError
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_targets,

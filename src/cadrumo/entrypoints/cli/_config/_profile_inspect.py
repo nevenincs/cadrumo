@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING, cast
 
 import typer
 
-from ....core.errors import CadrumoError as _CadrumoError
+from ....core.errors.hierarchy import CadrumoError as _CadrumoError
 from ....core.external_constants import OutputLanguage as _OutputLanguage
 from ....core.i18n import tr
 from ....core.logging import get_logger as _get_logger

@@ -93,7 +93,7 @@ from ..core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..core import AuthProviderKind, BindingSourceKind, OperatorActionAxis, Period
 from ..core.aggregation import LEDGER_BINDING_SOURCE_KINDS as _LEDGER_PREFLIGHT_BINDING_SOURCES
 from ..core.bucket_pointer import resolve_active_bucket_id
-from ..core.errors import CadrumoError
+from ..core.errors.hierarchy import CadrumoError
 from ..core.filing_year import FilingYear
 from ..core.hashing import content_hash_hex
 from ..core.identity import ProfileId

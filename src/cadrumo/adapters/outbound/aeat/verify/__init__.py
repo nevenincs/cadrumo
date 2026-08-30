@@ -40,7 +40,7 @@ from .....core import is_aeat_csv as _is_aeat_csv
 from .....core import normalise_aeat_csv as _normalise_aeat_csv
 from .....core.async_cleanup import close_async_resources as _close_async_resources
 from .....core.config import Settings as _Settings
-from .....core.errors import CadrumoError as _CadrumoError
+from .....core.errors.hierarchy import CadrumoError as _CadrumoError
 from .....core.logging import get_logger as _get_logger
 from .....domain.calculations.registry.remote_state_guard import RemoteOperation as _RemoteOperation
 from .....domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy as _RemoteStateGuardPolicy

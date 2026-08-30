@@ -242,7 +242,7 @@ class TestErrorCodeRegistration:
             ("NonceCollisionError", "INTEGRITY_STORAGE_NONCE_COLLISION"),
             ("PersistenceError", "FAIL_STORAGE_PERSISTENCE"),
         )
-        from ......core.errors import bind_error_code
+        from ......core.errors.error_codes import bind_error_code
         from ... import errors as storage_errors
 
         for error_class, expected_code in cases:

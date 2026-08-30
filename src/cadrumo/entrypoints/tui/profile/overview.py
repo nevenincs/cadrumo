@@ -865,7 +865,8 @@ class ProfileManagerScreen(Screen[None]):
         if error is None:
             rendered = ""
         else:
-            from ....core.errors import CadrumoError, resolve_error_message
+            from ....core.errors.error_codes import resolve_error_message
+            from ....core.errors.hierarchy import CadrumoError
 
             rendered = resolve_error_message(error) if isinstance(error, CadrumoError) else ""
         self._refuse(rendered or tr(message_key))

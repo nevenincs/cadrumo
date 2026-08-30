@@ -51,7 +51,7 @@ from ...core import (
     TipoOperacionVinculada,
     TipoVinculacion,
 )
-from ...core.errors import CadrumoError
+from ...core.errors.hierarchy import CadrumoError
 from ...core.identity import nif_iva_format_for_country
 from ...core.unit_proportion import UnitProportion
 

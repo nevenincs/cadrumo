@@ -58,7 +58,7 @@ from collections.abc import Callable, Collection, Iterator
 from enum import StrEnum
 from pathlib import Path
 
-from .errors import CoreValidationError
+from .errors.hierarchy import CoreValidationError
 
 
 class DirectoryEntryKind(StrEnum):

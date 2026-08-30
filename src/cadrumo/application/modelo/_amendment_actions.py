@@ -62,16 +62,8 @@ from ...domain.modelos.filing_repository import upsert_filing_record
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol, ModeloRecordCatalogueRepositoryProtocol
 from ...domain.modelos.repository import upsert_work_unit
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
-from ...domain.modelos.calculation_revision import (
-    CalculationRevision,
-    CalculationRevisionAmendmentIdentity,
-    CalculationRevisionAmendmentKind,
-    CalculationRevisionCatalogue,
-    CalculationRevisionState,
-    FilingInstanceEvidence,
-    M303RectificativaMotive,
-    derive_calculation_revision_id,
-)
+from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionAmendmentIdentity, CalculationRevisionAmendmentKind, CalculationRevisionCatalogue, CalculationRevisionState, FilingInstanceEvidence, derive_calculation_revision_id
+from ...domain.modelos.calculation_revision_amendment import M303RectificativaMotive
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ._action_errors import (
     AmendmentEvidenceMissingError,

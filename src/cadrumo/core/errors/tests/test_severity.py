@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import pytest
 
-from .. import BaseSeverity
+from ..severity import BaseSeverity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

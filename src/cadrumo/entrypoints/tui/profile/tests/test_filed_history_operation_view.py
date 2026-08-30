@@ -23,7 +23,7 @@ import pytest
 from .....adapters.persistence.operations.journal import OperationJournalRepository
 from .....adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from .....adapters.persistence.operations.secure_references import operation_secure_reference_repository
-from .....adapters.persistence.profile import SyncRunRecordRepository
+from .....adapters.persistence.profile.sync_runs import SyncRunRecordRepository
 from .....application.live.filed_history_operation import (
     build_filed_history_operation_definition,
     build_filed_history_operation_registration,

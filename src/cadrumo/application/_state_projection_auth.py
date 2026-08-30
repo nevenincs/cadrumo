@@ -15,7 +15,7 @@ from pydantic import BaseModel
 from ..core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..core import AuthProviderKind
 from ..core.config import Settings, load_settings
-from ..core.errors import CadrumoError
+from ..core.errors.hierarchy import CadrumoError
 from ..core.logging import get_logger
 from .auth.credentials import project_active_certificate_credentials
 from .auth.operator_probes import bind_profile_auth_settings, probe_provider_credentials

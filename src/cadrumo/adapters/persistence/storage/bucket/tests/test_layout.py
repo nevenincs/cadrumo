@@ -31,7 +31,7 @@ import pytest
 from pydantic import ValidationError
 
 from ......core import StorageCategory, storage_location
-from ......core.errors import ERROR_REGISTRY, build_error_envelope
+from ......core.errors.error_codes import ERROR_REGISTRY, build_error_envelope
 from ......tests.bucket_layout import provision_bucket_directory
 from .._layout import (
     BucketPaths,

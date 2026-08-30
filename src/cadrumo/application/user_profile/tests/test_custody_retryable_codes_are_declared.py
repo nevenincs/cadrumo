@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.errors import declared_error_codes
+from ....core.errors.error_codes import declared_error_codes
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

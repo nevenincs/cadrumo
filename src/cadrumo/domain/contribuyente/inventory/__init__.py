@@ -28,8 +28,8 @@ from pydantic import BaseModel, Field, ValidationError, ValidationInfo, field_va
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
 from ....core import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ....core.errors import CadrumoError as _CadrumoError
-from ....core.errors import CoreValidationError as _CoreValidationError
+from ....core.errors.hierarchy import CadrumoError as _CadrumoError
+from ....core.errors.hierarchy import CoreValidationError as _CoreValidationError
 from ....core.external_constants import DEFAULT_IVA_GENERAL_RATE_PCT as _DEFAULT_IVA_GENERAL_RATE_PCT
 from ....core.filing_year import FilingYear
 from ....core.hashing import content_hash_hex as _content_hash_hex

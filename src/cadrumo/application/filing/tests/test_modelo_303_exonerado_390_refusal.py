@@ -25,12 +25,8 @@ from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_
 from ....domain.deadlines.models import M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision, RegimenSimplificadoFilingRows
-from ....domain.modelos.calculation_revision import (
-    M303Exonerado390ActivityRowEvidence,
-    M303Exonerado390EndpointEvidence,
-    M303Exonerado390FilingEvidence,
-    M303RegimenSimplificadoFilingEvidence,
-)
+from ....domain.modelos.calculation_revision_m303_evidence import M303Exonerado390ActivityRowEvidence, M303Exonerado390EndpointEvidence, M303Exonerado390FilingEvidence
+from ....domain.modelos.calculation_revision_m303_handoff import M303RegimenSimplificadoFilingEvidence
 from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
 from ....domain.submission import ModeloDraftStatus
 from ....tests.filing_evidence import regimen_simplificado_filing_evidence

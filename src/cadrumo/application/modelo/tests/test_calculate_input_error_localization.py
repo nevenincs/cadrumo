@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.errors import CadrumoError, build_error_envelope, resolve_error_message
+from ....core.errors.error_codes import build_error_envelope, resolve_error_message
+from ....core.errors.hierarchy import CadrumoError
 from ....domain.calculations.registry.authority import bundled_authority
 from .._calculate_input import (
     ModeloCalculateDecimalInputError,

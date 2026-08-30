@@ -36,6 +36,7 @@ from ...core.filing_year import FilingYear
 from ...core.identity import BucketId, CalculationRevisionId, WorkUnitId
 from ...core.json_contract import OutputSchema
 from ...core.text_bounds import NonEmptyStr, PositiveCount
+from ...domain.modelos.codes import ModeloCode
 
 
 class ModeloReviewPackageBuildResult(OutputSchema):
@@ -51,7 +52,7 @@ class ModeloReviewPackageBuildResult(OutputSchema):
     bucket_id: BucketId
     work_unit_id: WorkUnitId
     calculation_revision_id: CalculationRevisionId
-    modelo: str = Field(min_length=1, max_length=8)
+    modelo: ModeloCode
     filing_year: FilingYear
     period: Period
     revision_state: NonEmptyStr
@@ -83,7 +84,7 @@ class ModeloReviewPackageVerifyResult(OutputSchema):
     bucket_id: BucketId
     work_unit_id: WorkUnitId
     calculation_revision_id: CalculationRevisionId
-    modelo: str = Field(min_length=1, max_length=8)
+    modelo: ModeloCode
     filing_year: FilingYear
     period: Period
     revision_state: NonEmptyStr

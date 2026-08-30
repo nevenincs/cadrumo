@@ -11,7 +11,7 @@ from typing import Any, cast
 import pytest
 from pydantic import ValidationError
 
-from .....core.errors import get_registered_error_code
+from .....core.errors.error_codes import get_registered_error_code
 from .. import censo_modelos as _censo_modelos
 from ..authority import bundled_authority
 from ..censo_modelos import (

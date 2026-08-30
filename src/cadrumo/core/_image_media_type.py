@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-from .errors import CoreValidationError
+from .errors.hierarchy import CoreValidationError
 
 __all__ = ["ImageMediaType", "detect_image_media_type"]
 

@@ -22,7 +22,8 @@ import pytest
 from pydantic import ValidationError
 
 from ..config import load_settings, override_settings
-from ..errors import CoreValidationError, get_registered_error_code
+from ..errors.error_codes import get_registered_error_code
+from ..errors.hierarchy import CoreValidationError
 from ..storage_materialization import ensure_storage_tree
 
 if TYPE_CHECKING:
