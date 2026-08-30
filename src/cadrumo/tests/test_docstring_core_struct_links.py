@@ -41,7 +41,7 @@ CORE_STRUCTS: dict[str, str] = {
     "ModeloDefinition": "cadrumo.domain.calculations.registry.schema",
     "ModeloRevision": "cadrumo.domain.calculations.registry.schema",
     "CasillaObservation": "cadrumo.domain.calculations.registry.bindings",
-    "CalculationRevision": "cadrumo.domain.modelos._calculation_revision",
+    "CalculationRevision": "cadrumo.domain.modelos.calculation_revision",
     "OutputSchema": "cadrumo.core.json_contract",
     "SchemaEnvelope": "cadrumo.core.json_contract",
     "SecureObjectRepository": "cadrumo.adapters.persistence.storage.sql.secure_objects",

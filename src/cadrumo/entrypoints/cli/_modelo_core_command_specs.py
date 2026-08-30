@@ -36,9 +36,9 @@ _MODELO = ValueContract(
     click_type=DeferredTarget("cadrumo.entrypoints.cli._common", "MODELO_CODE_CHOICE"),
 )
 _AMENDMENT_KIND = ValueContract(
-    DeferredTarget("cadrumo.domain.modelos._calculation_revision", "CalculationRevisionAmendmentKind")
+    DeferredTarget("cadrumo.domain.modelos.calculation_revision", "CalculationRevisionAmendmentKind")
 )
-_M303_MOTIVE = ValueContract(DeferredTarget("cadrumo.domain.modelos._calculation_revision", "M303RectificativaMotive"))
+_M303_MOTIVE = ValueContract(DeferredTarget("cadrumo.domain.modelos.calculation_revision", "M303RectificativaMotive"))
 
 
 def _key(value: str) -> TranslationKey:
