@@ -10,7 +10,7 @@ from pydantic import BaseModel, ValidationError
 
 from ....application.operator_surface.help import build_help_document
 from ....application.operator_surface.help_models import RootLandingReport
-from ....application.overview import OverviewStatusReport
+from ....application.overview.calendar_models import OverviewStatusReport
 from ....core.json_contract import strict_round_trip
 from .._root_payloads import AppRootResult, RootStatusResult
 

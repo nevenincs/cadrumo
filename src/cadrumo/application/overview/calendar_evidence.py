@@ -1,6 +1,6 @@
 """Calendar event dedup and filing-evidence reconciliation for the overview read model.
 
-Extracted from :mod:`~cadrumo.application.overview._calendar` (size-budget
+Extracted from :mod:`~cadrumo.application.overview.calendar` (size-budget
 split) to keep the calendar module and its ``build_overview_calendar``
 entry point under their line-count overrides. This module owns two
 cohesive concerns:
@@ -22,9 +22,9 @@ justificante by fetching external state; it only reconciles evidence the
 caller has already loaded.
 
 See Also:
-    :mod:`cadrumo.application.overview._calendar`
+    :mod:`cadrumo.application.overview.calendar`
         Composes :func:`calendar_filing_evidence_from_sources` and the
-        other builders here into :func:`~cadrumo.application.overview._calendar.build_overview_calendar`.
+        other builders here into :func:`~cadrumo.application.overview.calendar.build_overview_calendar`.
     :mod:`cadrumo.application.overview`
         Public facade that re-exports :func:`calendar_filing_evidence_from_sources`.
 """
@@ -45,7 +45,7 @@ from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.calculations.registry.applicability_routes import TaxRoute
 from ...domain.modelos import is_justificante_backed_external_evidence
 from ..calculations import ObservationSourceKind, is_official_aeat_observation_source
-from ._calendar_models import (
+from .calendar_models import (
     OverviewAeatSubmissionState,
     OverviewCalendarEvent,
     OverviewCalendarEventType,

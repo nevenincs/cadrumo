@@ -57,7 +57,7 @@ from ...domain.modelos import ModeloVerificationFindingSeverity, VerificationCom
 from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ..ledger.models import LedgerStatusReport
 from ..operator_actions import DeclaredNextAction
-from ._next_actions import declare_next_action
+from .next_actions import declare_next_action
 
 if TYPE_CHECKING:
     from ...domain.modelos import VerificationReport, WorkUnit

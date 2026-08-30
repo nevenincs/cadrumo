@@ -7,7 +7,8 @@ from datetime import date
 import pytest
 
 from ....domain.deadlines import EntityType, IVARegime, TaxpayerProfile
-from .. import OverviewCalendarRange, build_overview_calendar
+from ..calendar import build_overview_calendar
+from ..calendar_models import OverviewCalendarRange
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

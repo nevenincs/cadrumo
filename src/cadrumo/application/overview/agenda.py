@@ -24,15 +24,15 @@ from pydantic import BaseModel, Field
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time import now
 from ...domain.deadlines import DeadlineEngine, TaxpayerProfile
-from ._calendar import build_overview_calendar
-from ._calendar_models import (
+from .calendar import build_overview_calendar
+from .calendar_models import (
     CalendarCompleteness,
     CalendarWarning,
     OverviewCalendarEntry,
     OverviewCalendarRange,
     OverviewPeriodState,
 )
-from ._coverage import ObligationCoverageReport
+from .coverage import ObligationCoverageReport
 from .errors import OverviewAgendaError
 
 _DEFAULT_HORIZON_DAYS = 14

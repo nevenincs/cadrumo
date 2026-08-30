@@ -37,7 +37,7 @@ from ...domain.deadlines import HolidayJurisdiction as _HolidayJurisdiction
 from ...domain.deadlines import ObligationStatus as _ObligationStatus
 from ...domain.deadlines import Recovery as _Recovery
 from ..operator_actions import DeclaredNextAction
-from ._coverage import ObligationCoverageReport
+from .coverage import ObligationCoverageReport
 
 
 def _hydrate_calendar_period(value: object) -> object:
@@ -185,10 +185,16 @@ class OverviewCalendarRange(BaseModel):
         return self
 
     def covered_years(self) -> tuple[int, ...]:
+        """Every filing year this range can touch, including the prior one.
+
+        The year before the range start is included because a filing window
+        opens in the year after the period it covers.
+        """
         earliest = self.from_date.year - 1
         return tuple(range(earliest, self.to_date.year + 1))
 
     def covers(self, candidate: date) -> bool:
+        """Whether *candidate* falls inside this range, both ends included."""
         return self.from_date <= candidate <= self.to_date
 
 

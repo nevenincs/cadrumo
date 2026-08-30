@@ -49,7 +49,7 @@ from ..modelo._work_lifecycle import (
     create_work_unit,
     discard_work_unit,
 )
-from ..overview import build_overview_status_report
+from ..overview.status_report import build_overview_status_report
 from ..state_projection import (
     ModeloReadinessRequest,
     ProjectionModeloReadinessCapture,

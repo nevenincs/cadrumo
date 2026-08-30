@@ -14,7 +14,7 @@ import pytest
 from ....core.json_contract import NoticeSeverity, ResolvedNoticeAction
 from ....domain.calculations.registry.applicability_routes import TaxRoute
 from ...calculations import ObservationSourceKind
-from .. import NO_AEAT_HISTORY_NOTICE_CODE, no_aeat_history_notice
+from ..calendar_evidence import NO_AEAT_HISTORY_NOTICE_CODE, no_aeat_history_notice
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

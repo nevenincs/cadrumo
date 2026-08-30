@@ -56,7 +56,7 @@ def _overview_status_report_branch() -> type[BaseModel]:
     registry import graph. The help and cold-start landing branches are tried
     first and match without it, so ``aeat --help`` must never pay that cost.
     """
-    from ...application.overview import OverviewStatusReport
+    from ...application.overview.calendar_models import OverviewStatusReport
 
     return OverviewStatusReport
 

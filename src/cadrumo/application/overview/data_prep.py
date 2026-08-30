@@ -50,7 +50,7 @@ from ..modelo.work_addressing import (
     select_modelo_work_resolution,
 )
 from ..operator_actions import DeclaredNextAction
-from ._next_actions import declare_next_action
+from .next_actions import declare_next_action
 
 if TYPE_CHECKING:
     from ...application.ledger.evidence import PurchaseInvoiceEvidence

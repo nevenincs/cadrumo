@@ -36,7 +36,7 @@ from ....domain.transactions import (
     TransactionCatalogue,
     TransactionDirection,
 )
-from .._data_prep import (
+from ..data_prep import (
     DataPrepStepId,
     DataPrepStepState,
     build_data_prep_walkthrough,

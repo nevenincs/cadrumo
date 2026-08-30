@@ -38,7 +38,7 @@ from ...core import ActionArgumentSource, ActionArgumentStatus, Modelo
 from ..operator_actions import ActionArgumentBinding, ActionReference, DeclaredNextAction
 
 if TYPE_CHECKING:
-    from ._calendar_models import OverviewStatusReport
+    from .calendar_models import OverviewStatusReport
 
 
 def declare_next_action(action_id: str, /, **arguments: str | int) -> DeclaredNextAction:

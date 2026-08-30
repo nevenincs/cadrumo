@@ -1,7 +1,7 @@
-cadrumo.application.overview._next_actions module
+cadrumo.application.overview.status_report module
 =================================================
 
-.. automodule:: cadrumo.application.overview._next_actions
+.. automodule:: cadrumo.application.overview.status_report
    :members:
    :show-inheritance:
    :ignore-module-all:

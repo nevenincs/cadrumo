@@ -13,7 +13,7 @@ pull, or modelo description - rather than a command string; this module never
 starts those operations.
 
 See Also:
-    :mod:`~application.overview._next_actions`
+    :mod:`~application.overview.next_actions`
         Owns the shared declaration helper these remedies are built with.
 """
 
@@ -34,7 +34,7 @@ from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.deadlines import IrpfEstimationRegime as _IrpfEstimationRegime
 from ...domain.deadlines import IVARegime as _IVARegime
 from ..operator_actions import DeclaredNextAction
-from ._calendar_models import (
+from .calendar_models import (
     CalendarCompleteness,
     CalendarWarning,
     OverviewAeatSubmissionState,
@@ -43,7 +43,7 @@ from ._calendar_models import (
     OverviewCalendarEventType,
     OverviewCensoEnrolmentState,
 )
-from ._next_actions import declare_next_action
+from .next_actions import declare_next_action
 
 #: Every profile-fact gap this module reports is answered by one surface, so the
 #: warnings name that surface's catalogue action rather than nine copies of a

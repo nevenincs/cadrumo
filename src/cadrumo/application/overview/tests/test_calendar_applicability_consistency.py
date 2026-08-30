@@ -35,7 +35,9 @@ from ....domain.deadlines import (
     IVARegime,
     TaxpayerProfile,
 )
-from .. import OverviewCalendarRange, build_overview_calendar, build_overview_explain
+from ..calendar import build_overview_calendar
+from ..calendar_models import OverviewCalendarRange
+from ..explain import build_overview_explain
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

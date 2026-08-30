@@ -41,12 +41,12 @@ from ....domain.deadlines import (
 )
 from ....tests.attribute_scope import scoped_attribute
 from ...modelo.registry_discovery import registry_modelo_codes
-from .. import _coverage
-from .._agenda import build_overview_agenda
-from .._backlog import build_overview_backlog
-from .._calendar import build_overview_calendar
-from .._calendar_models import OverviewCalendarRange
-from .._coverage import (
+from .. import coverage as _coverage
+from ..agenda import build_overview_agenda
+from ..backlog import build_overview_backlog
+from ..calendar import build_overview_calendar
+from ..calendar_models import OverviewCalendarRange
+from ..coverage import (
     AdvisedObligation,
     CoverageAdviceReason,
     ObligationCoverageReport,

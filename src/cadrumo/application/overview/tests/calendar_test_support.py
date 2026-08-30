@@ -38,12 +38,12 @@ from ....domain.modelos import (
 from ....tests.aeat_literal_fixtures import aeat_url, justificante_cotejo_url
 from ....tests.registry_observations import registry_grounded_observations
 from ...calculations import ObservationEnvelopePayload
-from .. import (
+from ..calendar import build_overview_calendar
+from ..calendar_models import (
     OverviewCalendar,
     OverviewCalendarEvent,
     OverviewCalendarFilingEvidence,
     OverviewCalendarRange,
-    build_overview_calendar,
 )
 
 SOURCE_URL = aeat_url("sede", "/")

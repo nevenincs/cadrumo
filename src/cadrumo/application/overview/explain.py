@@ -82,7 +82,9 @@ does not model yet — distinct from an unknown-identifier typo.
 class DeadlineExplanationEngine(Protocol):
     """Protocol for the deadline engine's scheduling-rationale method."""
 
-    def explain(self, profile: TaxpayerProfile, modelo: str, *, year: int | None = None) -> str: ...
+    def explain(self, profile: TaxpayerProfile, modelo: str, *, year: int | None = None) -> str:
+        """Return the engine's scheduling rationale for one modelo."""
+        ...
 
 
 class OverviewExplain(BaseModel):

@@ -20,7 +20,6 @@ Submodules
    cadrumo.domain.transactions._llm
    cadrumo.domain.transactions._m210_income_classification
    cadrumo.domain.transactions._model_tier
-   cadrumo.domain.transactions._model_validation
    cadrumo.domain.transactions._models
    cadrumo.domain.transactions._protocols
    cadrumo.domain.transactions._raw_transaction
@@ -31,3 +30,4 @@ Submodules
    cadrumo.domain.transactions._volumen_ingresos
    cadrumo.domain.transactions.classification_rule
    cadrumo.domain.transactions.errors
+   cadrumo.domain.transactions.model_validation

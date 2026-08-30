@@ -215,7 +215,7 @@ def _no_aeat_history_notice(record: UserProfileRecord) -> Notice | None:
 
     from ...domain.calculations.registry.applicability import derive_tax_route
     from ..calculations import CalculationObservationRepository
-    from ..overview import no_aeat_history_notice
+    from ..overview.calendar_evidence import no_aeat_history_notice
     from .projections import projection_for_taxpayer
 
     try:

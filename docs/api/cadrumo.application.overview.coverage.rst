@@ -1,7 +1,7 @@
-cadrumo.application.overview._backlog module
+cadrumo.application.overview.coverage module
 ============================================
 
-.. automodule:: cadrumo.application.overview._backlog
+.. automodule:: cadrumo.application.overview.coverage
    :members:
    :show-inheritance:
    :ignore-module-all:

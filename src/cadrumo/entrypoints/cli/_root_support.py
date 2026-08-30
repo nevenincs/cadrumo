@@ -180,7 +180,7 @@ def _emit_bare_invocation_and_exit(ctx: typer.Context) -> None:
     # render the full overview. These imports pull the registry,
     # but are deferred until a verb that actually needs them is
     # invoked.
-    from ...application.overview import build_overview_status_report
+    from ...application.overview.status_report import build_overview_status_report
     from ...application.workflow.persistence import workflow_state_repository
 
     workflow_state = workflow_state_repository().load()

@@ -28,15 +28,15 @@ from ...domain.modelos import (
     WorkUnit,
     WorkUnitState,
 )
-from ._calendar import build_overview_calendar
-from ._calendar_models import (
+from .calendar import build_overview_calendar
+from .calendar_models import (
     CalendarCompleteness,
     CalendarWarning,
     OverviewCalendarEntry,
     OverviewCalendarRange,
     OverviewPeriodState,
 )
-from ._coverage import ObligationCoverageReport
+from .coverage import ObligationCoverageReport
 
 _DEFAULT_LOOKBACK_DAYS = 365
 """Default lookback window when neither --from nor --to is supplied."""

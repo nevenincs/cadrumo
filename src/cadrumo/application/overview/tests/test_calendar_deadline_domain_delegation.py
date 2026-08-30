@@ -30,7 +30,7 @@ from ....domain.deadlines import (
     resolve_filing_window,
 )
 from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
-from .._calendar import _local_work_unit_status, _registry_window_for_work_unit
+from ..calendar import _local_work_unit_status, _registry_window_for_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

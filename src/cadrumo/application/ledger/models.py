@@ -22,7 +22,6 @@ from ...core.external_constants import (
 from ...core.filing_year import FilingYear
 from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, TransactionId, WorkUnitId
 from ...core.parsing import normalise_iso_3166_alpha2_jurisdiction, normalise_iso_4217_currency
-from ...core.unit_proportion import is_unit_proportion
 from ...domain.iva import (
     EUMemberState,
     InputClassification,
@@ -40,6 +39,7 @@ from ...domain.transactions import (
     TransactionLifecycleLineageEntry,
     TransactionValidationError,
 )
+from ...domain.transactions.model_validation import validate_business_pct_coupling
 from ..export import ExportSerializationFormat, verify_export_metadata
 from ..review.filter import LedgerReviewStatus
 
@@ -187,14 +187,8 @@ class ManualLedgerTransactionCommand(_ManualLedgerTransactionInput):
 
     @model_validator(mode="after")
     def _validate_business_percentage(self) -> Self:
-        if self.business_classification is BusinessClassification.MIXED:
-            if self.business_pct is None:
-                raise TransactionValidationError("business_pct is required when classification is MIXED")
-            if not is_unit_proportion(self.business_pct):
-                raise TransactionValidationError("business_pct must be within 0..1 when classification is MIXED")
-            return self
-        if self.business_pct is not None:
-            raise TransactionValidationError("business_pct must be None unless classification is MIXED")
+        """Ask the domain whether this classification and share agree."""
+        validate_business_pct_coupling(self.business_classification, self.business_pct)
         return self
 
     @model_validator(mode="after")

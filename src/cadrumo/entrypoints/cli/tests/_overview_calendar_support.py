@@ -46,7 +46,7 @@ PRIMARY_PROFILE_ID = "11111111-1111-4111-8111-111111111111"
 
 
 #: Calendar strict-mode completeness gating reads these profile-fact paths
-#: (``_gating_fields`` in ``application.overview._calendar_warnings``) off
+#: (``_gating_fields`` in ``application.overview.calendar_warnings``) off
 #: every registered modelo applicability rule and deadline window. A minimal
 #: profile that leaves them unset makes every calendar fixture refuse with
 #: "comprobaciones de perfil sin resolver" before the scenario under test is

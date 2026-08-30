@@ -64,67 +64,67 @@ from ...domain.deadlines import resolve_filing_window as _resolve_filing_window
 from ...domain.deadlines import shift_deadline as _shift_deadline
 from ...domain.modelos import WorkUnit as _WorkUnit
 from ...domain.modelos import WorkUnitState as _WorkUnitState
-from ._calendar_evidence import (
+from .calendar_evidence import (
     authenticated_identity_matches_expected as _authenticated_identity_matches_expected,
 )
-from ._calendar_evidence import (
+from .calendar_evidence import (
     calendar_entry_filing_evidence as _calendar_entry_filing_evidence,
 )
-from ._calendar_evidence import (
+from .calendar_evidence import (
     calendar_events_with_filing_evidence as _calendar_events_with_filing_evidence,
 )
-from ._calendar_evidence import (
+from .calendar_evidence import (
     dedupe_calendar_events as _dedupe_calendar_events,
 )
-from ._calendar_evidence import (
+from .calendar_evidence import (
     filing_axes_from_modelo_record as _filing_axes_from_modelo_record,
 )
-from ._calendar_evidence import (
+from .calendar_evidence import (
     filing_evidence_from_justificante_capture_snapshot as _filing_evidence_from_justificante_capture_snapshot,
 )
-from ._calendar_evidence import (
+from .calendar_evidence import (
     is_active_aeat_filing_status as _is_active_aeat_filing_status,
 )
-from ._calendar_evidence import (
+from .calendar_evidence import (
     justificantes_by_csv as _justificantes_by_csv,
 )
-from ._calendar_models import (
+from .calendar_models import (
     CalendarCompleteness as _CalendarCompleteness,
 )
-from ._calendar_models import (
+from .calendar_models import (
     OverviewAeatSubmissionState as _OverviewAeatSubmissionState,
 )
-from ._calendar_models import (
+from .calendar_models import (
     OverviewCalendar as _OverviewCalendar,
 )
-from ._calendar_models import (
+from .calendar_models import (
     OverviewCalendarEntry as _OverviewCalendarEntry,
 )
-from ._calendar_models import (
+from .calendar_models import (
     OverviewCalendarEntrySource as _OverviewCalendarEntrySource,
 )
-from ._calendar_models import (
+from .calendar_models import (
     OverviewCalendarEvent as _OverviewCalendarEvent,
 )
-from ._calendar_models import (
+from .calendar_models import (
     OverviewCalendarEventType as _OverviewCalendarEventType,
 )
-from ._calendar_models import (
+from .calendar_models import (
     OverviewCalendarFilingEvidence as _OverviewCalendarFilingEvidence,
 )
-from ._calendar_models import (
+from .calendar_models import (
     OverviewCalendarRange as _OverviewCalendarRange,
 )
-from ._calendar_models import (
+from .calendar_models import (
     OverviewLocalFilingState as _OverviewLocalFilingState,
 )
-from ._calendar_models import (
+from .calendar_models import (
     SuppressedCalendarEntry as _SuppressedCalendarEntry,
 )
-from ._calendar_models import (
+from .calendar_models import (
     user_state_for as _user_state_for,
 )
-from ._calendar_warnings import (
+from .calendar_warnings import (
     _build_completeness_and_warnings,
     _calendar_aeat_evidence_conflict_warnings,
     _calendar_censo_enrolment_state,
@@ -132,8 +132,8 @@ from ._calendar_warnings import (
     _calendar_regime_incompatibility_warnings,
     _calendar_unverified_justificante_warnings,
 )
-from ._coverage import build_obligation_coverage
-from ._next_actions import declare_next_action as _declare_next_action
+from .coverage import build_obligation_coverage
+from .next_actions import declare_next_action as _declare_next_action
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.schema import DeadlineWindowDefinition
