@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Final
+
 from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
 from .._command_spec import (
     ArgumentSpec,
@@ -56,8 +58,30 @@ def _key(value: str) -> TranslationKey:
     return TranslationKey(value)
 
 
+# Every dynamically resolved handler module is named here as a WHOLE dotted path.
+# The path used to be built with an f-string, which meant no static reader -- grep,
+# the import-hygiene scan, or a dead-code sweep -- could see the edge, so all of
+# these modules read as orphaned while backing live verbs. A wrong key now raises
+# at spec-build time instead of failing lazily on first invocation.
+_HANDLER_MODULES: Final[dict[str, str]] = {
+    "_archive_cli": "cadrumo.entrypoints.cli._config._archive_cli",
+    "_archive_reconcile": "cadrumo.entrypoints.cli._config._archive_reconcile",
+    "_bucket_history": "cadrumo.entrypoints.cli._config._bucket_history",
+    "_capabilities_cli": "cadrumo.entrypoints.cli._config._capabilities_cli",
+    "_censo_transport": "cadrumo.entrypoints.cli._config._censo_transport",
+    "_complete_setup_cli": "cadrumo.entrypoints.cli._config._complete_setup_cli",
+    "_descendiente": "cadrumo.entrypoints.cli._config._descendiente",
+    "_google": "cadrumo.entrypoints.cli._config._google",
+    "_manager_dispatch": "cadrumo.entrypoints.cli._config._manager_dispatch",
+    "_profile_delete": "cadrumo.entrypoints.cli._config._profile_delete",
+    "_profile_inspect": "cadrumo.entrypoints.cli._config._profile_inspect",
+    "_profile_repeatable_row": "cadrumo.entrypoints.cli._config._profile_repeatable_row",
+    "_restore_cli": "cadrumo.entrypoints.cli._config._restore_cli",
+}
+
+
 def _handler(module: str, name: str) -> LazyBinding:
-    return LazyBinding.available(DeferredTarget(f"cadrumo.entrypoints.cli._config.{module}", name))
+    return LazyBinding.available(DeferredTarget(_HANDLER_MODULES[module], name))
 
 
 def _schema(module: str, name: str, identity: str) -> ResultSchemaSpec:
