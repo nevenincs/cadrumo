@@ -93,6 +93,7 @@ RECONCILED_MODULES: frozenset[str] = frozenset(
         "_config/_collab_payloads.py",
         "_config/_google_credential_source_payloads.py",
         "_root_payloads.py",
+        "_ledger_ratios_payloads.py",
         "_modelo_aux_payloads.py",
         "_modelo_iva_wallet_payloads.py",
         "_modelo_payloads_m036.py",
@@ -122,7 +123,6 @@ OUTSTANDING_MODULES: dict[str, str] = {
     "_config_payloads.py": "the largest config surface; reconciled after its canonical profile models are public",
     "_ledger_catalogue_invoice_payloads.py": "invoice payloads restate canonical invoice identity and amount rules",
     "_ledger_payloads.py": "the ledger mutation quintet restates transaction amount and direction bounds",
-    "_ledger_ratios_payloads.py": "usage-ratio invariants belong with the usage_ratios service",
     "_modelo_payloads.py": "filing-record payloads restate evidence reference bounds and the evidence-match invariant",
     "_modelo_review_package_payloads.py": "review-package payloads restate review model bounds",
     "_overview_payloads.py": "overview payloads restate agenda and backlog invariants",
@@ -176,9 +176,7 @@ def _is_threshold_literal(node: ast.expr) -> bool:
     nothing but delegate.
     """
     if isinstance(node, ast.Constant):
-        if node.value is None or isinstance(node.value, bool) or node.value == "":
-            return False
-        return True
+        return not (node.value is None or isinstance(node.value, bool) or node.value == "")
     if isinstance(node, ast.Call):
         func = node.func
         name = func.id if isinstance(func, ast.Name) else getattr(func, "attr", None)

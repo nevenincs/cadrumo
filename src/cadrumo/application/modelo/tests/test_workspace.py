@@ -1981,6 +1981,19 @@ def test_resolve_graded_snapshot_result_refuses_when_the_target_has_no_calculati
     assert isinstance(result, ModeloWorkspaceRefusedResultV1)
     assert result.refusal.kind == "domain"
     assert result.refusal.code is ModeloWorkspaceRefusalCode.CALCULATION_UNAVAILABLE
+    # The refusal must name WHICH unit has no calculation. An operator told only
+    # "there is no calculation" cannot act on it. A resolved target is genuinely
+    # unavailable at this point -- registry admission has not run yet, and this
+    # guard must keep firing before it, so the only other route to a target
+    # would be feeding the stored revision id back as a selector, which the
+    # revision-resolution rule forbids outright. The work unit identity
+    # therefore travels as a typed fact instead.
+    #
+    # Compared against the independently derived id rather than asserted
+    # present: a fact carrying the wrong unit reads exactly like a correct one.
+    facts = {fact.name: fact.value for fact in result.refusal.facts}
+    assert facts["work_unit_id"].value == str(work_unit.work_unit_id)
+    assert result.refusal.selected_target is None
     # Governing invariant, refusal arm: a refused result carries no projection
     # at all -- structurally, not merely by omission -- so no review, stale or
     # otherwise, can ever leak through this outcome.
