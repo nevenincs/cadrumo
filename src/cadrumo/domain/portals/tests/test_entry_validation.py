@@ -4,7 +4,10 @@ from typing import TypedDict, cast
 
 import pytest
 
-from .. import AuthMethod, Portal, PortalCategory, PortalHost, PortalValidationError, UrlStability, build_entry
+from .._entries.common import build_entry
+from ..categories import AuthMethod, PortalCategory, PortalHost, UrlStability
+from ..codes import Portal
+from ..errors import PortalValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

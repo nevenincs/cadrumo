@@ -16,14 +16,10 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
-from ...portals import (
-    PORTAL_REGISTRY,
-    PortalDriftEvent,
-    PortalDriftField,
-    PortalMetadata,
-    UrlStability,
-    evaluate_portal_drift,
-)
+from ...portals.categories import UrlStability
+from ...portals.drift import PortalDriftEvent, PortalDriftField, evaluate_portal_drift
+from ...portals.metadata import PortalMetadata
+from ...portals.registry import PORTAL_REGISTRY
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

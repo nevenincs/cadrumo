@@ -8,10 +8,10 @@ Defines the :class:`PortalMetadata` record for :class:`Portal`
 
 from __future__ import annotations
 
-from .._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
-from .._codes import Portal
-from .._metadata import PortalMetadata
-from ._common import build_entry, portal_path
+from ..categories import AuthMethod, PortalCategory, PortalHost, UrlStability
+from ..codes import Portal
+from ..metadata import PortalMetadata
+from .common import build_entry, portal_path
 
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_M193_RESUMEN_CAPITAL,

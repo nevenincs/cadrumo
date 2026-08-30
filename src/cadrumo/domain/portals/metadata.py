@@ -15,10 +15,10 @@ from pydantic import BaseModel, Field, HttpUrl, field_validator, model_validator
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.external_constants import load_external_constants
 from ...core.i18n import Translatable as tr
-from ._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
-from ._codes import Portal
-from ._hosts import portal_host_name
+from .categories import AuthMethod, PortalCategory, PortalHost, UrlStability
+from .codes import Portal
 from .errors import PortalValidationError
+from .hosts import portal_host_name
 
 
 @lru_cache(maxsize=1)
@@ -39,7 +39,7 @@ class PortalMetadata(BaseModel):
     is strict, frozen, and rejects unknown keys. Structural
     cross-reference invariants that span the registry as a whole are
     enforced at registry-assembly time by
-    :func:`cadrumo.domain.portals._registry._finalise_registry` rather than
+    :func:`cadrumo.domain.portals.registry._finalise_registry` rather than
     here, so individual entries can be constructed in isolation.
 
     Attributes:

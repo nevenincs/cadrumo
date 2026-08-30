@@ -19,8 +19,6 @@ from ..calculations.registry.errors import RegistryError, RegistrySnapshotError
 from ..calculations.registry.ids import RevisionId
 from ..modelos import ModeloCode
 from ..modelos.errors import ModeloValidationError
-from ._categories import PortalCategory
-from ._codes import Portal
 from ._entries import (
     portal_calendario_contribuyente,
     portal_cert_selection,
@@ -64,13 +62,15 @@ from ._entries import (
     portal_renta_web_borrador,
     portal_sede_root,
 )
-from ._metadata import PortalMetadata
+from .categories import PortalCategory
+from .codes import Portal
 from .errors import (
     PortalRegistryInvariant,
     UnknownPortalError,
     portal_integrity_error,
     unknown_modelo_error,
 )
+from .metadata import PortalMetadata
 
 _LOG = get_logger(__name__)
 

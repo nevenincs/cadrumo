@@ -15,11 +15,11 @@ from pydantic import HttpUrl, TypeAdapter
 
 from ....core.config import Settings
 from ....core.i18n import Translatable as tr
-from .._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
-from .._codes import Portal
-from .._hosts import portal_host_origin
-from .._metadata import PortalMetadata
+from ..categories import AuthMethod, PortalCategory, PortalHost, UrlStability
+from ..codes import Portal
 from ..errors import PortalValidationError
+from ..hosts import portal_host_origin
+from ..metadata import PortalMetadata
 
 _URL_ADAPTER: TypeAdapter[HttpUrl] = TypeAdapter(HttpUrl)
 

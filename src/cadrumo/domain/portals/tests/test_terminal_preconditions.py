@@ -11,9 +11,8 @@ import pytest
 
 from ....core import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.errors import TerminalPreconditionErrorMixin
-from .. import _registry as registry_module
+from .. import registry as registry_module
 from .. import errors as errors_module
-from .._registry import PORTAL_REGISTRY, _finalise_registry, get_portal, portals_for_modelo
 from ..errors import (
     PortalIntegrityError,
     PortalRegistryError,
@@ -22,6 +21,7 @@ from ..errors import (
     PortalValidationError,
     UnknownPortalError,
 )
+from ..registry import PORTAL_REGISTRY, _finalise_registry, get_portal, portals_for_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

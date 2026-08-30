@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from .._categories import PortalCategory
-from .._codes import Portal
-from .._registry import PORTAL_REGISTRY, portals_for_modelo
+from ..categories import PortalCategory
+from ..codes import Portal
+from ..registry import PORTAL_REGISTRY, portals_for_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

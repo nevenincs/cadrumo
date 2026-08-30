@@ -10,7 +10,7 @@ from __future__ import annotations
 from urllib.parse import urlsplit
 
 from ...core.config import Settings
-from ._categories import PortalHost
+from .categories import PortalHost
 from .errors import PortalValidationError
 
 

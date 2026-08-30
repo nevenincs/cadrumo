@@ -29,10 +29,10 @@ from pydantic import AwareDatetime, BaseModel, Field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.time import now as _now
-from ._categories import UrlStability
-from ._codes import Portal
-from ._metadata import PortalMetadata
+from .categories import UrlStability
+from .codes import Portal
 from .errors import PortalValidationError
+from .metadata import PortalMetadata
 
 __all__ = [
     "PortalDriftEvent",

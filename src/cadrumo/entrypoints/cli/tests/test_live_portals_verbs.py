@@ -12,7 +12,8 @@ import pytest
 from click.testing import Result
 
 from ....core.i18n import tr
-from ....domain.portals import PORTAL_REGISTRY, PortalRegistryInvariant, portal_integrity_error
+from ....domain.portals.errors import PortalRegistryInvariant, portal_integrity_error
+from ....domain.portals.registry import PORTAL_REGISTRY
 from ....tests.cli_runner import invoke_cached_cli
 from .. import _app_live_portals_cli as portals_cli_module
 from .._app_live_portals_cli import _project_portal_refusal
