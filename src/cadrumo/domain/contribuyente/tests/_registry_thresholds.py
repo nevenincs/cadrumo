@@ -32,7 +32,7 @@ from ...calculations.registry.formula_runtime_ops import resolve_parameter
 from ...calculations.registry.loader import load_registry_tree
 from ...calculations.registry.static_inspection import RegistryRevisionInspection
 from ...calculations.registry.temporal import select_revision
-from .. import MinimoDescendientesThresholds
+from ..family_types import MinimoDescendientesThresholds
 
 __all__ = [
     "registry_birth_order_amounts",

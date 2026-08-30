@@ -35,13 +35,14 @@ from decimal import Decimal
 import pytest
 
 from ....core import ART_58_2_ENTITLING_RELACIONES, ART_81_1_MATERNIDAD_RELACIONES, DescendantRelacion
-from .. import DescendantInfo, RentaFamilyProfile
-from .._descendant_facts import (
+from ..descendant import DescendantInfo
+from ..descendant_facts import (
     descendant_facts_from_list,
     descendant_list_from_facts,
     parse_descendiente_flag,
 )
-from .._meses_trabajo import parse_meses_trabajo
+from ..family_profile import RentaFamilyProfile
+from ..meses_trabajo import parse_meses_trabajo
 from ._registry_thresholds import registry_thresholds
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -258,7 +259,7 @@ class TestCLIHelpers:
 
     def test_compute_oracle_examples(self) -> None:
         """Domain arithmetic matches the Art. 81 oracle examples."""
-        from .._deduccion_maternidad import compute_deduccion_maternidad_0611
+        from ..deduccion_maternidad import compute_deduccion_maternidad_0611
 
         cases = (
             ("two-hijos-full-year", [("0", 12), ("1", 12)], 2400),
@@ -271,7 +272,7 @@ class TestCLIHelpers:
 
     def test_compute_anti_tautology_delta(self) -> None:
         """Incrementing meses from 6 to 12 must change result by exactly 600."""
-        from .._deduccion_maternidad import compute_deduccion_maternidad_0611
+        from ..deduccion_maternidad import compute_deduccion_maternidad_0611
 
         r6 = compute_deduccion_maternidad_0611([("0", 6)], filing_year=2024)
         r12 = compute_deduccion_maternidad_0611([("0", 12)], filing_year=2024)
@@ -296,7 +297,7 @@ class TestComputeDeduccionMaternidadAltaPosterior:
 
     def test_the_manual_worked_example_reproduces_verbatim(self) -> None:
         """Every printed figure from the manual's own worked example."""
-        from .._deduccion_maternidad import compute_deduccion_maternidad_0611
+        from ..deduccion_maternidad import compute_deduccion_maternidad_0611
 
         mellizos_total = compute_deduccion_maternidad_0611(
             [("mellizo_a", 8), ("mellizo_b", 8)],
@@ -321,7 +322,7 @@ class TestComputeDeduccionMaternidadAltaPosterior:
 
     def test_the_increment_raises_the_per_hijo_cap_to_1350(self) -> None:
         """A hijo whose months alone would exceed 1.200 is capped at 1.350, not 1.200."""
-        from .._deduccion_maternidad import compute_deduccion_maternidad_0611
+        from ..deduccion_maternidad import compute_deduccion_maternidad_0611
 
         capped = compute_deduccion_maternidad_0611(
             [("0", 12)],
@@ -332,7 +333,7 @@ class TestComputeDeduccionMaternidadAltaPosterior:
 
     def test_a_hijo_absent_from_alta_posterior_hijos_keeps_the_ordinary_cap(self) -> None:
         """The increment adds to a named hijo only; an unnamed one is untouched."""
-        from .._deduccion_maternidad import compute_deduccion_maternidad_0611
+        from ..deduccion_maternidad import compute_deduccion_maternidad_0611
 
         mixed = compute_deduccion_maternidad_0611(
             [("alta", 8), ("ordinary", 8)],
@@ -347,7 +348,7 @@ class TestComputeDeduccionMaternidadAltaPosterior:
         Proves the boundary runs both ways: 2023 grants the increment (asserted
         above) and 2022 -- one year earlier, same inputs -- does not.
         """
-        from .._deduccion_maternidad import compute_deduccion_maternidad_0611
+        from ..deduccion_maternidad import compute_deduccion_maternidad_0611
 
         pre_2023 = compute_deduccion_maternidad_0611(
             [("mellizo_a", 8)],
@@ -358,7 +359,7 @@ class TestComputeDeduccionMaternidadAltaPosterior:
 
     def test_filing_year_2022_never_exceeds_the_ordinary_1200_cap(self) -> None:
         """The raised 1.350 cap must not leak into a pre-2023 filing year."""
-        from .._deduccion_maternidad import compute_deduccion_maternidad_0611
+        from ..deduccion_maternidad import compute_deduccion_maternidad_0611
 
         pre_2023_capped = compute_deduccion_maternidad_0611(
             [("0", 12)],

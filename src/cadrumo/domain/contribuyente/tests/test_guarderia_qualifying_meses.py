@@ -22,8 +22,8 @@ from datetime import date
 
 import pytest
 
-from .. import DescendantInfo
-from .._guarderia_mensual import parse_guarderia_mensual
+from ..descendant import DescendantInfo
+from ..guarderia_mensual import parse_guarderia_mensual
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

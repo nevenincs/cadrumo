@@ -1,7 +1,7 @@
 """Canonical descendant model assembled from factual legal responsibilities."""
 
-from ._descendant_guarderia import DescendantGuarderiaMixin
-from ._descendant_madrid import DescendantMadridMixin
+from .descendant_guarderia import DescendantGuarderiaMixin
+from .descendant_madrid import DescendantMadridMixin
 
 
 class DescendantInfo(

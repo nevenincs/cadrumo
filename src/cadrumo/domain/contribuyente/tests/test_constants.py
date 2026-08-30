@@ -10,7 +10,7 @@ from __future__ import annotations
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from .. import ProfileName
+from ..constants import ProfileName
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

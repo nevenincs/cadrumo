@@ -34,7 +34,8 @@ import pytest
 from ....core import CasillaId, DescendantRelacion, Modelo
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import ModeloRevision
-from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list
+from ....domain.contribuyente.descendant import DescendantInfo
+from ....domain.contribuyente.descendant_facts import descendant_facts_from_list
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.profile_capsule import set_active_test_profile_facts
 from ...aggregation import CalculationSourceDiagnostic

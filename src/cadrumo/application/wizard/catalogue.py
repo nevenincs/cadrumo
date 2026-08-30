@@ -13,13 +13,8 @@ from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES
 from ...core.i18n import Translatable as tr
 from ...core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH, SetupAnswers
 from ...core.wizard_catalogue import register_wizard_catalogue
-from ...domain.contribuyente import (
-    CCAA,
-    RentaDisabilityGrade,
-    RentaMaritalStatus,
-    RentaSexCode,
-    SituacionFamiliar,
-)
+from ...domain.contribuyente.ccaa import CCAA
+from ...domain.contribuyente.renta_codes import RentaDisabilityGrade, RentaMaritalStatus, RentaSexCode, SituacionFamiliar
 from ...domain.deadlines import (
     EntityType,
     FiscalResidency,

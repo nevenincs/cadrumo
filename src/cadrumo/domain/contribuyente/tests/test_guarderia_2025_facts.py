@@ -6,7 +6,9 @@ from datetime import date
 
 import pytest
 
-from .. import DescendantInfo, GuarderiaMonthSpend, RentaFamilyProfile
+from ..descendant import DescendantInfo
+from ..family_profile import RentaFamilyProfile
+from ..family_types import GuarderiaMonthSpend
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

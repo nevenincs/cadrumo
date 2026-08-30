@@ -6,8 +6,8 @@ from decimal import Decimal
 
 from ...core import ART_58_2_ENTITLING_RELACIONES
 from ...core.external_constants import CUSTODIA_COMPARTIDA_PRORRATA_FACTOR
-from ._descendant_record import DescendantRecordBase
-from ._family_types import (
+from .descendant_record import DescendantRecordBase
+from .family_types import (
     MAX_AGE_MENOR_TRES,
     NACIMIENTO_ADOPCION_APPLICABILITY_FOLLOWING_PERIODS,
     within_multi_year_applicability_window,
@@ -15,6 +15,8 @@ from ._family_types import (
 
 
 class DescendantMadridMixin(DescendantRecordBase):
+    """Madrid's autonomous deduction for a descendant."""
+
     def entry_year(self) -> int:
         """Calendar year of the nacimiento/adopción event, for the Madrid deducción window.
 

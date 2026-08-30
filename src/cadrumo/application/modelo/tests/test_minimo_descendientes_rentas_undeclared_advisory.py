@@ -30,7 +30,8 @@ import pytest
 from ....core import CasillaId, Modelo
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import ModeloRevision
-from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list
+from ....domain.contribuyente.descendant import DescendantInfo
+from ....domain.contribuyente.descendant_facts import descendant_facts_from_list
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.profile_capsule import set_active_test_profile_facts
 from ...aggregation import CalculationSourceDiagnostic
@@ -163,7 +164,7 @@ def test_a_declared_zero_survives_the_round_trip_as_an_answer() -> None:
     because the descendant vanished, not because zero was recorded. This pins
     the distinction the whole advisory rests on.
     """
-    from ....domain.contribuyente import descendant_list_from_facts
+    from ....domain.contribuyente.descendant_facts import descendant_list_from_facts
 
     stored = dict(descendant_facts_from_list([_contributing_child(rentas_anuales_euros=Decimal("0"))]))
     assert "renta_family.descendiente.0.rentas_anuales" in stored

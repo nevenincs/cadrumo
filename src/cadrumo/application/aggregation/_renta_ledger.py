@@ -45,12 +45,9 @@ from ...core.filing_year import FilingYear
 from ...core.identity import TransactionId
 from ...core.resources import resources
 from ...domain.categories import CategoryProfile, SpendingCategory
-from ...domain.contribuyente import (
-    CCAA,
-    ForalRegimeError,
-    TaxResidenceProfileError,
-    parse_tax_region,
-)
+from ...domain.contribuyente.ccaa import CCAA
+from ...domain.contribuyente.errors import ForalRegimeError, TaxResidenceProfileError
+from ...domain.contribuyente.tax_residence import parse_tax_region
 from ...domain.contribuyente.seguro_enfermedad_insured import (
     seguro_enfermedad_insured_counts_from_facts,
 )

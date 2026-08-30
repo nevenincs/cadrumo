@@ -20,11 +20,9 @@ from decimal import Decimal
 import pytest
 
 from ....core import DescendantRelacion
-from .. import (
-    DescendantInfo,
-    RentaFamilyProfile,
-    within_multi_year_applicability_window,
-)
+from ..descendant import DescendantInfo
+from ..family_profile import RentaFamilyProfile
+from ..family_types import within_multi_year_applicability_window
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

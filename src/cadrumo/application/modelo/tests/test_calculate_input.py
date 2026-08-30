@@ -10,7 +10,8 @@ import pytest
 
 from ....core import CasillaId, Period, RegistryAuthorityGrade, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list
+from ....domain.contribuyente.descendant import DescendantInfo
+from ....domain.contribuyente.descendant_facts import descendant_facts_from_list
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile

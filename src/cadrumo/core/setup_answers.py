@@ -421,14 +421,14 @@ def _m() -> Any:
     return importlib.import_module("cadrumo.domain.deadlines")
 
 
-# ANY-RETURN-RATIONALE-PROFILE-LAZY-MODULE: returns the
-# cadrumo.domain.contribuyente module object; typed return would require importing the
-# module at definition time, re-introducing the circular import.
+# ANY-RETURN-RATIONALE-PROFILE-LAZY-MODULE: returns the renta-code module
+# object; typed return would require importing it at definition time,
+# re-introducing the circular import.
 def _p() -> Any:
-    """Return the cadrumo.domain.contribuyente module (lazy)."""
+    """Return the renta-code module that owns the profile enums (lazy)."""
     import importlib
 
-    return importlib.import_module("cadrumo.domain.contribuyente")
+    return importlib.import_module("cadrumo.domain.contribuyente.renta_codes")
 
 
 # ANY-RETURN-RATIONALE-PROFILE-LAZY-MODULE: returns the CCAA enum class object;
@@ -438,7 +438,7 @@ def _ccaa() -> Any:
     """Return the CCAA enum class (lazy)."""
     import importlib
 
-    return importlib.import_module("cadrumo.domain.contribuyente").CCAA
+    return importlib.import_module("cadrumo.domain.contribuyente.ccaa").CCAA
 
 
 # ---------------------------------------------------------------------------

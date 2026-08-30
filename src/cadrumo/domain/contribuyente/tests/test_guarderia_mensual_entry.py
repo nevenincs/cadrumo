@@ -21,13 +21,14 @@ from datetime import date
 import pytest
 
 from ....core.errors import ProfileAnswerTypeError
-from .. import DescendantInfo, GuarderiaMonthSpend
-from .._descendant_facts import (
+from ..descendant import DescendantInfo
+from ..descendant_facts import (
     descendant_facts_from_list,
     descendant_list_from_facts,
     parse_descendiente_flag,
 )
-from .._guarderia_mensual import parse_guarderia_mensual, serialise_guarderia_mensual
+from ..family_types import GuarderiaMonthSpend
+from ..guarderia_mensual import parse_guarderia_mensual, serialise_guarderia_mensual
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

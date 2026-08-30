@@ -45,7 +45,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Sequence
 
 from ...core.errors import ProfileAnswerTypeError
-from ._family_types import GuarderiaMonthSpend
+from .family_types import GuarderiaMonthSpend
 
 #: Separator between entries. Not ``,``: the ``--descendiente`` flag owns that.
 ENTRY_SEPARATOR = ";"

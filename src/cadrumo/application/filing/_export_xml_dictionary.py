@@ -44,7 +44,7 @@ from ...domain.calculations.registry.export_parse import (
 )
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ...domain.calculations.registry.schema_references import SourceReference
-from ...domain.contribuyente import modelo100_ccaa_codigo, modelo100_ecivil_export_code
+from ...domain.contribuyente.renta_codes import modelo100_ccaa_codigo, modelo100_ecivil_export_code
 from ...domain.filing import FilingExportError, FilingExportValidationError, ModeloDraft
 from .runtime import RegistrySchemaAccessor
 

@@ -356,7 +356,7 @@ def _validate_meses_range(page: FlowPage, canonical: str) -> ValidationVerdict:
     """
     if not canonical:
         return ValidationVerdict.passed()
-    from ...domain.contribuyente import parse_meses_trabajo
+    from ...domain.contribuyente.meses_trabajo import parse_meses_trabajo
 
     try:
         parse_meses_trabajo(canonical, field=page.id)
@@ -448,7 +448,7 @@ def _validate_gastos_mensuales_grammar(page: FlowPage, canonical: str) -> Valida
     if not canonical.strip():
         return ValidationVerdict.passed()
     from ...core.errors import ProfileAnswerTypeError
-    from ...domain.contribuyente import parse_guarderia_mensual
+    from ...domain.contribuyente.guarderia_mensual import parse_guarderia_mensual
 
     try:
         parse_guarderia_mensual(canonical, field=page.id)

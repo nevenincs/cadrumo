@@ -29,11 +29,9 @@ import pytest
 
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ....domain.contribuyente import (
-    DescendantInfo,
-    compute_deduccion_maternidad_0611,
-    descendant_facts_from_list,
-)
+from ....domain.contribuyente.deduccion_maternidad import compute_deduccion_maternidad_0611
+from ....domain.contribuyente.descendant import DescendantInfo
+from ....domain.contribuyente.descendant_facts import descendant_facts_from_list
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ..profile_binding import resolve_maternidad_meses
 

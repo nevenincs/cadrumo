@@ -18,7 +18,7 @@ from collections.abc import Mapping
 from enum import StrEnum
 from types import MappingProxyType
 
-from ._ccaa import CCAA
+from .ccaa import CCAA
 
 
 class RentaSexCode(StrEnum):

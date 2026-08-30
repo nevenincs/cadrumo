@@ -24,7 +24,8 @@ from datetime import date
 import pytest
 
 from ....core import Modelo
-from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list
+from ....domain.contribuyente.descendant import DescendantInfo
+from ....domain.contribuyente.descendant_facts import descendant_facts_from_list
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.profile_capsule import set_active_test_profile_facts
 from .._minimo_descendientes_advisory import collect_descendientes_count_desync_diagnostics

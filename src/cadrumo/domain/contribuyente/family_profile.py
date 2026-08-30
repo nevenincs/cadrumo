@@ -10,15 +10,15 @@ from pydantic import BaseModel, Field, field_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import CUSTODIA_COMPARTIDA_PRORRATA_FACTOR
-from ._constants import SUPPORTED_PROFILE_SCHEMA_VERSION, ProfileSchemaVersion
-from ._descendant import DescendantInfo
-from ._family_types import (
+from .constants import SUPPORTED_PROFILE_SCHEMA_VERSION, ProfileSchemaVersion
+from .descendant import DescendantInfo
+from .errors import ProfileValidationError
+from .family_types import (
     MAX_AGE_MENOR_TRES,
     MinimoDescendientesThresholds,
     RentaAscendantProfile,
     RentaDescendantProfile,
 )
-from .errors import ProfileValidationError
 
 
 def _survivor_rank_by_position(eligible: Sequence[DescendantInfo], filing_year: int) -> dict[int, int]:

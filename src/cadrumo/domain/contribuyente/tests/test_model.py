@@ -12,7 +12,9 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from .. import CCAA, ForalRegimeError, ResidenceChange, TaxResidenceProfile, parse_tax_region
+from ..ccaa import CCAA
+from ..errors import ForalRegimeError
+from ..tax_residence import ResidenceChange, TaxResidenceProfile, parse_tax_region
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from .._renta_codes import SituacionFamiliarM145
+from ..renta_codes import SituacionFamiliarM145
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -48,16 +48,21 @@ def test_disjoint_from_situacion_familiar_art82() -> None:
     (declaracion). The grounding rule in the docstring depends on these
     enums being structurally distinct.
     """
-    from .._renta_codes import SituacionFamiliar
+    from ..renta_codes import SituacionFamiliar
 
     m145_values = {member.value for member in SituacionFamiliarM145}
     art82_values = {member.value for member in SituacionFamiliar}
     assert not (m145_values & art82_values)
 
 
-def test_reachable_via_contribuyente_package_boundary() -> None:
-    """The enum re-exports through ``cadrumo.domain.contribuyente``."""
-    from ... import contribuyente
+def test_reachable_at_its_owning_module() -> None:
+    """The enum is public on the module that declares it.
 
-    assert contribuyente.SituacionFamiliarM145 is SituacionFamiliarM145
-    assert "SituacionFamiliarM145" in contribuyente.__all__
+    This asserted a re-export through the package namespace until that
+    namespace was made inert. What it protects -- that the enum is reachable
+    from outside the package -- is unchanged; the address is now the module
+    that owns it rather than the package root.
+    """
+    from .. import renta_codes
+
+    assert renta_codes.SituacionFamiliarM145 is SituacionFamiliarM145

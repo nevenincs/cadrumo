@@ -171,7 +171,7 @@ def guard_active_profile_foral_ccaa() -> None:
     creation reaches the generic unsupported-modelo checks.
     """
     from ...application.user_profile.projections import fact_value
-    from ...domain.contribuyente import parse_tax_region
+    from ...domain.contribuyente.tax_residence import parse_tax_region
     from ..workflow.persistence import workflow_state_repository
 
     state = workflow_state_repository().load()

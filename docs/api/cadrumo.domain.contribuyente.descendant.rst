@@ -1,7 +1,7 @@
-cadrumo.domain.contribuyente._normalise module
+cadrumo.domain.contribuyente.descendant module
 ==============================================
 
-.. automodule:: cadrumo.domain.contribuyente._normalise
+.. automodule:: cadrumo.domain.contribuyente.descendant
    :members:
    :show-inheritance:
    :ignore-module-all:

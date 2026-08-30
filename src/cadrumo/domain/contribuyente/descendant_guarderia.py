@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from ...core import ART_81_1_MATERNIDAD_RELACIONES
 from ...core.external_constants import DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_FIRST_FILING_YEAR
-from ._descendant_maternity import DescendantMaternityMixin
-from ._family_types import (
+from .descendant_maternity import DescendantMaternityMixin
+from .family_types import (
     MAX_AGE_MENOR_TRES,
     NACIMIENTO_ADOPCION_APPLICABILITY_FOLLOWING_PERIODS,
     MinimoDescendientesThresholds,
@@ -14,6 +14,8 @@ from ._family_types import (
 
 
 class DescendantGuarderiaMixin(DescendantMaternityMixin):
+    """The guarderia spend facts a descendant carries."""
+
     def guarderia_art_81_1_meses(
         self,
         filing_year: int,

@@ -24,7 +24,7 @@ from datetime import date
 
 import pytest
 
-from .. import DescendantInfo
+from ..descendant import DescendantInfo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

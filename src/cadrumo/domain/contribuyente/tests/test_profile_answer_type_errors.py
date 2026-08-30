@@ -5,7 +5,9 @@ from collections.abc import Callable
 import pytest
 
 from ....core.errors import ProfileAnswerTypeError
-from .. import CCAA, parse_descendiente_flag, parse_marriage_date_flag
+from ..ccaa import CCAA
+from ..descendant_facts import parse_descendiente_flag
+from ..marriage_facts import parse_marriage_date_flag
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

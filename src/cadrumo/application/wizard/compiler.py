@@ -15,10 +15,7 @@ from __future__ import annotations
 from collections.abc import Iterator, Sequence
 
 from ...core.i18n import Translatable as tr
-from ...domain.contribuyente import (
-    ProfileKey,
-    ProfileKeyRequirement,
-)
+from ...domain.contribuyente.keys import ProfileKey, ProfileKeyRequirement
 from .errors import WizardCompileError
 from .models import WizardCondition, WizardFlow, WizardQuestion, WizardVisibility
 
@@ -133,7 +130,7 @@ def ensure_profile_keys_registered() -> None:
     early when the compiled tuple equals the registered one, so an entrypoint
     may call this unconditionally without ordering knowledge.
     """
-    from ...domain.contribuyente import register_profile_keys
+    from ...domain.contribuyente.keys import register_profile_keys
     from .catalogue import WIZARD_FLOWS
 
     register_profile_keys(compile_profile_keys(WIZARD_FLOWS))

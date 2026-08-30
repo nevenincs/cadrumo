@@ -142,7 +142,7 @@ def _ccaa_choice_values() -> list[str]:
     localised redirect rather than a generic "not one of" error, but they
     are refused by the wizard persistence layer via ``ForalRegimeError``.
     """
-    from ...domain.contribuyente import CCAA
+    from ...domain.contribuyente.ccaa import CCAA
 
     common = [member.value for member in CCAA]
     foral = ["pais_vasco", "navarra"]
@@ -218,7 +218,7 @@ def _irpf_personal_choice_values() -> tuple[list[str], list[str]]:
     ``--situacion-familiar`` flag choices never drift from the values
     the wizard catalogue and the profile schema validate against.
     """
-    from ...domain.contribuyente import SituacionFamiliar
+    from ...domain.contribuyente.renta_codes import SituacionFamiliar
     from ...domain.deadlines import IrpfSpecialRegime
 
     return (
@@ -1388,7 +1388,8 @@ def _refuse_foral_ccaa(canonical: dict[str, str], explicit_flags: dict[str, str]
     if ccaa_token is None:
         return
 
-    from ...domain.contribuyente import ForalRegimeError, parse_tax_region
+    from ...domain.contribuyente.errors import ForalRegimeError
+    from ...domain.contribuyente.tax_residence import parse_tax_region
 
     try:
         parse_tax_region(ccaa_token)
@@ -1626,7 +1627,7 @@ def _ccaa_was_defaulted(
     path prompts for the value and is likewise excluded, as is ``edit``
     (whose CCAA already exists on the profile).
     """
-    from ...domain.contribuyente import CCAA
+    from ...domain.contribuyente.ccaa import CCAA
 
     return (
         mode == "create"
@@ -1682,7 +1683,7 @@ def _emit_wizard_success(
     callers).
     """
     from ...core.click_context import json_output_requested
-    from ...domain.contribuyente import CCAA
+    from ...domain.contribuyente.ccaa import CCAA
     from ..operator_output import emit_operator_json_success
     from .results import ConfigProfileCreateResult, ConfigProfileEditResult, ProfileWizardStatus
 
@@ -1834,7 +1835,7 @@ def _wizard_success_notices(
     entered with, not one a mid-walk output-language switch left behind.
     """
     from ...core.json_contract import Notice, NoticeSeverity
-    from ...domain.contribuyente import CCAA
+    from ...domain.contribuyente.ccaa import CCAA
 
     verb_key = "create" if mode == "create" else "edit"
     # The next-step hint is text-surface only. ``Notice`` reserves executable

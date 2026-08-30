@@ -1,7 +1,7 @@
-cadrumo.domain.contribuyente._family_types module
+cadrumo.domain.contribuyente.tax_residence module
 =================================================
 
-.. automodule:: cadrumo.domain.contribuyente._family_types
+.. automodule:: cadrumo.domain.contribuyente.tax_residence
    :members:
    :show-inheritance:
    :ignore-module-all:

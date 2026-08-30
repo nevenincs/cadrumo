@@ -113,7 +113,7 @@ def _key_facts() -> tuple[set[str], set[str]]:
     rather than at module scope — after the registration call, never before.
     """
     ensure_profile_keys_registered()
-    from ....domain.contribuyente import PROFILE_KEYS, ProfileKeyRequirement
+    from ....domain.contribuyente.keys import PROFILE_KEYS, ProfileKeyRequirement
 
     paths = {entry.key for entry in PROFILE_KEYS}
     required = {entry.key for entry in PROFILE_KEYS if entry.requirement is ProfileKeyRequirement.REQUIRED}

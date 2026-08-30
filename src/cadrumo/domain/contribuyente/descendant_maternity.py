@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from ...core import ART_81_1_MATERNIDAD_RELACIONES
-from ._descendant_record import DescendantRecordBase
-from ._family_types import (
+from .descendant_record import DescendantRecordBase
+from .family_types import (
     ART_81_1_ENTRY_WINDOW_YEARS,
     MAX_AGE_MENOR_TRES,
     MinimoDescendientesThresholds,
@@ -13,6 +13,8 @@ from ._family_types import (
 
 
 class DescendantMaternityMixin(DescendantRecordBase):
+    """The maternity deduction facts a descendant carries."""
+
     def maternidad_eligible_meses(self, filing_year: int) -> int:
         """Months of *filing_year* the Art. 81.1 deducción may reach for this descendant.
 

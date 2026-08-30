@@ -10,7 +10,7 @@ from __future__ import annotations
 import pytest
 
 from ....core.errors import ProfileAnswerTypeError
-from .._meses_trabajo import parse_meses_trabajo, serialise_meses_trabajo
+from ..meses_trabajo import parse_meses_trabajo, serialise_meses_trabajo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

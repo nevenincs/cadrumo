@@ -30,7 +30,7 @@ from decimal import Decimal
 import pytest
 
 from ....core.errors import ProfileAnswerTypeError
-from .. import parse_descendiente_flag
+from ..descendant_facts import parse_descendiente_flag
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -32,7 +32,7 @@ from ....domain.categories import (
     SpendingCategory,
     parse_http_url,
 )
-from ....domain.contribuyente import CCAA
+from ....domain.contribuyente.ccaa import CCAA
 from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
 from ....domain.iva import InvoiceKind
 from ....domain.prorrata_register import ProrrataRegisterEntry
