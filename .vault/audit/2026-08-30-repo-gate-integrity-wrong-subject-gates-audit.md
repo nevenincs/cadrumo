@@ -2417,3 +2417,41 @@ this. Recorded so the decision is taken against current evidence: the
 relocation campaign appears to have dissolved the specific breakage the row
 documents, which weakens the "working tree is more coherent than HEAD"
 argument in the one direction the row measured it.
+
+### Semantic sweep 2026-08-31: the work-target revision comparison is written twice
+
+**Pathway:** `application/modelo/work_addressing.py:1128` (the canonical
+`assert_work_target_revision`) and `application/modelo/workspace.py:250` (the
+Workspace revision-axes resolver). Found by semantic search rather than by
+symbol grep, which cannot see it: the two sites share no identifier.
+
+Both implement the SAME rule over the SAME two axes. The canonical authority
+skips a `None` candidate, takes `candidate.strip()`, compares it against the
+law-determined revision, and RAISES `ModeloWorkRegistryYearMismatchError` on
+inequality. The Workspace resolver skips a `None` candidate, takes
+`candidate.strip()`, compares it against the law-determined revision, and
+RECORDS the axis in a mismatched set. Same normalisation, same comparison, same
+per-axis independence -- only the disposition differs.
+
+The split itself is defensible and documented: a read projection wants the
+divergence as typed data, because an exception escaping there would destroy the
+information the typed refusal exists to carry. What is not defensible is that
+the COMPARISON is open-coded at both sites. The Workspace docstring even names
+the canonical function and states that it "is not called here". Two copies of
+one rule drift silently: a change to normalisation -- case folding, a revision
+id that gains a suffix, a different strip -- lands at one site and the other
+goes on answering the old question, and the surfaces disagree about whether a
+taxpayer's stored revision matches the law.
+
+**Remediation.** Extract the pure per-axis comparison into one function
+returning the diverging axes, and have BOTH consume it: the authority raising
+on a non-empty result, the Workspace recording it. No behaviour changes, and
+the raise site and the record site become incapable of disagreeing. Verify by
+altering the normalisation in the extracted function and confirming BOTH
+surfaces move together.
+
+**Related, same subject.** The Workspace's recorded mismatch currently reaches
+no consumer at all -- see the refusal-union reachability finding: the
+disposition is computed, attached to the resolved target, and read by nothing
+in production. Consolidating the comparison does not fix that; it makes the two
+gaps independent, which is what lets each be closed on its own evidence.

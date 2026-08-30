@@ -9,7 +9,7 @@ related:
   - '[[2026-08-28-semantic-consolidation-cli-payload-projection-adr]]'
 modified: '2026-08-30'
 body_schema: body-v2
-body_hash: 'sha256:a3d3ecf73bae8f7588eb50f001761a067a3817ed3a8ad43b40bb7fafd191ccf1'
+body_hash: 'sha256:1d163ebc526bcd48a041d29cca55161c0ebf2b3887d1e74d4148582a35c96cbe'
 ---
 
 # `semantic-consolidation` plan
@@ -69,6 +69,8 @@ Six package namespaces carry a PEP 562 __getattr__ resolver, four of them byte-i
 - [x] `P02.S125` - Declare the represented-NIF length bound once and the two password-generation bounds beside the envelope that owns them, closing a result payload that reported a generation the envelope would refuse to store; `src/cadrumo/application/auth/, src/cadrumo/adapters/persistence/storage/custody/, src/cadrumo/entrypoints/cli/`.
 - [x] `P02.S126` - Declare the ISO 4217 currency shape once as a normalising alias and adopt it at the domain model and both CLI payloads, giving the domain the uppercase rule it lacked; `src/cadrumo/core/parsing/, src/cadrumo/domain/currency/, src/cadrumo/entrypoints/cli/`.
 - [x] `P02.S127` - Adopt the canonical non-negative and positive decimal aliases on the catalogue invoice payload's money and rate fields; `src/cadrumo/core/text_bounds.py, src/cadrumo/entrypoints/cli/`.
+- [x] `P02.S129` - Publicise the eliding issue-detail annotation and adopt it at four sites, two of which refused an over-length detail where the canonical deliberately elides; `src/cadrumo/application/ledger/preflight.py, src/cadrumo/application/aggregation/, src/cadrumo/entrypoints/cli/`.
+- [x] `P02.S130` - Route the ledger export amount check through the parser's own signed axis instead of comparing against zero beside the payload; `src/cadrumo/entrypoints/cli/_ledger_payloads.py`.
 
 ### Phase `P03` - Consolidate the repeated secure-repository configuration shape
 
