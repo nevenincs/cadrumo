@@ -20,7 +20,7 @@ from typing import Literal
 
 import pytest
 
-from .....core import validated_casilla_id
+from .....core.casilla_id import validated_casilla_id
 from ..errors import RegistryValidationError
 from ..schema_verification import (
     DiscrepancyCause,

@@ -30,7 +30,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from ...core import CasillaId, Period
+from ...core import Period
+from ...core.casilla_id import CasillaId
 from ...core.aggregation import LEDGER_BINDING_SOURCE_KINDS, BindingSourceKind
 from ...core.i18n import output_language
 from ...core.logging import get_logger

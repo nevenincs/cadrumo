@@ -18,7 +18,7 @@ from functools import cache
 
 import pytest
 
-from .....core import CasillaId, validated_casilla_id
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..authority import bundled_authority
 from ..bindings_previous_filing import (
     previous_filing_observation_requirements,

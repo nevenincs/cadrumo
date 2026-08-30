@@ -40,7 +40,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core import validated_casilla_id
+from .....core.casilla_id import validated_casilla_id
 from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.schema_extraction import ExtractionProfileDefinition, ExtractionTargetDefinition
 from .._parser import _numeric_casilla_anchors

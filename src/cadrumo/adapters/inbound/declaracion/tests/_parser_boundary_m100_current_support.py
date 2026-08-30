@@ -21,7 +21,7 @@ See Also:
 
 from __future__ import annotations
 
-from .....core import CasillaId, validated_casilla_id
+from .....core.casilla_id import CasillaId, validated_casilla_id
 
 M100_CURRENT_YEAR_EXPECTED_CASILLAS: frozenset[CasillaId] = frozenset(
     validated_casilla_id(value, surface="m100_current_year_pdf_fixture")

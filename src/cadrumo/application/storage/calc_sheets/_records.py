@@ -38,7 +38,8 @@ from typing import Literal
 from pydantic import BaseModel, Field, field_serializer, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ....core import CasillaId, Period
+from ....core import Period
+from ....core.casilla_id import CasillaId
 from ....core.filing_year import FilingYear
 from ....core.identity import ContentDigest, TransactionId
 from ....core.time import now as _utc_now

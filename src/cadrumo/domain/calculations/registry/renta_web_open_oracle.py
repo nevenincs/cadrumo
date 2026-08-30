@@ -9,7 +9,8 @@ from typing import Final, Literal, Protocol
 
 from pydantic import AnyUrl, BaseModel, Field, field_validator
 
-from ....core import STRICT_FROZEN_CONFIG, CasillaId, validated_casilla_id
+from ....core import STRICT_FROZEN_CONFIG
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.config import Settings
 from ....core.decimal import coerce_finite_european_decimal, normalize_decimal_separators
 from ....core.identity import AeatBoxNumber

@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from ...core import CasillaId
+from ...core.casilla_id import CasillaId
 from ...core.json_contract import OutputSchema
 from ...core.text_bounds import NonEmptyStr
 from ...domain.calculations.registry.schema_base import LegalRefs, SourceRefs

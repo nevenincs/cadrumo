@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from .....core import EstadoCasillaOficial, validated_casilla_id
+from .....core import EstadoCasillaOficial
+from .....core.casilla_id import validated_casilla_id
 from .. import export as owner
 from ..authority import bundled_authority
 from ..errors import RegistryValidationError

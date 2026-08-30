@@ -48,7 +48,7 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Final, NamedTuple
 
-from ...core import CasillaId
+from ...core.casilla_id import CasillaId
 from ...domain.calculations.registry.ids import BindingId, LegalRefId, SourceRefId
 from ...domain.calculations.registry.schema import ModeloRevision
 from ._renta_income_ledger import RentaIncomeLedgerAggregation

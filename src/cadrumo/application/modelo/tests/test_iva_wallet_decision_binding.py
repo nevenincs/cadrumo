@@ -7,7 +7,8 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import ActionConditionality, CasillaId, NoRecoveryOutcome, Period, validated_casilla_id
+from ....core import ActionConditionality, NoRecoveryOutcome, Period
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision

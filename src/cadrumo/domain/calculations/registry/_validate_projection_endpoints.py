@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ....core import CasillaId, FilingProjectionRef, filing_projection_ref_casilla_id
+from ....core import FilingProjectionRef, filing_projection_ref_casilla_id
+from ....core.casilla_id import CasillaId
 from ._validate_evidence import EvidenceValidator
 from ._validate_helpers import missing_refs as _missing_refs
 from .schema import ModeloRevision

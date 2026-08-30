@@ -99,7 +99,7 @@ if TYPE_CHECKING:
     from ._authority_grade import UNDECLARED_REGISTRY_AUTHORITY_GRADE, RegistryAuthorityGrade
     from ._calculation_route import ModeloCalculationRouteId
     from ._capabilities import ServiceCapability
-    from ._casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
+    from .casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
     from ._casilla_value_kind import CasillaValueKind
     from ._classifier_input_source import ClassifierInputSource, CounterpartyTaxablePersonStatus
     from ._concept_lifecycle import ConceptLifecycle
@@ -879,7 +879,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "BindingSourceKind": ".aggregation",
     "CalculationSourceLineageRole": ".aggregation",
     "COMPATIBILITY_REGIME": ".compatibility_lifecycle",
-    "CasillaId": "._casilla_id",
+    "CasillaId": ".casilla_id",
     "CasillaValueKind": "._casilla_value_kind",
     "ClassifierInputSource": "._classifier_input_source",
     "ClaveMovilRoute": "._auth_provider",
@@ -1206,8 +1206,8 @@ _LAZY_EXPORTS: dict[str, str] = {
     "undeclared_persisted_formats": ".compatibility_lifecycle",
     "unicode_compose": ".text_fold",
     "unlink_lockfile": "._lockfile_unlink",
-    "validated_casilla_id": "._casilla_id",
-    "validated_casilla_id_map": "._casilla_id",
+    "validated_casilla_id": ".casilla_id",
+    "validated_casilla_id_map": ".casilla_id",
 }
 
 

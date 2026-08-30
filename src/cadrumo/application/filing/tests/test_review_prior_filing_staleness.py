@@ -32,7 +32,8 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import CasillaId, Period, validated_casilla_id
+from ....core import Period
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ....domain.filing.protocols import CasillaSchemaProvider
 from ....domain.filing.schema import ModeloDraft

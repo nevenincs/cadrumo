@@ -9,12 +9,12 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import (
     STRICT_FROZEN_CONFIG,
-    CasillaId,
     Period,
     RegistryAuthorityGrade,
     RegistrySchemaFamilyDisposition,
     RevisionReviewStatus,
 )
+from ...core.casilla_id import CasillaId
 from ...core.aggregation import BindingSourceKind
 from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FilingYear
@@ -609,7 +609,6 @@ class ModeloWorkspaceScalarMaterializationV1(_WorkspaceModel):
 
     casilla_id: CasillaId
     value: ModeloScalar
-    provenance: Annotated[tuple[ModeloWorkspaceProvenanceRecordV1, ...], Field(max_length=_MAX_PROVENANCE_RECORDS)] = ()
 
 
 class ModeloWorkspaceRepeatedRowMaterializationV1(_WorkspaceModel):
@@ -620,7 +619,6 @@ class ModeloWorkspaceRepeatedRowMaterializationV1(_WorkspaceModel):
     values: Annotated[
         tuple[ModeloWorkspaceScalarMaterializationV1, ...], Field(min_length=1, max_length=_MAX_REPEATED_ROW_VALUES)
     ]
-    provenance: Annotated[tuple[ModeloWorkspaceProvenanceRecordV1, ...], Field(max_length=_MAX_PROVENANCE_RECORDS)] = ()
 
 
 class ModeloWorkspaceScalarMaterializationRecordV1(_WorkspaceModel):

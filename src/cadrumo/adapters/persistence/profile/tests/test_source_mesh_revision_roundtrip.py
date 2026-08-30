@@ -35,7 +35,8 @@ import pytest
 from pydantic import ValidationError
 from sqlalchemy import select
 
-from .....core import CasillaId, Period, validated_casilla_id
+from .....core import Period
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from .....domain.calculations import DirectRowMaterializationProvenance, RowSourceIdentity
 from .....domain.calculations.registry.bindings import CasillaObservation

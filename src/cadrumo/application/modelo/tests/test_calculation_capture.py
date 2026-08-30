@@ -9,7 +9,8 @@ from typing import TYPE_CHECKING
 import pytest
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from ....core import Period, validated_casilla_id
+from ....core import Period
+from ....core.casilla_id import validated_casilla_id
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.codes import ModeloCode

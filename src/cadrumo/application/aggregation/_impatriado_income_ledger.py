@@ -49,7 +49,8 @@ from pydantic import BaseModel, Field
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import CasillaId, Modelo, Period, PeriodKind, validated_casilla_id
+from ...core import Modelo, Period, PeriodKind
+from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.prose_elision import ElidedProse
 from ...core.country_code import CountryCodeAlpha2
 from ...core.identity import TransactionId

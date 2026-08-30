@@ -7,7 +7,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import CasillaId, validated_casilla_id
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.config import override_settings
 from .....domain.calculations.registry.authority import bundled_authority
 from .._engine import build_export_plan

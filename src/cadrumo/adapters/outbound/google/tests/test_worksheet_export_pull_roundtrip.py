@@ -30,7 +30,8 @@ from .....application.storage.calc_sheets import (
     build_export_plan,
     registry_sha,
 )
-from .....core import CasillaId, Period, validated_casilla_id
+from .....core import Period
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.errors import NoRevisionForPeriodError
 from .....domain.calculations.registry.formula_runtime import calculate_registry_snapshot

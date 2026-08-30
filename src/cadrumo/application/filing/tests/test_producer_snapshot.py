@@ -20,8 +20,8 @@ from ....core import (
     ProrrataRegisterRegime,
     RefundElection,
     ResultDisposition,
-    validated_casilla_id,
 )
+from ....core.casilla_id import validated_casilla_id
 from ....domain.bienes_inversion import (
     BienesInversionIvaRegister,
     BienInversionIvaRecord,

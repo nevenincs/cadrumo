@@ -20,7 +20,7 @@ from __future__ import annotations
 from collections import Counter
 from collections.abc import Iterable
 
-from ....core import CasillaId
+from ....core.casilla_id import CasillaId
 from .errors import RegistryValidationError
 from .schema import ModeloRevision
 from .schema_surfaces import CasillaDefinition

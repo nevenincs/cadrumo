@@ -55,7 +55,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import CasillaId
+from ...core.casilla_id import CasillaId
 from ...core.aggregation import BindingSourceKind
 from ...core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS
 from ...domain.calculations.registry.ids import BindingId

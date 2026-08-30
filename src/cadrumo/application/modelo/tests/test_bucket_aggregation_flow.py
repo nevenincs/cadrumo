@@ -13,13 +13,8 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import (
-    CasillaId,
-    IvaDeductionEvidenceAuthority,
-    IvaDeductionFactKind,
-    Period,
-    validated_casilla_id,
-)
+from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind, Period
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.errors.error_codes import resolve_error_message
 from ....domain.buckets.event import BucketEventType
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance

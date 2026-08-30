@@ -40,15 +40,8 @@ from ...adapters.persistence.storage import (
     EnvelopeVersionError,
     StorageValidationError,
 )
-from ...core import (
-    CasillaId,
-    M210GrossIncomeSourceMode,
-    Modelo,
-    Period,
-    PeriodError,
-    StandardPeriodCode,
-    validated_casilla_id,
-)
+from ...core import M210GrossIncomeSourceMode, Modelo, Period, PeriodError, StandardPeriodCode
+from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.money import round_to_cents
 from ...domain.bienes_inversion import BienesInversionIvaRegister

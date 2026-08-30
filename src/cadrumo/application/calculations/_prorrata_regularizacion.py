@@ -47,14 +47,13 @@ from pydantic import BaseModel
 from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core import (
     STRICT_FROZEN_CONFIG,
-    CasillaId,
     Modelo,
     Period,
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
     regime_apportions_deduction,
-    validated_casilla_id,
 )
+from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.resources import bundled_path

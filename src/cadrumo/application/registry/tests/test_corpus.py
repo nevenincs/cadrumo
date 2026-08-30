@@ -10,7 +10,7 @@ from typing import cast
 import pytest
 from pydantic import ValidationError
 
-from ....core import CasillaId, validated_casilla_id
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.config import override_settings
 from ....core.errors.error_codes import build_error_envelope
 from ....core.external_constants import OutputLanguage

@@ -31,7 +31,8 @@ from typing import Final
 
 from pydantic import BaseModel, ValidationError
 
-from ...core import STRICT_FROZEN_CONFIG, CasillaId, Period, validated_casilla_id
+from ...core import STRICT_FROZEN_CONFIG, Period
+from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.resources import bundled_path
 from ...core.time import now as _utc_now
 from ...domain.calculations.registry.bindings import (

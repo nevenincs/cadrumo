@@ -9,7 +9,8 @@ from typing import Final, Literal, Self
 
 from pydantic import BaseModel, field_serializer, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG, CasillaId, Period
+from ...core import STRICT_FROZEN_CONFIG, Period
+from ...core.casilla_id import CasillaId
 from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, WorkUnitId

@@ -9,7 +9,8 @@ from typing import Any
 import pytest
 
 from ....application.filing._draft_construction import _filing_binding_values
-from ....core import CasillaId, Modelo, Period, validated_casilla_id
+from ....core import Modelo, Period
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.resources import bundled_path
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id

@@ -53,15 +53,14 @@ from pydantic import AnyHttpUrl
 
 from ....adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue
 from ....core import (
-    CasillaId,
     CasillaValueKind,
     IvaCompensationStateProvenance,
     Modelo,
     ObservedHeaderFact,
     Period,
     ResultDisposition,
-    validated_casilla_id,
 )
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.config import Settings
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState

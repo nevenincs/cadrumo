@@ -30,10 +30,9 @@ from .. import (
     ActionArgumentStatus,
     ActionConditionality,
     ActionEvidenceProvenance,
-    CasillaId,
     NoRecoveryOutcome,
-    validated_casilla_id,
 )
+from ..casilla_id import CasillaId, validated_casilla_id
 from ..json_contract import (
     ENVELOPE_SCHEMA_VERSION,
     ActionConditionEvidence,

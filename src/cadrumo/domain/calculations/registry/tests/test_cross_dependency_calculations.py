@@ -45,7 +45,8 @@ from functools import cache
 import pdfplumber
 import pytest
 
-from .....core import CasillaId, Period, validated_casilla_id, validated_casilla_id_map
+from .....core import Period
+from .....core.casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
 from .....core.aggregation import RetencionClave
 from .....tests import FIXTURES_DIR
 from ....period import calculation_filing_date

@@ -56,7 +56,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core import CasillaId, Period
+from ....core import Period
+from ....core.casilla_id import CasillaId
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import BindingId

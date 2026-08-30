@@ -16,11 +16,11 @@ from pydantic import BaseModel, Field, model_validator
 
 from ....core import (
     STRICT_FROZEN_CONFIG,
-    CasillaId,
     FilingPeriodCode,
     RegistryAuthorityGrade,
     RegistrySelectorPeriodCode,
 )
+from ....core.casilla_id import CasillaId
 from ....core.aggregation import BindingSourceKind, RelationAggregationOp
 from ._relation_aggregation import relation_aggregation_op
 from ._validate import RegistryValidator

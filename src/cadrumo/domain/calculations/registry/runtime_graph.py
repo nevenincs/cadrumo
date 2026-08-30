@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from graphlib import TopologicalSorter
 
-from ....core import CasillaId
+from ....core.casilla_id import CasillaId
 from .ids import BindingId, ParameterId, RelationId
 from .schema import ModeloRevision
 from .schema_formula import FormulaExpression

@@ -8,7 +8,7 @@ from difflib import SequenceMatcher
 from functools import lru_cache
 from typing import NamedTuple, Protocol
 
-from ....core import CasillaId
+from ....core.casilla_id import CasillaId
 from ._validate_semantic_role_axes import (
     semantic_roles_are_axis_siblings,
     semantic_roles_are_modelo_prefix_siblings,

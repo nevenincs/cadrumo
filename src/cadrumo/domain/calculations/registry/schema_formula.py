@@ -10,7 +10,7 @@ from typing import Literal
 
 from pydantic import ConfigDict, Field, TypeAdapter, ValidationError, model_validator
 
-from ....core import CasillaId
+from ....core.casilla_id import CasillaId
 from ._formula_operator_contracts import require_formula_operator_arity
 from .errors import RegistryValidationError
 from .ids import BindingId, ParameterId, RelationId

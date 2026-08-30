@@ -24,7 +24,8 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import CasillaId, Period, validated_casilla_id
+from .....core import Period
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from .....domain.filing.amendment import CasillaChange, ModeloComplementaria
 from .....domain.filing.schema import ModeloDraft, ModeloValue, ModeloValueKind, compute_modelo_draft_id, registry_schema_version

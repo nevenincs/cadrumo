@@ -8,7 +8,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from .....core import CasillaId, Period, validated_casilla_id
+from .....core import Period
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from .._records import (
     SheetCellAddress,
     SheetEvidenceContributorRow,

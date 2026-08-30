@@ -23,7 +23,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Protocol, runtime_checkable
 
-from ...core import CasillaId, validated_casilla_id
+from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.modelos.errors import ModeloError

@@ -21,7 +21,8 @@ from typing import TypedDict, get_type_hints
 import pytest
 from pydantic import ValidationError
 
-from .....core import CasillaId, Period, validated_casilla_id
+from .....core import Period
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.identity import SubjectTaxId
 from ....filing.schema import ModeloBindingValue, ModeloDraft, ModeloValidationFinding, ModeloValue, ModeloValueKind, registry_schema_version
 from ....modelos.calculation_revision import (

@@ -10,13 +10,8 @@ from typing import Literal
 import pytest
 from pydantic import ValidationError as ValidationError
 
-from .....core import (
-    CasillaId,
-    RegistryAuthorityGrade,
-    TaxDomain,
-    freeze_toml,
-    validated_casilla_id,
-)
+from .....core import RegistryAuthorityGrade, TaxDomain, freeze_toml
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.classification import SensitivityClass
 from .....core.config import Settings
 from .._snapshot_internals import _build_validated_snapshot as build_snapshot_at_grade

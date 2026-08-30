@@ -38,7 +38,8 @@ needs to express a second, independent domain fact.
 
 from __future__ import annotations
 
-from ...core import CasillaId, Modelo, validated_casilla_id
+from ...core import Modelo
+from ...core.casilla_id import CasillaId, validated_casilla_id
 from ..calculations.registry.ids import BindingId
 from ..calculations.registry.validate_cross_domain_snapshot import register_cross_domain_snapshot_check
 

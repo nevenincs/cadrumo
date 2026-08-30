@@ -11,7 +11,8 @@ from io import BytesIO
 import pytest
 from openpyxl import load_workbook
 
-from .....core import CasillaId, Period, validated_casilla_id
+from .....core import Period
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from .._records import (
     SheetCellAddress,
     SheetEvidenceContributorRow,

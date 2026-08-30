@@ -7,7 +7,7 @@ from datetime import UTC, date, datetime
 import pytest
 from pydantic import AnyHttpUrl, ValidationError
 
-from ....core import CasillaId, validated_casilla_id
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....tests.aeat_literal_fixtures import manual_practicos_url
 from ..errors import ManualValidationError
 from ..rule_id import generate_rule_id

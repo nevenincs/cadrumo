@@ -50,7 +50,8 @@ from .....application.repair_integrity import (
 from .....application.workflow.persistence import WorkflowRunRepository, WorkflowStateRepository
 from .....application.workflow.run_models import WorkflowResult, WorkflowStage, WorkflowStep
 from .....application.workflow.state_models import DeclaracionPointer, WorkflowState
-from .....core import CasillaId, IvaCompensationStateProvenance, validated_casilla_id
+from .....core import IvaCompensationStateProvenance
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core import Period as _Period
 from .....core.config import override_settings
 from .....domain.attachments.errors import AttachmentNotFoundError

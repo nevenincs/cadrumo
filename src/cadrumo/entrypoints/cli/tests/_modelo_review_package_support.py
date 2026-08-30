@@ -22,7 +22,8 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....application.modelo.work_addressing import law_selected_revision_for_work_target
 from ....application.workflow.persistence import workflow_state_repository
-from ....core import CasillaId, Period
+from ....core import Period
+from ....core.casilla_id import CasillaId
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.repository import upsert_work_unit

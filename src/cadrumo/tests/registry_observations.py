@@ -9,7 +9,8 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from decimal import Decimal
 
-from ..core import CasillaId, RegistryAuthorityGrade
+from ..core import RegistryAuthorityGrade
+from ..core.casilla_id import CasillaId
 from ..core.resources import bundled_path
 from ..domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ..domain.calculations.registry.snapshot import build_snapshot

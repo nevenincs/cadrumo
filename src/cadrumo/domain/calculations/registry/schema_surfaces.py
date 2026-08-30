@@ -8,11 +8,8 @@ from typing import Literal
 
 from pydantic import Field, field_validator, model_validator
 
-from ....core import (
-    CasillaId,
-    FilingPeriodCode,
-    RegistrySelectorPeriodCode,
-)
+from ....core import FilingPeriodCode, RegistrySelectorPeriodCode
+from ....core.casilla_id import CasillaId
 from ....core.aggregation import RelationAggregation
 from ....core.identity import AeatBoxNumber, ContinuidadId
 from ._schema_export_exemption import ExportExemptionReasonValue

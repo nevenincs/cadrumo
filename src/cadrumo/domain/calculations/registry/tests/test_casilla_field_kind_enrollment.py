@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core import CasillaId, validated_casilla_id
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.aggregation import BindingSourceKind
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from ...export_field_kind import CasillaFieldKind

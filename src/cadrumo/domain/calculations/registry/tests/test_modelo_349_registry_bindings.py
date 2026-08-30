@@ -8,7 +8,7 @@ from typing import Any, cast
 
 import pytest
 
-from .....core import CasillaId
+from .....core.casilla_id import CasillaId
 from .....core.aggregation import BindingSourceKind, IntracomOperationType
 from ..binding_selector_utils import selector_as_dict
 from ..bindings import resolve_available_bound_inputs_by_casilla_id

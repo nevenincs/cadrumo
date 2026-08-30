@@ -39,7 +39,8 @@ from pydantic import BaseModel, Field, TypeAdapter, field_validator, model_valid
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.storage import M145_COMMUNICATION_RECORD_NAMESPACE
-from ...core import STRICT_FROZEN_CONFIG, CasillaId, ExportLayoutFormat, Hex64Str, validated_casilla_id_map
+from ...core import STRICT_FROZEN_CONFIG, ExportLayoutFormat, Hex64Str
+from ...core.casilla_id import CasillaId, validated_casilla_id_map
 from ...core.decimal import coerce_decimal_strict
 from ...core.errors.error_codes import resolve_error_message
 from ...core.hashing import content_hash_hex, sha256_hex

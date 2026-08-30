@@ -39,7 +39,8 @@ from ...application.modelo.work_review import (
     ModeloWorkProgress,
     ModeloWorkReview,
 )
-from ...core import CasillaId, PaymentElection, Period, RefundElection, ResultDisposition
+from ...core import PaymentElection, Period, RefundElection, ResultDisposition
+from ...core.casilla_id import CasillaId
 from ...core.aggregation import BindingSourceKind
 from ...core.filing_year import FilingYear
 from ...core.identity import (

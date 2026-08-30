@@ -68,7 +68,8 @@ from typing import Any
 
 import pytest
 
-from .....core import CasillaId, IvaDeductionFactKind, validated_casilla_id
+from .....core import IvaDeductionFactKind
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from ....iva.flow import IvaFlowDirection
 from ....iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from ..authority import ValidatedRegistryAuthority, bundled_authority

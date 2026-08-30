@@ -32,7 +32,8 @@ from typing import TYPE_CHECKING, Literal, Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field, TypeAdapter, ValidationError, field_validator
 
-from ....core import STRICT_FROZEN_CONFIG, CasillaId
+from ....core import STRICT_FROZEN_CONFIG
+from ....core.casilla_id import CasillaId
 from ....core.logging import get_logger
 from .errors import RegistryValidationError
 from .external_grounding import BUNDLED_ORACLE_EVIDENCE_LOCATOR_MAX_LENGTH

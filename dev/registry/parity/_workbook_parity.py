@@ -33,7 +33,7 @@ if TYPE_CHECKING:
     from openpyxl.cell.cell import Cell, MergedCell
     from openpyxl.worksheet.worksheet import Worksheet
 
-from cadrumo.core import CasillaId
+from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.decimal import coerce_decimal
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.external_constants import XLS_EXTENSION as _XLS_EXTENSION

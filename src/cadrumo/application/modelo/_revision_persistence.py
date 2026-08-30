@@ -44,14 +44,8 @@ from typing import TYPE_CHECKING
 
 from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from ...core import (
-    CasillaId,
-    M210GrossIncomeSourceMode,
-    Modelo,
-    ProrrataRegisterRegime,
-    ResultDisposition,
-    validated_casilla_id,
-)
+from ...core import M210GrossIncomeSourceMode, Modelo, ProrrataRegisterRegime, ResultDisposition
+from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.hashing import sha256_hex
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import bucket_event_history_write

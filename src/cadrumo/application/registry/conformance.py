@@ -108,7 +108,7 @@ from ...core import NON_REGISTRY_MODELOS as _NON_REGISTRY_MODELOS
 from ...core import REVIEWED_REVISION_REVIEW_STATUSES as _REVIEWED_REVISION_REVIEW_STATUSES
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
 from ...core import ActionEvidenceProvenance, NoRecoveryOutcome
-from ...core import CasillaId as _CasillaId
+from ...core.casilla_id import CasillaId as _CasillaId
 from ...core import ExportLayoutFormat as _ExportLayoutFormat
 from ...core import Modelo as _Modelo
 from ...core import RevisionReviewStatus as _RevisionReviewStatus

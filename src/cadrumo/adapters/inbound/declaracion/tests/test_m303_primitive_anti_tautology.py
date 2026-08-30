@@ -37,7 +37,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core import validated_casilla_id
+from .....core.casilla_id import validated_casilla_id
 from ._verification_chain_support import (
     _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
     _M303_CUOTA_DEVENGADA_TOTAL_CASILLA,

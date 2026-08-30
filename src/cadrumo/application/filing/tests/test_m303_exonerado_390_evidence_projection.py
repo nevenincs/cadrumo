@@ -11,8 +11,8 @@ from ....core import (
     M303Exonerado390ActivityProjectionRef,
     M303Exonerado390OperacionesTercerosProjectionRef,
     Period,
-    validated_casilla_id,
 )
+from ....core.casilla_id import validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.calculations.registry.schema import RegistrySnapshot

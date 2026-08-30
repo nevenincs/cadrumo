@@ -44,7 +44,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 
-from ...core import CasillaId, Modelo, Period, validated_casilla_id
+from ...core import Modelo, Period
+from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.decimal import normalize_decimal_separators
 from ...core.identity import CalculationRevisionId
 from ...core.time import now as _utc_now

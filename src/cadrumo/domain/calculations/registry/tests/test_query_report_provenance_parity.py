@@ -17,7 +17,7 @@ from collections.abc import Mapping
 import pytest
 from pydantic import ValidationError
 
-from .....core import CasillaId, validated_casilla_id
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..query_reports import CasillaGroundingReport, ModeloCasillaDetailReport, ModeloCasillaRow
 from ..schema_input_kind import InputKind
 

@@ -14,7 +14,8 @@ from pydantic import AnyHttpUrl, TypeAdapter
 
 from ....adapters.inbound.pdf import source_pdf_reference_path
 from ....application.user_profile.censo_sync import CENSO_SOURCE_TAG
-from ....core import CasillaId, Period, validated_casilla_id
+from ....core import Period
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.justificante import Justificante
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind, ModeloRecord, ModeloRecordStatus, derive_filing_record_id

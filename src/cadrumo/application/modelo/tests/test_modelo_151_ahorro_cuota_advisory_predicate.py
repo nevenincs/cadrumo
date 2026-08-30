@@ -34,7 +34,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import validated_casilla_id
+from ....core.casilla_id import validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.deadlines.models import EntityType, IVARegime, TaxpayerProfile
 from .._verification_predicates import _evaluate_predicate_expression

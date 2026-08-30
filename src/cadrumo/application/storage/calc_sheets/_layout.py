@@ -43,7 +43,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ....core import CasillaId
+from ....core.casilla_id import CasillaId
 from ....domain.calculations.registry.ids import (
     BindingId,
     ParameterId,

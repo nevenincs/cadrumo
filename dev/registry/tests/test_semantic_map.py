@@ -9,8 +9,8 @@ from cadrumo.core import (
     FilingProducerKey,
     M303ProrrataActivityProjectionField,
     M303ProrrataActivityProjectionRef,
-    validated_casilla_id,
 )
+from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.export_semantics import ExportComputedKey, ExportDraftAttribute
 

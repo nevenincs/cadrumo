@@ -31,7 +31,8 @@ from ...application.modelo._projection import (
     compare_modelo_years,
     project_modelo_100_from_m130,
 )
-from ...core import CasillaId, Modelo
+from ...core import Modelo
+from ...core.casilla_id import CasillaId
 from ...core.output_rendering import jsonable_output_payload
 from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 from ._common import emit_envelope

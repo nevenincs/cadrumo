@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import CasillaId, Period, validated_casilla_id
+from ....core import Period
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.ids import SourceRefId
 from ...calculations import (
     CrossPeriodCleanStateVerdict,

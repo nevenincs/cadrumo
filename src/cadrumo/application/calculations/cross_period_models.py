@@ -9,7 +9,8 @@ from typing import Protocol, Self
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG, CasillaId, OperatorActionAxis, Period
+from ...core import STRICT_FROZEN_CONFIG, OperatorActionAxis, Period
+from ...core.casilla_id import CasillaId
 from ...core.filing_year import FilingYear
 from ...core.identity import BucketId, CalculationRevisionId, FilingRecordId
 from ...domain.calculations.registry.bindings import RegistryModeloObservation

@@ -27,7 +27,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
-from ...core import CasillaId, Period, RegistryAuthorityGrade
+from ...core import Period, RegistryAuthorityGrade
+from ...core.casilla_id import CasillaId
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.casilla_membership import casillas_by_id

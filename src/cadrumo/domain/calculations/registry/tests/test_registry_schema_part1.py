@@ -6,7 +6,8 @@ from collections.abc import Callable
 
 import pytest
 
-from .....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
+from .....core import RegistryAuthorityGrade
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .....core.identity import SPANISH_TAX_ID_WIDTH, IdentityError, validate_spanish_tax_id
 from ...export_field_kind import CasillaFieldKind

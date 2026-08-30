@@ -21,7 +21,7 @@ import pytest
 from openpyxl import Workbook, load_workbook
 from pydantic import ValidationError
 
-from cadrumo.core import CasillaId, validated_casilla_id
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot

@@ -54,10 +54,10 @@ from ...adapters.persistence.profile.transactions import TransactionCatalogueRep
 from ...core import (
     M210_TIPO_RENTA_CODE_PROJECTION,
     ActionEvidenceProvenance,
-    CasillaId,
     M210GrossIncomeSourceMode,
     Modelo,
 )
+from ...core.casilla_id import CasillaId
 from ...core.aggregation import BindingSourceKind
 from ...core.identity import CalculationRevisionId
 from ...core.time import now as _utc_now

@@ -20,7 +20,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 
-from ....core import CasillaId
+from ....core.casilla_id import CasillaId
 from ....core.decimal import AEAT_THOUSANDS_SEPARATORS, normalize_decimal_separators
 
 # The thousands-separator class is NOT declared here: it is

@@ -12,7 +12,8 @@ from xml.etree.ElementTree import Element
 
 from defusedxml import ElementTree
 
-from ....core import CasillaId, ExportLayoutFormat, validated_casilla_id
+from ....core import ExportLayoutFormat
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.decimal import normalize_decimal_separators
 from ....core.external_constants import LATIN_1_ENCODING as _LATIN_1_ENCODING
 from ....core.paths import path_stat_fingerprint

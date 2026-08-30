@@ -25,7 +25,6 @@ from pydantic import (
 from ....core import (
     M210_TIPO_RENTA_CODE_PROJECTION,
     UNDECLARED_REGISTRY_AUTHORITY_GRADE,
-    CasillaId,
     FilingProjectionRef,
     Modelo,
     Period,
@@ -38,6 +37,7 @@ from ....core import (
     filing_projection_ref_casilla_id,
     registry_period_kind,
 )
+from ....core.casilla_id import CasillaId
 from ....core.aggregation import BindingAggregation, BindingSourceKind, BindingTypedEnumKind
 from ....core.classification import SensitivityClass
 from ._schema_governance import (

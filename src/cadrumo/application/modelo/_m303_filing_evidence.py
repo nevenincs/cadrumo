@@ -5,7 +5,8 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from decimal import Decimal
 
-from ...core import ActionEvidenceProvenance, CasillaId, Modelo
+from ...core import ActionEvidenceProvenance, Modelo
+from ...core.casilla_id import CasillaId
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot

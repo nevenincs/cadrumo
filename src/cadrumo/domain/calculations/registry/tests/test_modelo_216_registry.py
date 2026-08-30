@@ -32,7 +32,8 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import CasillaId, PeriodKind, registry_period_kind, validated_casilla_id
+from .....core import PeriodKind, registry_period_kind
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
 from .._validate import RegistryValidator
 from ..formula_runtime import calculate_registry_snapshot

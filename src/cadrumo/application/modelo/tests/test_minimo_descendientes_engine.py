@@ -37,7 +37,7 @@ from typing import Any
 
 import pytest
 
-from ....core import validated_casilla_id
+from ....core.casilla_id import validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.formula_runtime_ops import resolve_parameter

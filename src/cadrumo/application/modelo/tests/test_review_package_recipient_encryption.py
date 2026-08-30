@@ -52,7 +52,8 @@ from ....adapters.persistence.storage import (
 )
 from ....adapters.persistence.storage.sql import SecureObjectRow
 from ....adapters.persistence.storage.sql.session import session_scope
-from ....core import Period, validated_casilla_id
+from ....core import Period
+from ....core.casilla_id import validated_casilla_id
 from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id

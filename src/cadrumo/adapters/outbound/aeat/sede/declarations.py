@@ -32,7 +32,8 @@ from urllib.parse import urlsplit
 
 from pydantic import AnyHttpUrl
 
-from .....core import CasillaId, ObservedHeaderFact, Period
+from .....core import ObservedHeaderFact, Period
+from .....core.casilla_id import CasillaId
 from .....core.config import Settings
 from .....core.external_constants import JSON_MIME_TYPE as _JSON_MIME_TYPE
 from .....core.hashing import sha256_hex

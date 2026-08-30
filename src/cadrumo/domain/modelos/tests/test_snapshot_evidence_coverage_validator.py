@@ -14,7 +14,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import CasillaId, validated_casilla_id
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ..calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,

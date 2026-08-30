@@ -16,7 +16,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-from ....core import STRICT_FROZEN_CONFIG, CasillaId
+from ....core import STRICT_FROZEN_CONFIG
+from ....core.casilla_id import CasillaId
 from .errors import RegistryValidationError
 
 __all__ = [

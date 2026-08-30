@@ -24,7 +24,8 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from ....core import CasillaId, Modelo, ProrrataProvisionalProvenance, ProrrataRegisterRegime, validated_casilla_id
+from ....core import Modelo, ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.prorrata_register import ProrrataRegisterEntry
 from ....tests.registry_observations import registry_grounded_modelo_observation

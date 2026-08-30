@@ -29,14 +29,8 @@ from typing import Any, cast, override
 import pytest
 
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from ....core import (
-    CasillaId,
-    Modelo,
-    Period,
-    ProrrataProvisionalProvenance,
-    ProrrataRegisterRegime,
-    validated_casilla_id,
-)
+from ....core import Modelo, Period, ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.aggregation import BindingSourceKind
 from ....core.directory_scan import (
     scan_directory,

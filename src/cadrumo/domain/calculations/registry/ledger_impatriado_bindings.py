@@ -28,7 +28,8 @@ from typing import Literal, Protocol
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
-from ....core import CasillaId, Modelo
+from ....core import Modelo
+from ....core.casilla_id import CasillaId
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ._ledger_binding_resolution import resolve_ledger_family_binding_values, unsupported_ledger_family_observations
 from .binding_aggregation import binding_aggregation_op

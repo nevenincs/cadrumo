@@ -16,7 +16,7 @@ from typing import Literal, TypedDict
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
-from .....core import CasillaId, validated_casilla_id
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from ...export_field_kind import CasillaFieldKind
 from ..ids import LegalRefId, SourceRefId
 from ..schema import ConstructDefinition, FormulaDefinition

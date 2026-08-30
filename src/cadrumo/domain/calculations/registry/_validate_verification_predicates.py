@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ....core import CasillaId
+from ....core.casilla_id import CasillaId
 from ....core.decimal import try_parse_canonical_decimal
 from .schema_scalars import registry_scalar_value_type
 from .schema_surfaces import CasillaDefinition

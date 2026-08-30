@@ -52,7 +52,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 
-from ...core import CasillaId, Modelo
+from ...core import Modelo
+from ...core.casilla_id import CasillaId
 from ...core import Period as _Period
 from ...core.errors.hierarchy import CoreError
 from ...domain.calculations.registry.formula_runtime import calculate_registry_snapshot

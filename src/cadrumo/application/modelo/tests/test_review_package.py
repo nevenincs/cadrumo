@@ -21,7 +21,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Period, validated_casilla_id
+from ....core import Period
+from ....core.casilla_id import validated_casilla_id
 from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.ledger_filing_snapshot import LedgerFilingEvidence

@@ -46,7 +46,8 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field
 
-from ...core import STRICT_FROZEN_CONFIG, CasillaId
+from ...core import STRICT_FROZEN_CONFIG
+from ...core.casilla_id import CasillaId
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.renta import (
     MaritimeWorkerFacts,

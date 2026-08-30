@@ -70,7 +70,7 @@ from ._reconcile_casilla import detect_casilla_divergences
 from ._reconcile_population import resolve_casilla_population_scope
 
 if TYPE_CHECKING:
-    from ...core import CasillaId
+    from ...core.casilla_id import CasillaId
     from ...domain.calculations.registry.schema import RegistrySnapshot
     from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
     from ...domain.modelos.work_unit import WorkUnit

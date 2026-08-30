@@ -28,7 +28,7 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict
 
 from ...core import ActionEvidenceProvenance, NoRecoveryOutcome
-from ...core import CasillaId as _CasillaId
+from ...core.casilla_id import CasillaId as _CasillaId
 from ...core.resources import bundled_path as _bundled_path
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority as _ValidatedRegistryAuthority
 from ...domain.calculations.registry.errors import AmbiguousRevisionSelectionError as _AmbiguousRevisionSelectionError

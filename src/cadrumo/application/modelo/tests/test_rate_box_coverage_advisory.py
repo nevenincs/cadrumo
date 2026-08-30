@@ -26,7 +26,8 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import CasillaId, Modelo, validated_casilla_id
+from ....core import Modelo
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector

@@ -18,7 +18,8 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 if TYPE_CHECKING:  # pragma: no cover — type-only import
-    from ...core import CasillaId, Period
+    from ...core import Period
+    from ...core.casilla_id import CasillaId
     from ...core.identity import SubjectTaxId
     from ..calculations.registry.ids import BindingId, FormulaId, LegalRefId, RelationId, SourceRefId
     from ..calculations.registry.schema_surfaces import CasillaConstraints

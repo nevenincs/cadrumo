@@ -21,8 +21,8 @@ from pydantic import BaseModel, ConfigDict
 
 from ...core import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.aggregation import BindingSourceKind as _BindingSourceKind
-from ...core import CasillaId as _CasillaId
-from ...core import validated_casilla_id as _validated_casilla_id
+from ...core.casilla_id import CasillaId as _CasillaId
+from ...core.casilla_id import validated_casilla_id as _validated_casilla_id
 from ...core.resources import bundled_path as _bundled_path
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority as _ValidatedRegistryAuthority
 from ...domain.calculations.registry.bindings import RegistryModeloObservation as _RegistryModeloObservation

@@ -34,7 +34,8 @@ from .....application.storage.calc_sheets import (
     SheetProtectedRange,
     TabName,
 )
-from .....core import CasillaId, Period, validated_casilla_id
+from .....core import Period
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....domain.calculations.registry.ids import LegalRefId
 from ..calc_sheets_apply import (
     _build_structural_cleanup_requests,

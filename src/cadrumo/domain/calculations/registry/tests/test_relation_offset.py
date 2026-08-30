@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from .....core import CasillaId, validated_casilla_id
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..errors import RegistryValidationError
 from ..relations import _derive_offset_source_anchor, derive_offset_source_period
 from ..schema_surfaces import RelationDefinition

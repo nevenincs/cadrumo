@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core import validated_casilla_id
+from .....core.casilla_id import validated_casilla_id
 from ._parser_boundary_support import _MODELO_369_SYNTHETIC_FIXTURE, CasillaId, _expected_period, parse_declaracion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]

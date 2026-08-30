@@ -89,7 +89,8 @@ from ....application.filing import (
     build_runtime_schema_provider,
 )
 from ....application.filing._draft_construction import _filing_period_date
-from ....core import CasillaId, Period, validated_casilla_id
+from ....core import Period
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.resources import bundled_path
 from ....domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 from ....domain.calculations.registry.ids import BindingId

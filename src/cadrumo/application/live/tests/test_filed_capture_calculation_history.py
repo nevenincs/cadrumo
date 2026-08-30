@@ -21,7 +21,8 @@ from ....adapters.outbound.aeat.sede.schema import (
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from ....core import CasillaValueKind, IvaCompensationStateProvenance, Period, validated_casilla_id
+from ....core import CasillaValueKind, IvaCompensationStateProvenance, Period
+from ....core.casilla_id import validated_casilla_id
 from ....core.config import Settings
 from ....core.json_contract import NoticeSeverity
 from ....domain.buckets.event import BucketEventType

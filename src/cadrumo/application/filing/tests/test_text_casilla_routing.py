@@ -6,11 +6,8 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import (
-    CasillaId,
-    Period,
-    validated_casilla_id,
-)
+from ....core import Period
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.filing.errors import ModeloBuilderError
 from ....domain.filing.schema import ModeloValueKind
 from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision

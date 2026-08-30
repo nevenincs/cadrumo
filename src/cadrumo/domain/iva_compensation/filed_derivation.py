@@ -28,7 +28,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Literal
 
-from ...core import CasillaId, validated_casilla_id
+from ...core.casilla_id import CasillaId, validated_casilla_id
 from .carry_forward import derive_303_compensation_available
 
 _ZERO = Decimal("0")

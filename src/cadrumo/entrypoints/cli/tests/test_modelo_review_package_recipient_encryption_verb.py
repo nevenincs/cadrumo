@@ -55,7 +55,7 @@ from ....application.modelo._review_package_recipient_encryption import (
     recipient_encryption_public_key,
 )
 from ....application.modelo._review_package_recipient_registry import RecipientFingerprintRegistryRepository
-from ....core import CasillaId, validated_casilla_id
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload

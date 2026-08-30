@@ -54,14 +54,8 @@ from ....adapters.persistence.profile.modelos_verification_reports import Verifi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import (
-    CasillaId,
-    IvaDeductionEvidenceAuthority,
-    IvaDeductionFactKind,
-    Period,
-    ResultDisposition,
-    validated_casilla_id,
-)
+from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind, Period, ResultDisposition
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.errors.hierarchy import CadrumoError
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.deadlines.models import EntityType, IVARegime, LegalEntityForm, TaxpayerProfile

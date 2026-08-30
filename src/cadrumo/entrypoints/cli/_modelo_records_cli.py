@@ -40,7 +40,8 @@ from ...application.modelo.external_import_actions import (
     import_external_filing_evidence,
     import_external_filing_source,
 )
-from ...core import CasillaId, Period, PeriodError, validated_casilla_id
+from ...core import Period, PeriodError
+from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.i18n import tr
 from ...domain.modelos.codes import ModeloCode

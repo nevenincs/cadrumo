@@ -33,10 +33,10 @@ from ...core import (
     OBJECT_TUPLE_ADAPTER,
     STR_KEYED_MAPPING_ADAPTER,
     STRICT_FROZEN_HIDDEN_INPUT_CONFIG,
-    CasillaId,
     M210GrossIncomeSourceMode,
     Period,
 )
+from ...core.casilla_id import CasillaId
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.prose_elision import ElidedProse
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN

@@ -28,7 +28,8 @@ from collections.abc import Mapping
 from datetime import datetime
 from decimal import Decimal
 
-from ...core import CasillaId, Modelo
+from ...core import Modelo
+from ...core.casilla_id import CasillaId
 from ...domain.calculations.registry.ids import (
     LegalRefId,
     SourceRefId,

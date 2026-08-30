@@ -14,7 +14,7 @@ from collections import defaultdict
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 
-from ....core import CasillaId
+from ....core.casilla_id import CasillaId
 from ....core.i18n import MissingTranslationError
 from .ids import RevisionId
 from .schema import ModeloDefinition, ModeloRevision

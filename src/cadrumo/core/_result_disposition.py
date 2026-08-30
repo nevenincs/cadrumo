@@ -45,7 +45,7 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Final
 
-from ._casilla_id import CasillaId, validated_casilla_id
+from .casilla_id import CasillaId, validated_casilla_id
 from ._modelo import Modelo
 from .errors.hierarchy import CoreValidationError
 

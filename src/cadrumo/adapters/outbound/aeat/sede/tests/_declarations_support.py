@@ -15,7 +15,8 @@ from pydantic import AnyHttpUrl
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
-from ......core import CasillaId, CasillaValueKind, Period, validated_casilla_id, validated_casilla_id_map
+from ......core import CasillaValueKind, Period
+from ......core.casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
 from ......core.config import Settings
 from ......domain.calculations.registry.authority import bundled_authority
 from ......domain.calculations.registry.errors import RegistryValidationError

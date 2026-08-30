@@ -37,7 +37,7 @@ from typing import Literal, get_args
 
 import pytest
 
-from .....core import validated_casilla_id
+from .....core.casilla_id import validated_casilla_id
 from .....domain.calculations.registry.schema_extraction import ExtractionTargetDefinition
 from .._parser import _classify_target
 

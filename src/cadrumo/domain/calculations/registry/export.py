@@ -11,12 +11,12 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 
 from ....core import (
-    CasillaId,
     EstadoCasillaOficial,
     ExportExemptionReason,
     ExportLayoutFormat,
     filing_projection_ref_casilla_id,
 )
+from ....core.casilla_id import CasillaId
 from ....core.aggregation import BindingAggregationOp
 from ..export_field_kind import CasillaFieldKind
 from .binding_aggregation import binding_aggregation_op

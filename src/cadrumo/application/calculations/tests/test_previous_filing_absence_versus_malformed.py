@@ -23,7 +23,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import validated_casilla_id
+from ....core.casilla_id import validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings_previous_filing import resolve_previous_filing_binding_values
 from ....domain.calculations.registry.errors import RegistryValidationError

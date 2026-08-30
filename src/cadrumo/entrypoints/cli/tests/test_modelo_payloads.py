@@ -19,7 +19,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from ....core import CasillaId, validated_casilla_id
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.calculations.registry.ids import RelationId

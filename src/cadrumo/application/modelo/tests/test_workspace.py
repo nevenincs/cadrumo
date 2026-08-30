@@ -1224,7 +1224,7 @@ def _real_calculation_revision_with_row_materialization():
     """
     from decimal import Decimal
 
-    from ....core import validated_casilla_id
+    from ....core.casilla_id import validated_casilla_id
     from ....core.aggregation import BindingSourceKind
     from ....domain.calculations import DirectRowMaterializationProvenance, RowSourceIdentity
     from ....domain.calculations.registry.bindings import CasillaObservation
@@ -1336,7 +1336,7 @@ def test_graded_snapshot_materialization_facet_refuses_a_row_value_with_no_prove
     """
     from decimal import Decimal
 
-    from ....core import validated_casilla_id
+    from ....core.casilla_id import validated_casilla_id
     from ....domain.modelos.work_unit import derive_work_unit_id
     from ....domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
     from ..workspace import ModeloWorkspaceMaterializationProvenanceMissingError
@@ -1464,7 +1464,7 @@ def test_graded_snapshot_readiness_preserves_every_axis_and_the_ledger_issue_sub
 
 def test_graded_snapshot_provenance_facet_fans_out_by_linked_casilla_and_marks_unlinked_refs() -> None:
     """A source ref fans out to one record per linked casilla; an unlinked ref yields one subject=None record."""
-    from ....core import validated_casilla_id
+    from ....core.casilla_id import validated_casilla_id
     from ....core.aggregation import CalculationSourceLineageRole
     from ....core.aggregation import BindingSourceKind
     from ....domain.modelos.calculation_revision import CalculationSourceRef
@@ -1588,7 +1588,7 @@ def test_materialization_facet_pages_a_real_revision_that_exceeds_the_page_size(
     """
     from decimal import Decimal
 
-    from ....core import validated_casilla_id
+    from ....core.casilla_id import validated_casilla_id
 
     bucket_id, repository = workspace_repos
     _seed_work_unit(repository, bucket_id=bucket_id)
@@ -1633,7 +1633,7 @@ def test_provenance_facet_pages_a_real_revision_that_exceeds_the_page_size(
     workspace_repos: tuple[str, WorkUnitCatalogueRepository],
 ) -> None:
     """The provenance facet carried the same defect and is proven on the same real set."""
-    from ....core import validated_casilla_id
+    from ....core.casilla_id import validated_casilla_id
     from ....core.aggregation import CalculationSourceLineageRole
     from ....core.aggregation import BindingSourceKind
     from ....domain.modelos.calculation_revision import CalculationSourceRef
@@ -1698,7 +1698,7 @@ def test_an_overflowing_facet_built_without_a_cursor_still_refuses(
 
     from pydantic import ValidationError
 
-    from ....core import validated_casilla_id
+    from ....core.casilla_id import validated_casilla_id
 
     bucket_id, repository = workspace_repos
     _seed_work_unit(repository, bucket_id=bucket_id)

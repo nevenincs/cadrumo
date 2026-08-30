@@ -26,7 +26,8 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core import AuthProviderKind, CasillaId, Period, validated_casilla_id
+from ....core import AuthProviderKind, Period
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.config import Settings
 from ....domain.buckets.event import BucketEventType
 from ....domain.calculations.registry.authority import bundled_authority

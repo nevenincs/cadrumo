@@ -37,7 +37,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ....core import CasillaId, Period, RegistrySelectorPeriodCode
+from ....core import Period, RegistrySelectorPeriodCode
+from ....core.casilla_id import CasillaId
 from ....core.aggregation import BindingSourceKind
 from ....core.filing_year import FilingYear
 from ....core.identity import AeatBoxNumber

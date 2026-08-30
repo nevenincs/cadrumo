@@ -21,7 +21,7 @@ from typing import cast
 import pytest
 from pydantic import ValidationError
 
-from .....core import CasillaId, validated_casilla_id
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from ..bindings import CasillaObservation, RegistryModeloObservation
 from ..bindings_previous_filing import (

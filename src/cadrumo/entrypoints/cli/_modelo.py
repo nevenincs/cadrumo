@@ -35,7 +35,8 @@ from ...application.modelo.work_addressing import (
     ModeloWorkUnitNotFoundError,
     ModeloWorkVisibleTargetAmbiguousError,
 )
-from ...core import CasillaId, Modelo, validated_casilla_id
+from ...core import Modelo
+from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .....core import validated_casilla_id
+from .....core.casilla_id import validated_casilla_id
 from ._parser_boundary_support import CasillaId, Decimal
 
 _M115_EXPECTED_VALUES: dict[CasillaId, Decimal] = {

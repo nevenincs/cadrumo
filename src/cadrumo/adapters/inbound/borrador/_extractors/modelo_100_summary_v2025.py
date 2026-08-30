@@ -28,7 +28,8 @@ from decimal import Decimal
 from pathlib import Path
 from typing import ClassVar
 
-from .....core import CasillaId, Modelo, normalise_aeat_csv, validated_casilla_id
+from .....core import Modelo, normalise_aeat_csv
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.time import now
 from ...pdf import (
     SPANISH_AMOUNT_GROUP,

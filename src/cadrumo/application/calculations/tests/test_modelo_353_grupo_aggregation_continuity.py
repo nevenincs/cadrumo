@@ -50,7 +50,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core import CasillaId, IvaDeductionEvidenceAuthority, IvaDeductionFactKind, validated_casilla_id
+from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import (
     RegistryModeloObservation,

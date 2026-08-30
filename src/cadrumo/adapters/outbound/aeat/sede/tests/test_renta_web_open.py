@@ -7,7 +7,7 @@ from urllib.parse import urlsplit
 
 import pytest
 
-from ......core import CasillaId, validated_casilla_id
+from ......core.casilla_id import CasillaId, validated_casilla_id
 from ......core.config import Settings
 from ......domain.calculations.registry.renta_web_open_oracle import (
     RentaWebOpenLivePayload,

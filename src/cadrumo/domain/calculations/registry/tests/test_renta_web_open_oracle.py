@@ -9,7 +9,7 @@ from urllib.parse import urlparse
 import pytest
 from pydantic import ValidationError
 
-from .....core import CasillaId, validated_casilla_id
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.config import Settings
 from .....tests.aeat_literal_fixtures import aeat_host
 from ..errors import RegistryValidationError

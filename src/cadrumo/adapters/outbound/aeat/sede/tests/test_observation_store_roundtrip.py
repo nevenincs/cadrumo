@@ -24,7 +24,8 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl
 
-from ......core import CasillaId, CasillaValueKind, Period, validated_casilla_id
+from ......core import CasillaValueKind, Period
+from ......core.casilla_id import CasillaId, validated_casilla_id
 from ......core.config import Settings
 from ......tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ..iva_compensation_wallet import IVA_COMPENSATION_WALLET_URL

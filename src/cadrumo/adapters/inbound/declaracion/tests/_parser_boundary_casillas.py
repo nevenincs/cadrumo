@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .....core import validated_casilla_id
+from .....core.casilla_id import validated_casilla_id
 from ._parser_boundary_support import CasillaId
 
 _M303_CASILLA_27: CasillaId = validated_casilla_id("27", surface="declaracion_parser_boundary.casilla")

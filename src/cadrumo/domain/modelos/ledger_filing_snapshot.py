@@ -20,7 +20,7 @@ from decimal import Decimal
 from pydantic import BaseModel, Field, field_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import CasillaId
+from ...core.casilla_id import CasillaId
 from ...core.country_code import CountryCodeAlpha2
 from ...core.hashing import sha256_hex
 from ...core.identity import SnapshotId, TransactionId

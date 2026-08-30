@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from ......core import CasillaId, Period, validated_casilla_id
+from ......core import Period
+from ......core.casilla_id import CasillaId, validated_casilla_id
 from ..declarations_observations import resolve_relation_values_from_filed_declarations
 from ._declarations_support import (
     UTC,

@@ -25,7 +25,7 @@ from datetime import date as _date
 from decimal import Decimal
 from types import MappingProxyType
 
-from ...core import CasillaId, validated_casilla_id
+from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.money import CENT
 from ...core.parsing import parse_date
 from ...domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome

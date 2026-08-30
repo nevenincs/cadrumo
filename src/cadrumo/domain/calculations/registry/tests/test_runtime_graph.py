@@ -16,7 +16,7 @@ from graphlib import CycleError
 
 import pytest
 
-from .....core import CasillaId, validated_casilla_id
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....tests.registry_tree import bundled_registry_tree
 from .._validate_formulas import validate_formula_dag
 from ..runtime_graph import (

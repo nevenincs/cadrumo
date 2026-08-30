@@ -7,7 +7,8 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import CasillaId, PaymentElection, Period, RefundElection
+from ....core import PaymentElection, Period, RefundElection
+from ....core.casilla_id import CasillaId
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.deadlines.models import IVARegime, M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile, TaxpayerProfile

@@ -33,7 +33,8 @@ from xml.etree import ElementTree
 
 from defusedxml import ElementTree as DefusedElementTree
 
-from ...core import CasillaId, FilingProducerKey, Modelo
+from ...core import FilingProducerKey, Modelo
+from ...core.casilla_id import CasillaId
 from ...core.decimal import coerce_decimal, try_parse_canonical_decimal
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8
 from ...domain.calculations.registry.export_parse import (

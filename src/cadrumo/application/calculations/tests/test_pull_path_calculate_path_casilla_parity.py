@@ -73,14 +73,13 @@ from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterR
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import (
-    CasillaId,
     IvaDeductionEvidenceAuthority,
     IvaDeductionFactKind,
     Period,
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
-    validated_casilla_id,
 )
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.aggregation import AggregationCaptureKind
 from ....core.aggregation import BindingSourceKind
 from ....domain.bienes_inversion import BienesInversionIvaRegister

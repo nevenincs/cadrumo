@@ -42,7 +42,8 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from ...core import CasillaId, Modelo
+from ...core import Modelo
+from ...core.casilla_id import CasillaId
 from ...core.errors.severity import BaseSeverity
 from ...core.i18n import Translatable as tr
 from ...core.logging import get_logger
@@ -60,7 +61,7 @@ from .schema import (
 )
 
 if TYPE_CHECKING:  # pragma: no cover - type-only import
-    from ...core import CasillaId
+    from ...core.casilla_id import CasillaId
 
 _logger = get_logger(__name__)
 _REQUIRED_MISSING_CODE = "casilla-required-missing"

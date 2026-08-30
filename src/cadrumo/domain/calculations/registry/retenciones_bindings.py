@@ -22,7 +22,7 @@ from typing import Annotated, Literal, Protocol
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict
 
-from ....core import CasillaId
+from ....core.casilla_id import CasillaId
 from ....core.aggregation import BindingSourceKind
 from ....core.aggregation import RetencionScheme
 from .binding_selector_utils import selector_against_model

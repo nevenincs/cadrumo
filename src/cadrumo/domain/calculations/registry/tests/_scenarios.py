@@ -15,7 +15,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-from .....core import STRICT_FROZEN_CONFIG, CasillaId, Period, hydrate_scenario_filing_period
+from .....core import STRICT_FROZEN_CONFIG, Period, hydrate_scenario_filing_period
+from .....core.casilla_id import CasillaId
 from .....core.aggregation import BindingSourceKind
 from ..authority import ValidatedRegistryAuthority
 from ..errors import RegistrySnapshotError, RegistryValidationError

@@ -15,13 +15,13 @@ import pytest
 from ....core import (
     ActionConditionality,
     ActionEvidenceProvenance,
-    CasillaId,
     Modelo,
     NoRecoveryOutcome,
     ObservedHeaderFact,
     Period,
     ResultDisposition,
 )
+from ....core.casilla_id import CasillaId
 from ....core.errors.hierarchy import TerminalPreconditionErrorMixin
 from ....core.resources import bundled_path
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation

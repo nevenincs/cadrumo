@@ -18,7 +18,7 @@ from decimal import Decimal
 from pydantic import BaseModel, Field
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ....core import CasillaId
+from ....core.casilla_id import CasillaId
 
 
 class ExtractedCasilla(BaseModel):

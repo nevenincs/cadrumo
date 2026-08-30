@@ -30,7 +30,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
-from ...core import CasillaId
+from ...core.casilla_id import CasillaId
 from ...domain.calculations.registry.rate_box_partition import (
     derive_rate_box_partitions,
     rate_box_coverage_shortfalls,

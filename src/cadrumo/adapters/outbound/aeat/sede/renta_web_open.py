@@ -37,7 +37,7 @@ from pydantic import ValidationError as PydanticValidationError
 if TYPE_CHECKING:
     from playwright.async_api import BrowserContext, Locator, Page
 
-from .....core import CasillaId
+from .....core.casilla_id import CasillaId
 from .....core.async_cleanup import close_async_resources
 from .....core.config import Settings
 from .....core.errors.hierarchy import SiteHealthError

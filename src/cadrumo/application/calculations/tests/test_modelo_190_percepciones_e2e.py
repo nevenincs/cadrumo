@@ -17,7 +17,8 @@ from pathlib import Path
 import pytest
 
 from ....application.aggregation import WithholdingSourceResolver, persist_percepcion_observations
-from ....core import Period, validated_casilla_id
+from ....core import Period
+from ....core.casilla_id import validated_casilla_id
 from ....core.aggregation import RetencionClave
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id

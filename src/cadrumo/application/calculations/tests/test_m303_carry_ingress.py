@@ -8,7 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core import CasillaId, Modelo, ObservedHeaderFact, Period, ResultDisposition
+from ....core import Modelo, ObservedHeaderFact, Period, ResultDisposition
+from ....core.casilla_id import CasillaId
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ....domain.calculations.registry.casilla_membership import casillas_by_id

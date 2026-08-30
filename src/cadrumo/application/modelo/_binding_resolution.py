@@ -32,7 +32,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...core.aggregation import BindingSourceKind as _BindingSourceKind
-from ...core import CasillaId
+from ...core.casilla_id import CasillaId
 from ...core import Period as _Period
 from ...domain.calculations.registry.casilla_membership import casillas_by_id
 from ...domain.calculations.registry.ids import BindingId

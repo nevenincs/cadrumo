@@ -36,7 +36,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import validated_casilla_id
+from ....core.casilla_id import validated_casilla_id
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.temporal import select_revision
 from ....tests.registry_tree import bundled_registry_tree

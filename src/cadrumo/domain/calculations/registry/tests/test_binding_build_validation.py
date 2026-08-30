@@ -30,7 +30,7 @@ from __future__ import annotations
 import pytest
 
 from .....application.aggregation import DEFERRED_SOURCE_KINDS
-from .....core import CasillaId, validated_casilla_id
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from .....core.resources import bundled_path
 from .._validate import RegistryValidator

@@ -27,7 +27,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import CasillaId, validated_casilla_id
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
 from ..ledger_impatriado_bindings import (
     resolve_ledger_impatriado_income_aggregation_binding_values,

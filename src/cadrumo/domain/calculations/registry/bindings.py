@@ -32,14 +32,8 @@ from pydantic import (
     model_validator,
 )
 
-from ....core import (
-    OBJECT_TUPLE_ADAPTER,
-    STRICT_FROZEN_CONFIG,
-    CasillaId,
-    FilingPeriodCode,
-    Period,
-    RegistryPeriodCode,
-)
+from ....core import OBJECT_TUPLE_ADAPTER, STRICT_FROZEN_CONFIG, FilingPeriodCode, Period, RegistryPeriodCode
+from ....core.casilla_id import CasillaId
 from ....core.aggregation import BindingSourceKind
 from ....core.filing_year import FilingYear
 from ...iva_compensation.filed_derivation import M303_COMPENSATION_APLICADA_CASILLA, M303_COMPENSATION_AVAILABLE_CASILLA, M303_COMPENSATION_GENERADA_CASILLA, M303_COMPENSATION_POSTERIOR_CASILLA

@@ -22,7 +22,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import CasillaId, validated_casilla_id
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
 from ..binding_selector_utils import selector_as_dict
 from ..irnr_ledger_bindings import (

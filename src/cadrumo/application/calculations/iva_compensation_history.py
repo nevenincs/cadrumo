@@ -43,7 +43,8 @@ from ...adapters.persistence.storage import (
     SensitivityClass,
     safe_repository_id,
 )
-from ...core import CasillaId, CasillaValueKind, IvaCompensationStateProvenance, Modelo, Period
+from ...core import CasillaValueKind, IvaCompensationStateProvenance, Modelo, Period
+from ...core.casilla_id import CasillaId
 from ...core.filing_year import FilingYear
 from ...core.identity import AeatExpedienteId, ContentDigest, SubjectTaxId
 from ...core.resources import bundled_path

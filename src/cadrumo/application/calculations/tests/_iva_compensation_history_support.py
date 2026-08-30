@@ -11,14 +11,8 @@ from pydantic import AnyHttpUrl
 
 from ....adapters.outbound.aeat.sede.iva_compensation_wallet import IVA_COMPENSATION_WALLET_URL
 from ....adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, IvaCompensationWalletObservation, IvaCompensationWalletRow, ObservedCasillaValue
-from ....core import (
-    CasillaId,
-    CasillaValueKind,
-    IvaCompensationStateProvenance,
-    Period,
-    RegistryAuthorityGrade,
-    validated_casilla_id,
-)
+from ....core import CasillaValueKind, IvaCompensationStateProvenance, Period, RegistryAuthorityGrade
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.resources import bundled_path
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.snapshot import build_snapshot

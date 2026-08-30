@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import CasillaId, validated_casilla_id
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.config import Settings
 from ....tests.aeat_literal_fixtures import manual_practicos_url
 from ....tests.fixtures.settings import EnvFileFreeSettings

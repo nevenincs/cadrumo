@@ -22,7 +22,8 @@ from ....application.storage.calc_sheets import (
     serialize_offline_export,
     sheet_evidence_from_ledger_filing,
 )
-from ....core import CasillaId, Period, validated_casilla_id
+from ....core import Period
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.modelos.ledger_filing_snapshot import LedgerEvidenceRow, LedgerFilingEvidence, ManualFactBasisEntry
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
