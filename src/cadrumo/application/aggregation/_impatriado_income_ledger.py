@@ -43,22 +43,21 @@ from collections.abc import Sequence
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated
 
 from pydantic import BaseModel, Field
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.modelo import Modelo
-from ...core.period import Period, PeriodKind
 from ...core.casilla_id import CasillaId, validated_casilla_id
-from ...core.prose_elision import ElidedProse
 from ...core.country_code import CountryCodeAlpha2
 from ...core.identity import TransactionId
+from ...core.modelo import Modelo
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.period import Period, PeriodKind
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.irpf_categories import has_activity_irpf_category, has_employment_irpf_category
 from ...domain.transactions.models import OutOfWindowTransactionSummary, Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ..ledger.preflight import IssueDetail
 from . import _shared_issue_reasons
 from ._business_proportion import business_proportion
 from ._currency_predicates import effective_eur_amount, effective_eur_taxable_base, is_non_eur_without_conversion
@@ -103,7 +102,6 @@ class ImpatriadoIncomeLedgerAggregationIssueReason(StrEnum):
 #: length would drop the explanation for the exclusion AND fail the aggregation
 #: that produced it -- a silent under-declaration dressed as a validation error.
 #: Shortening the sentence is strictly the lesser loss.
-_IssueDetail = Annotated[str, ElidedProse(512)]
 
 
 class ImpatriadoIncomeLedgerAggregationIssue(BaseModel):
@@ -113,7 +111,7 @@ class ImpatriadoIncomeLedgerAggregationIssue(BaseModel):
 
     transaction_id: TransactionId
     reason: ImpatriadoIncomeLedgerAggregationIssueReason
-    detail: _IssueDetail
+    detail: IssueDetail
     # The rejected ISO 3166-1 alpha-2 source-jurisdiction code for a
     # BECKHAM_FOREIGN_SOURCE_SEGREGATED row; ``None`` when the row carried no
     # declared jurisdiction (the unresolved case), so an auditor can tell a

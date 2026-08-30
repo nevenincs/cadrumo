@@ -30,15 +30,25 @@ from typing import Annotated, Final, Literal
 
 from pydantic import BaseModel, Field, computed_field, field_serializer, field_validator
 
+from ...core.external_constants import DEFAULT_CURRENCY
+from ...core.identity import BucketId, TransactionId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.operator_action_enums import OperatorActionAxis
 from ...core.period import Period
 from ...core.prose_elision import ElidedProse
-from ...core.external_constants import DEFAULT_CURRENCY
-from ...core.identity import BucketId, TransactionId
-from ...domain.categories.spending_category import HOME_OFFICE_FAMILIES, SpendingCategory, family_for, home_office_categories
+from ...domain.categories.spending_category import (
+    HOME_OFFICE_FAMILIES,
+    SpendingCategory,
+    family_for,
+    home_office_categories,
+)
 from ...domain.iva.schema import IvaCategory
-from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState, is_classified
+from ...domain.transactions.enums import (
+    BusinessClassification,
+    TransactionDirection,
+    TransactionLifecycleState,
+    is_classified,
+)
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.irpf_categories import has_employment_irpf_category
 from ...domain.transactions.models import Transaction, TransactionCatalogue
@@ -101,12 +111,15 @@ class LedgerPreflightIssueReason(StrEnum):
 
 
 #: The traceable-exclusion ``detail`` annotation: elides rather than refusing.
+#: Public because the CLI payload projecting this field must elide too: a
+#: payload that REFUSES an over-length detail reintroduces exactly the
+#: failure described below, one layer further out.
 #:
 #: These issues explain why a ledger row was excluded, so refusing one over its
 #: length would drop the explanation for the exclusion AND fail the aggregation
 #: that produced it -- a silent under-declaration dressed as a validation error.
 #: Shortening the sentence is strictly the lesser loss.
-_IssueDetail = Annotated[str, ElidedProse(512)]
+IssueDetail = Annotated[str, ElidedProse(512)]
 
 
 class LedgerPreflightIssue(BaseModel):
@@ -116,7 +129,7 @@ class LedgerPreflightIssue(BaseModel):
 
     transaction_id: TransactionId | Literal["__period__"]
     reason: LedgerPreflightIssueReason
-    detail: _IssueDetail
+    detail: IssueDetail
 
 
 class LedgerPreflightReport(BaseModel):
@@ -797,6 +810,7 @@ def _preflight_detail_for_iva_issue(reason: IvaLedgerAggregationIssueReason) -> 
 
 __all__ = [
     "OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE",
+    "IssueDetail",
     "LedgerPreflightIssue",
     "LedgerPreflightIssueReason",
     "LedgerPreflightReport",

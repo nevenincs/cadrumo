@@ -10,8 +10,8 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.persistence.storage.errors import DecryptionError
-from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations import DirectRowMaterializationProvenance
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ids import RevisionId

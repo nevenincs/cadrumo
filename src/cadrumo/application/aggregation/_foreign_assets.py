@@ -29,15 +29,14 @@ from ...core import (
     M720AssetClassCode,
     foreign_asset_obligation_group,
 )
-from ...core.modelo import Modelo
-from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.period import Period
-from ...core.aggregation import BindingSourceKind
-from ...core.aggregation import ForeignAssetClass
+from ...core.aggregation import BindingSourceKind, ForeignAssetClass
 from ...core.country_code import CountryCodeAlpha2
 from ...core.hashing import content_hash_hex
 from ...core.identity import TransactionId
+from ...core.modelo import Modelo
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing import IsoDateString, require_iso8601_date
+from ...core.period import Period
 from ...domain.calculations import RowSourceIdentity
 from ...domain.calculations.registry.binding_selector_utils import binding_row_set_selector
 from ...domain.calculations.registry.detail_record_bindings import (

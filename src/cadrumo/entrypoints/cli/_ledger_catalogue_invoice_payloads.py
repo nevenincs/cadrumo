@@ -19,7 +19,6 @@ graph-declared command identifiers are ``ledger.invoice.<verb>``.
 from __future__ import annotations
 
 from datetime import date
-from decimal import Decimal
 from typing import Self
 
 from pydantic import Field, NonNegativeInt, model_validator
@@ -29,7 +28,7 @@ from ...core.country_code import CountryCodeAlpha2
 from ...core.identity import BucketId, InvoiceId, TaxIdIdentityToken, TransactionId, validate_spanish_tax_id
 from ...core.json_contract import OutputSchema
 from ...core.parsing import IsoCurrencyCode
-from ...core.text_bounds import NonEmptyStr, NonNegativeDecimal, PositiveCount
+from ...core.text_bounds import NonEmptyStr, NonNegativeDecimal, PositiveCount, PositiveDecimal
 from ...domain.invoices.enums import PaymentStatus
 from ...domain.invoices.validators import validate_country_code, validate_iva_number
 from ...domain.iva.classification import InvoiceKind
@@ -73,12 +72,12 @@ class CatalogueInvoiceRecordPayload(OutputSchema):
     # be resolved carries the stamp fields ``None`` AND the eur totals ``None``:
     # the record says, on its face, that no euro figure exists for it rather
     # than presenting the foreign face value as though it were euro.
-    fx_rate: Decimal | None = Field(default=None, gt=Decimal("0"))
+    fx_rate: PositiveDecimal | None = None
     fx_rate_date: date | None = None
     fx_rate_source: NonEmptyStr | None = None
-    base_total_eur: Decimal | None = Field(default=None, ge=Decimal("0"))
-    iva_total_eur: Decimal | None = Field(default=None, ge=Decimal("0"))
-    grand_total_eur: Decimal | None = Field(default=None, ge=Decimal("0"))
+    base_total_eur: NonNegativeDecimal | None = None
+    iva_total_eur: NonNegativeDecimal | None = None
+    grand_total_eur: NonNegativeDecimal | None = None
 
     @model_validator(mode="after")
     def _validate_counterparty_identity(self) -> Self:

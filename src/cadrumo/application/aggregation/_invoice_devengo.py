@@ -57,8 +57,8 @@ from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.aggregation import InvoiceDevengoRank
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ._source_mesh import CalculationSourceDiagnostic
 
 if TYPE_CHECKING:

@@ -41,8 +41,8 @@ from datetime import date
 from decimal import Decimal
 from typing import NamedTuple, Protocol
 
-from ...core.period import Period, PeriodKind
 from ...core.casilla_id import CasillaId
+from ...core.period import Period, PeriodKind
 from ._models import CasillaAggregation, CasillaProvenance
 from .errors import AggregationPeriodError, AggregationUnsupportedModeloError, t
 

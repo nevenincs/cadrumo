@@ -55,10 +55,10 @@ from typing import TYPE_CHECKING, Final, Self
 
 from pydantic import BaseModel, model_validator
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.aggregation import BindingSourceKind
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.identity import InvoiceId
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...domain.iva.components import IvaRetencionRole, category_components
 from ._retenciones import RetencionObservation, RetencionScheme
 from .errors import AggregationValidationError, t

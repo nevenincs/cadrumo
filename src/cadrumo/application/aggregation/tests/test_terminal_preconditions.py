@@ -13,10 +13,10 @@ from typing import override
 
 import pytest
 
-from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
-from ....core.period import Period
 from ....core.aggregation import BindingSourceKind
 from ....core.errors.hierarchy import TerminalPreconditionErrorMixin
+from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ledger_bindings import IvaLedgerObservation
 from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision

@@ -28,10 +28,10 @@ from typing import TYPE_CHECKING, Protocol, cast
 from pydantic import BaseModel
 
 from ...adapters.persistence.storage import safe_repository_id
-from ...core.period import Period
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.identity import tax_id_identity_token
+from ...core.period import Period
 from ...core.time import now
 from .errors import AggregationValidationError, t
 

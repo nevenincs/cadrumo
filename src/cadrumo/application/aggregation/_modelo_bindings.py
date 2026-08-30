@@ -41,11 +41,11 @@ from ...adapters.persistence.storage import (
     StorageValidationError,
 )
 from ...core import M210GrossIncomeSourceMode
-from ...core.modelo import Modelo
-from ...core.period import Period, PeriodError, StandardPeriodCode
-from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
+from ...core.casilla_id import CasillaId, validated_casilla_id
+from ...core.modelo import Modelo
 from ...core.money import round_to_cents
+from ...core.period import Period, PeriodError, StandardPeriodCode
 from ...domain.bienes_inversion import BienesInversionIvaRegister
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.irnr_ledger_bindings import (

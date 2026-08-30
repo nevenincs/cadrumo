@@ -46,19 +46,19 @@ from typing import Annotated, Final
 from pydantic import BaseModel, Field, StringConstraints, field_serializer, field_validator, model_validator
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import (
     IvaDeductionFactKind,
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
     regime_apportions_deduction,
 )
-from ...core.period import Period
 from ...core.aggregation import BindingSourceKind
-from ...core.prose_elision import ElidedProse
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n import tr
 from ...core.identity import TransactionId
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.period import Period
+from ...core.prose_elision import ElidedProse
 from ...domain.bienes_inversion import (
     BienesInversionIvaRegister,
     validate_investment_asset_reciprocity,
@@ -73,11 +73,27 @@ from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.iva.classification import IvaTerritorialScope
 from ...domain.iva.deduction_facts import IvaDeductionClassificationProvenance, validate_iva_deduction_fact
 from ...domain.iva.errors import ProrrataInputError
-from ...domain.iva.establishment import StatedCountryCodeStatus, stated_country_code_status, territorial_scope_for_country
+from ...domain.iva.establishment import (
+    StatedCountryCodeStatus,
+    stated_country_code_status,
+    territorial_scope_for_country,
+)
 from ...domain.iva.flow import IvaFlowDirection, flow_direction_for_invoice_kind, is_deducible_flow
 from ...domain.iva.lookup import rate_kinds_for_declared_rate
-from ...domain.iva.prorrata import InputClassification, ProrrataReference, deductible_percentage_for, validate_prorrata_reference
-from ...domain.iva.schema import EUMemberState, IvaCashAccountingTreatment, IvaCategory, IvaExemptionArticle, IvaLedgerObservationRole, IvaRateKind
+from ...domain.iva.prorrata import (
+    InputClassification,
+    ProrrataReference,
+    deductible_percentage_for,
+    validate_prorrata_reference,
+)
+from ...domain.iva.schema import (
+    EUMemberState,
+    IvaCashAccountingTreatment,
+    IvaCategory,
+    IvaExemptionArticle,
+    IvaLedgerObservationRole,
+    IvaRateKind,
+)
 from ...domain.prorrata_register import ProrrataRegister, ProrrataRegisterRepositoryProtocol
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.models import OutOfWindowTransactionSummary, Transaction, TransactionCatalogue

@@ -39,8 +39,8 @@ import pytest
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core.period import Period
 from ....core.aggregation import IntracomOperationType
+from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.invoices.models import InvoiceCatalogue
 from ....domain.iva.classification import InvoiceKind

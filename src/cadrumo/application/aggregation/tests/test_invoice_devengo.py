@@ -18,8 +18,8 @@ from typing import Any
 
 import pytest
 
-from ....core.period import Period
 from ....core.aggregation import InvoiceDevengoRank
+from ....core.period import Period
 from ....domain.invoices.enums import InvoiceOperationDateRole, IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.classification import InvoiceKind

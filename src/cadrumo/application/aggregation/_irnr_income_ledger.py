@@ -21,25 +21,24 @@ from collections.abc import Sequence
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated
 
 from pydantic import BaseModel, Field
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import M210PayerMode
-from ...core.modelo import Modelo
-from ...core.period import Period
 from ...core.casilla_id import CasillaId, validated_casilla_id
-from ...core.prose_elision import ElidedProse
 from ...core.country_code import CountryCodeAlpha2
 from ...core.i18n import tr
 from ...core.identity import TransactionId
+from ...core.modelo import Modelo
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.period import Period
 from ...core.unit_proportion import UnitProportion
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.m210_income_classification import M210IncomeClassification
 from ...domain.transactions.models import OutOfWindowTransactionSummary, Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ..ledger.preflight import IssueDetail
 from . import _shared_issue_reasons
 from ._grouping import fold_casilla_observations
 from ._models import CasillaAggregation, LedgerAggregationResultBase
@@ -69,7 +68,6 @@ class IrnrIncomeLedgerAggregationIssueReason(StrEnum):
 #: length would drop the explanation for the exclusion AND fail the aggregation
 #: that produced it -- a silent under-declaration dressed as a validation error.
 #: Shortening the sentence is strictly the lesser loss.
-_IssueDetail = Annotated[str, ElidedProse(512)]
 
 
 class IrnrIncomeLedgerAggregationIssue(BaseModel):
@@ -79,7 +77,7 @@ class IrnrIncomeLedgerAggregationIssue(BaseModel):
 
     transaction_id: TransactionId
     reason: IrnrIncomeLedgerAggregationIssueReason
-    detail: _IssueDetail
+    detail: IssueDetail
     rejected_source_jurisdiction: str | None = None
 
 
