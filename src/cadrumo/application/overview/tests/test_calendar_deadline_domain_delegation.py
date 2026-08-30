@@ -22,7 +22,7 @@ from datetime import UTC, date, datetime
 
 import pytest
 
-from ....core import Period
+from ....core.period import Period
 from ....domain.deadlines.engine import classify_obligation_status
 from ....domain.deadlines.models import ObligationStatus
 from ....domain.deadlines.plazo import resolve_filing_closes_on, resolve_filing_window

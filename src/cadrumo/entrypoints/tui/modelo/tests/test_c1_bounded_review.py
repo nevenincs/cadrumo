@@ -24,7 +24,7 @@ import pytest
 from textual.coordinate import Coordinate
 from textual.widgets import DataTable, Static
 
-from .....core import Period
+from .....core.period import Period
 from .....core.config import override_settings
 from .....core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from .....domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id

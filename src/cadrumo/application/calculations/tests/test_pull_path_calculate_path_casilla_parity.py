@@ -75,10 +75,10 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import (
     IvaDeductionEvidenceAuthority,
     IvaDeductionFactKind,
-    Period,
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
 )
+from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.aggregation import AggregationCaptureKind
 from ....core.aggregation import BindingSourceKind

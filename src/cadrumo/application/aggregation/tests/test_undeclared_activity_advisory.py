@@ -27,7 +27,8 @@ from functools import cache
 
 import pytest
 
-from ....core import Modelo, Period, TipoActividad
+from ....core import Modelo, TipoActividad
+from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState

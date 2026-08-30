@@ -54,7 +54,7 @@ from pydantic import BaseModel, ConfigDict
 
 from ...core import Modelo
 from ...core.casilla_id import CasillaId
-from ...core import Period as _Period
+from ...core.period import Period as _Period
 from ...core.errors.hierarchy import CoreError
 from ...domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ...domain.calculations.registry.ids import (

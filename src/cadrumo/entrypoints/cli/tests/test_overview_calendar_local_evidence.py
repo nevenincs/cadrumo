@@ -13,7 +13,7 @@ from ....adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact, Fil
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....application.calculations import CalculationObservationRepository
-from ....core import Period
+from ....core.period import Period
 from ....core.config import load_settings
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.modelos.filing_repository import upsert_filing_record

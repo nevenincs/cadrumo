@@ -29,7 +29,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage import Envelope, SecureObjectRowIdentityError
-from ....core import Period
+from ....core.period import Period
 from ....core.external_constants import UTF_8_ENCODING
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ....tests.secure_sql import isolated_runtime_profile

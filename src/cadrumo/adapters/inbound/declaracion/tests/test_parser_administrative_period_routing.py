@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core import Period, accepted_filing_period_codes, accepted_period_codes
+from .....core.period import Period, accepted_filing_period_codes, accepted_period_codes
 from .._parser import _filing_period_for_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
@@ -78,7 +78,7 @@ def test_a_bare_filing_year_still_reads_as_the_annual_period() -> None:
 
 def test_an_unknown_selector_is_refused_rather_than_silently_routed() -> None:
     """A token in neither vocabulary must not fall through to ``AD-HOC``."""
-    from .....core import PeriodError
+    from .....core.period import PeriodError
 
     with pytest.raises(PeriodError):
         _filing_period_for_observation(2025, "NOT-A-PERIOD")

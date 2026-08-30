@@ -37,7 +37,7 @@ from ....application.ledger.actions_manual import (
     update_manual_transaction_fields,
 )
 from ....application.ledger.models import LedgerExportCommand, LedgerSourceImportCommand, ManualLedgerTransactionPatch
-from ....core import Period
+from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.aggregation import BindingSourceKind
 from ....domain.attachments.enums import AttachmentKind, AttachmentSource

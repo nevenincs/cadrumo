@@ -40,11 +40,11 @@ from ....adapters.persistence.storage import SecureObjectRepository
 from ....core import (
     IvaDeductionEvidenceAuthority,
     IvaDeductionFactKind,
-    Period,
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,
 )
+from ....core.period import Period
 from ....domain.bienes_inversion import BienesInversionIvaRegister
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ids import BindingId

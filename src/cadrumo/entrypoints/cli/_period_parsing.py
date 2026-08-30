@@ -21,7 +21,7 @@ from ...core.i18n import tr
 from ._common import _bad
 
 if TYPE_CHECKING:
-    from ...core import Period
+    from ...core.period import Period
 
 __all__ = ["_canonical_period", "_filter_canonical_period", "_optional_canonical_period"]
 
@@ -50,7 +50,7 @@ def _ledger_aeat_token(token: str) -> str | None:
     does not filter by (``EXT-*``, ``AD-HOC``, ``EVENT-N``) and instalment
     claves (``1P``-``4P``) return ``None``.
     """
-    from ...core import StandardPeriodCode
+    from ...core.period import StandardPeriodCode
 
     try:
         registry_period = StandardPeriodCode(token.strip().upper()).value
@@ -79,7 +79,7 @@ def _ledger_period_accepted_tokens() -> tuple[str, ...]:
     what the boundary actually admits — a new span-shaped enum member is
     advertised automatically.
     """
-    from ...core import Period, PeriodError, StandardPeriodCode
+    from ...core.period import Period, PeriodError, StandardPeriodCode
 
     accepted: list[str] = []
     for member in StandardPeriodCode:
@@ -140,7 +140,7 @@ def _canonical_period(period: str, *, year: int) -> Period:
     :class:`Period` date span the ledger filters by — there is no
     intermediate calendar string.
     """
-    from ...core import Period, PeriodError
+    from ...core.period import Period, PeriodError
 
     stripped = period.strip()
     if not stripped:

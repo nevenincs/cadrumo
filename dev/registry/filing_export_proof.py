@@ -45,7 +45,8 @@ from cadrumo.application.registry.filing_export_authority import (
     FilingExportProof,
     FilingExportProofConflictError,
 )
-from cadrumo.core import Period, PriorDomiciliationElection, RegistryAuthorityGrade
+from cadrumo.core import PriorDomiciliationElection, RegistryAuthorityGrade
+from cadrumo.core.period import Period
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.product_identity import AeatProductSoftwareIdentity
 from cadrumo.core.time import now

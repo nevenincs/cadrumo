@@ -15,7 +15,7 @@ import hashlib
 
 import pytest
 
-from ....core import Period
+from ....core.period import Period
 from ....core.bucket_pointer import require_active_bucket_id
 from ....tests.live_gate import requires_live_enabled
 from ..errors import LiveApplicationInputError

@@ -43,8 +43,8 @@ from ...core import (
     ActionArgumentStatus,
     ActionEvidenceProvenance,
     NoRecoveryOutcome,
-    Period,
 )
+from ...core.period import Period
 from ...core.identifier_grammar import NamespacedId
 from ...core.identity import CalculationRevisionId
 from ...core.time import now as _utc_now

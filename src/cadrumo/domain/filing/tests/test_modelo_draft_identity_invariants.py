@@ -23,7 +23,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....core import Period
+from ....core.period import Period
 from ...calculations.registry.schema_references import RegistrySnapshotRef
 from ...submission import ModeloDraftStatus
 from ..schema import ModeloDraft, ModeloValue, ModeloValueKind, registry_schema_version

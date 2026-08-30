@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
-from ...core import Period
+from ...core.period import Period
 from .calculation_revision import CalculationRevisionCatalogue
 from .filing_record import ModeloRecord, ModeloRecordCatalogue
 from .participation_index import TransactionRevisionParticipationIndex

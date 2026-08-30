@@ -16,7 +16,7 @@ import pytest
 from openpyxl import Workbook
 
 from ....application.calculations import CalculationObservationRepository, resolve_bindings_from_local_store
-from ....core import Period
+from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
 from ....tests.cli_runner import invoke_cached_cli

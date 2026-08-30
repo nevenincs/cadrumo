@@ -344,7 +344,7 @@ def _seed_m303_filing_evidence(fixtures_dir: Path) -> None:
     from the shared evidence helper binds it to the live snapshot every time,
     and keeps a six-figure-byte blob out of the tree.
     """
-    from cadrumo.core import Period
+    from cadrumo.core.period import Period
     from cadrumo.tests.filing_evidence import general_m303_filing_evidence
 
     fixtures_dir.mkdir(parents=True, exist_ok=True)

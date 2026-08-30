@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core import Period
+from .....core.period import Period
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from ...export_field_kind import CasillaFieldKind
 from .._validate import RegistryValidator

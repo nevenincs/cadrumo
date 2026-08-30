@@ -31,7 +31,7 @@ import pytest
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core import Period
+from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.buckets.event import BucketEventType
 from ....domain.modelos.calculation_repository import upsert_calculation_revision

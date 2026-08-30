@@ -16,7 +16,8 @@ from typing import Literal, TypeGuard
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG, Modelo, ModeloCalculationRouteId, Period
+from ...core import STRICT_FROZEN_CONFIG, Modelo, ModeloCalculationRouteId
+from ...core.period import Period
 from ...core.casilla_id import CasillaId
 from ...core.aggregation import BindingSourceKind
 from ...core.source_connectivity import (

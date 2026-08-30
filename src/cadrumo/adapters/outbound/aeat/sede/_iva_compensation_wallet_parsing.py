@@ -22,7 +22,7 @@ from urllib.parse import urljoin, urlsplit
 from bs4 import BeautifulSoup, Tag
 from pydantic import AnyHttpUrl, AnyUrl, TypeAdapter
 
-from .....core import Period
+from .....core.period import Period
 from .....core.config import Settings
 from .....core.decimal import AEAT_THOUSANDS_SEPARATORS, is_aeat_printed_money, normalize_decimal_separators
 from .....core.external_constants import UTF_8_ENCODING

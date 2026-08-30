@@ -7,7 +7,8 @@ from datetime import date
 
 import pytest
 
-from ....core import Modelo, Period
+from ....core import Modelo
+from ....core.period import Period
 from ...calculations.registry.authority import bundled_authority
 from ...calculations.registry.deadline_coordinate import DeadlineSemanticCoordinate, deadline_semantic_coordinate
 from ...calculations.registry.schedules import applicable_filing_schedules, evaluate_profile_conditions

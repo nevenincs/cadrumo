@@ -20,7 +20,7 @@ from ....adapters.persistence.storage import (
     dispose_engine,
     get_engine,
 )
-from ....core import Period
+from ....core.period import Period
 from ....core.config import Settings
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ...calculations import IvaWalletDecisionRepository

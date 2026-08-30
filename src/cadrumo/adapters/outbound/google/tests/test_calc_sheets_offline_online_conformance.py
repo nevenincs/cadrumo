@@ -30,7 +30,7 @@ from .....application.storage.calc_sheets import (
     guide_stamps,
     serialize_offline_workbook,
 )
-from .....core import Period
+from .....core.period import Period
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..calc_sheets_apply import (
     _build_emphasis_format_requests,

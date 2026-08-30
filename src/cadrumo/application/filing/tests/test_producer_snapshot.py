@@ -14,13 +14,13 @@ from ....core import (
     FilingProducerKey,
     Modelo,
     PaymentElection,
-    Period,
     PriorDomiciliationElection,
     ProrrataEspecialTransitionKind,
     ProrrataRegisterRegime,
     RefundElection,
     ResultDisposition,
 )
+from ....core.period import Period
 from ....core.casilla_id import validated_casilla_id
 from ....domain.bienes_inversion import (
     BienesInversionIvaRegister,

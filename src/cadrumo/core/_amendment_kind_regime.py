@@ -76,7 +76,7 @@ if TYPE_CHECKING:
     # is sufficient and the module needs no runtime binding of the name.
     from _typeshed import SupportsAllComparisons
 
-    from ._period import Period
+    from .period import Period
 
 
 class AmendmentLiabilityDirection(StrEnum):

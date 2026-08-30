@@ -19,7 +19,8 @@ from ....adapters.persistence.storage import (
     SecureObjectRowIdentityError,
 )
 from ....adapters.persistence.storage.errors import StorageValidationError
-from ....core import AuthProviderKind, Period
+from ....core import AuthProviderKind
+from ....core.period import Period
 from ....core.config import Settings
 from ....core.identity import nif_check_letter
 from ....tests.secure_sql import isolated_runtime_profile, isolated_sessionless_storage_root, read_db_at_rest_bytes

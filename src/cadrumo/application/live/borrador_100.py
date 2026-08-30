@@ -33,7 +33,8 @@ from ...adapters.persistence.storage import (
     SecureObjectRepository,
 )
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Modelo, Period
+from ...core import Modelo
+from ...core.period import Period
 from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId, SnapshotId

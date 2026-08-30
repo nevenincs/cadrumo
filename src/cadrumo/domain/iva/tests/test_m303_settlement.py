@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from ....core import Period
+from ....core.period import Period
 from ..m303_settlement import (
     is_m303_annual_settlement_period,
     m303_annual_settlement_order_key,

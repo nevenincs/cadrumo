@@ -29,7 +29,8 @@ from typing import Any
 import pytest
 
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from ....core import Period, ProrrataProvisionalProvenance, ProrrataRegisterRegime, ResultDisposition
+from ....core import ProrrataProvisionalProvenance, ProrrataRegisterRegime, ResultDisposition
+from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.aggregation import BindingSourceKind
 from ....core.resources import bundled_path

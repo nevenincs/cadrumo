@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 
 from ....application.calculations import IvaWalletDecisionRepository
-from ....core import Period
+from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.deadlines.models import M303RegimeComposition
 from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision

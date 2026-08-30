@@ -10,8 +10,8 @@ from ....core import (
     M303Exonerado390ActivityField,
     M303Exonerado390ActivityProjectionRef,
     M303Exonerado390OperacionesTercerosProjectionRef,
-    Period,
 )
+from ....core.period import Period
 from ....core.casilla_id import validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot

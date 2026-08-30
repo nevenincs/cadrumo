@@ -33,8 +33,8 @@ from ....core import (
     ActionEvidenceProvenance,
     Modelo,
     NoRecoveryOutcome,
-    Period,
 )
+from ....core.period import Period
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....domain.deadlines.models import ObligationStatus
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord

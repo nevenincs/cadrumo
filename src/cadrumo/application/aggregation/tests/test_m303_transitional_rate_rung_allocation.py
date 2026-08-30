@@ -36,7 +36,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Modelo, Period
+from ....core import Modelo
+from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.binding_selector_utils import selector_as_dict
 from ....domain.calculations.registry.ledger_bindings import IvaLedgerObservation

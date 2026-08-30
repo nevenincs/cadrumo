@@ -128,7 +128,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core._period.PeriodError",
+        "cadrumo.core.period.PeriodError",
         ErrorCode(
             code="INTEGRITY_PERIOD",
             category=ErrorCategory.INTEGRITY,

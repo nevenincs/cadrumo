@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from ...core import Modelo, Period
+from ...core import Modelo
+from ...core.period import Period
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ._producer_snapshot import (

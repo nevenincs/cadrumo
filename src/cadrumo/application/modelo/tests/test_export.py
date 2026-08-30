@@ -20,7 +20,7 @@ from ._export_test_support import isolated_backend
 __all__ = ["isolated_backend"]
 from pydantic import ValidationError
 
-from ....core import Period
+from ....core.period import Period
 from ....core.config import override_settings
 from ....domain.filing.schema import ModeloCasillaProvenance
 from ....domain.iva_compensation.reconciliation import IvaCompensationAuthoritySource, IvaCompensationReconciliationDecision

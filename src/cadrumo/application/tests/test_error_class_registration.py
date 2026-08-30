@@ -99,7 +99,7 @@ def test_iva_compensation_casilla_reference_error_is_registered_and_roundtrips()
 
 
 def test_iva_compensation_year_range_error_raised_on_out_of_range_filing_year() -> None:
-    from ...core import Period
+    from ...core.period import Period
     from ...domain.iva_compensation.errors import IvaCompensationYearRangeError
     from ..calculations import iva_compensation_period_key
 

@@ -165,7 +165,7 @@ def _walk_iva_categories() -> Iterator[EnrolmentCandidate]:
 
 
 def _walk_periods() -> Iterator[EnrolmentCandidate]:
-    from cadrumo.core import StandardPeriodCode
+    from cadrumo.core.period import StandardPeriodCode
 
     for period in sorted(StandardPeriodCode, key=lambda member: member.value):
         yield EnrolmentCandidate(

@@ -29,7 +29,8 @@ from types import SimpleNamespace
 import pytest
 from pydantic import ValidationError
 
-from ....core import NoRecoveryOutcome, Period
+from ....core import NoRecoveryOutcome
+from ....core.period import Period
 from ....core.aggregation import BindingSourceKind
 from ....core.errors.error_codes import get_registered_error_code
 from ....domain.calculations.registry.detail_record_bindings import resolve_foreign_asset_binding_row_values

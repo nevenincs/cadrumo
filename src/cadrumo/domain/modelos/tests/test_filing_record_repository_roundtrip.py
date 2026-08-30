@@ -24,7 +24,7 @@ from pydantic import ValidationError
 
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.storage import MODELO_FILING_RECORD_CATALOGUE_NAMESPACE, SensitivityClass
-from ....core import Period
+from ....core.period import Period
 from ....tests.secure_sql import isolated_runtime_profile
 from ..codes import ModeloCode
 from ..filing_record import (

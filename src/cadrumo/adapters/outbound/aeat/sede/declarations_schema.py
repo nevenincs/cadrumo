@@ -8,7 +8,7 @@ from typing import Literal, Self
 from pydantic import BaseModel, Field, model_validator
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from .....core import Period
+from .....core.period import Period
 from .....core.filing_year import FilingYear
 from .....core.identity import AeatExpedienteId
 

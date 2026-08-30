@@ -10,7 +10,8 @@ import pytest
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core import Modelo, NoRecoveryOutcome, Period
+from ....core import Modelo, NoRecoveryOutcome
+from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.codes import ModeloCode

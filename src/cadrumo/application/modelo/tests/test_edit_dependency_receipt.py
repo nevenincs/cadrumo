@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Period
+from ....core.period import Period
 from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_input_kind import InputKind

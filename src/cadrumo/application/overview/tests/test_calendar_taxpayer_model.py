@@ -7,7 +7,7 @@ from datetime import UTC, date, datetime
 import pytest
 
 from ....adapters.outbound.aeat.sede.declarations_schema import Declaracion
-from ....core import Period
+from ....core.period import Period
 from ....domain.deadlines.models import EntityType, IVARegime, IrpfEstimationRegime, IrpfIncomeCategory, TaxpayerProfile
 from ...live.expedientes import PersistedExpedientesSnapshot
 from ..calendar import build_overview_calendar, calendar_events_from_expedientes_snapshots

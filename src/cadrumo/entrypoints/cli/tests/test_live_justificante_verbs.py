@@ -15,7 +15,7 @@ import pytest
 from click.testing import Result
 
 from ....application.live.justificante import JustificanteCaptureSnapshotService
-from ....core import Period
+from ....core.period import Period
 from ....tests.cli_runner import invoke_cached_cli
 from ._live_read_profile_fixture import _ACTIVE_TEST_BUCKET_ID, _isolated_backend
 

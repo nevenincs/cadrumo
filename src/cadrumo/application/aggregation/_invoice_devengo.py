@@ -64,7 +64,7 @@ from ._source_mesh import CalculationSourceDiagnostic
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-    from ...core import Period
+    from ...core.period import Period
     from ...domain.invoices.models import Invoice
 
 __all__ = [

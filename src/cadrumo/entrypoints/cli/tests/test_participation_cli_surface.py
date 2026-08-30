@@ -17,7 +17,7 @@ from click.testing import Result
 
 from ....adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ....application.ledger.participation_read import get_transaction_participation
-from ....core import Period
+from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.participation_index import TransactionRevisionParticipation, TransactionRevisionParticipationIndex
 from ....tests.cli_runner import invoke_cached_cli

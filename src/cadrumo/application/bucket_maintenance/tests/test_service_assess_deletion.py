@@ -80,7 +80,7 @@ def _published_profile(tmp_path: Path) -> Generator[Path]:
 
 
 def _filing_record(*, filed_at: datetime, seed: str) -> ModeloRecord:
-    from ....core import Period
+    from ....core.period import Period
     from ....domain.modelos.codes import ModeloCode
     from ....domain.modelos.filing_record import derive_filing_record_id
 

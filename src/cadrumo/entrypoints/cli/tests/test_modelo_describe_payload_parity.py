@@ -21,7 +21,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from ....core import Period
+from ....core.period import Period
 from ....domain.calculations.registry.query_reports import ModeloDescribeReport
 from .._modelo_aux_payloads import ModeloDescribeResult
 

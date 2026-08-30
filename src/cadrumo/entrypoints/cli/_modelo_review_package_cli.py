@@ -137,7 +137,8 @@ from ...application.modelo.work_addressing import (
     ModeloWorkPeriodTokenError,
 )
 from ...application.workflow.persistence import workflow_state_repository
-from ...core import PaymentElection, Period, PriorDomiciliationElection, RefundElection
+from ...core import PaymentElection, PriorDomiciliationElection, RefundElection
+from ...core.period import Period
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.i18n import tr
 from ._common import _filing_taxpayer_or_refuse, emit_envelope

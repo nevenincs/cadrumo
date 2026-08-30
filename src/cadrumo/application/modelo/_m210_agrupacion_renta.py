@@ -16,7 +16,8 @@ See Also:
 
 from __future__ import annotations
 
-from ...core import Modelo, StandardPeriodCode
+from ...core import Modelo
+from ...core.period import StandardPeriodCode
 from ...domain.modelos.row_models import Modelo210AgrupacionRentaRow, Modelo210AgrupacionRentaRowsError, ModeloDetailRow, validate_m210_agrupacion_renta_rows
 from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ...domain.modelos.work_unit import WorkUnit

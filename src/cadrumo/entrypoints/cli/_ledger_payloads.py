@@ -44,7 +44,8 @@ from ...application.ledger.models import (
     DiagnosticSeverity,
     IsoDateText,
 )
-from ...core import LinkInconsistencyDirection, Period
+from ...core import LinkInconsistencyDirection
+from ...core.period import Period
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.identity import (
     BucketId,

@@ -14,7 +14,7 @@ __all__ = ["_isolated_backend"]
 from ....adapters.inbound.justificante.parser import parse_justificante
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core import Period
+from ....core.period import Period
 from ....domain.buckets.event import BucketEventType
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.repository import upsert_work_unit

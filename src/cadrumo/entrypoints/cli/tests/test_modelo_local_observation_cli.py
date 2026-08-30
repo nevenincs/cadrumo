@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 
 from ....application.calculations import CalculationObservationRepository, resolve_bindings_from_local_store
-from ....core import Period
+from ....core.period import Period
 from ....core.casilla_id import validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation

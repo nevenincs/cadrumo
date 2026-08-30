@@ -14,13 +14,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
-from ...core import (
-    STRICT_FROZEN_CONFIG,
-    EstadoCasillaOficial,
-    ModeloWorkProgressState,
-    OperatorActionAxis,
-    Period,
-)
+from ...core import STRICT_FROZEN_CONFIG, EstadoCasillaOficial, ModeloWorkProgressState, OperatorActionAxis
+from ...core.period import Period
 from ...core.casilla_id import CasillaId
 from ...core.aggregation import BindingSourceKind
 from ...core.hashing import content_hash_hex

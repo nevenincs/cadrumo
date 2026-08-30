@@ -14,7 +14,8 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import Modelo, Period
+from ....core import Modelo
+from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.modelos.codes import ModeloCode

@@ -29,7 +29,8 @@ from __future__ import annotations
 
 from pydantic import NonNegativeInt, field_validator
 
-from ...core import IvaCompensationStateProvenance, Period
+from ...core import IvaCompensationStateProvenance
+from ...core.period import Period
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.filing_year import FilingYear
 from ...core.json_contract import OutputSchema

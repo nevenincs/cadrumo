@@ -8,7 +8,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from .....core import Period
+from .....core.period import Period
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....domain.calculations.registry.bindings import CasillaObservation
 from .....domain.modelos.ledger_filing_snapshot import LedgerEvidenceRow, LedgerFilingEvidence, ManualFactBasisEntry

@@ -13,7 +13,8 @@ from ....adapters.outbound.aeat.auth import session_store
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from ....core import AuthProviderKind, ClaveMovilRoute, NoRecoveryOutcome, Period
+from ....core import AuthProviderKind, ClaveMovilRoute, NoRecoveryOutcome
+from ....core.period import Period
 from ....core.config import Settings, load_settings, override_settings
 from ....core.time import frozen_clock
 from ....domain.buckets.event import BucketEventType

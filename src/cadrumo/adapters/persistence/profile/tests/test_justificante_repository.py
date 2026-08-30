@@ -11,7 +11,8 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter, ValidationError
 
-from .....core import Period, StorageCategory, storage_path
+from .....core import StorageCategory, storage_path
+from .....core.period import Period
 from .....domain.justificante import Justificante, JustificanteRepositoryProtocol
 from .....tests.aeat_literal_fixtures import JUSTIFICANTE_VERIFY_PATH_FIXTURE, aeat_url
 from .....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile

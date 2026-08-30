@@ -49,11 +49,11 @@ from ...adapters.persistence.profile.transactions import TransactionCatalogueRep
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import (
     IvaDeductionFactKind,
-    Period,
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
     regime_apportions_deduction,
 )
+from ...core.period import Period
 from ...core.aggregation import BindingSourceKind
 from ...core.prose_elision import ElidedProse
 from ...core.external_constants import DEFAULT_CURRENCY

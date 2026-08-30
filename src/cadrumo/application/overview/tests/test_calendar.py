@@ -11,7 +11,7 @@ from pydantic import AnyHttpUrl, ValidationError
 
 from ....adapters.outbound.aeat.sede.declarations_schema import Declaracion
 from ....adapters.outbound.aeat.sede.notifications import RemoteNotification
-from ....core import Period
+from ....core.period import Period
 from ....domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.deadlines.engine import DeadlineEngine

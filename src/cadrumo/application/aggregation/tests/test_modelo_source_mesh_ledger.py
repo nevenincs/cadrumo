@@ -20,10 +20,10 @@ from ....core import (
     IvaDeductionEvidenceAuthority,
     IvaDeductionFactKind,
     NoRecoveryOutcome,
-    Period,
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
 )
+from ....core.period import Period
 from ....core.aggregation import BindingSourceKind
 from ....core.classification import SensitivityClass
 from ....domain.bienes_inversion import BienesInversionIvaRegister

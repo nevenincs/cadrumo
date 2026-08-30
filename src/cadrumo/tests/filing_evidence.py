@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from ..application.calculations import calculate_m303_regimen_simplificado_result
-from ..core import Period
+from ..core.period import Period
 from ..domain.calculations.registry.authority import bundled_authority
 from ..domain.calculations.registry.m303_orden_projection_models import M303RegimenSimplificadoSnapshot
 from ..domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot

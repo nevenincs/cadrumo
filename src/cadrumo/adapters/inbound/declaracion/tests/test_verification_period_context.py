@@ -6,7 +6,7 @@ from datetime import date
 
 import pytest
 
-from .....core import PeriodError
+from .....core.period import PeriodError
 from ._verification_chain_support import _period_to_date
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]

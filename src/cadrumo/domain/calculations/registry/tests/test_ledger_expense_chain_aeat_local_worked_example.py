@@ -54,7 +54,7 @@ from pathlib import Path
 import pytest
 
 from .....application.aggregation import aggregate_renta_ledger_expenses
-from .....core import Period
+from .....core.period import Period
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
 from ....categories.spending_category import SpendingCategory

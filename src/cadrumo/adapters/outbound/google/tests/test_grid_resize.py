@@ -27,7 +27,7 @@ from .....application.storage.calc_sheets import (
     SheetValueCell,
     TabName,
 )
-from .....core import Period
+from .....core.period import Period
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..calc_sheets_apply import _build_grid_resize_requests
 

@@ -28,7 +28,7 @@ from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from ...core import Period
+from ...core.period import Period
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ...domain.calculations.registry.ids import (

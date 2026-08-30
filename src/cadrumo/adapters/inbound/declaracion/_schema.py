@@ -23,7 +23,7 @@ from typing import Literal
 from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ....core import Period, PeriodError
+from ....core.period import Period, PeriodError
 from ....core.casilla_id import CasillaId
 from ....core.filing_year import FilingYear
 from ....core.identity import ContentDigest

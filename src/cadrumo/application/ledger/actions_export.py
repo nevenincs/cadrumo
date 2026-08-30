@@ -20,7 +20,7 @@ from ...core.hashing import content_hash_hex
 if TYPE_CHECKING:
     pass
 
-from ...core import Period
+from ...core.period import Period
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.transactions.enums import TransactionLifecycleState

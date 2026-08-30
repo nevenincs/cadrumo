@@ -18,9 +18,9 @@ from ....core import (
     Modelo,
     NoRecoveryOutcome,
     ObservedHeaderFact,
-    Period,
     ResultDisposition,
 )
+from ....core.period import Period
 from ....core.casilla_id import CasillaId
 from ....core.errors.hierarchy import TerminalPreconditionErrorMixin
 from ....core.resources import bundled_path

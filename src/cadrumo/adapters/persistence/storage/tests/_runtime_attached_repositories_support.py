@@ -52,7 +52,7 @@ from .....application.workflow.run_models import WorkflowResult, WorkflowStage, 
 from .....application.workflow.state_models import DeclaracionPointer, WorkflowState
 from .....core import IvaCompensationStateProvenance
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core import Period as _Period
+from .....core.period import Period as _Period
 from .....core.config import override_settings
 from .....domain.attachments.errors import AttachmentNotFoundError
 from .....domain.buckets.event import BucketEvent, BucketEventHistoryCatalogue, BucketEventObjectType, BucketEventType, derive_bucket_event_id

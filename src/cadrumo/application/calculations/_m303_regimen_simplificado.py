@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from decimal import Decimal, InvalidOperation
 
-from ...core import Period
+from ...core.period import Period
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.money import round_to_cents
 from ...domain.calculations.registry.m303_orden_projection_models import M303RegimenSimplificadoSnapshot

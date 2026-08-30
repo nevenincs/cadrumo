@@ -6,7 +6,7 @@ from datetime import date
 
 import pytest
 
-from ...core import Period
+from ...core.period import Period
 from ..period import (
     PeriodValidationError,
     RegistryPeriodError,

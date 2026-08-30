@@ -23,7 +23,8 @@ from ....application.aggregation import (
     PerModeloAggregationResult,
     aggregate_per_modelo,
 )
-from ....core import Modelo, Period
+from ....core import Modelo
+from ....core.period import Period
 from ....core.aggregation import BindingSourceKind
 from ....core.aggregation import OperationKind347
 from .._modelo_payloads import ModeloAggregateResult

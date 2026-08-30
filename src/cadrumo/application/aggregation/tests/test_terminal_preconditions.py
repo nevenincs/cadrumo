@@ -13,7 +13,8 @@ from typing import override
 
 import pytest
 
-from ....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome, Period
+from ....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from ....core.period import Period
 from ....core.aggregation import BindingSourceKind
 from ....core.errors.hierarchy import TerminalPreconditionErrorMixin
 from ....domain.calculations.registry.authority import bundled_authority

@@ -46,13 +46,13 @@ from decimal import Decimal
 from ...core import (
     Modelo,
     PaymentElection,
-    Period,
     RefundElection,
     ResultDisposition,
     derive_result_disposition,
     result_disposition_casilla_ids,
     result_disposition_is_refund,
 )
+from ...core.period import Period
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import CoreValidationError
 from ...domain.calculations.registry.authority import bundled_authority

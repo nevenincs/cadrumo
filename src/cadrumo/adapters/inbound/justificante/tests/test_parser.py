@@ -19,7 +19,8 @@ from urllib.parse import urlparse
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter, ValidationError
 
-from .....core import Period, is_aeat_csv
+from .....core import is_aeat_csv
+from .....core.period import Period
 from .....core.directory_scan import scan_directory
 from .....domain.justificante import (
     Justificante,

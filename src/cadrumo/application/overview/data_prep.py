@@ -40,7 +40,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Period
+from ...core.period import Period
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.work_unit import WorkUnitCatalogue
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState

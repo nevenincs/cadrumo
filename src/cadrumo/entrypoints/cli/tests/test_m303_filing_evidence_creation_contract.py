@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 import typer
 
-from ....core import Period
+from ....core.period import Period
 from .._m303_filing_evidence_input import m303_filing_instance_evidence_from_cli
 from ._m303_filing_evidence_support import default_insolvency_fact, write_m303_filing_evidence
 

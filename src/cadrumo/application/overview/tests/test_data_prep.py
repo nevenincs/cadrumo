@@ -23,7 +23,7 @@ from ....adapters.persistence.tests.runtime_profile_fixture import (
 )
 from ....application.ledger.evidence import MediaKind, PurchaseInvoiceEvidence
 from ....application.ledger.preflight import preflight_ledger_tax_readiness
-from ....core import Period
+from ....core.period import Period
 from ....core.aggregation import BindingSourceKind
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine

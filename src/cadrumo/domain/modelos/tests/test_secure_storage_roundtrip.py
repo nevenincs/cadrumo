@@ -26,7 +26,7 @@ from sqlalchemy.engine import Engine
 
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage import MODELO_WORK_UNIT_CATALOGUE_NAMESPACE, SensitivityClass
-from ....core import Period
+from ....core.period import Period
 from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from ....tests.secure_sql import isolated_runtime_profile
 from ..codes import ModeloCode

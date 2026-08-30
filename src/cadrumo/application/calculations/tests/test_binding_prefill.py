@@ -13,10 +13,10 @@ from ....core import (
     IvaCompensationStateProvenance,
     IvaDeductionEvidenceAuthority,
     IvaDeductionFactKind,
-    Period,
     derive_result_disposition,
     result_disposition_casilla_ids,
 )
+from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.errors.error_codes import ERROR_REGISTRY, build_error_envelope
 from ....domain.calculations.registry.authority import bundled_authority

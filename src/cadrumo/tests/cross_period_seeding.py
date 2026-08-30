@@ -32,7 +32,7 @@ from ..application.calculations import CalculationObservationRepository
 from ..application.modelo.external_import_actions import import_external_filing_evidence
 from ..application.modelo.tests.justificante_metadata import persist_justificante_metadata
 from ..application.modelo.work_lifecycle import create_work_unit
-from ..core import Period
+from ..core.period import Period
 from ..core.casilla_id import CasillaId
 from ..domain.calculations.registry.bindings import RegistryModeloObservation
 from ..domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements

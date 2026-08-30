@@ -45,7 +45,8 @@ from typing import Final
 
 from pydantic import BaseModel, TypeAdapter
 
-from ...core import STR_KEYED_MAPPING_ADAPTER, Modelo, Period
+from ...core import STR_KEYED_MAPPING_ADAPTER, Modelo
+from ...core.period import Period
 from ...core.casilla_id import CasillaId
 from ...core.aggregation import BindingSourceKind
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN

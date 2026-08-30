@@ -9,7 +9,8 @@ from pathlib import Path
 import pytest
 
 from ....adapters.outbound.aeat.export import RegistryFixedWidthRecordRenderer
-from ....core import FilingProducerKey, Period
+from ....core import FilingProducerKey
+from ....core.period import Period
 from ....core.casilla_id import CasillaId
 from ....core.directory_scan import scan_directory
 from ....domain.calculations.export_field_kind import CasillaFieldKind

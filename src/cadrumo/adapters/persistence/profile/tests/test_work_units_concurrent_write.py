@@ -23,7 +23,8 @@ from datetime import UTC, datetime
 
 import pytest
 
-from .....core import Modelo, Period
+from .....core import Modelo
+from .....core.period import Period
 from .....domain.modelos.repository import upsert_work_unit
 from .....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture

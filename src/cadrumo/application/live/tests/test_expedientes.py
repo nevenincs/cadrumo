@@ -33,7 +33,7 @@ import pytest
 
 from ....adapters.outbound.aeat.sede.declarations_schema import Declaracion
 from ....adapters.persistence.storage import LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE
-from ....core import Period
+from ....core.period import Period
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile, read_db_at_rest_bytes
 from ..errors import LiveApplicationInputError

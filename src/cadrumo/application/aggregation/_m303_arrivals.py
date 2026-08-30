@@ -15,13 +15,8 @@ from typing import Final
 
 from pydantic import BaseModel, field_validator, model_validator
 
-from ...core import (
-    STRICT_FROZEN_CONFIG,
-    Period,
-    ProrrataEspecialTransitionKind,
-    ProrrataRegisterRegime,
-    StandardPeriodCode,
-)
+from ...core import STRICT_FROZEN_CONFIG, ProrrataEspecialTransitionKind, ProrrataRegisterRegime
+from ...core.period import Period, StandardPeriodCode
 from ...domain.calculations.registry.ledger_bindings import IvaLedgerObservation
 from ...domain.iva.schema import IvaCashAccountingTreatment
 from ...domain.prorrata_register import (

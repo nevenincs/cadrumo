@@ -8,7 +8,8 @@ from importlib import import_module
 
 import pytest
 
-from ....core import FilingProducerKey, Modelo, Period
+from ....core import FilingProducerKey, Modelo
+from ....core.period import Period
 from ....domain.calculations import registry
 from ....domain.calculations.registry.export_semantics import ExportComputedKey, ExportDraftAttribute
 from ....domain.calculations.registry.schema_exports import (

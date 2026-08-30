@@ -16,7 +16,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG, Period, ServiceCapability
+from ...core import STRICT_FROZEN_CONFIG, ServiceCapability
+from ...core.period import Period
 from ...core.operations import (
     OperationCancellation,
     OperationClosePolicy,

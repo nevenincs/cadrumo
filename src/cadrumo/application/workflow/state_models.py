@@ -16,10 +16,8 @@ from pydantic import BaseModel, BeforeValidator, Field
 from ...core import (
     STRICT_FROZEN_CONFIG as _STRICT_FROZEN,
 )
-from ...core import (
-    Modelo,
-    Period,
-)
+from ...core import Modelo
+from ...core.period import Period
 from ...core.time import now as utc_now
 from ...domain.submission import ModeloDraftStatus
 from ..auth.models import AuthState

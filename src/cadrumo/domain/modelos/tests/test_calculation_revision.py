@@ -11,7 +11,8 @@ from typing import TypedDict, cast
 import pytest
 from pydantic import ValidationError
 
-from ....core import M210GrossIncomeSourceMode, Period
+from ....core import M210GrossIncomeSourceMode
+from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ....core.directory_scan import (

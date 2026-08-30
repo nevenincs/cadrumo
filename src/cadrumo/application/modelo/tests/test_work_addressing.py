@@ -14,7 +14,8 @@ from sqlalchemy import event
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import ActionArgumentSource, ActionConditionality, NoRecoveryOutcome, Period
+from ....core import ActionArgumentSource, ActionConditionality, NoRecoveryOutcome
+from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.repository import upsert_work_unit

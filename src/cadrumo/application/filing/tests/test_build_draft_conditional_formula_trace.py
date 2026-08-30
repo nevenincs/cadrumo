@@ -28,7 +28,7 @@ from decimal import Decimal
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
-from ....core import Period
+from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.filing.protocols import ModeloInputs

@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....core import Period
+from ....core.period import Period
 from .._modelo_review_package_payloads import (
     ModeloReviewPackageBuildResult,
     ModeloReviewPackageCounterSignResult,

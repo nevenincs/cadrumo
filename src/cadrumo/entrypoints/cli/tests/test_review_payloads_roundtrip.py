@@ -21,7 +21,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....application.review.enums import ReviewSeverity, ReviewState
-from ....core import Period
+from ....core.period import Period
 from .._review_payloads import (
     ReviewQueueResult,
     ReviewQueueRowPayload,

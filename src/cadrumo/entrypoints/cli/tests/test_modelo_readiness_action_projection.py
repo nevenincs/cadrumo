@@ -11,7 +11,7 @@ from ....application.state_projection import (
     ProjectionModeloReadiness,
 )
 from ....application.user_profile.commands import ProfilePreflightRequirement
-from ....core import Period
+from ....core.period import Period
 from ....core.aggregation import BindingSourceKind
 from ....core.i18n import tr
 from .._modelo_readiness_cli import _readiness_result

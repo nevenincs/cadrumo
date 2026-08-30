@@ -6,7 +6,8 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date
 
-from ....core import RegistryAuthorityGrade, RegistrySelectorPeriodCode
+from ....core import RegistryAuthorityGrade
+from ....core.period import RegistrySelectorPeriodCode
 from .errors import RegistrySnapshotError
 from .ids import ModeloId
 from .period_selector_match import selector_period_matches_request

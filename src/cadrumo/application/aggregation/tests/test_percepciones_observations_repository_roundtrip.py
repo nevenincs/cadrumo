@@ -26,7 +26,7 @@ from pydantic import ValidationError
 
 from ....adapters.persistence.storage import PathContainmentError, SecureObjectRowIdentityError
 from ....adapters.persistence.storage.crypto.encrypted_columns import secure_object_key_digest
-from ....core import Period
+from ....core.period import Period
 from ....core.aggregation import AggregationCaptureKind
 from ....core.aggregation import RetencionClave
 from ....core.external_constants import UTF_8_ENCODING

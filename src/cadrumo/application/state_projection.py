@@ -90,7 +90,8 @@ from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueR
 from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ..adapters.persistence.storage import inspect_bucket_storage_runtime
 from ..core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ..core import AuthProviderKind, OperatorActionAxis, Period
+from ..core import AuthProviderKind, OperatorActionAxis
+from ..core.period import Period
 from ..core.aggregation import BindingSourceKind
 from ..core.aggregation import LEDGER_BINDING_SOURCE_KINDS as _LEDGER_PREFLIGHT_BINDING_SOURCES
 from ..core.bucket_pointer import resolve_active_bucket_id

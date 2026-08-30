@@ -33,7 +33,7 @@ from typing import Protocol, runtime_checkable
 
 from ...adapters.persistence.profile.filing_amendments import ModeloAmendmentRepository
 from ...adapters.persistence.profile.filing_drafts import ModeloDraftRepository
-from ...core import Period
+from ...core.period import Period
 from ...core.identity import AeatCsv, IdentityError, SubjectTaxId, validate_spanish_tax_id
 from ...core.logging import get_logger
 from ...domain.filing.amendment import AmendmentKind, CasillaChange, CasillaDelta, CasillaInputs, ModeloCode, ModeloComplementaria, ModeloSustitutiva, make_amendment_id

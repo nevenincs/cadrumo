@@ -10,7 +10,8 @@ import pytest
 
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Period, RegistrySchemaFamilyDisposition
+from ....core import RegistrySchemaFamilyDisposition
+from ....core.period import Period
 from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos.work_unit import WorkUnit

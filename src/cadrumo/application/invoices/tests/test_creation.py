@@ -17,7 +17,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ....core import Period
+from ....core.period import Period
 from ....core.aggregation import IntracomOperationType
 from ....core.aggregation import InvoiceDevengoRank
 from ....core.resources import bundled_path

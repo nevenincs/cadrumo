@@ -24,7 +24,7 @@ from typing import Any
 
 import pytest
 
-from ....core import Period
+from ....core.period import Period
 from ....core.aggregation import LedgerIncomeGrounding, LedgerWithholdingDerivation
 from ....domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine

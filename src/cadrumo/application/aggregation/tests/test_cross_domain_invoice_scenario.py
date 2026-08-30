@@ -36,7 +36,8 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import Modelo, Period
+from ....core import Modelo
+from ....core.period import Period
 from ....core.aggregation import LedgerIncomeGrounding
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ledger_bindings import resolve_ledger_renta_income_aggregation_binding_values

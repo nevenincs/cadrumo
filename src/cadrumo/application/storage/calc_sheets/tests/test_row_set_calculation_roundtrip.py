@@ -16,7 +16,7 @@ from .....adapters.persistence.profile.invoices import InvoiceCatalogueRepositor
 from .....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from .....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from .....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from .....core import Period
+from .....core.period import Period
 from .....core.aggregation import BindingSourceKind
 from .....core.hashing import content_hash_hex
 from .....domain.calculations.registry.authority import bundled_authority

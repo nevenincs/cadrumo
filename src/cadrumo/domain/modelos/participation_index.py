@@ -34,7 +34,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, StringConstraints, TypeAdapter, ValidationError, model_validator
 
-from ...core import Period
+from ...core.period import Period
 from ...core.filing_year import FilingYear
 from ...core.identity import CalculationRevisionId, FilingRecordId, TransactionId, WorkUnitId
 from .codes import ModeloCode

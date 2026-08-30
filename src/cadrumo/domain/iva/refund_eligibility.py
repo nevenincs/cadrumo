@@ -25,7 +25,7 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Final
 
-from ...core import Period, StandardPeriodCode
+from ...core.period import Period, StandardPeriodCode
 
 #: The last Modelo 303 filing-period codes of a year, after which a negative
 #: result may be requested as a refund: ``4T`` (quarterly cadence), ``12`` (monthly

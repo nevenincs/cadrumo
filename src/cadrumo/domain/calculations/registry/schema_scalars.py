@@ -9,7 +9,8 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, BeforeValidator, Field, SerializeAsAny
 
-from ....core import IBAN_SHAPE_RE, StandardPeriodCode, iban_mod_97, normalise_iban
+from ....core import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
+from ....core.period import StandardPeriodCode
 from ....core.decimal import coerce_decimal
 from ....core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
 from ....core.identity import IdentityError, validate_spanish_tax_id

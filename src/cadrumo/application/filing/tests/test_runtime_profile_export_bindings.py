@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import Period
+from ....core.period import Period
 from ....tests.registry_tree import bundled_registry_tree
 from ..runtime import build_runtime_schema_provider
 

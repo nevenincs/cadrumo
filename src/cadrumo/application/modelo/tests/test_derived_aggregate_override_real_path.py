@@ -45,7 +45,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Period
+from ....core.period import Period
 from ....core.casilla_id import validated_casilla_id
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....domain.calculations.registry.authority import bundled_authority

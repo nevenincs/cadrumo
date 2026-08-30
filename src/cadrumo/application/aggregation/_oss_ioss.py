@@ -33,7 +33,8 @@ from pydantic import BaseModel, Field, StringConstraints
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
-from ...core import STRICT_FROZEN_CONFIG, Period
+from ...core import STRICT_FROZEN_CONFIG
+from ...core.period import Period
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.money import CENT, round_to_cents
 from ...domain.calculations.registry.ids import BindingId

@@ -80,7 +80,7 @@ from pathlib import Path
 import pytest
 
 from .....application.aggregation import aggregate_renta_m100_income_ledger
-from .....core import Period
+from .....core.period import Period
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.aggregation import LedgerIncomeGrounding
 from .....core.resources import bundled_path

@@ -35,10 +35,10 @@ from ....core import (
     ActionEvidenceProvenance,
     Modelo,
     NoRecoveryOutcome,
-    Period,
     StorageCategory,
     storage_path,
 )
+from ....core.period import Period
 from ....core.config import override_settings
 from ....core.errors.hierarchy import SiteHealthState
 from ....core.external_constants import OutputLanguage

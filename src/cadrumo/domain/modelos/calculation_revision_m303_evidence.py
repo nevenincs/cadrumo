@@ -9,7 +9,8 @@ from typing import Annotated, Self
 
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
-from ...core import RECORD_DESIGN_EPOCH_PATTERN, STRICT_FROZEN_CONFIG, Period
+from ...core import RECORD_DESIGN_EPOCH_PATTERN, STRICT_FROZEN_CONFIG
+from ...core.period import Period
 from ...core.casilla_id import CasillaId
 from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex

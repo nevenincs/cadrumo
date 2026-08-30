@@ -20,7 +20,8 @@ from typing import TypedDict
 
 import pytest
 
-from ....core import Modelo, Period
+from ....core import Modelo
+from ....core.period import Period
 from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ..errors import LiveApplicationInputError
 from ..justificante import (

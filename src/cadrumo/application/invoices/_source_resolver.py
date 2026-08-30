@@ -31,7 +31,8 @@ from ...adapters.persistence.storage import (
     DecryptionError,
     EnvelopeVersionError,
 )
-from ...core import Modelo, Period
+from ...core import Modelo
+from ...core.period import Period
 from ...core.aggregation import (
     BindingSourceKind,
     CalculationSourceLineageRole,

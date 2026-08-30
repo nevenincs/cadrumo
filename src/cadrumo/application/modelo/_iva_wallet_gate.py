@@ -46,7 +46,7 @@ from typing import Final, NamedTuple, Never, override
 
 from ...core import ActionEvidenceProvenance, Modelo
 from ...core.casilla_id import CasillaId
-from ...core import Period as _Period
+from ...core.period import Period as _Period
 from ...core.identity import same_tax_identifier
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements

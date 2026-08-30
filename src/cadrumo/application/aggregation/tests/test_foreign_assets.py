@@ -8,7 +8,8 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import ForeignAssetObligationGroup, Period
+from ....core import ForeignAssetObligationGroup
+from ....core.period import Period
 from ....core.aggregation import BindingSourceKind
 from ....core.aggregation import BindingAggregation, BindingAggregationOp
 from ....domain.calculations.registry.authority import bundled_authority

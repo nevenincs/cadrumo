@@ -7,7 +7,7 @@ from datetime import UTC, date, datetime
 import pytest
 
 from ....adapters.outbound.aeat.sede.declarations_schema import Declaracion
-from ....core import Period
+from ....core.period import Period
 from ...live.expedientes import PersistedExpedientesSnapshot
 from ..calendar import calendar_events_from_expedientes_snapshots
 from ..calendar_evidence import calendar_filing_evidence_from_sources

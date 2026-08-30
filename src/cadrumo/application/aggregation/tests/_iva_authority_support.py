@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ....core import Period
+from ....core.period import Period
 from ....domain.bienes_inversion import BienesInversionIvaRegister
 from ....domain.transactions.models import TransactionCatalogue
 from .._iva_ledger import (

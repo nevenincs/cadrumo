@@ -26,7 +26,7 @@ from pydantic import (
 )
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Period
+from ...core.period import Period
 from ...core.casilla_id import CasillaId
 from ...domain.categories.spending_category import SpendingCategory
 from .errors import AggregationValidationError, t

@@ -16,11 +16,11 @@ from ....core import (
     M303RegimenSimplificadoFact,
     Modelo,
     PaymentElection,
-    Period,
     PriorDomiciliationElection,
     RefundElection,
     ResultDisposition,
 )
+from ....core.period import Period
 from ....core.product_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
 from ....core.resources import bundled_path
 from ....domain.bienes_inversion import BienesInversionIvaRegister, RegistroRegularizacionResult

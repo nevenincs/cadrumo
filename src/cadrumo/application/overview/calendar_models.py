@@ -26,7 +26,7 @@ from pydantic import BaseModel, BeforeValidator, Field, PlainSerializer, model_v
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.prose_elision import ElidedProse
 from ...core import NotificacionEstadoServicio as _NotificacionEstadoServicio
-from ...core import Period as _Period
+from ...core.period import Period as _Period
 from ...core import PostFilingEventKind as _PostFilingEventKind
 from ...core.filing_year import FilingYear
 from ...core.identity import AeatCsv, CalculationRevisionId, FilingRecordId, SnapshotId, WorkUnitId

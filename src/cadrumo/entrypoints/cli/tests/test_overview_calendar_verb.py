@@ -23,7 +23,7 @@ from ....application.live.notifications import NotificationsService
 from ....application.overview.calendar import build_overview_calendar
 from ....application.overview.calendar_models import OverviewCalendarRange
 from ....application.user_profile.projections import record_to_values
-from ....core import Period
+from ....core.period import Period
 from ....core.config import override_settings
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ....core.i18n import clear_output_language_cache

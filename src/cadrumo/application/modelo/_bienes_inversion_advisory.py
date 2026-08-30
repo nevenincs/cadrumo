@@ -51,7 +51,8 @@ See Also:
 
 from __future__ import annotations
 
-from ...core import Modelo, Period
+from ...core import Modelo
+from ...core.period import Period
 from ...domain.bienes_inversion import BienInversionRecordError
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.iva.m303_settlement import is_m303_annual_settlement_period

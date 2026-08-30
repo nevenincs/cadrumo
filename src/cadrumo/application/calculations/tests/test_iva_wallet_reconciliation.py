@@ -11,7 +11,8 @@ from pydantic import AnyHttpUrl
 
 from ....adapters.outbound.aeat.sede.iva_compensation_wallet import IVA_COMPENSATION_WALLET_URL
 from ....adapters.outbound.aeat.sede.schema import IvaCompensationWalletObservation, IvaCompensationWalletRow
-from ....core import IvaCompensationStateProvenance, Period
+from ....core import IvaCompensationStateProvenance
+from ....core.period import Period
 from ....core.aggregation import BindingSourceKind
 from ....core.errors.error_codes import ERROR_REGISTRY, build_error_envelope
 from ....domain.calculations.registry.authority import bundled_authority

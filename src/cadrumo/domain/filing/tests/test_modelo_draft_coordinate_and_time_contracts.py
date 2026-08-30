@@ -27,7 +27,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....core import Period
+from ....core.period import Period
 from ....core.aggregation import BindingSourceKind
 from ....core.time import validate_utc_aware
 from ...calculations.registry.schema_references import RegistrySnapshotRef

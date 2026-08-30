@@ -16,7 +16,7 @@ import pytest
 from pydantic import AnyHttpUrl
 
 from ....adapters.inbound.pdf import source_pdf_reference_path
-from ....core import Period
+from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.config import override_settings
 from ....core.errors.error_codes import resolve_error_message

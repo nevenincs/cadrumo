@@ -43,7 +43,8 @@ from ...application.calculations import (
     observation_key,
     persist_observation_envelope_and_iva_history,
 )
-from ...core import IvaCompensationStateProvenance, Modelo, Period, PeriodKind, normalise_aeat_csv
+from ...core import IvaCompensationStateProvenance, Modelo, normalise_aeat_csv
+from ...core.period import Period, PeriodKind
 from ...core.hashing import sha256_hex
 from ...core.identity import same_tax_identifier
 from ...core.json_contract import Notice, NoticeSeverity

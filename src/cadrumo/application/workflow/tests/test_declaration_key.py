@@ -24,7 +24,8 @@ from typing import Any, cast
 import pytest
 from pydantic import ValidationError
 
-from ....core import Modelo, Period
+from ....core import Modelo
+from ....core.period import Period
 from ....domain.submission import ModeloDraftStatus
 from ..run_models import WorkflowResult
 from ..state_models import WorkflowState, declaration_key, update_declaration_pointer

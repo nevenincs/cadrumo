@@ -34,7 +34,7 @@ from collections.abc import Mapping
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
-from .....core import RegistrySelectorPeriodCode, accepted_period_codes
+from .....core.period import RegistrySelectorPeriodCode, accepted_period_codes
 from .....tests.registry_tree import bundled_registry_tree
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]

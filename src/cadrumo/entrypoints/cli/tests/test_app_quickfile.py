@@ -32,7 +32,8 @@ from click.testing import Result
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.state_projection import ProjectionModeloReadiness
-from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind, Period
+from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.filing_evidence import FilingEvidenceReference
@@ -546,7 +547,7 @@ def test_quickfile_result_payload_refuses_unknown_stopped_stage() -> None:
     """``stopped_at_stage`` names a canonical stage or nothing at all."""
     from pydantic import ValidationError
 
-    from ....core import Period
+    from ....core.period import Period
     from .._app_quickfile_payloads import QuickfileResultPayload
 
     with pytest.raises(ValidationError):

@@ -6,7 +6,7 @@ from datetime import date
 
 import pytest
 
-from ....core import Period
+from ....core.period import Period
 from ..agenda import OverviewAgenda, build_overview_agenda
 from ..errors import OverviewAgendaError
 from .calendar_test_support import profile as _profile

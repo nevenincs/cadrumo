@@ -28,7 +28,6 @@ from cadrumo.core import (
     M303Exonerado390ActivityProjectionRef,
     M303ProrrataActivityProjectionRef,
     M303RegimenSimplificadoFact,
-    Period,
     PriorDomiciliationElection,
     ProrrataActivityRowType,
     ProrrataProvisionalProvenance,
@@ -36,6 +35,7 @@ from cadrumo.core import (
     ResultDisposition,
     SectorDiferenciadoLetra,
 )
+from cadrumo.core.period import Period
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry._supplementary_orden import compile_supplementary_ordenes

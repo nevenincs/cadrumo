@@ -36,8 +36,8 @@ from ....core import (
     ActionEvidenceProvenance,
     Modelo,
     NoRecoveryOutcome,
-    Period,
 )
+from ....core.period import Period
 from ....core.errors.hierarchy import SiteHealthState
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES
 from ....domain.deadlines.models import ObligationStatus

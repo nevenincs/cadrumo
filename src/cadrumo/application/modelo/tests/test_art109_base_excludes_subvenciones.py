@@ -26,7 +26,8 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import ConceptoIngreso, Period, TipoActividad
+from ....core import ConceptoIngreso, TipoActividad
+from ....core.period import Period
 from ....core.resources import bundled_path
 from ....domain.calculations.registry.loader import load_legal_parameters_only
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState

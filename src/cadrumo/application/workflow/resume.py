@@ -58,7 +58,8 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
-from ...core import HEX_PATTERN_16, HEX_PATTERN_64, STRICT_FROZEN_CONFIG, Period
+from ...core import HEX_PATTERN_16, HEX_PATTERN_64, STRICT_FROZEN_CONFIG
+from ...core.period import Period
 from ...core.identity import CalculationRevisionId, WorkUnitId
 from ...domain.modelos.work_unit import WorkUnitCatalogue
 from .errors import WorkflowError

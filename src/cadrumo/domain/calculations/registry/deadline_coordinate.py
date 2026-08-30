@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from typing import NamedTuple
 
-from ....core import M210_TIPO_RENTA_CODE_PROJECTION, Modelo, Period, ResultDisposition, registry_period_kind
+from ....core import M210_TIPO_RENTA_CODE_PROJECTION, Modelo, ResultDisposition
+from ....core.period import Period, registry_period_kind
 from .schema import DeadlineWindowDefinition
 
 

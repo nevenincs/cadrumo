@@ -28,7 +28,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal
 
-from ...core import Period
+from ...core.period import Period
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.casilla_membership import (

@@ -8,7 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core import M303RegimenSimplificadoFact, Modelo, Period
+from ....core import M303RegimenSimplificadoFact, Modelo
+from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.deadlines.models import M303RegimeComposition

@@ -50,7 +50,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Period
+from ...core.period import Period
 from ...core.i18n import tr
 from ...core.identity import BucketId, WorkUnitId
 from ...domain.modelos.verification_report import ModeloVerificationFindingSeverity, VerificationCompletenessStatus

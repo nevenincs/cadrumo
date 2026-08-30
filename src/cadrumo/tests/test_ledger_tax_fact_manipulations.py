@@ -30,7 +30,7 @@ from ..application.aggregation import (
     aggregate_renta_income_ledger,
     aggregate_renta_ledger_expenses,
 )
-from ..core import Period
+from ..core.period import Period
 from ..domain.bienes_inversion import BienesInversionIvaRegister
 from ..domain.categories.spending_category import SpendingCategory
 from ..domain.invoices.models import InvoiceCatalogue

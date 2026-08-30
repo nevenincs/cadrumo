@@ -14,7 +14,8 @@ from ....application.calculations import (
     ObservationSourceKind,
     ResultDispositionProjection,
 )
-from ....core import ObservedHeaderFact, Period, PriorDomiciliationElection, ResultDisposition
+from ....core import ObservedHeaderFact, PriorDomiciliationElection, ResultDisposition
+from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind, ModeloRecord, ModeloRecordStatus, derive_filing_record_id

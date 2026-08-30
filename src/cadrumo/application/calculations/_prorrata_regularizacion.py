@@ -48,11 +48,11 @@ from ...adapters.persistence.storage import ClassificationError, DecryptionError
 from ...core import (
     STRICT_FROZEN_CONFIG,
     Modelo,
-    Period,
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
     regime_apportions_deduction,
 )
+from ...core.period import Period
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.json_contract import Notice, NoticeSeverity

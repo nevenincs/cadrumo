@@ -38,7 +38,7 @@ from enum import StrEnum
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Period
+from ...core.period import Period
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import CadrumoError
 from ...core.i18n import output_language

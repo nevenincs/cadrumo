@@ -47,7 +47,7 @@ from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryPr
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState, CalculationSourceRef
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..ledger.preflight import LedgerPreflightIssue
-from ..operator_actions._models import ActionReference
+from ..operator_actions import ActionReference
 from ..registry.closure import RegistryClosureLimb
 from ..state_projection import ModeloReadinessRequest, ProjectionModeloReadiness
 from .work_addressing import (

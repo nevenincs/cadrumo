@@ -44,7 +44,8 @@ from pydantic import BaseModel, Field, model_validator
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Modelo, Period, PeriodKind, TipoActividad
+from ...core import Modelo, TipoActividad
+from ...core.period import Period, PeriodKind
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.prose_elision import ElidedProse
 from ...core.aggregation import LedgerIncomeGrounding, LedgerWithholdingDerivation

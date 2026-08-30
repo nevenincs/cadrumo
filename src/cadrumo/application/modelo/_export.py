@@ -58,11 +58,11 @@ from ...core import (
     FilingProducerKey,
     Modelo,
     PaymentElection,
-    Period,
     PriorDomiciliationElection,
     RefundElection,
     ResultDisposition,
 )
+from ...core.period import Period
 from ...core.product_identity import AeatProductSoftwareIdentity
 from ...core.atomic_write import StagedPublication, hardened_staged_publication
 from ...core.filing_year import FilingYear

@@ -90,7 +90,7 @@ from cadrumo.application.calculations import CalculationObservationRepository
 from cadrumo.application.modelo._calculation_actions import calculate_modelo_revision_from_bucket_aggregation
 from cadrumo.application.modelo._filed_revision_observation import persist_filed_revision_observation
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
-from cadrumo.core import Period
+from cadrumo.core.period import Period
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.domain.bienes_inversion import BienesInversionIvaRegister

@@ -10,7 +10,8 @@ from pathlib import Path
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
-from ....core import Period, RegistrySchemaFamilyDisposition, RevisionReviewStatus
+from ....core import RegistrySchemaFamilyDisposition, RevisionReviewStatus
+from ....core.period import Period
 from ....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ....core.external_constants import OutputLanguage
 from ....domain.modelos.calculation_revision import CalculationSourceRef

@@ -28,8 +28,8 @@ from __future__ import annotations
 
 from datetime import date
 
-from ..core import Period
-from ..core import PeriodError as CorePeriodError
+from ..core.period import Period
+from ..core.period import PeriodError as CorePeriodError
 from ..core.errors.hierarchy import CadrumoError
 
 

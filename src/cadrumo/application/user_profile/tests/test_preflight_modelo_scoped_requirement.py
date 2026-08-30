@@ -12,7 +12,8 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import Modelo, Period
+from ....core import Modelo
+from ....core.period import Period
 from ....core.classification import SensitivityClass
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.schema import (

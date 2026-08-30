@@ -8,7 +8,7 @@ import inspect
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.core import Period
+from cadrumo.core.period import Period
 from cadrumo.core.product_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_revision_inspection

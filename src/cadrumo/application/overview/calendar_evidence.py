@@ -37,7 +37,7 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING
 
 from ...application.operator_actions import next_action
-from ...core import Period as _Period
+from ...core.period import Period as _Period
 from ...core import normalise_aeat_csv
 from ...core.i18n import tr
 from ...core.identity import same_tax_identifier

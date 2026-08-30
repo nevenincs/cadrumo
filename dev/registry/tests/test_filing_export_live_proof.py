@@ -18,11 +18,11 @@ from cadrumo.application.registry.filing_export_coverage import compose_filing_e
 from cadrumo.core import (
     Modelo,
     PaymentElection,
-    Period,
     PriorDomiciliationElection,
     RefundElection,
     ResultDisposition,
 )
+from cadrumo.core.period import Period
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.product_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
 from cadrumo.core.resources import bundled_path

@@ -30,7 +30,8 @@ from typing import Annotated
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Modelo, Period
+from ...core import Modelo
+from ...core.period import Period
 from ...core.hashing import sha256_hex
 from ...core.identity import AeatCsv, SubjectTaxId
 from ...core.time import UtcInstant, validate_utc_aware

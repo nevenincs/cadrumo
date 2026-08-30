@@ -23,7 +23,7 @@ from .....application.storage.calc_sheets import (
     SheetRowSetColumn,
     TabName,
 )
-from .....core import Period
+from .....core.period import Period
 from ..calc_sheets_pull import (
     MetadataMatchState,
     PullCoverageDiscrepancy,

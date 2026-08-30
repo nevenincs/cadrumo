@@ -14,7 +14,7 @@ from ....adapters.outbound.fx import ECB_RATE_SOURCE_ID
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage import StorageValidationError
 from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
-from ....core import Period
+from ....core.period import Period
 from ....core.aggregation import (
     BindingSourceKind,
     IntracomOperationType,

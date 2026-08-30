@@ -14,7 +14,7 @@ from ..adapters.persistence.profile.modelos_calculation import CalculationRevisi
 from ..adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ..application.modelo.work_review import ModeloWorkReview, build_modelo_work_review
-from ..core import Period
+from ..core.period import Period
 from ..domain.calculations.registry.authority import bundled_authority
 from ..domain.calculations.registry.bindings import CasillaObservation
 from ..domain.calculations.registry.temporal import select_revision

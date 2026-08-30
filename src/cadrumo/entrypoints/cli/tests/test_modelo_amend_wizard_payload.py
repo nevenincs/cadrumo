@@ -16,7 +16,7 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
-from ....core import Period
+from ....core.period import Period
 from ....domain.modelos.filing_record import ModeloRecordStatus
 from ....domain.modelos.calculation_revision import CalculationRevisionAmendmentKind
 from .._modelo_amend_wizard_payloads import WorkAmendWizardResult

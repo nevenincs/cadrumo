@@ -25,8 +25,8 @@ from ...core import (
     ActionEvidenceProvenance,
     Modelo,
     NoRecoveryOutcome,
-    Period,
 )
+from ...core.period import Period
 from ...core.config import Settings
 from ...core.errors.hierarchy import SiteHealthError
 from ...core.errors.severity import BaseSeverity

@@ -6,7 +6,7 @@ from datetime import date
 from enum import StrEnum
 from typing import Literal
 
-from ...core import Period
+from ...core.period import Period
 
 type CertificateSeverityValue = Literal["OK", "WARN", "CRITICAL", "EXPIRED"]
 

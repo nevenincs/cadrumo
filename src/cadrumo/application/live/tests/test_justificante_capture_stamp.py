@@ -14,7 +14,8 @@ __all__ = ["_isolated_backend"]
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from ....core import Modelo, Period
+from ....core import Modelo
+from ....core.period import Period
 from ....domain.buckets.event import BucketEventType
 from ....domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind
 from ....domain.user_profile.values import UserProfileFact

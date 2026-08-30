@@ -24,7 +24,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from ....core import Period
+from ....core.period import Period
 from ....domain.iva.schema import IvaCashAccountingTreatment, IvaCategory
 from ....domain.transactions.dates import transaction_eligible_date_span
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection

@@ -7,18 +7,17 @@ from datetime import date
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from .. import (
+from .. import _period, aggregation
+from ..period import (
     FilingPeriodCode,
     Period,
     PeriodError,
     PeriodKind,
     RegistryPeriodCode,
     StandardPeriodCode,
-    _period,
     accepted_filing_period_codes,
     accepted_filing_period_patterns,
     accepted_period_codes,
-    aggregation,
 )
 from .._period import accepted_period_patterns
 

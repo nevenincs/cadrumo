@@ -27,8 +27,8 @@ from ....core import (
     ActionEvidenceProvenance,
     Modelo,
     NoRecoveryOutcome,
-    Period,
 )
+from ....core.period import Period
 from ....core.errors.hierarchy import SiteHealthState
 from ....domain.deadlines.models import ModeloDeadline, ObligationStatus, RecargoBand, Recovery
 from ....tests.aeat_literal_fixtures import aeat_url

@@ -16,7 +16,8 @@ from pathlib import Path
 
 from pydantic import AnyHttpUrl, BaseModel, Field, ValidationInfo, field_validator
 
-from ...core import STRICT_FROZEN_CONFIG, Period, PeriodError
+from ...core import STRICT_FROZEN_CONFIG
+from ...core.period import Period, PeriodError
 from ...core.identity import AeatCsv, AeatPresentationId, ContentDigest, SubjectTaxId, same_tax_identifier
 from ...core.time import UtcInstant
 

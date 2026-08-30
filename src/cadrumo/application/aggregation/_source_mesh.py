@@ -34,8 +34,8 @@ from ...core import (
     STR_KEYED_MAPPING_ADAPTER,
     STRICT_FROZEN_HIDDEN_INPUT_CONFIG,
     M210GrossIncomeSourceMode,
-    Period,
 )
+from ...core.period import Period
 from ...core.casilla_id import CasillaId
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.prose_elision import ElidedProse

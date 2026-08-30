@@ -25,7 +25,7 @@ from pathlib import Path
 import pytest
 
 from ......application.auth.session_types import AeatSession, CertificateSessionDetail
-from ......core import Period
+from ......core.period import Period
 from ......core.i18n import tr
 from .._auth_state import storage_state_for_session
 from ..errors import SedeNavigationError

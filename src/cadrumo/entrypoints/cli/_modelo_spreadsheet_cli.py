@@ -21,7 +21,7 @@ from ...adapters.outbound.storage import (
     build_google_credentials,
     resolve_drive_root_folder_id,
 )
-from ...core import Period
+from ...core.period import Period
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.config import load_settings
 from ...core.decimal import coerce_decimal

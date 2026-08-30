@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 
-from ....core import Period
+from ....core.period import Period
 from ....domain.deadlines.models import IVARegime, IrpfEstimationRegime, TaxpayerProfile
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity

@@ -22,7 +22,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ...core import Period
+from ...core.period import Period
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.modelos.errors import ModeloError

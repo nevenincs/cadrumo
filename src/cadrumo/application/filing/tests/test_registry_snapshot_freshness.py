@@ -58,7 +58,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from ....core import Period
+from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from .._draft_construction import _load_registry_snapshot
 

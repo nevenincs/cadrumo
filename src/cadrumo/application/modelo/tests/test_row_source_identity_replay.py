@@ -8,7 +8,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import Period
+from ....core.period import Period
 from ....core.aggregation import BindingSourceKind
 from ....domain.calculations import RowSourceIdentity
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef

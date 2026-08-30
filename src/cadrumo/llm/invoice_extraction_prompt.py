@@ -83,7 +83,8 @@ from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel, Field
 
-from ..core import STRICT_FROZEN_CONFIG, Period
+from ..core import STRICT_FROZEN_CONFIG
+from ..core.period import Period
 from ..core.hashing import sha256_hex
 from .invoice_field_contract import (
     ANCHOR_KEY_SUFFIX,

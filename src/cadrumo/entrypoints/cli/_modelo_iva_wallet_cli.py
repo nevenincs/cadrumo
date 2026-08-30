@@ -16,7 +16,7 @@ from ...application.modelo._iva_wallet_seed import (
     record_iva_compensation_override_for_bucket,
     seed_iva_compensation_period_for_bucket,
 )
-from ...core import Period
+from ...core.period import Period
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.i18n import tr
 from ...domain.iva_compensation.errors import IvaCompensationSeedConflictError

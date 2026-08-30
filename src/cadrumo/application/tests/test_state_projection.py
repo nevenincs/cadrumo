@@ -34,7 +34,7 @@ from ...adapters.persistence.storage import master_key
 from ...adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from ...adapters.persistence.storage.custody.kdf_supervision import unlock_profile_custody
 from ...adapters.persistence.storage.sql.engine import dispose_engine
-from ...core import Period
+from ...core.period import Period
 from ...core.config import SecretStoreBackend, Settings, override_settings
 from ...domain.categories.spending_category import SpendingCategory
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection

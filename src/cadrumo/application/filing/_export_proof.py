@@ -13,12 +13,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core import (
-    STRICT_FROZEN_CONFIG,
-    STRICT_FROZEN_HIDDEN_INPUT_CONFIG,
-    Period,
-    PriorDomiciliationElection,
-)
+from ...core import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG, PriorDomiciliationElection
+from ...core.period import Period
 from ...core.product_identity import AeatProductSoftwareIdentity
 from ...core.filing_year import FilingYear
 from ...core.identity import CalculationRevisionId, ContentDigest

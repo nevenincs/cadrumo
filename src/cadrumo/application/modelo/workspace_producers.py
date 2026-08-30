@@ -8,7 +8,8 @@ from typing import TYPE_CHECKING, Annotated, Literal, Protocol, Self, TypedDict,
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG, Period, RegistryAuthorityGrade, RevisionReviewStatus
+from ...core import STRICT_FROZEN_CONFIG, RegistryAuthorityGrade, RevisionReviewStatus
+from ...core.period import Period
 from ...core.hashing import content_hash_hex
 from ...core.source_connectivity import SourceConnectivityProofAuthority
 from ...core.identity import BucketId, CalculationRevisionId, ContentDigest

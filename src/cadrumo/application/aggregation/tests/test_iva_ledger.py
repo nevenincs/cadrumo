@@ -17,8 +17,8 @@ from ....core import (
     IvaDeductionEvidenceAuthority,
     IvaDeductionFactKind,
     OperatorActionAxis,
-    Period,
 )
+from ....core.period import Period
 from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from ....domain.bienes_inversion import (
     BienesInversionIvaRegister,

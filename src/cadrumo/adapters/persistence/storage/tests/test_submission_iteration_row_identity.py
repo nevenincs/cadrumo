@@ -25,7 +25,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from .....core import Period
+from .....core.period import Period
 from .....domain.submission import (
     ModeloPresentado,
     SubmissionAttempt,

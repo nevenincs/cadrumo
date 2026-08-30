@@ -13,7 +13,7 @@ from click.testing import Result
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....application.aggregation import CalculationSourceContext
 from ....application.invoices import InvoiceCatalogueSourceResolver
-from ....core import Period
+from ....core.period import Period
 from ....core.resources import bundled_path
 from ....domain.calculations.registry.loader import load_modelo_path
 from ....tests.cli_runner import invoke_cached_cli

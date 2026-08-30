@@ -38,7 +38,8 @@ from ...application.modelo.work_lifecycle import (
     list_work_units,
     rename_work_unit,
 )
-from ...core import Modelo, Period
+from ...core import Modelo
+from ...core.period import Period
 from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
 from ...core.i18n import tr

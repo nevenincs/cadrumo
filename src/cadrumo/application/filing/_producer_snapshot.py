@@ -26,13 +26,12 @@ from ...core import (
     M390RepresentativeKind,
     Modelo,
     PaymentElection,
-    Period,
     PriorDomiciliationElection,
     RefundElection,
     ResultDisposition,
-    StandardPeriodCode,
     result_disposition_is_refund,
 )
+from ...core.period import Period, StandardPeriodCode
 from ...core.identity import SubjectTaxId
 from ...domain.bienes_inversion import (
     BienesInversionIvaRegister,

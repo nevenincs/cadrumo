@@ -12,7 +12,8 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....core import M210GrossIncomeSourceMode, M210PayerMode, Period
+from ....core import M210GrossIncomeSourceMode, M210PayerMode
+from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.loader import load_modelo_directory
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile

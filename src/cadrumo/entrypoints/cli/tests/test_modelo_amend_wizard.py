@@ -43,7 +43,8 @@ from ....application.flows.scripted import run_scripted_flow
 from ....application.modelo._action_errors import amendment_evidence_missing_precondition
 from ....application.modelo._calculation_actions import get_calculation_revision
 from ....application.modelo._filing_actions import get_filing_record
-from ....core import STR_KEYED_MAPPING_ADAPTER, ActionConditionality, NoRecoveryOutcome, Period
+from ....core import STR_KEYED_MAPPING_ADAPTER, ActionConditionality, NoRecoveryOutcome
+from ....core.period import Period
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.flows import FlowMode
 from ....domain.calculations.registry.authority import bundled_authority

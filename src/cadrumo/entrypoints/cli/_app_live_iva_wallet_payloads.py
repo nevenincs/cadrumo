@@ -16,10 +16,8 @@ from ...application.live.remote_state_models import (
     LiveIvaReadStatus,
     LiveIvaReadSurface,
 )
-from ...core import (
-    IvaCompensationStateProvenance,
-    Period,
-)
+from ...core import IvaCompensationStateProvenance
+from ...core.period import Period
 from ...core.json_contract import OutputSchema
 
 

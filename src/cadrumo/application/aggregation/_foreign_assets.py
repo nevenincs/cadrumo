@@ -29,9 +29,9 @@ from ...core import (
     ForeignAssetObligationGroup,
     M720AssetClassCode,
     Modelo,
-    Period,
     foreign_asset_obligation_group,
 )
+from ...core.period import Period
 from ...core.aggregation import BindingSourceKind
 from ...core.aggregation import ForeignAssetClass
 from ...core.country_code import CountryCodeAlpha2

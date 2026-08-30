@@ -39,7 +39,8 @@ from typing import TYPE_CHECKING, ClassVar
 
 from pydantic import BaseModel, ConfigDict
 
-from ...core import Modelo, Period
+from ...core import Modelo
+from ...core.period import Period
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.hashing import sha256_hex
 from ...domain.calculations.registry.schema import RegistrySnapshot

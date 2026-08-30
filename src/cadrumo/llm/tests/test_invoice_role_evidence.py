@@ -29,7 +29,7 @@ import pytest
 from pydantic import ValidationError
 
 from ...application.ledger.evidence import PurchaseInvoiceEvidenceInputError
-from ...core import Period
+from ...core.period import Period
 from ..invoice_extraction_prompt import build_invoice_extraction_prompt
 from ..invoice_field_contract import (
     ANCHOR_KEY_SUFFIX,

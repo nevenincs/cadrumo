@@ -8,7 +8,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....core import ActionConditionality, NoRecoveryOutcome, Period
+from ....core import ActionConditionality, NoRecoveryOutcome
+from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.errors.severity import BaseSeverity
 from ....core.i18n import Translatable as tr

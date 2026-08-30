@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Period
+from ....core.period import Period
 from ...calculations.registry.schema_verification import ProfilePredicateDefinition
 from .. import engine as _engine_module
 from ..engine import (

@@ -21,7 +21,8 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from ....core import Modelo, Period
+from ....core import Modelo
+from ....core.period import Period
 from ..models import (
     CrossPeriodGroupMemberRoster,
     IVARegime,

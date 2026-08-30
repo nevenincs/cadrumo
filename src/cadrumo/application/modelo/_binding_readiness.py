@@ -26,7 +26,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from ...core import Period
+from ...core.period import Period
 from ...core.logging import get_logger
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 from ...domain.calculations.registry.errors import (

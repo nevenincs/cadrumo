@@ -51,13 +51,8 @@ from ...adapters.persistence.storage import (
     SensitivityClass,
     safe_repository_id,
 )
-from ...core import (
-    STRICT_FROZEN_CONFIG,
-    ObservedHeaderFact,
-    Period,
-    PriorDomiciliationElection,
-    ResultDisposition,
-)
+from ...core import STRICT_FROZEN_CONFIG, ObservedHeaderFact, PriorDomiciliationElection, ResultDisposition
+from ...core.period import Period
 from ...core.secure_object_write import SecureObjectWrite
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex

@@ -24,7 +24,8 @@ from pathlib import Path
 import pytest
 
 from ....adapters.outbound.fx import ECB_RATE_SOURCE_ID
-from ....core import Modelo, Period
+from ....core import Modelo
+from ....core.period import Period
 from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.retenciones_bindings import resolve_retenciones_aggregation_binding_values
@@ -239,7 +240,7 @@ def test_routed_observations_aggregate_through_the_existing_modelo_111_path() ->
     practice: the observations reach the committed Modelo 111 rollups without
     any new aggregator standing between them.
     """
-    from ....core import Period
+    from ....core.period import Period
 
     first = _invoice(number="F-PROV-301")
     second = _invoice(number="F-PROV-302", base="2000.00", retention_amount="300.00")

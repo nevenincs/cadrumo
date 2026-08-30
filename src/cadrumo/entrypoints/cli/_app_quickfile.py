@@ -26,7 +26,8 @@ from ...application.modelo._quickfile import (
     run_modelo_quickfile,
 )
 from ...application.workflow.persistence import workflow_state_repository
-from ...core import PaymentElection, Period, PeriodError, PriorDomiciliationElection, RefundElection
+from ...core import PaymentElection, PriorDomiciliationElection, RefundElection
+from ...core.period import Period, PeriodError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.json_contract import Notice

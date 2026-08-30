@@ -14,7 +14,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core import NoRecoveryOutcome, Period
+from ....core import NoRecoveryOutcome
+from ....core.period import Period
 from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector

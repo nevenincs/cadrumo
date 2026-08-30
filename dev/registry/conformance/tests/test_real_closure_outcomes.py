@@ -33,11 +33,11 @@ from cadrumo.application.registry.temporal_coverage import compose_temporal_cove
 from cadrumo.core import (
     Modelo,
     PaymentElection,
-    Period,
     PriorDomiciliationElection,
     RefundElection,
     ResultDisposition,
 )
+from cadrumo.core.period import Period
 from cadrumo.core.product_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
 from cadrumo.core.source_connectivity import SourceConnectivityDisposition
 from cadrumo.core.resources import bundled_path

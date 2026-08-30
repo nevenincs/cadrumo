@@ -49,7 +49,7 @@ from ..application.aggregation import (
 )
 from ..application.ledger.actions_manual import update_manual_transaction_fields
 from ..application.ledger.models import ManualLedgerTransactionPatch
-from ..core import Period
+from ..core.period import Period
 from ..core.casilla_id import CasillaId, validated_casilla_id
 from ..domain.iva.schema import IvaCategory
 from ..domain.modelos.codes import ModeloCode

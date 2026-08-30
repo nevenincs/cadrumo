@@ -71,7 +71,8 @@ from ....application.storage.calc_sheets import (
     registry_sha,
 )
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ....core import ActionEvidenceProvenance, NoRecoveryOutcome, Period
+from ....core import ActionEvidenceProvenance, NoRecoveryOutcome
+from ....core.period import Period
 from ....core.casilla_id import CasillaId
 from ....core.decimal import coerce_decimal, coerce_finite_european_decimal
 from ....core.filing_year import FilingYear

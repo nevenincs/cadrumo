@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core import Period
+from .....core.period import Period
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .._loader_internals import _collect_registry_tree_fingerprints
 from ..authority import ValidatedRegistryAuthority

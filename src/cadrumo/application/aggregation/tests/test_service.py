@@ -12,7 +12,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....core import Period
+from ....core.period import Period
 from ....core.aggregation import BindingSourceKind
 from ....core.errors.error_codes import ERROR_REGISTRY, build_error_envelope, get_registered_error_code
 from .._service import (

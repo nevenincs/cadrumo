@@ -50,7 +50,8 @@ from ...adapters.outbound.aeat.sede.declarations_schema import Declaracion
 from ...adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
 from ...adapters.outbound.aeat.sede.schema import FiledDeclaracionObservation, FiledDeclarationAvailabilityReport
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import CasillaValueKind, FiledHistoryDiscoverySignal, Period, RegisterScopingSignal, SyncSurface
+from ...core import CasillaValueKind, FiledHistoryDiscoverySignal, RegisterScopingSignal, SyncSurface
+from ...core.period import Period
 from ...core.casilla_id import CasillaId
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.config import load_settings

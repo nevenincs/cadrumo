@@ -27,7 +27,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from ....core import Period
+from ....core.period import Period
 from ....domain.iva_compensation.reconciliation import IvaCompensationDecisionReason, reconcile_iva_compensation_wallet
 from .._app_live import _iva_wallet_decision_reason_text
 

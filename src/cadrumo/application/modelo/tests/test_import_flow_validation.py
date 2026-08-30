@@ -6,7 +6,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import Period
+from ....core.period import Period
 from .._action_errors import ExternalModeloImportError
 from ..work_lifecycle import create_work_unit
 from ._import_flow_support import (

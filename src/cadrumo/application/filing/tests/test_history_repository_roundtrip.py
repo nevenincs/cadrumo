@@ -12,7 +12,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Period, StorageCategory, storage_path
+from ....core import StorageCategory, storage_path
+from ....core.period import Period
 from ....domain.identifiers import ModeloIdentifier
 from ....tests.secure_sql import isolated_runtime_profile
 from .._history_models import ModeloHistory, ModeloHistoryEntry

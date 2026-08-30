@@ -36,11 +36,8 @@ from pydantic import AwareDatetime, BaseModel, BeforeValidator, Field, field_val
 from ...core import (
     STRICT_FROZEN_CONFIG as _STRICT_FROZEN,
 )
-from ...core import (
-    AuthProviderKind,
-    Modelo,
-    Period,
-)
+from ...core import AuthProviderKind, Modelo
+from ...core.period import Period
 from ...core.errors.hierarchy import SiteHealthState, SiteHealthStatusLike
 from ...core.hashing import sha256_hex
 from ...core.identifier_grammar import NamespacedId

@@ -15,7 +15,8 @@ from datetime import date
 from functools import lru_cache
 from typing import TYPE_CHECKING
 
-from ...core import M210_TIPO_RENTA_CODE_PROJECTION, Modelo, Period, PeriodKind, ResultDisposition
+from ...core import M210_TIPO_RENTA_CODE_PROJECTION, Modelo, ResultDisposition
+from ...core.period import Period, PeriodKind
 from .errors import DeadlineValidationError
 
 if TYPE_CHECKING:

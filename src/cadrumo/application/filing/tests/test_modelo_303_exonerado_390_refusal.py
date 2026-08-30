@@ -10,12 +10,12 @@ import pytest
 from ....core import (
     Modelo,
     PaymentElection,
-    Period,
     PriorDomiciliationElection,
     ProrrataRegisterRegime,
     RefundElection,
     ResultDisposition,
 )
+from ....core.period import Period
 from ....core.casilla_id import validated_casilla_id
 from ....core.product_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
 from ....domain.bienes_inversion import BienesInversionIvaRegister, compute_registro_regularizacion

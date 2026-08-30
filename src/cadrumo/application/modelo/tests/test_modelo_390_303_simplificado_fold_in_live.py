@@ -25,7 +25,8 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....adapters.persistence.storage import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
 from ....adapters.persistence.storage.sql import SecureObjectRepository, SecureObjectRow
 from ....application.calculations import M303RegimenSimplificadoAnnualSummaryHandoffError
-from ....core import M303RegimenSimplificadoFact, Period
+from ....core import M303RegimenSimplificadoFact
+from ....core.period import Period
 from ....core.casilla_id import CasillaId
 from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry.authority import bundled_authority

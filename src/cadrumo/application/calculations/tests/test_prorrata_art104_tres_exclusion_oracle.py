@@ -29,7 +29,7 @@ from typing import Any
 
 import pytest
 
-from ....core import Period
+from ....core.period import Period
 from ....core.resources import bundled_path
 from ....domain.calculations.registry.ledger_bindings import IvaLedgerObservation
 from ....domain.iva.flow import IvaFlowDirection

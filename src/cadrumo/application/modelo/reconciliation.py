@@ -95,7 +95,7 @@ _MAX_PAYLOAD_VALUE_LENGTH = 500
 _REFERENCE_ELISION = "..."
 
 if TYPE_CHECKING:
-    from ...core import Period
+    from ...core.period import Period
     from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
     from ...domain.justificante import Justificante
     from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue

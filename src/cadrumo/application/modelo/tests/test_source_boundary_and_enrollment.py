@@ -34,7 +34,7 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Period
+from ....core.period import Period
 from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import ModeloRevision
@@ -380,7 +380,7 @@ def test_s09_ledger_renta_income_resolver_enrolled_fires_on_m130(
     separate concern exercised by the carry-forward continuity tests in
     test_modelo_130_carry_forward_continuity.py.
     """
-    from ....core import Period
+    from ....core.period import Period
     from ...aggregation import (
         CalculationSourceContext,
         LedgerRentaIncomeAggregationSourceResolver,

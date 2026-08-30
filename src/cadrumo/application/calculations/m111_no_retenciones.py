@@ -6,7 +6,8 @@ import re
 from collections.abc import Mapping
 from typing import Final
 
-from ...core import Modelo, Period, PeriodError
+from ...core import Modelo
+from ...core.period import Period, PeriodError
 
 M111_NO_RETENCIONES_PROFILE_PATH: Final = "withholding.modelo_111_no_retenciones_periods"
 """Profile fact carrying comma-separated ``YYYY:PERIOD`` no-obligation M111 periods."""

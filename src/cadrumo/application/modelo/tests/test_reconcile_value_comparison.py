@@ -27,7 +27,7 @@ __all__ = ["_isolated_backend"]
 from ....adapters.inbound.justificante.parser import parse_justificante
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core import Period
+from ....core.period import Period
 from ....core.casilla_id import validated_casilla_id
 from ....domain.justificante import Justificante
 from ....domain.modelos.calculation_repository import upsert_calculation_revision

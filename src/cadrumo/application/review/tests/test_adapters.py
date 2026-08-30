@@ -21,7 +21,7 @@ from ....adapters.persistence.profile.invoices import (
 )
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from ....core import Period
+from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.classification import SensitivityClass
 from ....core.config import Settings

@@ -27,7 +27,7 @@ from pathlib import Path
 import pytest
 import typer
 
-from ....core import Period, StandardPeriodCode
+from ....core.period import Period, StandardPeriodCode
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.cli_runner import invoke_cached_cli
 from .._period_parsing import _canonical_period, _filter_canonical_period, _LedgerPeriodRefusal

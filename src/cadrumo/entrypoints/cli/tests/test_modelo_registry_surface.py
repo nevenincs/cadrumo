@@ -447,7 +447,7 @@ def test_work_calculate_missing_m200_m202_relation_prefill_is_advisory(tmp_path)
     """The live M200 relation-prefill path warns rather than refusing calculation."""
 
     from ....application.modelo.work_lifecycle import create_work_unit
-    from ....core import Period
+    from ....core.period import Period
     from ....domain.user_profile.values import UserProfileFact, UserProfileRecord
     from ....tests.profile_capsule import seed_test_profile_record
     from ....tests.secure_sql import isolated_runtime_profile

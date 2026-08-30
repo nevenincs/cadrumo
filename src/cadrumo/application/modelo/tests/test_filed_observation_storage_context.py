@@ -20,7 +20,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Modelo, Period, ResultDisposition
+from ....core import Modelo, ResultDisposition
+from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.iva_compensation.filed_derivation import M303_COMPENSATION_RESULTADO_CASILLA

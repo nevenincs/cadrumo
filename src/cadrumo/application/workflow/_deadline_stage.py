@@ -25,7 +25,8 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import NoReturn
 
-from ...core import ActionEvidenceProvenance, NoRecoveryOutcome, Period
+from ...core import ActionEvidenceProvenance, NoRecoveryOutcome
+from ...core.period import Period
 from ...core.time import now as _utcnow
 from ...domain.deadlines.engine import compute_obligation_schedule, next_deadline
 from ...domain.deadlines.errors import NoDeadlineWindowsError, ScheduleComputationError
