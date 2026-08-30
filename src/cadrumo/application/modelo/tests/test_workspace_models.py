@@ -398,7 +398,7 @@ def test_workspace_schema_record_has_typed_destinations_for_every_explanatory_re
     record = ModeloWorkspaceSchemaRecordV1.model_validate(
         {
             "reference": {"kind": "casilla", "casilla_id": "0001"},
-            "section_path": ("filing", "income"),
+            "record_family": ("filing", "income"),
             "data_type": "decimal",
             "label": {
                 "kind": "localized",
@@ -434,7 +434,7 @@ def test_workspace_schema_record_has_typed_destinations_for_every_explanatory_re
     assert record.relation_endpoints[0].kind == "relation_target_binding"
     assert record.export_exposure[0].export_field_id == "BASE_01"
     with pytest.raises(ValidationError, match="at most 16 items"):
-        ModeloWorkspaceSchemaRecordV1.model_validate({**record.model_dump(), "section_path": ("section",) * 17})
+        ModeloWorkspaceSchemaRecordV1.model_validate({**record.model_dump(), "record_family": ("section",) * 17})
 
 
 def test_workspace_materialization_is_a_true_discriminated_union() -> None:
@@ -787,7 +787,7 @@ def test_workspace_schema_record_distinguishes_unmeasured_legal_grounding_from_d
     """None means the producer never carries the grounding; () means it does and declares none."""
     base_payload = {
         "reference": {"kind": "casilla", "casilla_id": "0001"},
-        "section_path": ("filing", "income"),
+        "record_family": ("filing", "income"),
         "data_type": "decimal",
         "label": {
             "kind": "localized",
@@ -828,7 +828,7 @@ def test_workspace_schema_record_label_distinguishes_localized_from_technical() 
     """A formula/binding/relation/parameter row's label is honest about never being translated."""
     base_payload = {
         "reference": {"kind": "formula", "formula_id": "modelo-130-rendimiento-neto"},
-        "section_path": ("formulas",),
+        "record_family": ("formulas",),
         "data_type": "formula_id",
         "classification": ModeloWorkspaceSchemaClassification.PROJECTED,
         "family_disposition": RegistrySchemaFamilyDisposition.POPULATED,

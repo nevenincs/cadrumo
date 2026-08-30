@@ -39,7 +39,7 @@ from .work_review import ModeloWorkReview
 _MAX_FACET_PAGE_SIZE = 200
 _MAX_FACET_CURSOR_LENGTH = 256
 _MAX_CONTRIBUTORS = 32
-_MAX_SCHEMA_SECTION_DEPTH = 16
+_MAX_SCHEMA_RECORD_FAMILY_DEPTH = 16
 _MAX_SCHEMA_RELATIONSHIPS = 128
 _MAX_SCHEMA_EVIDENCE_REFERENCES = 64
 _MAX_REPEATED_ROW_VALUES = 200
@@ -534,7 +534,7 @@ class ModeloWorkspaceSchemaRecordV1(_WorkspaceModel):
     """Explanatory schema row using canonical registry identities, never grammar objects."""
 
     reference: ModeloWorkspaceSchemaReferenceV1
-    section_path: Annotated[tuple[_BoundedText, ...], Field(max_length=_MAX_SCHEMA_SECTION_DEPTH)]
+    record_family: Annotated[tuple[_BoundedText, ...], Field(max_length=_MAX_SCHEMA_RECORD_FAMILY_DEPTH)]
     data_type: _BoundedCode
     label: ModeloWorkspaceRecordLabelV1
     classification: ModeloWorkspaceSchemaClassification

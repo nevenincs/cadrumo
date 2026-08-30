@@ -58,6 +58,8 @@ from .work_addressing import (
     ModeloWorkSelectorRequest,
 )
 from .workspace_models import (
+    ModeloWorkspaceEvidenceFactV1,
+    ModeloWorkspaceTextFactValueV1,
     ModeloWorkspaceBaselineV1,
     ModeloWorkspaceBindingReferenceV1,
     ModeloWorkspaceBindingRequirementV1,
@@ -1111,7 +1113,7 @@ def static_inspection_casilla_schema_records(
         records.append(
             ModeloWorkspaceSchemaRecordV1(
                 reference=ModeloWorkspaceCasillaReferenceV1(casilla_id=casilla_id),
-                section_path=("casillas",),
+                record_family=("casillas",),
                 data_type="casilla_id",
                 label=ModeloWorkspaceLocalizedTextV1(
                     locale_key=key,
@@ -1161,7 +1163,7 @@ def graded_snapshot_casilla_schema_records(
         records.append(
             ModeloWorkspaceSchemaRecordV1(
                 reference=ModeloWorkspaceCasillaReferenceV1(casilla_id=casilla_id),
-                section_path=("casillas",),
+                record_family=("casillas",),
                 data_type="casilla_id",
                 label=ModeloWorkspaceLocalizedTextV1(
                     locale_key=key,
@@ -1240,7 +1242,7 @@ def binding_schema_records(
         records.append(
             ModeloWorkspaceSchemaRecordV1(
                 reference=ModeloWorkspaceBindingReferenceV1(binding_id=binding_id),
-                section_path=("bindings",),
+                record_family=("bindings",),
                 data_type="binding_id",
                 label=ModeloWorkspaceTechnicalLabelV1(identifier=binding_id),
                 classification=ModeloWorkspaceSchemaClassification.PROJECTED,
@@ -1272,7 +1274,7 @@ def formula_schema_records(
         records.append(
             ModeloWorkspaceSchemaRecordV1(
                 reference=ModeloWorkspaceFormulaReferenceV1(formula_id=formula.id),
-                section_path=("formulas",),
+                record_family=("formulas",),
                 data_type="formula_id",
                 label=ModeloWorkspaceTechnicalLabelV1(identifier=formula.id),
                 classification=ModeloWorkspaceSchemaClassification.PROJECTED,
@@ -1303,7 +1305,7 @@ def relation_schema_records(
         records.append(
             ModeloWorkspaceSchemaRecordV1(
                 reference=ModeloWorkspaceRelationReferenceV1(relation_id=relation.id),
-                section_path=("relations",),
+                record_family=("relations",),
                 data_type="relation_id",
                 label=ModeloWorkspaceTechnicalLabelV1(identifier=relation.id),
                 classification=ModeloWorkspaceSchemaClassification.PROJECTED,
@@ -1355,7 +1357,7 @@ def parameter_schema_records(
         records.append(
             ModeloWorkspaceSchemaRecordV1(
                 reference=ModeloWorkspaceParameterReferenceV1(parameter_id=parameter.id),
-                section_path=("parameters",),
+                record_family=("parameters",),
                 data_type="parameter_id",
                 label=ModeloWorkspaceTechnicalLabelV1(identifier=parameter.id),
                 classification=ModeloWorkspaceSchemaClassification.PROJECTED,
@@ -1728,6 +1730,12 @@ def resolve_graded_snapshot_result(
                 boundary="admission",
                 requested_target=target,
                 selected_target=None,
+                facts=(
+                    ModeloWorkspaceEvidenceFactV1(
+                        name="work_unit_id",
+                        value=ModeloWorkspaceTextFactValueV1(value=str(work_unit.work_unit_id)),
+                    ),
+                ),
                 responsible_owner=_GRADED_SNAPSHOT_RESPONSIBLE_OWNER,
                 reconsideration_condition="calculate this work unit, then request a graded snapshot again",
                 recovery_action=ActionReference(action_id="operator.modelo.work.calculate"),

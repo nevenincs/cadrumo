@@ -7,24 +7,18 @@ time-bounded admission this cohort does not hold. A screen that offered an
 edit affordance it cannot honour would promise the operator something the
 contract refuses.
 
-Grouping follows ``ModeloWorkspaceSchemaRecordV1.section_path``, and that
-field is NOT the modelo's declared section structure -- it is the RECORD
-FAMILY the schema facet labels. The assembler sets it to a literal
-(``("casillas",)``, ``("bindings",)``, ``("formulas",)``,
-``("relations",)``, ``("parameters",)``), and the family reading is the
-only coherent one for that facet: it carries casillas, bindings, formulas,
-relations and parameters in one record set, and a casilla-only section
-path is undefined over four of those five.
+Grouping follows ``ModeloWorkspaceSchemaRecordV1.record_family``, which
+the assembler sets to a literal (``("casillas",)``, ``("bindings",)``,
+``("formulas",)``, ``("relations",)``, ``("parameters",)``). The family is
+the only coherent grouping for that facet: it carries casillas, bindings,
+formulas, relations and parameters in one record set, and a casilla-only
+section path is undefined over four of those five.
 
 So an operator sees these records grouped by family, not by the modelo's
 sections. The modelo's own ``CasillaDefinition.section`` is not projected
 into the workspace schema facet at all, and this module does not
 substitute for it: inventing a section structure the projection does not
 carry would be exactly the synthesis the cohort forbids everywhere else.
-Note the name collision when reading across surfaces -- the calc_sheets
-export layout has its own ``section_path`` populated from
-``casilla.section``, so the two fields share a name and a type while
-meaning different things.
 
 Row identity is the canonical identity the producer already assigned -- a
 casilla id for a scalar, a (binding, row index) pair for a repeated row --
@@ -86,13 +80,13 @@ def _input_kinds_by_casilla(session: ModeloWorkspaceReadSession) -> dict[str, st
     return {str(casilla.casilla_id): casilla.declared_input_kind.value for casilla in facet.review.casillas}
 
 
-def _section_title(section_path: tuple[str, ...]) -> str:
-    """Render one registry-declared section path as its disclosure title.
+def _family_title(record_family: tuple[str, ...]) -> str:
+    """Render one schema record-family label as its disclosure title.
 
-    Joined for display only. The path itself stays the grouping key, so two
-    sections that render alike still group apart.
+    Joined for display only. The label itself stays the grouping key, so two
+    families that render alike still group apart.
     """
-    return " / ".join(section_path) if section_path else tr("flows.modelo_workspace_inputs.section.unsectioned")
+    return " / ".join(record_family) if record_family else tr("flows.modelo_workspace_inputs.section.unsectioned")
 
 
 def _scalar_row(record: ModeloWorkspaceScalarMaterializationRecordV1) -> tuple[str, str]:
@@ -186,13 +180,13 @@ class ModeloWorkspaceInputsScreen(Screen[None]):
         }
         input_kinds = _input_kinds_by_casilla(self._session)
         unmeasured = tr("flows.modelo_workspace_inputs.input_kind_unmeasured")
-        rows_by_section = self._rows_by_section()
-        if not rows_by_section:
+        rows_by_family = self._rows_by_family()
+        if not rows_by_family:
             body.mount(Static(tr("flows.modelo_workspace_inputs.empty"), id="workspace-inputs-empty"))
             return
-        for index, (section_path, rows) in enumerate(sorted(rows_by_section.items())):
+        for index, (record_family, rows) in enumerate(sorted(rows_by_family.items())):
             table = ContentDataTable(id=f"workspace-inputs-table-{index}", cursor_type="row", zebra_stripes=True)
-            body.mount(DisclosureGroup(table, title=_section_title(section_path), collapsed=False))
+            body.mount(DisclosureGroup(table, title=_family_title(record_family), collapsed=False))
             for column_key in _COLUMN_KEYS:
                 table.add_column(tr(f"flows.modelo_workspace_inputs.column.{column_key}"), key=column_key)
             for address, value in rows:
@@ -204,13 +198,13 @@ class ModeloWorkspaceInputsScreen(Screen[None]):
                     key=address,
                 )
 
-    def _rows_by_section(self) -> dict[tuple[str, ...], tuple[tuple[str, str], ...]]:
+    def _rows_by_family(self) -> dict[tuple[str, ...], tuple[tuple[str, str], ...]]:
         """Group every materialized row under the section its schema record declares."""
         facet = self._session.projection.materialization_facet
         if facet is None:
             return {}
         sections = {
-            str(record.reference): record.section_path for record in self._session.projection.schema_facet.records
+            str(record.reference): record.record_family for record in self._session.projection.schema_facet.records
         }
         grouped: dict[tuple[str, ...], list[tuple[str, str]]] = {}
         for record in facet.records:

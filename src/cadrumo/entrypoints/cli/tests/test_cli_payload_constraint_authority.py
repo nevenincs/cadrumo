@@ -166,12 +166,19 @@ def _is_threshold_literal(node: ast.expr) -> bool:
     is wrapped in a constructor call. That gap was found by mutation-proof:
     a probe validator refusing ``value > Decimal("1")`` passed the gate.
 
-    ``None`` and booleans are excluded. A comparison against either asks
-    whether a projected field is present, or whether two projected fields
-    agree, which is structural rather than a domain rule.
+    ``None``, booleans and the empty string are excluded. A comparison against
+    any of them asks whether a projected field is PRESENT, or whether two
+    projected fields agree, which is structural rather than a domain rule. The
+    empty string joins that set because an optional text field arrives over the
+    wire as ``""`` rather than ``None``, so ``value is None or value == ""`` is
+    one presence check written in the two spellings the wire actually uses --
+    it was reading the second half as a rule and flagging a validator that does
+    nothing but delegate.
     """
     if isinstance(node, ast.Constant):
-        return node.value is not None and not isinstance(node.value, bool)
+        if node.value is None or isinstance(node.value, bool) or node.value == "":
+            return False
+        return True
     if isinstance(node, ast.Call):
         func = node.func
         name = func.id if isinstance(func, ast.Name) else getattr(func, "attr", None)

@@ -163,11 +163,19 @@ class PerModeloAggregationContract(BaseModel):
 
 
 class PerModeloAggregationCommand(BaseModel):
-    """Command payload for a per-modelo aggregation run."""
+    """Command payload for a per-modelo aggregation run.
+
+    ``modelo`` is deliberately NOT :class:`ModeloCode` here, though the result
+    and contract models beside it are. Which modelos this service supports is
+    registry-driven, and the CLI contract allows a late refusal for exactly that
+    reason provided it names the accepted set. Typing the field would refuse a
+    malformed code at construction with a generic shape error instead, losing
+    the listing the operator needs.
+    """
 
     model_config = _STRICT_FROZEN
 
-    modelo: ModeloCode
+    modelo: str = Field(min_length=1, max_length=16)
     period: Period
     retencion_observations: tuple[RetencionObservation, ...] = Field(default_factory=tuple)
     counterpart_observations: tuple[CounterpartObservation, ...] = Field(default_factory=tuple)

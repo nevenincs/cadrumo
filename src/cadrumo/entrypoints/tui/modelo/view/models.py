@@ -173,10 +173,10 @@ class ModeloWorkspaceRepeatedRowV1:
 
 @dataclass(frozen=True, slots=True)
 class ModeloWorkspaceSectionV1:
-    """One registry-declared section path, presented as a grouping key.
+    """One schema record-family label, presented as a grouping key.
 
-    The path is the registry's own ``section_path``; this model groups by it
-    and never synthesises a section a revision did not declare.
+    The path is the projection's own ``record_family``; this model groups by
+    it and never synthesises a grouping a revision did not declare.
     """
 
     path: tuple[str, ...]
