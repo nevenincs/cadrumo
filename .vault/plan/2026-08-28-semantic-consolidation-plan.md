@@ -9,7 +9,7 @@ related:
   - '[[2026-08-28-semantic-consolidation-cli-payload-projection-adr]]'
 modified: '2026-08-30'
 body_schema: body-v2
-body_hash: 'sha256:9e7e84055f27d843283c68c408dea4419dc0dd9bc54972625f9444d24c59049b'
+body_hash: 'sha256:9243179f023233fd6303ad2002fdc7bd5200dbfa27c99e27213f88192ec4ef6a'
 ---
 
 # `semantic-consolidation` plan
@@ -109,6 +109,7 @@ The lazy-export ADR assembled its population by searching for one identifier, _L
 - [x] `P07.S87` - Retire the currency, manuals and fincas facades, one package per commit; `src/cadrumo/domain/`.
 - [x] `P07.S91` - Retire the censo, attachments, categories, invoices and buckets facades, dissolving the invoices-iva import cycle the invoices namespace made spellable; `src/cadrumo/domain/`.
 - [x] `P07.S95` - Retire the deadlines, Google outbound and AEAT sede facades, repointing module-object imports and their body uses together; `src/cadrumo/`.
+- [x] `P07.S99` - Retire the three largest domain facades: iva at 179 names across 26 modules, filing at 43 and iva_compensation at 36; `src/cadrumo/domain/`.
 
 ### Phase `P08` - Consolidate the repeated constrained scalar shapes
 
@@ -152,6 +153,8 @@ An AST census of every pydantic Field constraint in production code found the sa
 - [x] `P08.S96` - Sweep the third stale-pin class: ruff per-file ignores in pyproject naming modules the retirements made public, deleting rather than repointing where a narrower inline suppression already covers the site; `pyproject.toml`.
 - [x] `P08.S97` - Rehome the censal no-write-surface scan and its anti-tautology guard off the sede facade onto the censal module, so emptying a namespace cannot turn a guard green by emptiness; `src/cadrumo/adapters/outbound/aeat/sede/tests/`.
 - [x] `P08.S98` - Repoint the setup-answers lazy module accessor at deadlines.models, and move the FiscalResidency reads to the renta-code module that actually defines them; `src/cadrumo/core/setup_answers.py`.
+- [x] `P08.S100` - Promote the post-retirement checks into a single reusable sweep covering all five stale-reference classes, so each retirement runs a written-down pass rather than ad-hoc checks; `dev/quality/namespace_retirement_sweep.py`.
+- [x] `P08.S101` - Repoint the two application/modelo files reading filing contracts off the package object, which the reachability gate caught as an AttributeError that only fires when the path runs; `src/cadrumo/application/modelo/`.
 
 ## Parallelization
 
