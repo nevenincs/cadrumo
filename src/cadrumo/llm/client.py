@@ -19,13 +19,14 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 from uuid import uuid4
 
-from pydantic import BaseModel, ConfigDict, Field, SecretStr
+from pydantic import BaseModel, Field, SecretStr
 
-from ..core.operator_action_enums import ActionEvidenceProvenance
 from ..core.config import Settings
 from ..core.errors.error_codes import get_registered_error_code
 from ..core.hashing import content_hash_hex
 from ..core.logging import get_logger
+from ..core.models import STRICT_FROZEN_CONFIG
+from ..core.operator_action_enums import ActionEvidenceProvenance
 from ..core.time import now
 from .consent import provider_reads_off_host
 from .errors import (
@@ -126,7 +127,7 @@ class LLMRetryPolicy(BaseModel):
             technically respecting its attempt limit.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     max_attempts: int = Field(default=3, ge=1)
     initial_backoff_s: float = Field(default=0.5, gt=0.0)

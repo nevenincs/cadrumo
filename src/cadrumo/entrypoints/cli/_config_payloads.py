@@ -19,7 +19,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING, Literal
 
-from pydantic import ConfigDict, Field, NonNegativeInt, field_validator, model_validator
+from pydantic import Field, NonNegativeInt, field_validator, model_validator
 
 from ...application.auth.catalogue import AuthProviderListing
 from ...application.auth.diagnostics import AuthDiagnosticDetail, AuthDiagnosticPhoneState, AuthDiagnosticSummary
@@ -38,6 +38,7 @@ from ...core import Hex64Str
 from ...core.errors.severity import BaseSeverity
 from ...core.identity import BucketId, ProfileId, ProfileLabel
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.text_bounds import NonEmptyStr, PositiveCount
 from ...core.time import validate_utc_aware
 from ...domain.auth.apoderamientos.catalogue import ApoderadoScopeCode, ApoderadoScopeName
@@ -1040,7 +1041,7 @@ class RepairIntegrityRegistryResult(OutputSchema):
     the registry / diagnostic-check shapes locally.
     """
 
-    model_config = ConfigDict(extra="allow")
+    model_config = STRICT_FROZEN_CONFIG
 
 
 # Apoderado verb result schemas

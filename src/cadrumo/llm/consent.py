@@ -36,10 +36,11 @@ from __future__ import annotations
 
 from typing import Never, Self, override
 
-from pydantic import BaseModel, ConfigDict, Field, model_serializer, model_validator
+from pydantic import BaseModel, Field, model_serializer, model_validator
 
-from ..core.operator_action_enums import ActionEvidenceProvenance
 from ..core.config import LLMProvider, Settings
+from ..core.models import STRICT_FROZEN_CONFIG
+from ..core.operator_action_enums import ActionEvidenceProvenance
 from .errors import LLMConsentError
 from .preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
 
@@ -122,7 +123,7 @@ class EvidenceConsentToken(BaseModel):
             rather than to the session. The address, never the bytes.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     surface: str = Field(min_length=1, description="Operator surface that took the acknowledgement.")
     evidence_content_address: str = Field(

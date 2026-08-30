@@ -50,12 +50,13 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
-from ...core.modelo import Modelo
 from ...core.casilla_id import CasillaId
-from ...core.period import Period as _Period
 from ...core.errors.hierarchy import CoreError
+from ...core.modelo import Modelo
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.period import Period as _Period
 from ...domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ...domain.calculations.registry.ids import (
     BindingId,
@@ -137,7 +138,7 @@ class TaxationComparisonResult(BaseModel):
     recommendation.
     """
 
-    model_config = ConfigDict(strict=False, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     filing_year: int
     modelo: str = Modelo.M100.value

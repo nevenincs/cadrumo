@@ -35,7 +35,7 @@ from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from typing import ClassVar, override
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ...adapters.persistence.storage import (
     IVA_COMPENSATION_HISTORY_NAMESPACE,
@@ -44,18 +44,29 @@ from ...adapters.persistence.storage import (
     safe_repository_id,
 )
 from ...core import CasillaValueKind, IvaCompensationStateProvenance
-from ...core.modelo import Modelo
-from ...core.period import Period
 from ...core.casilla_id import CasillaId
 from ...core.filing_year import FilingYear
 from ...core.identity import AeatExpedienteId, ContentDigest, SubjectTaxId
+from ...core.modelo import Modelo
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.period import Period
 from ...core.resources import bundled_path
 from ...core.time import now
 from ...domain.calculations.registry.casilla_membership import undeclared_casilla_ids
 from ...domain.calculations.registry.loader import load_registry_tree
 from ...domain.calculations.registry.temporal import select_revision
-from ...domain.iva_compensation.carry_forward import IvaCompensationCarryForwardReport, IvaCompensationPeriodState, derive_iva_compensation_year_end_carry_partition, iva_compensation_period_sort_key
-from ...domain.iva_compensation.errors import IvaCompensationCasillaReferenceError, IvaCompensationDecimalParseError, IvaCompensationSeedConflictError, IvaCompensationYearRangeError
+from ...domain.iva_compensation.carry_forward import (
+    IvaCompensationCarryForwardReport,
+    IvaCompensationPeriodState,
+    derive_iva_compensation_year_end_carry_partition,
+    iva_compensation_period_sort_key,
+)
+from ...domain.iva_compensation.errors import (
+    IvaCompensationCasillaReferenceError,
+    IvaCompensationDecimalParseError,
+    IvaCompensationSeedConflictError,
+    IvaCompensationYearRangeError,
+)
 from ._iva_compensation_casillas import (
     M303_COMPENSACION_APLICADA_CASILLA as _M303_COMPENSACION_APLICADA_CASILLA,
 )
@@ -99,7 +110,7 @@ class IvaCompensationAnnualSummary(BaseModel):
     :func:`cross_check_iva_compensation_annual_summary`.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     taxpayer_nif: SubjectTaxId = Field(
         description=(
@@ -145,7 +156,7 @@ class IvaCompensationAnnualCrossCheck(BaseModel):
     ``CasillaId`` values.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     filing_year: FilingYear
     carry_forward_remaining_amount: Decimal = Field(ge=_ZERO)

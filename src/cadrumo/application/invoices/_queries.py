@@ -11,11 +11,12 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core.identity import InvoiceId
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.invoices.models import Invoice, InvoiceCatalogue
 from ...domain.invoices.service import LinkInconsistency, find_invoice, find_unmatched, verify_link_consistency
 from ...domain.iva.classification import InvoiceKind
@@ -24,7 +25,7 @@ from ...domain.iva.classification import InvoiceKind
 class InvoiceListRow(BaseModel):
     """Rendered invoice summary owned by the application layer."""
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     invoice_id: InvoiceId
     kind: InvoiceKind

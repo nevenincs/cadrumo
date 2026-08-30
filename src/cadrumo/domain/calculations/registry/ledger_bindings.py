@@ -27,24 +27,33 @@ from datetime import date
 from decimal import Decimal
 from typing import Annotated, Literal, NamedTuple, Protocol
 
-from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, BeforeValidator, Field, field_validator, model_validator
 
 from ....core import IvaDeductionFactKind
-from ....core.modelo import Modelo
-from ....core.models import STRICT_FROZEN_CONFIG
-from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.aggregation import (
     BindingAggregationOp,
     BindingSourceKind,
     LedgerIncomeGrounding,
 )
+from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.modelo import Modelo
+from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.unit_proportion import UnitProportion
 from ...iva.classification import InvoiceKind, TransactionKind
 from ...iva.deduction_facts import IvaDeductionClassificationProvenance, validate_iva_deduction_fact
 from ...iva.flow import IvaFlowDirection, is_deducible_flow
 from ...iva.oss import OssIossRegime
 from ...iva.prorrata import InputClassification
-from ...iva.schema import CUOTA_LESS_M303_IVA_CATEGORIES, EUMemberState, IvaCashAccountingTreatment, IvaCategory, IvaExemptionArticle, IvaLedgerObservationRole, IvaRateKind, M303_BASE_OUT_OF_SCOPE_IVA_CATEGORIES
+from ...iva.schema import (
+    CUOTA_LESS_M303_IVA_CATEGORIES,
+    M303_BASE_OUT_OF_SCOPE_IVA_CATEGORIES,
+    EUMemberState,
+    IvaCashAccountingTreatment,
+    IvaCategory,
+    IvaExemptionArticle,
+    IvaLedgerObservationRole,
+    IvaRateKind,
+)
 from ._ledger_binding_resolution import (
     UnroutedLedgerQuantity,
     resolve_ledger_family_binding_values,
@@ -178,7 +187,7 @@ class _OssIossLedgerSelector(BaseModel):
     downstream consumers see typed values.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     regime: Annotated[OssIossRegime, BeforeValidator(coerce_enum_member(OssIossRegime))]
     destination_member_state: Annotated[EUMemberState, BeforeValidator(coerce_enum_member(EUMemberState))]
@@ -500,7 +509,7 @@ _IVA_SUPPORTED_FACTS: frozenset[str] = frozenset(
 class _IvaLedgerSelector(BaseModel):
     """Validated form of a ledger_iva_aggregation binding selector."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     categories: Annotated[tuple[IvaCategory, ...], BeforeValidator(coerce_enum_tuple(IvaCategory))] = Field(
         min_length=1,
@@ -1173,7 +1182,7 @@ class RentaGastosEstimacionDirectaObservationProtocol(Protocol):
 class _RentaLedgerGastosEstimacionDirectaSelector(BaseModel):
     """Validated form of a ledger_renta_gastos_estimacion_directa_aggregation binding selector."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: Literal[Modelo.M100] = Modelo.M100
     period: Literal["0A"] = "0A"
@@ -1380,7 +1389,7 @@ class _RentaLedgerIncomeSelector(BaseModel):
       net-paid professional receipts.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: Literal[Modelo.M130, Modelo.M100, Modelo.M131] = Modelo.M130
     target_casilla_id: CasillaId
@@ -1846,7 +1855,7 @@ class _RentaLedgerGastosPagoFraccionadoSelector(BaseModel):
     application aggregator, exactly as for the income sibling.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: Literal[Modelo.M130] = Modelo.M130
     target_casilla_id: CasillaId

@@ -44,12 +44,13 @@ import hmac
 import json
 from typing import override
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 from sqlalchemy import LargeBinary
 from sqlalchemy.engine import Dialect
 from sqlalchemy.types import TypeDecorator
 
 from .....core.hashing import canonical_json_bytes
+from .....core.models import STRICT_FROZEN_CONFIG
 from ..errors import (
     DecryptionError,
 )
@@ -70,7 +71,7 @@ class EncryptedPayload(BaseModel):
     than propagating bare ``object`` into domain code.
     """
 
-    model_config = ConfigDict(strict=False)
+    model_config = STRICT_FROZEN_CONFIG
 
     data: object
 

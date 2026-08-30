@@ -17,11 +17,12 @@ from collections.abc import Callable, Iterable, Sequence
 from decimal import Decimal
 from typing import Literal, Protocol
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
-from ....core.modelo import Modelo
-from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
+from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.modelo import Modelo
+from ....core.models import STRICT_FROZEN_CONFIG
 from ._ledger_binding_resolution import resolve_ledger_family_binding_values, unsupported_ledger_family_observations
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import invariant_diagnostics, selector_against_model
@@ -43,7 +44,7 @@ __all__ = [
 class _IrnrLedgerIncomeSelector(BaseModel):
     """Validated selector for a Modelo 210 gross-income ledger binding."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: Literal[Modelo.M210] = Modelo.M210
     target_casilla_id: CasillaId

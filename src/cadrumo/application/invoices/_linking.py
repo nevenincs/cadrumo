@@ -10,12 +10,13 @@ unit of work through
 
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...core.secure_object_write import SecureObjectWrite
 from ...core.identity import InvoiceId, TransactionId
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.secure_object_write import SecureObjectWrite
 from ...domain.invoices.errors import InvoiceLinkError
 from ...domain.invoices.models import Invoice, InvoiceCatalogue
 from ...domain.invoices.service import link_transaction
@@ -26,7 +27,7 @@ from ...domain.transactions.service import link_invoice
 class InvoiceTransactionLinkResult(BaseModel):
     """Result of a persisted bidirectional invoice link command."""
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     invoice_id: InvoiceId
     transaction_id: TransactionId

@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import TypeGuard
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, Field, ValidationError
 
 from ...application.workflow.errors import WorkflowError
 from ...application.workflow.persistence import (
@@ -15,9 +15,10 @@ from ...application.workflow.persistence import (
 )
 from ...application.workflow.run_models import WorkflowResult
 from ...application.workflow.state_models import WorkflowState
-from ...core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID, SecureObjectWrite
 from ...core.classification import SensitivityClass
 from ...core.logging import get_logger
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID, SecureObjectWrite
 from ...core.time import now as utc_now
 from ...domain.buckets.event import BucketEvent
 from ...domain.buckets.event_repository import append_bucket_event
@@ -53,7 +54,7 @@ _RUN_SENSITIVITY = WORKFLOW_RUN_NAMESPACE.sensitivity
 class _WorkflowRunEnvelopeHeader(BaseModel):
     """Version and classification inspected before the typed run payload."""
 
-    model_config = ConfigDict(strict=True, frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     schema_version: int = Field(ge=1)
     classification: SensitivityClass

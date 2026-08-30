@@ -16,8 +16,9 @@ from collections.abc import Mapping
 from typing import TYPE_CHECKING
 
 import httpx
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, Field, ValidationError
 
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ..errors import LLMConfigError, LLMProviderError, LLMRateLimitError, LLMTransientTransportError
 from ..models import LLMProvider, MultimodalImageInput
@@ -51,7 +52,7 @@ class ProviderRequest(BaseModel):
             persisted (sensitive-financial-data-secure-storage-only).
     """
 
-    model_config = ConfigDict(strict=True, frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     request_id: str = Field(description="Stable public request hash.")
     model: str = Field(description="Resolved provider model.")
@@ -84,7 +85,7 @@ class ProviderCompletion(BaseModel):
             available, otherwise ``None``.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     text: str = Field(description="Generated text.")
     model: str = Field(description="Provider model that served the request.")

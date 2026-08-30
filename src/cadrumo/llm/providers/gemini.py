@@ -15,6 +15,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.config import load_settings
 from ...core.logging import get_logger
+from ...core.models import STRICT_FROZEN_CONFIG
 from ..models import LLMProvider
 from .base import (
     ProviderAdapter,
@@ -29,7 +30,7 @@ _logger = get_logger(__name__)
 class _GeminiPart(BaseModel):
     """Single text part of a Gemini ``content`` block."""
 
-    model_config = ConfigDict(strict=True, frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     text: str | None = None
 
@@ -37,7 +38,7 @@ class _GeminiPart(BaseModel):
 class _GeminiContent(BaseModel):
     """Multi-part content payload returned for a single Gemini candidate."""
 
-    model_config = ConfigDict(strict=True, frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     parts: tuple[_GeminiPart, ...]
 
@@ -45,7 +46,7 @@ class _GeminiContent(BaseModel):
 class _GeminiCandidate(BaseModel):
     """One candidate completion within a Gemini response."""
 
-    model_config = ConfigDict(strict=True, frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     content: _GeminiContent
 

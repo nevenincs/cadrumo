@@ -29,11 +29,12 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Final
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 from ...adapters.outbound.fx import default_ecb_rate_provider
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core.aggregation import IntracomOperationType
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money import round_to_cents
 from ...core.parsing import normalise_iso_4217_currency
 from ...core.time import now
@@ -41,7 +42,13 @@ from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import emit_bucket_event
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.currency.service import ExchangeRateProvider, resolve_fx_conversion_stamp
-from ...domain.invoices.enums import InvoiceClass, InvoiceOperationDateRole, IvaRate, PaymentStatus, numeric_iva_rate_slots
+from ...domain.invoices.enums import (
+    InvoiceClass,
+    InvoiceOperationDateRole,
+    IvaRate,
+    PaymentStatus,
+    numeric_iva_rate_slots,
+)
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
@@ -53,7 +60,7 @@ from ._catalogue_mutation import mutate_catalogue
 class CatalogueInvoiceCreateResult(BaseModel):
     """Result of persisting one rich catalogue invoice."""
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     invoice: Invoice
     catalogue: InvoiceCatalogue

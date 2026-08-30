@@ -32,7 +32,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import ClassVar, override
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ...adapters.persistence.storage import (
     AUTH_APODERADO_CONFIGURATION_NAMESPACE,
@@ -45,6 +45,7 @@ from ...adapters.persistence.storage import (
 from ...core.config import Settings
 from ...core.errors.hierarchy import CadrumoError
 from ...core.identity import BucketId, canonical_bucket_id
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time import now
 from ...domain.auth import (
     ApoderamientosCatalogue,
@@ -90,7 +91,7 @@ class ApoderadoConfigurationIdentityError(CadrumoError):
 class ApoderadoConfiguration(BaseModel):
     """Persisted apoderado configuration for one bucket."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     represented_nif: str = Field(min_length=1, max_length=16)
@@ -103,7 +104,7 @@ class ApoderadoConfiguration(BaseModel):
 class ApoderadoStatus(BaseModel):
     """Read-only status surface returned by ``apoderado status``."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     configured: bool

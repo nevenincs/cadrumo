@@ -31,11 +31,12 @@ from collections.abc import Mapping
 from secrets import token_bytes
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ...core.credentials import assess_profile_password
 from ...core.errors.hierarchy import CadrumoError
 from ...core.identity import ProfileId
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.paths import effective_storage_root
 from ...core.time import now as _now
 from ...domain.buckets.event import BucketEventType
@@ -87,7 +88,7 @@ class ProfilePassphraseRotationOutcome(BaseModel):
     surface needs to tell the operator what changed and what did not.
     """
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     profile_id: ProfileId
     password_generation: int = Field(ge=2)

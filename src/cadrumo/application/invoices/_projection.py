@@ -11,12 +11,13 @@ from __future__ import annotations
 
 from decimal import Decimal, InvalidOperation
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
-from ...core.period import Period
 from ...core.decimal import format_decimal
 from ...core.logging import get_logger
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money import round_to_cents as _round_to_cents
+from ...core.period import Period
 from ...domain.invoices.models import Invoice, InvoiceCatalogue
 from ...domain.transactions.models import TransactionCatalogue
 from ..review.actions import update_invoice_review
@@ -30,7 +31,7 @@ _log = get_logger(__name__)
 class InvoiceReviewProjection(BaseModel):
     """Rendered invoice row computed by backend review services."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     id: str
     kind: str
@@ -50,7 +51,7 @@ class InvoiceMatchRow(BaseModel):
     an unmatched invoice.
     """
 
-    model_config = ConfigDict(frozen=True, strict=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     invoice: str
     payment: str | None = None
@@ -59,7 +60,7 @@ class InvoiceMatchRow(BaseModel):
 class InvoiceMatchProjection(BaseModel):
     """Backend-owned invoice/payment matching projection."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     period: Period
     matched: tuple[InvoiceMatchRow, ...]

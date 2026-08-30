@@ -34,11 +34,12 @@ from secrets import token_bytes
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 from ...core.credentials import assess_profile_password
 from ...core.errors.hierarchy import CadrumoError
 from ...core.identity import BucketId, ProfileId
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time import now as _utc_now
 from ...domain.user_profile.values import ProfileSetupState, UserProfileRecord, new_profile_id
 from ..evidence import try_record_legal_hold_snapshot
@@ -106,7 +107,7 @@ class ProfileRegistrationOutcome(BaseModel):
     process by the create span, exactly as :func:`login_profile` leaves it.
     """
 
-    model_config = ConfigDict(frozen=True)
+    model_config = STRICT_FROZEN_CONFIG
 
     profile_id: ProfileId
     bucket_id: BucketId
