@@ -118,6 +118,7 @@ class CommandIndex:
     """
 
     def __init__(self, docs: Sequence[CommandDoc]) -> None:
+        """Build the index over ``docs``, keeping them in their given order."""
         self._docs = tuple(docs)
         self._stemmer = spanish_stemmer()
         self._connection: sqlite3.Connection | None = None
