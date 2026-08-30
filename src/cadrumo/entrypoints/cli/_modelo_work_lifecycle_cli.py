@@ -44,7 +44,7 @@ from ...core.i18n import tr
 from ...core.json_contract import Notice
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.ids import RevisionId
-from ...domain.contribuyente import parse_tax_region
+from ...domain.contribuyente.tax_residence import parse_tax_region
 from ...domain.modelos import WorkUnit
 from ._common import (
     activate_subcommand_output_language,

@@ -35,7 +35,7 @@ from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId, WorkUnitId
 from ...core.time import UtcInstant
 from ..calculations.registry.ids import RevisionId
-from ..contribuyente import CCAA
+from ..contribuyente.ccaa import CCAA
 from ._codes import ModeloCode
 from .errors import ModeloValidationError
 from .filing_text import ModeloActorLabel, OperatorReason

@@ -19,7 +19,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import DescendantRelacion
-from ....domain.contribuyente import DescendantInfo
+from ....domain.contribuyente.descendant import DescendantInfo
 from .._config_descendiente_payloads import ProfileDescendientePayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

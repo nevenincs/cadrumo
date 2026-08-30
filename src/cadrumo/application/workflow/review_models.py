@@ -10,7 +10,7 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.identity import BucketId, InvoiceId, TransactionId
 from ...core.time import now as utc_now
 from ...core.time import validate_utc_aware
-from ...domain.contribuyente import normalise_key
+from ...domain.contribuyente.normalise import normalise_key
 
 
 class WorkflowEvent(BaseModel):

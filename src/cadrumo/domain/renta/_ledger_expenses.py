@@ -35,7 +35,7 @@ from ..categories import (
     StatutoryCapVariant,
     family_for,
 )
-from ..contribuyente import CCAA
+from ..contribuyente.ccaa import CCAA
 from ._first_slice_routing import FIRST_SLICE_EXPENSE_CASILLAS
 from .errors import RentaValidationError
 

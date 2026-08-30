@@ -41,7 +41,7 @@ from ...core import ART_58_2_ENTITLING_RELACIONES, DescendantRelacion
 from ...core.json_contract import OutputSchema
 from ...core.text_bounds import CalendarMonth
 from ...core.time import today_madrid
-from ...domain.contribuyente import DescendantRecordFields
+from ...domain.contribuyente.descendant_record import DescendantRecordFields
 
 DescendantNif = Annotated[
     str,

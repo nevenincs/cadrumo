@@ -10,13 +10,10 @@ import pytest
 from pydantic import AnyUrl, ValidationError
 
 from .....core import CasillaId, RegistryAuthorityGrade
-from ....contribuyente import (
-    PROFILE_KEYS,
-    RentaAscendantProfile,
-    RentaDescendantProfile,
-    RentaFamilyProfile,
-    TaxResidenceProfile,
-)
+from ....contribuyente.family_profile import RentaFamilyProfile
+from ....contribuyente.family_types import RentaAscendantProfile, RentaDescendantProfile
+from ....contribuyente.keys import PROFILE_KEYS
+from ....contribuyente.tax_residence import TaxResidenceProfile
 from .._validate import RegistryValidator
 from .._validate_constructs import _CONSTRUCT_MEMBER_ATTRS
 from ..binding_selector_utils import selector_as_dict

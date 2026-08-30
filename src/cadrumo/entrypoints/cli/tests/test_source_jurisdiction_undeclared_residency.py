@@ -21,7 +21,7 @@ from __future__ import annotations
 import pytest
 import typer
 
-from ....domain.contribuyente import FiscalResidency
+from ....domain.contribuyente.renta_codes import FiscalResidency
 from ....domain.deadlines import IrpfSpecialRegime
 from .._ledger_support import _resolve_source_jurisdiction
 

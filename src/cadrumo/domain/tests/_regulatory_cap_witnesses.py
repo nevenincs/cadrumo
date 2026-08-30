@@ -44,12 +44,10 @@ from datetime import date
 from decimal import Decimal
 
 from ..categories import SpendingCategory, resolve_category_profiles
-from ..contribuyente import (
-    DescendantInfo,
-    MinimoDescendientesThresholds,
-    RentaFamilyProfile,
-    compute_deduccion_maternidad_0611,
-)
+from ..contribuyente.deduccion_maternidad import compute_deduccion_maternidad_0611
+from ..contribuyente.descendant import DescendantInfo
+from ..contribuyente.family_profile import RentaFamilyProfile
+from ..contribuyente.family_types import MinimoDescendientesThresholds
 from ..fincas import (
     CarryForwardEntry,
     ExpenseCategory,

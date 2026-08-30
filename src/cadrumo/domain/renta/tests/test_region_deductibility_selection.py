@@ -38,7 +38,7 @@ from ...categories import (
     SpendingCategory,
     parse_http_url,
 )
-from ...contribuyente import CCAA
+from ...contribuyente.ccaa import CCAA
 from .. import (
     RentaDeductibilityContext,
     resolve_region_category_profiles,

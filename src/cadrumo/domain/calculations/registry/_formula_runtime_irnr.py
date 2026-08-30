@@ -32,7 +32,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, NoReturn
 
 from ....core import CasillaId, ConvenioOverrideKind, TipoRentaIrnr
-from ...contribuyente import UE_EEA_COUNTRY_CODES
+from ...contribuyente.renta_codes import UE_EEA_COUNTRY_CODES
 from .convenio import ConvenioOverride
 from .errors import RegistryValidationError
 from .formula_runtime_ops import (

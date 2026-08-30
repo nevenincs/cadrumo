@@ -214,7 +214,7 @@ def test_the_wizard_grammar_is_the_domain_grammar() -> None:
     agree today.
     """
     from ....core.errors import ProfileAnswerTypeError
-    from ....domain.contribuyente import parse_guarderia_mensual
+    from ....domain.contribuyente.guarderia_mensual import parse_guarderia_mensual
 
     definition = _probe_definition()
     state = _one_descendant_state(definition)
