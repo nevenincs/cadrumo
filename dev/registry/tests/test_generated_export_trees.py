@@ -498,6 +498,68 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
     assert str(checked.candidate.layout.id) == tree.layout_id
 
 
+@pytest.mark.parametrize(
+    ("tree", "expected_literals"),
+    (
+        (
+            next(item for item in _GENERATED_TREES if str(item) == "m184-2023-2024"),
+            ("m184-2023.entidad.f008", "E", "m184-2023.socio.f008", "S"),
+        ),
+        (
+            next(item for item in _GENERATED_TREES if str(item) == "m184-2025-y-siguientes"),
+            ("m184-2025.entidad.f008", "E", "m184-2025.socio.f008", "S"),
+        ),
+    ),
+    ids=str,
+)
+def test_m184_sheet_type_literals_replace_the_blank_capable_casilla_path(
+    tree: _GeneratedTree,
+    expected_literals: tuple[str, str, str, str],
+    tmp_path: Path,
+) -> None:
+    """Both Tipo-2 record markers emit official bytes without a manual casilla path."""
+    semantic_map, render_profile, joined, evidence, transport = _authorities(tree)
+    rendered = render_complete_export_tree(
+        tmp_path / "export",
+        revision_id=tree.revision,
+        joined=joined,
+        semantic_map=semantic_map,
+        transport_profile=transport,
+        render_profile=render_profile,
+        render_profile_source_evidence=evidence,
+    )
+    fields = {field.id: field for record in rendered.layout.records for field in record.fields}
+    entidad_id, entidad_literal, socio_id, socio_literal = expected_literals
+
+    assert (
+        fields[entidad_id].kind.value,
+        fields[entidad_id].literal,
+        fields[entidad_id].casilla_id,
+        fields[entidad_id].required,
+    ) == ("literal", entidad_literal, None, True)
+    assert (
+        fields[socio_id].kind.value,
+        fields[socio_id].literal,
+        fields[socio_id].casilla_id,
+        fields[socio_id].required,
+    ) == ("literal", socio_literal, None, True)
+
+    revision = load_modelo_directory(bundled_path("registry", "aeat", "modelos", tree.modelo)).revisions[tree.revision]
+    casillas = {str(casilla.id): casilla for casilla in revision.casillas}
+    entidad_casilla = casillas["tipo2.tipo-hoja"]
+    assert (entidad_casilla.input_kind.value, entidad_casilla.required, entidad_casilla.export_refs) == (
+        "manual",
+        False,
+        (),
+    )
+    socio_casilla = casillas["tipo3.tipo-hoja"]
+    assert (socio_casilla.input_kind.value, socio_casilla.required, socio_casilla.export_refs) == (
+        "manual",
+        False,
+        (),
+    )
+
+
 def test_target_only_continuity_metadata_requires_real_declared_m303_siblings(tmp_path: Path) -> None:
     """A strict 2026 landing revision cannot validate against invented predecessors.
 

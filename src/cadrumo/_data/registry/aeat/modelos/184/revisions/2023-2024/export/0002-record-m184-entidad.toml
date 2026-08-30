@@ -153,12 +153,12 @@ source_refs = ['aeat-dr-184-2023-2024']
 id = 'm184-2023.entidad.f008'
 offset = 76
 length = 1
-kind = 'casilla'
-casilla_id = 'tipo2.tipo-hoja'
+kind = 'literal'
+literal = 'E'
 data_type = 'text'
-required = false
-padding = 'right_space'
-justification = 'left'
+required = true
+padding = 'none'
+justification = 'none'
 signed = false
 legal_refs = [
     'orden-hap-2250-2015:art-1',
