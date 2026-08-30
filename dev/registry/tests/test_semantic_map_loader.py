@@ -12,6 +12,7 @@ import pytest
 from cadrumo.core import M303ProrrataActivityProjectionField, M303ProrrataActivityProjectionRef
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_semantics import ExportComputedKey, ExportDraftAttribute
+from cadrumo.domain.calculations.registry.schema_exports import RecordDiscriminator
 
 from .. import SEMANTIC_MAP_FRAGMENT_SCHEMA_VERSION, load_semantic_map
 
@@ -221,6 +222,17 @@ def test_loader_preserves_projection_record_occurrence_authority(tmp_path: Path)
 
     assert semantic_map.records[0].repeat == "projection_rows"
     assert semantic_map.records[0].required is False
+
+
+def test_loader_carries_the_existing_typed_record_discriminator(tmp_path: Path) -> None:
+    root = tmp_path / "semantic-map"
+    root.mkdir()
+    record = _RECORD + 'discriminator = { offset = 500, length = 1, requires = "blank" }\n'
+    _write(root / "0001-record.toml", _fragment(fragment_id="record", body=record + _ENTRY))
+
+    semantic_map = load_semantic_map(root)
+
+    assert semantic_map.records[0].discriminator == RecordDiscriminator(offset=500, length=1, requires="blank")
 
 
 @pytest.mark.parametrize("slot_literal", ['"1"', "1.0", "true"])

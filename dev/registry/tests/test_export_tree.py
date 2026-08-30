@@ -27,7 +27,7 @@ from cadrumo.domain.calculations.registry.errors import (
 from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.loader import load_modelo_directory
-from cadrumo.domain.calculations.registry.schema_exports import ProjectionEndpointDeclaration
+from cadrumo.domain.calculations.registry.schema_exports import ProjectionEndpointDeclaration, RecordDiscriminator
 from cadrumo.domain.calculations.registry.static_inspection import (
     StaticGeneratedArtifactInspection,
     StaticGeneratedArtifactSource,
@@ -994,6 +994,33 @@ def test_renderer_carries_semantic_projection_occurrence_authority_into_generate
     assert rendered.layout.records[1].required is required
 
 
+def test_renderer_carries_semantic_record_discriminator_into_generated_record(
+    m130_inspection_snapshot,
+    tmp_path,
+) -> None:
+    semantic_map = _semantic_map()
+    records = tuple(
+        record.model_copy(update={"discriminator": RecordDiscriminator(offset=3, length=1, requires="blank")})
+        if index == 1
+        else record
+        for index, record in enumerate(semantic_map.records)
+    )
+    semantic_map = semantic_map.model_copy(update={"records": records})
+    joined = join_record_design_semantics(semantic_map, _intermediate(), m130_inspection_snapshot)
+
+    rendered = render_complete_export_tree(
+        tmp_path / "export",
+        revision_id="2025",
+        joined=joined,
+        semantic_map=semantic_map,
+        transport_profile=_profile(),
+        render_profile=_wire_profile(),
+        render_profile_source_evidence=_wire_evidence(),
+    )
+
+    assert rendered.layout.records[1].discriminator == RecordDiscriminator(offset=3, length=1, requires="blank")
+
+
 def test_renderer_manifest_refuses_file_tampering_derivation_drift_and_partial_field_evidence(
     m130_inspection_snapshot,
     tmp_path,
@@ -1475,6 +1502,20 @@ def test_labelled_official_literal_accepts_the_m184_sentence_stop_but_not_an_alt
     assert labelled.group("literal") == "E"
     assert _export_tree._OFFICIAL_ALTERNATIVE_LITERALS_RE.fullmatch('Constante "E". o "S". rentas.') is not None
     assert _export_tree._OFFICIAL_ALTERNATIVE_LITERALS_RE.fullmatch('Constante "E". rentas.\no "S".') is not None
+
+
+def test_labelled_official_literal_accepts_m296_field_enumeration_after_the_constant() -> None:
+    """M296's later quoted 1/2 values describe another field, not tipo-hoja."""
+    official_content = (
+        'Constante «F» ANEXO «VALORES NEGOCIABLES. RELACIÓN DE PAGO A CONTRIBUYENTES» '
+        'Sólo para claves de percepción "1" ó "2" (posiciones 100-101 del tipo de registro 2).'
+    )
+    folded = official_content.translate(_export_tree._OFFICIAL_QUOTE_FOLD)
+
+    assert _export_tree._OFFICIAL_ALTERNATIVE_LITERALS_RE.fullmatch(folded) is None
+    labelled = _export_tree._OFFICIAL_LABELLED_LITERAL_RE.fullmatch(folded)
+    assert labelled is not None
+    assert labelled.group("literal") == "F"
 
 
 def test_renderer_refuses_wrong_same_width_literal_without_output(m130_inspection_snapshot, tmp_path) -> None:

@@ -29,7 +29,7 @@ from cadrumo.domain.calculations.registry.ids import (
     SourceRefId,
 )
 from cadrumo.domain.calculations.registry.schema_base import LegalRefs, SourceRefs
-from cadrumo.domain.calculations.registry.schema_exports import FilingEnvelopePrefixRole
+from cadrumo.domain.calculations.registry.schema_exports import FilingEnvelopePrefixRole, RecordDiscriminator
 
 from ._record_design_ir import AnchorKey, RecordKey
 
@@ -297,6 +297,14 @@ class SemanticMapRecord(_StrictModel):
     record_type: str = Field(min_length=1)
     required: bool = True
     repeat: Literal["projection_rows"] | None = None
+    discriminator: RecordDiscriminator | None = None
+    """Reviewed runtime record-shape fact, carried unchanged into generated output.
+
+    This is deliberately the existing registry discriminator model rather than
+    a second mapping-only vocabulary: the generator neither interprets nor
+    derives it.  An authored rule must therefore already satisfy the strict
+    production schema that consumes it while parsing filed records.
+    """
 
 
 class SemanticMap(_StrictModel):

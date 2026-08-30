@@ -284,13 +284,17 @@ _OFFICIAL_LITERAL_RE: Final[re.Pattern[str]] = re.compile(
 #: worst outcome available here, and it would be invisible: the emitted record is
 #: well formed and the wrong literal is the right width.
 #:
-#: The labelled form it guards is not weakened. Measured across all 121 bundled
-#: designs, `_OFFICIAL_LABELLED_LITERAL_RE` matches NOTHING: the modelo 296 cells
-#: it was written for -- `Constante «F» ANEXO «VALORES NEGOCIABLES...»` -- carry
-#: TYPOGRAPHIC quotes, which its straight-quote character class never admits.
+#: An explanatory clause may itself quote an ordinary field enumeration. Modelo
+#: 296's ``Constante «F» ... "1" ó "2"`` is the worked case: the trailing
+#: ``"1" ó "2"`` describes another field's permitted values, not alternative
+#: bytes for the already-declared ``F``. The indirect branch therefore requires
+#: prose immediately before the connector to end in a non-quote. Direct
+#: ``Constante "E" o "S"`` alternatives remain rejected by the first branch,
+#: and a later ``... rentas. o "S"`` remains rejected by the second.
 _OFFICIAL_ALTERNATIVE_LITERALS_RE: Final[re.Pattern[str]] = re.compile(
     r"^\s*constante(?:\s+n[uú]mero)?\s+(?P<quote>['\"])[^'\"]*(?P=quote)"
-    r"(?:\.\s+|\s+).*?\b(?:o|ó|or|u)\s*(?P=quote)[^'\"]*(?P=quote).*?$",
+    r"(?:\s*\.?\s*\b(?:o|ó|or|u)\s*(?P=quote)[^'\"]*(?P=quote).*?"
+    r"|(?:\.\s+|\s+).*?[^\s'\"]\s+\b(?:o|ó|or|u)\s*(?P=quote)[^'\"]*(?P=quote).*?)$",
     re.IGNORECASE | re.DOTALL,
 )
 _OFFICIAL_LABELLED_LITERAL_RE: Final[re.Pattern[str]] = re.compile(
@@ -573,6 +577,7 @@ def _render_records(
                     "record_type": joined_record.semantic_record.record_type,
                     "required": joined_record.semantic_record.required,
                     "repeat": joined_record.semantic_record.repeat,
+                    "discriminator": joined_record.semantic_record.discriminator,
                     "order": order,
                     "encoding": transport_profile.encoding,
                     "line_ending": transport_profile.line_ending,

@@ -19,6 +19,12 @@ record_type = "perceptor"
 # One record is one perceptor. Without this the layout holds exactly one payee and a
 # 296 with two cannot be expressed at all.
 repeat = "projection_rows"
+# AEAT's exact 2024 design calls position 500 `BLANCO` on this primary Tipo-2
+# sheet. The three sibling sheets instead mandate their own tipo-hoja literals
+# there (F, A and B), so blankness is a safe runtime shape signal, not an
+# optional taxpayer datum. Source: aeat-dr-296-2024, Tipo 2 - Registro De
+# Perceptor, source row 961 / position 500.
+discriminator = { offset = 500, length = 1, requires = "blank" }
 
 [[records]]
 sheet = "Tipo 2 - Registro De Perceptor, Toma El Valor 1), 2 (Intereses Y Otras Rentas"

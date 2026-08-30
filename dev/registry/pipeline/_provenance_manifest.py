@@ -85,7 +85,7 @@ _SEMANTIC_MAP_KEYS: Final[frozenset[str]] = frozenset(
     {"modelo", "design_epoch", "source_ref", "source_sha256", "records", "entries", "variable_envelopes"},
 )
 _SEMANTIC_MAP_RECORD_KEYS: Final[frozenset[str]] = frozenset(
-    {"sheet", "record_identity", "export_record_id", "record_type", "required", "repeat"},
+    {"sheet", "record_identity", "export_record_id", "record_type", "required", "repeat", "discriminator"},
 )
 _SEMANTIC_MAP_ENTRY_KEYS: Final[frozenset[str]] = frozenset(
     {
@@ -969,7 +969,17 @@ def _semantic_entry_sort_key(payload: Mapping[str, object]) -> tuple[str, int, s
 
 def _normalise_semantic_map_record(payload: Mapping[str, object]) -> dict[str, object]:
     _require_exact_keys(payload, _SEMANTIC_MAP_RECORD_KEYS, subject="semantic-map record")
-    return {
+    discriminator = payload["discriminator"]
+    normalised_discriminator: dict[str, object] | None = None
+    if discriminator is not None:
+        discriminator_payload = _as_object(discriminator, subject="semantic-map record discriminator")
+        _require_exact_keys(discriminator_payload, _DISCRIMINATOR_KEYS, subject="semantic-map record discriminator")
+        normalised_discriminator = {
+            "offset": discriminator_payload["offset"],
+            "length": discriminator_payload["length"],
+            "requires": discriminator_payload["requires"],
+        }
+    normalised = {
         "sheet": _as_string(payload["sheet"], subject="semantic-map record sheet"),
         "record_identity": _as_string(
             payload["record_identity"],
@@ -983,6 +993,12 @@ def _normalise_semantic_map_record(payload: Mapping[str, object]) -> dict[str, o
         "required": _as_bool(payload["required"], subject="semantic-map record required"),
         "repeat": _as_optional_string(payload["repeat"], subject="semantic-map record repeat"),
     }
+    # Adding an optional semantic-map field must not invalidate every existing
+    # generated tree whose authored meaning did not use it. A present rule is
+    # attested; absence retains the previous canonical representation.
+    if normalised_discriminator is not None:
+        normalised["discriminator"] = normalised_discriminator
+    return normalised
 
 
 def _semantic_record_sort_key(payload: Mapping[str, object]) -> tuple[str, str, str, str, str]:
