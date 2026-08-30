@@ -291,7 +291,7 @@ _OFFICIAL_LITERAL_RE: Final[re.Pattern[str]] = re.compile(
 _OFFICIAL_ALTERNATIVE_LITERALS_RE: Final[re.Pattern[str]] = re.compile(
     r"^\s*constante(?:\s+n[uú]mero)?\s+(?P<quote>['\"])[^'\"]*(?P=quote)"
     r"(?:\.\s+|\s+).*?\b(?:o|ó|or|u)\s*(?P=quote)[^'\"]*(?P=quote).*?$",
-    re.IGNORECASE,
+    re.IGNORECASE | re.DOTALL,
 )
 _OFFICIAL_LABELLED_LITERAL_RE: Final[re.Pattern[str]] = re.compile(
     r"^\s*constante(?:\s+n[uú]mero)?\s+(?P<quote>['\"])(?P<literal>[^'\"]*)(?P=quote)(?:\.\s+|\s+)\S.*$",

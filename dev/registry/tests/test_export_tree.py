@@ -1423,7 +1423,13 @@ def test_renderer_refuses_profile_hash_drift_literal_extent_and_nonempty_target(
 
 @pytest.mark.parametrize(
     "official_content",
-    (None, 'Constante "<T" o "ZZ"', 'Constante "<T". o "ZZ"', 'Constante "E". o "S". rentas.'),
+    (
+        None,
+        'Constante "<T" o "ZZ"',
+        'Constante "<T". o "ZZ"',
+        'Constante "E". o "S". rentas.',
+        'Constante "E". rentas.\no "S".',
+    ),
 )
 def test_renderer_refuses_missing_or_ambiguous_official_literal_without_output(
     m130_inspection_snapshot,
@@ -1468,6 +1474,7 @@ def test_labelled_official_literal_accepts_the_m184_sentence_stop_but_not_an_alt
     assert labelled is not None
     assert labelled.group("literal") == "E"
     assert _export_tree._OFFICIAL_ALTERNATIVE_LITERALS_RE.fullmatch('Constante "E". o "S". rentas.') is not None
+    assert _export_tree._OFFICIAL_ALTERNATIVE_LITERALS_RE.fullmatch('Constante "E". rentas.\no "S".') is not None
 
 
 def test_renderer_refuses_wrong_same_width_literal_without_output(m130_inspection_snapshot, tmp_path) -> None:
