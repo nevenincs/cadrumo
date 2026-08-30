@@ -7,9 +7,10 @@ from enum import StrEnum
 from itertools import accumulate
 from typing import Annotated, Final, Literal, Self
 
-from pydantic import ConfigDict, Field, model_validator
+from pydantic import Field, model_validator
 
 from ....core.modelo import Modelo
+from ....core.models import STRICT_FROZEN_CONFIG
 from .errors import RegistryValidationError
 from .schema_base import RegistryModel
 
@@ -187,7 +188,7 @@ AUXILIARY_ENVELOPE_HEADER_ORDINALS: tuple[str, ...] = tuple(str(i) for i in rang
 class RecordDesignAuxiliaryEnvelopeHeaderField(RegistryModel):
     """One exact parser field with its source-proved auxiliary-header role."""
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     role: RecordDesignAuxiliaryEnvelopeHeaderRole
     field: RecordDesignField
@@ -203,7 +204,7 @@ class RecordDesignAuxiliaryEnvelopeHeader(RegistryModel):
     ``declared_total`` for a fixed record.
     """
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     sheet: str
     record_identity: str
@@ -352,7 +353,7 @@ def _validate_m220_closing_source_sequence(parts: tuple[RecordDesignRelativeSuff
 class RecordDesignCompositeRelativeClosing(RegistryModel):
     """Exact six-row relative closing declared by Modelo 220 designs."""
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     tag_prefix: RecordDesignRelativeSuffixMarker
     modelo: RecordDesignRelativeSuffixMarker
@@ -405,7 +406,7 @@ class RecordDesignVariableEnvelope(RegistryModel):
     not that nobody checked.
     """
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     name: str
     prefix_fields: tuple[RecordDesignField, ...] = Field(min_length=1)
@@ -446,7 +447,7 @@ class RecordDesignFieldTypeCorrection(RegistryModel):
     :attr:`RecordDesignExtraction.corrections` for where both land.
     """
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     kind: Literal["field_type"] = "field_type"
     sheet: str = Field(min_length=1)
@@ -471,7 +472,7 @@ class RecordDesignHeaderCellCorrection(RegistryModel):
     differently ordered.
     """
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     kind: Literal["header_cell"] = "header_cell"
     sheet: str = Field(min_length=1)
@@ -509,7 +510,7 @@ class RecordDesignSinglePositionCorrection(RegistryModel):
     and can never displace, override, or duplicate a row that WAS read.
     """
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     kind: Literal["single_position"] = "single_position"
     sheet: str = Field(min_length=1)
@@ -554,7 +555,7 @@ class RecordDesignRangeStartCorrection(RegistryModel):
     sibling editions that justify the correction.
     """
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     kind: Literal["range_start"] = "range_start"
     sheet: str = Field(min_length=1)
@@ -597,7 +598,7 @@ class RecordDesignNote(RegistryModel):
     both travel together on the sheet that printed them.
     """
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     ordinal: str
     body: str
@@ -606,7 +607,7 @@ class RecordDesignNote(RegistryModel):
 class RecordDesignSheet(RegistryModel):
     """Parsed field rows and declared total length for one workbook sheet."""
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     name: str
     fields: tuple[RecordDesignField, ...]
@@ -652,7 +653,7 @@ class RecordDesignSkippedSheet(RegistryModel):
     was handed to the caller looking exactly like one that lost none.
     """
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     name: str
     reason: str
@@ -690,7 +691,7 @@ class RecordDesignExtraction(RegistryModel):
     has to stop being expressible.
     """
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     source: str
     sheets: tuple[RecordDesignSheet, ...]

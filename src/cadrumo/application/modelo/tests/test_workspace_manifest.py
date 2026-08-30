@@ -342,7 +342,7 @@ def test_the_retired_private_manifest_module_is_gone() -> None:
 
     assert not (package / "_workspace_manifest.py").exists()
     with pytest.raises(ModuleNotFoundError):
-        importlib.import_module("cadrumo.application.modelo._workspace_manifest")
+        importlib.import_module("cadrumo.application.modelo.workspace_manifest")
 
 
 # STATIC_INSPECTION gets its own complete manifest, over its own

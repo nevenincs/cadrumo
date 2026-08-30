@@ -1120,6 +1120,95 @@ def test_static_inspection_family_dispositions_reports_only_declared_not_applica
     assert "constructs" not in by_family
 
 
+def test_a_caller_can_spend_the_cursor_the_schema_facet_mints(
+    workspace_repos: tuple[str, WorkUnitCatalogueRepository],
+) -> None:
+    """The public resolver accepts the cursor it mints and returns the NEXT page.
+
+    The paginator could always page; no public entry point could. Both read
+    resolvers took ``page_size`` and no cursor, so a facet returned a valid
+    ``next_cursor`` that no caller could redeem, and paging is the normal case
+    on the provenance destination where one source ref fans out per casilla.
+
+    Re-resolving is not a workaround and is not what this proves: a fresh
+    capture invalidates the held cursor by construction, which is the exact
+    property the cursor exists to certify. This drives the SAME entry point
+    twice, spending page one's cursor on the second call.
+    """
+    from ....core.external_constants import OutputLanguage
+
+    bucket_id, repository = workspace_repos
+    _seed_work_unit(repository, bucket_id=bucket_id)
+    authority = bundled_authority()
+
+    def _resolve(cursor=None):
+        return resolve_static_inspection_result(
+            _visible_target(bucket_id),
+            bucket_id=bucket_id,
+            catalogue_repository=repository,
+            authority=authority,
+            output_language=OutputLanguage.ES,
+            page_size=5,
+            cursor=cursor,
+        )
+
+    first = _resolve().projection.schema_facet
+    assert first.has_more, "the paging proof needs a schema facet past the page size"
+    assert first.next_cursor is not None
+
+    second = _resolve(first.next_cursor).projection.schema_facet
+
+    # The cursor must advance, not restart. Comparing the record identities
+    # rather than the counts: a second call that silently returned page one
+    # again would match on length and on has_more, and only the contents
+    # distinguish "continued" from "started over".
+    first_refs = tuple(str(record.reference) for record in first.records)
+    second_refs = tuple(str(record.reference) for record in second.records)
+    assert second_refs, "spending the cursor returned an empty page"
+    assert not set(first_refs) & set(second_refs), "the cursor restarted instead of continuing"
+
+
+def test_a_cursor_naming_a_facet_the_resolver_does_not_paginate_refuses(
+    workspace_repos: tuple[str, WorkUnitCatalogueRepository],
+) -> None:
+    """A cursor for another facet must refuse, never silently return page one.
+
+    Static inspection assembles only the schema facet. Accepting a
+    provenance cursor and ignoring it would hand back the first page while
+    the caller believed it was continuing, which is the failure the cursor
+    exists to make impossible.
+    """
+    from ....core.external_constants import OutputLanguage
+
+    from ..workspace import ModeloWorkspaceStaleCursorError
+
+    bucket_id, repository = workspace_repos
+    _seed_work_unit(repository, bucket_id=bucket_id)
+    authority = bundled_authority()
+
+    minted = resolve_static_inspection_result(
+        _visible_target(bucket_id),
+        bucket_id=bucket_id,
+        catalogue_repository=repository,
+        authority=authority,
+        output_language=OutputLanguage.ES,
+        page_size=5,
+    ).projection.schema_facet.next_cursor
+    assert minted is not None
+
+    foreign = minted.model_copy(update={"facet": ModeloWorkspaceFacetName.PROVENANCE})
+    with pytest.raises(ModeloWorkspaceStaleCursorError):
+        resolve_static_inspection_result(
+            _visible_target(bucket_id),
+            bucket_id=bucket_id,
+            catalogue_repository=repository,
+            authority=authority,
+            output_language=OutputLanguage.ES,
+            page_size=5,
+            cursor=foreign,
+        )
+
+
 def test_resolve_static_inspection_result_assembles_a_complete_valid_projection(
     workspace_repos: tuple[str, WorkUnitCatalogueRepository],
 ) -> None:

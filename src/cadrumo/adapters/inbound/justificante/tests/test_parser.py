@@ -159,7 +159,7 @@ class TestParseJustificante:
         modelo_130_pdf: Path,
         caplog: pytest.LogCaptureFixture,
     ) -> None:
-        with caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.inbound.justificante._parser"):
+        with caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.inbound.justificante.parser"):
             parse_justificante(modelo_130_pdf)
 
         rendered_logs = "\n".join(record.getMessage() for record in caplog.records)

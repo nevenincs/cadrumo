@@ -221,7 +221,7 @@ class TestHashedLookup:
     def test_short_plaintext_digest_does_not_emit_runtime_warning(self, caplog: pytest.LogCaptureFixture) -> None:
         caplog.set_level(
             logging.WARNING,
-            logger="cadrumo.adapters.persistence.storage.crypto._encrypted_columns",
+            logger="cadrumo.adapters.persistence.storage.crypto.encrypted_columns",
         )
 
         digest = HashedLookup.compute("alpha")
@@ -230,7 +230,7 @@ class TestHashedLookup:
         assert not [
             record
             for record in caplog.records
-            if record.name == "cadrumo.adapters.persistence.storage.crypto._encrypted_columns"
+            if record.name == "cadrumo.adapters.persistence.storage.crypto.encrypted_columns"
         ]
 
     def test_round_trip_via_sqlalchemy(self, session: Session) -> None:
