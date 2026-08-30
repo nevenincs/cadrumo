@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .. import OutboundStorageNetworkError, next_drive_page_token
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

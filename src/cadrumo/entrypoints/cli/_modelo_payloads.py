@@ -40,9 +40,8 @@ from ...application.modelo.work_review import (
     ModeloWorkReview,
 )
 from ...core import PaymentElection, RefundElection, ResultDisposition
-from ...core.period import Period
-from ...core.casilla_id import CasillaId
 from ...core.aggregation import BindingSourceKind
+from ...core.casilla_id import CasillaId
 from ...core.filing_year import FilingYear
 from ...core.identity import (
     BucketId,
@@ -54,9 +53,15 @@ from ...core.identity import (
     WorkUnitId,
 )
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
+from ...core.period import Period
 from ...core.text_bounds import NonEmptyStr
-from ...domain.buckets.event import BucketActorLabel, BucketEventId, BucketEventObjectType, BucketEventType
-from ...domain.buckets.event import BucketObjectId
+from ...domain.buckets.event import (
+    BucketActorLabel,
+    BucketEventId,
+    BucketEventObjectType,
+    BucketEventType,
+    BucketObjectId,
+)
 from ...domain.calculations.registry.ids import (
     BindingId,
     FormulaId,
@@ -69,12 +74,17 @@ from ...domain.calculations.registry.ids import (
 )
 from ...domain.calculations.registry.schema_base import LegalRefs, SourceRefs
 from ...domain.calculations.registry.withholding_bindings import WithholdingClaveBreakdown
-from ...domain.modelos.codes import ModeloCode
-from ...domain.modelos.filing_record import ExternalEvidenceKind, ModeloRecordStatus
-from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity, VerificationCompletenessStatus
 from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ...domain.modelos.calculation_revision_amendment import M303RectificativaMotive
+from ...domain.modelos.codes import ModeloCode
+from ...domain.modelos.filing_record import ExternalEvidenceKind, ModeloRecordStatus
 from ...domain.modelos.filing_text import EvidenceReference, FilingNotes, ModeloActorLabel
+from ...domain.modelos.verification_report import (
+    ModeloVerificationFinding,
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
+    VerificationCompletenessStatus,
+)
 from ._decimal_wire import DecimalWireText
 from ._modelo_aux_payloads import (
     EvidenceBundleCheckFindingPayload,
@@ -1351,7 +1361,7 @@ class ModeloAggregateResult(OutputSchema):
     """
 
     operation: str = "modelo.aggregate"
-    modelo: str = Field(min_length=1, max_length=16)
+    modelo: ModeloCode
     period: Period
     provider: PerModeloAggregationContributor
     observation_count: NonNegativeInt

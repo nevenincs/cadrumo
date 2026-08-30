@@ -55,7 +55,7 @@ def _complete_inventory() -> _ReconciliationInventory:
             InputSchemaInventoryRow(
                 subject_leaf_key="app.ledger.list",
                 required_input_names=("period",),
-                provenance="S05 VerbInputSchema",
+                provenance="VerbInputSchema",
             ),
         ),
         "mounted_families": (
@@ -159,7 +159,7 @@ def test_reconciliation_accounts_for_the_root_status_callback_without_a_mounted_
         InputSchemaInventoryRow(
             subject_leaf_key="root.status",
             required_input_names=(),
-            provenance="S05 VerbInputSchema",
+            provenance="VerbInputSchema",
         ),
     )
     inventory["profile_policies"] = (

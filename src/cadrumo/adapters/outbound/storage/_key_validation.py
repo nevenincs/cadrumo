@@ -40,7 +40,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from ....application.operator_actions import no_action_precondition_verdict
-from ....core import ActionEvidenceProvenance, NoRecoveryOutcome
+from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from .errors import OutboundStorageValidationError
 
 

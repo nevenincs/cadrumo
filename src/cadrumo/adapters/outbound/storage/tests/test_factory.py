@@ -16,7 +16,8 @@ from pathlib import Path
 
 import pytest
 
-from .....core import ActionConditionality, ActionEvidenceProvenance, GoogleCredentialSourceKind, NoRecoveryOutcome
+from .....core import GoogleCredentialSourceKind
+from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....core.config import override_settings
 from .....core.errors.error_codes import resolve_error_message
 from .....core.i18n import tr

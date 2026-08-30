@@ -47,7 +47,8 @@ if TYPE_CHECKING:
     from google.auth.credentials import Credentials
 
 from ....application.operator_actions import no_action_precondition_verdict
-from ....core import ActionEvidenceProvenance, GoogleCredentialSourceKind, NoRecoveryOutcome
+from ....core import GoogleCredentialSourceKind
+from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.config import Settings, load_settings
 from ._protocol import StorageProvider
 from ._records import ProviderKind

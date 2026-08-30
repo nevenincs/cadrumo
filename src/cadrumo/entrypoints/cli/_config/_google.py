@@ -44,10 +44,23 @@ from pydantic import BaseModel, ConfigDict, ValidationError
 # of a Modelo 100 revision fails loudly if that check is unregistered, so
 # the M100 routing referential-integrity gate runs on this CLI path.
 from ....adapters.outbound.google.active_profile import resolve_active_profile
-from ....adapters.outbound.google.errors import GoogleAuthClientNotRegisteredError, GoogleAuthError, GoogleAuthExpiredError, GoogleAuthValidationError
+from ....adapters.outbound.google.errors import (
+    GoogleAuthClientNotRegisteredError,
+    GoogleAuthError,
+    GoogleAuthExpiredError,
+    GoogleAuthValidationError,
+)
 from ....adapters.outbound.google.oauth_flow import run_login_flow
-from ....adapters.outbound.google.records import OAuthClient, REQUIRED_SCOPES
-from ....adapters.outbound.google.session_store import delete_session, load_client, load_metadata, load_token, save_client, save_metadata, save_token
+from ....adapters.outbound.google.records import REQUIRED_SCOPES, OAuthClient
+from ....adapters.outbound.google.session_store import (
+    delete_session,
+    load_client,
+    load_metadata,
+    load_token,
+    save_client,
+    save_metadata,
+    save_token,
+)
 from ....adapters.outbound.storage import (
     OutboundStorageError,
     OutboundStorageValidationError,
@@ -63,6 +76,7 @@ from ....adapters.outbound.storage import (
     inspect_remote_mirror_upload,
     put_remote_mirror_namespace_manifest,
     remote_mirror_object_key_hmac,
+    remote_mirror_object_label,
 )
 from ....adapters.persistence.storage import (
     STORAGE_NAMESPACE_REGISTRY,
@@ -428,18 +442,6 @@ def _object_key_hmac(namespace: str, object_key: bytes) -> str:
     return remote_mirror_object_key_hmac(namespace, object_key)
 
 
-def _label_for(namespace: str) -> str:
-    """Pick a Drive-filename label from `namespace`.
-
-    Default policy: trailing dotted segment, capped at 32 chars,
-    sanitised to alnum/dash/underscore. Per-namespace registered
-    label-derivers override this default once they ship.
-    """
-    leaf = namespace.rsplit(".", 1)[-1] or "obj"
-    safe = "".join(c if c.isalnum() or c in "-_." else "-" for c in leaf)
-    return safe[:32] or "obj"
-
-
 @dataclass(frozen=True)
 class _MirrorRowPartition:
     """Row partition produced before any remote mirror write occurs.
@@ -737,7 +739,7 @@ def _push_mirror_objects(
             continue
         for raw_row in rows:
             hmac_hex = _object_key_hmac(raw_row.namespace, raw_row.object_key)
-            label = _label_for(raw_row.namespace)
+            label = remote_mirror_object_label(raw_row.namespace)
             content_hash = f"sha256-{sha256_hex(raw_row.payload)}"
             try:
                 provider.put(

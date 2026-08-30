@@ -753,7 +753,7 @@ def _evaluate_advisory_predicate_fires(
 #: carries the same suffix, since the id is only prefixed
 #: ``modelo-100-<year>-``, so one suffix serves that family's whole six-year
 #: run. ``test_every_production_verification_finding_constructor_is_locale_neutral``
-#: (S24) requires every ``ModeloVerificationFinding`` call site to carry its
+#: requires every ``ModeloVerificationFinding`` call site to carry its
 #: ``message_locale_key`` as a literal, so the dispatch on these suffixes
 #: lives in :func:`_advisory_predicate_finding` as separate constructor call
 #: sites rather than as a returned value threaded into one shared call.

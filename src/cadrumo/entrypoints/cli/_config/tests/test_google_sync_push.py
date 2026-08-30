@@ -10,6 +10,7 @@ import pytest
 from pydantic import ValidationError
 from sqlalchemy import text
 
+from .....adapters.outbound.storage import remote_mirror_object_label
 from .....adapters.outbound.storage import (
     REMOTE_MIRROR_MANIFEST_NAMESPACE,
     OutboundStorageNotFoundError,
@@ -26,7 +27,7 @@ from .....adapters.persistence.storage.sql import SecureObjectRepository
 from .....core.i18n import tr
 from .....tests.path_obstruction import obstructed_path
 from .....tests.secure_sql import isolated_runtime_profile
-from .._google import _google_refusal, _label_for, _push_secure_object_mirror_rows
+from .._google import _google_refusal, _push_secure_object_mirror_rows
 from .._google_payloads import GoogleSyncProbeResult
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -548,7 +549,7 @@ def test_google_sync_push_rolls_back_prior_objects_when_a_later_upload_fails(tmp
 
         provider = LocalFileSystemProvider(tmp_path / "mirror")
         second_hmac = remote_mirror_object_key_hmac(second_row.namespace, second_row.object_key)
-        second_label = _label_for(second_row.namespace)
+        second_label = remote_mirror_object_label(second_row.namespace)
         # Real O_EXCL-then-replace collision: os.replace refuses to swap a
         # plain file onto an existing directory, so the real atomic-write
         # commit for the second row's object genuinely fails -- no mock.

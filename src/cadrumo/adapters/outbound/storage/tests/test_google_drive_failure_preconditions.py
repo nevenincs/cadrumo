@@ -9,7 +9,7 @@ from typing import override
 
 import pytest
 
-from .....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ...google.tests.drive_media_server import drive_files_list_endpoint
 from .. import (
     OutboundStorageConflictError,

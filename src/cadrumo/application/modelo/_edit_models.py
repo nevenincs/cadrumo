@@ -92,7 +92,7 @@ class ModeloEditRowIntentKind(StrEnum):
 class ModeloEditDetailRowIntentKind(StrEnum):
     """The closed ``ModeloDetailRow`` edit intents, addressed by natural key.
 
-    ``MOVE_ROW`` is deliberately NOT a member (established S292). A row's
+    ``MOVE_ROW`` is deliberately NOT a member. A row's
     physical record occurrence number in the exported fichero is NOT a
     function of caller-supplied order at all: every row-producer resolver in
     :mod:`domain.calculations.registry.detail_record_bindings`
@@ -444,7 +444,7 @@ class ModeloEditSchemaIdentityV1(_EditModel):
     completeness declaration), so a compare-and-swap re-check catches the
     registry's declared completeness rules changing between admission and
     commit. The Workspace type's ``field_manifest_digest`` digests a
-    structurally unrelated concept -- the S278 field-CLASSIFICATION manifest,
+    structurally unrelated concept -- the field-CLASSIFICATION manifest,
     a deterministic walk over the public registry TYPE denominator for
     display rendering. Reusing one field name for both silently made two
     genuinely different values compare unequal under one name; see the

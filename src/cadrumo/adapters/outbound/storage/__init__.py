@@ -36,6 +36,7 @@ from ._mirror_manifest import (
     inspect_remote_mirror_upload,
     put_remote_mirror_namespace_manifest,
     remote_mirror_object_key_hmac,
+    remote_mirror_object_label,
 )
 from ._path_budget import windows_worst_case_object_path_suffix_length
 from ._protocol import StorageProvider
@@ -96,6 +97,7 @@ __all__ = [
     "next_drive_page_token",
     "put_remote_mirror_namespace_manifest",
     "remote_mirror_object_key_hmac",
+    "remote_mirror_object_label",
     "resolve_drive_root_folder_id",
     "windows_worst_case_object_path_suffix_length",
 ]
