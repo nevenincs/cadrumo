@@ -290,7 +290,7 @@ _OFFICIAL_LITERAL_RE: Final[re.Pattern[str]] = re.compile(
 #: TYPOGRAPHIC quotes, which its straight-quote character class never admits.
 _OFFICIAL_ALTERNATIVE_LITERALS_RE: Final[re.Pattern[str]] = re.compile(
     r"^\s*constante(?:\s+n[uú]mero)?\s+(?P<quote>['\"])[^'\"]*(?P=quote)"
-    r"\.?\s*(?:o|ó|or|u)\s*(?P=quote)[^'\"]*(?P=quote)\s*\.?\s*$",
+    r"(?:\.\s+|\s+).*?\b(?:o|ó|or|u)\s*(?P=quote)[^'\"]*(?P=quote).*?$",
     re.IGNORECASE,
 )
 _OFFICIAL_LABELLED_LITERAL_RE: Final[re.Pattern[str]] = re.compile(
