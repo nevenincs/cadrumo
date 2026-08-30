@@ -5,49 +5,25 @@ tags:
 date: '2026-08-30'
 modified: '2026-08-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:3347e71e37289b9d5631359481d71f99ccb3ed2787497d0a8c6c759bdeed1cc5'
+body_hash: 'sha256:c657c7d56a585dfb152fb33599860638052a7bdd2edee3a02dcda41b5c7bad8a'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace ci-lane-deconflation with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `ci-lane-deconflation` audit: `P02.S119 code review`
 
 ## Scope
 
-<!-- What was audited and why -->
+Reviewed commit `4e0ca003ef80344d991cef96a54b31fe3be6b72c`, its P02.S119 execution record, the P02.S119 and P02.S69 plan rows, the preceding P02.S64 review, the current export-layout join ratchet, and the generated registry declaration paths for Modelos 184 and 296.
+
+The review confirms that the four removed Modelo 184 entries were stale after the reviewed, official-text-derived literal publication. The current scan retains exactly one unjoined sheet: Modelo 296 revision `2024-y-siguientes`, `Tipo 2 - Registro De Perceptor`. Its explicit two-direction equality check, multi-record check, auxiliary-header exclusion, and scan anti-vacuity floor all passed in the focused four-test run: `4 passed in 126.28s`.
+
+P02.S69 remains intact: its candidate Modelo 296 span is optional under the official design and therefore cannot become a runtime `RecordDiscriminator`. The reviewed commit changes neither runtime registry declarations nor the join algorithm; it only reconciles the test inventory and records that boundary.
 
 ## Findings
 
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
-
-       ### P02.S119 code review | {level} | {summary}
-
-     followed by a paragraph carrying the detail. P02.S119 code review is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
+No findings identified.
 
 ## Recommendations
 
-<!-- Actionable recommendations, each tied to a finding above. An
-     architecturally significant recommendation names the decision a
-     follow-on ADR must make; the decision itself is never recorded here. -->
+No action required. Leave the runtime-identity question with P02.S69; this inventory reconciliation must not be interpreted as resolving it.

@@ -5,16 +5,11 @@ tags:
 date: '2026-08-30'
 modified: '2026-08-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:f4efb32e416f48879a41b07e0d9ab6fd9dcc4e753d14064a4802d09e392b35c8'
+body_hash: 'sha256:58177bd1331735089fc6671390763577128566550ffde51b70ffac8fdb112322'
 step_id: 'S356'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Let a caller spend the cursor the facet mints, or stop minting it. Verified: both public read entry points -- resolve_static_inspection_result and resolve_graded_snapshot_result -- accept page_size and NO cursor parameter, so a facet returns a valid next_cursor that no caller can redeem. RE-RESOLVING IS NOT A WORKAROUND AND MUST NOT BE PROPOSED AS ONE: a fresh capture invalidates the held cursor by construction, which is precisely the property the cursor exists to certify. The gap is load-bearing rather than cosmetic because paging is the normal case on the provenance destination, where the facet fans one source ref out per casilla it names
 

@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#tui-interface'
 date: '2026-08-26'
-modified: '2026-08-26'
+modified: '2026-08-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:6256025f95272d3084ed6a9f633bf59d36191736745da1d594f4892fa71d5a5a'
+body_hash: 'sha256:822bc482410d60a37f4ad32e76b5acf91126b53539cc31d6069331fb631a5586'
 step_id: 'S37'
 related:
   - "[[2026-08-11-tui-interface-plan]]"

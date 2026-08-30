@@ -224,8 +224,7 @@ def fix_string_module_paths() -> int:
             # module is expected to be gone, so repointing it at the live one
             # inverts the test. The same trap as `assert not (pkg / "_x.py")`,
             # in the dotted spelling.
-            context = "
-".join(lines[max(0, node.lineno - 4) : node.lineno])
+            context = "\n".join(lines[max(0, node.lineno - 4) : node.lineno])
             if "raises" in context and ("ModuleNotFoundError" in context or "ImportError" in context):
                 continue
             for dotted in module_path.findall(node.value):

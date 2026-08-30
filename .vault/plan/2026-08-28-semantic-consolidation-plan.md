@@ -9,7 +9,7 @@ related:
   - '[[2026-08-28-semantic-consolidation-cli-payload-projection-adr]]'
 modified: '2026-08-30'
 body_schema: body-v2
-body_hash: 'sha256:b432003aca9111b8bc56a46886aacd210fc65e23a497874beae4383cbe6c08a4'
+body_hash: 'sha256:9e9caebf60f3370cee8afa9ff322c5bc84405e4295d898f4d232c3e73511b34b'
 ---
 
 # `semantic-consolidation` plan
@@ -87,6 +87,8 @@ The same filing_year field carries six contradictory windows across the tree -- 
 - [x] `P06.S11` - Adjudicate every year-bounded field: separate the filing-year axis from the birth, accrual and catastral revision years that legitimately reach 1900; `src/cadrumo/`.
 - [x] `P06.S12` - Sweep the confirmed filing-year carriers onto the canonical alias across domain, application, adapters and the CLI payloads; `src/cadrumo/`.
 - [x] `P06.S13` - Gate the axis: refuse a restated year window on a field the adjudication named a filing year, mutation-proved; `src/cadrumo/core/tests/`.
+- [x] `P06.S122` - Extract the self-verifying custody digest base into a leaf module so every custody record can reach it, the two capsule records having been unable to subclass it where it lived; `src/cadrumo/adapters/persistence/storage/custody/`.
+- [ ] `P06.S123` - Extend the custody digest base with the digest field validator, the mismatch check and the canonical payload, then subclass the five records that hand-roll them; `src/cadrumo/adapters/persistence/storage/custody/`.
 
 ### Phase `P07` - Rule on the second population of non-inert package namespaces
 
@@ -174,6 +176,7 @@ An AST census of every pydantic Field constraint in production code found the sa
 - [ ] `P08.S108` - Detect a name imported from a genuinely inert namespace, distinguishing it from one reached through a live lazy export map; `src/cadrumo/tests/`.
 - [x] `P08.S116` - Refuse a name imported from a namespace that exports nothing, the failure that has landed three times and takes a package down at collection rather than at use; `src/cadrumo/tests/test_inert_namespace_imports_resolve.py`.
 - [x] `P08.S120` - Stop the payload gate reading an empty-string presence check as a declared rule, which was flagging a validator that only delegates; `src/cadrumo/entrypoints/cli/tests/test_cli_payload_constraint_authority.py`.
+- [x] `P08.S121` - Repoint the dotted module paths written inside string literals, a class every AST sweep is blind to and which had been failing four custody lock tests in a way that read as flakiness; `src/cadrumo/, dev/quality/namespace_retirement_sweep.py`.
 
 ## Parallelization
 
