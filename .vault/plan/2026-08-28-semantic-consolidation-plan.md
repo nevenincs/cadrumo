@@ -9,7 +9,7 @@ related:
   - '[[2026-08-28-semantic-consolidation-cli-payload-projection-adr]]'
 modified: '2026-08-30'
 body_schema: body-v2
-body_hash: 'sha256:1701e93589be461d3ca8d385c5a3a42bfaaab43cfea2477188a8361fc64bf1d1'
+body_hash: 'sha256:227c7a0560265701af31b08239c62781ec115f3001fcc9fd1341d8e80f5840e3'
 ---
 
 # `semantic-consolidation` plan
@@ -61,16 +61,13 @@ Six package namespaces carry a PEP 562 __getattr__ resolver, four of them byte-i
 
 Eleven repository classes declare the identical namespace, payload_type, schema_version and sensitivity quartet. The question this phase answers is whether they are eleven restatements of one configuration shape or eleven legitimately distinct repositories that share four field names, and the answer decides whether a shared base is a consolidation or a false merge.
 
-
 ### Phase `P04` - Close the confirmed single-function duplicates
 
 Behaviour-fingerprint matches that are small, self-contained and mechanically rehomable once a canonical home is ruled: the uppercase-alphanumeric code validator across domain auth and the CLI payloads, the passphrase strength renderer across two TUI screens, the projection row selector across M200 and M296, the snapshot lister across borrador and justificante, and three identical secure-persistence constructors.
 
-
 ### Phase `P05` - Adjudicate the enum-subset rebuilt groupings
 
 Fifty-two enum-subset clusters at two to six sites, each a candidate partition of a closed axis stated more than once. Every one needs the substitutability pre-filter before collapse, because two modules naming the same members for genuinely different rules must stay apart. The home-office family grouping closed earlier is the worked precedent for both the fix and the gate.
-
 
 ### Phase `P06` - Collapse the filing-year axis onto one declared bound
 
@@ -108,6 +105,8 @@ The lazy-export ADR assembled its population by searching for one identifier, _L
 - [ ] `P07.S83` - Relocate the production code out of the twenty-three namespaces that define it directly, seven of which were absent from the phase population entirely; `src/cadrumo/`.
 - [ ] `P07.S84` - Rule on the three module-scope registration side effects, whose dependency inversion is sound but whose siting in a package namespace makes touching that package cost 613 modules; `src/cadrumo/`.
 - [x] `P07.S85` - Remove the orphan docstring describing the retired lazy map in application/registry and correct the module docstring that still claimed 87 lazy re-exports; `src/cadrumo/application/registry/__init__.py`.
+- [x] `P07.S86` - Retire the core observability facade: sixty-one names across eleven modules, with the replay canonicity gate's pinned module literal moved in the same change; `src/cadrumo/core/observability/`.
+- [x] `P07.S87` - Retire the currency, manuals and fincas facades, one package per commit; `src/cadrumo/domain/`.
 
 ### Phase `P08` - Consolidate the repeated constrained scalar shapes
 
@@ -142,6 +141,9 @@ An AST census of every pydantic Field constraint in production code found the sa
 - [x] `P08.S63` - Gate the classification the UTC sweep got wrong: refuse a field promising an instant whose producer parses a printed local time and can only return a naive value, mutation-proved on both arms; `src/cadrumo/core/tests/test_utc_instant_sources_are_aware.py`.
 - [x] `P08.S71` - Route the manual ledger command through the canonical business-pct coupling validator, publicising the module so application code can reach what it had been re-implementing byte for byte; `src/cadrumo/domain/transactions/model_validation.py`.
 - [x] `P08.S72` - Record the attachment-id normaliser as a deliberate non-merge: it drops blank entries where the transaction identifier normaliser refuses them, so its shape is not a superset; `src/cadrumo/application/ledger/models.py`.
+- [x] `P08.S88` - Repoint the thirty-eight gate path pins the campaign's renames left naming deleted files, which made those gates scan an empty set and pass while blind; `src/cadrumo/, dev/`.
+- [x] `P08.S89` - Fix the violations the unblinded gates exposed: a CLI payload re-implementing ISO date parsing, two stale persisted-version exemptions, and one over-granted bool exemption; `src/cadrumo/`.
+- [x] `P08.S90` - Add a tree-wide relative-import resolver as a standing check, so a repoint that emits the wrong dot depth is caught before it reaches a commit; `src/cadrumo/tests/`.
 
 ## Parallelization
 
