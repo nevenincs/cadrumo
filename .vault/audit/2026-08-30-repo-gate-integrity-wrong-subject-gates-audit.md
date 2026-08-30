@@ -2242,3 +2242,35 @@ For the family as a whole, the durable practice is a question rather than a
 mechanism: of any green gate, ask what it actually asserted, and whether that is
 the same as what its readers believe it covers. No freshness check finds a gate
 that was never right about the thing it is trusted for.
+
+### An absolute-only import census reports live code as dead
+
+**Pathway:** repository-wide import analysis feeding de-export and dead-code work.
+
+A census used to identify package namespaces with no facade-route importers
+resolved `ast.ImportFrom` by matching `node.module` against a full dotted path.
+A relative import carries the bare tail in that field -- `_parsers`, not
+`adapters.inbound.declaracion._parsers` -- so every relative edge was invisible.
+
+Measured on this tree: **35,735 relative import edges against 17,269 absolute**
+inside `src/cadrumo`. The census therefore saw roughly a third of the graph.
+It did not degrade at the margin: re-run with `level` resolved by walking the
+importer's own package upward, the number of namespaces with zero facade-route
+importers was **0**, where the original reported four.
+
+What is lost is the distinguishability of two opposite states. An
+absolute-only scan returns an empty consumer list for a live namespace and for
+a dead one alike, and nothing in its output declares the blind spot -- so the
+result reads as a clean measurement rather than a partial one. Acting on it
+removed `extract_pages_text` from `adapters/inbound/declaracion/_parsers`,
+whose real consumer `_detect.py:23` imports it relatively; the package stopped
+importing, and the breakage surfaced only because the change was probed with an
+actual `import` afterwards.
+
+**Remediation.** Any import census over this tree resolves `level > 0` before
+comparing, and asserts a plausibility floor on its own totals -- a scan of
+`src/cadrumo` reporting fewer than ~30,000 internal edges is missing the
+relative ones and must not be acted on. Independently, a de-export is proven by
+importing the affected package, not by re-reading the census that proposed it:
+the census and the deletion share an assumption, so only execution is a second
+opinion.
