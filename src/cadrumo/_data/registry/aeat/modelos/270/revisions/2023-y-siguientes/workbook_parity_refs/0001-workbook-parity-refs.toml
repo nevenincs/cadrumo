@@ -3,7 +3,7 @@
 # form-spec excerpt, which carried no layout content. runner_required stays
 # false pending a verified byte-position parity run against the design.
 
-[[revisions."2023-2024".workbook_parity_refs]]
+[[revisions."2023-y-siguientes".workbook_parity_refs]]
 id = "modelo-270-orden-static-layout"
 workbook_source = "aeat-dr-270-2023"
 fixture_id = "modelo-270-orden-hap-2368-2013-layout"

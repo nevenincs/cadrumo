@@ -1,7 +1,7 @@
 # Modelo 270 annual deadline windows, grounded in orden-hap-2368-2013 art 3: la presentación se realiza entre el 1 y el 31 de enero del
 # año siguiente al que corresponde la declaración.
 
-[[revisions."2023-2024".deadline_windows]]
+[[revisions."2023-y-siguientes".deadline_windows]]
 id = "modelo-270-2024-0a"
 filing_year = 2024
 period = "2024 0A"

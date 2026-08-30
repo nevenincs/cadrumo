@@ -37,10 +37,17 @@ _REVISION_BY_MODELO = {"187": "2022-y-siguientes", "188": "2023-y-siguientes", "
 _SOURCE_CASILLA: CasillaId = validated_casilla_id("04", surface="_SOURCE_CASILLA")
 _TARGET_CASILLA: CasillaId = validated_casilla_id("05", surface="_TARGET_CASILLA")
 
+# (first ejercicio, LAST ejercicio or None for an open era, design, amending art, df unica).
+# The end dates are NOT "first year again": each amending orden's df unica applies its
+# edition "por primera vez" to its first ejercicio, which OPENS a continuing window, and
+# BOE's consolidated Referencias posteriores for BOE-A-1999-22309 (read 2026-08-30) is
+# what closes each one -- anexo X is amended in 2019, 2023 and 2024 and NOWHERE between
+# 2020 and 2022, and not at all after 2024. So 2019 runs to 2022, 2023 is a single year
+# because 2024 amends it, and 2024 is open.
 _M194_DESIGN_ERAS = (
-    (2019, "aeat-dr-194-2019", "orden-hac-1276-2019:art-primero", "orden-hac-1276-2019:df-unica"),
-    (2023, "aeat-dr-194-2023", "orden-hfp-1284-2023:art-6", "orden-hfp-1284-2023:df-unica"),
-    (2024, "aeat-dr-194-2024", "orden-hac-1504-2024:art-primero", "orden-hac-1504-2024:df-unica"),
+    (2019, 2022, "aeat-dr-194-2019", "orden-hac-1276-2019:art-primero", "orden-hac-1276-2019:df-unica"),
+    (2023, 2023, "aeat-dr-194-2023", "orden-hfp-1284-2023:art-6", "orden-hfp-1284-2023:df-unica"),
+    (2024, None, "aeat-dr-194-2024", "orden-hac-1504-2024:art-primero", "orden-hac-1504-2024:df-unica"),
 )
 
 
@@ -140,24 +147,30 @@ def test_modelo_194_selects_only_its_three_hash_pinned_design_eras() -> None:
     modelo, catalogues = _committed_modelo("194")
 
     assert set(modelo.revisions) == {"2019", "2023", "2024"}
-    for filing_year, source_ref, amendment_ref, commencement_ref in _M194_DESIGN_ERAS:
+    for filing_year, last_year, source_ref, amendment_ref, commencement_ref in _M194_DESIGN_ERAS:
         revision = modelo.revisions[str(filing_year)]
         source = catalogues.sources[source_ref]
 
         assert revision.authority_grade is not None
         assert revision.authority_grade.value == "applicability"
+        era_end = date(last_year, 12, 31) if last_year is not None else None
         assert revision.valid_from == date(filing_year, 1, 1)
-        assert revision.valid_to == date(filing_year, 12, 31)
+        assert revision.valid_to == era_end
         assert revision.period_selector.year_from == filing_year
-        assert revision.period_selector.year_to == filing_year
+        assert revision.period_selector.year_to == last_year
         assert {ref for ref in revision.source_refs if ref.startswith("aeat-dr-194-")} == {source_ref}
         assert {amendment_ref, commencement_ref} <= set(revision.legal_refs)
         assert revision.export_layouts == ()
 
         assert source.record_design_epoch == str(filing_year)
         assert source.applies_from == date(filing_year, 1, 1)
-        assert source.applies_to == date(filing_year, 12, 31)
+        # The design's window must MATCH the era it grounds; a design capped shorter than
+        # its revision would let the revision cite authority the source disclaims.
+        assert source.applies_to == era_end
         assert select_revision(modelo, filing_year=filing_year, period="0A", on=date(filing_year, 12, 31)) == revision
+        # Every year the era spans resolves to it -- the 2020-2022 interval is the point.
+        for covered in range(filing_year, (last_year or filing_year) + 1):
+            assert select_revision(modelo, filing_year=covered, period="0A", on=date(covered, 6, 30)) == revision
 
         resolved = resolve_record_design_binary(
             bundled_path(),
@@ -169,32 +182,49 @@ def test_modelo_194_selects_only_its_three_hash_pinned_design_eras() -> None:
         assert resolved.source == source
         assert hash_file(resolved.path) == (source.sha256, source.bytes)
 
-    for filing_year in (2020, 2021, 2022, 2025, 2026):
+    # Refused BELOW the first declared era only. 2020-2022 and 2025+ used to be refused
+    # here; both refusals were holes, not conservatism -- BOE's amendment list for
+    # BOE-A-1999-22309 puts no amendment between 2020 and 2022 and none after 2024, so
+    # those years are governed by the 2019 and 2024 editions respectively.
+    for filing_year in (2016, 2017, 2018):
         with pytest.raises(NoRevisionForPeriodError):
             select_revision(modelo, filing_year=filing_year, period="0A", on=date(filing_year, 12, 31))
+    for filing_year in (2025, 2026):
+        carried = select_revision(modelo, filing_year=filing_year, period="0A", on=date(filing_year, 12, 31))
+        assert carried.id == "2024"
 
 
-def test_modelo_194_refuses_a_mutated_2024_selector_past_its_source_window() -> None:
-    """A selector expansion cannot turn the 2024 source into 2025 authority."""
+def test_modelo_194_refuses_a_mutated_2023_selector_past_its_source_window() -> None:
+    """A selector expansion cannot turn the 2023 source into 2024 authority.
+
+    This guard used to be aimed at the 2024 edition reaching into 2025. That is no
+    longer a boundary: BOE's consolidated amendment list for BOE-A-1999-22309 records
+    no amendment to anexo X after HAC/1504/2024, so the 2024 edition legitimately
+    governs 2025 and there is nothing there to refuse. The guard is re-aimed rather
+    than dropped -- 2023/2024 IS still a real closed boundary, because HAC/1504/2024
+    supersedes the 2023 edition, so the same over-reach is still provably refused.
+    """
     modelo, catalogues = _committed_modelo("194")
-    revision = modelo.revisions["2024"]
+    revision = modelo.revisions["2023"]
     expanded = revision.model_copy(
         update={
-            "valid_to": date(2025, 12, 31),
-            "period_selector": revision.period_selector.model_copy(update={"year_to": 2025}),
+            "valid_to": date(2024, 12, 31),
+            "period_selector": revision.period_selector.model_copy(update={"year_to": 2024}),
         },
     )
-    mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, "2024": expanded}})
-    selected = select_revision(mutated_modelo, filing_year=2025, period="0A", on=date(2025, 12, 31))
+    mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, "2023": expanded}})
+    selected = select_revision(
+        mutated_modelo, filing_year=2024, period="0A", on=date(2024, 12, 31), revision_id="2023"
+    )
     (source_ref,) = (ref for ref in selected.source_refs if ref.startswith("aeat-dr-194-"))
 
-    with pytest.raises(RegistryValidationError, match="does not apply to filing year 2025"):
+    with pytest.raises(RegistryValidationError, match="does not apply to filing year 2024"):
         resolve_record_design_binary(
             bundled_path(),
             catalogues.sources,
             source_ref=source_ref,
-            filing_year=2025,
-            design_epoch="2024",
+            filing_year=2024,
+            design_epoch="2023",
         )
 
 

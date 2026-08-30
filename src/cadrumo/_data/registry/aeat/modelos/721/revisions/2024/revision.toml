@@ -4,8 +4,7 @@ authority_grade = "applicability"
 # period_selector.year_from), not the orden's own effective date -- that fact
 # already has its home on orden-hfp-886-2023:art-1's legal.effective_from.
 valid_from = 2024-01-01
-valid_to = 2024-12-31
-period_selector = { years = [2024], periods = ["0A"] }
+period_selector = { year_from = 2024, periods = ["0A"] }
 legal_refs = [
     "ley-58-2003:da-18",
     "rd-1065-2007:art-42-quater",
@@ -30,15 +29,15 @@ review_status = "agent_reviewed"
 reviewed_by = """\
 agent: finite BOE-package review. VERIFIED -- the bundled HAC/1504/2024 PDF is the immutable official \
 amendment package (827110 bytes; SHA-256 27995a7285f61a3a3ff2ddd259d9b252143d2ef6fc5d999936738bbd8b116a31), \
-and its final provision first applies the substituted annex to exercise 2024. This applicability-grade \
-revision is therefore selected only for 2024 0A. NOT CLAIMED -- the separately published AEAT SOAP/XML \
+and its final provision declares the substituted annex "aplicable, POR PRIMERA VEZ, a las declaraciones informativas correspondientes al ejercicio 2024, que se presentaran en el ejercicio 2025". This applicability-grade \
+era is therefore OPEN-ENDED: por primera vez opens a CONTINUING window at its first ejercicio rather than confining the annex to it. No bundled normative amends modelo 721 after HAC/1504/2024, and none of the seven bundled 2025 ordenes names this modelo, so closing the era at 2024 would refuse ejercicio 2025 under an annex no orden has withdrawn. NOT CLAIMED -- the separately published AEAT SOAP/XML \
 material is not pair-complete here: the historical 2023 description endpoint no longer supplies its bytes, so \
 no 2023/2024 AEAT service-package inventory, service serializer, validation matrix, record design, or \
 filing-grade authority is asserted. The BOE amendment is kind form_spec, not record_design; export layouts \
 remain empty. NOT CLAIMED -- no independent figure oracle exists and the informational casillas remain manual \
 or informational facts.
 """
-reviewed_at = 2026-08-25
+reviewed_at = 2026-08-30
 
 [revisions."2024".family_dispositions.casilla_continuidad_evolutions]
 reason = """

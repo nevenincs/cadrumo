@@ -22,7 +22,7 @@
 # two data AEAT names rather than as one 49-byte slot: the coverage gate
 # measures byte extent, so the design's grouping and the layout's need not
 # agree, and two operator-supplied facts are what the record actually carries.
-[[revisions."2023-2024".casillas]]
+[[revisions."2023-y-siguientes".casillas]]
 id = "decl.persona-contacto-telefono"
 number = "59-67"
 section = ["declarante", "contacto"]
@@ -34,7 +34,7 @@ export_refs = ["modelo-270-decl-persona-contacto-telefono"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
-[[revisions."2023-2024".casillas]]
+[[revisions."2023-y-siguientes".casillas]]
 id = "decl.persona-contacto-nombre"
 number = "68-107"
 section = ["declarante", "contacto"]
@@ -49,7 +49,7 @@ source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 # Design campo 8. A sequential number the filer assigns, whose first three
 # digits are the código 270. It is not derivable from the draft, so it is the
 # operator's datum rather than a producer's.
-[[revisions."2023-2024".casillas]]
+[[revisions."2023-y-siguientes".casillas]]
 id = "decl.numero-identificativo"
 number = "108-120"
 section = ["declarante"]
@@ -66,7 +66,7 @@ source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 # claves with different meanings, so two casillas rather than one two-byte slot.
 # These are NOT the application's amendment_evidence boolean: that renders the
 # canonical "X", which this design does not admit here.
-[[revisions."2023-2024".casillas]]
+[[revisions."2023-y-siguientes".casillas]]
 id = "decl.complementaria"
 number = "121"
 section = ["declarante"]
@@ -78,7 +78,7 @@ export_refs = ["modelo-270-decl-complementaria"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
-[[revisions."2023-2024".casillas]]
+[[revisions."2023-y-siguientes".casillas]]
 id = "decl.sustitutiva"
 number = "122"
 section = ["declarante"]
@@ -92,7 +92,7 @@ source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
 # Design campo 10. Written when campo 9 carries "C" or "S"; the design states
 # "en cualquier otro caso deberá rellenarse a CEROS".
-[[revisions."2023-2024".casillas]]
+[[revisions."2023-y-siguientes".casillas]]
 id = "decl.numero-identificativo-anterior"
 number = "123-135"
 section = ["declarante"]
@@ -104,7 +104,7 @@ export_refs = ["modelo-270-decl-numero-identificativo-anterior"]
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
-[[revisions."2023-2024".casillas]]
+[[revisions."2023-y-siguientes".casillas]]
 id = "decl.total-perceptores"
 number = "138-146"
 section = ["declarante", "resumen"]
@@ -116,7 +116,7 @@ export_refs = ["modelo-270-decl-total-perceptores"]
 legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 
-[[revisions."2023-2024".casillas]]
+[[revisions."2023-y-siguientes".casillas]]
 id = "decl.total-importe-premios"
 number = "147-163"
 section = ["declarante", "resumen"]
@@ -129,7 +129,7 @@ legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"] }
 
-[[revisions."2023-2024".casillas]]
+[[revisions."2023-y-siguientes".casillas]]
 id = "decl.total-base-retencion"
 number = "164-180"
 section = ["declarante", "resumen"]
@@ -142,7 +142,7 @@ legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-
 source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
 constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"] }
 
-[[revisions."2023-2024".casillas]]
+[[revisions."2023-y-siguientes".casillas]]
 id = "decl.total-retenciones"
 number = "181-197"
 section = ["declarante", "resumen"]

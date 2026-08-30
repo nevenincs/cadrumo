@@ -4,8 +4,8 @@
 # not declare an export layout or infer any unbundled design year.
 authority_grade = "applicability"
 valid_from = 2019-01-01
-valid_to = 2019-12-31
-period_selector = { year_from = 2019, year_to = 2019, periods = ["0A"] }
+valid_to = 2022-12-31
+period_selector = { year_from = 2019, year_to = 2022, periods = ["0A"] }
 orden_aplicabilidad = ["orden-1999-11-18:apartado-cuarto"]
 legal_refs = [
     "orden-1999-11-18:apartado-cuarto",
@@ -21,12 +21,21 @@ source_refs = [
 ]
 review_status = "agent_reviewed"
 reviewed_by = """\
-agent: inspected the official AEAT hash-pinned Modelo 194 design for ejercicio 2019 and the cited full BOE amendment. The revision is bounded exactly to the design's stated ejercicio; no record-design evidence is reused for a different year. The five hoja-resumen casillas remain manual input, no export layout is declared, and no authority grade is promoted. The 2020-2022 gap is intentionally unselectable: no exact successor or continuing application window is declared."""
-reviewed_at = 2026-08-25
+agent: inspected the official AEAT hash-pinned Modelo 194 design and the cited full BOE amendment. \
+The era runs 2019-2022 because Orden HAC/1276/2019 disposicion final unica declares the amended \
+design "aplicable, POR PRIMERA VEZ, para las declaraciones correspondientes a 2019 que se presenten \
+en 2020" -- por primera vez fixes the FIRST ejercicio of a continuing window, not a single-year \
+scope, so the design governs each later ejercicio until an orden amends it. It is superseded from \
+ejercicio 2023 by Orden HFP/1284/2023 df unica ("por primera vez ... ejercicio 2023"), which closes \
+this era at 2022. BOE's consolidated Referencias posteriores for BOE-A-1999-22309 (read 2026-08-30) \
+records anexo X amendments in 2016, 2019, 2023 and 2024 and NONE between 2020 and 2022, so no \
+intermediate era is skipped. The five hoja-resumen casillas remain manual input, no export layout is \
+declared, and no authority grade is promoted."""
+reviewed_at = 2026-08-30
 
 [revisions."2019".family_dispositions.casilla_continuidad_evolutions]
 reason = """
-No casilla continuity evolution is declared. This applicability-grade revision carries only the five manual hoja-resumen boxes, while the hash-pinned record design is used solely to bound the revision's era. A continuity stamp would assert box identity across record-design eras that this work has not compared field-by-field; the unevidenced 2020-2022 interval is therefore not bridged by inference.
+No casilla continuity evolution is declared. This applicability-grade revision carries only the five manual hoja-resumen boxes, while the hash-pinned record design is used solely to bound the revision's era. A continuity stamp would assert box identity across record-design eras that this work has not compared field-by-field. Bounding this era at 2022 states which orden governs each ejercicio; it asserts no box-level identity across the 2023 amendment.
 """
 legal_refs = [
     "orden-1999-11-18:apartado-cuarto",

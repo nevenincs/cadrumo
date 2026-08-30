@@ -3,7 +3,7 @@
 # numbered form casilla is invented. Their record positions are rendered from
 # the filing header / draft contract, not from casilla-to-position mappings.
 
-[[revisions."2023-2024".casillas]]
+[[revisions."2023-y-siguientes".casillas]]
 id = "decl.ejercicio"
 number = "ejercicio"
 section = ["declarante"]
@@ -14,7 +14,7 @@ input_kind = "informational"
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-270-procedure"]
 
-[[revisions."2023-2024".casillas]]
+[[revisions."2023-y-siguientes".casillas]]
 id = "decl.tipo-declaracion"
 number = "tipo-declaracion"
 section = ["declarante"]

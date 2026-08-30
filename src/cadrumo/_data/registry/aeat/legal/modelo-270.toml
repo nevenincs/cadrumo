@@ -76,6 +76,48 @@ required_text = [
     "modelo 270 correspondiente al ejercicio 2024",
 ]
 
+[legal."orden-hac-1431-2025:art-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1431-2025.html#articulo-3"
+document_id = "BOE-A-2025-25390"
+article = "3"
+section = "Modelo 270"
+permalink = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-25390"
+published_at = 2025-12-12
+effective_from = 2025-12-13
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-30
+reviewed_by = "agent-authored from the bundled canonical BOE-A-2025-25390 HTML; the article text was read verbatim, not summarised from a secondary source"
+notes = "Articulo 3 modifica UNICAMENTE el contenido del campo CODIGO DE PROVINCIA del tipo de registro 2 (perceptor) del anexo de la Orden HAP/2368/2013, reescribiendo cuatro rotulos provinciales (03 ALICANTE/ALACANT, 12 CASTELLON/CASTELLO, 20 GUIPUZCOA/GIPUZKOA, 48 VIZCAYA/BIZKAIA). El propio articulo declara las posiciones 118-119 sin alterarlas, de modo que la geometria del diseno de registro no cambia; el registro modela el codigo numerico de dos digitos, no el rotulo."
+required_text = [
+    "Modificación de la Orden HAP/2368/2013",
+    "modelo 270",
+    "CÓDIGO DE PROVINCIA",
+    "posiciones 118-119",
+    "48. VIZCAYA/BIZKAIA",
+]
+
+[legal."orden-hac-1431-2025:df-unica"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1431-2025.html#df-unica"
+document_id = "BOE-A-2025-25390"
+article = "disposición final única"
+permalink = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-25390"
+published_at = 2025-12-12
+effective_from = 2025-12-13
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-30
+reviewed_by = "agent-authored from the bundled canonical BOE-A-2025-25390 HTML final provision, read verbatim"
+notes = "La disposicion final unica declara la orden aplicable POR PRIMERA VEZ a los modelos 347, 190 y 270 correspondientes al ejercicio 2025 y siguientes: abre una ventana continua desde 2025, no una aplicabilidad limitada a ese ejercicio."
+required_text = [
+    "Disposición final única. Entrada en vigor.",
+    "modelos 347, 190 y 270 correspondientes al ejercicio 2025 y siguientes",
+]
+
 [sources."enrolled-modelo-270-procedure"]
 evidence_tier = "official_source_guidance"
 authority = "boe"
@@ -114,6 +156,10 @@ sha256 = "d845cc47e3b60d01128d27dddcc3cffd2cf64bd6dfb24e0cd0d0467d66f95a92"
 bytes = 111633
 retrieved_at = 2026-07-21
 applies_from = 2023-01-01
-applies_to = 2024-12-31
+# Open-ended: Orden HAC/1431/2025 art 3 rewrote four province ROTULOS inside CODIGO DE
+# PROVINCIA while naming its positions 118-119 unchanged, so this design's geometry still
+# governs 2025 and later. AEAT reissued a design for modelo 347 under that same orden and
+# did NOT for modelo 270 -- this file is still the CURRENT published design (page captured
+# 2026-08-26), so capping it at 2024 would contradict the revision that cites it.
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos/270_HAP_2368_2013.pdf"
 review_status = "reviewed"

@@ -6,17 +6,17 @@
 # (1+3+4+9+40+1+49+13+2+13+2+9+17+17+17+303 = 500); all 16 are declared here,
 # at the design's own (posición, longitud) coordinates.
 
-[[revisions."2023-2024".export_layouts]]
+[[revisions."2023-y-siguientes".export_layouts]]
 id = "modelo-270-fichero-boe"
 
-[[revisions."2023-2024".export_layouts.records]]
+[[revisions."2023-y-siguientes".export_layouts.records]]
 id = "modelo-270-declarante"
 record_type = "declarante"
 order = 0
 encoding = "latin-1"
 line_ending = "none"
 
-[[revisions."2023-2024".export_layouts.records.fields]]
+[[revisions."2023-y-siguientes".export_layouts.records.fields]]
 id = "modelo-270-decl-record-type"
 offset = 1
 length = 1
@@ -30,7 +30,7 @@ signed = false
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023"]
 
-[[revisions."2023-2024".export_layouts.records.fields]]
+[[revisions."2023-y-siguientes".export_layouts.records.fields]]
 id = "modelo-270-decl-modelo"
 offset = 2
 length = 3
@@ -44,7 +44,7 @@ signed = false
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023"]
 
-[[revisions."2023-2024".export_layouts.records.fields]]
+[[revisions."2023-y-siguientes".export_layouts.records.fields]]
 id = "modelo-270-decl-year"
 offset = 5
 length = 4
@@ -58,7 +58,7 @@ signed = false
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023"]
 
-[[revisions."2023-2024".export_layouts.records.fields]]
+[[revisions."2023-y-siguientes".export_layouts.records.fields]]
 id = "modelo-270-decl-nif"
 offset = 9
 length = 9
@@ -76,7 +76,7 @@ signed = false
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023"]
 
-[[revisions."2023-2024".export_layouts.records.fields]]
+[[revisions."2023-y-siguientes".export_layouts.records.fields]]
 id = "modelo-270-decl-razon-social"
 offset = 18
 length = 40
@@ -98,7 +98,7 @@ signed = false
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023"]
 
-[[revisions."2023-2024".export_layouts.records.fields]]
+[[revisions."2023-y-siguientes".export_layouts.records.fields]]
 id = "modelo-270-decl-tipo-soporte"
 offset = 58
 length = 1
@@ -120,7 +120,7 @@ source_refs = ["aeat-dr-270-2023"]
 # measures byte extent rather than (offset, length) identity, so the design's
 # grouping and the layout's do not have to agree; writing the two real facts
 # beats writing one 49-byte blank.
-[[revisions."2023-2024".export_layouts.records.fields]]
+[[revisions."2023-y-siguientes".export_layouts.records.fields]]
 id = "modelo-270-decl-persona-contacto-telefono"
 offset = 59
 length = 9
@@ -135,7 +135,7 @@ signed = false
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023"]
 
-[[revisions."2023-2024".export_layouts.records.fields]]
+[[revisions."2023-y-siguientes".export_layouts.records.fields]]
 id = "modelo-270-decl-persona-contacto-nombre"
 offset = 68
 length = 40
@@ -151,7 +151,7 @@ signed = false
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023"]
 
-[[revisions."2023-2024".export_layouts.records.fields]]
+[[revisions."2023-y-siguientes".export_layouts.records.fields]]
 id = "modelo-270-decl-numero-identificativo"
 offset = 108
 length = 13
@@ -172,7 +172,7 @@ source_refs = ["aeat-dr-270-2023"]
 # two fields so each clave lands on its own byte. Deliberately NOT wired to
 # amendment_evidence.is_complementaria: that producer is a boolean and renders
 # the canonical "X", which this design does not admit here.
-[[revisions."2023-2024".export_layouts.records.fields]]
+[[revisions."2023-y-siguientes".export_layouts.records.fields]]
 id = "modelo-270-decl-complementaria"
 offset = 121
 length = 1
@@ -186,7 +186,7 @@ signed = false
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023"]
 
-[[revisions."2023-2024".export_layouts.records.fields]]
+[[revisions."2023-y-siguientes".export_layouts.records.fields]]
 id = "modelo-270-decl-sustitutiva"
 offset = 122
 length = 1
@@ -200,7 +200,7 @@ signed = false
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023"]
 
-[[revisions."2023-2024".export_layouts.records.fields]]
+[[revisions."2023-y-siguientes".export_layouts.records.fields]]
 id = "modelo-270-decl-numero-identificativo-anterior"
 offset = 123
 length = 13
@@ -217,7 +217,7 @@ signed = false
 legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023"]
 
-[[revisions."2023-2024".export_layouts.records.fields]]
+[[revisions."2023-y-siguientes".export_layouts.records.fields]]
 id = "modelo-270-decl-periodo"
 offset = 136
 length = 2
@@ -237,7 +237,7 @@ signed = false
 legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023"]
 
-[[revisions."2023-2024".export_layouts.records.fields]]
+[[revisions."2023-y-siguientes".export_layouts.records.fields]]
 id = "modelo-270-decl-total-perceptores"
 offset = 138
 length = 9
@@ -251,7 +251,7 @@ signed = false
 legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023"]
 
-[[revisions."2023-2024".export_layouts.records.fields]]
+[[revisions."2023-y-siguientes".export_layouts.records.fields]]
 id = "modelo-270-decl-total-importe-premios"
 offset = 147
 length = 17
@@ -268,7 +268,7 @@ signed = false
 legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023"]
 
-[[revisions."2023-2024".export_layouts.records.fields]]
+[[revisions."2023-y-siguientes".export_layouts.records.fields]]
 id = "modelo-270-decl-total-base-retencion"
 offset = 164
 length = 17
@@ -282,7 +282,7 @@ signed = false
 legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023"]
 
-[[revisions."2023-2024".export_layouts.records.fields]]
+[[revisions."2023-y-siguientes".export_layouts.records.fields]]
 id = "modelo-270-decl-total-retenciones"
 offset = 181
 length = 17
@@ -296,7 +296,7 @@ signed = false
 legal_refs = ["orden-hap-2368-2013:art-1", "orden-hfp-1286-2023:art-2", "ley-35-2006:da-33", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-270-2023"]
 
-[[revisions."2023-2024".export_layouts.records.fields]]
+[[revisions."2023-y-siguientes".export_layouts.records.fields]]
 id = "modelo-270-decl-blancos"
 offset = 198
 length = 303

@@ -91,17 +91,31 @@ def test_modelo_721_selects_only_its_two_hash_pinned_boe_form_spec_eras() -> Non
 
         assert revision.authority_grade is not None
         assert revision.authority_grade.value == "applicability"
+        # 2024 is OPEN: HAC/1504/2024 substitutes the anexo of Orden HFP/886/2023 and
+        # applies it "por primera vez" to ejercicio 2024, and BOE's consolidated
+        # Referencias posteriores for BOE-A-2023-17429 (read 2026-08-30) records that
+        # substitution as the ONLY subsequent amendment -- nothing in 2025 or 2026.
+        is_open = filing_year == 2024
+        era_end = None if is_open else date(filing_year, 12, 31)
         assert revision.valid_from == date(filing_year, 1, 1)
-        assert revision.valid_to == date(filing_year, 12, 31)
-        assert revision.period_selector.years == (filing_year,)
-        assert revision.period_selector.year_from is None
+        assert revision.valid_to == era_end
+        if is_open:
+            # An open era cannot be spelled with an explicit `years` list, so this one
+            # is the range form with no upper bound.
+            assert revision.period_selector.years == ()
+            assert revision.period_selector.year_from == filing_year
+            assert revision.period_selector.year_to is None
+        else:
+            assert revision.period_selector.years == (filing_year,)
+            assert revision.period_selector.year_from is None
+        assert revision.period_selector.includes_year(filing_year)
         assert {ref for ref in revision.source_refs if ref.startswith("boe-modelo-721-")} == {source_ref}
         assert revision.export_layouts == ()
         assert source.authority == "boe"
         assert source.evidence_tier == "layout_authority"
         assert source.kind == "form_spec"
         assert source.applies_from == date(filing_year, 1, 1)
-        assert source.applies_to == date(filing_year, 12, 31)
+        assert source.applies_to == era_end
         assert source.corpus_path.endswith(".pdf")
         verify_source_file(REPO_ROOT, source)
         assert select_revision(modelo, filing_year=filing_year, period="0A", on=date(filing_year, 12, 31)) == revision
@@ -114,29 +128,46 @@ def test_modelo_721_selects_only_its_two_hash_pinned_boe_form_spec_eras() -> Non
     revision_2024 = modelo.revisions["2024"]
     assert "orden-hac-1504-2024:art-9" not in revision_2023.legal_refs
     assert {"orden-hac-1504-2024:art-9", "orden-hac-1504-2024:df-unica"} <= set(revision_2024.legal_refs)
-    for filing_year in (2022, 2025, 2026):
+    # Refused BELOW the first declared era only. 2025+ used to be refused here; that was
+    # a hole, not conservatism -- BOE's Referencias posteriores for BOE-A-2023-17429
+    # records HAC/1504/2024 as the only subsequent amendment, so its substituted anexo
+    # still governs 2025 and later.
+    for filing_year in (2021, 2022):
         with pytest.raises(NoRevisionForPeriodError):
             select_revision(modelo, filing_year=filing_year, period="0A", on=date(filing_year, 12, 31))
+    for filing_year in (2025, 2026):
+        carried = select_revision(modelo, filing_year=filing_year, period="0A", on=date(filing_year, 12, 31))
+        assert carried.id == "2024"
 
 
-def test_modelo_721_refuses_a_mutated_2024_selector_past_its_boe_package_window() -> None:
-    """A selector expansion cannot turn the 2024 Annex into 2025 authority."""
-    modelo, revision, catalogues = _revision_721(2024)
+def test_modelo_721_refuses_a_mutated_2023_selector_past_its_boe_package_window() -> None:
+    """A selector expansion cannot turn the 2023 Annex into 2024 authority.
+
+    Re-aimed from the 2024 era, which is no longer a boundary: HAC/1504/2024 SUBSTITUTES
+    the anexo of Orden HFP/886/2023 and BOE's Referencias posteriores for BOE-A-2023-17429
+    lists no amendment after it, so the 2024 package legitimately reaches 2025 and there
+    is nothing to refuse there. 2023/2024 remains a real closed boundary -- the 2024
+    substitution is exactly what closes the 2023 package -- so the over-reach this guard
+    exists to catch is still provably refused.
+    """
+    modelo, revision, catalogues = _revision_721(2023)
     expanded = revision.model_copy(
         update={
-            "valid_to": date(2025, 12, 31),
-            "period_selector": revision.period_selector.model_copy(update={"years": (2024, 2025)}),
+            "valid_to": date(2024, 12, 31),
+            "period_selector": revision.period_selector.model_copy(update={"years": (2023, 2024)}),
         },
     )
-    mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, "2024": expanded}})
+    mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, "2023": expanded}})
 
-    selected = select_revision(mutated_modelo, filing_year=2025, period="0A", on=date(2025, 12, 31))
-    assert selected.id == "2024"
+    selected = select_revision(
+        mutated_modelo, filing_year=2024, period="0A", on=date(2024, 12, 31), revision_id="2023"
+    )
+    assert selected.id == "2023"
     (source_ref,) = (ref for ref in selected.source_refs if ref.startswith("boe-modelo-721-"))
     source = catalogues.sources[source_ref]
 
-    assert source.applies_to == date(2024, 12, 31)
-    assert not source.applies_across(date(2025, 1, 1), date(2025, 12, 31))
+    assert source.applies_to == date(2023, 12, 31)
+    assert not source.applies_across(date(2024, 1, 1), date(2024, 12, 31))
 
 
 def test_modelo_721_refuses_a_mutated_boe_package_hash() -> None:

@@ -1,4 +1,4 @@
-[[revisions."2023-2024".application_links]]
+[[revisions."2023-y-siguientes".application_links]]
 id = "modelo-270-export"
 surface = "export"
 consumer = "cadrumo.application.filing.export_draft"
