@@ -56,6 +56,7 @@ from .work_addressing import (
     ModeloWorkResolution,
     ModeloWorkSelectionMode,
     ModeloWorkSelectorRequest,
+    diverging_work_target_revision_axes,
 )
 from .workspace_models import (
     ModeloWorkspaceEvidenceFactV1,
@@ -248,13 +249,23 @@ def resolve_modelo_workspace_revision_axes(
 
     law_revision_id = registry_projection.revision_id
 
-    mismatched: set[ModeloWorkspaceRevisionAssertionSource] = set()
-    for source, candidate in (
-        (ModeloWorkspaceRevisionAssertionSource.REQUESTED, requested_revision_id),
-        (ModeloWorkspaceRevisionAssertionSource.STORED, stored_revision_id),
-    ):
-        if candidate is not None and candidate.strip() != law_revision_id:
-            mismatched.add(source)
+    # The comparison itself is the shared authority's, not a local copy: this
+    # surface differs from it only in DISPOSITION -- recording the divergence as
+    # typed data rather than raising -- and two open-coded copies of one
+    # normalisation drift silently.
+    diverging = diverging_work_target_revision_axes(
+        law_revision_id=law_revision_id,
+        requested_revision_id=requested_revision_id,
+        stored_revision_id=stored_revision_id,
+    )
+    mismatched: set[ModeloWorkspaceRevisionAssertionSource] = {
+        source
+        for axis, source in (
+            ("requested", ModeloWorkspaceRevisionAssertionSource.REQUESTED),
+            ("stored", ModeloWorkspaceRevisionAssertionSource.STORED),
+        )
+        if axis in diverging
+    }
 
     return ModeloWorkspaceRevisionAxes(
         law_selected_revision_id=law_revision_id,
