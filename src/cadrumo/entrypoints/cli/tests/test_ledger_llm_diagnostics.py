@@ -35,7 +35,7 @@ from ....domain.transactions import (
     TransactionDirection,
     set_classification,
 )
-from ....llm import LLMProvider, LLMResponse
+from ....llm.models import LLMProvider, LLMResponse
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.cli_envelope import unwrap_cli_result as _json_result
 from ....tests.cli_envelope import unwrap_envelope_notices

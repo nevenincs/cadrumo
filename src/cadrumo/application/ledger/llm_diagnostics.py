@@ -45,7 +45,7 @@ from ...adapters.outbound.llm import UsageRecorder
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...domain.transactions import Transaction
-from ...llm import UsageRecord
+from ...llm.models import UsageRecord
 
 __all__ = [
     "DEFAULT_LOW_CONFIDENCE_THRESHOLD",

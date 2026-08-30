@@ -13,7 +13,7 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.llm._providers
+   cadrumo.llm.providers
 
 Submodules
 ----------
@@ -21,20 +21,20 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.llm._client
-   cadrumo.llm._column_role_mapping
-   cadrumo.llm._consent
-   cadrumo.llm._evidence_draft_text
-   cadrumo.llm._evidence_draft_vision
-   cadrumo.llm._invoice_extraction_prompt
-   cadrumo.llm._invoice_field_contract
-   cadrumo.llm._invoice_field_grounding
-   cadrumo.llm._models
-   cadrumo.llm._preconditions
-   cadrumo.llm._pricing
-   cadrumo.llm._retention
-   cadrumo.llm._supply_nature_proposal
-   cadrumo.llm._text_classifier
-   cadrumo.llm._vision_classifier
+   cadrumo.llm.client
+   cadrumo.llm.column_role_mapping
+   cadrumo.llm.consent
    cadrumo.llm.errors
+   cadrumo.llm.evidence_draft_text
+   cadrumo.llm.evidence_draft_vision
+   cadrumo.llm.invoice_extraction_prompt
+   cadrumo.llm.invoice_field_contract
+   cadrumo.llm.invoice_field_grounding
+   cadrumo.llm.models
+   cadrumo.llm.preconditions
+   cadrumo.llm.pricing
+   cadrumo.llm.retention
    cadrumo.llm.suggestions
+   cadrumo.llm.supply_nature_proposal
+   cadrumo.llm.text_classifier
+   cadrumo.llm.vision_classifier

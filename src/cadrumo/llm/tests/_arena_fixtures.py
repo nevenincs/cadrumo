@@ -2,7 +2,7 @@ from collections.abc import Iterator
 
 import pytest
 
-from .._client import reset_on_host_inference_arena
+from ..client import reset_on_host_inference_arena
 
 
 @pytest.fixture(autouse=True)

@@ -7,7 +7,7 @@ the seeded registry contains the prompts that downstream callers depend on.
 
 import pytest
 
-from .. import PromptDefinition, PromptRegistry
+from ..models import PromptDefinition, PromptRegistry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

@@ -57,7 +57,7 @@ from ....domain.evidence_consent import (
     EvidenceConsentLedgerEntry,
     evidence_consent_ledger_entry_object_key,
 )
-from ....llm import LLMConsentError
+from ....llm.errors import LLMConsentError
 
 __all__ = ["EvidenceConsentLedger"]
 

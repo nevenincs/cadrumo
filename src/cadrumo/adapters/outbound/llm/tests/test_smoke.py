@@ -2,7 +2,9 @@
 
 import pytest
 
-from .....llm import LLMClient, LLMError, LLMRequest, LLMResponse, PromptRegistry
+from .....llm.client import LLMClient
+from .....llm.errors import LLMError
+from .....llm.models import LLMRequest, LLMResponse, PromptRegistry
 from .. import LLMCache
 from .. import __all__ as llm_all
 

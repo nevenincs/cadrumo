@@ -36,21 +36,19 @@ from ...tests.loopback_llm import (
     serving_loopback,
     write_raw_response,
 )
-from .. import (
+from ..client import LLMClient, LLMRetryPolicy, transport_retry_permitted
+from ..errors import (
     LLMBusyError,
     LLMCacheError,
-    LLMClient,
     LLMConfigError,
     LLMConsentError,
     LLMError,
     LLMProviderError,
     LLMRateLimitError,
-    LLMRequest,
-    LLMRetryPolicy,
     LLMTransientTransportError,
     LLMValidationError,
-    transport_retry_permitted,
 )
+from ..models import LLMRequest
 from ._arena_fixtures import _fresh_arena
 
 __all__ = ["_fresh_arena"]

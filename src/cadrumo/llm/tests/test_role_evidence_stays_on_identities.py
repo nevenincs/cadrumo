@@ -23,8 +23,8 @@ import pytest
 
 from ...application.ledger.party_attribution import PARTY_ATTRIBUTED_ADDRESS_FIELDS, party_addresses
 from ...core import Period
-from .._invoice_extraction_prompt import build_invoice_extraction_prompt
-from .._invoice_field_contract import (
+from ..invoice_extraction_prompt import build_invoice_extraction_prompt
+from ..invoice_field_contract import (
     INVOICE_FIELD_CONTRACTS,
     identity_field_names,
     role_evidence_key_for_field,

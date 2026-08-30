@@ -29,7 +29,7 @@ See Also:
         The envelope every populated field now carries.
     :class:`~core.FieldGroundingOutcome`
         The outcome axis this stage deliberately under-claims on.
-    :func:`~llm._invoice_field_grounding.ground_extracted_fields`
+    :func:`~llm.invoice_field_grounding.ground_extracted_fields`
         The grounding derivation under test.
 """
 
@@ -46,7 +46,7 @@ from ...application.ledger.evidence_draft import FieldProvenance, InvoiceDraft
 from ...core import FieldGroundingOutcome, FieldOrigin, Period
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.iva import EUMemberState, load_iva_rate_table
-from .._invoice_extraction_prompt import (
+from ..invoice_extraction_prompt import (
     INVOICE_EXTRACTION_PROMPT_ID,
     INVOICE_EXTRACTION_PROMPT_VERSION,
     PROMPT_TEMPLATE,
@@ -54,13 +54,13 @@ from .._invoice_extraction_prompt import (
     invoice_extraction_prompt_registry,
     template_numeric_literals,
 )
-from .._invoice_field_contract import (
+from ..invoice_field_contract import (
     ANCHOR_KEY_SUFFIX,
     INVOICE_FIELD_CONTRACTS,
     anchor_key_for_field,
     role_evidence_key_for_field,
 )
-from .._invoice_field_grounding import (
+from ..invoice_field_grounding import (
     ExtractedFieldAnchors,
     ExtractedInvoiceFields,
     ExtractedInvoiceResponse,
@@ -569,7 +569,7 @@ class TestTheTemplateIsRegisteredRatherThanOnlyAConstant:
     """The pre-substitution template is versioned prompt metadata, so it lives in the registry.
 
     The compiler reads its template from
-    :func:`~llm._invoice_extraction_prompt.invoice_extraction_prompt_registry`
+    :func:`~llm.invoice_extraction_prompt.invoice_extraction_prompt_registry`
     rather than closing over a module constant, which is what lets the template's
     id and version travel onto the compiled artefact. The compiled OUTPUT keeps
     its own type: an integer version cannot express a content fingerprint that

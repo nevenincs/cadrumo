@@ -40,16 +40,12 @@ import pytest
 from .....core.config import Settings
 from .....core.external_constants import UTF_8_ENCODING
 from .....domain.evidence_consent import EvidenceConsentLedgerEntry
-from .....llm import (
-    EvidenceConsentToken,
-    LLMClient,
-    LLMConsentError,
-    LLMProvider,
-    LLMRequest,
-    ProviderCompletion,
-    ProviderRequest,
-)
-from .....llm._providers.base import _ProviderAdapter
+from .....llm.providers.base import _ProviderAdapter
+from .....llm.client import LLMClient
+from .....llm.consent import EvidenceConsentToken
+from .....llm.errors import LLMConsentError
+from .....llm.models import LLMProvider, LLMRequest
+from .....llm.providers.base import ProviderCompletion, ProviderRequest
 from ....persistence.storage import (
     LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE,
     close_active_bucket_session,

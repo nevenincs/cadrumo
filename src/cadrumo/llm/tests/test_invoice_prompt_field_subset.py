@@ -26,12 +26,12 @@ import pytest
 from pydantic import ValidationError
 
 from ...core import Period
-from .._invoice_extraction_prompt import (
+from ..invoice_extraction_prompt import (
     build_invoice_extraction_prompt,
     render_invoice_extraction_prompt,
     selected_invoice_field_contracts,
 )
-from .._invoice_field_contract import INVOICE_FIELD_CONTRACTS
+from ..invoice_field_contract import INVOICE_FIELD_CONTRACTS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

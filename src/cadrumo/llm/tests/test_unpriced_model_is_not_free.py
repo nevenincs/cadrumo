@@ -28,8 +28,8 @@ from decimal import Decimal
 
 import pytest
 
-from .._models import LLMProvider
-from .._pricing import estimate_cost_usd
+from ..models import LLMProvider
+from ..pricing import estimate_cost_usd
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -89,7 +89,7 @@ def test_the_pricing_table_prices_every_entry_it_claims() -> None:
     a real model at nothing while looking like coverage, which is the reported
     defect wearing the table's own clothes rather than the fallback's.
     """
-    from .._pricing import _PRICING_PER_MILLION
+    from ..pricing import _PRICING_PER_MILLION
 
     assert _PRICING_PER_MILLION, "an empty table would make every model unpriced"
     for provider, prefix, input_rate, output_rate in _PRICING_PER_MILLION:

@@ -1,7 +1,7 @@
 """On-host vision read: in-memory PDF rasterisation plus the LocalAdapter images path.
 
 Proves a scan-only PDF is rasterised to base64 PNG pages fully in process memory
-and that :class:`cadrumo.llm._providers.local.LocalAdapter`
+and that :class:`cadrumo.llm.providers.local.LocalAdapter`
 forwards those images on the Ollama ``images`` message field to a loopback
 endpoint -- so a local vision model can read the document with no byte leaving
 the host (``sensitive-financial-data-secure-storage-only``).
@@ -29,9 +29,9 @@ from ...tests.loopback_llm import (
     serving_loopback,
     write_json_response,
 )
-from .._models import MultimodalImageInput
-from .._providers.base import ProviderRequest
-from .._providers.local import LocalAdapter, rasterise_pdf_pages_to_base64_png
+from ..models import MultimodalImageInput
+from ..providers.base import ProviderRequest
+from ..providers.local import LocalAdapter, rasterise_pdf_pages_to_base64_png
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

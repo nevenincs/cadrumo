@@ -189,7 +189,7 @@ def test_no_transcriber_identity_folds_its_transport_into_a_name() -> None:
     """
     from ...application.ledger.evidence_textlayer import text_layer_transcriber_identity
     from ...core import LOCAL_TRANSPORT_LABEL
-    from .._evidence_draft_vision import LocalVisionDocumentTranscriber
+    from ..evidence_draft_vision import LocalVisionDocumentTranscriber
 
     identities = [
         text_layer_transcriber_identity(),

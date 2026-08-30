@@ -43,7 +43,7 @@ from .....adapters.persistence.storage import secure_object_repository_for_activ
 from .....core.classification import SensitivityClass
 from .....core.config import override_settings
 from .....core.hashing import canonical_json_bytes
-from .....llm import LLMCacheError
+from .....llm.errors import LLMCacheError
 from .._run_telemetry import (
     _RUN_TELEMETRY_NAMESPACE,
     _RUN_TELEMETRY_VERSION,
@@ -188,7 +188,7 @@ def test_client_construction_sweeps_the_run_telemetry_store(tmp_path: Path) -> N
     once-per-client retention sweep - proving the retention R3 promises fires in
     production rather than depending on a manual prune() call.
     """
-    from .....llm import LLMClient
+    from .....llm.client import LLMClient
 
     anchor = datetime.now(UTC)
     recorder = LLMRunTelemetryRecorder(root_dir=tmp_path / "llm-run-telemetry")

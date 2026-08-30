@@ -20,10 +20,10 @@ from typing import override
 
 import pytest
 
-from .._client import LLMClient
-from .._providers import ProviderCompletion, ProviderRequest
-from .._providers.anthropic import build_message_kwargs
-from .._providers.base import _ProviderAdapter
+from ..client import LLMClient
+from ..providers import ProviderCompletion, ProviderRequest
+from ..providers.anthropic import build_message_kwargs
+from ..providers.base import _ProviderAdapter
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

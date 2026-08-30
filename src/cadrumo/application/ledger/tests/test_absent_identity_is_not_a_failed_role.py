@@ -25,7 +25,7 @@ import json
 import pytest
 
 from ....core import DraftDiscrepancyKind, FieldGroundingOutcome, FieldOrigin
-from ....llm import ground_extracted_fields, parse_invoice_extraction_response
+from ....llm.invoice_field_grounding import ground_extracted_fields, parse_invoice_extraction_response
 from ..identity_roles import IdentityCandidate, resolve_counterparty_identity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

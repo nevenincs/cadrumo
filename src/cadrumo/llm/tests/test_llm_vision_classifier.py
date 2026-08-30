@@ -32,9 +32,9 @@ from ...tests.llm_vision_evidence_support import (
     _run_against_loopback_ollama,
     _transaction,
 )
-from .. import LLMClient
-from .._models import MultimodalImageInput
-from .._vision_classifier import LocalVisionLLMClassifier
+from ..client import LLMClient
+from ..models import MultimodalImageInput
+from ..vision_classifier import LocalVisionLLMClassifier
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

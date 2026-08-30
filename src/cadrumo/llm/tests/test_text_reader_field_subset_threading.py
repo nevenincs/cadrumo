@@ -28,15 +28,15 @@ import pytest
 
 from ...application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
 from ...core import FieldOrigin
-from .._client import LLMClient
-from .._evidence_draft_text import (
+from ..client import LLMClient
+from ..evidence_draft_text import (
     TextInvoiceFieldExtractor,
     build_text_field_extraction_prompt,
     default_extraction_authority_values,
 )
-from .._invoice_extraction_prompt import render_invoice_extraction_prompt
-from .._invoice_field_contract import INVOICE_FIELD_CONTRACTS
-from .._models import LLMProvider
+from ..invoice_extraction_prompt import render_invoice_extraction_prompt
+from ..invoice_field_contract import INVOICE_FIELD_CONTRACTS
+from ..models import LLMProvider
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_outbound_adapter]
 

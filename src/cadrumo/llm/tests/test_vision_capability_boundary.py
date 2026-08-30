@@ -39,9 +39,11 @@ from ...tests.loopback_llm import (
     serving_loopback,
     write_json_response,
 )
-from .. import LLMClient, LLMConfigError, LLMRequest, MultimodalImageInput
-from .._providers import GeminiAdapter, LocalAdapter, OpenAIAdapter, ProviderRequest
-from .._providers.anthropic import build_user_content
+from ..client import LLMClient
+from ..errors import LLMConfigError
+from ..models import LLMRequest, MultimodalImageInput
+from ..providers import GeminiAdapter, LocalAdapter, OpenAIAdapter, ProviderRequest
+from ..providers.anthropic import build_user_content
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -192,7 +194,7 @@ class TestDeclaredImageCapability:
         a new adapter defaults to text-only and a rename cannot make this pass
         vacuously.
         """
-        from .._providers.anthropic import AnthropicAdapter
+        from ..providers.anthropic import AnthropicAdapter
 
         assert AnthropicAdapter.supports_images is True
         assert LocalAdapter.supports_images is True

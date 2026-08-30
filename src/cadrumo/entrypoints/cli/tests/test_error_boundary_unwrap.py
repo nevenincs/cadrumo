@@ -26,7 +26,7 @@ from pydantic import TypeAdapter
 from ....adapters.persistence.storage.master_key import NoActiveBucketSessionError
 from ....core.errors import CadrumoError, build_error_envelope, render_error_text
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES
-from ....llm import LLMRequest, PromptDefinition
+from ....llm.models import LLMRequest, PromptDefinition
 from ..errors import (
     CliUnexpectedBoundaryError,
     _unwrap_cadrumo_error,

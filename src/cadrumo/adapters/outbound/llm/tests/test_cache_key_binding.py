@@ -22,7 +22,8 @@ from pathlib import Path
 
 import pytest
 
-from .....llm import LLMCacheError, LLMProvider, LLMRequest, LLMResponse
+from .....llm.errors import LLMCacheError
+from .....llm.models import LLMProvider, LLMRequest, LLMResponse
 from .._cache import _CACHE_NAMESPACE, LLMCache
 from ._engine_binding_fixtures import _ENGINE_HOLDER, _bind_engine  # noqa: F401
 

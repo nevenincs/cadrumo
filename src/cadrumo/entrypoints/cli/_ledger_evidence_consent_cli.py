@@ -220,7 +220,7 @@ def _on_host_reader() -> OnHostReader:
     and this module carries no tests, so a re-derivation would have raised
     ``TypeError`` in an operator's hands.
     """
-    from ...llm import TextInvoiceFieldExtractor
+    from ...llm.evidence_draft_text import TextInvoiceFieldExtractor
 
     def _read(transcription: DocumentTranscription, /) -> tuple[InvoiceDraft, str]:
         extractor = TextInvoiceFieldExtractor()

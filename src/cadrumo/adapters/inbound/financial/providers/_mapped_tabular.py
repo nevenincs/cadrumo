@@ -113,7 +113,7 @@ def _resolve_roles_semantically(table: NormalizedTable) -> ColumnRoleMapping | N
     ``llm`` extra's identity rather than a rendered installation command.
     """
     try:
-        from .....llm import SemanticColumnRoleMapper
+        from .....llm.column_role_mapping import SemanticColumnRoleMapper
     except MissingOptionalExtraError:
         raise
     except ImportError:

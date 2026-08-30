@@ -21,7 +21,7 @@ import pytest
 
 from .....core.config import override_settings
 from .....core.directory_scan import scan_directory
-from .....llm import LLMProvider, LLMRequest, LLMResponse
+from .....llm.models import LLMProvider, LLMRequest, LLMResponse
 from .. import LLMCache
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -82,7 +82,7 @@ def test_cache_key_distinguishes_multimodal_evidence(tmp_path: Path) -> None:
     payload differs (the key folds the content address, never the bytes).
     """
     from .....core import ImageMediaType
-    from .....llm import MultimodalImageInput
+    from .....llm.models import MultimodalImageInput
 
     cache = LLMCache(root_dir=tmp_path)
     sha_a = "a" * 64
@@ -166,7 +166,7 @@ def test_cache_path_rejects_unsafe_model_identifiers(tmp_path: Path) -> None:
     # regression: ``key.model`` flows from the operator-
     # configured registry / env-driven ``model_override``. A path-
     # shaped value must not let the cache write outside ``root_dir``.
-    from .....llm import LLMCacheError
+    from .....llm.errors import LLMCacheError
 
     cache = LLMCache(root_dir=tmp_path)
     request = LLMRequest(prompt="Hello", temperature=0.0, language="es")
@@ -242,7 +242,7 @@ def test_entry_from_payload_rejects_malformed_bytes(tmp_path: Path) -> None:
     # ``_entry_from_payload`` calls ``CachedEntry.model_validate_json``
     # before consuming any field; malformed or structurally invalid
     # payloads must raise rather than silently producing a corrupt entry.
-    from .....llm import LLMCacheError
+    from .....llm.errors import LLMCacheError
 
     cache = LLMCache(root_dir=tmp_path)
     corrupted_payloads = (
@@ -266,7 +266,7 @@ def test_entry_from_payload_rejects_wrong_logical_root(tmp_path: Path) -> None:
     # ``logical_root`` equality before re-validating the entry.
     import json as _json
 
-    from .....llm import LLMCacheError
+    from .....llm.errors import LLMCacheError
 
     request = LLMRequest(prompt="Hello", temperature=0.0, language="es")
     cache = LLMCache(root_dir=tmp_path)

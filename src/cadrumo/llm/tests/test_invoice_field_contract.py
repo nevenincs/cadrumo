@@ -12,11 +12,11 @@ the field entirely while one returning ``"21"`` was accepted, so the model that
 obeyed "copy exactly as printed" more literally was the one punished.
 
 See Also:
-    :data:`~llm._invoice_field_contract.INVOICE_FIELD_CONTRACTS`
+    :data:`~llm.invoice_field_contract.INVOICE_FIELD_CONTRACTS`
         The one declaration both derivations bind to.
-    :func:`~llm._invoice_extraction_prompt.build_invoice_extraction_prompt`
+    :func:`~llm.invoice_extraction_prompt.build_invoice_extraction_prompt`
         The compiled artefact whose numbers come from the registry.
-    :func:`~llm._invoice_field_grounding.ground_extracted_fields`
+    :func:`~llm.invoice_field_grounding.ground_extracted_fields`
         The grounding derivation.
 """
 
@@ -38,8 +38,8 @@ from ...domain.iva import (
 )
 from ...domain.transactions import statutory_activity_retencion_rates
 from ...tests.attribute_scope import scoped_attribute
-from .. import _invoice_extraction_prompt
-from .._invoice_extraction_prompt import (
+from .. import invoice_extraction_prompt as _invoice_extraction_prompt
+from ..invoice_extraction_prompt import (
     INVOICE_EXTRACTION_PROMPT_ID,
     PROMPT_TEMPLATE,
     build_invoice_extraction_prompt,
@@ -47,13 +47,13 @@ from .._invoice_extraction_prompt import (
     invoice_extraction_prompt_registry,
     template_numeric_literals,
 )
-from .._invoice_field_contract import (
+from ..invoice_field_contract import (
     INVOICE_FIELD_CONTRACTS,
     InvoiceFieldForm,
     anchor_key_for_field,
     role_evidence_key_for_field,
 )
-from .._invoice_field_grounding import (
+from ..invoice_field_grounding import (
     _NUMERIC_GROUNDING_BY_FORM,
     _TEXT_GROUNDING_BY_FORM,
     ExtractedFieldAnchors,

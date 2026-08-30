@@ -39,13 +39,11 @@ from ....adapters.outbound.llm import LLMCache, UsageRecorder
 from ....application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
 from ....core import LOCAL_TRANSPORT_LABEL, FieldOrigin
 from ....core.config import override_settings
-from ....llm import (
-    LLMClient,
-    LLMConsentError,
-    LLMProvider,
-    TextInvoiceFieldExtractor,
-    mint_evidence_consent_token,
-)
+from ....llm.client import LLMClient
+from ....llm.consent import mint_evidence_consent_token
+from ....llm.errors import LLMConsentError
+from ....llm.evidence_draft_text import TextInvoiceFieldExtractor
+from ....llm.models import LLMProvider
 from ....tests.fixtures.settings import EnvFileFreeSettings
 from ....tests.loopback_llm import (
     SilentLoopbackHandler,

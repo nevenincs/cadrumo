@@ -14,7 +14,8 @@ import pytest
 
 from ...core.config import Settings
 from ...tests.live_gate import requires_live_enabled
-from .. import LLMClient, LLMRequest
+from ..client import LLMClient
+from ..models import LLMRequest
 
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_outbound_adapter]
 

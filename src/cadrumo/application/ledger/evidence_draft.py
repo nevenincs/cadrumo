@@ -25,9 +25,9 @@ stored MIME type:
   values, which is what makes the anchor check an external check rather than a
   model confirming itself.
 - A **scan-only PDF or image** has nothing to transcribe, so it falls back to the
-  on-host LOCAL vision reader (:mod:`~llm._evidence_draft_vision`) -- the same
+  on-host LOCAL vision reader (:mod:`~llm.evidence_draft_vision`) -- the same
   rasterise-then-read-with-Ollama transport
-  :class:`~llm._vision_classifier.LocalVisionLLMClassifier` already uses for
+  :class:`~llm.vision_classifier.LocalVisionLLMClassifier` already uses for
   classification, gated by :attr:`~core.ServiceCapability.LLM_VISION` and never a
   cloud call.
 
@@ -91,7 +91,7 @@ See Also:
     :func:`~application.ledger.evidence_draft.confirm_invoice_draft_from_evidence`
         Non-interactive confirm step that re-extracts, applies overrides, and
         delegates the catalogue write.
-    :mod:`~llm._evidence_draft_vision`
+    :mod:`~llm.evidence_draft_vision`
         On-host vision fallback for scan-only PDFs and image attachments.
     :func:`~application.invoices.create_catalogue_invoice`
         Sole sanctioned writer for the resulting catalogue invoice.
@@ -151,12 +151,9 @@ from ...domain.iva import (
     SupplyNature,
     rate_kinds_for_declared_rate,
 )
-from ...llm import (
-    LLMPdfRasterisationError,
-    LLMProviderError,
-    MultimodalImageInput,
-    rasterise_pdf_pages_to_base64_png,
-)
+from ...llm.errors import LLMPdfRasterisationError, LLMProviderError
+from ...llm.models import MultimodalImageInput
+from ...llm.providers import rasterise_pdf_pages_to_base64_png
 from ..provisioning import probe_ollama_vision
 from ..user_profile.capabilities import resolve_active_capability
 from .document_transcription import DocumentTranscription
@@ -177,7 +174,8 @@ from .evidence_textlayer import transcribe_text_layer
 from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 
 if TYPE_CHECKING:
-    from ...llm import EvidenceConsentToken, LLMProvider
+    from ...llm.consent import EvidenceConsentToken
+    from ...llm.models import LLMProvider
     from .confirm_establishment import ConfirmedEstablishment
     from .confirmation_gate import ConfirmationBlocker, FindingResolution
     from .confirmation_record import InvoiceConfirmationRecord
@@ -1040,7 +1038,7 @@ def _proposed_supply_nature(
     they were.
     """
     try:
-        from ...llm import SupplyNatureProposer
+        from ...llm.supply_nature_proposal import SupplyNatureProposer
 
         return SupplyNatureProposer(settings=settings).propose(transcription.text.splitlines()).nature
     except Exception:
@@ -1123,7 +1121,7 @@ def _read_transcription_semantically(
     # written at module scope.
     import httpx
 
-    from ...llm import TextInvoiceFieldExtractor, extract_invoice_fields_from_text
+    from ...llm.evidence_draft_text import TextInvoiceFieldExtractor, extract_invoice_fields_from_text
     from .grounded_reading import ground_draft_against_transcription
     from .invoice_extraction_authority import (
         default_invoice_extraction_period,
@@ -1386,7 +1384,7 @@ def _extract_invoice_fields_via_vision(
         )
 
     try:
-        from ...llm import LocalVisionDocumentTranscriber, transcribe_document_images
+        from ...llm.evidence_draft_vision import LocalVisionDocumentTranscriber, transcribe_document_images
 
         if evidence.document_shape in PDF_CONTAINER_SHAPES:
             images = tuple(

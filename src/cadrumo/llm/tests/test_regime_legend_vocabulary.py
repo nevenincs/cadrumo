@@ -44,8 +44,8 @@ import pytest
 from ...core import FieldOrigin
 from ...domain.iva import REGIME_LEGENDS, IvaCategory, RegimeLegend, regime_legend_phrases
 from ...tests.attribute_scope import scoped_attribute
-from .. import _invoice_extraction_prompt
-from .._invoice_extraction_prompt import (
+from .. import invoice_extraction_prompt as _invoice_extraction_prompt
+from ..invoice_extraction_prompt import (
     INVOICE_EXTRACTION_PROMPT_ID,
     build_invoice_extraction_prompt,
     default_extraction_period,
@@ -53,8 +53,8 @@ from .._invoice_extraction_prompt import (
     template_numeric_literals,
     template_unsourced_legend_phrases,
 )
-from .._invoice_field_contract import INVOICE_FIELD_CONTRACTS, anchor_key_for_field
-from .._invoice_field_grounding import (
+from ..invoice_field_contract import INVOICE_FIELD_CONTRACTS, anchor_key_for_field
+from ..invoice_field_grounding import (
     ExtractedFieldAnchors,
     ExtractedInvoiceFields,
     ground_extracted_fields,

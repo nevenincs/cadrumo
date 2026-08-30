@@ -21,7 +21,8 @@ from ....core import ImageMediaType
 from ....core.config import Settings
 from ....domain.transactions import prompt_spec_with_saturation_fields
 from ....domain.user_profile.values import ProfileSetupState
-from ....llm import LocalVisionLLMClassifier, MultimodalImageInput
+from ....llm.models import MultimodalImageInput
+from ....llm.vision_classifier import LocalVisionLLMClassifier
 from ....tests.llm_vision_evidence_support import _png_image, _transaction
 from ....tests.persistence_vision_evidence_support import (
     _add_evidence,

@@ -77,12 +77,8 @@ from ...domain.transactions import (
     prompt_spec_with_saturation_fields,
     set_classification,
 )
-from ...llm import (
-    LocalTextLLMClassifier,
-    LocalVisionLLMClassifier,
-    MultimodalImageInput,
-    rasterise_pdf_pages_to_base64_png,
-)
+from ...llm.models import MultimodalImageInput
+from ...llm.providers import rasterise_pdf_pages_to_base64_png
 from ...llm.suggestions import (
     LLMClassificationSuggestion,
     LLMSaturatedSuggestion,
@@ -92,6 +88,8 @@ from ...llm.suggestions import (
     LLMSuggestionRejectionResult,
     OperatorIvaDerivationResult,
 )
+from ...llm.text_classifier import LocalTextLLMClassifier
+from ...llm.vision_classifier import LocalVisionLLMClassifier
 from .actions_common import (
     build_ledger_bucket_event,
     build_manual_ledger_result,
@@ -331,7 +329,7 @@ def _run_on_host_or_refuse[T](run: Callable[[], T], *, settings: Settings) -> T:
     import httpx
 
     from ...domain.transactions import LLMClassifierError
-    from ...llm import LLMProviderError
+    from ...llm.errors import LLMProviderError
 
     try:
         return run()
@@ -367,7 +365,7 @@ def _record_injected_classifier_run[T](run: Callable[[], T], *, provider: str) -
     import time
 
     from ...adapters.outbound.llm import LLMRunRecord, LLMRunTelemetryRecorder
-    from ...llm import LLMCacheError
+    from ...llm.errors import LLMCacheError
 
     started_at = now()
     clock_start = time.monotonic()

@@ -25,16 +25,9 @@ from ....core.hashing import canonical_json_bytes, content_hash_hex, sha256_hex
 from ....core.logging import get_logger
 from ....core.redaction import default_rules_for_class, redact_structured
 from ....core.time import now
-from ....llm import (
-    CachedEntry,
-    CacheKey,
-    CacheStats,
-    LLMCacheError,
-    LLMProvider,
-    LLMRequest,
-    LLMResponse,
-    select_retention_removal_keys,
-)
+from ....llm.errors import LLMCacheError
+from ....llm.models import CachedEntry, CacheKey, CacheStats, LLMProvider, LLMRequest, LLMResponse
+from ....llm.retention import select_retention_removal_keys
 
 if TYPE_CHECKING:
     from ....adapters.persistence.storage import SecureObjectRepository

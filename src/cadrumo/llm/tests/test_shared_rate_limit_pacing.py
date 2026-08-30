@@ -32,15 +32,15 @@ from ...tests.loopback_llm import (
     serving_loopback,
     write_json_response,
 )
-from .. import (
+from ..client import (
     LLMClient,
-    LLMRateLimitError,
-    LLMRequest,
     LLMRetryPolicy,
     provider_pacing_remaining_s,
+    reset_on_host_inference_arena,
     reset_provider_pacing,
 )
-from .._client import reset_on_host_inference_arena
+from ..errors import LLMRateLimitError
+from ..models import LLMRequest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

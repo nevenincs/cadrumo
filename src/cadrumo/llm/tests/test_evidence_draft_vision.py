@@ -13,12 +13,12 @@ emits a transcription, that its prompt names no invoice field, and that its
 module reaches no field-grounding symbol at all.
 
 See Also:
-    :class:`~llm._evidence_draft_vision.LocalVisionDocumentTranscriber`
+    :class:`~llm.evidence_draft_vision.LocalVisionDocumentTranscriber`
         On-host Ollama transport exercised through the loopback server.
-    :func:`~llm._invoice_field_grounding.parse_invoice_extraction_response`
+    :func:`~llm.invoice_field_grounding.parse_invoice_extraction_response`
         JSON-object recovery and strict schema boundary covered by adversarial
         response cases.
-    :func:`~llm._invoice_field_grounding.ground_extracted_fields`
+    :func:`~llm.invoice_field_grounding.ground_extracted_fields`
         Grounded re-validation step that rejects hallucinated identifiers and
         unparsable values.
     :func:`~application.ledger.evidence_draft.extract_invoice_draft_from_evidence`
@@ -49,14 +49,14 @@ from ...tests.llm_vision_evidence_support import (
     _png_image,
     _run_against_loopback_ollama,
 )
-from .._evidence_draft_vision import (
+from ..evidence_draft_vision import (
     VISION_TRANSCRIPTION_PROMPT,
     LocalVisionDocumentTranscriber,
     transcribe_document_images,
 )
-from .._invoice_extraction_prompt import build_invoice_extraction_prompt, default_extraction_period
-from .._invoice_field_contract import anchor_key_for_field, role_evidence_key_for_field
-from .._invoice_field_grounding import (
+from ..invoice_extraction_prompt import build_invoice_extraction_prompt, default_extraction_period
+from ..invoice_field_contract import anchor_key_for_field, role_evidence_key_for_field
+from ..invoice_field_grounding import (
     ExtractedFieldAnchors,
     ExtractedInvoiceFields,
     ExtractedInvoiceResponse,
@@ -64,7 +64,7 @@ from .._invoice_field_grounding import (
     ground_extracted_fields,
     parse_invoice_extraction_response,
 )
-from .._models import MultimodalImageInput
+from ..models import MultimodalImageInput
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -395,7 +395,7 @@ class TestTheVisionStageInterpretsNothing:
         there -- and, tuned to avoid that, would just as easily miss a real one.
         The walk sees imported and referenced NAMES, never prose.
         """
-        module = importlib.import_module("cadrumo.llm._evidence_draft_vision")
+        module = importlib.import_module("cadrumo.llm.evidence_draft_vision")
         source = pathlib.Path(str(module.__file__)).read_text(encoding="utf-8")
         tree = ast.parse(source)
 
@@ -517,7 +517,7 @@ class TestFieldExtractionPromptShowsWellFormedJson:
     template shipped ``{{``/``}}`` for a while, which showed the model a
     malformed skeleton immediately after instructing it to "Return ONLY one
     JSON object": the model then either echoes the doubling, in which case
-    :func:`~llm._invoice_field_grounding.parse_invoice_extraction_response`
+    :func:`~llm.invoice_field_grounding.parse_invoice_extraction_response`
     rejects the response outright, or silently repairs it, in which case the
     read depends on that recovery rather than on the instruction.
 

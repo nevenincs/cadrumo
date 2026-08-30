@@ -23,7 +23,8 @@ from pathlib import Path
 
 import pytest
 
-from .....llm import LLMCacheError, LLMProvider, UsageRecord
+from .....llm.errors import LLMCacheError
+from .....llm.models import LLMProvider, UsageRecord
 from .._run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
 from .._usage import UsageRecorder
 from ._engine_binding_fixtures import _ENGINE_HOLDER, _bind_engine  # noqa: F401

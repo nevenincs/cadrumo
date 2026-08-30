@@ -120,7 +120,7 @@ from .....domain.transactions import (
     TransactionDirection,
 )
 from .....domain.usage_ratios import UsageRatioProfile
-from .....llm import LLMProvider, LLMRequest, LLMResponse, UsageRecord
+from .....llm.models import LLMProvider, LLMRequest, LLMResponse, UsageRecord
 from .....tests.aeat_literal_fixtures import (
     AEAT_HOST_SUFFIX_EXPECTED,
     AUTH_DIAGNOSTIC_PATH_FIXTURE,

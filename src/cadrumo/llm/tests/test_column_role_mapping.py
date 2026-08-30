@@ -37,15 +37,14 @@ from ...tests.loopback_llm import (
     serving_loopback,
     write_json_response,
 )
-from .. import (
-    LLMClient,
-    LLMConfigError,
-    LLMValidationError,
+from ..client import LLMClient
+from ..column_role_mapping import (
     SemanticColumnRoleMapper,
     build_column_role_mapping_prompt,
     parse_column_role_mapping_response,
     permitted_column_roles,
 )
+from ..errors import LLMConfigError, LLMValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
