@@ -71,3 +71,42 @@ at this HEAD (so `export_layouts` is legitimately empty), and modelo 390
 declares no 2026 revision while the test requests one. Both are registry
 coverage state, the same class as the modelo 303 2021 failures seen earlier.
 The remaining eleven are unattributed.
+
+## Notes (continued)
+
+UPDATE 2026-08-31: THE SUBSET TEST IS NOT A PROMOTABILITY TEST, AND ACTING AS IF
+IT WERE BROKE THE TREE.
+
+The sweep's selector was "this config's keys are a strict subset of the
+canonical's", which reads as "weaker, therefore safely strengthened". It is not.
+Pydantic REFUSES `extra` on a `RootModel` outright -- `PydanticUserError:
+RootModel does not support setting model_config['extra']` -- and the canonical
+carries `extra="forbid"`. On a root model the canonical is not stronger, it is
+INVALID, so those sites were never promotable.
+
+Repointing `core/logging.py`'s `LogExtra` stopped that module importing, and
+because `core.logging` sits under most of the tree it took four unrelated
+modules with it. Parse passed, lint passed, and the earlier spot-checks passed;
+only importing the modules surfaced it. A model-config change is validated at
+class-construction time, so static checks cannot see it -- which is the reason
+the 95-file batch needed an import sweep it did not get at the time.
+
+Restored, each with its reason recorded inline, which is what turns an
+apparently-weak config into a declared decision:
+`core/logging.py`, `application/diagnostics_run_health.py`,
+`application/diagnostics_telemetry.py`, `application/ledger/llm_diagnostics.py`
+and `adapters/outbound/llm/_run_telemetry.py`.
+
+Swept the whole tree for the same shape rather than assuming those were all:
+exactly ONE other `RootModel` carries a strict-frozen config,
+`core/json_contract.py:344`, and it uses a purpose-named `_STRICT_ROOT_CONFIG`
+-- a correct pre-existing divergence, not a sweep casualty.
+
+A SECOND POPULATION THE CENSUS WRONGLY COUNTED: roughly thirteen remaining
+"subset" sites are `TypeAdapter(..., config=ConfigDict(strict=True))`, not model
+configs at all. `frozen` and `extra` are model concepts; applying the canonical
+to a TypeAdapter over `dict[str, object]` would be meaningless. They are
+excluded, and the census that counts them is measuring the wrong population.
+
+- `verify:` `import every one of the 70 touched modules` -> `70 of 70`
+- `verify:` `tree-wide RootModel + strict-frozen config sweep` -> `1, pre-existing and correct`

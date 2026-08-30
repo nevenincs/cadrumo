@@ -2496,3 +2496,24 @@ so the three surfaces stop sharing a name for three shapes; and treat the
 absent evidence reference as a build, tracked with the Workspace's equivalent
 rather than separately -- the two are one gap in two contracts, and closing
 either alone leaves an operator-facing refusal that still cannot say why.
+
+#### Landed 2026-08-31: the revision comparison now has one home
+
+`diverging_work_target_revision_axes` in `application/modelo/work_addressing.py`
+is the single comparison. `assert_work_target_revision` raises on a non-empty
+result; the Workspace revision-axes resolver records the same result as typed
+dispositions. The dispositions still differ, which was always correct; the
+comparison no longer can.
+
+- `verify:` `pytest test_work_addressing.py test_workspace.py test_revision_id_d1_contract.py` -> `82 passed`
+- `verify:` behaviour across the cases that separate the two spellings ->
+  whitespace-padded values match, a genuine divergence is named per axis, an
+  absent axis never diverges, and each axis is judged against the law-determined
+  revision alone.
+
+Noted against my own work: the first pass left an `if True:` in
+`assert_work_target_revision`, a scaffold kept while restructuring around the
+raise block. It parsed, it lint-passed, and it would have sat permanently in one
+of the most safety-critical functions in the tree. Caught by reading the diff,
+not by any tool -- the third mechanical edit this session that was syntactically
+clean and wrong.
