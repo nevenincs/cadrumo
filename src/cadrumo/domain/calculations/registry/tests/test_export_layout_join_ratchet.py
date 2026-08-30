@@ -53,10 +53,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 #: comes from the weaker any-record fallback. Shrink this; never grow it.
 _UNJOINED_DESIGN_SHEETS: frozenset[tuple[str, str, str]] = frozenset(
     (
-        ("184", "2023-2024", "Tipo 2 - Registro De Rentas De La"),  # 3-record layout
-        ("184", "2023-2024", "Tipo 2 - Registro De Socio, Heredero,"),  # 3-record layout
-        ("184", "2025-y-siguientes", "Tipo 2 - Registro De Rentas De La"),  # 3-record layout
-        ("184", "2025-y-siguientes", "Tipo 2 - Registro De Socio, Heredero,"),  # 3-record layout
+        # Modelo 184's 2023 and 2025 entidad/socio sheets now join through
+        # their AEAT-derived tipo-hoja literals. Modelo 296 remains the sole
+        # unresolved fallback: its candidate discriminator span is optional at
+        # runtime, so it cannot honestly identify a filed record.
         ("296", "2024-y-siguientes", "Tipo 2 - Registro De Perceptor"),  # 5-record layout
     )
 )
