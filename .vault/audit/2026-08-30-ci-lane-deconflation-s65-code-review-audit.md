@@ -10,8 +10,6 @@ related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
 ---
 
-
-
 # `ci-lane-deconflation` audit: `S65 code review`
 
 ## Scope
