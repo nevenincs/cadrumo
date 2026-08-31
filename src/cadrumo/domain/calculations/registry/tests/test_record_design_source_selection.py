@@ -255,17 +255,28 @@ def test_record_design_selection_cannot_consult_registry_export_layouts() -> Non
         f"the record-design selector imports export-layout machinery: {sorted(export_layout_modules)}"
     )
     # ...and a floor, so an empty or mis-rooted parse cannot satisfy the above.
+    # The floor names each symbol at the module that DEFINES it, in the spelling the
+    # selector actually uses. Both entries below moved with promotions rather than
+    # with any change here: `resolve_companion_binary` now lives in
+    # `core.resources.bundled_data`, and `SourceReference` is reached relatively
+    # within the package. A floor that pins a stale spelling reds on someone else's
+    # correct relocation, which is the failure this test's own comment above warns
+    # about in the inventory form.
     assert {
         (1, "errors", "RegistryValidationError"),
-        (0, "cadrumo.domain.calculations.registry.schema_references", "SourceReference"),
+        (1, "schema_references", "SourceReference"),
         (4, "core.hashing", "hash_file"),
-        (4, "core.resources", "resolve_companion_binary"),
+        (4, "core.resources.bundled_data", "resolve_companion_binary"),
     } <= top_level_imported_symbols
     assert top_level_direct_imports == set()
     assert resolver_imports == set()
     assert resolver_globals == {"RegistryValidationError", "ResolvedRecordDesignBinary", "date", "verify_source_file"}
     assert call_names == {"RegistryValidationError", "ResolvedRecordDesignBinary", "date", "verify_source_file"}
-    assert attribute_call_names == {"get", "strip"}
+    # `applies_across` is a temporal check on a SOURCE -- the selector confirming a
+    # record design applies across the filing year -- not a reach into an export
+    # layout. Pinned rather than dropped so a genuinely new attribute call still has
+    # to be read before it is admitted.
+    assert attribute_call_names == {"applies_across", "get", "strip"}
 
 
 def test_resolves_the_hash_pinned_modelo_200_2025_binary() -> None:
