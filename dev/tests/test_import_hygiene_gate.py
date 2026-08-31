@@ -84,6 +84,17 @@ was closed to zero after every one of the 8 pre-existing hits was disposed of
 (promoted to a public name with consumers swept, or dropped from ``__all__``
 because the symbol had zero cross-package consumers), so any new hit is a
 straight failure with no allowlist escape hatch.
+
+A sixth check (**Family 11: non-inert package namespaces**) covers the tree
+the detector's ``inert_modules`` spec field could only cover one package at a
+time. A package ``__init__.py`` may not import, bind, lazily resolve or
+re-export a project symbol; an empty ``__all__`` is the one binding it may
+carry, documenting the inert boundary deliberately. The live set is asserted
+equal to the baseline's named ``namespaces``, keyed by ``(package, breaches)``
+so the FOUR breach kinds stay apart: they cost different amounts to close, and
+a namespace that stops re-exporting while still defining production code has
+paid the cheap half only. This population is inherited debt, not approvals --
+no entry here is a licence to add another.
 """
 
 from __future__ import annotations
@@ -113,12 +124,15 @@ from ..quality.import_hygiene_scan import (
     PKG_ROOT,
     REGISTRY_LOADER_PACKAGE,
     ImportSite,
+    NamespaceInertnessBreach,
     TuiBoundaryViolation,
     TuiBoundaryViolationKind,
+    classify_namespace_inertness,
     discover_facades,
     find_delegate_wrapper_shims,
     find_dev_tooling_import_violations,
     find_multi_sourced_symbols,
+    find_non_inert_namespaces,
     find_private_import_violations,
     find_registry_loader_import_violations,
     find_retired_tui_remnants,
@@ -228,6 +242,26 @@ class _Family3Section(TypedDict):
     tolerated_multi_sourced_symbols: list[_ToleratedSymbolEntry]
 
 
+class _NonInertNamespaceEntry(TypedDict):
+    """One named, reasoned non-inert package namespace the gate has recorded.
+
+    Keyed by ``(package, breaches)``. The breach list is part of the identity,
+    not decoration: a namespace that stops re-exporting but keeps its own
+    definitions has closed the cheap half of its debt and still owes the
+    expensive half, and an entry that recorded only "not inert" would read
+    identically before and after. ``reason`` states what closing THIS entry
+    actually takes, because the three breach kinds do not share a remedy.
+    """
+
+    package: str
+    breaches: list[str]
+    reason: str
+
+
+class _Family11Section(TypedDict):
+    namespaces: list[_NonInertNamespaceEntry]
+
+
 class _BaselineDocument(TypedDict):
     """The checked-in ``dev/quality/import_hygiene_baseline.json`` shape (plus a ``$schema_note`` key)."""
 
@@ -235,6 +269,7 @@ class _BaselineDocument(TypedDict):
     family2_shim_modules: _Family2Section
     family2_delegate_wrapper_shims: _Family2DelegateSection
     family3_pinned_duplicate_symbols: _Family3Section
+    family11_non_inert_package_namespaces: _Family11Section
 
 
 class _TestDebtDocument(TypedDict):
@@ -261,6 +296,24 @@ def _baseline_sites(baseline: _BaselineDocument) -> tuple[_BaselineSite, ...]:
         )
         for entry in family1["sites"]
     )
+
+
+def _baseline_non_inert_namespaces(
+    baseline: _BaselineDocument,
+) -> dict[tuple[str, tuple[str, ...]], str]:
+    """Return the recorded ``(package, breaches) -> reason`` inventory."""
+    return {
+        (entry["package"], tuple(entry["breaches"])): entry["reason"]
+        for entry in baseline["family11_non_inert_package_namespaces"]["namespaces"]
+    }
+
+
+def _live_non_inert_namespaces() -> dict[tuple[str, tuple[str, ...]], tuple[str, ...]]:
+    """Return the live ``(package, breaches) -> evidence`` census of ``src/cadrumo``."""
+    return {
+        (record.package, tuple(breach.value for breach in record.breaches)): record.evidence
+        for record in find_non_inert_namespaces()
+    }
 
 
 @cache
@@ -353,6 +406,7 @@ def test_baseline_file_is_well_formed() -> None:
     assert "family2_shim_modules" in baseline
     assert "family2_delegate_wrapper_shims" in baseline
     assert "family3_pinned_duplicate_symbols" in baseline
+    assert "family11_non_inert_package_namespaces" in baseline
 
 
 def test_production_family1_baseline_is_hard_zero() -> None:
@@ -1480,3 +1534,207 @@ def test_the_canonical_tui_package_is_fully_importable() -> None:
             failures.append((module.name, f"{type(error).__name__}: {error}"))
 
     assert failures == [], f"canonical TUI package is not fully importable: {failures}"
+
+
+# ---------------------------------------------------------------------------
+# Family 11: non-inert package namespaces
+# ---------------------------------------------------------------------------
+
+
+def test_family11_baseline_entries_are_named_and_reasoned() -> None:
+    """Every recorded namespace names itself, its breaches, and what closing it takes.
+
+    The distinct-reason assertion is the anti-bulk-allowlist property. A named
+    set stops being a named set the moment one sentence is pasted across twenty
+    entries: the file still looks reasoned and carries no information, which is
+    exactly the honor-system list the baseline exists to replace.
+    """
+    entries = _load_baseline()["family11_non_inert_package_namespaces"]["namespaces"]
+    valid_breaches = {breach.value for breach in NamespaceInertnessBreach}
+    packages = [entry["package"] for entry in entries]
+
+    assert packages == sorted(packages), f"family-11 entries must stay sorted by package; got {packages}"
+    assert len(set(packages)) == len(packages), (
+        "a package appears twice in the family-11 baseline; one namespace carries one breach set"
+    )
+    for entry in entries:
+        package = entry["package"]
+        breaches = entry["breaches"]
+        assert package.startswith("cadrumo."), f"{package} is not a package under the shipped tree"
+        assert breaches, f"{package} is recorded with no breach; an inert namespace does not belong here"
+        assert set(breaches) <= valid_breaches, f"{package} records unknown breach kinds: {breaches}"
+        assert breaches == sorted(set(breaches)), f"{package} records duplicate or unsorted breaches: {breaches}"
+        assert entry["reason"].strip(), f"{package} carries no reason"
+
+    reasons = [entry["reason"] for entry in entries]
+    assert len(set(reasons)) == len(reasons), (
+        "two family-11 entries share a reason verbatim; each entry states what closing THAT namespace "
+        "takes, and a repeated sentence is a bulk allowlist wearing a named set's clothes"
+    )
+
+
+def test_non_inert_package_namespaces_are_exactly_the_named_baseline_set() -> None:
+    """The live non-inert namespace set must equal the recorded set exactly.
+
+    Equality in both directions, so all three failures are visible. A newly
+    non-inert namespace is unrecorded and fails. A namespace whose breach set
+    CHANGED -- it stopped re-exporting but still defines its own production
+    code -- fails as one unrecorded identity plus one stale one, because half a
+    remedy is not the same finding as the whole. And an entry left behind after
+    its namespace was emptied fails too, so the inventory cannot quietly
+    accumulate rows describing a tree that no longer exists.
+
+    There is deliberately no count here. A tally would let one namespace close
+    while another opened and report the pair as no change.
+
+    Both directions are reported in ONE message rather than as two assertions,
+    because a changed breach set is a single event that lands in both lists:
+    split across two assertions the first one short-circuits, the operator
+    adds the new row without dropping the old, and the second failure only
+    appears on the next run.
+    """
+    recorded = _baseline_non_inert_namespaces(_load_baseline())
+    live = _live_non_inert_namespaces()
+
+    unrecorded = [
+        f"{package} [{', '.join(breaches)}] evidence={live[package, breaches][:8]}"
+        for package, breaches in sorted(key for key in live if key not in recorded)
+    ]
+    stale = [
+        f"{package} [{', '.join(breaches)}]" for package, breaches in sorted(key for key in recorded if key not in live)
+    ]
+
+    assert not (unrecorded or stale), (
+        f"the non-inert package namespaces of src/cadrumo no longer match {repo_relative(_BASELINE_PATH)}.\n"
+        f"  NOT NAMED in the baseline (a package __init__ may not import, bind, lazily resolve or re-export "
+        f"a project symbol -- either make the namespace inert, or add a named, reasoned entry in the same "
+        f"commit): {unrecorded}\n"
+        f"  STALE in the baseline (these no longer breach as recorded, so the entry must be dropped, or its "
+        f"'breaches' list corrected, in the commit that changed them): {stale}\n"
+        "A package appearing in BOTH lists changed which breaches it carries: correct that entry's "
+        "'breaches' rather than adding a second row for the same package."
+    )
+
+
+_PLANTED_NAMESPACE_CASES: Final[tuple[tuple[str, str, frozenset[NamespaceInertnessBreach]], ...]] = (
+    (
+        "module-level project import",
+        "from cadrumo.core.identity import TransactionId\n",
+        frozenset({NamespaceInertnessBreach.IMPORT_BINDING}),
+    ),
+    (
+        "type-checking-guarded import",
+        "from typing import TYPE_CHECKING\n\nif TYPE_CHECKING:\n    from cadrumo.core.identity import WorkUnitId\n",
+        frozenset({NamespaceInertnessBreach.IMPORT_BINDING}),
+    ),
+    (
+        "function-local import",
+        "def resolve() -> object:\n    from cadrumo.core.identity import InvoiceId\n\n    return InvoiceId\n",
+        frozenset({NamespaceInertnessBreach.IMPORT_BINDING, NamespaceInertnessBreach.OWN_DEFINITION}),
+    ),
+    (
+        "namespace-defined class",
+        "class PlantedRecord:\n    value: int\n",
+        frozenset({NamespaceInertnessBreach.OWN_DEFINITION}),
+    ),
+    (
+        "namespace-defined constant",
+        "PLANTED_LIMIT = 7\n",
+        frozenset({NamespaceInertnessBreach.OWN_DEFINITION}),
+    ),
+    (
+        "pep 562 hook",
+        "def __getattr__(name: str) -> object:\n    raise AttributeError(name)\n",
+        frozenset({NamespaceInertnessBreach.LAZY_RESOLUTION}),
+    ),
+    (
+        "lazy export map",
+        '_LAZY_EXPORTS = {"PlantedRecord": ".planted"}\n',
+        frozenset({NamespaceInertnessBreach.LAZY_RESOLUTION}),
+    ),
+    (
+        "non-empty __all__",
+        '__all__ = ["PlantedRecord"]\n',
+        frozenset({NamespaceInertnessBreach.SYMBOL_EXPORT}),
+    ),
+    (
+        "computed __all__",
+        '_PLANTED_NAMES = ("PlantedRecord",)\n__all__ = tuple(_PLANTED_NAMES)\n',
+        frozenset({NamespaceInertnessBreach.OWN_DEFINITION, NamespaceInertnessBreach.SYMBOL_EXPORT}),
+    ),
+)
+
+
+@pytest.mark.parametrize(
+    ("label", "body", "expected"),
+    _PLANTED_NAMESPACE_CASES,
+    ids=[case[0] for case in _PLANTED_NAMESPACE_CASES],
+)
+def test_the_inertness_detector_reports_a_planted_namespace(
+    tmp_path: Path,
+    label: str,
+    body: str,
+    expected: frozenset[NamespaceInertnessBreach],
+) -> None:
+    """Each forbidden namespace shape is caught, in a synthetic tree.
+
+    Planted rather than asserted against a tracked file, so proving the gate
+    bites never leaves a mutation in the working tree for a peer's sweep to
+    pick up. The computed-``__all__`` case is the one that would otherwise slip:
+    a checker that only reads list literals sees a value it cannot parse and,
+    guessing permissively, calls the namespace inert.
+    """
+    planted = _plant_module(tmp_path, "cadrumo/planted_namespace/__init__.py", body)
+
+    record = classify_namespace_inertness(planted, src_root=tmp_path)
+
+    assert record is not None, f"the detector missed a planted {label}"
+    assert set(record.breaches) == expected, (
+        f"planted {label} classified as {[breach.value for breach in record.breaches]}, expected "
+        f"{sorted(breach.value for breach in expected)}"
+    )
+    assert record.package == "cadrumo.planted_namespace"
+
+
+@pytest.mark.parametrize(
+    ("label", "body"),
+    (
+        ("bare docstring", '"""Inert namespace."""\n'),
+        (
+            "documented inert boundary",
+            '"""Inert namespace."""\n\nfrom __future__ import annotations\n\n__all__: tuple[str, ...] = ()\n',
+        ),
+        ("distribution version marker", '"""Inert namespace."""\n\n__version__ = "0.0.1"\n'),
+    ),
+)
+def test_the_inertness_detector_clears_an_inert_namespace(tmp_path: Path, label: str, body: str) -> None:
+    """An inert namespace is not reported, so the census is not trivially true.
+
+    Without this, a detector that returned a record for every ``__init__.py``
+    would satisfy every planted case above and the whole family would be
+    tautological. The permitted shapes are exactly the ones the boundary rule
+    names: a docstring, the ``__future__`` directive, and an empty ``__all__``
+    documenting the boundary on purpose.
+    """
+    planted = _plant_module(tmp_path, "cadrumo/planted_namespace/__init__.py", body)
+
+    assert classify_namespace_inertness(planted, src_root=tmp_path) is None, (
+        f"the detector reported an inert namespace ({label}) as a breach"
+    )
+
+
+def test_the_namespace_census_walks_a_whole_planted_tree(tmp_path: Path) -> None:
+    """The gate's own entry point finds a planted namespace anywhere in the tree.
+
+    The per-file classifier being correct is not the same claim as the census
+    reaching every package: a walk that missed nested packages would leave the
+    ratchet green over a tree it never opened.
+    """
+    _plant_module(tmp_path, "cadrumo/__init__.py", '"""Inert root."""\n')
+    _plant_module(tmp_path, "cadrumo/outer/__init__.py", '"""Inert."""\n\n__all__: tuple[str, ...] = ()\n')
+    _plant_module(tmp_path, "cadrumo/outer/inner/__init__.py", "from cadrumo.core.identity import TransactionId\n")
+
+    found = find_non_inert_namespaces(tmp_path / "cadrumo", src_root=tmp_path)
+
+    assert [record.package for record in found] == ["cadrumo.outer.inner"]
+    assert set(found[0].breaches) == {NamespaceInertnessBreach.IMPORT_BINDING}

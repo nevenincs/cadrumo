@@ -18,8 +18,8 @@ from typing import Final, Literal, cast
 import rtoml
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from cadrumo.core.link_safety import is_link_like
 from cadrumo.core.directory_scan import iter_directory
+from cadrumo.core.link_safety import is_link_like
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_value_policy import (
@@ -66,6 +66,11 @@ from ._render_profile import (
 )
 from ._semantic_map import SemanticMap
 from ._semantic_map_join import JoinedRecordDesign, JoinedRecordDesignField, JoinedRecordDesignRecord
+from ._source_defects import (
+    SourceDefectDeclaration,
+    adjudicated_literal_for,
+    validate_source_defect_declarations,
+)
 from ._variable_envelope import (
     compile_auxiliary_envelope_header_definition,
     compile_filing_envelope_definition,
@@ -385,6 +390,7 @@ def render_complete_export_tree(
     transport_profile: ExportTreeTransportProfile,
     render_profile: RenderProfile,
     render_profile_source_evidence: RenderProfileSourceEvidence,
+    source_defects: tuple[SourceDefectDeclaration, ...] = (),
 ) -> RenderedExportTree:
     """Render one whole generated ``export/`` tree from its three authorities.
 
@@ -393,6 +399,7 @@ def render_complete_export_tree(
     responsibilities deliberately remain later generator steps.
     """
     _validate_transport_profile(joined, transport_profile)
+    validate_source_defect_declarations(source_defects, joined.source)
     if joined.variable_envelopes and joined.variable_envelope_contract is None:
         identities = ", ".join(repr(envelope.record_identity) for envelope in joined.variable_envelopes)
         raise RegistryValidationError(
@@ -405,7 +412,9 @@ def render_complete_export_tree(
             f"selected revision {joined.revision_id!r}",
         )
     validate_render_profile(render_profile, joined, render_profile_source_evidence)
-    records, derivations = _render_records(joined.records, transport_profile, render_profile)
+    records, derivations = _render_records(
+        joined.records, transport_profile, render_profile, source_defects=source_defects
+    )
     _validate_generated_projection_bijection(tuple(derivations), joined.projection_endpoints)
     filing_envelope = (
         compile_filing_envelope_definition(
@@ -549,6 +558,8 @@ def _render_records(
     joined_records: tuple[JoinedRecordDesignRecord, ...],
     transport_profile: ExportTreeTransportProfile,
     render_profile: RenderProfile,
+    *,
+    source_defects: tuple[SourceDefectDeclaration, ...] = (),
 ) -> tuple[tuple[ExportRecordDefinition, ...], tuple[ExportFieldDerivation, ...]]:
     records: list[ExportRecordDefinition] = []
     derivations: list[ExportFieldDerivation] = []
@@ -566,6 +577,7 @@ def _render_records(
                 transport_profile,
                 render_profile,
                 export_record_id=record_id,
+                source_defects=source_defects,
             )
             for field in joined_record.fields
         )
@@ -665,12 +677,15 @@ def _normalise_field(
     render_profile: RenderProfile,
     *,
     export_record_id: str,
+    source_defects: tuple[SourceDefectDeclaration, ...] = (),
 ) -> ExportFieldDerivation:
     parser_field = joined_field.parser_field
     semantic_entry = joined_field.semantic_entry
     _require_safe_identifier(str(semantic_entry.export_field_id), subject="export field id")
     if semantic_entry.kind is CasillaFieldKind.LITERAL:
-        return _literal_derivation(joined_field, transport_profile, export_record_id=export_record_id)
+        return _literal_derivation(
+            joined_field, transport_profile, export_record_id=export_record_id, source_defects=source_defects
+        )
     if semantic_entry.kind is CasillaFieldKind.FILLER:
         return _schema_field(
             joined_field,
@@ -803,6 +818,7 @@ def _literal_derivation(
     profile: ExportTreeTransportProfile,
     *,
     export_record_id: str,
+    source_defects: tuple[SourceDefectDeclaration, ...] = (),
 ) -> ExportFieldDerivation:
     parser_field = joined_field.parser_field
     literal = joined_field.semantic_entry.literal
@@ -838,6 +854,18 @@ def _literal_derivation(
                 f"literal field {joined_field.semantic_entry.export_field_id!r} has ambiguous official constant "
                 f"content {official_content!r}",
             )
+    # An adjudicated defect in the published design replaces the literal the
+    # grammar read, and NOTHING ELSE: the byte comparison and the slot-width
+    # check below both still run against it, so a declaration cannot admit a
+    # value the document's own declared geometry refuses.
+    adjudicated = adjudicated_literal_for(
+        source_defects,
+        sheet=parser_field.sheet,
+        source_cell=parser_field.source_cell,
+        published_content=parser_field.content or "",
+    )
+    if adjudicated is not None:
+        official_literal = adjudicated
     try:
         literal_bytes = literal.encode(profile.encoding)
         official_literal_bytes = official_literal.encode(profile.encoding)
