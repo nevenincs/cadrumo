@@ -5,7 +5,7 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:0dd703dd3c9003bdda7383946358669f4b36c0dec3dfbf98c8c5dee9456f2391'
+body_hash: 'sha256:b3741688b7c6cb74795fc6d6f7e00c67e340bbf29e36a4e39c313e84f48940e8'
 step_id: 'S188'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
@@ -117,8 +117,8 @@ related:
 
 ## Notes
 
-Source provenance is `f8dbe09b92e108bdec0fbc5ae0a0009cf9ae7bb2`. It deletes the 2148-line `ledger_bindings.py` subject and splits it into six siblings with physical counts 18, 821, 284, 265, 282, and 537; 61 definitions retain one-to-one ownership. The direct Python-import scan reports zero stale imports. No plan, size baseline, or threshold changed.
+Source provenance is `f8dbe09b92e108bdec0fbc5ae0a0009cf9ae7bb2`. It deletes the 2148-line `ledger_bindings.py` subject and splits it into six siblings with physical counts 17, 820, 283, 264, 281, and 536; 61 definitions retain one-to-one ownership. The direct Python-import scan reports zero stale imports. No plan, size baseline, or threshold changed.
 
 Supplied checks passed: compileall, I001/Ruff check, 108 tests in 94.10s, and 127 tests in 101.76s. The global size audit names none of the six new modules among 60 legacy overages; it is not a global green size claim.
 
-The formatter finding at `dev/registry/analysis/load_census.py:729` is non-S188 and excluded. No full-green format claim is made.
+The formatter finding at `dev/registry/analysis/load_census_classification.py:729` is non-S188 and excluded. No full-green format claim is made.
