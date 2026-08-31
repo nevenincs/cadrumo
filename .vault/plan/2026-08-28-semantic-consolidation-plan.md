@@ -9,7 +9,7 @@ related:
   - '[[2026-08-28-semantic-consolidation-cli-payload-projection-adr]]'
 modified: '2026-08-31'
 body_schema: body-v2
-body_hash: 'sha256:c876f7398398500536de2f699a40f64536d112faa0f32e2fa22818e2996e5c57'
+body_hash: 'sha256:9c2a53fe6d6c9b4d5d82e1ffd1a1e8de42803298adc2e65b20ef11ddfe753eb4'
 ---
 
 # `semantic-consolidation` plan
@@ -105,11 +105,9 @@ Eleven repository classes declare the identical namespace, payload_type, schema_
 
 Behaviour-fingerprint matches that are small, self-contained and mechanically rehomable once a canonical home is ruled: the uppercase-alphanumeric code validator across domain auth and the CLI payloads, the passphrase strength renderer across two TUI screens, the projection row selector across M200 and M296, the snapshot lister across borrador and justificante, and three identical secure-persistence constructors.
 
-
 ### Phase `P05` - Adjudicate the enum-subset rebuilt groupings
 
 Fifty-two enum-subset clusters at two to six sites, each a candidate partition of a closed axis stated more than once. Every one needs the substitutability pre-filter before collapse, because two modules naming the same members for genuinely different rules must stay apart. The home-office family grouping closed earlier is the worked precedent for both the fix and the gate.
-
 
 ### Phase `P06` - Collapse the filing-year axis onto one declared bound
 
@@ -174,7 +172,7 @@ An AST census of every pydantic Field constraint in production code found the sa
 - [x] `P08.S23` - Declare the two-character country code once across the 32 sites that state only its length, and rule on whether a charset check belongs on it; `src/cadrumo/`.
 - [ ] `P08.S24` - Adjudicate the nine-character tax-id fields against the identity token, which normalises without enforcing a length and so is not a safe promotion; `src/cadrumo/domain/calculations/registry/`.
 - [ ] `P08.S25` - Rule on the float-typed zero-to-one scores and the exclusive gt/lt rate bound: whether each earns its own alias or stays open-coded as a distinct rule; `src/cadrumo/`.
-- [ ] `P08.S26` - Settle the reported divergence between the SHA-256 hex length literals and the named constant that states the same length; `src/cadrumo/`.
+- [x] `P08.S26` - Settle the reported divergence between the SHA-256 hex length literals and the named constant that states the same length; `src/cadrumo/`.
 - [x] `P08.S27` - Record that grouping by constraint shape conflates concepts: the two-character group mixed country codes with tipo-renta, subclave and provincia codes, and only about two thirds were countries; `src/cadrumo/`.
 - [x] `P08.S28` - Adopt the content-digest aliases at the twenty sites that pin only a length, tightening a pattern onto fields that had none, and retire the two independent SHA-256 length constants; `src/cadrumo/`.
 - [ ] `P08.S29` - Adjudicate the coefficient field declared with contradictory zero-inclusion rules in one file, and the gross-amount and taxable-base fields that disagree across sites; `src/cadrumo/domain/`.
