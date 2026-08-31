@@ -20,7 +20,7 @@ from ..._config_payloads import (
     ApoderadoConfigureResult,
     ApoderadoStatusResult,
 )
-from .. import app
+from .._command_tree import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
 
