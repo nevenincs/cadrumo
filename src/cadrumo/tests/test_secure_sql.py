@@ -8,26 +8,24 @@ from pathlib import Path
 
 import pytest
 
-from ..adapters.persistence.storage import (
+from ..adapters.persistence.storage._secure_object_namespaces import (
     MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE,
     MODELO_WORK_UNIT_CATALOGUE_NAMESPACE,
     WORKFLOW_STATE_NAMESPACE,
 )
-from ..adapters.persistence.storage.bucket import bucket_paths
-from ..adapters.persistence.storage.master_key import (
-    BucketSession,
-    activate_session,
-)
+from ..adapters.persistence.storage.bucket._layout import bucket_paths
+from ..adapters.persistence.storage.master_key.active_session import activate_session
+from ..adapters.persistence.storage.master_key.bucket_session import BucketSession
 from ..adapters.persistence.storage.sql.engine import dispose_engine
 from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ..adapters.persistence.storage.tests.profile_capsule_runtime import (
     derive_test_bucket_key,
     publish_test_profile_capsule,
 )
-from ..core.storage_taxonomy_locations import storage_location
-from ..core.storage_taxonomy import StorageCategory
-from ..core.classification import SensitivityClass
+from ..core.classification.policies import SensitivityClass
 from ..core.config import load_settings, override_settings
+from ..core.storage_taxonomy import StorageCategory
+from ..core.storage_taxonomy_locations import storage_location
 from .secure_sql import (
     dev_test_database_password,
     isolated_cli_runtime_profile,

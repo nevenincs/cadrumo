@@ -69,6 +69,18 @@ def record_collected_markers(config: pytest.Config, items: Iterable[pytest.Item]
     setattr(config, _COLLECTED_MARKERS_KEY, frozenset(names))
 
 
+def _collected_count(terminalreporter: TerminalReporter) -> int | None:
+    """Return how many tests were collected, or ``None`` when unknowable.
+
+    Distinguishes the two ways a run can execute nothing, which have
+    OPPOSITE remedies: a selection that matched none of the collected tests
+    (fix the marker expression) versus a collection that produced no tests
+    at all (fix the path, or the import error behind it).
+    """
+    count = getattr(terminalreporter, "_numcollected", None)
+    return count if isinstance(count, int) else None
+
+
 def _lane_markers(config: pytest.Config) -> frozenset[str]:
     """Return the recorded marker names, or an empty set when unknown."""
     recorded = getattr(config, _COLLECTED_MARKERS_KEY, frozenset())
@@ -136,8 +148,26 @@ def apply(
     # cover, so it is treated as a detail to include when known rather than
     # as the trigger.
     if executed == 0:
-        scope = f"All {deselected} collected tests were" if deselected else "Every collected test was"
         terminalreporter.write_sep("=", "NOTHING RAN", red=True, bold=True)
+        collected = _collected_count(terminalreporter)
+        if collected == 0 and not deselected:
+            # NOT a marker problem, and saying so would send the reader to
+            # check lanes when the real cause is above: a path that does not
+            # exist, or an import error, so there was never anything to
+            # deselect. Blaming the selection here is a confidently wrong
+            # diagnosis, which is worse than no banner at all.
+            terminalreporter.write_line(
+                "This run executed 0 tests, and COLLECTED 0 -- so the selection is not the cause.",
+                red=True,
+                bold=True,
+            )
+            terminalreporter.write_line(
+                "Look above for a collection error: a path that does not exist, or a module that "
+                "failed to import. Changing -m will not help.",
+                red=True,
+            )
+            return
+        scope = f"All {deselected} collected tests were" if deselected else "Every collected test was"
         terminalreporter.write_line(
             f"This run executed 0 tests. {scope} deselected by -m {expression!r}.",
             red=True,

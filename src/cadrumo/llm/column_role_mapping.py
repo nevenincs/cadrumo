@@ -52,13 +52,13 @@ from functools import cache
 
 from pydantic import BaseModel, Field
 
+from ..core.config import Settings, load_settings
 from ..core.field_role import FieldRole
 from ..core.model_catalogue import ModelRole
-from ..core.provenance_stamp import build_provenance_stamp
-from ..core.optional_extras import LLM_EXTRA, require_optional_extra
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.operator_action_enums import ActionEvidenceProvenance
-from ..core.config import Settings, load_settings
+from ..core.optional_extras import LLM_EXTRA, require_optional_extra
+from ..core.provenance_stamp import build_provenance_stamp
 from .client import LLMClient
 from .errors import LLMConfigError, LLMValidationError
 from .models import LLMProvider, LLMRequest

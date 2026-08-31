@@ -22,18 +22,18 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ..adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ..adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ..application.calculations import CalculationObservationRepository
+from ..application.calculations.observations_repository import CalculationObservationRepository
 from ..application.modelo.external_import_actions import import_external_filing_evidence
 from ..application.modelo.tests.justificante_metadata import persist_justificante_metadata
 from ..application.modelo.work_lifecycle import create_work_unit
-from ..core.period import Period
 from ..core.casilla_id import CasillaId
+from ..core.period import Period
 from ..domain.calculations.registry.bindings import RegistryModeloObservation
 from ..domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements
 from ..domain.calculations.registry.relations import relation_source_requirements
@@ -67,6 +67,17 @@ def resolved_revision(*, modelo: str, filing_year: int, period: str) -> ModeloRe
     modelos, _catalogues = bundled_registry_tree()
     modelo_definition = next(candidate for candidate in modelos if candidate.id == modelo)
     return select_revision(modelo_definition, filing_year=filing_year, period=period)
+
+
+SEEDED_SOURCE_TAX_ID: Final = "X1234567L"
+"""The taxpayer identity every seeded cross-period source is filed under.
+
+Named because the clean-state gate compares the seeded evidence's
+``authenticated_identity`` against the ACTIVE PROFILE's tax id, so a caller
+whose profile carries a different identity gets
+``mismatched_external_evidence_record`` and no indication that an identity is
+what diverged. A caller aligns its profile to this value.
+"""
 
 
 def cross_period_source_groups(work_unit: WorkUnit) -> dict[tuple[str, int, str], set[CasillaId]]:
@@ -163,7 +174,7 @@ def seed_clean_cross_period_sources(
                 calculation_repository=calculation_repository,
                 filing_repository=filing_repository,
                 bucket_event_repository=bucket_event_repository,
-                expected_tax_id="X1234567L",
+                expected_tax_id=SEEDED_SOURCE_TAX_ID,
                 clock=SEED_CLOCK,
             )
             filing_catalogue = filing_repository.load()
@@ -187,7 +198,7 @@ def seed_clean_cross_period_sources(
                     "aeat_register_status": "ALTA",
                     "aeat_expediente_id": f"EXP-{source_modelo}-{filing_year}-{period}",
                     "aeat_justificante_csv": evidence_reference_id,
-                    "authenticated_identity": "X1234567L",
+                    "authenticated_identity": SEEDED_SOURCE_TAX_ID,
                 },
             )
         )

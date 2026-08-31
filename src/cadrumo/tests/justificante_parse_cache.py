@@ -6,7 +6,7 @@ from functools import cache
 from pathlib import Path
 
 from ..adapters.inbound.justificante.parser import parse_justificante
-from ..domain.justificante import Justificante
+from ..domain.justificante._schema import Justificante
 
 
 @cache

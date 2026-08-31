@@ -36,7 +36,7 @@ import pytest
 
 from ..core.directory_scan import scan_directory
 from ..core.hashing import sha256_file
-from ..core.resources import bundled_path
+from ..core.resources._boundary import bundled_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

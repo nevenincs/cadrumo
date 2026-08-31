@@ -68,9 +68,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ..core.storage_taxonomy_locations import STORAGE_TAXONOMY
-from ..core.storage_taxonomy import StorageCategory, StorageOverridePolicy, StorageScope
 from ..core.errors.hierarchy import CoreValidationError
+from ..core.storage_taxonomy import StorageCategory, StorageOverridePolicy, StorageScope
+from ..core.storage_taxonomy_locations import STORAGE_TAXONOMY
 
 if TYPE_CHECKING:
     from pathlib import Path

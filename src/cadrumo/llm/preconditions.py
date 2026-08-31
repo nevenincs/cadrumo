@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING
 from ..core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 
 if TYPE_CHECKING:
-    from ..application.operator_actions import PreconditionVerdict
+    from ..application.operator_actions._models import PreconditionVerdict
 
 
 class LLMPreconditionCondition(StrEnum):
@@ -61,7 +61,7 @@ def llm_no_recovery_verdict(
     cycle.  The returned object is nevertheless the canonical application-owned
     verdict type used by the shared CLI resolver.
     """
-    from ..application.operator_actions import no_action_precondition_verdict
+    from ..application.operator_actions._preconditions import no_action_precondition_verdict
 
     return no_action_precondition_verdict(
         condition_id=condition.value,

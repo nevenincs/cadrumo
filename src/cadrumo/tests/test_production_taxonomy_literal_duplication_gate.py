@@ -107,7 +107,7 @@ from typing import Final, cast
 
 import pytest
 
-from ..adapters.persistence.storage import STORAGE_PATH_DEFINITIONS
+from ..adapters.persistence.storage._storage_path_definitions import STORAGE_PATH_DEFINITIONS
 from ..core.storage_taxonomy_locations import STORAGE_TAXONOMY
 from ._inventory import aeat_relative, ast_for_path, production_python_files
 

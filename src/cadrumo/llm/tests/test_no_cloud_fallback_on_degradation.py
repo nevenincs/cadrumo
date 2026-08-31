@@ -27,7 +27,9 @@ from typing import override
 import pytest
 from pydantic import SecretStr
 
-from ...adapters.outbound.llm import LLMCache, LLMRunTelemetryRecorder, UsageRecorder
+from ...adapters.outbound.llm._cache import LLMCache
+from ...adapters.outbound.llm._run_telemetry import LLMRunTelemetryRecorder
+from ...adapters.outbound.llm._usage import UsageRecorder
 from ...core.config import LLMProvider, override_settings
 from ...core.directory_scan import scan_directory
 from ...core.errors.error_codes import build_error_envelope

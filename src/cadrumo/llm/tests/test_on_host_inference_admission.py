@@ -26,9 +26,11 @@ from typing import override
 
 import pytest
 
-from ...adapters.outbound.llm import LLMCache, LLMRunTelemetryRecorder, UsageRecorder
-from ...core.operator_action_enums import NoRecoveryOutcome
+from ...adapters.outbound.llm._cache import LLMCache
+from ...adapters.outbound.llm._run_telemetry import LLMRunTelemetryRecorder
+from ...adapters.outbound.llm._usage import UsageRecorder
 from ...core.config import LLMProvider, override_settings
+from ...core.operator_action_enums import NoRecoveryOutcome
 from ...tests.fixtures.settings import EnvFileFreeSettings
 from ...tests.loopback_llm import (
     SilentLoopbackHandler,

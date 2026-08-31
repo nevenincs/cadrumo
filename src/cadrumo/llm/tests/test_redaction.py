@@ -23,7 +23,8 @@ from pathlib import Path
 
 import pytest
 
-from ...adapters.outbound.llm import LLMCache, UsageRecorder
+from ...adapters.outbound.llm._cache import LLMCache
+from ...adapters.outbound.llm._usage import UsageRecorder
 from ...tests.secure_sql import TestRuntimeProfile, read_db_at_rest_bytes
 from ..models import (
     CachedEntry,

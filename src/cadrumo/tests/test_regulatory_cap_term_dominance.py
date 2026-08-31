@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from ..domain.tests import REGULATORY_CAP_WITNESSES
+from ..domain.tests._regulatory_cap_witnesses import REGULATORY_CAP_WITNESSES
 from . import aeat_relative, production_ast_items
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -76,7 +76,7 @@ _NON_REGULATORY_EXEMPTIONS: Mapping[_SiteKey, str] = {
     ("adapters/persistence/storage/attachment.py", "_merge_with_stored_manifest"): (
         "captured_at is a timestamp, not a regulatory cap."
     ),
-    ("adapters/persistence/storage/master_key/_login_throttle.py", "_required_wait_seconds"): (
+    ("adapters/persistence/storage/master_key/login_throttle.py", "_required_wait_seconds"): (
         "Authentication backoff is a security control, not a tax limit."
     ),
     ("llm/_client.py", "backoff_for"): ("Transport retry backoff is not a regulatory cap."),

@@ -28,7 +28,7 @@ import yaml
 from pydantic import TypeAdapter
 
 from ..core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
-from ..core.i18n import route_key_to_shard
+from ..core.i18n._routing import route_key_to_shard
 
 if TYPE_CHECKING:
     from collections.abc import Iterator, Mapping

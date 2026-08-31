@@ -24,21 +24,21 @@ from decimal import Decimal
 
 from pydantic import TypeAdapter, ValidationError
 
-from ..application.filing import (
+from ..application.filing._draft_construction import build_draft
+from ..application.filing._review import (
     approve_draft,
-    build_draft,
-    build_runtime_schema_provider,
     empty_prior_filing_observations_fingerprint,
     empty_profile_activity_fingerprint,
 )
-from ..core.period import Period
+from ..application.filing.runtime import build_runtime_schema_provider
 from ..core.casilla_id import CasillaId, validated_casilla_id
+from ..core.period import Period
 from ..domain.calculations.registry.ids import BindingId
 from ..domain.filing.errors import ModeloBuilderError
 from ..domain.filing.protocols import ModeloInputs
 from ..domain.filing.schema import ModeloDraft
 from ..domain.invoices.models import InvoiceCatalogue
-from ..domain.submission import ModeloDraftStatus
+from ..domain.submission._protocols import ModeloDraftStatus
 from ..domain.transactions.models import TransactionCatalogue
 
 _REGISTRY_TEST_BUCKET_ID = "1465aefb-768a-4344-a564-1f0737966d59"  # was 'registry-test'

@@ -19,10 +19,10 @@ from typing import Final
 
 import pytest
 
-from ..core.storage_taxonomy_locations import STORAGE_TAXONOMY, storage_path
-from ..core.storage_taxonomy import StorageCategory, StorageOverridePolicy, StorageScope
 from ..core.config import Settings, override_settings
 from ..core.errors.hierarchy import CoreValidationError
+from ..core.storage_taxonomy import StorageCategory, StorageOverridePolicy, StorageScope
+from ..core.storage_taxonomy_locations import STORAGE_TAXONOMY, storage_path
 from .env_scope import isolated_aeat_env, settings_without_env_file
 from .storage_scope import relocated_storage_path, storage_env_overrides, storage_overrides
 

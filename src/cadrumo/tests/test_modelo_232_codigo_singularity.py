@@ -29,8 +29,8 @@ from typing import get_type_hints
 
 import pytest
 
-from ..core.modelo_232_codigos import MetodoValoracion, TipoOperacionVinculada, TipoVinculacion
 from ..core.directory_scan import scan_directory
+from ..core.modelo_232_codigos import MetodoValoracion, TipoOperacionVinculada, TipoVinculacion
 from ..domain.calculations.registry.detail_record_bindings import RelatedPartyOperationObservation
 from ..domain.modelos.row_models import Modelo232VinculadaRow
 

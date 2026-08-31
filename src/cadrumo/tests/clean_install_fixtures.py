@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from ..core.external_constants import OUTPUT_LANGUAGE_ENV_VAR
-from ..core.i18n import clear_output_language_cache
+from ..core.i18n._render import clear_output_language_cache
 from .env_scope import scoped_env_var
 from .secure_sql import isolated_sessionless_storage_root
 

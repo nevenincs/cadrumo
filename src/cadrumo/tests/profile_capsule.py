@@ -13,6 +13,7 @@ from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Final
 from uuid import UUID
 
 from ..adapters.persistence.storage.custody.capsule import (
@@ -20,7 +21,10 @@ from ..adapters.persistence.storage.custody.capsule import (
     load_committed_profile_password_material,
 )
 from ..adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
-from ..adapters.persistence.storage.master_key import current_active_bucket_session, session_serves_bucket
+from ..adapters.persistence.storage.master_key.active_session import (
+    current_active_bucket_session,
+    session_serves_bucket,
+)
 from ..adapters.persistence.storage.tests.profile_capsule_runtime import (
     derive_test_bucket_key,
     new_test_profile_custody_envelope,
@@ -82,10 +86,8 @@ def open_test_profile_session(profile_id: str | UUID) -> Iterator[str]:
     authority does not serve the requested identity.
     """
     identity = str(UUID(str(profile_id)))
-    from ..adapters.persistence.storage.master_key import (
-        BucketSession,
-        activate_session,
-    )
+    from ..adapters.persistence.storage.master_key.active_session import activate_session
+    from ..adapters.persistence.storage.master_key.bucket_session import BucketSession
     from ..core.config import override_settings
 
     live = current_active_bucket_session()
@@ -285,6 +287,73 @@ def set_active_test_profile_facts(
     return upsert_test_profile_facts(active, facts, root=root)
 
 
+MODELO_READY_PROFILE_FACTS: Final[tuple[UserProfileFact, ...]] = (
+    UserProfileFact(path="identity.tax_id", value="12345678Z"),
+    # A fichero carries the declarant's legal name, composed from these two
+    # facts: `_identity_from_profile_facts` returns None without them, and the
+    # export then refuses with ModeloExportError because a filing-grade artefact
+    # cannot name an anonymous taxpayer. A tax id alone makes a profile ready to
+    # CALCULATE and not ready to EXPORT, which is why seeding only the id looks
+    # sufficient right up to the moment a fichero is produced.
+    UserProfileFact(path="identity.name", value="Ana"),
+    UserProfileFact(path="identity.surnames", value="Garcia Lopez"),
+    UserProfileFact(path="activities.description", value="Spanish rental income"),
+    UserProfileFact(path="iva.regime", value="GENERAL"),
+    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+    UserProfileFact(path="iva.m303_regime_composition", value="general"),
+    UserProfileFact(path="iva.redeme_enrolled", value=False),
+    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+)
+"""The minimum taxpayer baseline the modelo readiness gate accepts.
+
+One declaration, because this exact tuple was copied verbatim into four test
+modules and a fifth was nearly added. A duplicated fixture is not harmless: the
+readiness gate decides what modelo work may run at all, so five copies are five
+places for the answer to drift, and a copy that silently falls behind produces
+a suite passing against a taxpayer shape the gate no longer accepts.
+
+The values are a coherent taxpayer rather than whatever satisfies the gate: a
+NIF-shaped id, a described activity, and an explicit IVA regime with its
+enrolment flags answered. Generating values to make a gate pass risks writing
+data that is well-formed and wrong.
+"""
+
+
+def _facts_with_tax_id(tax_id: str) -> tuple[UserProfileFact, ...]:
+    """The readiness baseline under a different taxpayer identity.
+
+    Needed by callers that seed cross-period sources: that evidence is filed
+    under its own identity, and the clean-state gate refuses when the active
+    profile does not carry the same one.
+    """
+    return tuple(
+        UserProfileFact(path="identity.tax_id", value=tax_id) if fact.path == "identity.tax_id" else fact
+        for fact in MODELO_READY_PROFILE_FACTS
+    )
+
+
+def seed_modelo_ready_profile_record(
+    profile_id: str, *, clock: datetime, tax_id: str | None = None
+) -> UserProfileRecord:
+    """Seed one profile carrying the modelo readiness baseline.
+
+    Takes the clock rather than reading one, so a caller's fixture stays
+    deterministic and two records seeded in one test are not separated by
+    whatever the wall clock did between them.
+    """
+    return seed_test_profile_record(
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
+            profile_id=profile_id,
+            facts=_facts_with_tax_id(tax_id) if tax_id else MODELO_READY_PROFILE_FACTS,
+            created_at=clock,
+            updated_at=clock,
+        )
+    )
+
+
 def seed_test_profile_record(
     record: UserProfileRecord,
     *,
@@ -399,12 +468,14 @@ def forge_colliding_capsule_label(*, profile_id: UUID, label: str, root: Path | 
 
 
 __all__ = [
+    "MODELO_READY_PROFILE_FACTS",
     "bound_test_profile_record",
     "forge_colliding_capsule_label",
     "load_test_profile_record",
     "mint_test_profile_recovery_envelope",
     "open_test_profile_session",
     "replace_test_profile_record",
+    "seed_modelo_ready_profile_record",
     "seed_test_profile_record",
     "set_active_test_profile_facts",
     "upsert_test_profile_facts",

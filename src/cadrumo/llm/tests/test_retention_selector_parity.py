@@ -28,7 +28,7 @@ from decimal import Decimal
 
 import pytest
 
-from ...adapters.outbound.llm import LLMRunRecord
+from ...adapters.outbound.llm._run_telemetry import LLMRunRecord
 from ..models import CachedEntry, LLMProvider, LLMResponse, UsageRecord
 from ..retention import select_retention_removal_keys
 
