@@ -256,13 +256,22 @@ _SINGLETON_POLICY_SHAPES: Final[
     ExportValuePolicy.INTEGER_PART: "integer",
     ExportValuePolicy.FRACTIONAL_DIGITS: "integer",
 }
-#: Text naturalezas, in both vocabularies AEAT uses. A workbook prints the
-#: abbreviation; a PDF design prints the word, which the shipped parser
-#: canonicalises to ``Alfanumerico``/``Alfabetico``, and ``Blancos`` for a fill
-#: run. Matched accent-folded, so the accented spellings land here too.
-_TEXT_TYPES: Final[frozenset[str]] = frozenset(
-    {"a", "an", "alfanumerico", "alfabetico", "alphanumeric", "alphabetic", "blancos"},
-)
+#: Text naturalezas, split by the naturaleza AEAT names rather than by the
+#: vocabulary it names it in. A workbook prints the abbreviation; a PDF design
+#: prints the word, which the shipped parser canonicalises to
+#: ``Alfanumerico``/``Alfabetico``. Matched accent-folded, so the accented
+#: spellings land here too. The split is load-bearing: these two sets are the
+#: only thing that distinguishes the two text derivation codes, and reading
+#: them as one set keyed on the abbreviation records every PDF-sourced
+#: alphabetic field as the ALPHANUMERIC derivation, because the folded word
+#: ``alfabetico`` is not the abbreviation ``a``.
+_ALPHABETIC_TYPES: Final[frozenset[str]] = frozenset({"a", "alfabetico", "alphabetic"})
+_ALPHANUMERIC_TYPES: Final[frozenset[str]] = frozenset({"an", "alfanumerico", "alphanumeric"})
+#: A blank run states no text representation to derive one from. Where the
+#: semantic map calls such a field a filler it never reaches here; where it
+#: calls it a value-bearing field the two disagree, and the caller refuses
+#: rather than recording a naturaleza the design does not state.
+_BLANK_RUN_TYPES: Final[frozenset[str]] = frozenset({"blancos"})
 #: Retained for the workbook abbreviations; numeric membership itself is decided
 #: by :func:`_is_numeric_aeat_type`, the one vocabulary the render profile's
 #: eligibility already uses, so the two cannot disagree about what is numeric.
@@ -711,8 +720,14 @@ def _normalise_field(
         .decode("ascii")
         .casefold()
     )
-    if type_code in _TEXT_TYPES:
-        derivation_code: ExportFieldDerivationCode = "text-a-v1" if type_code == "a" else "text-an-v1"
+    if type_code in _BLANK_RUN_TYPES:
+        raise RegistryValidationError(
+            f"official field {semantic_entry.export_field_id!r} declares blank-run naturaleza "
+            f"{parser_field.aeat_type!r}, which states no text representation, but the semantic "
+            f"map does not declare it a filler",
+        )
+    if type_code in _ALPHABETIC_TYPES or type_code in _ALPHANUMERIC_TYPES:
+        derivation_code: ExportFieldDerivationCode = "text-a-v1" if type_code in _ALPHABETIC_TYPES else "text-an-v1"
         return _schema_field(
             joined_field,
             data_type="text",

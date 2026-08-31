@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-completeness-closure'
 date: '2026-08-29'
-modified: '2026-08-30'
+modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:fd09067af59038323cdad6d1d2a833cb9483aafecbd9e039fc9972d62133d8f6'
+body_hash: 'sha256:a1517ce79ad9a71f5c28ffb50b27a5fe608e8e9cf5b9ed3cdaa843e0f1efa987'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
@@ -432,3 +432,351 @@ at the `filecmp` byte comparison on `0002-record-m347-declarado.toml`, the
 also runs BEFORE check mode, so it masks the refusal message the check-mode
 guard was given for this case -- the ordering is worth fixing when that gap is
 closed.
+
+### The two owed export trees are not "just unpublished" — correcting a claim
+
+An earlier note in this sweep called publishing the two owed trees
+(`m200-2025-y-siguientes`, `m390-2022`) unblocked generator work. That was wrong
+on two counts, both measured.
+
+**The authored and generated layout shapes are mutually exclusive.** Every
+known-good generated tree carries `export/` fragments and an EMPTY
+`export_layouts/`: m184 2023-2024 is 6/0, m347 2011-2024 is 5/0, m322 2023 is
+7/0. m390 2022 is the inverse -- 0 generated fragments against 14 authored
+layouts (23 records, 415 fields), whose fichero layout id is
+`modelo-390-2022-fichero-boe`. A generated tree publishes
+`generated-modelo-390-2022-fichero`, so publishing would not fill a hole; it
+would seat a fifteenth layout claiming the same fichero beside the authored one.
+That is duplicate ownership of a filing surface, which the authority is required
+to refuse, and it means m390 is an authored-to-generated MIGRATION requiring
+adjudication -- not a missing render. The `_SOURCE_DEFECTS` entry for
+`aeat-dr-390-2022`, which adjudicates the eleven-character `</T3900700>` constant
+against the twelve-byte slot the same cell declares, reads as preparation for
+exactly that migration: it exists to make a generated render agree with the
+reviewed authored layout.
+
+`m200-2025-y-siguientes` carries neither shape (0/0), so it alone has no
+duplicate-ownership conflict.
+
+**There is no publication route into the shipped registry.** The only references
+to `publish_validated_generated_export_tree` are its definition in
+`_tree_publication.py`, the pipeline re-export, and
+`dev/registry/tests/test_generated_tree_publication.py`, which drives it against
+temporary fixtures. No CLI verb, script or dev entry point publishes a generated
+tree into `src/`. The check module additionally forbids itself a publisher
+surface by gate (`test_check_module_has_no_migration_reader_or_publisher_surface`),
+so the separation is deliberate -- but the operator-facing half of it was never
+built. The enrolment gate's own instruction, "publish it through the generator's
+own publication authority", currently names a route that does not exist. That,
+rather than an unrendered tree, is why both rows have stayed owed, and it is the
+gap to close before either row can go green.
+
+### The dev/registry unit lane, measured module by module
+
+Running the lane as one sequential command does not work in this tree. Two
+attempts were invalidated mid-flight by landings, and a third was still buffering
+after ninety minutes with nothing readable, because piping a backgrounded run
+through `tail` suppresses all interim output. Running the same lane module by
+module answered the same question in minutes per chunk, each attributable to a
+named commit. The phase asks for sequential runs, which is about worker loss on
+this share; it does not ask for one monolithic invocation, and the monolith is
+strictly worse here.
+
+All 42 modules covered. Twenty-one tests fail, in three groups, none unexplained.
+
+Four are the generated-export-tree enrolment rows -- both modelo 347 revisions,
+modelo 200 2025-y-siguientes and modelo 390 2022. All four are blocked on the
+operator-surface decision rather than on effort. The core generator pipeline
+behind them is green: check mode, publication, provenance manifest, the semantic
+map with its join and validation, source-defect declarations, the variable
+envelope and its generation gate, and the record-design intermediate together
+give 148 passed with no failures.
+
+Eleven are in the filing export-proof lane and belong to it, not here. They carry
+four distinct causes, which is worth stating because sampling one would have
+mis-reported all eleven: seven are modelo 200 declaring `calculation` authority
+grade against a requested `filing` snapshot -- the same deliberate downgrade that
+holds check mode below filing grade for that modelo -- one is a legacy
+single-channel proof path that has been disabled in favour of two-channel source
+and custody authorities, one is a missing `assess_for` method on that lane's own
+authority object, and two are regex assertions downstream of those. That lane
+holds uncommitted edits in the same files, which is what mid-refactor looks like.
+
+Six were relocation-stale declarations: a gate names modules by hard-coded path,
+a promotion moves them, the declaration expires. That is the gate working. Five
+belong to other lanes' sweeps. The sixth was the semantic-map loader's import
+pin, in this lane, and it was stale three ways at once -- it pinned package names
+rather than the modules that define each symbol, so it asserted the facade shape
+the architecture forbids and no longer named the TOML parser's owner; it silently
+lacked `is_link_like`; and its facade `__all__` list predated the filing-export
+proof work that legitimately grew it from eleven names to twenty.
+
+One further failure was a line ratchet exceeded by exactly one line. The delta was
+entirely the import-centralization sweep replacing facade imports with
+per-defining-module ones, which is the case that gate's own docstring names as
+making a module easier to review rather than harder, so the baseline was raised to
+the exact new length and no further.
+
+A caveat that must travel with these numbers: 24 tests were deselected by the
+marker expression. This is the unit lane. The workbook parity module drives
+LibreOffice and is held out of it, which is precisely why its line ratchet was
+placed in the default lane instead.
+
+### Measurements that ran correctly and reported the wrong subject
+
+Every wrong number in this sweep came from an instrument that worked. None came
+from a command that failed. They are worth listing together because the failure
+is invisible at the call site in each case.
+
+A pipe answers for the last command in it. Reading `exit=$?` after
+`git add f.py 2>&1 | head -2` reports `head`, so a command never actually measured
+appears to have succeeded. Capture the status of the command itself.
+
+An empty pipe is indistinguishable from a clean result. `git show HEAD:<path>` on
+an untracked path emits nothing, and `ast.parse("")` accepts it, so a file that
+does not exist at HEAD reports as parsing correctly. Check the byte count before
+trusting what came through.
+
+`git diff HEAD -- <path>` cannot see an untracked file. When an index entry has
+been removed the file becomes untracked, so diff reports "deleted file mode" while
+the content sits on disk. Thirteen registry modules were staged as deleted and
+this instrument called all thirteen genuine deletions. The comparison that settles
+it is `git show HEAD:<path> | diff - <path>`; identical output proves that
+re-adding restores exactly what HEAD holds and can lose nothing.
+
+`git log -1 -- <path>` answers who touched a file last, not who created the thing
+in it. A split was attributed to the wrong session on that basis, twice, in both
+directions. `git log -S` finds the commit that introduced the content.
+
+A parser reports only its first syntax error. Four broken lines took four rounds
+to find one at a time; enumerating every occurrence found them together.
+
+A grep for a number misses its underscore spelling. Searching for `1398` returned
+nothing while the file declared `1_398`.
+
+An aggregate invites the feeling of being informed. "595 dirty" was read and moved
+past without looking at the letters, and thirteen staged deletions sat inside it
+for hours. The same shape produced three different units under one label in a
+neighbouring lane. A count without its members is not a measurement.
+
+The pattern behind all of them: the instrument answered a question adjacent to the
+one being asked, and looked authoritative doing it. The defence is not more
+caution but a second instrument that fails differently — read the members, not the
+count; compare content, not status; ask who created, not who touched.
+
+### Phase 0 closed: the registry failure set across both lanes
+
+Both registry lanes are now measured module by module, every failure named, and
+every name re-verified at a current HEAD rather than quoted from the run that
+found it. The re-verification was not ceremony: of twenty candidates recovered
+from one long run, three had already been fixed by landings and one more was an
+artifact of my own working directory. Reporting the run's own list would have
+handed over four failures that do not exist.
+
+The dev/registry lane, 42 modules, holds three groups. Four are the generated
+export-tree enrolment rows, and all four wait on the operator-surface decision
+rather than on effort. Eleven belong to the filing export-proof lane and carry
+four distinct causes, seven of them one refusal: modelo 200 declaring calculation
+authority grade against a requested filing snapshot. The remainder are
+relocation-stale declarations, where a gate names modules by hard-coded path and a
+promotion moved them; that is the gate working rather than rot. Two failures in
+this lane were repaired here -- a loader import pin that was stale three ways at
+once, and a line ratchet exceeded by a single import-sweep line.
+
+The registry package lane, 525 modules and 6028 tests, holds sixteen. Two are the
+Phase 5 items already named in the brief: bundled record designs registered by no
+source, and the filing-capability worklist. One is the modelo 165 layout-authority
+coverage gap, which is acquisition-blocked and was measured from the loaded
+authority rather than from a test file, which turned out to matter when that file
+was split into seven modules mid-measurement. One is the revision-resolution gate
+discussed below. The rest span the continuity backlog ratchet, export value
+policy, record-design source selection, the disk-cache fingerprint, a ledger
+worked example, read-parameter invalidation, two schema validator refusals, and
+two design-parser claims.
+
+Two gates disagree about modelo 308's 2011 overlap, and the disagreement is
+substantive rather than a defect in either. One adjudicates a year-only refusal as
+legitimate when the split is grounded, date-reducible and period-overlapping,
+which modelo 308 satisfies, and passes. The other admits no overlap at all,
+because a year that resolves to two revisions cannot be calculated at all, and
+fails. Both readings are defensible. Implementing the AD-HOC operation-date
+decision resolves the overlap and reconciles them, which is a stronger argument
+for that record than the one previously made for it.
+
+A caveat travels with all of this. Both lanes exclude tests deselected by the
+marker expression, so this is the unit lane; the workbook parity module drives
+LibreOffice and sits outside it. And the tree churns hourly -- during this
+measurement a module was split into seven, a merge left five files conflicted, and
+three failures were fixed underneath the run. The set is accurate as measured and
+should be re-measured, not inherited.
+
+### Twelve failures, one missing capability
+
+Counting the symptoms of modelo 200 having no export layout, now that both lanes
+are measured, gives a number worth stating plainly: twelve failing tests across
+three modules and two lanes trace to it, and none of them is in the lane that owns
+the cause.
+
+Two are the generated export-tree enrolment rows for modelo 200 and modelo 390,
+which report a tree as owed and cannot be satisfied because no operator route
+publishes one.
+
+Seven are in the filing export-proof lane, and all seven carry the same refusal:
+modelo 200 declares calculation authority grade, which cannot satisfy a requested
+filing snapshot. The revisions state the reason for that grade in their own
+comments -- filing refuses until the canonical generator publishes the exact
+design for that ejercicio -- so the grade is downstream of the same absence.
+
+Three are in the registry package lane and were only attributable once the
+authority was queried directly. The declared-casilla walk admits a revision only
+when it carries an export layout, so modelo 200 is enrolled among the modelos it
+must reach and is never reached. And two schema validator proofs read
+`revision.export_layouts` for modelo 200's 2024 revision to build their negative
+case: one asserts exactly one composed envelope-open prefix field and finds none,
+the other calls `next()` over the same empty sequence and raises StopIteration.
+
+The second pair is the most instructive. Their docstring states the premise
+explicitly -- "the campaign authored Modelo 200's generated export tree, so the
+revision declares a layout again" -- and that premise is false: both revisions
+carry zero export layouts, confirmed against the loaded authority rather than a
+directory listing. These are detector-teeth tests that can no longer construct
+their own defect, so they fail for the absence of the fixture rather than for the
+defect they guard. A reader seeing "validator rejects ..." in a failure list would
+reasonably conclude the validator had stopped rejecting something. It has not.
+
+The practical consequence is that the cost of one undecided capability is being
+paid in lanes that cannot fix it, in failures whose names do not mention it.
+
+### A redirect strategy that import centralization defeats
+
+Two tests in the registry package cannot work as written, and the reason is
+structural rather than a stale name, so it is worth recording before someone
+repairs it the way I first tried to.
+
+`test_read_parameter_authority_invalidation` needs to point the default bundled
+registry root at a temporary tree, so that an edit under that root can be observed
+reaching the next read. It does that by patching `bundled_path` as an attribute on
+the `core.resources` package. Since import centralization, no consumer reads that
+attribute: each imports the function from its defining module and holds its own
+binding. The patch therefore still succeeds and redirects nothing, the real
+bundled registry loads, and the synthetic modelo is simply absent -- the failure
+surfaces as `KeyError: '999'`, which names neither the redirect nor the root.
+
+Repointing the patch at the consumer does not rescue it. Patching
+`loader_cache.bundled_path`, which is what computes the cached root, still leaves
+the run resolving the real tree, because seven modules in that package bind the
+symbol independently -- authority, loader_cache, classification_coherence,
+external_grounding, formula_runtime_ops, the source-evidence fingerprint, and the
+package conftest. Redirecting one is whack-a-mole; redirecting all seven encodes a
+list that the next consumer invalidates silently.
+
+That attempted repair was made and backed out rather than left in place. It was
+more nearly correct than what it replaced and still did not work, and a plausible
+fix carrying a confident comment is worse than an honest failure, because the next
+reader inherits the confidence rather than the problem.
+
+The durable point is general. Patching a re-exported name is a technique that
+depends on consumers reaching the symbol through a shared surface. An architecture
+that requires every consumer to import from the defining module removes that
+surface deliberately, and every test that redirects by monkeypatching a package
+attribute is silently defeated by it -- silently, because the patch reports
+success. Making the root injectable in production is the repair; that is a design
+decision for whoever owns the authority, not a test edit.
+
+### The home-office worked example, grounded against the manual
+
+One of the registry package failures looked like a calculation defect and is not.
+`test_the_home_office_carve_out_is_not_applied_to_a_local` fails because the
+example's own facts produce four aggregation issues, every one reading
+`INELIGIBLE_DEDUCTIBILITY` with detail "missing usage ratio" against the category
+`suministros_home_office_luz`.
+
+The engine's refusal is correct, and the bundled manual says why. The 2024 renta
+manual, discussing an inmueble used partly as vivienda habitual and partly for the
+activity, separates the two kinds of cost: charges arising from OWNERSHIP are
+deductible in proportion to the part of the dwelling given over to the activity,
+while suministros are governed by regla 5.ª of article 30.2 of the IRPF law, which
+it states applies "cuando el empresario o profesional ejerza su actividad en su
+propia vivienda habitual". The usage ratio is a condition of the home-office
+suministros deduction, not an optional refinement, so a home-office suministros row
+that carries no ratio is genuinely ineligible and refusing it is the law being
+applied rather than a gap.
+
+The test deliberately builds that row. Its aggregation helper defaults to
+`SUMINISTROS_LOCAL_AFECTO` -- the local, which is the scenario the module is named
+for -- and one assertion re-resolves the same facts under
+`SUMINISTROS_HOME_OFFICE_LUZ` to demonstrate that the carve-out does not reach a
+local. The home-office variant is therefore fixture, not registry content, and it
+is incomplete: it asserts a clean aggregation for a categorisation the law does not
+permit without a ratio.
+
+This was left unrepaired deliberately. Completing the fixture means supplying a
+usage-ratio figure, and regla 5.ª sets that proportion from the share of the
+dwelling actually given over to the activity -- a fact about a taxpayer, which this
+example does not state. Inventing a percentage to clear four issues would put a
+fabricated tax figure into a worked example whose entire purpose is to be an
+independent check on the engine. The finding is that the fixture needs a grounded
+ratio, and that the engine and the registry are both behaving correctly.
+
+## Generator finding: one text naturaleza, two vocabularies, one derivation code
+
+`_normalise_field` in the export-tree generator chose between the two text
+derivation codes with `"text-a-v1" if type_code == "a" else "text-an-v1"`,
+guarded by a seven-member `_TEXT_TYPES` set. AEAT states the same two
+naturalezas in two vocabularies: a workbook prints the abbreviation `A`/`An`,
+and a PDF design prints the word, which the shipped parser canonicalises to
+`Alfabético`/`Alfanumérico`. Accent-folded, `alfabetico` is not `a`, so every
+PDF-sourced *alfabético* field fell to the `else` and was recorded as the
+ALPHANUMERIC derivation. Nothing refused: the comparison simply evaluated
+false.
+
+The signature was visible in the shipped manifests before any code was read.
+Across the 27 enrolled trees, joining each `source_ref` to its `corpus_path`
+extension:
+
+| source | trees | `text-a-v1` | `text-an-v1` |
+| ------ | ----: | ----------: | -----------: |
+| `.xlsx` | 14 | 26 | 796 |
+| `.xls` | 7 | 11 | 602 |
+| `.pdf` | 6 | **0** | 201 |
+
+Every workbook-sourced tree reads the abbreviation and emits both codes. No
+PDF-sourced tree emits the alphabetic code even once. Extracting the six
+bundled PDFs confirms the designs are not simply free of alphabetic fields --
+they carry 24, 24, 13, 31, 29 and 36 `Alfabético` occurrences respectively
+(modelos 184 ×2, 185, 296, 347 ×2). A zero against that is a defect, not a
+distribution.
+
+The two codes pass identical arguments to `_schema_field` and differ only in
+the label, so no emitted byte moves: the damage is confined to provenance
+fidelity. That is still a failure of the same kind the export rules name --
+a manifest asserting a derivation that was not the applicable one.
+
+### Second defect found in the same set
+
+`blancos` sat in `_TEXT_TYPES` and therefore also landed on `text-an-v1`. A
+blank run states no text representation to derive one from. Where the semantic
+map declares such a field a FILLER it returns earlier with `filler-v1` and
+never reaches the naturaleza read at all; reaching it means the design says
+"blanks" while the map says the field carries a value. That is a disagreement
+between two authorities, and the honest answer is a refusal naming the field,
+not a text derivation invented for it.
+
+### Disposition
+
+`_TEXT_TYPES` is replaced by `_ALPHABETIC_TYPES` and `_ALPHANUMERIC_TYPES`,
+split by the naturaleza AEAT names rather than by the vocabulary it names it
+in, plus `_BLANK_RUN_TYPES`, which refuses. Both gates were proven by
+sabotage: restoring `type_code == "a"` reds exactly the two word-spelling
+cases with `assert 'text-an-v1' == 'text-a-v1'` while the abbreviation cases
+stay green, and readmitting the blank run reds the refusal with DID NOT RAISE.
+
+### Lesson
+
+A membership set and a derivation keyed off one of its members are two
+declarations of the same fact, and the wider set silently absorbs the
+mismatch. The tell is a *derived* value whose distribution is degenerate on
+one partition of the inputs -- here, a code that never once appears among a
+third of the corpus. Reach for that comparison on any generator whose output
+is a label rather than a number, because a label carries no arithmetic that
+would otherwise fail.

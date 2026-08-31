@@ -106,6 +106,7 @@ def _intermediate(
     first_record_declared_total: int | None = 4,
     first_field_offset: int = 1,
     second_field_offset: int = 3,
+    second_field_aeat_type: str = "A",
     numeric_content: str | None = "2 enteros y 2 decimales",
 ) -> RecordDesignIntermediate:
     return RecordDesignIntermediate.model_validate(
@@ -143,7 +144,7 @@ def _intermediate(
                             "ordinal": "2",
                             "offset": second_field_offset,
                             "length": 2,
-                            "aeat_type": "A",
+                            "aeat_type": second_field_aeat_type,
                             "normalized_description": "Periodo",
                             "validation": "OBLIGATORIO",
                         },
@@ -329,8 +330,17 @@ def _blank_integer_profile() -> RenderProfile:
     )
 
 
-def _joined(snapshot, *, numeric_content: str | None = "2 enteros y 2 decimales"):
-    return join_record_design_semantics(_semantic_map(), _intermediate(numeric_content=numeric_content), snapshot)
+def _joined(
+    snapshot,
+    *,
+    numeric_content: str | None = "2 enteros y 2 decimales",
+    second_field_aeat_type: str = "A",
+):
+    return join_record_design_semantics(
+        _semantic_map(),
+        _intermediate(numeric_content=numeric_content, second_field_aeat_type=second_field_aeat_type),
+        snapshot,
+    )
 
 
 def _synthetic_static_inspection() -> StaticGeneratedArtifactInspection:
@@ -1508,7 +1518,7 @@ def test_labelled_official_literal_accepts_the_m184_sentence_stop_but_not_an_alt
 def test_labelled_official_literal_accepts_m296_field_enumeration_after_the_constant() -> None:
     """M296's later quoted 1/2 values describe another field, not tipo-hoja."""
     official_content = (
-        'Constante «F» ANEXO «VALORES NEGOCIABLES. RELACIÓN DE PAGO A CONTRIBUYENTES» '
+        "Constante «F» ANEXO «VALORES NEGOCIABLES. RELACIÓN DE PAGO A CONTRIBUYENTES» "
         'Sólo para claves de percepción "1" ó "2" (posiciones 100-101 del tipo de registro 2).'
     )
     folded = official_content.translate(_export_tree._OFFICIAL_QUOTE_FOLD)
@@ -1690,8 +1700,7 @@ def test_renderer_module_has_no_old_tree_or_approximate_admission_surface() -> N
     record_spec_symbols = {
         alias.name
         for node in ast.walk(module)
-        if isinstance(node, ast.ImportFrom)
-        and node.module == "cadrumo.domain.calculations.registry.record_spec"
+        if isinstance(node, ast.ImportFrom) and node.module == "cadrumo.domain.calculations.registry.record_spec"
         for alias in node.names
     }
     assert record_spec_symbols <= {"ENCODING_ALIAS_MAP"}, (
@@ -1775,3 +1784,72 @@ def test_width_17_sign_policies_cover_every_declared_policy() -> None:
         f"width-17 sign policies handled by the derivation {sorted(handled)} do not match the "
         f"declared set {sorted(declared)}; an unhandled policy renders as unsigned decimal"
     )
+
+
+@pytest.mark.parametrize(
+    ("aeat_type", "expected_code"),
+    [
+        ("A", "text-a-v1"),
+        ("Alfabético", "text-a-v1"),
+        ("Alfabetico", "text-a-v1"),
+        ("An", "text-an-v1"),
+        ("Alfanumérico", "text-an-v1"),
+        ("Alfanumerico", "text-an-v1"),
+    ],
+)
+def test_every_spelling_of_a_text_naturaleza_reaches_its_own_derivation_code(
+    m130_inspection_snapshot,
+    tmp_path,
+    aeat_type: str,
+    expected_code: str,
+) -> None:
+    """A naturaleza must derive from what it names, not from which vocabulary named it.
+
+    AEAT states the same two text naturalezas in two vocabularies: a workbook
+    prints the abbreviation, and a PDF design prints the word the shipped parser
+    canonicalises to ``Alfabético``/``Alfanumérico``. Both spellings of
+    *alfabético* have to reach the alphabetic derivation. Keying the choice on
+    the abbreviation alone silently records every PDF-sourced alphabetic field as
+    the ALPHANUMERIC derivation, and nothing refuses, because the folded word is
+    simply not the abbreviation.
+    """
+    revision_dir = _write_modelo_shell(tmp_path / "modelos" / "130")
+    rendered = render_complete_export_tree(
+        revision_dir / "export",
+        revision_id="2025",
+        joined=_joined(m130_inspection_snapshot, second_field_aeat_type=aeat_type),
+        semantic_map=_semantic_map(),
+        transport_profile=_profile(),
+        render_profile=_wire_profile(),
+        render_profile_source_evidence=_wire_evidence(),
+    )
+
+    codes = {str(derivation.field.id): derivation.derivation_code for derivation in rendered.field_derivations}
+    text_field = next(field_id for field_id in codes if codes[field_id] in {"text-a-v1", "text-an-v1"})
+    assert codes[text_field] == expected_code
+
+
+def test_a_blank_run_naturaleza_the_semantic_map_calls_value_bearing_is_refused(
+    m130_inspection_snapshot,
+    tmp_path,
+) -> None:
+    """``Blancos`` states no text representation, so deriving one is a guess.
+
+    A blank run is a fill, and the semantic map already routes a declared filler
+    to its own derivation before any naturaleza is read. Reaching this branch
+    means the design says "blanks" while the map says the field carries a value:
+    the two disagree, and the honest answer is a refusal naming the field, not a
+    text derivation invented for it.
+    """
+    revision_dir = _write_modelo_shell(tmp_path / "modelos" / "130")
+
+    with pytest.raises(RegistryValidationError, match="blank-run naturaleza"):
+        render_complete_export_tree(
+            revision_dir / "export",
+            revision_id="2025",
+            joined=_joined(m130_inspection_snapshot, second_field_aeat_type="Blancos"),
+            semantic_map=_semantic_map(),
+            transport_profile=_profile(),
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
+        )
