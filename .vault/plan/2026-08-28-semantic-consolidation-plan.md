@@ -9,7 +9,7 @@ related:
   - '[[2026-08-28-semantic-consolidation-cli-payload-projection-adr]]'
 modified: '2026-08-31'
 body_schema: body-v2
-body_hash: 'sha256:6faaccdc1917dd9b0ed0c85f2f6b124231b8c3dfe79928d6d44e07580adc1b8a'
+body_hash: 'sha256:3d648f0bddac3d3517900107436beb441c75dde56649eac7d359c08cf387ae36'
 ---
 
 # `semantic-consolidation` plan
@@ -74,6 +74,8 @@ Six package namespaces carry a PEP 562 __getattr__ resolver, four of them byte-i
 - [x] `P02.S131` - Merge the two Spanish identity validators onto one AEAT leader policy, keeping the richer refusal payload and correcting the test that asserted the laxer reading; `src/cadrumo/core/identity/_documents.py, src/cadrumo/core/identity/_tax_id.py, src/cadrumo/core/identity/tests/, src/cadrumo/domain/invoices/tests/test_validators.py`.
 - [x] `P02.S132` - Gate the identity algorithm and its policy tables to a single declaration, proved by mutation from outside the repository; `src/cadrumo/core/identity/tests/test_single_identity_algorithm.py`.
 - [x] `P02.S133` - Declare the apoderamiento and review-package note bounds once each and adopt them at their six sites, retiring the review-package payload module from the outstanding list; `src/cadrumo/application/auth/apoderado_text.py, src/cadrumo/application/modelo/review_package_text.py, src/cadrumo/entrypoints/cli/`.
+- [x] `P02.S134` - Make the province-code alternation one declaration and route the postcode, province and INE municipality shapes through it, closing a registry boundary that accepted a nonexistent province; `src/cadrumo/core/spanish_postcode.py, src/cadrumo/domain/calculations/registry/schema_scalars.py, src/cadrumo/domain/calculations/registry/tests/test_long_tail_data_types.py`.
+- [x] `P02.S135` - Declare the ISO alpha-2 shape once and record at each site whether it folds or refuses a lowercase token, leaving that policy question open rather than settling it by consolidation; `src/cadrumo/core/country_code.py, src/cadrumo/domain/invoices/validators.py, src/cadrumo/domain/calculations/registry/schema_scalars.py`.
 
 ### Phase `P03` - Consolidate the repeated secure-repository configuration shape
 
