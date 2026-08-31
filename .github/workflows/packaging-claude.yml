@@ -45,7 +45,7 @@ jobs:
           WATCHDOG_JOB_NAME: Cadrumo / runner queue watchdog
           THRESHOLD_SECONDS: "300"
           MAX_WATCH_SECONDS: "900"
-        run: python3 dev/ci/runner_queue_watchdog.py
+        run: python3 -m dev.ci.runner_queue_watchdog
 
   cadrumo-claude-acquisition:
     name: Cadrumo / Windows / Claude plugin and MCPB

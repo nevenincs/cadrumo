@@ -830,11 +830,7 @@ def _sheet_run_is_filler(sheet: RecordDesignSheet, offset: int, length: int) -> 
     ]
     if not covering:
         return None
-    described = {
-        position
-        for item in covering
-        for position in range(item.offset, item.offset + item.length)
-    }
+    described = {position for item in covering for position in range(item.offset, item.offset + item.length)}
     if not set(span) <= described:
         # Part of the span is described by nothing, so the design does not say
         # whether it is blank. Silence over any byte of the run is silence over

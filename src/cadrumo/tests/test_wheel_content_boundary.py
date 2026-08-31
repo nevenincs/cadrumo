@@ -84,6 +84,7 @@ def _declared_sdist_roots() -> frozenset[str]:
     declared = config["tool"]["hatch"]["build"]["targets"]["sdist"]["include"]
     return frozenset(Path(entry).parts[0] for entry in declared)
 
+
 # Corpus source binaries the wheel-split excludes; they ship in the two
 # ``aeat-data-*`` companions, so zero of them may appear in this slim wheel.
 _CORPUS_BINARY_SUFFIXES = (".docx", ".pdf", ".xls", ".xlsm", ".xlsx", ".zip")
@@ -193,7 +194,9 @@ def test_distributions_ship_only_the_product_package(
     )
     for archive_kind, members, allowed_roots, root_of in allowed_by_archive:
         offenders = sorted(member for member in members if Path(member).parts and root_of(member) not in allowed_roots)
-        assert not offenders, f"{archive_kind} delivers members the build configuration never declared: {offenders[:10]!r}"
+        assert not offenders, (
+            f"{archive_kind} delivers members the build configuration never declared: {offenders[:10]!r}"
+        )
 
 
 def test_wheel_keeps_required_data_roots(wheel_members: frozenset[str]) -> None:

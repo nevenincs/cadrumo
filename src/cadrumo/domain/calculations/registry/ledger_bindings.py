@@ -476,10 +476,7 @@ class IvaLedgerObservation(BaseModel):
                 "exemption_article is only valid when category is DOMESTIC_EXEMPT; "
                 f"got category {self.category.value!r}",
             )
-        if (
-            not is_deducible_flow(self.flow_direction)
-            or self.category is IvaCategory.RECARGO_EQUIVALENCIA
-        ):
+        if not is_deducible_flow(self.flow_direction) or self.category is IvaCategory.RECARGO_EQUIVALENCIA:
             if self.deduction_fact_kind is not None or self.deduction_provenance is not None:
                 raise RegistryValidationError("output IVA facts cannot carry deduction authority")
             return self
