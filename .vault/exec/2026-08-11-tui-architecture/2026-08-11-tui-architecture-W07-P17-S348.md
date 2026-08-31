@@ -5,7 +5,7 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:7d4194dc96fd936bfb1084d3f79a23c853bbddcf48017a5299feec6a215b4cf9'
+body_hash: 'sha256:e73d5aa7228a98f74eb7ad6570d3f705f9298a131813251e2da9979a2716934e'
 step_id: 'S348'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -71,3 +71,13 @@ Re-attested through the owning edit verb after hand-authoring, so the body
 fingerprint matches its stamp.
 
 Re-attested through the owning edit verb; body fingerprint matches its stamp.
+
+CORRECTION 2026-08-31 TO THIS RECORD'S OWN FIGURE, and to the scan the row calls reproducible.
+
+The post-regeneration figure recorded above -- 168 stale across 7 artefacts -- is a TEXT scan result and over-reports. Re-measured by parsing each artefact and walking only real data keys, skipping any key that is underscore-prefixed or named as a note: **148 stale across 4 artefacts**.
+
+Three artefacts drop out completely, because every apparent stale path in them sat in explanatory prose rather than in a ledger entry: `complexity_baseline.json`, `complexity_allowlist.json` and `import_hygiene_baseline.json`. The last is the sharpest case and is the same one W07.P17.S349 escalated: its `_note` names `domain/transactions/_ids.py` precisely to record that the bridge is GONE and its consumers now resolve through the canonical owner. The note is the record of the fix, and a text scan reads it as the defect.
+
+So the row's stated scan has a second known limit beyond the one it already names. It records that the scan reports paths that no longer RESOLVE rather than paths resolving to the WRONG thing; it should also record that the scan cannot tell a live entry from a note about a removed entry. Both limits push the same way: the scan is a starting inventory, never a verdict.
+
+The true remaining population is `registry_facade_family_census.v1.json` 86, `regulatory_drift_dispositions.toml` 34, `fixture_ownership.toml` 24 and `modelo_branch_classification.toml` 4 -- and the last three are hand-authored adjudication ledgers, which is W07.P17.S349's subject rather than a regeneration.

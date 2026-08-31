@@ -5,16 +5,11 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:048c65682f22862fcb2df849473080981af3c978f488104d78968247d8d692e4'
+body_hash: 'sha256:00d3f5d7bfcd14af296cfaabff83db99588ee57ec5c1a58fd6f85753c32a7bcd'
 step_id: 'S122'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Refactor the size-budget subjects in calc_sheets_apply.py into cohesive siblings without raising any threshold.
 
@@ -23,23 +18,6 @@ related:
 - `src/cadrumo/adapters/outbound/google/calc_sheets_apply.py`
 
 ## Changes
-
-<!-- MECHANICAL LOG. One line per path touched, nothing else:
-       `A path` added   `M path` modified   `D path` deleted   `R old -> new` renamed
-     Paths are repo-relative, in backticks. No prose, no sentences, no
-     narration of intent, outcome, or difficulty - the diff and the plan Step
-     already carry those. Example:
-
-       - `M` `src/vaultspec_core/cli/exec_cmd.py`
-       - `A` `src/vaultspec_core/cli/tests/test_exec_cmd.py`
-       - `D` `src/legacy/shim.py`
-
-     Optional final line, only when a check was run:
-       - `verify:` `<command>` -> `pass` | `fail`
-
-     Optional `## Notes` section, ONLY on exception: data loss, skipped work,
-     a scaffold left in code, or a persistent failure. Omit it otherwise -
-     an absent section is correct; an empty one is a check finding. -->
 
 - `M` `src/cadrumo/adapters/outbound/google/calc_sheets_apply.py`
 - `A` `src/cadrumo/adapters/outbound/google/_calc_sheets_apply_formatting.py`

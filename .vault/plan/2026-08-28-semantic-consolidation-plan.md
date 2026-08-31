@@ -9,7 +9,7 @@ related:
   - '[[2026-08-28-semantic-consolidation-cli-payload-projection-adr]]'
 modified: '2026-08-31'
 body_schema: body-v2
-body_hash: 'sha256:0d1a0f9be963c3059422faac85abb39d7080c92e7ccb83334dd2ec9c591fbcc8'
+body_hash: 'sha256:6faaccdc1917dd9b0ed0c85f2f6b124231b8c3dfe79928d6d44e07580adc1b8a'
 ---
 
 # `semantic-consolidation` plan
@@ -73,18 +73,22 @@ Six package namespaces carry a PEP 562 __getattr__ resolver, four of them byte-i
 - [x] `P02.S130` - Route the ledger export amount check through the parser's own signed axis instead of comparing against zero beside the payload; `src/cadrumo/entrypoints/cli/_ledger_payloads.py`.
 - [x] `P02.S131` - Merge the two Spanish identity validators onto one AEAT leader policy, keeping the richer refusal payload and correcting the test that asserted the laxer reading; `src/cadrumo/core/identity/_documents.py, src/cadrumo/core/identity/_tax_id.py, src/cadrumo/core/identity/tests/, src/cadrumo/domain/invoices/tests/test_validators.py`.
 - [x] `P02.S132` - Gate the identity algorithm and its policy tables to a single declaration, proved by mutation from outside the repository; `src/cadrumo/core/identity/tests/test_single_identity_algorithm.py`.
+- [x] `P02.S133` - Declare the apoderamiento and review-package note bounds once each and adopt them at their six sites, retiring the review-package payload module from the outstanding list; `src/cadrumo/application/auth/apoderado_text.py, src/cadrumo/application/modelo/review_package_text.py, src/cadrumo/entrypoints/cli/`.
 
 ### Phase `P03` - Consolidate the repeated secure-repository configuration shape
 
 Eleven repository classes declare the identical namespace, payload_type, schema_version and sensitivity quartet. The question this phase answers is whether they are eleven restatements of one configuration shape or eleven legitimately distinct repositories that share four field names, and the answer decides whether a shared base is a consolidation or a false merge.
 
+
 ### Phase `P04` - Close the confirmed single-function duplicates
 
 Behaviour-fingerprint matches that are small, self-contained and mechanically rehomable once a canonical home is ruled: the uppercase-alphanumeric code validator across domain auth and the CLI payloads, the passphrase strength renderer across two TUI screens, the projection row selector across M200 and M296, the snapshot lister across borrador and justificante, and three identical secure-persistence constructors.
 
+
 ### Phase `P05` - Adjudicate the enum-subset rebuilt groupings
 
 Fifty-two enum-subset clusters at two to six sites, each a candidate partition of a closed axis stated more than once. Every one needs the substitutability pre-filter before collapse, because two modules naming the same members for genuinely different rules must stay apart. The home-office family grouping closed earlier is the worked precedent for both the fix and the gate.
+
 
 ### Phase `P06` - Collapse the filing-year axis onto one declared bound
 
