@@ -44,6 +44,36 @@ Contracts: 4 kept, 6 broken.
 """
 
 
+#: Real output from a later dead-gate run whose pin wrapped inside the module path.
+#: The wrap point moves with the pin's length, and this one leaves the marker
+#: line carrying no pin at all -- the case the first fixture did not reproduce.
+_WRAPPED_MID_IDENTIFIER_RUN: Final = (
+    "=============\n"
+    "Import Linter\n"
+    "=============\n"
+    "\n"
+    "\n"
+    "No matches for ignored import \n"
+    "cadrumo.domain.calculations.registry.tests.test_ledger_renta_gastos_estimacion_\n"
+    "directa_binding -> cadrumo.domain.renta.\n"
+)
+
+
+def test_a_pin_wrapped_mid_identifier_is_quoted_whole() -> None:
+    """The quoted pin must be copy-pasteable back into .importlinter.
+
+    This is the defect a real run exposed. The tool had wrapped inside the
+    module path, so reading only the marker line quoted the reader the word
+    "import" and nothing else, and rejoining with a space split the identifier.
+    Both forms name a pin that cannot be found in the file.
+    """
+    annotated = annotate_unevaluated_contracts(_WRAPPED_MID_IDENTIFIER_RUN)
+
+    quoted = annotated.rsplit("delete the pin", 1)[1]
+    assert "test_ledger_renta_gastos_estimacion_directa_binding" in quoted
+    assert "estimacion_ directa" not in quoted
+
+
 def test_an_aborted_run_is_named_as_evaluating_nothing() -> None:
     """The annotation states the blast radius, which the raw output does not."""
     annotated = annotate_unevaluated_contracts(_ABORTED_RUN)

@@ -114,6 +114,39 @@ _CONTRACT_TALLY_MARKER: Final[str] = "Contracts:"
 _UNMATCHED_IGNORE_MARKER: Final[str] = "No matches for ignored import"
 
 
+def _unmatched_pins(output: str) -> list[str]:
+    """Rejoin each unmatched-pin report, which the tool wraps across lines.
+
+    ``lint-imports`` wraps this message at the terminal width, and the wrap
+    point moves with the pin's length: a long importer can push the whole
+    ``a -> b`` pair onto the lines AFTER the marker, leaving the marker line
+    carrying no pin at all. Reading only that line therefore quotes the reader
+    the word "import" and nothing actionable, which was this annotation's own
+    defect until a real dead-gate run showed it -- the fixture happened to wrap
+    after the module name, so the tests passed while the live case did not.
+
+    The report ends at the sentence's full stop, so lines are gathered until
+    one ends in a period rather than guessing at a line count.
+    """
+    lines = output.splitlines()
+    pins: list[str] = []
+    for index, line in enumerate(lines):
+        if _UNMATCHED_IGNORE_MARKER not in line:
+            continue
+        pin = line
+        cursor = index
+        while not pin.rstrip().endswith(".") and cursor + 1 < len(lines):
+            cursor += 1
+            # The tool leaves a trailing space where it wrapped at a word break
+            # and none where it wrapped mid-token. Honouring that is what keeps
+            # a dotted module path copy-pasteable: joining unconditionally with
+            # a space splits the identifier and yields a pin nobody can find.
+            continuation = lines[cursor].strip()
+            pin = pin + continuation if pin.endswith(" ") else pin.rstrip() + continuation
+        pins.append(pin.strip())
+    return pins
+
+
 def annotate_unevaluated_contracts(output: str) -> str:
     """Say so when a layering run ended before evaluating any contract.
 
@@ -131,7 +164,7 @@ def annotate_unevaluated_contracts(output: str) -> str:
     """
     if _CONTRACT_TALLY_MARKER in output or _UNMATCHED_IGNORE_MARKER not in output:
         return output
-    stale = [line.strip() for line in output.splitlines() if _UNMATCHED_IGNORE_MARKER in line]
+    stale = _unmatched_pins(output)
     return "\n".join(
         (
             output,
