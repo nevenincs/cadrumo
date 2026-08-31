@@ -19,8 +19,8 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.modelo import Modelo
 from ....core.casilla_id import CasillaId
+from ....core.modelo import Modelo
 from ...calculations.registry.authority import bundled_authority
 from ...calculations.registry.ledger_bindings import renta_first_slice_binding_target_casillas
 from ...categories.spending_category import SpendingCategory
@@ -144,7 +144,7 @@ def test_first_slice_check_is_registered_with_the_registry_validator() -> None:
     """
 
     from ...calculations.registry._validate_references import _CROSS_DOMAIN_SNAPSHOT_CHECKS
-    from .._first_slice_routing_integrity import check_first_slice_routing
+    from ..first_slice_routing_integrity import check_first_slice_routing
 
     assert check_first_slice_routing in _CROSS_DOMAIN_SNAPSHOT_CHECKS
 
@@ -161,12 +161,12 @@ def test_registered_check_fires_through_the_snapshot_build_gate() -> None:
     The check is scoped to a revision's OWN
     ``ledger_renta_gastos_estimacion_directa_aggregation`` binding targets (never the
     universal :func:`first_slice_target_casillas` codomain) -- see
-    :mod:`cadrumo.domain.renta._first_slice_routing_integrity` for why a
+    :mod:`cadrumo.domain.renta.first_slice_routing_integrity` for why a
     revision that declares no such bindings has a legitimately empty
     required set.
     """
 
-    from .._first_slice_routing_integrity import check_first_slice_routing
+    from ..first_slice_routing_integrity import check_first_slice_routing
 
     representative_targets = frozenset({"0183", "0195"})
     # A casilla set missing every routing target must report them all.
