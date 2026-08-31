@@ -10,7 +10,7 @@ related:
   - '[[2026-06-01-registry-period-code-union-cli-boundary-adr]]'
   - '[[2026-08-05-ci-lane-deconflation-step-check-attribution-audit]]'
 modified: '2026-08-31'
-body_hash: 'sha256:8f55b09cae52d5c5314272fffd0ba8786b1c84a1b061ec06531efcb9597ad1dc'
+body_hash: 'sha256:ac6fc5d2d4d5ba93d7d8e30ee101d955330b39800e66e0ce33896dabb7ee1b4c'
 ---
 
 <!-- RETIRED: S01, S10, S181, S184, S186, S189, S191, S193, S194, S197, S199, S201, S203, S205, S207, S209, S211, S213, S215, S217, S219, S221 -->
@@ -229,7 +229,7 @@ Decompose every live size-budget subject by its owning source file, then regener
 - [ ] `P05.S144` - Refactor the size-budget subjects in test_source_resolver.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/invoices/tests/test_source_resolver.py`.
 - [ ] `P05.S145` - Refactor the size-budget subjects in actions_manual.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/ledger/actions_manual.py`.
 - [ ] `P05.S146` - Refactor the size-budget subjects in classification_assembly.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/ledger/classification_assembly.py`.
-- [ ] `P05.S147` - Refactor the size-budget subjects in evidence_draft.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/ledger/evidence_draft.py`.
+- [x] `P05.S147` - Refactor the size-budget subjects in evidence_draft.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/ledger/evidence_draft.py`.
 - [x] `P05.S148` - Refactor the size-budget subjects in evidence.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/ledger/evidence.py`.
 - [x] `P05.S149` - Refactor the size-budget subjects in identity_roles.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/ledger/identity_roles.py`.
 - [ ] `P05.S150` - Refactor the size-budget subjects in llm_classification.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/ledger/llm_classification.py`.
