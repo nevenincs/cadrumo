@@ -5,29 +5,10 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:ec8c434c18dfe3ac1b17f7eb189eb4e9adf23dafc63c324ec5788b94d445f924'
+body_hash: 'sha256:fd512b851d77e78359861286fd9335bcc65c17cf1f60f017d4363b2fde63a4b9'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace ci-lane-deconflation with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `ci-lane-deconflation` audit: `P05 S127 code review`
 
@@ -51,4 +32,3 @@ Record-only commit `628babde4229c300098d7865ccb962710abace4f` correctly adds six
 - Replace the non-executable 42-node behavioural-pass prose with its full command and node-id selection, then re-review the evidence-only amendment.
 
 The extraction itself is canonical: `acceleration_receipt_crypto.py` owns the public persisted-record, AAD, AEAD wrap/unwrap and wipeable rewrap contract; the lifecycle module imports it privately and no longer re-exports that contract. Direct consumers import the crypto owner. Session-key and unwrapped-DEK buffers remain zeroised in lifecycle and crypto finally blocks, and persisted-session refusal/deletion routes remain in the lifecycle owner. The selected focused run passes 42 tests; the target measures `1065 <= 1250`, the crypto sibling is 229 physical lines, and no size baseline changes. `git diff --check` reports only a new blank line at end of the Markdown execution record, a cosmetic documentation whitespace notice rather than a source or evidence integrity finding.
-
