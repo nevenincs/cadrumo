@@ -30,6 +30,8 @@ from ..acceleration_receipt import (
     delete_profile_session,
     mint_profile_session,
     resume_profile_session,
+)
+from ..acceleration_receipt_crypto import (
     unwrap_profile_session_dek,
     wrap_profile_session_dek,
 )

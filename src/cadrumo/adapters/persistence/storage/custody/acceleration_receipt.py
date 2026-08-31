@@ -65,7 +65,7 @@ from pathlib import Path
 from typing import Final, Protocol, cast
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, Field, ValidationError, field_validator
+from pydantic import BaseModel, Field, ValidationError
 
 from .....core import ProfileSessionRefusalReason
 from .....core.base64_codec import b64_decode, b64_encode
@@ -80,7 +80,7 @@ from .....core.logging import get_logger
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.time import validate_utc_aware
 from .._storage_path_definitions import PROFILE_SESSION_FILENAME, PROFILE_SESSION_RETIREMENT_FILENAME
-from ..crypto.aead import KEY_SIZE, EncryptedBlob, decrypt_record, encrypt_record
+from ..crypto.aead import KEY_SIZE
 from ..errors import (
     DecryptionError,
     EncryptionError,
@@ -88,6 +88,7 @@ from ..errors import (
     StorageError,
     StorageValidationError,
 )
+from . import acceleration_receipt_crypto as _crypto
 from .errors import ProfileCustodyRecordError
 from .filesystem import (
     compare_and_clear_profile_custody_local_record,
@@ -112,85 +113,17 @@ Permanent credential residue on real machines is the worse outcome, so the
 wire identifier stays fixed while the code name says what the artefact is.
 """
 
-PROFILE_SESSION_SCHEMA_VERSION: Final[int] = 2
-"""Current persisted-session record schema version.
-
-A record carrying any other version is a revocable cache from another
-build: resume deletes it and refuses so the operator re-logs-in. This is
-the deliberate, documented exemption from persisted-format durability
-enrollment — losing a session record costs one re-login, never data.
-"""
-
-_SESSION_KEY_BYTES: Final[int] = 32
-_NONCE_BYTES: Final[int] = 12
-_TAG_BYTES: Final[int] = 16
-_AAD_PREFIX: Final[str] = "cadrumo.profile-session.v2"
 PROFILE_SESSION_RECORD_MAX_BYTES: Final[int] = 8 * 1024
 """Strict ceiling for one canonical ``session.v2.json`` receipt."""
 
 _PROFILE_SESSION_RETIREMENT_MAX_BYTES: Final[int] = 24 * 1024
 _PROFILE_SESSION_RETIREMENT_SCHEMA_VERSION: Final[int] = 1
 
-_STORAGE_DECRYPTION_MESSAGE_KEY: Final[str] = "errors.integrity.integrity_storage_decryption"
 _STORAGE_ENCRYPTION_MESSAGE_KEY: Final[str] = "errors.integrity.integrity_storage_encryption"
 
 
 def _encryption_error(message: str) -> EncryptionError:
     return EncryptionError(message, translated_message=_STORAGE_ENCRYPTION_MESSAGE_KEY)
-
-
-def _validate_profile_session_metadata(
-    *,
-    profile_id: UUID,
-    custody_generation: int,
-    dek_epoch: str,
-    issued_at: datetime,
-) -> datetime:
-    """Validate the immutable receipt metadata before any durable coordination.
-
-    The wrapper and public mint entry point share this exact boundary.  It
-    deliberately asks the canonical profile identity helper to validate the
-    UUID spelling and version even though the public type is ``UUID``: runtime
-    callers are not protected by a type annotation, and an invalid request
-    must not provision a custody lock merely to fail later in receipt writing.
-    """
-    canonical_profile_bucket_id(profile_id)
-    if custody_generation < 1:
-        raise _encryption_error("custody_generation must be a strict positive integer")
-    if not dek_epoch:
-        raise _encryption_error("dek_epoch must be non-empty")
-    return validate_utc_aware(issued_at)
-
-
-class PersistedProfileSession(BaseModel):
-    """Frozen session-wrapped-DEK record for one bucket's profile session.
-
-    ``nonce`` / ``ciphertext`` / ``tag`` carry the AES-256-GCM wrap of the
-    32-byte bucket DEK under the keychain-held session key; every other
-    field is bound into the AEAD associated data, so no metadata field can
-    change without failing tag verification at
-    :func:`unwrap_profile_session_dek`.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    schema_version: int = Field(ge=1)
-    profile_id: UUID
-    session_id: UUID
-    custody_generation: int = Field(ge=1)
-    dek_epoch: str = Field(min_length=1, max_length=128)
-    issued_at: datetime
-    idle_deadline: datetime
-    absolute_deadline: datetime
-    nonce: bytes = Field(min_length=_NONCE_BYTES, max_length=_NONCE_BYTES)
-    ciphertext: bytes = Field(min_length=KEY_SIZE, max_length=KEY_SIZE)
-    tag: bytes = Field(min_length=_TAG_BYTES, max_length=_TAG_BYTES)
-
-    @field_validator("issued_at", "idle_deadline", "absolute_deadline")
-    @classmethod
-    def _require_utc(cls, value: datetime) -> datetime:
-        """Reject naive or non-UTC deadlines at the model boundary."""
-        return validate_utc_aware(value)
 
 
 class _AccelerationReceiptDocument(BaseModel):
@@ -241,226 +174,7 @@ class ProfileSessionResumeOutcome(BaseModel):
 
     resumed: bool
     refusal: ProfileSessionRefusalReason | None = None
-    record: PersistedProfileSession | None = None
-
-
-def _associated_data(
-    *,
-    schema_version: int,
-    profile_id: UUID,
-    session_id: UUID,
-    custody_generation: int,
-    dek_epoch: str,
-    issued_at: datetime,
-    idle_deadline: datetime,
-    absolute_deadline: datetime,
-) -> bytes:
-    """Compose the canonical AEAD associated data for one session record.
-
-    Canonical JSON (sorted keys, no whitespace) keeps the composition
-    unambiguous for every UUID-bound receipt, so no metadata value can be
-    smuggled across a field boundary.
-    """
-    payload = canonical_json_bytes(
-        {
-            "absolute_deadline": absolute_deadline.isoformat(),
-            "custody_generation": custody_generation,
-            "dek_epoch": dek_epoch,
-            "idle_deadline": idle_deadline.isoformat(),
-            "issued_at": issued_at.isoformat(),
-            "profile_id": canonical_profile_bucket_id(profile_id),
-            "schema_version": schema_version,
-            "session_id": str(session_id),
-        },
-    )
-    return f"{_AAD_PREFIX}:".encode(_UTF_8_ENCODING) + payload
-
-
-# Wraps the bucket DEK under an ephemeral OS-keychain session key, for
-# login-resumption custody. This is now the only wrap of the bucket DEK
-# outside the profile's own password envelope: the sibling KEK-wrap that
-# once carried it into a keystore sidecar was retired with that route.
-def wrap_profile_session_dek(
-    *,
-    session_key: bytes,
-    dek: bytes,
-    profile_id: UUID,
-    session_id: UUID,
-    custody_generation: int,
-    dek_epoch: str,
-    issued_at: datetime,
-    idle_deadline: datetime,
-    absolute_deadline: datetime,
-) -> PersistedProfileSession:
-    """Wrap ``dek`` under ``session_key`` with all metadata bound as AAD.
-
-    Args:
-        session_key: 32-byte ephemeral session key (keychain-held).
-        dek: 32-byte bucket data-encryption key to wrap.
-        profile_id: Immutable current-capsule profile UUID bound into AAD.
-        session_id: Fresh random UUID naming this acceleration receipt.
-        custody_generation: Current password-envelope generation.
-        dek_epoch: Current immutable envelope DEK epoch.
-        issued_at: UTC login instant.
-        idle_deadline: UTC sliding idle deadline; must not exceed
-            ``absolute_deadline``.
-        absolute_deadline: UTC immutable session cap.
-
-    Returns:
-        A frozen :class:`PersistedProfileSession` carrying the wrap.
-
-    Raises:
-        EncryptionError: On a wrong-length key, invalid custody metadata, a
-            non-UTC deadline, or an idle deadline past the absolute cap.
-    """
-    if len(session_key) != _SESSION_KEY_BYTES:
-        raise _encryption_error(f"session_key must be exactly {_SESSION_KEY_BYTES} bytes")
-    if len(dek) != KEY_SIZE:
-        raise _encryption_error(f"dek must be exactly {KEY_SIZE} bytes")
-    issued_at = _validate_profile_session_metadata(
-        profile_id=profile_id,
-        custody_generation=custody_generation,
-        dek_epoch=dek_epoch,
-        issued_at=issued_at,
-    )
-    idle_deadline = validate_utc_aware(idle_deadline)
-    absolute_deadline = validate_utc_aware(absolute_deadline)
-    if idle_deadline > absolute_deadline:
-        raise _encryption_error("idle_deadline must not exceed absolute_deadline")
-
-    aad = _associated_data(
-        schema_version=PROFILE_SESSION_SCHEMA_VERSION,
-        profile_id=profile_id,
-        session_id=session_id,
-        custody_generation=custody_generation,
-        dek_epoch=dek_epoch,
-        issued_at=issued_at,
-        idle_deadline=idle_deadline,
-        absolute_deadline=absolute_deadline,
-    )
-    # Routes through the canonical AEAD primitives rather than calling
-    # AESGCM directly. encrypt_record mints its own fresh nonce internally,
-    # and EncryptedBlob.ciphertext (the cryptography library's
-    # ciphertext-with-tag) is split into
-    # PersistedProfileSession.ciphertext/.tag at the 32-byte boundary, so
-    # the persisted PersistedProfileSession/_AccelerationReceiptDocument
-    # shapes do not change.
-    try:
-        blob = encrypt_record(dek, key=session_key, associated_data=aad)
-    except EncryptionError as exc:
-        # Re-raise the SAME exception object (preserving its __cause__ chain)
-        # with this module's translated_message, rather than wrapping it in a
-        # new EncryptionError -- a caller inspecting __cause__ sees the real
-        # underlying failure either way. Unreachable in practice: the
-        # session_key/dek length checks above already refuse before this
-        # call, but it is kept as defence in depth.
-        exc.translated_message = _STORAGE_ENCRYPTION_MESSAGE_KEY
-        raise
-    return PersistedProfileSession(
-        schema_version=PROFILE_SESSION_SCHEMA_VERSION,
-        profile_id=profile_id,
-        session_id=session_id,
-        custody_generation=custody_generation,
-        dek_epoch=dek_epoch,
-        issued_at=issued_at,
-        idle_deadline=idle_deadline,
-        absolute_deadline=absolute_deadline,
-        nonce=blob.nonce,
-        ciphertext=blob.ciphertext[:KEY_SIZE],
-        tag=blob.ciphertext[KEY_SIZE:],
-    )
-
-
-def unwrap_profile_session_dek(*, session_key: bytes, record: PersistedProfileSession) -> bytearray:
-    """Recover the 32-byte DEK from ``record`` under ``session_key``.
-
-    The AAD is recomputed from the record's own metadata fields, so any
-    single-field mutation (a deadline extension, a bucket swap, a version
-    edit) fails tag verification here.
-
-    Args:
-        session_key: 32-byte keychain-held session key.
-        record: The persisted session record to unwrap.
-
-    Returns:
-        The 32-byte bucket data-encryption key, in a mutable buffer the caller
-        can wipe. Handing it back as immutable ``bytes`` put it permanently
-        beyond ``zeroise``, which refuses what it cannot overwrite in place --
-        and a caller who copied it into a ``bytearray`` to wipe it was left
-        with the original still resident and unreachable.
-
-        One immutable copy is irreducible and is NOT wiped by this: the AEAD
-        library returns plaintext as ``bytes``. What the caller receives is
-        wipeable; the library's transient copy is a floor this cannot raise.
-
-    Raises:
-        EncryptionError: When ``session_key`` has the wrong length.
-        DecryptionError: When AEAD tag verification fails.
-    """
-    if len(session_key) != _SESSION_KEY_BYTES:
-        raise _encryption_error(f"session_key must be exactly {_SESSION_KEY_BYTES} bytes")
-    aad = _associated_data(
-        schema_version=record.schema_version,
-        profile_id=record.profile_id,
-        session_id=record.session_id,
-        custody_generation=record.custody_generation,
-        dek_epoch=record.dek_epoch,
-        issued_at=record.issued_at,
-        idle_deadline=record.idle_deadline,
-        absolute_deadline=record.absolute_deadline,
-    )
-    blob = EncryptedBlob(nonce=record.nonce, ciphertext=record.ciphertext + record.tag)
-    try:
-        return bytearray(decrypt_record(blob, key=session_key, associated_data=aad))
-    except DecryptionError as exc:
-        # Same re-raise-in-place rationale as wrap_profile_session_dek:
-        # preserves __cause__ (e.g. the underlying
-        # cryptography.exceptions.InvalidTag) exactly.
-        exc.translated_message = _STORAGE_DECRYPTION_MESSAGE_KEY
-        raise
-
-
-def advance_profile_session_idle_deadline(
-    *,
-    record: PersistedProfileSession,
-    session_key: bytes,
-    new_idle_deadline: datetime,
-) -> PersistedProfileSession:
-    """Return a re-wrapped record whose idle deadline advanced to ``new_idle_deadline``.
-
-    The new deadline is clamped to the record's immutable absolute
-    deadline; the DEK is unwrapped and re-wrapped under the same session
-    key with a fresh nonce because the deadline participates in the AAD.
-    The transient DEK buffer is zeroised before returning.
-
-    Args:
-        record: The currently-valid persisted session record.
-        session_key: The record's keychain-held session key.
-        new_idle_deadline: UTC instant the sliding window advances to.
-
-    Returns:
-        A new :class:`PersistedProfileSession` with the advanced deadline.
-
-    Raises:
-        DecryptionError: When the record fails tag verification.
-        EncryptionError: When re-wrapping fails.
-    """
-    clamped = min(validate_utc_aware(new_idle_deadline), record.absolute_deadline)
-    dek_buffer = unwrap_profile_session_dek(session_key=session_key, record=record)
-    try:
-        return wrap_profile_session_dek(
-            session_key=session_key,
-            dek=bytes(dek_buffer),
-            profile_id=record.profile_id,
-            session_id=record.session_id,
-            custody_generation=record.custody_generation,
-            dek_epoch=record.dek_epoch,
-            issued_at=record.issued_at,
-            idle_deadline=clamped,
-            absolute_deadline=record.absolute_deadline,
-        )
-    finally:
-        _zeroise(dek_buffer)
+    record: _crypto.PersistedProfileSession | None = None
 
 
 class _ProfileSessionKeyring(Protocol):
@@ -502,8 +216,8 @@ def _keychain_account(*, profile_id: UUID, session_id: UUID) -> str:
 
 def _store_acceleration_secret(*, profile_id: UUID, session_id: UUID, session_key: bytes) -> None:
     """Store and round-trip verify one fresh session key under its UUID pair."""
-    if len(session_key) != _SESSION_KEY_BYTES:
-        raise StorageValidationError(f"session_key must be exactly {_SESSION_KEY_BYTES} bytes")
+    if len(session_key) != _crypto.PROFILE_SESSION_KEY_BYTES:
+        raise StorageValidationError(f"session_key must be exactly {_crypto.PROFILE_SESSION_KEY_BYTES} bytes")
     keyring, keyring_error, _password_delete_error = _keyring()
     account = _keychain_account(profile_id=profile_id, session_id=session_id)
     encoded = b64_encode(session_key)
@@ -540,7 +254,7 @@ def _load_acceleration_secret(*, profile_id: UUID, session_id: UUID) -> bytes | 
     except (ValueError, binascii.Error):
         _delete_acceleration_secret(profile_id=profile_id, session_id=session_id, suppress_unavailable=False)
         return None
-    if len(key) != _SESSION_KEY_BYTES:
+    if len(key) != _crypto.PROFILE_SESSION_KEY_BYTES:
         _delete_acceleration_secret(profile_id=profile_id, session_id=session_id, suppress_unavailable=False)
         return None
     return key
@@ -654,7 +368,7 @@ def _ensure_profile_session_directory(path: Path) -> None:
     ensure_profile_custody_local_directory(path.parent)
 
 
-def _document_from_record(record: PersistedProfileSession) -> _AccelerationReceiptDocument:
+def _document_from_record(record: _crypto.PersistedProfileSession) -> _AccelerationReceiptDocument:
     return _AccelerationReceiptDocument(
         schema_version=record.schema_version,
         profile_id=record.profile_id,
@@ -670,7 +384,7 @@ def _document_from_record(record: PersistedProfileSession) -> _AccelerationRecei
     )
 
 
-def _record_from_document(document: _AccelerationReceiptDocument) -> PersistedProfileSession:
+def _record_from_document(document: _AccelerationReceiptDocument) -> _crypto.PersistedProfileSession:
     """Hydrate the strict record from an on-disk document.
 
     Raises:
@@ -678,7 +392,7 @@ def _record_from_document(document: _AccelerationReceiptDocument) -> PersistedPr
             length); the resume evaluation maps this to the ``MALFORMED``
             refusal.
     """
-    return PersistedProfileSession(
+    return _crypto.PersistedProfileSession(
         schema_version=document.schema_version,
         profile_id=document.profile_id,
         session_id=document.session_id,
@@ -717,16 +431,16 @@ def _parse_canonical_document(payload: bytes, model: type[BaseModel]) -> BaseMod
     return document
 
 
-def _receipt_bytes(record: PersistedProfileSession) -> bytes:
+def _receipt_bytes(record: _crypto.PersistedProfileSession) -> bytes:
     return _canonical_document_bytes(_document_from_record(record))
 
 
-def _record_from_canonical_receipt(payload: bytes) -> PersistedProfileSession:
+def _record_from_canonical_receipt(payload: bytes) -> _crypto.PersistedProfileSession:
     document = cast(_AccelerationReceiptDocument, _parse_canonical_document(payload, _AccelerationReceiptDocument))
     return _record_from_document(document)
 
 
-def _read_receipt(path: Path) -> tuple[bytes, PersistedProfileSession] | None:
+def _read_receipt(path: Path) -> tuple[bytes, _crypto.PersistedProfileSession] | None:
     """Read and parse one receipt through the canonical anchored authority."""
     payload = read_optional_profile_custody_local_record(path, maximum_bytes=PROFILE_SESSION_RECORD_MAX_BYTES)
     if payload is None:
@@ -751,7 +465,7 @@ def _write_acceleration_receipt(
     *,
     storage_root: Path,
     profile_id: UUID,
-    record: PersistedProfileSession,
+    record: _crypto.PersistedProfileSession,
     predecessor: bytes | None,
 ) -> bytes:
     """CAS-publish a canonical receipt through the custody local-record owner."""
@@ -857,7 +571,7 @@ def _recover_pending_retirement(*, storage_root: Path, profile_id: UUID) -> bool
     raise StorageValidationError("profile-session retirement receipt conflicts with the current receipt")
 
 
-def _discard_known_record(*, path: Path, payload: bytes, record: PersistedProfileSession) -> bool:
+def _discard_known_record(*, path: Path, payload: bytes, record: _crypto.PersistedProfileSession) -> bool:
     """Revoke one verified cache entry, then clear the exact captured receipt."""
     try:
         _delete_acceleration_secret(
@@ -945,7 +659,7 @@ def mint_profile_session(
     now: datetime,
     idle_minutes: int,
     absolute_minutes: int,
-) -> PersistedProfileSession:
+) -> _crypto.PersistedProfileSession:
     """Mint a profile receipt under the custody-wide session lifecycle lock.
 
     Validate all deterministic receipt inputs before opening the custody root.
@@ -958,7 +672,7 @@ def mint_profile_session(
         raise StorageValidationError("absolute_minutes must be a strict positive integer")
     if len(dek) != KEY_SIZE:
         raise _encryption_error(f"dek must be exactly {KEY_SIZE} bytes")
-    now = _validate_profile_session_metadata(
+    now = _crypto.validate_profile_session_metadata(
         profile_id=profile_id,
         custody_generation=custody_generation,
         dek_epoch=dek_epoch,
@@ -987,7 +701,7 @@ def _mint_profile_session(
     now: datetime,
     idle_minutes: int,
     absolute_minutes: int,
-) -> PersistedProfileSession:
+) -> _crypto.PersistedProfileSession:
     """Mint the persisted session for a freshly-authenticated login.
 
     Generates the ephemeral session key, wraps ``dek`` under it with the
@@ -1008,7 +722,7 @@ def _mint_profile_session(
         absolute_minutes: Immutable absolute cap; strict positive.
 
     Returns:
-        The persisted :class:`PersistedProfileSession`.
+        The persisted :class:`~.acceleration_receipt_crypto.PersistedProfileSession`.
 
     Raises:
         StorageValidationError: On non-positive windows.
@@ -1029,10 +743,10 @@ def _mint_profile_session(
         prior = _read_receipt(receipt_path)
         predecessor = None if prior is None else prior[0]
 
-        session_key_buffer = bytearray(secrets.token_bytes(_SESSION_KEY_BYTES))
+        session_key_buffer = bytearray(secrets.token_bytes(_crypto.PROFILE_SESSION_KEY_BYTES))
         session_id = uuid4()
         try:
-            record = wrap_profile_session_dek(
+            record = _crypto.wrap_profile_session_dek(
                 session_key=bytes(session_key_buffer),
                 dek=dek,
                 profile_id=profile_id,
@@ -1102,7 +816,7 @@ def _mint_profile_session(
 
 def _refusal(
     reason: ProfileSessionRefusalReason,
-    record: PersistedProfileSession | None = None,
+    record: _crypto.PersistedProfileSession | None = None,
 ) -> tuple[ProfileSessionResumeOutcome, None]:
     return ProfileSessionResumeOutcome(resumed=False, refusal=reason, record=record), None
 
@@ -1237,7 +951,7 @@ def _resume_profile_session(
                 _clear_captured_receipt(path, payload=payload, maximum_bytes=PROFILE_SESSION_RECORD_MAX_BYTES)
                 return _refusal(ProfileSessionRefusalReason.MALFORMED)
 
-            if record.schema_version != PROFILE_SESSION_SCHEMA_VERSION:
+            if record.schema_version != _crypto.PROFILE_SESSION_SCHEMA_VERSION:
                 if not _discard_known_record(path=path, payload=payload, record=record):
                     return _refusal(ProfileSessionRefusalReason.KEYRING_UNAVAILABLE, record)
                 return _refusal(ProfileSessionRefusalReason.SCHEMA_VERSION_MISMATCH)
@@ -1269,7 +983,7 @@ def _resume_profile_session(
             session_key_buffer = bytearray(session_key)
             del session_key
             try:
-                dek = unwrap_profile_session_dek(session_key=bytes(session_key_buffer), record=record)
+                dek = _crypto.unwrap_profile_session_dek(session_key=bytes(session_key_buffer), record=record)
             except DecryptionError:
                 if not _discard_known_record(path=path, payload=payload, record=record):
                     return _refusal(ProfileSessionRefusalReason.KEYRING_UNAVAILABLE, record)
@@ -1286,9 +1000,9 @@ def advance_persisted_profile_session_idle_deadline(
     *,
     storage_root: Path,
     profile_id: UUID,
-    record: PersistedProfileSession,
+    record: _crypto.PersistedProfileSession,
     new_idle_deadline: datetime,
-) -> PersistedProfileSession:
+) -> _crypto.PersistedProfileSession:
     """Advance a profile receipt under the custody-wide session lifecycle lock."""
     if record.profile_id != profile_id:
         raise StorageValidationError("persisted session record belongs to another profile")
@@ -1306,9 +1020,9 @@ def _advance_persisted_profile_session_idle_deadline(
     *,
     storage_root: Path,
     profile_id: UUID,
-    record: PersistedProfileSession,
+    record: _crypto.PersistedProfileSession,
     new_idle_deadline: datetime,
-) -> PersistedProfileSession:
+) -> _crypto.PersistedProfileSession:
     """Advance an already-resumed receipt without exposing its key upstream."""
     path = profile_session_path(storage_root=storage_root, profile_id=profile_id)
     _ensure_profile_session_directory(path)
@@ -1324,7 +1038,7 @@ def _advance_persisted_profile_session_idle_deadline(
             raise KeyringUnavailableError("profile-session keychain entry disappeared before idle renewal")
         key_buffer = bytearray(session_key)
         try:
-            advanced = advance_profile_session_idle_deadline(
+            advanced = _crypto.advance_profile_session_idle_deadline(
                 record=record,
                 session_key=bytes(key_buffer),
                 new_idle_deadline=new_idle_deadline,
@@ -1342,15 +1056,10 @@ def _advance_persisted_profile_session_idle_deadline(
 
 __all__ = [
     "PROFILE_SESSION_KEYCHAIN_SERVICE",
-    "PROFILE_SESSION_SCHEMA_VERSION",
-    "PersistedProfileSession",
     "ProfileSessionResumeOutcome",
     "advance_persisted_profile_session_idle_deadline",
-    "advance_profile_session_idle_deadline",
     "delete_profile_session",
     "mint_profile_session",
     "profile_session_path",
     "resume_profile_session",
-    "unwrap_profile_session_dek",
-    "wrap_profile_session_dek",
 ]
