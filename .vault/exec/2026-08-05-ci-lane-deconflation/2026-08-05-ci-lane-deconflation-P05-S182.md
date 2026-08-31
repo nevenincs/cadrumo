@@ -5,7 +5,7 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:95c74e4c0686121e71bcdd67733efd83e69e13ca0458975d7846692a5aceeb91'
+body_hash: 'sha256:2433be10ff8d5d31c76f7b7d32686bae755fbcbb0ea2b16d885fe2d274945ff0'
 step_id: 'S182'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
@@ -30,7 +30,7 @@ related:
 
 ## Notes
 
-Source provenance is `4ced237398edb70bd54a0eef6550fda705dc0d70`. Its committed raw line counts are 1189 for the parent `authority.py`, 980 for its post-split form, and 233 for the added `diagnostic_classification.py`. The executor-reported live AST/worktree measurement is 1365 to 1142 with a 253-line sibling; it is retained as a separate worktree measurement and is not attributed to the source commit. The size-budget baseline and thresholds were not changed.
+Source provenance is `4ced237398edb70bd54a0eef6550fda705dc0d70`. Its immutable physical/raw comparison is 1365 parent `authority.py` lines to 1142 committed `authority.py` lines, with a new 253-line `diagnostic_classification.py` sibling. The size-budget baseline and thresholds were not changed.
 
 The supplied focused evidence reports passing compile, import, direct-ownership, Ruff, and two boundary tests. The integration receipt is intentionally not represented as green: `1 passed, 2 failed, 4 deselected in 293.23s`; both failures are shared unrelated `corpus_catalogue` `applies_across` failures.
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:260eb6c2d9fb355e8ab05429b525024f47baf61090fa903d8cd0bfc351998e2d'
+body_hash: 'sha256:646cf8997fad92e46e93c5ae194536d0282298055885ec84257c0b685f71bb0d'
 related:
   - "[[2026-08-05-ci-lane-deconflation-P05-S182]]"
 ---
@@ -32,7 +32,7 @@ related:
 
 ## Scope
 
-Independent self-review of the P05.S182 execution record against source provenance `4ced237398edb70bd54a0eef6550fda705dc0d70`, its four-path manifest and raw line counts, the live-worktree measurement, supplied focused receipts, the mixed integration receipt, size-budget-policy boundary, and isolated vault-artifact scope.
+Independent self-review of the P05.S182 execution record against source provenance `4ced237398edb70bd54a0eef6550fda705dc0d70`, its four-path manifest and immutable physical/raw line comparison, supplied focused receipts, the mixed integration receipt, size-budget-policy boundary, and isolated vault-artifact scope.
 
 ## Findings
 
@@ -40,9 +40,9 @@ Independent self-review of the P05.S182 execution record against source provenan
 
 The exact receipt is `1 passed, 2 failed, 4 deselected in 293.23s`. Both failures concern shared `corpus_catalogue` `applies_across` behavior rather than the `authority.py` split, so the execution record accurately retains them as a limitation and makes no green integration claim.
 
-### p05-s182-execution-self-review | high | Count attribution corrected
+### p05-s182-execution-self-review | high | Count labeling corrected
 
-The original record made the executor-reported live AST/worktree measure appear to describe source commit `4ced237398edb70bd54a0eef6550fda705dc0d70`. The corrected record separates that measure from immutable raw counts: 1189 parent lines, 980 committed `authority.py` lines, and 233 committed sibling lines. It also completes the commit manifest with both direct-consumer import repoints.
+An earlier correction inaccurately called nonblank PowerShell line counts committed raw counts. The corrected record now carries only the immutable physical/raw comparison for source commit `4ced237398edb70bd54a0eef6550fda705dc0d70`: 1365 parent `authority.py` lines, 1142 committed `authority.py` lines, and a new 253-line sibling. It also completes the commit manifest with both direct-consumer import repoints.
 
 ### p05-s182-execution-self-review | low | No baseline or threshold mutation
 
