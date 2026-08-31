@@ -38,8 +38,8 @@ from .....domain.contribuyente.inventory.records import (
     MovementRecord,
     StockLayer,
     ValuationMethod,
-    inventory_acquisition_fingerprint,
 )
+from .....domain.contribuyente.inventory.valuation import inventory_acquisition_fingerprint
 from .....domain.filing_evidence import FilingEvidenceReference
 from .....tests.secure_sql import (
     isolated_runtime_profile,

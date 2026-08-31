@@ -47,9 +47,9 @@ from ....domain.contribuyente.inventory.records import (
     PriorAuthoritativeClosingLink,
     PriorClosingContinuityEvidence,
     ValuationMethod,
-    compute_inventory_anexo_d_projection,
     fingerprint_prior_authoritative_closing,
 )
+from ....domain.contribuyente.inventory.valuation import compute_inventory_anexo_d_projection
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from .._inventory import _VALUE_ATTRIBUTE_BY_OPERATION, InventorySourceResolver
