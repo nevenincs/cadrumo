@@ -62,31 +62,6 @@ from __future__ import annotations
 
 from importlib import import_module
 
-from .errors import (
-    RegistryApplicationError,
-    RegistryApplicationInputError,
-)
-
-"""Names this package re-exports, resolved on first access.
-
-The package root is a HYBRID: it defines real contracts of its own AND
-re-exports 89 names from siblings. A lazy map still works, because
-``__getattr__`` runs only for names absent from module globals -- the module's
-own definitions are untouched and stay eager.
-
-Eager re-exports made this root expensive to touch at all. CommandSpec
-parameter annotations resolve through here, so BUILDING the Typer signature for
-an unrelated registry command imported the filing package, the sede adapter and
-the persistence family behind them. Four `app/registry/manuals/*` nodes paid
-that on resolution.
-"""
-
-
-
-
-
-
-
 import_module("cadrumo.domain.renta")
 
 

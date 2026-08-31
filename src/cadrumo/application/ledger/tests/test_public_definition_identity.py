@@ -17,11 +17,7 @@ _PACKAGE_ROOT = Path(__file__).parents[1]
 _REPOSITORY_ROOT = _PACKAGE_ROOT.parents[3]
 _SOURCE_SCAN_ROOTS = (_REPOSITORY_ROOT / "src",)
 _PUBLIC_MODULE_NAMES: tuple[str, ...] = tuple(
-    sorted(
-        path.stem
-        for path in _PACKAGE_ROOT.glob("*.py")
-        if not path.stem.startswith("_")
-    )
+    sorted(path.stem for path in _PACKAGE_ROOT.glob("*.py") if not path.stem.startswith("_"))
 )
 """Every public defining module in the ledger package, DERIVED not hand-listed.
 
