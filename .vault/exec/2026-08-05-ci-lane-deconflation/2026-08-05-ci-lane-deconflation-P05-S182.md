@@ -5,7 +5,7 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:c8829f7cc1bfb016dbf1d16f616fc493a833958ac3e7d2454735fa8c75856988'
+body_hash: 'sha256:95c74e4c0686121e71bcdd67733efd83e69e13ca0458975d7846692a5aceeb91'
 step_id: 'S182'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
@@ -25,11 +25,13 @@ related:
 
 - `M` `src/cadrumo/domain/calculations/registry/authority.py`
 - `A` `src/cadrumo/domain/calculations/registry/diagnostic_classification.py`
+- `M` `dev/registry/filing_export_proof.py`
+- `M` `dev/registry/tests/test_filing_export_two_channel_proof.py`
 
 ## Notes
 
-The live subject is reduced from 1365 to 1142 lines and the added cohesive sibling is 253 lines. The size-budget baseline and thresholds were not changed.
+Source provenance is `4ced237398edb70bd54a0eef6550fda705dc0d70`. Its committed raw line counts are 1189 for the parent `authority.py`, 980 for its post-split form, and 233 for the added `diagnostic_classification.py`. The executor-reported live AST/worktree measurement is 1365 to 1142 with a 253-line sibling; it is retained as a separate worktree measurement and is not attributed to the source commit. The size-budget baseline and thresholds were not changed.
 
 The supplied focused evidence reports passing compile, import, direct-ownership, Ruff, and two boundary tests. The integration receipt is intentionally not represented as green: `1 passed, 2 failed, 4 deselected in 293.23s`; both failures are shared unrelated `corpus_catalogue` `applies_across` failures.
 
-Source provenance is `4ced237398edb70bd54a0eef6550fda705dc0d70`. This attestation commit is isolated to this execution record and its linked audit. It excludes the peer filing-relocation changes from its commit scope.
+The two `dev/registry` paths record the direct diagnostic-classification import repoints in `4ced237398edb70bd54a0eef6550fda705dc0d70`. Their shared working-tree hunk context also contains peer filing-relocation churn; that peer content is excluded from this attestation's source attribution and this artifact commit is isolated to the execution record and linked audit.
