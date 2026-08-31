@@ -26,7 +26,8 @@ from pathlib import Path
 
 from pydantic import Field, field_validator, model_validator
 
-from ....core import ConvenioOverrideKind, TipoRentaIrnr, freeze_toml, read_toml
+from ....core import freeze_toml, read_toml
+from ....core.irnr import ConvenioOverrideKind, TipoRentaIrnr
 from ....core.directory_scan import scan_directory
 from .errors import RegistryLoadError, RegistryValidationError
 from .ids import LegalRefId

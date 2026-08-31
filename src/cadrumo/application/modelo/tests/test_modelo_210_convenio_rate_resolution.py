@@ -31,7 +31,7 @@ from ._m210_snapshot_fixture import m210_snapshot
 
 __all__ = ["m210_snapshot"]
 
-from ....core import ConvenioOverrideKind, TipoRentaIrnr
+from ....core.irnr import ConvenioOverrideKind, TipoRentaIrnr
 from ....domain.calculations.registry.convenio import ConvenioAuthority
 from ....domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
 from ....domain.calculations.registry.formula_runtime_ops import RegistryUnresolvedOutcomeReason

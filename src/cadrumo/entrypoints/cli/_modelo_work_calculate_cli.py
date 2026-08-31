@@ -36,7 +36,8 @@ from ...application.modelo._action_errors import (
 from ...application.modelo._calculate_input import calculate_modelo_work_revision
 from ...application.modelo._iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from ...application.modelo.borrador_binding import Modelo100BorradorBindingError
-from ...core import M210GrossIncomeSourceMode, RescateType
+from ...core import RescateType
+from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.json_contract import Notice

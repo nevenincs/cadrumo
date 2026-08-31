@@ -30,7 +30,7 @@ from ._confirmation_profile_fixture import profile
 
 __all__ = ["profile"]
 
-from ....core import LOCAL_TRANSPORT_LABEL
+from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from ....domain.transactions.errors import TransactionNotFoundError
 from ....tests.secure_sql import TestRuntimeProfile
 from ..evidence_draft import InvoiceDraft

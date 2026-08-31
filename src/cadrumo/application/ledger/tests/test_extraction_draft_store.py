@@ -24,7 +24,8 @@ from ....tests.consent_profile_fixture import consent_profile
 
 __all__ = ["consent_profile"]
 
-from ....core import FieldGroundingOutcome, FieldOrigin
+from ....core.field_grounding import FieldGroundingOutcome
+from ....core.field_origin import FieldOrigin
 from ....tests.secure_sql import TestRuntimeProfile
 from ..evidence_draft import (
     FieldAmbiguityCandidate,

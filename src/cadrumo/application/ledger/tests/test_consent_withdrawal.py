@@ -20,7 +20,8 @@ from ....tests.consent_profile_fixture import consent_profile
 
 __all__ = ["consent_profile"]
 
-from ....core import LOCAL_TRANSPORT_LABEL, FieldOrigin
+from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
+from ....core.field_origin import FieldOrigin
 from ....tests.secure_sql import TestRuntimeProfile
 from ..consent_withdrawal import (
     ConsentRederivationError,

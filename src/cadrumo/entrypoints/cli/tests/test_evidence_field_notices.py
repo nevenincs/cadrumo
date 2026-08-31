@@ -19,7 +19,9 @@ from ....application.ledger.document_transcription import DocumentTranscription,
 from ....application.ledger.evidence_draft import FieldAmbiguityCandidate, FieldProvenance, InvoiceDraft
 from ....application.ledger.grounded_reading import verified_provenance
 from ....application.ledger.identity_roles import IdentityCandidate, resolve_counterparty_identity
-from ....core import LOCAL_TRANSPORT_LABEL, FieldGroundingOutcome, FieldOrigin
+from ....core.field_grounding import FieldGroundingOutcome
+from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
+from ....core.field_origin import FieldOrigin
 from ....core.json_contract import Notice, NoticeSeverity, derive_status
 from .._evidence_field_notices import DEGRADED_GROUNDING_OUTCOMES, field_degradation_notices
 from ._english_locale_fixture import english_locale_fixture

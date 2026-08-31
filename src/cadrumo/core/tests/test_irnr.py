@@ -6,7 +6,7 @@ registry stores (``tipo_renta`` casilla tokens and the override-kind tokens the
 boundary-hydration break, so the tests pin the exact strings.
 
 See Also:
-    :mod:`~core._irnr`
+    :mod:`~core.irnr`
         Core closed-axis declarations for IRNR income type and treaty override
         semantics.
     :class:`~core.TipoRentaIrnr`
@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import pytest
 
-from ...core import ConvenioOverrideKind, TipoRentaIrnr
+from ..irnr import ConvenioOverrideKind, TipoRentaIrnr
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

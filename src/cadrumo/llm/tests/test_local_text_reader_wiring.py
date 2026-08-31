@@ -112,7 +112,7 @@ def test_the_text_model_default_sits_under_the_declared_hardware_floor() -> None
     the floor and had to be swept by hand; the property survives any default
     that still respects it.
     """
-    from ...core import ModelRole, model_candidate
+    from ...core.model_catalogue import ModelRole, model_candidate
     from ...core.config import load_settings
 
     settings = load_settings()

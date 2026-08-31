@@ -43,7 +43,7 @@ from typing import TYPE_CHECKING, Final, Literal, get_args, override
 
 from pydantic import BaseModel, Field, TypeAdapter
 
-from ...core import LOCAL_TRANSPORT_LABEL
+from ...core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.directory_scan import scan_directory
 from ...core.identity import ContentDigest
@@ -461,7 +461,7 @@ def _assess_model_load_contention_once(
     provisioning verb far more precisely than a guess made here could.
     """
     from ...application.provisioning import assess_model_load_contention, select_model_for_role
-    from ...core import ModelRole
+    from ...core.model_catalogue import ModelRole
 
     for role in (ModelRole.TEXT_EXTRACTION, ModelRole.VISION_TRANSCRIPTION):
         assessable = select_model_for_role(role, profile=profile).assessable_load

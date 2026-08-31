@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core import M210_TIPO_RENTA_CODE_PROJECTION
+from .....core.irnr import M210_TIPO_RENTA_CODE_PROJECTION
 from .. import _validate_revision_rules as rules
 from ..authority import bundled_authority
 

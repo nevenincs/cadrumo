@@ -27,7 +27,8 @@ from __future__ import annotations
 
 import asyncio
 
-from ..core import LLM_EXTRA, build_provenance_stamp, require_optional_extra
+from ..core.provenance_stamp import build_provenance_stamp
+from ..core.optional_extras import LLM_EXTRA, require_optional_extra
 from ..core.config import Settings, load_settings
 from ..domain.transactions.llm import LLMClassificationResponse, LLMSplitResponse, PromptSpec, build_split_prompt, parse_response, parse_split_response
 from ..domain.transactions.models import Transaction

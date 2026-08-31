@@ -17,7 +17,7 @@ from typing import ClassVar, override
 
 import pytest
 
-from ...core import MissingOptionalExtraError, OptionalExtra, require_optional_extra
+from ...core.optional_extras import MissingOptionalExtraError, OptionalExtra, require_optional_extra
 from ...core.storage_taxonomy import ExternalPathRole
 from ...core.config import override_settings
 from ...core.errors.hierarchy import CadrumoError, CoreError

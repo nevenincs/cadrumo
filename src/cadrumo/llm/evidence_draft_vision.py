@@ -58,7 +58,9 @@ from typing import Final
 
 from ..application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
 from ..application.ledger.evidence import PurchaseInvoiceEvidenceInputError
-from ..core import LLM_EXTRA, FieldOrigin, provenance_transport_label, require_optional_extra
+from ..core.provenance_stamp import provenance_transport_label
+from ..core.optional_extras import LLM_EXTRA, require_optional_extra
+from ..core.field_origin import FieldOrigin
 from ..core.operator_action_enums import ActionEvidenceProvenance
 from ..core.config import Settings, load_settings
 from .client import LLMClient

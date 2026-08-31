@@ -30,7 +30,8 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import FieldGroundingOutcome, FieldOrigin
+from ....core.field_grounding import FieldGroundingOutcome
+from ....core.field_origin import FieldOrigin
 from ....core.config import Settings
 from ..evidence_draft import InvoiceDraft, extract_invoice_draft_from_evidence
 from ..grounding_anchor import normalise_for_anchor_search

@@ -246,7 +246,7 @@ selected_contracts = {
     "aeat app modelo work calculate": (
         "compute",
         {
-            "cadrumo.core._irnr",
+            "cadrumo.core.irnr",
             "cadrumo.core._rescate_type",
             "cadrumo.entrypoints.cli._terminal_errors",
         },

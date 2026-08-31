@@ -48,7 +48,8 @@ from uuid import uuid4
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.storage import AttachmentStore, secure_object_repository_for_bucket
-from ...core import PDF_CONTAINER_SHAPES, ImageMediaType, detect_image_media_type, provenance_stamp_transport
+from ...core import PDF_CONTAINER_SHAPES, ImageMediaType, detect_image_media_type
+from ...core.provenance_stamp import provenance_stamp_transport
 from ...core.config import Settings, load_settings
 from ...core.logging import get_logger
 from ...core.time import coerce_utc_aware, now

@@ -24,7 +24,8 @@ from ...adapters.persistence.profile.transactions import TransactionCatalogueRep
 from ...application.ledger.actions_manual import create_manual_transaction, update_manual_transaction_fields
 from ...application.ledger.id_resolution import resolve_lineage_transaction_id
 from ...application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
-from ...core import Art104TresExclusion, M210PayerMode
+from ...core import Art104TresExclusion
+from ...core.irnr import M210PayerMode
 from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.prorrata_register import ProrrataRegisterRegime
 from ...core.bucket_pointer import resolve_active_bucket_id

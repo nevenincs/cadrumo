@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from ......core import OFX_EXTRA
+from ......core.optional_extras import OFX_EXTRA
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_inbound_adapter]
 

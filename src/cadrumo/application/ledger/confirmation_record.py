@@ -39,7 +39,8 @@ from typing import Protocol, Self
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core import FieldGroundingOutcome, FieldOrigin
+from ...core.field_grounding import FieldGroundingOutcome
+from ...core.field_origin import FieldOrigin
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.config import Settings
 from ...core.hashing import content_hash_hex

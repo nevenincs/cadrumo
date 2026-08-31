@@ -129,6 +129,6 @@ def test_the_surface_inventory_names_real_exported_entry_points() -> None:
 
 def test_the_expected_extra_matches_the_registered_extra() -> None:
     """The lane's expected refusal identity is the registry's, not a copy that can drift."""
-    from cadrumo.core import LLM_EXTRA
+    from cadrumo.core.optional_extras import LLM_EXTRA
 
     assert LLM_EXTRA.extra == _EXPECTED_EXTRA

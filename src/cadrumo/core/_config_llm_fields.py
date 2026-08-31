@@ -24,7 +24,7 @@ from pydantic import Field, SecretStr
 
 from ._config_integration_fields import CadrumoIntegrationSettings
 from ._config_support import LLMProvider
-from ._model_catalogue import ModelRole, ModelRuntime, default_model_runtime_id
+from .model_catalogue import ModelRole, ModelRuntime, default_model_runtime_id
 
 
 class CadrumoLlmSettings(CadrumoIntegrationSettings):

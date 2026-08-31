@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import pytest
 
-from ...core import FieldOrigin
+from ..field_origin import FieldOrigin
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

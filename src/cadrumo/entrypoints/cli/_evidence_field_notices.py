@@ -64,7 +64,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 from ...application.ledger.evidence_draft import FieldProvenance
-from ...core import FieldGroundingOutcome
+from ...core.field_grounding import FieldGroundingOutcome
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 

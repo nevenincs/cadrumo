@@ -37,7 +37,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ...core import TipoRentaIrnr
+from ...core.irnr import TipoRentaIrnr
 from ...core.casilla_id import CasillaId
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.deadlines.models import TaxpayerProfile

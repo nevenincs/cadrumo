@@ -36,7 +36,8 @@ from ....application.ledger.document_transcription import DocumentTranscription,
 from ....application.ledger.evidence_draft import InvoiceDraft
 from ....application.ledger.extracted_document_cache import write_cached_transcription
 from ....application.ledger.extraction_draft_store import write_extraction_draft
-from ....core import LOCAL_TRANSPORT_LABEL, FieldOrigin
+from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
+from ....core.field_origin import FieldOrigin
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import TestRuntimeProfile
 

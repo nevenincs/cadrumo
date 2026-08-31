@@ -72,7 +72,9 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
-from ...core import DraftDiscrepancyKind, FieldGroundingOutcome, FieldOrigin
+from ...core import DraftDiscrepancyKind
+from ...core.field_grounding import FieldGroundingOutcome
+from ...core.field_origin import FieldOrigin
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.identity import (
     IdentityError,

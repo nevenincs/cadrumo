@@ -118,13 +118,13 @@ from ...core import (
     PDF_CONTAINER_SHAPES,
     STRUCTURED_DOCUMENT_SHAPES,
     DraftDiscrepancyKind,
-    FieldGroundingOutcome,
-    FieldOrigin,
     ImageMediaType,
-    MissingOptionalExtraError,
     ServiceCapability,
     detect_image_media_type,
 )
+from ...core.field_grounding import FieldGroundingOutcome
+from ...core.optional_extras import MissingOptionalExtraError
+from ...core.field_origin import FieldOrigin
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.aggregation import IntracomOperationType
 from ...core.config import Settings

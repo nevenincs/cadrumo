@@ -45,7 +45,8 @@ import pytest
 
 from ....adapters.inbound.einvoice import parse_einvoice_document
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import FieldGroundingOutcome, FieldOrigin
+from ....core.field_grounding import FieldGroundingOutcome
+from ....core.field_origin import FieldOrigin
 from ....core.config import Settings
 from ....domain.iva.classification import InvoiceKind, IvaTerritorialScope
 from ....domain.iva.establishment import country_code_for_stated_country_code, territorial_scope_for_country

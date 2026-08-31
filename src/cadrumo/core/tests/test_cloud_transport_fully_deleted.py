@@ -334,7 +334,7 @@ def _transport_of(stamp: str) -> str:
     carry their own copy of a grammar agree until the grammar changes, and then
     the checker keeps passing on the shape nothing writes any more.
     """
-    from .. import provenance_stamp_transport
+    from ..provenance_stamp import provenance_stamp_transport
 
     transport = provenance_stamp_transport(stamp)
     assert transport is not None, f"{stamp!r} does not name a transport the canonical parser can read"
@@ -483,7 +483,7 @@ def test_every_transport_mintable_without_a_consent_token_is_on_host() -> None:
 
     from ...llm.text_classifier import LocalTextLLMClassifier
     from ...llm.vision_classifier import LocalVisionLLMClassifier
-    from .. import LOCAL_TRANSPORT_LABEL
+    from ..provenance_stamp import LOCAL_TRANSPORT_LABEL
 
     classes = {
         "LocalTextLLMClassifier": LocalTextLLMClassifier,
@@ -523,7 +523,7 @@ def test_a_reader_reachable_only_under_consent_stamps_the_transport_it_actually_
     reader that assembled a hardcoded label would satisfy any source-level
     pattern while storing the same lie.
     """
-    from .. import LOCAL_TRANSPORT_LABEL
+    from ..provenance_stamp import LOCAL_TRANSPORT_LABEL
     from ..config import LLMProvider
 
     off_host = {

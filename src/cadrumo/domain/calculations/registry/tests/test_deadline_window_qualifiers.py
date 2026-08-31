@@ -7,7 +7,7 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from .....core import M210_TIPO_RENTA_CODE_PROJECTION, TipoRentaIrnr
+from .....core.irnr import M210_TIPO_RENTA_CODE_PROJECTION, TipoRentaIrnr
 from .....core.result_disposition import ResultDisposition
 from ..errors import RegistryValidationError
 from ..schema import DeadlineWindowDefinition

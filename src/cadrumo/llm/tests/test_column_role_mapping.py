@@ -27,7 +27,8 @@ from typing import override
 import pytest
 
 from ...application.provisioning import ProvisioningPreconditionCondition, select_model_for_role
-from ...core import FieldRole, ModelRole
+from ...core import FieldRole
+from ...core.model_catalogue import ModelRole
 from ...core.operator_action_enums import NoRecoveryOutcome
 from ...core.config import LLMProvider, override_settings
 from ...tests.fixtures.settings import EnvFileFreeSettings

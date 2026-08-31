@@ -43,7 +43,9 @@ from pydantic import BaseModel, Field
 
 from ..application.ledger.evidence import PurchaseInvoiceEvidenceInputError
 from ..application.ledger.evidence_draft import DraftDiscrepancyFinding, FieldProvenance, InvoiceDraft
-from ..core import DraftDiscrepancyKind, FieldGroundingOutcome, FieldOrigin
+from ..core import DraftDiscrepancyKind
+from ..core.field_grounding import FieldGroundingOutcome
+from ..core.field_origin import FieldOrigin
 from ..core.operator_action_enums import ActionEvidenceProvenance
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.decimal import coerce_finite_european_decimal, european_thousands_reading_is_ambiguous

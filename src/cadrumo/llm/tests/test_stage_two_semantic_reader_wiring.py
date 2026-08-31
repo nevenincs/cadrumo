@@ -34,7 +34,8 @@ from typing import TYPE_CHECKING, override
 import pytest
 
 from ...application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
-from ...core import LOCAL_TRANSPORT_LABEL, FieldOrigin
+from ...core.provenance_stamp import LOCAL_TRANSPORT_LABEL
+from ...core.field_origin import FieldOrigin
 from ...core.config import load_settings
 from ...core.time import now
 from ..client import LLMClient

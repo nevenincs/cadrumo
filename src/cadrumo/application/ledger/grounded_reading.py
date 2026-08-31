@@ -42,7 +42,8 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from ...core import FieldGroundingOutcome, FieldOrigin
+from ...core.field_grounding import FieldGroundingOutcome
+from ...core.field_origin import FieldOrigin
 from .deterministic_findings import deterministic_findings
 from .document_direction import (
     DirectionDerivationOutcome,

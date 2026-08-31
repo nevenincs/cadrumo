@@ -58,7 +58,7 @@ from pydantic import (
     model_validator,
 )
 
-from ...core import M210_TIPO_RENTA_CODE_PROJECTION, M210GrossIncomeSourceMode
+from ...core.irnr import M210GrossIncomeSourceMode, M210_TIPO_RENTA_CODE_PROJECTION
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole

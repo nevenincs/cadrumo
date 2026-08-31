@@ -44,12 +44,8 @@ from typing import Self
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core import (
-    ConfirmationBlockReason,
-    DraftDiscrepancyKind,
-    FieldGroundingOutcome,
-    FindingResolutionAction,
-)
+from ...core import ConfirmationBlockReason, DraftDiscrepancyKind, FindingResolutionAction
+from ...core.field_grounding import FieldGroundingOutcome
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import content_hash_hex

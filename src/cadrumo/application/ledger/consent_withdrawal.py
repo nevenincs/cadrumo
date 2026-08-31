@@ -47,7 +47,7 @@ from typing import TYPE_CHECKING, Protocol
 
 from pydantic import BaseModel, Field
 
-from ...core import LOCAL_TRANSPORT_LABEL, provenance_stamp_transport
+from ...core.provenance_stamp import LOCAL_TRANSPORT_LABEL, provenance_stamp_transport
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time import UtcInstant
 from .evidence import PurchaseInvoiceEvidenceInputError

@@ -21,7 +21,7 @@ from .operator_actions import (
 
 def _registered_terminal_precondition_verdict(current: BaseException) -> PreconditionVerdict | None:
     """Extract one registered terminal verdict from a single exception."""
-    from ..core import MissingOptionalExtraError
+    from ..core.optional_extras import MissingOptionalExtraError
     from ..core.errors.error_codes import get_registered_error_code
     from ..core.errors.hierarchy import CadrumoError, CoreValidationError
 
@@ -103,7 +103,7 @@ def nested_terminal_precondition_verdict(error: BaseException) -> PreconditionVe
 
 def cli_exception_envelope_view(error: BaseException) -> BaseException:
     """Return the narrow envelope-safe view for the exception producer families."""
-    from ..core import MissingOptionalExtraError
+    from ..core.optional_extras import MissingOptionalExtraError
     from ..core.errors.error_codes import get_registered_error_code
     from ..core.errors.hierarchy import CadrumoError, CoreValidationError
 

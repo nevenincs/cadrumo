@@ -32,7 +32,7 @@ from typing import ClassVar, override
 
 import pytest
 
-from ...core import LLM_EXTRA
+from ...core.optional_extras import LLM_EXTRA
 from ...core.config import override_settings
 from ...tests.loopback_llm import (
     SilentLoopbackHandler,
@@ -305,7 +305,7 @@ def extra_absent() -> Iterator[None]:
 
 def _installed_extra() -> bool:
     """Return the live availability of the llm extra in this environment."""
-    from ...core import optional_extra_available
+    from ...core.optional_extras import optional_extra_available
 
     return optional_extra_available(LLM_EXTRA)
 

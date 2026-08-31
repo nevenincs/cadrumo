@@ -63,7 +63,9 @@ from ...application.ledger.document_transcription import DocumentTranscription, 
 from ...application.ledger.evidence import PurchaseInvoiceEvidenceInputError
 from ...application.ledger.evidence_draft import InvoiceDraft
 from ...application.ledger.grounding_anchor import evaluate_anchor
-from ...core import LOCAL_TRANSPORT_LABEL, FieldGroundingOutcome, FieldOrigin
+from ...core.field_grounding import FieldGroundingOutcome
+from ...core.provenance_stamp import LOCAL_TRANSPORT_LABEL
+from ...core.field_origin import FieldOrigin
 from ...core.config import LLMProvider, override_settings
 from ...tests.fixtures.settings import EnvFileFreeSettings
 from ...tests.loopback_llm import (

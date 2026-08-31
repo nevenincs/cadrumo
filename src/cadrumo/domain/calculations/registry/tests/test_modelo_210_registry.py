@@ -7,7 +7,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import ConvenioOverrideKind, TipoRentaIrnr
+from .....core.irnr import ConvenioOverrideKind, TipoRentaIrnr
 from .....core.result_disposition import ResultDisposition
 from .....core.resources import bundled_path
 from .._validate import RegistryValidator
@@ -587,4 +587,4 @@ def test_modelo_210_2025_inmobiliaria_branch_carries_categorical_conditional_adv
 
     art_13_1_h = catalogues.legal["trlirnr-rdleg-5-2004:art-13.1.h"]
     assert art_13_1_h.corpus_ref.endswith("#a13-1-h")
-    verify_legal_catalogue({"trlirnr-rdleg-5-2004:art-13.1.h": a
+    verify_legal_catalogue({"trlirnr-rdleg-5-2004:art-13.1.h": art_13_1_h}, source_root=bundled_path())

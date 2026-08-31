@@ -1,7 +1,7 @@
 """Tests for the official Modelo 210 tipo-de-renta code axis and projection.
 
 Grounds the code-to-:class:`~cadrumo.core.TipoRentaIrnr` projection declared in
-:mod:`cadrumo.core._irnr` against the M210 IRNR implementation decision: the
+:mod:`cadrumo.core.irnr` against the M210 IRNR implementation decision: the
 code list is the bundled Orden EHA/3316/2010 HOJA INFORMATIVA 210, and only the
 rate-concept-grounded codes are declared (the fetch-gated special-rate codes are
 absent by design, not by omission).
@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from ...core import (
+from ..irnr import (
     M210_TIPO_RENTA_CODE_PROJECTION,
     OFFICIAL_M210_TIPO_RENTA_CODES,
     TipoRentaGroundingTier,

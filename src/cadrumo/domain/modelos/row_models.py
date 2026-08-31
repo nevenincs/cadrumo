@@ -42,13 +42,8 @@ from typing import Annotated, Literal, get_args
 
 from pydantic import BaseModel, BeforeValidator, Field, StringConstraints, field_validator, model_validator
 
-from ...core import (
-    M210_TIPO_RENTA_CODE_PROJECTION,
-    M210PayerMode,
-    MetodoValoracion,
-    TipoOperacionVinculada,
-    TipoVinculacion,
-)
+from ...core import MetodoValoracion, TipoOperacionVinculada, TipoVinculacion
+from ...core.irnr import M210PayerMode, M210_TIPO_RENTA_CODE_PROJECTION
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.external_constants import M347_THRESHOLD_EUR
 from ...core.errors.hierarchy import CadrumoError

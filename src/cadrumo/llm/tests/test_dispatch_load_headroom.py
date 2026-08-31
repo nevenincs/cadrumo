@@ -39,7 +39,8 @@ from ...application.provisioning import (
     probe_hardware_profile,
     read_runtime_residents,
 )
-from ...core import AcceleratorKind, ContentionCause, model_candidate
+from ...core import AcceleratorKind, ContentionCause
+from ...core.model_catalogue import model_candidate
 from ...core.config import LLMProvider, override_settings
 from ...tests.fixtures.settings import EnvFileFreeSettings
 from ...tests.loopback_llm import (

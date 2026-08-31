@@ -31,23 +31,17 @@ from typing import TypedDict, cast
 import httpx
 from pydantic import BaseModel, Field, model_validator
 
-from ..core import (
-    LLM_EXTRA,
-    OPTIONAL_EXTRAS,
-    AcceleratorKind,
-    ContentionCause,
+from ..core import AcceleratorKind, ContentionCause, HardwareTier, hardware_tier_for_free_bytes
+from ..core.model_catalogue import (
     DeploymentLicencePosture,
-    HardwareTier,
     ModelCandidate,
     ModelRole,
     ModelRuntime,
     ModelSelectionAdvisory,
-    OptionalExtra,
     candidates_for_role,
-    hardware_tier_for_free_bytes,
     model_candidate,
-    optional_extra_available,
 )
+from ..core.optional_extras import LLM_EXTRA, OPTIONAL_EXTRAS, OptionalExtra, optional_extra_available
 from ..core.storage_taxonomy import ExternalPathRole
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.config import Settings, load_settings

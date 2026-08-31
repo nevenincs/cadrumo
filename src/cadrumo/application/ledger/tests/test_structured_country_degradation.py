@@ -71,7 +71,9 @@ from typing import Final
 import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import ClassifierInputSource, FieldGroundingOutcome, FieldOrigin, IvaCategoryOutcome
+from ....core import ClassifierInputSource, IvaCategoryOutcome
+from ....core.field_grounding import FieldGroundingOutcome
+from ....core.field_origin import FieldOrigin
 from ....core.config import Settings
 from ....domain.iva.classification import CustomerTaxStatus, InvoiceKind, IvaTerritorialScope
 from ....domain.iva.establishment import StatedCountryCodeStatus, record_country_code_status

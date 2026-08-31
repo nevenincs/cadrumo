@@ -41,7 +41,8 @@ from typing import ClassVar, override
 
 import pytest
 
-from ....core import DraftDiscrepancyKind, FieldOrigin
+from ....core import DraftDiscrepancyKind
+from ....core.field_origin import FieldOrigin
 from ....core.config import load_settings, override_settings
 from ....domain.iva.legend_derivation import LegendDerivationOutcome, derive_category_from_regime_legend
 from ....domain.iva.schema import IvaCategory

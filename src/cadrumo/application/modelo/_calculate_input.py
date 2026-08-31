@@ -35,11 +35,11 @@ from decimal import Decimal, InvalidOperation
 from typing import Literal
 
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ...core import (
+from ...core import RescateType
+from ...core.irnr import (
     FETCH_GATED_M210_TIPO_RENTA_CODES,
-    M210_TIPO_RENTA_CODE_PROJECTION,
     M210GrossIncomeSourceMode,
-    RescateType,
+    M210_TIPO_RENTA_CODE_PROJECTION,
 )
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId

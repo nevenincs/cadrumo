@@ -18,7 +18,9 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import DraftDiscrepancyKind, FieldGroundingOutcome, FieldOrigin
+from ....core import DraftDiscrepancyKind
+from ....core.field_grounding import FieldGroundingOutcome
+from ....core.field_origin import FieldOrigin
 from ....core.identity import IdentityError, validate_spanish_tax_id
 from ..identity_roles import (
     IdentityCandidate,

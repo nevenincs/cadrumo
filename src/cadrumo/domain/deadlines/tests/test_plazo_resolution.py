@@ -7,7 +7,7 @@ from typing import cast
 
 import pytest
 
-from ....core import M210_TIPO_RENTA_CODE_PROJECTION
+from ....core.irnr import M210_TIPO_RENTA_CODE_PROJECTION
 from ....core.result_disposition import ResultDisposition
 from ....core.period import Period
 from ...calculations.registry.schema import DeadlineWindowDefinition, ModeloRevision

@@ -22,7 +22,9 @@ from __future__ import annotations
 from importlib.metadata import version
 
 from ...adapters.inbound.pdf import extract_pages_text_from_bytes
-from ...core import LOCAL_TRANSPORT_LABEL, PDF_CONTAINER_SHAPES, FieldOrigin
+from ...core import PDF_CONTAINER_SHAPES
+from ...core.provenance_stamp import LOCAL_TRANSPORT_LABEL
+from ...core.field_origin import FieldOrigin
 from .document_transcription import DocumentTranscription, TranscriberIdentity
 from .evidence import PurchaseInvoiceEvidenceInputError
 from .evidence_input import EvidenceInput

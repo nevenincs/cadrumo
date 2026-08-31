@@ -15,7 +15,10 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....core import LOCAL_TRANSPORT_LABEL, DraftDiscrepancyKind, FieldGroundingOutcome, FieldOrigin
+from ....core import DraftDiscrepancyKind
+from ....core.field_grounding import FieldGroundingOutcome
+from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
+from ....core.field_origin import FieldOrigin
 from ....core.decimal import coerce_finite_european_decimal
 from ..closure_findings import closure_findings
 from ..document_transcription import DocumentTranscription, TranscriberIdentity

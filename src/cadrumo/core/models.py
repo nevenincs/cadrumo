@@ -5,7 +5,7 @@ application, and adapter pydantic models that require strict-mode, frozen,
 no-extra-fields configuration. It is a :class:`pydantic.ConfigDict` value shared
 by records that need immutable boundary contracts, including
 :class:`domain.calculations.registry._schema_base.RegistryModel`,
-:class:`core._optional_extras.OptionalExtra`, and encrypted-storage
+:class:`core.optional_extras.OptionalExtra`, and encrypted-storage
 envelope records.
 
 The constant is intentionally only a config value, not a base class or a
