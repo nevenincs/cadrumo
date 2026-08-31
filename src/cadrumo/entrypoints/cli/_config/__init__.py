@@ -1,13 +1,11 @@
-"""Demand-loaded configuration command surface."""
+"""Inert namespace for the demand-loaded configuration command surface.
+
+This package exports nothing.  The composed ``config`` subtree and its command
+graph are defined in ``_command_tree``; the command specs live in
+``_command_specs`` and the individual verb modules beside them.  Callers import
+from the defining module, never from this namespace.
+"""
 
 from __future__ import annotations
 
-from .._command_runtime import build_command_subtree
-from .._command_spec import CommandSpecGraph
-from .._root_command_specs import ROOT_COMMAND_SPECS
-from ._command_specs import CONFIG_COMMAND_SPECS
-
-CONFIG_COMMAND_GRAPH = CommandSpecGraph((*ROOT_COMMAND_SPECS, *CONFIG_COMMAND_SPECS))
-app = build_command_subtree(CONFIG_COMMAND_GRAPH, "config")
-
-__all__ = ["CONFIG_COMMAND_GRAPH", "app"]
+__all__: tuple[str, ...] = ()

@@ -62,53 +62,12 @@
         "reason": "Pure re-export facade over _factory, _site_health, _site_health_parsers and the errors, evasion, health, profile and session submodules. Consumer sweep only."
       },
       {
-        "package": "cadrumo.adapters.outbound.aeat.verify",
-        "breaches": [
-          "import_binding",
-          "own_definition",
-          "symbol_export"
-        ],
-        "reason": "Holds the verify-session protocol classes, the pinned AEAT verify host and URL constants, the guard policy and the HTTP assertion in the namespace itself, so the definitions must hard-move to a public defining module before the re-exports can go. The pinned host and the guard assertion are a safety surface: relocating them is a change to the read-only-probe boundary and wants its own review, not a mechanical sweep."
-      },
-      {
         "package": "cadrumo.adapters.outbound.llm",
         "breaches": [
           "import_binding",
           "symbol_export"
         ],
         "reason": "Pure re-export facade over _cache, _consent_ledger, _run_telemetry and _usage. Consumer sweep only."
-      },
-      {
-        "package": "cadrumo.adapters.persistence.storage.blob_store",
-        "breaches": [
-          "import_binding",
-          "symbol_export"
-        ],
-        "reason": "Pure re-export facade over _blob_store and _materialisation. Consumer sweep only."
-      },
-      {
-        "package": "cadrumo.adapters.persistence.storage.bucket",
-        "breaches": [
-          "import_binding",
-          "symbol_export"
-        ],
-        "reason": "Pure re-export facade over the sealed-archive reader and writer, the lockfile, the layout, the keystore paths and the export header. Consumer sweep only, but the parent storage namespace was retired ahead of it, so nothing re-exports these names through an ancestor any more."
-      },
-      {
-        "package": "cadrumo.adapters.persistence.storage.envelope",
-        "breaches": [
-          "import_binding",
-          "symbol_export"
-        ],
-        "reason": "Pure re-export facade over _envelope and _secure_repository. Consumer sweep only."
-      },
-      {
-        "package": "cadrumo.adapters.persistence.storage.master_key",
-        "breaches": [
-          "import_binding",
-          "symbol_export"
-        ],
-        "reason": "Pure re-export facade over the active-session, bucket-session, idle-timeout, KDF-parameter, master-key, derivation and login-throttle siblings plus its errors module. Consumer sweep only; the custody semantics live in the defining modules, not here."
       },
       {
         "package": "cadrumo.adapters.persistence.storage.sql",
@@ -135,15 +94,6 @@
         "reason": "Pure re-export facade over the private per-concern calculation siblings (IVA compensation, wallet reconciliation, binding prefill, cross-period evidence, bienes-inversion regularizacion). Consumer sweep only."
       },
       {
-        "package": "cadrumo.application.filing",
-        "breaches": [
-          "import_binding",
-          "own_definition",
-          "symbol_export"
-        ],
-        "reason": "Mostly a re-export facade, but the namespace also defines validate_draft, iter_findings and the severity ranking they order findings by, so it cannot be emptied by deleting imports. The three definitions hard-move first; the re-exports then sweep like any other facade."
-      },
-      {
         "package": "cadrumo.application.invoices",
         "breaches": [
           "import_binding",
@@ -160,32 +110,6 @@
           "symbol_export"
         ],
         "reason": "The largest and most-consumed namespace in the tree, breaching on all four axes: a whole-namespace PEP 562 export map, a large public __all__ over it, its own module-level definitions, and eager imports of most of its siblings. Its consumer population is effectively the whole package, so this entry closes by its own staged retirement and not as part of anyone else's sweep -- and the deferral it buys has to be re-measured rather than assumed, because a ``from core import X`` consumer pays for X's owner at import time regardless of the map."
-      },
-      {
-        "package": "cadrumo.core.corpus_manifest",
-        "breaches": [
-          "import_binding",
-          "own_definition",
-          "symbol_export"
-        ],
-        "reason": "The namespace IS the module: it defines the corpus manifest and entry records, the bundle verification result, the diff record and the manifest payload errors. Every one of them must hard-move to a public defining module before the package can be made inert."
-      },
-      {
-        "package": "cadrumo.core.errors.registry",
-        "breaches": [
-          "import_binding",
-          "own_definition"
-        ],
-        "reason": "Defines the concatenated declared-error-code tuple assembled from the five private per-layer shards. The aggregation is the namespace's only content and has exactly one consumer, so it moves to a defining module beside the shards it concatenates."
-      },
-      {
-        "package": "cadrumo.core.errors.tests",
-        "breaches": [
-          "import_binding",
-          "own_definition",
-          "symbol_export"
-        ],
-        "reason": "Defines the optional-extras probe and the extras table it reports over. Test plumbing rather than shipped surface, but the namespace rule does not distinguish: the helper moves to a submodule."
       },
       {
         "package": "cadrumo.core.i18n",
@@ -214,15 +138,6 @@
         "reason": "Defines two date-parsing wrappers over the private _dates implementations while re-exporting the rest of the parsing surface. The wrappers are forwarding definitions, so they are deleted rather than relocated, and their consumers point at _dates' public defining module."
       },
       {
-        "package": "cadrumo.core.redaction",
-        "breaches": [
-          "import_binding",
-          "own_definition",
-          "symbol_export"
-        ],
-        "reason": "The heaviest core namespace-as-module: it defines the redaction key-term sets, the CLI placeholder constants and the compiled detection patterns for bearer tokens, CIF, IBAN and the CLI identifier shapes. This is a security surface, so the hard-move is a review, not a mechanical relocation."
-      },
-      {
         "package": "cadrumo.core.resources",
         "breaches": [
           "import_binding",
@@ -231,48 +146,12 @@
         "reason": "Pure re-export facade over _boundary, _keys, _registry, _repository and its errors module. Consumer sweep only."
       },
       {
-        "package": "cadrumo.domain.bienes_inversion",
-        "breaches": [
-          "import_binding",
-          "own_definition",
-          "symbol_export"
-        ],
-        "reason": "The bienes-de-inversion register domain model lives in the namespace: the IVA record, the disposal and disposal-regime types, the sector contribution, the regularizacion result rows, the schema version and the validation errors. A hard-move of the whole model, not a re-export sweep."
-      },
-      {
-        "package": "cadrumo.domain.contribuyente.assets",
-        "breaches": [
-          "import_binding",
-          "own_definition",
-          "symbol_export"
-        ],
-        "reason": "The asset and amortizacion ledger domain model lives in the namespace: the asset record and class, the ledger document, the libertad-de-amortizacion election, the schema version and the validation errors. A hard-move of the whole model."
-      },
-      {
-        "package": "cadrumo.domain.contribuyente.inventory",
-        "breaches": [
-          "import_binding",
-          "own_definition",
-          "symbol_export"
-        ],
-        "reason": "The largest namespace-as-module in the tree: the entire existencias/inventory domain model -- acquisition cost and evidence, attributable-cost components, valuation methods, the closing authority decision, the anexo-D result and the schema version -- is defined in the package __init__ with no defining module anywhere. Nothing about this closes with a consumer sweep."
-      },
-      {
         "package": "cadrumo.domain.justificante",
         "breaches": [
           "import_binding",
           "symbol_export"
         ],
         "reason": "Pure re-export facade over _protocols, _schema and its errors module. Consumer sweep only."
-      },
-      {
-        "package": "cadrumo.domain.prorrata_register",
-        "breaches": [
-          "import_binding",
-          "own_definition",
-          "symbol_export"
-        ],
-        "reason": "The prorrata register domain model lives in the namespace: the register and its entries, the activity rows, the sector definitions, the provisional resolution, the especial-transition evidence, the three-active-years aggregate and the schema version. A hard-move of the whole model."
       },
       {
         "package": "cadrumo.entrypoints.cli",
@@ -285,15 +164,6 @@
         "reason": "Breaches on all four axes at once. It carries a PEP 562 hook, defines the Typer app object, the command execution policy and its resolvers, the operator-progress emitter and a startup refusal, re-exports a further verb-input schema surface, and binds imports across adapters, application and core. The definitions include the CLI composition root, so this namespace is the one place in the tree where emptying it means deciding where an entrypoint's composition root belongs."
       },
       {
-        "package": "cadrumo.entrypoints.cli._config",
-        "breaches": [
-          "import_binding",
-          "own_definition",
-          "symbol_export"
-        ],
-        "reason": "Defines the config sub-app object and its command graph over the imported command specs. Small, but a definition rather than a re-export: the two names move to a defining module beside the specs."
-      },
-      {
         "package": "cadrumo.tests",
         "breaches": [
           "import_binding",
@@ -302,15 +172,6 @@
           "symbol_export"
         ],
         "reason": "The one BOUNDED lazy resolution in the tree and the only entry here whose lazy map is argued rather than inherited. Its two deferred names are individually justified in the hook's own docstring and backed by a recorded import-weight measurement, which is the shape a deferral has to have to be legitimate; the namespace additionally defines the fixtures directory constant and re-exports the shared source-inventory helpers. Recorded so the gate sees it, NOT as a template: a third lazy row here is a new breach, and this entry is the reason a bare non-inert flag would have been useless."
-      },
-      {
-        "package": "cadrumo.tests.fixtures",
-        "breaches": [
-          "import_binding",
-          "own_definition",
-          "symbol_export"
-        ],
-        "reason": "Defines the fixture-provenance vocabulary and the sidecar/DocInfo cross-check the provenance gates read. It is the declared-provenance authority those gates depend on, so it moves to a defining module with its consumers, not by deleting re-exports."
       }
     ]
   }
