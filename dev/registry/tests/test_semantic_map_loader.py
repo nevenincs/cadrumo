@@ -9,7 +9,10 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core import M303ProrrataActivityProjectionField, M303ProrrataActivityProjectionRef
+from cadrumo.core.filing_projection_ref import (
+    M303ProrrataActivityProjectionField,
+    M303ProrrataActivityProjectionRef,
+)
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_semantics import ExportComputedKey, ExportDraftAttribute
 from cadrumo.domain.calculations.registry.schema_exports import RecordDiscriminator

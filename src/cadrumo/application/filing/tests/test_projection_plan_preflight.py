@@ -5,14 +5,14 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from ....core import (
+from ....core import ResultDisposition
+from ....core.filing_projection_ref import (
     M303DifferentiatedDeductionProjectionField,
     M303DifferentiatedDeductionProjectionRef,
     M303Exonerado390ActivityField,
     M303Exonerado390ActivityProjectionRef,
     M303ProrrataActivityProjectionField,
     M303ProrrataActivityProjectionRef,
-    ResultDisposition,
 )
 from ....core.modelo import Modelo
 from ....domain.calculations.export_field_kind import CasillaFieldKind

@@ -13,7 +13,10 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field
 
-from ....core import M303ProrrataActivityProjectionField, M303ProrrataActivityProjectionRef
+from ....core.filing_projection_ref import (
+    M303ProrrataActivityProjectionField,
+    M303ProrrataActivityProjectionRef,
+)
 from ....core.models import STRICT_FROZEN_CONFIG
 from ...prorrata_register import ProrrataActivityRow, ProrrataRegister
 from .errors import RegistryValidationError

@@ -6,7 +6,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import (
+from ....core.filing_projection_ref import (
     M303Exonerado390ActivityField,
     M303Exonerado390ActivityProjectionRef,
     M303Exonerado390OperacionesTercerosProjectionRef,

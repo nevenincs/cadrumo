@@ -9,15 +9,12 @@ from pathlib import Path
 
 import pytest
 
-from ....core import (
+from ....core import PaymentElection, PriorDomiciliationElection, RefundElection, ResultDisposition
+from ....core.filing_projection_ref import (
     M303RegimenSimplificadoActivityField,
     M303RegimenSimplificadoActivityProjectionRef,
     M303RegimenSimplificadoCohort,
     M303RegimenSimplificadoFact,
-    PaymentElection,
-    PriorDomiciliationElection,
-    RefundElection,
-    ResultDisposition,
 )
 from ....core.modelo import Modelo
 from ....core.period import Period

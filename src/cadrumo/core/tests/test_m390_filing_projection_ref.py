@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
-from .. import (
+from ..filing_projection_ref import (
     FilingProjectionRef,
     M390ActivityField,
     M390DifferentiatedDeductionProjectionField,
@@ -18,7 +18,7 @@ from .. import (
     compile_filing_projection_ref,
     filing_projection_ref_casilla_id,
 )
-from .._filing_projection_ref import (
+from ..filing_projection_ref import (
     M390ActivityProjectionRef,
     M390DifferentiatedDeductionProjectionRef,
     M390ProrrataActivityProjectionRef,

@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import M303RegimenSimplificadoFact
+from ....core.filing_projection_ref import M303RegimenSimplificadoFact
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority

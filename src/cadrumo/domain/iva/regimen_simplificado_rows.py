@@ -13,7 +13,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
-from ...core import M303_MESA_FACTS, M303_REPEATING_FACTS, M303RegimenSimplificadoFact
+from ...core.filing_projection_ref import M303RegimenSimplificadoFact, M303_MESA_FACTS, M303_REPEATING_FACTS
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.filing_year import FilingYear
 from ..filing_evidence import FilingEvidenceReference

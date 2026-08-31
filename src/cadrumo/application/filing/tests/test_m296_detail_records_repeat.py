@@ -21,7 +21,8 @@ from typing import override
 
 import pytest
 
-from ....core import (
+from ....core import PaymentElection, PriorDomiciliationElection, RefundElection, ResultDisposition
+from ....core.filing_projection_ref import (
     M296AnexoCertificadoField,
     M296AnexoCertificadoProjectionRef,
     M296AnexoPagoField,
@@ -30,10 +31,6 @@ from ....core import (
     M296PerceptorInteresesField,
     M296PerceptorInteresesProjectionRef,
     M296PerceptorProjectionRef,
-    PaymentElection,
-    PriorDomiciliationElection,
-    RefundElection,
-    ResultDisposition,
 )
 from ....core.modelo import Modelo
 from ....domain.calculations.registry.authority import bundled_authority

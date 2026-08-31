@@ -10,9 +10,9 @@ from typing import get_args
 import pytest
 from pydantic import ValidationError
 
-from .....core import (
+from .....core import RegistryAuthorityGrade
+from .....core.filing_projection_ref import (
     FilingProjectionRef,
-    RegistryAuthorityGrade,
     compile_filing_projection_ref,
     filing_projection_ref_casilla_id,
 )

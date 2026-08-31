@@ -6,7 +6,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import M303RegimenSimplificadoFact
+from ....core.filing_projection_ref import M303RegimenSimplificadoFact
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.m303_orden_projection_models import M303RegimenSimplificadoSnapshot

@@ -8,12 +8,10 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import (
-    EstadoCasillaOficial,
+from .....core import EstadoCasillaOficial, ProrrataActivityRowType, ProrrataRegisterRegime
+from .....core.filing_projection_ref import (
     M303ProrrataActivityProjectionField,
     M303ProrrataActivityProjectionRef,
-    ProrrataActivityRowType,
-    ProrrataRegisterRegime,
 )
 from .....core.modelo import Modelo
 from .....core.i18n import tr

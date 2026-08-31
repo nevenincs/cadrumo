@@ -16,13 +16,8 @@ from typing import cast, get_args, get_origin
 
 from pydantic import BaseModel, ValidationError
 
-from ....core import (
-    OBJECT_TUPLE_ADAPTER,
-    FilingProducerKey,
-    compile_filing_projection_ref,
-    freeze_toml,
-    read_toml,
-)
+from ....core import OBJECT_TUPLE_ADAPTER, FilingProducerKey, freeze_toml, read_toml
+from ....core.filing_projection_ref import compile_filing_projection_ref
 from ....core.directory_scan import (
     DirectoryEntryKind,
     scan_directory,

@@ -15,11 +15,13 @@ from .....application.aggregation._iva_ledger import IvaLedgerProrrataApportionm
 from .....core import (
     IvaDeductionEvidenceAuthority,
     IvaDeductionFactKind,
-    M303DifferentiatedDeductionProjectionField,
-    M303DifferentiatedDeductionProjectionRef,
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,
+)
+from .....core.filing_projection_ref import (
+    M303DifferentiatedDeductionProjectionField,
+    M303DifferentiatedDeductionProjectionRef,
 )
 from .....core.resources import bundled_path
 from .....domain.bienes_inversion import (

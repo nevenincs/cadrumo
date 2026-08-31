@@ -9,8 +9,8 @@ from typing import Literal
 import pytest
 from pydantic import ValidationError
 
-from .....core import (
-    FilingProducerKey,
+from .....core import FilingProducerKey
+from .....core.filing_projection_ref import (
     M303Exonerado390OperacionesTercerosProjectionRef,
     M303ProrrataActivityProjectionField,
     M303ProrrataActivityProjectionRef,

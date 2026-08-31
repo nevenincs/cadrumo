@@ -18,7 +18,7 @@ profile rather than projected from an existing substrate.
 
 from __future__ import annotations
 
-from ...core import FilingProjectionRef
+from ...core.filing_projection_ref import FilingProjectionRef
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ._producer_snapshot import FilingProducerSnapshot, Modelo200ProfileFacts
