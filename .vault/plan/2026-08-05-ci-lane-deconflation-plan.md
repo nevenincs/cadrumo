@@ -10,7 +10,7 @@ related:
   - '[[2026-06-01-registry-period-code-union-cli-boundary-adr]]'
   - '[[2026-08-05-ci-lane-deconflation-step-check-attribution-audit]]'
 modified: '2026-08-31'
-body_hash: 'sha256:c7d9cbf5ab5168d7fe800c902d67d22523f3a20ad4b1dda351d884c79b16c875'
+body_hash: 'sha256:b97055f92707f5a61c1184fc2f4f32f94b8e3396f88f5d56839259caf930986a'
 ---
 
 <!-- RETIRED: S01, S10, S181, S184, S186, S189, S191, S193, S194, S197, S199, S201, S203, S205, S207, S209, S211, S213, S215, S217, S219, S221 -->
@@ -228,7 +228,7 @@ Decompose every live size-budget subject by its owning source file, then regener
 - [x] `P05.S143` - Refactor the size-budget subjects in _producer_snapshot.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/filing/_producer_snapshot.py`.
 - [ ] `P05.S144` - Refactor the size-budget subjects in test_source_resolver.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/invoices/tests/test_source_resolver.py`.
 - [ ] `P05.S145` - Refactor the size-budget subjects in actions_manual.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/ledger/actions_manual.py`.
-- [ ] `P05.S146` - Refactor the size-budget subjects in classification_assembly.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/ledger/classification_assembly.py`.
+- [x] `P05.S146` - Refactor the size-budget subjects in classification_assembly.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/ledger/classification_assembly.py`.
 - [x] `P05.S147` - Refactor the size-budget subjects in evidence_draft.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/ledger/evidence_draft.py`.
 - [x] `P05.S148` - Refactor the size-budget subjects in evidence.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/ledger/evidence.py`.
 - [x] `P05.S149` - Refactor the size-budget subjects in identity_roles.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/ledger/identity_roles.py`.
