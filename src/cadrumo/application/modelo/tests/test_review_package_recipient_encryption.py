@@ -47,21 +47,21 @@ from ....adapters.persistence.profile.recipient_replay_guard import (
     RecipientPackageReplayedError,
     RecipientReplayGuardRepository,
 )
-from ....adapters.persistence.storage import (
+from ....adapters.persistence.storage._secure_object_namespaces import (
     MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE as _ENCRYPTION_KEY_NAMESPACE,
 )
-from ....adapters.persistence.storage.sql import SecureObjectRow
+from ....adapters.persistence.storage.sql._orm import SecureObjectRow
 from ....adapters.persistence.storage.sql.session import session_scope
-from ....core.period import Period
 from ....core.casilla_id import validated_casilla_id
+from ....core.period import Period
 from ....domain.calculations.registry.bindings import CasillaObservation
-from ....domain.modelos.codes import ModeloCode
-from ....domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
 from ....tests.secure_sql import isolated_runtime_profile
 from .._review_package_recipient_encryption import (
     RecipientDecryptionError,

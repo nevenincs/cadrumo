@@ -14,7 +14,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....domain.iva.classification import InvoiceKind
-from ...operator_actions import PreconditionVerdict
+from ...operator_actions._models import PreconditionVerdict
 from ..batch_ingest import (
     BATCH_ITEM_STATUSES,
     BatchItemResult,

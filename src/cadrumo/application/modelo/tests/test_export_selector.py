@@ -15,12 +15,12 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core.period import Period
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
-from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.repository import upsert_work_unit
 from ....tests.registry_observations import registry_grounded_observations
 from .._selectors import ModeloCalculationRevisionSelectorStateError, select_exportable_revision
 from ..work_lifecycle import create_work_unit

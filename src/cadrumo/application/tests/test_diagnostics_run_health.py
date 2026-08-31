@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ...adapters.outbound.llm import LLMRunRecord, LLMRunTelemetryRecorder
+from ...adapters.outbound.llm._run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
 from ...core.directory_scan import scan_directory
 from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..diagnostics_run_health import (

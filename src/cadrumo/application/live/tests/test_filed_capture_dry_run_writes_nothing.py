@@ -23,7 +23,7 @@ from pathlib import Path
 import pytest
 
 from ....tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
-from ...calculations import CalculationObservationRepository
+from ...calculations.observations_repository import CalculationObservationRepository
 from ..filed_data_capture import _CaptureAccumulator, recapture_divergence_notices
 from ._filed_capture_history_support import _prior_303_observation
 

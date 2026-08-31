@@ -21,17 +21,15 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.period import Period
 from ....domain.calculations.registry.applicability_modelo202 import Modelo202Modality
-from .. import (
+from ..cross_period_clean_state import (
     CrossPeriodCleanStateVerdict,
     CrossPeriodDependencyEvidence,
     CrossPeriodDependencyOrigin,
     CrossPeriodDependencyRequirement,
     NoPriorObligationProvenanceKind,
-)
-from ..cross_period_clean_state import (
     _qualifies_for_first_year_fractional_suppression,
     _suppressed_first_year_fractional_evidence,
     _suppressed_pre_activity_evidence,

@@ -130,18 +130,18 @@ from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core.authority_grade import RegistryAuthorityGrade
-from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....core.resources import bundled_path
+from ....core.period import Period
+from ....core.resources._boundary import bundled_path
 from ....domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
-from ....domain.calculations.registry.tests import oracle_declared_figures
+from ....domain.calculations.registry.tests._manual_oracle_support import oracle_declared_figures
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
-from ...calculations import CalculationObservationRepository
+from ...calculations.observations_repository import CalculationObservationRepository
 from .._calculation_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,

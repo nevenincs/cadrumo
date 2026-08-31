@@ -17,8 +17,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.aggregation import BindingSourceKind
-from ....core.aggregation import BindingAggregation, BindingAggregationOp
+from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.binding_aggregation import binding_aggregation_op
 from ....domain.calculations.registry.errors import RegistryValidationError

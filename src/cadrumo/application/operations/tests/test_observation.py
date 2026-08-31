@@ -20,10 +20,10 @@ from ....core.operations import (
     OperationDurability,
     OperationEffect,
     OperationEventKind,
+    OperationInteractionKind,
     OperationLifecycle,
     OperationTerminalCondition,
 )
-from ....core.operations import OperationInteractionKind
 from ..capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,

@@ -10,14 +10,12 @@ from pathlib import Path
 import pytest
 
 from ....adapters.outbound.aeat.auth.clave_movil_support import mint_diagnostic_id
-from ....adapters.persistence.storage import (
-    CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE,
-    SecureObjectRepository,
-    SensitivityClass,
-)
-from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from ....adapters.persistence.storage._secure_object_namespaces import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE
+from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....core.classification.policies import SensitivityClass
 from ....core.errors.error_codes import ERROR_REGISTRY, build_error_envelope
 from ....core.external_constants import UTF_8_ENCODING, load_external_constants
+from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ....tests.secure_sql import isolated_runtime_profile
 from ..diagnostics import (

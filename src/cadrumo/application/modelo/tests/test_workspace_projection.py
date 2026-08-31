@@ -35,17 +35,17 @@ from pathlib import Path
 
 import pytest
 
-from ....core.modelo_work_progress_state import ModeloWorkProgressState
 from ....core.authority_grade import RegistryAuthorityGrade
-from ....core.period import Period
 from ....core.external_constants import OutputLanguage
+from ....core.modelo_work_progress_state import ModeloWorkProgressState
+from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.temporal import select_revision
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
+from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ....domain.modelos.calculation_revision import CalculationRevision
 from ...registry.closure_capture import capture_registry_closure
 from ...registry.source_connectivity import load_source_connectivity_census
 from ...state_projection import ModeloReadinessRequest, capture_modelo_readiness

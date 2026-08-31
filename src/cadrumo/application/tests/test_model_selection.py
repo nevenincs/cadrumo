@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import pytest
 
+from ...core.config import load_settings, override_settings
 from ...core.hardware import AcceleratorKind, HardwareTier
 from ...core.model_catalogue import (
     DeploymentLicencePosture,
@@ -30,7 +31,6 @@ from ...core.model_catalogue import (
     candidates_for_role,
     model_candidate,
 )
-from ...core.config import load_settings, override_settings
 from ..provisioning import (
     AcceleratorDevice,
     AcceleratorReading,

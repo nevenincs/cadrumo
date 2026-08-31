@@ -35,20 +35,20 @@ from typing import TYPE_CHECKING, Final
 from pydantic import BaseModel, Field, model_validator
 
 from ..core.auth_provider import AuthProviderKind
-from ..core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
-from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.config import Settings, load_settings
 from ..core.directory_scan import (
     iter_directory,
 )
 from ..core.errors.hierarchy import CadrumoError
+from ..core.models import STRICT_FROZEN_CONFIG
+from ..core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ..core.paths import (
     WINDOWS_MAX_PATH,
     windows_long_paths_enabled,
     windows_storage_root_long_path_margin,
 )
 from .auth.probes import ProviderProbeResult
-from .operator_actions import ActionReference, ConditionEvidence, PreconditionVerdict
+from .operator_actions._models import ActionReference, ConditionEvidence, PreconditionVerdict
 
 if TYPE_CHECKING:
     from ..domain.calculations.registry.authority import ValidatedRegistryAuthority

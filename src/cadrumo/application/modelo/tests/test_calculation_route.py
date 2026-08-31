@@ -6,10 +6,10 @@ from dataclasses import replace
 
 import pytest
 
-from ....core.calculation_route import ModeloCalculationRouteId
 from ....core.aggregation import BindingSourceKind
+from ....core.calculation_route import ModeloCalculationRouteId
 from ...aggregation import AggregationValidationError, BindingSourceDisposition
-from ...calculations import M303RegimenSimplificadoAnnualSummarySourceResolver
+from ...calculations._m303_regimen_simplificado_annual_summary import M303RegimenSimplificadoAnnualSummarySourceResolver
 from ..calculation_route import (
     CALCULATION_ROUTE_ENROLLED_SOURCES,
     CALCULATION_ROUTE_ID,

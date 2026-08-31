@@ -10,9 +10,9 @@ from typing import override
 
 import pytest
 
-from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.casilla_id import validated_casilla_id
 from ....core.config import override_settings
+from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.manuals.schema import ManualPart
 from ..conformance import _AxisIndex

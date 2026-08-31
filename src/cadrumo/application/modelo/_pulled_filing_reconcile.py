@@ -65,7 +65,11 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...domain.calculations.registry.verification_tolerance import verification_tolerance_or_exact
-from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
+from ...domain.modelos.verification_report import (
+    ModeloVerificationFinding,
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
+)
 from ._reconcile_casilla import detect_casilla_divergences
 from ._reconcile_population import resolve_casilla_population_scope
 
@@ -73,9 +77,9 @@ if TYPE_CHECKING:
     from ...core.casilla_id import CasillaId
     from ...domain.calculations.registry.schema import RegistrySnapshot
     from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
-    from ...domain.modelos.work_unit import WorkUnit
     from ...domain.modelos.calculation_revision import CalculationRevision
-    from ..calculations import CalculationObservationRepository
+    from ...domain.modelos.work_unit import WorkUnit
+    from ..calculations.observations_repository import CalculationObservationRepository
 
 
 def _pulled_filed_values(
@@ -88,7 +92,7 @@ def _pulled_filed_values(
     ``None`` covers both "no sweep has run" and "this modelo and period were
     never pulled"; neither is an error and neither should produce a finding.
     """
-    from ..calculations import CalculationObservationRepository as _Repository
+    from ..calculations.observations_repository import CalculationObservationRepository as _Repository
 
     repo = repository if repository is not None else _Repository()
     stored = repo.load_observation(str(work_unit.modelo), work_unit.period)

@@ -14,8 +14,7 @@ from datetime import date
 import pytest
 
 from ....domain.calculations.registry.authority import bundled_authority
-from .. import build_runtime_schema_provider
-from ..runtime import RegistryModeloSubview, _subview_from_snapshot
+from ..runtime import RegistryModeloSubview, _subview_from_snapshot, build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

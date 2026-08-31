@@ -14,7 +14,7 @@ from decimal import Decimal
 import pytest
 
 from ....core.json_contract import NoticeSeverity
-from .. import build_prorrata_especial_mandatory_advisory
+from .._prorrata_regularizacion import build_prorrata_especial_mandatory_advisory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

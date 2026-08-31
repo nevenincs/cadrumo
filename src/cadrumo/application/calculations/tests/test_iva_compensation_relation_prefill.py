@@ -10,11 +10,11 @@ from typing import Literal
 
 import pytest
 
-from ....core.observed_header_fact import ObservedHeaderFact
-from ....core.result_disposition import ResultDisposition
-from ....core.period import Period
-from ....core.casilla_id import CasillaId
 from ....core.aggregation import BindingSourceKind
+from ....core.casilla_id import CasillaId
+from ....core.observed_header_fact import ObservedHeaderFact
+from ....core.period import Period
+from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.relations import materialize_relation_binding_values

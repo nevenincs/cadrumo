@@ -29,20 +29,20 @@ from typing import Any
 import pytest
 
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from ....core.result_disposition import ResultDisposition
-from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
-from ....core.period import Period
-from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.aggregation import BindingSourceKind
-from ....core.resources import bundled_path
+from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.period import Period
+from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from ....core.resources._boundary import bundled_path
+from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.iva_compensation.filed_derivation import M303_COMPENSATION_RESULTADO_CASILLA
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
+from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations import CalculationObservationRepository, ResultDispositionProjection
+from ...calculations.observations_repository import CalculationObservationRepository, ResultDispositionProjection
 from .._calculation_actions import _resolve_bucket_source_mesh
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

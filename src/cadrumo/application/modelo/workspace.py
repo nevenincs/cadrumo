@@ -26,10 +26,10 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from ...core.schema_family_disposition import RegistrySchemaFamilyDisposition
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.external_constants import OutputLanguage
 from ...core.hashing import content_hash_hex
+from ...core.schema_family_disposition import RegistrySchemaFamilyDisposition
 from ...domain.calculations.registry.errors import RegistryFailureCondition, RegistryValidationError
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.modelo_localization import casilla_occurrence_locale_key, revision_locale_key
@@ -43,12 +43,15 @@ from ...domain.calculations.registry.schema import (
 from ...domain.calculations.registry.schema_formula import FormulaExpression
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition, RelationDefinition
 from ...domain.calculations.registry.static_inspection import RegistryRevisionInspection
-from ...domain.modelos.codes import ModeloCode
-from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol, VerificationReportCatalogueRepositoryProtocol
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState, CalculationSourceRef
+from ...domain.modelos.codes import ModeloCode
+from ...domain.modelos.protocols import (
+    CalculationRevisionCatalogueRepositoryProtocol,
+    VerificationReportCatalogueRepositoryProtocol,
+)
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..ledger.preflight import LedgerPreflightIssue
-from ..operator_actions import ActionReference
+from ..operator_actions._models import ActionReference
 from ..registry.closure import RegistryClosureLimb
 from ..state_projection import ModeloReadinessRequest, ProjectionModeloReadiness
 from .work_addressing import (
@@ -60,8 +63,6 @@ from .work_addressing import (
     diverging_work_target_revision_axes,
 )
 from .workspace_models import (
-    ModeloWorkspaceEvidenceFactV1,
-    ModeloWorkspaceTextFactValueV1,
     ModeloWorkspaceBaselineV1,
     ModeloWorkspaceBindingReferenceV1,
     ModeloWorkspaceBindingRequirementV1,
@@ -74,6 +75,7 @@ from .workspace_models import (
     ModeloWorkspaceContributorIdentityV1,
     ModeloWorkspaceCursorV1,
     ModeloWorkspaceDomainRefusalV1,
+    ModeloWorkspaceEvidenceFactV1,
     ModeloWorkspaceEvidenceHorizonV1,
     ModeloWorkspaceExactWorkUnitTargetV1,
     ModeloWorkspaceFacetName,
@@ -123,6 +125,7 @@ from .workspace_models import (
     ModeloWorkspaceStaticInspectionScopeV1,
     ModeloWorkspaceTargetV1,
     ModeloWorkspaceTechnicalLabelV1,
+    ModeloWorkspaceTextFactValueV1,
     ModeloWorkspaceWorkReviewFacetV1,
 )
 from .workspace_producers import (

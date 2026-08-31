@@ -12,7 +12,7 @@ from ....adapters.persistence.profile.usage_ratios import save_usage_ratios
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.transactions.enums import BusinessClassification
 from ....domain.transactions.models import TransactionCatalogue
-from ....domain.usage_ratios import UsageRatioProfile
+from ....domain.usage_ratios._model import UsageRatioProfile
 from ....tests.secure_sql import isolated_runtime_profile
 from ..preflight import LedgerPreflightIssueReason, preflight_ledger_tax_readiness
 from ._preflight_test_support import (

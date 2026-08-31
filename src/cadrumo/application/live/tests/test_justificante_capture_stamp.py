@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 import pytest
 
 from ....tests.profile_capsule import set_active_test_profile_facts
-from ...tests import isolated_profile_backend as _isolated_backend
+from ...tests._profile_backend_fixtures import _isolated_backend
 
 __all__ = ["_isolated_backend"]
 

@@ -39,7 +39,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.persistence.storage import RETENCION_OBSERVATIONS_NAMESPACE
+from ....adapters.persistence.storage._secure_object_namespaces import RETENCION_OBSERVATIONS_NAMESPACE
 from ....core.aggregation import AggregationCaptureKind, BindingSourceKind
 from ....core.period import Period
 from ....domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage

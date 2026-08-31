@@ -23,7 +23,7 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.outbound.fx import ECB_RATE_SOURCE_ID
+from ....adapters.outbound.fx._ecb_provider import ECB_RATE_SOURCE_ID
 from ....core.aggregation import BindingSourceKind
 from ....core.modelo import Modelo
 from ....core.period import Period

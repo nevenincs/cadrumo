@@ -21,10 +21,6 @@ from typing import override
 
 import pytest
 
-from ....core.refund_election import RefundElection
-from ....core.payment_election import PaymentElection
-from ....core.prior_domiciliation_election import PriorDomiciliationElection
-from ....core.result_disposition import ResultDisposition
 from ....core.filing_projection_ref import (
     M296AnexoCertificadoField,
     M296AnexoCertificadoProjectionRef,
@@ -36,6 +32,10 @@ from ....core.filing_projection_ref import (
     M296PerceptorProjectionRef,
 )
 from ....core.modelo import Modelo
+from ....core.payment_election import PaymentElection
+from ....core.prior_domiciliation_election import PriorDomiciliationElection
+from ....core.refund_election import RefundElection
+from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import bundled_authority
 from .._m296_projection import build_m296_filing_projection_plan
 from .._producer_snapshot import (

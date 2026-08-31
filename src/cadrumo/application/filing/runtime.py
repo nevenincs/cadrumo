@@ -50,12 +50,12 @@ from typing import Literal, Protocol
 
 from pydantic import BaseModel, Field
 
+from ...core.aggregation import BindingSourceKind
+from ...core.casilla_id import CasillaId
+from ...core.identity import SubjectTaxId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
-from ...core.casilla_id import CasillaId
-from ...core.aggregation import BindingSourceKind
-from ...core.identity import SubjectTaxId
-from ...core.resources import bundled_path
+from ...core.resources._boundary import bundled_path
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ...domain.calculations.registry.errors import (
     RegistryFailureCondition,

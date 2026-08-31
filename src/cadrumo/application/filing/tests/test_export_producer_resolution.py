@@ -32,7 +32,9 @@ from pathlib import Path
 
 import pytest
 
-from .._export_producer import filing_producer_ownership
+from .. import _export_producer as export_producer_module
+from .._export_producer import _SHARED_SNAPSHOT_PRODUCER_KEYS
+from .._producer_ownership import filing_producer_ownership
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -63,9 +65,13 @@ def test_the_scan_finds_producer_keys_at_all() -> None:
     assert total > 100, f"only {total} producer keys found across {len(cited)} modelo(s); the parse is suspect"
 
 
+def test_owner_dispatch_has_one_canonical_module() -> None:
+    assert not hasattr(export_producer_module, "filing_producer_ownership")
+
+
 def test_every_cited_producer_key_is_resolvable() -> None:
     """Fail with the modelos whose layouts cite producers nothing can supply."""
-    ownership = filing_producer_ownership()
+    ownership = filing_producer_ownership(shared_snapshot_keys=_SHARED_SNAPSHOT_PRODUCER_KEYS)
     resolvable = {key.value for key, owner in ownership.items() if owner == "shared_snapshot"}
     declared = {key.value for key in ownership}
 

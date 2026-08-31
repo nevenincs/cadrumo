@@ -25,18 +25,25 @@ See Also:
 
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, NonNegativeInt
 
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.identity import CalculationRevisionId
-from ...domain.modelos.filing_record import ExternalEvidence, ModeloRecord, ModeloRecordCatalogue
-from ...domain.modelos.participation_index import TransactionRevisionParticipation, TransactionRevisionParticipationIndex, upsert_transaction_participation
-from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol, ModeloRecordCatalogueRepositoryProtocol
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...domain.modelos.calculation_revision import SEALED_REVISION_STATES, CalculationRevisionState
+from ...domain.modelos.filing_record import ExternalEvidence, ModeloRecord, ModeloRecordCatalogue
+from ...domain.modelos.participation_index import (
+    TransactionRevisionParticipation,
+    TransactionRevisionParticipationIndex,
+    upsert_transaction_participation,
+)
+from ...domain.modelos.protocols import (
+    CalculationRevisionCatalogueRepositoryProtocol,
+    ModeloRecordCatalogueRepositoryProtocol,
+)
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 
 
@@ -57,10 +64,10 @@ class ParticipationRebuildStats(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    transaction_count: int = Field(ge=0)
-    participation_count: int = Field(ge=0)
-    revision_count: int = Field(ge=0)
-    stale_removed_count: int = Field(ge=0)
+    transaction_count: NonNegativeInt
+    participation_count: NonNegativeInt
+    revision_count: NonNegativeInt
+    stale_removed_count: NonNegativeInt
 
 
 def _filing_record_for_revision(

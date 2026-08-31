@@ -19,9 +19,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ...core.storage_taxonomy_locations import storage_location
-from ...core.storage_taxonomy import StorageCategory
 from ...core.config import Settings, load_settings
+from ...core.storage_taxonomy import StorageCategory
+from ...core.storage_taxonomy_locations import storage_location
 from ._citation_lookup import bundled_citation_lookup
 from ._lexical_index import build_lexical_index, iter_corpus_chunks
 from ._models import RetrievalResponse

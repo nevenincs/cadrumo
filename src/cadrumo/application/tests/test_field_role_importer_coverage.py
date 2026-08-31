@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import pytest
 
-from ...application.invoices import BULK_INVOICE_IMPORT_ALLOWED_COLUMNS
+from ...application.invoices._bulk_import import BULK_INVOICE_IMPORT_ALLOWED_COLUMNS
 from ...application.ledger.models import BULK_CLASSIFY_ALLOWED_COLUMNS
 from ...core.field_role import FieldRole
 

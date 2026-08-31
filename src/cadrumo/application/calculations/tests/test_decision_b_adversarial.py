@@ -9,8 +9,8 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.period import Period
 from ..cross_period_clean_state import (
     _OFFICIAL_EVIDENCE_DELTA_BLOCKERS,
     CrossPeriodCleanStateBlocker,

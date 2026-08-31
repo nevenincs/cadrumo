@@ -12,9 +12,9 @@ from ..core.foreign_asset_obligation import (
     ForeignAssetObligationGroup,
     obligation_groups_established_by_legal_refs,
 )
-from ..core.revision_review import RevisionReviewStatus
 from ..core.modelo import Modelo
-from ..core.resources import bundled_path
+from ..core.resources._boundary import bundled_path
+from ..core.revision_review import RevisionReviewStatus
 from ..domain.calculations.registry.errors import RegistryValidationError
 from ..domain.calculations.registry.formula_runtime_ops import resolve_parameter
 from ..domain.calculations.registry.loader import load_registry_tree

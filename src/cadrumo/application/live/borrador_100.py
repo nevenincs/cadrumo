@@ -26,18 +26,16 @@ from typing import Annotated, override
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
-from ...adapters.persistence.storage import (
+from ...adapters.persistence.storage._secure_object_namespaces import (
     LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE as BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE,
 )
-from ...adapters.persistence.storage import (
-    SecureObjectRepository,
-)
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.modelo import Modelo
-from ...core.period import Period
+from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId, SnapshotId
+from ...core.modelo import Modelo
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.period import Period
 from ...domain.calculations.registry.ids import BindingId
 from .errors import LiveApplicationInputError
 from .snapshot_base import (

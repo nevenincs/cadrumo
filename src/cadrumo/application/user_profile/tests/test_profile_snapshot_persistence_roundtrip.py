@@ -41,10 +41,10 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.persistence.storage import (
+from ....adapters.persistence.storage._secure_object_namespaces import (
     USER_PROFILE_SNAPSHOT_NAMESPACE as USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE,
 )
-from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....domain.user_profile.values import (
     ProfileSetupState,
     UserProfileFact,

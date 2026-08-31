@@ -11,13 +11,13 @@ from uuid import UUID
 
 import pytest
 
-from ....adapters.persistence.storage import master_key
 from ....adapters.persistence.storage.custody.records import (
     ProfileCustodyEnvelope,
     ProfileCustodyKdfParameters,
     ProfileCustodyWrappedDek,
 )
 from ....adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
+from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ....application.state_projection import _build_active_profile
 from ....application.user_profile.capsule_record import ProfileRecordSession
 from ....application.user_profile.lifecycle import ProfileCapsuleLifecycle
@@ -263,7 +263,7 @@ def test_health_observes_current_or_degraded_state_without_provider_or_recovery_
             cadrumo_active_profile=_PROFILE_ID,
         ):
             ready = assess_active_profile_health()
-        master_key.close_active_bucket_session()
+        close_active_bucket_session()
 
         with override_settings(
             cadrumo_local_storage_root=absent_root,
@@ -284,7 +284,7 @@ def test_health_observes_current_or_degraded_state_without_provider_or_recovery_
         ):
             cold = assess_active_profile_health()
     finally:
-        master_key.close_active_bucket_session()
+        close_active_bucket_session()
         sys.setprofile(previous_profile)
 
     assert ready.status == "ready"

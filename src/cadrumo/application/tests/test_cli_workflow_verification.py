@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from ...adapters.persistence.storage.sql import dispose_engine
+from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...tests.profile_capsule import open_test_profile_session
 from ...tests.secure_sql import isolated_profile_storage_root
 from ...tests.user_profile import register_minimal_profile

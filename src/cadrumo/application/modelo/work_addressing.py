@@ -38,25 +38,25 @@ from typing import Annotated
 
 from pydantic import BaseModel, StringConstraints, field_validator
 
-from ...core.operator_action_enums import ActionEvidenceProvenance
-from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.period import Period
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId, CalculationRevisionId, FilingRecordId, WorkUnitId
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.operator_action_enums import ActionEvidenceProvenance
+from ...core.period import Period
 from ...domain.calculations.registry.authority import RegistryAuthorityCapture, bundled_authority
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.static_inspection import RegistryRevisionInspection
 from ...domain.contribuyente.ccaa import CCAA
-from ...domain.modelos.codes import ModeloCode
-from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState
 from ...domain.modelos.calculation_revision import (
     CURRENT_SEALED_REVISION_STATES,
     CalculationRevision,
     CalculationRevisionState,
 )
+from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.errors import ModeloError, ModeloValidationError
+from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ._action_errors import (
     CalculationRevisionNotFoundError,
@@ -76,8 +76,8 @@ from ._selectors import (
     ModeloCalculationRevisionSelectorStateError,
     resolve_modelo_calculation_revision_pick,
 )
-from .work_lifecycle import RevisionParentOperation, create_work_unit, rename_work_unit, require_revision_parent_active
 from .registry_discovery import declared_modelo_period_tokens
+from .work_lifecycle import RevisionParentOperation, create_work_unit, rename_work_unit, require_revision_parent_active
 
 _RevisionId = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=128)]
 _OperatorWorkUnitLookupId = Annotated[

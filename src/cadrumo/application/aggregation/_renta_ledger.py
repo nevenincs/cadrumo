@@ -32,15 +32,15 @@ from pydantic import BaseModel, Field
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...core.prorrata_register import regime_apportions_deduction
 from ...core.casilla_id import CasillaId
 from ...core.filing_year import FilingYear
 from ...core.identity import TransactionId
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period, PeriodKind
+from ...core.prorrata_register import regime_apportions_deduction
 from ...core.prose_elision import ElidedProse
-from ...core.resources import resources
+from ...core.resources._registry import resources
 from ...domain.categories.profile import CategoryProfile
 from ...domain.categories.spending_category import SpendingCategory
 from ...domain.contribuyente.ccaa import CCAA
@@ -53,8 +53,8 @@ from ...domain.deadlines.models import IVARegime
 from ...domain.invoices.models import InvoiceCatalogue
 from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.iva.classification import InvoiceKind
-from ...domain.prorrata_register import ProrrataRegisterRepositoryProtocol
-from ...domain.renta import (
+from ...domain.prorrata_register._protocols import ProrrataRegisterRepositoryProtocol
+from ...domain.renta._ledger_expenses import (
     RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS,
     RentaDeductibilityContext,
     RentaDeductibilityStatus,

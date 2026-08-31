@@ -7,7 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage import PersistenceError, build_profile_custody_port
+from ....adapters.persistence.storage._profile_custody import build_profile_custody_port
+from ....adapters.persistence.storage.errors import PersistenceError
 from ..custody_ports import bind_profile_custody_port, profile_custody_port, profile_is_persistence_failure
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

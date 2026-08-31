@@ -28,16 +28,16 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Annotated
 
-from pydantic import BaseModel, Field, StringConstraints
+from pydantic import BaseModel, Field, NonNegativeInt, StringConstraints
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.config import Settings, coerce_output_language_setting, load_settings
 from ...core.directory_scan import scan_directory
 from ...core.errors.severity import BaseSeverity
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, output_language, tr
 from ...core.logging import get_logger
-from ...core.topics import Topic, TopicCatalogue, load_topic_catalogue
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
+from ...core.topics.catalogue import Topic, TopicCatalogue, load_topic_catalogue
 from ...domain.calculations.registry.authority import (
     ValidatedRegistryAuthority,
     bundled_authority,
@@ -48,9 +48,9 @@ from ...domain.calculations.registry.legal import verify_legal_catalogue
 from ...domain.calculations.registry.schema_references import LegalReference, RegistryExternalLink
 from ...domain.manuals.errors import ManualNotFoundError
 from ...domain.manuals.loader import find_rules, iter_sections, load_manual
+from ...domain.manuals.loader import load_catalogue as load_manual_catalogue
 from ...domain.manuals.schema import ManualCasillaReference, ManualId, ManualPart
 from ...domain.manuals.verify import ManualVerificationIssue, ManualVerificationReport, verify_manual_dir
-from ...domain.manuals.loader import load_catalogue as load_manual_catalogue
 from ._corpus_manual_helpers import load_manual_manifest as _load_manual_manifest
 from ._corpus_manual_helpers import (
     manual_report_with_registry_casilla_issues as _manual_report_with_registry_casilla_issues,
@@ -110,7 +110,7 @@ class RegistryCitationReferenceProjection(BaseModel):
     boe_id: _ProjectionText
     boe_url: RegistryExternalLink
     tags: tuple[_ProjectionText, ...] = ()
-    articulo_count: int = Field(ge=0)
+    articulo_count: NonNegativeInt
     short_title: _ProjectionText
     topic_slugs: tuple[_ProjectionText, ...] = ()
 
@@ -159,9 +159,9 @@ class RegistryCitationsListReport(BaseModel):
     model_config = _STRICT_FROZEN
 
     operation: str = "registry.citations.list"
-    reference_count: int = Field(ge=0)
+    reference_count: NonNegativeInt
     tag_filter: str | None = None
-    topic_count: int = Field(ge=0)
+    topic_count: NonNegativeInt
     topics: tuple[RegistryTopicProjection, ...] = ()
     references: tuple[RegistryCitationReferenceProjection, ...] = ()
 
@@ -205,11 +205,11 @@ class RegistryCitationsVerificationReport(BaseModel):
     model_config = _STRICT_FROZEN
 
     operation: str = "registry.citations.verify"
-    reference_count: int = Field(ge=0)
-    issue_count: int = Field(ge=0)
+    reference_count: NonNegativeInt
+    issue_count: NonNegativeInt
     issues: tuple[RegistryCorpusIssueProjection, ...] = ()
     passed: bool
-    topic_count: int = Field(ge=0)
+    topic_count: NonNegativeInt
     topics: tuple[RegistryTopicProjection, ...] = ()
 
 
@@ -277,9 +277,9 @@ class RegistryManualsListReport(BaseModel):
     operation: str = "registry.manuals.list"
     manual_filter: str | None = None
     year_filter: int | None = None
-    part_count: int = Field(ge=0)
+    part_count: NonNegativeInt
     parts: tuple[RegistryManualPartProjection, ...] = ()
-    topic_count: int = Field(ge=0)
+    topic_count: NonNegativeInt
     topics: tuple[RegistryTopicProjection, ...] = ()
 
 
@@ -290,8 +290,8 @@ class RegistryManualSectionProjection(BaseModel):
 
     section_id: str = Field(min_length=1)
     title: str = Field(min_length=1)
-    rule_count: int = Field(ge=0)
-    paragraph_count: int = Field(ge=0)
+    rule_count: NonNegativeInt
+    paragraph_count: NonNegativeInt
 
 
 class RegistryManualShowReport(BaseModel):
@@ -309,11 +309,11 @@ class RegistryManualShowReport(BaseModel):
     part: str = Field(min_length=1)
     title: str | None = None
     source_pdf_url: str = Field(min_length=1)
-    chapter_count: int = Field(ge=0)
-    section_count: int = Field(ge=0)
+    chapter_count: NonNegativeInt
+    section_count: NonNegativeInt
     structure_available: bool
     section: RegistryManualSectionProjection | None = None
-    topic_count: int = Field(ge=0)
+    topic_count: NonNegativeInt
     topics: tuple[RegistryTopicProjection, ...] = ()
 
 
@@ -349,9 +349,9 @@ class RegistryManualRulesReport(BaseModel):
     part: str = Field(min_length=1)
     kind_filter: str | None = None
     structure_available: bool
-    rule_count: int = Field(ge=0)
+    rule_count: NonNegativeInt
     rules: tuple[RegistryManualRuleProjection, ...] = ()
-    topic_count: int = Field(ge=0)
+    topic_count: NonNegativeInt
     topics: tuple[RegistryTopicProjection, ...] = ()
 
 
@@ -369,12 +369,12 @@ class RegistryManualVerificationReport(BaseModel):
     manual_id: str = Field(min_length=1)
     year: int = Field(ge=2000, le=2100)
     part: str = Field(min_length=1)
-    issue_count: int = Field(ge=0)
-    error_count: int = Field(ge=0)
-    warning_count: int = Field(ge=0)
+    issue_count: NonNegativeInt
+    error_count: NonNegativeInt
+    warning_count: NonNegativeInt
     passed: bool
     issues: tuple[RegistryCorpusIssueProjection, ...] = ()
-    topic_count: int = Field(ge=0)
+    topic_count: NonNegativeInt
     topics: tuple[RegistryTopicProjection, ...] = ()
 
 

@@ -26,7 +26,7 @@ from pydantic import ValidationError
 
 from ....core.modelo import Modelo
 from ....core.period import Period
-from ....domain.submission import ModeloDraftStatus
+from ....domain.submission._protocols import ModeloDraftStatus
 from ..run_models import WorkflowResult
 from ..state_models import WorkflowState, declaration_key, update_declaration_pointer
 

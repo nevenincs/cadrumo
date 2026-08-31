@@ -12,8 +12,8 @@ from __future__ import annotations
 import pytest
 from pydantic import BaseModel
 
-from ....core.modelo import Modelo
 from ....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
+from ....core.modelo import Modelo
 from ....domain.calculations.registry.authority import bundled_authority
 from ...flows.definition import CopyRef, FlowDefinition, FlowPage, FlowSection
 from ..legal_zone import PageLegalZone, build_flow_legal_zones

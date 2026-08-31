@@ -14,7 +14,7 @@ from ....adapters.persistence.operations.secure_references import (
     OPERATION_SECURE_REFERENCE_NAMESPACE,
     operation_secure_reference_repository,
 )
-from ....adapters.persistence.storage import RepositoryError
+from ....adapters.persistence.storage.errors import RepositoryError
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import aeat_url
 from ....tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes

@@ -4,18 +4,29 @@ from __future__ import annotations
 
 from typing import NoReturn, Protocol
 
-from ...application.filing import AmendmentEvidence
+from ...application.filing._producer_snapshot import AmendmentEvidence
 from ...core.modelo import Modelo
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.justificante import Justificante, JustificanteRepositoryProtocol
-from ...domain.modelos.calculation_revision_aggregate import CalculationRevisionAggregateContext, validate_calculation_revision_aggregate
-from ...domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue, is_justificante_backed_external_evidence
-from ...domain.modelos.protocols import ModeloRecordCatalogueRepositoryProtocol
-from ...domain.modelos.work_unit import WorkUnit
-from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionAmendmentIdentity, CalculationRevisionAmendmentKind
+from ...domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionAmendmentIdentity,
+    CalculationRevisionAmendmentKind,
+)
+from ...domain.modelos.calculation_revision_aggregate import (
+    CalculationRevisionAggregateContext,
+    validate_calculation_revision_aggregate,
+)
 from ...domain.modelos.calculation_revision_amendment import M303RectificativaMotive
 from ...domain.modelos.errors import ModeloExportError
+from ...domain.modelos.filing_record import (
+    ModeloRecord,
+    ModeloRecordCatalogue,
+    is_justificante_backed_external_evidence,
+)
+from ...domain.modelos.protocols import ModeloRecordCatalogueRepositoryProtocol
+from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 
 

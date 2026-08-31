@@ -5,20 +5,26 @@ from decimal import Decimal
 
 import pytest
 
-from ....application.filing import ModeloOperatorProfile, build_draft, build_runtime_schema_provider
-from ....core.period import Period
+from ....application.filing._draft_construction import build_draft
+from ....application.filing.runtime import ModeloOperatorProfile, build_runtime_schema_provider
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.period import Period
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.temporal import select_revision
-from ....domain.deadlines.models import EntityType, IVARegime, IrpfEstimationRegime, IrpfIncomeCategory, TaxpayerProfile
-from ....domain.modelos.codes import ModeloCode
-from ....domain.modelos.row_models import Modelo232VinculadaRow, Modelo349OperadorRow, Modelo349RectificacionRow, ModeloDetailRow
-from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from ....domain.deadlines.models import EntityType, IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.row_models import (
+    Modelo232VinculadaRow,
+    Modelo349OperadorRow,
+    Modelo349RectificacionRow,
+    ModeloDetailRow,
+)
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.registry_tree import bundled_registry_tree
 from .._revision_replay_inputs import revision_filing_replay_inputs

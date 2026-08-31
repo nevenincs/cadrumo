@@ -32,22 +32,17 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.period import Period
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ....domain.filing.protocols import CasillaSchemaProvider
 from ....domain.filing.schema import ModeloDraft
-from ....domain.submission import ModeloDraftStatus
+from ....domain.submission._protocols import ModeloDraftStatus
 from ....tests.secure_sql import TestRuntimeProfile
-from ...calculations import CalculationObservationRepository
-from .. import (
-    ModeloApprovalStaleReason,
-    approval_stale_reasons,
-    approve_draft,
-    build_draft,
-    build_runtime_schema_provider,
-)
-from ..runtime import ModeloOperatorProfile
+from ...calculations.observations_repository import CalculationObservationRepository
+from .._draft_construction import build_draft
+from .._review import ModeloApprovalStaleReason, approval_stale_reasons, approve_draft
+from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

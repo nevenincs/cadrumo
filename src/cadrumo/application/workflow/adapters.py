@@ -34,16 +34,16 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date
 
-from ...core.period import Period
 from ...core.config import Settings, load_settings
 from ...core.identity import SubjectTaxId
 from ...core.logging import get_logger
+from ...core.period import Period
 from ...domain.deadlines.engine import DeadlineEngine
 from ...domain.deadlines.models import Schedule, TaxpayerProfile
 from ...domain.filing.protocols import CasillaSchemaProvider
 from ...domain.filing.schema import ModeloDraft
-from ...domain.submission import SubmissionEngine
-from ..filing import build_draft
+from ...domain.submission._engine import SubmissionEngine
+from ..filing._draft_construction import build_draft
 from .engine import WorkflowEngine
 from .errors import WorkflowError
 from .protocols import (

@@ -19,14 +19,8 @@ from ...domain.calculations.registry.errors import (
     RegistryFailureClassification,
     RegistryFailureCondition,
 )
-from ..operator_actions import (
-    ActionArgumentBinding,
-    ActionReference,
-    ConditionEvidence,
-    PreconditionVerdict,
-    conditionality_for_binding,
-    no_action_precondition_verdict,
-)
+from ..operator_actions._models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
+from ..operator_actions._preconditions import conditionality_for_binding, no_action_precondition_verdict
 
 
 def calculation_registry_failure_verdict(

@@ -9,12 +9,13 @@ from pathlib import Path
 
 import pytest
 
-from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
-from ....core.result_disposition import derive_result_disposition, result_disposition_casilla_ids
-from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
-from ....core.period import Period
+from ....adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.errors.error_codes import ERROR_REGISTRY, build_error_envelope
+from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
+from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from ....core.period import Period
+from ....core.result_disposition import derive_result_disposition, result_disposition_casilla_ids
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import (
     RegistryModeloObservation,
@@ -34,7 +35,6 @@ from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ....domain.iva_compensation.errors import IvaCompensationCasillaReferenceError
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext
-from ...bienes_inversion import BienesInversionIvaRegisterRepository
 from .._bienes_inversion_regularizacion import BienesInversionRegularizacionSourceResolver
 from .._binding_prefill import (
     _iva_compensation_history_observation,

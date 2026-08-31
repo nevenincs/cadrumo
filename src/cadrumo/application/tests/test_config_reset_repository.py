@@ -14,11 +14,11 @@ from typing import Final
 import pytest
 from pydantic import ValidationError
 
-from ...adapters.persistence.storage.bucket import bucket_paths
-from ...core.storage_taxonomy_locations import storage_location
-from ...core.storage_taxonomy import StorageCategory
+from ...adapters.persistence.storage.bucket._layout import bucket_paths
 from ...core.bucket_pointer import BucketPointer
 from ...core.directory_scan import scan_directory
+from ...core.storage_taxonomy import StorageCategory
+from ...core.storage_taxonomy_locations import storage_location
 from ...domain.user_profile.values import ProfileSetupState
 from .._bucket_deletion_contracts import BucketDeletionFingerprint
 from .._config_reset_models import (

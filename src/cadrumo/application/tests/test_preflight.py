@@ -20,7 +20,7 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
-from ...adapters.outbound.storage import windows_worst_case_object_path_suffix_length
+from ...adapters.outbound.storage._path_budget import windows_worst_case_object_path_suffix_length
 from ...core.auth_provider import AuthProviderKind
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.config import override_settings

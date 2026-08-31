@@ -24,9 +24,9 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Protocol, runtime_checkable
 
+from ...core.casilla_id import CasillaId
 from ...core.casilla_value_kind import CasillaValueKind
 from ...core.period import Period
-from ...core.casilla_id import CasillaId
 
 
 @runtime_checkable

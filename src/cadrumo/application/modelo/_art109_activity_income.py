@@ -30,10 +30,9 @@ from typing import Final
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core.modelo import Modelo
 from ...core.period import Period
-from ...core.resources import bundled_path
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.formula_runtime_ops import resolve_parameter
-from ...domain.calculations.registry.loader import load_registry_tree
 from ...domain.calculations.registry.temporal import select_revision
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
@@ -140,8 +139,12 @@ def art_109_retained_income_threshold(*, filing_year: int, period: Period) -> De
             threshold parameter. Refusing is correct: answering from a default
             would apply an ungrounded ratio to a real filing decision.
     """
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    definition = next(candidate for candidate in modelos if candidate.id == Modelo.M130.value)
+    # Read through the validated authority: a filing-grade value comes from the
+    # published snapshot, not from a raw tree load that reaches the same TOML
+    # without the validation every other filing-grade reader relies on. This is
+    # a correctness change, not a speed one -- both paths cost about the same
+    # per call, and the authority is slower to build the first time.
+    definition = bundled_authority().modelo(Modelo.M130.value)
     revision = select_revision(definition, filing_year=filing_year, period=period.registry_token)
     for parameter in revision.parameters:
         if parameter.id == _ART_109_THRESHOLD_PARAMETER_ID:

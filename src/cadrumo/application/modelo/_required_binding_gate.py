@@ -30,13 +30,13 @@ from decimal import Decimal
 
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
-from ...core.resources import bundled_path
+from ...core.resources._boundary import bundled_path
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.loader import load_registry_tree
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.temporal import select_revision
-from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.calculation_revision import CalculationRevision
+from ...domain.modelos.work_unit import WorkUnit
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.loader import load_user_profile_schema
 from ..user_profile.profile_record_repository import ProfileRecordRepository

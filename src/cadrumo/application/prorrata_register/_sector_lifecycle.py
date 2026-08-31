@@ -33,7 +33,7 @@ from decimal import Decimal
 
 from ...core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from ...domain.iva.prorrata import ProrrataInputs, compute_prorrata_definitiva_anual
-from ...domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
+from ...domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 
 
 def seed_sector_carried_definitive_from_register(

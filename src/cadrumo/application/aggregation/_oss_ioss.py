@@ -32,10 +32,10 @@ from typing import Annotated, ClassVar
 from pydantic import BaseModel, Field, StringConstraints
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
+from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.money import CENT, round_to_cents
+from ...core.money.rounding import CENT, round_to_cents
 from ...core.period import Period
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.ledger_bindings import (
@@ -61,9 +61,9 @@ from ._source_mesh import (
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,
     CalculationSourceResolution,
-    storage_degradation_resolution,
 )
 from .errors import AggregationValidationError, t
+from .source_resolution_operations import storage_degradation_resolution
 
 _LedgerId = Annotated[
     str,

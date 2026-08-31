@@ -51,7 +51,7 @@ from typing import TYPE_CHECKING, Final
 
 import pytest
 
-from ....core.classification import SensitivityClass
+from ....core.classification.policies import SensitivityClass
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.schema import (
     ProfileFieldDefinition,

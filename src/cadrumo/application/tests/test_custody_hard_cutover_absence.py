@@ -480,9 +480,9 @@ def test_detector_flags_a_master_key_reach_that_names_no_retired_symbol() -> Non
     plain = "import cadrumo.adapters.persistence.storage.master_key as _mk\n"
     assert _retired_references(plain) == {_MASTER_KEY_PACKAGE_ABSOLUTE}
 
-    submodule = "from ...adapters.persistence.storage.master_key._bucket_session import BucketSession\n"
+    submodule = "from ...adapters.persistence.storage.master_key.bucket_session import BucketSession\n"
     assert _retired_references(submodule) == {
-        "master-key-module:adapters.persistence.storage.master_key._bucket_session"
+        "master-key-module:adapters.persistence.storage.master_key.bucket_session"
     }
 
     sibling = "from ...adapters.persistence.storage.custody import load_capsule\n"

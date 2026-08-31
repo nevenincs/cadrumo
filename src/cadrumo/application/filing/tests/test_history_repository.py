@@ -13,10 +13,11 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage import Envelope, SensitivityClass
-from ....adapters.persistence.storage.bucket import bucket_paths
+from ....adapters.persistence.storage.bucket._layout import bucket_paths
+from ....adapters.persistence.storage.envelope._envelope import Envelope
 from ....adapters.persistence.storage.errors import ClassificationError, SecureObjectRowIdentityError
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ....core.classification.policies import SensitivityClass
 from ....core.period import Period
 from ....domain.identifiers import ModeloIdentifier
 from ....tests.secure_sql import TestRuntimeProfile

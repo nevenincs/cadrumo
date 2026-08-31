@@ -12,9 +12,19 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.m303_orden_projection_models import M303RegimenSimplificadoSnapshot
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.filing_evidence import FilingEvidenceReference
-from ....domain.iva.regimen_simplificado_rows import ActividadNoAgricolaSimplificado, EntradaModuloSimplificado, HechoActividadSimplificado, M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision, RegimenSimplificadoFilingRows
+from ....domain.iva.regimen_simplificado_rows import (
+    ActividadNoAgricolaSimplificado,
+    EntradaModuloSimplificado,
+    HechoActividadSimplificado,
+    M303RegimenSimplificadoScope,
+    M303RegimenSimplificadoScopeDecision,
+    RegimenSimplificadoFilingRows,
+)
 from ....domain.modelos.calculation_revision_m303_evidence import M303DANA2024EligibilityEvidence
-from .. import M303RegimenSimplificadoCalculationError, calculate_m303_regimen_simplificado_result
+from .._m303_regimen_simplificado import (
+    M303RegimenSimplificadoCalculationError,
+    calculate_m303_regimen_simplificado_result,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

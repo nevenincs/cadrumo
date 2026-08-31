@@ -22,9 +22,9 @@ from collections.abc import Callable, Iterable
 from datetime import date
 from decimal import Decimal
 
+from ...core.decimal._coerce import coerce_decimal_strict
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
-from ...core.decimal import coerce_decimal_strict
 from ...domain.calculations.registry.applicability import derive_not_applicable_source_modelos
 from ...domain.calculations.registry.applicability_modelo202 import Modelo202Modality, derive_modelo_202_modality
 from ...domain.calculations.registry.authority import bundled_authority
@@ -33,21 +33,28 @@ from ...domain.calculations.registry.ids import (
     SourceRefId,
 )
 from ...domain.deadlines.models import TaxpayerProfile
-from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol, ModeloRecordCatalogueRepositoryProtocol, VerificationReportCatalogueRepositoryProtocol
-from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
-from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.calculation_revision import CalculationRevision
-from ..calculations import (
-    M111_NO_RETENCIONES_PROFILE_PATH,
-    CalculationObservationRepository,
+from ...domain.modelos.protocols import (
+    CalculationRevisionCatalogueRepositoryProtocol,
+    ModeloRecordCatalogueRepositoryProtocol,
+    VerificationReportCatalogueRepositoryProtocol,
+)
+from ...domain.modelos.verification_report import (
+    ModeloVerificationFinding,
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
+)
+from ...domain.modelos.work_unit import WorkUnit
+from ..calculations.cross_period_clean_state import (
     CrossPeriodCleanStateBlocker,
     CrossPeriodCleanStateVerdict,
     CrossPeriodDependencyEvidence,
     CrossPeriodDependencyRequirement,
     CrossPeriodExpectedMemberSet,
     evaluate_cross_period_clean_state,
-    m111_no_retenciones_periods_for_bucket,
 )
+from ..calculations.m111_no_retenciones import M111_NO_RETENCIONES_PROFILE_PATH, m111_no_retenciones_periods_for_bucket
+from ..calculations.observations_repository import CalculationObservationRepository
 from ._action_errors import ModeloCrossPeriodCleanStateError
 from ._preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure
 

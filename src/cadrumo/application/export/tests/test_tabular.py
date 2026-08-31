@@ -14,8 +14,8 @@ from openpyxl import load_workbook
 from ....core.errors.error_codes import ERROR_REGISTRY, build_error_envelope, declared_error_codes
 from ....core.external_constants import CSV_MIME_TYPE, JSONL_MIME_TYPE, UTF_8_ENCODING, XLSX_MIME_TYPE
 from ....tests.locale_catalogue import CATALOGUE_LANGUAGES, catalogue_shard_path, shard_payload
-from .. import ExportSerializationFormat, serialize_tabular_rows
 from ..errors import ExportFieldError, ExportFormatError
+from ..tabular import ExportSerializationFormat, serialize_tabular_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

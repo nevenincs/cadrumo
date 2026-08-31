@@ -35,19 +35,19 @@ from decimal import Decimal, InvalidOperation
 from typing import Literal
 
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ...core.rescate_type import RescateType
-from ...core.irnr import (
-    FETCH_GATED_M210_TIPO_RENTA_CODES,
-    M210GrossIncomeSourceMode,
-    M210_TIPO_RENTA_CODE_PROJECTION,
-)
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId
-from ...core.decimal import try_parse_canonical_decimal
+from ...core.decimal._grammar import try_parse_canonical_decimal
 from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import M347_THRESHOLD_EUR
+from ...core.irnr import (
+    FETCH_GATED_M210_TIPO_RENTA_CODES,
+    M210_TIPO_RENTA_CODE_PROJECTION,
+    M210GrossIncomeSourceMode,
+)
 from ...core.modelo import Modelo
-from ...core.resources import bundled_path
+from ...core.rescate_type import RescateType
+from ...core.resources._boundary import bundled_path
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.binding_selector_utils import boolean_binding_encoded_values
 from ...domain.calculations.registry.casilla_membership import (
@@ -1103,7 +1103,7 @@ def authorization_advisory_for_modelo(modelo: str) -> ModeloAuthorizationAdvisor
     ``None``. Unauthorized modelos with an engine return the registry
     authorization state for non-blocking CLI disclosure.
     """
-    from ...core.access_gate import AuthorizationState
+    from ...core.access_gate._authorization import AuthorizationState
 
     try:
         capability = bundled_authority().authorization(modelo.strip())

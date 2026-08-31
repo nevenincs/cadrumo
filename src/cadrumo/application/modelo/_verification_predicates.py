@@ -26,7 +26,7 @@ from decimal import Decimal
 from types import MappingProxyType
 
 from ...core.casilla_id import CasillaId, validated_casilla_id
-from ...core.money import CENT
+from ...core.money.rounding import CENT
 from ...core.parsing import parse_date
 from ...domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
 from ...domain.calculations.registry.formula_runtime_ops import RegistryUnresolvedOutcomeReason
@@ -39,8 +39,12 @@ from ...domain.calculations.registry.schema_verification import (
     parse_verification_predicate_expression,
 )
 from ...domain.deadlines.models import FiscalResidency, TaxpayerProfile
-from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ...domain.modelos.errors import ModeloError
+from ...domain.modelos.verification_report import (
+    ModeloVerificationFinding,
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
+)
 from ._action_errors import ModeloApplicabilityFilterError
 from ._m210_rate import resolve_m210_rate as _resolve_m210_rate
 

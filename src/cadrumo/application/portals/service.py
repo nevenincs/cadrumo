@@ -17,9 +17,9 @@ from collections.abc import Iterable
 
 from pydantic import BaseModel, Field
 
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.errors.error_codes import get_registered_error_code
 from ...core.errors.hierarchy import CadrumoError
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.modelos.codes import ModeloCode
 from ...domain.portals.categories import PortalCategory
 from ...domain.portals.codes import Portal

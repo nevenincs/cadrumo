@@ -33,11 +33,12 @@ from xml.etree import ElementTree
 
 from defusedxml import ElementTree as DefusedElementTree
 
+from ...core.casilla_id import CasillaId
+from ...core.decimal._coerce import coerce_decimal
+from ...core.decimal._grammar import try_parse_canonical_decimal
+from ...core.external_constants import UTF_8_ENCODING as _UTF_8
 from ...core.filing_producer_key import FilingProducerKey
 from ...core.modelo import Modelo
-from ...core.casilla_id import CasillaId
-from ...core.decimal import coerce_decimal, try_parse_canonical_decimal
-from ...core.external_constants import UTF_8_ENCODING as _UTF_8
 from ...domain.calculations.registry.export_parse import (
     SINO_DICTIONARY_TYPE,
     XML_DICTIONARY_BOOLEAN_TYPES,

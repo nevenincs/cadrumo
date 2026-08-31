@@ -23,9 +23,9 @@ from typing import ClassVar, override
 
 import pytest
 
+from ...core.config import override_settings
 from ...core.hardware import AcceleratorKind, ContentionCause
 from ...core.model_catalogue import ModelRole
-from ...core.config import override_settings
 from ...tests.loopback_llm import (
     SilentLoopbackHandler,
     read_json_body,

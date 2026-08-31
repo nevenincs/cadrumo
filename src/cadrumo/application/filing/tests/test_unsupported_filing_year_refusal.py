@@ -20,7 +20,7 @@ from __future__ import annotations
 import pytest
 
 from ....core.period import Period
-from ....core.resources import bundled_path
+from ....core.resources._boundary import bundled_path
 from ....domain.calculations.registry.loader import load_registry_tree
 from .._draft_construction import _refuse_unsupported_filing_year
 from ..errors import ModeloApplicationError

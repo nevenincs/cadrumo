@@ -214,7 +214,7 @@ def _no_aeat_history_notice(record: UserProfileRecord) -> Notice | None:
     from pydantic import ValidationError
 
     from ...domain.calculations.registry.applicability import derive_tax_route
-    from ..calculations import CalculationObservationRepository
+    from ..calculations.observations_repository import CalculationObservationRepository
     from ..overview.calendar_evidence import no_aeat_history_notice
     from .projections import projection_for_taxpayer
 

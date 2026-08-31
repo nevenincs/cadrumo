@@ -72,13 +72,12 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
-from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
-from ....core.period import Period
+from ....core.aggregation import AggregationCaptureKind, BindingSourceKind
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....core.aggregation import AggregationCaptureKind
-from ....core.aggregation import BindingSourceKind
-from ....domain.bienes_inversion import BienesInversionIvaRegister
+from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from ....core.period import Period
+from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from ....domain.bienes_inversion.register import BienesInversionIvaRegister
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import (
     RegistryModeloObservation,
@@ -89,7 +88,7 @@ from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
-from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
+from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -108,9 +107,8 @@ from ...aggregation import (
 from ...modelo._binding_resolution import resolve_declaration_period_inputs
 from ...modelo._calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from ...modelo.work_lifecycle import create_work_unit
-from .. import IvaWalletDecisionRepository, RelationPrefillSourceResolver
-from .._relation_prefill import resolve_relations_from_local_store
-from ..observations_repository import CalculationObservationRepository
+from .._relation_prefill import RelationPrefillSourceResolver, resolve_relations_from_local_store
+from ..observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

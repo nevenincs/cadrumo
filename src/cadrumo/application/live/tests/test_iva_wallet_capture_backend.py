@@ -10,13 +10,20 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.outbound.aeat.sede.iva_compensation_wallet import IVA_COMPENSATION_WALLET_URL, parse_iva_compensation_wallet_html
+from ....adapters.outbound.aeat.sede.iva_compensation_wallet import (
+    IVA_COMPENSATION_WALLET_URL,
+    parse_iva_compensation_wallet_html,
+)
 from ....adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
-from ....adapters.persistence.storage import has_active_bucket_session
+from ....adapters.persistence.storage.master_key.active_session import has_active_bucket_session
 from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ....core.period import Period
 from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
-from ....domain.iva_compensation.reconciliation import IvaCompensationAuthoritySource, IvaCompensationDecisionReason, IvaCompensationReconciliationDecision
+from ....domain.iva_compensation.reconciliation import (
+    IvaCompensationAuthoritySource,
+    IvaCompensationDecisionReason,
+    IvaCompensationReconciliationDecision,
+)
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import (
     dev_test_database_password,
@@ -25,9 +32,9 @@ from ....tests.secure_sql import (
     read_db_at_rest_bytes,
 )
 from ....tests.user_profile import register_minimal_profile
-from ...calculations import (
+from ...calculations.iva_compensation_history import IvaCompensationHistoryRepository
+from ...calculations.observations_repository import (
     CalculationObservationRepository,
-    IvaCompensationHistoryRepository,
     IvaWalletDecisionRepository,
     iva_wallet_decision_key,
 )

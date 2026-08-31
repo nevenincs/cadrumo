@@ -28,8 +28,8 @@ from collections.abc import Mapping
 from decimal import Decimal
 
 from ...core.authority_grade import RegistryAuthorityGrade
-from ...core.period import Period
 from ...core.casilla_id import CasillaId
+from ...core.period import Period
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.casilla_membership import casillas_by_id
@@ -39,8 +39,8 @@ from ...domain.calculations.registry.formula_runtime import (
 )
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
-from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.calculation_revision import CalculationRevision
+from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ._action_errors import (
     CalculationRegistryUnavailableError,
     CasillaProvenanceMissingError,

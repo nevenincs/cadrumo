@@ -13,10 +13,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ...adapters.persistence.storage.bucket import (
-    BucketPaths,
-    bucket_paths,
-)
+from ...adapters.persistence.storage.bucket._layout import BucketPaths, bucket_paths
 from ...core.link_safety import is_link_like
 
 

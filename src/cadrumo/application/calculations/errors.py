@@ -38,11 +38,11 @@ from collections.abc import Mapping
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
-from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.errors.hierarchy import CoreError, CoreValidationError, TerminalPreconditionErrorMixin
+from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 
 if TYPE_CHECKING:
-    from ..operator_actions import PreconditionVerdict
+    from ..operator_actions._models import PreconditionVerdict
 
     _CalculationPreconditionErrorMixin = TerminalPreconditionErrorMixin[PreconditionVerdict]
 else:
@@ -90,7 +90,7 @@ def calculation_no_recovery_verdict(
         The :class:`~application.operator_actions.PreconditionVerdict` carrying
         the failed condition and its explicit no-recovery outcome.
     """
-    from ..operator_actions import no_action_precondition_verdict
+    from ..operator_actions._preconditions import no_action_precondition_verdict
 
     return no_action_precondition_verdict(
         condition_id=condition.value,

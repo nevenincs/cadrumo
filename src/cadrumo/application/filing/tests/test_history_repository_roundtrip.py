@@ -12,9 +12,9 @@ from pathlib import Path
 
 import pytest
 
-from ....core.storage_taxonomy_locations import storage_path
-from ....core.storage_taxonomy import StorageCategory
 from ....core.period import Period
+from ....core.storage_taxonomy import StorageCategory
+from ....core.storage_taxonomy_locations import storage_path
 from ....domain.identifiers import ModeloIdentifier
 from ....tests.secure_sql import isolated_runtime_profile
 from .._history_models import ModeloHistory, ModeloHistoryEntry

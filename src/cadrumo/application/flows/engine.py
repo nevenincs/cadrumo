@@ -28,13 +28,13 @@ from collections.abc import Mapping
 
 from pydantic import BaseModel, Field
 
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.flows import (
     DEFER_TOKEN,
     REPEATING_INSTANCE_SEPARATOR,
     FlowMode,
     PageStatus,
 )
+from ...core.models import STRICT_FROZEN_CONFIG
 from .definition import (
     FlowCondition,
     FlowDefinition,

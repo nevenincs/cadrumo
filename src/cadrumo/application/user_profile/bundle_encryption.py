@@ -8,8 +8,8 @@ from typing import Final
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import UTF_8_ENCODING
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...domain.user_profile.errors import UserProfileValidationError
 from ...domain.user_profile.portable_export import UserProfilePortableExport
 from .bundle import (

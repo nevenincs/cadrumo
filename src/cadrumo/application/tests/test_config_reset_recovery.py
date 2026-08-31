@@ -324,8 +324,8 @@ def test_every_durable_boundary_rolls_forward_in_a_fresh_process(
     tmp_path: Path,
     boundary: str,
 ) -> None:
-    from ...adapters.persistence.storage.bucket import bucket_paths
-    from ...adapters.persistence.storage.sql import dispose_engine
+    from ...adapters.persistence.storage.bucket._layout import bucket_paths
+    from ...adapters.persistence.storage.sql.engine import dispose_engine
     from ...core.bucket_pointer import read_pointer
     from .._config_reset_models import (
         ConfigResetOperation,
@@ -409,7 +409,7 @@ def test_fresh_resume_canonicalizes_journal_bucket_identity_before_target_lock(
     tmp_path: Path,
 ) -> None:
     """A whitespace-bearing durable identity resumes under its canonical lock key."""
-    from ...adapters.persistence.storage.bucket import bucket_paths
+    from ...adapters.persistence.storage.bucket._layout import bucket_paths
     from .._config_reset_models import ConfigResetOperation, ConfigResetOperationStatus
     from .._config_reset_repository import ConfigResetJournalRepository
 
@@ -438,7 +438,7 @@ def test_resume_refuses_malformed_journal_identity_before_target_lock(
     tmp_path: Path,
 ) -> None:
     """An invalid journal target is an application error before deletion can start."""
-    from ...adapters.persistence.storage.bucket import bucket_paths
+    from ...adapters.persistence.storage.bucket._layout import bucket_paths
     from .._config_reset_repository import ConfigResetJournalRepository
     from ..config_reset import ConfigResetError, resume_config_reset
 
@@ -478,8 +478,8 @@ def test_a_deletion_marker_cannot_attest_an_erase_that_is_not_its_own(tmp_path: 
     """
     from pydantic import ValidationError
 
-    from ...adapters.persistence.storage.bucket import bucket_paths
-    from ...adapters.persistence.storage.sql import dispose_engine
+    from ...adapters.persistence.storage.bucket._layout import bucket_paths
+    from ...adapters.persistence.storage.sql.engine import dispose_engine
     from .._config_reset_models import ConfigResetOperation
     from .._config_reset_repository import ConfigResetJournalRepository
 

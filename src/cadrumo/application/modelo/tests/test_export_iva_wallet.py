@@ -14,16 +14,13 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....adapters.persistence.storage import (
-    STORAGE_NAMESPACE_REGISTRY,
-    SecureObjectRepository,
-    dispose_engine,
-    get_engine,
-)
-from ....core.period import Period
+from ....adapters.persistence.storage._namespace_registry import STORAGE_NAMESPACE_REGISTRY
+from ....adapters.persistence.storage.sql.engine import dispose_engine, get_engine
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core.config import Settings
+from ....core.period import Period
 from ....domain.modelos.calculation_revision import CalculationRevisionState
-from ...calculations import IvaWalletDecisionRepository
+from ...calculations.observations_repository import IvaWalletDecisionRepository
 from .._export import ModeloExportCommand, export_modelo_revision
 from .._filing_actions import file_modelo_revision
 from .._iva_wallet_gate import ModeloIvaWalletReconciliationBlocked

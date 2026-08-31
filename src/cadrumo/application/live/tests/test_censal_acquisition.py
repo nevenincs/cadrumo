@@ -20,7 +20,7 @@ import inspect
 
 import pytest
 
-from ....core.access_gate import AeatLiveReadNotEnabledError
+from ....core.access_gate.errors import AeatLiveReadNotEnabledError
 from ..censo import (
     LIVE_CENSAL_READ_OPERATION,
     pull_censal_datos,

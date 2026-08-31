@@ -9,9 +9,9 @@ from pathlib import Path
 
 import pytest
 
-from ....core.period import Period
 from ....core.casilla_id import validated_casilla_id
 from ....core.directory_scan import scan_directory
+from ....core.period import Period
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,

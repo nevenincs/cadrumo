@@ -152,7 +152,7 @@ def test_every_cited_provision_exists_in_the_legal_catalogue() -> None:
     provision nothing can confirm -- which is the failure this row exists to
     close, one indirection further along.
     """
-    from ....core.resources import bundled_path
+    from ....core.resources._boundary import bundled_path
     from .._retencion_rate_advisory import _administrador_refs, _art95_refs
 
     # Through the shipped resolver rather than a hand-counted relative path,

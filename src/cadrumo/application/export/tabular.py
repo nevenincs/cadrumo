@@ -23,14 +23,14 @@ from types import MappingProxyType
 from xml.etree.ElementTree import ParseError
 from zipfile import BadZipFile
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_validator
 
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.external_constants import CSV_MIME_TYPE as _CSV_MIME_TYPE
 from ...core.external_constants import JSONL_MIME_TYPE as _JSONL_MIME_TYPE
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ...core.external_constants import XLSX_MIME_TYPE as _XLSX_MIME_TYPE
 from ...core.hashing import sha256_hex
+from ...core.models import STRICT_FROZEN_CONFIG
 from .errors import ExportFieldError, ExportFormatError
 
 
@@ -86,9 +86,9 @@ class TabularExportResult(BaseModel):
     media_type: str = Field(min_length=1)
     filename_extension: str = Field(min_length=1)
     payload: bytes
-    byte_size: int = Field(ge=0)
+    byte_size: NonNegativeInt
     sha256: str
-    row_count: int = Field(ge=0)
+    row_count: NonNegativeInt
     fieldnames: tuple[str, ...]
 
     @field_validator("fieldnames")

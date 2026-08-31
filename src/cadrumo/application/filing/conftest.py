@@ -39,8 +39,8 @@ import pytest
 from sqlalchemy import inspect as sa_inspect
 from sqlalchemy import text as sa_text
 
-from ...adapters.persistence.storage import USER_PROFILE_VALUE_NAMESPACE
-from ...adapters.persistence.storage.sql import SecureObjectRepository
+from ...adapters.persistence.storage._secure_object_namespaces import USER_PROFILE_VALUE_NAMESPACE
+from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 # Capsule publication mints the bucket's identity through ``UUID(str(profile_id))``

@@ -26,7 +26,7 @@ from ...core.bucket_pointer import resolve_repository_bucket_id
 from .errors import ModeloApplicationError
 
 if TYPE_CHECKING:
-    from ...adapters.persistence.storage import SecureObjectRepository
+    from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
     from ...domain.modelos.protocols import ModeloRecordCatalogueRepositoryProtocol
 
 
@@ -59,9 +59,7 @@ def secure_objects_for_application_filing_bucket(bucket_id: str) -> SecureObject
         A :class:`~adapters.persistence.storage.SecureObjectRepository`
         scoped to ``bucket_id``.
     """
-    from ...adapters.persistence.storage import (
-        secure_object_repository_for_bucket,
-    )
+    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 
     return secure_object_repository_for_bucket(bucket_id)
 

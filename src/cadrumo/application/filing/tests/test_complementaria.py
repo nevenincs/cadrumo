@@ -10,26 +10,23 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.filing.errors import ModeloAmendmentError, ModeloBuilderError
 from ....domain.filing.protocols import ModeloInputs
-from ....domain.filing.schema import ModeloDraft, ModeloValue, ModeloValueKind, compute_modelo_draft_id, registry_schema_version
-from ....domain.submission import (
-    ModeloDraftStatus,
-    ModeloPresentado,
-    SubmissionAttempt,
-    SubmissionStatus,
-    make_submission_id,
+from ....domain.filing.schema import (
+    ModeloDraft,
+    ModeloValue,
+    ModeloValueKind,
+    compute_modelo_draft_id,
+    registry_schema_version,
 )
-from .. import (
-    build_complementaria,
-    build_draft,
-    build_runtime_schema_provider,
-    load_amendment,
-)
-from ..runtime import ModeloOperatorProfile
+from ....domain.submission._models import ModeloPresentado, SubmissionAttempt, SubmissionStatus, make_submission_id
+from ....domain.submission._protocols import ModeloDraftStatus
+from .._complementaria import build_complementaria, load_amendment
+from .._draft_construction import build_draft
+from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -7,11 +7,11 @@ from decimal import Decimal, InvalidOperation
 import pytest
 from pydantic import ValidationError
 
-from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.period import Period
 from ....domain.filing.errors import ModeloBuilderError
 from ....domain.filing.schema import ModeloDraft, ModeloValueKind
-from ....domain.submission import ModeloDraftStatus
+from ....domain.submission._protocols import ModeloDraftStatus
 from ....tests.filing import build_registry_filing_draft, build_registry_filing_draft_from_decimals
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

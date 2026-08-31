@@ -46,13 +46,13 @@ from collections.abc import Mapping
 from decimal import Decimal
 from typing import Final
 
-from ...core.modelo import Modelo
 from ...core.casilla_id import CasillaId, validated_casilla_id
+from ...core.modelo import Modelo
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.period_offset_math import same_ejercicio_prior_quarter_anchors
 from ...domain.calculations.registry.schema import ModeloRevision
 from ..aggregation import CalculationSourceDiagnostic, casilla_registry_legal_refs
-from ..calculations import CalculationObservationRepository
+from ..calculations.observations_repository import CalculationObservationRepository
 
 __all__ = [
     "collect_prior_payment_minoracion_not_captured_diagnostics",

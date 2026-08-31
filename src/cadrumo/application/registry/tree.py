@@ -19,10 +19,10 @@ from __future__ import annotations
 from pathlib import Path
 from typing import NamedTuple
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, NonNegativeInt
 
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.resources import bundled_path as _bundled_path
+from ...core.resources._boundary import bundled_path as _bundled_path
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority as _ValidatedRegistryAuthority
 from ...domain.calculations.registry.ids import ExportLayoutId as _ExportLayoutId
 from ...domain.calculations.registry.ids import LegalRefId as _LegalRefId
@@ -47,21 +47,21 @@ class RegistryTreeReport(BaseModel):
 
     registry_root: str
     source_root: str | None = None
-    modelo_count: int = Field(ge=0)
-    revision_count: int = Field(ge=0)
-    legal_reference_count: int = Field(ge=0)
-    source_reference_count: int = Field(ge=0)
-    casilla_count: int = Field(ge=0)
-    formula_count: int = Field(ge=0)
-    extraction_profile_count: int = Field(ge=0)
-    cross_reference_count: int = Field(ge=0)
-    workbook_parity_ref_count: int = Field(ge=0)
-    verification_expectation_count: int = Field(ge=0)
-    application_link_count: int = Field(ge=0)
+    modelo_count: NonNegativeInt
+    revision_count: NonNegativeInt
+    legal_reference_count: NonNegativeInt
+    source_reference_count: NonNegativeInt
+    casilla_count: NonNegativeInt
+    formula_count: NonNegativeInt
+    extraction_profile_count: NonNegativeInt
+    cross_reference_count: NonNegativeInt
+    workbook_parity_ref_count: NonNegativeInt
+    verification_expectation_count: NonNegativeInt
+    application_link_count: NonNegativeInt
     application_link_surfaces: tuple[str, ...]
-    relation_count: int = Field(ge=0)
+    relation_count: NonNegativeInt
     relation_dependency_roles: tuple[str, ...]
-    filing_schedule_count: int = Field(ge=0)
+    filing_schedule_count: NonNegativeInt
     modelos: tuple[str, ...]
     revision_details: tuple[RegistryRevisionDetailReport, ...]
     verified: bool
@@ -78,7 +78,7 @@ class RegistryWorkbookParityDetailReport(BaseModel):
     workbook_source: _SourceRefId
     formula_coverage: str
     runner_required: bool
-    output_cell_count: int = Field(ge=0)
+    output_cell_count: NonNegativeInt
 
 
 class RegistryRevisionDetailReport(BaseModel):
@@ -91,16 +91,16 @@ class RegistryRevisionDetailReport(BaseModel):
     legal_refs: tuple[_LegalRefId, ...]
     source_refs: tuple[_SourceRefId, ...]
     export_layout_ids: tuple[_ExportLayoutId, ...]
-    export_layout_count: int = Field(ge=0)
-    export_record_count: int = Field(ge=0)
-    export_field_count: int = Field(ge=0)
-    deadline_window_count: int = Field(ge=0)
+    export_layout_count: NonNegativeInt
+    export_record_count: NonNegativeInt
+    export_field_count: NonNegativeInt
+    deadline_window_count: NonNegativeInt
     deadline_periods: tuple[str, ...]
     relation_ids: tuple[_RelationId, ...]
-    relation_count: int = Field(ge=0)
+    relation_count: NonNegativeInt
     relation_dependency_roles: tuple[str, ...]
     filing_schedule_ids: tuple[str, ...]
-    filing_schedule_count: int = Field(ge=0)
+    filing_schedule_count: NonNegativeInt
     portal_guard_policy_ids: tuple[str, ...]
     workbook_parity: tuple[RegistryWorkbookParityDetailReport, ...]
 

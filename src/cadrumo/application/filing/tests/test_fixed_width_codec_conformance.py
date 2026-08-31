@@ -8,11 +8,11 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.outbound.aeat.export import RegistryFixedWidthRecordRenderer
-from ....core.filing_producer_key import FilingProducerKey
-from ....core.period import Period
+from ....adapters.outbound.aeat.export._registry_record_renderer import RegistryFixedWidthRecordRenderer
 from ....core.casilla_id import CasillaId
 from ....core.directory_scan import scan_directory
+from ....core.filing_producer_key import FilingProducerKey
+from ....core.period import Period
 from ....domain.calculations.export_field_kind import CasillaFieldKind
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.export_parse import parse_export_payload
@@ -22,7 +22,7 @@ from ....domain.calculations.registry.schema_references import RegistrySnapshotR
 from ....domain.filing.errors import FilingExportValidationError
 from ....domain.filing.schema import ModeloDraft, registry_schema_version
 from ....domain.modelos.errors import ModeloExportError
-from ....domain.submission import ModeloDraftStatus
+from ....domain.submission._protocols import ModeloDraftStatus
 from .._export import _RecordRenderRow, _render_record
 from ._export_support import _typed_producer_snapshot
 

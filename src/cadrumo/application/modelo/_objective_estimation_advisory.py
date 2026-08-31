@@ -25,13 +25,17 @@ from collections.abc import Mapping
 from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING
 
+from ...core.decimal._coerce import coerce_decimal_strict
 from ...core.modelo import Modelo
-from ...core.decimal import coerce_decimal_strict
-from ...core.resources import bundled_path
+from ...core.resources._boundary import bundled_path
 from ...domain.calculations.registry.loader import load_legal_parameters_only
 from ...domain.deadlines.models import IrpfEstimationRegime, TaxpayerProfile
-from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ...domain.modelos.errors import ModeloValidationError
+from ...domain.modelos.verification_report import (
+    ModeloVerificationFinding,
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
+)
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.ids import SourceRefId

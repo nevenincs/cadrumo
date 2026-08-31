@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.errors import LedgerNoActiveBucketError
 from ....domain.transactions.models import Transaction, TransactionCatalogue

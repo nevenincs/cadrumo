@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.classification import SensitivityClass
+from ....core.classification.policies import SensitivityClass
 from ....domain.user_profile.schema import (
     ProfileFieldDefinition,
     ProfileFieldType,

@@ -11,10 +11,8 @@ import pytest
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....tests import general_m303_filing_evidence
 from ....tests.env_scope import ready_clave_settings
-from ...calculations import (
-    CalculationObservationRepository,
-    reconcile_modelo_303_iva_compensation,
-)
+from ...calculations._iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
+from ...calculations.observations_repository import CalculationObservationRepository
 from .._calculation_actions import calculate_modelo_revision
 from .._iva_wallet_gate import (
     ModeloIvaWalletReconciliationBlocked,

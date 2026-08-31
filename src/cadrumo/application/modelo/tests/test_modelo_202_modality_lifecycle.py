@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 
 from ....domain.calculations.registry.authority import bundled_authority
-from ...tests import register_wizard_catalogue
+from ...tests._wizard_catalogue_fixtures import register_wizard_catalogue
 
 __all__ = ["register_wizard_catalogue"]
 
@@ -25,21 +25,29 @@ from ....adapters.persistence.profile.modelos_verification_reports import Verifi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core.period import Period
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
-from ....domain.deadlines.models import EntityType, IVARegime, LegalEntityForm, M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile, TaxpayerProfile
+from ....domain.deadlines.models import (
+    EntityType,
+    IVARegime,
+    LegalEntityForm,
+    M303RegimeComposition,
+    M303TaxTerritory,
+    ModeloIVAProfile,
+    TaxpayerProfile,
+)
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
-from ....domain.modelos.filing_record import ExternalEvidenceKind
-from ....domain.modelos.work_unit import WorkUnit
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.filing_record import ExternalEvidenceKind
+from ....domain.modelos.work_unit import WorkUnit
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.env_scope import ready_clave_settings
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations import CalculationObservationRepository
+from ...calculations.observations_repository import CalculationObservationRepository
 from .._action_errors import (
     CalculationRevisionStateError,
     ModeloRequiredBindingsMissingError,
@@ -52,8 +60,8 @@ from .._export import (
 )
 from .._filing_actions import file_modelo_revision
 from .._verification_actions import verify_modelo_revision
-from ..work_lifecycle import create_work_unit
 from ..external_import_actions import import_external_filing_evidence
+from ..work_lifecycle import create_work_unit
 from .justificante_metadata import persist_justificante_metadata
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

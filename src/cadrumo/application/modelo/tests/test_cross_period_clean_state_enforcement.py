@@ -10,37 +10,54 @@ from typing import TYPE_CHECKING
 import pytest
 
 from ....domain.calculations.registry.authority import bundled_authority
-from ...tests import register_wizard_catalogue
+from ...tests._wizard_catalogue_fixtures import register_wizard_catalogue
 
 __all__ = ["register_wizard_catalogue"]
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.period import Period
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
-from ....domain.deadlines.models import CrossPeriodGroupMemberRoster, EntityType, IVARegime, IrpfIncomeCategory, M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile, TaxpayerProfile
+from ....domain.deadlines.models import (
+    CrossPeriodGroupMemberRoster,
+    EntityType,
+    IrpfIncomeCategory,
+    IVARegime,
+    M303RegimeComposition,
+    M303TaxTerritory,
+    ModeloIVAProfile,
+    TaxpayerProfile,
+)
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
-from ....domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind, ModeloRecord, ModeloRecordStatus, derive_filing_record_id
-from ....domain.modelos.filing_repository import upsert_filing_record
-from ....domain.modelos.verification_report import ModeloVerificationFindingKind
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.filing_record import (
+    ExternalEvidence,
+    ExternalEvidenceKind,
+    ModeloRecord,
+    ModeloRecordStatus,
+    derive_filing_record_id,
+)
+from ....domain.modelos.filing_repository import upsert_filing_record
+from ....domain.modelos.verification_report import ModeloVerificationFindingKind
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.env_scope import ready_clave_settings
 from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations import (
-    CalculationObservationRepository,
+from ...calculations.cross_period_clean_state import (
     CrossPeriodExpectedMemberSet,
     NoPriorObligationProvenanceKind,
-    ObservationSourceKind,
     cross_period_dependency_requirements,
+)
+from ...calculations.observations_repository import (
+    CalculationObservationRepository,
+    ObservationSourceKind,
     is_official_aeat_observation_source,
 )
 from .._action_errors import ModeloCrossPeriodCleanStateError
@@ -55,14 +72,14 @@ from .._export import (
 from .._filed_revision_observation import APP_FILING_SOURCE_KIND
 from .._filing_actions import file_modelo_revision
 from .._verification_actions import verify_modelo_revision
-from ..work_lifecycle import create_work_unit
 from ..external_import_actions import import_external_filing_evidence
+from ..work_lifecycle import create_work_unit
 from .justificante_metadata import persist_justificante_metadata
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
-    from ....adapters.persistence.storage import SecureObjectRepository
+    from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 
 _CLOCK = datetime(2026, 6, 5, 10, 0, tzinfo=UTC)
 _M390_EJERCICIO_CASILLA: CasillaId = validated_casilla_id(

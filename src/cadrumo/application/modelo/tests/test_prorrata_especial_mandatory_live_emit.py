@@ -39,25 +39,26 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from ....core.modelo import Modelo
 from ....core.prorrata_register import (
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,
 )
-from ....core.modelo import Modelo
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.prorrata import InputClassification
-from ....domain.prorrata_register import ProrrataRegisterEntry, SectorDefinition
+from ....domain.prorrata_register.register import ProrrataRegisterEntry, SectorDefinition
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...aggregation import CalculationSourceDiagnostic
-from ...calculations import CalculationObservationRepository
-from ...prorrata_register import ProrrataRegisterRepository, ProrrataRegisterService
+from ...calculations.observations_repository import CalculationObservationRepository
+from ...prorrata_register._service import ProrrataRegisterService
 from .._calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
 from .._prorrata_regularizacion_advisory import collect_prorrata_regularizacion_diagnostics
 

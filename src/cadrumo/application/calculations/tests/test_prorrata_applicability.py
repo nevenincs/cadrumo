@@ -22,7 +22,7 @@ from decimal import Decimal
 import pytest
 
 from ....core.prorrata_register import ProrrataRegisterRegime
-from ....domain.prorrata_register import ProrrataRegisterEntry
+from ....domain.prorrata_register.register import ProrrataRegisterEntry
 from .._prorrata_regularizacion import (
     ProrrataDeclaredVolumeLedgerRollup,
     derive_prorrata_applicability,

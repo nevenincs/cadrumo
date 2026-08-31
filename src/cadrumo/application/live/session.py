@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from ...application.auth.session_types import AeatSession
 from ...application.auth.sessions import ensure_authenticated_aeat_session
-from ...core.access_gate import AeatAccessGate
+from ...core.access_gate.gate import AeatAccessGate
 from ...core.config import Settings, load_settings
 
 

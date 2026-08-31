@@ -73,8 +73,9 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, U
 from ....tests import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
-from ...calculations import CalculationObservationRepository, IvaWalletDecisionRepository
-from ...invoices import build_catalogue_invoice, link_invoice_transaction_catalogues
+from ...calculations.observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository
+from ...invoices._creation import build_catalogue_invoice
+from ...invoices._linking import link_invoice_transaction_catalogues
 from ...modelo._calculation_actions import calculate_modelo_revision_from_bucket_aggregation
 from ...modelo._filed_revision_observation import persist_filed_revision_observation
 from ...modelo._m303_regimen_simplificado_scope import active_taxpayer_profile

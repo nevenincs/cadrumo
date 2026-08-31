@@ -17,12 +17,11 @@ from collections.abc import Callable, Iterable, Mapping
 from datetime import date
 from typing import Final, Literal
 
-from ....core.period import Period
+from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.casilla_id import CasillaId
-from ....core.aggregation import BindingSourceKind
-from ....core.aggregation import BindingAggregationOp
 from ....core.hashing import sha256_hex
 from ....core.i18n import tr
+from ....core.period import Period
 from ....domain.calculations.registry.binding_aggregation import binding_aggregation_op
 from ....domain.calculations.registry.binding_selector_utils import (
     BindingRowSetSelector,

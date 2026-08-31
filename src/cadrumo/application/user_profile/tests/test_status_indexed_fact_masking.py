@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.classification import SensitivityClass
+from ....core.classification.policies import SensitivityClass
 from ....domain.user_profile.labels import profile_field_label
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.schema import (

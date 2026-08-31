@@ -35,9 +35,9 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field, field_validator
 
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.errors.severity import BaseSeverity
 from ...core.i18n import Translatable as tr
+from ...core.models import STRICT_FROZEN_CONFIG
 
 
 class LedgerImportDiagnosticKind(StrEnum):

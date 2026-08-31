@@ -17,8 +17,7 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ....tests.profile_capsule import seed_test_profile_record
+from ....tests.profile_capsule import seed_modelo_ready_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...operations.registry import OperationSchemaIdentityV1
 from .._edit_execution import apply_modelo_edit
@@ -62,25 +61,15 @@ _CLOCK = datetime(2026, 1, 10, tzinfo=UTC)
 
 
 def _seed_minimal_profile(objects: SecureObjectRepository) -> None:
-    seed_test_profile_record(
-        UserProfileRecord(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=_BUCKET_ID,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value="12345678Z"),
-                UserProfileFact(path="activities.description", value="Spanish rental income"),
-                UserProfileFact(path="iva.regime", value="GENERAL"),
-                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                UserProfileFact(path="iva.redeme_enrolled", value=False),
-                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            ),
-            created_at=_CLOCK,
-            updated_at=_CLOCK,
-        )
-    )
+    """Seed the modelo readiness baseline through the canonical seeder.
+
+    The fact tuple this used to restate lived here in four identical
+    copies. It is declared once in `tests.profile_capsule` now, because
+    the readiness gate decides what modelo work may run at all and every
+    copy was another place for that answer to drift.
+    """
+    del objects
+    seed_modelo_ready_profile_record(str(_BUCKET_ID), clock=_CLOCK)
 
 
 def _schema_identity() -> OperationSchemaIdentityV1:

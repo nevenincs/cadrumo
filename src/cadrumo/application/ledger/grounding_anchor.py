@@ -84,7 +84,7 @@ from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel
 
-from ...core.decimal import coerce_finite_european_decimal
+from ...core.decimal._coerce import coerce_finite_european_decimal
 from ...core.document_shape import DocumentShape
 from ...core.field_grounding import FieldGroundingOutcome
 from ...core.field_origin import FieldOrigin
@@ -95,7 +95,7 @@ from .document_transcription import DocumentTranscription
 from .invoice_draft_records import FieldAmbiguityCandidate, FieldProvenance
 
 if TYPE_CHECKING:
-    from ...adapters.inbound.einvoice import ParsedEInvoice
+    from ...adapters.inbound.einvoice._parsers import ParsedEInvoice
     from .evidence_input import EvidenceInput
 
 __all__ = [

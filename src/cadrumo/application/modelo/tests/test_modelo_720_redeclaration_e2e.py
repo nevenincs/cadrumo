@@ -46,28 +46,34 @@ from pathlib import Path
 import pytest
 
 from ....domain.calculations.registry.authority import bundled_authority
-from ...tests import register_wizard_catalogue
+from ...tests._wizard_catalogue_fixtures import register_wizard_catalogue
 
 __all__ = ["register_wizard_catalogue"]
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....core.aggregation import BindingSourceKind
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.modelo import Modelo
 from ....core.period import Period
-from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry.binding_selector_utils import selector_as_dict
 from ....domain.calculations.registry.schema import DataBindingDefinition
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.deadlines.models import FiscalResidency, IVARegime, TaxpayerProfile
-from ....domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity, VerificationReport
 from ....domain.modelos.calculation_revision import CalculationRevision
+from ....domain.modelos.verification_report import (
+    ModeloVerificationFinding,
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
+    VerificationReport,
+)
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations import CalculationObservationRepository, modelo_720_prior_baseline_observation
+from ...calculations._foreign_asset_redeclaration import modelo_720_prior_baseline_observation
+from ...calculations.observations_repository import CalculationObservationRepository
 from .._calculation_actions import _resolve_bucket_source_mesh, calculate_modelo_revision
 from .._verification_actions import verify_modelo_revision
 from ..work_lifecycle import create_work_unit

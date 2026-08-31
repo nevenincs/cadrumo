@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, NonNegativeInt
 
+from ..core.identity._digest import ContentDigest
 from ..core.models import STRICT_FROZEN_CONFIG
-from ..core.identity import ContentDigest
 
 
 class BucketDeletionFingerprint(BaseModel):
@@ -28,7 +28,7 @@ class BucketDeletionFingerprint(BaseModel):
     schema_version: int = Field(default=1, ge=1)
     digest: ContentDigest
     file_count: int = Field(ge=1)
-    total_bytes: int = Field(ge=0)
+    total_bytes: NonNegativeInt
 
 
 __all__ = ["BucketDeletionFingerprint"]

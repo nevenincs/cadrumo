@@ -14,7 +14,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from decimal import Decimal
 
-from ...core.money import round_to_cents
+from ...core.money.rounding import round_to_cents
 
 __all__ = ["derive_child_amounts"]
 

@@ -37,7 +37,7 @@ import pytest
 
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ....domain.calculations.registry.tests import read_manual_worked_example
+from ....domain.calculations.registry.tests._manual_oracle_support import read_manual_worked_example
 from ....domain.contribuyente.renta_codes import RentaMaritalStatus
 from ....domain.user_profile.values import UserProfileFactValue
 from ..profile_binding import (

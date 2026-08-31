@@ -33,7 +33,7 @@ from typing import TYPE_CHECKING, ClassVar
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
+from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.filing_year import FilingYear
 from ...core.hashing import sha256_hex

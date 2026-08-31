@@ -94,13 +94,13 @@ def test_register_profile_copy_sources_is_idempotent() -> None:
 
 
 def _lookup(concept_id: str):
-    from ...corpus_search import lookup_terminology
+    from ...corpus_search._terminology import lookup_terminology
 
     return lookup_terminology(concept_id)
 
 
 def _first_non_approved_concept_id() -> str | None:
-    from ...corpus_search import load_terminology_concepts
+    from ...corpus_search._terminology import load_terminology_concepts
 
     for concept in load_terminology_concepts():
         if concept.lifecycle != "approved":

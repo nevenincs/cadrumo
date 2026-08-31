@@ -24,9 +24,9 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from ...core.modelo import Modelo
-from ...core.casilla_id import CasillaId
 from ...core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS, BindingSourceKind
+from ...core.casilla_id import CasillaId
+from ...core.modelo import Modelo
 from ...domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
     derive_modelo_applicability,

@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 
-from ...core.filing_producer_key import FilingProducerKey
-from ...core.result_disposition import ResultDisposition
-from ...core.modelo import Modelo
 from ...core.casilla_id import CasillaId
+from ...core.filing_producer_key import FilingProducerKey
+from ...core.modelo import Modelo
+from ...core.result_disposition import ResultDisposition
 from ...domain.calculations.export_field_kind import CasillaFieldKind
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.export_semantics import ExportComputedKey, ExportDraftAttribute

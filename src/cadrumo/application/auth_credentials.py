@@ -6,8 +6,8 @@ from pathlib import Path
 
 from pydantic import BaseModel, SecretStr
 
-from ..core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..core.config import Settings
+from ..core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 
 class ActiveCertificateCredentials(BaseModel):

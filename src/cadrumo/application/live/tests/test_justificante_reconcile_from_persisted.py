@@ -7,12 +7,12 @@ from typing import NamedTuple
 
 import pytest
 
-from ...tests import isolated_profile_backend as _isolated_backend
+from ...tests._profile_backend_fixtures import _isolated_backend
 
 __all__ = ["_isolated_backend"]
 
-from ....core.modelo import Modelo
 from ....core.directory_scan import scan_directory
+from ....core.modelo import Modelo
 from ...modelo.reconciliation import ReconciliationEvidenceInvalidError
 from ...modelo.reconciliation_records import (
     ModeloReconciliationVerdict,

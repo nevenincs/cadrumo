@@ -27,15 +27,15 @@ from typing import Protocol
 
 from pydantic import ValidationError
 
-from ..core.link_safety import is_link_like
-from ..core.hex import HEX_PATTERN_64
-from ..core.storage_taxonomy_locations import storage_location
-from ..core.storage_taxonomy import StorageCategory
-from ..core.locks import exclusive_file_lock
 from ..core.atomic_write import atomic_write_hardened_text
 from ..core.directory_scan import scan_directory
 from ..core.errors.hierarchy import CadrumoError
 from ..core.external_constants import UTF_8_ENCODING
+from ..core.hex import HEX_PATTERN_64
+from ..core.link_safety import is_link_like
+from ..core.locks import exclusive_file_lock
+from ..core.storage_taxonomy import StorageCategory
+from ..core.storage_taxonomy_locations import storage_location
 
 JOURNAL_OPERATION_ID_PATTERN = re.compile(HEX_PATTERN_64)
 _DIRECTORY_MODE = 0o700

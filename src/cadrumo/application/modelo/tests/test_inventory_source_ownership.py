@@ -6,8 +6,8 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.casilla_id import validated_casilla_id
 from ....core.aggregation import BindingSourceKind
+from ....core.casilla_id import validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision

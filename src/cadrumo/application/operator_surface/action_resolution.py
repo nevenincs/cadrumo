@@ -8,13 +8,14 @@ authorities before projecting a next action onto a successful notice.
 
 from __future__ import annotations
 
-from ...core.operator_action_enums import ActionArgumentStatus
 from ...core.json_contract import (
     ResolvedActionArgument,
     ResolvedActionReference,
     ResolvedNoticeAction,
 )
-from ..operator_actions import ActionArgumentBindingSpecification, ActionCatalogue, ActionReference
+from ...core.operator_action_enums import ActionArgumentStatus
+from ..operator_actions._catalogue import ActionArgumentBindingSpecification, ActionCatalogue
+from ..operator_actions._models import ActionReference
 from .manifest import OperatorSurfaceReconciliation, ResolvedCatalogueAction
 
 

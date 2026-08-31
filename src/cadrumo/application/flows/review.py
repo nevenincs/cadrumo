@@ -12,10 +12,10 @@ completeness gate.
 
 from __future__ import annotations
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, NonNegativeInt, model_validator
 
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.flows import PageStatus
+from ...core.models import STRICT_FROZEN_CONFIG
 from .definition import FlowDefinition
 from .engine import FlowState, page_status, visible_sequence
 from .errors import FlowSubmitError
@@ -60,8 +60,8 @@ class ReviewProjection(BaseModel):
     flow_verdicts: tuple[ValidationVerdict, ...] = ()
     submit_eligible: bool
     blocking: tuple[ValidationVerdict, ...] = ()
-    answered_count: int = Field(ge=0)
-    required_remaining: int = Field(ge=0)
+    answered_count: NonNegativeInt
+    required_remaining: NonNegativeInt
 
     @model_validator(mode="after")
     def _derived_state_matches_rows(self) -> ReviewProjection:

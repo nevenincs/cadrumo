@@ -29,9 +29,9 @@ from typing import Any
 
 import pytest
 
-from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....core.resources import bundled_path
+from ....core.period import Period
+from ....core.resources._boundary import bundled_path
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id

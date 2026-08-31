@@ -21,7 +21,10 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.inbound.financial.providers import CsvProvider, OfxProvider, PdfN26Provider, XlsxProvider
+from ....adapters.inbound.financial.providers._csv import CsvProvider
+from ....adapters.inbound.financial.providers._ofx import OfxProvider
+from ....adapters.inbound.financial.providers._pdf_n26 import PdfN26Provider
+from ....adapters.inbound.financial.providers._xlsx import XlsxProvider
 from ....domain.transactions.errors import TransactionValidationError
 from ..actions_import import LedgerProviderID, _resolve_financial_provider
 

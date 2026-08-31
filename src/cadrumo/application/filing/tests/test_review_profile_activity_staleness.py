@@ -35,25 +35,24 @@ from pathlib import Path
 
 import pytest
 
-from ....core.period import Period
 from ....core.bucket_pointer import read_pointer
 from ....core.config import load_settings
+from ....core.period import Period
 from ....domain.filing.protocols import CasillaSchemaProvider
 from ....domain.filing.schema import ModeloDraft
-from ....domain.submission import ModeloDraftStatus
+from ....domain.submission._protocols import ModeloDraftStatus
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.profile_capsule import open_test_profile_session, set_active_test_profile_facts
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
-from .. import (
+from .._draft_construction import build_draft
+from .._review import (
     ModeloApprovalStaleReason,
     approval_stale_reasons,
     approve_draft,
-    build_draft,
-    build_runtime_schema_provider,
+    empty_profile_activity_fingerprint,
 )
-from .._review import empty_profile_activity_fingerprint
-from ..runtime import ModeloOperatorProfile
+from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

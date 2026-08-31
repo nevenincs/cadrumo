@@ -24,8 +24,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.persistence.storage import PathContainmentError, SecureObjectRowIdentityError
 from ....adapters.persistence.storage.crypto.encrypted_columns import secure_object_key_digest
+from ....adapters.persistence.storage.errors import PathContainmentError, SecureObjectRowIdentityError
 from ....core.aggregation import AggregationCaptureKind, RetencionClave
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.period import Period

@@ -40,7 +40,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import ClassVar, Literal
 
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field, NonNegativeInt, ValidationError
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core.country_code import CountryCodeAlpha2
@@ -190,9 +190,9 @@ class BulkInvoiceImportResult(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    rows: int = Field(ge=0)
-    created: int = Field(ge=0)
-    skipped_duplicate: int = Field(ge=0)
+    rows: NonNegativeInt
+    created: NonNegativeInt
+    skipped_duplicate: NonNegativeInt
     refused: tuple[BulkInvoiceImportRowFailure, ...] = ()
     created_invoice_ids: tuple[str, ...] = ()
 

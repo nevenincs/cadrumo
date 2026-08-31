@@ -5,7 +5,6 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from ....core.result_disposition import ResultDisposition
 from ....core.filing_projection_ref import (
     M303DifferentiatedDeductionProjectionField,
     M303DifferentiatedDeductionProjectionRef,
@@ -15,6 +14,7 @@ from ....core.filing_projection_ref import (
     M303ProrrataActivityProjectionRef,
 )
 from ....core.modelo import Modelo
+from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.export_field_kind import CasillaFieldKind
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_exports import (
@@ -23,8 +23,8 @@ from ....domain.calculations.registry.schema_exports import (
     ExportRecordDefinition,
 )
 from ....domain.filing.errors import FilingExportValidationError
-from .. import build_filing_producer_snapshot
 from .._export import _preflight_projection_plan
+from .._producer_snapshot import build_filing_producer_snapshot
 from .._projection import (
     FilingProjectionPlan,
     FilingProjectionValue,

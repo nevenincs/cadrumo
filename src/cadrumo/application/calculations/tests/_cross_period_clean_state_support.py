@@ -10,39 +10,46 @@ from functools import cache
 
 from pydantic import AnyHttpUrl, TypeAdapter
 
-from ....adapters.inbound.pdf import source_pdf_reference_path
+from ....adapters.inbound.pdf._utils import source_pdf_reference_path
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....core.authority_grade import RegistryAuthorityGrade
-from ....core.period import Period
 from ....core.casilla_id import CasillaId
-from ....core.resources import bundled_path
+from ....core.period import Period
+from ....core.resources._boundary import bundled_path
 from ....domain.calculations.registry.applicability_modelo202 import Modelo202Modality
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.snapshot import build_snapshot
 from ....domain.justificante import Justificante
-from ....domain.modelos.codes import ModeloCode
-from ....domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind, ModeloRecord, ModeloRecordCatalogue, ModeloRecordStatus, derive_filing_record_id
-from ....domain.modelos.work_unit import WorkUnit
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.filing_record import (
+    ExternalEvidence,
+    ExternalEvidenceKind,
+    ModeloRecord,
+    ModeloRecordCatalogue,
+    ModeloRecordStatus,
+    derive_filing_record_id,
+)
+from ....domain.modelos.work_unit import WorkUnit
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_modelo_observation, registry_grounded_observations
 from ....tests.registry_tree import bundled_registry_tree
-from ...modelo.work_lifecycle import create_work_unit
 from ...modelo.external_import_actions import import_external_filing_evidence
-from .. import (
-    CalculationObservationRepository,
+from ...modelo.work_lifecycle import create_work_unit
+from .._cross_period_external_evidence import filing_external_evidence_blockers
+from ..cross_period_clean_state import (
     CrossPeriodCleanStateBlocker,
     CrossPeriodCleanStateVerdict,
     CrossPeriodDependencyEvidence,
@@ -50,9 +57,8 @@ from .. import (
     CrossPeriodExpectedMemberSet,
     cross_period_dependency_requirements,
     evaluate_cross_period_clean_state,
-    filing_external_evidence_blockers,
 )
-from ..observations_repository import ObservationSourceKind
+from ..observations_repository import CalculationObservationRepository, ObservationSourceKind
 
 _PROFILE_ID = "39039039-0390-4390-8390-390390390390"
 _BUCKET_ID = _PROFILE_ID

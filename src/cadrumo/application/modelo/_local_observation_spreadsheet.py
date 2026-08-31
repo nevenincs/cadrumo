@@ -36,11 +36,8 @@ from typing import Final
 
 from openpyxl import load_workbook
 
-from ...core.decimal import (
-    european_thousands_reading_is_ambiguous,
-    normalize_decimal_separators,
-    try_parse_canonical_decimal,
-)
+from ...core.decimal._coerce import normalize_decimal_separators
+from ...core.decimal._grammar import european_thousands_reading_is_ambiguous, try_parse_canonical_decimal
 from ...core.external_constants import XLSX_EXTENSION
 from ...core.tabular import (
     TabularSourceError,

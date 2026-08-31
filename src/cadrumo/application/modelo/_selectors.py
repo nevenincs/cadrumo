@@ -18,12 +18,12 @@ from typing import Literal
 from pydantic import BaseModel
 
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.identity import CalculationRevisionId, WorkUnitId
-from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
-from ...domain.modelos.work_unit import WorkUnit
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ...domain.modelos.errors import ModeloError
+from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
+from ...domain.modelos.work_unit import WorkUnit
 
 
 class ModeloCalculationRevisionSelector(StrEnum):

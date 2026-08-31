@@ -20,12 +20,11 @@ from datetime import date
 from typing import Final, NamedTuple, cast
 
 from ...adapters.persistence.profile.justificante import JustificanteRepository
-from ...core.aeat_csv import normalise_aeat_csv
 from ...core.authority_grade import RegistryAuthorityGrade
-from ...core.modelo import Modelo
-from ...core.period import Period
 from ...core.casilla_id import CasillaId
 from ...core.identity import CalculationRevisionId, same_tax_identifier
+from ...core.modelo import Modelo
+from ...core.period import Period
 from ...domain.calculations.registry.applicability_modelo202 import Modelo202Modality
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ...domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements
@@ -36,11 +35,20 @@ from ...domain.calculations.registry.relations import (
     source_presence_gaps,
 )
 from ...domain.calculations.registry.schema import RegistrySnapshot
-from ...domain.justificante import Justificante
-from ...domain.modelos.filing_record import ExternalEvidenceKind, ModeloRecord, ModeloRecordCatalogue, ModeloRecordStatus, is_justificante_backed_external_evidence, is_receipt_bound_external_evidence
-from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol, ModeloRecordCatalogueRepositoryProtocol, VerificationReportCatalogueRepositoryProtocol
-from ...domain.modelos.verification_report import VerificationCompletenessStatus, VerificationReportCatalogue
 from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue, CalculationRevisionState
+from ...domain.modelos.filing_record import (
+    ExternalEvidenceKind,
+    ModeloRecord,
+    ModeloRecordCatalogue,
+    ModeloRecordStatus,
+)
+from ...domain.modelos.protocols import (
+    CalculationRevisionCatalogueRepositoryProtocol,
+    ModeloRecordCatalogueRepositoryProtocol,
+    VerificationReportCatalogueRepositoryProtocol,
+)
+from ...domain.modelos.verification_report import VerificationCompletenessStatus, VerificationReportCatalogue
+from ._cross_period_external_evidence import filing_external_evidence_blockers as _filing_external_evidence_blockers
 from ._per_grupo_member_keys import per_grupo_member_requirement_keys
 from ._revision_carry_gate import revision_carry_outcome
 from .cross_period_models import (
@@ -965,152 +973,6 @@ def _evaluate_requirement(
     )
 
 
-def _filing_external_evidence_blockers(
-    filing: ModeloRecord,
-    observation_source_kind: str | None,
-    justificante_repository: JustificanteRepository,
-    taxpayer_tax_id: str | None,
-    observation_source_metadata: Mapping[str, str] | None = None,
-) -> list[CrossPeriodCleanStateBlocker]:
-    blockers: list[CrossPeriodCleanStateBlocker] = []
-    if filing.status is not ModeloRecordStatus.VIGENTE:
-        blockers.append(CrossPeriodCleanStateBlocker.MISSING_CURRENT_FILING_RECORD)
-    if not filing.aeat_accepted:
-        blockers.append(CrossPeriodCleanStateBlocker.MISSING_AEAT_ACCEPTANCE)
-    if filing.external_evidence is None:
-        blockers.append(CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE)
-        if not is_official_aeat_observation_source(observation_source_kind or ""):
-            blockers.append(CrossPeriodCleanStateBlocker.LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE)
-    elif filing.external_evidence.kind is ExternalEvidenceKind.AEAT_CSV_REGISTER:
-        metadata_reference = _clean_metadata_value(
-            (observation_source_metadata or {}).get("external_evidence_reference_id"),
-        )
-        metadata_filing_id = _clean_metadata_value(
-            (observation_source_metadata or {}).get("filing_record_id"),
-        )
-        # Absent and divergent are different operator situations and must not
-        # collapse: MISSING sends the operator to CAPTURE the register record,
-        # MISMATCHED sends them to RESOLVE a divergence, and asking someone to
-        # reconcile a divergence when nothing was ever captured is wrong
-        # guidance. The receipt-bound branch below already splits these by
-        # testing for None first; this is the same split for the register.
-        if metadata_reference is None and metadata_filing_id is None:
-            blockers.append(CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE_RECORD)
-        elif (
-            observation_source_kind != ObservationSourceKind.AEAT_CSV_REGISTER.value
-            or metadata_reference != filing.external_evidence.reference_id
-            or metadata_filing_id != filing.filing_record_id
-        ):
-            blockers.append(CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD)
-    elif not is_justificante_backed_external_evidence(filing.external_evidence.kind):
-        blockers.append(CrossPeriodCleanStateBlocker.MISSING_JUSTIFICANTE_VERIFICATION)
-    elif is_receipt_bound_external_evidence(filing.external_evidence.kind):
-        justificante = justificante_repository.load(filing.external_evidence.reference_id)
-        if justificante is None:
-            blockers.append(CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE_RECORD)
-        elif not _justificante_matches_filing_apart_from_owner(filing, justificante, taxpayer_tax_id=taxpayer_tax_id):
-            blockers.append(CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD)
-        elif _resolved_filing_identity(filing, taxpayer_tax_id) is None:
-            blockers.append(CrossPeriodCleanStateBlocker.UNRESOLVED_TAXPAYER_IDENTITY)
-        else:
-            blockers.extend(_justificante_observation_reference_blockers(justificante, observation_source_metadata))
-    return blockers
-
-
-def _justificante_observation_reference_blockers(
-    justificante: Justificante,
-    observation_source_metadata: Mapping[str, str] | None,
-) -> list[CrossPeriodCleanStateBlocker]:
-    """Require comparable filed-history references to agree with the parsed receipt."""
-    if not observation_source_metadata:
-        return []
-    blockers: list[CrossPeriodCleanStateBlocker] = []
-    metadata_csv = _clean_metadata_csv(
-        observation_source_metadata.get("aeat_justificante_csv") or observation_source_metadata.get("justificante_csv"),
-    )
-    receipt_csv = normalise_aeat_csv(justificante.csv)
-    if metadata_csv is not None and metadata_csv != receipt_csv:
-        blockers.append(CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD)
-    metadata_csvs = _clean_metadata_csvs(observation_source_metadata.get("aeat_justificante_csvs"))
-    if metadata_csvs and receipt_csv not in metadata_csvs:
-        blockers.append(CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD)
-
-    metadata_expediente_id = _clean_metadata_value(observation_source_metadata.get("aeat_expediente_id"))
-    presentation_id = _clean_metadata_value(justificante.presentation_id)
-    if metadata_expediente_id is not None:
-        has_csv_reference = metadata_csv is not None or bool(metadata_csvs)
-        if (presentation_id is None and not has_csv_reference) or (
-            presentation_id is not None and metadata_expediente_id.casefold() != presentation_id.casefold()
-        ):
-            blockers.append(CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD)
-    return blockers
-
-
-def _clean_metadata_value(value: str | None) -> str | None:
-    cleaned = (value or "").strip()
-    return cleaned or None
-
-
-def _clean_metadata_csv(value: str | None) -> str | None:
-    """Return a filed-history CSV reference in the one comparison form, or ``None``.
-
-    Distinct from :func:`_clean_metadata_value`, which stays a plain trim
-    because it also serves the expediente id -- a different namespace whose
-    grammar this transform does not describe. Normalising here rather than at
-    each comparison means the checks above are plain equality and cannot drift
-    apart from one another.
-    """
-    return normalise_aeat_csv(value or "") or None
-
-
-def _clean_metadata_csvs(value: str | None) -> tuple[str, ...]:
-    return tuple(dict.fromkeys(normalise_aeat_csv(item) for item in (value or "").split(",") if item.strip()))
-
-
-def _resolved_filing_identity(filing: ModeloRecord, taxpayer_tax_id: str | None) -> str | None:
-    """Return the identity a filing's receipt is checked against, or ``None`` when there is none.
-
-    The member NIF wins for a fan-in row; otherwise the taxpayer's own. Absence
-    is reported as absence rather than folded into the match result, so the
-    caller can say WHICH of the two failures occurred: an unidentifiable receipt
-    and someone else's receipt are different facts about the operator's tree and
-    need different remedies.
-    """
-    expected_tax_id = filing.member_nif or taxpayer_tax_id
-    if expected_tax_id is None or not expected_tax_id.strip():
-        return None
-    return expected_tax_id
-
-
-def _justificante_matches_filing_apart_from_owner(
-    filing: ModeloRecord,
-    justificante: Justificante,
-    *,
-    taxpayer_tax_id: str | None,
-) -> bool:
-    """Whether the receipt matches this filing on every axis EXCEPT ownership.
-
-    When no identity is resolvable the ownership axis is neutralised (probed with
-    the receipt's own tax id) rather than failed, so a genuinely mismatched
-    modelo, year or period is still reported as a mismatch. Collapsing the two
-    would let an absent identity MASK a real metadata divergence behind an
-    identity complaint, which is the inverse of the confusion this split exists
-    to remove. Ownership is then judged separately by the caller.
-    """
-    resolved = _resolved_filing_identity(filing, taxpayer_tax_id)
-    # The receipt's own tax id is a required, min-length field, so the fallback
-    # can be blank-but-present but never absent; only the blank case is live.
-    expected_tax_id = resolved if resolved is not None else justificante.tax_id
-    if not expected_tax_id.strip():
-        return False
-    return justificante.matches_filing_target(
-        modelo=str(filing.modelo),
-        filing_year=filing.filing_year,
-        period=filing.period,
-        tax_id=expected_tax_id,
-    )
-
-
 def _filing_revision_blockers(
     filing: ModeloRecord,
     requirement: CrossPeriodDependencyRequirement,
@@ -1247,9 +1109,6 @@ def _combined_source_kind(source_kinds: Iterable[ObservationSourceKind]) -> Obse
     return None
 
 
-filing_external_evidence_blockers = _filing_external_evidence_blockers
-
-
 __all__ = [
     "CrossPeriodCleanStateBlocker",
     "CrossPeriodCleanStateVerdict",
@@ -1264,6 +1123,5 @@ __all__ = [
     "cross_period_dependency_inventory",
     "cross_period_dependency_requirements",
     "evaluate_cross_period_clean_state",
-    "filing_external_evidence_blockers",
     "partition_cross_period_requirements_by_activity_start",
 ]

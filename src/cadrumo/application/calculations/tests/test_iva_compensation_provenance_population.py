@@ -51,24 +51,28 @@ from decimal import Decimal
 import pytest
 from pydantic import AnyHttpUrl
 
-from ....adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue
-from ....core.observed_header_fact import ObservedHeaderFact
-from ....core.casilla_value_kind import CasillaValueKind
-from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
-from ....core.result_disposition import ResultDisposition
-from ....core.modelo import Modelo
-from ....core.period import Period
+from ....adapters.outbound.aeat.sede.schema import (
+    FiledDeclaracionArtefact,
+    FiledDeclaracionObservation,
+    ObservedCasillaValue,
+)
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.casilla_value_kind import CasillaValueKind
 from ....core.config import Settings
+from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
+from ....core.modelo import Modelo
+from ....core.observed_header_fact import ObservedHeaderFact
+from ....core.period import Period
+from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
-from ....domain.modelos.codes import ModeloCode
-from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile

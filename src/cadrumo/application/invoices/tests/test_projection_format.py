@@ -20,7 +20,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.decimal import format_decimal as _canonical_format_decimal
+from ....core.decimal._format import format_decimal as _canonical_format_decimal
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

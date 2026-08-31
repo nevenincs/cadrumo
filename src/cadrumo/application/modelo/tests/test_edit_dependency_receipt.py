@@ -18,8 +18,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core.period import Period
 from ....core.aggregation import BindingSourceKind
+from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue

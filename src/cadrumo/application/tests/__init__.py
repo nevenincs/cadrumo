@@ -14,10 +14,4 @@ exercise wizard-backed casillas.
 
 from __future__ import annotations
 
-from ._profile_backend_fixtures import _isolated_backend as isolated_profile_backend
-from ._wizard_catalogue_fixtures import register_wizard_catalogue
-
-__all__ = [
-    "isolated_profile_backend",
-    "register_wizard_catalogue",
-]
+__all__: tuple[str, ...] = ()

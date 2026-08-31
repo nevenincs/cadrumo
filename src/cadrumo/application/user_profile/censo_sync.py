@@ -33,9 +33,9 @@ from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel
 
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.identity import IdentityError, validate_spanish_tax_id
 from ...core.logging import get_logger
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.user_profile.values import UserProfileFact
 from .censal_observation import CensalObservation, CensalObservationAddress
 from .censo_errors import CensoSyncError

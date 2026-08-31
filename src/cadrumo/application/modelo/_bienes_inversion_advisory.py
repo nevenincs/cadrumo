@@ -51,14 +51,14 @@ See Also:
 
 from __future__ import annotations
 
+from ...adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
 from ...core.modelo import Modelo
 from ...core.period import Period
-from ...domain.bienes_inversion import BienInversionRecordError
+from ...domain.bienes_inversion.register import BienInversionRecordError
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.iva.m303_settlement import is_m303_annual_settlement_period
 from ..aggregation import CalculationSourceDiagnostic
-from ..bienes_inversion import BienesInversionIvaRegisterRepository
-from ..calculations import (
+from ..calculations._bienes_inversion_regularizacion import (
     build_bienes_inversion_regularizacion_advisory,
     build_bienes_inversion_transmision_advisory,
 )

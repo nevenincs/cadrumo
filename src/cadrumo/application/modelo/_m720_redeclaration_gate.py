@@ -36,17 +36,17 @@ from __future__ import annotations
 from ...core.modelo import Modelo
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.errors import RegistrySnapshotError
+from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.verification_report import ModeloVerificationFinding
 from ...domain.modelos.work_unit import WorkUnit
-from ...domain.modelos.calculation_revision import CalculationRevision
-from ..calculations import (
-    CalculationObservationRepository,
+from ..calculations._binding_prefill import resolve_bindings_from_local_store
+from ..calculations._foreign_asset_redeclaration import (
     modelo_720_declared_observation,
     modelo_720_evidence_observation,
     modelo_720_prior_baseline_observation,
     modelo_720_redeclaration_advisory_findings,
-    resolve_bindings_from_local_store,
 )
+from ..calculations.observations_repository import CalculationObservationRepository
 
 
 def modelo_720_redeclaration_findings(

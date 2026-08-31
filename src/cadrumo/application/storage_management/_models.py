@@ -15,8 +15,10 @@ from __future__ import annotations
 from enum import StrEnum
 from pathlib import Path
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, NonNegativeInt
 
+from ...core.identity import BucketId
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.storage_taxonomy import (
     FingerprintParticipation,
     StorageArea,
@@ -27,8 +29,6 @@ from ...core.storage_taxonomy import (
     StorageOverridePolicy,
     StorageScope,
 )
-from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.identity import BucketId
 
 
 class StorageAreaDisposition(StrEnum):
@@ -109,9 +109,9 @@ class StorageAreaInventoryRow(_StorageReport):
     occupancy: StorageOccupancy
     disposition: StorageAreaDisposition
     reclaimable: bool
-    resolved_paths: int = Field(ge=0)
-    entry_count: int = Field(ge=0)
-    footprint_bytes: int = Field(ge=0)
+    resolved_paths: NonNegativeInt
+    entry_count: NonNegativeInt
+    footprint_bytes: NonNegativeInt
 
 
 class StorageAreaInventoryReport(_StorageReport):
@@ -151,7 +151,7 @@ class StorageTreeCheckReport(_StorageReport):
     storage_root: Path
     healthy: bool
     root_mode_enforced: bool
-    checked_locations: int = Field(ge=0)
+    checked_locations: NonNegativeInt
     issues: tuple[StorageTreeIssue, ...] = ()
 
 
@@ -171,8 +171,8 @@ class StorageReclaimReport(_StorageReport):
     """Outcome of reclaiming every regenerable target in one public area."""
 
     area: StorageArea
-    target_count: int = Field(ge=0)
-    removed_entries: int = Field(ge=0)
+    target_count: NonNegativeInt
+    removed_entries: NonNegativeInt
     retained_entries: int = Field(default=0, ge=0)
 
     retained_paths: tuple[Path, ...] = ()

@@ -44,23 +44,19 @@ from typing import TYPE_CHECKING
 
 from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from ...core.irnr import M210GrossIncomeSourceMode
-from ...core.result_disposition import ResultDisposition
-from ...core.prorrata_register import ProrrataRegisterRegime
-from ...core.modelo import Modelo
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.hashing import sha256_hex
+from ...core.irnr import M210GrossIncomeSourceMode
+from ...core.modelo import Modelo
+from ...core.prorrata_register import ProrrataRegisterRegime
+from ...core.result_disposition import ResultDisposition
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import bucket_event_history_write
-from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.buckets.event_repository import build_bucket_event as _build_domain_bucket_event
 from ...domain.buckets.event_repository import emit_bucket_event as _emit_domain_bucket_event
-from ...domain.calculations import (
-    DirectRowMaterializationProvenance,
-    RowBindingKey,
-    RowCasillaKey,
-    RowSourceIdentity,
-)
+from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.calculations._row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
+from ...domain.calculations._row_source_identity import RowBindingKey, RowSourceIdentity
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
 from ...domain.calculations.registry.ids import (
@@ -69,14 +65,6 @@ from ...domain.calculations.registry.ids import (
 )
 from ...domain.iva.m303_settlement import is_m303_annual_settlement_period
 from ...domain.modelos.calculation_repository import upsert_calculation_revision
-from ...domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue, ModeloRecordStatus, derive_filing_record_id
-from ...domain.modelos.filing_repository import upsert_filing_record
-from ...domain.modelos.ledger_filing_snapshot import LedgerFilingSnapshot
-from ...domain.modelos.participation_index import TransactionRevisionParticipation, upsert_transaction_participation
-from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol, ModeloRecordCatalogueRepositoryProtocol
-from ...domain.modelos.repository import upsert_work_unit
-from ...domain.modelos.row_models import ModeloDetailRow
-from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -87,20 +75,36 @@ from ...domain.modelos.calculation_revision import (
     M303RegimenSimplificadoAnnualSummaryHandoff,
     derive_calculation_revision_id,
 )
-from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from ...domain.prorrata_register import (
-    ProrrataRegister,
-    ProrrataRegisterEntry,
-    ProrrataRegisterRepositoryProtocol,
+from ...domain.modelos.filing_record import (
+    ModeloRecord,
+    ModeloRecordCatalogue,
+    ModeloRecordStatus,
+    derive_filing_record_id,
 )
-from ..calculations import CalculationObservationRepository, PriorDomiciliationElectionProjection
-from ..filing import try_record_filing_retention_snapshot
+from ...domain.modelos.filing_repository import upsert_filing_record
+from ...domain.modelos.ledger_filing_snapshot import LedgerFilingSnapshot
+from ...domain.modelos.participation_index import TransactionRevisionParticipation, upsert_transaction_participation
+from ...domain.modelos.protocols import (
+    CalculationRevisionCatalogueRepositoryProtocol,
+    ModeloRecordCatalogueRepositoryProtocol,
+)
+from ...domain.modelos.repository import upsert_work_unit
+from ...domain.modelos.row_models import ModeloDetailRow
+from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
+from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
+from ...domain.prorrata_register._protocols import ProrrataRegisterRepositoryProtocol
+from ...domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
+from ..calculations.observations_repository import (
+    CalculationObservationRepository,
+    PriorDomiciliationElectionProjection,
+)
+from ..filing._profile_filing_retention import try_record_filing_retention_snapshot
 from ._action_errors import M303FilingEvidenceError
 from ._filed_revision_observation import persist_filed_revision_observation, require_filing_result_disposition
 from ._m303_filing_evidence import m303_filing_evidence_failure
 
 if TYPE_CHECKING:  # pragma: no cover - typing-only storage boundary import
-    from ...adapters.persistence.storage import SecureObjectWrite
+    from ...adapters.persistence.storage.sql.secure_objects import SecureObjectWrite
 
 _BUCKET_EVENT_PAYLOAD_VERSION = 2
 """Schema version for the bucket-event payload dict emitted by modelo actions."""

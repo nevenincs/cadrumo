@@ -29,8 +29,9 @@ from ._ledger_value_fixtures import secure_objects
 __all__ = ["secure_objects"]
 from pydantic import ValidationError
 
-from ....adapters.persistence.storage import LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE, SensitivityClass
+from ....adapters.persistence.storage._secure_object_namespaces import LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE
 from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....core.classification.policies import SensitivityClass
 from ..evidence import (
     MediaKind,
     PurchaseInvoiceEvidence,

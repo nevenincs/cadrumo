@@ -21,12 +21,12 @@ from typing import Final
 import pytest
 
 from ....adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
-from ....core.period import Period
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.config import load_settings
+from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.live_gate import requires_live_enabled
-from ...calculations import IvaWalletDecisionRepository
+from ...calculations.observations_repository import IvaWalletDecisionRepository
 from ...modelo._iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from ...modelo._iva_wallet_gate import (
     apply_iva_compensation_decision_binding as _apply_iva_compensation_decision_binding,

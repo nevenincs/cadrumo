@@ -9,21 +9,21 @@ from typing import Protocol, Self
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core.operator_action_enums import OperatorActionAxis
-from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.period import Period
 from ...core.casilla_id import CasillaId
 from ...core.filing_year import FilingYear
 from ...core.identity import BucketId, CalculationRevisionId, FilingRecordId
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.operator_action_enums import OperatorActionAxis
+from ...core.period import Period
 from ...domain.calculations.registry.bindings import RegistryModeloObservation
 from ...domain.calculations.registry.ids import (
     LegalRefId,
     RevisionId,
     SourceRefId,
 )
+from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ...domain.modelos.filing_record import ExternalEvidenceKind
 from ...domain.modelos.verification_report import VerificationCompletenessStatus
-from ...domain.modelos.calculation_revision import CalculationRevisionState
 from .observations_repository import ObservationSourceKind
 
 

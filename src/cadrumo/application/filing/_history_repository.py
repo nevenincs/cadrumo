@@ -30,14 +30,11 @@ from typing import ClassVar, override
 
 from pydantic import BaseModel
 
-from ...adapters.persistence.storage import (
-    APPLICATION_FILING_HISTORY_NAMESPACE,
-    ClassificationError,
-    EnvelopeVersionError,
-    SecureBoundRepository,
-    SecureObjectRepository,
-    SensitivityClass,
-)
+from ...adapters.persistence.storage._secure_object_namespaces import APPLICATION_FILING_HISTORY_NAMESPACE
+from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
+from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
+from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ...core.classification.policies import SensitivityClass
 from ._history_models import ModeloHistory
 from ._runtime_repository import (
     resolve_application_filing_bucket_id,

@@ -49,11 +49,11 @@ from typing import Protocol, TypedDict
 
 from pydantic import ValidationError
 
-from ...core.modelo_232_codigos import MetodoValoracion, TipoOperacionVinculada
-from ...core.foreign_asset_obligation import M720AssetClassCode
 from ...core.aggregation import BindingAggregationOp, RetencionClave, RowSetGroupingKind
-from ...core.decimal import coerce_decimal
+from ...core.decimal._coerce import coerce_decimal
 from ...core.external_constants import DEFAULT_CURRENCY
+from ...core.foreign_asset_obligation import M720AssetClassCode
+from ...core.modelo_232_codigos import MetodoValoracion, TipoOperacionVinculada
 from ...core.parsing import parse_iso8601_date
 from ...domain.calculations.registry.binding_aggregation import binding_aggregation_op
 from ...domain.calculations.registry.binding_selector_utils import binding_row_set_selector

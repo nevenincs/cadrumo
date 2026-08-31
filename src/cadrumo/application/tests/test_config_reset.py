@@ -58,7 +58,7 @@ def _create_profile(
     profile look like a real one.
     """
     from ...tests.user_profile import register_minimal_profile
-    from ..evidence import LegalHoldCaseAuthority
+    from ..evidence._profile_legal_hold import LegalHoldCaseAuthority
 
     with open_test_profile_session(profile_id):
         register_minimal_profile(
@@ -83,8 +83,8 @@ def _delete_profile_through_custody(profile_id: str, *, root: Path) -> None:
     when they are absent -- that refusal is the hold guard working, not setup
     noise.
     """
-    from ..evidence import LegalHoldCaseAuthority
-    from ..filing import FilingRetentionAuthority
+    from ..evidence._profile_legal_hold import LegalHoldCaseAuthority
+    from ..filing._profile_filing_retention import FilingRetentionAuthority
     from ..user_profile.lifecycle import ProfileCapsuleLifecycle
 
     observed_at = datetime.now(UTC)
@@ -116,7 +116,8 @@ def _remove_bucket_directory_out_of_band(profile_id: str, *, root: Path) -> None
     Replaces the retired ``remove_profile_bucket_directory``. No supported path
     produces this state; forging it is the only way to exercise the detector.
     """
-    from ...adapters.persistence.storage import BUCKETS_DIRNAME, dispose_engines_for_bucket
+    from ...adapters.persistence.storage._storage_path_definitions import BUCKETS_DIRNAME
+    from ...adapters.persistence.storage.sql.engine import dispose_engines_for_bucket
 
     # An out-of-band remover is some OTHER actor, which would not be holding
     # this process's SQLite handle on the bucket. Releasing it first is what
@@ -127,7 +128,7 @@ def _remove_bucket_directory_out_of_band(profile_id: str, *, root: Path) -> None
 
 
 def _capsule_dir_for(root: Path, profile_id: str) -> Path:
-    from ...adapters.persistence.storage import BUCKETS_DIRNAME
+    from ...adapters.persistence.storage._storage_path_definitions import BUCKETS_DIRNAME
 
     return root / BUCKETS_DIRNAME / profile_id
 
@@ -160,7 +161,7 @@ def _persist_filing(
     from ...core.period import Period
     from ...domain.modelos.codes import ModeloCode
     from ...domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue, derive_filing_record_id
-    from ..filing import try_record_filing_retention_snapshot
+    from ..filing._profile_filing_retention import try_record_filing_retention_snapshot
 
     work_unit_id = (seed * 64)[:64]
     revision_id = ((chr(ord(seed) + 1)) * 64)[:64]
@@ -195,7 +196,8 @@ def _persist_filing(
 
 
 def _fingerprint(bucket_id: str) -> str:
-    from ..bucket_maintenance import AssessBucketDeletionCommand, BucketMaintenanceService
+    from ..bucket_maintenance._contracts import AssessBucketDeletionCommand
+    from ..bucket_maintenance._service import BucketMaintenanceService
 
     assessment = BucketMaintenanceService().assess_deletion(
         AssessBucketDeletionCommand(bucket_id=bucket_id),
@@ -234,12 +236,12 @@ def test_start_discovers_live_and_dangling_targets_then_completes(
     must NOT reappear, and the acquisition lock moved to a live target, where
     clearing it is a contract the reset actually holds.
     """
-    from ...adapters.persistence.storage.bucket import bucket_paths
+    from ...adapters.persistence.storage.bucket._layout import bucket_paths
     from ...core.auth_provider import AuthProviderKind
-    from ...core.storage_taxonomy_locations import storage_location
-    from ...core.storage_taxonomy import StorageCategory
     from ...core.bucket_pointer import pointer_path
     from ...core.config import load_settings
+    from ...core.storage_taxonomy import StorageCategory
+    from ...core.storage_taxonomy_locations import storage_location
     from .._config_reset_models import (
         ConfigResetAuthClearanceMode,
         ConfigResetOperationStatus,
@@ -424,8 +426,9 @@ def test_a_profile_from_the_seeding_door_alone_is_deletion_assessable(
     profile whose recorded snapshot is REMOVED refuses again.
     """
     from ...domain.buckets.errors import BucketDeleteRefusedError
-    from ..bucket_maintenance import AssessBucketDeletionCommand, BucketMaintenanceService
-    from ..filing import FilingRetentionAuthority
+    from ..bucket_maintenance._contracts import AssessBucketDeletionCommand
+    from ..bucket_maintenance._service import BucketMaintenanceService
+    from ..filing._profile_filing_retention import FilingRetentionAuthority
 
     with _isolated_reset_root(tmp_path) as root:
         from ...tests.user_profile import register_minimal_profile
@@ -605,7 +608,7 @@ def test_resume_pauses_once_when_target_content_changed_then_accepts_new_snapsho
 def test_resume_adds_changed_pointer_target_under_the_same_operation(
     tmp_path: Path,
 ) -> None:
-    from ...adapters.persistence.storage.bucket import bucket_paths
+    from ...adapters.persistence.storage.bucket._layout import bucket_paths
     from .._config_reset_models import ConfigResetOperationStatus, ConfigResetPauseReason
     from ..config_reset import resume_config_reset, start_config_reset
 

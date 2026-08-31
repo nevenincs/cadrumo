@@ -26,9 +26,9 @@ from typing import TYPE_CHECKING
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core.authority_grade import RegistryAuthorityGrade
+from ...core.casilla_id import CasillaId
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
-from ...core.casilla_id import CasillaId
 from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
@@ -43,7 +43,7 @@ from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryPr
 from ...domain.period import calculation_filing_date
 from ...domain.transactions.enums import BUSINESS_BEARING_STATES, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
-from ..calculations import IvaWalletDecisionRepository
+from ..calculations.observations_repository import IvaWalletDecisionRepository
 from ._action_errors import ModeloAggregationBindingError
 from ._calculation_helpers import load_work_unit_for_calculation as _load_work_unit_for_calculation
 from ._calculation_helpers import resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit

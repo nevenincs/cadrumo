@@ -49,22 +49,20 @@ from pathlib import Path
 from ...adapters.persistence.profile.submission import SubmissionRepository
 from ...application.auth.providers import select_provider
 from ...core.auth_provider import AuthProviderKind
-from ...core.period import Period
 from ...core.config import Settings, load_settings
+from ...core.period import Period
 from ...domain.deadlines.engine import DeadlineEngine
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.deadlines.plazo import resolve_filing_window
 from ...domain.filing.protocols import ModeloInputs
-from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.calculation_revision import CalculationRevision
-from ...domain.submission import DeadlineWindowChecker, ModeloDraftStatus, SubmissionEngine
+from ...domain.modelos.work_unit import WorkUnit
+from ...domain.submission._engine import SubmissionEngine
+from ...domain.submission._protocols import DeadlineWindowChecker, ModeloDraftStatus
 from ...domain.transactions.models import TransactionCatalogue
-from ..filing import (
-    approve_draft,
-    build_draft,
-    build_runtime_schema_provider,
-    filing_profile_from_taxpayer,
-)
+from ..filing._draft_construction import build_draft
+from ..filing._review import approve_draft
+from ..filing.runtime import build_runtime_schema_provider, filing_profile_from_taxpayer
 from ..workflow.adapters import DeadlineEngineAdapter
 from ..workflow.engine import WorkflowEngine
 from ..workflow.errors import WorkflowInputMismatchError

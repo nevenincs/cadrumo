@@ -28,14 +28,14 @@ from decimal import Decimal
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
-from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.period import Period
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.filing.protocols import ModeloInputs
 from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
-from ....domain.submission import ModeloDraftStatus
-from .. import build_draft, build_runtime_schema_provider
-from ..runtime import ModeloOperatorProfile
+from ....domain.submission._protocols import ModeloDraftStatus
+from .._draft_construction import build_draft
+from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _BINDING_ID_ADAPTER: TypeAdapter[BindingId] = TypeAdapter(BindingId)

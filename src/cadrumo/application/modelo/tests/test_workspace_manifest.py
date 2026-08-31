@@ -342,7 +342,14 @@ def test_the_retired_private_manifest_module_is_gone() -> None:
 
     assert not (package / "_workspace_manifest.py").exists()
     with pytest.raises(ModuleNotFoundError):
-        importlib.import_module("cadrumo.application.modelo.workspace_manifest")
+        importlib.import_module("cadrumo.application.modelo._workspace_manifest")
+
+    # The PUBLIC module is the destination of that move, not a casualty of it:
+    # workspace_producers imports it in twelve places. An earlier version of
+    # this assertion named the public path, so the gate demanded the absence
+    # of the very module the move created -- landed red, and unsatisfiable
+    # without deleting live production code.
+    assert importlib.import_module("cadrumo.application.modelo.workspace_manifest") is not None
 
 
 # STATIC_INSPECTION gets its own complete manifest, over its own

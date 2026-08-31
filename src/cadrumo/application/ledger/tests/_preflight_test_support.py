@@ -6,8 +6,8 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
-from ....core.period import Period
 from ....core.aggregation import BindingSourceKind
+from ....core.period import Period
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.iva.schema import EUMemberState, IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
@@ -138,7 +138,8 @@ def _apply_home_office_censo(bucket_id: str) -> None:
     override agrees with the bound afectación ratio.
     """
     from ....adapters.persistence.profile.usage_ratios import load_usage_ratios, save_usage_ratios
-    from ....domain.usage_ratios import UsageRatioProfile, derive_home_office_ratios_from_censo
+    from ....domain.usage_ratios._model import UsageRatioProfile
+    from ....domain.usage_ratios._service import derive_home_office_ratios_from_censo
 
     _declare_home_office_m2(bucket_id)
     raw = CensoSyncService(bucket_id=bucket_id).bound_raw_afectacion_ratio(profile_id=bucket_id)

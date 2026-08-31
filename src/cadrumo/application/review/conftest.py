@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
-from ...adapters.persistence.storage.sql import dispose_engine
+from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...core.config import SecretStoreBackend, override_settings
 from ...tests.secure_sql import dev_test_database_password
 

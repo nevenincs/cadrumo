@@ -5,18 +5,18 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_validator
 
-from ...core.schema_family_disposition import RegistrySchemaFamilyDisposition
-from ...core.revision_review import RevisionReviewStatus
-from ...core.authority_grade import RegistryAuthorityGrade
-from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.period import Period
-from ...core.casilla_id import CasillaId
 from ...core.aggregation import BindingSourceKind
+from ...core.authority_grade import RegistryAuthorityGrade
+from ...core.casilla_id import CasillaId
 from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FilingYear
 from ...core.identity import BucketId, ContentDigest, ContinuidadId, ProfileId, TransactionId, WorkUnitId
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.period import Period
+from ...core.revision_review import RevisionReviewStatus
+from ...core.schema_family_disposition import RegistrySchemaFamilyDisposition
 from ...domain.calculations.registry.ids import (
     ApplicabilityRuleId,
     BindingId,
@@ -29,11 +29,11 @@ from ...domain.calculations.registry.ids import (
     SourceRefId,
 )
 from ...domain.filing.schema import ModeloScalar
+from ...domain.modelos.calculation_revision import CalculationSourceRef
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.work_unit import WorkUnitState
-from ...domain.modelos.calculation_revision import CalculationSourceRef
 from ..ledger.preflight import LedgerPreflightIssueReason
-from ..operator_actions import ActionReference
+from ..operator_actions._models import ActionReference
 from ..registry.closure import RegistryClosureLimb
 from .work_addressing import ModeloExactWorkUnitTarget, ModeloVisibleFilingTarget
 from .work_review import ModeloWorkReview
@@ -658,7 +658,7 @@ class ModeloWorkspaceCountFactValueV1(_WorkspaceModel):
     """A non-negative count fact with no text-length constraint."""
 
     kind: Literal["count"] = "count"
-    value: Annotated[int, Field(ge=0)]
+    value: NonNegativeInt
 
 
 class ModeloWorkspaceFlagFactValueV1(_WorkspaceModel):

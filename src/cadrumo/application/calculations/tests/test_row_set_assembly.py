@@ -19,12 +19,12 @@ from ....adapters.outbound.google.calc_sheets_pull_records import RowSetCellEdit
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
-from .. import assemble_observations_for_snapshot
 from ..row_set_assembly import (
     assemble_atribucion_observations,
     assemble_donativo_observations,
     assemble_foreign_asset_observations,
     assemble_observations_for_grouping,
+    assemble_observations_for_snapshot,
     assemble_refund_observations,
     assemble_related_party_observations,
     assemble_withholding_observations,

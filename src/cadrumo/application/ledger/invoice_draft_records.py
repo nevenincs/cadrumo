@@ -20,7 +20,7 @@ from typing import Self
 
 from pydantic import BaseModel, Field, PrivateAttr, model_validator
 
-from ...adapters.inbound.einvoice import FacturaeInvoiceClass
+from ...adapters.inbound.einvoice._parsers import FacturaeInvoiceClass
 from ...core.draft_discrepancy import DraftDiscrepancyKind
 from ...core.field_grounding import FieldGroundingOutcome
 from ...core.field_origin import FieldOrigin

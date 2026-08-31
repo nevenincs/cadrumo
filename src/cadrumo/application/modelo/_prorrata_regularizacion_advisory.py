@@ -57,24 +57,24 @@ from collections.abc import Mapping
 from datetime import datetime
 from decimal import Decimal
 
-from ...core.prorrata_register import ProrrataRegisterRegime
+from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+from ...core.aggregation import BindingSourceKind
+from ...core.casilla_id import CasillaId
 from ...core.modelo import Modelo
 from ...core.period import Period
-from ...core.casilla_id import CasillaId
-from ...core.aggregation import BindingSourceKind
+from ...core.prorrata_register import ProrrataRegisterRegime
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.iva.m303_settlement import is_m303_annual_settlement_period, m303_annual_settlement_order_key
 from ...domain.iva.prorrata import especial_mandatory_rule
-from ...domain.prorrata_register import ProrrataRegisterError
+from ...domain.prorrata_register.register import ProrrataRegisterError
 from ..aggregation import CalculationSourceDiagnostic, compute_annual_deducible_totals_by_regime
-from ..calculations import (
-    CalculationObservationRepository,
+from ..calculations._prorrata_regularizacion import (
     build_prorrata_especial_mandatory_advisory,
     build_prorrata_missing_provisional_advisory,
     build_prorrata_regularizacion_advisory,
     derive_prorrata_applicability,
 )
-from ..prorrata_register import ProrrataRegisterRepository
+from ..calculations.observations_repository import CalculationObservationRepository
 from ._semantic_role_resolution import casilla_id_for_unambiguous_revision_semantic_role
 
 __all__ = ["collect_prorrata_regularizacion_diagnostics"]

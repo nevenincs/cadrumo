@@ -14,7 +14,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.decimal import coerce_decimal as _coerce_decimal
+from ....core.decimal._coerce import coerce_decimal as _coerce_decimal
 from ..row_set_assembly import _coerce_iso_date, _coerce_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

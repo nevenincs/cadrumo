@@ -36,15 +36,15 @@ from datetime import UTC, date, datetime
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
-from ...application.operator_actions import next_action
-from ...core.period import Period as _Period
+from ...application.operator_actions._catalogue import next_action
 from ...core.aeat_csv import normalise_aeat_csv
 from ...core.i18n import tr
 from ...core.identity import same_tax_identifier
 from ...core.json_contract import Notice, NoticeSeverity
+from ...core.period import Period as _Period
 from ...domain.calculations.registry.applicability_routes import TaxRoute
 from ...domain.modelos.filing_record import is_justificante_backed_external_evidence
-from ..calculations import ObservationSourceKind, is_official_aeat_observation_source
+from ..calculations.observations_repository import ObservationSourceKind, is_official_aeat_observation_source
 from .calendar_models import (
     OverviewAeatSubmissionState,
     OverviewCalendarEvent,
@@ -57,7 +57,7 @@ if TYPE_CHECKING:
     from ...adapters.outbound.aeat.sede.schema import FiledDeclaracionObservation
     from ...domain.justificante import Justificante
     from ...domain.modelos.filing_record import ModeloRecord
-    from ..calculations import ObservationEnvelopePayload
+    from ..calculations.observations_repository import ObservationEnvelopePayload
     from ..live.justificante import JustificanteCaptureSnapshot
 
 _AEAT_SUBMISSION_RANK: MappingProxyType[OverviewAeatSubmissionState, int] = MappingProxyType(

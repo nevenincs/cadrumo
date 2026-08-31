@@ -31,9 +31,6 @@ if TYPE_CHECKING:
     from prompt_toolkit.input import Input
     from prompt_toolkit.output import Output
 
-    from ...domain.auth import ApoderamientosCatalogue
-
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.flows import (
     CheckpointAvailability,
     CopyRefKind,
@@ -41,6 +38,8 @@ from ...core.flows import (
     FlowWidgetKind,
 )
 from ...core.identity import IdentityError, validate_identity
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...domain.auth.apoderamientos.catalogue import ApoderamientosCatalogue
 from ..flows.definition import CopyRef, FlowChoice, FlowDefinition, FlowPage, FlowSection
 from ..flows.engine import FlowState
 from ..flows.validators import ValidationVerdict, register_answer_validator

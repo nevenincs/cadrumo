@@ -17,8 +17,8 @@ import pytest
 
 from ....core.casilla_id import CasillaId
 from ....domain.buckets.event import BucketEventObjectType, BucketEventType
-from ....domain.modelos.filing_record import ExternalEvidenceKind, ModeloRecordStatus
 from ....domain.modelos.calculation_revision import CalculationRevisionAmendmentKind, CalculationRevisionState
+from ....domain.modelos.filing_record import ExternalEvidenceKind, ModeloRecordStatus
 from .._amendment_actions import amend_modelo_revision
 from .._calculation_actions import get_calculation_revision
 from .._filing_actions import get_filing_record

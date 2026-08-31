@@ -43,18 +43,18 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
-from ...core.refund_election import RefundElection
+from ...core.casilla_id import CasillaId
+from ...core.errors.hierarchy import CoreValidationError
+from ...core.modelo import Modelo
 from ...core.payment_election import PaymentElection
+from ...core.period import Period
+from ...core.refund_election import RefundElection
 from ...core.result_disposition import (
     ResultDisposition,
     derive_result_disposition,
     result_disposition_casilla_ids,
     result_disposition_is_refund,
 )
-from ...core.modelo import Modelo
-from ...core.period import Period
-from ...core.casilla_id import CasillaId
-from ...core.errors.hierarchy import CoreValidationError
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_targets,
@@ -66,8 +66,8 @@ from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.iva.refund_eligibility import is_last_filing_period_of_year, refund_disposition_available
-from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.calculation_revision import CalculationRevision
+from ...domain.modelos.work_unit import WorkUnit
 from ._action_errors import (
     CalculationRegistryUnavailableError,
     ModeloPaymentElectionCapabilityRefusedError,

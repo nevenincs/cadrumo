@@ -31,11 +31,11 @@ from ....adapters.persistence.storage.custody.sentinel import create_profile_cus
 from ....application.user_profile.capsule_record import ProfileRecordSession
 from ....application.user_profile.lifecycle import ProfileCapsuleLifecycle
 from ....application.user_profile.profile_record_repository import bound_profile_record_session
-from ....core.profile_session import ProfileRecordUnavailability
 from ....core.bucket_pointer import BucketPointer, pointer_path, read_pointer, resolve_active_bucket_id, write_pointer
 from ....core.config import override_settings
 from ....core.errors.error_codes import get_registered_error_code
 from ....core.errors.hierarchy import NoActiveProfileError
+from ....core.profile_session import ProfileRecordUnavailability
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import mint_test_profile_recovery_envelope
 from ...wizard import compiler as _wizard  # noqa: F401

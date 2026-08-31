@@ -22,23 +22,32 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
-from ....adapters.persistence.storage.sql import SecureObjectRepository, SecureObjectRow
-from ....application.calculations import M303RegimenSimplificadoAnnualSummaryHandoffError
+from ....adapters.persistence.storage._secure_object_namespaces import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
+from ....adapters.persistence.storage.sql._orm import SecureObjectRow
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ....application.calculations._m303_regimen_simplificado_annual_summary import (
+    M303RegimenSimplificadoAnnualSummaryHandoffError,
+)
+from ....core.aggregation import BindingSourceKind
+from ....core.casilla_id import CasillaId
 from ....core.filing_projection_ref import M303RegimenSimplificadoFact
 from ....core.period import Period
-from ....core.casilla_id import CasillaId
-from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.binding_selector_utils import selector_as_dict
 from ....domain.calculations.registry.bindings import m303_regimen_simplificado_annual_summary_requirement
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.filing_evidence import FilingEvidenceReference
-from ....domain.iva.regimen_simplificado_rows import ActividadAgricolaSimplificado, ActividadNoAgricolaSimplificado, EntradaModuloSimplificado, HechoActividadSimplificado, M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision, RegimenSimplificadoFilingRows
+from ....domain.iva.regimen_simplificado_rows import (
+    ActividadAgricolaSimplificado,
+    ActividadNoAgricolaSimplificado,
+    EntradaModuloSimplificado,
+    HechoActividadSimplificado,
+    M303RegimenSimplificadoScope,
+    M303RegimenSimplificadoScopeDecision,
+    RegimenSimplificadoFilingRows,
+)
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
-from ....domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue, ModeloRecordStatus, derive_filing_record_id
-from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.calculation_revision import (
     M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS,
     CalculationRevision,
@@ -46,6 +55,13 @@ from ....domain.modelos.calculation_revision import (
     FilingInstanceEvidence,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.filing_record import (
+    ModeloRecord,
+    ModeloRecordCatalogue,
+    ModeloRecordStatus,
+    derive_filing_record_id,
+)
+from ....domain.modelos.repository import upsert_work_unit
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.filing_evidence import general_m303_filing_evidence, regimen_simplificado_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
@@ -765,7 +781,7 @@ def test_agricultural_rows_remain_an_evidence_bearing_refusal_while_empty_cohort
         ),
         evidence_reference=FilingEvidenceReference(reference=regimen_snapshot.orden.source_ref),
     )
-    from ....application.calculations import M303RegimenSimplificadoCalculationError
+    from ....application.calculations._m303_regimen_simplificado import M303RegimenSimplificadoCalculationError
 
     with pytest.raises(M303RegimenSimplificadoCalculationError, match="two_digit_agricultural_crosswalk"):
         regimen_simplificado_filing_evidence(

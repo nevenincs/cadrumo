@@ -9,18 +9,18 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core.schema_family_disposition import RegistrySchemaFamilyDisposition
-from ....core.period import Period
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core.aggregation import BindingSourceKind
+from ....core.period import Period
+from ....core.schema_family_disposition import RegistrySchemaFamilyDisposition
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos.work_unit import WorkUnit
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...registry.source_connectivity import load_source_connectivity_census
-from ..work_lifecycle import create_work_unit
 from ..work_addressing import ModeloWorkRegistryYearMismatchError
+from ..work_lifecycle import create_work_unit
 from ..workspace import (
     STATIC_INSPECTION_WORK_REVIEW_FACET,
     ModeloWorkspaceStaleCursorError,
@@ -1179,7 +1179,6 @@ def test_a_cursor_naming_a_facet_the_resolver_does_not_paginate_refuses(
     exists to make impossible.
     """
     from ....core.external_constants import OutputLanguage
-
     from ..workspace import ModeloWorkspaceStaleCursorError
 
     bucket_id, repository = workspace_repos
@@ -1314,16 +1313,17 @@ def _real_calculation_revision_with_row_materialization():
     """
     from decimal import Decimal
 
-    from ....core.casilla_id import validated_casilla_id
     from ....core.aggregation import BindingSourceKind
-    from ....domain.calculations import DirectRowMaterializationProvenance, RowSourceIdentity
+    from ....core.casilla_id import validated_casilla_id
+    from ....domain.calculations._row_casilla import DirectRowMaterializationProvenance
+    from ....domain.calculations._row_source_identity import RowSourceIdentity
     from ....domain.calculations.registry.bindings import CasillaObservation
-    from ....domain.modelos.work_unit import derive_work_unit_id
     from ....domain.modelos.calculation_revision import (
         CalculationRevision,
         CalculationRevisionState,
         derive_calculation_revision_id,
     )
+    from ....domain.modelos.work_unit import derive_work_unit_id
 
     bucket_id = "30330300-0000-4000-8000-000000000601"
     scalar_casilla = validated_casilla_id("00501")
@@ -1427,8 +1427,8 @@ def test_graded_snapshot_materialization_facet_refuses_a_row_value_with_no_prove
     from decimal import Decimal
 
     from ....core.casilla_id import validated_casilla_id
-    from ....domain.modelos.work_unit import derive_work_unit_id
     from ....domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
+    from ....domain.modelos.work_unit import derive_work_unit_id
     from ..workspace import ModeloWorkspaceMaterializationProvenanceMissingError
 
     bucket_id = "30330300-0000-4000-8000-000000000601"
@@ -1554,9 +1554,8 @@ def test_graded_snapshot_readiness_preserves_every_axis_and_the_ledger_issue_sub
 
 def test_graded_snapshot_provenance_facet_fans_out_by_linked_casilla_and_marks_unlinked_refs() -> None:
     """A source ref fans out to one record per linked casilla; an unlinked ref yields one subject=None record."""
+    from ....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
     from ....core.casilla_id import validated_casilla_id
-    from ....core.aggregation import CalculationSourceLineageRole
-    from ....core.aggregation import BindingSourceKind
     from ....domain.modelos.calculation_revision import CalculationSourceRef
     from ..workspace_models import ModeloWorkspaceCasillaReferenceV1
 
@@ -1723,9 +1722,8 @@ def test_provenance_facet_pages_a_real_revision_that_exceeds_the_page_size(
     workspace_repos: tuple[str, WorkUnitCatalogueRepository],
 ) -> None:
     """The provenance facet carried the same defect and is proven on the same real set."""
+    from ....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
     from ....core.casilla_id import validated_casilla_id
-    from ....core.aggregation import CalculationSourceLineageRole
-    from ....core.aggregation import BindingSourceKind
     from ....domain.modelos.calculation_revision import CalculationSourceRef
 
     bucket_id, repository = workspace_repos
@@ -2139,9 +2137,9 @@ def test_resolve_graded_snapshot_result_assembles_a_complete_projection_over_a_r
     """The full assembly over a real work unit, calculation, and verification report."""
     from decimal import Decimal
 
-    from ....core.modelo_work_progress_state import ModeloWorkProgressState
     from ....core.authority_grade import RegistryAuthorityGrade
     from ....core.external_constants import OutputLanguage
+    from ....core.modelo_work_progress_state import ModeloWorkProgressState
     from ....domain.calculations.registry.authority import bundled_authority
     from ....domain.calculations.registry.temporal import select_revision
     from ....domain.modelos.codes import ModeloCode

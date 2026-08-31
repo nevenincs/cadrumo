@@ -8,6 +8,9 @@ from types import MappingProxyType
 
 from pydantic import BaseModel, model_validator
 
+from ...core.identifier_grammar import NamespacedId
+from ...core.identity import CalculationRevisionId
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import (
     ActionArgumentSource,
     ActionArgumentStatus,
@@ -15,17 +18,9 @@ from ...core.operator_action_enums import (
     ActionEvidenceProvenance,
     NoRecoveryOutcome,
 )
-from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.identifier_grammar import NamespacedId
-from ...core.identity import CalculationRevisionId
 from ...domain.modelos.work_unit import WorkUnit
-from ..operator_actions import (
-    ActionArgumentBinding,
-    ActionReference,
-    ConditionEvidence,
-    PreconditionVerdict,
-    lookup_action,
-)
+from ..operator_actions._catalogue import lookup_action
+from ..operator_actions._models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
 from ..operator_surface.models import ManifestActionProfile
 
 

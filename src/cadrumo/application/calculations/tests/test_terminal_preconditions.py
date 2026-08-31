@@ -12,18 +12,24 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from ....core.observed_header_fact import ObservedHeaderFact
-from ....core.result_disposition import ResultDisposition
-from ....core.modelo import Modelo
-from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
-from ....core.period import Period
 from ....core.casilla_id import CasillaId
 from ....core.errors.hierarchy import TerminalPreconditionErrorMixin
-from ....core.resources import bundled_path
+from ....core.modelo import Modelo
+from ....core.observed_header_fact import ObservedHeaderFact
+from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from ....core.period import Period
+from ....core.resources._boundary import bundled_path
+from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ....domain.calculations.registry.loader import load_registry_tree
 from ....domain.calculations.registry.temporal import select_revision
-from ....domain.iva_compensation.filed_derivation import M303CompensationAvailableDerivation, M303_COMPENSATION_AVAILABLE_CASILLA, M303_COMPENSATION_GENERADA_CASILLA, M303_COMPENSATION_POSTERIOR_CASILLA, M303_COMPENSATION_RESULTADO_CASILLA
+from ....domain.iva_compensation.filed_derivation import (
+    M303_COMPENSATION_AVAILABLE_CASILLA,
+    M303_COMPENSATION_GENERADA_CASILLA,
+    M303_COMPENSATION_POSTERIOR_CASILLA,
+    M303_COMPENSATION_RESULTADO_CASILLA,
+    M303CompensationAvailableDerivation,
+)
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import _m303_carry_ingress as m303_module
 from .. import errors as errors_module

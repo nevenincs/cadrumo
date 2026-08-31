@@ -6,10 +6,10 @@ from pathlib import Path
 
 import pytest
 
-from ...core.storage_taxonomy import STORAGE_ROOT_SETTINGS_FIELD
 from ...core.bucket_pointer import BucketPointer, write_pointer
 from ...core.config import Settings, StorageRouteKind
 from ...core.external_constants import OutputLanguage
+from ...core.storage_taxonomy import STORAGE_ROOT_SETTINGS_FIELD
 from ..storage_write_policy import StorageWritePolicyCode, inspect_storage_write_policy
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -12,7 +12,7 @@ from datetime import date
 from typing import Protocol
 
 from ...core.identity import AeatCertificadoId
-from ...domain.notifications import SancionLiquidacion
+from ...domain.notifications.sancion import SancionLiquidacion
 
 
 class NotificationRowProtocol(Protocol):

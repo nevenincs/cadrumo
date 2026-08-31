@@ -26,7 +26,7 @@ from ....core.prorrata_register import (
     ProrrataRegisterRegime,
     regime_apportions_deduction,
 )
-from ....domain.prorrata_register import (
+from ....domain.prorrata_register.register import (
     ProrrataRegister,
     ProrrataRegisterEntry,
     resolve_provisional_percentage,

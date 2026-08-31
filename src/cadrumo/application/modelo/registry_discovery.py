@@ -14,8 +14,8 @@ from __future__ import annotations
 
 from datetime import date
 
-from ...core.tax_domain import TaxDomain
 from ...core.period import Period
+from ...core.tax_domain import TaxDomain
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.queries import RegistryQueryService

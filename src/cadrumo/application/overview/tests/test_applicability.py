@@ -33,7 +33,7 @@ from collections.abc import Callable
 import pytest
 
 from ....core.modelo import Modelo
-from ....core.resources import bundled_path
+from ....core.resources._boundary import bundled_path
 from ....domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
     derive_modelo_applicability,
@@ -45,7 +45,14 @@ from ....domain.calculations.registry.applicability import (
 from ....domain.calculations.registry.applicability_routes import TaxRoute
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.legal import verify_legal_catalogue
-from ....domain.deadlines.models import EntityType, IVARegime, IrpfEstimationRegime, IrpfIncomeCategory, LegalEntityForm, TaxpayerProfile
+from ....domain.deadlines.models import (
+    EntityType,
+    IrpfEstimationRegime,
+    IrpfIncomeCategory,
+    IVARegime,
+    LegalEntityForm,
+    TaxpayerProfile,
+)
 from .calendar_test_support import profile as _autonomo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

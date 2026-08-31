@@ -20,8 +20,9 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import ConceptoIngreso, TipoActividad
+from ....core.concepto_ingreso import ConceptoIngreso
 from ....core.period import Period
+from ....core.tipos_actividad import TipoActividad
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from .._renta_income_ledger import aggregate_renta_m131_agrario_income_ledger

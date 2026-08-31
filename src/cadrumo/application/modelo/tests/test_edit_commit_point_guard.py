@@ -18,7 +18,7 @@ import pytest
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....adapters.persistence.storage import SecureObjectRevisionConflictError
+from ....adapters.persistence.storage.errors import SecureObjectRevisionConflictError
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue

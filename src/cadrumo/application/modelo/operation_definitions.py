@@ -19,17 +19,16 @@ See Also:
 
 from __future__ import annotations
 
+import asyncio
+import functools
 from collections.abc import Callable
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, Literal
+from typing import TYPE_CHECKING, Annotated, Final, Literal, Self
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, StringConstraints, TypeAdapter, model_validator
 
-from ...core.refund_election import RefundElection
-from ...core.payment_election import PaymentElection
-from ...core.irnr import M210PayerMode
 from ...core.country_code import CountryCodeAlpha2
 from ...core.errors.hierarchy import CadrumoError
 from ...core.filing_year import FilingYear
@@ -40,6 +39,7 @@ from ...core.identity import (
     ModeloEditBaselineId,
     WorkUnitId,
 )
+from ...core.irnr import M210PayerMode
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import (
     EFFECTS_WITHOUT_PARTIAL_COMMIT,
@@ -47,9 +47,12 @@ from ...core.operations import (
     OperationClosePolicy,
     OperationDeadline,
     OperationDurability,
+    OperationEffect,
     OperationInteractionKind,
 )
+from ...core.payment_election import PaymentElection
 from ...core.period import Period
+from ...core.refund_election import RefundElection
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.modelos.calculation_revision import CalculationRevisionAmendmentKind
 from ...domain.modelos.calculation_revision_amendment import M303RectificativaMotive
@@ -110,7 +113,7 @@ from ._edit_models import (
     ModeloScalarEditIntentV1,
 )
 from ._edit_services import DETAIL_ROW_NATURAL_KEY_SEPARATOR
-from ._export import export_modelo_revision
+from ._export import ModeloExportCommand, export_modelo_revision
 from ._filing_actions import file_modelo_revision
 from ._verification_actions import verify_modelo_revision
 from .edit_contract import ModeloEditCompatibilityTupleV1
@@ -122,7 +125,7 @@ if TYPE_CHECKING:
     from ...domain.modelos.verification_report import VerificationReport
     from ..operations.models import OperationRequest
     from ..operations.owner import OperationExecutorContext
-    from ._export import ModeloExportCommand, ModeloExportResult
+    from ._export import ModeloExportResult
 
 MODELO_WORK_RENAME_OPERATION_DEFINITION_ID = "modelo.work.rename"
 MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID = "modelo.work.discard"
@@ -133,8 +136,21 @@ MODELO_WORK_AMEND_OPERATION_DEFINITION_ID = "modelo.work.amend"
 MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID = "modelo.edit.apply"
 MODELO_WORK_VERIFY_PROGRESS_UNIT = "casilla"
 
-_WORK_UNIT_ID = Annotated[str, Field(min_length=1, max_length=128)]
-_WORK_UNIT_NAME = Annotated[str, Field(min_length=1, max_length=200)]
+#: ``pattern=r"\S"`` refuses an all-whitespace id, which ``min_length`` alone
+#: admits. An identifier is NOT stripped -- unlike a display name, altering it
+#: would change what it addresses -- so the guard requires a non-whitespace
+#: character and otherwise leaves the value exactly as given. Without it a
+#: request naming "   " is journalled, takes a lease, and is scheduled before
+#: failing to resolve at execution: real platform work for something that can
+#: never settle.
+_WORK_UNIT_ID = Annotated[str, Field(min_length=1, max_length=128, pattern=r"\S")]
+#: Mirrors the DOMAIN's own display-name constraint, whitespace stripping
+#: included. Without the strip this request type is LOOSER than the type it
+#: feeds: "   " passes ``min_length=1`` here and then fails the domain's
+#: stripped check at the writer -- so the platform journals a request, takes a
+#: lease and schedules work for a rename that can never settle. Matching the
+#: domain means the request carries exactly what the domain will store.
+_WORK_UNIT_NAME = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
 
 #: Suffix appended to a definition id to name that enrolment's refresh-target
 #: schema. Every Modelo enrolment binds the SAME target model, but each needs
@@ -225,13 +241,21 @@ class ModeloWorkRenameExecutor:
         The writer owns the atomic write set - the work-unit catalogue and the
         bucket lifecycle event co-commit inside it - so nothing here opens a
         second write path around them.
+
+        The declared phase is published BEFORE delegating, because a phase
+        marks entering a stage rather than finishing one: an observer watching
+        this operation should see it start, not learn of it only once the
+        write has already landed. Without this the definition advertises a
+        phase no surface can ever show.
         """
-        del context
+        await context.events.phase(MODELO_WORK_RENAME_OPERATION_DEFINITION_ID)
+        await context.events.effect(OperationEffect.UNKNOWN)
         renamed = rename_work_unit(
             request.payload.work_unit_id,
             request.payload.new_name,
             actor=request.payload.actor,
         )
+        await context.events.effect(OperationEffect.UPDATED)
         return renamed.work_unit_id
 
 
@@ -294,8 +318,17 @@ class ModeloWorkDiscardExecutor:
         discarded unit may be discarded again is the writer's rule, and it
         refuses that itself with no effect. This only refuses acting on a unit
         the operator did not actually see.
+
+        The declared phase is published before the approval check, so a
+        REFUSED discard is still observably a discard that started. Emitting
+        only on success would make a stale-approval refusal indistinguishable
+        from an operation that never ran.
         """
-        del context
+        await context.events.phase(MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID)
+        # UNKNOWN while the approval is still being judged: a stale-approval
+        # refusal below leaves the unit untouched, and claiming UPDATED before
+        # the write would tell an observer a discard landed that never did.
+        await context.events.effect(OperationEffect.UNKNOWN)
         baseline = request.payload.baseline
         current = get_work_unit(baseline.work_unit_id)
         if current.updated_at != baseline.observed_updated_at or current.name != baseline.name:
@@ -308,6 +341,7 @@ class ModeloWorkDiscardExecutor:
             actor=request.payload.actor,
             reason=request.payload.reason,
         )
+        await context.events.effect(OperationEffect.UPDATED)
         return discarded.work_unit_id
 
 
@@ -394,12 +428,12 @@ class ModeloWorkVerifyRequest(CredentialFreeOperationRequest):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    calculation_revision_id: Annotated[str, Field(min_length=1, max_length=128)]
+    calculation_revision_id: Annotated[str, Field(min_length=1, max_length=128, pattern=r"\S")]
 
     #: The operator this invocation acts as. The platform binds an actor at
     #: submission, never at composition, so baking one into a definition would
     #: make the production registry per-actor.
-    actor: Annotated[str, Field(min_length=1, max_length=128)]
+    actor: Annotated[str, Field(min_length=1, max_length=128, pattern=r"\S")]
 
 
 class ModeloWorkVerifyPublicResultV1(BaseModel):
@@ -418,8 +452,8 @@ class ModeloWorkVerifyPublicResultV1(BaseModel):
     calculation_revision_id: Annotated[str, Field(min_length=1, max_length=128)]
     completeness_status: Annotated[str, Field(min_length=1, max_length=64)]
     granted_verificado_completo: bool
-    finding_count: Annotated[int, Field(ge=0)]
-    missing_required_casilla_count: Annotated[int, Field(ge=0)]
+    finding_count: NonNegativeInt
+    missing_required_casilla_count: NonNegativeInt
 
 
 def project_modelo_work_verify_result(report: VerificationReport) -> ModeloWorkVerifyPublicResultV1:
@@ -432,6 +466,39 @@ def project_modelo_work_verify_result(report: VerificationReport) -> ModeloWorkV
         finding_count=len(report.findings),
         missing_required_casilla_count=len(report.missing_required_casilla_ids),
     )
+
+
+# DELEGATED PHASE REPORTING, stated once for every executor in this module that
+# delegates to an authority.
+#
+# Each such executor declares two phases -- an entry stage and an inner one --
+# but hands the whole job to an authority that performs both inside a single
+# call. The entry phase IS observable from here and is published before
+# delegating. The inner phase is NOT: the transition to it happens inside the
+# authority, invisible from outside, and emitting it after the call returns
+# would mark ENTERING a stage that had already finished. An observer would read
+# a phase that never bracketed any work, which is a worse report than silence.
+#
+# That leaves one declared code per such executor unbacked. It is a real gap,
+# not an accepted one, and it closes in one of two ways: the authority receives
+# the operation context and publishes the transition it can actually see, or
+# the definition stops declaring a phase nobody can honestly emit. Both are
+# decisions for the authority's owner rather than repairs to make from here.
+#
+# Effects follow the progression the other executor families use: UNKNOWN on
+# entry, UPDATED once the write has landed. Reporting neither -- which this
+# whole family did until 2026-08-31 -- makes the platform state that a filing
+# operation changed nothing, which is a false claim rather than a silence.
+
+
+_MODELO_WORK_VERIFY_GATES_PHASE = "modelo.work.verify.gates"
+"""The one verify phase an executor outside the authority can honestly observe.
+
+Declared here and used by both the definition's `phase_codes` and the emission,
+so the code cannot be published under a spelling the definition does not
+declare -- the execution context refuses an undeclared code, and a literal
+repeated in two places is one typo away from that refusal at runtime.
+"""
 
 
 class ModeloWorkVerifyExecutor:
@@ -450,13 +517,20 @@ class ModeloWorkVerifyExecutor:
 
         The authority owns the guarded persistence and the events it emits;
         nothing here writes a report or decides completeness.
+
+        Publishes its entry phase only -- see DELEGATED PHASE REPORTING above.
         """
-        del context
-        report = verify_modelo_revision(
-            request.payload.calculation_revision_id,
-            actor=request.payload.actor,
-            workflow_profile=self._profile_resolver(),
+        await context.events.phase(_MODELO_WORK_VERIFY_GATES_PHASE)
+        await context.events.effect(OperationEffect.UNKNOWN)
+        report = await asyncio.to_thread(
+            functools.partial(
+                verify_modelo_revision,
+                request.payload.calculation_revision_id,
+                actor=request.payload.actor,
+                workflow_profile=self._profile_resolver(),
+            )
         )
+        await context.events.effect(OperationEffect.UPDATED)
         return str(report.verification_report_id)
 
 
@@ -478,7 +552,7 @@ def build_modelo_work_verify_definition(
             executor_type=ModeloWorkVerifyExecutor,
             build=build,
         ),
-        phase_codes=("modelo.work.verify.gates", "modelo.work.verify.persist"),
+        phase_codes=(_MODELO_WORK_VERIFY_GATES_PHASE, "modelo.work.verify.persist"),
         # No REVIEW: the platform's review contract means the executor presents a
         # reviewed operand and settles on the operator's verdict. These run
         # straight through, so claiming REVIEW would declare an interaction that
@@ -571,6 +645,23 @@ class ModeloWorkFilePublicResultV1(BaseModel):
     handoff_required: bool = True
 
 
+# SYNC DOMAIN CALLS RUN OFF THE EVENT LOOP
+#
+# The modelo authorities are synchronous, and two of them (`verify` and `file`)
+# run a workflow preflight gate that calls `asyncio.run` internally. Calling
+# them directly from an `async` executor is therefore not merely impolite, it
+# RAISES: `asyncio.run()` cannot be called from a running event loop, and the
+# supervisor records the resulting RuntimeError as an opaque diagnostic digest
+# with no message. `verify` only reached that gate once its revision was
+# verified-complete, so the defect stayed invisible while its fixture refused.
+#
+# `asyncio.to_thread` gives the callee a thread with no running loop, so its
+# internal `asyncio.run` is legal again, and it copies the current context, so
+# the bound repositories and profile resolve exactly as they do on the CLI. It
+# also keeps a multi-second filing off the supervisor's loop, which a blocking
+# bridge in the callee would not.
+
+
 class ModeloWorkFileExecutor:
     """Record one local filing through the existing filing authority.
 
@@ -592,17 +683,24 @@ class ModeloWorkFileExecutor:
 
         Every precondition - verification state, cross-period cleanliness,
         election legality - belongs to that authority and refuses there.
+
+        Publishes its entry phase only -- see DELEGATED PHASE REPORTING above.
         """
-        del context
+        await context.events.phase("modelo.work.file.preconditions")
+        await context.events.effect(OperationEffect.UNKNOWN)
         payload = request.payload
-        record = file_modelo_revision(
-            payload.approval.calculation_revision_id,
-            actor=request.payload.actor,
-            workflow_profile=self._profile_resolver(),
-            notes=payload.notes,
-            refund_election=payload.refund_election,
-            payment_election=payload.payment_election,
+        record = await asyncio.to_thread(
+            functools.partial(
+                file_modelo_revision,
+                payload.approval.calculation_revision_id,
+                actor=request.payload.actor,
+                workflow_profile=self._profile_resolver(),
+                notes=payload.notes,
+                refund_election=payload.refund_election,
+                payment_election=payload.payment_election,
+            )
         )
+        await context.events.effect(OperationEffect.UPDATED)
         return str(record.filing_record_id)
 
 
@@ -680,7 +778,10 @@ class ModeloExportRequest(CredentialFreeOperationRequest):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
 
     calculation_revision_id: Annotated[str, Field(min_length=1, max_length=128)]
-    output_path: Annotated[str, Field(min_length=1, max_length=4096)]
+    #: ``pattern=r"\S"`` refuses an all-whitespace destination, which
+    #: ``min_length`` alone admits. NOT stripped: a path must stay byte-exact,
+    #: and silently trimming one would mask a typo rather than surface it.
+    output_path: Annotated[str, Field(min_length=1, max_length=4096, pattern=r"\S")]
 
     #: The operator this invocation acts as; stamped onto the exported
     #: artefact through the command built from this request.
@@ -699,8 +800,11 @@ class ModeloExportPublicResultV1(BaseModel):
 
     result_version: int = 1
     calculation_revision_id: Annotated[str, Field(min_length=1, max_length=128)]
-    output_path: Annotated[str, Field(min_length=1, max_length=4096)]
-    byte_size: Annotated[int, Field(ge=0)]
+    #: ``pattern=r"\S"`` refuses an all-whitespace destination, which
+    #: ``min_length`` alone admits. NOT stripped: a path must stay byte-exact,
+    #: and silently trimming one would mask a typo rather than surface it.
+    output_path: Annotated[str, Field(min_length=1, max_length=4096, pattern=r"\S")]
+    byte_size: NonNegativeInt
     file_sha256: Annotated[str, Field(pattern=r"^[a-f0-9]{64}$")]
     export_format: Annotated[str, Field(min_length=1, max_length=64)]
     handoff_required: bool = True
@@ -739,8 +843,11 @@ class ModeloExportExecutor:
         The command is built from the journalled request, so the identity an
         artefact is stamped with is the one this invocation recorded rather
         than whatever a closure happened to hold when the definition was built.
+
+        Publishes its entry phase only -- see DELEGATED PHASE REPORTING above.
         """
-        del context
+        await context.events.phase("modelo.export.preconditions")
+        await context.events.effect(OperationEffect.UNKNOWN)
         payload = request.payload
         command = ModeloExportCommand(
             calculation_revision_id=payload.calculation_revision_id,
@@ -748,6 +855,7 @@ class ModeloExportExecutor:
             actor=payload.actor,
         )
         result = export_modelo_revision(command, workflow_profile=self._profile_resolver())
+        await context.events.effect(OperationEffect.UPDATED)
         return str(result.file_sha256)
 
 
@@ -873,7 +981,7 @@ class ModeloWorkAmendPublicResultV1(BaseModel):
     filing_record_id: Annotated[str, Field(min_length=1, max_length=128)]
     amended_from_filing_record_id: Annotated[str, Field(min_length=1, max_length=128)]
     amendment_kind: CalculationRevisionAmendmentKind
-    corrected_casilla_count: Annotated[int, Field(ge=0)]
+    corrected_casilla_count: NonNegativeInt
     handoff_required: bool = True
 
 
@@ -893,8 +1001,11 @@ class ModeloWorkAmendExecutor:
 
         Which overrides are legal, which kinds a modelo admits, and whether the
         baseline is AEAT-attested are all the authority's decisions.
+
+        Publishes its entry phase only -- see DELEGATED PHASE REPORTING above.
         """
-        del context
+        await context.events.phase("modelo.work.amend.baseline")
+        await context.events.effect(OperationEffect.UNKNOWN)
         payload = request.payload
         record = amend_modelo_revision(
             from_filing_record_id=payload.baseline.from_filing_record_id,
@@ -904,6 +1015,7 @@ class ModeloWorkAmendExecutor:
             reason=payload.reason,
             actor=request.payload.actor,
         )
+        await context.events.effect(OperationEffect.UPDATED)
         return str(record.filing_record_id)
 
 
@@ -1036,6 +1148,26 @@ class ModeloEditApplyBaselineV1(BaseModel):
         data["period"] = Period.from_year_and_code(period_filing_year, period_code)
         return ModeloEditBaselineV1.model_validate(data)
 
+    @classmethod
+    def from_baseline(cls, baseline: ModeloEditBaselineV1) -> ModeloEditApplyBaselineV1:
+        """Mirror a domain baseline onto the wire form ``to_baseline`` reverses.
+
+        Kept beside its inverse so the two directions cannot drift into
+        disagreeing about which fields are mirrored: adding a field to the
+        wire type without teaching this method is a validation error here, not
+        a silently dropped coordinate.
+        """
+        data = baseline.model_dump(mode="python")
+        period = data.pop("period")
+        # The wire baseline does not restate the contract version: the enclosing
+        # ModeloEditApplySubmissionV1 already carries it, and declaring it twice
+        # would let the two disagree.
+        data.pop("edit_contract_version", None)
+        data["modelo"] = str(baseline.modelo)
+        data["period_filing_year"] = period["filing_year"]
+        data["period_code"] = period["code"]
+        return cls.model_validate(data)
+
 
 #: Wire-safe mirror of ``ModeloScalar`` (``Decimal | int | str | bool | date | None``).
 #: ``Decimal`` validates from a JSON number OR a pattern-matched string but
@@ -1045,9 +1177,35 @@ class ModeloEditApplyBaselineV1(BaseModel):
 #: requiring a decimal amount to arrive as a string - exactly what
 #: serialization already produces, and what real fixtures already pass
 #: (``value="150.00"``) - removes the asymmetry with no loss of expressible
-#: values: the real type's own validator still parses a numeric string into
-#: ``Decimal`` when it is reconstructed in ``to_submission``.
+#: values, though NOT where this once said. ``to_submission`` does not restore
+#: the ``Decimal``: ``ModeloScalar`` is a plain union and ``_EditModel`` is
+#: strict, so a string crosses back as a string. The reconstruction happens one
+#: layer further in, at the execution boundary, which coerces with
+#: ``Decimal(str(value))`` keyed on the CASILLA'S DECLARED ``data_type`` from
+#: the registry rather than on the value's Python type. That is the stronger
+#: guarantee -- the registry decides what a casilla holds, not the wire -- but
+#: it does mean a round trip through this mirror is not an identity for
+#: ``Decimal``, and a test asserting that it is will fail correctly.
 type _ModeloEditApplyScalarValue = int | str | bool | date | None
+
+
+def _wire_scalar_value(value: object) -> _ModeloEditApplyScalarValue:
+    """Mirror one domain ``ModeloScalar`` onto the payload-safe wire union.
+
+    Only ``Decimal`` needs mirroring, and it becomes the exact characters
+    ``str`` produces -- which is precisely what serialization already emits
+    and what ``to_intent`` parses back. Every other member of ``ModeloScalar``
+    is already a member of the wire union and crosses unchanged.
+
+    Not a total inverse of the round trip, deliberately. ``ModeloScalar``
+    admits a plain ``str``, so a string that spells a number is
+    indistinguishable on the wire from a ``Decimal`` and comes back as a
+    ``str``. Nothing is lost by that: the execution boundary reconstructs the
+    amount with ``Decimal(str(value))`` according to the casilla's declared
+    registry ``data_type``, so what a casilla holds is decided by the registry
+    rather than by which Python type happened to survive the trip.
+    """
+    return str(value) if isinstance(value, Decimal) else value  # type: ignore[return-value]
 
 
 class ModeloEditApplyScalarIntentV1(BaseModel):
@@ -1063,6 +1221,11 @@ class ModeloEditApplyScalarIntentV1(BaseModel):
         """Translate back to the real, fully re-validated domain intent."""
         return ModeloScalarEditIntentV1(address=self.address, kind=self.kind, value=self.value)
 
+    @classmethod
+    def from_intent(cls, intent: ModeloScalarEditIntentV1) -> ModeloEditApplyScalarIntentV1:
+        """Mirror a domain scalar intent onto the wire form ``to_intent`` reverses."""
+        return cls(address=intent.address, kind=intent.kind, value=_wire_scalar_value(intent.value))
+
 
 class ModeloEditApplyBindingIntentV1(BaseModel):
     """Wire mirror of ModeloBindingEditIntentV1 with a payload-safe value."""
@@ -1076,6 +1239,11 @@ class ModeloEditApplyBindingIntentV1(BaseModel):
     def to_intent(self) -> ModeloBindingEditIntentV1:
         """Translate back to the real, fully re-validated domain intent."""
         return ModeloBindingEditIntentV1(address=self.address, kind=self.kind, value=self.value)
+
+    @classmethod
+    def from_intent(cls, intent: ModeloBindingEditIntentV1) -> ModeloEditApplyBindingIntentV1:
+        """Mirror a domain binding intent onto the wire form ``to_intent`` reverses."""
+        return cls(address=intent.address, kind=intent.kind, value=_wire_scalar_value(intent.value))
 
 
 class ModeloEditApplyRowIntentV1(BaseModel):
@@ -1095,6 +1263,20 @@ class ModeloEditApplyRowIntentV1(BaseModel):
             kind=self.kind,
             row=None if self.row is None else tuple(entry.to_intent() for entry in self.row),
             move_to_index=self.move_to_index,
+        )
+
+    @classmethod
+    def from_intent(cls, intent: ModeloRowEditIntentV1) -> ModeloEditApplyRowIntentV1:
+        """Mirror a domain row intent, including each of its scalar entries."""
+        return cls(
+            address=intent.address,
+            kind=intent.kind,
+            row=(
+                None
+                if intent.row is None
+                else tuple(ModeloEditApplyScalarIntentV1.from_intent(entry) for entry in intent.row)
+            ),
+            move_to_index=intent.move_to_index,
         )
 
 
@@ -1146,7 +1328,38 @@ def _optional_decimal(value: str | None) -> Decimal | None:
     return None if value is None else Decimal(value)
 
 
-class ModeloEditApply184MemberRowV1(BaseModel):
+def _wire_row_payload(row: BaseModel) -> dict[str, object]:
+    """Dump one domain detail row with its amounts as their exact characters."""
+    return {
+        key: str(value) if isinstance(value, Decimal) else value for key, value in row.model_dump(mode="python").items()
+    }
+
+
+class _WireDetailRowMirror(BaseModel):
+    """Shared inverse for the per-modelo detail-row wire mirrors.
+
+    Each of the six mirrors hand-writes its own ``to_row``, because the
+    domain constructors differ. The direction BACK does not differ: every
+    field crosses unchanged except a ``Decimal``, which becomes the exact
+    characters it already serializes to. Written once here rather than six
+    times, so the mirrors cannot drift into disagreeing about what a total
+    translation means.
+
+    Total by construction rather than by inspection. The row is dumped whole,
+    so a field added to the domain row is carried automatically; and because
+    every mirror forbids extras, a field the wire type does NOT declare raises
+    here instead of being silently dropped on its way to the payload.
+    """
+
+    model_config = _WIRE_CONFIG
+
+    @classmethod
+    def from_row(cls, row: BaseModel) -> Self:
+        """Mirror one domain detail row onto its wire form."""
+        return cls.model_validate(_wire_row_payload(row))
+
+
+class ModeloEditApply184MemberRowV1(_WireDetailRowMirror):
     """Wire mirror of Modelo184MemberRow with decimal amounts as characters."""
 
     model_config = _WIRE_CONFIG
@@ -1199,7 +1412,7 @@ class ModeloEditApply184MemberRowV1(BaseModel):
         )
 
 
-class ModeloEditApply232VinculadaRowV1(BaseModel):
+class ModeloEditApply232VinculadaRowV1(_WireDetailRowMirror):
     """Wire mirror of Modelo232VinculadaRow carrying its codes unhydrated."""
 
     model_config = _WIRE_CONFIG
@@ -1226,7 +1439,7 @@ class ModeloEditApply232VinculadaRowV1(BaseModel):
         )
 
 
-class ModeloEditApply349OperadorRowV1(BaseModel):
+class ModeloEditApply349OperadorRowV1(_WireDetailRowMirror):
     """Wire mirror of Modelo349OperadorRow with its importe as characters."""
 
     model_config = _WIRE_CONFIG
@@ -1249,7 +1462,7 @@ class ModeloEditApply349OperadorRowV1(BaseModel):
         )
 
 
-class ModeloEditApply349RectificacionRowV1(BaseModel):
+class ModeloEditApply349RectificacionRowV1(_WireDetailRowMirror):
     """Wire mirror of Modelo349RectificacionRow with its bases as characters."""
 
     model_config = _WIRE_CONFIG
@@ -1278,7 +1491,7 @@ class ModeloEditApply349RectificacionRowV1(BaseModel):
         )
 
 
-class ModeloEditApply347ContraparteRowV1(BaseModel):
+class ModeloEditApply347ContraparteRowV1(_WireDetailRowMirror):
     """Wire mirror of Modelo347ContraparteRow with quarterly amounts as characters."""
 
     model_config = _WIRE_CONFIG
@@ -1307,7 +1520,7 @@ class ModeloEditApply347ContraparteRowV1(BaseModel):
         )
 
 
-class ModeloEditApply210AgrupacionRentaRowV1(BaseModel):
+class ModeloEditApply210AgrupacionRentaRowV1(_WireDetailRowMirror):
     """Wire mirror of Modelo210AgrupacionRentaRow with its rates as characters."""
 
     model_config = _WIRE_CONFIG
@@ -1346,6 +1559,20 @@ type ModeloEditApplyDetailRowV1 = Annotated[
     Field(discriminator="row_type"),
 ]
 """The wire mirror of the per-modelo detail-row union, discriminated as it is."""
+
+
+_DETAIL_ROW_ADAPTER: Final = TypeAdapter(ModeloEditApplyDetailRowV1)
+
+
+def wire_detail_row(row: BaseModel) -> ModeloEditApplyDetailRowV1:
+    """Mirror any domain detail row onto the discriminated wire union.
+
+    Dispatches through the union's own ``row_type`` discriminator rather than
+    a hand-written row-type-to-class map. A map would be a second declaration
+    of which shapes exist, free to fall behind the union it mirrors; adding a
+    seventh row kind should not require remembering this site.
+    """
+    return _DETAIL_ROW_ADAPTER.validate_python(_wire_row_payload(row))
 
 
 class ModeloEditApplyDetailRowAddressV1(BaseModel):
@@ -1474,6 +1701,47 @@ class ModeloEditApplySubmissionV1(BaseModel):
             detail_row_intents=tuple(intent.to_intent() for intent in self.detail_row_intents),
         )
 
+    @classmethod
+    def from_submission(cls, submission: ModeloEditSubmissionV1) -> ModeloEditApplySubmissionV1:
+        """Mirror a domain submission onto the wire form the operation accepts.
+
+        This is the direction an operator surface needs. The executor already
+        owned wire-to-domain; without its inverse the registered apply
+        operation had no caller outside this package's own tests, because a
+        frontend that stages domain intents had no way to reach it.
+
+        REFUSES A SUBMISSION CARRYING DETAIL ROWS, and the refusal is the
+        honest answer rather than a gap. A domain
+        :class:`ModeloEditDetailRowAddressV1` holds only the JOINED
+        ``natural_key``, while the wire form carries the identity components
+        that were joined to make it -- deliberately, per
+        :class:`ModeloEditApplyDetailRowAddressV1`, because a component
+        containing the separator is indistinguishable from a boundary once
+        joined. Splitting the key here would reconstruct the components by
+        guessing, and would guess wrong exactly when a taxpayer's own
+        identifier contains the separator. A caller staging detail rows still
+        holds the components and must build the wire address from those; it
+        does not come back out of the domain address.
+        """
+        if submission.detail_row_intents:
+            raise ValueError(
+                "detail-row intents cannot be mirrored from a domain submission: the domain address "
+                "carries only the joined natural key, and splitting it would guess the identity "
+                "components. Build the wire detail-row address from the components at the point they "
+                "were staged."
+            )
+        return cls(
+            baseline=ModeloEditApplyBaselineV1.from_baseline(submission.baseline),
+            mutation_family=submission.mutation_family,
+            scalar_intents=tuple(
+                ModeloEditApplyScalarIntentV1.from_intent(intent) for intent in submission.scalar_intents
+            ),
+            binding_intents=tuple(
+                ModeloEditApplyBindingIntentV1.from_intent(intent) for intent in submission.binding_intents
+            ),
+            row_intents=tuple(ModeloEditApplyRowIntentV1.from_intent(intent) for intent in submission.row_intents),
+        )
+
 
 class ModeloEditApplyOperationRequestV1(CredentialFreeOperationRequest):
     """The admitted Edit Contract submission this operation is authorized to apply.
@@ -1535,7 +1803,12 @@ class ModeloEditApplyExecutor:
         caller outside this package through the operation result path, so it
         is reported here as a no-effect None rather than fabricated into an
         exception the refusal was deliberately designed not to be.
+
+        Unlike its delegating siblings this executor declares ONE phase and
+        publishes it, because there is no inner transition it cannot see.
         """
+        await context.events.phase(MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID)
+        await context.events.effect(OperationEffect.UNKNOWN)
         submission = request.payload.submission.to_submission()
         baseline = submission.baseline
         apply_request = ModeloEditApplyRequestV1(
@@ -1548,7 +1821,12 @@ class ModeloEditApplyExecutor:
             result_destination=f"modelo/{baseline.modelo}/{baseline.filing_year}/{baseline.period}/edit-result",
         )
         if isinstance(outcome, ModeloEditExecutionNoEffectV1):
+            # A failed compare-and-swap changed nothing, and NONE is the
+            # truthful report of that -- distinct from the UNKNOWN carried
+            # while the outcome was still open.
+            await context.events.effect(OperationEffect.NONE)
             return None
+        await context.events.effect(OperationEffect.UPDATED)
         return str(outcome.receipt.receipt_id)
 
 

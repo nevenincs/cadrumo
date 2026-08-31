@@ -21,23 +21,32 @@ from collections.abc import Iterable, Mapping
 from decimal import Decimal
 from typing import ClassVar
 
-from pydantic import BaseModel, Field, InstanceOf, TypeAdapter, ValidationError, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    Field,
+    InstanceOf,
+    NonNegativeInt,
+    TypeAdapter,
+    ValidationError,
+    field_validator,
+    model_validator,
+)
 
-from ...core import (
+from ...core.aggregation import BindingSourceKind, ForeignAssetClass
+from ...core.country_code import CountryCodeAlpha2
+from ...core.foreign_asset_obligation import (
     MODELO_720_FOREIGN_ASSET_CLASS_CODES,
     ForeignAssetObligationGroup,
     M720AssetClassCode,
     foreign_asset_obligation_group,
 )
-from ...core.aggregation import BindingSourceKind, ForeignAssetClass
-from ...core.country_code import CountryCodeAlpha2
 from ...core.hashing import content_hash_hex
 from ...core.identity import TransactionId
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing import IsoDateString, require_iso8601_date
 from ...core.period import Period
-from ...domain.calculations import RowSourceIdentity
+from ...domain.calculations._row_source_identity import RowSourceIdentity
 from ...domain.calculations.registry.binding_selector_utils import binding_row_set_selector
 from ...domain.calculations.registry.detail_record_bindings import (
     Modelo720RowObservation,
@@ -163,8 +172,8 @@ class ForeignAssetClassRollup(BaseModel):
 
     source_kind: BindingSourceKind
     asset_class: ForeignAssetClass
-    assets_count: int = Field(ge=0)
-    held_at_year_end_count: int = Field(ge=0)
+    assets_count: NonNegativeInt
+    held_at_year_end_count: NonNegativeInt
     total_valuation_eur: Decimal = Field(ge=Decimal("0"))
     countries: tuple[str, ...] = Field(default_factory=tuple)
 
@@ -197,7 +206,7 @@ class ForeignAssetsAggregation(BaseModel):
     modelo: str = Field(min_length=1)
     period: InstanceOf[Period]
     rollups: tuple[ForeignAssetClassRollup, ...] = Field(default_factory=tuple)
-    total_assets: int = Field(ge=0)
+    total_assets: NonNegativeInt
     total_valuation_eur: Decimal = Field(ge=Decimal("0"))
 
     @model_validator(mode="after")

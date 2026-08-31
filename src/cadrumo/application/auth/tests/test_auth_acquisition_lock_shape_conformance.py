@@ -14,9 +14,9 @@ from pathlib import Path
 import pytest
 
 from ....core.auth_provider import AuthProviderKind
-from ....core.storage_taxonomy_locations import storage_location
-from ....core.storage_taxonomy import StorageCategory
 from ....core.config import Settings, override_settings
+from ....core.storage_taxonomy import StorageCategory
+from ....core.storage_taxonomy_locations import storage_location
 from ....tests import assert_path_matches_grammar
 from ..acquisition_lock import acquire_auth_acquisition_lock, auth_acquisition_lock_path
 

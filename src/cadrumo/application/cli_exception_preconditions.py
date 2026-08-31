@@ -14,16 +14,14 @@ from enum import StrEnum
 from pydantic import ValidationError
 
 from ..core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
-from .operator_actions import (
-    PreconditionVerdict,
-)
+from .operator_actions._models import PreconditionVerdict
 
 
 def _registered_terminal_precondition_verdict(current: BaseException) -> PreconditionVerdict | None:
     """Extract one registered terminal verdict from a single exception."""
-    from ..core.optional_extras import MissingOptionalExtraError
     from ..core.errors.error_codes import get_registered_error_code
     from ..core.errors.hierarchy import CadrumoError, CoreValidationError
+    from ..core.optional_extras import MissingOptionalExtraError
 
     if not isinstance(current, CadrumoError):
         return None
@@ -103,9 +101,9 @@ def nested_terminal_precondition_verdict(error: BaseException) -> PreconditionVe
 
 def cli_exception_envelope_view(error: BaseException) -> BaseException:
     """Return the narrow envelope-safe view for the exception producer families."""
-    from ..core.optional_extras import MissingOptionalExtraError
     from ..core.errors.error_codes import get_registered_error_code
     from ..core.errors.hierarchy import CadrumoError, CoreValidationError
+    from ..core.optional_extras import MissingOptionalExtraError
 
     if isinstance(error, MissingOptionalExtraError):
         safe_context: Mapping[str, object] = {
@@ -181,7 +179,7 @@ def cli_exception_no_recovery_verdict(
     The facts name what was observed, while the closed outcome prevents a CLI
     adapter from smuggling an unbound command template into a recovery field.
     """
-    from .operator_actions import no_action_precondition_verdict
+    from .operator_actions._preconditions import no_action_precondition_verdict
 
     return no_action_precondition_verdict(
         condition_id=condition.value,

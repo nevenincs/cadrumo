@@ -20,13 +20,13 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field
 
+from ...core.identity import AeatExpedienteId, BucketId
 from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
+from ...core.json_contract import Notice
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
-from ...core.identity import AeatExpedienteId, BucketId
-from ...core.json_contract import Notice
 from ...domain.iva_compensation.reconciliation import IvaCompensationDecisionReason
-from ..storage.sync_runs import SyncRunRecordReference
+from ..storage.sync_runs._records import SyncRunRecordReference
 from .errors import LiveIvaAcquisitionFailureMode
 
 LiveIvaDiagnosticRef = Annotated[str, Field(pattern=r"^sha256:[0-9a-f]{12}$")]

@@ -27,7 +27,7 @@ from ...core.logging import get_logger
 from ...domain.filing.schema import ModeloDraft, ModeloValidationFinding
 from ...domain.invoices.enums import PaymentStatus
 from ...domain.invoices.models import Invoice, InvoiceCatalogue
-from ...domain.submission import ModeloDraftStatus
+from ...domain.submission._protocols import ModeloDraftStatus
 from ...domain.transactions.enums import BusinessClassification, is_classified
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from .enums import ReviewSeverity

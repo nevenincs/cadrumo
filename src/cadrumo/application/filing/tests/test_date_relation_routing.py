@@ -33,8 +33,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.runtime_graph import enum_consumed_binding_ids
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ....domain.submission import ModeloDraftStatus
-from .. import build_draft
+from ....domain.submission._protocols import ModeloDraftStatus
 from .._draft_construction import (
     _bound_casilla_binding_ids,
     _date_binding_ids,
@@ -42,6 +41,7 @@ from .._draft_construction import (
     _formula_binding_ids,
     _relation_ids,
     _string_inputs_for_ids,
+    build_draft,
 )
 from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider
 

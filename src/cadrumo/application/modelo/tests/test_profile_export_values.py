@@ -18,8 +18,8 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.modelo import Modelo
 from ....core.aggregation import BindingSourceKind
+from ....core.modelo import Modelo
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import DataBindingDefinition
 from ....domain.user_profile.loader import load_user_profile_schema

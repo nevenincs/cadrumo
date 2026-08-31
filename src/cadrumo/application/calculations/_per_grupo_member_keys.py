@@ -19,8 +19,8 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ...core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ...core.aggregation import BindingSourceKind
+from ...core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ...domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements
 from ...domain.calculations.registry.schema import ModeloRevision
 

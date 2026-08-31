@@ -15,11 +15,15 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
-from ...adapters.persistence.storage.bucket import acquire_lock, bucket_paths, release_lock
-from ...adapters.persistence.storage.master_key import current_active_bucket_session, session_serves_bucket
-from ...core.models import STRICT_FROZEN_CONFIG
+from ...adapters.persistence.storage.bucket._layout import bucket_paths
+from ...adapters.persistence.storage.bucket._lockfile import acquire_lock, release_lock
+from ...adapters.persistence.storage.master_key.active_session import (
+    current_active_bucket_session,
+    session_serves_bucket,
+)
 from ...core.config import LIVE_READ_TEST_OPT_IN_SETTINGS_FIELD, Settings, load_settings
 from ...core.identity import BucketId
+from ...core.models import STRICT_FROZEN_CONFIG
 from .catalogue import get_auth_provider, known_auth_provider_ids
 from .operator_results import (
     AuthCleanupInProgressError,
@@ -30,7 +34,7 @@ from .operator_results import (
 )
 
 if TYPE_CHECKING:
-    from ...adapters.persistence.storage.master_key import BucketSession
+    from ...adapters.persistence.storage.master_key.bucket_session import BucketSession
     from ..workflow.state_models import WorkflowState
 
 _AUTH_OPERATOR_SETTINGS_SCOPE_FIELDS = (

@@ -8,10 +8,10 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
-from ....core.prorrata_register import ProrrataRegisterRegime
 from ....core.period import Period
-from ....domain.bienes_inversion import BienInversionIvaRecord, BienInversionKind
-from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
+from ....core.prorrata_register import ProrrataRegisterRegime
+from ....domain.bienes_inversion.register import BienInversionIvaRecord, BienInversionKind
+from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from ....tests.secure_sql import isolated_two_bucket_runtime
 from ...aggregation import IvaLedgerAggregation
 from .._export import _resolve_m303_export_arrivals

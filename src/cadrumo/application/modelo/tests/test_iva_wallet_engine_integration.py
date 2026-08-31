@@ -9,17 +9,17 @@ from pathlib import Path
 import pytest
 
 from ....core.observed_header_fact import ObservedHeaderFact
-from ....core.result_disposition import ResultDisposition
 from ....core.period import Period
+from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.iva_compensation.reconciliation import IvaCompensationOverride, IvaCompensationReconciliationDecision
 from ....tests import general_m303_filing_evidence
-from ...calculations import (
+from ...calculations._iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
+from ...calculations.observations_repository import (
     CalculationObservationRepository,
     IvaWalletDecisionRepository,
     ObservationSourceKind,
     ResultDispositionProjection,
-    reconcile_modelo_303_iva_compensation,
 )
 from .._calculation_actions import calculate_modelo_revision
 from .._filed_revision_observation import persist_filed_revision_observation

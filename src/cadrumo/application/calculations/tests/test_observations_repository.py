@@ -17,8 +17,8 @@ from typing import cast
 import pytest
 from pydantic import ValidationError
 
-from ....core.period import Period
 from ....core.errors.error_codes import ERROR_REGISTRY, build_error_envelope
+from ....core.period import Period
 from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ..errors import ObservationKeyError
 from ..observations_repository import (

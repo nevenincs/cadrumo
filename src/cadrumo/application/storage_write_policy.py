@@ -33,14 +33,6 @@ from enum import StrEnum
 
 from pydantic import BaseModel, model_validator
 
-from ..core.storage_taxonomy import STORAGE_ROOT_SETTINGS_FIELD
-from ..core.operator_action_enums import (
-    ActionArgumentStatus,
-    ActionConditionality,
-    ActionEvidenceProvenance,
-    NoRecoveryOutcome,
-)
-from ..core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..core.config import (
     Settings,
     StorageRouteClassification,
@@ -49,14 +41,17 @@ from ..core.config import (
     load_settings,
     settings_for_active_profile_bucket,
 )
-from ..core.i18n import tr
-from .operator_actions import (
-    ActionArgumentBinding,
-    ActionReference,
-    ConditionEvidence,
-    PreconditionVerdict,
-    no_action_precondition_verdict,
+from ..core.i18n._render import tr
+from ..core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ..core.operator_action_enums import (
+    ActionArgumentStatus,
+    ActionConditionality,
+    ActionEvidenceProvenance,
+    NoRecoveryOutcome,
 )
+from ..core.storage_taxonomy import STORAGE_ROOT_SETTINGS_FIELD
+from .operator_actions._models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
+from .operator_actions._preconditions import no_action_precondition_verdict
 
 
 class StorageWritePolicyCode(StrEnum):

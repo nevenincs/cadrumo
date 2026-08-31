@@ -12,13 +12,13 @@ from typing import Annotated, Self
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.hex import Hex64Str
-from ...core.period import Period
-from ...core.prose_elision import ElidedProse
 from ...core.errors.severity import BaseSeverity as _BaseSeverity
 from ...core.filing_year import FilingYear
+from ...core.hex import Hex64Str
 from ...core.identity import ProfileId
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.period import Period
+from ...core.prose_elision import ElidedProse
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.user_profile.values import UserProfileFact, UserProfileRecord
 

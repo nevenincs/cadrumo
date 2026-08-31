@@ -36,8 +36,8 @@ from textwrap import dedent
 
 import pytest
 
-from ....adapters.persistence.storage import DecryptionError
 from ....adapters.persistence.storage.crypto.encrypted_columns import secure_object_key_digest
+from ....adapters.persistence.storage.errors import DecryptionError
 from ....domain.user_profile.values import UserProfileRecord
 from ....tests.subprocess_cli import run_subprocess_cli_harness
 from ..capsule_record import (

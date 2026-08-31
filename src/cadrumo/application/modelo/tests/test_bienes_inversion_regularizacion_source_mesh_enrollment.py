@@ -29,10 +29,10 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
-from ....core.period import Period
-from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.aggregation import BindingSourceKind
-from ....domain.bienes_inversion import BienInversionIvaRecord, BienInversionKind
+from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.period import Period
+from ....domain.bienes_inversion.register import BienInversionIvaRecord, BienInversionKind
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id

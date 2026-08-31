@@ -52,7 +52,7 @@ def _held_profile(root: Path) -> None:
 
 
 def _bucket_dir(root: Path) -> Path:
-    from ...adapters.persistence.storage import BUCKETS_DIRNAME
+    from ...adapters.persistence.storage._storage_path_definitions import BUCKETS_DIRNAME
 
     return root / BUCKETS_DIRNAME / _PROFILE_ID
 
@@ -89,7 +89,7 @@ def test_an_open_legal_case_still_refuses_with_a_valid_override(tmp_path: Path) 
     tombstone would read as a pass here while having already destroyed the
     thing the refusal exists to protect.
     """
-    from ..evidence import LegalHoldCaseAuthority
+    from ..evidence._profile_legal_hold import LegalHoldCaseAuthority
     from ..user_profile.custody_transactions import ProfileCustodyTransactionRefusalError
     from ..user_profile.lifecycle import ProfileCapsuleLifecycle
 
@@ -138,7 +138,7 @@ def test_a_legal_case_opened_after_preparation_still_stops_the_execution(tmp_pat
     Preparation happens while only a filing hold stands; the legal case opens
     afterwards. The execution must refuse, and the capsule must survive.
     """
-    from ..evidence import LegalHoldCaseAuthority
+    from ..evidence._profile_legal_hold import LegalHoldCaseAuthority
     from ..user_profile.custody_transactions import ProfileCustodyTransactionRefusalError
     from ..user_profile.lifecycle import ProfileCapsuleLifecycle
 

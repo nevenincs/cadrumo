@@ -46,23 +46,20 @@ from typing import Annotated, Final
 from pydantic import BaseModel, Field, StringConstraints, field_serializer, field_validator, model_validator
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ...core.aggregation import BindingSourceKind
+from ...core.external_constants import DEFAULT_CURRENCY
+from ...core.i18n import tr
+from ...core.identity import TransactionId
 from ...core.iva_deduction_fact import IvaDeductionFactKind
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.period import Period
 from ...core.prorrata_register import (
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
     regime_apportions_deduction,
 )
-from ...core.aggregation import BindingSourceKind
-from ...core.external_constants import DEFAULT_CURRENCY
-from ...core.i18n import tr
-from ...core.identity import TransactionId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.period import Period
 from ...core.prose_elision import ElidedProse
-from ...domain.bienes_inversion import (
-    BienesInversionIvaRegister,
-    validate_investment_asset_reciprocity,
-)
+from ...domain.bienes_inversion.register import BienesInversionIvaRegister, validate_investment_asset_reciprocity
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.ledger_bindings import (
     IvaLedgerObservation,
@@ -94,7 +91,8 @@ from ...domain.iva.schema import (
     IvaLedgerObservationRole,
     IvaRateKind,
 )
-from ...domain.prorrata_register import ProrrataRegister, ProrrataRegisterRepositoryProtocol
+from ...domain.prorrata_register._protocols import ProrrataRegisterRepositoryProtocol
+from ...domain.prorrata_register.register import ProrrataRegister
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.models import OutOfWindowTransactionSummary, Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol

@@ -9,8 +9,8 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.i18n import Translatable as tr
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 """Shared :class:`pydantic.ConfigDict` enforcing strict, frozen, no-extras."""
 

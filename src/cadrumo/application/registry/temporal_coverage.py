@@ -14,9 +14,9 @@ from typing import Literal
 from pydantic import BaseModel, Field, computed_field, model_validator
 
 from ...core.authority_grade import RegistryAuthorityGrade
+from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import RegistrySelectorPeriodCode
-from ...core.filing_year import FilingYear
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ...domain.calculations.registry.errors import (
     RegistrySnapshotError,

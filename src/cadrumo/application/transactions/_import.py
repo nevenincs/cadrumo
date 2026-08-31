@@ -24,11 +24,15 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.errors.severity import BaseSeverity
 from ...core.i18n import Translatable as tr
 from ...core.logging import get_logger
-from ...domain.transactions.models import TransactionCatalogue, derive_transaction_id, existing_transaction_import_fingerprints
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...domain.transactions.models import (
+    TransactionCatalogue,
+    derive_transaction_id,
+    existing_transaction_import_fingerprints,
+)
 from ...domain.transactions.raw_transaction import RawTransaction
 from ._diagnostics import (
     LedgerImportDiagnostic,

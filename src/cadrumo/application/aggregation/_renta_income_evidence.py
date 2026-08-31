@@ -17,7 +17,7 @@ from pydantic import BaseModel
 
 from ...core.aggregation import LedgerWithholdingDerivation
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.money import round_to_cents
+from ...core.money.rounding import round_to_cents
 from ...domain.invoices.decomposition import decompose_invoice
 from ...domain.invoices.models import InvoiceCatalogue
 from ...domain.iva.classification import InvoiceKind

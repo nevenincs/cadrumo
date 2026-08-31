@@ -28,8 +28,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core.rescate_type import RescateType
 from ....core.period import Period
+from ....core.rescate_type import RescateType
 from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root

@@ -18,16 +18,14 @@ from ....adapters.persistence.operations.secure_references import (
     OperationSecureReferenceRepository,
     operation_secure_reference_repository,
 )
-from ....adapters.persistence.storage import (
-    STORAGE_NAMESPACE_REGISTRY,
-    RepositoryError,
-    SecureObjectRepository,
-)
-from ....core.models import STRICT_FROZEN_CONFIG
-from ....core.access_gate import AeatLiveReadNotEnabledError
+from ....adapters.persistence.storage._namespace_registry import STORAGE_NAMESPACE_REGISTRY
+from ....adapters.persistence.storage.errors import RepositoryError
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ....core.access_gate.errors import AeatLiveReadNotEnabledError
 from ....core.directory_scan import scan_directory
 from ....core.errors.error_codes import get_registered_error_code
 from ....core.errors.hierarchy import CoreError
+from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operations import (
     OperationCancellation,
     OperationClosePolicy,

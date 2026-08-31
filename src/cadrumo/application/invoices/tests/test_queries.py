@@ -20,12 +20,8 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.transactions.service import link_invoice
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import (
-    link_invoice_transaction_catalogues,
-    list_invoice_rows,
-    list_unmatched_invoice_rows,
-    verify_invoice_repository_links,
-)
+from .._linking import link_invoice_transaction_catalogues
+from .._queries import list_invoice_rows, list_unmatched_invoice_rows, verify_invoice_repository_links
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

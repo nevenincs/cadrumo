@@ -20,7 +20,7 @@ from collections.abc import Mapping
 from decimal import Decimal
 from types import MappingProxyType
 
-from pydantic import BaseModel, Field, InstanceOf, field_validator, model_validator
+from pydantic import BaseModel, Field, InstanceOf, NonNegativeInt, field_validator, model_validator
 
 from ...core.aggregation import (
     COUNTERPART_SOURCE_KIND_ORDER,
@@ -103,7 +103,7 @@ class RetencionPerceptorRollup(BaseModel):
     perceptor_nif: TaxIdIdentityToken = Field(min_length=1, max_length=16)
     perceptor_name: str = Field(default="", max_length=200)
     scheme: RetencionScheme
-    observations_count: int = Field(ge=0)
+    observations_count: NonNegativeInt
     total_taxable_base: Decimal = Field(ge=Decimal("0"))
     total_retencion: Decimal = Field(ge=Decimal("0"))
 
@@ -126,7 +126,7 @@ class RetencionesAggregation(BaseModel):
     modelo: str = Field(min_length=1)
     period: InstanceOf[Period]
     rollups: tuple[RetencionPerceptorRollup, ...] = Field(default_factory=tuple)
-    total_perceptors: int = Field(ge=0)
+    total_perceptors: NonNegativeInt
     total_taxable_base: Decimal = Field(ge=Decimal("0"))
     total_retencion: Decimal = Field(ge=Decimal("0"))
 
@@ -358,8 +358,8 @@ class RetencionesTotalsParity(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    perceptores_aggregation_total: int = Field(ge=0)
-    perceptores_summary_total: int = Field(ge=0)
+    perceptores_aggregation_total: NonNegativeInt
+    perceptores_summary_total: NonNegativeInt
     perceptores_delta: int
     base_aggregation_total: Decimal = Field(ge=Decimal("0"))
     base_summary_total: Decimal = Field(ge=Decimal("0"))

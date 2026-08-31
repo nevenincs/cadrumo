@@ -36,9 +36,9 @@ from collections.abc import Mapping, Sequence
 from decimal import Decimal
 from typing import NamedTuple
 
-from ...core.modelo import Modelo
 from ...core.casilla_id import CasillaId
-from ...core.decimal import coerce_decimal
+from ...core.decimal._coerce import coerce_decimal
+from ...core.modelo import Modelo
 from ...domain.calculations.registry.ids import LegalRefId
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.contribuyente.descendant import DescendantInfo

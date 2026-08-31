@@ -18,10 +18,17 @@ from __future__ import annotations
 
 import pytest
 
-from ....adapters.persistence.storage import AttachmentStore
+from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....domain.attachments.enums import AttachmentKind, AttachmentSource
-from ....domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment, link_attachment_transaction, list_attachments, load_attachment
+from ....domain.attachments.service import (
+    AttachmentBytesContent,
+    AttachmentIngestionRequest,
+    add_attachment,
+    link_attachment_transaction,
+    list_attachments,
+    load_attachment,
+)
 from ....domain.transactions.service import find_transaction
 from ._action_test_support import (
     _BUCKET_ID,

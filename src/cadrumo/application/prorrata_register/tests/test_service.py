@@ -26,9 +26,9 @@ from ....core.prorrata_register import (
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
 )
-from ....domain.prorrata_register import ProrrataEspecialTransitionEvidence, ProrrataRegisterEntry
+from ....domain.prorrata_register.register import ProrrataEspecialTransitionEvidence, ProrrataRegisterEntry
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import ProrrataRegisterService
+from .._service import ProrrataRegisterService
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

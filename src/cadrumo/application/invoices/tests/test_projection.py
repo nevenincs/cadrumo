@@ -18,7 +18,7 @@ from ....domain.transactions.raw_transaction import RawProvenance, RawTransactio
 from ...review.actions import update_invoice_review
 from ...review.filter import InvoiceReviewFilterSpec, InvoiceReviewStatus
 from ...workflow.state_models import WorkflowState
-from .. import (
+from .._projection import (
     InvoiceMatchRow,
     apply_manual_invoice_match,
     invoice_review_status,

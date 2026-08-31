@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.master_key import current_active_bucket_session
+from ....adapters.persistence.storage.master_key.active_session import current_active_bucket_session
 from ....core.auth_provider import AuthProviderKind
 from ....core.bucket_pointer import BucketPointer, write_pointer
 from ....core.config import load_settings, override_settings
