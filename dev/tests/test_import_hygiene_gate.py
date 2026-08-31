@@ -125,6 +125,7 @@ from ..quality.import_hygiene_scan import (
     find_shim_modules,
     find_tui_boundary_violations,
     find_underscore_in_all_violations,
+    has_private_component,
     is_shipped_module,
     iter_dynamic_import_targets,
     walk_module_imports,
@@ -137,6 +138,7 @@ _BASELINE_PATH: Final[Path] = REPO_ROOT / "dev" / "quality" / "import_hygiene_ba
 _TEST_DEBT_PATH: Final[Path] = REPO_ROOT / "dev" / "quality" / "import_hygiene_test_debt.json"
 _COMPONENTS_PACKAGE: Final[str] = f"{CANONICAL_TUI_PACKAGE}.components"
 _COMPONENTS_ROOT: Final[Path] = PKG_ROOT / "entrypoints" / "tui" / "components"
+_PRIVATE_FACADE_PROBE: Final[str] = "cadrumo.application.operations._model_contract"
 _COMPONENT_FORBIDDEN_PREFIXES: Final[tuple[str, ...]] = (
     "cadrumo.adapters",
     "cadrumo.application",
@@ -1284,7 +1286,7 @@ def test_components_boundary_allows_a_direct_canonical_component_import(tmp_path
         ),
         (
             "cadrumo/entrypoints/tui/app.py",
-            "from cadrumo.application.operations.registry import definitions\n",
+            f"from {_PRIVATE_FACADE_PROBE} import definitions\n",
             TuiBoundaryViolationKind.PRIVATE_FACADE,
         ),
         (
@@ -1294,7 +1296,7 @@ def test_components_boundary_allows_a_direct_canonical_component_import(tmp_path
         ),
         (
             "cadrumo/entrypoints/tui/app.py",
-            "import importlib\nimportlib.import_module('cadrumo.application.operations.registry')\n",
+            f"import importlib\nimportlib.import_module('{_PRIVATE_FACADE_PROBE}')\n",
             TuiBoundaryViolationKind.PRIVATE_FACADE,
         ),
     ),
@@ -1436,6 +1438,24 @@ def test_every_declared_launch_seam_still_names_a_real_import() -> None:
 
     assert stale == [], f"declared launch seams no longer reach the TUI: {stale}"
     assert all(_TUI_LAUNCH_SEAMS.values()), "every launch seam states why it is permitted"
+
+
+def test_the_private_facade_probe_target_is_still_private() -> None:
+    """A promoted probe target would make the private-facade bypass cases vacuous.
+
+    Those cases prove the scanner rejects a TUI reach into a private module
+    only while the module they name actually carries a private component.
+    They previously named ``application.operations.registry``, which a
+    relocation later promoted to a public defining module; the cases then
+    failed rather than passing for the wrong reason, which is how this was
+    found. Anchoring the target keeps that failure mode loud.
+    """
+    assert has_private_component(_PRIVATE_FACADE_PROBE), (
+        f"{_PRIVATE_FACADE_PROBE} carries no private component, so the private-facade "
+        "bypass cases no longer probe what they are named for"
+    )
+    relative = Path(*_PRIVATE_FACADE_PROBE.split(".")[1:]).with_suffix(".py")
+    assert (PKG_ROOT / relative).is_file(), f"probe target {_PRIVATE_FACADE_PROBE} no longer exists"
 
 
 def test_textual_is_confined_to_the_canonical_tui_package() -> None:
