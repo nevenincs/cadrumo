@@ -41,9 +41,9 @@ import pytest
 
 from ....core.resources.bundled_data import bundled_path
 from ..classification import IvaTerritorialScope
+from ..country_vocabulary import _index_country_names
 from ..errors import IvaCatalogueError
 from ..establishment import (
-    _index_country_names,
     country_code_for_printed_country_name,
     territorial_scope_for_printed_country_name,
 )
