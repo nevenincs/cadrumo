@@ -5,7 +5,7 @@ tags:
 date: '2026-08-29'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:9700928d6190a48f370b0d18c223f55d78e1f7a37ae7f0f767dacf09dbd1142b'
+body_hash: 'sha256:0ddc5a37351e7fa11adb8ffd0204f7fadf7367b23b3acfe5287466c48752b367'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
@@ -1057,3 +1057,41 @@ word count, plus a control term you expect to find. Zero occurrences of
 *ejercicio* means little on its own; zero *ejercicio* beside twelve *308* and
 four *anexo II*, in 1,971 extracted words, means the search worked and the term
 is genuinely not there.
+
+## A split that landed one step short took the whole registry lane down
+
+`test_revision_span_matches_published_designs` was split into four
+`_revision_span_*_support` modules and deleted. Four consumers still imported
+from it. Unlike the earlier sighting of this, the module is now absent at HEAD
+as well as on disk with a clean status, so this was not a mid-flight working
+tree: a clean copy of main could not collect the registry test lane either.
+
+The severity is out of proportion to the cause, and that is the point worth
+recording. Four bad import lines produce four COLLECTION errors, and pytest
+interrupts the entire run on a collection error rather than proceeding with
+what it could gather. So the lane did not report 6,793 passes and 4 broken
+modules -- it reported nothing at all, and had been doing so for as long as the
+deletion had been committed. A gate that cannot be collected is
+indistinguishable, in a CI summary, from a gate nobody ran.
+
+Every one of the seven imported names resolved to exactly one support module,
+so the repair was mechanical rather than a judgement call: 4 errors and 6,793
+collected became 0 errors and 6,811 collected.
+
+One surviving reference was prose -- a docstring in
+`test_every_bundled_design_is_read_or_reported` naming the deleted module as
+"the sibling guard". Repointed at `test_revision_span_boundaries`, which is
+where that inventory guard now lives. A dangling name in prose costs nothing at
+runtime and everything to the next reader trying to find the guard being
+described.
+
+### Lesson
+
+This is the third relocation this session to land with its consumers
+unswept, and each time the error names a MISSING MODULE rather than an
+unfinished sweep, so the first person to hit it reasonably concludes their own
+lane is broken. When a rename or split is the suspected cause, the cheap
+discriminator is `git cat-file -e HEAD:<old path>`: present at HEAD and absent
+on disk means someone is mid-flight and the sweep is theirs to finish; absent
+in both means the breakage has LANDED and repointing is the repair, not an
+intrusion.
