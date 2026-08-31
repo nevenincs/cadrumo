@@ -27,15 +27,14 @@ import re
 import pytest
 
 from .....core.resources._boundary import bundled_path
-from ..record_design import (
-    _clean_pdf_line,
+from ..record_design import extract_record_design
+from ..record_design_pdf_repairs import (
     _collapse_stuttered_row_prefix,
-    _extract_pdf_text_lines,
     _join_wrapped_row_descriptions,
-    _pdf_page_name,
     _reattach_stranded_casilla_tags,
-    extract_record_design,
 )
+from ..record_design_pdf_rows import _clean_pdf_line, _pdf_page_name
+from ..record_design_pdf_visual import _extract_pdf_text_lines
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

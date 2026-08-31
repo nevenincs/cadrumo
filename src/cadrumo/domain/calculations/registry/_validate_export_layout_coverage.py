@@ -128,7 +128,8 @@ from ..export_field_kind import CasillaFieldKind
 from .binding_selector_utils import selector_as_dict
 from .errors import RegistryValidationError
 from .export import derive_export_layouts_from_bindings
-from .record_design import _naturaleza_or_none, extract_record_design
+from .record_design import extract_record_design
+from .record_design_pdf_rows import _naturaleza_or_none
 from .record_design_schema import RecordDesignField, RecordDesignSheet
 from .schema import ModeloRevision
 from .schema_exports import (

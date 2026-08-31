@@ -91,7 +91,7 @@ def test_modelo_180_recovered_reserved_band_still_carries_its_caption_in_the_doc
     source that drops it must make this proof fail rather than preserve a remembered
     label.
     """
-    from ..record_design import _extract_pdf_text_lines
+    from ..record_design_pdf_visual import _extract_pdf_text_lines
 
     folder, name = _MODELO_180_DIAGRAM
     path = bundled_path("corpus", "aeat_official", "disenos_registro", folder, "files", name)

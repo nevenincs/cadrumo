@@ -11,15 +11,16 @@ from pathlib import Path
 import pytest
 
 from .....core.directory_scan import DirectoryEntryKind, scan_directory
-from .. import record_design as record_design_module
+from .. import record_design_workbook as record_design_workbook_module
+from .. import record_design_workbook_headers as record_design_headers_module
 from ..corpus_catalogue import resolve_record_design_binary
 from ..errors import RegistryValidationError
 from ..record_design import (
-    _unnamed_position_candidate,
     extract_record_design,
     extract_record_design_pdf,
     extract_record_design_pdf_bytes,
 )
+from ..record_design_pdf_rows import _unnamed_position_candidate
 from ..record_design_schema import (
     RecordDesignCompositeRelativeClosing,
     RecordDesignRelativeSuffixMarker,
@@ -199,7 +200,7 @@ def test_modelo_220_workbooks_preserve_the_exact_composite_relative_closing(
 
 def test_variable_envelope_recognition_has_no_record_name_selector() -> None:
     """The parser recognises official composition markers, never a known tab name."""
-    source = inspect.getsource(record_design_module._extract_sheet_rows)
+    source = inspect.getsource(record_design_workbook_module._extract_sheet_rows)
 
     assert "DP200000" not in source
     assert "DP30300" not in source
@@ -975,11 +976,11 @@ def test_header_matching_ignores_an_abbreviating_full_stop_on_either_side() -> N
     broken set. This one fails for any token whose two spellings disagree.
     """
     for token in ("lon", "posic", "tipo", "descripcion", "oblig", "validacion", "contenido"):
-        with_stop = record_design_module._optional_header_index((f"{token}.",), token)
-        without_stop = record_design_module._optional_header_index((token,), token)
+        with_stop = record_design_headers_module._optional_header_index((f"{token}.",), token)
+        without_stop = record_design_headers_module._optional_header_index((token,), token)
         assert with_stop == without_stop == 0, token
         # And the expected side may carry the stop just as the cell may.
-        assert record_design_module._optional_header_index((token,), f"{token}.") == 0, token
+        assert record_design_headers_module._optional_header_index((token,), f"{token}.") == 0, token
 
 
 def test_a_workbook_mixing_both_header_spellings_yields_every_sheet() -> None:
@@ -1118,7 +1119,7 @@ def test_a_second_recognised_header_shape_is_read_and_a_non_matching_sheet_still
 
     # Negative case: a header row with NEITHER "Descripcion" NOR "Com." must still refuse,
     # proving Shape B did not widen the match rather than add a second one.
-    no_shape_match = record_design_module._probe_header_row(
+    no_shape_match = record_design_headers_module._probe_header_row(
         ("Nº", "Posic.", "Lon", "Tipo", "Contenido"),
         1,
         label="test",
@@ -1129,7 +1130,7 @@ def test_a_second_recognised_header_shape_is_read_and_a_non_matching_sheet_still
 
     # Negative case: "Com." present but the following column is blank -- no caption to
     # treat as the description -- must also still refuse.
-    blank_caption = record_design_module._probe_header_row(
+    blank_caption = record_design_headers_module._probe_header_row(
         ("Nº", "Posic.", "Lon", "Tipo", "Com.", None, "Contenido"),
         1,
         label="test",
@@ -1176,7 +1177,7 @@ def test_a_declared_header_cell_correction_is_read_and_an_undeclared_blank_colum
 
     # Negative case: the identical blank-length-column shape with NO declared correction
     # must still refuse -- proving the sidecar is load-bearing, not a fallback default.
-    undeclared = record_design_module._probe_header_row(
+    undeclared = record_design_headers_module._probe_header_row(
         ("Nº", "Posic.", "", "Tipo", "Descripción", "Validación", "Contenido"),
         5,
         label="test",
@@ -1242,14 +1243,14 @@ def test_a_truncated_header_spelling_names_the_same_column() -> None:
     the moment AEAT wrote a spelling nobody had enrolled.
     """
     for spelling in ("lon", "lon.", "long", "long.", "longitud"):
-        assert record_design_module._optional_header_index((spelling,), "lon") == 0, spelling
+        assert record_design_headers_module._optional_header_index((spelling,), "lon") == 0, spelling
 
     # The floor: a token under three characters may not prefix-match a column.
-    assert record_design_module._optional_header_index(("n",), "no") is None
-    assert record_design_module._optional_header_index(("lo",), "lon") is None
+    assert record_design_headers_module._optional_header_index(("n",), "no") is None
+    assert record_design_headers_module._optional_header_index(("lo",), "lon") is None
     # And an unrelated column is still not matched, however long it is.
-    assert record_design_module._optional_header_index(("contenido",), "lon") is None
-    assert record_design_module._optional_header_index(("descripcion",), "tipo") is None
+    assert record_design_headers_module._optional_header_index(("contenido",), "lon") is None
+    assert record_design_headers_module._optional_header_index(("descripcion",), "tipo") is None
 
 
 def test_the_truncation_rule_recovers_a_sheet_that_was_silently_dropped() -> None:
@@ -1310,7 +1311,7 @@ def test_a_two_byte_closing_part_that_is_not_a_terminator_is_not_peeled() -> Non
     the record identifier. Peeling on width would silently truncate that closing and
     reclassify a real identifier component as physical padding.
     """
-    from ..record_design import _split_record_terminator
+    from ..record_design_layout_markers import _split_record_terminator
     from ..record_design_schema import RecordDesignRelativeSuffixMarker
 
     def suffix(length: int, description: str, ordinal: int) -> RecordDesignRelativeSuffixMarker:
@@ -1343,8 +1344,8 @@ def test_a_terminator_that_does_not_come_last_is_refused() -> None:
     declaring it early is either malformed or has been misread, and rearranging it
     would hide both.
     """
-    from ..record_design import _require_terminator_closes_the_record
     from ..record_design_schema import RecordDesignRelativeSuffixMarker
+    from ..record_design_workbook import _require_terminator_closes_the_record
 
     def suffix(ordinal: int, length: int, description: str) -> RecordDesignRelativeSuffixMarker:
         return RecordDesignRelativeSuffixMarker(
@@ -1408,15 +1409,18 @@ def test_the_workbook_and_pdf_parsers_share_one_notion_of_a_crlf_row() -> None:
     Asserted by composition, not by equality of behaviour: this fails if either side
     grows its own copy.
     """
-    assert record_design_module._RECORD_TERMINATOR_PHRASE in record_design_module._COMPACT_PDF_CRLF_ROW_RE.pattern
-    assert record_design_module._RECORD_TERMINATOR.pattern == record_design_module._RECORD_TERMINATOR_PHRASE
+    from ..record_design_layout_markers import _RECORD_TERMINATOR, _RECORD_TERMINATOR_PHRASE
+    from ..record_design_pdf_rows import _COMPACT_PDF_CRLF_ROW_RE
+
+    assert _RECORD_TERMINATOR_PHRASE in _COMPACT_PDF_CRLF_ROW_RE.pattern
+    assert _RECORD_TERMINATOR.pattern == _RECORD_TERMINATOR_PHRASE
 
     # Every wording the shared phrase claims to cover must actually match, so a
     # dead alternative cannot hide behind a live one. The bare-CRLF spelling was
     # dead for exactly this reason before this test existed.
     for wording in ("Fin de Registro. Constante CRLF", "Salto de linea. CRLF", "Salto de línea. CRLF"):
-        assert record_design_module._RECORD_TERMINATOR.search(wording), wording
-    assert not record_design_module._RECORD_TERMINATOR.search("Periodo. Constante 0A")
+        assert _RECORD_TERMINATOR.search(wording), wording
+    assert not _RECORD_TERMINATOR.search("Periodo. Constante 0A")
 
 
 def test_envelope_composition_order_is_checked_by_source_position_not_by_ordinal() -> None:
@@ -1434,13 +1438,13 @@ def test_envelope_composition_order_is_checked_by_source_position_not_by_ordinal
     the authority never promised, and a string ordering would place ``2`` after
     ``10`` by construction.
     """
-    from ..record_design import _require_ordered_variable_envelope
     from ..record_design_schema import (
         RecordDesignField,
         RecordDesignRelativeSuffixMarker,
         RecordDesignVariableBodyMarker,
         RecordDesignVariableTotalMarker,
     )
+    from ..record_design_workbook import _require_ordered_variable_envelope
 
     def field(row: int) -> RecordDesignField:
         return RecordDesignField(sheet="S", row=row, ordinal="1", offset=1, length=1, type_code="An", description="d")

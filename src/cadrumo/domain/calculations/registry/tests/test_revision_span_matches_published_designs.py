@@ -152,13 +152,13 @@ from .....core.resources._boundary import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
 from ..authority import ValidatedRegistryAuthority
 from ..record_design import (
-    _clean_pdf_line,
-    _extract_pdf_text_lines,
     extract_record_design_pdf,
     extract_record_design_workbook,
     extract_record_design_xls_workbook,
 )
 from ..record_design_coverage import _CASILLA_TAG_RE
+from ..record_design_pdf_rows import _clean_pdf_line
+from ..record_design_pdf_visual import _extract_pdf_text_lines
 from ..record_design_schema import RecordDesignSheet
 from ..schema import ModeloDefinition, ModeloRevision
 from ..schema_references import SourceReference

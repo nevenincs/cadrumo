@@ -8,7 +8,8 @@ import pytest
 
 from .....core.hashing import hash_file
 from .....core.resources._boundary import bundled_path
-from ..record_design import _extract_pdf_text_lines, extract_record_design
+from ..record_design import extract_record_design
+from ..record_design_pdf_visual import _extract_pdf_text_lines
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

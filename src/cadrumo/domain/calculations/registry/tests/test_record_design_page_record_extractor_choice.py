@@ -35,16 +35,11 @@ from pathlib import Path
 import pytest
 
 from .....core.resources._boundary import bundled_path
-from ..record_design import (
-    _EMPTY_CORRECTIONS,
-    _better_page_record_lines,
-    _collapse_stuttered_row_prefix,
-    _extract_pdf_text_lines,
-    _extract_pdfplumber_text_lines,
-    _join_wrapped_row_descriptions,
-    _uses_page_record_layout,
-    extract_record_design,
-)
+from ..record_design import extract_record_design
+from ..record_design_pdf_orchestration import _better_page_record_lines
+from ..record_design_pdf_repairs import _collapse_stuttered_row_prefix, _join_wrapped_row_descriptions
+from ..record_design_pdf_visual import _extract_pdf_text_lines, _extract_pdfplumber_text_lines, _uses_page_record_layout
+from ..record_design_sources import _EMPTY_CORRECTIONS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
