@@ -10,7 +10,7 @@ related:
   - '[[2026-06-01-registry-period-code-union-cli-boundary-adr]]'
   - '[[2026-08-05-ci-lane-deconflation-step-check-attribution-audit]]'
 modified: '2026-08-31'
-body_hash: 'sha256:becffea1970f98f3a6eebee104649ae86117ef610b2110a16aeec9fae6451dc7'
+body_hash: 'sha256:28c770a3fbdc27d754ffae6c3803b01b50229f71c3afdf9598b543f010190f4a'
 ---
 
 <!-- RETIRED: S01, S10, S181, S184, S186, S189, S191, S193, S194, S197, S199, S201, S203, S205, S207, S209, S211, S213, S215, S217, S219, S221 -->
@@ -272,7 +272,7 @@ Decompose every live size-budget subject by its owning source file, then regener
 - [ ] `P05.S208` - Refactor the size-budget subjects in __init__.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/contribuyente/inventory/__init__.py`.
 - [ ] `P05.S210` - Refactor the size-budget subjects in models.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/invoices/models.py`.
 - [x] `P05.S212` - Refactor the size-budget subjects in classification.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/iva/classification.py`.
-- [ ] `P05.S214` - Refactor the size-budget subjects in components.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/iva/components.py`.
+- [x] `P05.S214` - Refactor the size-budget subjects in components.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/iva/components.py`.
 - [ ] `P05.S216` - Refactor the size-budget subjects in establishment.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/iva/establishment.py`.
 - [ ] `P05.S218` - Refactor the size-budget subjects in calculation_revision.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/modelos/calculation_revision.py`.
 - [ ] `P05.S220` - Refactor the size-budget subjects in test_calculation_revision.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/modelos/tests/test_calculation_revision.py`.
