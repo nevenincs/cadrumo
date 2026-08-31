@@ -49,17 +49,22 @@ from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.identity import TransactionId
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.money import round_to_cents
 from ...core.period import Period, PeriodKind
 from ...core.prose_elision import ElidedProse
+from ...domain.invoices.decomposition import decompose_invoice
 from ...domain.invoices.models import InvoiceCatalogue
 from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
+from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.components import category_cuota_is_zero_by_law
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.irpf_categories import has_activity_irpf_category, has_employment_irpf_category
 from ...domain.transactions.models import OutOfWindowTransactionSummary, Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ...domain.transactions.retencion_parameters import maximum_supported_activity_retencion_rate
 from ...domain.transactions.tipo_actividad_partitions import tipo_actividad_code_set
 from ...domain.transactions.volumen_ingresos import counts_toward_volumen_de_ingresos
-from . import _renta_income_evidence, _shared_issue_reasons
+from . import _shared_issue_reasons
 from ._business_proportion import business_proportion
 from ._currency_predicates import effective_eur_amount, effective_eur_taxable_base, is_non_eur_without_conversion
 from ._grouping import cumulative_year_to_date_window, fold_casilla_observations
@@ -115,6 +120,62 @@ class RentaIncomeLedgerAggregationIssueReason(StrEnum):
 _IssueDetail = Annotated[str, ElidedProse(512)]
 
 
+class SalesInvoiceEvidenceRefusal(StrEnum):
+    """Why a linked sales invoice was not trusted for a row's fiscal figures.
+
+    NOT an exclusion. Every member here leaves the row IN the aggregation,
+    contributing its bank cash under ``CASH_FALLBACK`` grounding, because the
+    taxpayer was paid and that income is declarable whatever state its paperwork
+    is in. What the refusal withholds is the invoice's FIGURES, not the row.
+
+    This is the income side of an asymmetry worth stating, because copying the
+    expense pipeline's control flow here caused a real regression. An
+    unevidenced gasto must NOT be claimed, so that pipeline excludes it. An
+    unevidenced ingreso must STILL be declared, so this one degrades it. Same
+    checks, opposite consequence; only the checks transfer.
+
+    Spelled per failure rather than as one generic mismatch: which check
+    rejected the link is what an operator needs to repair it, and one reason
+    would make five different repairs look like one problem.
+    """
+
+    BUCKET_MISMATCH = "sales_invoice_bucket_mismatch"
+    """The linked invoice belongs to another bucket."""
+
+    UNSUPPORTED_KIND = "unsupported_sales_invoice_kind"
+    """The linked invoice is not ISSUED, so it is not this taxpayer's income."""
+
+    LINK_NOT_RECIPROCAL = "sales_invoice_link_mismatch"
+    """The invoice does not name this transaction back, so the pairing is unconfirmed."""
+
+    PARTIAL_OR_MULTI_TRANSACTION = "partial_or_multi_transaction_sales_invoice"
+    """Several transactions settle this invoice, so no one of them carries its whole base.
+
+    The ordinary instalment case. The rows keep contributing their cash; what
+    cannot be done is attribute the invoice's full base to any single one.
+    """
+
+    AMOUNT_MISMATCH = "sales_invoice_amount_mismatch"
+    """The credit does not match the invoice total net of its declared retención."""
+
+    UNGROUNDED_DECOMPOSITION = "ungrounded_sales_invoice_decomposition"
+    """The invoice is correctly linked but its own figures are not interpretable.
+
+    Every other member of this enum asks whether the invoice describes THIS
+    transaction. This one asks the separate question of whether the invoice is
+    internally coherent at all — whether it declares an IVA treatment, resolves
+    its currency, and carries a cuota its category permits. A document can pass
+    every linkage guard and still fail that: an invoice with no declared
+    :class:`~cadrumo.domain.iva.IvaCategory` reconciles perfectly against its
+    payment while remaining ambiguous between untagged and exempt, which is the
+    distinction the grounding contract exists to preserve.
+
+    The verdict comes from :func:`~cadrumo.domain.invoices.decompose_invoice`
+    rather than from checks re-derived here, so the one authority on invoice
+    coherence answers for every consumer.
+    """
+
+
 class RentaIncomeLedgerAggregationIssue(BaseModel):
     """Traceable exclusion emitted while aggregating income ledger rows."""
 
@@ -123,6 +184,22 @@ class RentaIncomeLedgerAggregationIssue(BaseModel):
     transaction_id: TransactionId
     reason: RentaIncomeLedgerAggregationIssueReason
     detail: _IssueDetail
+
+
+class _SalesInvoiceEvidencePayload(BaseModel):
+    """The figures a trusted linked sales invoice contributes to one row.
+
+    Empty when the row links no invoice, which is the ordinary case and not a
+    defect. A populated payload has passed every guard in
+    :func:`_sales_invoice_evidence_payload`, so its figures may take precedence
+    over the transaction's own tax substrate.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    taxable_base: Decimal | None = None
+    iva_amount: Decimal | None = None
+    retencion_amount: Decimal | None = None
 
 
 class RentaIncomeObservation(BaseModel):
@@ -170,7 +247,7 @@ class RentaIncomeObservation(BaseModel):
     source_jurisdiction: str | None = None
     grounding: LedgerIncomeGrounding
     withheld_derivation: LedgerWithholdingDerivation = LedgerWithholdingDerivation.NOT_APPLICABLE
-    sales_invoice_refusal: _renta_income_evidence.SalesInvoiceEvidenceRefusal | None = None
+    sales_invoice_refusal: SalesInvoiceEvidenceRefusal | None = None
 
     @model_validator(mode="after")
     def _grounding_matches_declared_base(self) -> Self:
@@ -864,7 +941,7 @@ def _classify_income_transaction(
 
     # taxable_base carries the IVA-exclusive base imponible when set; it
     # feeds the taxable_base_sum fact path for the rendimiento-neto binding.
-    evidence, evidence_refusal = _renta_income_evidence._sales_invoice_evidence_payload(
+    evidence, evidence_refusal = _sales_invoice_evidence_payload(
         invoices=invoices,
         bucket_id=bucket_id,
         transaction=transaction,
@@ -888,7 +965,7 @@ def _classify_income_transaction(
     # retención derived from the undivided base stayed whole.
     taxable_base_amount: Decimal | None = None if declared_base is None else declared_base * proportion
 
-    withheld = _renta_income_evidence._income_withheld_amount(transaction, evidence=evidence)
+    withheld = _income_withheld_amount(transaction, evidence=evidence)
 
     return RentaIncomeObservation(
         transaction_id=transaction_id,
@@ -905,6 +982,68 @@ def _classify_income_transaction(
             if taxable_base_amount is not None
             else LedgerIncomeGrounding.CASH_FALLBACK
         ),
+    )
+
+
+def _sales_invoice_evidence_payload(
+    *,
+    invoices: InvoiceCatalogue,
+    bucket_id: str,
+    transaction: Transaction,
+) -> tuple[_SalesInvoiceEvidencePayload, SalesInvoiceEvidenceRefusal | None]:
+    """Return the figures a linked sales invoice contributes, or why it is refused.
+
+    Derive-on-read, mirroring the expense pipeline's
+    ``_purchase_invoice_evidence_payload``: nothing is copied onto the
+    transaction at link time, so a corrected invoice is reflected on the next
+    aggregation and no stale figure can outlive it.
+
+    One guard differs from the expense side, and the difference is the point. An
+    expense pays the whole contraprestación, so that side asserts the cash
+    equals ``grand_total``. A sales invoice subject to retención is paid NET --
+    the payer withholds and remits the retención on the taxpayer's account -- so
+    the bank credit is ``grand_total - retention_amount``. Asserting equality
+    against ``grand_total`` here would refuse precisely the net-paid
+    professional invoices this evidence path exists to ground; asserting it
+    against the cash without the retención term would accept an invoice that
+    does not describe the payment.
+    """
+    invoice_id = transaction.invoice_id
+    if invoice_id is None:
+        return _SalesInvoiceEvidencePayload(), None
+    invoice = invoices.get(invoice_id)
+    if invoice is None:
+        # Not an error: an unresolvable link is already reported by the ledger
+        # surface, and the income pipeline's job here is only to decide whether
+        # trustworthy invoice figures exist. Falling through leaves the row on
+        # its own substrate and its existing grounding marker.
+        return _SalesInvoiceEvidencePayload(), None
+    transaction_id = transaction.transaction_id
+    if invoice.bucket_id != bucket_id:
+        return _SalesInvoiceEvidencePayload(), SalesInvoiceEvidenceRefusal.BUCKET_MISMATCH
+    if invoice.kind is not InvoiceKind.ISSUED:
+        return _SalesInvoiceEvidencePayload(), SalesInvoiceEvidenceRefusal.UNSUPPORTED_KIND
+    if transaction_id not in invoice.linked_transaction_ids:
+        return _SalesInvoiceEvidencePayload(), SalesInvoiceEvidenceRefusal.LINK_NOT_RECIPROCAL
+    if len(invoice.linked_transaction_ids) != 1:
+        return _SalesInvoiceEvidencePayload(), SalesInvoiceEvidenceRefusal.PARTIAL_OR_MULTI_TRANSACTION
+    expected_cash = invoice.grand_total - (invoice.retention_amount or Decimal("0"))
+    if abs(transaction.raw.amount) != expected_cash:
+        return _SalesInvoiceEvidencePayload(), SalesInvoiceEvidenceRefusal.AMOUNT_MISMATCH
+    # Linkage is established by this point; coherence is a separate question and
+    # the guards above cannot answer it. Delegated rather than re-derived: the
+    # decomposition contract is the single authority on whether an invoice's own
+    # figures are legally interpretable, and consulting it here is what makes a
+    # correctly-linked but untagged invoice visible instead of silently grounded.
+    if not decompose_invoice(invoice).is_grounded:
+        return _SalesInvoiceEvidencePayload(), SalesInvoiceEvidenceRefusal.UNGROUNDED_DECOMPOSITION
+    return (
+        _SalesInvoiceEvidencePayload(
+            taxable_base=invoice.base_total,
+            iva_amount=invoice.iva_total,
+            retencion_amount=invoice.retention_amount,
+        ),
+        None,
     )
 
 
@@ -929,7 +1068,7 @@ def unusable_sales_invoice_diagnostics(
     degrades to a count instead of raising out of the diagnostic and taking the
     calculation down with it.
     """
-    by_reason: dict[_renta_income_evidence.SalesInvoiceEvidenceRefusal, list[RentaIncomeObservation]] = {}
+    by_reason: dict[SalesInvoiceEvidenceRefusal, list[RentaIncomeObservation]] = {}
     for observation in observations:
         if observation.sales_invoice_refusal is not None:
             by_reason.setdefault(observation.sales_invoice_refusal, []).append(observation)
@@ -1032,6 +1171,93 @@ def _computable_income_amount(observation: RentaIncomeObservation) -> Decimal:
     return observation.gross_amount
 
 
+class _WithheldInference(NamedTuple):
+    """One row's derived retención and the route that produced it."""
+
+    amount: Decimal
+    derivation: LedgerWithholdingDerivation
+
+
+def _determinable_cuota(transaction: Transaction) -> Decimal | None:
+    """Return the row's IVA cuota when it can be known, else ``None``.
+
+    A recorded ``iva_amount`` is the cuota. Failing that, the declared IVA
+    category can still determine it: for a category whose cuota is zero by law
+    the absent field is not missing data, it is the operation having no cuota
+    to record. Reading the Axis-A table rather than testing for nullness is
+    what separates those two -- ``iva_amount is None`` alone cannot say whether
+    an exempt supply was declared or nothing was tagged at all.
+
+    The table is keyed on the category AND the invoice kind, because the same
+    category resolves differently on each side: a domestic reverse-charge
+    operation carries no cuota when issued and a self-assessed one when
+    received. These are actividad-económica RECEIPTS, so the taxpayer is always
+    the issuer -- an income row is the issued side by construction, which is
+    why the kind is fixed here rather than read off the row.
+
+    Returns ``None`` only when the cuota is genuinely unknown.
+    """
+    if transaction.iva_amount is not None:
+        return transaction.iva_amount
+    category = transaction.iva_category
+    if category is not None and category_cuota_is_zero_by_law(category, InvoiceKind.ISSUED):
+        return Decimal("0")
+    return None
+
+
+def _income_withheld_amount(
+    transaction: Transaction,
+    *,
+    evidence: _SalesInvoiceEvidencePayload | None = None,
+) -> _WithheldInference:
+    """Derive the retención practicada on one income row.
+
+    Bounded inference only: the figure is the declared invoice gross minus the
+    cash actually received. The base is never reconstructed from the cash by
+    assuming a rate -- selecting the applicable rate (15 %, 7 %, a sectoral or
+    convenio figure) is a per-row legal fact this application cannot determine,
+    and inventing it would manufacture legal behaviour rather than read it.
+
+    The result is capped by the registry maximum supported rate. That bound
+    also exists on the :class:`~cadrumo.domain.transactions.Transaction` gross
+    invariant, which refuses construction outright -- but only for rows
+    carrying BOTH a base and a cuota, since it returns early when either is
+    absent. The zero-cuota rows admitted here never meet it, so for them this
+    is the only bound, and applying it uniformly keeps one rule rather than two
+    that must be read together to know whether a row was checked.
+    """
+    if not has_activity_irpf_category(transaction.irpf_category, direction=transaction.direction):
+        return _WithheldInference(Decimal("0"), LedgerWithholdingDerivation.NOT_APPLICABLE)
+    # Declared-first, by design. A retención the linked invoice states is the
+    # figure the document carries; the inference below reconstructs one from
+    # what reached the bank. The declared figure is preferred and needs no
+    # bound because nothing was inferred.
+    if evidence is not None and evidence.retencion_amount is not None and evidence.retencion_amount > Decimal("0"):
+        return _WithheldInference(
+            evidence.retencion_amount,
+            LedgerWithholdingDerivation.DECLARED_ON_LINKED_INVOICE,
+        )
+    if transaction.taxable_base is None:
+        return _WithheldInference(Decimal("0"), LedgerWithholdingDerivation.NO_SUBSTRATE)
+    cuota = _determinable_cuota(transaction)
+    if cuota is None:
+        return _WithheldInference(Decimal("0"), LedgerWithholdingDerivation.NO_SUBSTRATE)
+    derivation = (
+        LedgerWithholdingDerivation.INFERRED_FROM_DECLARED_CUOTA
+        if transaction.iva_amount is not None
+        else LedgerWithholdingDerivation.INFERRED_FROM_CATEGORY_ZERO_CUOTA
+    )
+    invoice_gross = transaction.taxable_base + cuota
+    cash_received = abs(transaction.raw.amount)
+    if invoice_gross <= cash_received:
+        return _WithheldInference(Decimal("0"), LedgerWithholdingDerivation.NONE_WITHHELD)
+    inferred = invoice_gross - cash_received
+    maximum_supported = round_to_cents(transaction.taxable_base * maximum_supported_activity_retencion_rate())
+    if round_to_cents(inferred) > maximum_supported:
+        return _WithheldInference(Decimal("0"), LedgerWithholdingDerivation.REFUSED_ABOVE_SUPPORTED_RATE)
+    return _WithheldInference(inferred, derivation)
+
+
 def _income_casilla_aggregation(
     period: Period,
     observations: Sequence[RentaIncomeObservation],
@@ -1049,6 +1275,7 @@ __all__ = [
     "RentaIncomeLedgerAggregationIssue",
     "RentaIncomeLedgerAggregationIssueReason",
     "RentaIncomeObservation",
+    "SalesInvoiceEvidenceRefusal",
     "UnadmittedActivityIncome",
     "aggregate_renta_income_ledger",
     "aggregate_renta_income_ledger_from_repositories",

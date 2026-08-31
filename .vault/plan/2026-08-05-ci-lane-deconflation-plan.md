@@ -10,7 +10,7 @@ related:
   - '[[2026-06-01-registry-period-code-union-cli-boundary-adr]]'
   - '[[2026-08-05-ci-lane-deconflation-step-check-attribution-audit]]'
 modified: '2026-08-31'
-body_hash: 'sha256:83ca47c94780b42e96ac5d14574cd0aabfd345af66ea90182afe2451f934ad93'
+body_hash: 'sha256:ea88816cf14d585f207402cc976750e27616c4ddd32f034ce8f3335919b3b9a7'
 ---
 
 <!-- RETIRED: S01, S10, S181, S184, S186, S189, S191, S193, S194, S197, S199, S201, S203, S205, S207, S209, S211, S213, S215, S217, S219, S221 -->
@@ -189,7 +189,7 @@ Decompose every live size-budget subject by its owning source file, then regener
 - [x] `P05.S128` - Refactor the size-budget subjects in filesystem.py into cohesive siblings without raising any threshold.; `src/cadrumo/adapters/persistence/storage/custody/filesystem.py`.
 - [x] `P05.S129` - Refactor the size-budget subjects in secure_objects.py into cohesive siblings without raising any threshold.; `src/cadrumo/adapters/persistence/storage/sql/secure_objects.py`.
 - [x] `P05.S130` - Refactor the size-budget subjects in _modelo_bindings.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/aggregation/_modelo_bindings.py`.
-- [x] `P05.S131` - Refactor the size-budget subjects in _renta_income_ledger.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/aggregation/_renta_income_ledger.py`.
+- [ ] `P05.S131` - Refactor the size-budget subjects in _renta_income_ledger.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/aggregation/_renta_income_ledger.py`.
 - [ ] `P05.S132` - Refactor the size-budget subjects in _source_mesh.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/aggregation/_source_mesh.py`.
 - [ ] `P05.S133` - Refactor the size-budget subjects in test_iva_ledger.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/aggregation/tests/test_iva_ledger.py`.
 - [ ] `P05.S134` - Refactor the size-budget subjects in test_modelo_source_mesh_ledger.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/aggregation/tests/test_modelo_source_mesh_ledger.py`.
