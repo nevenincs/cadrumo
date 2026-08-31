@@ -108,7 +108,7 @@ from typing import Final, cast
 import pytest
 
 from ..adapters.persistence.storage import STORAGE_PATH_DEFINITIONS
-from ..core import STORAGE_TAXONOMY
+from ..core.storage_taxonomy_locations import STORAGE_TAXONOMY
 from ._inventory import aeat_relative, ast_for_path, production_python_files
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

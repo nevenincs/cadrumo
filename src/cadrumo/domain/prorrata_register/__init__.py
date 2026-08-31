@@ -46,21 +46,11 @@ from decimal import Decimal
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
-from ...core import (
-    ProrrataActivityRowType as _ProrrataActivityRowType,
-)
-from ...core import (
-    ProrrataEspecialTransitionKind as _ProrrataEspecialTransitionKind,
-)
-from ...core import (
-    ProrrataProvisionalProvenance as _ProrrataProvisionalProvenance,
-)
-from ...core import (
-    ProrrataRegisterRegime as _ProrrataRegisterRegime,
-)
-from ...core import (
-    SectorDiferenciadoLetra as _SectorDiferenciadoLetra,
-)
+from ...core.prorrata_register import ProrrataActivityRowType as _ProrrataActivityRowType
+from ...core.prorrata_register import ProrrataEspecialTransitionKind as _ProrrataEspecialTransitionKind
+from ...core.prorrata_register import ProrrataProvisionalProvenance as _ProrrataProvisionalProvenance
+from ...core.prorrata_register import ProrrataRegisterRegime as _ProrrataRegisterRegime
+from ...core.prorrata_register import SectorDiferenciadoLetra as _SectorDiferenciadoLetra
 from ...core.errors.hierarchy import CadrumoError as _CadrumoError
 from ...core.filing_year import FilingYear
 from ._protocols import ProrrataRegisterRepositoryProtocol

@@ -6,7 +6,7 @@ from collections.abc import Mapping
 
 import pytest
 
-from .....core import RegistryAuthorityGrade
+from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.resources import bundled_path
 from ..binding_selector_utils import selector_as_dict
 from ..ids import ParameterId

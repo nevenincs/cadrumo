@@ -58,7 +58,7 @@ from .....application.auth.session_types import (
     ClaveMovilSessionDetail,
     is_exact_active_provider_session,
 )
-from .....core import AuthProviderDescription, AuthProviderKind
+from .....core.auth_provider import AuthProviderDescription, AuthProviderKind
 from .....core.config import Settings as _Settings
 from .....core.config import unwrap_optional_secret
 from .....core.errors.hierarchy import AeatLoginAssertionError, AuthError

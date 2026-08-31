@@ -22,7 +22,7 @@ from ...core.hashing import content_hash_hex
 if TYPE_CHECKING:
     from ..invoices import InvoiceTransactionLinkResult
 
-from ...core import IvaDeductionEvidenceAuthority
+from ...core.iva_deduction_fact import IvaDeductionEvidenceAuthority
 from ...core.period import Period
 from ...core.aggregation import BindingSourceKind
 from ...core.decimal import format_decimal

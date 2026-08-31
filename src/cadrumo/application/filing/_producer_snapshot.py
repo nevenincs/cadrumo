@@ -14,13 +14,8 @@ from typing import Annotated, ClassVar, Final, Literal
 
 from pydantic import BaseModel, StringConstraints, model_validator
 
-from ...core import (
-    PaymentElection,
-    PriorDomiciliationElection,
-    RefundElection,
-    ResultDisposition,
-    result_disposition_is_refund,
-)
+from ...core import PaymentElection, PriorDomiciliationElection, RefundElection
+from ...core.result_disposition import ResultDisposition, result_disposition_is_refund
 from ...core.filing_projection_ref import (
     M390ActivityField,
     M390DifferentiatedDeductionProjectionField,

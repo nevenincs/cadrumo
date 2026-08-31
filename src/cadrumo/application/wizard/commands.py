@@ -53,7 +53,7 @@ import typer._click.types
 from pydantic import BaseModel, ValidationError
 from pydantic_core import ErrorDetails
 
-from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
+from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.flows import CheckpointAvailability, FlowMode

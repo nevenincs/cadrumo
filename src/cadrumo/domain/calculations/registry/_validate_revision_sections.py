@@ -18,7 +18,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from pathlib import Path
 
-from ....core import RegistryAuthorityGrade
+from ....core.authority_grade import RegistryAuthorityGrade
 from ._validate_applicability_section import validate_applicability_section
 from ._validate_authority_grade import validate_authority_grade_section
 from ._validate_completeness import emit_completeness_gate_failures as _emit_completeness_gate_failures

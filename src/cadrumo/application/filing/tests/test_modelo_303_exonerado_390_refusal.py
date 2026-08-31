@@ -7,13 +7,9 @@ from pathlib import Path
 
 import pytest
 
-from ....core import (
-    PaymentElection,
-    PriorDomiciliationElection,
-    ProrrataRegisterRegime,
-    RefundElection,
-    ResultDisposition,
-)
+from ....core import PaymentElection, PriorDomiciliationElection, RefundElection
+from ....core.result_disposition import ResultDisposition
+from ....core.prorrata_register import ProrrataRegisterRegime
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....core.casilla_id import validated_casilla_id

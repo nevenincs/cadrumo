@@ -10,7 +10,8 @@ from pathlib import Path
 
 from pydantic import ConfigDict, TypeAdapter, ValidationError
 
-from ....core import StorageCategory, storage_location, storage_path
+from ....core.storage_taxonomy_locations import storage_location, storage_path
+from ....core.storage_taxonomy import StorageCategory
 from ....core.corpus_text import normalise_corpus_text
 from ....core.manual_corpus_sidecar import (
     MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX,
@@ -31,7 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 # literal. Still joined onto ``cadrumo_corpus_text_cache_dir`` exactly as
 # before -- the member carries no ``settings_field`` and is not safe to
 # resolve directly, because ``CORPUS_TEXT_CACHE`` is operator-overridable
-# (see the member's declaration in ``core._storage_taxonomy``).
+# (see the member's declaration in ``core.storage_taxonomy``).
 _CORPUS_TEXT_CACHE_FILENAME = Path(storage_location(StorageCategory.CORPUS_TEXT_CACHE_FILE).subpath).name
 
 # Shipped sidecar constants (written by the corpus extraction tooling).

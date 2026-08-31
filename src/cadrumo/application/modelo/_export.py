@@ -58,8 +58,8 @@ from ...core import (
     PaymentElection,
     PriorDomiciliationElection,
     RefundElection,
-    ResultDisposition,
 )
+from ...core.result_disposition import ResultDisposition
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.period import Period

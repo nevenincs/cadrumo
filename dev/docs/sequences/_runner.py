@@ -616,7 +616,7 @@ def _isolated_diagnostic_log() -> Iterator[None]:
 
     An explicit ``override_settings(cadrumo_log_dir=...)`` here, not reliance on
     ``cadrumo_local_storage_root``'s automatic re-derivation
-    (:data:`~cadrumo.core._storage_taxonomy.ROOT_DERIVED_STORAGE_FIELDS`):
+    (:data:`~cadrumo.core.storage_taxonomy.ROOT_DERIVED_STORAGE_FIELDS`):
     :func:`dev.docs.build.ensure_private_diagnostic_log` already set
     ``CADRUMO_LOG_DIR`` explicitly at PROCESS start, so the process-wide
     :class:`~cadrumo.core.config.Settings` carries ``cadrumo_log_dir`` in its

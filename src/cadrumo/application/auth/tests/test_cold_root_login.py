@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
-from ....core import AuthProviderKind
+from ....core.auth_provider import AuthProviderKind
 from ....core.config import override_settings
 from ....tests.certificates import CERTIFICATE_BUNDLE_PASSPHRASE, build_pkcs12_bundle
 from ..credentials import active_auth_projection_span

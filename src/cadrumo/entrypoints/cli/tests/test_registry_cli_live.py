@@ -35,7 +35,8 @@ from ....application.live.remote_state_models import (
     LiveIvaReadStatus,
 )
 from ....application.registry.filed_state import verify_filed_state
-from ....core import AuthProviderKind, CasillaValueKind, IvaCompensationStateProvenance
+from ....core import CasillaValueKind, IvaCompensationStateProvenance
+from ....core.auth_provider import AuthProviderKind
 from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.access_gate import AeatLiveReadNotEnabledError

@@ -40,7 +40,7 @@ async def _load_active_clave_session():
     """
     # Local imports keep the test file lightweight when skipped.
     from ......application.auth.sessions import ensure_authenticated_aeat_session
-    from ......core import AuthProviderKind
+    from ......core.auth_provider import AuthProviderKind
     from ......core.config import load_settings
     from ......core.errors.hierarchy import CadrumoError
 

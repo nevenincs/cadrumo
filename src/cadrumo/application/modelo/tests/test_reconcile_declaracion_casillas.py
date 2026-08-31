@@ -32,7 +32,7 @@ from ....adapters.inbound.declaracion import InboundDeclaracionObservation, Temp
 from ....adapters.inbound.pdf import ExtractedCasilla
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core import RegistryAuthorityGrade
+from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.period import Period
 from ....core.casilla_id import validated_casilla_id
 from ....core.time import now

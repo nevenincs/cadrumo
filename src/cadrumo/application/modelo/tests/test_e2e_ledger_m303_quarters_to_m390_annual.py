@@ -54,7 +54,8 @@ from ....adapters.persistence.profile.modelos_verification_reports import Verifi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind, ResultDisposition
+from ....core.result_disposition import ResultDisposition
+from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.errors.hierarchy import CadrumoError

@@ -13,14 +13,13 @@ from .....application.calculations import (
     normalize_m303_carry_observation_envelope,
     resolve_iva_compensation_annual_partition_binding_values,
 )
-from .....core import (
-    IvaDeductionEvidenceAuthority,
-    IvaDeductionFactKind,
-    RegistryAuthorityGrade,
+from .....core.result_disposition import (
     ResultDisposition,
     derive_result_disposition,
     result_disposition_casilla_ids,
 )
+from .....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.aggregation import BindingSourceKind
 from .....core.aggregation import BindingAggregation, BindingAggregationOp

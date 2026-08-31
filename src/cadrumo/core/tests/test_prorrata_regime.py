@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import pytest
 
-from .. import ProrrataRegisterRegime, regime_apportions_deduction
+from ..prorrata_register import ProrrataRegisterRegime, regime_apportions_deduction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

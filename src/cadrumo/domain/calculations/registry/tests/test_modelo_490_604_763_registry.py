@@ -32,7 +32,8 @@ from datetime import date
 
 import pytest
 
-from .....core import RegistryAuthorityGrade, TaxDomain
+from .....core import TaxDomain
+from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.resources import bundled_path
 from .._validate import RegistryValidator
 from ..errors import NoRevisionForPeriodError

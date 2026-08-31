@@ -46,12 +46,8 @@ from ...adapters.persistence.profile.modelos_calculation import CalculationRevis
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ...core import (
-    PaymentElection,
-    PriorDomiciliationElection,
-    RefundElection,
-    ResultDisposition,
-)
+from ...core import PaymentElection, PriorDomiciliationElection, RefundElection
+from ...core.result_disposition import ResultDisposition
 from ...core.config import Settings
 from ...core.identity import CalculationRevisionId
 from ...core.time import now as _utc_now

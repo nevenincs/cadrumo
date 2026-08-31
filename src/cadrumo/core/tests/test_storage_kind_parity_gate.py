@@ -42,7 +42,7 @@ from typing import Final
 import pytest
 
 from ...adapters.persistence.storage import StoragePathKind
-from .. import StorageNodeKind
+from ..storage_taxonomy import StorageNodeKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

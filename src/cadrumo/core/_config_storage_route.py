@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING
 from urllib.parse import unquote
 
 from ._config_state_root import PRODUCT_DATABASE_FILENAME
-from ._storage_taxonomy import StorageCategory, storage_location, storage_path
+from .storage_taxonomy import StorageCategory, storage_location, storage_path
 from .errors.hierarchy import CoreValidationError
 
 if TYPE_CHECKING:

@@ -14,7 +14,8 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.bucket import bucket_paths
 from ....application.diagnostics import build_cli_version_report
-from ....core import StorageCategory, storage_path
+from ....core.storage_taxonomy_locations import storage_path
+from ....core.storage_taxonomy import StorageCategory
 from ....core.config import load_settings, override_settings
 from ....core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH

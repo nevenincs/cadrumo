@@ -31,7 +31,7 @@ from pydantic import ValidationError
 
 from ....adapters.outbound.aeat.auth import session_store
 from ....adapters.persistence.storage.bucket import bucket_paths
-from ....core import AuthProviderKind
+from ....core.auth_provider import AuthProviderKind
 from ....core.config import override_settings
 from ....core.directory_scan import DirectoryEntryKind, scan_directory
 from ....tests.profile_capsule import open_test_profile_session

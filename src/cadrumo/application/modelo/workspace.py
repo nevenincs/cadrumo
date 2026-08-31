@@ -26,7 +26,8 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from ...core import RegistryAuthorityGrade, RegistrySchemaFamilyDisposition
+from ...core import RegistrySchemaFamilyDisposition
+from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.external_constants import OutputLanguage
 from ...core.hashing import content_hash_hex
 from ...domain.calculations.registry.errors import RegistryFailureCondition, RegistryValidationError

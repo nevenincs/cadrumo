@@ -87,7 +87,8 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ....core import ExportExemptionReason, ExportLayoutFormat, RegistryAuthorityGrade
+from ....core import ExportExemptionReason, ExportLayoutFormat
+from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId
 from ....core.aggregation import BindingSourceKind
 from .bindings import binding_source_casilla_ids, binding_source_modelo

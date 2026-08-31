@@ -12,9 +12,8 @@ from .....application.aggregation import (
     resolve_iva_differentiated_deduction_contributions,
 )
 from .....application.aggregation._iva_ledger import IvaLedgerProrrataApportionment, IvaLedgerSectorApportionment
-from .....core import (
-    IvaDeductionEvidenceAuthority,
-    IvaDeductionFactKind,
+from .....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from .....core.prorrata_register import (
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,

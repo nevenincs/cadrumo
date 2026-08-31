@@ -8,7 +8,7 @@ from typing import Any, cast
 
 import pytest
 
-from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
 from ....domain.bienes_inversion import (
     BienesInversionIvaRegister,

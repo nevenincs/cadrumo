@@ -12,7 +12,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from ....core import ObservedHeaderFact, ResultDisposition
+from ....core import ObservedHeaderFact
+from ....core.result_disposition import ResultDisposition
 from ....core.modelo import Modelo
 from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.period import Period

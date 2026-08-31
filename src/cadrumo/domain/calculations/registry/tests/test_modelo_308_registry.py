@@ -6,7 +6,7 @@ from datetime import date
 
 import pytest
 
-from .....core import RegistryAuthorityGrade
+from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.hashing import hash_file
 from .....core.resources import bundled_path
 from .._validate import RegistryValidator

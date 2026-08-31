@@ -43,7 +43,7 @@ from urllib.parse import quote
 
 import pytest
 
-from ......core import AuthProviderKind
+from ......core.auth_provider import AuthProviderKind
 from ......core.config import Settings
 from ......core.errors.hierarchy import AeatLoginAssertionError
 from ......tests.aeat_literal_fixtures import (

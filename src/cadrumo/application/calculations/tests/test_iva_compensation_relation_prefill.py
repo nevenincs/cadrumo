@@ -10,7 +10,8 @@ from typing import Literal
 
 import pytest
 
-from ....core import ObservedHeaderFact, ResultDisposition
+from ....core import ObservedHeaderFact
+from ....core.result_disposition import ResultDisposition
 from ....core.period import Period
 from ....core.casilla_id import CasillaId
 from ....core.aggregation import BindingSourceKind

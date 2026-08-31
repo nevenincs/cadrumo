@@ -15,7 +15,8 @@ from typing import Self, override
 
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, field_serializer, field_validator, model_validator
 
-from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER, Hex64Str
+from ...core import Hex64Str
+from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.identity import BucketId, ContentDigest

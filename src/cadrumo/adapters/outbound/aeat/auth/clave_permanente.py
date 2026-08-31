@@ -66,7 +66,7 @@ from .....application.auth.session_types import (
     ClavePermanenteSessionDetail,
     is_exact_active_provider_session,
 )
-from .....core import AuthProviderDescription, AuthProviderKind
+from .....core.auth_provider import AuthProviderDescription, AuthProviderKind
 from .....core.auth_session_keys import aeat_auth_session_storage_state_path
 from .....core.bucket_pointer import require_active_bucket_id
 from .....core.config import Settings as _Settings

@@ -52,7 +52,8 @@ import pytest
 from pydantic import AnyHttpUrl
 
 from ....adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue
-from ....core import CasillaValueKind, IvaCompensationStateProvenance, ObservedHeaderFact, ResultDisposition
+from ....core import CasillaValueKind, IvaCompensationStateProvenance, ObservedHeaderFact
+from ....core.result_disposition import ResultDisposition
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id

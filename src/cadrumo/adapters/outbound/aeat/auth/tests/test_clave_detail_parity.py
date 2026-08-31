@@ -25,7 +25,7 @@ from ......application.auth.session_types import (
     ClavePermanenteLoginAssertionDetail,
     ClavePermanenteSessionDetail,
 )
-from ......core import AuthProviderKind
+from ......core.auth_provider import AuthProviderKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

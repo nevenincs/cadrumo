@@ -19,7 +19,7 @@ from pathlib import Path
 import pytest
 
 from ....tests.storage_scope import relocated_storage_path, storage_overrides
-from ... import StorageCategory
+from ...storage_taxonomy import StorageCategory
 from ...config import override_settings
 from ...directory_scan import DirectoryEntryKind, scan_directory
 from ..models import RunOutcome, RunTrace

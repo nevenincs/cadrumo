@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from ...core import AuthProviderKind
+from ...core.auth_provider import AuthProviderKind
 from ...core.config import Settings
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex

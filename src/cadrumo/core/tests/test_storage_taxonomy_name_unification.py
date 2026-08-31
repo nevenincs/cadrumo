@@ -38,7 +38,7 @@ from .._config_state_root import (
     resolve_state_root,
 )
 from .._config_storage_route import classify_storage_route_for_settings
-from .._storage_taxonomy import StorageCategory, storage_location
+from ..storage_taxonomy import StorageCategory, storage_location
 from ..config import Settings, StorageRouteKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

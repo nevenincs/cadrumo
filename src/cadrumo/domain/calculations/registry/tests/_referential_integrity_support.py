@@ -10,7 +10,8 @@ from typing import Literal
 import pytest
 from pydantic import ValidationError as ValidationError
 
-from .....core import RegistryAuthorityGrade, TaxDomain, freeze_toml
+from .....core import TaxDomain, freeze_toml
+from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.classification import SensitivityClass
 from .....core.config import Settings

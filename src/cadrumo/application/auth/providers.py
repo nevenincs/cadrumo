@@ -7,7 +7,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
-from ...core import AuthProviderDescription, AuthProviderKind
+from ...core.auth_provider import AuthProviderDescription, AuthProviderKind
 from ..auth_credentials import ActiveCertificateCredentials
 from .credentials import resolve_active_certificate_credentials
 from .protocols import BrowserSessionFactoryPort

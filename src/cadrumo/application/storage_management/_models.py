@@ -17,7 +17,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
-from ...core import (
+from ...core.storage_taxonomy import (
     FingerprintParticipation,
     StorageArea,
     StorageCategory,

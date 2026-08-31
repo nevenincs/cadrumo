@@ -353,7 +353,7 @@ def test_registry_port_captures_the_admission_specific_projection() -> None:
 
 
 def test_registry_projection_refuses_carrying_both_or_neither_admission_shape() -> None:
-    from ....core import RegistryAuthorityGrade
+    from ....core.authority_grade import RegistryAuthorityGrade
     from ....domain.calculations.registry.authority import bundled_authority
     from ..workspace_producers import ModeloWorkspaceRegistryPortV1, ModeloWorkspaceRegistryProjectionV1
 

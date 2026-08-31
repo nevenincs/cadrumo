@@ -90,7 +90,7 @@ from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueR
 from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ..adapters.persistence.storage import inspect_bucket_storage_runtime
 from ..core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ..core import AuthProviderKind
+from ..core.auth_provider import AuthProviderKind
 from ..core.operator_action_enums import OperatorActionAxis
 from ..core.period import Period
 from ..core.aggregation import BindingSourceKind

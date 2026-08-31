@@ -33,12 +33,8 @@ from decimal import Decimal
 from ...adapters.persistence.profile.prorrata_register import (
     ProrrataRegisterRepository,
 )
-from ...core import (
-    ProrrataProvisionalProvenance as _ProrrataProvisionalProvenance,
-)
-from ...core import (
-    ProrrataRegisterRegime as _ProrrataRegisterRegime,
-)
+from ...core.prorrata_register import ProrrataProvisionalProvenance as _ProrrataProvisionalProvenance
+from ...core.prorrata_register import ProrrataRegisterRegime as _ProrrataRegisterRegime
 from ...domain.prorrata_register import (
     ProrrataProvisionalResolution,
     ProrrataRegister,

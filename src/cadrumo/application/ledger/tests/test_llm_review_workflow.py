@@ -17,7 +17,7 @@ import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....core import STR_KEYED_MAPPING_ADAPTER
+from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....domain.buckets.event import BucketEvent, BucketEventType
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.iva.schema import IvaCategory

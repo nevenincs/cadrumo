@@ -19,7 +19,7 @@ from typing import Final
 
 import pytest
 
-from .. import (
+from ..result_disposition import (
     ResultDisposition,
     derive_result_disposition,
     modelo_has_codified_disposition,

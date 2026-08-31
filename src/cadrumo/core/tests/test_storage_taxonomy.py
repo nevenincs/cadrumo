@@ -17,7 +17,7 @@ from typing import Final
 import pytest
 from pydantic import ValidationError
 
-from .._storage_taxonomy import (
+from ..storage_taxonomy import (
     FINGERPRINT_EXCLUDED_STORAGE_FIELDS,
     ROOT_DERIVED_STORAGE_FIELDS,
     STORAGE_FIELD_CATEGORIES,
@@ -261,7 +261,7 @@ def test_fingerprint_participation_is_a_declared_axis_on_every_member() -> None:
     for category, location in STORAGE_TAXONOMY.items():
         assert isinstance(location.fingerprint_participation, FingerprintParticipation), category
 
-    from .._storage_taxonomy import StorageScope as _Scope
+    from ..storage_taxonomy import StorageScope as _Scope
 
     recomputed = {
         location.settings_field

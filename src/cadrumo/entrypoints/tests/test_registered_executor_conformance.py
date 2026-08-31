@@ -69,7 +69,7 @@ from ...application.user_profile.custody_ports import profile_custody_secure_obj
 from ...application.user_profile.login_session import login_profile
 from ...application.user_profile.profile_record_repository import ProfileRecordRepository
 from ...application.user_profile.registration import register_profile_with_credentials
-from ...core import AuthProviderKind
+from ...core.auth_provider import AuthProviderKind
 from ...core.period import Period
 from ...core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from ...core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH

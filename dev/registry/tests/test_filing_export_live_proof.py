@@ -15,7 +15,8 @@ from cadrumo.application.filing.tests._export_support import (
 )
 from cadrumo.application.registry.filing_export_authority import FilingExportProofConflictError
 from cadrumo.application.registry.filing_export_coverage import compose_filing_export_coverage
-from cadrumo.core import PaymentElection, PriorDomiciliationElection, RefundElection, ResultDisposition
+from cadrumo.core import PaymentElection, PriorDomiciliationElection, RefundElection
+from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.period import Period
 from cadrumo.core.hashing import sha256_hex

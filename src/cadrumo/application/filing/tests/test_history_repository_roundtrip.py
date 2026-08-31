@@ -12,7 +12,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core import StorageCategory, storage_path
+from ....core.storage_taxonomy_locations import storage_path
+from ....core.storage_taxonomy import StorageCategory
 from ....core.period import Period
 from ....domain.identifiers import ModeloIdentifier
 from ....tests.secure_sql import isolated_runtime_profile

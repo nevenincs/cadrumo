@@ -34,7 +34,7 @@ from pydantic_settings import (
 )
 
 from . import _config_live_tests as _live_test_config
-from ._auth_provider import AuthProviderKind as _AuthProviderKind
+from .auth_provider import AuthProviderKind as _AuthProviderKind
 from ._config_integration_fields import (
     FORMER_PRODUCT_GOOGLE_DRIVE_VAULT_FOLDER_NAME,  # noqa: F401 - public re-export for storage adapters
 )
@@ -1026,7 +1026,7 @@ class Settings(CadrumoLlmSettings):
                 raise ActiveProfilePointerError(path=pointer_file) from exc
             if pointer.bucket_id is not None:
                 bucket_id = pointer.bucket_id.strip()
-        from ._storage_taxonomy import StorageCategory, bucket_scoped_storage_path, storage_path
+        from .storage_taxonomy import StorageCategory, bucket_scoped_storage_path, storage_path
 
         if not bucket_id:
             refuse_former_product_database(self.cadrumo_local_storage_root)
@@ -1081,7 +1081,7 @@ class Settings(CadrumoLlmSettings):
         ``mode="after"`` guarantees ``cadrumo_local_storage_root`` is already
         populated when this runs.
         """
-        from ._storage_taxonomy import ROOT_DERIVED_STORAGE_LOCATIONS
+        from .storage_taxonomy import ROOT_DERIVED_STORAGE_LOCATIONS
 
         for location in ROOT_DERIVED_STORAGE_LOCATIONS:
             field_name = location.settings_field
@@ -1424,7 +1424,7 @@ def override_settings(**overrides: object) -> Iterator[Settings]:
     The field set is taken from the taxonomy, so a member added there is
     covered here the moment it lands.
     """
-    from ._storage_taxonomy import ROOT_DERIVED_STORAGE_FIELDS
+    from .storage_taxonomy import ROOT_DERIVED_STORAGE_FIELDS
 
     current = load_settings()
     # ``model_copy(update=)`` skips validators in Pydantic v2; route the

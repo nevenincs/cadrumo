@@ -37,7 +37,7 @@ from ....application.modelo._m145_communication_records import (
     M145CommunicationRecordState,
     read_m145_communication_record,
 )
-from ....core import STR_KEYED_MAPPING_ADAPTER
+from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....tests.cli_envelope import unwrap_schema_envelope
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import dev_test_database_password, isolated_runtime_profile

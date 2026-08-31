@@ -9,7 +9,7 @@ import pytest
 from ....application.calculations import calculate_m303_regimen_simplificado_result
 from ....application.filing import build_filing_producer_snapshot
 from ....application.filing._projection import build_m303_filing_projection_plan
-from ....core import ResultDisposition
+from ....core.result_disposition import ResultDisposition
 from ....core.filing_projection_ref import (
     M303RegimenSimplificadoActivityField,
     M303RegimenSimplificadoActivityProjectionRef,

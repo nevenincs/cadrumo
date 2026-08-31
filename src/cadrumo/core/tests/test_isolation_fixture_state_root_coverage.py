@@ -21,7 +21,7 @@ from pathlib import Path
 import pytest
 
 from ...tests.secure_sql import isolated_cli_backend
-from .. import ROOT_DERIVED_STORAGE_FIELDS
+from ..storage_taxonomy_locations import ROOT_DERIVED_STORAGE_FIELDS
 from ..config import load_settings
 
 __all__ = ["isolated_cli_backend"]

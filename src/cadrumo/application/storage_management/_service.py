@@ -25,18 +25,20 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
-from ...core import (
+from ...core import is_link_like
+from ...core.storage_taxonomy_locations import (
     STORAGE_TAXONOMY,
+    bucket_scoped_storage_path,
+    storage_location,
+    storage_path,
+)
+from ...core.storage_taxonomy import (
     StorageArea,
     StorageCategory,
     StorageLifecycle,
     StorageLocation,
     StorageNodeKind,
     StorageScope,
-    bucket_scoped_storage_path,
-    is_link_like,
-    storage_location,
-    storage_path,
 )
 from ...core.storage_materialization import STORAGE_ROOT_MODE, ensure_storage_tree
 from ...core.bucket_pointer import resolve_active_bucket_id
@@ -564,7 +566,7 @@ def _immediate_entry_count(path: Path) -> int:
 
 def _existing_declared_directories(settings: Settings, root: Path) -> frozenset[Path]:
     """Return the declared directories that currently exist on disk."""
-    from ...core import storage_tree_targets
+    from ...core.storage_taxonomy_locations import storage_tree_targets
 
     present = {target for target in storage_tree_targets(settings) if target.is_dir()}
     if root.is_dir():

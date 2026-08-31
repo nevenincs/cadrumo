@@ -19,7 +19,7 @@ from ....adapters.persistence.storage import (
     SecureObjectRowIdentityError,
 )
 from ....adapters.persistence.storage.errors import StorageValidationError
-from ....core import AuthProviderKind
+from ....core.auth_provider import AuthProviderKind
 from ....core.period import Period
 from ....core.config import Settings
 from ....core.identity import nif_check_letter

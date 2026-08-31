@@ -4,7 +4,7 @@ from collections.abc import Callable
 
 import pytest
 
-from ....core import RegistryAuthorityGrade
+from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.resources import bundled_path
 from ....tests.registry_tree import bundled_registry_tree
 from .authority import ValidatedRegistryAuthority, bundled_authority

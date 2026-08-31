@@ -20,12 +20,12 @@ from pydantic_core import core_schema
 
 from ...core import (
     ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS,
-    OBJECT_TUPLE_ADAPTER,
     Art104TresExclusion,
     ConceptoIngreso,
-    IvaDeductionFactKind,
     TipoActividad,
 )
+from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
+from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.text_fold import fold_diacritics
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors.hierarchy import CoreValidationError

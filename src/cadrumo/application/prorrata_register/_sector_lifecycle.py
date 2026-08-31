@@ -31,7 +31,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from ...core import ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from ...core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from ...domain.iva.prorrata import ProrrataInputs, compute_prorrata_definitiva_anual
 from ...domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
 

@@ -22,7 +22,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.outbound.aeat.export import RegistryFixedWidthRecordRenderer
-from ....core import RegistryAuthorityGrade
+from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.resources import bundled_path
 from ....domain.calculations.registry.export import ResolvedExportLayout, resolve_export_layout
 from ....domain.calculations.registry.schema_exports import ExportFieldDefinition

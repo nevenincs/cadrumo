@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from ....core import ResultDisposition
+from ....core.result_disposition import ResultDisposition
 from ....core.filing_projection_ref import (
     M303DifferentiatedDeductionProjectionField,
     M303DifferentiatedDeductionProjectionRef,

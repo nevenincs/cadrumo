@@ -34,7 +34,8 @@ from ....application.ledger.document_transcription import DocumentTranscription,
 from ....application.ledger.evidence_draft import FieldProvenance, InvoiceDraft
 from ....application.ledger.extraction_draft_store import write_extraction_draft
 from ....application.ledger.grounded_reading import ground_draft_against_transcription
-from ....core import LOCAL_TRANSPORT_LABEL, STR_KEYED_MAPPING_ADAPTER, FieldGroundingOutcome, FieldOrigin
+from ....core import LOCAL_TRANSPORT_LABEL, FieldGroundingOutcome, FieldOrigin
+from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.config import load_settings
 from ._ledger_ux_support import _invoke, _open_ledger_ux_session

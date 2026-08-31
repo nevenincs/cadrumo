@@ -23,7 +23,7 @@ from typing import Final
 
 import pytest
 
-from ...core import StorageCategory
+from ...core.storage_taxonomy import StorageCategory
 from ...tests.profile_capsule import open_test_profile_session
 from ...tests.storage_scope import storage_env_overrides
 from .test_config_reset import (

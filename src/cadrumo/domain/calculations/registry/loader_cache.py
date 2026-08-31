@@ -33,12 +33,9 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from ....core import (
-    StorageCategory,
-    freeze_toml,
-    read_toml,
-    storage_location,
-)
+from ....core import freeze_toml, read_toml
+from ....core.storage_taxonomy_locations import storage_location
+from ....core.storage_taxonomy import StorageCategory
 from ....core.config import load_settings
 from ....core.directory_scan import (
     DirectoryEntryKind,
@@ -56,7 +53,7 @@ REGISTRY_DISK_CACHE_DIR_ENV_VAR = "CADRUMO_REGISTRY_DISK_CACHE_DIR"
 
 # The production branch's relative path, read off the taxonomy rather than an
 # untethered ``"cache" / "registry"`` literal -- the member's name is governed
-# there (see its declaration in ``core._storage_taxonomy``), while the field
+# there (see its declaration in ``core.storage_taxonomy``), while the field
 # itself stays deliberately un-derived so the pytest branch below can keep
 # selecting on it being unset.
 _REGISTRY_DISK_CACHE_RELATIVE_PATH = storage_location(StorageCategory.REGISTRY_DISK_CACHE).relative_path()

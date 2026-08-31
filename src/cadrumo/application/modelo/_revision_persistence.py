@@ -44,7 +44,9 @@ from typing import TYPE_CHECKING
 
 from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from ...core import M210GrossIncomeSourceMode, ProrrataRegisterRegime, ResultDisposition
+from ...core import M210GrossIncomeSourceMode
+from ...core.result_disposition import ResultDisposition
+from ...core.prorrata_register import ProrrataRegisterRegime
 from ...core.modelo import Modelo
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.hashing import sha256_hex

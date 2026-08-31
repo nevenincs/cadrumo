@@ -4,7 +4,7 @@ from collections.abc import Callable, Iterable, Mapping
 from decimal import Decimal
 from functools import cache
 
-from .....core import RegistryAuthorityGrade
+from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
 from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree

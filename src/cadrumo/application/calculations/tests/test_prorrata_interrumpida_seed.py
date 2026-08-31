@@ -28,7 +28,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
 from .._prorrata_regularizacion import build_interrumpida_tres_ultimos_seed
 

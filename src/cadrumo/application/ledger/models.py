@@ -9,7 +9,9 @@ from typing import Annotated, Self
 
 from pydantic import AfterValidator, BaseModel, Field, StringConstraints, field_validator, model_validator
 
-from ...core import Art104TresExclusion, Hex64Str, IvaDeductionFactKind
+from ...core import Art104TresExclusion, Hex64Str
+from ...core.iva_deduction_fact import IvaDeductionFactKind
+from ...core.decimal import is_non_negative_canonical_decimal
 
 # CLASSIFIED_BY_MANUAL is re-exported for constants centralisation tests.
 from ...core.external_constants import (
@@ -21,7 +23,12 @@ from ...core.external_constants import (
 from ...core.filing_year import FilingYear
 from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, TransactionId, WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.parsing import IsoCurrencyCode, normalise_iso_3166_alpha2_jurisdiction, normalise_iso_4217_currency
+from ...core.parsing import (
+    IsoCurrencyCode,
+    normalise_iso_3166_alpha2_jurisdiction,
+    normalise_iso_4217_currency,
+    parse_iso8601_date,
+)
 from ...core.period import Period
 from ...core.text_bounds import NonEmptyStr
 from ...domain.iva.prorrata import InputClassification
@@ -878,6 +885,45 @@ class LedgerExportRow(BaseModel):
     # magnitude + applied CCY->EUR rate for foreign rows; "" for EUR-native rows.
     value_in_eur: str = ""
     fx_rate: str = ""
+
+    @field_validator("booked_date", "effective_date")
+    @classmethod
+    def _require_iso_date(cls, value: str) -> str:
+        """Keep a mandatory exported date parseable without changing its form.
+
+        The row stores dates as the strings the serializer emits, so the type
+        cannot carry this and the model has to ask. Declared HERE rather than on
+        the CLI projection that used to hold it: this row is what
+        ``export_ledger_snapshot`` writes, and a rule enforced only on the way
+        out through JSON leaves the CSV and the persisted snapshot ungoverned.
+        """
+        if parse_iso8601_date(value) is None:
+            raise ValueError("must be an ISO-8601 date")
+        return value
+
+    @field_validator("value_date")
+    @classmethod
+    def _validate_optional_iso_date(cls, value: str) -> str:
+        """The same rule where the serializer spells an absent column as ``""``."""
+        if value:
+            cls._require_iso_date(value)
+        return value
+
+    @field_validator("amount", "taxable_base", "iva_amount", "value_in_eur")
+    @classmethod
+    def _require_non_negative_decimal(cls, value: str) -> str:
+        """Refuse an export amount the ledger could never have stored.
+
+        The sign rule is the parser's own ``signed`` axis rather than a
+        comparison written here: a ledger amount is a magnitude and direction
+        lives on its own enum, so "non-negative" is a property of the grammar,
+        not a threshold this row gets to pick.
+        """
+        if not value:
+            return value
+        if not is_non_negative_canonical_decimal(value):
+            raise ValueError("must be a non-negative canonical decimal")
+        return value
 
 
 class LedgerExportResult(BaseModel):

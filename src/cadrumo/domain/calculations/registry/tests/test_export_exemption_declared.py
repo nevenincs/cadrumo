@@ -24,7 +24,8 @@ import inspect
 import pytest
 from pydantic import ValidationError
 
-from .....core import ExportExemptionReason, ExportLayoutFormat, RegistryAuthorityGrade
+from .....core import ExportExemptionReason, ExportLayoutFormat
+from .....core.authority_grade import RegistryAuthorityGrade
 from .._snapshot_internals import _check_snapshot_filing_capability
 from .._validate_export_exemption import (
     modelo_publishes_a_record_design,

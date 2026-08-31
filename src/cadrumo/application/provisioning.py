@@ -37,7 +37,6 @@ from ..core import (
     AcceleratorKind,
     ContentionCause,
     DeploymentLicencePosture,
-    ExternalPathRole,
     HardwareTier,
     ModelCandidate,
     ModelRole,
@@ -49,6 +48,7 @@ from ..core import (
     model_candidate,
     optional_extra_available,
 )
+from ..core.storage_taxonomy import ExternalPathRole
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.config import Settings, load_settings
 from ..core.directory_scan import (

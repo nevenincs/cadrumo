@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 from pydantic import AnyUrl, SecretStr
 
-from ......core import AuthProviderKind
+from ......core.auth_provider import AuthProviderKind
 from ......core.config import Settings
 from ......core.i18n import tr
 from ......domain.calculations.registry.errors import RegistryValidationError

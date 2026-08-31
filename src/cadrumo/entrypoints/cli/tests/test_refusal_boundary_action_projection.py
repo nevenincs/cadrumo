@@ -22,7 +22,8 @@ from ....application.operator_actions import (
 )
 from ....application.workflow.abort import WorkflowAbortReason
 from ....application.workflow.run_models import WorkflowResult, WorkflowStage, WorkflowStep
-from ....core import AuthProviderKind, MissingOptionalExtraError, OptionalExtra
+from ....core import MissingOptionalExtraError, OptionalExtra
+from ....core.auth_provider import AuthProviderKind
 from ....core.operator_action_enums import (
     ActionArgumentStatus,
     ActionConditionality,

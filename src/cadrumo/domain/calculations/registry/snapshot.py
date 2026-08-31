@@ -10,9 +10,7 @@ from __future__ import annotations
 from datetime import date
 from pathlib import Path
 
-from ....core import (
-    RegistryAuthorityGrade,
-)
+from ....core.authority_grade import RegistryAuthorityGrade
 from ._snapshot_internals import (
     _SNAPSHOT_CACHE,
     _build_validated_snapshot,

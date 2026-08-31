@@ -8,7 +8,7 @@ from functools import cache
 
 import pytest
 
-from .....core import RegistryAuthorityGrade
+from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.hashing import hash_file
 from .....core.resources import bundled_path
 from .._validate_export_layout_coverage import validate_export_layout_record_coverage

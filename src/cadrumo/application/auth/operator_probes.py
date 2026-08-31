@@ -14,7 +14,7 @@ from pydantic import BaseModel
 
 from ...adapters.persistence.storage import has_active_bucket_session
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import AuthProviderKind
+from ...core.auth_provider import AuthProviderKind
 from ...core.config import Settings, load_settings
 from ...core.errors.hierarchy import CadrumoError
 from ...core.i18n import tr

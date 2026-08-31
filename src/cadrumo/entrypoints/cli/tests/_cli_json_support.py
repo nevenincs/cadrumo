@@ -11,7 +11,7 @@ misdescribe a non-domain consumer importing it.
 
 from __future__ import annotations
 
-from ....core import STR_KEYED_MAPPING_ADAPTER
+from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 
 
 def _json_object(value: object) -> dict[str, object]:

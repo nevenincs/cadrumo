@@ -10,7 +10,7 @@ from typing import get_args
 import pytest
 from pydantic import ValidationError
 
-from .....core import RegistryAuthorityGrade
+from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.filing_projection_ref import (
     FilingProjectionRef,
     compile_filing_projection_ref,

@@ -41,7 +41,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, model_validator
 
-from ...core import IvaDeductionFactKind
+from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.models import STRICT_FROZEN_CONFIG
 
 # IvaRate (and the public ``iva_rate_kind`` accessor) are imported lazily

@@ -23,8 +23,8 @@ from ......application.auth.session_types import (
     CertificateSessionDetail,
 )
 from ......application.auth_credentials import unnamed_certificate_credentials
-from ......core import AuthProviderDescription as AuthProviderDescription
-from ......core import AuthProviderKind as AuthProviderKind
+from ......core.auth_provider import AuthProviderDescription as AuthProviderDescription
+from ......core.auth_provider import AuthProviderKind as AuthProviderKind
 from ......core.config import (
     AEAT_CERTIFICATE_PROTECTED_ORIGIN,
     AEAT_CERTIFICATE_PROTECTED_URL,

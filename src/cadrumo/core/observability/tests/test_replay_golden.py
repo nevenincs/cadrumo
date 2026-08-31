@@ -17,7 +17,7 @@ from typing import Any, cast
 import pytest
 
 from ....tests.storage_scope import storage_overrides
-from ... import StorageCategory
+from ...storage_taxonomy import StorageCategory
 from ...config import Settings, override_settings
 from ...json_contract import OutputSchema, emit_json_success
 from ..capture import capture_envelopes

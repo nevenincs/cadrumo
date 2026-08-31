@@ -15,7 +15,7 @@ from .._config_state_root import (
     platform_user_data_root,
     resolve_state_root,
 )
-from .._storage_taxonomy import StorageCategory, storage_path
+from ..storage_taxonomy import StorageCategory, storage_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

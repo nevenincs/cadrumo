@@ -29,7 +29,10 @@ from ...adapters.persistence.storage.bucket import bucket_paths
 from ...tests import REPO_ROOT
 from ...tests.env_scope import isolated_aeat_env as _isolated_aeat_env
 from ...tests.env_scope import scoped_env_var, settings_without_env_file
-from .. import AuthProviderKind, StateRootInputs, StorageCategory, platform_user_data_root, storage_location
+from .. import StateRootInputs, platform_user_data_root
+from ..auth_provider import AuthProviderKind
+from ..storage_taxonomy_locations import storage_location
+from ..storage_taxonomy import StorageCategory
 from ..bucket_pointer import BucketPointer
 from ..config import (
     Settings,
@@ -119,7 +122,7 @@ class TestAuthProviderEnum:
     """#285 — ``CADRUMO_AUTH_PROVIDER`` coerces to the settings enum strictly."""
 
     def test_env_value_coerces_to_enum(self) -> None:
-        from .. import AuthProviderKind
+        from ..auth_provider import AuthProviderKind
 
         with _isolated_aeat_env(CADRUMO_AUTH_PROVIDER="clave_movil"):
             settings = settings_without_env_file()

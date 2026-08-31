@@ -23,7 +23,8 @@ from PIL import Image
 
 from ....adapters.inbound.einvoice import EInvoiceXmlParseError, parse_einvoice_document
 from ....adapters.inbound.pdf import extract_pages_text_from_bytes
-from ....core import STR_KEYED_MAPPING_ADAPTER, STRUCTURED_DOCUMENT_SHAPES, DocumentShape
+from ....core import STRUCTURED_DOCUMENT_SHAPES, DocumentShape
+from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....core.directory_scan import scan_directory
 from ....llm.errors import LLMPdfRasterisationError
 from ....llm.providers.local import rasterise_pdf_pages_to_base64_png

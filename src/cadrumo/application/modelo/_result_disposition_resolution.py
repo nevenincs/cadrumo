@@ -43,9 +43,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
-from ...core import (
-    PaymentElection,
-    RefundElection,
+from ...core import PaymentElection, RefundElection
+from ...core.result_disposition import (
     ResultDisposition,
     derive_result_disposition,
     result_disposition_casilla_ids,

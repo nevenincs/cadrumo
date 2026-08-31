@@ -16,16 +16,12 @@ from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterR
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage import TRANSACTION_CATALOGUE_NAMESPACE, EnvelopeVersionError
 from ....adapters.persistence.storage.sql import SecureObjectRepository, session_scope
-from ....core import (
-    IvaDeductionEvidenceAuthority,
-    IvaDeductionFactKind,
-    ProrrataProvisionalProvenance,
-    ProrrataRegisterRegime,
-)
 from ....core.aggregation import BindingSourceKind
 from ....core.classification import SensitivityClass
+from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.period import Period
+from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from ....domain.bienes_inversion import BienesInversionIvaRegister
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import ModeloRevision
@@ -50,13 +46,13 @@ from .. import (
     OssIossLedgerCandidate,
     OssIossLedgerSourceResolver,
     aggregate_oss_ioss_bindings,
-    merge_source_resolutions,
 )
 from .. import (
     LedgerIvaAggregationSourceResolver as _LedgerIvaAggregationSourceResolver,
 )
 from .._preconditions import AggregationPreconditionCondition
 from .._source_mesh import CalculationSourceResolution
+from ..source_resolution_operations import merge_source_resolutions
 from ._iva_authority_support import aggregate_iva_ledger_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

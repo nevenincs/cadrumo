@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING, Final, Self, cast, override
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
-from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
+from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from ...core.aggregation import IntracomOperationType, TravelAgencyMediationType
 from ...core.country_code import CountryCodeAlpha2
 from ...core.decimal import coerce_decimal

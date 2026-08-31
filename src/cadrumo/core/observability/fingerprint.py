@@ -188,7 +188,7 @@ def data_root_cache_exclusions(settings: Settings) -> frozenset[Path]:
     installed operator; excluding too little churns it on each cache write
     until the refusal stops being believed.
     """
-    from .._storage_taxonomy import FINGERPRINT_EXCLUDED_STORAGE_FIELDS
+    from ..storage_taxonomy import FINGERPRINT_EXCLUDED_STORAGE_FIELDS
 
     resolved = (getattr(settings, field, None) for field in sorted(FINGERPRINT_EXCLUDED_STORAGE_FIELDS))
     return frozenset(Path(path).resolve() for path in resolved if path is not None)

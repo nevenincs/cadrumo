@@ -28,7 +28,8 @@ from typing import Never
 
 from pydantic import ValidationError
 
-from .. import StorageCategory, storage_path
+from ..storage_taxonomy_locations import storage_path
+from ..storage_taxonomy import StorageCategory
 from ..atomic_write import atomic_write_text
 from ..config import Settings, load_settings
 from ..directory_scan import scan_directory

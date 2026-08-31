@@ -8,7 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core import ObservedHeaderFact, ResultDisposition
+from ....core import ObservedHeaderFact
+from ....core.result_disposition import ResultDisposition
 from ....core.period import Period
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.iva_compensation.reconciliation import IvaCompensationOverride, IvaCompensationReconciliationDecision

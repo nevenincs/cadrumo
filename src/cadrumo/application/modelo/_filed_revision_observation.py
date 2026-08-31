@@ -52,7 +52,8 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Final
 
-from ...core import IvaCompensationStateProvenance, ResultDisposition
+from ...core import IvaCompensationStateProvenance
+from ...core.result_disposition import ResultDisposition
 from ...core.modelo import Modelo
 from ...domain.calculations.registry.bindings import RegistryModeloObservation
 from ...domain.modelos.work_unit import WorkUnit

@@ -154,7 +154,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     """
     from cadrumo.application.storage_management import StorageAreaDisposition, StorageOccupancy
     from cadrumo.application.wizard.catalogue import WIZARD_FLOWS
-    from cadrumo.core import StorageArea
+    from cadrumo.core.storage_taxonomy import StorageArea
     from cadrumo.core.errors.error_codes import ErrorCategory
     from cadrumo.core.i18n import SUPPORTED_OUTPUT_LANGUAGES
     from cadrumo.domain.contribuyente.ccaa import CCAA

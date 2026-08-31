@@ -32,12 +32,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core import (
-    STR_KEYED_MAPPING_ADAPTER,
-    DraftDiscrepancyKind,
-    FieldGroundingOutcome,
-    FieldOrigin,
-)
+from ....core import DraftDiscrepancyKind, FieldGroundingOutcome, FieldOrigin
+from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....core.directory_scan import (
     scan_directory,
 )

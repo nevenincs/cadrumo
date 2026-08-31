@@ -9,13 +9,9 @@ from pathlib import Path
 
 import pytest
 
-from ....core import (
-    IvaCompensationStateProvenance,
-    IvaDeductionEvidenceAuthority,
-    IvaDeductionFactKind,
-    derive_result_disposition,
-    result_disposition_casilla_ids,
-)
+from ....core import IvaCompensationStateProvenance
+from ....core.result_disposition import derive_result_disposition, result_disposition_casilla_ids
+from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.errors.error_codes import ERROR_REGISTRY, build_error_envelope

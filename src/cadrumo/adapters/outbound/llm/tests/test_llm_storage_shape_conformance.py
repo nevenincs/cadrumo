@@ -27,7 +27,7 @@ from typing import Final
 
 import pytest
 
-from .....core import StorageCategory
+from .....core.storage_taxonomy import StorageCategory
 from .....core.config import override_settings
 from .....llm.models import LLMProvider, LLMRequest, LLMResponse
 from .....tests import assert_path_matches_grammar

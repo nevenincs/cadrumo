@@ -57,7 +57,7 @@ from collections.abc import Mapping
 from datetime import datetime
 from decimal import Decimal
 
-from ...core import ProrrataRegisterRegime
+from ...core.prorrata_register import ProrrataRegisterRegime
 from ...core.modelo import Modelo
 from ...core.period import Period
 from ...core.casilla_id import CasillaId

@@ -21,7 +21,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import (
+from ....core.prorrata_register import (
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
     regime_apportions_deduction,

@@ -22,14 +22,9 @@ from pydantic import (
     model_validator,
 )
 
-from ....core import (
-    M210_TIPO_RENTA_CODE_PROJECTION,
-    UNDECLARED_REGISTRY_AUTHORITY_GRADE,
-    RegistryAuthorityGrade,
-    ResultDisposition,
-    RevisionReviewStatus,
-    TaxDomain,
-)
+from ....core import M210_TIPO_RENTA_CODE_PROJECTION, RevisionReviewStatus, TaxDomain
+from ....core.result_disposition import ResultDisposition
+from ....core.authority_grade import RegistryAuthorityGrade, UNDECLARED_REGISTRY_AUTHORITY_GRADE
 from ....core.filing_projection_ref import FilingProjectionRef, filing_projection_ref_casilla_id
 from ....core.modelo import Modelo
 from ....core.period import Period, PeriodKind, RegistrySelectorPeriodCode, registry_period_kind

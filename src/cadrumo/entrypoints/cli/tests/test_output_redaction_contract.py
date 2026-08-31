@@ -7,7 +7,7 @@ import typer
 from typer.core import TyperGroup
 
 from ....application.operator_surface.help_models import RootLandingReport
-from ....core import STR_KEYED_MAPPING_ADAPTER
+from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....core.redaction import (
     CLI_PROFILE_ID_PLACEHOLDER,
 )

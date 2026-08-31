@@ -9,7 +9,7 @@ from typing import Any, cast
 import pytest
 from pydantic import AnyUrl, ValidationError
 
-from .....core import RegistryAuthorityGrade
+from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId
 from ....contribuyente.family_profile import RentaFamilyProfile
 from ....contribuyente.family_types import RentaAscendantProfile, RentaDescendantProfile

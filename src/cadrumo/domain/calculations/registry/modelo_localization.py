@@ -7,7 +7,7 @@ import re
 from collections.abc import Mapping
 from typing import Final, Literal, cast
 
-from ....core import OBJECT_TUPLE_ADAPTER
+from ....core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ....core.modelo import Modelo
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.i18n import MissingTranslationError, lookup_translation

@@ -35,7 +35,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core import ModeloWorkProgressState, RegistryAuthorityGrade
+from ....core import ModeloWorkProgressState
+from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.period import Period
 from ....core.external_constants import OutputLanguage
 from ....domain.calculations.registry.authority import bundled_authority

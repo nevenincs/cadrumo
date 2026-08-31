@@ -34,7 +34,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core import IvaDeductionFactKind
+from .....core.iva_deduction_fact import IvaDeductionFactKind
 from ....iva.flow import IvaFlowDirection
 from ....iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from ..ledger_bindings import IvaLedgerObservation, iva_ledger_selector, resolve_ledger_iva_aggregation_binding_values

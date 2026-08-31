@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import pytest
 
-from .._storage_taxonomy import ROOT_DERIVED_STORAGE_FIELDS, STORAGE_FIELD_CATEGORIES, storage_location
+from ..storage_taxonomy import ROOT_DERIVED_STORAGE_FIELDS, STORAGE_FIELD_CATEGORIES, storage_location
 from ..config import Settings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

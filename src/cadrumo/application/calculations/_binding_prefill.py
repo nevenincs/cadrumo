@@ -45,7 +45,7 @@ from typing import Final
 
 from pydantic import BaseModel, TypeAdapter
 
-from ...core import STR_KEYED_MAPPING_ADAPTER
+from ...core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ...core.modelo import Modelo
 from ...core.period import Period
 from ...core.casilla_id import CasillaId

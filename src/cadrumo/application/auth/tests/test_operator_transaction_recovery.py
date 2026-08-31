@@ -19,7 +19,7 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.storage import RepositoryError
 from ....adapters.persistence.storage.bucket import bucket_paths
 from ....application.wizard.catalogue import WIZARD_FLOWS
-from ....core import AuthProviderKind
+from ....core.auth_provider import AuthProviderKind
 from ....core.config import load_settings
 from ....domain.buckets.event import BucketEvent, BucketEventType
 from ....domain.contribuyente.keys import required_profile_keys

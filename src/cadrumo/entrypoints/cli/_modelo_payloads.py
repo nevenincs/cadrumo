@@ -39,7 +39,8 @@ from ...application.modelo.work_review import (
     ModeloWorkProgress,
     ModeloWorkReview,
 )
-from ...core import PaymentElection, RefundElection, ResultDisposition
+from ...core import PaymentElection, RefundElection
+from ...core.result_disposition import ResultDisposition
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.filing_year import FilingYear
@@ -54,7 +55,7 @@ from ...core.identity import (
 )
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
 from ...core.period import Period
-from ...core.prose_elision import IssueDetail
+from ...core.prose_elision import IssueDetail, elided_prose
 from ...core.text_bounds import NonEmptyStr
 from ...core.time import UtcInstant
 from ...domain.buckets.event import (
@@ -261,6 +262,12 @@ class CalculationRevisionPayload(OutputSchema):
     superseded_at: str | None = None
 
 
+#: Longest rendered verification-finding message the wire carries.
+FINDING_MESSAGE_CAP = 500
+
+FindingMessage = elided_prose(FINDING_MESSAGE_CAP)
+"""A rendered finding message, elided at the cap rather than refused."""
+
 class FindingPayload(OutputSchema):
     """One localized verification finding with its resolved recovery verdict.
 
@@ -274,7 +281,12 @@ class FindingPayload(OutputSchema):
     severity: ModeloVerificationFindingSeverity
     casilla_id: CasillaId | None = None
     expectation_id: VerificationExpectationId | None = None
-    message: str = Field(min_length=1, max_length=500)
+    # Elides rather than refuses, because this message is not authored: it is
+    # ``tr(finding.message_locale_key, **finding.message_facts)``, a template
+    # with taxpayer data substituted, so its length is set by the household. A
+    # hard cap turns the longest findings -- the ones with most to say -- into a
+    # refused payload, which drops the finding rather than shortening it.
+    message: FindingMessage
     action: ResolvedPreconditionAction | None = None
     legal_refs: LegalRefs
     source_refs: list[SourceRefId] = Field(default_factory=list)

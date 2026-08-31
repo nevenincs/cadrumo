@@ -7,7 +7,8 @@ from decimal import Decimal
 from functools import cache
 from pathlib import Path
 
-from ....core import PaymentElection, PriorDomiciliationElection, RefundElection, ResultDisposition
+from ....core import PaymentElection, PriorDomiciliationElection, RefundElection
+from ....core.result_disposition import ResultDisposition
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id

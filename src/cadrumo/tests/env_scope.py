@@ -42,7 +42,7 @@ from typing import Any
 from pydantic import SecretStr
 from pydantic_settings import SettingsConfigDict
 
-from ..core import AuthProviderKind
+from ..core.auth_provider import AuthProviderKind
 from ..core.config import Settings, reset_settings_cache
 from ..core.external_constants import OutputLanguage
 from ..core.i18n import OUTPUT_LANGUAGE_ENV_VAR, clear_output_language_cache

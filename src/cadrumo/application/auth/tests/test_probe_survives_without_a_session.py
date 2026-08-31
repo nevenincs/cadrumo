@@ -33,7 +33,7 @@ import pytest
 
 from ....adapters.outbound.storage import windows_worst_case_object_path_suffix_length
 from ....adapters.persistence.storage import has_active_bucket_session
-from ....core import AuthProviderKind
+from ....core.auth_provider import AuthProviderKind
 from ....core.config import override_settings
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root

@@ -8,7 +8,11 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....core import ProrrataEspecialTransitionKind, ProrrataRegisterRegime, SectorDiferenciadoLetra
+from ....core.prorrata_register import (
+    ProrrataEspecialTransitionKind,
+    ProrrataRegisterRegime,
+    SectorDiferenciadoLetra,
+)
 from ....core.period import Period
 from ....core.resources import bundled_path
 from ....domain.calculations.registry.ledger_bindings import IvaLedgerObservation

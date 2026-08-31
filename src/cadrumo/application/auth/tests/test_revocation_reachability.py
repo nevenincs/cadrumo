@@ -22,7 +22,7 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
-from ....core import AuthProviderKind
+from ....core.auth_provider import AuthProviderKind
 from ....core.bucket_pointer import BucketPointer, write_pointer
 from ....core.config import load_settings
 from ....tests.profile_capsule import open_test_profile_session

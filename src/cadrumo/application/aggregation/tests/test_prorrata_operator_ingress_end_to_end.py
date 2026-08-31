@@ -37,9 +37,8 @@ import pytest
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage import SecureObjectRepository
-from ....core import (
-    IvaDeductionEvidenceAuthority,
-    IvaDeductionFactKind,
+from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from ....core.prorrata_register import (
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,

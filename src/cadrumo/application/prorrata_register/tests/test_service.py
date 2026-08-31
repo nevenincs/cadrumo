@@ -21,7 +21,11 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from ....core import ProrrataEspecialTransitionKind, ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from ....core.prorrata_register import (
+    ProrrataEspecialTransitionKind,
+    ProrrataProvisionalProvenance,
+    ProrrataRegisterRegime,
+)
 from ....domain.prorrata_register import ProrrataEspecialTransitionEvidence, ProrrataRegisterEntry
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import ProrrataRegisterService

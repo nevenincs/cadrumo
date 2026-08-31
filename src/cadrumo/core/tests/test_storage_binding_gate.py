@@ -34,7 +34,7 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel
 
-from .._storage_taxonomy import (
+from ..storage_taxonomy import (
     EXTERNAL_PATH_SETTINGS_FIELDS,
     STORAGE_FIELD_CATEGORIES,
     STORAGE_ROOT_SETTINGS_FIELD,

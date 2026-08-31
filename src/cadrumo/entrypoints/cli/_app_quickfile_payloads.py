@@ -16,7 +16,8 @@ from ...application.modelo._quickfile import (
     QuickfileStageStatus,
 )
 from ...application.state_projection import ProjectionModeloReadiness
-from ...core import PaymentElection, PriorDomiciliationElection, RefundElection, ResultDisposition
+from ...core import PaymentElection, PriorDomiciliationElection, RefundElection
+from ...core.result_disposition import ResultDisposition
 from ...core.period import Period
 from ...core.identity import BucketId, CalculationRevisionId, WorkUnitId
 from ...core.json_contract import OutputSchema

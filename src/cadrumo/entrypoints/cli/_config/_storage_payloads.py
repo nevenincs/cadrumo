@@ -20,7 +20,7 @@ from ....application.storage_management import (
     StorageCheckIssueKind,
     StorageOccupancy,
 )
-from ....core import StorageArea
+from ....core.storage_taxonomy import StorageArea
 from ....core.json_contract import OutputSchema
 from ....core.text_bounds import NonEmptyStr
 

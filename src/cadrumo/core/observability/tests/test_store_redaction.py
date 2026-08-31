@@ -22,7 +22,7 @@ from ....tests.aeat_literal_fixtures import (
     aeat_url,
 )
 from ....tests.storage_scope import storage_overrides
-from ... import StorageCategory
+from ...storage_taxonomy import StorageCategory
 from ...config import override_settings
 from ..models import (
     ArgumentRecord,

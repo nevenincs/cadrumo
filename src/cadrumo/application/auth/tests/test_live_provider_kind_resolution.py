@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import AuthProviderKind
+from ....core.auth_provider import AuthProviderKind
 from ....core.config import override_settings
 from ....tests.profile_storage_root_fixture import bucket_session_storage_fixture
 from ....tests.user_profile import register_minimal_profile

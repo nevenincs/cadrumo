@@ -7,7 +7,7 @@ from datetime import date
 
 import pytest
 
-from .....core import RegistryAuthorityGrade
+from .....core.authority_grade import RegistryAuthorityGrade
 from ..errors import NoRevisionForPeriodError
 from ..schema import DataBindingDefinition
 from ..temporal import select_revision

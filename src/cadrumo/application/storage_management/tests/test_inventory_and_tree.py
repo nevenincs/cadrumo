@@ -12,14 +12,8 @@ import stat
 
 import pytest
 
-from ....core import (
-    STORAGE_TAXONOMY,
-    StorageArea,
-    StorageCategory,
-    StorageNodeKind,
-    StorageScope,
-    storage_path,
-)
+from ....core.storage_taxonomy_locations import STORAGE_TAXONOMY, storage_path
+from ....core.storage_taxonomy import StorageArea, StorageCategory, StorageNodeKind, StorageScope
 from ....core.storage_materialization import STORAGE_ROOT_MODE, ensure_storage_tree
 from ....core.config import load_settings, override_settings
 from ....core.directory_scan import (

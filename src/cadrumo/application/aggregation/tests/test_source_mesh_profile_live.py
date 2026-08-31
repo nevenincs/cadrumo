@@ -11,7 +11,7 @@ from pydantic import AnyHttpUrl
 
 from ....adapters.outbound.aeat.sede.iva_compensation_wallet import IVA_COMPENSATION_WALLET_URL
 from ....adapters.outbound.aeat.sede.schema import IvaCompensationWalletObservation, IvaCompensationWalletRow
-from ....core import RegistryAuthorityGrade
+from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.aggregation import CalculationSourceLineageRole
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority

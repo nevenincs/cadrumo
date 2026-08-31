@@ -32,7 +32,7 @@ from click.testing import Result
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.state_projection import ProjectionModeloReadiness
-from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot

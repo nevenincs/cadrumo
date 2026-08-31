@@ -19,7 +19,7 @@ from threading import Condition, RLock
 from typing import Protocol, override
 
 from .... import __version__
-from ....core import RegistryAuthorityGrade
+from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.access_gate import (
     AuthorizationManifest,
     ModeloAuthorization,

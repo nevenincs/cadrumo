@@ -8,7 +8,7 @@ from decimal import Decimal
 import pydantic
 import pytest
 
-from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.flow import IvaFlowDirection
 from ....domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind

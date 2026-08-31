@@ -17,7 +17,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
-from ._storage_taxonomy import (
+from .storage_taxonomy import (
     FingerprintParticipation,
     StorageCategory,
     StorageGrouping,

@@ -9,7 +9,8 @@ from typing import Protocol
 
 from pydantic import BaseModel, Field
 
-from ....core import IvaDeductionFactKind, ProrrataRegisterRegime, regime_apportions_deduction
+from ....core.iva_deduction_fact import IvaDeductionFactKind
+from ....core.prorrata_register import ProrrataRegisterRegime, regime_apportions_deduction
 from ....core.filing_projection_ref import (
     M303DifferentiatedDeductionProjectionField,
     M303DifferentiatedDeductionProjectionRef,

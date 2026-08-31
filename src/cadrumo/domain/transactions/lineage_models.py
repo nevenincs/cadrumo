@@ -18,7 +18,8 @@ from pydantic import (
     model_validator,
 )
 
-from ...core import OBJECT_TUPLE_ADAPTER, Hex64Str
+from ...core import Hex64Str
+from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.hashing import sha256_hex
 from ...core.identity import TransactionId

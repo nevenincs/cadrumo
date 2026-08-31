@@ -20,7 +20,9 @@ from ....application.operations.persistence.leases import (
     OperationLeaseResult,
     OperationOwnerLease,
 )
-from ....core import StorageCategory, is_link_like, storage_location
+from ....core import is_link_like
+from ....core.storage_taxonomy_locations import storage_location
+from ....core.storage_taxonomy import StorageCategory
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.locks import exclusive_file_lock
 from ....core.time import validate_utc_aware

@@ -21,7 +21,8 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER, read_toml
+from ...core import read_toml
+from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from ...core.citation_grounding import CitationGrounding
 from ...core.resources import bundled_path
 from ...core.validity_window import years_covered_by_every_group

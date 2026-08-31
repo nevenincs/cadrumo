@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState

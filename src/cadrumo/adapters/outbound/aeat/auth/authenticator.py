@@ -54,7 +54,7 @@ from .....application.auth.session_types import (
     is_exact_active_provider_session,
 )
 from .....application.auth_credentials import ActiveCertificateCredentials
-from .....core import AuthProviderDescription, AuthProviderKind
+from .....core.auth_provider import AuthProviderDescription, AuthProviderKind
 from .....core.async_cleanup import close_async_resources
 from .....core.config import AEAT_CERTIFICATE_PROTECTED_URL
 from .....core.config import Settings as _Settings

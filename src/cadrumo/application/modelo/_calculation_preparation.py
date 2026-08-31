@@ -25,7 +25,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...core import RegistryAuthorityGrade
+from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.casilla_id import CasillaId

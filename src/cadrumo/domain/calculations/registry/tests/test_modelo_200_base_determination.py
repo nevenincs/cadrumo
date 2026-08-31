@@ -35,7 +35,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import RegistryAuthorityGrade
+from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema_input_kind import InputKind

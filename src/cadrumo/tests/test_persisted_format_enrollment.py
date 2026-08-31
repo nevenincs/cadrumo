@@ -52,7 +52,8 @@ from ..adapters.persistence.storage import (
     SecureObjectNamespaceDefinition,
     StoragePathKind,
 )
-from ..core import StorageCategory, storage_location
+from ..core.storage_taxonomy_locations import storage_location
+from ..core.storage_taxonomy import StorageCategory
 from ..core.compatibility_lifecycle import (
     PERSISTED_FORMATS,
     PersistedFormatClass,

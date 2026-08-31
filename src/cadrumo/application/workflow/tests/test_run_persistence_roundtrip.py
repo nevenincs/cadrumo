@@ -29,7 +29,8 @@ from ....adapters.persistence.storage import (
     EnvelopeVersionError,
     SensitivityClass,
 )
-from ....core import StorageCategory, storage_path
+from ....core.storage_taxonomy_locations import storage_path
+from ....core.storage_taxonomy import StorageCategory
 from ....core.modelo import Modelo
 from ....core.operator_action_enums import (
     ActionArgumentStatus,

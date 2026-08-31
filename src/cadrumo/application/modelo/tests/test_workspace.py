@@ -915,7 +915,7 @@ def _real_303_inspection():
 
 
 def _real_303_snapshot():
-    from ....core import RegistryAuthorityGrade
+    from ....core.authority_grade import RegistryAuthorityGrade
     from ....domain.calculations.registry.schema import RegistrySnapshot
 
     authority = bundled_authority()
@@ -1277,7 +1277,7 @@ def test_capture_with_a_grade_admits_a_registry_snapshot_reading_work_and_regist
     """Capture core: passing a grade switches REGISTRY's admission, not the read count or ordering."""
     import logging
 
-    from ....core import RegistryAuthorityGrade
+    from ....core.authority_grade import RegistryAuthorityGrade
     from ....domain.calculations.registry.schema import RegistrySnapshot
 
     bucket_id, repository = workspace_repos
@@ -2015,7 +2015,7 @@ def test_resolve_graded_snapshot_result_refuses_when_the_target_has_no_calculati
     repos,
 ) -> None:
     """CALCULATION_UNAVAILABLE fires before REGISTRY grade admission, for a real never-calculated work unit."""
-    from ....core import RegistryAuthorityGrade
+    from ....core.authority_grade import RegistryAuthorityGrade
     from ....core.external_constants import OutputLanguage
     from ....domain.calculations.registry.authority import bundled_authority
     from ....domain.calculations.registry.temporal import select_revision
@@ -2102,7 +2102,7 @@ def test_resolve_graded_snapshot_result_refuses_target_not_found_when_no_work_un
     reaches this admission rather than being refused upstream by the
     selector itself.
     """
-    from ....core import RegistryAuthorityGrade
+    from ....core.authority_grade import RegistryAuthorityGrade
     from ....core.external_constants import OutputLanguage
     from ....domain.calculations.registry.authority import bundled_authority
     from ..workspace import resolve_graded_snapshot_result
@@ -2139,7 +2139,8 @@ def test_resolve_graded_snapshot_result_assembles_a_complete_projection_over_a_r
     """The full assembly over a real work unit, calculation, and verification report."""
     from decimal import Decimal
 
-    from ....core import ModeloWorkProgressState, RegistryAuthorityGrade
+    from ....core import ModeloWorkProgressState
+    from ....core.authority_grade import RegistryAuthorityGrade
     from ....core.external_constants import OutputLanguage
     from ....domain.calculations.registry.authority import bundled_authority
     from ....domain.calculations.registry.temporal import select_revision
@@ -2271,7 +2272,7 @@ def test_resolve_graded_snapshot_result_refuses_authority_grade_unavailable(
     touched -- the work unit only has to carry a non-``None`` id to pass the
     earlier ``CALCULATION_UNAVAILABLE`` gate.
     """
-    from ....core import RegistryAuthorityGrade
+    from ....core.authority_grade import RegistryAuthorityGrade
     from ....core.external_constants import OutputLanguage
     from ....domain.calculations.registry.authority import bundled_authority
     from ....domain.calculations.registry.temporal import select_revision
@@ -2355,7 +2356,7 @@ def test_resolve_graded_snapshot_result_reraises_a_non_grade_registry_validation
     registry cannot otherwise exercise is forced, to prove the except clause
     discriminates by condition rather than by type.
     """
-    from ....core import RegistryAuthorityGrade
+    from ....core.authority_grade import RegistryAuthorityGrade
     from ....core.external_constants import OutputLanguage
     from ....domain.calculations.registry.authority import bundled_authority
     from ....domain.calculations.registry.errors import (
@@ -2459,7 +2460,7 @@ def test_resolve_graded_snapshot_result_reads_the_work_catalogue_before_any_writ
     import logging
     from decimal import Decimal
 
-    from ....core import RegistryAuthorityGrade
+    from ....core.authority_grade import RegistryAuthorityGrade
     from ....core.external_constants import OutputLanguage
     from ....domain.calculations.registry.authority import bundled_authority
     from ....domain.calculations.registry.temporal import select_revision
@@ -2568,7 +2569,7 @@ def test_resolve_graded_snapshot_result_baseline_reflects_a_real_contributor_cha
     """
     from decimal import Decimal
 
-    from ....core import RegistryAuthorityGrade
+    from ....core.authority_grade import RegistryAuthorityGrade
     from ....core.external_constants import OutputLanguage
     from ....domain.calculations.registry.authority import bundled_authority
     from ....domain.calculations.registry.temporal import select_revision

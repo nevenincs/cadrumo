@@ -9,7 +9,7 @@ from typing import cast
 import pytest
 from click.testing import Result
 
-from ....core import STR_KEYED_MAPPING_ADAPTER
+from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....core.errors.error_codes import ErrorCategory, get_error_exit_code
 from ....tests.cli_envelope import unwrap_envelope_notices as _notices
 from ....tests.cli_runner import semantic_cli_output

@@ -13,7 +13,7 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from ...core import ResultDisposition, result_disposition_is_refund
+from ...core.result_disposition import ResultDisposition, result_disposition_is_refund
 from ...core.modelo import Modelo
 from ...core.errors.hierarchy import CoreValidationError, TerminalPreconditionErrorMixin
 from ...core.resources import bundled_path

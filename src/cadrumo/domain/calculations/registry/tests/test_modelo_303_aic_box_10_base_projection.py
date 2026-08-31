@@ -31,7 +31,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from .....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....iva.flow import IvaFlowDirection
 from ....iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind

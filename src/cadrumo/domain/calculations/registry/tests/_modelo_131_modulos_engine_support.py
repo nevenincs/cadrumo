@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from .....core import RegistryAuthorityGrade
+from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.money import round_to_cents
 from ..formula_runtime import calculate_registry_snapshot
 from ._registry_schema_support import _committed_snapshot

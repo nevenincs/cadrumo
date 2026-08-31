@@ -39,9 +39,9 @@ from ...core import (
     FETCH_GATED_M210_TIPO_RENTA_CODES,
     M210_TIPO_RENTA_CODE_PROJECTION,
     M210GrossIncomeSourceMode,
-    RegistryAuthorityGrade,
     RescateType,
 )
+from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.errors.hierarchy import CadrumoError

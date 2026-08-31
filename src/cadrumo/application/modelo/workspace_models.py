@@ -7,7 +7,8 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core import RegistryAuthorityGrade, RegistrySchemaFamilyDisposition, RevisionReviewStatus
+from ...core import RegistrySchemaFamilyDisposition, RevisionReviewStatus
+from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.casilla_id import CasillaId

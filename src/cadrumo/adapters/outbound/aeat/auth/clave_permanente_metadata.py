@@ -30,7 +30,7 @@ from typing import Final
 
 from pydantic import BaseModel, Field
 
-from .....core import AuthProviderKind
+from .....core.auth_provider import AuthProviderKind
 from .....core.identity import ContentDigest
 from .....core.models import STRICT_FROZEN_CONFIG
 

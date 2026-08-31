@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import ClaveMovilRoute
+from ....core.auth_provider import ClaveMovilRoute
 from ....core.config import override_settings
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.profile_storage_root_fixture import isolated_profile_storage_fixture

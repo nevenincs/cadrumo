@@ -40,7 +40,8 @@ import pytest
 from click.testing import Result
 
 from ....application.ledger.filer_establishment import FILER_POSTCODE_FACT_PATH
-from ....core import STR_KEYED_MAPPING_ADAPTER, IvaCategoryOutcome
+from ....core import IvaCategoryOutcome
+from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....domain.iva.schema import IvaCategory
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.profile_capsule import set_active_test_profile_facts

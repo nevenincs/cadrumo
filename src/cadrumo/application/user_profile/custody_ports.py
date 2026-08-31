@@ -19,7 +19,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from ...core import StorageCategory, StorageCustodyProfile, storage_location
+from ...core.storage_taxonomy_locations import storage_location
+from ...core.storage_taxonomy import StorageCategory, StorageCustodyProfile
 from ...core.classification import SensitivityClass
 from ...core.errors.hierarchy import CoreError
 from ...core.models import STRICT_FROZEN_CONFIG

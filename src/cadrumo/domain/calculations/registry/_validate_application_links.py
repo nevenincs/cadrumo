@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from collections.abc import Set as AbstractSet
 
-from ....core import RegistryAuthorityGrade
+from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.modelo import Modelo
 from .schema import ModeloRevision
 

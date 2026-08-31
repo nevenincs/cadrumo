@@ -8,7 +8,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
-from ...core import AuthProviderKind
+from ...core.auth_provider import AuthProviderKind
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.config import AEAT_CERTIFICATE_PROTECTED_URL, assert_canonical_protected_resource
 from ...core.time import coerce_utc_aware

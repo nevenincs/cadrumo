@@ -17,7 +17,7 @@ from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from typing import NamedTuple
 
-from ...core import STR_KEYED_MAPPING_ADAPTER
+from ...core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ...core.aggregation import BindingSourceKind as _BindingSourceKind
 from ...core.casilla_id import CasillaId as _CasillaId
 from ...core.period import Period as _Period

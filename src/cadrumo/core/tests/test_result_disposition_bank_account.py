@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import pytest
 
-from ...core import (
+from ..result_disposition import (
     ResultDisposition,
     result_disposition_is_refund,
     result_disposition_requires_bank_account,

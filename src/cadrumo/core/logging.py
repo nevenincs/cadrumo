@@ -564,7 +564,7 @@ def default_log_file_path() -> Path:
     The filename itself is read off the taxonomy's ``LOG_FILE`` member rather
     than declared as an untethered string literal here.
     """
-    from ._storage_taxonomy import StorageCategory, storage_location, storage_path
+    from .storage_taxonomy import StorageCategory, storage_location, storage_path
 
     filename = Path(storage_location(StorageCategory.LOG_FILE).subpath).name
     return storage_path(StorageCategory.LOGS).expanduser() / filename

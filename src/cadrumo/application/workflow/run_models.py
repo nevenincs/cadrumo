@@ -34,7 +34,7 @@ from typing import Annotated, Literal
 from pydantic import AwareDatetime, BaseModel, BeforeValidator, Field, field_validator, model_validator
 
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import AuthProviderKind
+from ...core.auth_provider import AuthProviderKind
 from ...core.modelo import Modelo
 from ...core.period import Period
 from ...core.errors.hierarchy import SiteHealthState, SiteHealthStatusLike

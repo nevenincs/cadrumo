@@ -37,7 +37,7 @@ from pydantic import ValidationError
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage import AttachmentStore
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import STR_KEYED_MAPPING_ADAPTER
+from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....core.config import Settings
 from ....core.directory_scan import scan_directory
 from ....domain.attachments.service import load_attachment

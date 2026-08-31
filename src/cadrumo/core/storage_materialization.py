@@ -23,7 +23,7 @@ def ensure_storage_tree(settings: Settings | None = None) -> Path:
     This is the sole opt-in topology materialization boundary.  Settings and
     derived-path reads never enter it implicitly.
     """
-    from ._storage_taxonomy import storage_tree_targets
+    from .storage_taxonomy import storage_tree_targets
 
     resolved = settings if settings is not None else load_settings()
     root = Path(resolved.cadrumo_local_storage_root)

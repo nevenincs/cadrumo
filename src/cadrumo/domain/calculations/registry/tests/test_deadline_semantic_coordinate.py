@@ -6,7 +6,7 @@ from datetime import date
 
 import pytest
 
-from .....core import ResultDisposition
+from .....core.result_disposition import ResultDisposition
 from .....core.period import Period
 from ..deadline_coordinate import (
     DeadlineSemanticCoordinate,
