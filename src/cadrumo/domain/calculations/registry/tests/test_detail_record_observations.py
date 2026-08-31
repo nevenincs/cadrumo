@@ -19,7 +19,7 @@ from typing import cast
 import pytest
 from pydantic import ValidationError
 
-from .....core import M720AssetClassCode
+from .....core.foreign_asset_obligation import M720AssetClassCode
 from .....core.aggregation import RetencionClave
 from ..detail_record_bindings import (
     AtributionMemberObservation,

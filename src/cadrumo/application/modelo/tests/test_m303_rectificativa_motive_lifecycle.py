@@ -23,13 +23,11 @@ from ....application.filing import (
     build_filing_producer_snapshot,
     m303_rectificativa_motive_producer_values,
 )
-from ....core import (
-    FilingProducerKey,
-    PaymentElection,
-    PriorDomiciliationElection,
-    RefundElection,
-    ResultDisposition,
-)
+from ....core.refund_election import RefundElection
+from ....core.payment_election import PaymentElection
+from ....core.filing_producer_key import FilingProducerKey
+from ....core.prior_domiciliation_election import PriorDomiciliationElection
+from ....core.result_disposition import ResultDisposition
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority

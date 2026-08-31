@@ -28,7 +28,8 @@ import pytest
 from pydantic import ValidationError
 from pydantic_core import PydanticSerializationError
 
-from ....core import LOCAL_TRANSPORT_LABEL, FieldOrigin
+from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
+from ....core.field_origin import FieldOrigin
 from ..document_transcription import (
     ACQUISITION_ORIGINS,
     DocumentTranscription,

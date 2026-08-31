@@ -75,6 +75,7 @@ from ._binding_prefill import (
     extract_modelo_303_local_iva_compensation_recurrence,
     resolve_bindings_from_local_store,
 )
+from ._cross_period_external_evidence import filing_external_evidence_blockers
 from ._foreign_asset_redeclaration import (
     modelo_720_declared_observation,
     modelo_720_evidence_observation,
@@ -137,9 +138,9 @@ from ._prorrata_regularizacion import (
 )
 from ._relation_prefill import (
     RelationPrefillSourceResolver,
-    relation_prefill_period_zero_default_binding_ids,
     resolve_relations_from_local_store,
 )
+from ._relation_prefill_m202 import relation_prefill_period_zero_default_binding_ids
 from ._revision_carry_gate import RevisionCarryOutcome, revision_carry_outcome
 from .cross_period_clean_state import (
     CrossPeriodCleanStateBlocker,
@@ -155,7 +156,6 @@ from .cross_period_clean_state import (
     cross_period_dependency_inventory,
     cross_period_dependency_requirements,
     evaluate_cross_period_clean_state,
-    filing_external_evidence_blockers,
     partition_cross_period_requirements_by_activity_start,
 )
 from .cross_period_models import (
@@ -207,6 +207,12 @@ from .row_set_assembly import (
 
 # Resolve forward reference: BindingPrefillReport is TYPE_CHECKING-only inside
 # _iva_wallet_reconciliation due to a circular import; rebuild after both modules load.
+#
+# RULED SOUND AND FORCED. This is the one module-scope side effect in a namespace
+# that cannot move to a defining module: it needs BOTH modules already loaded, so
+# the package namespace is the only place that observes that condition. It
+# registers nothing and reaches nothing -- it completes a type this package's own
+# exports already name.
 IvaCompensationReconciliationReport.model_rebuild()
 
 __all__ = [

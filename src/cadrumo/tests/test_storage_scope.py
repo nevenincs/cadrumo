@@ -19,7 +19,8 @@ from typing import Final
 
 import pytest
 
-from ..core import STORAGE_TAXONOMY, StorageCategory, StorageOverridePolicy, StorageScope, storage_path
+from ..core.storage_taxonomy_locations import STORAGE_TAXONOMY, storage_path
+from ..core.storage_taxonomy import StorageCategory, StorageOverridePolicy, StorageScope
 from ..core.config import Settings, override_settings
 from ..core.errors.hierarchy import CoreValidationError
 from .env_scope import isolated_aeat_env, settings_without_env_file

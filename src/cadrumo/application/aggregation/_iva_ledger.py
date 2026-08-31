@@ -46,8 +46,8 @@ from typing import Annotated, Final
 from pydantic import BaseModel, Field, StringConstraints, field_serializer, field_validator, model_validator
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...core import (
-    IvaDeductionFactKind,
+from ...core.iva_deduction_fact import IvaDeductionFactKind
+from ...core.prorrata_register import (
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
     regime_apportions_deduction,

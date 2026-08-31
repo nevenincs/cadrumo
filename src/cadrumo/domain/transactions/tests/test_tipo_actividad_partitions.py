@@ -16,7 +16,11 @@ from typing import Final
 
 import pytest
 
-from ....core import IAE_SUBJECT_TIPOS_ACTIVIDAD, NON_IAE_SUBJECT_TIPOS_ACTIVIDAD, TipoActividad
+from ....core.tipos_actividad import (
+    IAE_SUBJECT_TIPOS_ACTIVIDAD,
+    NON_IAE_SUBJECT_TIPOS_ACTIVIDAD,
+    TipoActividad,
+)
 from ...deadlines.models import IrpfActivityKind
 from ..errors import TransactionValidationError
 from ..tipo_actividad_partitions import (

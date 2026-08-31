@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING
 
 import typer
 
-from ....core import ModelRole
+from ....core.model_catalogue import ModelRole
 from .._common import emit_envelope, resolve_cli_precondition_action
 from ._provision_payloads import (
     ProvisionContentionPayload,
@@ -123,7 +123,7 @@ def _selected_provision_models(
     and checked nothing.
     """
     from ....application.provisioning import select_model_for_role
-    from ....core import ModelRole
+    from ....core.model_catalogue import ModelRole
 
     models: list[ProvisionModelPayload] = []
     primary = None

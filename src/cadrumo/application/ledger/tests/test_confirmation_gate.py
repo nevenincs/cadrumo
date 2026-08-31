@@ -17,13 +17,10 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....core import (
-    ConfirmationBlockReason,
-    DraftDiscrepancyKind,
-    FieldGroundingOutcome,
-    FieldOrigin,
-    FindingResolutionAction,
-)
+from ....core.confirmation_gate import ConfirmationBlockReason, FindingResolutionAction
+from ....core.draft_discrepancy import DraftDiscrepancyKind
+from ....core.field_grounding import FieldGroundingOutcome
+from ....core.field_origin import FieldOrigin
 from ..confirmation_gate import (
     BLOCKING_REASON_BY_DISCREPANCY_KIND,
     ConfirmationBlockedError,
@@ -31,12 +28,7 @@ from ..confirmation_gate import (
     confirmation_blockers,
     resolved_blockers,
 )
-from ..evidence_draft import (
-    DraftDiscrepancyFinding,
-    FieldAmbiguityCandidate,
-    FieldProvenance,
-    InvoiceDraft,
-)
+from ..invoice_draft_records import DraftDiscrepancyFinding, FieldAmbiguityCandidate, FieldProvenance, InvoiceDraft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

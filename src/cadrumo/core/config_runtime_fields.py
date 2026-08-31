@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from pydantic import Field
 
-from ._config_timeouts import CadrumoTimeoutSettings
-from ._model_catalogue import ModelRole, ModelRuntime, default_model_runtime_id
+from .config_timeouts import CadrumoTimeoutSettings
+from .model_catalogue import ModelRole, ModelRuntime, default_model_runtime_id
 
 
 class CadrumoRuntimeSettings(CadrumoTimeoutSettings):
@@ -179,7 +179,12 @@ class CadrumoRuntimeSettings(CadrumoTimeoutSettings):
     cadrumo_llm_default_temperature: float = Field(
         default=0.0,
         ge=0.0,
-        le=2.0,
+        # Capped where the REQUEST model caps it, not where a provider API
+        # elsewhere allows. This value is fed straight into an LlmRequest whose
+        # own temperature is bounded at one, so a configured 1.5 validated here
+        # as settings and then failed at request construction -- a configuration
+        # the app called valid and could never use.
+        le=1.0,
         description="Default sampling temperature when an LLM request omits ``temperature``",
     )
     cadrumo_browser_locale: str = Field(

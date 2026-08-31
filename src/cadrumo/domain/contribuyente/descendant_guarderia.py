@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ...core import ART_81_1_MATERNIDAD_RELACIONES
+from ...core.descendant_relacion import ART_81_1_MATERNIDAD_RELACIONES
 from ...core.external_constants import DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_FIRST_FILING_YEAR
 from .descendant_maternity import DescendantMaternityMixin
 from .family_types import (

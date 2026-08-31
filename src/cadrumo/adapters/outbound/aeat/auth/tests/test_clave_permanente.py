@@ -9,7 +9,7 @@ import pytest
 from pydantic import AnyUrl
 
 from ......application.auth.session_types import AeatSession, ClavePermanenteSessionDetail
-from ......core import AuthProviderKind
+from ......core.auth_provider import AuthProviderKind
 from ......core.errors.hierarchy import AeatLoginAssertionError
 from ......domain.calculations.registry.errors import RegistryValidationError
 from ......domain.calculations.registry.remote_state_guard import RemoteOperation, assert_remote_operation_allowed

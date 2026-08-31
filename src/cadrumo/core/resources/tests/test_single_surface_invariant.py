@@ -148,7 +148,7 @@ def test_no_production_module_walks_out_of_the_package() -> None:
     source-checkout layout, which on an installed build lands in
     ``site-packages`` — or inside a packaging tool's ephemeral cache,
     where a prune can destroy whatever was written there. That is exactly
-    the hazard :mod:`cadrumo.core._config_state_root` exists to close, so
+    the hazard :mod:`cadrumo.core.config_state_root` exists to close, so
     precisely one module may compute it, behind ``RunMode.CHECKOUT``.
 
     Walking *within* the package is fine and is NOT flagged: a wheel ships

@@ -23,8 +23,8 @@ from typing import Annotated, Protocol, Self, cast
 
 from pydantic import BaseModel, BeforeValidator, Field, PlainSerializer, model_validator
 
-from ...core import NotificacionEstadoServicio as _NotificacionEstadoServicio
-from ...core import PostFilingEventKind as _PostFilingEventKind
+from ...core.notificacion_estado_servicio import NotificacionEstadoServicio as _NotificacionEstadoServicio
+from ...core.post_filing_event import PostFilingEventKind as _PostFilingEventKind
 from ...core.filing_year import FilingYear
 from ...core.identity import AeatCsv, CalculationRevisionId, FilingRecordId, SnapshotId, WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN

@@ -14,7 +14,7 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from ....core import DescendantRelacion
+from ....core.descendant_relacion import DescendantRelacion
 from ..descendant import DescendantInfo
 from ..family_types import RentaAscendantProfile, RentaDescendantProfile, coerce_iso_date_field
 

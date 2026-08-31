@@ -14,7 +14,7 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....core import M210PayerMode
+from ....core.irnr import M210PayerMode
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos.row_models import Modelo210AgrupacionRentaRow

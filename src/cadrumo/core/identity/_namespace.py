@@ -6,7 +6,7 @@ from typing import Annotated, Final
 
 from pydantic import BeforeValidator, StringConstraints
 
-from .._aeat_csv import AEAT_CSV_MAX_LENGTH, AEAT_CSV_MIN_LENGTH, normalise_aeat_csv
+from ..aeat_csv import AEAT_CSV_MAX_LENGTH, AEAT_CSV_MIN_LENGTH, normalise_aeat_csv
 
 __all__ = [
     "AEAT_EXPEDIENTE_ID_MAX_LENGTH",
@@ -33,7 +33,7 @@ AeatCsv = Annotated[
 ]
 """AEAT's Codigo Seguro de Verificacion, at the documented contract's bound.
 
-Eight to thirty-two uppercase alphanumerics, the shape :mod:`core._aeat_csv`
+Eight to thirty-two uppercase alphanumerics, the shape :mod:`core.aeat_csv`
 states and every real captured CSV satisfies. A receipt-domain alias once
 carried a wider four-to-sixty-four bound with no pattern at all, and the two
 coexisted as one concept at two strengths. That alias is retired rather than

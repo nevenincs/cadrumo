@@ -33,7 +33,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, model_validator
 
-from ..core import STORAGE_ROOT_SETTINGS_FIELD
+from ..core.storage_taxonomy import STORAGE_ROOT_SETTINGS_FIELD
 from ..core.operator_action_enums import (
     ActionArgumentStatus,
     ActionConditionality,

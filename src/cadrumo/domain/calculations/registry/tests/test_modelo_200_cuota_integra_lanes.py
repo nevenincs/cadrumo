@@ -29,7 +29,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import RegistryAuthorityGrade
+from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from ....deadlines.models import EntityType, IVARegime, LegalEntityForm, TaxpayerProfile
 from ..applicability_modelo202 import Modelo202Modality, derive_modelo_202_modality

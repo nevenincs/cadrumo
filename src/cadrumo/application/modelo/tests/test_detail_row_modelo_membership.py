@@ -92,7 +92,7 @@ def _m347_row() -> Modelo347ContraparteRow:
 
 
 def _m210_row() -> Modelo210AgrupacionRentaRow:
-    from ....core import M210PayerMode
+    from ....core.irnr import M210PayerMode
 
     return Modelo210AgrupacionRentaRow(
         source_id="manual-renta-jan",

@@ -49,9 +49,9 @@ from pydantic import (
     field_validator,
 )
 
-from ._action_argument_resolution import ActionArgumentResolution
+from .action_argument_resolution import ActionArgumentResolution
 from .operator_action_enums import ActionArgumentStatus
-from ._precondition_action_invariants import (
+from .precondition_action_invariants import (
     PreconditionActionIdentity,
     PreconditionEvidence,
     PreconditionOutcomeInvariant,

@@ -10,7 +10,7 @@ from typing import Final, Self
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
-from ._action_argument_resolution import ActionArgumentResolution
+from .action_argument_resolution import ActionArgumentResolution
 from .models import STRICT_FROZEN_CONFIG
 from .operator_action_enums import (
     ActionArgumentSource,

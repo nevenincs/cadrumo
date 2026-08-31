@@ -8,7 +8,7 @@ from typing import Literal, Protocol
 
 from pydantic import BaseModel, Field, model_validator
 
-from ....core import STR_KEYED_MAPPING_ADAPTER
+from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.models import STRICT_FROZEN_CONFIG
 from .binding_aggregation import binding_aggregation_op

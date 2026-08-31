@@ -19,7 +19,7 @@ from ....adapters.persistence.storage.bucket import (
 )
 from ....adapters.persistence.storage.master_key import current_active_bucket_session
 from ....application.wizard.catalogue import WIZARD_FLOWS
-from ....core import AuthProviderKind
+from ....core.auth_provider import AuthProviderKind
 from ....core.config import load_settings, override_settings
 from ....core.errors.error_codes import ERROR_REGISTRY, build_error_envelope, resolve_error_message
 from ....domain.contribuyente.keys import required_profile_keys

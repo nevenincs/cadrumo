@@ -629,7 +629,7 @@ def _handbook_definitions(language: OutputLanguage) -> dict[str, str]:
     contributes; a draft concept, or one translated into other locales but not
     this one, contributes nothing rather than a substituted string.
     """
-    from cadrumo.core import ConceptLifecycle
+    from cadrumo.core.concept_lifecycle import ConceptLifecycle
 
     from .terminology_handbook import load_terminology_handbook
 

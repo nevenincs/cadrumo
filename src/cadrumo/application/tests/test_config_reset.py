@@ -235,7 +235,9 @@ def test_start_discovers_live_and_dangling_targets_then_completes(
     clearing it is a contract the reset actually holds.
     """
     from ...adapters.persistence.storage.bucket import bucket_paths
-    from ...core import AuthProviderKind, StorageCategory, storage_location
+    from ...core.auth_provider import AuthProviderKind
+    from ...core.storage_taxonomy_locations import storage_location
+    from ...core.storage_taxonomy import StorageCategory
     from ...core.bucket_pointer import pointer_path
     from ...core.config import load_settings
     from .._config_reset_models import (
@@ -367,7 +369,7 @@ def test_a_locked_dangling_target_has_its_key_free_lock_cleared_and_says_what_it
     revocation the reset cannot reach is recorded as unreached rather than
     reported as done.
     """
-    from ...core import AuthProviderKind
+    from ...core.auth_provider import AuthProviderKind
     from ...core.config import load_settings
     from .._config_reset_models import (
         ConfigResetAuthClearanceMode,

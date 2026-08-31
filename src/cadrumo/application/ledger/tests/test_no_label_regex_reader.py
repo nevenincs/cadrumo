@@ -1,7 +1,7 @@
 """The invoice router holds no label-regex reader.
 
 The deletion gate for the Spanish-label regex family that used to read a PDF's
-text layer into an :class:`~application.ledger.evidence_draft.InvoiceDraft`. It recovered only
+text layer into an :class:`~application.ledger.invoice_draft_records.InvoiceDraft`. It recovered only
 what its patterns anticipated, and on an unfamiliar layout it did not decline --
 it grounded whichever labelled line happened to match, which is fabrication with
 a printed anchor behind it. The semantic transcribe-extract-ground chain replaced

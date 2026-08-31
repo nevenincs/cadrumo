@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .._auth_provider import AuthProviderDescription, AuthProviderKind
+from ..auth_provider import AuthProviderDescription, AuthProviderKind
 from ._render import tr
 
 

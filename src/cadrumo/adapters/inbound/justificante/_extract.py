@@ -30,7 +30,7 @@ from pathlib import Path
 
 from pydantic import AnyHttpUrl, TypeAdapter, ValidationError
 
-from ....core import is_aeat_csv, normalise_aeat_csv
+from ....core.aeat_csv import is_aeat_csv, normalise_aeat_csv
 from ....core.period import Period, PeriodError
 from ....core.text_fold import fold_diacritics
 from ....core.decimal import european_thousands_reading_is_ambiguous

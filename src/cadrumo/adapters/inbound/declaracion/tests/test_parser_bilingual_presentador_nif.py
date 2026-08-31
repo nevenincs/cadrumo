@@ -47,7 +47,7 @@ from pathlib import Path
 import pdfplumber
 import pytest
 
-from .....core import STR_KEYED_MAPPING_ADAPTER
+from .....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from .....tests import FIXTURES_DIR
 from .. import parse_declaracion
 from .._detect import detect_template_revision

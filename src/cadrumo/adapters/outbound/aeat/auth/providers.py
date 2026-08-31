@@ -15,8 +15,8 @@ from __future__ import annotations
 
 from typing import Protocol, TypedDict, runtime_checkable
 
-from .....core import AuthProviderDescription as _AuthProviderDescription
-from .....core import AuthProviderKind as _AuthProviderKind
+from .....core.auth_provider import AuthProviderDescription as _AuthProviderDescription
+from .....core.auth_provider import AuthProviderKind as _AuthProviderKind
 from .....core.config import AEAT_CERTIFICATE_PROTECTED_ORIGIN
 from .certificate import (
     CertificateNifParseError,

@@ -68,7 +68,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ..core import STORAGE_TAXONOMY, StorageCategory, StorageOverridePolicy, StorageScope
+from ..core.storage_taxonomy_locations import STORAGE_TAXONOMY
+from ..core.storage_taxonomy import StorageCategory, StorageOverridePolicy, StorageScope
 from ..core.errors.hierarchy import CoreValidationError
 
 if TYPE_CHECKING:

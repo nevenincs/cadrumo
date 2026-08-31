@@ -13,7 +13,7 @@ from typing import ClassVar, override
 
 from PIL import Image
 
-from ..core import STR_KEYED_MAPPING_ADAPTER
+from ..core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ..core.config import override_settings
 from ..domain.transactions.enums import TransactionDirection
 from ..domain.transactions.models import Transaction

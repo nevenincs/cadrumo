@@ -8,7 +8,7 @@ from typing import Literal, cast
 
 from pydantic import BaseModel, Field, model_validator
 
-from ....core import Hex64Str
+from ....core.hex import Hex64Str
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.hashing import content_hash_hex
 from ....core.identity import ContentDigest

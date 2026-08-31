@@ -26,7 +26,9 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import ConfirmationBlockReason, FieldGroundingOutcome, FieldOrigin, FindingResolutionAction
+from ....core.confirmation_gate import ConfirmationBlockReason, FindingResolutionAction
+from ....core.field_grounding import FieldGroundingOutcome
+from ....core.field_origin import FieldOrigin
 from ....core.redaction import redact_for_cli_output
 from ..confirmation_gate import (
     ConfirmationBlockedError,
@@ -34,7 +36,7 @@ from ..confirmation_gate import (
     confirmation_blockers,
     resolved_blockers,
 )
-from ..evidence_draft import FieldAmbiguityCandidate, FieldProvenance, InvoiceDraft
+from ..invoice_draft_records import FieldAmbiguityCandidate, FieldProvenance, InvoiceDraft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

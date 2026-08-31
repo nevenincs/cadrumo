@@ -33,7 +33,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .....core import StorageCategory, storage_path
+from .....core.storage_taxonomy_locations import storage_path
+from .....core.storage_taxonomy import StorageCategory
 from .....domain.iva.schema import IvaCashAccountingPaymentEvidence, IvaCashAccountingTreatment, IvaCategory
 from .....domain.transactions.enums import BusinessClassification, TransactionDirection
 from .....domain.transactions.errors import StoredTransactionDriftError

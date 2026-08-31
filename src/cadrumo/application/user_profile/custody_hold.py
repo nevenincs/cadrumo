@@ -7,7 +7,8 @@ from pathlib import Path
 from typing import Final, Literal
 from uuid import UUID
 
-from ...core import StorageCategory, storage_location
+from ...core.storage_taxonomy_locations import storage_location
+from ...core.storage_taxonomy import StorageCategory
 from ...core.paths import effective_storage_root
 from ...core.time import validate_utc_aware
 from ..profile_deletion_hold_contract import ProfileDeletionHoldOwnerProjection

@@ -825,7 +825,7 @@ def active_profile_label() -> str | None:
     """
     from ...adapters.persistence.storage import StorageValidationError
     from ...application.workflow.profile_bucket_scan import resolve_profile_bucket
-    from ...core import FormerProductStateError
+    from ...core.config_state_root import FormerProductStateError
     from ...core.bucket_pointer import resolve_active_bucket_id
 
     try:

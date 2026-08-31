@@ -32,7 +32,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import IvaDeductionFactKind
+from .....core.iva_deduction_fact import IvaDeductionFactKind
 from ....iva.flow import IvaFlowDirection
 from ....iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from ..authority import bundled_authority

@@ -81,70 +81,70 @@ from types import ModuleType
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ._action_argument_resolution import ActionArgumentResolution
-    from ._aeat_csv import (
+    from .action_argument_resolution import ActionArgumentResolution
+    from .aeat_csv import (
         AEAT_CSV_MAX_LENGTH,
         AEAT_CSV_MIN_LENGTH,
         AEAT_CSV_PATTERN,
         is_aeat_csv,
         normalise_aeat_csv,
     )
-    from ._amendment_kind_regime import (
+    from .amendment_kind_regime import (
         AmendmentLiabilityDirection,
         classify_amendment_liability_direction,
         permitted_amendment_kind_values,
         resolve_amendment_kind_regime,
     )
-    from ._auth_provider import AuthProviderDescription, AuthProviderKind, ClaveMovilRoute
-    from ._authority_grade import UNDECLARED_REGISTRY_AUTHORITY_GRADE, RegistryAuthorityGrade
-    from ._calculation_route import ModeloCalculationRouteId
-    from ._capabilities import ServiceCapability
+    from .auth_provider import AuthProviderDescription, AuthProviderKind, ClaveMovilRoute
+    from .authority_grade import UNDECLARED_REGISTRY_AUTHORITY_GRADE, RegistryAuthorityGrade
+    from .calculation_route import ModeloCalculationRouteId
+    from .capabilities import ServiceCapability
     from .casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
-    from ._casilla_value_kind import CasillaValueKind
-    from ._classifier_input_source import ClassifierInputSource, CounterpartyTaxablePersonStatus
-    from ._concept_lifecycle import ConceptLifecycle
-    from ._concepto_ingreso import (
+    from .casilla_value_kind import CasillaValueKind
+    from .classifier_input_source import ClassifierInputSource, CounterpartyTaxablePersonStatus
+    from .concept_lifecycle import ConceptLifecycle
+    from .concepto_ingreso import (
         INGRESO_CONCEPTS_OUTSIDE_THE_ART_109_BASE,
         INGRESO_CONCEPTS_OUTSIDE_THE_VOLUME_BASE,
         ConceptoIngreso,
     )
-    from ._config_state_root import (
+    from .config_state_root import (
         FormerProductStateError,
         StateRootInputs,
         live_state_root_inputs,
         platform_user_data_root,
     )
-    from ._config_support import LLMProvider
-    from ._confirmation_gate import (
+    from .config_support import LLMProvider
+    from .confirmation_gate import (
         ConfirmationBlockReason,
         FindingResolutionAction,
         ReviewAdvisoryKind,
     )
-    from ._corpus_sidecar import render_corpus_sidecar_text
-    from ._declaracion_idioma import DeclaracionIdioma
-    from ._descendant_relacion import (
+    from .corpus_sidecar import render_corpus_sidecar_text
+    from .declaracion_idioma import DeclaracionIdioma
+    from .descendant_relacion import (
         ART_58_2_ENTITLING_RELACIONES,
         ART_81_1_MATERNIDAD_RELACIONES,
         DescendantRelacion,
     )
-    from ._deuda_direccion import DeudaDireccion
-    from ._document_shape import (
+    from .deuda_direccion import DeudaDireccion
+    from .document_shape import (
         AEAT_RECORD_BATCH_SHAPES,
         PDF_CONTAINER_SHAPES,
         STRUCTURED_DOCUMENT_SHAPES,
         DocumentShape,
     )
-    from ._draft_discrepancy import DraftDiscrepancyKind
-    from ._estado_casilla_oficial import EstadoCasillaOficial
-    from ._export_exemption_reason import ExportExemptionReason
-    from ._export_layout_format import ExportLayoutFormat
-    from ._external_oracle_corpus import ExternalOracleCorpus
-    from ._field_grounding import FieldGroundingOutcome
-    from ._field_origin import FieldOrigin
-    from ._field_role import FieldRole
-    from ._filed_history_discovery_signal import FiledHistoryDiscoverySignal
-    from ._filing_producer_key import FilingProducerKey
-    from ._filing_projection_ref import (
+    from .draft_discrepancy import DraftDiscrepancyKind
+    from .estado_casilla_oficial import EstadoCasillaOficial
+    from .export_exemption_reason import ExportExemptionReason
+    from .export_layout_format import ExportLayoutFormat
+    from .external_oracle_corpus import ExternalOracleCorpus
+    from .field_grounding import FieldGroundingOutcome
+    from .field_origin import FieldOrigin
+    from .field_role import FieldRole
+    from .filed_history_discovery_signal import FiledHistoryDiscoverySignal
+    from .filing_producer_key import FilingProducerKey
+    from .filing_projection_ref import (
         M303_MESA_FACTS,
         M303_REPEATING_FACTS,
         FilingProjectionRef,
@@ -182,27 +182,27 @@ if TYPE_CHECKING:
         filing_projection_ref_casilla_id,
         hydrate_filing_projection_ref,
     )
-    from ._foreign_asset_obligation import (
+    from .foreign_asset_obligation import (
         MODELO_720_FOREIGN_ASSET_CLASS_CODES,
         ForeignAssetObligationGroup,
         M720AssetClassCode,
         foreign_asset_obligation_group,
         obligation_groups_established_by_legal_refs,
     )
-    from ._fsync import fsync_parent_dir
-    from ._fts_query import fts_or_group
-    from ._google_credential_source import GoogleCredentialSourceKind
-    from ._hardware import (
+    from .fsync import fsync_parent_dir
+    from .fts_query import fts_or_group
+    from .google_credential_source import GoogleCredentialSourceKind
+    from .hardware import (
         AcceleratorKind,
         ContentionCause,
         HardwareTier,
         hardware_tier_for_free_bytes,
     )
-    from ._hex import HEX_PATTERN_16, HEX_PATTERN_64, HEX_PATTERN_128, Hex16Str, Hex64Str
-    from ._iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
-    from ._image_media_type import ImageMediaType, detect_image_media_type
-    from ._invoice_link import LinkInconsistencyDirection
-    from ._irnr import (
+    from .hex import HEX_PATTERN_16, HEX_PATTERN_64, HEX_PATTERN_128, Hex16Str, Hex64Str
+    from .iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
+    from .image_media_type import ImageMediaType, detect_image_media_type
+    from .invoice_link import LinkInconsistencyDirection
+    from .irnr import (
         FETCH_GATED_M210_TIPO_RENTA_CODES,
         M210_TIPO_RENTA_CODE_PROJECTION,
         OFFICIAL_M210_TIPO_RENTA_CODES,
@@ -213,14 +213,14 @@ if TYPE_CHECKING:
         TipoRentaIrnr,
         project_m210_tipo_renta_code,
     )
-    from ._iva_category_resolution import IvaCategoryOutcome
-    from ._iva_compensation_provenance import IvaCompensationStateProvenance
-    from ._iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
-    from ._ledger_sort import LedgerSortField, LedgerSortOrder
-    from ._legal_review import REVIEWED_LEGAL_STATUSES, LegalReviewStatus
-    from ._link_safety import is_link_like
-    from ._lockfile_unlink import LOCKFILE_UNLINK_RETRY_SECONDS, unlink_lockfile
-    from ._model_catalogue import (
+    from .iva_category_resolution import IvaCategoryOutcome
+    from .iva_compensation_provenance import IvaCompensationStateProvenance
+    from .iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+    from .ledger_sort import LedgerSortField, LedgerSortOrder
+    from .legal_review import REVIEWED_LEGAL_STATUSES, LegalReviewStatus
+    from .link_safety import is_link_like
+    from .lockfile_unlink import LOCKFILE_UNLINK_RETRY_SECONDS, unlink_lockfile
+    from .model_catalogue import (
         DEFAULT_MODEL_BY_RUNTIME_AND_ROLE,
         MODEL_CATALOGUE,
         DeploymentLicencePosture,
@@ -235,15 +235,15 @@ if TYPE_CHECKING:
         model_candidate,
     )
     from .modelo import NON_REGISTRY_MODELOS, OUT_OF_SCOPE_OBLIGATIONS, UNMODELED_OBLIGATIONS, Modelo
-    from ._modelo_232_codigos import MetodoValoracion, TipoOperacionVinculada, TipoVinculacion
-    from ._modelo_work_progress_state import ModeloWorkProgressState
+    from .modelo_232_codigos import MetodoValoracion, TipoOperacionVinculada, TipoVinculacion
+    from .modelo_work_progress_state import ModeloWorkProgressState
     from .models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    from ._notificacion_estado_servicio import (
+    from .notificacion_estado_servicio import (
         NotificacionEstadoServicio,
         resolve_notificacion_estado_servicio,
     )
-    from ._objeto_tributario import ObjetoTributario
-    from ._observed_header_fact import ObservedHeaderFact
+    from .objeto_tributario import ObjetoTributario
+    from .observed_header_fact import ObservedHeaderFact
     from .operator_action_enums import (
         ActionArgumentSource,
         ActionArgumentStatus,
@@ -252,8 +252,8 @@ if TYPE_CHECKING:
         NoRecoveryOutcome,
         OperatorActionAxis,
     )
-    from ._operator_progress import OperatorProgress
-    from ._optional_extras import (
+    from .operator_progress import OperatorProgress
+    from .optional_extras import (
         ANTHROPIC_EXTRA,
         BROWSER_EXTRA,
         GOOGLE_EXTRA,
@@ -265,7 +265,7 @@ if TYPE_CHECKING:
         optional_extra_available,
         require_optional_extra,
     )
-    from ._orden_anual_html import (
+    from .orden_anual_html import (
         OrdenAnualHtmlParseError,
         OrdenAnualIvaActivityTable,
         OrdenAnualIvaAgriculturalIndex,
@@ -283,7 +283,7 @@ if TYPE_CHECKING:
         orden_anual_iva_authority_units,
         orden_anual_iva_table_text,
     )
-    from ._payment_election import PaymentElection
+    from .payment_election import PaymentElection
     from .period import (
         FilingPeriodCode,
         Period,
@@ -299,25 +299,25 @@ if TYPE_CHECKING:
         is_administrative_period_token,
         registry_period_kind,
     )
-    from ._pid_liveness import pid_is_alive
-    from ._post_filing_event import (
+    from .pid_liveness import pid_is_alive
+    from .post_filing_event import (
         ACTIONABLE_POST_FILING_EVENT_KINDS,
         PostFilingEventKind,
         classify_post_filing_event_kind,
         post_filing_event_is_actionable,
     )
-    from ._precondition_action_invariants import (
+    from .precondition_action_invariants import (
         PreconditionActionIdentity,
         PreconditionEvidence,
         PreconditionOutcomeInvariant,
     )
-    from ._prior_domiciliation_election import PriorDomiciliationElection
-    from ._profile_session import ProfileRecordUnavailability, ProfileSessionRefusalReason
-    from ._prorrata_exclusions import (
+    from .prior_domiciliation_election import PriorDomiciliationElection
+    from .profile_session import ProfileRecordUnavailability, ProfileSessionRefusalReason
+    from .prorrata_exclusions import (
         ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS,
         Art104TresExclusion,
     )
-    from ._prorrata_register import (
+    from .prorrata_register import (
         ProrrataActivityRowType,
         ProrrataEspecialTransitionKind,
         ProrrataProvisionalProvenance,
@@ -325,22 +325,22 @@ if TYPE_CHECKING:
         SectorDiferenciadoLetra,
         regime_apportions_deduction,
     )
-    from ._provenance_stamp import (
+    from .provenance_stamp import (
         LOCAL_TRANSPORT_LABEL,
         build_provenance_stamp,
         provenance_stamp_transport,
         provenance_transport_label,
     )
-    from ._record_design_epoch import (
+    from .record_design_epoch import (
         RECORD_DESIGN_EPOCH_PATTERN,
         RECORD_DESIGN_EPOCH_RE,
         record_design_epoch_year,
     )
-    from ._refund_election import RefundElection
-    from ._register_scoping_signal import RegisterScopingSignal
-    from ._renta_declaracion_type import RentaDeclaracionType
-    from ._rescate_type import RescateType
-    from ._result_disposition import (
+    from .refund_election import RefundElection
+    from .register_scoping_signal import RegisterScopingSignal
+    from .renta_declaracion_type import RentaDeclaracionType
+    from .rescate_type import RescateType
+    from .result_disposition import (
         ResultDisposition,
         derive_result_disposition,
         modelo_has_codified_disposition,
@@ -348,19 +348,19 @@ if TYPE_CHECKING:
         result_disposition_is_refund,
         result_disposition_requires_bank_account,
     )
-    from ._revision_review import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
-    from ._schema_family_disposition import (
+    from .revision_review import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
+    from .schema_family_disposition import (
         UNRESOLVED_SCHEMA_FAMILY_DISPOSITIONS,
         RegistrySchemaFamilyDisposition,
     )
-    from ._spanish_stemming import (
+    from .spanish_stemming import (
         SpanishStemmer,
         spanish_stemmer,
         spanish_word_tokens,
         stem_spanish_terms,
         stem_spanish_text,
     )
-    from ._storage_taxonomy import (
+    from .storage_taxonomy import (
         EXTERNAL_PATH_SETTINGS_FIELDS,
         FINGERPRINT_EXCLUDED_STORAGE_FIELDS,
         ROOT_DERIVED_STORAGE_FIELDS,
@@ -383,15 +383,15 @@ if TYPE_CHECKING:
         storage_path,
         storage_tree_targets,
     )
-    from ._sync_surface import SyncSurface
-    from ._tax_domain import TaxDomain
-    from ._tipos_actividad import (
+    from .sync_surface import SyncSurface
+    from .tax_domain import TaxDomain
+    from .tipos_actividad import (
         IAE_SUBJECT_TIPOS_ACTIVIDAD,
         NON_IAE_SUBJECT_TIPOS_ACTIVIDAD,
         TipoActividad,
     )
-    from ._toml import freeze_toml, read_toml, to_str_keyed_dict
-    from ._type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
+    from .toml import freeze_toml, read_toml, to_str_keyed_dict
+    from .type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
     from .aggregation import (
         OBSERVATION_BACKED_BINDING_SOURCE_KINDS,
         AggregationCaptureKind,
@@ -852,17 +852,17 @@ __all__: list[str] = [
 # WHEN the owning submodule executes has moved.
 _LAZY_EXPORTS: dict[str, str] = {
     "ABSENT_SECURE_OBJECT_REVISION_ID": ".secure_object_write",
-    "ACTIONABLE_POST_FILING_EVENT_KINDS": "._post_filing_event",
-    "AEAT_CSV_MAX_LENGTH": "._aeat_csv",
-    "AEAT_CSV_MIN_LENGTH": "._aeat_csv",
-    "AEAT_CSV_PATTERN": "._aeat_csv",
-    "AEAT_RECORD_BATCH_SHAPES": "._document_shape",
-    "ANTHROPIC_EXTRA": "._optional_extras",
-    "ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS": "._prorrata_exclusions",
-    "ART_58_2_ENTITLING_RELACIONES": "._descendant_relacion",
-    "ART_81_1_MATERNIDAD_RELACIONES": "._descendant_relacion",
-    "AcceleratorKind": "._hardware",
-    "ActionArgumentResolution": "._action_argument_resolution",
+    "ACTIONABLE_POST_FILING_EVENT_KINDS": ".post_filing_event",
+    "AEAT_CSV_MAX_LENGTH": ".aeat_csv",
+    "AEAT_CSV_MIN_LENGTH": ".aeat_csv",
+    "AEAT_CSV_PATTERN": ".aeat_csv",
+    "AEAT_RECORD_BATCH_SHAPES": ".document_shape",
+    "ANTHROPIC_EXTRA": ".optional_extras",
+    "ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS": ".prorrata_exclusions",
+    "ART_58_2_ENTITLING_RELACIONES": ".descendant_relacion",
+    "ART_81_1_MATERNIDAD_RELACIONES": ".descendant_relacion",
+    "AcceleratorKind": ".hardware",
+    "ActionArgumentResolution": ".action_argument_resolution",
     "ActionArgumentSource": ".operator_action_enums",
     "ActionArgumentStatus": ".operator_action_enums",
     "ActionConditionality": ".operator_action_enums",
@@ -870,149 +870,149 @@ _LAZY_EXPORTS: dict[str, str] = {
     "AeatProductSoftwareEvidence": ".product_identity",
     "AeatProductSoftwareIdentity": ".product_identity",
     "AggregationCaptureKind": ".aggregation",
-    "AmendmentLiabilityDirection": "._amendment_kind_regime",
-    "Art104TresExclusion": "._prorrata_exclusions",
-    "AuthProviderDescription": "._auth_provider",
-    "AuthProviderKind": "._auth_provider",
-    "BROWSER_EXTRA": "._optional_extras",
+    "AmendmentLiabilityDirection": ".amendment_kind_regime",
+    "Art104TresExclusion": ".prorrata_exclusions",
+    "AuthProviderDescription": ".auth_provider",
+    "AuthProviderKind": ".auth_provider",
+    "BROWSER_EXTRA": ".optional_extras",
     "BindingAggregationOp": ".aggregation",
     "BindingSourceKind": ".aggregation",
     "CalculationSourceLineageRole": ".aggregation",
     "COMPATIBILITY_REGIME": ".compatibility_lifecycle",
     "CasillaId": ".casilla_id",
-    "CasillaValueKind": "._casilla_value_kind",
-    "ClassifierInputSource": "._classifier_input_source",
-    "ClaveMovilRoute": "._auth_provider",
-    "ConceptLifecycle": "._concept_lifecycle",
-    "ConceptoIngreso": "._concepto_ingreso",
-    "ConfirmationBlockReason": "._confirmation_gate",
-    "ContentionCause": "._hardware",
-    "ConvenioOverrideKind": "._irnr",
+    "CasillaValueKind": ".casilla_value_kind",
+    "ClassifierInputSource": ".classifier_input_source",
+    "ClaveMovilRoute": ".auth_provider",
+    "ConceptLifecycle": ".concept_lifecycle",
+    "ConceptoIngreso": ".concepto_ingreso",
+    "ConfirmationBlockReason": ".confirmation_gate",
+    "ContentionCause": ".hardware",
+    "ConvenioOverrideKind": ".irnr",
     "CorpusAnchorResolutionError": ".corpus_text",
-    "CounterpartyTaxablePersonStatus": "._classifier_input_source",
-    "DEFAULT_MODEL_BY_RUNTIME_AND_ROLE": "._model_catalogue",
+    "CounterpartyTaxablePersonStatus": ".classifier_input_source",
+    "DEFAULT_MODEL_BY_RUNTIME_AND_ROLE": ".model_catalogue",
     "DEFAULT_WRITE_PROVENANCE": ".secure_object_write",
-    "DeclaracionIdioma": "._declaracion_idioma",
-    "DeploymentLicencePosture": "._model_catalogue",
-    "DescendantRelacion": "._descendant_relacion",
-    "DeudaDireccion": "._deuda_direccion",
-    "DocumentShape": "._document_shape",
-    "DraftDiscrepancyKind": "._draft_discrepancy",
-    "EXTERNAL_PATH_SETTINGS_FIELDS": "._storage_taxonomy",
+    "DeclaracionIdioma": ".declaracion_idioma",
+    "DeploymentLicencePosture": ".model_catalogue",
+    "DescendantRelacion": ".descendant_relacion",
+    "DeudaDireccion": ".deuda_direccion",
+    "DocumentShape": ".document_shape",
+    "DraftDiscrepancyKind": ".draft_discrepancy",
+    "EXTERNAL_PATH_SETTINGS_FIELDS": ".storage_taxonomy",
     "ElidedProse": ".prose_elision",
-    "EstadoCasillaOficial": "._estado_casilla_oficial",
-    "ExportExemptionReason": "._export_exemption_reason",
-    "ExportLayoutFormat": "._export_layout_format",
-    "ExternalOracleCorpus": "._external_oracle_corpus",
-    "ExternalPathRole": "._storage_taxonomy",
-    "FETCH_GATED_M210_TIPO_RENTA_CODES": "._irnr",
-    "FINGERPRINT_EXCLUDED_STORAGE_FIELDS": "._storage_taxonomy",
-    "FieldGroundingOutcome": "._field_grounding",
-    "FieldOrigin": "._field_origin",
-    "FieldRole": "._field_role",
-    "FiledHistoryDiscoverySignal": "._filed_history_discovery_signal",
+    "EstadoCasillaOficial": ".estado_casilla_oficial",
+    "ExportExemptionReason": ".export_exemption_reason",
+    "ExportLayoutFormat": ".export_layout_format",
+    "ExternalOracleCorpus": ".external_oracle_corpus",
+    "ExternalPathRole": ".storage_taxonomy",
+    "FETCH_GATED_M210_TIPO_RENTA_CODES": ".irnr",
+    "FINGERPRINT_EXCLUDED_STORAGE_FIELDS": ".storage_taxonomy",
+    "FieldGroundingOutcome": ".field_grounding",
+    "FieldOrigin": ".field_origin",
+    "FieldRole": ".field_role",
+    "FiledHistoryDiscoverySignal": ".filed_history_discovery_signal",
     "FilingPeriodCode": ".period",
-    "FilingProducerKey": "._filing_producer_key",
-    "FilingProjectionRef": "._filing_projection_ref",
-    "FindingResolutionAction": "._confirmation_gate",
-    "FingerprintParticipation": "._storage_taxonomy",
-    "ForeignAssetObligationGroup": "._foreign_asset_obligation",
-    "FormerProductStateError": "._config_state_root",
-    "GOOGLE_EXTRA": "._optional_extras",
-    "GoogleCredentialSourceKind": "._google_credential_source",
-    "HEX_PATTERN_128": "._hex",
-    "HEX_PATTERN_16": "._hex",
-    "HEX_PATTERN_64": "._hex",
-    "HardwareTier": "._hardware",
-    "Hex16Str": "._hex",
-    "Hex64Str": "._hex",
-    "IAE_SUBJECT_TIPOS_ACTIVIDAD": "._tipos_actividad",
-    "IBAN_SHAPE_RE": "._iban",
-    "INGRESO_CONCEPTS_OUTSIDE_THE_ART_109_BASE": "._concepto_ingreso",
-    "INGRESO_CONCEPTS_OUTSIDE_THE_VOLUME_BASE": "._concepto_ingreso",
-    "ImageMediaType": "._image_media_type",
+    "FilingProducerKey": ".filing_producer_key",
+    "FilingProjectionRef": ".filing_projection_ref",
+    "FindingResolutionAction": ".confirmation_gate",
+    "FingerprintParticipation": ".storage_taxonomy",
+    "ForeignAssetObligationGroup": ".foreign_asset_obligation",
+    "FormerProductStateError": ".config_state_root",
+    "GOOGLE_EXTRA": ".optional_extras",
+    "GoogleCredentialSourceKind": ".google_credential_source",
+    "HEX_PATTERN_128": ".hex",
+    "HEX_PATTERN_16": ".hex",
+    "HEX_PATTERN_64": ".hex",
+    "HardwareTier": ".hardware",
+    "Hex16Str": ".hex",
+    "Hex64Str": ".hex",
+    "IAE_SUBJECT_TIPOS_ACTIVIDAD": ".tipos_actividad",
+    "IBAN_SHAPE_RE": ".iban",
+    "INGRESO_CONCEPTS_OUTSIDE_THE_ART_109_BASE": ".concepto_ingreso",
+    "INGRESO_CONCEPTS_OUTSIDE_THE_VOLUME_BASE": ".concepto_ingreso",
+    "ImageMediaType": ".image_media_type",
     "IntracomOperationType": ".aggregation",
-    "IvaCategoryOutcome": "._iva_category_resolution",
-    "IvaCompensationStateProvenance": "._iva_compensation_provenance",
-    "IvaDeductionEvidenceAuthority": "._iva_deduction_fact",
-    "IvaDeductionFactKind": "._iva_deduction_fact",
-    "LLM_EXTRA": "._optional_extras",
-    "LLMProvider": "._config_support",
-    "LOCAL_TRANSPORT_LABEL": "._provenance_stamp",
-    "LOCKFILE_UNLINK_RETRY_SECONDS": "._lockfile_unlink",
-    "LedgerSortField": "._ledger_sort",
-    "LedgerSortOrder": "._ledger_sort",
-    "LegalReviewStatus": "._legal_review",
-    "LicenceVerification": "._model_catalogue",
-    "LinkInconsistencyDirection": "._invoice_link",
-    "M210GrossIncomeSourceMode": "._irnr",
-    "M210PayerMode": "._irnr",
-    "M210_TIPO_RENTA_CODE_PROJECTION": "._irnr",
-    "M296AnexoCertificadoField": "._filing_projection_ref",
-    "M296AnexoCertificadoProjectionRef": "._filing_projection_ref",
-    "M296AnexoPagoField": "._filing_projection_ref",
-    "M296AnexoPagoProjectionRef": "._filing_projection_ref",
-    "M296PerceptorField": "._filing_projection_ref",
-    "M296PerceptorInteresesField": "._filing_projection_ref",
-    "M296PerceptorInteresesProjectionRef": "._filing_projection_ref",
-    "M296PerceptorProjectionRef": "._filing_projection_ref",
-    "M303DifferentiatedDeductionProjectionField": "._filing_projection_ref",
-    "M303DifferentiatedDeductionProjectionRef": "._filing_projection_ref",
-    "M303Exonerado390ActivityField": "._filing_projection_ref",
-    "M303Exonerado390ActivityProjectionRef": "._filing_projection_ref",
-    "M303Exonerado390OperacionesTercerosProjectionRef": "._filing_projection_ref",
-    "M303ProrrataActivityProjectionField": "._filing_projection_ref",
-    "M303ProrrataActivityProjectionRef": "._filing_projection_ref",
-    "M303RegimenSimplificadoActivityField": "._filing_projection_ref",
-    "M303RegimenSimplificadoActivityProjectionRef": "._filing_projection_ref",
-    "M303RegimenSimplificadoCohort": "._filing_projection_ref",
-    "M303RegimenSimplificadoFact": "._filing_projection_ref",
-    "M303RegimenSimplificadoFactProjectionRef": "._filing_projection_ref",
-    "M303RegimenSimplificadoModuleProjectionRef": "._filing_projection_ref",
-    "M303RegimenSimplificadoModuleValue": "._filing_projection_ref",
-    "M303_MESA_FACTS": "._filing_projection_ref",
-    "M303_REPEATING_FACTS": "._filing_projection_ref",
-    "M390ActivityField": "._filing_projection_ref",
-    "M390DifferentiatedDeductionProjectionField": "._filing_projection_ref",
-    "M390ProrrataActivityProjectionField": "._filing_projection_ref",
-    "M390RegimenSimplificadoActivityField": "._filing_projection_ref",
-    "M390RegimenSimplificadoCohort": "._filing_projection_ref",
-    "M390RegimenSimplificadoModuleValue": "._filing_projection_ref",
-    "M390RepresentativeField": "._filing_projection_ref",
-    "M390RepresentativeKind": "._filing_projection_ref",
+    "IvaCategoryOutcome": ".iva_category_resolution",
+    "IvaCompensationStateProvenance": ".iva_compensation_provenance",
+    "IvaDeductionEvidenceAuthority": ".iva_deduction_fact",
+    "IvaDeductionFactKind": ".iva_deduction_fact",
+    "LLM_EXTRA": ".optional_extras",
+    "LLMProvider": ".config_support",
+    "LOCAL_TRANSPORT_LABEL": ".provenance_stamp",
+    "LOCKFILE_UNLINK_RETRY_SECONDS": ".lockfile_unlink",
+    "LedgerSortField": ".ledger_sort",
+    "LedgerSortOrder": ".ledger_sort",
+    "LegalReviewStatus": ".legal_review",
+    "LicenceVerification": ".model_catalogue",
+    "LinkInconsistencyDirection": ".invoice_link",
+    "M210GrossIncomeSourceMode": ".irnr",
+    "M210PayerMode": ".irnr",
+    "M210_TIPO_RENTA_CODE_PROJECTION": ".irnr",
+    "M296AnexoCertificadoField": ".filing_projection_ref",
+    "M296AnexoCertificadoProjectionRef": ".filing_projection_ref",
+    "M296AnexoPagoField": ".filing_projection_ref",
+    "M296AnexoPagoProjectionRef": ".filing_projection_ref",
+    "M296PerceptorField": ".filing_projection_ref",
+    "M296PerceptorInteresesField": ".filing_projection_ref",
+    "M296PerceptorInteresesProjectionRef": ".filing_projection_ref",
+    "M296PerceptorProjectionRef": ".filing_projection_ref",
+    "M303DifferentiatedDeductionProjectionField": ".filing_projection_ref",
+    "M303DifferentiatedDeductionProjectionRef": ".filing_projection_ref",
+    "M303Exonerado390ActivityField": ".filing_projection_ref",
+    "M303Exonerado390ActivityProjectionRef": ".filing_projection_ref",
+    "M303Exonerado390OperacionesTercerosProjectionRef": ".filing_projection_ref",
+    "M303ProrrataActivityProjectionField": ".filing_projection_ref",
+    "M303ProrrataActivityProjectionRef": ".filing_projection_ref",
+    "M303RegimenSimplificadoActivityField": ".filing_projection_ref",
+    "M303RegimenSimplificadoActivityProjectionRef": ".filing_projection_ref",
+    "M303RegimenSimplificadoCohort": ".filing_projection_ref",
+    "M303RegimenSimplificadoFact": ".filing_projection_ref",
+    "M303RegimenSimplificadoFactProjectionRef": ".filing_projection_ref",
+    "M303RegimenSimplificadoModuleProjectionRef": ".filing_projection_ref",
+    "M303RegimenSimplificadoModuleValue": ".filing_projection_ref",
+    "M303_MESA_FACTS": ".filing_projection_ref",
+    "M303_REPEATING_FACTS": ".filing_projection_ref",
+    "M390ActivityField": ".filing_projection_ref",
+    "M390DifferentiatedDeductionProjectionField": ".filing_projection_ref",
+    "M390ProrrataActivityProjectionField": ".filing_projection_ref",
+    "M390RegimenSimplificadoActivityField": ".filing_projection_ref",
+    "M390RegimenSimplificadoCohort": ".filing_projection_ref",
+    "M390RegimenSimplificadoModuleValue": ".filing_projection_ref",
+    "M390RepresentativeField": ".filing_projection_ref",
+    "M390RepresentativeKind": ".filing_projection_ref",
     "M347_CLAVE_C_THRESHOLD_EUR": ".external_constants",
     "M347_THRESHOLD_EUR": ".external_constants",
     "OutputLanguage": ".external_constants",
     "OutputFormat": ".output_rendering",
-    "M720AssetClassCode": "._foreign_asset_obligation",
+    "M720AssetClassCode": ".foreign_asset_obligation",
     "MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX": ".manual_corpus_sidecar",
     "MANUAL_CORPUS_TEXT_SCHEMA_VERSION": ".manual_corpus_sidecar",
     "MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX": ".manual_corpus_sidecar",
-    "MODELO_720_FOREIGN_ASSET_CLASS_CODES": "._foreign_asset_obligation",
-    "MODEL_CATALOGUE": "._model_catalogue",
+    "MODELO_720_FOREIGN_ASSET_CLASS_CODES": ".foreign_asset_obligation",
+    "MODEL_CATALOGUE": ".model_catalogue",
     "ManualCorpusTextSidecar": ".manual_corpus_sidecar",
-    "MetodoValoracion": "._modelo_232_codigos",
-    "MissingOptionalExtraError": "._optional_extras",
-    "ModelCandidate": "._model_catalogue",
-    "ModelLicence": "._model_catalogue",
-    "ModelRole": "._model_catalogue",
-    "ModelRuntime": "._model_catalogue",
-    "ModelSelectionAdvisory": "._model_catalogue",
+    "MetodoValoracion": ".modelo_232_codigos",
+    "MissingOptionalExtraError": ".optional_extras",
+    "ModelCandidate": ".model_catalogue",
+    "ModelLicence": ".model_catalogue",
+    "ModelRole": ".model_catalogue",
+    "ModelRuntime": ".model_catalogue",
+    "ModelSelectionAdvisory": ".model_catalogue",
     "Modelo": ".modelo",
-    "ModeloCalculationRouteId": "._calculation_route",
-    "ModeloWorkProgressState": "._modelo_work_progress_state",
-    "NON_IAE_SUBJECT_TIPOS_ACTIVIDAD": "._tipos_actividad",
+    "ModeloCalculationRouteId": ".calculation_route",
+    "ModeloWorkProgressState": ".modelo_work_progress_state",
+    "NON_IAE_SUBJECT_TIPOS_ACTIVIDAD": ".tipos_actividad",
     "NON_REGISTRY_MODELOS": ".modelo",
     "NoRecoveryOutcome": ".operator_action_enums",
-    "NotificacionEstadoServicio": "._notificacion_estado_servicio",
-    "OBJECT_TUPLE_ADAPTER": "._type_adapters",
+    "NotificacionEstadoServicio": ".notificacion_estado_servicio",
+    "OBJECT_TUPLE_ADAPTER": ".type_adapters",
     "OBSERVATION_BACKED_BINDING_SOURCE_KINDS": ".aggregation",
-    "OFFICIAL_M210_TIPO_RENTA_CODES": "._irnr",
-    "OFX_EXTRA": "._optional_extras",
-    "OPTIONAL_EXTRAS": "._optional_extras",
+    "OFFICIAL_M210_TIPO_RENTA_CODES": ".irnr",
+    "OFX_EXTRA": ".optional_extras",
+    "OPTIONAL_EXTRAS": ".optional_extras",
     "OUT_OF_SCOPE_OBLIGATIONS": ".modelo",
-    "ObjetoTributario": "._objeto_tributario",
-    "ObservedHeaderFact": "._observed_header_fact",
+    "ObjetoTributario": ".objeto_tributario",
+    "ObservedHeaderFact": ".observed_header_fact",
     "OperationCancellation": ".operations",
     "OperationClosePolicy": ".operations",
     "OperationDeadline": ".operations",
@@ -1023,68 +1023,68 @@ _LAZY_EXPORTS: dict[str, str] = {
     "OperationLifecycle": ".operations",
     "OperationTerminalCondition": ".operations",
     "OperatorActionAxis": ".operator_action_enums",
-    "OperatorProgress": "._operator_progress",
-    "OptionalExtra": "._optional_extras",
-    "OrdenAnualHtmlParseError": "._orden_anual_html",
-    "OrdenAnualIvaActivityTable": "._orden_anual_html",
-    "OrdenAnualIvaAgriculturalIndex": "._orden_anual_html",
-    "OrdenAnualIvaAgriculturalIngresoACuenta": "._orden_anual_html",
-    "OrdenAnualIvaAuthority": "._orden_anual_html",
-    "OrdenAnualIvaAuthorityUnit": "._orden_anual_html",
-    "OrdenAnualIvaDifficultJustification": "._orden_anual_html",
-    "OrdenAnualIvaIngresoACuenta": "._orden_anual_html",
-    "OrdenAnualIvaLorca2022Reduction": "._orden_anual_html",
-    "OrdenAnualIvaModule": "._orden_anual_html",
-    "OrdenAnualIvaSeasonalIndex": "._orden_anual_html",
-    "PDF_CONTAINER_SHAPES": "._document_shape",
+    "OperatorProgress": ".operator_progress",
+    "OptionalExtra": ".optional_extras",
+    "OrdenAnualHtmlParseError": ".orden_anual_html",
+    "OrdenAnualIvaActivityTable": ".orden_anual_html",
+    "OrdenAnualIvaAgriculturalIndex": ".orden_anual_html",
+    "OrdenAnualIvaAgriculturalIngresoACuenta": ".orden_anual_html",
+    "OrdenAnualIvaAuthority": ".orden_anual_html",
+    "OrdenAnualIvaAuthorityUnit": ".orden_anual_html",
+    "OrdenAnualIvaDifficultJustification": ".orden_anual_html",
+    "OrdenAnualIvaIngresoACuenta": ".orden_anual_html",
+    "OrdenAnualIvaLorca2022Reduction": ".orden_anual_html",
+    "OrdenAnualIvaModule": ".orden_anual_html",
+    "OrdenAnualIvaSeasonalIndex": ".orden_anual_html",
+    "PDF_CONTAINER_SHAPES": ".document_shape",
     "PERSISTED_FORMATS": ".compatibility_lifecycle",
     "PRODUCT_IDENTITY": ".product_identity",
     "PROSE_ELISION_MARKER": ".prose_elision",
-    "PaymentElection": "._payment_election",
+    "PaymentElection": ".payment_election",
     "Period": ".period",
     "PeriodError": ".period",
     "PeriodKind": ".period",
     "PersistedFormatClass": ".compatibility_lifecycle",
-    "PostFilingEventKind": "._post_filing_event",
-    "PreconditionActionIdentity": "._precondition_action_invariants",
-    "PreconditionEvidence": "._precondition_action_invariants",
-    "PreconditionOutcomeInvariant": "._precondition_action_invariants",
-    "PriorDomiciliationElection": "._prior_domiciliation_election",
-    "ProfileRecordUnavailability": "._profile_session",
-    "ProfileSessionRefusalReason": "._profile_session",
-    "ProrrataActivityRowType": "._prorrata_register",
-    "ProrrataEspecialTransitionKind": "._prorrata_register",
-    "ProrrataProvisionalProvenance": "._prorrata_register",
-    "ProrrataRegisterRegime": "._prorrata_register",
-    "regime_apportions_deduction": "._prorrata_register",
-    "RECORD_DESIGN_EPOCH_PATTERN": "._record_design_epoch",
-    "RECORD_DESIGN_EPOCH_RE": "._record_design_epoch",
+    "PostFilingEventKind": ".post_filing_event",
+    "PreconditionActionIdentity": ".precondition_action_invariants",
+    "PreconditionEvidence": ".precondition_action_invariants",
+    "PreconditionOutcomeInvariant": ".precondition_action_invariants",
+    "PriorDomiciliationElection": ".prior_domiciliation_election",
+    "ProfileRecordUnavailability": ".profile_session",
+    "ProfileSessionRefusalReason": ".profile_session",
+    "ProrrataActivityRowType": ".prorrata_register",
+    "ProrrataEspecialTransitionKind": ".prorrata_register",
+    "ProrrataProvisionalProvenance": ".prorrata_register",
+    "ProrrataRegisterRegime": ".prorrata_register",
+    "regime_apportions_deduction": ".prorrata_register",
+    "RECORD_DESIGN_EPOCH_PATTERN": ".record_design_epoch",
+    "RECORD_DESIGN_EPOCH_RE": ".record_design_epoch",
     "RELEASED_FORMAT_FLOORS": ".compatibility_lifecycle",
-    "REVIEWED_LEGAL_STATUSES": "._legal_review",
-    "REVIEWED_REVISION_REVIEW_STATUSES": "._revision_review",
-    "ROOT_DERIVED_STORAGE_FIELDS": "._storage_taxonomy",
-    "RefundElection": "._refund_election",
-    "RegisterScopingSignal": "._register_scoping_signal",
-    "RegistryAuthorityGrade": "._authority_grade",
+    "REVIEWED_LEGAL_STATUSES": ".legal_review",
+    "REVIEWED_REVISION_REVIEW_STATUSES": ".revision_review",
+    "ROOT_DERIVED_STORAGE_FIELDS": ".storage_taxonomy",
+    "RefundElection": ".refund_election",
+    "RegisterScopingSignal": ".register_scoping_signal",
+    "RegistryAuthorityGrade": ".authority_grade",
     "RegistryPeriodCode": ".period",
-    "RegistrySchemaFamilyDisposition": "._schema_family_disposition",
+    "RegistrySchemaFamilyDisposition": ".schema_family_disposition",
     "RegistrySelectorPeriodCode": ".period",
-    "RentaDeclaracionType": "._renta_declaracion_type",
-    "RescateType": "._rescate_type",
-    "ResultDisposition": "._result_disposition",
-    "ReviewAdvisoryKind": "._confirmation_gate",
-    "RevisionReviewStatus": "._revision_review",
-    "STORAGE_FIELD_CATEGORIES": "._storage_taxonomy",
+    "RentaDeclaracionType": ".renta_declaracion_type",
+    "RescateType": ".rescate_type",
+    "ResultDisposition": ".result_disposition",
+    "ReviewAdvisoryKind": ".confirmation_gate",
+    "RevisionReviewStatus": ".revision_review",
+    "STORAGE_FIELD_CATEGORIES": ".storage_taxonomy",
     "STORAGE_ROOT_MODE": ".storage_materialization",
-    "STORAGE_ROOT_SETTINGS_FIELD": "._storage_taxonomy",
-    "STORAGE_TAXONOMY": "._storage_taxonomy",
+    "STORAGE_ROOT_SETTINGS_FIELD": ".storage_taxonomy",
+    "STORAGE_TAXONOMY": ".storage_taxonomy",
     "STRICT_FROZEN_CONFIG": ".models",
     "STRICT_FROZEN_HIDDEN_INPUT_CONFIG": ".models",
-    "STRUCTURED_DOCUMENT_SHAPES": "._document_shape",
-    "STR_KEYED_MAPPING_ADAPTER": "._type_adapters",
-    "SectorDiferenciadoLetra": "._prorrata_register",
+    "STRUCTURED_DOCUMENT_SHAPES": ".document_shape",
+    "STR_KEYED_MAPPING_ADAPTER": ".type_adapters",
+    "SectorDiferenciadoLetra": ".prorrata_register",
     "SecureObjectWrite": ".secure_object_write",
-    "ServiceCapability": "._capabilities",
+    "ServiceCapability": ".capabilities",
     "SourceConnectivityCandidateId": ".source_connectivity",
     "SourceConnectivityCandidateIdentity": ".source_connectivity",
     "SourceConnectivityCensusRow": ".source_connectivity",
@@ -1102,110 +1102,110 @@ _LAZY_EXPORTS: dict[str, str] = {
     "SourceConnectivityProofAuthority": ".source_connectivity",
     "SourceConnectivityProofFailureCause": ".source_connectivity",
     "SourceConnectivityResolverOwnershipProof": ".source_connectivity",
-    "SpanishStemmer": "._spanish_stemming",
+    "SpanishStemmer": ".spanish_stemming",
     "StandardPeriodCode": ".period",
-    "StateRootInputs": "._config_state_root",
-    "StorageArea": "._storage_taxonomy",
-    "StorageCategory": "._storage_taxonomy",
-    "StorageCustodyProfile": "._storage_taxonomy",
-    "StorageGrouping": "._storage_taxonomy",
-    "StorageLifecycle": "._storage_taxonomy",
-    "StorageLocation": "._storage_taxonomy",
-    "StorageNodeKind": "._storage_taxonomy",
-    "StorageOverridePolicy": "._storage_taxonomy",
-    "StorageScope": "._storage_taxonomy",
-    "SyncSurface": "._sync_surface",
-    "TaxDomain": "._tax_domain",
+    "StateRootInputs": ".config_state_root",
+    "StorageArea": ".storage_taxonomy",
+    "StorageCategory": ".storage_taxonomy",
+    "StorageCustodyProfile": ".storage_taxonomy",
+    "StorageGrouping": ".storage_taxonomy",
+    "StorageLifecycle": ".storage_taxonomy",
+    "StorageLocation": ".storage_taxonomy",
+    "StorageNodeKind": ".storage_taxonomy",
+    "StorageOverridePolicy": ".storage_taxonomy",
+    "StorageScope": ".storage_taxonomy",
+    "SyncSurface": ".sync_surface",
+    "TaxDomain": ".tax_domain",
     "ThirdPartyDeclarationRole": ".aggregation",
-    "TipoActividad": "._tipos_actividad",
-    "TipoOperacionVinculada": "._modelo_232_codigos",
-    "TipoRentaGroundingTier": "._irnr",
-    "TipoRentaIrnr": "._irnr",
-    "TipoVinculacion": "._modelo_232_codigos",
+    "TipoActividad": ".tipos_actividad",
+    "TipoOperacionVinculada": ".modelo_232_codigos",
+    "TipoRentaGroundingTier": ".irnr",
+    "TipoRentaIrnr": ".irnr",
+    "TipoVinculacion": ".modelo_232_codigos",
     "TravelAgencyMediationType": ".aggregation",
-    "UNDECLARED_REGISTRY_AUTHORITY_GRADE": "._authority_grade",
+    "UNDECLARED_REGISTRY_AUTHORITY_GRADE": ".authority_grade",
     "UNMODELED_OBLIGATIONS": ".modelo",
-    "UNRESOLVED_SCHEMA_FAMILY_DISPOSITIONS": "._schema_family_disposition",
-    "record_design_epoch_year": "._record_design_epoch",
+    "UNRESOLVED_SCHEMA_FAMILY_DISPOSITIONS": ".schema_family_disposition",
+    "record_design_epoch_year": ".record_design_epoch",
     "accepted_filing_period_codes": ".period",
     "accepted_filing_period_patterns": ".period",
     "accepted_period_codes": ".period",
-    "bucket_scoped_storage_path": "._storage_taxonomy",
-    "build_provenance_stamp": "._provenance_stamp",
-    "candidates_for_role": "._model_catalogue",
-    "classify_amendment_liability_direction": "._amendment_kind_regime",
-    "classify_post_filing_event_kind": "._post_filing_event",
-    "compile_filing_projection_ref": "._filing_projection_ref",
+    "bucket_scoped_storage_path": ".storage_taxonomy",
+    "build_provenance_stamp": ".provenance_stamp",
+    "candidates_for_role": ".model_catalogue",
+    "classify_amendment_liability_direction": ".amendment_kind_regime",
+    "classify_post_filing_event_kind": ".post_filing_event",
+    "compile_filing_projection_ref": ".filing_projection_ref",
     "content_hash_hex": ".hashing",
     "corpus_redaction_marks": ".corpus_text",
-    "default_model_runtime_id": "._model_catalogue",
-    "derive_result_disposition": "._result_disposition",
-    "detect_image_media_type": "._image_media_type",
+    "default_model_runtime_id": ".model_catalogue",
+    "derive_result_disposition": ".result_disposition",
+    "detect_image_media_type": ".image_media_type",
     "elide_to_cap": ".prose_elision",
     "elided_prose": ".prose_elision",
     "exclusive_file_lock": ".locks",
     "expected_floor": ".compatibility_lifecycle",
-    "extract_orden_anual_iva_authority": "._orden_anual_html",
-    "extract_orden_anual_iva_tables": "._orden_anual_html",
+    "extract_orden_anual_iva_authority": ".orden_anual_html",
+    "extract_orden_anual_iva_tables": ".orden_anual_html",
     "extracted_unit_count": ".corpus_text",
-    "filing_projection_ref_casilla_id": "._filing_projection_ref",
+    "filing_projection_ref_casilla_id": ".filing_projection_ref",
     "fold_diacritics": ".text_fold",
     "fold_printed_phrase": ".text_fold",
-    "foreign_asset_obligation_group": "._foreign_asset_obligation",
-    "obligation_groups_established_by_legal_refs": "._foreign_asset_obligation",
-    "freeze_toml": "._toml",
-    "fsync_parent_dir": "._fsync",
-    "fts_or_group": "._fts_query",
-    "hardware_tier_for_free_bytes": "._hardware",
-    "hydrate_filing_projection_ref": "._filing_projection_ref",
+    "foreign_asset_obligation_group": ".foreign_asset_obligation",
+    "obligation_groups_established_by_legal_refs": ".foreign_asset_obligation",
+    "freeze_toml": ".toml",
+    "fsync_parent_dir": ".fsync",
+    "fts_or_group": ".fts_query",
+    "hardware_tier_for_free_bytes": ".hardware",
+    "hydrate_filing_projection_ref": ".filing_projection_ref",
     "hydrate_scenario_filing_period": ".period",
-    "iban_mod_97": "._iban",
+    "iban_mod_97": ".iban",
     "is_administrative_period_token": ".period",
-    "is_aeat_csv": "._aeat_csv",
-    "is_link_like": "._link_safety",
+    "is_aeat_csv": ".aeat_csv",
+    "is_link_like": ".link_safety",
     "lineage_obligations": ".compatibility_lifecycle",
-    "live_state_root_inputs": "._config_state_root",
-    "model_candidate": "._model_catalogue",
-    "modelo_has_codified_disposition": "._result_disposition",
-    "normalise_aeat_csv": "._aeat_csv",
+    "live_state_root_inputs": ".config_state_root",
+    "model_candidate": ".model_catalogue",
+    "modelo_has_codified_disposition": ".result_disposition",
+    "normalise_aeat_csv": ".aeat_csv",
     "normalise_corpus_text": ".corpus_text",
-    "normalise_iban": "._iban",
+    "normalise_iban": ".iban",
     "normalise_product_identity_references": ".product_identity",
-    "optional_extra_available": "._optional_extras",
-    "orden_anual_iva_activity_anchors": "._orden_anual_html",
-    "orden_anual_iva_authority_units": "._orden_anual_html",
-    "orden_anual_iva_table_text": "._orden_anual_html",
-    "permitted_amendment_kind_values": "._amendment_kind_regime",
-    "pid_is_alive": "._pid_liveness",
-    "platform_user_data_root": "._config_state_root",
-    "post_filing_event_is_actionable": "._post_filing_event",
-    "project_m210_tipo_renta_code": "._irnr",
-    "provenance_stamp_transport": "._provenance_stamp",
-    "provenance_transport_label": "._provenance_stamp",
-    "read_toml": "._toml",
+    "optional_extra_available": ".optional_extras",
+    "orden_anual_iva_activity_anchors": ".orden_anual_html",
+    "orden_anual_iva_authority_units": ".orden_anual_html",
+    "orden_anual_iva_table_text": ".orden_anual_html",
+    "permitted_amendment_kind_values": ".amendment_kind_regime",
+    "pid_is_alive": ".pid_liveness",
+    "platform_user_data_root": ".config_state_root",
+    "post_filing_event_is_actionable": ".post_filing_event",
+    "project_m210_tipo_renta_code": ".irnr",
+    "provenance_stamp_transport": ".provenance_stamp",
+    "provenance_transport_label": ".provenance_stamp",
+    "read_toml": ".toml",
     "registry_period_kind": ".period",
-    "render_corpus_sidecar_text": "._corpus_sidecar",
-    "require_optional_extra": "._optional_extras",
-    "resolve_amendment_kind_regime": "._amendment_kind_regime",
+    "render_corpus_sidecar_text": ".corpus_sidecar",
+    "require_optional_extra": ".optional_extras",
+    "resolve_amendment_kind_regime": ".amendment_kind_regime",
     "resolve_anchored_extracted_unit": ".corpus_text",
-    "resolve_notificacion_estado_servicio": "._notificacion_estado_servicio",
-    "result_disposition_casilla_ids": "._result_disposition",
-    "result_disposition_is_refund": "._result_disposition",
-    "result_disposition_requires_bank_account": "._result_disposition",
+    "resolve_notificacion_estado_servicio": ".notificacion_estado_servicio",
+    "result_disposition_casilla_ids": ".result_disposition",
+    "result_disposition_is_refund": ".result_disposition",
+    "result_disposition_requires_bank_account": ".result_disposition",
     "sha256_hex": ".hashing",
-    "spanish_stemmer": "._spanish_stemming",
-    "spanish_word_tokens": "._spanish_stemming",
+    "spanish_stemmer": ".spanish_stemming",
+    "spanish_word_tokens": ".spanish_stemming",
     "stale_persisted_format_declarations": ".compatibility_lifecycle",
-    "stem_spanish_terms": "._spanish_stemming",
-    "stem_spanish_text": "._spanish_stemming",
-    "storage_location": "._storage_taxonomy",
-    "storage_path": "._storage_taxonomy",
+    "stem_spanish_terms": ".spanish_stemming",
+    "stem_spanish_text": ".spanish_stemming",
+    "storage_location": ".storage_taxonomy",
+    "storage_path": ".storage_taxonomy",
     "ensure_storage_tree": ".storage_materialization",
-    "storage_tree_targets": "._storage_taxonomy",
-    "to_str_keyed_dict": "._toml",
+    "storage_tree_targets": ".storage_taxonomy",
+    "to_str_keyed_dict": ".toml",
     "undeclared_persisted_formats": ".compatibility_lifecycle",
     "unicode_compose": ".text_fold",
-    "unlink_lockfile": "._lockfile_unlink",
+    "unlink_lockfile": ".lockfile_unlink",
     "validated_casilla_id": ".casilla_id",
     "validated_casilla_id_map": ".casilla_id",
 }

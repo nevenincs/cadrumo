@@ -21,7 +21,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import ProrrataRegisterRegime
+from ....core.prorrata_register import ProrrataRegisterRegime
 from ....core.aggregation import BindingSourceKind
 from ....domain.prorrata_register import (
     ProrrataProvisionalResolution,

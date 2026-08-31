@@ -7,7 +7,7 @@ side of that boundary. The figure itself is grounded in the bundled corpus
 excerpt and the pinned leaf constant, not re-derived here.
 
 See Also:
-    :mod:`~core._notificacion_estado_servicio`
+    :mod:`~core.notificacion_estado_servicio`
         Module under test.
 """
 
@@ -18,7 +18,7 @@ from datetime import date, timedelta
 import pytest
 
 from ... import core as core_facade
-from .. import NotificacionEstadoServicio, resolve_notificacion_estado_servicio
+from ..notificacion_estado_servicio import NotificacionEstadoServicio, resolve_notificacion_estado_servicio
 from ..external_constants import DEHU_RECHAZO_TACITO_DIAS_NATURALES
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

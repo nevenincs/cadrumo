@@ -13,12 +13,9 @@ from datetime import date
 from pathlib import Path
 from typing import Protocol
 
-from ....core import (
-    REVIEWED_REVISION_REVIEW_STATUSES,
-    LegalReviewStatus,
-    RegistryAuthorityGrade,
-    RevisionReviewStatus,
-)
+from ....core.legal_review import LegalReviewStatus
+from ....core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
+from ....core.authority_grade import RegistryAuthorityGrade
 from ._validate import RegistryValidator
 from ._validate_orden_aplicabilidad import RevisionLegalApplicabilityWindow, validate_orden_aplicabilidad
 from ._validate_references import check_all_id_references

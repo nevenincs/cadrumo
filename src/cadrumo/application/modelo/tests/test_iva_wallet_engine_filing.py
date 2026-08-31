@@ -10,7 +10,7 @@ import pytest
 from pydantic import SecretStr
 
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from ....core import AuthProviderKind
+from ....core.auth_provider import AuthProviderKind
 from ....core.config import Settings
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.modelos.filing_record import ModeloRecordStatus

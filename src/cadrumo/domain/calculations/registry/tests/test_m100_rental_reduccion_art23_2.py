@@ -8,7 +8,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import RegistryAuthorityGrade
+from .....core.authority_grade import RegistryAuthorityGrade
 from ..errors import RegistryValidationError
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ..schema import RegistrySnapshot

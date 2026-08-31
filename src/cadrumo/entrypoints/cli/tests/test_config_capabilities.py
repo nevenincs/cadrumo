@@ -18,7 +18,7 @@ from pydantic import ValidationError
 from ....application.user_profile.capabilities import CapabilitySource
 from ....application.user_profile.login_session import login_profile
 from ....application.user_profile.registration import register_profile_with_credentials
-from ....core import ServiceCapability
+from ....core.capabilities import ServiceCapability
 from ....core.config import override_settings
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root

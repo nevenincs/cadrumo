@@ -28,7 +28,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ...core import RentaDeclaracionType
+from ...core.renta_declaracion_type import RentaDeclaracionType
 from ...domain.contribuyente.renta_codes import SituacionFamiliar
 from ..flows.definition import FlowDefinition, FlowSection
 from ..flows.validators import ValidationVerdict, register_cross_field_validator

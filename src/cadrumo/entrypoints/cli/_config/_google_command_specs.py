@@ -32,7 +32,7 @@ _BOOL = ValueContract(DeferredTarget("builtins", "bool"))
 _INT = ValueContract(DeferredTarget("builtins", "int"))
 _PATH = ValueContract(DeferredTarget("pathlib", "Path"))
 _STR = ValueContract(DeferredTarget("builtins", "str"))
-_CREDENTIAL_KIND = ValueContract(DeferredTarget("cadrumo.core", "GoogleCredentialSourceKind"))
+_CREDENTIAL_KIND = ValueContract(DeferredTarget("cadrumo.core.google_credential_source", "GoogleCredentialSourceKind"))
 
 
 def _key(value: str) -> TranslationKey:

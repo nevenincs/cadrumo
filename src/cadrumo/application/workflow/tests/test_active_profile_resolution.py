@@ -31,7 +31,7 @@ from ....adapters.persistence.storage.custody.sentinel import create_profile_cus
 from ....application.user_profile.capsule_record import ProfileRecordSession
 from ....application.user_profile.lifecycle import ProfileCapsuleLifecycle
 from ....application.user_profile.profile_record_repository import bound_profile_record_session
-from ....core import ProfileRecordUnavailability
+from ....core.profile_session import ProfileRecordUnavailability
 from ....core.bucket_pointer import BucketPointer, pointer_path, read_pointer, resolve_active_bucket_id, write_pointer
 from ....core.config import override_settings
 from ....core.errors.error_codes import get_registered_error_code

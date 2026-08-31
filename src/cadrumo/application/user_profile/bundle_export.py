@@ -34,7 +34,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from ...core import fsync_parent_dir, is_link_like
+from ...core.link_safety import is_link_like
+from ...core.fsync import fsync_parent_dir
 from ...core.atomic_write import atomic_write_hardened_bytes
 from ...core.directory_scan import scan_directory
 from ...core.external_constants import UTF_8_ENCODING

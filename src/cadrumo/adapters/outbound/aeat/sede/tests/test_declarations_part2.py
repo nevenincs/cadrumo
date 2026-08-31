@@ -6,7 +6,7 @@ from collections.abc import Mapping
 
 import pytest
 
-from ......core import CasillaValueKind
+from ......core.casilla_value_kind import CasillaValueKind
 from ......core.period import Period
 from ......core.casilla_id import validated_casilla_id, validated_casilla_id_map
 from ......domain.calculations.registry.bindings_previous_filing import previous_filing_source_reference

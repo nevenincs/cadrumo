@@ -39,7 +39,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.docs, pytest.mark.hex_entrypo
 
 # Dev tooling runs from a source checkout by definition, so it owns its own
 # repo-root anchor. Production code has no repository concept and must never
-# export one (see cadrumo.core._config_state_root for the runtime data root).
+# export one (see cadrumo.core.config_state_root for the runtime data root).
 _REPO_ROOT = REPO_ROOT
 
 # User-docs prose surfaces. The generated glossary (which legitimately DEFINES
@@ -72,7 +72,7 @@ def _approved_anchor_terms() -> tuple[str, ...]:
     generator renders them. Longest-first so a multi-word term is matched before
     a substring (``modelo 100`` before a bare ``modelo`` that is not an anchor).
     """
-    from cadrumo.core import ConceptLifecycle
+    from cadrumo.core.concept_lifecycle import ConceptLifecycle
 
     from .. import load_terminology_handbook
     from .._enums import TermStatus

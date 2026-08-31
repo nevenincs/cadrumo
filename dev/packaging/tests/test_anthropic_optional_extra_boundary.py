@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core import ANTHROPIC_EXTRA
+from cadrumo.core.optional_extras import ANTHROPIC_EXTRA
 
 from .._smoke_common import (
     build_companion_wheels,

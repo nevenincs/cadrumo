@@ -10,7 +10,17 @@ from pydantic import Field, model_validator
 from ....core.filing_year import FilingYear
 from ....core.identity import ContentDigest
 from ....core.percentage import Percentage
-from ....domain.iva.regimen_simplificado_rows import ActividadOrdenAnual, ActividadOrdenAnualId, AutoridadAgricolaOrdenAnualNoResuelta, DificilJustificacionOrdenAnual, IndiceTemporadaOrdenAnual, M303RegimenSimplificadoScopeDecision, PorcentajeIngresoCuentaIaeOrdenAnual, ReduccionLorcaOrdenAnual
+from ....core.text_bounds import PositiveCount
+from ....domain.iva.regimen_simplificado_rows import (
+    ActividadOrdenAnual,
+    ActividadOrdenAnualId,
+    AutoridadAgricolaOrdenAnualNoResuelta,
+    DificilJustificacionOrdenAnual,
+    IndiceTemporadaOrdenAnual,
+    M303RegimenSimplificadoScopeDecision,
+    PorcentajeIngresoCuentaIaeOrdenAnual,
+    ReduccionLorcaOrdenAnual,
+)
 from ._m303_orden_constants import (
     EXPECTED_ACTIVITY_COUNT,
     EXPECTED_NON_AGRICULTURAL_INGRESO_A_CUENTA_COUNT,
@@ -56,12 +66,12 @@ class M303AnnualOrdenGeneratedSource(RegistryModel):
     ejercicio: FilingYear
     source_ref: SourceRefId
     source_content_digest: ContentDigest
-    activity_table_count: int = Field(ge=1)
-    module_row_count: int = Field(ge=1)
+    activity_table_count: PositiveCount
+    module_row_count: PositiveCount
     module_distribution: tuple[int, ...] = Field(min_length=7, max_length=7)
-    agricultural_index_row_count: int = Field(ge=1)
-    agricultural_ingreso_a_cuenta_row_count: int = Field(ge=1)
-    non_agricultural_ingreso_a_cuenta_row_count: int = Field(ge=1)
+    agricultural_index_row_count: PositiveCount
+    agricultural_ingreso_a_cuenta_row_count: PositiveCount
+    non_agricultural_ingreso_a_cuenta_row_count: PositiveCount
     seasonal_index_day_bands: tuple[tuple[int, int], ...] = Field(min_length=3, max_length=3)
     seasonal_index_coefficients: tuple[Decimal, ...] = Field(min_length=3, max_length=3)
     difficult_justification_pct: Percentage

@@ -7,7 +7,7 @@ from re import Match
 
 from bs4 import BeautifulSoup, Tag
 
-from ._orden_anual_html import (
+from .orden_anual_html import (
     AGRICULTURAL_ACTIVITY_RE,
     AGRICULTURAL_INDEX_RE,
     DIFFICULT_JUSTIFICATION_RE,

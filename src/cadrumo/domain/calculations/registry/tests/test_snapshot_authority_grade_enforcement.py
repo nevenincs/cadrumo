@@ -6,7 +6,7 @@ from dataclasses import replace
 
 import pytest
 
-from .....core import RegistryAuthorityGrade
+from .....core.authority_grade import RegistryAuthorityGrade
 from .....tests.registry_tree import bundled_registry_tree
 from .._snapshot_internals import _build_validated_snapshot
 from ..authority import ValidatedRegistryAuthority

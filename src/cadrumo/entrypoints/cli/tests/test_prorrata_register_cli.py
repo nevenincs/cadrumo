@@ -16,8 +16,8 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from ....core import (
-    STR_KEYED_MAPPING_ADAPTER,
+from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
+from ....core.prorrata_register import (
     ProrrataEspecialTransitionKind,
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,

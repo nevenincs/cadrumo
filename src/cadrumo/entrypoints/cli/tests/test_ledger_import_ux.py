@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from ....application.ledger.actions_import import LedgerProviderID
-from ....core import STR_KEYED_MAPPING_ADAPTER
+from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ._cli_json_support import _json_object
 from ._ledger_ux_support import (
     _FOUR_ROW_CSV,

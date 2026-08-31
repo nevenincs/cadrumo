@@ -40,7 +40,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
 
-from cadrumo.core import read_toml
+from cadrumo.core.toml import read_toml
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[3] / "src" / "cadrumo"
 REGISTRY_PACKAGE_ROOT = PACKAGE_ROOT / "domain" / "calculations" / "registry"

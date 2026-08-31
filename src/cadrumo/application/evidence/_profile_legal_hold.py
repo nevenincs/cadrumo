@@ -17,7 +17,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 
-from ...core import StorageCategory, storage_location
+from ...core.storage_taxonomy_locations import storage_location
+from ...core.storage_taxonomy import StorageCategory
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.identity import PrefixedContentDigest
 from ...core.logging import get_logger

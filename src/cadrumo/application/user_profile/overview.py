@@ -42,7 +42,7 @@ from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel, Field
 
-from ...core import ClaveMovilRoute
+from ...core.auth_provider import ClaveMovilRoute
 from ...core.classification import SensitivityClass
 from ...core.i18n import tr
 from ...core.identity import ProfileId

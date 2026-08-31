@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core import TaxDomain
+from .....core.tax_domain import TaxDomain
 from ..schema import ModeloDefinition
 from ._registry_schema_support import _committed_registry_tree
 

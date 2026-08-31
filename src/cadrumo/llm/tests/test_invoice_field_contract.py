@@ -28,7 +28,7 @@ from decimal import Decimal
 
 import pytest
 
-from ...core import FieldOrigin
+from ...core.field_origin import FieldOrigin
 from ...core.period import Period
 from ...domain import iva as _iva_module
 from ...domain.iva.rates import load_iva_rate_table

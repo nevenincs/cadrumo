@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import pytest
 
-from .. import AEAT_CSV_MAX_LENGTH, AEAT_CSV_MIN_LENGTH, is_aeat_csv
+from ..aeat_csv import AEAT_CSV_MAX_LENGTH, AEAT_CSV_MIN_LENGTH, is_aeat_csv
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

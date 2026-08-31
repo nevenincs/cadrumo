@@ -22,7 +22,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import PDF_CONTAINER_SHAPES, DocumentShape
+from ....core.document_shape import DocumentShape, PDF_CONTAINER_SHAPES
 from ....core.directory_scan import scan_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

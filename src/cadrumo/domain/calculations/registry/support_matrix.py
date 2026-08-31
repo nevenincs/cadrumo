@@ -43,7 +43,7 @@ from datetime import date
 
 from pydantic import BaseModel, Field
 
-from ....core import ExportLayoutFormat
+from ....core.export_layout_format import ExportLayoutFormat
 from ....core.models import STRICT_FROZEN_CONFIG
 from .authority import ValidatedRegistryAuthority
 from .ids import ModeloId, RevisionId

@@ -4,15 +4,6 @@
     "_note": "Each site is a test file reaching a foreign package's private submodule to exercise an internal helper, evaluator, repository factory, or module-private constant/cache by name. Grouped by owning package below for readability; the gate reads the flat 'sites' list. Each site records an 'occurrence' ordinal -- 1-based among the entries sharing its (importer_path, target_mod, imported_names) triple, in the order the reaches appear in the importing file -- because one reach can occur several times in a file, each reasoned separately, and something has to say which reason belongs to which site. It replaces a stored line number, which was a cache of a scan with nothing to invalidate it and had drifted on roughly half the entries; the live line is recoverable from dev/quality/import_hygiene_scan.py at any time, whereas the ordinal only moves when the number of occurrences moves, which the gate checks.",
     "sites": [
       {
-        "importer_path": "src/cadrumo/adapters/outbound/llm/tests/test_evidence_consent_ledger.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.llm._providers.base",
-        "imported_names": [
-          "_ProviderAdapter"
-        ],
-        "reason": "White-box test reach: the consent-ledger test subclasses the provider adapter ABC to capture the dispatched ProviderRequest against the REAL client dispatch path rather than a double, so the consent ledger is exercised through actual adapter selection. `_ProviderAdapter` is declared private on purpose -- its docstring names it the private interface every concrete provider adapter implements, and every production implementation lives inside cadrumo.llm._providers. Deliberately NOT promoted: publishing it would advertise an extension point for out-of-package provider adapters, which is a design question for the llm package owner, not a side effect of satisfying an import gate. The normalized contract types the same test needs (ProviderRequest, ProviderCompletion) WERE promoted onto the cadrumo.llm facade, so this entry covers only the private ABC."
-      },
-      {
         "importer_path": "src/cadrumo/application/aggregation/tests/test_period_boundary_authority.py",
         "occurrence": 1,
         "target_mod": "cadrumo.entrypoints.cli._period_parsing",
@@ -25,7 +16,7 @@
       {
         "importer_path": "src/cadrumo/application/aggregation/tests/test_service.py",
         "occurrence": 1,
-        "target_mod": "cadrumo.application.review._operator",
+        "target_mod": "cadrumo.application.review.operator",
         "imported_names": [
           "_ACCEPTED_KIND_TO_INTERNAL"
         ],
@@ -154,16 +145,6 @@
         "reason": "Structural introspection test reading the private _pdfplumber submodule's own __all__ list to confirm suppress_pdfminer_debug_logging stays exported from it. Testing the submodule's own export surface, not importing a symbol through it -- no promotion candidate exists."
       },
       {
-        "importer_path": "src/cadrumo/core/tests/test_storage_fingerprint_participation_gate.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.core.observability._fingerprint",
-        "imported_names": [
-          "compute_data_root_sha256",
-          "data_root_cache_exclusions"
-        ],
-        "reason": "White-box test reach: this gate asserts that the storage taxonomy's fingerprint_participation axis and the digest that actually consumes it agree, so it has to call the settings-bound composition itself -- the generic primitive cannot answer which directories the axis excludes. `compute_data_root_sha256` and `data_root_cache_exclusions` are observability's internal wiring of compute_db_sha256 onto Settings and the storage taxonomy, producing the RunTrace.db_sha256 field; measured at HEAD, both are consumed in production ONLY inside cadrumo.core.observability itself (_context.py, _replay.py, and _fingerprint.py), with zero cross-package production consumers. Deliberately NOT promoted: the facade already exports the generic, domain-agnostic compute_db_sha256 -- whose own docstring draws exactly this line, stating it knows nothing about Settings or the storage-root taxonomy -- and that primitive is the one with a cross-package consumer. Minting the settings-bound compositions onto the public facade to serve a single test would grow the package's public contract with implementation detail no consumer needs."
-      },
-      {
         "importer_path": "src/cadrumo/core/time/tests/test_clock.py",
         "occurrence": 1,
         "target_mod": "cadrumo.application.storage.calc_sheets._records",
@@ -222,42 +203,6 @@
           "ConfigResetTargetPhase"
         ],
         "reason": "White-box test of the config-reset CLI's internal operation/summary payload models, an application-layer contract scoped to the one `config reset` verb, not a cross-package production API."
-      },
-      {
-        "importer_path": "src/cadrumo/entrypoints/cli/tests/test_google_payloads.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.adapters.outbound.google.calc_sheets_pull",
-        "imported_names": [
-          "RelationEdit"
-        ],
-        "reason": "White-box test of the Google Sheets pull adapter's private relation-edit record shape used to assert the CLI payload projection matches the adapter's internal edit representation."
-      },
-      {
-        "importer_path": "src/cadrumo/entrypoints/cli/tests/test_google_payloads.py",
-        "occurrence": 2,
-        "target_mod": "cadrumo.adapters.outbound.google.calc_sheets_pull",
-        "imported_names": [
-          "RelationEdit"
-        ],
-        "reason": "White-box test of the Google Sheets pull adapter's private relation-edit record shape used to assert the CLI payload projection matches the adapter's internal edit representation."
-      },
-      {
-        "importer_path": "src/cadrumo/entrypoints/cli/tests/test_overview_obligation_coverage_payload_contract.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.application.overview._agenda",
-        "imported_names": [
-          "OverviewAgenda"
-        ],
-        "reason": "White-box test of the overview application layer's private agenda record shape used to assert the CLI obligation-coverage payload matches the agenda builder's internal representation."
-      },
-      {
-        "importer_path": "src/cadrumo/entrypoints/cli/tests/test_overview_obligation_coverage_payload_contract.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.application.overview._backlog",
-        "imported_names": [
-          "OverviewBacklog"
-        ],
-        "reason": "White-box test of the overview application layer's private backlog record shape used to assert the CLI obligation-coverage payload matches the backlog builder's internal representation."
       },
       {
         "importer_path": "src/cadrumo/entrypoints/cli/tests/test_self_referential_string_conformance.py",

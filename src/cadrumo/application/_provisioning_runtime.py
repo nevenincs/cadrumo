@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, TypedDict, cast
 import httpx
 from pydantic import BaseModel, Field, model_validator
 
-from ..core import AcceleratorKind, ContentionCause
+from ..core.hardware import AcceleratorKind, ContentionCause
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.config import Settings, load_settings
 from ._provisioning_contracts import (

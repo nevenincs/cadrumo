@@ -14,7 +14,7 @@ reason, rather than left empty and silent.
 
 from __future__ import annotations
 
-from ....core import RegistryAuthorityGrade
+from ....core.authority_grade import RegistryAuthorityGrade
 from ._schema_family_coverage import build_revision_coverage_manifest
 from .schema import ModeloRevision
 

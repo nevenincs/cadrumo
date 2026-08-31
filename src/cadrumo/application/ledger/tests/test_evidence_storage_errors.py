@@ -8,11 +8,8 @@ import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.config import Settings
-from ..evidence import (
-    PurchaseInvoiceEvidenceInputError,
-    PurchaseInvoiceEvidenceNotFoundError,
-    PurchaseInvoiceEvidencePatch,
-)
+from ..evidence import PurchaseInvoiceEvidencePatch
+from ..evidence_errors import PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceNotFoundError
 from ..preconditions import LedgerPreconditionCondition
 from ._evidence_test_support import _BUCKET_ID, _make_svc
 from ._evidence_test_support import runtime_profile as runtime_profile

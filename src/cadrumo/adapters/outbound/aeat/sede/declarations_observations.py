@@ -25,7 +25,9 @@ from urllib.parse import urlsplit
 
 from pydantic import AnyHttpUrl
 
-from .....core import CasillaValueKind, ExportLayoutFormat, ObservedHeaderFact
+from .....core.observed_header_fact import ObservedHeaderFact
+from .....core.export_layout_format import ExportLayoutFormat
+from .....core.casilla_value_kind import CasillaValueKind
 from .....core.casilla_id import CasillaId
 from .....core.config import Settings
 from .....core.external_constants import JSON_MIME_TYPE as _JSON_MIME_TYPE

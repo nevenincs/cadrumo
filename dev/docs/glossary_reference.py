@@ -46,7 +46,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import cast
 
-from cadrumo.core import ConceptLifecycle
+from cadrumo.core.concept_lifecycle import ConceptLifecycle
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import OutputLanguage
 

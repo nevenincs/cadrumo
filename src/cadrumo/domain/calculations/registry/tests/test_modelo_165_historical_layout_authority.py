@@ -12,7 +12,7 @@ from datetime import date
 
 import pytest
 
-from .....core import RegistryAuthorityGrade
+from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.resources import bundled_path
 from .._validate import RegistryValidator
 from .._validate_export_exemption import validate_export_exemption_declarations

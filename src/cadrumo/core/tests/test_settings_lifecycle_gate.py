@@ -7,9 +7,9 @@ test module is a poor home for a domain fact -- it drifts from the code it
 describes, and it was invisible to anything but this file.
 
 The classification now lives on the taxonomy, where each member declares its
-own :class:`~core._storage_taxonomy.StorageLifecycle`, and each path setting
+own :class:`~core.storage_taxonomy.StorageLifecycle`, and each path setting
 outside the taxonomy declares an
-:class:`~core._storage_taxonomy.ExternalPathRole` saying why. Two of the old
+:class:`~core.storage_taxonomy.ExternalPathRole` saying why. Two of the old
 assertions therefore hold **by construction** rather than by checking: a path
 field cannot be unclassified when classification is a required field on its
 declaration, and it cannot be double-classified when it has exactly one
@@ -46,7 +46,7 @@ from pathlib import Path
 
 import pytest
 
-from .._storage_taxonomy import (
+from ..storage_taxonomy import (
     EXTERNAL_PATH_SETTINGS_FIELDS,
     ROOT_DERIVED_STORAGE_FIELDS,
     STORAGE_ROOT_SETTINGS_FIELD,

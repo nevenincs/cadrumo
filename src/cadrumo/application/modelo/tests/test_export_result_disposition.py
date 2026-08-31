@@ -7,7 +7,8 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import PaymentElection, RefundElection
+from ....core.refund_election import RefundElection
+from ....core.payment_election import PaymentElection
 from ....core.period import Period
 from ....core.casilla_id import CasillaId
 from ....domain.calculations.registry.authority import bundled_authority

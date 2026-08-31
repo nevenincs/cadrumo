@@ -27,7 +27,7 @@ from pathlib import PurePosixPath
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from cadrumo.core import render_corpus_sidecar_text
+from cadrumo.core.corpus_sidecar import render_corpus_sidecar_text
 
 #: Current sidecar schema version. Bump on any breaking field change; the
 #: loader refuses an unknown version rather than silently coercing.

@@ -18,7 +18,7 @@ from datetime import date, timedelta
 import pytest
 from pydantic import ValidationError
 
-from ....core import DescendantRelacion
+from ....core.descendant_relacion import DescendantRelacion
 from ....domain.contribuyente.descendant import DescendantInfo
 from .._config_descendiente_payloads import ProfileDescendientePayload
 

@@ -163,7 +163,7 @@ LEDGER_INVOICE_INTAKE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="operation_type",
                 declarations=("--operation-type",),
-                value=ValueContract(DeferredTarget("cadrumo.core", "IntracomOperationType")),
+                value=ValueContract(DeferredTarget("cadrumo.core.aggregation", "IntracomOperationType")),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.app.ledger.invoice.operation_type_help"),
                 metavar=None,

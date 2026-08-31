@@ -7,8 +7,7 @@ from datetime import date
 from typing import Literal
 from urllib.parse import parse_qs, urlsplit
 
-from ....core import (
-    LegalReviewStatus,
+from ....core.orden_anual_html import (
     OrdenAnualIvaAgriculturalIndex,
     OrdenAnualIvaAgriculturalIngresoACuenta,
     OrdenAnualIvaAuthority,
@@ -18,6 +17,7 @@ from ....core import (
     OrdenAnualIvaSeasonalIndex,
     orden_anual_iva_authority_units,
 )
+from ....core.legal_review import LegalReviewStatus
 from ._m303_orden_constants import EXTRACTOR_VERSION
 from ._m303_orden_keys import (
     activity_legal_key,

@@ -27,7 +27,7 @@ from typing import Any
 
 import pytest
 
-from .....core import ServiceCapability
+from .....core.capabilities import ServiceCapability
 from .....core.config import override_settings
 from .....tests.cli_runner import invoke_cached_cli
 from ._isolated_storage_fixture import config_check_backend, config_check_isolated_backend

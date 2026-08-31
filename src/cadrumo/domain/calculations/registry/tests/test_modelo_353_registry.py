@@ -7,7 +7,7 @@ from hashlib import sha256
 
 import pytest
 
-from .....core import IvaDeductionFactKind
+from .....core.iva_deduction_fact import IvaDeductionFactKind
 from .....core.resources import bundled_path
 from ....iva.schema import IvaLedgerObservationRole
 from .._validate import RegistryValidator

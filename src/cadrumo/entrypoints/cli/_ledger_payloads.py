@@ -43,7 +43,7 @@ from ...application.ledger.models import (
     DiagnosticSeverity,
     IsoDateText,
 )
-from ...core import LinkInconsistencyDirection
+from ...core.invoice_link import LinkInconsistencyDirection
 from ...core.decimal import is_non_negative_canonical_decimal, try_parse_canonical_decimal
 from ...core.identity import (
     BucketId,
@@ -865,7 +865,17 @@ class LedgerExportRowPayload(OutputSchema):
     @field_validator("booked_date", "effective_date")
     @classmethod
     def _require_iso_date(cls, value: str) -> str:
-        """Keep exported mandatory dates parseable without changing their JSON wire form."""
+        """Keep exported mandatory dates parseable without changing their JSON wire form.
+
+        Asked here AND on :class:`~application.ledger.models.LedgerExportRow`,
+        deliberately. The row is where the rule now LIVES, so the CSV and the
+        persisted snapshot are governed too rather than only the JSON path; this
+        assertion stays because a projection that promises less than the record
+        it mirrors is the divergence this module has already been corrected for
+        twice. Both ask the same two predicates -- ``parse_iso8601_date`` and
+        ``is_non_negative_canonical_decimal`` -- so the rule is stated once and
+        checked twice, which is not the same as being written twice.
+        """
         if parse_iso8601_date(value) is None:
             raise ValueError("must be an ISO-8601 date")
         return value

@@ -23,7 +23,7 @@ from pydantic import (
     model_validator,
 )
 
-from ...core import Hex16Str
+from ...core.hex import Hex16Str
 from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period
 from ...core.casilla_id import CasillaId

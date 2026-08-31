@@ -21,7 +21,7 @@ from typing import Any
 
 import pytest
 
-from cadrumo.core import FieldRole
+from cadrumo.core.field_role import FieldRole
 from cadrumo.core.tabular import normalize_tabular_bytes
 
 from .. import (

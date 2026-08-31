@@ -7,7 +7,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from .....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.aggregation import BindingAggregationOp, BindingSourceKind
 from .....core.resources import bundled_path

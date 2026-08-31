@@ -14,7 +14,7 @@ from typing import Annotated
 
 import pytest
 
-from .....core import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
+from .....core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
 from .....tests.registry_tree import bundled_registry_tree
 from .. import _loader_internals as _loader
 from .._schema_governance import REVISION_REVIEW_DATE_CEILING, REVISION_REVIEW_DATE_FLOOR

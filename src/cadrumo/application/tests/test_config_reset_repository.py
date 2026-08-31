@@ -15,7 +15,8 @@ import pytest
 from pydantic import ValidationError
 
 from ...adapters.persistence.storage.bucket import bucket_paths
-from ...core import StorageCategory, storage_location
+from ...core.storage_taxonomy_locations import storage_location
+from ...core.storage_taxonomy import StorageCategory
 from ...core.bucket_pointer import BucketPointer
 from ...core.directory_scan import scan_directory
 from ...domain.user_profile.values import ProfileSetupState

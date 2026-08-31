@@ -28,21 +28,17 @@ import pytest
 # import` edge as reaching through the inert namespace.
 import cadrumo.application.ledger.evidence_draft as evidence_draft_module
 
-from ....core import (
-    LLM_EXTRA,
-    LOCAL_TRANSPORT_LABEL,
-    DraftDiscrepancyKind,
-    FieldGroundingOutcome,
-    FieldOrigin,
-    MissingOptionalExtraError,
-)
 from ....core.config import load_settings
+from ....core.draft_discrepancy import DraftDiscrepancyKind
+from ....core.field_grounding import FieldGroundingOutcome
+from ....core.field_origin import FieldOrigin
+from ....core.optional_extras import LLM_EXTRA, MissingOptionalExtraError
+from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from ....llm.errors import LLMProviderError
 from ....llm.invoice_field_grounding import ground_extracted_fields, parse_invoice_extraction_response
 from ....tests.attribute_scope import scoped_attribute
 from ..document_transcription import DocumentTranscription, TranscriberIdentity
-from ..evidence import PurchaseInvoiceEvidenceInputError
-from ..evidence_draft import FieldProvenance, InvoiceDraft
+from ..evidence_errors import PurchaseInvoiceEvidenceInputError
 from ..evidence_input import EvidenceInput
 from ..evidence_textlayer import transcribe_text_layer
 from ..grounded_reading import (
@@ -52,6 +48,7 @@ from ..grounded_reading import (
     verified_provenance,
 )
 from ..identity_roles import IdentityCandidate, resolve_counterparty_identity
+from ..invoice_draft_records import FieldProvenance, InvoiceDraft
 from ..preconditions import LedgerPreconditionCondition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

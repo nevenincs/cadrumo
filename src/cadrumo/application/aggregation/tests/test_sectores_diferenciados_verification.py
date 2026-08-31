@@ -44,9 +44,8 @@ from ....application.prorrata_register import (
     seed_sector_carried_definitive_from_register,
     settle_sector_definitive,
 )
-from ....core import (
-    IvaDeductionEvidenceAuthority,
-    IvaDeductionFactKind,
+from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from ....core.prorrata_register import (
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,

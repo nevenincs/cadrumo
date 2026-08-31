@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core import EstadoCasillaOficial
+from cadrumo.core.estado_casilla_oficial import EstadoCasillaOficial
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.export import clasificar_casillas_oficiales
 from cadrumo.domain.calculations.registry.loader import load_registry_tree

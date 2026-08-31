@@ -18,7 +18,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, TypeAdapter, ValidationError, field_validator, model_validator
 
-from ...core._hex import Hex64Str
+from ...core.hex import Hex64Str
 from ...core.bucket_pointer import BucketPointer
 from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import (

@@ -33,7 +33,7 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from pydantic import SecretStr, ValidationError
 
-from ....core import AuthProviderKind, ClaveMovilRoute
+from ....core.auth_provider import AuthProviderKind, ClaveMovilRoute
 from ....core.config import override_settings
 from ....tests.profile_storage_root_fixture import bucket_session_storage_fixture
 from ....tests.user_profile import register_minimal_profile

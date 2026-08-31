@@ -24,7 +24,8 @@ from ..adapters.persistence.storage.tests.profile_capsule_runtime import (
     derive_test_bucket_key,
     publish_test_profile_capsule,
 )
-from ..core import StorageCategory, storage_location
+from ..core.storage_taxonomy_locations import storage_location
+from ..core.storage_taxonomy import StorageCategory
 from ..core.classification import SensitivityClass
 from ..core.config import load_settings, override_settings
 from .secure_sql import (

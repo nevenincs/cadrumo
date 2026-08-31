@@ -27,7 +27,7 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
-from ......core import FiledHistoryDiscoverySignal
+from ......core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ..schema import FiledDeclarationAvailability, FiledDeclarationAvailabilityReport
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

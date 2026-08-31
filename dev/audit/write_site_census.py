@@ -276,7 +276,7 @@ def _taxonomy_subpath_tokens() -> frozenset[str]:
     ``constrained`` (or the production scope, which never computes it) pays
     nothing for the import.
     """
-    from cadrumo.core import STORAGE_TAXONOMY
+    from cadrumo.core.storage_taxonomy_locations import STORAGE_TAXONOMY
 
     tokens: set[str] = set()
     for location in STORAGE_TAXONOMY.values():

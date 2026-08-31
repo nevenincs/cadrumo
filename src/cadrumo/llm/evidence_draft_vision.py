@@ -10,7 +10,7 @@ that mean* -- so a wrong result could not be attributed to either: a
 transcription error and a reasoning error arrived in the same shape. Worse, the
 anchors came back from the same call that produced the values, so there was
 nothing independent to check them against. The provenance record had to say so
-(:attr:`~application.ledger.evidence_draft.FieldProvenance.anchor_self_reported`), and a
+(:attr:`~application.ledger.invoice_draft_records.FieldProvenance.anchor_self_reported`), and a
 self-reported anchor can never read as verified, because a fabricating model is
 self-consistent too. The vision lane was therefore structurally incapable of
 earning the grounding the text lane earned for free.
@@ -57,10 +57,12 @@ import asyncio
 from typing import Final
 
 from ..application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
-from ..application.ledger.evidence import PurchaseInvoiceEvidenceInputError
-from ..core import LLM_EXTRA, FieldOrigin, provenance_transport_label, require_optional_extra
-from ..core.operator_action_enums import ActionEvidenceProvenance
+from ..application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
 from ..core.config import Settings, load_settings
+from ..core.field_origin import FieldOrigin
+from ..core.operator_action_enums import ActionEvidenceProvenance
+from ..core.optional_extras import LLM_EXTRA, require_optional_extra
+from ..core.provenance_stamp import provenance_transport_label
 from .client import LLMClient
 from .consent import EvidenceConsentToken
 from .errors import LLMConfigError

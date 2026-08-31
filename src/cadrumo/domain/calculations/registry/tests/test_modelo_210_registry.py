@@ -7,7 +7,8 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import ConvenioOverrideKind, ResultDisposition, TipoRentaIrnr
+from .....core.irnr import ConvenioOverrideKind, TipoRentaIrnr
+from .....core.result_disposition import ResultDisposition
 from .....core.resources import bundled_path
 from .._validate import RegistryValidator
 from ..convenio import load_convenio_authority

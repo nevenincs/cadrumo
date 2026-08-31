@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 
-from ...core import IvaDeductionFactKind
+from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.period import Period
 from ...domain.calculations.registry.ledger_bindings import IvaLedgerObservation
 from ...domain.iva.classification import InvoiceKind, domestic_categories_by_rate_kind

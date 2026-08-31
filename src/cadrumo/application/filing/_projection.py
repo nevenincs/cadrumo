@@ -7,7 +7,7 @@ from typing import cast
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core import (
+from ...core.filing_projection_ref import (
     FilingProjectionRef,
     M303DifferentiatedDeductionProjectionRef,
     M303Exonerado390ActivityProjectionRef,

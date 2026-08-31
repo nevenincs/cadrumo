@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import RegistryAuthorityGrade
+from ....core.authority_grade import RegistryAuthorityGrade
 from ....domain.calculations.registry.authority import bundled_authority
 from ...registry.source_connectivity import (
     derive_registry_binding_records,

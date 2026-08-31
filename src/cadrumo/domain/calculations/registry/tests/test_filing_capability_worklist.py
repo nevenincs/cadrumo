@@ -569,7 +569,7 @@ def _producer_vocabulary_gap(modelo: ModeloDefinition) -> _FilingCapabilityBlock
     therefore not on this list. A modelo genuinely lacking a vocabulary cannot be
     hidden by the alias, because it has no keys under any name.
     """
-    from .....core import FilingProducerKey
+    from .....core.filing_producer_key import FilingProducerKey
 
     prefix = f"m{modelo.id}."
     if any(member.value.startswith(prefix) for member in FilingProducerKey):

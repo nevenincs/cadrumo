@@ -42,7 +42,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import ServiceCapability
+from ....core.capabilities import ServiceCapability
 from ....core.config import Settings, load_settings
 from ....core.directory_scan import scan_directory
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord

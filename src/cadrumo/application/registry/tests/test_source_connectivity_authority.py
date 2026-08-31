@@ -12,7 +12,7 @@ from pydantic import ValidationError
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.storage import SecureObjectRepository
-from ....core import ModeloCalculationRouteId
+from ....core.calculation_route import ModeloCalculationRouteId
 from ....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ....core.source_connectivity import (
     SourceConnectivityCensusRow,

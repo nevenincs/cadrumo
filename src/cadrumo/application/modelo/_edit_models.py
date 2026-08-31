@@ -462,6 +462,21 @@ class ModeloEditBaselineV1(_EditModel):
     Contains only safe coordinates and no values. It is a compare-and-swap
     coordinate, not actor authorization or proof that the operation remains
     available.
+
+    NEVER COMPARED BY RECORD EQUALITY. This carries its own admission identity
+    and lifetime -- ``issued_at``, ``expires_at`` and ``baseline_id`` -- so two
+    admissions of an UNCHANGED tree are never equal, and ``==`` between two of
+    these can only ever report "different". Staleness is asked of
+    :func:`~application.modelo._edit_services.reconfirm_modelo_edit_baseline`,
+    which judges the coordinate axes the guarded commit point judges.
+
+    The distinction matters because
+    :class:`~application.modelo.workspace_models.ModeloWorkspaceBaselineV1`
+    shares the name and has the OPPOSITE contract: it is content-derived,
+    carries no timestamp, and is compared by equality on purpose. An editor
+    session once carried that pattern here, and its stale signal was
+    permanently on -- worse than absent, because a warning that always fires
+    teaches the operator to dismiss it.
     """
 
     edit_contract_version: Literal[1] = 1

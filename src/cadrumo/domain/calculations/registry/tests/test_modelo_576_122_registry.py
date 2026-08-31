@@ -28,7 +28,9 @@ from datetime import date
 
 import pytest
 
-from .....core import RegistryAuthorityGrade, RevisionReviewStatus, TaxDomain
+from .....core.tax_domain import TaxDomain
+from .....core.revision_review import RevisionReviewStatus
+from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.resources import bundled_path
 from .._validate import RegistryValidator
 from ..errors import RegistryValidationError

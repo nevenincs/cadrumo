@@ -39,7 +39,7 @@ from typing import Final, NamedTuple
 
 import pytest
 
-from .._storage_taxonomy import (
+from ..storage_taxonomy import (
     FINGERPRINT_EXCLUDED_STORAGE_FIELDS,
     STORAGE_TAXONOMY,
     FingerprintParticipation,

@@ -8,7 +8,8 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...core import FiledHistoryDiscoverySignal, RegisterScopingSignal
+from ...core.register_scoping_signal import RegisterScopingSignal
+from ...core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ...core.operations import (
     OperationCancellation,
     OperationClosePolicy,

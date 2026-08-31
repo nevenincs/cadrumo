@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from ......core import FieldRole
+from ......core.field_role import FieldRole
 from ......core.tabular import NormalizedTable
 from ......domain.transactions.enums import TransactionDirection
 from ......tests import FIXTURES_DIR

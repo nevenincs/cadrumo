@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core import GoogleCredentialSourceKind
+from .....core.google_credential_source import GoogleCredentialSourceKind
 from .....tests.secure_sql import isolated_runtime_profile
 from .. import session_store
 from ..impersonation import GoogleCredentialSourceSelection, GoogleImpersonationConfig

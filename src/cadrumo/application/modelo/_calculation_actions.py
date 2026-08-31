@@ -51,10 +51,10 @@ from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...core import M210_TIPO_RENTA_CODE_PROJECTION, M210GrossIncomeSourceMode
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.identity import CalculationRevisionId
+from ...core.irnr import M210_TIPO_RENTA_CODE_PROJECTION, M210GrossIncomeSourceMode
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.time import now as _utc_now
@@ -791,11 +791,11 @@ def _resolve_bucket_source_mesh(
         OssIossLedgerSourceResolver,
         RetencionesAggregationSourceResolver,
         WithholdingSourceResolver,
-        merge_source_resolutions,
     )
     from ..aggregation._modelo_bindings_renta_expenses import (
         LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
     )
+    from ..aggregation.source_resolution_operations import merge_source_resolutions
     from ..calculations import (
         IvaCompensationAnnualPartitionSourceResolver,
         M303RegimenSimplificadoAnnualSummarySourceResolver,

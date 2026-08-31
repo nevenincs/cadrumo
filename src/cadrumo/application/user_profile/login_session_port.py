@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING, Protocol, TypeGuard
 from uuid import UUID
 
 if TYPE_CHECKING:
-    from ...core import ProfileSessionRefusalReason
+    from ...core.profile_session import ProfileSessionRefusalReason
 
 
 class ProfileBucketSessionPort(Protocol):

@@ -21,7 +21,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import FieldRole
+from ....core.field_role import FieldRole
 from ....domain.iva.classification import InvoiceKind
 from ....tests import FIXTURES_DIR
 from ....tests.secure_sql import isolated_runtime_profile

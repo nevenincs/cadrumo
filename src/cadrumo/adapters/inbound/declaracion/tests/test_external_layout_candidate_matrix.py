@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core import RegistryAuthorityGrade
+from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.modelo import Modelo
 from .....domain.calculations.registry.authority import bundled_authority
 from .....tests import FIXTURES_DIR

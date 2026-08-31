@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import pytest
 
-from ......core import is_aeat_csv
+from ......core.aeat_csv import is_aeat_csv
 from ......tests.live_gate import requires_live_enabled
 from ..declarations import Declaracion, capture_declaration, walk_declarations_register
 from ..errors import SedeError
@@ -40,7 +40,7 @@ async def _load_active_clave_session():
     """
     # Local imports keep the test file lightweight when skipped.
     from ......application.auth.sessions import ensure_authenticated_aeat_session
-    from ......core import AuthProviderKind
+    from ......core.auth_provider import AuthProviderKind
     from ......core.config import load_settings
     from ......core.errors.hierarchy import CadrumoError
 

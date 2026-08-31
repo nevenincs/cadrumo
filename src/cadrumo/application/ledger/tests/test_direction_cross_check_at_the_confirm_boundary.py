@@ -24,10 +24,12 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import ConfirmationBlockReason, DraftDiscrepancyKind
+from ....core.confirmation_gate import ConfirmationBlockReason
+from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....domain.iva.classification import InvoiceKind
 from ..confirmation_gate import ConfirmationBlockedError, confirmation_blockers, resolved_blockers
-from ..evidence_draft import InvoiceDraft, _with_direction_contradiction
+from ..evidence_draft import _with_direction_contradiction
+from ..invoice_draft_records import InvoiceDraft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

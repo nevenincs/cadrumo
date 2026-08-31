@@ -22,7 +22,7 @@ _READ = ExecutionPolicySpec(frozenset({"encrypted-facts"}), frozenset({"none"}),
 _STR = ValueContract(DeferredTarget("builtins", "str"))
 _FLOAT = ValueContract(DeferredTarget("builtins", "float"))
 _BOOL = ValueContract(DeferredTarget("builtins", "bool"))
-_LANG = ValueContract(DeferredTarget("cadrumo.core", "OutputLanguage"))
+_LANG = ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage"))
 _STATE = ValueContract(
     DeferredTarget("cadrumo.application.review.enums", "ReviewState"),
     parser=DeferredTarget("cadrumo.entrypoints.cli._review", "parse_review_state"),

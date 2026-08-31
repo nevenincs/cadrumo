@@ -276,7 +276,7 @@ LEDGER_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="deduction_fact_kind",
                 declarations=("--deduction-kind",),
-                value=ValueContract(DeferredTarget("cadrumo.core", "IvaDeductionFactKind")),
+                value=ValueContract(DeferredTarget("cadrumo.core.iva_deduction_fact", "IvaDeductionFactKind")),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.ledger.classify.deduction_fact_kind_help"),
                 metavar=None,
@@ -388,7 +388,7 @@ LEDGER_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="art_104_tres_exclusion",
                 declarations=("--art-104-tres-exclusion",),
-                value=ValueContract(DeferredTarget("cadrumo.core", "Art104TresExclusion")),
+                value=ValueContract(DeferredTarget("cadrumo.core.prorrata_exclusions", "Art104TresExclusion")),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.ledger.add.art_104_tres_exclusion_help"),
                 metavar=None,

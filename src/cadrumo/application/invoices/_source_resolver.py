@@ -31,8 +31,6 @@ from ...adapters.persistence.storage import (
     DecryptionError,
     EnvelopeVersionError,
 )
-from ...core.modelo import Modelo
-from ...core.period import Period
 from ...core.aggregation import (
     BindingSourceKind,
     CalculationSourceLineageRole,
@@ -43,6 +41,8 @@ from ...core.aggregation import (
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId
+from ...core.modelo import Modelo
+from ...core.period import Period
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.invoice_bindings import (
@@ -63,8 +63,8 @@ from ..aggregation import (
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,
     CalculationSourceResolution,
-    storage_degradation_resolution,
 )
+from ..aggregation.source_resolution_operations import storage_degradation_resolution
 
 #: Modelo 347 clave D's four disjoint filer-role populations (RD 1065/2007
 #: art. 31.1's last paragraph and art. 31.2). Any ONE of them, combined with

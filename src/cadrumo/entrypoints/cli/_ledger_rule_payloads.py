@@ -18,7 +18,7 @@ from __future__ import annotations
 from pydantic import NonNegativeInt, model_validator
 
 from ...application.ledger.llm_diagnostics import LlmProviderName
-from ...core import Hex64Str
+from ...core.hex import Hex64Str
 from ...core.identity import TransactionId
 from ...core.json_contract import OutputSchema
 from ...core.time import UtcInstant

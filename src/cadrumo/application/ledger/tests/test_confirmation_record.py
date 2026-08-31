@@ -30,12 +30,9 @@ from ._confirmation_profile_fixture import profile
 
 __all__ = ["profile"]
 
-from ....core import (
-    ConfirmationBlockReason,
-    FieldGroundingOutcome,
-    FieldOrigin,
-    FindingResolutionAction,
-)
+from ....core.confirmation_gate import ConfirmationBlockReason, FindingResolutionAction
+from ....core.field_grounding import FieldGroundingOutcome
+from ....core.field_origin import FieldOrigin
 from ....tests.secure_sql import TestRuntimeProfile
 from ..confirmation_gate import ConfirmationBlocker, FindingResolution
 from ..confirmation_record import (
@@ -49,7 +46,7 @@ from ..confirmation_record import (
     re_stamped_provenance,
     write_confirmation_record,
 )
-from ..evidence_draft import FieldAmbiguityCandidate, FieldProvenance, InvoiceDraft
+from ..invoice_draft_records import FieldAmbiguityCandidate, FieldProvenance, InvoiceDraft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 
 from .....application.auth.protocols import BrowserSessionFactoryPort
 from .....application.auth_credentials import ActiveCertificateCredentials
-from .....core import AuthProviderKind
+from .....core.auth_provider import AuthProviderKind
 from .authenticator import AeatAuthenticator
 from .clave_movil import ClaveMovilAuthProvider
 from .clave_permanente import ClavePermanenteAuthProvider

@@ -30,7 +30,7 @@ from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.ledger_bindings import (
     resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values,

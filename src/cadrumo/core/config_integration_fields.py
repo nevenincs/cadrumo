@@ -25,7 +25,7 @@ from typing import Final
 
 from pydantic import Field, field_validator
 
-from ._config_runtime_fields import CadrumoRuntimeSettings
+from .config_runtime_fields import CadrumoRuntimeSettings
 from .external_constants import DEFAULT_CURRENCY
 
 FORMER_PRODUCT_GOOGLE_DRIVE_VAULT_FOLDER_NAME: Final = "aeat-vault"

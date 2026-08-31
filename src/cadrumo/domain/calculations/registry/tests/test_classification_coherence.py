@@ -30,7 +30,7 @@ from datetime import date
 import pytest
 from pydantic import BaseModel, Field, ValidationError
 
-from .....core import TaxDomain
+from .....core.tax_domain import TaxDomain
 from .....tests.registry_tree import bundled_registry_tree
 from ..classification_coherence import (
     _MAX_DETAIL_LENGTH,

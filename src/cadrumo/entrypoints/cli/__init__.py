@@ -58,8 +58,8 @@ _configure_stdio_for_utf8()
 _disable_rich_cli_rendering()
 
 from ...core.product_identity import PRODUCT_IDENTITY as _PRODUCT_IDENTITY
-from ...core import StorageCategory as _StorageCategory
-from ...core import storage_location as _storage_location
+from ...core.storage_taxonomy import StorageCategory as _StorageCategory
+from ...core.storage_taxonomy_locations import storage_location as _storage_location
 from ...core.cli_metadata import is_metadata_invocation as _is_metadata_invocation
 from ._command_policy import CommandExecutionPolicy as _CommandExecutionPolicy
 from ._command_runtime import build_command_app as _build_command_app
@@ -260,7 +260,7 @@ def _refuse_former_product_state_at_startup() -> None:
         FormerProductDetectionScope,
         former_product_state_verdict,
     )
-    from ...core import FormerProductStateError
+    from ...core.config_state_root import FormerProductStateError
     from ...core.config import Settings
     from ...core.errors.hierarchy import ActiveProfilePointerError
     from .errors import CliRefusedBoundaryError, _emit_error_and_exit, project_cli_boundary_error
@@ -327,7 +327,7 @@ def _metadata_state_isolation(arguments: list[str]) -> Iterator[None]:
 
 def _emit_operator_progress(progress: object) -> None:
     """Write an operator progress banner to stderr, keeping stdout pure."""
-    from ...core import OperatorProgress
+    from ...core.operator_progress import OperatorProgress
 
     if not isinstance(progress, OperatorProgress):
         raise TypeError(f"progress must be OperatorProgress, got {type(progress).__name__}")

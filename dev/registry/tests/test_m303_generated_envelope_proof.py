@@ -22,18 +22,20 @@ from cadrumo.application.filing import FilingEnvelopeRenderRequest, FilingEnvelo
 from cadrumo.application.filing._projection import _project_record
 from cadrumo.application.filing.tests import test_m303_did_account_wire_isolated_authority as m303_did
 from cadrumo.application.filing.tests.test_producer_snapshot import _m303_exonerado_evidence
-from cadrumo.core import (
-    IvaDeductionFactKind,
+from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
+from cadrumo.core.result_disposition import ResultDisposition
+from cadrumo.core.iva_deduction_fact import IvaDeductionFactKind
+from cadrumo.core.prorrata_register import (
+    ProrrataActivityRowType,
+    ProrrataProvisionalProvenance,
+    ProrrataRegisterRegime,
+    SectorDiferenciadoLetra,
+)
+from cadrumo.core.filing_projection_ref import (
     M303DifferentiatedDeductionProjectionRef,
     M303Exonerado390ActivityProjectionRef,
     M303ProrrataActivityProjectionRef,
     M303RegimenSimplificadoFact,
-    PriorDomiciliationElection,
-    ProrrataActivityRowType,
-    ProrrataProvisionalProvenance,
-    ProrrataRegisterRegime,
-    ResultDisposition,
-    SectorDiferenciadoLetra,
 )
 from cadrumo.core.period import Period
 from cadrumo.core.resources import bundled_path

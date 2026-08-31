@@ -28,7 +28,7 @@ inventing its own error surface.
 
 from __future__ import annotations
 
-from ...core import ConceptLifecycle
+from ...core.concept_lifecycle import ConceptLifecycle
 from ...core.flows import CopyRefKind
 from ...core.i18n import output_language
 from ...domain.user_profile.errors import UserProfileError

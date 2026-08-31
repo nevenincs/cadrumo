@@ -32,7 +32,7 @@ import pytest
 from ....adapters.persistence.storage import master_key
 from ....adapters.persistence.storage.custody.acceleration_receipt import profile_session_path
 from ....adapters.persistence.storage.master_key import current_active_bucket_session, login_throttle_path
-from ....core import ProfileSessionRefusalReason
+from ....core.profile_session import ProfileSessionRefusalReason
 from ....core.bucket_pointer import read_pointer
 from ....core.time import now as _now
 from ....tests.secure_sql import isolated_profile_storage_root

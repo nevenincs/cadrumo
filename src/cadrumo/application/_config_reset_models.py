@@ -14,7 +14,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-from ..core import Hex64Str
+from ..core.hex import Hex64Str
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.bucket_pointer import BucketPointer
 from ..core.identity import BucketId, ContentDigest

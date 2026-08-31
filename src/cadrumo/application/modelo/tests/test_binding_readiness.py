@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import RegistryAuthorityGrade
+from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.period import Period
 from ....domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ....domain.calculations.registry.errors import RegistryValidationError

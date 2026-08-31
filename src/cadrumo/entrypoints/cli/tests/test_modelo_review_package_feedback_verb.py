@@ -50,7 +50,7 @@ from ....application.modelo._review_package_recipient_encryption import (
     recipient_encryption_public_key,
 )
 from ....application.modelo._review_package_recipient_registry import RecipientFingerprintRegistryRepository
-from ....core import STR_KEYED_MAPPING_ADAPTER
+from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.buckets.event import BucketEventType
 from ....domain.user_profile.values import UserProfileFact

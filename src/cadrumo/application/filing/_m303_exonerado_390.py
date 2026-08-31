@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from ...core import M303Exonerado390ActivityProjectionRef, M303Exonerado390OperacionesTercerosProjectionRef
+from ...core.filing_projection_ref import (
+    M303Exonerado390ActivityProjectionRef,
+    M303Exonerado390OperacionesTercerosProjectionRef,
+)
 from ...core.modelo import Modelo
 from ...domain.calculations.registry.m303_exonerado_390_projection import (
     M303Exonerado390RecordProjection,

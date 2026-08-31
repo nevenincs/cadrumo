@@ -37,8 +37,8 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.transactions.retencion_parameters import maximum_supported_activity_retencion_rate
+from .._renta_income_evidence import _income_withheld_amount as income_withheld_amount
 from .._renta_income_ledger import RentaIncomeObservation, aggregate_renta_income_ledger
-from .._renta_income_ledger import _income_withheld_amount as income_withheld_amount
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

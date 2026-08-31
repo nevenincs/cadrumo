@@ -22,7 +22,7 @@ from typing import override
 import pytest
 
 from ....tests.storage_scope import storage_overrides
-from ... import StorageCategory
+from ...storage_taxonomy import StorageCategory
 from ...config import override_settings
 from ...logging import get_logger
 from ..context import run_context

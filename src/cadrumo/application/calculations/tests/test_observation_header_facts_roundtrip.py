@@ -36,7 +36,7 @@ from pydantic import ValidationError
 from sqlalchemy import select
 
 from ....adapters.persistence.storage.sql import SecureObjectRow
-from ....core import ObservedHeaderFact
+from ....core.observed_header_fact import ObservedHeaderFact
 from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation

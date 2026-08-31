@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ......core import AuthProviderDescription, AuthProviderKind
+from ......core.auth_provider import AuthProviderDescription, AuthProviderKind
 from ......core.i18n import describe_auth_provider_operator_impact
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

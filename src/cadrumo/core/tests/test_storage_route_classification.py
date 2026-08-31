@@ -40,7 +40,7 @@ from typing import Final
 
 import pytest
 
-from .._config_state_root import FormerProductStateError
+from ..config_state_root import FormerProductStateError
 from ..bucket_pointer import BucketPointer, write_pointer
 from ..config import (
     Settings,

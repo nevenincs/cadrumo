@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 
-from .....core import RegistryAuthorityGrade
+from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.aggregation import BindingAggregationOp, BindingSourceKind
 from .....core.resources import bundled_path

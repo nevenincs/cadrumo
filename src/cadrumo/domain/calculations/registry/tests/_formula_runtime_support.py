@@ -4,7 +4,7 @@ from collections.abc import Callable, Mapping
 from datetime import date
 from decimal import Decimal
 
-from .....core import RegistryAuthorityGrade
+from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import validated_casilla_id
 from .....core.resources import bundled_path
 from ..formula_runtime import _evaluate_expression

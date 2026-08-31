@@ -143,7 +143,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core import RegistryAuthorityGrade
+from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.period import PeriodKind, registry_period_kind
 from .....core.directory_scan import DirectoryEntryKind, scan_directory
 from .....core.external_constants import PDF_EXTENSION as _PDF_EXTENSION

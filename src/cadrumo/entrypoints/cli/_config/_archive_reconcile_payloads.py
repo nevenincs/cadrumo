@@ -25,7 +25,7 @@ from __future__ import annotations
 from pydantic import NonNegativeInt
 
 from ....application.user_profile.bundle_export_contracts import ProfileBundleExportPurpose
-from ....core import Hex64Str
+from ....core.hex import Hex64Str
 from ....core.json_contract import OutputSchema
 from ....core.text_bounds import NonEmptyStr
 

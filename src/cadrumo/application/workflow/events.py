@@ -23,12 +23,12 @@ See Also:
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Final
+from typing import Annotated, Final
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, StringConstraints
 
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.identity import BucketId
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time import now as utc_now
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import emit_bucket_event
@@ -38,6 +38,20 @@ SYSTEM_BUCKET_ID: Final[str] = "system"
 WORKFLOW_STATE_OBJECT_ID: Final[str] = "cadrumo.workflow:state"
 _EVENT_PAYLOAD_VERSION: Final[int] = 1
 
+
+#: Longest a workflow reason class may be, stated once.
+WORKFLOW_REASON_CLASS_MAX_LENGTH = 64
+
+WorkflowReasonClass = Annotated[
+    str,
+    StringConstraints(min_length=1, max_length=WORKFLOW_REASON_CLASS_MAX_LENGTH),
+]
+"""How a discarded workflow envelope is classified.
+
+Declared here rather than at each site because the CLI payload that projects
+this event carried the same bound spelled out again, and a classification the
+transport refuses is one the operator never learns the reason for.
+"""
 
 class WorkflowStateResetFingerprint(BaseModel):
     """Row-level fingerprint of a discarded workflow-state envelope.
@@ -55,7 +69,7 @@ class WorkflowStateResetFingerprint(BaseModel):
     schema_version: int | None = Field(default=None, ge=1)
     written_at: datetime | None = None
     byte_length: int | None = Field(default=None, ge=0)
-    reason_class: str = Field(min_length=1, max_length=64)
+    reason_class: WorkflowReasonClass
     recovered_bucket_id: BucketId | None = None
 
 

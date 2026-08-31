@@ -18,10 +18,10 @@ from importlib.metadata import version
 
 import pytest
 
-from ....core import FieldOrigin
+from ....core.field_origin import FieldOrigin
 from ....tests.pdf_fixtures import multi_page_text_pdf_bytes
 from ..document_transcription import DocumentTranscription, TranscriberIdentity
-from ..evidence import PurchaseInvoiceEvidenceInputError
+from ..evidence_errors import PurchaseInvoiceEvidenceInputError
 from ..evidence_input import EvidenceInput
 from ..evidence_textlayer import (
     TEXT_LAYER_TRANSCRIBER_NAME,

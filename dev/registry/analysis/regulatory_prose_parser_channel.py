@@ -32,7 +32,7 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
-from cadrumo.core import read_toml
+from cadrumo.core.toml import read_toml
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 SCANNED_ROOTS = ("src/cadrumo", "dev")

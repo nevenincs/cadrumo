@@ -80,7 +80,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from ....core import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
+from ....core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
 from .errors import RegistryValidationError
 from .ids import RevisionId
 

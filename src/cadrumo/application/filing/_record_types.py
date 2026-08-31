@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from ...core import FilingProjectionRef
+from ...core.filing_projection_ref import FilingProjectionRef
 from ...domain.calculations.registry.ids import BindingId, RecordId
 
 

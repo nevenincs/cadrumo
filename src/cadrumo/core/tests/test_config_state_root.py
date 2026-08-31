@@ -8,14 +8,14 @@ import pytest
 
 from ...tests import REPO_ROOT
 from ...tests.env_scope import isolated_aeat_env, settings_without_env_file
-from .._config_state_root import (
+from ..config_state_root import (
     FormerProductStateError,
     StateRootInputs,
     live_state_root_inputs,
     platform_user_data_root,
     resolve_state_root,
 )
-from .._storage_taxonomy import StorageCategory, storage_path
+from ..storage_taxonomy import StorageCategory, storage_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

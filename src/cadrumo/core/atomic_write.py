@@ -15,7 +15,7 @@ so a new writer picks one deliberately instead of inventing a fifth dialect:
   :func:`atomic_write_text`): a :func:`tempfile.NamedTemporaryFile` sibling in
   the target's own parent directory (``{stem}.`` prefix, ``.tmp`` suffix),
   write, flush, ``fsync``, :func:`os.replace`, then a best-effort
-  parent-directory ``fsync`` via :func:`~cadrumo.core._fsync.fsync_parent_dir`.
+  parent-directory ``fsync`` via :func:`~cadrumo.core.fsync.fsync_parent_dir`.
   The stream variant bounds memory to its caller's chunk size. Suitable for
   ordinary durable application data with a single writer.
 
@@ -81,7 +81,7 @@ Payload content is never logged; only the target path and the exception
 type are (the best-effort tier logs nothing at all; see above).
 
 The helpers are freestanding primitives at the ``core`` layer with no
-dependency beyond :func:`~cadrumo.core._fsync.fsync_parent_dir`.
+dependency beyond :func:`~cadrumo.core.fsync.fsync_parent_dir`.
 """
 
 from __future__ import annotations
@@ -93,7 +93,7 @@ from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
-from ._fsync import fsync_parent_dir
+from .fsync import fsync_parent_dir
 from .logging import get_logger
 
 __all__ = [

@@ -49,12 +49,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core import (
-    IvaDeductionEvidenceAuthority,
-    IvaDeductionFactKind,
-    derive_result_disposition,
-    result_disposition_casilla_ids,
-)
+from ....core.result_disposition import derive_result_disposition, result_disposition_casilla_ids
+from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority

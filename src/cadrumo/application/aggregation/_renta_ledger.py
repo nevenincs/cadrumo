@@ -32,7 +32,7 @@ from pydantic import BaseModel, Field
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...core import regime_apportions_deduction
+from ...core.prorrata_register import regime_apportions_deduction
 from ...core.casilla_id import CasillaId
 from ...core.filing_year import FilingYear
 from ...core.identity import TransactionId

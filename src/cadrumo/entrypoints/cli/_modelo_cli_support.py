@@ -36,7 +36,9 @@ from ...application.modelo.work_addressing import (
     ModeloWorkVisibleTargetAmbiguousError,
 )
 from ...application.modelo.work_lifecycle import get_work_unit
-from ...core import HEX_PATTERN_64, M210GrossIncomeSourceMode, RescateType
+from ...core.rescate_type import RescateType
+from ...core.hex import HEX_PATTERN_64
+from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.modelo import Modelo
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.decimal import try_parse_canonical_decimal

@@ -7,7 +7,8 @@ from typing import Annotated, Final, Literal
 
 from pydantic import AfterValidator, AnyHttpUrl, Field, TypeAdapter, field_validator, model_validator
 
-from ....core import RECORD_DESIGN_EPOCH_RE, REVIEWED_LEGAL_STATUSES, LegalReviewStatus
+from ....core.record_design_epoch import RECORD_DESIGN_EPOCH_RE
+from ....core.legal_review import LegalReviewStatus, REVIEWED_LEGAL_STATUSES
 from ....core.period import RegistryPeriodCode, RegistrySelectorPeriodCode
 from ....core.external_constants import (
     PDF_EXTENSION,

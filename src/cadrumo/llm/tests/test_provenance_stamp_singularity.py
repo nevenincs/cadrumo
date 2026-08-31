@@ -24,7 +24,7 @@ from pathlib import Path
 
 import pytest
 
-from ...core import build_provenance_stamp
+from ...core.provenance_stamp import build_provenance_stamp
 from ...core.config import LLMProvider
 from ...core.directory_scan import scan_directory
 from ...tests import non_test_package_python_files, repo_relative
@@ -162,7 +162,7 @@ def test_a_stamp_built_here_is_readable_by_the_parser_that_classifies_it() -> No
     satisfy a local-only check while being unable to express the case the whole
     apparatus exists for.
     """
-    from ...core import provenance_stamp_transport
+    from ...core.provenance_stamp import provenance_stamp_transport
 
     local = build_provenance_stamp(provider=LLMProvider.LOCAL, reader="text-extract", model="m")
     cloud = build_provenance_stamp(provider=LLMProvider.OPENAI, reader="text-extract", model="gpt-4.1")
@@ -188,7 +188,7 @@ def test_no_transcriber_identity_folds_its_transport_into_a_name() -> None:
     smuggled shape.
     """
     from ...application.ledger.evidence_textlayer import text_layer_transcriber_identity
-    from ...core import LOCAL_TRANSPORT_LABEL
+    from ...core.provenance_stamp import LOCAL_TRANSPORT_LABEL
     from ..evidence_draft_vision import LocalVisionDocumentTranscriber
 
     identities = [

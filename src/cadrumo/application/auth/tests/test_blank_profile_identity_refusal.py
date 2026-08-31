@@ -24,7 +24,7 @@ from __future__ import annotations
 import pytest
 from pydantic import SecretStr
 
-from ....core import AuthProviderKind
+from ....core.auth_provider import AuthProviderKind
 from ....core.config import override_settings
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import (

@@ -30,9 +30,9 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.config import Settings, load_settings
 from ...core.identity import BucketId, TransactionId
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time import now
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.transactions.errors import TransactionValidationError
@@ -45,8 +45,8 @@ from ...llm.suggestions import (
     LLMSuggestionRejectionResult,
     OperatorIvaDerivationResult,
 )
-from .evidence_draft import InvoiceDraft
 from .extraction_draft_store import ExtractionDraftDocument, write_extraction_draft
+from .invoice_draft_records import InvoiceDraft
 from .llm_classification import (
     apply_evidence_split,
     apply_llm_classification,

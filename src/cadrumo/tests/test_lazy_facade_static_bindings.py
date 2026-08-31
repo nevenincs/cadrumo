@@ -1,10 +1,22 @@
 """A lazily-exposed facade name must also be bound statically, or it types as ``object``.
 
 Several package facades resolve their public surface through a module-level
-``__getattr__`` keyed by a name-to-submodule map. The mechanism is deliberate:
-the ledger facade re-exports 185 names across 20 submodules, and importing it
-eagerly pulled the whole transitive graph for whichever single symbol a CLI
-process actually wanted.
+``__getattr__`` keyed by a name-to-submodule map. The mechanism is being
+RETIRED, not defended: the consolidation campaign ruled that a contract is
+reached at its own defining module and that a package namespace is inert, and
+the maps are being removed one package at a time.
+
+This gate is therefore transitional and its job is to keep the remaining maps
+honest until the last one goes, not to bless them. The original argument for
+laziness was real -- the ledger facade re-exported 185 names across 20
+submodules, and importing it eagerly pulled the whole transitive graph for
+whichever single symbol a CLI process wanted -- but the retirement answers that
+better, because a consumer importing the one defining module pulls nothing else
+at all.
+
+When the last map is gone this file has nothing to scan. That is the intended
+end state and it should be DELETED then rather than left passing over an empty
+population, which is the vacuity this campaign has found in several other gates.
 
 PEP 562 resolution is invisible to a type checker. It reads ``__getattr__``'s
 own return annotation -- ``object`` -- so every symbol reached that way degrades

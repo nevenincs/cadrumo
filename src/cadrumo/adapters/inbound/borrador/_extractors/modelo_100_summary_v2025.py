@@ -28,7 +28,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import ClassVar
 
-from .....core import normalise_aeat_csv
+from .....core.aeat_csv import normalise_aeat_csv
 from .....core.modelo import Modelo
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.time import now

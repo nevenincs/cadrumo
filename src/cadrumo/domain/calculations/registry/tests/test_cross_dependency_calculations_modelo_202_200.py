@@ -6,7 +6,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import RegistryAuthorityGrade
+from .....core.authority_grade import RegistryAuthorityGrade
 from ..formula_runtime import calculate_registry_snapshot
 from ..relations import relation_source_requirements, resolve_relation_values_from_observations
 from ..schema import RegistrySnapshot

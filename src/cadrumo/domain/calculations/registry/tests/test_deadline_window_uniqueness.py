@@ -6,7 +6,7 @@ from datetime import date
 
 import pytest
 
-from .....core import ResultDisposition
+from .....core.result_disposition import ResultDisposition
 from .....core.period import Period
 from .._validate import RegistryValidator
 from .._validate_revision_rules import validate_deadline_window_uniqueness

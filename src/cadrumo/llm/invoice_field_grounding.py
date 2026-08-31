@@ -23,7 +23,7 @@ Nothing in this module knows about images, providers or transports, which is why
 it lives here rather than beside either reader.
 
 See Also:
-    :class:`~application.ledger.evidence_draft.InvoiceDraft`
+    :class:`~application.ledger.invoice_draft_records.InvoiceDraft`
         Typed draft every grounded reader returns.
     :func:`~core.identity.validate_spanish_tax_id`
         Spanish NIF/NIE/CIF checksum authority.
@@ -41,19 +41,21 @@ from typing import cast
 
 from pydantic import BaseModel, Field
 
-from ..application.ledger.evidence import PurchaseInvoiceEvidenceInputError
-from ..application.ledger.evidence_draft import DraftDiscrepancyFinding, FieldProvenance, InvoiceDraft
-from ..core import DraftDiscrepancyKind, FieldGroundingOutcome, FieldOrigin
-from ..core.operator_action_enums import ActionEvidenceProvenance
-from ..core.models import STRICT_FROZEN_CONFIG
+from ..application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
+from ..application.ledger.invoice_draft_records import DraftDiscrepancyFinding, FieldProvenance, InvoiceDraft
 from ..core.decimal import coerce_finite_european_decimal, european_thousands_reading_is_ambiguous
+from ..core.draft_discrepancy import DraftDiscrepancyKind
 from ..core.errors.hierarchy import CoreValidationError
+from ..core.field_grounding import FieldGroundingOutcome
+from ..core.field_origin import FieldOrigin
 from ..core.identity import (
     IdentityError,
     nif_iva_format_for_country,
     normalise_nif_iva,
     validate_spanish_tax_id,
 )
+from ..core.models import STRICT_FROZEN_CONFIG
+from ..core.operator_action_enums import ActionEvidenceProvenance
 from ..core.parsing import normalise_iso_4217_currency, parse_date
 from ..domain.iva.establishment import country_code_for_printed_country_name
 from .invoice_field_contract import (
@@ -656,7 +658,7 @@ def ground_extracted_fields(
     only this stage still holds that fact.
 
     Every field that survives grounding also gets a
-    :class:`~application.ledger.evidence_draft.FieldProvenance` envelope carrying the verbatim
+    :class:`~application.ledger.invoice_draft_records.FieldProvenance` envelope carrying the verbatim
     anchor the model reported for it, so no value reaches the operator without
     the printed form it claims to have come from.
 

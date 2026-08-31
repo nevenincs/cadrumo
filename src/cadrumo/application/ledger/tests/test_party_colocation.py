@@ -26,16 +26,14 @@ from typing import Final
 
 import pytest
 
-from ....core import (
-    LOCAL_TRANSPORT_LABEL,
-    ConfirmationBlockReason,
-    DraftDiscrepancyKind,
-    FieldGroundingOutcome,
-    FieldOrigin,
-)
+from ....core.confirmation_gate import ConfirmationBlockReason
+from ....core.draft_discrepancy import DraftDiscrepancyKind
+from ....core.field_grounding import FieldGroundingOutcome
+from ....core.field_origin import FieldOrigin
+from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from ..document_transcription import DocumentTranscription, TranscriberIdentity
-from ..evidence_draft import FieldProvenance, InvoiceDraft
 from ..grounded_reading import ground_draft_against_transcription
+from ..invoice_draft_records import FieldProvenance, InvoiceDraft
 from ..party_attribution import party_attribution_advisory
 from ..party_colocation import (
     PartyAttributionOutcome,

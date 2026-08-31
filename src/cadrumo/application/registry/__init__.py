@@ -62,6 +62,18 @@ from __future__ import annotations
 
 from importlib import import_module
 
+# RULED SUPERSEDED, not yet removed. This import exists to trigger
+# ``cadrumo.domain.renta``'s cross-domain check registration, and
+# ``domain.calculations.registry._snapshot_internals`` now does the same thing
+# better: idempotent, flag-guarded, and run at the start of EVERY snapshot
+# build. Its docstring names this site as the problem it solves -- "registration
+# no longer relies on a composition root happening to import renta before the
+# first M100 snapshot".
+#
+# So this namespace is inert (`__all__` is empty) and its only content is a side
+# effect, which is the worst pairing: nothing to import it FOR, yet importing it
+# does work. Removing it is a behaviour change on a registration path and wants
+# a green tree to land against; recorded here rather than deleted blind.
 import_module("cadrumo.domain.renta")
 
 __all__: tuple[str, ...] = ()

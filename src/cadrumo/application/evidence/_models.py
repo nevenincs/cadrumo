@@ -29,7 +29,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, field_serializer
 
-from ...core import Hex64Str
+from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.prose_elision import ElidedProse
 from ...core.errors.hierarchy import CadrumoError

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from .._foreign_asset_obligation import (
+from ..foreign_asset_obligation import (
     FOREIGN_ASSET_CLASS_OBLIGATION_GROUP,
     MODELO_720_FOREIGN_ASSET_CLASS_CODES,
     ForeignAssetObligationGroup,

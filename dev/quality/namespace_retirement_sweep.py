@@ -38,13 +38,32 @@ apply = "--apply" in sys.argv
 report: list[str] = []
 
 
+def _read(path: Path) -> str | None:
+    """Return a file's text, or ``None`` when it is not readable right now.
+
+    This sweep globs the tree and then reads what it found, and on a SHARED
+    worktree those are two different moments. A peer relocating a module can
+    delete a path between them, and an unguarded read then kills the whole run
+    partway through -- which is worse than missing one file, because a sweep
+    that dies at file four hundred has silently not checked files four hundred
+    to nine hundred and says nothing about them.
+    """
+    try:
+        return path.read_text(encoding="utf-8")
+    except (FileNotFoundError, UnicodeDecodeError, PermissionError):
+        return None
+
+
 def fix_dot_depth() -> int:
     """Reduce by one the dot count of a relative import that lands nowhere."""
     fixed = 0
     for path in sorted(SRC.rglob("*.py")):
         pkg = path.relative_to(ROOT).with_suffix("").parts[:-1]
+        source = _read(path)
+        if source is None:
+            continue
         try:
-            tree = ast.parse(path.read_text(encoding="utf-8"))
+            tree = ast.parse(source)
         except SyntaxError:
             continue
         bad = []
@@ -67,7 +86,10 @@ def fix_dot_depth() -> int:
             continue
         report.append(f"  dot-depth: {path} {[b[2] for b in bad]}")
         if apply:
-            lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
+            current = _read(path)
+            if current is None:
+                continue
+            lines = current.splitlines(keepends=True)
             for lineno, level, module in bad:
                 lines[lineno - 1] = re.sub(
                     rf"^(\s*from ){'.' * level}{re.escape(module)}\b",
@@ -83,7 +105,9 @@ def fix_module_object_imports() -> int:
     """Rename a module imported as an object by its old private name, and its uses."""
     fixed = 0
     for path in sorted(SRC.rglob("*.py")):
-        text = path.read_text(encoding="utf-8")
+        text = _read(path)
+        if text is None:
+            continue
         if "import _" not in text:
             continue
         pkg = path.relative_to(ROOT).with_suffix("").parts[:-1]
@@ -158,9 +182,8 @@ def fix_pins() -> int:
     public = {p.name for p in SRC.rglob("*.py")}
     edits: dict[Path, set[tuple[str, str]]] = {}
     for path in sorted(SRC.rglob("*.py")) + sorted(Path("dev").rglob("*.py")):
-        try:
-            text = path.read_text(encoding="utf-8")
-        except UnicodeDecodeError:
+        text = _read(path)
+        if text is None:
             continue
         lines = text.splitlines()
         for n in _constants(text):
@@ -185,7 +208,9 @@ def fix_pins() -> int:
     for path, subs in edits.items():
         report.append(f"  pin: {path} {sorted(s[0] for s in subs)}")
         if apply:
-            t = path.read_text(encoding="utf-8")
+            t = _read(path)
+            if t is None:
+                continue
             for old, new in subs:
                 t = t.replace(f'"{old}"', f'"{new}"').replace(f"'{old}'", f"'{new}'")
             path.write_text(t, encoding="utf-8")
@@ -246,10 +271,12 @@ def fix_string_module_paths() -> int:
 
     changed = 0
     for path in sorted(SRC.rglob("*.py")) + sorted(Path("dev").rglob("*.py")):
+        text = _read(path)
+        if text is None:
+            continue
         try:
-            text = path.read_text(encoding="utf-8")
             tree = ast.parse(text)
-        except (SyntaxError, UnicodeDecodeError):
+        except SyntaxError:
             continue
         lines = text.splitlines()
         subs: set[tuple[str, str]] = set()

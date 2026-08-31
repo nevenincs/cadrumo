@@ -14,7 +14,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
-from ...core import EstadoCasillaOficial, ModeloWorkProgressState
+from ...core.modelo_work_progress_state import ModeloWorkProgressState
+from ...core.estado_casilla_oficial import EstadoCasillaOficial
 from ...core.operator_action_enums import OperatorActionAxis
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period

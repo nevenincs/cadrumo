@@ -26,7 +26,7 @@ from ....application.provisioning import (
     SystemMemoryReading,
     probe_hardware_profile,
 )
-from ....core import AcceleratorKind
+from ....core.hardware import AcceleratorKind
 from ....domain.iva.classification import InvoiceKind
 from ....tests.secure_sql import TestRuntimeProfile
 from ..batch_ingest import COMPLETED_BATCH_ITEM_STATUSES, BatchRunResult, run_evidence_batch

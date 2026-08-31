@@ -33,7 +33,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Hex64Str
+from ...core.hex import Hex64Str
 from ...core.locks import exclusive_file_lock
 from ...core.config import Settings
 from ...core.errors.hierarchy import CadrumoError

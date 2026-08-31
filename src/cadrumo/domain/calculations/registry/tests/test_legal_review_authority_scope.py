@@ -6,7 +6,9 @@ from datetime import date
 
 import pytest
 
-from .....core import LegalReviewStatus, RegistryAuthorityGrade, RevisionReviewStatus
+from .....core.legal_review import LegalReviewStatus
+from .....core.revision_review import RevisionReviewStatus
+from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
 from .._snapshot_internals import _check_snapshot_filing_capability

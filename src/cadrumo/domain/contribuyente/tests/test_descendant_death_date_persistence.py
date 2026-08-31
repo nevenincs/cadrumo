@@ -19,7 +19,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import DescendantRelacion
+from ....core.descendant_relacion import DescendantRelacion
 from ..descendant import DescendantInfo
 from ..descendant_facts import (
     descendant_facts_from_list,

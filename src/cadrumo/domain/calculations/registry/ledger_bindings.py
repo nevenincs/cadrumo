@@ -29,7 +29,7 @@ from typing import Annotated, Literal, NamedTuple, Protocol
 
 from pydantic import BaseModel, BeforeValidator, Field, field_validator, model_validator
 
-from ....core import IvaDeductionFactKind
+from ....core.iva_deduction_fact import IvaDeductionFactKind
 from ....core.aggregation import (
     BindingAggregationOp,
     BindingSourceKind,

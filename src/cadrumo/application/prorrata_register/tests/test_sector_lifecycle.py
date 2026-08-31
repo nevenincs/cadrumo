@@ -23,7 +23,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
 from .. import (
     seed_sector_carried_definitive_from_register,

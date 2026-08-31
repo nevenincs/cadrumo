@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 
 import typer
 
-from ....core import ServiceCapability
+from ....core.capabilities import ServiceCapability
 from ....core.bucket_pointer import resolve_active_bucket_id
 
 if TYPE_CHECKING:
@@ -66,7 +66,7 @@ def _assess_selected_model_load(profile: HardwareProfile) -> ContentionSnapshot 
     are all measurements; nothing on this path loads or pulls a model.
     """
     from ....application.provisioning import assess_model_load_contention, select_model_for_role
-    from ....core import ModelRole
+    from ....core.model_catalogue import ModelRole
 
     assessable = select_model_for_role(ModelRole.VISION_TRANSCRIPTION, profile=profile).assessable_load
     if assessable is None:

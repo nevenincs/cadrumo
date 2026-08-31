@@ -17,7 +17,7 @@ from collections.abc import Mapping
 
 from pydantic import Field, NonNegativeInt
 
-from ....core import ContentionCause
+from ....core.hardware import ContentionCause
 from ....core.json_contract import OutputSchema, ResolvedPreconditionAction
 from ....core.text_bounds import NonEmptyStr
 

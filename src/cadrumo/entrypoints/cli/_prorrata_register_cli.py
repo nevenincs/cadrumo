@@ -26,7 +26,7 @@ import typer
 from pydantic import ValidationError
 
 from ...application.prorrata_register import ProrrataRegisterService
-from ...core import (
+from ...core.prorrata_register import (
     ProrrataEspecialTransitionKind,
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,

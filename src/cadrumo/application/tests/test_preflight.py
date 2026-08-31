@@ -21,7 +21,8 @@ import pytest
 from pydantic import SecretStr
 
 from ...adapters.outbound.storage import windows_worst_case_object_path_suffix_length
-from ...core import AuthProviderKind, RegistryAuthorityGrade
+from ...core.auth_provider import AuthProviderKind
+from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.config import override_settings
 from ..auth.probes import ProviderProbeResult
 from ..preflight import (

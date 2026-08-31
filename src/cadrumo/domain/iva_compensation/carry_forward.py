@@ -17,7 +17,7 @@ from enum import StrEnum
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import IvaCompensationStateProvenance
+from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ...core.period import Period, PeriodKind, StandardPeriodCode
 from ...core.filing_year import FilingYear
 from ...core.identity import AeatExpedienteId, ContentDigest, SubjectTaxId

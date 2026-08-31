@@ -78,7 +78,7 @@ from typing import TYPE_CHECKING, Final, NamedTuple
 
 import pytest
 
-from ..core import STORAGE_ROOT_SETTINGS_FIELD
+from ..core.storage_taxonomy import STORAGE_ROOT_SETTINGS_FIELD
 from ._inventory import aeat_relative, ast_for_path, package_python_files
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

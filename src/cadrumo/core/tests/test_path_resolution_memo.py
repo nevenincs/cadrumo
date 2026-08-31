@@ -23,7 +23,7 @@ from pathlib import Path
 
 import pytest
 
-from .._config_state_root import StateRootInputs, platform_user_data_root
+from ..config_state_root import StateRootInputs, platform_user_data_root
 from ..paths import _resolved_path, clear_resolved_path_cache, resolve_project_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

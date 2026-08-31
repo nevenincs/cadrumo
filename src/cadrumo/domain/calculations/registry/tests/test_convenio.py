@@ -16,7 +16,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .....core import ConvenioOverrideKind, TipoRentaIrnr
+from .....core.irnr import ConvenioOverrideKind, TipoRentaIrnr
 from .....core.resources import bundled_path
 from ..convenio import (
     ConvenioAuthority,

@@ -8,7 +8,7 @@ from contextlib import suppress
 from datetime import datetime, timedelta
 from typing import Any
 
-from ...core import Hex64Str
+from ...core.hex import Hex64Str
 from .models import OperationId, OperationIdentity
 from .persistence.idempotency import OperationIdempotencyClaim
 from .persistence.journal import (

@@ -83,6 +83,19 @@ _WRITES_WITHOUT_A_REVISION: dict[tuple[str, str], str] = {
         "save_decision",
     ): "builds a fresh decision envelope rather than deriving one from a read, so no revision exists to assert",
     (
+        "src/cadrumo/application/modelo/_edit_execution.py",
+        "_co_commit_receipt",
+    ): "the receipt is CONSTRUCTED here, never read, so there is no revision to assert. Its id is a "
+    "content hash over the operation, baseline, calculation revision and bucket event, so it is a "
+    "per-record document rather than a singleton catalogue and two writers can only collide by writing "
+    "the identical receipt. Closed, not merely unclassified",
+    (
+        "src/cadrumo/application/modelo/_edit_execution.py",
+        "apply_modelo_edit",
+    ): "the enclosing function of _co_commit_receipt above, and its only composing write. It delegates "
+    "evaluation and persistence to the calculation boundary and the single-writer primitive, adding the "
+    "commit-point recheck and that one co-committed receipt. Closed for the same reason",
+    (
         "src/cadrumo/application/workflow/persistence.py",
         "save",
     ): "a repository-shaped save over its own parameter; the guarded path beside it composes with load_revisioned",

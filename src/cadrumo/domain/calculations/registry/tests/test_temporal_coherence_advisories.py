@@ -17,7 +17,7 @@ from datetime import date
 
 import pytest
 
-from .....core import TaxDomain
+from .....core.tax_domain import TaxDomain
 from .....core.resources import bundled_path
 from ..loader import load_registry_tree
 from ..schema import ModeloDefinition, ModeloRevision

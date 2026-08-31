@@ -39,7 +39,7 @@ from __future__ import annotations
 import time
 from typing import TYPE_CHECKING
 
-from ._windows_contention import is_windows_contention
+from .windows_contention import is_windows_contention
 from .logging import get_logger
 
 if TYPE_CHECKING:

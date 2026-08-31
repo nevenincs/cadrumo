@@ -12,7 +12,7 @@ from xml.etree.ElementTree import Element
 
 from defusedxml import ElementTree
 
-from ....core import ExportLayoutFormat
+from ....core.export_layout_format import ExportLayoutFormat
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.decimal import normalize_decimal_separators
 from ....core.external_constants import LATIN_1_ENCODING as _LATIN_1_ENCODING

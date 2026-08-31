@@ -23,7 +23,7 @@ from typing import NamedTuple
 
 import pytest
 
-from .....core import RegistryAuthorityGrade
+from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.resources import bundled_path
 from .._validate import RegistryValidator
 from ..authority import bundled_authority

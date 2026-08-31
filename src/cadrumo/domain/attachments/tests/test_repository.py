@@ -11,7 +11,8 @@ import pytest
 
 from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
-from ....core import StorageCategory, storage_path
+from ....core.storage_taxonomy_locations import storage_path
+from ....core.storage_taxonomy import StorageCategory
 from ....tests.secure_sql import TestRuntimeProfile
 from ..enums import AttachmentKind, AttachmentSource
 from ..errors import AttachmentNotFoundError, AttachmentValidationError

@@ -41,7 +41,7 @@ from typing import Final
 
 import pytest
 
-from ...core import FieldOrigin
+from ...core.field_origin import FieldOrigin
 from ...domain.iva.regime_legend import REGIME_LEGENDS, RegimeLegend, regime_legend_phrases
 from ...domain.iva.schema import IvaCategory
 from ...tests.attribute_scope import scoped_attribute

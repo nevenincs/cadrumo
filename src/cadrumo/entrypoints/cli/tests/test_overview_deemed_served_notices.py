@@ -17,7 +17,8 @@ from datetime import date
 import pytest
 
 from ....application.overview.calendar_models import OverviewCalendarEvent, OverviewCalendarEventType
-from ....core import NotificacionEstadoServicio, PostFilingEventKind
+from ....core.post_filing_event import PostFilingEventKind
+from ....core.notificacion_estado_servicio import NotificacionEstadoServicio
 from ....core.json_contract import NoticeSeverity, ResolvedNoticeAction
 from ....domain.calculations.registry.authority import bundled_authority
 from .._overview_rendering import (

@@ -13,7 +13,7 @@ from typing import NamedTuple
 from pydantic import BaseModel
 
 from ..core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ..core import AuthProviderKind
+from ..core.auth_provider import AuthProviderKind
 from ..core.config import Settings, load_settings
 from ..core.errors.hierarchy import CadrumoError
 from ..core.logging import get_logger

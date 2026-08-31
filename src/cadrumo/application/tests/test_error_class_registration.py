@@ -240,7 +240,7 @@ def test_certificate_configuration_probe_does_not_swallow_unrelated_exceptions(t
     that would mask a genuine programmer error as a merely-corrupt
     certificate.
     """
-    from ...core import AuthProviderKind
+    from ...core.auth_provider import AuthProviderKind
     from ...core.config import Settings
     from ..auth.operator_probes import probe_provider_configuration
 

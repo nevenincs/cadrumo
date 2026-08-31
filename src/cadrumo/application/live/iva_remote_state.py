@@ -66,10 +66,10 @@ from ...application.calculations import IvaCompensationHistoryRepository as _Iva
 from ...application.calculations import IvaWalletDecisionRepository as _IvaWalletDecisionRepository
 from ...application.calculations import iva_wallet_decision_key as _iva_wallet_decision_key
 from ...application.calculations import reconcile_modelo_303_iva_compensation as _reconcile_modelo_303_iva_compensation
-from ...core import StorageCategory
+from ...core.storage_taxonomy import StorageCategory
 from ...core.modelo import Modelo
 from ...core.period import Period
-from ...core import storage_location as _storage_location
+from ...core.storage_taxonomy_locations import storage_location as _storage_location
 from ...core.access_gate import AeatAccessGate as _AeatAccessGate
 from ...core.bucket_pointer import resolve_active_bucket_id as _resolve_active_bucket_id
 from ...core.config import Settings as _Settings

@@ -22,7 +22,7 @@ from typing import Final, Literal
 import rtoml
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from cadrumo.core import is_link_like
+from cadrumo.core.link_safety import is_link_like
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import (

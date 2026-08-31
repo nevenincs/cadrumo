@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import spanish_word_tokens
+from ....core.spanish_stemming import spanish_word_tokens
 from ..index import CommandDoc, CommandIndex, build_command_index
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

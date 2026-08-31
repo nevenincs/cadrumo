@@ -34,7 +34,11 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import ART_58_2_ENTITLING_RELACIONES, ART_81_1_MATERNIDAD_RELACIONES, DescendantRelacion
+from ....core.descendant_relacion import (
+    ART_58_2_ENTITLING_RELACIONES,
+    ART_81_1_MATERNIDAD_RELACIONES,
+    DescendantRelacion,
+)
 from ..descendant import DescendantInfo
 from ..descendant_facts import (
     descendant_facts_from_list,

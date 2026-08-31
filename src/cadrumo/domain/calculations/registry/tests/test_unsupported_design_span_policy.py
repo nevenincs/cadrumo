@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core import RegistryAuthorityGrade
+from .....core.authority_grade import RegistryAuthorityGrade
 from ..authority import bundled_authority
 from ..errors import RegistryFailureCondition, RegistryValidationError
 from .test_revision_span_matches_published_designs import _boundaries_for, _declared_revisions, _filing_revisions

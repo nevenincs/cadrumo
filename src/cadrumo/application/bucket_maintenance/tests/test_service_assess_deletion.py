@@ -254,7 +254,7 @@ def test_a_linked_custody_target_refuses_with_its_exact_safety_verdict(tmp_path:
 def test_a_missing_label_projection_refuses_with_its_exact_safety_verdict(tmp_path: Path) -> None:
     """A present capsule without a committed projection is not a deletable target."""
     from ....adapters.persistence.storage.custody.paths import profile_custody_path
-    from ....core import StorageCategory
+    from ....core.storage_taxonomy import StorageCategory
 
     with _published_profile(tmp_path) as root:
         commit_path = profile_custody_path(
@@ -280,7 +280,7 @@ def test_a_missing_label_projection_refuses_with_its_exact_safety_verdict(tmp_pa
 def test_an_unreadable_capsule_inventory_refuses_with_its_exact_safety_verdict(tmp_path: Path) -> None:
     """A linked capsule member makes the deletion fingerprint untrustworthy."""
     from ....adapters.persistence.storage.custody.paths import profile_custody_path
-    from ....core import StorageCategory
+    from ....core.storage_taxonomy import StorageCategory
 
     with _published_profile(tmp_path) as root:
         _record_snapshot(root)

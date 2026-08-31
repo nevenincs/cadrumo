@@ -51,7 +51,9 @@ from ...adapters.persistence.storage import (
     SensitivityClass,
     safe_repository_id,
 )
-from ...core import ObservedHeaderFact, PriorDomiciliationElection, ResultDisposition
+from ...core.observed_header_fact import ObservedHeaderFact
+from ...core.prior_domiciliation_election import PriorDomiciliationElection
+from ...core.result_disposition import ResultDisposition
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.secure_object_write import SecureObjectWrite

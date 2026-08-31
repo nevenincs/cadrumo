@@ -8,7 +8,7 @@ from typing import Literal, cast
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core import ART_58_2_ENTITLING_RELACIONES, DescendantRelacion
+from ...core.descendant_relacion import ART_58_2_ENTITLING_RELACIONES, DescendantRelacion
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.text_bounds import CalendarMonth, is_calendar_month
 from ...core.time import today_madrid

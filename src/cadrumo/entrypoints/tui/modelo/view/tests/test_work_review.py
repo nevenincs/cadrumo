@@ -24,7 +24,8 @@ from textual.widgets import (
 )
 
 from ......application.modelo.work_review import ModeloWorkOriginAnomaly
-from ......core import EstadoCasillaOficial, ModeloWorkProgressState
+from ......core.modelo_work_progress_state import ModeloWorkProgressState
+from ......core.estado_casilla_oficial import EstadoCasillaOficial
 from ......core.operator_action_enums import OperatorActionAxis
 from ......core.aggregation import BindingSourceKind
 from ......core.config import override_settings

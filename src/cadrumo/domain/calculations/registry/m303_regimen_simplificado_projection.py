@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
-from ....core import (
+from ....core.filing_projection_ref import (
     FilingProjectionRef,
     M303RegimenSimplificadoActivityField,
     M303RegimenSimplificadoActivityProjectionRef,

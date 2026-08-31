@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import AuthProviderKind
+from ....core.auth_provider import AuthProviderKind
 from ....core.operator_action_enums import ActionConditionality, NoRecoveryOutcome
 from ....core.config import Settings
 from ....core.external_constants import UTF_8_ENCODING

@@ -37,7 +37,7 @@ from collections.abc import Awaitable, Callable, Sequence
 from datetime import date
 from typing import Protocol, override, runtime_checkable
 
-from ...core import AuthProviderDescription
+from ...core.auth_provider import AuthProviderDescription
 from ...core.period import Period
 from ...core.errors.severity import BaseSeverity
 from ...domain.deadlines.models import Schedule, TaxpayerProfile

@@ -121,7 +121,7 @@ from typing import Final
 
 import pytest
 
-from ..core import STORAGE_TAXONOMY
+from ..core.storage_taxonomy_locations import STORAGE_TAXONOMY
 from ._inventory import aeat_relative, ast_for_path, package_python_files
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

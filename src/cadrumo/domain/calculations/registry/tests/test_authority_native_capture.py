@@ -17,7 +17,7 @@ from typing import Final, cast
 
 import pytest
 
-from .....core import RegistryAuthorityGrade
+from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.directory_scan import scan_directory
 from .....core.identity import ContentDigest
 from .....tests import REPO_ROOT

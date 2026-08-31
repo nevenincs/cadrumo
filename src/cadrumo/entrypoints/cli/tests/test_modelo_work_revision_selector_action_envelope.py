@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import STR_KEYED_MAPPING_ADAPTER
+from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....tests.cli_runner import semantic_cli_output
 from ._modelo_work_ux_support import _create_m130_work_unit, _create_profile, _invoke
 from ._modelo_work_ux_support import _isolated_cli_backend as _isolated_cli_backend

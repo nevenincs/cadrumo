@@ -392,7 +392,7 @@ def _m303_annual_orden_table_units(source: Path) -> list[PreprocessUnit]:
     """Project the canonical annual-Orden parser into exact legal-corpus units."""
     if source.name not in _M303_ANNUAL_ORDEN_SOURCES:
         return []
-    from cadrumo.core._orden_anual_html import (
+    from cadrumo.core.orden_anual_html import (
         extract_orden_anual_iva_authority,
         orden_anual_iva_authority_units,
     )

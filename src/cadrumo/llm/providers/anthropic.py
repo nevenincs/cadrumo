@@ -56,7 +56,7 @@ class _AnthropicSdk:
 
 
 def _load_anthropic_sdk() -> _AnthropicSdk:
-    from ...core import ANTHROPIC_EXTRA, require_optional_extra
+    from ...core.optional_extras import ANTHROPIC_EXTRA, require_optional_extra
 
     require_optional_extra(ANTHROPIC_EXTRA)
 

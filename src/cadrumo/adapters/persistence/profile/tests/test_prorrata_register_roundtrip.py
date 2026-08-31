@@ -33,7 +33,7 @@ from pathlib import Path
 import pydantic
 import pytest
 
-from .....core import (
+from .....core.prorrata_register import (
     ProrrataActivityRowType,
     ProrrataEspecialTransitionKind,
     ProrrataProvisionalProvenance,

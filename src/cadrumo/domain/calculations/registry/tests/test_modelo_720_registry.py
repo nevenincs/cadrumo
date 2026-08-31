@@ -7,7 +7,7 @@ from typing import cast
 
 import pytest
 
-from .....core import RegistryAuthorityGrade
+from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
 from .._validate import RegistryValidator

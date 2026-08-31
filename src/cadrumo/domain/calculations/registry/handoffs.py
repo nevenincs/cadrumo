@@ -14,7 +14,7 @@ from typing import Literal, NamedTuple
 
 from pydantic import BaseModel, Field, model_validator
 
-from ....core import RegistryAuthorityGrade
+from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import FilingPeriodCode, RegistrySelectorPeriodCode
 from ....core.casilla_id import CasillaId

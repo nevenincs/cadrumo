@@ -28,7 +28,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import ResultDisposition
+from ....core.result_disposition import ResultDisposition
 from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority

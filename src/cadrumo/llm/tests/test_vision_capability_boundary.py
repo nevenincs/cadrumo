@@ -29,7 +29,7 @@ import pytest
 from PIL import Image
 from pydantic import SecretStr, ValidationError
 
-from ...core import ImageMediaType
+from ...core.image_media_type import ImageMediaType
 from ...core.config import LLMProvider, override_settings
 from ...tests.fixtures.settings import EnvFileFreeSettings
 from ...tests.loopback_llm import (

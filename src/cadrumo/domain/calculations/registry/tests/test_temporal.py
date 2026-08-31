@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core import RegistryAuthorityGrade
+from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.directory_scan import scan_directory
 from .._validate_revision_rules import validate_revision_windows
 from ..errors import (

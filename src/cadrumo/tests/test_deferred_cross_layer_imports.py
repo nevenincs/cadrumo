@@ -116,7 +116,7 @@ _UNADJUDICATED: frozenset[tuple[str, str]] = frozenset(
         ("application/bucket_maintenance/_service.py", "export"),
         ("application/bucket_maintenance/_service.py", "import_"),
         ("application/bucket_maintenance/_service.py", "inspect"),
-        ("application/diagnostics.py", "_ensure_models_rebuilt"),
+        ("application/diagnostic_models.py", "ensure_models_rebuilt"),
         ("application/diagnostics.py", "_is_missing_active_bucket_session"),
         ("application/diagnostics.py", "_ok_site_health_status"),
         ("application/diagnostics.py", "_probe_browser_connectivity"),

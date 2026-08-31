@@ -29,7 +29,11 @@ from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogu
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from ....core import ProrrataActivityRowType, ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from ....core.prorrata_register import (
+    ProrrataActivityRowType,
+    ProrrataProvisionalProvenance,
+    ProrrataRegisterRegime,
+)
 from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority

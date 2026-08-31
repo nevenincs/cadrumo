@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from ...tests import ast_for_path, repo_path, repo_relative
-from .. import ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from ..prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -30,8 +30,8 @@ def test_prorrata_register_enums_are_public_only_from_core(source_tree_ast: Mapp
     from .. import __all__ as core_exports
 
     assert set(_ENUMS) <= set(core_exports)
-    assert ProrrataProvisionalProvenance.__module__ == "cadrumo.core._prorrata_register"
-    assert ProrrataRegisterRegime.__module__ == "cadrumo.core._prorrata_register"
+    assert ProrrataProvisionalProvenance.__module__ == "cadrumo.core.prorrata_register"
+    assert ProrrataRegisterRegime.__module__ == "cadrumo.core.prorrata_register"
 
     for module_name, relative_path in _FACADES:
         facade = importlib.import_module(module_name)

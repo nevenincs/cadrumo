@@ -33,7 +33,7 @@ from typing import TYPE_CHECKING
 import pytest
 from pydantic import ValidationError
 
-from .....core import GoogleCredentialSourceKind
+from .....core.google_credential_source import GoogleCredentialSourceKind
 from .....tests.env_scope import scoped_env_var
 from ..errors import GoogleAuthError
 from ..impersonation import (

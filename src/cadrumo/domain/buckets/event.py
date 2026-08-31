@@ -19,7 +19,7 @@ from typing import Annotated, Final, override
 
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
-from ...core import Hex64Str
+from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId

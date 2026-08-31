@@ -53,7 +53,7 @@ from typing import TypeGuard
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core import read_toml
+from ...core.toml import read_toml
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.resources import bundled_path
 from ...core.validity_window import ValidityWindow, years_covered_by_every_group

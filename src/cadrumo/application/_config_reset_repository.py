@@ -13,7 +13,8 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 
-from ..core import StorageCategory, storage_location
+from ..core.storage_taxonomy_locations import storage_location
+from ..core.storage_taxonomy import StorageCategory
 from ..core.locks import exclusive_file_lock
 from ..core.config import Settings
 from ..core.errors.hierarchy import CadrumoError

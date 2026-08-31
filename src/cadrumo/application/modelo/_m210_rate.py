@@ -30,7 +30,7 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from ...core import ConvenioOverrideKind, TipoRentaIrnr
+from ...core.irnr import ConvenioOverrideKind, TipoRentaIrnr
 from ...domain.calculations.registry.convenio import ConvenioOverride
 from ...domain.calculations.registry.ids import (
     LegalRefId,

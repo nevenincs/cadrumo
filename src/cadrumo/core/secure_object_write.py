@@ -32,7 +32,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from ._hex import Hex64Str
+from .hex import Hex64Str
 from .models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .classification import SensitivityClass
 

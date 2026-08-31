@@ -12,7 +12,8 @@ import pytest
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Art104TresExclusion, IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from ....core import Art104TresExclusion
+from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from ....core.operator_action_enums import OperatorActionAxis
 from ....core.period import Period

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-from ...core import StorageCustodyProfile
+from ...core.storage_taxonomy import StorageCustodyProfile
 from ...domain.user_profile.errors import ProfileExportError
 from ...domain.user_profile.portable_export import CarriedSecureObject, CoverageManifest
 from .custody_ports import ProfileCustodyCarryMaterial, profile_custody_port

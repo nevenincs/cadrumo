@@ -40,9 +40,8 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....core import (
-    IvaDeductionEvidenceAuthority,
-    IvaDeductionFactKind,
+from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from ....core.prorrata_register import (
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,

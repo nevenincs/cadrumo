@@ -188,7 +188,8 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final, TypeGuard
 
-from cadrumo.core import RevisionReviewStatus, to_str_keyed_dict
+from cadrumo.core.revision_review import RevisionReviewStatus
+from cadrumo.core.toml import to_str_keyed_dict
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryError

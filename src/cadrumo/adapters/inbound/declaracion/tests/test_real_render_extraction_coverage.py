@@ -94,7 +94,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core import RegistryAuthorityGrade
+from .....core.authority_grade import RegistryAuthorityGrade
 from .....domain.calculations.registry.authority import bundled_authority
 from .....tests import FIXTURES_DIR
 from .._parser import _extract_profile_values, _select_extraction_profile, extract_pages_text

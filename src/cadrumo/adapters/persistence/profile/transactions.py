@@ -64,7 +64,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field, TypeAdapter, ValidationError, field_validator
 from sqlalchemy import delete, select, update
 
-from ....core import IvaDeductionFactKind
+from ....core.iva_deduction_fact import IvaDeductionFactKind
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.config import load_settings
 from ....core.external_constants import UTF_8_ENCODING

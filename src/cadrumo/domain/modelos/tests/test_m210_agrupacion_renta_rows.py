@@ -7,7 +7,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....core import M210PayerMode
+from ....core.irnr import M210PayerMode
 from ..row_models import (
     Modelo210AgrupacionRentaRow,
     Modelo210AgrupacionRentaRowsError,

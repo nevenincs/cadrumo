@@ -35,7 +35,7 @@ See Also:
     :func:`~adapters.inbound.einvoice.parse_aeat_record_batch`
         The batch reader whose inherited multi-recipient requirement this
         module discharges.
-    :class:`~application.ledger.evidence_draft.InvoiceDraft`
+    :class:`~application.ledger.invoice_draft_records.InvoiceDraft`
         The single-counterparty draft shape a projected record targets.
 """
 

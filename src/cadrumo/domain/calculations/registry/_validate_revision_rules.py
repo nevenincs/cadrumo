@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from collections.abc import Collection
 
-from ....core import M210_TIPO_RENTA_CODE_PROJECTION
+from ....core.irnr import M210_TIPO_RENTA_CODE_PROJECTION
 from ._validate_parameter_temporal import _bracket_coverage_gaps as _bracket_coverage_gaps
 from ._validate_parameter_temporal import (
     validate_bracket_table_temporal_coverage as validate_bracket_table_temporal_coverage,

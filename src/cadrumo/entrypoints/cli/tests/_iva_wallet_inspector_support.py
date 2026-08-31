@@ -7,7 +7,7 @@ from decimal import Decimal
 
 from ....application.wizard import catalogue as _wizard_catalogue
 from ....application.wizard import persistence as _wizard_persistence
-from ....core import IvaCompensationStateProvenance
+from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ....core.period import Period
 from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ....domain.user_profile.values import ProfileSetupState

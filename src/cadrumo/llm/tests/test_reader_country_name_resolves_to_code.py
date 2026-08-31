@@ -22,7 +22,7 @@ import json
 
 import pytest
 
-from ...core import FieldOrigin
+from ...core.field_origin import FieldOrigin
 from ..invoice_field_contract import anchor_key_for_field
 from ..invoice_field_grounding import ground_extracted_fields, parse_invoice_extraction_response
 

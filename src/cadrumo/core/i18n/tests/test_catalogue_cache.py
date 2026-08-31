@@ -222,7 +222,7 @@ def test_tr_survives_a_storage_root_settings_cannot_construct_over(
     ever read a packaged resource via ``importlib.resources``. ``Settings()``
     construction can raise for reasons that have nothing to do with
     translation (here: a real retired-product-state ``aeat.db`` under the
-    active storage root, which ``core._config_state_root.refuse_former_product_database``
+    active storage root, which ``core.config_state_root.refuse_former_product_database``
     correctly refuses). Because ``tr()`` is called from a MODULE-LEVEL
     statement in ``entrypoints/cli/__init__.py`` (``help=tr(...)``), before
     the CLI's own command-dispatch error boundary is active, an unguarded
@@ -240,7 +240,7 @@ def test_tr_survives_a_storage_root_settings_cannot_construct_over(
     """
     import sqlite3
 
-    from ..._config_state_root import FormerProductStateError
+    from ...config_state_root import FormerProductStateError
     from ...config import Settings, _constructed_settings
     from ...i18n import tr
     from .. import _render

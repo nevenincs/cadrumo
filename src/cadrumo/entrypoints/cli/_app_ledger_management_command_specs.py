@@ -239,7 +239,7 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="sort_by",
                 declarations=("--sort-by",),
-                value=ValueContract(DeferredTarget("cadrumo.core", "LedgerSortField")),
+                value=ValueContract(DeferredTarget("cadrumo.core.ledger_sort", "LedgerSortField")),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.ledger.list.sort_by_help"),
                 metavar=None,
@@ -255,7 +255,7 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="sort_order",
                 declarations=("--sort-order",),
-                value=ValueContract(DeferredTarget("cadrumo.core", "LedgerSortOrder")),
+                value=ValueContract(DeferredTarget("cadrumo.core.ledger_sort", "LedgerSortOrder")),
                 default=ParameterDefault.value("asc"),
                 help_key=TranslationKey("cli.ledger.list.sort_order_help"),
                 metavar=None,

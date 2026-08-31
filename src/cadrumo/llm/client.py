@@ -595,7 +595,7 @@ class LLMClient:
         if provider_reads_off_host(provider):
             return
         from ..application.provisioning import assess_model_load_contention
-        from ..core import model_candidate
+        from ..core.model_catalogue import model_candidate
 
         candidate = model_candidate(model)
         requirement_bytes = None if candidate is None else candidate.memory_requirement_bytes
@@ -978,7 +978,7 @@ class LLMClient:
             # The Anthropic-API provider needs the optional `anthropic` extra. Guard
             # before the lazy import so a missing extra is an instructive
             # LLMConfigError, not a deep ModuleNotFoundError.
-            from ..core import ANTHROPIC_EXTRA, require_optional_extra
+            from ..core.optional_extras import ANTHROPIC_EXTRA, require_optional_extra
 
             require_optional_extra(ANTHROPIC_EXTRA)
             from .providers.anthropic import AnthropicAdapter

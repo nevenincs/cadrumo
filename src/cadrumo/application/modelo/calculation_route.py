@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Literal
 
-from ...core import ModeloCalculationRouteId
+from ...core.calculation_route import ModeloCalculationRouteId
 from ...core.aggregation import BindingSourceKind
 from ..aggregation import (
     AtribucionMemberSourceResolver,

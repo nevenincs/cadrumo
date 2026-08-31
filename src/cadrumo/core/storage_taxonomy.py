@@ -562,7 +562,7 @@ def _location(
 # and ``_location`` from THIS module, so it can only be imported back here
 # once those names are already bound -- i.e. after the class/function
 # definitions above, not before them.
-from ._storage_taxonomy_locations import (  # noqa: E402 - see comment above
+from .storage_taxonomy_locations import (  # noqa: E402 - see comment above
     FINGERPRINT_EXCLUDED_STORAGE_FIELDS,
     ROOT_DERIVED_STORAGE_FIELDS,
     ROOT_DERIVED_STORAGE_LOCATIONS,

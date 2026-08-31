@@ -47,7 +47,8 @@ import pytest
 
 from ....adapters.persistence.storage.custody.errors import ProfileCustodyRecordError
 from ....adapters.persistence.storage.custody.filesystem import profile_custody_local_lock
-from ....core import StorageCategory, storage_location
+from ....core.storage_taxonomy_locations import storage_location
+from ....core.storage_taxonomy import StorageCategory
 from ....core.paths import effective_storage_root
 from ..custody_repository import profile_custody_transaction_lock
 

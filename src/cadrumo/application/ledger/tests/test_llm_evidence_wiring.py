@@ -23,11 +23,8 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.pdf_fixtures import text_pdf_bytes
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from ..evidence import (
-    PurchaseInvoiceEvidence,
-    PurchaseInvoiceEvidenceInputError,
-    PurchaseInvoiceEvidenceService,
-)
+from ..evidence import PurchaseInvoiceEvidence, PurchaseInvoiceEvidenceService
+from ..evidence_errors import PurchaseInvoiceEvidenceInputError
 from ..llm_classification import _resolve_evidence, suggest_llm_classification
 from ._subprocess_classifier_support import SubprocessLLMClassifier
 

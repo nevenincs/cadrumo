@@ -18,11 +18,11 @@ from __future__ import annotations
 
 import pytest
 
-from ...core import (
+from ..model_catalogue import (
     DEFAULT_MODEL_BY_RUNTIME_AND_ROLE,
-    MODEL_CATALOGUE,
     DeploymentLicencePosture,
     LicenceVerification,
+    MODEL_CATALOGUE,
     ModelCandidate,
     ModelLicence,
     ModelRole,

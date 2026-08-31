@@ -20,7 +20,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field
 
-from ...core import IvaCompensationStateProvenance
+from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.identity import AeatExpedienteId, BucketId

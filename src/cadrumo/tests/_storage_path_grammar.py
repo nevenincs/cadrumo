@@ -32,7 +32,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
 if TYPE_CHECKING:
-    from ..adapters.persistence.storage import StoragePathKind
+    from ..adapters.persistence.storage._namespace_taxonomy import StoragePathKind
 
 _PLACEHOLDER_PATTERNS: Final[dict[str, str]] = {
     # Content-hash fan-out (blob store, both root- and bucket-scoped).
@@ -186,7 +186,7 @@ def literal_directory_runs(*, grammar: str, kind: StoragePathKind) -> tuple[str,
     components = remainder.split("/")
     is_literal = ["<" not in component for component in components]
     # Deferred for the same early-collection reason as assert_path_matches_grammar above.
-    from ..adapters.persistence.storage import StoragePathKind
+    from ..adapters.persistence.storage._namespace_taxonomy import StoragePathKind
 
     if kind in (StoragePathKind.FILE, StoragePathKind.BLOB_OBJECT):
         is_literal[-1] = False

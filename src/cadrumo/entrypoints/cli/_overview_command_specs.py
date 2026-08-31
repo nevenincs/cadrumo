@@ -22,7 +22,7 @@ _READ = ExecutionPolicySpec(frozenset({"calculation", "encrypted-facts"}), froze
 _STR = ValueContract(DeferredTarget("builtins", "str"))
 _INT = ValueContract(DeferredTarget("builtins", "int"))
 _BOOL = ValueContract(DeferredTarget("builtins", "bool"))
-_LANG = ValueContract(DeferredTarget("cadrumo.core", "OutputLanguage"))
+_LANG = ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage"))
 _MODULE = "cadrumo.entrypoints.cli._overview"
 _PAYLOADS = "cadrumo.entrypoints.cli._overview_payloads"
 

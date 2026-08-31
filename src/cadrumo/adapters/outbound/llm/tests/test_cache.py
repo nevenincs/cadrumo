@@ -81,7 +81,7 @@ def test_cache_key_distinguishes_multimodal_evidence(tmp_path: Path) -> None:
     the same content address must reproduce the same key even when the base64
     payload differs (the key folds the content address, never the bytes).
     """
-    from .....core import ImageMediaType
+    from .....core.image_media_type import ImageMediaType
     from .....llm.models import MultimodalImageInput
 
     cache = LLMCache(root_dir=tmp_path)

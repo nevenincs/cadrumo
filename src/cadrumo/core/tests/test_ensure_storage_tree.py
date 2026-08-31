@@ -180,7 +180,7 @@ def test_a_directory_removed_after_materialisation_is_rebuilt(tmp_path: Path) ->
         settings = load_settings()
         root = ensure_storage_tree(settings)
 
-        from .._storage_taxonomy import storage_tree_targets
+        from ..storage_taxonomy import storage_tree_targets
 
         removable = next(
             target

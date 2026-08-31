@@ -16,7 +16,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import RegistryAuthorityGrade
+from .....core.authority_grade import RegistryAuthorityGrade
 from ..formula_runtime import calculate_registry_snapshot
 from ._registry_schema_support import _committed_snapshot
 

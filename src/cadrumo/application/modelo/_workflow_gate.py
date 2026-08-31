@@ -48,7 +48,7 @@ from pathlib import Path
 
 from ...adapters.persistence.profile.submission import SubmissionRepository
 from ...application.auth.providers import select_provider
-from ...core import AuthProviderKind
+from ...core.auth_provider import AuthProviderKind
 from ...core.period import Period
 from ...core.config import Settings, load_settings
 from ...domain.deadlines.engine import DeadlineEngine

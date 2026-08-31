@@ -26,7 +26,7 @@ _MODEL = OptionSpec(
 _ROLE = OptionSpec(
     name="role",
     declarations=("--role",),
-    value=ValueContract(DeferredTarget("cadrumo.core", "ModelRole")),
+    value=ValueContract(DeferredTarget("cadrumo.core.model_catalogue", "ModelRole")),
     default=ParameterDefault.value(None),
     help_key=TranslationKey("cli.config.provision.role_help"),
 )

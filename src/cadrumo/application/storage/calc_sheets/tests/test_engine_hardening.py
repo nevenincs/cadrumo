@@ -6,7 +6,7 @@ from datetime import date
 
 import pytest
 
-from .....core import RegistryAuthorityGrade
+from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.config import override_settings
 from .....core.resources import bundled_path
 from .....domain.calculations.registry.authority import bundled_authority

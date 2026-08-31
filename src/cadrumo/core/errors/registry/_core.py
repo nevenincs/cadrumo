@@ -118,7 +118,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core._optional_extras.MissingOptionalExtraError",
+        "cadrumo.core.optional_extras.MissingOptionalExtraError",
         ErrorCode(
             code="ERROR_OPTIONAL_EXTRA_MISSING",
             category=ErrorCategory.ERROR,

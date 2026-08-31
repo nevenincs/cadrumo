@@ -9,7 +9,7 @@ from pathlib import Path
 
 from pydantic import SecretStr
 
-from ...core import AuthProviderKind
+from ...core.auth_provider import AuthProviderKind
 from ...core.config import Settings, load_settings, override_settings
 from ...core.errors.hierarchy import CadrumoError
 from ..auth_credentials import (

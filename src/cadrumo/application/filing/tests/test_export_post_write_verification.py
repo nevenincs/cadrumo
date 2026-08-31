@@ -13,12 +13,12 @@ from ....domain.calculations.export_field_kind import CasillaFieldKind
 from ....domain.calculations.registry.export_parse import parse_export_payload
 from ....domain.filing.errors import FilingExportError
 from .. import GeneralFilingProfileFacts, build_filing_producer_snapshot
-from .._export import (
+from .._export import export_draft
+from .._export_verification import (
     DeclaracionExportResult,
     DeclaracionVerifyVerdict,
-    _verify_written_export,
-    export_draft,
     verify_export,
+    verify_written_export,
 )
 from .._producer_snapshot import FilingProducerSnapshot
 from ..runtime import RegistrySchemaAccessor
@@ -124,7 +124,7 @@ def test_post_write_tripwire_refuses_real_casilla_drift_and_preserves_the_artifa
     # contract -- that the refusal names the drifted casilla -- lives in the
     # context and survives translation.
     with pytest.raises(FilingExportError) as refusal:
-        _verify_written_export(draft, file_path=output_path, schema_provider=provider)
+        verify_written_export(draft, file_path=output_path, schema_provider=provider)
     assert refusal.value.translated_message == ("application.filing.export.errors.post_write_verification_refused")
     assert refusal.value.context["mismatched_casilla_ids"] == ("03",)
 
@@ -216,6 +216,6 @@ def test_post_write_tripwire_types_an_unreadable_existing_path_as_missing(tmp_pa
     with pytest.raises(
         FilingExportError, match=re.escape("application.filing.export.errors.post_write_verification_refused")
     ):
-        _verify_written_export(draft, file_path=incompatible_path, schema_provider=provider)
+        verify_written_export(draft, file_path=incompatible_path, schema_provider=provider)
 
     assert incompatible_path.is_dir()

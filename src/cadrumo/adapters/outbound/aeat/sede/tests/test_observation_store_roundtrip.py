@@ -24,7 +24,7 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl
 
-from ......core import CasillaValueKind
+from ......core.casilla_value_kind import CasillaValueKind
 from ......core.period import Period
 from ......core.casilla_id import CasillaId, validated_casilla_id
 from ......core.config import Settings

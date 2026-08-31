@@ -38,7 +38,7 @@ are internal to the document and run the moment it is read, which is where the
 operator is still deciding.
 
 See Also:
-    :class:`~application.ledger.evidence_draft.DraftDiscrepancyFinding`
+    :class:`~application.ledger.invoice_draft_records.DraftDiscrepancyFinding`
         The finding record produced here.
     :class:`~core.DraftDiscrepancyKind`
         The closed kind axis; this module never widens it.
@@ -50,8 +50,8 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from ...core import DraftDiscrepancyKind
-from .evidence_draft import DraftDiscrepancyFinding, InvoiceDraft
+from ...core.draft_discrepancy import DraftDiscrepancyKind
+from .invoice_draft_records import DraftDiscrepancyFinding, InvoiceDraft
 
 __all__ = [
     "ROUNDING_ALLOWANCE_PER_TERM",

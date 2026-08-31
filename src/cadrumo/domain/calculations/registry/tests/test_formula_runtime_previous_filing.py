@@ -6,7 +6,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import RegistryAuthorityGrade
+from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .....tests.registry_observations import registry_grounded_modelo_observation
 from ..bindings_previous_filing import (

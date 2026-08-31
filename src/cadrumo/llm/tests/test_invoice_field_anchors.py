@@ -25,7 +25,7 @@ invoice may snap a printed ``19`` onto ``21``. A prompt sentence forbidding that
 is prose; the gate here drives real product code and proves the figure survives.
 
 See Also:
-    :class:`~application.ledger.evidence_draft.FieldProvenance`
+    :class:`~application.ledger.invoice_draft_records.FieldProvenance`
         The envelope every populated field now carries.
     :class:`~core.FieldGroundingOutcome`
         The outcome axis this stage deliberately under-claims on.
@@ -41,9 +41,10 @@ from decimal import Decimal
 
 import pytest
 
-from ...application.ledger.evidence import PurchaseInvoiceEvidenceInputError
-from ...application.ledger.evidence_draft import FieldProvenance, InvoiceDraft
-from ...core import FieldGroundingOutcome, FieldOrigin
+from ...application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
+from ...application.ledger.invoice_draft_records import FieldProvenance, InvoiceDraft
+from ...core.field_grounding import FieldGroundingOutcome
+from ...core.field_origin import FieldOrigin
 from ...core.period import Period
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.iva.rates import load_iva_rate_table

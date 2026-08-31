@@ -26,7 +26,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ....core import ContentionCause
+from ....core.hardware import ContentionCause
 
 if TYPE_CHECKING:
     from ....application.provisioning import ContentionSnapshot, DependencyStatus

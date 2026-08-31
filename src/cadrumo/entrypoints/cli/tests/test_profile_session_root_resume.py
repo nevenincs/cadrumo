@@ -42,7 +42,7 @@ from ....adapters.persistence.storage.master_key import (
     current_active_bucket_session,
 )
 from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....core import ProfileSessionRefusalReason
+from ....core.profile_session import ProfileSessionRefusalReason
 from ....core.config import load_settings, override_settings
 from ....core.time import now as _now
 from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli, semantic_cli_output

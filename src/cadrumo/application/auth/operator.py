@@ -32,7 +32,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, TypedDict
 
-from ...core import AuthProviderKind
+from ...core.auth_provider import AuthProviderKind
 from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.config import Settings, load_settings
 from ...core.i18n import tr

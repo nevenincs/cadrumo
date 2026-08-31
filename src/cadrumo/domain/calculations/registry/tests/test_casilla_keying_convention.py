@@ -7,7 +7,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import RegistryAuthorityGrade
+from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..authority import bundled_authority
 from ..casilla_membership import casilla_noncanonical_reference_targets, format_noncanonical_casilla_reference

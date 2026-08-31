@@ -32,7 +32,7 @@ from pydantic import ValidationError
 from sqlalchemy import select
 
 from ....adapters.persistence.storage.sql import SecureObjectRow
-from ....core import IvaCompensationStateProvenance
+from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ....core.period import Period
 from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json

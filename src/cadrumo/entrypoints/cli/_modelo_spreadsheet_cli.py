@@ -250,7 +250,7 @@ def modelo_spreadsheet_verify(
 
     from ...application.storage.calc_sheets.parity_harness import OperatorInputScenario, verify_modelo_parity
     from ...application.user_profile.capabilities import resolve_active_capability
-    from ...core import ServiceCapability
+    from ...core.capabilities import ServiceCapability
 
     # `verify` creates a Drive spreadsheet and writes cells, so it is a Google
     # export egress and is gated on the same capability as `export`.

@@ -53,8 +53,8 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import (
 from pydantic import BaseModel, Field
 
 from ...adapters.persistence.storage import MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE as _NAMESPACE
-from ...core import HEX_PATTERN_64 as _HEX_PATTERN_64
-from ...core import HEX_PATTERN_128 as _HEX_PATTERN_128
+from ...core.hex import HEX_PATTERN_64 as _HEX_PATTERN_64
+from ...core.hex import HEX_PATTERN_128 as _HEX_PATTERN_128
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.corpus_manifest import CorpusBundleError, CorpusManifestTamperError, verify_corpus_bundle
 from ...core.ed25519_signing import (

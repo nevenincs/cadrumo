@@ -28,7 +28,7 @@ from ....application.user_profile.bundle_export_operation import (
     PROFILE_EXPORT_STAGED_TEMP_SUFFIX,
     ProfileBundleExportJournalRepository,
 )
-from ....core import STR_KEYED_MAPPING_ADAPTER
+from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....core.directory_scan import scan_directory
 from ....domain.user_profile.portable_export import UserProfilePortableExport
 from ....tests.cli_runner import invoke_cached_cli

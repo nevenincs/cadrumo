@@ -31,7 +31,8 @@ from ....application.operations.persistence.replay import (
     OperationReplayPage,
     OperationReplayStatus,
 )
-from ....core import StorageCategory, storage_location
+from ....core.storage_taxonomy_locations import storage_location
+from ....core.storage_taxonomy import StorageCategory
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.locks import exclusive_file_lock
 from ....core.directory_scan import (

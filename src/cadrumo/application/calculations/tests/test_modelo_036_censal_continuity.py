@@ -41,7 +41,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import RegistryAuthorityGrade
+from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....tests.registry_observations import registry_grounded_observations

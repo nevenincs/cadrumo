@@ -62,11 +62,10 @@ from ...adapters.persistence.storage import (
     SecureBoundRepository,
     secure_object_repository_for_bucket,
 )
-from ...core import Hex64Str
 from ...core.config import Settings
-from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import PDF_EXTENSION, PDF_MIME_TYPE, XML_MIME_TYPE
 from ...core.hashing import content_hash_hex
+from ...core.hex import Hex64Str
 from ...core.identity import BucketId, ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.percentage import Percentage
@@ -78,7 +77,8 @@ from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import emit_bucket_event
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.identifiers import canonical_decimal_string
-from .preconditions import LedgerPreconditionCondition, LedgerPreconditionErrorMixin, ledger_no_recovery_verdict
+from .evidence_errors import PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceNotFoundError
+from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 
 _PDF_EXTENSIONS = frozenset({PDF_EXTENSION})
 _IMAGE_EXTENSIONS = frozenset({".png", ".jpg", ".jpeg", ".tif", ".tiff", ".webp", ".heic", ".heif"})
@@ -123,14 +123,6 @@ class MediaKind(StrEnum):
 
     PDF = "pdf"
     IMAGE = "image"
-
-
-class PurchaseInvoiceEvidenceInputError(LedgerPreconditionErrorMixin, CadrumoError):
-    """Raised when a CLI-supplied evidence input violates the typed contract."""
-
-
-class PurchaseInvoiceEvidenceNotFoundError(LedgerPreconditionErrorMixin, CadrumoError):
-    """Raised when a CLI lookup targets a missing evidence record."""
 
 
 class PurchaseInvoiceEvidence(BaseModel):
@@ -478,6 +470,34 @@ def _emit_evidence_event(
     return event.event_id
 
 
+def _ingest_evidence_attachment(
+    *,
+    settings: Settings,
+    bucket_id: str,
+    resolved: Path,
+    media_kind: MediaKind,
+    now: datetime,
+    actor: str,
+) -> ContentDigest:
+    """Write one admitted evidence file through the secure attachment authority."""
+    store = AttachmentStore(objects=secure_object_repository_for_bucket(bucket_id, settings))
+    attachment = add_attachment(
+        store,
+        content=AttachmentFileContent(path=resolved),
+        request=AttachmentIngestionRequest(
+            kind=_attachment_kind_for(media_kind),
+            source=AttachmentSource.LOCAL_FILE,
+            source_reference=str(resolved),
+            mime_type=_SUFFIX_MIME[resolved.suffix.lower()],
+            captured_at=now,
+            bucket_id=bucket_id,
+            captured_by=actor,
+            source_command="aeat app ledger evidence add",
+        ),
+    )
+    return attachment.attachment_id
+
+
 class PurchaseInvoiceEvidenceService:
     """Application service for the ``aeat app ledger evidence`` verb group."""
 
@@ -587,22 +607,14 @@ class PurchaseInvoiceEvidenceService:
         # The attachment service is the single manifest and encrypted-byte write
         # authority. Ledger retains its narrow PDF/image admission, stable source
         # provenance, and evidence-specific audit lifecycle around that custody write.
-        store = AttachmentStore(objects=secure_object_repository_for_bucket(bucket_id, self._settings))
-        attachment = add_attachment(
-            store,
-            content=AttachmentFileContent(path=resolved),
-            request=AttachmentIngestionRequest(
-                kind=_attachment_kind_for(media_kind),
-                source=AttachmentSource.LOCAL_FILE,
-                source_reference=str(resolved),
-                mime_type=_SUFFIX_MIME[resolved.suffix.lower()],
-                captured_at=now,
-                bucket_id=bucket_id,
-                captured_by=actor,
-                source_command="aeat app ledger evidence add",
-            ),
+        digest = _ingest_evidence_attachment(
+            settings=self._settings,
+            bucket_id=bucket_id,
+            resolved=resolved,
+            media_kind=media_kind,
+            now=now,
+            actor=actor,
         )
-        digest = attachment.attachment_id
         records = _load(self._settings, bucket_id)
         existing_ids = {existing.evidence_id for existing in records}
         if idempotency_key is not None:

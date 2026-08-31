@@ -19,7 +19,7 @@ from __future__ import annotations
 import pytest
 from pydantic import SecretStr
 
-from ....core import AuthProviderKind, ClaveMovilRoute
+from ....core.auth_provider import AuthProviderKind, ClaveMovilRoute
 from ....core.config import override_settings
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....tests.profile_storage_root_fixture import bucket_session_storage_fixture

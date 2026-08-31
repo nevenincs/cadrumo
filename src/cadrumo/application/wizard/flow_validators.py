@@ -22,7 +22,7 @@ from collections.abc import Mapping
 
 from pydantic import ValidationError
 
-from ...core import OBJECT_TUPLE_ADAPTER
+from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ...core.flows import REPEATING_INSTANCE_SEPARATOR
 from ..flows.definition import FlowDefinition, FlowPage, FlowRepeatingGroup
 from ..flows.validators import CrossFieldValidator, ValidationVerdict, register_cross_field_validator

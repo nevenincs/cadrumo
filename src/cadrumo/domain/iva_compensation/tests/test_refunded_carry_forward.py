@@ -25,7 +25,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import ResultDisposition, result_disposition_is_refund
+from ....core.result_disposition import ResultDisposition, result_disposition_is_refund
 from ..carry_forward import derive_303_compensation_available
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

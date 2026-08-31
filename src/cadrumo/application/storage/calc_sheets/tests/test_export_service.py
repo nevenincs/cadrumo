@@ -20,7 +20,7 @@ from .....adapters.outbound.google.calc_sheets_apply import apply_export_plan
 from .....adapters.outbound.storage import OutboundStorageValidationError
 from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from .....adapters.persistence.profile.sync_runs import SyncRunRecordRepository
-from .....core import SyncSurface
+from .....core.sync_surface import SyncSurface
 from .....domain.buckets.event import BucketEventType
 from .....domain.calculations.registry.authority import bundled_authority
 from .....tests.secure_sql import isolated_runtime_profile

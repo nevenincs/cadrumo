@@ -28,7 +28,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import RescateType
+from ....core.rescate_type import RescateType
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.profile_capsule import open_test_profile_session

@@ -28,7 +28,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
-from ....core import RegistryAuthorityGrade
+from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.period import Period, is_administrative_period_token
 from ....core.casilla_id import CasillaId
 from ....core.text_fold import fold_diacritics

@@ -68,7 +68,7 @@ from typing import Final, Literal
 
 from pydantic import BaseModel, Field
 
-from ....core import TaxDomain
+from ....core.tax_domain import TaxDomain
 from ....core.modelo import Modelo, NON_REGISTRY_MODELOS
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.prose_elision import PROSE_ELISION_MARKER, elide_to_cap

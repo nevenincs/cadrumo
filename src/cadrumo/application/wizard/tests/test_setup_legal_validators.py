@@ -24,7 +24,7 @@ from __future__ import annotations
 import pytest
 from pydantic import BaseModel
 
-from ....core import RentaDeclaracionType
+from ....core.renta_declaracion_type import RentaDeclaracionType
 from ....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from ....domain.contribuyente.renta_codes import SituacionFamiliar
 from ...flows.definition import CopyRef, FlowDefinition, FlowPage, FlowSection

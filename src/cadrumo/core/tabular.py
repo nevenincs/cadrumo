@@ -50,12 +50,13 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from .models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .config import load_settings
 from .decimal import european_thousands_reading_is_ambiguous
 from .errors.hierarchy import CoreValidationError
 from .external_constants import CSV_ENCODING_FALLBACK_CHAIN
 from .logging import get_logger
+from .models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .text_bounds import PositiveCount
 from .text_fold import fold_printed_phrase
 
 __all__ = [
@@ -165,7 +166,7 @@ class TabularDialect(BaseModel):
     encoding: str = Field(min_length=1)
     decimal_separator: Literal[",", "."]
     header_line_number: int = Field(ge=1)
-    column_count: int = Field(ge=1)
+    column_count: PositiveCount
 
 
 class NormalizedRow(BaseModel):

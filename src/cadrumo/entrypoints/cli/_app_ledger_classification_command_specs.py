@@ -225,7 +225,7 @@ LEDGER_CLASSIFICATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="m210_payer_mode",
                 declarations=("--m210-payer-mode",),
-                value=ValueContract(DeferredTarget("cadrumo.core", "M210PayerMode")),
+                value=ValueContract(DeferredTarget("cadrumo.core.irnr", "M210PayerMode")),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.ledger.classify.m210_payer_mode_help"),
                 metavar=None,
@@ -289,7 +289,7 @@ LEDGER_CLASSIFICATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="deduction_fact_kind",
                 declarations=("--deduction-kind",),
-                value=ValueContract(DeferredTarget("cadrumo.core", "IvaDeductionFactKind")),
+                value=ValueContract(DeferredTarget("cadrumo.core.iva_deduction_fact", "IvaDeductionFactKind")),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.ledger.classify.deduction_fact_kind_help"),
                 metavar=None,

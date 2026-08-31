@@ -18,7 +18,7 @@ from typing import Final, Literal, cast
 import rtoml
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from cadrumo.core import is_link_like
+from cadrumo.core.link_safety import is_link_like
 from cadrumo.core.directory_scan import iter_directory
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError

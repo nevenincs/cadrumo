@@ -9,7 +9,7 @@ from pydantic import SecretStr
 
 from ......application.auth.providers import AuthProvider, select_provider
 from ......application.modelo._workflow_gate import build_revision_deadline_window_checker
-from ......core import AuthProviderKind
+from ......core.auth_provider import AuthProviderKind
 from ......core.period import Period
 from ......core.config import Settings
 from ......domain.calculations.registry.schema_references import RegistrySnapshotRef

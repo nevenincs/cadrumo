@@ -13,7 +13,7 @@ from cadrumo.application.registry.closure import RegistryClosureEvidence, Regist
 from cadrumo.application.registry.filing_export_coverage import FilingExportCoverageReport
 from cadrumo.application.registry.source_connectivity_coverage import SourceConnectivityCoverageReport
 from cadrumo.application.registry.temporal_coverage import TemporalCoverageReport, TemporalRevisionCoverage
-from cadrumo.core import RegistryAuthorityGrade
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.source_connectivity import (
     SourceConnectivityEncryptedRevisionProof,
     SourceConnectivityExecutableEvidence,

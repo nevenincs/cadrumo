@@ -15,12 +15,12 @@ from decimal import Decimal
 from typing import ClassVar, Final
 
 from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
-from ...core import IvaCompensationStateProvenance
+from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
+from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
+from ...core.casilla_id import CasillaId
+from ...core.logging import get_logger
 from ...core.modelo import Modelo
 from ...core.period import Period
-from ...core.casilla_id import CasillaId
-from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
-from ...core.logging import get_logger
 from ...core.time import now
 from ...domain.calculations.registry.bindings import (
     RegistryModeloObservation,
@@ -34,14 +34,18 @@ from ...domain.calculations.registry.schema import (
     RegistrySnapshot,
 )
 from ...domain.calculations.registry.temporal import select_revision
-from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState, build_iva_compensation_carry_forward_report, derive_iva_compensation_year_end_carry_partition
+from ...domain.iva_compensation.carry_forward import (
+    IvaCompensationPeriodState,
+    build_iva_compensation_carry_forward_report,
+    derive_iva_compensation_year_end_carry_partition,
+)
 from ..aggregation import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,
     CalculationSourceResolution,
-    storage_degradation_resolution,
 )
+from ..aggregation.source_resolution_operations import storage_degradation_resolution
 from ._iva_compensation_casillas import (
     M303_COMPENSACION_APLICADA_CASILLA,
     M303_DISPONIBLE_CASILLA,

@@ -9,7 +9,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from ...application.auth.sessions import AuthenticatedAeatSessionResult
-from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
+from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from ...core.classification import SensitivityClass
 from ...core.hashing import sha256_hex
 from ...core.redaction import (

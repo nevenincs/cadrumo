@@ -121,7 +121,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Final
 
-from ....core import ExportLayoutFormat
+from ....core.export_layout_format import ExportLayoutFormat
 from ....core.aggregation import BindingSourceKind
 from ....core.resources import resolve_corpus_binary
 from ..export_field_kind import CasillaFieldKind

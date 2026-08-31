@@ -28,8 +28,10 @@ from ....domain.iva.flow import derive_flow_for_classification
 from ....domain.iva.schema import IvaCashAccountingTreatment, IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import _modelo_bindings_invoice_iva as modelo_bindings_module
+from .. import _modelo_bindings_invoice_iva_refusal as modelo_bindings_refusal_module
+from .. import _modelo_bindings_retenciones as modelo_bindings_retenciones_module
 from .. import _service as service_module
-from .._modelo_bindings_invoice_iva import _raise_if_screened_invoice_iva_would_be_silent
+from .._modelo_bindings_invoice_iva_refusal import _raise_if_screened_invoice_iva_would_be_silent
 from .._modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 from .._preconditions import AggregationPreconditionCondition, aggregation_no_recovery_verdict
 from .._retencion_observations_repository import RetencionObservationRepository
@@ -72,7 +74,7 @@ _AGGREGATION_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
         AggregationPreconditionCondition.PER_MODELO_MODELO_SUPPORTED,
         (("modelo", "modelo"), ("supported_modelos", "'|'.join(_SUPPORTED_PER_MODELO_MODELOS)")),
     ),
-    "_modelo_bindings_invoice_iva:_raise_if_screened_invoice_iva_would_be_silent:1": _contract(
+    "_modelo_bindings_invoice_iva_refusal:_raise_if_screened_invoice_iva_would_be_silent:1": _contract(
         AggregationPreconditionCondition.INVOICE_LEDGER_COMPLETE,
         (
             ("modelo", "str(context.modelo)"),
@@ -83,7 +85,7 @@ _AGGREGATION_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
             ("missing_binding_count", "0"),
         ),
     ),
-    "_modelo_bindings_invoice_iva:_raise_if_screened_invoice_iva_would_be_silent:2": _contract(
+    "_modelo_bindings_invoice_iva_refusal:_raise_if_screened_invoice_iva_would_be_silent:2": _contract(
         AggregationPreconditionCondition.INVOICE_LEDGER_COMPLETE,
         (
             ("modelo", "str(context.modelo)"),
@@ -105,7 +107,12 @@ _AGGREGATION_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
     ),
 }
 
-_ATTACHMENT_MODULES: tuple[ModuleType, ...] = (service_module, modelo_bindings_module)
+_ATTACHMENT_MODULES: tuple[ModuleType, ...] = (
+    service_module,
+    modelo_bindings_module,
+    modelo_bindings_refusal_module,
+    modelo_bindings_retenciones_module,
+)
 
 
 def _call_name(node: ast.expr) -> str | None:

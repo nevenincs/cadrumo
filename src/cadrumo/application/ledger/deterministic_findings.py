@@ -63,7 +63,7 @@ from .regime_contradiction import regime_contradiction_finding
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from .evidence_draft import DraftDiscrepancyFinding, InvoiceDraft
+    from .invoice_draft_records import DraftDiscrepancyFinding, InvoiceDraft
 
 __all__ = ["DETERMINISTIC_CHECKS", "DeterministicCheck", "deterministic_check_names", "deterministic_findings"]
 

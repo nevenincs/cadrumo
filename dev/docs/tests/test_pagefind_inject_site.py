@@ -202,7 +202,7 @@ def test_materialise_injects_approved_concepts_only_no_drafts() -> None:
     materialised concept records must therefore all carry ``lifecycle ==
     'approved'`` and match the approved-concept count.
     """
-    from cadrumo.core import ConceptLifecycle
+    from cadrumo.core.concept_lifecycle import ConceptLifecycle
 
     cards, _ = project_concept_cards()
     approved = sum(1 for c in cards if c.lifecycle is ConceptLifecycle.APPROVED)

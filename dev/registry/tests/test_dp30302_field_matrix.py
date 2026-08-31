@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.core import M303RegimenSimplificadoFact, compile_filing_projection_ref
+from cadrumo.core.filing_projection_ref import M303RegimenSimplificadoFact, compile_filing_projection_ref
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 

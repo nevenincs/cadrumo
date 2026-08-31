@@ -25,7 +25,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from ..core.models import STRICT_FROZEN_CONFIG
 
-from ._hex import HEX_PATTERN_64
+from .hex import HEX_PATTERN_64
 
 __all__ = [
     "MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX",

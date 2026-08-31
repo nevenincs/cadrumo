@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core import AEAT_CSV_MAX_LENGTH, is_aeat_csv
+from .....core.aeat_csv import AEAT_CSV_MAX_LENGTH, is_aeat_csv
 from .....core.config import Settings
 from .....domain.justificante import JustificanteCsvNotFoundError
 from .._extract import _extract_csv

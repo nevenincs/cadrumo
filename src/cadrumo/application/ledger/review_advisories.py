@@ -40,13 +40,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Final
 
-from ...core import ReviewAdvisoryKind
+from ...core.confirmation_gate import ReviewAdvisoryKind
 from ...domain.iva.establishment import StatedCountryCodeStatus
 from .country_vocabulary_advisory import country_vocabulary_advisory
 from .party_attribution import party_attribution_advisory
 
 if TYPE_CHECKING:
-    from .evidence_draft import InvoiceDraft
+    from .invoice_draft_records import InvoiceDraft
 
 __all__ = ["review_advisory_kinds"]
 

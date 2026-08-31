@@ -21,7 +21,8 @@ from ....adapters.outbound.aeat.sede.schema import (
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from ....core import CasillaValueKind, IvaCompensationStateProvenance
+from ....core.casilla_value_kind import CasillaValueKind
+from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ....core.period import Period
 from ....core.casilla_id import validated_casilla_id
 from ....core.config import Settings
@@ -1664,7 +1665,7 @@ def test_no_discovery_signal_token_reaches_the_observation_provenance(tmp_path: 
     ``source_metadata`` would make the stored provenance vary with WHICH signal
     nominated the pair, which is exactly the distinction the domain does not have.
     """
-    from ....core import FiledHistoryDiscoverySignal
+    from ....core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 
     with _secure_backend(tmp_path):
         finalize_filed_capture((_filed_130_observation(),), policy=FiledCaptureFailurePolicy.BEST_EFFORT)

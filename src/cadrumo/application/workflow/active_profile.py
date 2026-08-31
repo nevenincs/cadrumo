@@ -12,7 +12,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from ...core import ProfileRecordUnavailability
+from ...core.profile_session import ProfileRecordUnavailability
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.config import override_settings
 from ...core.errors.hierarchy import NoActiveProfileError

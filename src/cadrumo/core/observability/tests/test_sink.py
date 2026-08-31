@@ -30,7 +30,8 @@ import pytest
 
 from ....tests.path_obstruction import obstructed_path
 from ....tests.storage_scope import storage_overrides
-from ... import StorageCategory, storage_path
+from ...storage_taxonomy_locations import storage_path
+from ...storage_taxonomy import StorageCategory
 from ...config import override_settings
 from ...directory_scan import iter_directory
 from ..errors import RunTracePersistenceError, RunTraceValidationError

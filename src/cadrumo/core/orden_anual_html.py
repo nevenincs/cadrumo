@@ -176,7 +176,7 @@ def extract_orden_anual_iva_authority(markup: bytes, *, source_label: str) -> Or
     """Extract the complete IVA simplified-regime authority from one Orden source."""
     from bs4 import BeautifulSoup
 
-    from ._orden_anual_sections import (
+    from .orden_anual_sections import (
         extract_agricultural_indexes,
         extract_difficult_justification,
         extract_ingresos_a_cuenta,
