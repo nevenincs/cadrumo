@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-16'
-modified: '2026-08-27'
+modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:97f07e428e8c6c2293d3a42768d5597eb98776c2455c590a3b351d2eef68e66b'
+body_hash: 'sha256:51bbca03b14bccfaa52cb4400893d791d317a382a3f7ee90708b15569ce67298'
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-ledger]]'
@@ -93,6 +93,10 @@ related:
   - '[[2026-08-14-aeat-export-fragment-generator-authority-silent-partial-record-design-extraction-audit]]'
   - '[[2026-08-16-aeat-export-fragment-generator-authority-pdf-source-wire-fact-authority-adr]]'
   - '[[2026-08-18-aeat-export-fragment-generator-authority-split-part-export-value-policy-adr]]'
+  - '[[2026-08-30-aeat-export-fragment-generator-authority-m390-2022-layout-anchor-reconciliation-audit]]'
+  - '[[2026-08-31-aeat-export-fragment-generator-authority-m390-2022-page-7-constant-reference]]'
+  - '[[2026-08-31-aeat-export-fragment-generator-authority-semantic-map-cannot-express-binding-rows-audit]]'
+  - '[[2026-08-31-aeat-export-fragment-generator-authority-source-defect-adjudication-adr]]'
 ---
 
 # `aeat-export-fragment-generator-authority` feature index
@@ -106,6 +110,7 @@ Auto-generated index of all documents tagged with `#aeat-export-fragment-generat
 - `2026-08-10-aeat-export-fragment-generator-authority-adr` - `aeat-export-fragment-generator-authority` adr: `official-binary coordinates, reviewed render profiles, and semantic maps generate export fragments` | (**status:** `accepted`)
 - `2026-08-16-aeat-export-fragment-generator-authority-pdf-source-wire-fact-authority-adr` - `aeat-export-fragment-generator-authority` adr: `PDF-sourced designs state wire facts in prose, so every numeric anchor is profile-eligible` | (**status:** `accepted`)
 - `2026-08-18-aeat-export-fragment-generator-authority-split-part-export-value-policy-adr` - `aeat-export-fragment-generator-authority` adr: `one semantic value written across the parts AEAT prints` | (**status:** `accepted`)
+- `2026-08-31-aeat-export-fragment-generator-authority-source-defect-adjudication-adr` - `aeat-export-fragment-generator-authority` adr: `adjudicating a self-contradictory cell in an official AEAT record design` | (**status:** `accepted`)
 
 ### audit
 
@@ -181,6 +186,8 @@ Auto-generated index of all documents tagged with `#aeat-export-fragment-generat
 - `2026-08-14-aeat-export-fragment-generator-authority-s87-m390-temporal-split-audit` - `aeat-export-fragment-generator-authority` audit: `S87 Modelo 390 temporal split review`
 - `2026-08-14-aeat-export-fragment-generator-authority-s92-implementation-review-audit` - `aeat-export-fragment-generator-authority` audit: `S92 M303 rectificativa motive implementation review`
 - `2026-08-14-aeat-export-fragment-generator-authority-silent-partial-record-design-extraction-audit` - `aeat-export-fragment-generator-authority` audit: `silent partial record design extraction`
+- `2026-08-30-aeat-export-fragment-generator-authority-m390-2022-layout-anchor-reconciliation-audit` - `aeat-export-fragment-generator-authority` audit: `Modelo 390 2022 layout-to-anchor reconciliation`
+- `2026-08-31-aeat-export-fragment-generator-authority-semantic-map-cannot-express-binding-rows-audit` - `aeat-export-fragment-generator-authority` audit: `the generator's input schema is narrower than the registry it generates into`
 
 ### exec
 
@@ -196,6 +203,7 @@ Auto-generated index of all documents tagged with `#aeat-export-fragment-generat
 - `2026-08-12-aeat-export-fragment-generator-authority-dp30302-simplified-regime-grounding-proposal-reference` - `aeat-export-fragment-generator-authority` reference: `dp30302 simplified regime grounding proposal`
 - `2026-08-12-aeat-export-fragment-generator-authority-m303-2023-epoch-semantic-home-assignments-reference` - `aeat-export-fragment-generator-authority` reference: `m303 2023 epoch semantic home assignments`
 - `2026-08-13-aeat-export-fragment-generator-authority-m303-2022-orden-crosswalk-lorca-reference` - `aeat-export-fragment-generator-authority` reference: `M303 2022 Orden, crosswalk, and Lorca authority`
+- `2026-08-31-aeat-export-fragment-generator-authority-m390-2022-page-7-constant-reference` - `aeat-export-fragment-generator-authority` reference: `the M390 2022 page 7 close constant measured against its own declared slot`
 
 ### research
 
