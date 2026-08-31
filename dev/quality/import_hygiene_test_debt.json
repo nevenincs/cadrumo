@@ -122,18 +122,22 @@
         "occurrence": 1,
         "target_mod": "cadrumo.adapters.outbound.aeat.browser._site_health",
         "imported_names": [
+          "SiteHealthEvidence",
+          "SiteHealthStatus",
           "parse_site_health_url"
         ],
-        "reason": "White-box test reach into the browser package's private site-health module: the workflow state tests build a real parsed site-health URL rather than a hand-shaped string, so the persisted workflow record is exercised against the value the browser adapter actually produces. The reach is unchanged; only the symbol it imports changed, from the module's URL adapter constant to the parse helper that wraps it. The entry previously named the constant and so stopped matching, which made a live violation look resolved."
+        "reason": "White-box test reach into the browser package's private site-health module: the workflow state tests build a real parsed site-health URL rather than a hand-shaped string, so the persisted workflow record is exercised against the value the browser adapter actually produces. The reach is unchanged; only the symbol it imports changed, from the module's URL adapter constant to the parse helper that wraps it. The entry previously named the constant and so stopped matching, which made a live violation look resolved. Updated again on 2026-08-31: the reach still exists and the module is unchanged; the test now imports the evidence and status types alongside the parse helper, so the recorded symbol set grew from one name to three. The entry is corrected rather than deleted -- a recorded tuple that no longer matches reads identically to a reach that is gone, and deleting it would have dropped a live white-box reach out of the ratchet entirely."
       },
       {
         "importer_path": "src/cadrumo/application/workflow/tests/test_resume.py",
         "occurrence": 1,
         "target_mod": "cadrumo.adapters.outbound.aeat.browser._site_health",
         "imported_names": [
+          "SiteHealthEvidence",
+          "SiteHealthStatus",
           "parse_site_health_url"
         ],
-        "reason": "White-box test reach into the browser package's private site-health module: the workflow state tests build a real parsed site-health URL rather than a hand-shaped string, so the persisted workflow record is exercised against the value the browser adapter actually produces. The reach is unchanged; only the symbol it imports changed, from the module's URL adapter constant to the parse helper that wraps it. The entry previously named the constant and so stopped matching, which made a live violation look resolved."
+        "reason": "White-box test reach into the browser package's private site-health module: the workflow state tests build a real parsed site-health URL rather than a hand-shaped string, so the persisted workflow record is exercised against the value the browser adapter actually produces. The reach is unchanged; only the symbol it imports changed, from the module's URL adapter constant to the parse helper that wraps it. The entry previously named the constant and so stopped matching, which made a live violation look resolved. Updated again on 2026-08-31: the reach still exists and the module is unchanged; the test now imports the evidence and status types alongside the parse helper, so the recorded symbol set grew from one name to three. The entry is corrected rather than deleted -- a recorded tuple that no longer matches reads identically to a reach that is gone, and deleting it would have dropped a live white-box reach out of the ratchet entirely."
       },
       {
         "importer_path": "src/cadrumo/core/tests/test_logging.py",
@@ -212,15 +216,6 @@
           "_locale_map"
         ],
         "reason": "White-box test reading the private per-locale translation-key map to detect self-referential (untranslated) string leaks. Internal catalogue cache, not the public tr() translation surface."
-      },
-      {
-        "importer_path": "src/cadrumo/entrypoints/cli/tests/test_session_lifecycle_roundtrip.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.adapters.persistence.storage.master_key._active_session",
-        "imported_names": [
-          "_active_session"
-        ],
-        "reason": "White-box test reaching the private module-level active-session slot directly to assert session lifecycle roundtrip state that the public has_active_bucket_session()/current_active_bucket_session() accessors do not expose (raw slot identity across a save/load cycle)."
       },
       {
         "importer_path": "src/cadrumo/entrypoints/cli/tests/test_source_diagnostic_notice_context.py",
