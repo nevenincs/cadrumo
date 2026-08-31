@@ -21,7 +21,17 @@
 set +e   # never abort the hook; each step guards itself.
 
 # --- constants -------------------------------------------------------------
-LANE_GLOBS=(cadrumo-homebrew cadrumo-scoop cadrumo-claude oracle-emit-work)
+# Lane roots section (b) is allowed to reap. These default to cadrumo's own
+# lane names, which is correct on a cadrumo runner and silently inert on any
+# other: this same hook is deployed to the vaultspec-* runners, where nothing
+# has ever matched and the audit line has read `freed=0.0MB` on every run
+# since the hook was installed. A runner serving another repository names its
+# own lanes via RUNNER_HYGIENE_LANE_GLOBS (space-separated) in its .env.
+if [[ -n "${RUNNER_HYGIENE_LANE_GLOBS:-}" ]]; then
+    read -r -a LANE_GLOBS <<< "$RUNNER_HYGIENE_LANE_GLOBS"
+else
+    LANE_GLOBS=(cadrumo-homebrew cadrumo-scoop cadrumo-claude oracle-emit-work)
+fi
 LANE_MAX_AGE_MIN=$((24 * 60))
 EVIDENCE_EXEMPT="distribution-install-readiness"
 EVIDENCE_KEEP_MIN=$((7 * 24 * 60))
@@ -88,6 +98,24 @@ should_run_heavy() {
 
 # Purge immediate children of $1 whose name contains any lane token and whose
 # mtime is older than $LANE_MAX_AGE_MIN. Top-level mtime only - cheap stat.
+# Runner-managed state and repository checkouts are never lane roots, whatever
+# the tokens say. actions/checkout materialises _work/<repo>/<repo>, so a
+# checkout root is a directory containing a same-named child — that is the
+# structural tell, and it holds for any repo without hardcoding a name.
+#
+# This matters because matching is SUBSTRING: a lane token broad enough to
+# cover the repo's own temp dirs ("vaultspec-", which the dashboard workflows
+# use for ${RUNNER_TEMP}/vaultspec-*) also matches the "vaultspec-dashboard"
+# checkout sitting in the same WORK_ROOT, and would delete the entire working
+# copy on the first sweep past 24h.
+is_protected_root() {
+    case "$2" in
+        _actions|_tool|_temp|_diag|_PipelineMapping|.hygiene) return 0 ;;
+    esac
+    [[ -d "$1/$2" ]] && return 0
+    return 1
+}
+
 purge_stale_lane_dirs() {
     local root="$1"
     [[ -d "$root" ]] || return 0
@@ -95,6 +123,7 @@ purge_stale_lane_dirs() {
     for entry in "$root"/*; do
         [[ -e "$entry" ]] || continue
         base="$(basename "$entry")"
+        is_protected_root "$entry" "$base" && continue
         local match=0 tok
         for tok in "${LANE_GLOBS[@]}"; do [[ "$base" == *"$tok"* ]] && match=1; done
         [[ "$base" == release-cohort* || "$base" == *.tar.gz ]] && match=1
@@ -154,14 +183,33 @@ cap_cache "${HOME}/.npm" "$NPM_CAP_GB" npm
 
 # --- (d) docker hygiene against the shared host daemon ---------------------
 # The smoke spawns nested containers via the mounted host socket, stranding
-# anonymous volumes / dangling images on the host daemon. Prune only removes
-# what is unreferenced: the running runner containers and the named
-# cadrumo-runner-state* volumes are never candidates. Throttled + guarded.
+# anonymous volumes / dangling images on the host daemon.
+#
+# This used to be four blanket prunes, justified by "the running runner
+# containers and the named cadrumo-runner-state* volumes are never
+# candidates". That reasoning holds only while the sibling runners are
+# RUNNING. On the battery-gated MacBook host they are NOT: the power gate
+# stops every runner container whenever the machine is unplugged, so a job
+# finishing near that transition would meet `container prune -f` and delete
+# the sibling runner outright — and the `volume prune -f` on the next line
+# would then reap its now-unreferenced state volume, destroying the runner's
+# registration and every build cache with it.
+#
+# So: targeted removal, never a blanket prune. Skip anything named like a
+# fleet runner, and reap only ANONYMOUS volumes (a 64-hex name is Docker's
+# generated id, so a named state volume can never match).
 if command -v docker >/dev/null 2>&1 && should_run_heavy docker; then
     if docker info >/dev/null 2>&1; then
-        docker container prune -f >/dev/null 2>&1      # stopped only
+        for _cid in $(docker ps -aq --filter status=exited --filter status=dead 2>/dev/null); do
+            _cname="$(docker inspect -f '{{.Name}}' "$_cid" 2>/dev/null)"
+            case "${_cname#/}" in *runner*) continue ;; esac
+            docker rm -f "$_cid" >/dev/null 2>&1
+        done
         docker image prune -f >/dev/null 2>&1          # dangling only (never -a)
-        docker volume prune -f >/dev/null 2>&1         # unreferenced only
+        for _vol in $(docker volume ls -q --filter dangling=true 2>/dev/null); do
+            [[ "$_vol" =~ ^[0-9a-f]{64}$ ]] || continue
+            docker volume rm "$_vol" >/dev/null 2>&1
+        done
         docker builder prune -f --keep-storage "$DOCKER_BUILDER_KEEP" >/dev/null 2>&1
         NOTES="${NOTES}docker,"
     fi
