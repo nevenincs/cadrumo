@@ -10,7 +10,7 @@ related:
   - '[[2026-06-01-registry-period-code-union-cli-boundary-adr]]'
   - '[[2026-08-05-ci-lane-deconflation-step-check-attribution-audit]]'
 modified: '2026-08-31'
-body_hash: 'sha256:bac2e9e94441381a2d17d3faf953f2c13ff454c458428e696bbf6040eadf8b90'
+body_hash: 'sha256:5333eb38bab3eefe3de4a8562128fc9e77fe69f9ac69f938438976bcadb5a252'
 ---
 
 <!-- RETIRED: S01, S10, S181, S184, S186, S189, S191, S193, S194, S197, S199, S201, S203, S205, S207, S209, S211, S213, S215, S217, S219, S221 -->
@@ -207,7 +207,7 @@ Decompose every live size-budget subject by its owning source file, then regener
 - [x] `P05.S139` - Refactor the size-budget subjects in cross_period_clean_state.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/calculations/cross_period_clean_state.py`.
 - [x] `P05.S140` - Refactor the size-budget subjects in diagnostics.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/diagnostics.py`.
 - [x] `P05.S141` - Refactor the size-budget subjects in _export_producer.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/filing/_export_producer.py`.
-- [ ] `P05.S142` - Refactor the size-budget subjects in _export.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/filing/_export.py`.
+- [x] `P05.S142` - Refactor the size-budget subjects in _export.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/filing/_export.py`.
 - [ ] `P05.S143` - Refactor the size-budget subjects in _producer_snapshot.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/filing/_producer_snapshot.py`.
 - [ ] `P05.S144` - Refactor the size-budget subjects in test_source_resolver.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/invoices/tests/test_source_resolver.py`.
 - [ ] `P05.S145` - Refactor the size-budget subjects in actions_manual.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/ledger/actions_manual.py`.
