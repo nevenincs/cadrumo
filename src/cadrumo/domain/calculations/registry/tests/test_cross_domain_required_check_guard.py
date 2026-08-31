@@ -35,7 +35,7 @@ from ..validate_cross_domain_snapshot import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _REQUIRED_MODULE = "cadrumo.domain.renta.first_slice_routing_integrity"
-_OTHER_MODULE = "cadrumo.domain.renta._retenciones_routing_integrity"
+_OTHER_MODULE = "cadrumo.domain.renta.retenciones_routing_integrity"
 
 
 def _build_m100_with_declared_modules(declared: str) -> subprocess.CompletedProcess[str]:

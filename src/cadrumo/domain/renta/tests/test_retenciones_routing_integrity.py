@@ -12,7 +12,7 @@ import pytest
 
 from ....core.modelo import Modelo
 from ...calculations.registry.authority import bundled_authority
-from .._retenciones_routing_integrity import (
+from ..retenciones_routing_integrity import (
     RENTA_130_RETENCIONES_BINDING_ID,
     RENTA_130_RETENCIONES_OUTPUT_CASILLA,
     check_m130_retenciones_output_casilla,

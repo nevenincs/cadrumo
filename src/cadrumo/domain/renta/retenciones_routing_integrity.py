@@ -12,7 +12,7 @@ A hardcoded casilla routed to outside the registry is a routing-integrity
 hazard: nothing stops the constant from drifting out of sync with a revision
 that drops or renumbers the casilla it names, and that drift fails silently
 -- the value simply lands nowhere the filed form reads. This module closes
-it the same way :mod:`cadrumo.domain.renta._first_slice_routing_integrity`
+it the same way :mod:`cadrumo.domain.renta.first_slice_routing_integrity`
 closes the equivalent M100 hazard: the constant stays, and a snapshot-time
 cross-domain check confirms it names a real casilla on the revision before
 any calculation can silently write a value nowhere the filed form will ever
@@ -27,19 +27,27 @@ Instead this module registers a
 :class:`~cadrumo.domain.calculations.registry.CrossDomainSnapshotCheck` with
 the registry validator via
 :func:`~cadrumo.domain.calculations.registry.register_cross_domain_snapshot_check`.
-The registration runs at ``renta`` package import time (see
-:mod:`cadrumo.domain.renta` ``__init__``); the registry calls the check
-through the abstract Protocol without naming ``renta``. The Protocol's third
-parameter (``renta_first_slice_binding_targets``) is the first-slice check's
-own concern, not this one's -- this check ignores it and reads only
-``modelo_id`` and ``casilla_ids``, which is all the shared Protocol shape
-needs to express a second, independent domain fact.
+The registration runs when the registry's snapshot builder imports THIS
+module by name, not when the ``renta`` package is imported: the registry
+declares the module that performs the registration, so no package
+``__init__`` sits between the registry and the check. That is why this
+module is public. It was private while the package facade imported it for
+its side effect, and a facade made inert -- which the architecture rule
+requires of every package namespace -- would have stopped the registration
+silently. The registry still names no symbol from ``renta`` and calls the
+check through the abstract Protocol.
+
+The Protocol's third parameter (``renta_first_slice_binding_targets``) is
+the first-slice check's own concern, not this one's -- this check ignores it
+and reads only ``modelo_id``, ``casilla_ids`` and ``revision_binding_ids``,
+which is all the shared Protocol shape needs to express a second,
+independent domain fact.
 """
 
 from __future__ import annotations
 
-from ...core.modelo import Modelo
 from ...core.casilla_id import CasillaId, validated_casilla_id
+from ...core.modelo import Modelo
 from ..calculations.registry.ids import BindingId
 from ..calculations.registry.validate_cross_domain_snapshot import register_cross_domain_snapshot_check
 

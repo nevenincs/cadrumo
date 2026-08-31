@@ -73,7 +73,10 @@ class CrossDomainSnapshotCheck(Protocol):
 #: as its value, so declaring the member keeps the key greppable while the
 #: annotation states what callers may pass.
 REQUIRED_CROSS_DOMAIN_CHECK_IDENTITIES: Mapping[str, str] = MappingProxyType(
-    {Modelo.M100: "cadrumo.domain.renta.first_slice_routing_integrity"},
+    {
+        Modelo.M100: "cadrumo.domain.renta.first_slice_routing_integrity",
+        Modelo.M130: "cadrumo.domain.renta.retenciones_routing_integrity",
+    },
 )
 
 _CROSS_DOMAIN_SNAPSHOT_CHECKS: list[CrossDomainSnapshotCheck] = []
