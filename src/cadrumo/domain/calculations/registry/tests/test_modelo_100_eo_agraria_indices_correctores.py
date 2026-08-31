@@ -21,7 +21,7 @@ independently AEAT-manual-sourced — the multiplication the Fase 3ª formula
 performs is the mechanism under test.
 
 See Also:
-    :func:`~domain.calculations.registry._formula_runtime._evaluate_m100_resolve_eo_agraria_indices_correctores`
+    :func:`~domain.calculations.registry.formula_runtime_m100.evaluate_m100_resolve_eo_agraria_indices_correctores`
         Registry runtime evaluator for the sequential Fase 3ª índice cascade.
     :func:`~domain.calculations.registry.calculate_registry_snapshot`
         Public calculation entry point exercised by the worked-example cases.
