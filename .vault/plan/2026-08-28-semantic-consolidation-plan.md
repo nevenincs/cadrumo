@@ -9,7 +9,7 @@ related:
   - '[[2026-08-28-semantic-consolidation-cli-payload-projection-adr]]'
 modified: '2026-08-31'
 body_schema: body-v2
-body_hash: 'sha256:9c2a53fe6d6c9b4d5d82e1ffd1a1e8de42803298adc2e65b20ef11ddfe753eb4'
+body_hash: 'sha256:6d60e2a5152997e32dbfaa87f288e01016909d483ec52b8d72a33748e16ac0c0'
 ---
 
 # `semantic-consolidation` plan
@@ -87,6 +87,7 @@ Six package namespaces carry a PEP 562 __getattr__ resolver, four of them byte-i
 - [x] `P02.S151` - Close the three currency sites the collision had been hiding, including a patch command that accepted a currency its own create command refuses; `src/cadrumo/application/ledger/models.py, src/cadrumo/entrypoints/cli/_ledger_payloads.py`.
 - [x] `P02.S152` - Hunt the partial-variant class by stripping optionality and comparing what remains, and give the group label one bound both its create and patch models read; `src/cadrumo/application/ledger/models.py`.
 - [x] `P02.S153` - Bound the purchase-invoice evidence money fields on the record and its patch, after tracing the two that reach a renta deduction; `src/cadrumo/application/ledger/evidence.py`.
+- [x] `P02.S155` - Correct the fifteen fixture sites left carrying a CIF the merged leader policy refuses, after re-deriving the checksum I had dismissed them on; `src/cadrumo/application/overview/tests/, src/cadrumo/domain/calculations/registry/tests/`.
 
 ### Phase `P03` - Consolidate the repeated secure-repository configuration shape
 
@@ -180,7 +181,7 @@ An AST census of every pydantic Field constraint in production code found the sa
 - [x] `P08.S31` - Split the bare datetime fields in the domain into instants that owe UTC-awareness and calendar dates that must not be forced into it; `src/cadrumo/domain/`.
 - [x] `P08.S32` - Record that the three coefficient declarations are two concepts, not one: the seasonal-day index is distinct from the modulo coefficient, so only the raw module and the calculation result actually disagree, and settling them is a tax review against the orden text rather than a code judgement; `src/cadrumo/domain/calculations/registry/_m303_orden_raw_models.py`.
 - [x] `P08.S33` - Adopt the UTC instant alias on the domain timestamp fields whose own documentation promises timezone-aware UTC while enforcing nothing, closing a validation hole rather than a style gap; `src/cadrumo/domain/`.
-- [ ] `P08.S34` - Declare the source-locator bound once: the same concept carries no bound, 512 and 1024 at different sites; `src/cadrumo/`.
+- [x] `P08.S34` - Declare the source-locator bound once: the same concept carries no bound, 512 and 1024 at different sites; `src/cadrumo/`.
 - [x] `P08.S35` - Record that the transactions awareness helper delegates to the canonical validator and only translates the error type, so it is a wrapper to keep rather than a duplicate to retire; `src/cadrumo/domain/transactions/_model_validation.py`.
 - [x] `P08.S36` - Record why the locator bounds resist a single alias: the thousand-character sites carry a source URL while the five-hundred-character ones carry a structured reference, so one alias would either refuse stored URLs or loosen the structured sites; `src/cadrumo/`.
 - [x] `P08.S37` - Route the sancion money parse and its expected-amount check through the canonical half-up rounder, so neither falls back to the banker's rounding the money module forbids at the cent; `src/cadrumo/adapters/inbound/notificacion/_sancion.py`.

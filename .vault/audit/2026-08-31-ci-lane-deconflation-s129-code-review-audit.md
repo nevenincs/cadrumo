@@ -5,29 +5,10 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:88256e47c0d2c2cb2d4b19849668c86e3c9833fba845aae5581e7dba44f12b26'
+body_hash: 'sha256:c782738f8eb8861baf83a62928a3fa5fc7109d9caacbda21be387ae757eb75a5'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace ci-lane-deconflation with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `ci-lane-deconflation` audit: `P05 S129 code review`
 
@@ -52,4 +33,3 @@ Commit `bdd2e85488afb1256f60b04f67a810331b74abcc` changes only the S129 executio
 No additional P05.S129 corrective work is required.
 
 Source disposition is otherwise sound: `SecureObjectRepository` remains the public repository owner and inherits the private `SecureObjectWriteOperations` mixin; write and revision-lineage implementation carries no incidental public facade. `sql.__init__` keeps public API ownership while records move to their canonical records module. The SQL suite record cites 169 passed, the stale `1617` pin remains at `1191` for P05.S227 to regenerate, and no baseline entry changes.
-
