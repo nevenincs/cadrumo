@@ -5,7 +5,7 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:0824fe810ff7f50fa2233773317315c949150932eb43eacfa05234c3ab0d4d26'
+body_hash: 'sha256:5cd2237cb05b0546c817400b5fb71c904bf705c1c4c5c8d2544a7fa83ea36a4f'
 step_id: 'S183'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
@@ -19,6 +19,7 @@ related:
 ## Changes
 
 - `M` `src/cadrumo/application/calculations/_m303_regimen_simplificado_annual_summary.py`
+- `M` `src/cadrumo/application/modelo/_calculation_actions.py`
 - `M` `src/cadrumo/application/modelo/_calculation_modelo_adjustments.py`
 - `M` `src/cadrumo/application/modelo/_data_inventory.py`
 - `M` `src/cadrumo/application/modelo/_revision_replay_inputs.py`
@@ -42,4 +43,4 @@ related:
 - The public `bindings.py` surface was reduced below the unchanged 1,250-line module policy by moving cohesive binding-family logic to defining sibling modules. The independent source review observed a live 894-line primary; the prior executor observed 1,032 lines during the same shared-tree work. Both are below policy, and every extracted helper is at most 179 lines under the unchanged 180-line callable policy. No baseline or threshold change belongs to this Step.
 - The supplied focused receipt is executor-reported only: `48 passed in 51.93s`. Its literal command was not retained, so this record deliberately does not invent a `verify:` command.
 - Independently reviewed targeted Ruff/check, import, and compile probes were clean. The non-mutating full size audit stalled and yielded no result; this record makes no global size-audit pass claim.
-- `src/cadrumo/application/modelo/_calculation_actions.py` carries concurrent relocation work. The source commit stages the reviewed bindings extraction with an isolated index and excludes that peer relocation.
+- `src/cadrumo/application/modelo/_calculation_actions.py` is included only for its P05.S183 binding-target projection hunk. The source commit uses an isolated index to exclude its peer `persistence_wiring` relocation hunk.
