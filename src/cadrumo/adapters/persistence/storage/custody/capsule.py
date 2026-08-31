@@ -50,6 +50,36 @@ from ._capsule_data import (
 from ._capsule_data import (
     write_posix_data_files as _write_posix_data_files,
 )
+from ._capsule_filesystem import (
+    fsync_directory as _fsync_directory,
+)
+from ._capsule_filesystem import (
+    fsync_windows_published_commit as _fsync_windows_published_commit,
+)
+from ._capsule_filesystem import (
+    remove_posix_staging_if_same as _remove_posix_staging_if_same,
+)
+from ._capsule_filesystem import (
+    remove_posix_tree as _remove_posix_tree,
+)
+from ._capsule_filesystem import (
+    remove_windows_unpublished_staging as _remove_windows_unpublished_staging,
+)
+from ._capsule_filesystem import (
+    rename_directory_noreplace as _rename_directory_noreplace,
+)
+from ._capsule_filesystem import (
+    rename_windows_directory_by_handle as _rename_windows_directory_by_handle,
+)
+from ._capsule_filesystem import (
+    renameat2_noreplace as _renameat2_noreplace,
+)
+from ._capsule_filesystem import (
+    windows_stage_snapshot as _windows_stage_snapshot,
+)
+from ._capsule_filesystem import (
+    write_through_windows_publication_fence as _write_through_windows_publication_fence,
+)
 from ._inventory import (
     PROFILE_CUSTODY_INVENTORY_MAX_ENTRIES as _INVENTORY_MAX_ENTRIES,
 )
@@ -99,12 +129,6 @@ from .filesystem import (
     ensure_real_directory as _ensure_real_directory,
 )
 from .filesystem import (
-    fsync_directory as _fsync_directory,
-)
-from .filesystem import (
-    fsync_windows_published_commit as _fsync_windows_published_commit,
-)
-from .filesystem import (
     lexists as _lexists,
 )
 from .filesystem import (
@@ -126,34 +150,10 @@ from .filesystem import (
     read_regular_file_fd as _read_regular_file_fd,
 )
 from .filesystem import (
-    remove_posix_staging_if_same as _remove_posix_staging_if_same,
-)
-from .filesystem import (
-    remove_posix_tree as _remove_posix_tree,
-)
-from .filesystem import (
-    remove_windows_unpublished_staging as _remove_windows_unpublished_staging,
-)
-from .filesystem import (
-    rename_directory_noreplace as _rename_directory_noreplace,
-)
-from .filesystem import (
-    rename_windows_directory_by_handle as _rename_windows_directory_by_handle,
-)
-from .filesystem import (
-    renameat2_noreplace as _renameat2_noreplace,
-)
-from .filesystem import (
-    windows_stage_snapshot as _windows_stage_snapshot,
-)
-from .filesystem import (
     write_exclusive_fsynced as _write_exclusive_fsynced,
 )
 from .filesystem import (
     write_exclusive_fsynced_fd as _write_exclusive_fsynced_fd,
-)
-from .filesystem import (
-    write_through_windows_publication_fence as _write_through_windows_publication_fence,
 )
 from .paths import profile_custody_path
 from .records import (

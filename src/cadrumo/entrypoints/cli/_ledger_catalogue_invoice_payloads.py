@@ -25,12 +25,12 @@ from pydantic import Field, NonNegativeInt, model_validator
 
 from ...core.aggregation import IntracomOperationType
 from ...core.country_code import CountryCodeAlpha2
-from ...core.identity import BucketId, InvoiceId, TaxIdIdentityToken, TransactionId, validate_spanish_tax_id
+from ...core.identity import BucketId, InvoiceId, TaxIdIdentityToken, TransactionId
 from ...core.json_contract import OutputSchema
 from ...core.parsing import IsoCurrencyCode
 from ...core.text_bounds import NonEmptyStr, NonNegativeDecimal, PositiveCount, PositiveDecimal
 from ...domain.invoices.enums import PaymentStatus
-from ...domain.invoices.validators import validate_country_code, validate_iva_number
+from ...domain.invoices.validators import validate_counterparty_tax_id, validate_country_code
 from ...domain.iva.classification import InvoiceKind
 
 
@@ -87,14 +87,19 @@ class CatalogueInvoiceRecordPayload(OutputSchema):
         legitimately carry no counterparty tax id (RD 1619/2012 art. 6.1.d),
         and the rich :class:`~domain.invoices.Invoice` this payload projects
         already enforces the cases where one is mandatory.
+
+        WHICH regime applies is the domain's answer, through
+        :func:`~domain.invoices.validate_counterparty_tax_id`. This surface used
+        to decide it here with its own ``country == "ES"``, so the rule sat in a
+        wire projection as well as in the invoice normaliser and a third regime
+        would have had to reach both.
         """
         if self.counterparty_tax_id is None:
             return self
-        country = validate_country_code(self.counterparty_country)
-        if country == "ES":
-            validate_spanish_tax_id(self.counterparty_tax_id)
-        else:
-            validate_iva_number(self.counterparty_tax_id, country)
+        validate_counterparty_tax_id(
+            self.counterparty_tax_id,
+            country=validate_country_code(self.counterparty_country),
+        )
         return self
 
 

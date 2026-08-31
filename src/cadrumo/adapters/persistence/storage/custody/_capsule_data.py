@@ -9,13 +9,13 @@ from pathlib import Path, PurePosixPath, PureWindowsPath
 from uuid import uuid4
 
 from .....core.hashing import prefixed_digest
+from ._capsule_filesystem import fsync_directory
 from .errors import ProfileCustodyRecordError
 from .filesystem import (
     PROFILE_CUSTODY_DATA_FILE_MAX_BYTES,
     PROFILE_CUSTODY_DATA_MAX_ENTRIES,
     ProfileCustodyPasswordReadOperation,
     anchor_directory,
-    fsync_directory,
     posix_directory_fd,
     posix_open_child_directory,
     read_regular_file,

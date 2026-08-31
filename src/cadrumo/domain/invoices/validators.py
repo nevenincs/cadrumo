@@ -19,7 +19,7 @@ from __future__ import annotations
 import re
 
 from ...core.country_code import COUNTRY_CODE_ALPHA2_PATTERN
-from ...core.identity import nif_iva_format_for_country, normalise_nif_iva
+from ...core.identity import nif_iva_format_for_country, normalise_nif_iva, validate_spanish_tax_id
 from ..iva.schema import EUMemberState
 from .errors import InvoiceValidationError
 
@@ -28,11 +28,15 @@ __all__ = [
     "assert_eu_member_state_code",
     "assert_non_domestic_country_code",
     "is_eu_member_state_code",
+    "validate_counterparty_tax_id",
     "validate_country_code",
     "validate_iva_number",
 ]
 
 _IVA_BODY_RE = re.compile(r"^[a-zA-Z0-9]{4,20}$")
+#: The one country whose identifiers take the AEAT checksum regime.
+_SPAIN_COUNTRY_CODE = "ES"
+
 _ISO_2_RE = re.compile(rf"^{COUNTRY_CODE_ALPHA2_PATTERN}$")
 
 
@@ -187,3 +191,39 @@ def validate_iva_number(value: str, country: str) -> str:
     if not _IVA_BODY_RE.match(body):
         raise InvoiceValidationError("IVA number body must be 4-20 alphanumeric characters")
     return normalized
+
+
+def validate_counterparty_tax_id(tax_id: str, *, country: str | None) -> str:
+    """Validate a counterparty's tax identifier under its country's regime.
+
+    Which regime applies is a domain rule, not a detail of whichever surface
+    happens to hold the values: a Spanish counterparty is checked against the
+    AEAT checksum, an EU one against its Member State's NIF-IVA structure. That
+    choice was written twice -- once as a mapping with a default in the invoice
+    normaliser, once as an ``if country == "ES"`` in the CLI wire projection --
+    and a third regime, or a change to which countries take which, would have
+    had to reach both.
+
+    An ABSENT country returns the identifier unvalidated, and that is the
+    deliberate half. A factura simplificada may legitimately carry no
+    counterparty country (RD 1619/2012 art. 6.1.d), and with no country there is
+    no regime to check against; guessing one from the identifier's own shape is
+    the substitution the identification-state fact exists to prevent.
+
+    Args:
+        tax_id: The counterparty identifier as declared.
+        country: The counterparty's ISO alpha-2 country, or ``None`` when the
+            document states none.
+
+    Returns:
+        The identifier in the canonical form its regime's validator returns,
+        unchanged when no country was declared.
+
+    Raises:
+        InvoiceValidationError: The identifier does not satisfy its regime.
+    """
+    if country is None:
+        return tax_id
+    if country == _SPAIN_COUNTRY_CODE:
+        return validate_spanish_tax_id(tax_id)
+    return validate_iva_number(tax_id, country)

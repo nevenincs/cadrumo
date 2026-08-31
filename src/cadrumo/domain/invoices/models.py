@@ -33,7 +33,6 @@ from ...core.identity import (
     InvoiceId,
     TaxIdIdentityToken,
     tax_id_identity_token,
-    validate_spanish_tax_id,
 )
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.money import CENT, round_to_cents
@@ -63,8 +62,8 @@ if TYPE_CHECKING:
 from ...core.parsing import IsoCurrencyCode
 from .validators import (
     is_eu_member_state_code,
+    validate_counterparty_tax_id,
     validate_country_code,
-    validate_iva_number,
 )
 
 """Rounding slack allowed between a declared retención amount and rate.
@@ -261,15 +260,10 @@ def _normalise_invoice_counterparty(payload: dict[str, object]) -> dict[str, obj
         tax_id_raw = tax_id_identity_token(tax_id)
         country = payload.get("counterparty_country")
         country_key = country if isinstance(country, str) else None
-        validators: Mapping[str | None, Callable[[str], str]] = {
-            None: lambda value: value,
-            "ES": validate_spanish_tax_id,
-        }
-        validator = validators.get(
-            country_key,
-            lambda value: validate_iva_number(value, cast(str, country_key)),
+        payload["counterparty_tax_id"] = _judging(
+            "counterparty_tax_id",
+            lambda: validate_counterparty_tax_id(tax_id_raw, country=country_key),
         )
-        payload["counterparty_tax_id"] = _judging("counterparty_tax_id", lambda: validator(tax_id_raw))
     # Every structured creation path -- bulk import, the wizard, the CLI, the
     # ingestion mapper -- reaches this one normaliser, so reading the
     # identification off the identifier HERE is what makes the fact present on
