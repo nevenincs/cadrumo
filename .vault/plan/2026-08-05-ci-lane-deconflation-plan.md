@@ -10,7 +10,7 @@ related:
   - '[[2026-06-01-registry-period-code-union-cli-boundary-adr]]'
   - '[[2026-08-05-ci-lane-deconflation-step-check-attribution-audit]]'
 modified: '2026-08-31'
-body_hash: 'sha256:4910dabdcb13e165c9e57a71998b67d67c1b8bd16fe5215f1d4b309d1c4c7cb5'
+body_hash: 'sha256:3fbd459548bf45c8ef7c51f98dae4b8e35f5bc251ce0be4b51bc9adc1a50ad19'
 ---
 
 <!-- RETIRED: S01, S10, S181, S184, S186, S189, S191, S193, S194, S197, S199, S201, S203, S205, S207, S209, S211, S213, S215, S217, S219, S221 -->
@@ -195,7 +195,7 @@ Decompose every live size-budget subject by its owning source file, then regener
 - [x] `P05.S131` - Refactor the size-budget subjects in _renta_income_ledger.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/aggregation/_renta_income_ledger.py`.
 - [x] `P05.S132` - Refactor the size-budget subjects in _source_mesh.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/aggregation/_source_mesh.py`.
 - [x] `P05.S133` - Refactor the size-budget subjects in test_iva_ledger.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/aggregation/tests/test_iva_ledger.py`.
-- [ ] `P05.S134` - Refactor the size-budget subjects in test_modelo_source_mesh_ledger.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/aggregation/tests/test_modelo_source_mesh_ledger.py`.
+- [x] `P05.S134` - Refactor the size-budget subjects in test_modelo_source_mesh_ledger.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/aggregation/tests/test_modelo_source_mesh_ledger.py`.
 - [ ] `P05.S135` - Refactor the size-budget subjects in test_renta_ledger.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/aggregation/tests/test_renta_ledger.py`.
 - [ ] `P05.S136` - Refactor the size-budget subjects in operator.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/auth/operator.py`.
 - [ ] `P05.S137` - Refactor the size-budget subjects in test_certificate_sources_check.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/auth/tests/test_certificate_sources_check.py`.
