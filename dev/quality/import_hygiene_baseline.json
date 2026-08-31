@@ -51,7 +51,7 @@
           "import_binding",
           "symbol_export"
         ],
-        "reason": "Pure re-export facade over the private siblings _label_regex, _pdfplumber, _shared and _utils, plus a domain.justificante pass-through. Repointing consumers at those defining modules empties the namespace outright; nothing here needs relocating first."
+        "reason": "Pure re-export facade over the sibling defining modules label_regex, page_text_extraction, extracted_casilla and utils, plus a domain.justificante pass-through. All four are public now, so repointing the remaining package-level consumers at them empties the namespace outright; nothing here needs relocating first."
       },
       {
         "package": "cadrumo.adapters.outbound.aeat.browser",
@@ -59,7 +59,7 @@
           "import_binding",
           "symbol_export"
         ],
-        "reason": "Pure re-export facade over _factory, _site_health, _site_health_parsers and the errors, evasion, health, profile and session submodules. Consumer sweep only."
+        "reason": "Pure re-export facade over _site_health_parsers and the errors, evasion, factory, health, profile, session and site_health_records submodules. Consumer sweep only."
       },
       {
         "package": "cadrumo.adapters.outbound.llm",
@@ -92,14 +92,6 @@
           "symbol_export"
         ],
         "reason": "Pure re-export facade over the private per-concern calculation siblings (IVA compensation, wallet reconciliation, binding prefill, cross-period evidence, bienes-inversion regularizacion). Consumer sweep only."
-      },
-      {
-        "package": "cadrumo.application.invoices",
-        "breaches": [
-          "import_binding",
-          "symbol_export"
-        ],
-        "reason": "Pure re-export facade over the private bulk-import, creation, issuer-establishment, lifecycle, linking, projection and query siblings plus domain.invoices.service. Consumer sweep only."
       },
       {
         "package": "cadrumo.core",
