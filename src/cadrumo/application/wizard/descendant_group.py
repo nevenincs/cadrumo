@@ -38,6 +38,7 @@ from ...core.errors.hierarchy import ProfileAnswerTypeError
 from ...core.flows import REPEATING_INSTANCE_SEPARATOR, CopyRefKind, FlowWidgetKind
 from ...core.identity import IdentityError, validate_identity
 from ...core.parsing import parse_iso8601_date
+from ...core.text_bounds import CALENDAR_MONTH_MAX, CALENDAR_MONTH_MIN, is_calendar_month
 from ...core.time import today_madrid
 from ...domain.deadlines.models import EntityType
 from ..flows.definition import (
@@ -374,13 +375,13 @@ def _validate_alta_posterior_month(page: FlowPage, canonical: str) -> Validation
     """Keep the optional completion month inside the calendar range."""
     if not canonical:
         return ValidationVerdict.passed()
-    if 1 <= int(canonical) <= 12:
+    if is_calendar_month(int(canonical)):
         return ValidationVerdict.passed()
     return ValidationVerdict.failed(
         _ALTA_POSTERIOR_INVALID_RANGE_LOCALE_KEY,
         page_id=page.id,
-        minimum=1,
-        maximum=12,
+        minimum=CALENDAR_MONTH_MIN,
+        maximum=CALENDAR_MONTH_MAX,
     )
 
 

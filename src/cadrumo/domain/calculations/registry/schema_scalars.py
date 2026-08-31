@@ -10,6 +10,7 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, BeforeValidator, Field, SerializeAsAny
 
 from ....core import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
+from ....core.country_code import COUNTRY_CODE_ALPHA2_PATTERN
 from ....core.decimal import coerce_decimal
 from ....core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
 from ....core.identity import IdentityError, validate_spanish_tax_id
@@ -160,14 +161,21 @@ validate a period token independently of a casilla declaration.
 """
 
 
-_COUNTRY_CODE_RE = re.compile(r"^[A-Z]{2}$")
+_COUNTRY_CODE_RE = re.compile(rf"^{COUNTRY_CODE_ALPHA2_PATTERN}$")
 
 
 def _validate_country_code(value: object) -> object:
     """Validate a two-character ISO 3166-1 alpha-2 country code.
 
-    Format-only validation: enforces uppercase ASCII letters and
-    exact length 2. Membership against the AEAT-supported country
+    Format-only validation against the shared
+    :data:`~cadrumo.core.country_code.COUNTRY_CODE_ALPHA2_PATTERN`: uppercase
+    ASCII letters, exact length 2. A lowercase token is REFUSED rather than
+    folded, matching
+    :func:`~cadrumo.core.parsing.normalise_iso_3166_alpha2_jurisdiction`: a
+    country code on a casilla selects a regulatory treatment, so the operator
+    declares the canonical code rather than having one guessed.
+
+    Membership against the AEAT-supported country
     list is delegated to per-casilla `constraints.enum` declarations
     (Plan B) and to the semantic-role consistency layer (Plan C).
     Country casillas declaring `data_type = "country_code"` are

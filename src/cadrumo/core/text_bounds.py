@@ -24,7 +24,7 @@ and is used directly; only the positive case needs a local name.
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Annotated
+from typing import Annotated, Final
 
 from pydantic import Field, StringConstraints
 
@@ -45,8 +45,33 @@ point at the sites that need it: an exchange rate of zero is not a rate,
 while a total of zero is a legitimate total.
 """
 
-CalendarMonth = Annotated[int, Field(ge=1, le=12)]
+#: The first month AEAT numbers.
+CALENDAR_MONTH_MIN: Final[int] = 1
+
+#: The last month AEAT numbers.
+CALENDAR_MONTH_MAX: Final[int] = 12
+
+CalendarMonth = Annotated[int, Field(ge=CALENDAR_MONTH_MIN, le=CALENDAR_MONTH_MAX)]
 """A month of the year, numbered as AEAT numbers them."""
+
+
+def is_calendar_month(value: int) -> bool:
+    """Whether ``value`` names a month, inclusive at both ends.
+
+    For the callers that cannot use the annotation because they must raise
+    their OWN refusal: the profile answer reader raises a
+    ``ProfileAnswerTypeError`` naming the answer key, the descendant record a
+    ``ProfileValidationError``, the setup wizard returns a failed verdict
+    carrying a locale key, and the CLI payload a plain ``ValueError`` pydantic
+    wraps. Those differ on purpose -- the operator's first instructive surface
+    should name the field they typed into -- so what is shared is the question,
+    not the answer.
+
+    The bound was open-coded as ``1 <= month <= 12`` at five sites, twice within
+    a single module for the SAME field, which is how a bound stops being one
+    rule and becomes five that happen to agree.
+    """
+    return CALENDAR_MONTH_MIN <= value <= CALENDAR_MONTH_MAX
 
 type NonEmptyList[T] = Annotated[list[T], Field(min_length=1)]
 """A list that carries at least one element.
@@ -57,10 +82,13 @@ and a projection has no business changing what a caller may hand it.
 """
 
 __all__ = [
+    "CALENDAR_MONTH_MAX",
+    "CALENDAR_MONTH_MIN",
     "CalendarMonth",
     "NonEmptyList",
     "NonEmptyStr",
     "NonNegativeDecimal",
     "PositiveCount",
     "PositiveDecimal",
+    "is_calendar_month",
 ]

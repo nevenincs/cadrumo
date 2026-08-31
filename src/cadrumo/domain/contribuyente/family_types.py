@@ -17,7 +17,6 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field, field_validator
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import (
     ART_81_1_ENTRY_WINDOW_YEARS as _ART_81_1_ENTRY_WINDOW_YEARS,
 )
@@ -29,7 +28,9 @@ from ...core.external_constants import (
     NACIMIENTO_ADOPCION_APPLICABILITY_FOLLOWING_PERIODS as _NACIMIENTO_ADOPCION_APPLICABILITY_FOLLOWING_PERIODS,
 )
 from ...core.identity import SubjectTaxId
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.parsing import parse_iso8601_date
+from ...core.text_bounds import CalendarMonth
 from .errors import ProfileValidationError
 
 # Comunidad de Madrid "Por nacimiento o adopción de hijos" deducción autonómica
@@ -147,7 +148,7 @@ class GuarderiaMonthSpend(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    month: int = Field(ge=1, le=12)
+    month: CalendarMonth
     amount_euros: int = Field(ge=0)
 
 

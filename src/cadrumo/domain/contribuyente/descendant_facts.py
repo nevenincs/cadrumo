@@ -59,6 +59,7 @@ from ...core.decimal import try_parse_canonical_decimal
 from ...core.errors.hierarchy import ProfileAnswerTypeError
 from ...core.identity import tax_id_identity_token
 from ...core.parsing import parse_bool, parse_iso8601_date
+from ...core.text_bounds import is_calendar_month
 from .descendant import DescendantInfo
 from .family_types import GuarderiaMonthSpend
 from .guarderia_mensual import (
@@ -456,7 +457,7 @@ def _stored_alta_posterior_mes(raw: str | None, *, index: int) -> int | None:
             f"renta_family.descendiente.{index}.alta_posterior_nacimiento_mes must be a month 1-12; got {raw!r}.",
         )
     month = int(text)
-    if not (1 <= month <= 12):
+    if not is_calendar_month(month):
         raise ProfileAnswerTypeError(
             f"renta_family.descendiente.{index}.alta_posterior_nacimiento_mes must be a month 1-12; got {raw!r}.",
         )
@@ -735,7 +736,7 @@ def _flag_maternity_fields(parts: dict[str, str]) -> _MaternityFields:
     meses_raw = parts.get("MESES_TRABAJO")
     alta_posterior_raw = parts.get("ALTA_POSTERIOR_MES")
     alta_posterior_nacimiento_mes = int(alta_posterior_raw) if alta_posterior_raw is not None else None
-    if alta_posterior_nacimiento_mes is not None and not 1 <= alta_posterior_nacimiento_mes <= 12:
+    if alta_posterior_nacimiento_mes is not None and not is_calendar_month(alta_posterior_nacimiento_mes):
         raise ProfileAnswerTypeError(f"ALTA_POSTERIOR_MES must be 1-12; got {alta_posterior_nacimiento_mes!r}")
     gastos_raw = parts.get("GASTOS_GUARDERIA")
     gastos_guarderia_euros = int(gastos_raw) if gastos_raw is not None else 0

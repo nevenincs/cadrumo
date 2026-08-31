@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import re
 
+from ...core.country_code import COUNTRY_CODE_ALPHA2_PATTERN
 from ...core.identity import nif_iva_format_for_country, normalise_nif_iva
 from ..iva.schema import EUMemberState
 from .errors import InvoiceValidationError
@@ -32,7 +33,7 @@ __all__ = [
 ]
 
 _IVA_BODY_RE = re.compile(r"^[a-zA-Z0-9]{4,20}$")
-_ISO_2_RE = re.compile(r"^[A-Z]{2}$")
+_ISO_2_RE = re.compile(rf"^{COUNTRY_CODE_ALPHA2_PATTERN}$")
 
 
 EU_MEMBER_STATE_CODES: frozenset[str] = frozenset(
@@ -45,6 +46,14 @@ excluding the Northern Ireland IVA prefix ``XI``."""
 
 def validate_country_code(value: str) -> str:
     """Normalise and validate an ISO-3166 alpha-2 country code.
+
+    Folds case, unlike
+    :func:`~cadrumo.core.parsing.normalise_iso_3166_alpha2_jurisdiction`, which
+    refuses a lowercase token so the regulatory treatment of a ledger row is
+    never guessed. A counterparty's country is a label on an invoice rather than
+    a treatment selector, so folding an operator's ``"es"`` here costs nothing.
+    The two share :data:`~cadrumo.core.country_code.COUNTRY_CODE_ALPHA2_PATTERN`
+    and nothing else.
 
     Args:
         value: Raw country code to validate.
