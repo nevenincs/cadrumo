@@ -5,7 +5,7 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:fbbe0538c0fb78fbbdc553974601d663c90b304cab84ac5cf94cd81c28b363a4'
+body_hash: 'sha256:6ee8f00c14bfb662fbc16150df2840f611d7b5616b9a086cea41eba96a1efc89'
 related:
   - "[[2026-08-05-ci-lane-deconflation-P05-S182]]"
 ---
@@ -32,7 +32,7 @@ related:
 
 ## Scope
 
-Independent self-review of the P05.S182 execution record against the live `authority.py` to `diagnostic_classification.py` split, supplied focused receipts, the mixed integration receipt, size-budget-policy boundary, and isolated vault-artifact scope.
+Independent self-review of the P05.S182 execution record against source provenance `4ced237398edb70bd54a0eef6550fda705dc0d70`, the `authority.py` to `diagnostic_classification.py` split, supplied focused receipts, the mixed integration receipt, size-budget-policy boundary, and isolated vault-artifact scope.
 
 ## Findings
 
@@ -47,4 +47,3 @@ The live split records the 1365-to-1142-line primary reduction and 253-line sibl
 ## Recommendations
 
 Keep the two shared `corpus_catalogue` failures separately owned and rerun the integration selection once that shared surface is stable; do not use this record as a green integration receipt.
-
