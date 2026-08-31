@@ -780,3 +780,69 @@ one partition of the inputs -- here, a code that never once appears among a
 third of the corpus. Reach for that comparison on any generator whose output
 is a label rather than a number, because a label carries no arithmetic that
 would otherwise fail.
+
+## The blank-run refusal named a live filing-grade defect in modelo 347
+
+The refusal added above fired immediately on real shipped data:
+
+```
+official field 'm347-2011.declarado.f027' declares blank-run naturaleza
+'Blancos', which states no text representation, but the semantic map does not
+declare it a filler
+```
+
+Reading the two designs settles it. `aeat-dr-347-2011` states one row for the
+whole tail of the declarado record:
+
+```
+264 -500 -------- BLANCOS.
+```
+
+`aeat-dr-347-2025` is where the field was introduced:
+
+```
+264-280 Alfanumérico NIF OPERADOR COMUNITARIO
+282     Alfabético   OPERACIÓN CON INVERSIÓN DEL SUJETO PASIVO
+```
+
+The 2011 semantic map nevertheless declared, citing `aeat-dr-347-2011` as its
+own source:
+
+```toml
+export_field_id = "m347-2011.declarado.f027"
+kind = "casilla"
+casilla_id = "contraparte.nif-operador-comunitario"
+```
+
+and the SHIPPED export tree carries it as `offset = 264`, `length = 237`,
+`casilla_id = 'contraparte.nif-operador-comunitario'`. 500 − 264 + 1 = 237, so
+the extent is exactly the blank run: the region was read correctly and then
+bound to a casilla that did not exist in that revision. A 2011-2024 modelo 347
+filing carrying a value on `contraparte.nif-operador-comunitario` writes it
+left-justified across 237 bytes of space the design mandates be blank. The
+field is `required = false`, so the defect is latent rather than universal, but
+it is filing-grade, not provenance-grade.
+
+The entry looks copied from the 2025 map without re-reading the 2011 design.
+The corrected 2011 declaration is `kind = "filler"` with the casilla binding
+removed; the region, legal refs, source ref and anchor are unchanged, because
+only the binding was ever wrong.
+
+### What this says about the pre-existing red
+
+Both m347 rows were ALREADY failing check mode before any of this work, both
+on `['0002-record-m347-declarado.toml']`, with no diagnosis attached. Baselining
+the pre-fix generator against the same two rows confirms it: the drift predates
+the change, and the refusal is what finally named its cause. A committed
+artifact that a fresh render disagrees with had been read as staleness for as
+long as it had been red; it was a data contradiction the whole time.
+
+### Lesson
+
+A generated artifact drifting from its source is reported as "stale", and
+staleness is the innocent reading -- it invites republication rather than
+diagnosis. Republishing modelo 347 at any point would have overwritten the
+evidence and closed the gate green on the WRONG side, keeping the casilla
+binding and losing the only signal that anything was wrong. Before republishing
+a drifted tree, establish WHICH side is right. The refusal that fires during
+the fresh render is the cheapest way to find out.
