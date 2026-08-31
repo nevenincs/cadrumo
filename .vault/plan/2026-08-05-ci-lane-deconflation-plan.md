@@ -10,7 +10,7 @@ related:
   - '[[2026-06-01-registry-period-code-union-cli-boundary-adr]]'
   - '[[2026-08-05-ci-lane-deconflation-step-check-attribution-audit]]'
 modified: '2026-08-31'
-body_hash: 'sha256:e0ab5b49bf577a9cc796387c171e5bdbb650efffe83f6ba5220d597e7f381c39'
+body_hash: 'sha256:e5b606506b27b098b5f5659b52d0427293161ef7281f3eda29a35f332b223d93'
 ---
 
 <!-- RETIRED: S01, S10, S181, S184, S186, S189, S191, S193, S194, S197, S199, S201, S203, S205, S207, S209, S211, S213, S215, S217, S219, S221 -->
@@ -276,7 +276,7 @@ Decompose every live size-budget subject by its owning source file, then regener
 - [x] `P05.S200` - Refactor the size-budget subjects in test_modelo_303_registry.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/tests/test_modelo_303_registry.py`.
 - [x] `P05.S202` - Refactor the size-budget subjects in test_record_design.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/tests/test_record_design.py`.
 - [x] `P05.S204` - Refactor the size-budget subjects in test_revision_span_matches_published_designs.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/tests/test_revision_span_matches_published_designs.py`.
-- [ ] `P05.S206` - Refactor the size-budget subjects in withholding_bindings.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/withholding_bindings.py`.
+- [x] `P05.S206` - Refactor the size-budget subjects in withholding_bindings.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/withholding_bindings.py`.
 - [x] `P05.S208` - Refactor the size-budget subjects in __init__.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/contribuyente/inventory/__init__.py`.
 - [x] `P05.S210` - Refactor the size-budget subjects in models.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/invoices/models.py`.
 - [x] `P05.S212` - Refactor the size-budget subjects in classification.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/iva/classification.py`.
