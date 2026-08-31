@@ -5,7 +5,7 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:880f1764de42602a90e1145665f808766102b1f0269314c62587465eb5fb1f2a'
+body_hash: 'sha256:a416e72fd12de2be57506c30a42662411df8d383dae6a975946241de1fb54d75'
 step_id: 'S180'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
@@ -19,7 +19,6 @@ related:
 ## Changes
 
 - `M` `src/cadrumo/domain/calculations/registry/_validate_revision_sections.py`
-- `M` `.vault/plan/2026-08-05-ci-lane-deconflation-plan.md`
 - `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P05-S180.md`
 
 ## Notes
@@ -27,3 +26,4 @@ related:
 - Ruff check and format check on the validator emitted `All checks passed!` and `1 file already formatted` (exit 0).
 - The AST probe measured `_validate_revision_surface_sections` at 140 lines and its extracted tail helper at 73 lines (exit 0); no size baseline or policy changed.
 - Importing `validate_revision_definition` from the moved surface succeeded (exit 0).
+- Parent commit `606a4a707b` had already closed S180 through the vault CLI; this Step's source commit deliberately owns no plan mutation.
