@@ -37,11 +37,12 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_serializer, model_validator
 
-from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ....core.period import Period
 from ....core.casilla_id import CasillaId
 from ....core.filing_year import FilingYear
 from ....core.identity import ContentDigest, TransactionId
+from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core.parsing import IsoCurrencyCode
+from ....core.period import Period
 from ....core.time import now as _utc_now
 from ....core.time import validate_utc_aware
 from ....domain.calculations.registry.ids import (
@@ -514,7 +515,7 @@ class SheetEvidenceContributorRow(BaseModel):
     casilla_id: CasillaId
     transaction_id: TransactionId
     amount: Decimal
-    currency: str = Field(min_length=1)
+    currency: IsoCurrencyCode
     # Euro projection of a foreign-currency contributor, mirroring the domain
     # evidence row. The casilla this row explains is denominated in euro, so an
     # evidence surface showing only the native amount cannot be reconciled

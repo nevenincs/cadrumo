@@ -162,7 +162,10 @@ _EXPECTED_NAMESPACE_KEYS_IN_ORDER = (
 
 def test_secure_object_registry_preserves_the_declared_namespace_sequence() -> None:
     """The aggregate registry's order is a stable hierarchy contract."""
-    assert tuple(definition.key for definition in STORAGE_NAMESPACE_REGISTRY.namespaces) == _EXPECTED_NAMESPACE_KEYS_IN_ORDER
+    assert (
+        tuple(definition.key for definition in STORAGE_NAMESPACE_REGISTRY.namespaces)
+        == _EXPECTED_NAMESPACE_KEYS_IN_ORDER
+    )
 
 
 def test_secure_object_registry_names_application_namespaces() -> None:

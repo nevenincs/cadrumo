@@ -22,7 +22,6 @@ from pydantic import BaseModel, Field, field_serializer, field_validator, model_
 
 from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from ...core.aggregation import IntracomOperationType, TravelAgencyMediationType
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.country_code import CountryCodeAlpha2
 from ...core.decimal import coerce_decimal
 from ...core.errors.hierarchy import CoreValidationError
@@ -36,6 +35,7 @@ from ...core.identity import (
     tax_id_identity_token,
     validate_spanish_tax_id,
 )
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.money import CENT, round_to_cents
 from ...core.parsing import normalise_iso_4217_currency
 from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
@@ -60,6 +60,7 @@ from .errors import InvoiceValidationError
 
 if TYPE_CHECKING:
     pass
+from ...core.parsing import IsoCurrencyCode
 from .validators import (
     is_eu_member_state_code,
     validate_country_code,
@@ -611,7 +612,7 @@ class Invoice(BaseModel):
     base_total: Decimal
     iva_total: Decimal
     grand_total: Decimal
-    currency: str = Field(min_length=3, max_length=3)
+    currency: IsoCurrencyCode
     lines: tuple[InvoiceLine, ...]
     payment_status: PaymentStatus
     linked_transaction_ids: tuple[str, ...] = ()

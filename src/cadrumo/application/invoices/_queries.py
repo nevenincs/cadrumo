@@ -17,6 +17,7 @@ from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core.identity import InvoiceId
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.parsing import IsoCurrencyCode
 from ...domain.invoices.models import Invoice, InvoiceCatalogue
 from ...domain.invoices.service import LinkInconsistency, find_invoice, find_unmatched, verify_link_consistency
 from ...domain.iva.classification import InvoiceKind
@@ -32,7 +33,7 @@ class InvoiceListRow(BaseModel):
     issued_at: date
     counterparty_name: str
     grand_total: Decimal
-    currency: str
+    currency: IsoCurrencyCode
     payment_status: str
 
 

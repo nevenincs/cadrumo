@@ -80,6 +80,13 @@ class OperationTransientFinancialOperandDeclaration(_OperandModel):
     """
 
     operand_kind: OperationFinancialOperandKind
+    # Deliberately NOT :obj:`~core.parsing.IsoCurrencyCode`, and stated here
+    # so the divergence is a decision rather than an oversight. That annotation
+    # NORMALISES -- it would accept an authored "eur" and quietly uppercase it.
+    # This is a registry-authored declaration, not operator input, so a sloppy
+    # code should fail the author at load rather than be repaired behind them.
+    # Every other currency field in the tree normalises, because every other one
+    # reads a value someone typed or a bank exported.
     currency: Annotated[str, Field(pattern=r"^[A-Z]{3}$")]
     scale: Annotated[int, Field(ge=0, le=_MAX_OPERAND_SCALE)]
     minimum: Decimal

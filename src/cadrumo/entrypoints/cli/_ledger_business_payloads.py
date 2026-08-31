@@ -33,6 +33,7 @@ from pydantic import AfterValidator, NonNegativeInt, field_validator
 from ...core.decimal import is_non_negative_canonical_decimal
 from ...core.identity import BucketId, InvoiceId, TaxIdIdentityToken
 from ...core.json_contract import OutputSchema
+from ...core.parsing import IsoCurrencyCode
 from ...core.text_bounds import NonEmptyStr, PositiveCount
 from ...domain.contribuyente.inventory import (
     INVENTORY_SCHEMA_VERSION,
@@ -597,7 +598,7 @@ class EvidenceConfirmResult(OutputSchema):
     base_total: str
     iva_total: str
     grand_total: str
-    currency: str
+    currency: IsoCurrencyCode
     payment_status: str
     linked_transaction_ids: list[str] = []
     notes: str = ""
