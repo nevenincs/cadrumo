@@ -19,10 +19,10 @@ from urllib.parse import urlsplit
 
 from pydantic import AnyHttpUrl, BaseModel, Field, TypeAdapter, field_validator, model_validator
 
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.citation_grounding import CitationGrounding
 from ...core.external_constants import load_external_constants
 from ...core.i18n import Translatable as tr
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.unit_proportion import UnitProportion
 from ...core.validity_window import ValidityWindow
 from .errors import CategoryValidationError

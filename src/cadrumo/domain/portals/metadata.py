@@ -12,9 +12,9 @@ from functools import lru_cache
 
 from pydantic import BaseModel, Field, HttpUrl, field_validator, model_validator
 
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.external_constants import load_external_constants
 from ...core.i18n import Translatable as tr
+from ...core.models import STRICT_FROZEN_CONFIG
 from .categories import AuthMethod, PortalCategory, PortalHost, UrlStability
 from .codes import Portal
 from .errors import PortalValidationError

@@ -8,7 +8,7 @@ from decimal import Decimal
 import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from .._validate import RegistryValidator
 from ..formula_runtime import calculate_registry_snapshot
 from ..legal import verify_legal_catalogue

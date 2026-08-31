@@ -25,7 +25,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from ....core.resources import bundled_path
+from ....core.resources._boundary import bundled_path
 from ....domain.iva.classification import InvoiceKind
 from ..enums import InvoiceLegalMention, IvaRate, PaymentStatus, invoice_legal_mention_text
 from ..models import Invoice, InvoiceLine

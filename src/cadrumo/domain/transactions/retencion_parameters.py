@@ -52,7 +52,7 @@ from typing import TYPE_CHECKING, Final
 from pydantic import BaseModel, Field
 
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.resources import bundled_path
+from ...core.resources._boundary import bundled_path
 from .errors import TransactionValidationError
 
 if TYPE_CHECKING:

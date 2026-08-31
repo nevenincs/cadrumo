@@ -9,15 +9,15 @@ from decimal import Decimal
 import pytest
 
 from .....core.estado_casilla_oficial import EstadoCasillaOficial
-from .....core.prorrata_register import ProrrataActivityRowType, ProrrataRegisterRegime
 from .....core.filing_projection_ref import (
     M303ProrrataActivityProjectionField,
     M303ProrrataActivityProjectionRef,
 )
-from .....core.modelo import Modelo
 from .....core.i18n import tr
-from .....core.resources import bundled_path
-from .....domain.prorrata_register import ProrrataActivityRow, ProrrataRegister, ProrrataRegisterEntry
+from .....core.modelo import Modelo
+from .....core.prorrata_register import ProrrataActivityRowType, ProrrataRegisterRegime
+from .....core.resources._boundary import bundled_path
+from .....domain.prorrata_register.register import ProrrataActivityRow, ProrrataRegister, ProrrataRegisterEntry
 from .._validate import RegistryValidator
 from ..corpus_catalogue import resolve_record_design_binary
 from ..errors import RegistryValidationError

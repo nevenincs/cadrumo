@@ -25,7 +25,8 @@ from sqlalchemy import event
 from sqlalchemy.engine import Engine
 
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....adapters.persistence.storage import MODELO_WORK_UNIT_CATALOGUE_NAMESPACE, SensitivityClass
+from ....adapters.persistence.storage._secure_object_namespaces import MODELO_WORK_UNIT_CATALOGUE_NAMESPACE
+from ....core.classification.policies import SensitivityClass
 from ....core.period import Period
 from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from ....tests.secure_sql import isolated_runtime_profile
@@ -308,7 +309,7 @@ def test_work_unit_catalogue_wrong_inner_classification_is_localized(
 ) -> None:
     """A corrupted envelope classification raises a translated persistence error."""
 
-    from ....adapters.persistence.storage import Envelope
+    from ....adapters.persistence.storage.envelope._envelope import Envelope
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         envelope = Envelope[WorkUnitCatalogue](
@@ -342,7 +343,7 @@ def test_work_unit_catalogue_unsupported_inner_version_is_localized(
 ) -> None:
     """A future inner envelope schema version raises a translated persistence error."""
 
-    from ....adapters.persistence.storage import Envelope
+    from ....adapters.persistence.storage.envelope._envelope import Envelope
 
     stored_schema_version = _WORK_UNIT_CATALOGUE_VERSION + 1
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:

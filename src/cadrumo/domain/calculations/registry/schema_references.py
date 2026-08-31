@@ -7,9 +7,6 @@ from typing import Annotated, Final, Literal
 
 from pydantic import AfterValidator, AnyHttpUrl, Field, TypeAdapter, field_validator, model_validator
 
-from ....core.record_design_epoch import RECORD_DESIGN_EPOCH_RE
-from ....core.legal_review import LegalReviewStatus, REVIEWED_LEGAL_STATUSES
-from ....core.period import RegistryPeriodCode, RegistrySelectorPeriodCode
 from ....core.external_constants import (
     PDF_EXTENSION,
     XLS_EXTENSION,
@@ -18,6 +15,9 @@ from ....core.external_constants import (
 )
 from ....core.filing_year import FilingYear
 from ....core.identity import ContentDigest
+from ....core.legal_review import REVIEWED_LEGAL_STATUSES, LegalReviewStatus
+from ....core.period import RegistryPeriodCode, RegistrySelectorPeriodCode
+from ....core.record_design_epoch import RECORD_DESIGN_EPOCH_RE
 from .errors import RegistryValidationError
 from .ids import LegalRefId, ModeloId, ParameterId, RevisionId, SourceRefId
 from .schema_base import (

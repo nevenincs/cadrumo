@@ -31,7 +31,7 @@ from decimal import Decimal
 
 import pytest
 
-from .. import (
+from ..register import (
     BienInversionDisposalRegime,
     BienInversionKind,
     BienInversionValidationError,

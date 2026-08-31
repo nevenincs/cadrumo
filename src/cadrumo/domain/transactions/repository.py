@@ -21,10 +21,10 @@ and the membership-index key with :func:`transaction_index_object_key`.
 
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, NonNegativeInt
 
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.identity import BucketId
+from ...core.models import STRICT_FROZEN_CONFIG
 from .errors import LedgerStorageError
 from .models import BucketTransactionRef
 
@@ -113,8 +113,8 @@ class ImportSummary(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    imported: int = Field(ge=0)
-    skipped: int = Field(ge=0)
+    imported: NonNegativeInt
+    skipped: NonNegativeInt
     errors: int = Field(default=0, ge=0)
     bucket_id: BucketId
     imported_refs: tuple[BucketTransactionRef, ...] = ()

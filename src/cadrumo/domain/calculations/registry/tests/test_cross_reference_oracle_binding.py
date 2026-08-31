@@ -12,7 +12,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from .._validate import RegistryValidator
 from ..errors import RegistryValidationError
 from ..schema import ModeloDefinition, ModeloRevision

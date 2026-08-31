@@ -13,22 +13,15 @@ from sqlalchemy import select
 from ....adapters.persistence.profile.submission import (
     SubmissionRepository,
 )
-from ....adapters.persistence.storage import (
-    Envelope,
-    SensitivityClass,
-)
+from ....adapters.persistence.storage.envelope._envelope import Envelope
 from ....adapters.persistence.storage.errors import ClassificationError
-from ....adapters.persistence.storage.sql import SecureObjectRow
+from ....adapters.persistence.storage.sql._orm import SecureObjectRow
 from ....adapters.persistence.storage.sql.engine import get_engine
 from ....adapters.persistence.storage.sql.session import session_scope
+from ....core.classification.policies import SensitivityClass
 from ....core.period import Period
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from .. import (
-    ModeloPresentado,
-    SubmissionAttempt,
-    SubmissionStatus,
-    make_submission_id,
-)
+from .._models import ModeloPresentado, SubmissionAttempt, SubmissionStatus, make_submission_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -47,7 +47,7 @@ import pytest
 
 from .....core.config import override_settings
 from .....core.directory_scan import scan_directory
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from .....tests.env_scope import scoped_env_var
 from .._loader_internals import _collect_registry_tree_fingerprints
 from ..loader import _load_registry_tree_cached, load_registry_tree

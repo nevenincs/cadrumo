@@ -14,8 +14,8 @@ from typing import Literal, Protocol
 
 from pydantic import AnyUrl, BaseModel, Field, field_validator
 
-from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.identity import tax_id_identity_token
+from ....core.models import STRICT_FROZEN_CONFIG
 from .errors import RegistryValidationError
 from .ids import OracleId
 from .live_parity import (

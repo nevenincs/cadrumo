@@ -14,7 +14,7 @@ from pydantic import ValidationError
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.directory_scan import scan_directory
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from .._loader_internals import load_modelo_file
 from .._validate import RegistryValidator
 from ..authority import bundled_authority

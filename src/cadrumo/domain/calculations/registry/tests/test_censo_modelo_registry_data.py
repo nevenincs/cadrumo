@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from .....tests import REPO_ROOT
 from ..binding_selector_utils import selector_as_dict
 from ..corpus_catalogue import verify_source_file

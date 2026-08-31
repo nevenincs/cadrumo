@@ -15,10 +15,10 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 
+from .....core.aggregation import BindingSourceKind
+from .....core.casilla_id import CasillaId
 from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.period import Period, hydrate_scenario_filing_period
-from .....core.casilla_id import CasillaId
-from .....core.aggregation import BindingSourceKind
 from ..authority import ValidatedRegistryAuthority
 from ..errors import RegistrySnapshotError, RegistryValidationError
 from ..formula_runtime import RegistryCalculationEntry, RegistryCalculationResult, calculate_registry_snapshot

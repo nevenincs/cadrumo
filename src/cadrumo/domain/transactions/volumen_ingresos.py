@@ -15,9 +15,9 @@ See Also:
 from __future__ import annotations
 
 from ...core.concepto_ingreso import (
-    ConceptoIngreso,
     INGRESO_CONCEPTS_OUTSIDE_THE_ART_109_BASE,
     INGRESO_CONCEPTS_OUTSIDE_THE_VOLUME_BASE,
+    ConceptoIngreso,
 )
 
 __all__ = ["counts_toward_art_109_activity_income", "counts_toward_volumen_de_ingresos"]

@@ -29,7 +29,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....core.money import round_to_cents as _round_to_cents
+from ....core.money.rounding import round_to_cents as _round_to_cents
 from ._formula_operator_contracts import require_formula_operator_arity
 from .casilla_membership import undeclared_casilla_ids
 from .errors import RegistrySnapshotError, RegistryValidationError
@@ -472,7 +472,7 @@ def read_parameter(
     an unchanged tree resolve to the same compiled authority while an edited tree
     resolves to a new one.
     """
-    from ....core.resources import bundled_path
+    from ....core.resources._boundary import bundled_path
     from .authority import ValidatedRegistryAuthority
 
     source_root = bundled_path()

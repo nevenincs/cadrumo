@@ -130,7 +130,7 @@ import pytest
 
 from .....core.directory_scan import scan_directory
 from .....core.external_constants import UTF_8_ENCODING
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from ._manual_oracle_support import read_manual_worked_example
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

@@ -6,12 +6,12 @@ from collections.abc import Mapping
 
 from pydantic import BaseModel
 
+from ...core.identity import SubjectTaxId
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.identity import SubjectTaxId
 from ..calculations.registry.schema import RegistrySnapshot
 from ..calculations.registry.schema_references import SourceReference
-from ..justificante import Justificante
+from ..justificante._schema import Justificante
 from .calculation_revision import CalculationRevision
 from .calculation_revision_amendment import (
     CalculationRevisionAmendmentIdentity,

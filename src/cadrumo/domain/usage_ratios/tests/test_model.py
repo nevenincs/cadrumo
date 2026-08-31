@@ -17,14 +17,14 @@ from pydantic import ValidationError
 from ...categories.proportionality import ProportionalityKind
 from ...categories.registry import resolve_category_profiles
 from ...categories.spending_category import SpendingCategory
-from .. import (
+from .._model import (
     ELIGIBLE_USAGE_RATIO_CATEGORIES,
     UsageRatioProfile,
     UsageRatioReference,
-    UsageRatioValidationError,
     resolve_user_ratio,
     validate_usage_ratio_reference,
 )
+from ..errors import UsageRatioValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

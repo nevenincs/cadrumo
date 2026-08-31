@@ -1,5 +1,5 @@
 """Public test-support facade for domain verification witnesses."""
 
-from ._regulatory_cap_witnesses import REGULATORY_CAP_WITNESSES
+from __future__ import annotations
 
-__all__ = ["REGULATORY_CAP_WITNESSES"]
+__all__: tuple[str, ...] = ()

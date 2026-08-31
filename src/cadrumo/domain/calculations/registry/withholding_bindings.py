@@ -11,7 +11,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError, field_validator
+from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, TypeAdapter, ValidationError, field_validator
 
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind, RetencionClave
 from ....core.country_code import CountryCodeAlpha2
@@ -1667,7 +1667,7 @@ class WithholdingClaveBreakdown(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     clave: RetencionClave
-    percepcion_count: int = Field(ge=0)
+    percepcion_count: NonNegativeInt
     percibido_total: Decimal = Field(ge=Decimal("0"))
     retencion_total: Decimal = Field(ge=Decimal("0"))
 
@@ -1738,7 +1738,7 @@ class WithholdingTotalsParity(BaseModel):
     retenciones_row_total: Decimal = Field(ge=Decimal("0"))
     retenciones_summary_total: Decimal = Field(ge=Decimal("0"))
     retenciones_delta: Decimal
-    row_count: int = Field(ge=0)
+    row_count: NonNegativeInt
     tolerance: Decimal = Field(ge=Decimal("0"))
     is_consistent: bool
 

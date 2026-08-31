@@ -10,12 +10,12 @@ from typing import Literal
 import pytest
 from pydantic import ValidationError as ValidationError
 
-from .....core.tax_domain import TaxDomain
-from .....core.toml import freeze_toml
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.classification import SensitivityClass
+from .....core.classification.policies import SensitivityClass
 from .....core.config import Settings
+from .....core.tax_domain import TaxDomain
+from .....core.toml import freeze_toml
 from .._snapshot_internals import _build_validated_snapshot as build_snapshot_at_grade
 from .._validate_references import check_all_id_references
 from ..authority import ValidatedRegistryAuthority

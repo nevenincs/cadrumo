@@ -9,7 +9,7 @@ from functools import lru_cache
 import pytest
 
 from .....core.casilla_id import CasillaId
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from .._validate import RegistryValidator
 from ..formula_runtime import _evaluate_expression
 from ..legal import verify_legal_catalogue

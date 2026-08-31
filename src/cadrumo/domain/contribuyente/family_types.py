@@ -15,7 +15,7 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, NonNegativeInt, field_validator
 
 from ...core.external_constants import (
     ART_81_1_ENTRY_WINDOW_YEARS as _ART_81_1_ENTRY_WINDOW_YEARS,
@@ -149,7 +149,7 @@ class GuarderiaMonthSpend(BaseModel):
     model_config = _STRICT_FROZEN
 
     month: CalendarMonth
-    amount_euros: int = Field(ge=0)
+    amount_euros: NonNegativeInt
 
 
 class _RentaPersonProfileBase(BaseModel):

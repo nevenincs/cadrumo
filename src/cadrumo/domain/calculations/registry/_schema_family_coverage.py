@@ -15,13 +15,13 @@ validation could not reach the projection without importing its own consumer.
 
 from __future__ import annotations
 
-from pydantic import BaseModel, Field, TypeAdapter, computed_field, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, TypeAdapter, computed_field, model_validator
 
-from ....core.schema_family_disposition import (
-    RegistrySchemaFamilyDisposition,
-    UNRESOLVED_SCHEMA_FAMILY_DISPOSITIONS,
-)
 from ....core.models import STRICT_FROZEN_CONFIG
+from ....core.schema_family_disposition import (
+    UNRESOLVED_SCHEMA_FAMILY_DISPOSITIONS,
+    RegistrySchemaFamilyDisposition,
+)
 from .errors import RegistryValidationError
 from .ids import LegalRefId, SourceRefId
 from .schema import REVISION_SCHEMA_FAMILY_FIELDS, ModeloRevision
@@ -43,7 +43,7 @@ class SchemaFamilyCoverageRow(CoverageModel):
 
     family: str = Field(min_length=1)
     disposition: RegistrySchemaFamilyDisposition
-    populated_count: int = Field(ge=0)
+    populated_count: NonNegativeInt
     reason: str | None = None
     legal_refs: tuple[LegalRefId, ...] = ()
     source_refs: tuple[SourceRefId, ...] = ()

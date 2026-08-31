@@ -21,9 +21,9 @@ from pathlib import Path
 
 import pytest
 
-from .....core.authority_grade import RegistryAuthorityGrade, UNDECLARED_REGISTRY_AUTHORITY_GRADE
+from .....core.authority_grade import UNDECLARED_REGISTRY_AUTHORITY_GRADE, RegistryAuthorityGrade
 from .....core.directory_scan import DirectoryEntryKind, scan_directory
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
 from ..errors import RegistryLoadError
 from ..loader import load_modelo_directory

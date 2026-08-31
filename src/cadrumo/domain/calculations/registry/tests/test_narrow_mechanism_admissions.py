@@ -38,7 +38,7 @@ import pytest
 from .....core.aggregation import BindingSourceKind
 from .....core.directory_scan import DirectoryEntryKind, scan_directory
 from .....core.external_constants import UTF_8_ENCODING
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from ..authority import bundled_authority
 from ..binding_selector_utils import selector_as_dict
 from ..record_design import extract_record_design

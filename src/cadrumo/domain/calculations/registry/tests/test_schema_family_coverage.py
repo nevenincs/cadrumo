@@ -21,8 +21,8 @@ import pytest
 from pydantic import BaseModel, ValidationError
 
 from .....core.schema_family_disposition import (
-    RegistrySchemaFamilyDisposition,
     UNRESOLVED_SCHEMA_FAMILY_DISPOSITIONS,
+    RegistrySchemaFamilyDisposition,
 )
 from .....tests.registry_tree import bundled_registry_tree
 from .._schema_family_coverage import (

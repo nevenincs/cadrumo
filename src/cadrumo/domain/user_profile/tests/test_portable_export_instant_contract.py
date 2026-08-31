@@ -23,7 +23,7 @@ from datetime import UTC, datetime, timedelta, timezone
 import pytest
 from pydantic import ValidationError
 
-from ....core.classification import SensitivityClass
+from ....core.classification.policies import SensitivityClass
 from ..portable_export import CarriedSecureObject
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

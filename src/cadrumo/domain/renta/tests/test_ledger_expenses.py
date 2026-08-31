@@ -12,10 +12,16 @@ from ....core.aggregation import BindingSourceKind
 from ....core.i18n import Translatable as tr
 from ....tests.aeat_literal_fixtures import RENTA_DEDUCIBILIDAD_CITATION_URL_FIXTURE
 from ...categories.profile import CategoryProfile
-from ...categories.proportionality import CategoryCitation, CategoryCitationSource, ProportionalityKind, ProportionalityRule, parse_http_url
+from ...categories.proportionality import (
+    CategoryCitation,
+    CategoryCitationSource,
+    ProportionalityKind,
+    ProportionalityRule,
+    parse_http_url,
+)
 from ...categories.registry import resolve_category_profiles
 from ...categories.spending_category import SpendingCategory, SpendingCategoryFamily
-from .. import (
+from .._ledger_expenses import (
     RentaDeductibilityContext,
     RentaDeductibilityStatus,
     RentaDeductibleExpenseFact,

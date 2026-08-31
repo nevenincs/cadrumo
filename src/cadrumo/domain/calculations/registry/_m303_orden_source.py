@@ -10,6 +10,10 @@ from pathlib import Path
 from typing import cast
 from urllib.parse import urlsplit
 
+from ....core.corpus_sidecar import render_corpus_sidecar_text
+from ....core.corpus_text import normalise_corpus_text
+from ....core.external_constants import UTF_8_ENCODING
+from ....core.hashing import sha256_hex
 from ....core.orden_anual_html import (
     OrdenAnualIvaActivityTable,
     OrdenAnualIvaAgriculturalIndex,
@@ -27,10 +31,6 @@ from ....core.orden_anual_html import (
     orden_anual_iva_authority_units,
     orden_anual_iva_table_text,
 )
-from ....core.corpus_sidecar import render_corpus_sidecar_text
-from ....core.corpus_text import normalise_corpus_text
-from ....core.hashing import sha256_hex
-from ....core.external_constants import UTF_8_ENCODING
 from ._m303_orden_constants import (
     EXPECTED_ACTIVITY_COUNT,
     EXPECTED_MODULE_DISTRIBUTION,

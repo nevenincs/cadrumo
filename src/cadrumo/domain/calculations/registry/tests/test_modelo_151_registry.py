@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from .._validate import RegistryValidator
 from ..legal import verify_legal_catalogue
 from ..schema import ModeloDefinition, RegistryCatalogues

@@ -47,9 +47,9 @@ from typing import Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field, field_validator
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.i18n import tr as _tr
 from ...core.logging import get_logger
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.unit_proportion import UNIT_PROPORTION_MAX, UNIT_PROPORTION_MIN, is_unit_proportion
 from ..categories.registry import resolve_category_profiles
 from ..categories.spending_category import SpendingCategory

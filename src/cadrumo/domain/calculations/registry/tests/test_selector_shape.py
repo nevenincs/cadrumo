@@ -38,8 +38,8 @@ import pytest
 from pydantic import ValidationError
 
 from .....application.aggregation import DEFERRED_SOURCE_KINDS
-from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..binding_selector_utils import selector_as_dict
 from ..bindings import (
     _BINDING_SELECTOR_REGISTRY,

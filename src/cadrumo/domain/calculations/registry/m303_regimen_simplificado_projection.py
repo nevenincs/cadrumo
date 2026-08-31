@@ -18,7 +18,15 @@ from ....core.filing_projection_ref import (
     M303RegimenSimplificadoModuleValue,
 )
 from ....core.models import STRICT_FROZEN_CONFIG
-from ...iva.regimen_simplificado_rows import ActividadAgricolaSimplificado, ActividadNoAgricolaSimplificado, ActividadOrdenAnual, AutoridadAgricolaOrdenAnualNoResuelta, RegimenSimplificadoActivity, RegimenSimplificadoFilingRows, validate_regimen_simplificado_rows
+from ...iva.regimen_simplificado_rows import (
+    ActividadAgricolaSimplificado,
+    ActividadNoAgricolaSimplificado,
+    ActividadOrdenAnual,
+    AutoridadAgricolaOrdenAnualNoResuelta,
+    RegimenSimplificadoActivity,
+    RegimenSimplificadoFilingRows,
+    validate_regimen_simplificado_rows,
+)
 from .errors import RegistryValidationError
 
 if TYPE_CHECKING:

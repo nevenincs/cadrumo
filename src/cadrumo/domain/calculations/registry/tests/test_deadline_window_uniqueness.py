@@ -6,8 +6,8 @@ from datetime import date
 
 import pytest
 
-from .....core.result_disposition import ResultDisposition
 from .....core.period import Period
+from .....core.result_disposition import ResultDisposition
 from .._validate import RegistryValidator
 from .._validate_revision_rules import validate_deadline_window_uniqueness
 from ..errors import RegistryValidationError

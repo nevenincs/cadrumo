@@ -7,10 +7,10 @@ from decimal import Decimal
 
 import pytest
 
-from .....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
-from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.aggregation import BindingAggregationOp, BindingSourceKind
-from .....core.resources import bundled_path
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from .....core.resources._boundary import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
 from .....tests.registry_observations import registry_grounded_modelo_observation
 from ....iva.deduction_facts import IvaDeductionClassificationProvenance
@@ -1074,7 +1074,14 @@ def test_modelo_303_monthly_snapshot_resolves_for_each_period() -> None:
 
 def test_modelo_303_monthly_filing_schedule_matches_monthly_liquidation_profiles() -> None:
     """The monthly schedule fires for monthly IVA-liquidation triggers only."""
-    from ....deadlines.models import IVARegime, M303RegimeComposition, M303TaxTerritory, ModeloEnrollment, ModeloIVAProfile, TaxpayerProfile
+    from ....deadlines.models import (
+        IVARegime,
+        M303RegimeComposition,
+        M303TaxTerritory,
+        ModeloEnrollment,
+        ModeloIVAProfile,
+        TaxpayerProfile,
+    )
     from ..schedules import applicable_filing_schedules
 
     modelo, _catalogues = _load_modelo_303()

@@ -23,8 +23,8 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from .....core.casilla_id import validated_casilla_id
 from .....core.aggregation import BindingSourceKind
+from .....core.casilla_id import validated_casilla_id
 from ..authority import bundled_authority
 from ..bindings import bound_casilla_binding_ids, casillas_by_binding
 from ..schema import ModeloRevision

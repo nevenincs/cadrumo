@@ -20,11 +20,4 @@ snapshot without the filing-grade legal-review gate
 
 from __future__ import annotations
 
-from ..snapshot import build_snapshot
-from ._manual_oracle_support import oracle_declared_figures, read_manual_worked_example
-
-__all__ = [
-    "build_snapshot",
-    "oracle_declared_figures",
-    "read_manual_worked_example",
-]
+__all__: tuple[str, ...] = ()

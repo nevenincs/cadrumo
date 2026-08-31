@@ -34,7 +34,7 @@ from typing import Any
 
 import pytest
 
-from ....core.resources import bundled_path
+from ....core.resources._boundary import bundled_path
 from ..classification import (
     CustomerTaxStatus,
     InvoiceKind,

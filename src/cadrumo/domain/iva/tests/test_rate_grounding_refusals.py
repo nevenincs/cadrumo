@@ -19,7 +19,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.resources import bundled_path
+from ....core.resources._boundary import bundled_path
 from ...calculations.registry.schema_references import LegalReference, SourceReference
 from .._grounding import legal_ref_failures
 from ..errors import IvaCatalogueError

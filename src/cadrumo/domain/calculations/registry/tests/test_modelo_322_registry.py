@@ -7,7 +7,7 @@ from datetime import date
 import pytest
 
 from .....core.iva_deduction_fact import IvaDeductionFactKind
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from ....iva.schema import IvaLedgerObservationRole
 from .._validate import RegistryValidator
 from ..authority import bundled_authority

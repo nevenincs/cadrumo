@@ -33,9 +33,6 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from ....core.toml import freeze_toml, read_toml
-from ....core.storage_taxonomy_locations import storage_location
-from ....core.storage_taxonomy import StorageCategory
 from ....core.config import load_settings
 from ....core.directory_scan import (
     DirectoryEntryKind,
@@ -43,7 +40,10 @@ from ....core.directory_scan import (
     scan_directory,
 )
 from ....core.hashing import blake2b_hex
-from ....core.resources import bundled_path
+from ....core.resources._boundary import bundled_path
+from ....core.storage_taxonomy import StorageCategory
+from ....core.storage_taxonomy_locations import storage_location
+from ....core.toml import freeze_toml, read_toml
 from ._toml_helpers import as_toml_table as _as_toml_table
 from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryLoadError
 from .ids import RevisionId

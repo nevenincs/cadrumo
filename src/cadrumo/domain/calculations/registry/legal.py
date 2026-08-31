@@ -7,7 +7,6 @@ from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import Final
 
-from ....core.legal_review import REVIEWED_LEGAL_STATUSES
 from ....core.corpus_text import (
     CorpusAnchorResolutionError,
     corpus_redaction_marks,
@@ -16,6 +15,7 @@ from ....core.corpus_text import (
     resolve_anchored_extracted_unit,
 )
 from ....core.hashing import blake2b_hex
+from ....core.legal_review import REVIEWED_LEGAL_STATUSES
 from ._citation_blocklist import CitationSource, find_known_bad
 from .errors import RegistryValidationError
 from .schema_references import LegalReference

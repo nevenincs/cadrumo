@@ -18,7 +18,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema_input_kind import InputKind

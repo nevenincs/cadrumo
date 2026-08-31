@@ -6,7 +6,7 @@ from decimal import Decimal
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import validated_casilla_id
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from ..formula_runtime import _evaluate_expression
 from ..schema import CasillaId, DataBindingDefinition, ModeloDefinition, RegistryCatalogues, RegistrySnapshot
 from ..schema_formula import FormulaExpression, ParameterDefinition

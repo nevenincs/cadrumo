@@ -17,10 +17,10 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.invoice_link import LinkInconsistencyDirection
 from ...core.identity import InvoiceId, TransactionId
+from ...core.invoice_link import LinkInconsistencyDirection
 from ...core.logging import get_logger
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..iva.classification import InvoiceKind
 from ..transactions.enums import TransactionDirection
 from ..transactions.models import TransactionCatalogue

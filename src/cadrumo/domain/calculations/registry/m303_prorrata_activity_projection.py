@@ -18,7 +18,7 @@ from ....core.filing_projection_ref import (
     M303ProrrataActivityProjectionRef,
 )
 from ....core.models import STRICT_FROZEN_CONFIG
-from ...prorrata_register import ProrrataActivityRow, ProrrataRegister
+from ...prorrata_register.register import ProrrataActivityRow, ProrrataRegister
 from .errors import RegistryValidationError
 
 _FIELDS = frozenset(M303ProrrataActivityProjectionField)

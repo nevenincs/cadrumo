@@ -10,7 +10,7 @@ import pytest
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.hashing import hash_file
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from .._validate_export_layout_coverage import validate_export_layout_record_coverage
 from .._validate_semantic_roles import semantic_role_consistency_failures
 from ..errors import AmbiguousRevisionSelectionError, NoRevisionForPeriodError, RegistryValidationError

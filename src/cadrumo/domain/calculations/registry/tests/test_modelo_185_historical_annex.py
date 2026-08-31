@@ -7,7 +7,7 @@ from datetime import date
 import pytest
 
 from .....core.hashing import hash_file
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from ..record_design import _extract_pdf_text_lines, extract_record_design
 from ._registry_schema_support import _committed_modelo
 

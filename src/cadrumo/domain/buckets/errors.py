@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 from ...core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin
 
 if TYPE_CHECKING:
-    from ...application.operator_actions import PreconditionVerdict
+    from ...application.operator_actions._models import PreconditionVerdict
 
     _BucketDeletePreconditionErrorMixin = TerminalPreconditionErrorMixin[PreconditionVerdict]
 else:

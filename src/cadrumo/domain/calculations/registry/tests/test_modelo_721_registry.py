@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from .....tests import REPO_ROOT
 from ..corpus_catalogue import verify_source_file
 from ..errors import NoRevisionForPeriodError, RegistryValidationError

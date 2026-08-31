@@ -40,11 +40,11 @@ from typing import Final, TypeGuard
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.decimal import coerce_decimal_strict
+from ...core.decimal._coerce import coerce_decimal_strict
 from ...core.external_constants import UTF_8_ENCODING
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.paths import path_stat_fingerprint
-from ...core.resources import bundled_path
+from ...core.resources._boundary import bundled_path
 from ...core.unit_proportion import UnitProportion
 from ._grounding import verify_table_legal_refs
 from .errors import IvaCatalogueError, IvaValidationError

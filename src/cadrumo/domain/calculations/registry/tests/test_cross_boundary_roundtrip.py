@@ -21,16 +21,23 @@ from typing import TypedDict, get_type_hints
 import pytest
 from pydantic import ValidationError
 
-from .....core.period import Period
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.identity import SubjectTaxId
-from ....filing.schema import ModeloBindingValue, ModeloDraft, ModeloValidationFinding, ModeloValue, ModeloValueKind, registry_schema_version
+from .....core.period import Period
+from ....filing.schema import (
+    ModeloBindingValue,
+    ModeloDraft,
+    ModeloValidationFinding,
+    ModeloValue,
+    ModeloValueKind,
+    registry_schema_version,
+)
 from ....modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from ....submission import ModeloDraftStatus
+from ....submission._protocols import ModeloDraftStatus
 from ..bindings import (
     CasillaObservation,
     OracleModeloObservation,

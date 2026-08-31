@@ -10,7 +10,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
 from .....core.directory_scan import scan_directory
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from ...export_field_kind import CasillaFieldKind
 from ..binding_selector_utils import BindingFixedExportSelector, binding_export_selector
 from ..export import resolve_export_layout

@@ -61,7 +61,7 @@ class TestTheExcludedTerritoriesAreRecognised:
         """
         import tomllib
 
-        from ....core.resources import bundled_path
+        from ....core.resources._boundary import bundled_path
 
         payload = tomllib.loads(
             bundled_path("registry", "aeat", "iva", "territories.toml").read_text(encoding="utf-8"),

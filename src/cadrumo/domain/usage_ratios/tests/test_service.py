@@ -16,20 +16,19 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from ....adapters.persistence.profile.usage_ratios import load_usage_ratios, save_usage_ratios
-from ....adapters.persistence.storage import Envelope, SensitivityClass, StorageRuntimeReadinessCode
+from ....adapters.persistence.storage._runtime_readiness import StorageRuntimeReadinessCode
+from ....adapters.persistence.storage.envelope._envelope import Envelope
 from ....adapters.persistence.storage.errors import StorageValidationError
-from ....core.storage_taxonomy_locations import storage_path
-from ....core.storage_taxonomy import StorageCategory
+from ....core.classification.policies import SensitivityClass
 from ....core.directory_scan import scan_directory
 from ....core.identity import BucketId
+from ....core.storage_taxonomy import StorageCategory
+from ....core.storage_taxonomy_locations import storage_path
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...categories.spending_category import SpendingCategory
-from .. import (
-    UsageRatioPersistenceError,
-    UsageRatioProfile,
-    usage_ratio_bucket_lock,
-    usage_ratios_object_key,
-)
+from .._model import UsageRatioProfile
+from .._service import usage_ratio_bucket_lock, usage_ratios_object_key
+from ..errors import UsageRatioPersistenceError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

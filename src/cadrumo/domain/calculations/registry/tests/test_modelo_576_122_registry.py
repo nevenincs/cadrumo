@@ -28,10 +28,10 @@ from datetime import date
 
 import pytest
 
-from .....core.tax_domain import TaxDomain
-from .....core.revision_review import RevisionReviewStatus
 from .....core.authority_grade import RegistryAuthorityGrade
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
+from .....core.revision_review import RevisionReviewStatus
+from .....core.tax_domain import TaxDomain
 from .._validate import RegistryValidator
 from ..errors import RegistryValidationError
 from ..snapshot import build_snapshot, build_validated_snapshot

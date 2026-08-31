@@ -19,7 +19,7 @@ from ....core.external_constants import (
     IVA_BIEN_INVERSION_MUEBLE_DIVISOR,
     IVA_BIEN_INVERSION_REGULARIZACION_UMBRAL_PUNTOS,
 )
-from .. import (
+from ..register import (
     BienInversionKind,
     BienInversionValidationError,
     RegularizacionDireccion,

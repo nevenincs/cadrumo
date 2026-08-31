@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 if TYPE_CHECKING:  # pragma: no cover - typing-only boundary DTO (lives in core, not adapters)
     from ...core.secure_object_write import SecureObjectWrite
-    from . import ProrrataRegister
+    from .register import ProrrataRegister
 
 
 @runtime_checkable

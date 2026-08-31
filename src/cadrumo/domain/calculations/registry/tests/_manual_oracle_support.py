@@ -16,7 +16,7 @@ from decimal import Decimal
 from pathlib import Path
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from ..external_grounding import ManualWorkedExamplePayload
 
 __all__ = ["oracle_declared_figures", "read_manual_worked_example"]

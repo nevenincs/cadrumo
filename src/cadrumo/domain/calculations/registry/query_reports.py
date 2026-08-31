@@ -35,7 +35,7 @@ from collections.abc import Mapping
 from datetime import date
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, NonNegativeInt
 
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId
@@ -96,12 +96,12 @@ class ModeloDescribeReport(BaseModel):
     valid_from: date
     valid_to: date | None
     periods: tuple[str, ...]
-    casilla_count: int = Field(ge=0)
-    manual_casilla_count: int = Field(ge=0)
-    bound_casilla_count: int = Field(ge=0)
-    computed_casilla_count: int = Field(ge=0)
-    binding_count: int = Field(ge=0)
-    formula_count: int = Field(ge=0)
+    casilla_count: NonNegativeInt
+    manual_casilla_count: NonNegativeInt
+    bound_casilla_count: NonNegativeInt
+    computed_casilla_count: NonNegativeInt
+    binding_count: NonNegativeInt
+    formula_count: NonNegativeInt
     legal_refs: tuple[LegalRefId, ...]
     source_refs: tuple[SourceRefId, ...]
 

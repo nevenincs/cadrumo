@@ -24,7 +24,7 @@ from typing import NamedTuple
 import pytest
 
 from .....core.authority_grade import RegistryAuthorityGrade
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from .._validate import RegistryValidator
 from ..authority import bundled_authority
 from ._registry_schema_support import _committed_modelo
@@ -164,7 +164,7 @@ def test_modelo_222_trimestral_windows_open_and_close_on_day_20() -> None:
 
 
 def test_modelo_220_222_are_registry_backed() -> None:
-    from .....core.access_gate import CANONICAL_MODELO_FLEET
+    from .....core.access_gate._authorization import CANONICAL_MODELO_FLEET
 
     for modelo_id in ("220", "222"):
         assert modelo_id in CANONICAL_MODELO_FLEET

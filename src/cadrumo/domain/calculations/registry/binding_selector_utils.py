@@ -8,9 +8,9 @@ from typing import Literal, Protocol
 
 from pydantic import BaseModel, Field, model_validator
 
-from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.models import STRICT_FROZEN_CONFIG
+from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from .binding_aggregation import binding_aggregation_op
 from .errors import RegistryValidationError
 from .manual_input_selector import ManualInputSelector

@@ -14,7 +14,7 @@ from typing import Any, TypedDict
 
 import pytest
 
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from ....user_profile.loader import load_user_profile_schema
 from ....user_profile.schema import ProfileFieldType
 from ..legal import verify_legal_catalogue

@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING, Protocol, runtime_checkable
 from .event import BucketEventHistoryCatalogue
 
 if TYPE_CHECKING:  # pragma: no cover - typing-only storage boundary import
-    from ...adapters.persistence.storage import SecureObjectWrite
+    from ...adapters.persistence.storage.sql.secure_objects import SecureObjectWrite
 
 
 @runtime_checkable

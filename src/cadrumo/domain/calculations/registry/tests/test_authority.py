@@ -10,8 +10,8 @@ from pathlib import Path
 
 import pytest
 
-from .....core.period import Period
 from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.period import Period
 from .._loader_internals import _collect_registry_tree_fingerprints
 from ..authority import ValidatedRegistryAuthority
 from ..errors import RegistrySnapshotError, RegistryValidationError

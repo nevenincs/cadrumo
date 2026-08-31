@@ -9,7 +9,7 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from ..bindings import CasillaObservation, RegistryModeloObservation
 from ..errors import RegistryValidationError
 from ..filed_state import (

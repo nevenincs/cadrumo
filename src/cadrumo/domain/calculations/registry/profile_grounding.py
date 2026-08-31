@@ -22,9 +22,9 @@ from collections.abc import Mapping
 
 from pydantic import BaseModel, Field, ValidationError
 
+from ....core.aggregation import BindingSourceKind
 from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG
-from ....core.aggregation import BindingSourceKind
 from .authority import ValidatedRegistryAuthority
 from .binding_selector_utils import selector_as_dict
 from .bindings import ProfileSelector

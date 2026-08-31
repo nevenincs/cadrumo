@@ -7,8 +7,8 @@ from decimal import Decimal
 
 import pytest
 
-from .....core.iva_deduction_fact import IvaDeductionFactKind
 from .....core.casilla_id import CasillaId
+from .....core.iva_deduction_fact import IvaDeductionFactKind
 from ....iva.flow import IvaFlowDirection
 from ....iva.schema import IvaCategory, IvaRateKind
 from ._ledger_iva_aggregation_support import (

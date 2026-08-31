@@ -44,9 +44,9 @@ from typing import TypeGuard
 
 from pydantic import Field
 
-from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
-from ....core.casilla_id import CasillaId
 from ....core.aggregation import BindingSourceKind
+from ....core.casilla_id import CasillaId
+from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from .bindings import casillas_by_binding
 from .ids import BindingId
 from .ledger_bindings import iva_ledger_selector

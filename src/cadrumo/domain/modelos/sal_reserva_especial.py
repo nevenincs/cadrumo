@@ -12,7 +12,7 @@ from __future__ import annotations
 from decimal import Decimal
 
 from ...core.external_constants import SAL_RESERVA_CAPITAL_MULTIPLE, SAL_RESERVA_DOTACION_RATE
-from ...core.money import CENT, round_to_cents
+from ...core.money.rounding import CENT, round_to_cents
 from .errors import PensionReduccionError
 
 

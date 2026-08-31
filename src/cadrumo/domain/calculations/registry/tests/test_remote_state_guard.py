@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import AnyUrl, ValidationError
 
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from .....tests.aeat_literal_fixtures import (
     AEAT_HOST_SUFFIX_EXPECTED,
     AEAT_LEGACY_APEX_CANARY,

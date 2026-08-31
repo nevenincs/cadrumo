@@ -11,13 +11,13 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.authority_grade import RegistryAuthorityGrade
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.filing_projection_ref import (
     FilingProjectionRef,
     compile_filing_projection_ref,
     filing_projection_ref_casilla_id,
 )
-from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from .._validate import RegistryValidator
 from ..errors import RegistryValidationError
 from ..formula_runtime import calculate_registry_snapshot

@@ -27,13 +27,13 @@ from typing import cast
 
 from pydantic import ValidationError
 
-from ...core.toml import read_toml
-from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from ...core.citation_grounding import CitationGrounding
-from ...core.decimal import coerce_decimal
+from ...core.decimal._coerce import coerce_decimal
 from ...core.i18n import Translatable as tr
 from ...core.paths import path_stat_fingerprint
-from ...core.resources import bundled_path
+from ...core.resources._boundary import bundled_path
+from ...core.toml import read_toml
+from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from ...core.validity_window import ValidityWindow, years_covered_by_any, years_covered_by_every_group
 from .errors import CategoryValidationError
 from .profile import CategoryProfile, IvaDeductibilityHint

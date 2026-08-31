@@ -12,18 +12,18 @@ from .....application.aggregation import (
     resolve_iva_differentiated_deduction_contributions,
 )
 from .....application.aggregation._iva_ledger import IvaLedgerProrrataApportionment, IvaLedgerSectorApportionment
+from .....core.filing_projection_ref import (
+    M303DifferentiatedDeductionProjectionField,
+    M303DifferentiatedDeductionProjectionRef,
+)
 from .....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from .....core.prorrata_register import (
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,
 )
-from .....core.filing_projection_ref import (
-    M303DifferentiatedDeductionProjectionField,
-    M303DifferentiatedDeductionProjectionRef,
-)
-from .....core.resources import bundled_path
-from .....domain.bienes_inversion import (
+from .....core.resources._boundary import bundled_path
+from .....domain.bienes_inversion.register import (
     BienesInversionSectorContribution,
     BienInversionKind,
     RegistroRegularizacionResult,
@@ -33,7 +33,7 @@ from .....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from .....domain.iva.flow import IvaFlowDirection
 from .....domain.iva.prorrata import InputClassification
 from .....domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
-from .....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry, SectorDefinition
+from .....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry, SectorDefinition
 from ..corpus_catalogue import resolve_record_design_binary
 from ..errors import RegistryValidationError
 from ..ledger_bindings import IvaLedgerObservation

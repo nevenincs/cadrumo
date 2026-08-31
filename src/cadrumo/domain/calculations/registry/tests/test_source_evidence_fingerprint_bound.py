@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from .. import _source_evidence_fingerprint
 from .._source_evidence_fingerprint import (
     clear_source_evidence_fingerprint_cache,

@@ -66,13 +66,13 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import Final, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, NonNegativeInt
 
-from ....core.tax_domain import TaxDomain
-from ....core.modelo import Modelo, NON_REGISTRY_MODELOS
+from ....core.modelo import NON_REGISTRY_MODELOS, Modelo
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.prose_elision import PROSE_ELISION_MARKER, elide_to_cap
-from ....core.resources import bundled_path
+from ....core.resources._boundary import bundled_path
+from ....core.tax_domain import TaxDomain
 from ._validate_revision_rules import validate_informative_class_invariant
 from .ids import ModeloId
 from .loader import load_registry_tree
@@ -179,8 +179,8 @@ class DeclaredAxisUsage(ClassificationModel):
     """
 
     axis: DeclaredAxis
-    declaration_count: int = Field(ge=0)
-    population: int = Field(ge=0)
+    declaration_count: NonNegativeInt
+    population: NonNegativeInt
 
     @property
     def status(self) -> DeclaredAxisStatus:

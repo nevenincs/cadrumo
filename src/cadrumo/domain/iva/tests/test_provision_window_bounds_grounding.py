@@ -25,7 +25,7 @@ from datetime import date
 
 import pytest
 
-from ....core.resources import bundled_path
+from ....core.resources._boundary import bundled_path
 from ....core.validity_window import ValidityWindow
 from ...calculations.registry.loader import load_registry_tree
 from ...calculations.registry.schema_references import LegalReference

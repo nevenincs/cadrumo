@@ -7,23 +7,24 @@ from decimal import Decimal
 from functools import lru_cache
 from typing import Final
 
-from .....application.calculations import (
-    ObservationEnvelopePayload,
-    ResultDispositionProjection,
-    normalize_m303_carry_observation_envelope,
+from .....application.calculations._iva_compensation_annual_partition import (
     resolve_iva_compensation_annual_partition_binding_values,
 )
+from .....application.calculations._m303_carry_ingress import normalize_m303_carry_observation_envelope
+from .....application.calculations.observations_repository import (
+    ObservationEnvelopePayload,
+    ResultDispositionProjection,
+)
+from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
+from .....core.authority_grade import RegistryAuthorityGrade
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from .....core.resources._boundary import bundled_path
 from .....core.result_disposition import (
     ResultDisposition,
     derive_result_disposition,
     result_disposition_casilla_ids,
 )
-from .....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
-from .....core.authority_grade import RegistryAuthorityGrade
-from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.aggregation import BindingSourceKind
-from .....core.aggregation import BindingAggregation, BindingAggregationOp
-from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
 from ....iva.deduction_facts import IvaDeductionClassificationProvenance, required_deduction_evidence_authority
 from ....iva.flow import IvaFlowDirection

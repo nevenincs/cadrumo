@@ -9,15 +9,15 @@ from typing import Protocol
 
 from pydantic import BaseModel, Field
 
-from ....core.iva_deduction_fact import IvaDeductionFactKind
-from ....core.prorrata_register import ProrrataRegisterRegime, regime_apportions_deduction
 from ....core.filing_projection_ref import (
     M303DifferentiatedDeductionProjectionField,
     M303DifferentiatedDeductionProjectionRef,
 )
+from ....core.iva_deduction_fact import IvaDeductionFactKind
 from ....core.models import STRICT_FROZEN_CONFIG
-from ...bienes_inversion import RegistroRegularizacionResult
-from ...prorrata_register import ProrrataRegister
+from ....core.prorrata_register import ProrrataRegisterRegime, regime_apportions_deduction
+from ...bienes_inversion.register import RegistroRegularizacionResult
+from ...prorrata_register.register import ProrrataRegister
 from .errors import RegistryValidationError
 
 _KINDS = (

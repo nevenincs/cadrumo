@@ -22,17 +22,17 @@ from pydantic import (
     model_validator,
 )
 
-from ....core.tax_domain import TaxDomain
-from ....core.revision_review import RevisionReviewStatus
-from ....core.irnr import M210_TIPO_RENTA_CODE_PROJECTION
-from ....core.result_disposition import ResultDisposition
-from ....core.authority_grade import RegistryAuthorityGrade, UNDECLARED_REGISTRY_AUTHORITY_GRADE
+from ....core.aggregation import BindingAggregation, BindingSourceKind, BindingTypedEnumKind
+from ....core.authority_grade import UNDECLARED_REGISTRY_AUTHORITY_GRADE, RegistryAuthorityGrade
+from ....core.casilla_id import CasillaId
+from ....core.classification.policies import SensitivityClass
 from ....core.filing_projection_ref import FilingProjectionRef, filing_projection_ref_casilla_id
+from ....core.irnr import M210_TIPO_RENTA_CODE_PROJECTION
 from ....core.modelo import Modelo
 from ....core.period import Period, PeriodKind, RegistrySelectorPeriodCode, registry_period_kind
-from ....core.casilla_id import CasillaId
-from ....core.aggregation import BindingAggregation, BindingSourceKind, BindingTypedEnumKind
-from ....core.classification import SensitivityClass
+from ....core.result_disposition import ResultDisposition
+from ....core.revision_review import RevisionReviewStatus
+from ....core.tax_domain import TaxDomain
 from ._schema_governance import (
     validate_attribution_names_somebody,
     validate_governance_stamp_coherence,

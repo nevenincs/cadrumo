@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from .....core.directory_scan import scan_directory
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from ..authority import ValidatedRegistryAuthority
 from ..record_design_coverage import (
     build_diseno_coverage_report,

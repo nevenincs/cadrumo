@@ -228,8 +228,8 @@ def test_effective_usage_ratio_refuses_non_usage_ratio_rules() -> None:
     kinds (caller is responsible for routing rules to the right
     evaluator)."""
 
-    from ..proportionality import effective_usage_ratio
     from ..errors import CategoryValidationError
+    from ..proportionality import effective_usage_ratio
 
     rule = ProportionalityRule(
         kind=ProportionalityKind.FULL_DEDUCTIBLE,

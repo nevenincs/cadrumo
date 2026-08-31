@@ -18,7 +18,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from .....core.period import Period
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from ..snapshot import build_snapshot
 from ._registry_schema_support import _committed_modelo
 

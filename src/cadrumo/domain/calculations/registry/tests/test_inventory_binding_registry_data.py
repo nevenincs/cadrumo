@@ -4,8 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.aggregation import BindingSourceKind
-from .....core.aggregation import BindingAggregationOp
+from .....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ..authority import bundled_authority
 from ..inventory_bindings import InventorySelector
 

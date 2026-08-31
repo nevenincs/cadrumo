@@ -8,7 +8,7 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.modelo import Modelo
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from ..authority import ValidatedRegistryAuthority
 from ..errors import RegistryLoadError
 from ..loader import _load_shared_catalogue_files, load_registry_tree

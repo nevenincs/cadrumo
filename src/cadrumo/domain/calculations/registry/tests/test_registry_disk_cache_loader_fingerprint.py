@@ -31,10 +31,10 @@ import pytest
 from pydantic import BaseModel
 
 from .....core.auth_provider import AuthProviderKind
-from .....core.modelo import Modelo
 from .....core.config import override_settings
 from .....core.directory_scan import scan_directory
-from .....core.resources import bundled_path
+from .....core.modelo import Modelo
+from .....core.resources._boundary import bundled_path
 from .._compiled_cache import (
     _CADRUMO_PACKAGE_DIR,
     _REGISTRY_PACKAGE_DIR,

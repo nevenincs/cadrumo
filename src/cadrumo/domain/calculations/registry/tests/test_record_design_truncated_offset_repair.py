@@ -30,7 +30,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from ..record_design import _repair_truncated_offset_rows, extract_record_design
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

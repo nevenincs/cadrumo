@@ -19,16 +19,16 @@ from threading import Condition, RLock
 from typing import Protocol, override
 
 from .... import __version__
-from ....core.authority_grade import RegistryAuthorityGrade
-from ....core.access_gate import (
+from ....core.access_gate._authorization import (
     AuthorizationManifest,
     ModeloAuthorization,
     derive_modelo_authorization,
     load_authorization_manifest,
 )
+from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.hashing import content_hash_hex
 from ....core.identity import ContentDigest
-from ....core.resources import bundled_path as _bundled_path
+from ....core.resources._boundary import bundled_path as _bundled_path
 from ._snapshot_internals import _build_validated_snapshot
 from ._source_evidence_fingerprint import collect_source_evidence_fingerprints
 from ._supplementary_orden import collect_supplementary_orden_fingerprints, compile_supplementary_ordenes

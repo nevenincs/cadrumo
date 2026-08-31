@@ -17,14 +17,14 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, TypeAdapter, ValidationError
 
-from ....core.tax_domain import TaxDomain
-from ....core.type_adapters import OBJECT_TUPLE_ADAPTER
-from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.aggregation import BindingSourceKind
+from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.i18n import output_language
 from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import Period, RegistrySelectorPeriodCode
+from ....core.tax_domain import TaxDomain
+from ....core.type_adapters import OBJECT_TUPLE_ADAPTER
 from .authority import ValidatedRegistryAuthority
 from .binding_selector_utils import boolean_binding_encoded_values
 from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryValidationError

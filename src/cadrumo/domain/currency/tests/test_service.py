@@ -3,7 +3,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....adapters.outbound.fx import ECB_RATE_SOURCE_ID, EcbReferenceRateProvider
+from ....adapters.outbound.fx._ecb_provider import ECB_RATE_SOURCE_ID, EcbReferenceRateProvider
 from ....tests.ecb_stub import ecb_csv_fetch
 from ..models import (
     CurrencyNormalizationStatus,

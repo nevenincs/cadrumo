@@ -19,8 +19,8 @@ from typing import cast
 import pytest
 from pydantic import ValidationError
 
-from .....core.foreign_asset_obligation import M720AssetClassCode
 from .....core.aggregation import RetencionClave
+from .....core.foreign_asset_obligation import M720AssetClassCode
 from ..detail_record_bindings import (
     AtributionMemberObservation,
     Modelo720RowObservation,

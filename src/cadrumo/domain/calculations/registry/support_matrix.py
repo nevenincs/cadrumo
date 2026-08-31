@@ -41,7 +41,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, NonNegativeInt
 
 from ....core.export_layout_format import ExportLayoutFormat
 from ....core.models import STRICT_FROZEN_CONFIG
@@ -104,7 +104,7 @@ class RevisionCapabilityProbe(BaseModel):
     has_fixed_width_export: bool
     has_xml_dictionary_export: bool
     has_extractor: bool
-    extraction_profile_count: int = Field(ge=0)
+    extraction_profile_count: NonNegativeInt
 
 
 def revision_capability_probe(revision: ModeloRevision, *, modelo_id: str) -> RevisionCapabilityProbe:

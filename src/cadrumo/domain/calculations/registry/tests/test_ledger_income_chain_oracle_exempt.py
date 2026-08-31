@@ -49,9 +49,9 @@ from pathlib import Path
 import pytest
 
 from .....application.aggregation import aggregate_renta_income_ledger
-from .....core.period import Period
-from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.aggregation import LedgerIncomeGrounding, LedgerWithholdingDerivation
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.period import Period
 from ....iva.classification import InvoiceKind
 from ....iva.components import category_cuota_is_zero_by_law
 from ....iva.schema import IvaCategory

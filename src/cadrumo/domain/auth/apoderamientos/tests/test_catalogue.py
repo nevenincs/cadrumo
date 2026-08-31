@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from .. import (
+from ..catalogue import (
     ALL_TOKEN,
     ApoderamientosCatalogue,
     UnknownScopeError,

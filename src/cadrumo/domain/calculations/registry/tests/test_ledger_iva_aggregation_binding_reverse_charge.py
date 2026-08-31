@@ -7,9 +7,16 @@ from decimal import Decimal
 
 import pytest
 
-from .....core.iva_deduction_fact import IvaDeductionFactKind
 from .....core.casilla_id import validated_casilla_id
-from ....iva.classification import CustomerTaxStatus, InvoiceKind, IvaInvoiceClassificationCriteria, IvaTerritorialScope, TransactionKind, classify_iva
+from .....core.iva_deduction_fact import IvaDeductionFactKind
+from ....iva.classification import (
+    CustomerTaxStatus,
+    InvoiceKind,
+    IvaInvoiceClassificationCriteria,
+    IvaTerritorialScope,
+    TransactionKind,
+    classify_iva,
+)
 from ....iva.components import category_cuota_is_zero_by_law
 from ....iva.flow import IvaFlowDirection, derive_flow_for_classification
 from ....iva.schema import CUOTA_LESS_M303_IVA_CATEGORIES, EUMemberState, IvaCategory, IvaRateKind

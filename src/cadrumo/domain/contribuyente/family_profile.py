@@ -8,8 +8,8 @@ from typing import cast
 
 from pydantic import BaseModel, Field, field_validator
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import CUSTODIA_COMPARTIDA_PRORRATA_FACTOR
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .constants import SUPPORTED_PROFILE_SCHEMA_VERSION, ProfileSchemaVersion
 from .descendant import DescendantInfo
 from .errors import ProfileValidationError
@@ -267,7 +267,7 @@ class RentaFamilyProfile(BaseModel):
         Returns ``Decimal("0")`` when no descendant qualifies, which is the
         legally correct zero rather than an under-declaration.
         """
-        from ...core.money import round_to_cents
+        from ...core.money.rounding import round_to_cents
 
         available = self.dependencia_assimilation_available
         total = Decimal("0")

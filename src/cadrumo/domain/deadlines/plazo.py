@@ -16,9 +16,9 @@ from functools import lru_cache
 from typing import TYPE_CHECKING
 
 from ...core.irnr import M210_TIPO_RENTA_CODE_PROJECTION
-from ...core.result_disposition import ResultDisposition
 from ...core.modelo import Modelo
 from ...core.period import Period, PeriodKind
+from ...core.result_disposition import ResultDisposition
 from .errors import DeadlineValidationError
 
 if TYPE_CHECKING:

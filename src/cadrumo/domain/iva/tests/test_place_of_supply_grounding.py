@@ -25,7 +25,7 @@ from datetime import date
 
 import pytest
 
-from ....core.resources import bundled_path
+from ....core.resources._boundary import bundled_path
 from ..classification import _CLASSIFICATION_RULES, _R99_FALLTHROUGH_ID
 from ..place_of_supply import (
     IvaPlaceOfSupplyRule,

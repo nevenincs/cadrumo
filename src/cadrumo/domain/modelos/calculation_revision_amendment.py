@@ -6,8 +6,8 @@ from enum import StrEnum
 
 from pydantic import BaseModel, model_validator
 
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.identity import FilingRecordId
+from ...core.models import STRICT_FROZEN_CONFIG
 from ..calculations.registry.ids import RevisionId
 from ..calculations.registry.schema import RegistrySnapshot
 from ..calculations.registry.schema_references import SourceReference

@@ -23,7 +23,7 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from .._validate_semantic_role_axes import semantic_roles_are_axis_siblings
 from .._validate_semantic_role_typos import (
     _build_semantic_role_typo_index,

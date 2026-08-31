@@ -7,7 +7,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from .._validate import RegistryValidator
 from ..authority import bundled_authority
 from ..bindings import resolve_available_bound_inputs_by_casilla_id

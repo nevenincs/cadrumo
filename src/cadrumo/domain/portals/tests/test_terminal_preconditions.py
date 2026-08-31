@@ -9,10 +9,10 @@ from types import ModuleType
 
 import pytest
 
-from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.errors.hierarchy import TerminalPreconditionErrorMixin
-from .. import registry as registry_module
+from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from .. import errors as errors_module
+from .. import registry as registry_module
 from ..errors import (
     PortalIntegrityError,
     PortalRegistryError,

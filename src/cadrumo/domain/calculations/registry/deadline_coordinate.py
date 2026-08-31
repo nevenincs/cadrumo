@@ -5,9 +5,9 @@ from __future__ import annotations
 from typing import NamedTuple
 
 from ....core.irnr import M210_TIPO_RENTA_CODE_PROJECTION
-from ....core.result_disposition import ResultDisposition
 from ....core.modelo import Modelo
 from ....core.period import Period, registry_period_kind
+from ....core.result_disposition import ResultDisposition
 from .schema import DeadlineWindowDefinition
 
 

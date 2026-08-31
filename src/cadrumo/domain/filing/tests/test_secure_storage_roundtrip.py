@@ -24,10 +24,10 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
-from ....core.storage_taxonomy_locations import storage_path
-from ....core.storage_taxonomy import StorageCategory
-from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.period import Period
+from ....core.storage_taxonomy import StorageCategory
+from ....core.storage_taxonomy_locations import storage_path
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.registry.schema_references import RegistrySnapshotRef
 from ..schema import (

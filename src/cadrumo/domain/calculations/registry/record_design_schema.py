@@ -7,7 +7,7 @@ from enum import StrEnum
 from itertools import accumulate
 from typing import Annotated, Final, Literal, Self
 
-from pydantic import Field, model_validator
+from pydantic import Field, NonNegativeInt, model_validator
 
 from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG
@@ -477,7 +477,7 @@ class RecordDesignHeaderCellCorrection(RegistryModel):
     kind: Literal["header_cell"] = "header_cell"
     sheet: str = Field(min_length=1)
     header_row: int = Field(gt=0)
-    column_index: int = Field(ge=0)
+    column_index: NonNegativeInt
     #: Closed to the one shape observed so far. Extend when a new blank-header
     #: shape is grounded, never widen to a free-form string.
     column_role: Literal["length"]

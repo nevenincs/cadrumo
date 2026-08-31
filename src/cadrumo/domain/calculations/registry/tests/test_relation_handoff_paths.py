@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.modelo import Modelo
 from .....core.aggregation import BindingSourceKind
+from .....core.modelo import Modelo
 from ..authority import bundled_authority
 from ..binding_selector_utils import selector_as_dict
 from ..handoffs import audit_registry_handoff_paths

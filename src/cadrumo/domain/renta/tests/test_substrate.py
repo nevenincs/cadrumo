@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import pytest
 
-from .. import EstimacionDirectaModalidad, RentaIncomeType
+from .._substrate import EstimacionDirectaModalidad, RentaIncomeType
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

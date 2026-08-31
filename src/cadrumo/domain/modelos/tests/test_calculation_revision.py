@@ -11,22 +11,38 @@ from typing import TypedDict, cast
 import pytest
 from pydantic import ValidationError
 
-from ....core.irnr import M210GrossIncomeSourceMode
-from ....core.period import Period
-from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.directory_scan import (
     scan_directory,
 )
+from ....core.irnr import M210GrossIncomeSourceMode
+from ....core.period import Period
 from ....tests.filing_evidence import regimen_simplificado_filing_evidence
-from ...calculations import RowSourceIdentity
+from ...calculations._row_source_identity import RowSourceIdentity
 from ...calculations.registry.authority import bundled_authority
 from ...calculations.registry.ids import RelationId
 from ...calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ...filing_evidence import FilingEvidenceReference
-from ...iva.regimen_simplificado_rows import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision, RegimenSimplificadoFilingRows
-from ..calculation_revision import CalculationRevision, CalculationRevisionState, CalculationSourceRef, FilingInstanceEvidence, derive_calculation_revision_id
-from ..calculation_revision_m303_evidence import M303Exonerado390ActivityRowEvidence, M303Exonerado390EndpointEvidence, M303Exonerado390FilingEvidence, M303InsolvencyFilingFact, M303InsolvencyFilingSubtype
+from ...iva.regimen_simplificado_rows import (
+    M303RegimenSimplificadoScope,
+    M303RegimenSimplificadoScopeDecision,
+    RegimenSimplificadoFilingRows,
+)
+from ..calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionState,
+    CalculationSourceRef,
+    FilingInstanceEvidence,
+    derive_calculation_revision_id,
+)
+from ..calculation_revision_m303_evidence import (
+    M303Exonerado390ActivityRowEvidence,
+    M303Exonerado390EndpointEvidence,
+    M303Exonerado390FilingEvidence,
+    M303InsolvencyFilingFact,
+    M303InsolvencyFilingSubtype,
+)
 from ..calculation_revision_m303_handoff import M303FilingInstanceEvidence
 from ..errors import ModeloValidationError
 

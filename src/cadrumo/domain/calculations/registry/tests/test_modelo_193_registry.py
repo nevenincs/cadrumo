@@ -8,7 +8,7 @@ from decimal import Decimal
 import pytest
 
 from .....core.casilla_id import CasillaId
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from .....domain.deadlines.festivos import shift_deadline
 from .....tests.registry_observations import registry_grounded_modelo_observation
 from .._validate import RegistryValidator

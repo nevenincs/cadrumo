@@ -15,8 +15,8 @@ from decimal import Decimal
 
 import pytest
 
-from .....core.casilla_id import validated_casilla_id
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
+from .....core.casilla_id import validated_casilla_id
 from .....domain.iva.flow import IvaFlowDirection
 from .....domain.iva.schema import IvaCashAccountingTreatment, IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from ..rate_box_partition import derive_rate_box_partitions, rate_box_coverage_shortfalls

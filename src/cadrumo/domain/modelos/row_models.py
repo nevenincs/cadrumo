@@ -42,12 +42,12 @@ from typing import Annotated, Literal, get_args
 
 from pydantic import BaseModel, BeforeValidator, Field, StringConstraints, field_validator, model_validator
 
-from ...core.modelo_232_codigos import MetodoValoracion, TipoOperacionVinculada, TipoVinculacion
-from ...core.irnr import M210PayerMode, M210_TIPO_RENTA_CODE_PROJECTION
-from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.external_constants import M347_THRESHOLD_EUR
 from ...core.errors.hierarchy import CadrumoError
+from ...core.external_constants import M347_THRESHOLD_EUR
 from ...core.identity import nif_iva_format_for_country
+from ...core.irnr import M210_TIPO_RENTA_CODE_PROJECTION, M210PayerMode
+from ...core.modelo_232_codigos import MetodoValoracion, TipoOperacionVinculada, TipoVinculacion
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.unit_proportion import UnitProportion
 
 # ---------------------------------------------------------------------------

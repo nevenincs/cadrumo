@@ -50,10 +50,10 @@ from typing import Literal
 
 from pydantic import Field, PrivateAttr, computed_field, model_validator
 
-from ....core.revision_review import RevisionReviewStatus
 from ....core.authority_grade import RegistryAuthorityGrade
-from ....core.period import RegistrySelectorPeriodCode
 from ....core.filing_year import FilingYear
+from ....core.period import RegistrySelectorPeriodCode
+from ....core.revision_review import RevisionReviewStatus
 from ._schema_family_coverage import (
     CoverageModel,
 )

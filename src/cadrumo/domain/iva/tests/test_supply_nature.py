@@ -23,7 +23,7 @@ import re
 import pytest
 
 from ....core.corpus_text import resolve_anchored_extracted_unit
-from ....core.resources import bundled_path
+from ....core.resources._boundary import bundled_path
 from ..schema import IvaCategory
 from ..supply_nature import (
     LIVA_CITATION_QUALIFIERS,

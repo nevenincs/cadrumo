@@ -45,12 +45,12 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, StringConstraints, ValidationError
 
-from ...core.toml import read_toml
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.resources import bundled_path
+from ...core.resources._boundary import bundled_path
+from ...core.toml import read_toml
 from .errors import DeadlineValidationError
 
 # ---------------------------------------------------------------------------
@@ -222,7 +222,7 @@ class DeadlineShift(BaseModel):
     original_close_date: date
     adjusted_close_date: date
     shifted: bool
-    shift_days: Annotated[int, Field(ge=0)]
+    shift_days: NonNegativeInt
     shift_reason: _NonEmptyShortString
     jurisdictions: tuple[HolidayJurisdiction, ...] = Field(default_factory=tuple)
     holiday_refs: tuple[str, ...] = Field(default_factory=tuple)

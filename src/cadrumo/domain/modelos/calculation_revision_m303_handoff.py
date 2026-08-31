@@ -9,18 +9,23 @@ from typing import Final, Literal, Self
 
 from pydantic import BaseModel, field_serializer, field_validator, model_validator
 
-from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.period import Period
 from ...core.casilla_id import CasillaId
 from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, WorkUnitId
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.period import Period
 from ..calculations.registry.ids import RevisionId
 from ..calculations.registry.m303_orden_projection_models import M303RegimenSimplificadoSnapshot
 from ..filing_evidence import FilingEvidenceReference
 from ..identifiers import canonical_decimal_string as _canonical_decimal
 from ..iva.refund_eligibility import is_last_filing_period_of_year
-from ..iva.regimen_simplificado_rows import ActividadNoAgricolaSimplificado, M303RegimenSimplificadoScopeDecision, RegimenSimplificadoActivity, RegimenSimplificadoFilingRows
+from ..iva.regimen_simplificado_rows import (
+    ActividadNoAgricolaSimplificado,
+    M303RegimenSimplificadoScopeDecision,
+    RegimenSimplificadoActivity,
+    RegimenSimplificadoFilingRows,
+)
 from .calculation_revision_m303_evidence import (
     M303DANA2024EligibilityEvidence,
     M303Exonerado390FilingEvidence,

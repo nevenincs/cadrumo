@@ -14,7 +14,7 @@ from typing import NamedTuple
 
 import pytest
 
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from .._validate_export_layout_coverage import _position, validate_export_layout_record_coverage
 from ..errors import NoRevisionForPeriodError
 from ..loader import load_catalogue_file, load_modelo_directory
