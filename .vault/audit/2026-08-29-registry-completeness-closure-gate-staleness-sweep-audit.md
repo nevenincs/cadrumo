@@ -967,3 +967,59 @@ test -- did not, and shipped wrong provenance across six revisions.
 approach: it had no readers left, while its comment still asserted a role
 numeric membership no longer takes from it. A dead frozenset named for the
 vocabulary is exactly the wrong thing for the next reader to find.
+
+## Closing census: every naturaleza the corpus contains, and where it routes
+
+Parsing all 27 enrolled designs through the shipped
+`load_record_design_intermediate` gives the complete input vocabulary --
+9 distinct values over ~13,300 field rows:
+
+| naturaleza | rows | routes to |
+| --- | ---: | --- |
+| `Num`, `N`, `Numérico` | 10,198 | numeric derivation |
+| `An`, `Alfanumérico` | 2,799 | `text-an-v1` |
+| `A`, `Alfabético` | 191 | `text-a-v1` |
+| `No consta` | 95 | reviewed render profile |
+| `Blancos` | 28 | refuses unless the map declares a filler |
+
+Every value is handled, and the handling is now correct for each. The census
+also dates the defect precisely: **70 of those 191 rows are the `Alfabético`
+word spelling**, against 121 carrying the abbreviation `A`. Those 70 were the
+rows reaching the alphanumeric derivation.
+
+### Correction: a probe artifact, caught before it was reported
+
+The first run of this census labelled the 95 `No consta` rows
+"UNHANDLED -> refused as unsupported". They are nothing of the kind.
+`ABSENT_NATURALEZA_TYPE_CODE = "No consta"` is the marker the shipped parser
+stamps when AEAT prints the naturaleza cell EMPTY -- deliberately, because "an
+inferred `Alfanumerico` would be indistinguishable from one AEAT actually
+printed" -- and `_normalise_field` routes exactly those rows to the reviewed
+render profile. The probe modelled four branches of a five-branch function and
+reported the fifth branch's inputs as unhandled. A probe that reconstructs
+production logic evidences only the code its author read.
+
+### Correction: publish mode is exercised; what is missing is an operator surface
+
+An earlier note in this audit recorded that
+`publish_validated_generated_export_tree` "has no caller". That was a bad
+measurement, not a fact. The grep excluded its own defining module with
+`grep -v "_tree_publication.py:"`, and that substring also matches
+`test_generated_tree_publication.py:` -- so the exclusion silently removed the
+entire publication test file, which calls the authority about ten times across
+success, refusal, journal-recovery and rollback paths.
+
+The accurate statement is narrower and still the blocker: publish mode is well
+exercised against isolated temporary roots, and has no OPERATOR-facing
+invocation that publishes into the bundled registry. So of the three lifecycle
+stages, render is exercised, check mode is called for every enrolled tree but
+cannot pass for any of them (it demands a filing-complete, operator-reviewed
+revision, and none is reviewed yet), and publish has no route an operator can
+reach.
+
+**Lesson.** An exclusion pattern is a filename substring, and filenames nest:
+`test_generated_tree_publication.py` contains `_tree_publication.py`. Excluding
+a module by path fragment can remove its test file, its variants, and anything
+whose name embeds it -- and the loss is silent, because a filter that removes
+too much looks exactly like a search that found little. Anchor the exclusion
+(`^dev/registry/pipeline/_tree_publication.py:`) or exclude by an exact path.
