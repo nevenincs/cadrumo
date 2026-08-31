@@ -28,14 +28,13 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import Field
-
 from ...application.modelo.review_package import ReviewPackageActor
+from ...application.modelo.review_package_text import ReviewFeedbackNote, ReviewPackageNote
 from ...core import Hex64Str
-from ...core.period import Period
 from ...core.filing_year import FilingYear
 from ...core.identity import BucketId, CalculationRevisionId, WorkUnitId
 from ...core.json_contract import OutputSchema
+from ...core.period import Period
 from ...core.text_bounds import NonEmptyStr, PositiveCount
 from ...domain.modelos.codes import ModeloCode
 
@@ -139,7 +138,7 @@ class ModeloReviewPackageCounterSignResult(OutputSchema):
     signature_path: str
     receipt_path: str
     bucket_id: BucketId
-    note: str = Field(default="", max_length=2000)
+    note: ReviewPackageNote = ""
     counter_signer_public_key_hex: Hex64Str
     counter_signed_at: datetime
 
@@ -239,7 +238,7 @@ class ModeloReviewPackageImportFeedbackResult(OutputSchema):
     bucket_id: BucketId
     work_unit_id: WorkUnitId
     calculation_revision_id: CalculationRevisionId
-    note: str = Field(default="", max_length=4000)
+    note: ReviewFeedbackNote = ""
     submitted_by: ReviewPackageActor
     counter_signature_verified: bool | None = None
     attached_to_journal: bool = False

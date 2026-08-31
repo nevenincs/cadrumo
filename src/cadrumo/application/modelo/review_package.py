@@ -48,8 +48,6 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, StringConstraints
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.period import Period
 from ...core.corpus_manifest import (
     CorpusBundleError,
     CorpusManifestTamperError,
@@ -60,9 +58,12 @@ from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.filing_year import FilingYear
 from ...core.identity import BucketId, CalculationRevisionId, WorkUnitId
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.period import Period
 from ...core.time import now as _utc_now
-from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.calculation_revision import CURRENT_SEALED_REVISION_STATES, CalculationRevision
+from ...domain.modelos.work_unit import WorkUnit
+from .review_package_text import ReviewPackageNote
 
 #: Wire-format version of the review-package descriptor. Bumped when the
 #: package-info schema changes shape.
@@ -142,7 +143,7 @@ class ReviewPackageManifest(BaseModel):
     has_ledger_evidence: bool
     built_at: datetime
     built_by: ReviewPackageActor
-    notes: str = Field(default="", max_length=2000)
+    notes: ReviewPackageNote = ""
 
 
 class ReviewPackageBuildResult(BaseModel):

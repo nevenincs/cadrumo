@@ -23,6 +23,7 @@ from pydantic import Field, NonNegativeInt, field_validator, model_validator
 
 from ...adapters.persistence.storage.custody.records import PostChangePasswordGeneration
 from ...application.auth.apoderado_service import RepresentedNif
+from ...application.auth.apoderado_text import ApoderadoNotes
 from ...application.auth.catalogue import AuthProviderListing
 from ...application.auth.diagnostics import AuthDiagnosticDetail, AuthDiagnosticPhoneState, AuthDiagnosticSummary
 from ...application.auth.operator_results import AuthLoginResult, AuthStatusResult, AuthTestResult
@@ -1080,7 +1081,7 @@ class ApoderadoConfigureResult(OutputSchema):
     granted_scopes: list[str] = []
     catalogue_version: NonEmptyStr
     configured_at: datetime
-    notes: str = Field(default="", max_length=500)
+    notes: ApoderadoNotes = ""
 
 
 class ApoderadoClearResult(OutputSchema):
