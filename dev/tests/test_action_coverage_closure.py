@@ -17,7 +17,7 @@ from cadrumo.application.modelo._preconditions import (
     MODELO_PRECONDITION_PROFILES,
     build_modelo_precondition_failure_for_scenario,
 )
-from cadrumo.application.operator_actions import OPERATOR_ACTION_CATALOGUE, ActionCatalogue
+from cadrumo.application.operator_actions._catalogue import ActionCatalogue, OPERATOR_ACTION_CATALOGUE
 from cadrumo.application.operator_surface.errors import OperatorSurfaceContractError
 from cadrumo.application.operator_surface.manifest import (
     ManifestActionResolution,

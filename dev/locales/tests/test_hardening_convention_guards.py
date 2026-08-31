@@ -580,7 +580,7 @@ def _import_secure_storage_error_modules() -> None:
     for module_name in (
         "cadrumo.adapters.persistence.storage.bucket.errors",
         "cadrumo.adapters.persistence.storage.errors",
-        "cadrumo.adapters.persistence.storage.master_key._active_session",
+        "cadrumo.adapters.persistence.storage.master_key.active_session",
     ):
         importlib.import_module(module_name)
 

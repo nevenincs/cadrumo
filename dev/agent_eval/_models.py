@@ -60,7 +60,7 @@ from cadrumo.core.operator_action_enums import NoRecoveryOutcome
 from cadrumo.core.json_contract import EnvelopeStatus
 
 if TYPE_CHECKING:
-    from cadrumo.application.operator_actions import PreconditionVerdict
+    from cadrumo.application.operator_actions._models import PreconditionVerdict
 
     from ._action_coverage import LeafConditionScenario
 

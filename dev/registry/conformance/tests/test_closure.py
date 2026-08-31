@@ -8,7 +8,7 @@ import pytest
 from pydantic import ValidationError
 from typer.testing import CliRunner
 
-from cadrumo.application.filing import FilingExportProofAssessment, FilingExportProofCoordinate
+from cadrumo.application.filing._export_proof import FilingExportProofAssessment, FilingExportProofCoordinate
 from cadrumo.application.registry.closure import RegistryClosureEvidence, RegistryClosureLimb
 from cadrumo.application.registry.filing_export_coverage import FilingExportCoverageReport
 from cadrumo.application.registry.source_connectivity_coverage import SourceConnectivityCoverageReport

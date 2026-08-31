@@ -52,7 +52,7 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from cadrumo.application.operator_actions import OPERATOR_ACTION_CATALOGUE
+from cadrumo.application.operator_actions._catalogue import OPERATOR_ACTION_CATALOGUE
 from cadrumo.entrypoints.cli._command_spec import SchemaState
 from cadrumo.entrypoints.cli.command_api import command_spec_nodes
 
@@ -1145,6 +1145,25 @@ def discover_live_modelo_action_signatures() -> dict[str, ModeloWorkspaceActionC
     return live
 
 
+def discover_dispatchable_modelo_action_identities() -> frozenset[str]:
+    """Observe which actions a TUI surface can actually DISPATCH today.
+
+    A second candidate stream, deliberately separate from the command-graph
+    one. The command graph answers "what commands exist"; this answers "what
+    can a workspace surface invoke", and the two disagree in both directions:
+    a command can exist with no surface reaching it, and a surface can dispatch
+    an operation that is not a CLI command at all. Collapsing them into one
+    stream would let each hide the other's gaps.
+
+    Imported from the shipped package rather than re-listed here, so a dispatch
+    row added to the surface enters this gate automatically instead of when
+    somebody remembers to update a parallel list.
+    """
+    from cadrumo.entrypoints.tui.modelo.actions import MODELO_ACTION_DISPATCH
+
+    return frozenset(MODELO_ACTION_DISPATCH)
+
+
 def build_modelo_workspace_action_denominator() -> ModeloWorkspaceActionDenominatorV1:
     """Bind the current live candidate set to the closed classification table."""
     live_identities = tuple(sorted(discover_live_modelo_action_signatures()))
@@ -1182,6 +1201,28 @@ def validate_modelo_workspace_action_denominator(
     if stale:
         errors.append(f"stale classification(s) for action(s) no longer live: {stale}")
 
+    # THE DISPATCH STREAM AND THE COMMAND-GRAPH STREAM HAVE DIFFERENT
+    # DENOMINATORS, and that is the finding rather than a defect to paper
+    # over. The classification table is keyed to command-graph candidates;
+    # the dispatch table is keyed to REGISTERED OPERATIONS. Six members
+    # overlap. `modelo.edit.apply` is dispatchable and is not a command-graph
+    # candidate at all, so requiring it to be classified here would demand a
+    # row that the stale-classification rule above would then reject -- the
+    # two rules would contradict each other on the same identity.
+    #
+    # So the enforceable invariant is the intersection only: an action that
+    # BOTH appears in the command graph AND is dispatchable from a surface
+    # must be classified. Anything wider is a scope decision about what the
+    # classification table's denominator is, which belongs to that table's
+    # owner and not to this check.
+    dispatchable = discover_dispatchable_modelo_action_identities()
+    unadjudicated = sorted((dispatchable & set(live)) - set(classifications))
+    if unadjudicated:
+        errors.append(
+            "action(s) both live in the command graph and dispatchable from a surface, yet absent "
+            f"from the classification table: {unadjudicated}",
+        )
+
     for identity in sorted(set(live) & set(classifications)):
         observed = live[identity]
         recorded = classifications[identity]
@@ -1207,6 +1248,7 @@ __all__ = [
     "ModeloWorkspaceActionDenominatorV1",
     "ModeloWorkspaceActionDisposition",
     "build_modelo_workspace_action_denominator",
+    "discover_dispatchable_modelo_action_identities",
     "discover_live_modelo_action_signatures",
     "validate_modelo_workspace_action_denominator",
 ]

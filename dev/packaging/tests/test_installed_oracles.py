@@ -247,7 +247,7 @@ def test_installed_cli_and_mcp_are_one_hashed_cohort(installed_cohort: Installed
         f"cadrumo-data-manuals=={version}",
         f"cadrumo-data-official=={version}",
     } <= requirements
-    assert metadata["console_scripts"]["aeat"] == "cadrumo.entrypoints.cli:main"
+    assert metadata["console_scripts"]["aeat"] == "cadrumo.entrypoints._cli_main:main"
     # The split is load-bearing, not cosmetic: the command-bearing wheel is a
     # pure CLI, so the server script must come from the harness distribution and
     # must NOT also be declared by the root one.

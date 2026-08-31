@@ -19,6 +19,7 @@ from ..quality.modelo_workspace_action_denominator import (
     ModeloWorkspaceActionDenominatorV1,
     ModeloWorkspaceActionDisposition,
     build_modelo_workspace_action_denominator,
+    discover_dispatchable_modelo_action_identities,
     discover_live_modelo_action_signatures,
     validate_modelo_workspace_action_denominator,
 )
@@ -154,4 +155,43 @@ def test_two_named_judgement_call_dispositions_are_recorded_correctly() -> None:
     assert (
         MODELO_ACTION_CLASSIFICATIONS["modelo.work.review"].disposition
         is ModeloWorkspaceActionDisposition.C1_BOUNDED_REVIEW
+    )
+
+
+def test_the_dispatch_stream_and_the_command_graph_stream_have_different_denominators() -> None:
+    """The two candidate streams are not the same set, and the check must not assume they are.
+
+    The classification table is keyed to command-graph candidates; the
+    dispatch table is keyed to registered operations. Recorded as a test
+    rather than a comment because a future change that made them coincide
+    would silently widen the enforceable rule below.
+    """
+    dispatchable = discover_dispatchable_modelo_action_identities()
+    live = set(discover_live_modelo_action_signatures())
+
+    assert dispatchable, "no dispatchable actions were discovered; the proofs below would be vacuous"
+    assert dispatchable - live, (
+        "every dispatchable action is now also a command-graph candidate; the denominators have "
+        "converged and the intersection-only rule should be widened deliberately rather than by accident"
+    )
+
+
+def test_a_dispatchable_command_graph_action_missing_from_the_table_is_refused() -> None:
+    """Anti-tautology: prove the dispatch rule fires when its subject is removed.
+
+    Driven through the validator's own injectable classification table, so
+    nothing on disk is mutated -- this worktree is shared and a broad landing
+    commit could otherwise capture a deliberately broken table.
+    """
+    denominator = build_modelo_workspace_action_denominator()
+    both = discover_dispatchable_modelo_action_identities() & set(discover_live_modelo_action_signatures())
+    subject = sorted(both)[0]
+    trimmed = {key: row for key, row in denominator.classifications.items() if key != subject}
+
+    errors = validate_modelo_workspace_action_denominator(
+        denominator.model_copy(update={"classifications": trimmed})
+    )
+
+    assert any("dispatchable from a surface" in error and subject in error for error in errors), (
+        f"removing {subject!r} from the table did not raise the dispatch violation: {errors}"
     )

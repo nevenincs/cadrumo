@@ -17,8 +17,9 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.application.aggregation import IvaDifferentiatedDeductionContribution
-from cadrumo.application.calculations import calculate_m303_regimen_simplificado_result
-from cadrumo.application.filing import FilingEnvelopeRenderRequest, FilingEnvelopeRenderResult, render_filing_envelope
+from cadrumo.application.calculations._m303_regimen_simplificado import calculate_m303_regimen_simplificado_result
+from cadrumo.application.filing._export import render_filing_envelope
+from cadrumo.application.filing._export_envelope import FilingEnvelopeRenderRequest, FilingEnvelopeRenderResult
 from cadrumo.application.filing._projection import _project_record
 from cadrumo.application.filing.tests import test_m303_did_account_wire_isolated_authority as m303_did
 from cadrumo.application.filing.tests.test_producer_snapshot import _m303_exonerado_evidence
@@ -38,7 +39,7 @@ from cadrumo.core.filing_projection_ref import (
     M303RegimenSimplificadoFact,
 )
 from cadrumo.core.period import Period
-from cadrumo.core.resources import bundled_path
+from cadrumo.core.resources._boundary import bundled_path
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry._supplementary_orden import compile_supplementary_ordenes
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
@@ -56,12 +57,7 @@ from cadrumo.domain.iva.regimen_simplificado_rows import (
     RegimenSimplificadoFilingRows,
 )
 from cadrumo.domain.modelos.calculation_revision_m303_handoff import M303RegimenSimplificadoFilingEvidence
-from cadrumo.domain.prorrata_register import (
-    ProrrataActivityRow,
-    ProrrataRegister,
-    ProrrataRegisterEntry,
-    SectorDefinition,
-)
+from cadrumo.domain.prorrata_register.register import ProrrataActivityRow, ProrrataRegister, ProrrataRegisterEntry, SectorDefinition
 
 from ..pipeline._export_tree import render_complete_export_tree
 from ..pipeline._provenance_manifest import (

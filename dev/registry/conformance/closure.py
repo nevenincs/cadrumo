@@ -20,7 +20,7 @@ from typing import Final, Literal
 
 from pydantic import BaseModel, Field, computed_field, model_validator
 
-from cadrumo.application.filing import FilingExportProofAuthority
+from cadrumo.application.filing._export_proof import FilingExportProofAuthority
 from cadrumo.application.registry.closure import (
     RegistryClosureLimb,
     RegistryClosureLimbName,

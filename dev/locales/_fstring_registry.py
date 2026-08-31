@@ -152,7 +152,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     stays import-error-safe. If a domain import fails, ``get_registered_keys``
     will propagate the error with full context rather than a silent empty set.
     """
-    from cadrumo.application.storage_management import StorageAreaDisposition, StorageOccupancy
+    from cadrumo.application.storage_management._models import StorageAreaDisposition, StorageOccupancy
     from cadrumo.application.wizard.catalogue import WIZARD_FLOWS
     from cadrumo.core.storage_taxonomy import StorageArea
     from cadrumo.core.errors.error_codes import ErrorCategory
