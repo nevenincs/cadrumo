@@ -34,4 +34,3 @@ S87 plan prose says the later narrow module passed, but no historic literal term
 ## Recommendations
 
 - When citing S77, retain S78's correction and require a standalone receipt on a stable tree before making a production-behavior claim.
-
