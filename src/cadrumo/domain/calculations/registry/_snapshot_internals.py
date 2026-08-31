@@ -28,6 +28,7 @@ from .schema import ModeloDefinition, ModeloRevision, RegistryCatalogues, Regist
 from .schema_references import LegalReference, governed_period_span
 from .schema_surfaces import CasillaDefinition
 from .temporal import select_revision
+from .validate_cross_domain_snapshot import REQUIRED_CROSS_DOMAIN_CHECK_IDENTITIES
 from .validate_revision_identity import revision_reference_identity_failures
 
 _SnapshotCacheKey = tuple[int, int, str, int, str, date | None, str | None, RegistryAuthorityGrade]
@@ -144,7 +145,12 @@ def _collect_deadline_schedule_refs(
 # ``__init__`` importing the check module as a side effect, so making the
 # namespace inert -- which the architecture rule requires -- silently stopped
 # the registration and failed every Modelo 100 snapshot validation.
-_CROSS_DOMAIN_CHECK_MODULES: tuple[str, ...] = ("cadrumo.domain.renta.first_slice_routing_integrity",)
+# Derived from the requirement declaration rather than restated beside it: the
+# modules installed here and the checks the validator demands are the same set
+# by construction, so neither can be moved without the other.
+_CROSS_DOMAIN_CHECK_MODULES: tuple[str, ...] = tuple(
+    dict.fromkeys(REQUIRED_CROSS_DOMAIN_CHECK_IDENTITIES.values()),
+)
 _cross_domain_checks_installed = False
 
 
