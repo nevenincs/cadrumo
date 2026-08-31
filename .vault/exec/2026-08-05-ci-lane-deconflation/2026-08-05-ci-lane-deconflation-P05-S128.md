@@ -5,7 +5,7 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:169b6aff460e60394300eb7c6d0fb5e19251e32c5dc8f03266e5292042736b74'
+body_hash: 'sha256:5a57d7eeba3db27666a52011a73971b41627c4c2d71b30bbd357bc0fbbf55c4e'
 step_id: 'S128'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
@@ -34,5 +34,7 @@ related:
 - `verify:` `uv run --no-sync python -m dev.audit.size_budget` -> `fail` (`size budget: scanned 5607 modules, 15529 production callables; FAIL - 87 finding(s)`; exit 1; target absent)
 
 ## Notes
+
+The shared branch advanced to `d8a23b3202` immediately before S128â€™s isolated staging and had already captured the in-flight extractionâ€™s `_capsule_filesystem.py`, `filesystem.py`, `capsule.py`, and `_capsule_data.py` changes beside unrelated peer work. This record and `2ffa0754d4` own the remaining direct-consumer cleanup and closure; no already-landed source was duplicated or reverted.
 
 `uv run --no-sync ruff format --check src/cadrumo/adapters/persistence/storage/custody/filesystem.py src/cadrumo/adapters/persistence/storage/custody/_capsule_filesystem.py src/cadrumo/adapters/persistence/storage/custody/capsule.py src/cadrumo/adapters/persistence/storage/custody/_capsule_data.py src/cadrumo/adapters/persistence/storage/custody/_inventory.py src/cadrumo/adapters/persistence/storage/custody/capsule_discovery.py src/cadrumo/adapters/persistence/storage/custody/capsule_records.py` exits 1: `capsule_records.py` would be reformatted at lines 250 and 306. Those untouched pre-existing blank-line findings remain outside S128; scoped ruff check above passes.
