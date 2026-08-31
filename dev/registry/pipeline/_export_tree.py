@@ -272,10 +272,6 @@ _ALPHANUMERIC_TYPES: Final[frozenset[str]] = frozenset({"an", "alfanumerico", "a
 #: calls it a value-bearing field the two disagree, and the caller refuses
 #: rather than recording a naturaleza the design does not state.
 _BLANK_RUN_TYPES: Final[frozenset[str]] = frozenset({"blancos"})
-#: Retained for the workbook abbreviations; numeric membership itself is decided
-#: by :func:`_is_numeric_aeat_type`, the one vocabulary the render profile's
-#: eligibility already uses, so the two cannot disagree about what is numeric.
-_NUMERIC_TYPES: Final[frozenset[str]] = frozenset({"n", "num"})
 _OFFICIAL_LITERAL_RE: Final[re.Pattern[str]] = re.compile(
     r"^\s*constante(?:\s+n[uú]mero)?\s+(?P<quote>['\"])(?P<literal>[^'\"]*)(?P=quote)\.?\s*$",
     re.IGNORECASE,

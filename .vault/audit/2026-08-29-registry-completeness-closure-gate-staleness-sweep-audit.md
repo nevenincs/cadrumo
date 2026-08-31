@@ -921,3 +921,49 @@ That is precisely the trap here. Reading `gap_tiers` gives 121 of 128 rows
 encodes the difference between an absence it expects and one it refuses -- the
 reporting error is to collapse them. Read the field the model computes for the
 question being asked, not the field whose name is closest to it.
+
+## Provenance: the defect was predicted, deferred, and then half-landed
+
+The naturaleza collapse was not an oversight nobody had seen. The ADR
+`2026-08-16-aeat-export-fragment-generator-authority-pdf-source-wire-fact-authority-adr`
+names the exact function and the exact cause, and marks it **not landed**:
+
+> The fourth is `_normalise_field` in `_export_tree.py` and is **not landed**. It
+> casefolds the AEAT type against `_TEXT_TYPES` and `_NUMERIC_TYPES` -- the
+> workbook tokens -- and refuses anything else as an unsupported type, so a
+> `Numérico` field never reaches a renderer at all. [...] So the renderer needs
+> exactly the two changes eligibility received -- recognise the canonical
+> spellings, and route PDF fields to the profile rather than to content
+> derivation -- plus the text-type spellings (`Alfanumérico`, `Alfabético`,
+> `Blancos`) for the non-numeric anchors. That file is held by an in-flight
+> campaign, so it is named here rather than edited.
+
+What happened afterwards is the instructive part. The remedy landed on the
+NUMERIC side properly: `_is_numeric_aeat_type` matches both vocabularies, and
+its own docstring records the same bug and the same consequence -- "Selecting on
+the abbreviations alone made every PDF design's numeric fields ineligible, so no
+reviewed rule was ever demanded for them and an empty profile satisfied
+exhaustive coverage completely."
+
+On the TEXT side only half the remedy landed. The spellings were added to
+`_TEXT_TYPES` -- which is the only reason `alfabetico` was in the set at all --
+but the discriminator that reads the set was left as `type_code == "a"`. The
+membership widened; the branch that interprets membership did not.
+
+### Lesson
+
+Widening a membership set is not the whole change. Every discriminator that
+reads that set is a second, separate declaration of the same vocabulary, and
+adding a member silently redistributes inputs across branches that were written
+when the set was smaller. The fix on the numeric side was verified by its own
+eligibility test; the text side had no equivalent, so nothing failed.
+
+When a deferred remedy is finally applied, re-read the deferral note and check
+off each part it named. This one named three: canonical spellings, PDF routing,
+and the text-type spellings. Two landed. The third -- the one with no owning
+test -- did not, and shipped wrong provenance across six revisions.
+
+`_NUMERIC_TYPES` is removed here as the last remnant of the abbreviation-only
+approach: it had no readers left, while its comment still asserted a role
+numeric membership no longer takes from it. A dead frozenset named for the
+vocabulary is exactly the wrong thing for the next reader to find.
