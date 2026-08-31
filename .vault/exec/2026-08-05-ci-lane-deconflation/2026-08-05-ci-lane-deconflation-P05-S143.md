@@ -5,7 +5,7 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:4f6b4b96278b5c7592dc2bc4843491fee2700f07878258c047d0e9bfe3c030f7'
+body_hash: 'sha256:b7bab6c12f560d66b76d9a67d3635387037ce66ced11669ddd210b2dac16e94c'
 step_id: 'S143'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
@@ -66,7 +66,7 @@ exit 0
 git diff --cached --check
 exit 0
 
-$commit='80417ba85f'; $path='src/cadrumo/application/filing/_producer_snapshot.py'; $names=@('from ...core.refund_election import RefundElection','from ...core.payment_election import PaymentElection','from ...core.prior_domiciliation_election import PriorDomiciliationElection','from ...core.result_disposition import ResultDisposition, result_disposition_is_refund','from ...core.modelo import Modelo','from ...core.models import STRICT_FROZEN_CONFIG','from ...core.period import Period, StandardPeriodCode','from ...core.identity import SubjectTaxId'); $parent=git show "${commit}^:$path" | Where-Object { $_ -in $names }; $step=git show "${commit}:$path" | Where-Object { $_ -in $names }; if($parent.Count -ne $names.Count -or $step.Count -ne $names.Count -or (Compare-Object $parent $step)){throw 'immutable peer import-order mismatch'}; Write-Output ('IMMUTABLE_PARENT_ORDER=' + ($parent -join ' | ')); Write-Output ('IMMUTABLE_STEP_ORDER=' + ($step -join ' | ')); Write-Output 'IMMUTABLE_PEER_IMPORT_ORDER_UNCHANGED=true'; Write-Output 'exit 0'
+$commit='80417ba85f'; $path='src/cadrumo/application/filing/_producer_snapshot.py'; $names=@('from ...core.refund_election import RefundElection','from ...core.payment_election import PaymentElection','from ...core.prior_domiciliation_election import PriorDomiciliationElection','from ...core.result_disposition import ResultDisposition, result_disposition_is_refund','from ...core.modelo import Modelo','from ...core.models import STRICT_FROZEN_CONFIG','from ...core.period import Period, StandardPeriodCode','from ...core.identity import SubjectTaxId'); $parent=git show "${commit}^:$path" | Where-Object { $_ -in $names }; $step=git show "${commit}:$path" | Where-Object { $_ -in $names }; if($parent.Count -ne $names.Count -or $step.Count -ne $names.Count -or (($parent -join "`n") -cne ($step -join "`n"))){throw 'immutable peer import-order mismatch'}; Write-Output ('IMMUTABLE_PARENT_ORDER=' + ($parent -join ' | ')); Write-Output ('IMMUTABLE_STEP_ORDER=' + ($step -join ' | ')); Write-Output 'IMMUTABLE_PEER_IMPORT_ORDER_UNCHANGED=true'; Write-Output 'exit 0'
 IMMUTABLE_PARENT_ORDER=from ...core.refund_election import RefundElection | from ...core.payment_election import PaymentElection | from ...core.prior_domiciliation_election import PriorDomiciliationElection | from ...core.result_disposition import ResultDisposition, result_disposition_is_refund | from ...core.modelo import Modelo | from ...core.models import STRICT_FROZEN_CONFIG | from ...core.period import Period, StandardPeriodCode | from ...core.identity import SubjectTaxId
 IMMUTABLE_STEP_ORDER=from ...core.refund_election import RefundElection | from ...core.payment_election import PaymentElection | from ...core.prior_domiciliation_election import PriorDomiciliationElection | from ...core.result_disposition import ResultDisposition, result_disposition_is_refund | from ...core.modelo import Modelo | from ...core.models import STRICT_FROZEN_CONFIG | from ...core.period import Period, StandardPeriodCode | from ...core.identity import SubjectTaxId
 IMMUTABLE_PEER_IMPORT_ORDER_UNCHANGED=true
