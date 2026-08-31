@@ -47,19 +47,17 @@ from typing import Final
 
 import pytest
 
-from ..adapters.persistence.storage import (
-    STORAGE_NAMESPACE_REGISTRY,
-    SecureObjectNamespaceDefinition,
-    StoragePathKind,
-)
-from ..core.storage_taxonomy_locations import storage_location
-from ..core.storage_taxonomy import StorageCategory
+from ..adapters.persistence.storage._namespace_registry import STORAGE_NAMESPACE_REGISTRY
+from ..adapters.persistence.storage._namespace_taxonomy import StoragePathKind
+from ..adapters.persistence.storage._secure_object_namespaces import SecureObjectNamespaceDefinition
 from ..core.compatibility_lifecycle import (
     PERSISTED_FORMATS,
     PersistedFormatClass,
     stale_persisted_format_declarations,
     undeclared_persisted_formats,
 )
+from ..core.storage_taxonomy import StorageCategory
+from ..core.storage_taxonomy_locations import storage_location
 from ._storage_path_grammar import literal_directory_runs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
