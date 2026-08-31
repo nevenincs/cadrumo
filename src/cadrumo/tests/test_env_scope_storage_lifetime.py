@@ -23,7 +23,7 @@ from pathlib import Path
 import pytest
 
 from ..core.directory_scan import scan_directory
-from ._collection_storage_root import (
+from .collection_storage_root import (
     _ABANDONED_AFTER_SECONDS,
     _STALE_AFTER_SECONDS,
     _STEM,
@@ -323,7 +323,7 @@ def test_the_reclaim_runs_at_startup_and_not_only_at_exit(tmp_path: Path) -> Non
         import os
         from pathlib import Path
 
-        from cadrumo.tests._collection_storage_root import register_collection_storage_root_cleanup
+        from cadrumo.tests.collection_storage_root import register_collection_storage_root_cleanup
 
         parent = Path({str(parent)!r})
         root = parent / f"cadrumo-pytest-{{os.getpid()}}"

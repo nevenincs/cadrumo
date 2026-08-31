@@ -10,7 +10,7 @@ from functools import cache
 
 from pydantic import AnyHttpUrl, TypeAdapter
 
-from ....adapters.inbound.pdf.utils import source_pdf_reference_path
+from ....adapters.inbound.pdf.source_provenance import source_pdf_reference_path
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -48,7 +48,6 @@ from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.registry_tree import bundled_registry_tree
 from ...modelo.external_import_actions import import_external_filing_evidence
 from ...modelo.work_lifecycle import create_work_unit
-from .._cross_period_external_evidence import filing_external_evidence_blockers
 from ..cross_period_clean_state import (
     CrossPeriodCleanStateBlocker,
     CrossPeriodCleanStateVerdict,
@@ -58,6 +57,7 @@ from ..cross_period_clean_state import (
     cross_period_dependency_requirements,
     evaluate_cross_period_clean_state,
 )
+from ..cross_period_external_evidence import filing_external_evidence_blockers
 from ..observations_repository import CalculationObservationRepository, ObservationSourceKind
 
 _PROFILE_ID = "39039039-0390-4390-8390-390390390390"

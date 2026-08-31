@@ -31,10 +31,7 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
-from ._semantic_role_resolution import (
-    AmbiguousSemanticRoleCasillaError,
-    casilla_id_for_unique_revision_semantic_role,
-)
+from .semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla_id_for_unique_revision_semantic_role
 
 _ART20_RNT_ROLE = "irpf_rendimiento_trabajo_rendimiento_neto"
 _ART20_REDUCCION_ROLE = "irpf_rendimiento_trabajo_reduccion_gastos_generales"

@@ -43,7 +43,7 @@ from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegi
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.observations_repository import CalculationObservationRepository, ResultDispositionProjection
-from .._calculation_actions import _resolve_bucket_source_mesh
+from ..calculation_actions import _resolve_bucket_source_mesh
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

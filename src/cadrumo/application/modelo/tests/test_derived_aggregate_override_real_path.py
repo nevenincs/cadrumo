@@ -63,7 +63,7 @@ from ....tests.user_profile import register_minimal_profile
 from ...aggregation import CallerOverrideDisposition, precedence_ladder_sources
 from ...user_profile.projections import record_to_path_values
 from ...user_profile.validation import reject_invalid_profile_facts
-from .._calculation_actions import calculate_modelo_revision_from_bucket_aggregation
+from ..calculation_actions import calculate_modelo_revision_from_bucket_aggregation
 from ..work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

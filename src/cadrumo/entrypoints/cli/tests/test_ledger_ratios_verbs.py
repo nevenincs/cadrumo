@@ -169,8 +169,8 @@ def test_usage_ratio_bound_is_a_single_shared_authority() -> None:
     """The persisted profile and the transport edge share one range check."""
     from decimal import Decimal
 
-    from ....domain.usage_ratios._model import validate_usage_ratio_bound
     from ....domain.usage_ratios.errors import UsageRatioValidationError
+    from ....domain.usage_ratios.model import validate_usage_ratio_bound
 
     assert validate_usage_ratio_bound(Decimal("0.3"), label="ratio") == Decimal("0.3")
     for bad in (Decimal("-0.01"), Decimal("1.01")):

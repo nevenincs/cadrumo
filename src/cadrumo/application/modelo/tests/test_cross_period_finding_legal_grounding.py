@@ -32,8 +32,8 @@ from ...calculations.cross_period_clean_state import (
     CrossPeriodDependencyOrigin,
     CrossPeriodDependencyRequirement,
 )
-from .._action_errors import WORKFLOW_GATE_LEGAL_REFS
-from .._verification_actions import (
+from ..action_errors import WORKFLOW_GATE_LEGAL_REFS
+from ..verification_actions import (
     _CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS,
     _CROSS_PERIOD_DEPENDENCY_LEGAL_REFS,
     _IVA_COMPENSATION_CARRY_LEGAL_REF,

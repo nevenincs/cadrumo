@@ -32,7 +32,7 @@ import pytest
 from typer.main import get_command as _typer_get_command
 
 from ....application.operator_surface.contract import get_operator_surface_contract
-from .._command_suggestions import materialise_lazy_subcommands
+from ..command_suggestions import materialise_lazy_subcommands
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

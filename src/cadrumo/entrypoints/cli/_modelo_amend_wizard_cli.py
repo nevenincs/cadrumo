@@ -55,7 +55,7 @@ from ...application.flows.copy import register_copy_source
 from ...application.flows.definition import CopyRef, FlowChoice, FlowCondition, FlowDefinition, FlowPage, FlowSection
 from ...application.flows.engine import FlowState
 from ...application.flows.line_frontend import LineFlowFrontend
-from ...application.modelo._action_errors import (
+from ...application.modelo.action_errors import (
     AmendmentComplementariaLiabilityDecreaseError,
     AmendmentEvidenceMissingError,
     AmendmentKindNotPermittedError,
@@ -69,15 +69,15 @@ from ...application.modelo._action_errors import (
     WorkUnitNotFoundError,
     amendment_evidence_missing_precondition,
 )
-from ...application.modelo._amendment_actions import amend_modelo_revision
-from ...application.modelo._calculation_actions import get_calculation_revision
-from ...application.modelo._filing_actions import get_filing_record
+from ...application.modelo.amendment_actions import amend_modelo_revision
+from ...application.modelo.calculation_actions import get_calculation_revision
+from ...application.modelo.filing_actions import get_filing_record
 from ...application.modelo.registry_discovery import registry_casillas_for_registry_scope
 from ...core.amendment_kind_regime import permitted_amendment_kind_values
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.external_constants import OutputLanguage
 from ...core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
-from ...core.i18n._render import tr
+from ...core.i18n.render import tr
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period

@@ -57,6 +57,7 @@ from ....domain.iva.establishment import (
 from ....domain.iva.identification import identification_state_for_printed_tax_identifier
 from ....domain.iva.schema import EUMemberState
 from ....tests.attribute_scope import scoped_attribute
+from .. import establishment_ladder as ladder_module
 from ..counterparty_establishment import (
     ConfirmedCounterpartyFactsRepository,
     ConfirmedCounterpartyResolution,

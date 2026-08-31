@@ -15,7 +15,7 @@ from ...application.review.operator import (
 from ...core.decimal.coercion import coerce_decimal_strict
 from ...core.errors.error_codes import resolve_error_message
 from ...core.external_constants import OutputLanguage
-from ...core.i18n._render import tr
+from ...core.i18n.render import tr
 from ...core.unit_proportion import is_unit_proportion
 from ._common import _bad, activate_subcommand_output_language, emit_envelope
 from ._review_payloads import ReviewQueueResult, ReviewQueueRowPayload, ReviewViewResult

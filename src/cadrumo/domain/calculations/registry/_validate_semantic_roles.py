@@ -5,7 +5,7 @@ label patterns across all casillas in every :class:`ModeloDefinition`.
 
 The required-role hard-flip gate and the public cross-reference accessor
 are extracted into the sibling
-:mod:`~cadrumo.domain.calculations.registry.validate_semantic_role_required`
+:mod:`~cadrumo.domain.calculations.registry._validate_semantic_role_required`
 module and re-exported here for call-site stability.
 """
 

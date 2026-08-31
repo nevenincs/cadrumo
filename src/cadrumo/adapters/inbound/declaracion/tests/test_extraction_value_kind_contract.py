@@ -39,7 +39,7 @@ import pytest
 
 from .....core.casilla_id import validated_casilla_id
 from .....domain.calculations.registry.schema_extraction import ExtractionTargetDefinition
-from .._parser import _classify_target
+from ..parser import _classify_target
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 

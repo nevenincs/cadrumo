@@ -86,7 +86,7 @@ from pathlib import Path
 import pytest
 
 from ....domain.calculations.registry.authority import bundled_authority
-from ...tests._wizard_catalogue_fixtures import register_wizard_catalogue
+from ...tests.wizard_catalogue_fixtures import register_wizard_catalogue
 
 __all__ = ["register_wizard_catalogue"]
 
@@ -104,12 +104,12 @@ from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.observations_repository import CalculationObservationRepository
-from .._action_errors import ModeloRequiredBindingsMissingError
-from .._calculation_actions import (
+from ..action_errors import ModeloRequiredBindingsMissingError
+from ..calculation_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from .._filed_revision_observation import APP_FILING_SOURCE_KIND
+from ..filed_revision_observation import APP_FILING_SOURCE_KIND
 from ..work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -34,12 +34,12 @@ if TYPE_CHECKING:
     from ._command_schema import command_schema_refs as command_schema_refs
     from ._command_schema import command_schema_type as command_schema_type
     from ._command_schema import command_schema_types as command_schema_types
-    from ._command_spec import CommandSpec
     from ._config._google import OAuthClientPayload as OAuthClientPayload
     from ._modelo_rendering import calculation_revision_lines, calculation_revision_payload
     from ._verb_input_schema import VerbInputSchema as VerbInputSchema
     from ._verb_input_schema import cli_path_for_command_key as cli_path_for_command_key
     from ._verb_input_schema import is_exposable_command as is_exposable_command
+    from .command_spec import CommandSpec
 from ._stdio import _disable_rich_cli_rendering as _disable_rich_cli_rendering
 from ._stdio import configure_stdio_for_utf8 as _configure_stdio_for_utf8
 
@@ -63,7 +63,6 @@ from ...core.storage_taxonomy import StorageCategory as _StorageCategory
 from ...core.storage_taxonomy_locations import storage_location as _storage_location
 from ._command_policy import CommandExecutionPolicy as _CommandExecutionPolicy
 from ._command_runtime import build_command_app as _build_command_app
-from ._command_specs import COMMAND_GRAPH as _COMMAND_GRAPH
 from ._common import attach_cli_policy_verdict, resolve_cli_precondition_action
 from ._framework_localisation import (
     localise_help_section_headers as _localise_help_section_headers,
@@ -71,9 +70,10 @@ from ._framework_localisation import (
 from ._framework_localisation import (
     localise_typer_parse_error_messages as _localise_typer_parse_error_messages,
 )
-from ._language_argv import apply_language_argv_to_environment as _apply_language_argv_to_environment
 from ._operator_surface_reconciliation import current_operator_surface_reconciliation
+from .command_specs import COMMAND_GRAPH as _COMMAND_GRAPH
 from .errors import decorate_typer_app as _decorate_typer_app
+from .language_argv import apply_language_argv_to_environment as _apply_language_argv_to_environment
 
 CommandExecutionPolicy = _CommandExecutionPolicy
 

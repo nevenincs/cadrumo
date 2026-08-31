@@ -16,14 +16,14 @@ from decimal import Decimal
 
 import pytest
 
-from ....domain.renta._maritime_exemption import (
+from ....domain.renta.errors import RentaValidationError
+from ....domain.renta.maritime_exemption import (
     ART_7P_EXEMPTION_CAP_EUR,
     RENTA_EXENTA_CASILLA,
     MaritimeExemptionInactiveError,
     MaritimeWorkerFacts,
     ProfileCompletenessError,
 )
-from ....domain.renta.errors import RentaValidationError
 from .._maritime_exemption_service import (
     MaritimeExemptionResult,
     resolve_maritime_exemption,

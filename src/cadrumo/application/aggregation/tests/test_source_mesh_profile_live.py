@@ -18,10 +18,7 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ...calculations._iva_wallet_reconciliation import (
-    IvaWalletDecisionSourceResolver,
-    reconcile_iva_compensation_wallet,
-)
+from ...calculations.iva_wallet_reconciliation import IvaWalletDecisionSourceResolver, reconcile_iva_compensation_wallet
 from ...modelo.profile_binding import resolve_profile_sourced_bindings
 from .. import CalculationSourceContext, ProfileSourceResolver
 from ._secure_objects_fixtures import secure_profile_backend  # noqa: F401

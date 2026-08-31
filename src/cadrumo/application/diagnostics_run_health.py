@@ -69,7 +69,7 @@ from typing import TypedDict
 
 from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, model_validator
 
-from ..adapters.outbound.llm._run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
+from ..adapters.outbound.llm.run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
 from ..core.time.date_range import validate_inclusive_date_range
 from .auth.operator import test_operator_auth
 

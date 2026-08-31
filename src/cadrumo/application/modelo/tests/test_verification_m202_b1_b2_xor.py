@@ -11,7 +11,7 @@ from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.loader import load_modelo_path
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind
-from .._verification_actions import evaluate_verification_predicates
+from ..verification_actions import evaluate_verification_predicates
 from ._verification_substance_support import _workflow_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

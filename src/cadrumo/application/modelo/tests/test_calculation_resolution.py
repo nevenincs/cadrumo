@@ -22,10 +22,8 @@ from decimal import Decimal
 
 import pytest
 
-from .._calculation_resolution import build_calculation_replay_payloads, resolve_calculation_binding_channels
-from .._calculation_resolution import (
-    resolve_calculation_binding_channels as _owner_resolve_calculation_binding_channels,
-)
+from ..calculation_resolution import build_calculation_replay_payloads, resolve_calculation_binding_channels
+from ..calculation_resolution import resolve_calculation_binding_channels as _owner_resolve_calculation_binding_channels
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

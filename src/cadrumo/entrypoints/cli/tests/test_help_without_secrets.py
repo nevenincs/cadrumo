@@ -53,7 +53,7 @@ _PASSPHRASE_ENV_VAR = "CADRUMO_SECRET_PASSPHRASE"  # noqa: S105 - env var name, 
 #: assignment, e.g. leaked from ``os.environ`` or a diagnostic dump), never
 #: a bare instructional mention of the variable's NAME. Operator-facing help
 #: prose is allowed to name ``CADRUMO_SECRET_PASSPHRASE`` when explaining where
-#: it must be set for an isolated run (``application/operator_surface/_help.py``);
+#: it must be set for an isolated run (``application/operator_surface/help.py``);
 #: only an actual ``KEY=value`` leak is a genuine secret disclosure.
 _PASSPHRASE_VALUE_LEAK_PATTERN = re.compile(r"CADRUMO_SECRET_PASSPHRASE\s*=\s*\S")
 

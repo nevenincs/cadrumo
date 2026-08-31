@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from .._command_specs import COMMAND_GRAPH, COMMAND_SPECS
+from ..command_specs import COMMAND_GRAPH, COMMAND_SPECS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -38,7 +38,7 @@ def test_every_executable_target_is_public_and_every_schema_identity_is_unique()
 def test_complete_authority_import_does_not_import_behavior_modules() -> None:
     source = (
         "import json, sys; "
-        "from cadrumo.entrypoints.cli._command_specs import COMMAND_SPECS; "
+        "from cadrumo.entrypoints.cli.command_specs import COMMAND_SPECS; "
         "targets = {spec.result_schema.target.module for spec in COMMAND_SPECS "
         "if spec.result_schema.target is not None}; "
         "targets.update(spec.handler.target.module for spec in COMMAND_SPECS "

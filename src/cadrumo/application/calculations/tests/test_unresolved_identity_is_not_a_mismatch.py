@@ -35,8 +35,8 @@ from ....domain.modelos.filing_record import (
     derive_filing_record_id,
 )
 from ....tests.secure_sql import isolated_runtime_profile
-from .._cross_period_external_evidence import filing_external_evidence_blockers
 from ..cross_period_clean_state import CrossPeriodCleanStateBlocker
+from ..cross_period_external_evidence import filing_external_evidence_blockers
 from ._cross_period_clean_state_support import _persist_justificante_metadata
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -31,7 +31,7 @@ from pathlib import Path
 import pytest
 import typer
 
-from ....application.modelo._action_errors import WorkUnitNotFoundError
+from ....application.modelo.action_errors import WorkUnitNotFoundError
 from ....core.redaction.rules import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 from ....domain.user_profile.values import ProfileSetupState
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
@@ -47,10 +47,10 @@ _UUID_TEXT_RE = re.compile(
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parents[5]
 _S91_DECLARED_SOURCE_PATHS = (
-    "src/cadrumo/application/modelo/_action_errors.py",
-    "src/cadrumo/application/modelo/_export.py",
+    "src/cadrumo/application/modelo/action_errors.py",
+    "src/cadrumo/application/modelo/export.py",
     "src/cadrumo/application/modelo/_iva_wallet_seed.py",
-    "src/cadrumo/application/modelo/_preconditions.py",
+    "src/cadrumo/application/modelo/preconditions.py",
     "src/cadrumo/entrypoints/cli/_modelo.py",
     "src/cadrumo/entrypoints/cli/_modelo_behavior_support.py",
     "src/cadrumo/entrypoints/cli/_modelo_payloads.py",

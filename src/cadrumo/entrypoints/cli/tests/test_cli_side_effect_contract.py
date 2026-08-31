@@ -34,7 +34,7 @@ from pydantic import TypeAdapter
 
 from ....tests.cli_performance import is_non_authoritative_artifact
 from .. import command_graph
-from .._command_spec import CommandSpec
+from ..command_spec import CommandSpec
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

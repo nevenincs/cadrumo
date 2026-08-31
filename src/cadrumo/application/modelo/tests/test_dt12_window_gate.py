@@ -34,8 +34,8 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
-from .._calculate_input import WorkCalculateInputBundle, build_work_calculate_input_bundle
-from .._semantic_role_resolution import casilla_id_for_unique_semantic_role
+from ..calculate_input import WorkCalculateInputBundle, build_work_calculate_input_bundle
+from ..semantic_role_resolution import casilla_id_for_unique_semantic_role
 from ..work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

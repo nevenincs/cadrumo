@@ -13,8 +13,8 @@ from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.values import ProfileSetupState
 from ..user_profile.profile_record_repository import ProfileRecordRepository
 from ..user_profile.projections import projection_for_taxpayer
-from ._action_errors import ModeloProfileReadinessError
-from ._preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
+from .action_errors import ModeloProfileReadinessError
+from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
 
 _READINESS_SUBJECT_LEAF_KEY = "modelo.work.calculate"
 _READINESS_SCENARIO_PREFIX = "modelo.work.calculate.m303_profile_readiness"

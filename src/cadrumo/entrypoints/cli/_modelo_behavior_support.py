@@ -5,14 +5,14 @@ from __future__ import annotations
 import typer
 
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ...application.modelo._selectors import (
+from ...application.modelo.registry_discovery import declared_modelo_period_tokens
+from ...application.modelo.selectors import (
     ModeloCalculationRevisionDefault,
     ModeloCalculationRevisionSelector,
     ModeloCalculationRevisionSelectorAmbiguousError,
     ModeloCalculationRevisionSelectorNotFoundError,
     ModeloCalculationRevisionSelectorStateError,
 )
-from ...application.modelo.registry_discovery import declared_modelo_period_tokens
 from ...application.modelo.work_addressing import (
     ModeloWorkAddressNotFoundError,
     ModeloWorkPeriodTokenError,
@@ -26,7 +26,7 @@ from ...application.modelo.work_addressing import (
 )
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.errors.hierarchy import CadrumoError
-from ...core.i18n._render import tr
+from ...core.i18n.render import tr
 from ...core.logging import get_logger
 from ...core.period import Period, PeriodError
 from ...domain.modelos.calculation_revision import CalculationRevision

@@ -30,12 +30,12 @@ from pathlib import Path
 
 import pytest
 
-from .._csv import CsvProvider
 from .._detection import _ordered_candidates
 from .._mapped_tabular import MappedTabularProvider
 from .._ofx import OfxProvider
 from .._pdf_n26 import PdfN26Provider
 from .._xlsx import XlsxProvider
+from ..csv import CsvProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 

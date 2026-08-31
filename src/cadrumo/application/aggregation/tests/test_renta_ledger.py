@@ -36,11 +36,11 @@ from ....domain.contribuyente.ccaa import CCAA
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ....domain.iva.classification import InvoiceKind
-from ....domain.renta._ledger_expenses import RentaExpenseDirection
+from ....domain.renta.ledger_expenses import RentaExpenseDirection
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....domain.usage_ratios._model import UsageRatioProfile
+from ....domain.usage_ratios.model import UsageRatioProfile
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import RENTA_REGIMEN_CITATION_URL_FIXTURE
 from .. import (
@@ -53,7 +53,7 @@ from .. import (
     aggregate_renta_ledger_expenses_from_repositories,
 )
 from .._renta_gasto_ledger import aggregate_renta_gasto_ledger_from_repositories
-from ._renta_income_aggregation_support import _period
+from .renta_income_aggregation_support import _period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

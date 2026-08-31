@@ -23,8 +23,8 @@ from .....domain.calculations.registry.relations import (
 from .....domain.period import calculation_filing_date
 from .....tests import FIXTURES_DIR
 from .....tests.registry_observations import registry_grounded_observations
-from .._parser import parse_declaracion
 from ..errors import DeclaracionParseError
+from ..parser import parse_declaracion
 
 pytestmark = [
     pytest.mark.unit,

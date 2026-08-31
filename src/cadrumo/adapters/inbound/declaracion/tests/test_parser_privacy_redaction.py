@@ -21,7 +21,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 def test_parser_debug_log_does_not_expose_source_filename(caplog: pytest.LogCaptureFixture) -> None:
     pdf_path = FIXTURES_DIR / "justificantes" / "130" / "2022-2T.pdf"
 
-    with caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.inbound.declaracion._parser"):
+    with caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.inbound.declaracion.parser"):
         parse_declaracion(pdf_path, modelo_override="130", año_override=2022, period_override="2T")
 
     rendered_logs = "\n".join(record.getMessage() for record in caplog.records)
@@ -49,7 +49,7 @@ def test_word_extraction_debug_log_does_not_expose_source_filename(
     pdf_path = tmp_path / "12345678Z-private-words.pdf"
     pdf_path.write_text("not a PDF", encoding="utf-8")
 
-    with caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.inbound.declaracion._parser"):
+    with caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.inbound.declaracion.parser"):
         words = _extract_pages_words(pdf_path)
 
     rendered_logs = "\n".join(record.getMessage() for record in caplog.records)

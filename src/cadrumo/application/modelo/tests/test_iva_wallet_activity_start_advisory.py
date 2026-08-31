@@ -9,7 +9,7 @@ import pytest
 from ....domain.iva_compensation.reconciliation import IvaCompensationDecisionReason
 from ....tests.profile_capsule import load_test_profile_record, replace_test_profile_record
 from ...calculations.observations_repository import IvaWalletDecisionRepository
-from .._iva_wallet_gate import lazily_reconcile_local_iva_compensation_for_work_unit
+from ..iva_wallet_gate import lazily_reconcile_local_iva_compensation_for_work_unit
 from ._iva_wallet_engine_support import (
     _BUCKET_ID,
     _TAXPAYER_NIF,

@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import pytest
 
-from .._multi_year import EnrollmentEvidenceError, EnrollmentRecorder
+from ..multi_year import EnrollmentEvidenceError, EnrollmentRecorder
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

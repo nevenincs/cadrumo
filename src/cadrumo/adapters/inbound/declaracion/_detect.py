@@ -20,8 +20,8 @@ import re
 from pathlib import Path
 
 from ..pdf.label_regex import EJERCICIO_LABEL, MODELO_LABEL
-from ._parsers._pdfplumber_backend import extract_pages_text
-from ._schema import TemplateRevision
+from ._parsers.pdfplumber_backend import extract_pages_text
+from .schema import TemplateRevision
 
 # AEAT renders the header stamp in the sede UI language the filer used, so both
 # labels accept the Spanish and English wording. Both searches are bounded to

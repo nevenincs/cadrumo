@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from .._render import _I18N_STRICT_MISSING_KEYS, MissingTranslationError, _override_locales_root, tr
+from ..render import _I18N_STRICT_MISSING_KEYS, MissingTranslationError, _override_locales_root, tr
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

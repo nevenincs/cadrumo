@@ -40,7 +40,9 @@ from ....core.aggregation import LedgerIncomeGrounding
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.calculations.registry.ledger_bindings import resolve_ledger_renta_income_aggregation_binding_values
+from ....domain.calculations.registry.ledger_renta_income_bindings import (
+    resolve_ledger_renta_income_aggregation_binding_values,
+)
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
@@ -51,8 +53,8 @@ from .._iva_ledger import (
     resolve_iva_ledger_binding_values,
 )
 from .._renta_income_ledger import aggregate_renta_income_ledger
-from ._iva_authority_support import aggregate_iva_ledger_observations
-from ._renta_income_aggregation_support import _raw_transaction
+from .iva_authority_support import aggregate_iva_ledger_observations
+from .renta_income_aggregation_support import _raw_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -3,7 +3,7 @@
 Provides a profile-free function to ask "when does the plazo voluntario
 close for this modelo + filing year + period?" directly from the registry
 deadline windows.  The result feeds the pre-calculation extemporaneidad
-surface in :mod:`cadrumo.application.modelo._work_plazo`.  Post-calculation
+surface in :mod:`cadrumo.application.modelo.work_plazo`.  Post-calculation
 consumers that know resultado or Modelo 210 tipo-renta context call the sibling
 ``resolve_filing_window`` entry point; both paths therefore share the same
 canonical matcher.
@@ -22,7 +22,8 @@ from ...core.result_disposition import ResultDisposition
 from .errors import DeadlineValidationError
 
 if TYPE_CHECKING:
-    from ..calculations.registry.schema import DeadlineWindowDefinition, ModeloRevision
+    from ..calculations.registry.schema import ModeloRevision
+    from ..calculations.registry.schema_deadlines import DeadlineWindowDefinition
 
     type DeadlineWindowProjection = tuple[str, ModeloRevision, DeadlineWindowDefinition]
 

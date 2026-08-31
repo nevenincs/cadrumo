@@ -18,7 +18,10 @@ from ..authority import bundled_authority
 from ..binding_selector_utils import selector_as_dict
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
-from ..ledger_bindings import IvaLedgerObservation, resolve_ledger_iva_aggregation_binding_values
+from ..ledger_iva_bindings import (
+    IvaLedgerObservation,
+    resolve_ledger_iva_aggregation_binding_values,
+)
 from ..schema import ModeloRevision
 from ._ledger_iva_aggregation_support import (
     _M303_REPERCUTIDO_GENERAL_BASE_CASILLA,

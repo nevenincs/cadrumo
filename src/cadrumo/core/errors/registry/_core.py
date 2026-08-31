@@ -168,7 +168,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.i18n._render.MissingTranslationError",
+        "cadrumo.core.i18n.render.MissingTranslationError",
         ErrorCode(
             code="INTERNAL_I18N_MISSING_TRANSLATION",
             category=ErrorCategory.INTERNAL,
@@ -178,7 +178,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.i18n._render.UnmatchedPlaceholderError",
+        "cadrumo.core.i18n.render.UnmatchedPlaceholderError",
         ErrorCode(
             code="INTERNAL_I18N_UNMATCHED_PLACEHOLDER",
             category=ErrorCategory.INTERNAL,

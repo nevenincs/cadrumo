@@ -5,7 +5,7 @@ from __future__ import annotations
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ._calculation_helpers import resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit
-from ._profile_readiness_gate import require_profile_ready_for_work_unit
+from .profile_readiness_gate import require_profile_ready_for_work_unit
 from .work_lifecycle import ActiveWorkUnitUse, require_active_work_unit
 
 

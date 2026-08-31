@@ -36,8 +36,8 @@ from ....tests.secure_sql import isolated_profile_storage_root
 from ...user_profile.capsule_record import ProfileRecordSession
 from ...user_profile.lifecycle import ProfileCapsuleLifecycle
 from ...wizard.results import ConfigProfileCreateResult, ProfileWizardStatus
-from .._emit import emit_operator_json_success
-from .._sandbox_notice import sandbox_banner_line, sandbox_notice_for_active_bucket
+from ..emit import emit_operator_json_success
+from ..sandbox_notice import sandbox_banner_line, sandbox_notice_for_active_bucket
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

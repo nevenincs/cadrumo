@@ -32,7 +32,7 @@ from ...domain.calculations.registry.applicability import (
     derive_modelo_applicability,
 )
 from ...domain.calculations.registry.authority import bundled_authority
-from ...domain.calculations.registry.bindings import bound_casilla_binding_ids
+from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.ids import (
     BindingId,

@@ -86,12 +86,12 @@ def _catalogue_payload(locale: str) -> dict[str, object]:
 OPEN_ENDED_NAMESPACES: dict[str, str] = {
     "profile.keys": (
         "profile.keys.{question.profile_key} — keyed by the wizard question's "
-        "profile fact path (application/wizard/_compiler.py). The fact-path "
+        "profile fact path (application/wizard/compiler.py). The fact-path "
         "space is the open-ended profile schema, not a bounded enum."
     ),
     "profile.validation": (
         "profile.validation.{issue.code} — keyed by profile-readiness issue "
-        "codes surfaced at runtime (application/modelo/_profile_readiness_gate.py). "
+        "codes surfaced at runtime (application/modelo/profile_readiness_gate.py). "
         "Issue codes are raised ad hoc by the readiness gate, not a bounded enum."
     ),
     "errors.context_labels": (
@@ -111,7 +111,7 @@ OPEN_ENDED_NAMESPACES: dict[str, str] = {
     "sheets.detalle.headers": (
         "sheets.detalle.headers.{row_field} — keyed by binding row-field names "
         "with a tr(..., default=binding.id) fallback "
-        "(application/storage/calc_sheets/_engine.py). The header space is "
+        "(application/storage/calc_sheets/engine.py). The header space is "
         "binding-driven and the default makes a catalogue leaf optional."
     ),
     "topic": (
@@ -121,7 +121,7 @@ OPEN_ENDED_NAMESPACES: dict[str, str] = {
     ),
     "wizard.errors": (
         "wizard.errors.{reason} — keyed by ad-hoc reason tokens passed at "
-        "widget-validation call sites (application/wizard/_widgets.py). The "
+        "widget-validation call sites (application/wizard/widgets.py). The "
         "reason strings are literals chosen per call site, authored directly in "
         "the catalogues, not a bounded import-time enum."
     ),

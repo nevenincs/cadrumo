@@ -18,9 +18,9 @@ from .....core.period import Period
 from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.justificante import PdfModeloImportError
 from .....tests import FIXTURES_DIR
-from ...pdf import source_pdf_reference_path
-from .._parser import _extract_pages_words, parse_declaracion
+from ...pdf.source_provenance import source_pdf_reference_path
 from ..errors import DeclaracionParseError, TemplateNotDetectedError
+from ..parser import _extract_pages_words, parse_declaracion
 
 pytestmark = [
     pytest.mark.unit,

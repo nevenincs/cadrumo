@@ -20,7 +20,7 @@ from sqlalchemy.orm import Session
 
 from .....core.logging import get_logger
 from ..errors import RepositoryError
-from . import _orm
+from . import orm as _orm
 from .records import CorpusArtifactRecord, ModeloCatalogueRecord, PortalAuthMethod, PortalRecord
 
 _log = get_logger(__name__)

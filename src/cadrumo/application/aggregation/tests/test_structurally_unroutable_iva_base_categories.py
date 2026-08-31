@@ -36,7 +36,7 @@ from ....core.period import Period
 from ....core.resources.bundled_data import bundled_path
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.calculations.registry.ledger_bindings import structurally_unroutable_iva_base_categories
+from ....domain.calculations.registry.ledger_iva_bindings import structurally_unroutable_iva_base_categories
 from ....domain.calculations.registry.loader import load_registry_tree
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.iva.schema import CUOTA_LESS_M303_IVA_CATEGORIES, IvaCategory

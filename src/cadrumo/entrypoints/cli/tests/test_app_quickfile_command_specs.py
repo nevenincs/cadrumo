@@ -7,8 +7,8 @@ from typer.testing import CliRunner
 
 from .._app_quickfile_command_specs import QUICKFILE_COMMAND_SPECS
 from .._command_runtime import build_command_subtree, resolve_deferred_target
-from .._command_spec import CommandSpecGraph
 from .._root_command_specs import ROOT_COMMAND_SPECS
+from ..command_spec import CommandSpecGraph
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

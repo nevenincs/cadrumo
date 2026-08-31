@@ -38,9 +38,9 @@ from sqlalchemy import select
 from .....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
-from .....domain.calculations._row_casilla import DirectRowMaterializationProvenance
-from .....domain.calculations._row_source_identity import RowSourceIdentity
 from .....domain.calculations.registry.bindings import CasillaObservation
+from .....domain.calculations.row_casilla import DirectRowMaterializationProvenance
+from .....domain.calculations.row_source_identity import RowSourceIdentity
 from .....domain.modelos.calculation_repository import CalculationRevisionPersistenceError
 from .....domain.modelos.calculation_revision import (
     CalculationRevision,

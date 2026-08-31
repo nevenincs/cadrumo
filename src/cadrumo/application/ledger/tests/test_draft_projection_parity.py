@@ -24,7 +24,7 @@ import json
 import pytest
 from pydantic import BaseModel
 
-from ....entrypoints.cli._ledger_business_payloads import (
+from ....entrypoints.cli.ledger_business_payloads import (
     EvidenceDraftDiscrepancyPayload,
     EvidenceDraftLinePayload,
     EvidenceDraftRateBreakdownPayload,

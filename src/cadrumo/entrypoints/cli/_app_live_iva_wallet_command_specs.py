@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ._app_live_command_spec_support import _key
-from ._command_spec import (
+from .command_spec import (
     CommandSpec,
     DeferredTarget,
     ExecutionPolicySpec,

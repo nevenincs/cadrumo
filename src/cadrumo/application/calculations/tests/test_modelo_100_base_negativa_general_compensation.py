@@ -37,7 +37,7 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, U
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
-from ...modelo._calculation_actions import calculate_modelo_revision
+from ...modelo.calculation_actions import calculate_modelo_revision
 from ...modelo.work_lifecycle import create_work_unit
 from ..observations_repository import CalculationObservationRepository
 
@@ -141,7 +141,7 @@ def _zeroed_channels(snapshot: RegistrySnapshot) -> tuple[dict[BindingId, Decima
 def _calculate(*, casilla_inputs: dict[CasillaId, Decimal], obs_repo: CalculationObservationRepository):
     """Run the REAL M100 ``calculate_modelo_revision`` for filing year 2025."""
     snapshot = _snapshot()
-    from .._binding_prefill import resolve_bindings_from_local_store
+    from ..binding_prefill import resolve_bindings_from_local_store
 
     carry = resolve_bindings_from_local_store(snapshot, repository=obs_repo).binding_values
     binding_values, relation_values = _zeroed_channels(snapshot)

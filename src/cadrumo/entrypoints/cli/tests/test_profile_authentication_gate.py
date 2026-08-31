@@ -12,9 +12,7 @@ from ....core.config import override_settings
 from ....core.external_constants import OutputLanguage
 from ....core.profile_session import ProfileSessionRefusalReason
 from ....tests.cli_runner import invoke_cached_cli
-from .._command_spec import ProfileAuthenticationPosture
-from .._command_specs import COMMAND_GRAPH
-from .._config._secure_input import (
+from .._config.secure_input import (
     MachineSecretChannel,
     MachineSecretSelection,
     ProfileSecretChannel,
@@ -27,6 +25,8 @@ from .._profile_authentication_notice import (
 )
 from .._profile_session_gate import session_refusal_translation_key
 from .._windows_profile_secret_bootstrap import descriptor_from_inherited_handle
+from ..command_spec import ProfileAuthenticationPosture
+from ..command_specs import COMMAND_GRAPH
 from ..errors import CliRefusedBoundaryError, render_error_payload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

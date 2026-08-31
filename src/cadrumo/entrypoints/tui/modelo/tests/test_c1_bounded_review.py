@@ -25,7 +25,7 @@ from textual.coordinate import Coordinate
 from textual.widgets import DataTable, Static
 
 from .....core.config import override_settings
-from .....core.i18n._render import SUPPORTED_OUTPUT_LANGUAGES, tr
+from .....core.i18n.render import SUPPORTED_OUTPUT_LANGUAGES, tr
 from .....core.period import Period
 from .....domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
 from .....tests.terminal_sizes import SUPPORTED_TERMINAL_SIZE_IDS, SUPPORTED_TERMINAL_SIZES

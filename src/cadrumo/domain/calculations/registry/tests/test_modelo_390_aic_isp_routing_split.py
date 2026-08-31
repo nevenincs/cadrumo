@@ -37,7 +37,11 @@ import pytest
 from .....core.iva_deduction_fact import IvaDeductionFactKind
 from ....iva.flow import IvaFlowDirection
 from ....iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
-from ..ledger_bindings import IvaLedgerObservation, iva_ledger_selector, resolve_ledger_iva_aggregation_binding_values
+from ..ledger_iva_bindings import (
+    IvaLedgerObservation,
+    iva_ledger_selector,
+    resolve_ledger_iva_aggregation_binding_values,
+)
 from ..loader import load_registry_tree
 from ._gate_support import fragment_declaring
 from ._ledger_iva_aggregation_support import _deduction_provenance

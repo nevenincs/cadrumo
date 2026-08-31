@@ -381,7 +381,7 @@ def _central_harness_owner_violation(path: Path) -> str | None:
                 source = scoped_source.get(binding, "")
                 if source == "cadrumo.core" or (source.startswith("cadrumo.core.") and binding.isupper()):
                     evidence.add("root-facade-governance-contract")
-                if source.startswith("cadrumo.tests.") and not source.startswith("cadrumo.tests._inventory."):
+                if source.startswith("cadrumo.tests.") and not source.startswith("cadrumo.tests.inventory."):
                     evidence.add("exercised-central-test-support")
                 if source.startswith("dev.") and (
                     binding.startswith(("discover_", "find_", "scan_", "walk_"))
@@ -498,7 +498,7 @@ def _central_harness_owner_violation(path: Path) -> str | None:
                 if isinstance(candidate.func, ast.Name):
                     binding = candidate.func.id
                     source = scoped_source.get(binding, "")
-                    if source.startswith("cadrumo.tests._inventory."):
+                    if source.startswith("cadrumo.tests.inventory."):
                         evidence.add("structural-traversal")
                     elif source.startswith("cadrumo.tests."):
                         evidence.add("central-test-support")
@@ -938,7 +938,7 @@ def test_discover_test_control_modules_includes_support_and_conftest_files() -> 
     """Test-control discovery covers tests, support modules, and conftests."""
     modules = discover_test_control_modules()
 
-    assert repo_path("src/cadrumo/tests/_inventory.py") in modules
+    assert repo_path("src/cadrumo/tests/inventory.py") in modules
     assert repo_path("src/cadrumo/application/conftest.py") in modules
     assert all(not path.is_relative_to(FIXTURES_DIR) for path in modules)
 

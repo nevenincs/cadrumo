@@ -9,14 +9,14 @@ from functools import cache
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Literal, cast
 
-from ...core.i18n._render import output_language, tr
-from ._command_spec import DefaultKind, OptionSpec, SchemaState
+from ...core.i18n.render import output_language, tr
+from .command_spec import DefaultKind, OptionSpec, SchemaState
 
 if TYPE_CHECKING:
     from ...application.operator_surface.manifest import CommandSchemaRef
     from ...core.json_contract import RegisteredSchema
     from ._command_policy import CommandExecutionPolicy
-    from ._command_spec import CommandSpec, ParameterSpec
+    from .command_spec import CommandSpec, ParameterSpec
 
 CommandCapability = Literal[
     "state-free",
@@ -123,7 +123,7 @@ class ProfileAuthenticationContractMetadata:
 
 def machine_secret_payload_metadata(spec: CommandSpec) -> tuple[MachineSecretPayloadMetadata, ...]:
     """Project value-free secret shapes directly from their owning command spec."""
-    from ._config._secure_input import MACHINE_SECRET_MAX_BYTES
+    from ._config.secure_input import MACHINE_SECRET_MAX_BYTES
 
     contract = spec.machine_secret
     if contract is None:
@@ -271,9 +271,9 @@ def command_registration_projection() -> CommandRegistrationProjection:
 
 @cache
 def _command_registration_projection(language: str) -> CommandRegistrationProjection:
-    from ._command_specs import COMMAND_GRAPH
-    from ._config._secure_input import MACHINE_SECRET_MAX_BYTES
+    from ._config.secure_input import MACHINE_SECRET_MAX_BYTES
     from ._profile_authentication_contract import profile_authentication_posture
+    from .command_specs import COMMAND_GRAPH
 
     root_profile_secret = COMMAND_GRAPH.by_key()["root"].profile_secret
     if root_profile_secret is None:
@@ -332,7 +332,7 @@ def command_registration_metadata() -> tuple[CommandRegistrationMetadata, ...]:
 @cache
 def command_registration_policy(command: str) -> CommandExecutionPolicy:
     from ._command_policy import CommandExecutionPolicy
-    from ._command_specs import COMMAND_GRAPH
+    from .command_specs import COMMAND_GRAPH
 
     spec = COMMAND_GRAPH.by_schema_identity().get(command)
     if spec is None:
@@ -350,7 +350,7 @@ def command_registration_policy(command: str) -> CommandExecutionPolicy:
 @cache
 def command_schema_refs() -> tuple[CommandSchemaRef, ...]:
     from ...application.operator_surface.manifest import CommandSchemaRef
-    from ._command_specs import COMMAND_GRAPH
+    from .command_specs import COMMAND_GRAPH
 
     return tuple(
         CommandSchemaRef(command=identity, schema_name=spec.result_schema.target.qualname)
@@ -363,7 +363,7 @@ def command_schema_refs() -> tuple[CommandSchemaRef, ...]:
 def command_schema_type(command: str) -> RegisteredSchema:
     """Resolve the authored result-schema target for one command identity."""
     from ._command_runtime import resolve_deferred_target
-    from ._command_specs import COMMAND_GRAPH
+    from .command_specs import COMMAND_GRAPH
 
     spec = COMMAND_GRAPH.by_schema_identity().get(command)
     if spec is None or spec.result_schema.target is None:
@@ -381,7 +381,7 @@ def command_schema_type(command: str) -> RegisteredSchema:
 @cache
 def command_schema_types() -> Mapping[str, RegisteredSchema]:
     """Return the immutable graph-derived result-schema type projection."""
-    from ._command_specs import COMMAND_GRAPH
+    from .command_specs import COMMAND_GRAPH
 
     return MappingProxyType(
         {identity: command_schema_type(identity) for identity in COMMAND_GRAPH.by_schema_identity()}

@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 
-from .._workspace import workspace_hash
+from ..workspace import workspace_hash
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

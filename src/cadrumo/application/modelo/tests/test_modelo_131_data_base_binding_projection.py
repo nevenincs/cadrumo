@@ -17,7 +17,7 @@ from ....core.period import Period
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
-from .._calculation_actions import calculate_modelo_revision
+from ..calculation_actions import calculate_modelo_revision
 from ..work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -17,7 +17,7 @@ from ...application.modelo._iva_wallet_seed import (
     seed_iva_compensation_period_for_bucket,
 )
 from ...core.decimal.grammar import try_parse_canonical_decimal
-from ...core.i18n._render import tr
+from ...core.i18n.render import tr
 from ...core.period import Period
 from ...domain.iva_compensation.errors import IvaCompensationSeedConflictError
 from ._common import active_bucket_id_or_refuse, emit_envelope

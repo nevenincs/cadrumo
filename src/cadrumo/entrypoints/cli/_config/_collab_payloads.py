@@ -28,7 +28,7 @@ from datetime import datetime
 
 from pydantic import model_validator
 
-from ....application.modelo._review_package_recipient_registry import RecipientFingerprintRecord
+from ....application.modelo.review_package_recipient_registry import RecipientFingerprintRecord
 from ....core.json_contract import OutputSchema
 
 

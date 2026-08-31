@@ -27,12 +27,8 @@ from __future__ import annotations
 
 import pytest
 
-from .test_revision_span_matches_published_designs import (
-    _boundaries_for,
-    _declared_revisions,
-    _filing_revisions,
-    _mid_year_span,
-)
+from ._revision_span_boundary_support import _boundaries_for, _mid_year_span
+from ._revision_span_design_support import _declared_revisions, _filing_revisions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

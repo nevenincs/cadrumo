@@ -10,7 +10,7 @@ from ._app_ledger_command_spec_policies import (
     _POLICY_4,
     _POLICY_5,
 )
-from ._command_spec import (
+from .command_spec import (
     ArgumentSpec,
     CommandSpec,
     DeferredTarget,
@@ -100,7 +100,7 @@ LEDGER_INVENTORY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_business_payloads", "InventoryCreateResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli.ledger_business_payloads", "InventoryCreateResult"),
             identity="ledger.inventory.create",
         ),
     ),
@@ -119,7 +119,7 @@ LEDGER_INVENTORY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_business_payloads", "InventoryListResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli.ledger_business_payloads", "InventoryListResult"),
             identity="ledger.inventory.list",
         ),
     ),
@@ -185,7 +185,7 @@ LEDGER_INVENTORY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget(
-                "cadrumo.entrypoints.cli._ledger_business_payloads",
+                "cadrumo.entrypoints.cli.ledger_business_payloads",
                 "InventoryClosingAuthorityRecordResult",
             ),
             identity="ledger.inventory.closing-authority.record",

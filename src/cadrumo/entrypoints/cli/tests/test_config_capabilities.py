@@ -75,7 +75,7 @@ def test_capability_payload_refuses_unknown_capability_or_source(
 ) -> None:
     """The capability result uses the resolver's closed identifiers unchanged."""
 
-    from .._config._capabilities_payloads import CapabilityRowPayload
+    from .._config.capabilities_payloads import CapabilityRowPayload
 
     with pytest.raises(ValidationError):
         CapabilityRowPayload(capability=capability, enabled=True, source=source, reason="resolver result")

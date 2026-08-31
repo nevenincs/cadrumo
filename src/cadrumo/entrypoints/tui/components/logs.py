@@ -11,7 +11,7 @@ from textual.app import ComposeResult
 from textual.containers import Vertical
 from textual.widgets import Static
 
-from ....core.i18n._render import tr
+from ....core.i18n.render import tr
 from ..components.theme import tokenised
 from ._safe_text import bounded_pre_redacted_text
 

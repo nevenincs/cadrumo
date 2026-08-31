@@ -58,7 +58,7 @@ def _create_profile(
     profile look like a real one.
     """
     from ...tests.user_profile import register_minimal_profile
-    from ..evidence._profile_legal_hold import LegalHoldCaseAuthority
+    from ..evidence.profile_legal_hold import LegalHoldCaseAuthority
 
     with open_test_profile_session(profile_id):
         register_minimal_profile(
@@ -83,7 +83,7 @@ def _delete_profile_through_custody(profile_id: str, *, root: Path) -> None:
     when they are absent -- that refusal is the hold guard working, not setup
     noise.
     """
-    from ..evidence._profile_legal_hold import LegalHoldCaseAuthority
+    from ..evidence.profile_legal_hold import LegalHoldCaseAuthority
     from ..filing.retention import FilingRetentionAuthority
     from ..user_profile.lifecycle import ProfileCapsuleLifecycle
 
@@ -196,8 +196,8 @@ def _persist_filing(
 
 
 def _fingerprint(bucket_id: str) -> str:
-    from ..bucket_maintenance._contracts import AssessBucketDeletionCommand
-    from ..bucket_maintenance._service import BucketMaintenanceService
+    from ..bucket_maintenance.contracts import AssessBucketDeletionCommand
+    from ..bucket_maintenance.service import BucketMaintenanceService
 
     assessment = BucketMaintenanceService().assess_deletion(
         AssessBucketDeletionCommand(bucket_id=bucket_id),
@@ -426,8 +426,8 @@ def test_a_profile_from_the_seeding_door_alone_is_deletion_assessable(
     profile whose recorded snapshot is REMOVED refuses again.
     """
     from ...domain.buckets.errors import BucketDeleteRefusedError
-    from ..bucket_maintenance._contracts import AssessBucketDeletionCommand
-    from ..bucket_maintenance._service import BucketMaintenanceService
+    from ..bucket_maintenance.contracts import AssessBucketDeletionCommand
+    from ..bucket_maintenance.service import BucketMaintenanceService
     from ..filing.retention import FilingRetentionAuthority
 
     with _isolated_reset_root(tmp_path) as root:

@@ -42,7 +42,7 @@ _SOURCE_ROOT: Final[Path] = Path(__file__).resolve().parents[1]
 
 #: The one sanctioned stored home, as ``module suffix -> (class, attribute)``.
 _SANCTIONED_HOME: Final[tuple[str, str, str]] = (
-    "domain/transactions/_models.py",
+    "domain/transactions/models.py",
     "Transaction",
     "tipo_actividad",
 )

@@ -47,7 +47,8 @@ from .....core.optional_extras import (
 )
 from .....core.parsing import normalise_iso_4217_currency
 from .....domain.transactions.raw_transaction import SourceFormat
-from ._base import (
+from ._constants import OFX_EXTENSIONS
+from .base import (
     FinancialProvider,
     FinancialValidationError,
     InvalidFinancialSourceError,
@@ -59,7 +60,6 @@ from ._base import (
     parse_date_value,
     synthesize_transaction_id,
 )
-from ._constants import OFX_EXTENSIONS
 
 _logger = get_logger(__name__)
 _INPUT_OFX_SOURCE_LABEL = "<input-ofx>"

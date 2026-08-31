@@ -23,19 +23,18 @@ from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogu
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.secure_object_namespaces import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
-from ....adapters.persistence.storage.sql._orm import SecureObjectRow
+from ....adapters.persistence.storage.sql.orm import SecureObjectRow
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....application.calculations._m303_regimen_simplificado_annual_summary import (
-    M303RegimenSimplificadoAnnualSummaryHandoffError,
-)
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId
 from ....core.filing_projection_ref import M303RegimenSimplificadoFact
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.binding_selector_utils import selector_as_dict
-from ....domain.calculations.registry.bindings import m303_regimen_simplificado_annual_summary_requirement
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
+from ....domain.calculations.registry.m303_regimen_simplificado_annual_summary_bindings import (
+    m303_regimen_simplificado_annual_summary_requirement,
+)
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva.regimen_simplificado_rows import (
@@ -67,14 +66,12 @@ from ....tests.filing_evidence import general_m303_filing_evidence, regimen_simp
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import mutate_encrypted_secure_object_json
-from .._calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
-from .._export import (
-    ModeloExportCommand,
-    export_modelo_revision,
-)
-from .._filing_actions import file_modelo_revision
+from ...calculations.m303_regimen_simplificado_annual_summary import M303RegimenSimplificadoAnnualSummaryHandoffError
 from .._registry_helpers import assert_revision_content_integrity
-from .._verification_actions import verify_modelo_revision
+from ..calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
+from ..export import ModeloExportCommand, export_modelo_revision
+from ..filing_actions import file_modelo_revision
+from ..verification_actions import verify_modelo_revision
 from ..work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -781,7 +778,7 @@ def test_agricultural_rows_remain_an_evidence_bearing_refusal_while_empty_cohort
         ),
         evidence_reference=FilingEvidenceReference(reference=regimen_snapshot.orden.source_ref),
     )
-    from ....application.calculations._m303_regimen_simplificado import M303RegimenSimplificadoCalculationError
+    from ...calculations.m303_regimen_simplificado import M303RegimenSimplificadoCalculationError
 
     with pytest.raises(M303RegimenSimplificadoCalculationError, match="two_digit_agricultural_crosswalk"):
         regimen_simplificado_filing_evidence(

@@ -21,7 +21,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.export_parse import parse_export_payload
-from ....domain.calculations.registry.ledger_bindings import OssIossLedgerObservation
+from ....domain.calculations.registry.ledger_oss_bindings import OssIossLedgerObservation
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.invoices.enums import InvoiceOperationDateRole, IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
@@ -38,17 +38,14 @@ from ...aggregation import (
     aggregate_oss_ioss_bindings,
 )
 from ...aggregation import _oss_ioss as oss_ioss_module
-from .._action_errors import CalculationRevisionStateError
-from .._calculation_actions import (
+from ..action_errors import CalculationRevisionStateError
+from ..calculation_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from .._export import (
-    ModeloExportCommand,
-    export_modelo_revision,
-)
-from .._verification_actions import verify_modelo_revision
+from ..export import ModeloExportCommand, export_modelo_revision
+from ..verification_actions import verify_modelo_revision
 from ..work_lifecycle import create_work_unit
 from ._dormant_resolver_live_support import _T0, _T1, _revision, _seed_ready_profile
 

@@ -96,7 +96,7 @@ def build_complementaria(
     _require_one_taxpayer_identity(original_submission, original_draft)
     _require_original_registry_snapshot(original_draft, schema_provider=schema_provider)
     merged_inputs = _merge_inputs(original_draft, updated_inputs)
-    from ._draft_construction import build_draft
+    from .draft_construction import build_draft
 
     amended_draft = build_draft(
         modelo=original_submission.modelo,

@@ -10,8 +10,8 @@ import pytest
 
 from ....core.aggregation import BindingSourceKind
 from ....core.period import Period
-from ....domain.calculations._row_source_identity import RowSourceIdentity
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.row_source_identity import RowSourceIdentity
 from ....domain.filing.schema import (
     ModeloBindingValue,
     ModeloDraft,

@@ -35,8 +35,8 @@ from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.iva_compensation_history import IvaCompensationHistoryRepository
 from ...calculations.observations_repository import CalculationObservationRepository
-from .._action_errors import ModeloLocalObservationError
-from .._filed_revision_observation import persist_filed_revision_observation
+from ..action_errors import ModeloLocalObservationError
+from ..filed_revision_observation import persist_filed_revision_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -320,7 +320,7 @@ def test_the_discovery_walk_finds_an_unannotated_constant() -> None:
     """
     declared = _declared_version_constants()
     assert "ARCHIVE_SCHEMA_VERSION" in declared
-    source = (SRC_CADRUMO / "adapters/persistence/storage/bucket/_export_header.py").read_text(encoding="utf-8")
+    source = (SRC_CADRUMO / "adapters/persistence/storage/bucket/export_archive_header.py").read_text(encoding="utf-8")
     assert "ARCHIVE_SCHEMA_VERSION: Final" not in source, (
         "this constant is expected to carry NO annotation; if it gained one, the anti-tautology "
         "value of this test is gone and it needs a different unannotated subject"

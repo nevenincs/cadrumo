@@ -17,31 +17,31 @@ from typing import TYPE_CHECKING, cast, get_args
 import typer
 from pydantic import TypeAdapter, ValidationError
 
-from ...application.modelo._action_errors import WorkUnitNotFoundError
-from ...application.modelo._calculate_input import (
+from ...application.modelo.action_errors import WorkUnitNotFoundError
+from ...application.modelo.calculate_input import (
     WorkCalculateInputBundle,
     build_work_calculate_input_bundle,
     is_detail_casilla_override_key,
 )
-from ...application.modelo._selectors import (
+from ...application.modelo.registry_discovery import declared_modelo_period_tokens
+from ...application.modelo.selectors import (
     ModeloCalculationRevisionSelector,
     ModeloCalculationRevisionSelectorAmbiguousError,
 )
-from ...application.modelo._work_create_policy import modelo_work_create_refusal_locale_key
-from ...application.modelo.registry_discovery import declared_modelo_period_tokens
 from ...application.modelo.work_addressing import (
     ModeloWorkAddressNotFoundError,
     ModeloWorkRevisionConflictError,
     ModeloWorkUnitCandidate,
     ModeloWorkVisibleTargetAmbiguousError,
 )
+from ...application.modelo.work_create_policy import modelo_work_create_refusal_locale_key
 from ...application.modelo.work_lifecycle import get_work_unit
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.errors.error_codes import resolve_error_message
 from ...core.errors.hierarchy import CadrumoError
 from ...core.hex import HEX_PATTERN_64
-from ...core.i18n._render import tr
+from ...core.i18n.render import tr
 from ...core.identity import CalculationRevisionId
 from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.logging import get_logger

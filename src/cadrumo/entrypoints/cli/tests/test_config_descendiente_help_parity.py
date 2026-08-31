@@ -28,7 +28,7 @@ import re
 
 import pytest
 
-from ....core.i18n._render import tr
+from ....core.i18n.render import tr
 from ....domain.contribuyente.descendant_facts import parse_descendiente_flag
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -115,7 +115,7 @@ def _rendered_option_tokens() -> set[str]:
     """
     import inspect
 
-    from .._config._descendiente import descendiente_add
+    from .._config.descendiente import descendiente_add
 
     option = inspect.signature(descendiente_add).parameters["descendiente"].default
     return set(_TOKEN_RE.findall(getattr(option, "help", "") or ""))

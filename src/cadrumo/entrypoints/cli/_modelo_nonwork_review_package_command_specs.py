@@ -5,7 +5,13 @@
 from __future__ import annotations
 
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
-from ._command_spec import (
+from ._modelo_nonwork_command_spec_policies import (
+    _CALCULATION_WRITE,
+    _CRYPTO_FACT_FILE_WRITE,
+    _CRYPTO_PROFILE_WRITE,
+    _CRYPTO_READ,
+)
+from .command_spec import (
     ArgumentSpec,
     CommandSpec,
     DeferredTarget,
@@ -18,12 +24,6 @@ from ._command_spec import (
     SchemaState,
     TranslationKey,
     ValueContract,
-)
-from ._modelo_nonwork_command_spec_policies import (
-    _CALCULATION_WRITE,
-    _CRYPTO_FACT_FILE_WRITE,
-    _CRYPTO_PROFILE_WRITE,
-    _CRYPTO_READ,
 )
 
 MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (

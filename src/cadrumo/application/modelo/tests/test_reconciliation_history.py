@@ -20,7 +20,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from ...tests._profile_backend_fixtures import _isolated_backend
+from ...tests.profile_backend_fixtures import _isolated_backend
 
 __all__ = ["_isolated_backend"]
 

@@ -39,7 +39,7 @@ from ....core.json_contract import Notice, NoticeSeverity
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._common import emit_envelope
 from ..errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
-from ._secure_input import MachineSecretPayload
+from .secure_input import MachineSecretPayload
 
 
 class CertificateSecretSetSecrets(MachineSecretPayload):
@@ -275,11 +275,7 @@ def certificate_secret_set(
     bounded strict-JSON object through one canonical machine-secret channel.
     """
     _activate_subcommand_output_language(ctx, output_language)
-    from ._secure_input import (
-        prompt_secret_no_echo,
-        read_machine_secret_payload,
-        select_machine_secret_channel,
-    )
+    from .secure_input import prompt_secret_no_echo, read_machine_secret_payload, select_machine_secret_channel
 
     selection = select_machine_secret_channel(
         secrets_stdin=secrets_stdin,

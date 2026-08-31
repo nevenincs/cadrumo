@@ -42,8 +42,8 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations._prorrata_regularizacion import CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA
 from ...calculations.observations_repository import CalculationObservationRepository
+from ...calculations.prorrata_regularizacion import CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA
 from .._prorrata_regularizacion_advisory import collect_prorrata_regularizacion_diagnostics
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

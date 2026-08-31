@@ -55,14 +55,14 @@ from ...domain.buckets.event_repository import bucket_event_history_write
 from ...domain.buckets.event_repository import build_bucket_event as _build_domain_bucket_event
 from ...domain.buckets.event_repository import emit_bucket_event as _emit_domain_bucket_event
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
-from ...domain.calculations._row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
-from ...domain.calculations._row_source_identity import RowBindingKey, RowSourceIdentity
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
 from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
 )
+from ...domain.calculations.row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
+from ...domain.calculations.row_source_identity import RowBindingKey, RowSourceIdentity
 from ...domain.iva.m303_settlement import is_m303_annual_settlement_period
 from ...domain.modelos.calculation_repository import upsert_calculation_revision
 from ...domain.modelos.calculation_revision import (
@@ -92,16 +92,16 @@ from ...domain.modelos.repository import upsert_work_unit
 from ...domain.modelos.row_models import ModeloDetailRow
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from ...domain.prorrata_register._protocols import ProrrataRegisterRepositoryProtocol
+from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from ..calculations.observations_repository import (
     CalculationObservationRepository,
     PriorDomiciliationElectionProjection,
 )
 from ..filing.retention import try_record_filing_retention_snapshot
-from ._action_errors import M303FilingEvidenceError
-from ._filed_revision_observation import persist_filed_revision_observation, require_filing_result_disposition
 from ._m303_filing_evidence import m303_filing_evidence_failure
+from .action_errors import M303FilingEvidenceError
+from .filed_revision_observation import persist_filed_revision_observation, require_filing_result_disposition
 
 if TYPE_CHECKING:  # pragma: no cover - typing-only storage boundary import
     from ...adapters.persistence.storage.sql.secure_objects import SecureObjectWrite

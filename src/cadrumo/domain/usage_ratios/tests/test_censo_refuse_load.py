@@ -22,8 +22,8 @@ from ....adapters.persistence.tests.runtime_profile_fixture import (
     bucket_scoped_runtime_profile_fixture,
 )
 from ...categories.spending_category import SpendingCategory
-from .._model import UsageRatioProfile
 from ..errors import CensoRatioMismatchError
+from ..model import UsageRatioProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

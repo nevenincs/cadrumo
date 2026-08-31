@@ -17,7 +17,7 @@ from pathlib import Path
 import pytest
 
 from ...errors import CliRefusedBoundaryError
-from .._secure_input import write_to_controlling_terminal
+from ..secure_input import write_to_controlling_terminal
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

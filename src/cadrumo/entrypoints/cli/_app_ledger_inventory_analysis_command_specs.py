@@ -8,7 +8,7 @@ from ._app_ledger_command_spec_policies import (
     _POLICY_4,
     _POLICY_6,
 )
-from ._command_spec import (
+from .command_spec import (
     CommandSpec,
     DeferredTarget,
     InvocationSpec,
@@ -183,7 +183,7 @@ LEDGER_INVENTORY_ANALYSIS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_business_payloads", "InventoryMovementAddResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli.ledger_business_payloads", "InventoryMovementAddResult"),
             identity="ledger.inventory.movement.add",
         ),
     ),
@@ -236,7 +236,7 @@ LEDGER_INVENTORY_ANALYSIS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget(
-                "cadrumo.entrypoints.cli._ledger_business_payloads", "InventoryValuationPreviewPayload"
+                "cadrumo.entrypoints.cli.ledger_business_payloads", "InventoryValuationPreviewPayload"
             ),
             identity="ledger.inventory.valuation.preview",
         ),

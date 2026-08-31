@@ -42,7 +42,7 @@ from .._renta_income_ledger import (
 )
 from .._source_mesh import CalculationSourceDiagnostic
 from .._undeclared_activity_advisory import undeclared_activity_income_advisory_observations
-from ._renta_income_aggregation_support import _raw_transaction
+from .renta_income_aggregation_support import _raw_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

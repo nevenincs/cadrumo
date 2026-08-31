@@ -22,7 +22,17 @@
 set +e
 
 # --- constants -------------------------------------------------------------
-LANE_GLOBS=(cadrumo-homebrew cadrumo-scoop cadrumo-claude oracle-emit-work)
+# Lane roots section (b) is allowed to reap. These default to cadrumo's own
+# lane names, which is correct on a cadrumo runner and silently inert on any
+# other: this same hook is deployed to the vaultspec-* runners, where nothing
+# has ever matched and the audit line has read `freed=0.0MB` on every run
+# since the hook was installed. A runner serving another repository names its
+# own lanes via RUNNER_HYGIENE_LANE_GLOBS (space-separated) in its .env.
+if [[ -n "${RUNNER_HYGIENE_LANE_GLOBS:-}" ]]; then
+    read -r -a LANE_GLOBS <<< "$RUNNER_HYGIENE_LANE_GLOBS"
+else
+    LANE_GLOBS=(cadrumo-homebrew cadrumo-scoop cadrumo-claude oracle-emit-work)
+fi
 LANE_MAX_AGE_MIN=$((24 * 60))
 EVIDENCE_EXEMPT="distribution-install-readiness"
 EVIDENCE_KEEP_MIN=$((7 * 24 * 60))
@@ -88,6 +98,24 @@ should_run_heavy() {
     return 0
 }
 
+# Runner-managed state and repository checkouts are never lane roots, whatever
+# the tokens say. actions/checkout materialises _work/<repo>/<repo>, so a
+# checkout root is a directory containing a same-named child — that is the
+# structural tell, and it holds for any repo without hardcoding a name.
+#
+# This matters because matching is SUBSTRING: a lane token broad enough to
+# cover the repo's own temp dirs ("vaultspec-", which the dashboard workflows
+# use for ${RUNNER_TEMP}/vaultspec-*) also matches the "vaultspec-dashboard"
+# checkout sitting in the same WORK_ROOT, and would delete the entire working
+# copy on the first sweep past 24h.
+is_protected_root() {
+    case "$2" in
+        _actions|_tool|_temp|_diag|_PipelineMapping|.hygiene) return 0 ;;
+    esac
+    [[ -d "$1/$2" ]] && return 0
+    return 1
+}
+
 purge_stale_lane_dirs() {
     local root="$1"
     [[ -d "$root" ]] || return 0
@@ -95,6 +123,7 @@ purge_stale_lane_dirs() {
     for entry in "$root"/*; do
         [[ -e "$entry" ]] || continue
         base="$(basename "$entry")"
+        is_protected_root "$entry" "$base" && continue
         match=0
         for tok in "${LANE_GLOBS[@]}"; do [[ "$base" == *"$tok"* ]] && match=1; done
         [[ "$base" == release-cohort* || "$base" == *.tar.gz ]] && match=1

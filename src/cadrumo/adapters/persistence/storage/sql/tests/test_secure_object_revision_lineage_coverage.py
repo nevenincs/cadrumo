@@ -34,7 +34,7 @@ from typing import TypedDict
 import pytest
 
 from ......tests.master_key import EphemeralMasterKeyProvider
-from .._secure_object_crypto import derive_revision_id
+from ..secure_object_crypto import derive_revision_id
 from ._secure_objects_support import (
     UTC,
     Path,

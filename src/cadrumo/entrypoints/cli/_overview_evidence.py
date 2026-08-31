@@ -27,7 +27,7 @@ from ...application.overview.calendar_models import (
     OverviewCalendarRange,
 )
 from ...core.hashing import sha256_hex
-from ...core.i18n._render import tr
+from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.logging import get_logger
 from ...domain.modelos.work_unit import WorkUnit

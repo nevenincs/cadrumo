@@ -21,7 +21,7 @@ def requires_live_enabled() -> None:
     ``Settings.live_tests_enabled``, which reads only ``os.environ`` --
     production ``Settings`` carries no dotenv source of its own. An
     operator's ``env/.env`` reaches this gate only via the repo-root
-    ``conftest.py`` bridge (:func:`cadrumo.tests._env_loader.bridge_env_file_into_environ`),
+    ``conftest.py`` bridge (:func:`cadrumo.tests.env_loader.bridge_env_file_into_environ`),
     which populates ``os.environ`` at collection time. Every
     ``@pytest.mark.aeat_live`` test shares this one centralised definition
     rather than scattering raw ``os.environ`` reads.

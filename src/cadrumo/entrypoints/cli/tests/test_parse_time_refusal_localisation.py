@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.i18n._render import tr
+from ....core.i18n.render import tr
 from ....tests.cli_envelope import require_error_document
 from ....tests.cli_runner import invoke_cached_cli
 

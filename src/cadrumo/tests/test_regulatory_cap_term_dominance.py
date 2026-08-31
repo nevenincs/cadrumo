@@ -79,7 +79,7 @@ _NON_REGULATORY_EXEMPTIONS: Mapping[_SiteKey, str] = {
     ("adapters/persistence/storage/master_key/login_throttle.py", "_required_wait_seconds"): (
         "Authentication backoff is a security control, not a tax limit."
     ),
-    ("llm/_client.py", "backoff_for"): ("Transport retry backoff is not a regulatory cap."),
+    ("llm/client.py", "backoff_for"): ("Transport retry backoff is not a regulatory cap."),
     ("application/flows/engine.py", "set_instance_count"): ("A form-authoring instance bound is not a tax cap."),
     ("application/flows/engine.py", "_instance_count"): ("A form-authoring instance bound is not a tax cap."),
     ("application/flows/engine.py", "_refresh_instance_counts"): ("A form-authoring instance bound is not a tax cap."),

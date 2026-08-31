@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Final
 
-from .._command_spec import (
+from ..command_spec import (
     CommandSpec,
     DeferredTarget,
     InvocationSpec,

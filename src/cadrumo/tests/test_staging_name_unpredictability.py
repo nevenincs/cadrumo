@@ -49,7 +49,7 @@ from pathlib import Path
 
 import pytest
 
-from ._inventory import SRC_CADRUMO, production_ast_items
+from .inventory import SRC_CADRUMO, production_ast_items
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

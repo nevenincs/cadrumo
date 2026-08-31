@@ -25,7 +25,6 @@ from uuid import UUID
 
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_location
-from ._filesystem_primitives import anchor_directory, posix_directory_fd, posix_open_child_directory
 from .errors import (
     ProfileCustodyRecordError,
     ProfileCustodyRecoveryGuidance,
@@ -38,6 +37,7 @@ from .filesystem import (
     read_regular_file,
     read_regular_file_fd,
 )
+from .filesystem_primitives import anchor_directory, posix_directory_fd, posix_open_child_directory
 from .paths import profile_custody_directory_name
 
 

@@ -199,7 +199,7 @@ class TestThePrintedVariantsARealDocumentCarries:
         the fold reddened nothing here until the twins came out. Refusing the
         redundancy is what stops it coming back.
         """
-        from ..establishment import _normalise_printed_country_name
+        from ..country_vocabulary import _normalise_printed_country_name
 
         for code, names in _vocabulary():
             seen: dict[str, str] = {}

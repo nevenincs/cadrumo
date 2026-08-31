@@ -13,7 +13,7 @@ from ._app_ledger_command_spec_policies import (
     _POLICY_8,
     _POLICY_9,
 )
-from ._command_spec import (
+from .command_spec import (
     ArgumentSpec,
     CommandSpec,
     DeferredTarget,
@@ -436,7 +436,7 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_POLICY_9,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._ledger_lifecycle_cli", "ledger_merge")),
+        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli.ledger_lifecycle_cli", "ledger_merge")),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget("cadrumo.entrypoints.cli._ledger_payloads", "LedgerMergeResult"),
@@ -588,7 +588,7 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         policy=_POLICY_8,
         handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._ledger_lifecycle_cli", "ledger_evidence_pull_all")
+            DeferredTarget("cadrumo.entrypoints.cli.ledger_lifecycle_cli", "ledger_evidence_pull_all")
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,

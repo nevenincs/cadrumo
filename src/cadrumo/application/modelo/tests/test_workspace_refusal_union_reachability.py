@@ -31,13 +31,32 @@ from typing import get_args
 
 import pytest
 
-from ..workspace_models import ModeloWorkspaceRefusalV1
+from ..workspace_models import ModeloWorkspaceEvidenceFactValueV1, ModeloWorkspaceRefusalV1
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _PACKAGE_ROOT = Path(__file__).resolve().parents[3]
 
 _ADJUDICATED_UNREACHABLE: dict[str, str] = {
+    "ModeloWorkspaceCountFactValueV1": (
+        "Case (a) SUSPECTED, not established -- and the distinction is the ruling. "
+        "Adjudicated 2026-08-31 by searching for the decision that introduced the "
+        "three-member fact-value discriminator: no ADR mandates a count fact, no "
+        "consumer dispatches on fact kind, and the type arrived in a broad "
+        "feat(application) commit rather than a decision. The one fact production "
+        "emits is a TextFactValue carrying a work_unit_id. That is a thorough "
+        "NEGATIVE, which is weaker than the positive mandates behind the refusal "
+        "members above: it points to speculative generality and therefore to "
+        "deletion, but absence of a decision is not a decision to delete. The owner "
+        "rules; this entry records that the question was asked and what was found."
+    ),
+    "ModeloWorkspaceFlagFactValueV1": (
+        "Case (a) SUSPECTED, not established -- identical evidence and identical "
+        "reasoning to ModeloWorkspaceCountFactValueV1, with which it must be ruled "
+        "as a pair: they are the two unproduced arms of one three-member "
+        "discriminator, and deleting one alone would leave a two-member union that "
+        "is no more grounded than the three-member one."
+    ),
     "ModeloWorkspaceVersionRefusalV1": (
         "Case (a), the check was intended and never written. Every contract_version "
         "field on the Workspace models is pinned to Literal[1], so a version mismatch "
@@ -69,19 +88,31 @@ to silence a newly-dead member without answering the question is not.
 """
 
 
-def _union_member_names() -> tuple[str, ...]:
-    """Return the refusal union's arms, read from the alias rather than restated.
+_GOVERNED_UNIONS = (ModeloWorkspaceRefusalV1, ModeloWorkspaceEvidenceFactValueV1)
+"""Every discriminated union this gate holds to reachability.
 
-    ``ModeloWorkspaceRefusalV1`` is a PEP 695 alias wrapping an ``Annotated``
-    discriminated union, so reaching the arms means unwrapping twice. Read
-    rather than listed, because a literal copy would be a second definition
-    that agrees with the union only until someone adds a member -- and a
-    member added to the union but not to the copy is exactly the unreachable
-    arm this gate exists to notice.
+Both advertise outcomes a caller must branch on, so both carry the same defect
+when a member has no producer. Held in ONE gate rather than a second one per
+union: a per-union copy would need its own ruling register, and two registers
+for one question is how a member ends up adjudicated in the place nobody reads.
+"""
+
+
+def _union_member_names() -> tuple[str, ...]:
+    """Return every governed union's arms, read from the aliases rather than restated.
+
+    Each is a PEP 695 alias wrapping an ``Annotated`` discriminated union, so
+    reaching the arms means unwrapping twice. Read rather than listed, because
+    a literal copy would be a second definition that agrees with the union only
+    until someone adds a member -- and a member added to the union but not to
+    the copy is exactly the unreachable arm this gate exists to notice.
     """
-    annotated = getattr(ModeloWorkspaceRefusalV1, "__value__", ModeloWorkspaceRefusalV1)
-    union = get_args(annotated)[0]
-    return tuple(arm.__name__ for arm in get_args(union))
+    names: list[str] = []
+    for alias in _GOVERNED_UNIONS:
+        annotated = getattr(alias, "__value__", alias)
+        union = get_args(annotated)[0]
+        names.extend(arm.__name__ for arm in get_args(union))
+    return tuple(dict.fromkeys(names))
 
 
 def _production_construction_counts() -> dict[str, int]:

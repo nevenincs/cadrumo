@@ -33,9 +33,9 @@ from ...core.identity import ContentDigest, SubjectTaxId
 from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period
 from ...core.time.utc import UtcInstant
-from ..calculations._row_source_identity import RowSourceIdentity
 from ..calculations.registry.ids import BindingId, FormulaId, LegalRefId, RevisionId, SourceRefId
 from ..calculations.registry.schema_references import RegistrySnapshotRef
+from ..calculations.row_source_identity import RowSourceIdentity
 from ..submission.models import ModeloDraftStatus
 from .errors import FilingValidationError
 

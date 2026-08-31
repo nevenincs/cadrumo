@@ -69,7 +69,7 @@ def _work_unit() -> WorkUnit:
 
 def _compatibility(*, current: bool) -> ModeloEditCompatibilityTupleV1:
     """Build a live tuple, or one whose schema axes are deliberately stale."""
-    from ......application.modelo._edit_services import (
+    from ......application.modelo.edit_services import (
         modelo_edit_request_schema_identity,
         modelo_edit_result_schema_identity,
     )

@@ -41,7 +41,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, StringConstraints
 
-from ...adapters.outbound.llm._usage import UsageRecorder
+from ...adapters.outbound.llm.usage import UsageRecorder
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...domain.transactions.models import Transaction

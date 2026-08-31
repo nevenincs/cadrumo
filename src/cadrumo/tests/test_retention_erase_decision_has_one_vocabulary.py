@@ -33,7 +33,7 @@ from pathlib import Path
 
 import pytest
 
-from ._inventory import SRC_CADRUMO, repo_relative
+from .inventory import SRC_CADRUMO, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

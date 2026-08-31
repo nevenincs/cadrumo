@@ -57,7 +57,7 @@ from ..errors import (
 from ..errors import (
     storage_validation_error as _storage_validation_error,
 )
-from ..master_key._master_key import MasterKeyProvider
+from ..master_key.master_key import MasterKeyProvider
 from ..schema_lineage import inner_envelope_classification_is_expected
 
 _log = get_logger(__name__)

@@ -50,8 +50,8 @@ from typing import TYPE_CHECKING, Annotated
 from pydantic import BaseModel as _BaseModel
 from pydantic import Field, RootModel, StringConstraints
 
-from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core.external_constants import UTF_8_ENCODING
+from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.entrypoints.cli.command_api import (
     MachineSecretPayloadMetadata,
     ProfileAuthenticationContractMetadata,

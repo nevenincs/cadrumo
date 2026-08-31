@@ -18,7 +18,7 @@ from sqlalchemy import Engine, bindparam, text
 
 from ..crypto.encrypted_columns import decrypt_secure_object_payload, secure_object_payload_aad
 from ..errors import DecryptionError
-from . import _orm
+from . import orm as _orm
 from ._secure_object_records import SecureObjectDecryptabilityRow, SecureObjectNamespaceIntegrity
 from ._secure_object_schema import database_bytes, ensure_quarantine_table, quarantine_timestamp
 from .session import session_scope

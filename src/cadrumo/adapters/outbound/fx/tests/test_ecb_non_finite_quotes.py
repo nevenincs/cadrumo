@@ -26,7 +26,7 @@ from decimal import Decimal
 import pytest
 
 from .....tests.ecb_stub import ecb_csv_fetch
-from .._ecb_provider import EcbReferenceRateProvider
+from ..ecb_provider import EcbReferenceRateProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

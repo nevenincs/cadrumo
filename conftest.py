@@ -20,7 +20,7 @@ carries no dotenv source of its own
 ``env/.env`` is development/test-only configuration (an operator's local
 live-test credentials), so this conftest bridges it into ``os.environ``
 itself, before any Cadrumo import can resolve ``Settings``, via
-:func:`cadrumo.tests._env_loader.bridge_env_file_into_environ`.
+:func:`cadrumo.tests.env_loader.bridge_env_file_into_environ`.
 ``os.environ.setdefault`` semantics keep a real ambient environment
 variable authoritative over the dotfile — the file only fills gaps a
 shell or CI environment left unset, and the bridge is a clean no-op when
@@ -76,7 +76,7 @@ never referenced again once overwritten.
 os.environ.setdefault("CADRUMO_LOCAL_STORAGE_ROOT", str(_PURE_STDLIB_COLLECTION_ROOT))
 
 from cadrumo.tests import collection_storage_root  # noqa: E402
-from cadrumo.tests._env_loader import bridge_env_file_into_environ  # noqa: E402
+from cadrumo.tests.env_loader import bridge_env_file_into_environ  # noqa: E402
 
 # Bridge the operator's development-only env/.env dotfile into os.environ
 # BEFORE any Cadrumo import resolves Settings (production Settings carries

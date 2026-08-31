@@ -37,7 +37,7 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....tests.secure_sql import isolated_runtime_profile
-from .._calculation_actions import _resolve_bucket_source_mesh
+from ..calculation_actions import _resolve_bucket_source_mesh
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

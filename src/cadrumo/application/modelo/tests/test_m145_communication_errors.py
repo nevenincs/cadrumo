@@ -22,7 +22,7 @@ import pytest
 
 from ....core.errors.error_codes import get_registered_error_code
 from ....tests.secure_sql import isolated_runtime_profile
-from .._m145_communication_records import (
+from ..m145_communication_records import (
     M145CommunicationCreateCommand,
     M145CommunicationRecordAmbiguousError,
     M145CommunicationRecordExportError,
@@ -38,7 +38,7 @@ from .._m145_communication_records import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_LOGGER_NAME = "cadrumo.application.modelo._m145_communication_records"
+_LOGGER_NAME = "cadrumo.application.modelo.m145_communication_records"
 _FORBIDDEN_LOG_TERMS = (
     "file",
     "filing",

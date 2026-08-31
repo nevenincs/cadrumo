@@ -70,7 +70,7 @@ from pathlib import Path
 
 import pytest
 
-from ._inventory import (
+from .inventory import (
     CAST_RATIONALE_MARKER,
     cast_call_linenos,
     cast_rationale_violations,

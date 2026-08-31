@@ -15,14 +15,14 @@ import pytest
 from ....core.concept_lifecycle import ConceptLifecycle
 from ....core.directory_scan import scan_directory
 from ....core.external_constants import UTF_8_ENCODING
-from .._terminology import (
+from ..errors import CorpusSearchInputError
+from ..terminology import (
     _project_concept,
     _terminology_root,
     load_terminology_concepts,
     lookup_terminology,
     search_terminology,
 )
-from ..errors import CorpusSearchInputError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

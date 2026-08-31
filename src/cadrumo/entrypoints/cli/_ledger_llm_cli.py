@@ -37,7 +37,7 @@ from ...application.ledger.llm_review_workflow import (
 from ...application.ledger.models import ManualLedgerTransactionResult
 from ...application.ledger.review_projection import ledger_transaction_review_status
 from ...core.bucket_pointer import resolve_active_bucket_id
-from ...core.i18n._render import tr
+from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.provenance_stamp import provenance_stamp_transport
 from ...domain.iva.schema import IvaCategory

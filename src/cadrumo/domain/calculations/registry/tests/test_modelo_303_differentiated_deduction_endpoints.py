@@ -36,7 +36,7 @@ from .....domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRat
 from .....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry, SectorDefinition
 from ..corpus_catalogue import resolve_record_design_binary
 from ..errors import RegistryValidationError
-from ..ledger_bindings import IvaLedgerObservation
+from ..ledger_iva_bindings import IvaLedgerObservation
 from ..loader import load_catalogue_file
 from ..m303_differentiated_deduction_projection import (
     project_m303_differentiated_deduction_rows,

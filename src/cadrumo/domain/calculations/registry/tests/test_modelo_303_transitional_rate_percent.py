@@ -60,7 +60,7 @@ from ..authority import bundled_authority
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..errors import RegistryValidationError
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
-from ..ledger_bindings import resolve_ledger_iva_aggregation_binding_values
+from ..ledger_iva_bindings import resolve_ledger_iva_aggregation_binding_values
 from ..loader import load_registry_tree
 from ..snapshot import build_snapshot
 

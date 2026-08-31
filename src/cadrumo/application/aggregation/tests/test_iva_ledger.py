@@ -18,7 +18,7 @@ from ....core.operator_action_enums import OperatorActionAxis
 from ....core.period import Period
 from ....core.prorrata_exclusions import Art104TresExclusion
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister, BienInversionIvaRecord, BienInversionKind
-from ....domain.calculations.registry.ledger_bindings import resolve_ledger_iva_aggregation_binding_values
+from ....domain.calculations.registry.ledger_iva_bindings import resolve_ledger_iva_aggregation_binding_values
 from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
@@ -45,7 +45,7 @@ from .. import (
 from .. import (
     aggregate_iva_ledger_observations as _aggregate_iva_ledger_observations_with_authority,
 )
-from ._renta_income_aggregation_support import _period
+from .renta_income_aggregation_support import _period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

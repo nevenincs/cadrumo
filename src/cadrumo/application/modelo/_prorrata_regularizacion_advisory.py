@@ -68,14 +68,14 @@ from ...domain.iva.m303_settlement import is_m303_annual_settlement_period, m303
 from ...domain.iva.prorrata import especial_mandatory_rule
 from ...domain.prorrata_register.register import ProrrataRegisterError
 from ..aggregation import CalculationSourceDiagnostic, compute_annual_deducible_totals_by_regime
-from ..calculations._prorrata_regularizacion import (
+from ..calculations.observations_repository import CalculationObservationRepository
+from ..calculations.prorrata_regularizacion import (
     build_prorrata_especial_mandatory_advisory,
     build_prorrata_missing_provisional_advisory,
     build_prorrata_regularizacion_advisory,
     derive_prorrata_applicability,
 )
-from ..calculations.observations_repository import CalculationObservationRepository
-from ._semantic_role_resolution import casilla_id_for_unambiguous_revision_semantic_role
+from .semantic_role_resolution import casilla_id_for_unambiguous_revision_semantic_role
 
 __all__ = ["collect_prorrata_regularizacion_diagnostics"]
 

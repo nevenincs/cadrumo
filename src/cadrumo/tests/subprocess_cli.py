@@ -54,7 +54,7 @@ from pathlib import Path
 from textwrap import dedent
 from typing import TYPE_CHECKING
 
-from ._inventory import SRC_CADRUMO
+from .inventory import SRC_CADRUMO
 
 if TYPE_CHECKING:
     from ..core.config import StorageRouteKind

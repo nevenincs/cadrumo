@@ -253,7 +253,7 @@ def test_runtime_policy_tokens_have_one_production_owner_and_consumers_import_th
     for consumer in (
         src_root / "application/filing/_record_field_renderer.py",
         src_root / "application/filing/export_verification.py",
-        src_root / "adapters/outbound/aeat/export/_registry_record_renderer.py",
+        src_root / "adapters/outbound/aeat/export/registry_record_renderer.py",
     ):
         source = consumer.read_text(encoding="utf-8")
         assert "render_fixed_width_export_field" in source

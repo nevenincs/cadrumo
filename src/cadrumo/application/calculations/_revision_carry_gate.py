@@ -21,7 +21,7 @@ sites that use it.
 See Also:
     :func:`~application.calculations._binding_prefill.resolve_bindings_from_local_store`
         Previous-filing binding reader that drops unreconfirmable carries.
-    :func:`~application.calculations._relation_prefill.resolve_relations_from_local_store`
+    :func:`~application.calculations.relation_prefill.resolve_relations_from_local_store`
         Relation-prefill reader that applies the same revision-stamp gate.
     :func:`~application.calculations.cross_period_clean_state.evaluate_cross_period_clean_state`
         Filing-grade dependency proof that maps the shared outcome to blockers.

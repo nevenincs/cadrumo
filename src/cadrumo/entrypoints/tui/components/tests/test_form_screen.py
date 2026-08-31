@@ -119,7 +119,7 @@ async def test_commit_rechecks_a_field_the_operator_never_opened() -> None:
         await pilot.pause()
         await pilot.click("#btn-form-save")
         await pilot.pause()
-        assert app.collected is None, "commit must refuse while a field is invalid"
+        assert app.return_value is None, "commit must refuse while a field is invalid"
         assert str(_form(app).query_one("#form-refusal", Static).content)
         app.exit(None)
 
@@ -131,14 +131,14 @@ async def test_committing_returns_every_value_and_abandoning_returns_nothing() -
         await pilot.pause()
         await pilot.click("#btn-form-save")
         await pilot.pause()
-    assert app.collected == {"a": "one", "b": "two"}
+    assert app.return_value == {"a": "one", "b": "two"}
 
     abandoned = _form_app(_page(FormField(key="a", label="A", value="one")))
     async with abandoned.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
         await pilot.click("#btn-form-cancel")
         await pilot.pause()
-    assert abandoned.collected is None
+    assert abandoned.return_value is None
 
 
 @pytest.mark.asyncio
@@ -160,8 +160,8 @@ async def test_a_multi_choice_field_stores_the_tokens_it_was_given() -> None:
         assert _rows(app)["scopes"] == "Read, Write"
         await pilot.click("#btn-form-save")
         await pilot.pause()
-    assert app.collected is not None
-    assert set(multi_choice_tokens(app.collected["scopes"])) == {"READ", "WRITE"}
+    assert app.return_value is not None
+    assert set(multi_choice_tokens(app.return_value["scopes"])) == {"READ", "WRITE"}
 
 
 @pytest.mark.asyncio
@@ -260,8 +260,8 @@ async def test_a_shrinking_page_drops_the_values_it_no_longer_asks_for() -> None
 
         await pilot.click("#btn-form-save")
         await pilot.pause()
-    assert app.collected is not None
-    assert "child-1" not in app.collected
+    assert app.return_value is not None
+    assert "child-1" not in app.return_value
 
 
 @pytest.mark.asyncio

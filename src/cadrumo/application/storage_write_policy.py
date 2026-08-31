@@ -41,7 +41,7 @@ from ..core.config import (
     load_settings,
     settings_for_active_profile_bucket,
 )
-from ..core.i18n._render import tr
+from ..core.i18n.render import tr
 from ..core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..core.operator_action_enums import (
     ActionArgumentStatus,

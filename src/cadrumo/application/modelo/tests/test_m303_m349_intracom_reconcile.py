@@ -20,7 +20,7 @@ from decimal import Decimal
 import pytest
 
 from ....domain.calculations.registry.authority import bundled_authority
-from ...tests._profile_backend_fixtures import _isolated_backend
+from ...tests.profile_backend_fixtures import _isolated_backend
 
 __all__ = ["_isolated_backend"]
 

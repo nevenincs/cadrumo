@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Final
 
 from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
-from .._command_spec import (
+from ..command_spec import (
     ArgumentSpec,
     CommandSpec,
     DeferredTarget,

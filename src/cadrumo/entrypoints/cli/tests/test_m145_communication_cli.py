@@ -33,7 +33,7 @@ from typing import Final
 
 import pytest
 
-from ....application.modelo._m145_communication_records import (
+from ....application.modelo.m145_communication_records import (
     M145CommunicationRecordState,
     read_m145_communication_record,
 )

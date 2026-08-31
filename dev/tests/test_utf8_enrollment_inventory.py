@@ -86,11 +86,11 @@ _SCAN_EXCLUDES: frozenset[str] = frozenset(
 # They are deleted here rather than left as backlog decoration.
 _KNOWN_VIOLATING_FILES: frozenset[str] = frozenset(
     {
-        "adapters/outbound/llm/_cache.py",
-        "adapters/outbound/llm/_usage.py",
-        "adapters/outbound/storage/_mirror_manifest.py",
+        "adapters/outbound/llm/cache.py",
+        "adapters/outbound/llm/usage.py",
+        "adapters/outbound/storage/mirror_manifest.py",
         "adapters/persistence/profile/filing_amendments.py",
-        "adapters/persistence/storage/crypto/_encrypted_columns.py",
+        "adapters/persistence/storage/crypto/encrypted_columns.py",
         "adapters/persistence/storage/envelope/secure_bound_repository.py",
         "application/live/verify.py",
         "application/modelo/_revision_persistence.py",
@@ -99,19 +99,19 @@ _KNOWN_VIOLATING_FILES: frozenset[str] = frozenset(
         "application/wizard/_translations.py",
         "core/bucket_pointer.py",
         "core/corpus_manifest/__init__.py",
-        "core/i18n/_render.py",
+        "core/i18n/render.py",
         "core/json_contract.py",
-        "core/observability/_fingerprint.py",
-        "core/observability/_sink.py",
-        "core/observability/_store.py",
-        "domain/auth/apoderamientos/_catalogue.py",
-        "domain/calculations/registry/_export_parse.py",
-        "domain/calculations/registry/_legal.py",
-        "domain/calculations/registry/_live_parity.py",
-        "domain/calculations/registry/_renta_web_open_oracle.py",
+        "core/observability/fingerprint.py",
+        "core/observability/sink.py",
+        "core/observability/store.py",
+        "domain/auth/apoderamientos/catalogue.py",
+        "domain/calculations/registry/export_parse.py",
+        "domain/calculations/registry/legal.py",
+        "domain/calculations/registry/live_parity.py",
+        "domain/calculations/registry/renta_web_open_oracle.py",
         "domain/calculations/registry/_validate_evidence.py",
-        "domain/manuals/_fetch.py",
-        "domain/manuals/_loader.py",
+        "domain/manuals/fetch.py",
+        "domain/manuals/loader.py",
         "entrypoints/cli/_config/_google.py",
         "entrypoints/cli/_modelo_spreadsheet_cli.py",
         "entrypoints/cli/errors.py",
@@ -210,10 +210,10 @@ def test_no_bare_utf8_literals_in_production_files() -> None:
 #   application/aggregation/_source_profile.py:75
 #       hashlib.sha256(payload.encode('utf-8')).hexdigest()
 #
-#   application/calculations/_iva_wallet_reconciliation.py:173
+#   application/calculations/iva_wallet_reconciliation.py:173
 #       hashlib.sha256(decision.model_dump_json().encode('utf-8')).hexdigest()
 #
-#   application/invoices/_source_resolver.py:145
+#   application/invoices/source_resolver.py:145
 #       hashlib.sha256(payload.encode('utf-8')).hexdigest()
 #
 #   application/modelo/borrador_binding.py:223

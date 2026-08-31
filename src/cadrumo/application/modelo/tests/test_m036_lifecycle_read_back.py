@@ -23,7 +23,7 @@ import pytest
 
 from ....domain.calculations.registry.censo_modelos import CensoModeloEventKind
 from ....tests.secure_sql import isolated_runtime_profile
-from .._m036_lifecycle import (
+from ..m036_lifecycle import (
     M036DeclarationCommand,
     M036DeclarationResult,
     list_m036_declarations,
@@ -181,7 +181,7 @@ def test_anti_tautology_unrecorded_declaration_absent_from_list(tmp_path: Path) 
     If this passed with an unrecorded record present, every read-back test in
     the suite would be tautological.
     """
-    from .._m036_lifecycle import derive_m036_declaration_id
+    from ..m036_lifecycle import derive_m036_declaration_id
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as runtime:
         recorded = record_m036_declaration(

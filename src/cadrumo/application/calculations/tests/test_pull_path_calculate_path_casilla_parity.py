@@ -7,9 +7,9 @@ produces differently because both paths persisted to the same revision without a
 cross-path comparison.  The relation-canonicalisation work centralised relation handling so that:
 
 * The **live bucket-aggregation calculate path** enrolls
-  :class:`~application.calculations._relation_prefill.RelationPrefillSourceResolver`
+  :class:`~application.calculations.relation_prefill.RelationPrefillSourceResolver`
   in its ``merge_source_resolutions`` mesh, which delegates to
-  :func:`~application.calculations._relation_prefill.resolve_relations_from_local_store`
+  :func:`~application.calculations.relation_prefill.resolve_relations_from_local_store`
   before calling the formula engine. The M180 perceptor count is a separate
   RET-1 ``retenciones_aggregation`` source, so the parity path seeds and
   resolves that source explicitly instead of summing quarterly counts.
@@ -44,10 +44,10 @@ regression:
     skips, no xfail.
 
 See Also:
-    :class:`~application.calculations._relation_prefill.RelationPrefillSourceResolver`
+    :class:`~application.calculations.relation_prefill.RelationPrefillSourceResolver`
         Live source-mesh adapter whose ``resolve`` path is compared with the
         direct relay path.
-    :func:`~application.calculations._relation_prefill.resolve_relations_from_local_store`
+    :func:`~application.calculations.relation_prefill.resolve_relations_from_local_store`
         Shared relation-resolution implementation both transports consume.
     :func:`~domain.calculations.registry.calculate_registry_snapshot`
         Registry formula engine that consumes the resolved relation values.
@@ -105,10 +105,10 @@ from ...aggregation import (
     RetencionScheme,
 )
 from ...modelo._binding_resolution import resolve_declaration_period_inputs
-from ...modelo._calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
+from ...modelo.calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from ...modelo.work_lifecycle import create_work_unit
-from .._relation_prefill import RelationPrefillSourceResolver, resolve_relations_from_local_store
 from ..observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository
+from ..relation_prefill import RelationPrefillSourceResolver, resolve_relations_from_local_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -383,11 +383,11 @@ def test_pull_path_and_calculate_path_share_resolver_and_produce_equal_casilla_v
     store and verifies that:
 
     (A) The live bucket-aggregation calculate path for M180 (which enrolls
-        :class:`~application.calculations._relation_prefill.RelationPrefillSourceResolver`
+        :class:`~application.calculations.relation_prefill.RelationPrefillSourceResolver`
         in its source mesh) produces the same casilla values as
 
     (B) The standalone relay path
-        (:class:`~application.calculations._relation_prefill.RelationPrefillSourceResolver`
+        (:class:`~application.calculations.relation_prefill.RelationPrefillSourceResolver`
         called directly against the same observation store, feeding its resolved
         ``relation_values`` into
         :func:`~domain.calculations.registry.calculate_registry_snapshot`).

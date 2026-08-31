@@ -7,8 +7,8 @@ import pytest
 from ....core.config import override_settings
 from ....core.storage_taxonomy import StorageArea, StorageScope
 from ....core.storage_taxonomy_locations import STORAGE_TAXONOMY, storage_path
-from .._service import RECLAIMABLE_LIFECYCLES, reclaim_storage_area
 from ..errors import StorageReclaimRefusedError, StorageReclaimUnconfirmedError
+from ..service import RECLAIMABLE_LIFECYCLES, reclaim_storage_area
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -238,11 +238,11 @@ def test_new_calculation_helpers_preserve_their_reviewed_inventory_or_non_source
         "resolve_inventory_authoritative_closing"
     )
     registry_helpers = {
-        "calculation_helper:src/cadrumo/domain/calculations/registry/_deadline_coordinate.py:"
+        "calculation_helper:src/cadrumo/domain/calculations/registry/deadline_coordinate.py:"
         "deadline_semantic_coordinate",
-        "calculation_helper:src/cadrumo/domain/calculations/registry/_deadline_coordinate.py:"
+        "calculation_helper:src/cadrumo/domain/calculations/registry/deadline_coordinate.py:"
         "deadline_window_semantic_coordinates",
-        "calculation_helper:src/cadrumo/domain/calculations/registry/_relations.py:source_presence_gaps",
+        "calculation_helper:src/cadrumo/domain/calculations/registry/relations.py:source_presence_gaps",
     }
 
     assert inventory_closing in inventory.capability_ids
@@ -272,7 +272,7 @@ def test_reviewed_helpers_have_no_new_connectivity_candidate_or_connected_outcom
     manifest = load_source_connectivity_census()
     assignments = assign_capabilities_to_census(discovered_source_capability_ids(REPO_ROOT), manifest)
     helper_ids = {
-        "calculation_helper:src/cadrumo/domain/calculations/registry/_temporal.py:revision_selection_coordinates",
+        "calculation_helper:src/cadrumo/domain/calculations/registry/temporal.py:revision_selection_coordinates",
         "calculation_helper:src/cadrumo/domain/portals/errors.py:portal_integrity_error",
     }
     census_claims = {

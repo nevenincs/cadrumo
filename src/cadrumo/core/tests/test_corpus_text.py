@@ -23,11 +23,17 @@ def test_core_facade_reexports_the_corpus_text_owner() -> None:
     assert normalise_corpus_text is normalise_corpus_text_owner
 
 
-def test_core_facade_normaliser_imports_without_configuration_or_domain_loading() -> None:
-    """Build tooling can use the facade without loading settings or registry code."""
+def test_normaliser_imports_without_configuration_or_domain_loading() -> None:
+    """Build tooling can use the normaliser without loading settings or registry code.
+
+    The probe imported through the ``cadrumo.core`` facade. That namespace is
+    inert now, so it imports from the defining module -- which is the stricter
+    form of the same question: the module itself must not drag in settings or
+    domain code, with no facade in between to absorb the blame.
+    """
     probe = (
         "import sys\n"
-        "from cadrumo.core import normalise_corpus_text\n"
+        "from cadrumo.core.corpus_text import normalise_corpus_text\n"
         "assert normalise_corpus_text('<p>Café&nbsp;2026</p>') == 'cafe 2026'\n"
         "assert 'cadrumo.core.config' not in sys.modules\n"
         "assert not any(name.startswith('cadrumo.domain') for name in sys.modules)\n"

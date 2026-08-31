@@ -11,8 +11,8 @@ from typer.main import get_command
 
 from .._app_live_command_specs import LIVE_COMMAND_SPECS
 from .._command_runtime import build_command_subtree
-from .._command_spec import BindingState, CommandSpecGraph, LazyBinding
 from .._root_command_specs import ROOT_COMMAND_SPECS
+from ..command_spec import BindingState, CommandSpecGraph, LazyBinding
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

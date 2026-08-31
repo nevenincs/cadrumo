@@ -7,7 +7,7 @@ import pytest
 from ....core.errors.error_codes import build_error_envelope, resolve_error_message
 from ....core.errors.hierarchy import CadrumoError
 from ....domain.calculations.registry.authority import bundled_authority
-from .._calculate_input import (
+from ..calculate_input import (
     ModeloCalculateDecimalInputError,
     ModeloCalculateRelationInputError,
     ModeloCalculateTextInputError,
@@ -17,7 +17,7 @@ from .._calculate_input import (
     _validated_m210_official_tipo_renta_code,
     _validated_relation_id,
 )
-from .._selectors import ModeloCalculationRevisionSelector
+from ..selectors import ModeloCalculationRevisionSelector
 from ..work_addressing import ModeloRevisionPick, ModeloRevisionPickError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

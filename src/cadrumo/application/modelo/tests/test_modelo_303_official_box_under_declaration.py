@@ -63,11 +63,11 @@ from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.observations_repository import IvaWalletDecisionRepository
-from .._calculation_actions import (
+from ..calculation_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from .._verification_actions import verify_modelo_revision
+from ..verification_actions import verify_modelo_revision
 from ..work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -489,7 +489,7 @@ def test_equals_consistency_predicate_blocks_a_drifted_box() -> None:
     predicate holds. This proves the consistency operator is a real evaluator, not a
     tautology that cannot fail.
     """
-    from .._verification_actions import _evaluate_verification_predicates
+    from ..verification_actions import _evaluate_verification_predicates
 
     auth = _authority_for_303()
     snap = auth.snapshot("303", filing_year=2026, period="1T")

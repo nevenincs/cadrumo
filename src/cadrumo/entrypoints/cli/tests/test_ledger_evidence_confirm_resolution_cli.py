@@ -45,7 +45,7 @@ from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....domain.iva.schema import IvaCategory
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.profile_capsule import set_active_test_profile_facts
-from ._ledger_ux_support import _invoke, _open_bucket_session
+from .ledger_ux_support import _invoke, _open_bucket_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["_open_bucket_session"]

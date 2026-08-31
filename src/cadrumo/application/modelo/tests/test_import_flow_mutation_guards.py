@@ -25,25 +25,21 @@ from ....domain.modelos.filing_record import ExternalEvidenceKind
 from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....tests.secure_sql import isolated_runtime_profile
-from .._action_errors import (
+from ..action_errors import (
     AmendmentEvidenceMissingError,
     CalculationRevisionNotFoundError,
     ExternalModeloImportError,
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
 )
-from .._amendment_actions import amend_modelo_revision
-from .._calculation_actions import (
-    calculate_modelo_revision,
-    get_calculation_revision,
-    mark_revision_verificado_completo,
-)
+from ..amendment_actions import amend_modelo_revision
+from ..calculation_actions import calculate_modelo_revision, get_calculation_revision, mark_revision_verificado_completo
 from ..external_import_actions import import_external_filing_evidence
 from ..work_lifecycle import (
     create_work_unit,
     discard_work_unit,
 )
-from ._import_flow_support import (
+from .import_flow_support import (
     _IMPORT_INCOME_CASILLA,
     _M111_ACTIVITY_AMOUNT_CASILLA,
     _M111_ACTIVITY_COUNT_CASILLA,

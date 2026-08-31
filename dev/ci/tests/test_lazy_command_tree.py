@@ -7,7 +7,7 @@ import the whole tree — so ``aeat --version`` and ``aeat --help`` paid
 the full registry cost even though neither dispatches into a
 subcommand.
 
-:mod:`cadrumo.entrypoints.cli._command_suggestions` now registers heavy
+:mod:`cadrumo.entrypoints.cli.command_suggestions` now registers heavy
 subcommand groups through :class:`LazySubcommand` loaders that import
 their module only when the subtree is first resolved. These tests are
 the structural guard for that contract:

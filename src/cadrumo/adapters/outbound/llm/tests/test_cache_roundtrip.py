@@ -22,7 +22,7 @@ import pytest
 
 from .....llm.models import LLMProvider, LLMRequest, LLMResponse
 from .....tests.secure_sql import TestRuntimeProfile, mutate_encrypted_secure_object_json
-from .._cache import LLMCache
+from ..cache import LLMCache
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -158,7 +158,7 @@ def test_llm_cache_entry_with_dropped_text_field_surfaces_at_read(
 
     from .....llm.errors import LLMCacheError
     from ....persistence.storage.sql import SecureObjectRow
-    from .._cache import _CACHE_NAMESPACE
+    from ..cache import _CACHE_NAMESPACE
 
     created_at = _CREATED_AT
     request = _populated_request()

@@ -39,8 +39,8 @@ from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.verification_report import ModeloVerificationFinding
 from ...domain.modelos.work_unit import WorkUnit
-from ..calculations._binding_prefill import resolve_bindings_from_local_store
-from ..calculations._foreign_asset_redeclaration import (
+from ..calculations.binding_prefill import resolve_bindings_from_local_store
+from ..calculations.foreign_asset_redeclaration import (
     modelo_720_declared_observation,
     modelo_720_evidence_observation,
     modelo_720_prior_baseline_observation,

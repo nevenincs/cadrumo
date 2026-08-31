@@ -13,7 +13,7 @@ import typer
 from pydantic import TypeAdapter
 
 from ....application.auth.acquisition_lock import acquire_auth_acquisition_lock
-from ....application.modelo._action_errors import ModeloWorkflowGateError
+from ....application.modelo.action_errors import ModeloWorkflowGateError
 from ....application.operator_actions.models import (
     ActionArgumentBinding,
     ActionReference,
@@ -26,7 +26,7 @@ from ....core.auth_provider import AuthProviderKind
 from ....core.config import Settings, override_settings
 from ....core.errors.error_codes import ErrorCategory, get_error_exit_code
 from ....core.errors.hierarchy import CoreValidationError
-from ....core.i18n._render import SUPPORTED_OUTPUT_LANGUAGES
+from ....core.i18n.render import SUPPORTED_OUTPUT_LANGUAGES
 from ....core.operator_action_enums import (
     ActionArgumentStatus,
     ActionConditionality,

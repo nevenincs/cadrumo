@@ -347,7 +347,7 @@ def _workflow_run_id_resolution(run_id: str, *, source: str) -> WorkflowResumeTa
 def _resolve_resume_from_calculation_revision(
     calculation_revision_id: CalculationRevisionId,
 ) -> WorkflowResumeTargetResolution:
-    from ..modelo._calculation_actions import get_calculation_revision
+    from ..modelo.calculation_actions import get_calculation_revision
     from ..modelo.work_lifecycle import get_work_unit
 
     revision = get_calculation_revision(calculation_revision_id)
@@ -435,7 +435,7 @@ def _resolve_revision_for_resume_target(
     catalogue: WorkUnitCatalogue,
     bucket_id: str,
 ) -> ModeloResolvedRevisionProjection:
-    from ..modelo._selectors import ModeloCalculationRevisionSelector
+    from ..modelo.selectors import ModeloCalculationRevisionSelector
     from ..modelo.work_addressing import ModeloRevisionPick, resolve_modelo_revision_pick
 
     try:
@@ -636,8 +636,8 @@ def _resolve_resume_from_work_unit(
     latest: bool = False,
     calculation_revision_id: CalculationRevisionId | None = None,
 ) -> WorkflowResumeTargetResolution:
-    from ..modelo._workflow_gate import workflow_period_for_work_unit
     from ..modelo.work_addressing import project_modelo_work_unit
+    from ..modelo.workflow_gate import workflow_period_for_work_unit
 
     projection = project_modelo_work_unit(work_unit)
     workflow_period = workflow_period_for_work_unit(work_unit)

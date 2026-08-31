@@ -13,10 +13,10 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .._lexical_index import build_lexical_index, iter_corpus_chunks
-from .._models import CitationResolution, RetrievalHit, RetrievalMode, RetrievalResponse
 from .._retrieval import run_retrieval
 from ..errors import CorpusSearchInputError
+from ..lexical_index import build_lexical_index, iter_corpus_chunks
+from ..models import CitationResolution, RetrievalHit, RetrievalMode, RetrievalResponse
 from ._corpus_fixture import build_sample_corpus
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -58,7 +58,7 @@ def test_limit_caps_the_returned_page(tmp_path: Path) -> None:
 
 
 def test_citation_short_circuit(tmp_path: Path) -> None:
-    from .._citation_lookup import bundled_citation_lookup
+    from ..citation_lookup import bundled_citation_lookup
 
     database_path, _ids = _index_and_chunks(tmp_path)
     response = run_retrieval(

@@ -19,7 +19,7 @@ See Also:
     :mod:`cadrumo.domain.calculations.registry.formula_runtime`
         Formula-runtime implementation of ``irnr_resolve_tipo_gravamen`` and the
         typed M210 unresolved outcomes this application layer converts into findings.
-    :func:`cadrumo.application.modelo._verification_actions.verify_modelo_revision`
+    :func:`cadrumo.application.modelo.verification_actions.verify_modelo_revision`
         Verification path that replays this resolver for Modelo 210 observations.
     :mod:`cadrumo.application.calculations.tests.test_modelo_210_irnr_continuity`
         Cross-renta enrollment coverage for the registry-backed M210 engine.

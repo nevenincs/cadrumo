@@ -4,7 +4,8 @@
 
 from __future__ import annotations
 
-from ._command_spec import (
+from ._modelo_nonwork_command_spec_policies import _MODEL_READ
+from .command_spec import (
     ArgumentSpec,
     CommandSpec,
     DeferredTarget,
@@ -18,7 +19,6 @@ from ._command_spec import (
     TranslationKey,
     ValueContract,
 )
-from ._modelo_nonwork_command_spec_policies import _MODEL_READ
 
 MODELO_NONWORK_VERIFICATION_REPORT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(

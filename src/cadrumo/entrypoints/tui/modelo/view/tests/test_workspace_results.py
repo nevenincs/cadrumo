@@ -9,34 +9,18 @@ destination shows at a different address.
 from __future__ import annotations
 
 import pytest
-from textual.app import App, ComposeResult
 from textual.widgets import Static
 
 from ......adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ......application.modelo.workspace_models import ModeloWorkspaceCapabilityDisposition
 from ......core.external_constants import OutputLanguage
-from ......core.i18n._render import tr
-from ....components.theme import install_cadrumo_themes
+from ......core.i18n.render import tr
+from ....components.host import ScreenHostApp
 from ..controller import ModeloWorkspaceReadSession, admit_workspace_session
 from ..results import ModeloWorkspaceResultsScreen
 from .conftest import resolve_real_result
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-
-class _ResultsHost(App[None]):
-    """Minimal host so the destination runs under a real Textual pilot."""
-
-    def __init__(self, session: ModeloWorkspaceReadSession) -> None:
-        super().__init__()
-        self._session = session
-
-    def on_mount(self) -> None:
-        install_cadrumo_themes(self)
-        self.push_screen(ModeloWorkspaceResultsScreen(self._session))
-
-    def compose(self) -> ComposeResult:
-        return iter(())
 
 
 def _session(bucket_id: str, repository: WorkUnitCatalogueRepository) -> ModeloWorkspaceReadSession:
@@ -75,7 +59,7 @@ async def test_the_destination_refuses_rather_than_showing_the_inputs_content(
     addresses -- which is what teaches an operator to distrust addresses.
     """
     bucket_id, repository = bucket_and_repository
-    app = _ResultsHost(_session(bucket_id, repository))
+    app = ScreenHostApp(ModeloWorkspaceResultsScreen(_session(bucket_id, repository)))
 
     async with app.run_test() as pilot:
         await pilot.pause()
@@ -94,7 +78,7 @@ async def test_a_refusing_destination_mounts_no_results_table_at_all(
     about the admission.
     """
     bucket_id, repository = bucket_and_repository
-    app = _ResultsHost(_session(bucket_id, repository))
+    app = ScreenHostApp(ModeloWorkspaceResultsScreen(_session(bucket_id, repository)))
 
     async with app.run_test() as pilot:
         await pilot.pause()
@@ -111,7 +95,7 @@ async def test_the_destination_offers_no_editing_affordance(
     from textual.widgets import Button, Checkbox, Input, RadioSet, SelectionList
 
     bucket_id, repository = bucket_and_repository
-    app = _ResultsHost(_session(bucket_id, repository))
+    app = ScreenHostApp(ModeloWorkspaceResultsScreen(_session(bucket_id, repository)))
 
     async with app.run_test() as pilot:
         await pilot.pause()

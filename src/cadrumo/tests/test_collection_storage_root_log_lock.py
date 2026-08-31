@@ -29,7 +29,7 @@ from pathlib import Path
 import pytest
 
 from ..core.directory_scan import scan_directory
-from ._collection_storage_root import _release_log_handlers_under
+from .collection_storage_root import _release_log_handlers_under
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -123,7 +123,7 @@ def test_registered_cleanup_removes_a_root_with_a_real_atexit_ordered_log_handle
         import logging.handlers
         from pathlib import Path
 
-        from cadrumo.tests._collection_storage_root import register_collection_storage_root_cleanup
+        from cadrumo.tests.collection_storage_root import register_collection_storage_root_cleanup
 
         root = Path({str(root)!r})
         log_dir = root / "probe-logs"

@@ -75,8 +75,8 @@ from ....domain.modelos.verification_report import ModeloVerificationFindingKind
 from ....tests.registry_observations import registry_grounded_observation_rows
 from ....tests.secure_sql import isolated_runtime_profile
 from ..._foreign_asset_thresholds import foreign_asset_declaration_thresholds
-from .._foreign_asset_redeclaration import modelo_721_redeclaration_advisory_findings
-from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
+from ..foreign_asset_redeclaration import modelo_721_redeclaration_advisory_findings
+from ..multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from ..observations_repository import CalculationObservationRepository
 from ._multi_year_roundtrip_support import assert_two_ejercicio_round_trip
 from ._observation_lookup_support import find_observation

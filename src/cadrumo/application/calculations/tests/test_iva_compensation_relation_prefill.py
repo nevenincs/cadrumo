@@ -25,9 +25,9 @@ from .._iva_compensation_annual_partition import (
     IvaCompensationAnnualPartitionSourceResolver,
     resolve_iva_compensation_annual_partition_binding_values,
 )
-from .._m303_carry_ingress import M303CarryIngressError
-from .._relation_prefill import resolve_relations_from_local_store
+from ..m303_carry_ingress import M303CarryIngressError
 from ..observations_repository import CalculationObservationRepository, ResultDispositionProjection
+from ..relation_prefill import resolve_relations_from_local_store
 from ._iva_compensation_history_support import (
     _BOX_97_BINDING,
     _BOX_662_BINDING,

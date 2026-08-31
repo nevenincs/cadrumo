@@ -71,7 +71,7 @@ def _tracked_live_corpus() -> tuple[Path, ...]:
 
 
 def test_work_selection_fixed_point_is_discovery_complete() -> None:
-    assert not (_CADRUMO / "application/modelo/_work_addressing.py").exists()
+    assert not (_CADRUMO / "application/modelo/work_addressing.py").exists()
     assert not (_CADRUMO / "application/modelo/work_unit_selection.py").exists()
     assert scan_canonical_authority(_SPEC, _tracked_live_corpus()) == []
 

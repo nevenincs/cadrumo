@@ -20,7 +20,6 @@ import contextvars
 import logging
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
-from datetime import date
 from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated, Any, Final, Literal, override
@@ -33,6 +32,7 @@ from pydantic_settings import (
     SettingsConfigDict,
 )
 
+from . import _config_runtime, _config_validation
 from . import config_live_tests as _live_test_config
 from .auth_provider import AuthProviderKind as _AuthProviderKind
 from .config_integration_fields import (
@@ -42,7 +42,6 @@ from .config_llm_fields import CadrumoLlmSettings
 from .config_state_root import (
     FORMER_PRODUCT_DATABASE_FILENAME,  # noqa: F401 - public re-export for storage adapters
     default_storage_root,
-    refuse_former_product_database,
 )
 from .config_storage_route import classify_storage_route_for_settings, settings_for_bucket_route
 from .config_support import (
@@ -68,11 +67,10 @@ from .config_support import default_clave_sede_access_url_template as _default_c
 from .config_support import default_sede_expedientes_path as _default_sede_expedientes_path
 from .config_support import default_status_detail_url_template as _default_status_detail_url_template
 from .config_support import default_status_notificaciones_path as _default_status_notificaciones_path
-from .errors.hierarchy import ActiveProfilePointerError, CoreValidationError
 from .external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from .paths import normalize_project_relative_path
 from .resources.bundled_data import bundled_path
-from .telemetry._tier import TelemetryTier
+from .telemetry.tier import TelemetryTier
 
 if TYPE_CHECKING:
     from .bucket_pointer import BucketPointer
@@ -949,146 +947,17 @@ class Settings(CadrumoLlmSettings):
 
     @model_validator(mode="after")
     def _validate_live_iva_timeout_hierarchy(self) -> Settings:
-        if self.cadrumo_live_iva_declaration_capture_timeout_ms >= self.cadrumo_live_iva_surface_timeout_ms:
-            raise CoreValidationError(
-                translated_message="errors.integrity.integrity_cadrumo_core_validation",
-                context={
-                    "capture_timeout_ms": self.cadrumo_live_iva_declaration_capture_timeout_ms,
-                    "surface_timeout_ms": self.cadrumo_live_iva_surface_timeout_ms,
-                    "capture_below_surface": False,
-                },
-            )
-        return self
+        return _config_validation.validate_live_iva_timeout_hierarchy(self)
 
     @model_validator(mode="after")
     def _resolve_database_url_for_active_profile(self) -> Settings:
-        """Resolve ``cadrumo_database_url`` through the active-profile chain.
-
-        When the field is left empty (the production default), this
-        validator computes the per-bucket SQLite URL at
-        ``sqlite:///<cadrumo_local_storage_root>/buckets/<bucket-id>/db/cadrumo.db``.
-        Tests that pass an explicit URL bypass the resolution — the
-        validator only fires the computation when the field is empty.
-
-        Active-profile resolution honours the operator-facing
-        precedence chain:
-
-        1. ``self.cadrumo_active_profile`` (the in-process override the
-           ``--profile`` flag and ``override_settings`` write; no
-           environment variable reaches it).
-        2. ``<cadrumo_local_storage_root>/active-profile`` plaintext
-           pointer file written by ``profile create`` / ``config
-           login``.
-
-        When neither rung resolves, the field derives a root-level
-        fallback at ``sqlite:///<cadrumo_local_storage_root>/cadrumo.db`` so
-        the two storage settings stay coherent: setting
-        ``CADRUMO_LOCAL_STORAGE_ROOT`` alone never leaves
-        ``cadrumo_database_url`` empty. Cold-start commands still refuse
-        before touching this fallback database — every profile-scoped
-        path checks for an active profile first — so the fallback
-        database is a placeholder that real per-profile data never
-        lands in.
-        """
-        if self.cadrumo_database_url:
-            return self
-        bucket_id = (self.cadrumo_active_profile or "").strip()
-        if not bucket_id:
-            # Delegate to the canonical pointer-file reader rather
-            # than re-implementing the TOML parse inline. The reader
-            # uses strict pydantic validation; this preserves the
-            # one-resolver invariant for the active-profile pointer.
-            #
-            # Reached through the owning submodule, never the ``cadrumo.core``
-            # facade. Both helpers are served by the package's PEP 562
-            # ``__getattr__``, which is defined near the END of
-            # ``core/__init__``; any module imported EARLIER in that file that
-            # reaches this validator therefore asks a half-built package for an
-            # attribute whose accessor does not exist yet, and the whole package
-            # becomes unimportable. Naming the submodule keeps this resolvable
-            # no matter how early the caller sits.
-            from .bucket_pointer import pointer_path, read_pointer
-
-            try:
-                captured = _settings_pointer_observation.get()
-                pointer = (
-                    captured[1]
-                    if captured is not None and captured[0] == self.cadrumo_local_storage_root
-                    else read_pointer(self.cadrumo_local_storage_root)
-                )
-            except (OSError, ValueError) as exc:
-                pointer_file = pointer_path(self.cadrumo_local_storage_root)
-                _LOGGER.debug(
-                    "Invalid active-profile pointer at %s; refusing root storage fallback",
-                    pointer_file,
-                    exc_info=True,
-                )
-                raise ActiveProfilePointerError(path=pointer_file) from exc
-            if pointer.bucket_id is not None:
-                bucket_id = pointer.bucket_id.strip()
-        from .storage_taxonomy import StorageCategory, bucket_scoped_storage_path, storage_path
-
-        if not bucket_id:
-            refuse_former_product_database(self.cadrumo_local_storage_root)
-            fallback_db_path = storage_path(StorageCategory.ROOT_FALLBACK_DATABASE, settings=self)
-            object.__setattr__(
-                self,
-                "cadrumo_database_url",
-                f"sqlite:///{fallback_db_path.as_posix()}",
-            )
-            return self
-        refuse_former_product_database(self.cadrumo_local_storage_root, bucket_id=bucket_id)
-        # The layout comes from the one core storage authority. This fallback
-        # used to re-type it, unpinned against the code that actually
-        # provisions a bucket, so a rename would have routed the cold-start
-        # database at a directory nothing else agreed on.
-        bucket_db_path = bucket_scoped_storage_path(StorageCategory.BUCKET_DATABASE_FILE, bucket_id, settings=self)
-        object.__setattr__(
-            self,
-            "cadrumo_database_url",
-            f"sqlite:///{bucket_db_path.as_posix()}",
+        return _config_validation.resolve_database_url_for_active_profile(
+            self, pointer_observation=_settings_pointer_observation.get()
         )
-        return self
 
     @model_validator(mode="after")
     def _resolve_output_dirs_under_storage_root(self) -> Settings:
-        """Root every derived output directory under ``cadrumo_local_storage_root``.
-
-        Auth tokens, the diagnostic log, the encrypted-store substrate (secret,
-        blob, audit), the append-only telemetry logs, the regenerable caches,
-        and the durable generated-output directories all default to a subpath
-        under the one state root that ``CADRUMO_LOCAL_STORAGE_ROOT`` scopes, per
-        the core storage taxonomy. That root is the platform
-        user-data location in every run mode, never inside a virtualenv or uv
-        cache — the hazard a checkout-relative ``var/...`` default carries on
-        an installed distribution. A developer who wants the tree inside their
-        checkout sets ``CADRUMO_LOCAL_STORAGE_ROOT``.
-
-        An explicit per-field env override (``CADRUMO_TOKEN_DIR``,
-        ``CADRUMO_RUNS_DIR``, …) or a value supplied via an ``override_settings``
-        block registers the field in ``model_fields_set`` and wins: the
-        validator only computes the derived path when the field was left at its
-        placeholder default. The validator only computes paths; provider
-        factories and custody loaders decide how those directories are opened.
-
-        Which fields those are, and what subpath each takes, is not decided
-        here: the typed declaration is iterated directly so this validator
-        cannot drift from it by carrying a table of its own. Members whose
-        field is a deliberate opt-in override are excluded by the declaration
-        rather than by a special case here -- deriving a default into one would
-        silently retire the branch that selects on the field being unset.
-
-        ``mode="after"`` guarantees ``cadrumo_local_storage_root`` is already
-        populated when this runs.
-        """
-        from .storage_taxonomy import ROOT_DERIVED_STORAGE_LOCATIONS
-
-        for location in ROOT_DERIVED_STORAGE_LOCATIONS:
-            field_name = location.settings_field
-            if field_name is None or field_name in self.model_fields_set:
-                continue
-            object.__setattr__(self, field_name, self.cadrumo_local_storage_root / location.relative_path())
-        return self
+        return _config_validation.resolve_output_dirs_under_storage_root(self)
 
     @field_validator(
         "cadrumo_certificate_path",
@@ -1096,10 +965,7 @@ class Settings(CadrumoLlmSettings):
     )
     @classmethod
     def _empty_optional_paths_are_none(cls, value: object) -> object:
-        """Treat blank env vars for optional path fields as unset."""
-        if isinstance(value, str) and value.strip() == "":
-            return None
-        return value
+        return _config_validation.empty_optional_paths_are_none(value)
 
     @field_validator(
         "cadrumo_certificate_password_secret",
@@ -1110,25 +976,12 @@ class Settings(CadrumoLlmSettings):
     )
     @classmethod
     def _empty_optional_secrets_are_none(cls, value: object) -> object:
-        """Treat blank env vars for optional secret fields as unset."""
-        if isinstance(value, str) and value.strip() == "":
-            return None
-        return value
+        return _config_validation.empty_optional_secrets_are_none(value)
 
     @field_validator("aeat_status_detail_url_template")
     @classmethod
     def _detail_url_template_has_expediente_id(cls, value: str) -> str:
-        """Reject templates that omit the ``{expediente_id}`` placeholder."""
-        if "{expediente_id}" not in value:
-            raise CoreValidationError(
-                translated_message="errors.integrity.integrity_cadrumo_core_validation",
-                context={
-                    "setting": "aeat_status_detail_url_template",
-                    "required_placeholder": "{expediente_id}",
-                    "placeholder_present": False,
-                },
-            )
-        return value
+        return _config_validation.detail_url_template_has_expediente_id(value)
 
     @field_validator(
         "cadrumo_clave_movil_dni_nie",
@@ -1140,47 +993,12 @@ class Settings(CadrumoLlmSettings):
     )
     @classmethod
     def _empty_optional_clave_fields_are_none(cls, value: object) -> object:
-        """Treat blank env vars for optional Cl@ve identity/password fields as unset."""
-        if isinstance(value, str) and value.strip() == "":
-            return None
-        return value
+        return _config_validation.empty_optional_clave_fields_are_none(value)
 
     @field_validator("cadrumo_clave_movil_dni_fecha")
     @classmethod
     def _clave_dni_fecha_is_iso_date(cls, value: str | None) -> str | None:
-        """Reject DNI validity dates that are not canonical ``YYYY-MM-DD``.
-
-        Python 3.11's ``date.fromisoformat`` also accepts the compact
-        ``YYYYMMDD`` form and ISO week dates, but AEAT's Cl@ve Móvil
-        ``FECHA`` input expects the hyphenated canonical form. The
-        regex rejects anything else before we delegate the semantic
-        check to the stdlib parser.
-        """
-        if value is None:
-            return None
-        import re as _re
-
-        if not _re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):
-            raise CoreValidationError(
-                translated_message="errors.integrity.integrity_cadrumo_core_validation",
-                context={
-                    "env_var": "CADRUMO_CLAVE_MOVIL_DNI_FECHA",
-                    "required_format": "YYYY-MM-DD",
-                    "canonical_form": False,
-                },
-            )
-        try:
-            date.fromisoformat(value)
-        except ValueError as exc:
-            raise CoreValidationError(
-                translated_message="errors.integrity.integrity_cadrumo_core_validation",
-                context={
-                    "env_var": "CADRUMO_CLAVE_MOVIL_DNI_FECHA",
-                    "required_format": "YYYY-MM-DD",
-                    "resolvable_date": False,
-                },
-            ) from exc
-        return value
+        return _config_validation.clave_dni_fecha_is_iso_date(value)
 
     @field_validator(
         "aeat_clave_sede_access_url_template",
@@ -1188,17 +1006,7 @@ class Settings(CadrumoLlmSettings):
     )
     @classmethod
     def _clave_sede_access_url_template_has_target(cls, value: str) -> str:
-        """Reject templates that omit the ``{target}`` placeholder."""
-        if "{target}" not in value:
-            raise CoreValidationError(
-                translated_message="errors.integrity.integrity_cadrumo_core_validation",
-                context={
-                    "required_placeholder": "{target}",
-                    "placeholder_present": False,
-                    "placeholder_purpose": "url_encoded_post_auth_path",
-                },
-            )
-        return value
+        return _config_validation.clave_sede_access_url_template_has_target(value)
 
     @classmethod
     def env_var_names(cls) -> set[str]:
@@ -1261,8 +1069,7 @@ class Settings(CadrumoLlmSettings):
     )
     @classmethod
     def _normalize_repo_relative_paths(cls, value: Path | None) -> Path | None:
-        """Anchor repo-relative path settings to the application data root."""
-        return normalize_project_relative_path(value)
+        return _config_validation.normalize_repo_relative_paths(value, normalizer=normalize_project_relative_path)
 
 
 _settings_override: contextvars.ContextVar[Settings | None] = contextvars.ContextVar(
@@ -1302,37 +1109,11 @@ def settings_for_active_profile_bucket(bucket_id: str, source: Settings | None =
 
 
 def _active_profile_pointer_observation() -> tuple[Path, BucketPointer]:
-    """Identify the current active-profile pointer through its native coordinate.
-
-    Settings construction is not a pure function of the environment: when
-    ``cadrumo_database_url`` is unset, the post-validator below reads the
-    ``active-profile`` pointer file and derives the bucket's database route
-    from it. That makes the pointer a construction INPUT, and it moves
-    whenever ``config login``/``logout`` writes it — inside a live process,
-    for a long-running interactive or external session.
-
-    Holding one settings instance across such a switch would keep serving the
-    previous profile's database route, so the canonical durable transition
-    coordinate is folded into the cache key. A fresh root observes the initial
-    absent coordinate zero; a later clear is a distinct persisted tombstone.
-
-    The root is read straight from the environment: that read is deliberately
-    independent of the settings model it guards, because it has to answer
-    "which pointer would the next construction see" BEFORE any settings exist
-    to ask.
-    """
-    import os
-
-    configured_root = os.environ.get("CADRUMO_LOCAL_STORAGE_ROOT")
-    root = normalize_project_relative_path(Path(configured_root)) if configured_root else default_storage_root()
-    assert root is not None
-    try:
-        from .bucket_pointer import read_pointer
-
-        pointer = read_pointer(root)
-    except (OSError, ValueError):
-        raise
-    return (root, pointer)
+    """Identify the current active-profile pointer through its native coordinate."""
+    return _config_runtime.active_profile_pointer_observation(
+        normalizer=normalize_project_relative_path,
+        storage_root=default_storage_root,
+    )
 
 
 @lru_cache(maxsize=8)
@@ -1458,7 +1239,7 @@ def override_settings(**overrides: object) -> Iterator[Settings]:
     # resolution itself, which the invalidator recognises and skips -- see
     # ``clear_output_language_cache_for_settings_override``. Lazy import:
     # ``i18n._render`` imports this module.
-    from .i18n._render import clear_output_language_cache_for_settings_override
+    from .i18n.render import clear_output_language_cache_for_settings_override
 
     token = _settings_override.set(new_settings)
     clear_output_language_cache_for_settings_override()

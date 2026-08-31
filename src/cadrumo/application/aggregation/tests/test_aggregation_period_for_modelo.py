@@ -16,7 +16,7 @@ import pytest
 from ....core.period import Period, StandardPeriodCode
 from .. import aggregation_period_for_modelo
 from ..errors import AggregationValidationError
-from ._renta_income_aggregation_support import _period as _canonical_period
+from .renta_income_aggregation_support import _period as _canonical_period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

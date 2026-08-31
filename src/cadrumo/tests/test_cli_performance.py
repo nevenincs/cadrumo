@@ -75,4 +75,4 @@ def test_planted_instrumentation_probe_bites_for_alias_native_storage_and_pydant
     assert observation.filesystem_operations["open.write"] >= 2
     assert "aliased-pathlib.txt" in observation.filesystem_created
     assert "aliased-native.bin" in observation.filesystem_created
-    assert any(key.endswith("_path_safety:safe_repository_id") for key in observation.storage_operation_calls)
+    assert any(key.endswith(".path_safety:safe_repository_id") for key in observation.storage_operation_calls)

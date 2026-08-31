@@ -24,7 +24,7 @@ from ...application.ledger.id_resolution import resolve_transaction_id
 from ...application.ledger.review_projection import ledger_transaction_review_status
 from ...core.decimal.formatting import format_decimal
 from ...core.errors.hierarchy import CadrumoError
-from ...core.i18n._render import tr
+from ...core.i18n.render import tr
 from ...core.json_contract import Notice, OutputSchema
 from ...core.unit_proportion import is_unit_proportion
 from ...domain.categories.spending_category import SpendingCategory

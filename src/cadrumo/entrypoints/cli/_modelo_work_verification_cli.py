@@ -32,17 +32,17 @@ from ...application.calculations.cross_period_models import (
 )
 from ...application.calculations.m111_no_retenciones import m111_no_retenciones_periods_for_bucket
 from ...application.calculations.observations_repository import CalculationObservationRepository
-from ...application.modelo._calculation_actions import get_calculation_revision
-from ...application.modelo._filing_actions import file_modelo_revision
-from ...application.modelo._profile_readiness_gate import require_profile_ready_for_work_unit
-from ...application.modelo._selectors import ModeloCalculationRevisionSelector
-from ...application.modelo._verification_actions import verify_modelo_revision_with_preconditions
-from ...application.modelo._work_plazo import calculated_m210_plazo_resolution
+from ...application.modelo.calculation_actions import get_calculation_revision
+from ...application.modelo.filing_actions import file_modelo_revision
+from ...application.modelo.profile_readiness_gate import require_profile_ready_for_work_unit
+from ...application.modelo.selectors import ModeloCalculationRevisionSelector
+from ...application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ...application.modelo.verify_selector import ModeloVerifySelector
 from ...application.modelo.work_lifecycle import get_work_unit
+from ...application.modelo.work_plazo import calculated_m210_plazo_resolution
 from ...application.workflow.persistence import workflow_state_repository
 from ...core.external_constants import OutputLanguage
-from ...core.i18n._render import tr
+from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.payment_election import PaymentElection
 from ...core.prior_domiciliation_election import PriorDomiciliationElection

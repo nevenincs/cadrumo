@@ -16,7 +16,10 @@ from decimal import Decimal
 import pytest
 
 from .....core.aggregation import LedgerIncomeGrounding
-from ..ledger_bindings import unrouted_ledger_renta_income_quantities, unsupported_ledger_renta_income_observations
+from ..ledger_renta_income_bindings import (
+    unrouted_ledger_renta_income_quantities,
+    unsupported_ledger_renta_income_observations,
+)
 from ..schema import ModeloRevision
 from ._ledger_income_chain_oracle_support import modelo_130_revision
 

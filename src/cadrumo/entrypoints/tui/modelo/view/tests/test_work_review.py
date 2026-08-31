@@ -23,11 +23,12 @@ from textual.widgets import (
     Static,
 )
 
+from ......application.modelo import work_addressing
 from ......application.modelo.work_review import ModeloWorkOriginAnomaly
 from ......core.aggregation import BindingSourceKind
 from ......core.config import override_settings
 from ......core.estado_casilla_oficial import EstadoCasillaOficial
-from ......core.i18n._render import SUPPORTED_OUTPUT_LANGUAGES, tr
+from ......core.i18n.render import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ......core.modelo_work_progress_state import ModeloWorkProgressState
 from ......core.operator_action_enums import OperatorActionAxis
 from ......domain.calculations.registry.handoffs import RelationConsumptionChannel
@@ -43,6 +44,7 @@ from ....components.theme import (
 )
 from ....components.widgets import ContentScroll
 from ..work_review import (
+    _WORK_UNIT_ID_PREFIX_LENGTH,
     ModeloWorkReviewApp,
     ModeloWorkReviewScreen,
 )
@@ -699,3 +701,52 @@ async def test_representative_outlier_localizes_opened_filters_at_narrow_width_a
                 light_style = screen.get_style_at(1, 0)
                 assert app.theme == CADRUMO_LIGHT_THEME_NAME
                 assert (dark_style.bgcolor, dark_style.color) != (light_style.bgcolor, light_style.color)
+
+
+@pytest.mark.asyncio
+async def test_the_summary_shows_a_resolvable_prefix_rather_than_the_whole_work_unit_id(
+    tmp_path: Path,
+) -> None:
+    """The shortened identity must be an ADDRESS, not an abbreviation of one.
+
+    The full 64-character id rendered 88 columns and was the binding constraint
+    on this panel at every width below 95. Truncating an identifier an operator
+    may need to use would trade a layout problem for a correctness one -- so
+    what makes this safe is not the shortening but the fact that the resolver
+    accepts a prefix: it matches with ``startswith`` or ``endswith``, so the
+    displayed value is something the system takes.
+
+    Both halves are asserted here because either alone would mislead. That the
+    prefix appears proves the panel shortened; that the FULL id does not appear
+    proves it shortened the line that mattered rather than adding a second one.
+    """
+    review = build_real_modelo_work_review(tmp_path, modelo="130", filing_year=2026, period_code="1T")
+    app = ModeloWorkReviewApp(review)
+
+    async with app.run_test(size=(80, 24)) as pilot:
+        await pilot.pause()
+        summary = str(app.screen.query_one("#modelo-review-summary-lines", Static).content)
+
+        full = str(review.work_unit_id)
+        prefix = full[:_WORK_UNIT_ID_PREFIX_LENGTH]
+        assert len(full) > len(prefix), "this fixture's id is already short enough to prove nothing"
+        assert prefix in summary, "the summary must still identify the work unit"
+        assert full not in summary, (
+            "the summary still carries the whole 64-character id, which is the line that governed "
+            "the panel's wrap at every width below 95"
+        )
+        app.exit(None)
+
+
+def test_the_displayed_prefix_is_a_selector_the_resolver_accepts() -> None:
+    """The claim the shortening rests on, asserted rather than cited.
+
+    If the resolver ever stopped accepting a prefix, the panel would be showing
+    an identity an operator cannot use, and nothing about the panel itself
+    would change to say so.
+    """
+    source = Path(work_addressing.__file__).read_text(encoding="utf-8")
+    assert "startswith(request.operator_work_unit_id)" in source, (
+        "the work-unit resolver no longer matches on a prefix, so the summary's shortened id has "
+        "stopped being a valid address"
+    )

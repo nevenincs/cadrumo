@@ -57,8 +57,8 @@ from ..core.identity import (
 )
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.operator_action_enums import ActionEvidenceProvenance
-from ..core.parsing._codes import normalise_iso_4217_currency
-from ..core.parsing._dates import parse_date
+from ..core.parsing.codes import normalise_iso_4217_currency
+from ..core.parsing.dates import parse_date
 from ..domain.iva.establishment import country_code_for_printed_country_name
 from .invoice_field_contract import (
     ANCHOR_KEY_SUFFIX,

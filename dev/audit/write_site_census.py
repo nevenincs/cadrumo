@@ -139,7 +139,7 @@ commits this campaign's own founding defect -- a name re-typed instead of
 read from its declaration, mirrored as a name MATCHED instead of ANCHORED.
 Measured on the production set once anchor resolution replaced name
 matching: 2 of 6 raw matches were a different tree entirely
-(``domain/calculations/registry/_loader.py``'s ``manifest.toml`` roots at
+(``domain/calculations/registry/loader.py``'s ``manifest.toml`` roots at
 ``bundled_path("registry", "aeat")``, the bundled calculation-registry
 tree, not the taxonomy's own bucket ``manifest.toml`` at
 ``<root>/buckets/<bucket_id>/manifest.toml``) -- a 33% false-positive rate a

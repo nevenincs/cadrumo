@@ -15,11 +15,11 @@ from cadrumo.application.registry.source_connectivity_coverage import SourceConn
 from cadrumo.application.registry.temporal_coverage import TemporalCoverageReport, TemporalRevisionCoverage
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.source_connectivity import (
+    SourceConnectivityConnectionIdentity,
     SourceConnectivityEncryptedRevisionProof,
     SourceConnectivityExecutableEvidence,
     SourceConnectivityOperatorReachabilityProof,
 )
-from cadrumo.core.source_connectivity import SourceConnectivityConnectionIdentity
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 
 from ..authorities import RegistryClosureAuthorities

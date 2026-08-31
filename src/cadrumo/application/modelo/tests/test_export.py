@@ -29,12 +29,12 @@ from ....domain.iva_compensation.reconciliation import (
 )
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.modelos.errors import ModeloExportError
-from .._action_errors import (
+from ..action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
     ModeloCrossPeriodCleanStateError,
 )
-from .._export import (
+from ..export import (
     ModeloExportCommand,
     ModeloExportCrossBucketRefusedError,
     ModeloExportNoActiveBucketError,

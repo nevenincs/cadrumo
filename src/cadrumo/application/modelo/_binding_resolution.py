@@ -16,7 +16,7 @@ Completeness and unrouted-input concerns remain advisory or verify-gate
 responsibilities rather than a second projection contract.
 
 See Also:
-    :mod:`~cadrumo.application.modelo._calculation_resolution`:
+    :mod:`~cadrumo.application.modelo.calculation_resolution`:
         Merges these tiers and builds the canonical engine input maps.
     :mod:`~cadrumo.application.modelo.profile_binding`:
         Resolves profile-sourced bindings into decimal, enum, and date channels.
@@ -52,10 +52,7 @@ from .calculation_route import require_calculation_route_resolver
 
 if TYPE_CHECKING:
     from ..live.borrador_100 import Borrador100SnapshotRepository
-from ._semantic_role_resolution import (
-    AmbiguousSemanticRoleCasillaError,
-    casilla_id_for_unique_revision_semantic_role,
-)
+from .semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla_id_for_unique_revision_semantic_role
 
 
 def resolve_borrador_source_tier(
@@ -127,7 +124,7 @@ def resolve_profile_source_tier(
     See Also:
         :class:`~cadrumo.application.aggregation.ProfileSourceResolver`:
             Source resolver that reads the stored user profile facts.
-        :func:`~cadrumo.application.modelo._calculation_resolution.resolve_calculation_binding_channels`:
+        :func:`~cadrumo.application.modelo.calculation_resolution.resolve_calculation_binding_channels`:
             Places this profile tier below backend, borrador, and caller tiers.
 
     Returns:
@@ -199,7 +196,7 @@ def lift_previous_filing_casilla_overrides_to_bindings(
     channels. Existing resolved bindings are never overwritten.
 
     See Also:
-        :func:`~cadrumo.application.modelo._calculation_resolution.resolve_calculation_binding_channels`:
+        :func:`~cadrumo.application.modelo.calculation_resolution.resolve_calculation_binding_channels`:
             Calls this after the precedence overlay settles.
     """
     return _lift_previous_filing_casilla_overrides_to_bindings(revision, casilla_inputs, resolved_bindings)
@@ -238,7 +235,7 @@ def resolve_declaration_period_inputs(
     :class:`~ModeloError`.
 
     See Also:
-        :func:`~cadrumo.application.modelo._semantic_role_resolution.casilla_id_for_unique_revision_semantic_role`:
+        :func:`~cadrumo.application.modelo.semantic_role_resolution.casilla_id_for_unique_revision_semantic_role`:
             Enforces that each populated semantic role resolves to one casilla.
     """
     return _resolve_declaration_period_inputs(revision, filing_year=filing_year, period=period)

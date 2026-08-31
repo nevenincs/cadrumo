@@ -28,7 +28,7 @@ from typing import TYPE_CHECKING, Protocol, cast, runtime_checkable
 
 import pytest
 
-from ..tests._env import temporary_env
+from ..tests.env import temporary_env
 from ..tests.secure_sql import isolated_runtime_profile
 
 if TYPE_CHECKING:

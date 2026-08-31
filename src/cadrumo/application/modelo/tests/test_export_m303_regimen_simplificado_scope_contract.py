@@ -16,7 +16,7 @@ from ...aggregation import (
     resolve_m303_supplier_regime_arrival,
 )
 from ...filing.producer_snapshot import FilingProducerSnapshotError, resolve_m303_filing_facts
-from .._export import _require_m303_regimen_simplificado_scope_matches_profile
+from ..export import _require_m303_regimen_simplificado_scope_matches_profile
 from ._export_test_support import _general_m303_filing_evidence, _profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

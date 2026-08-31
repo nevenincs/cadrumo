@@ -14,7 +14,7 @@ import typer
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...application.ledger.actions_classification import bulk_classify_from_csv as _bulk_classify
 from ...core.bucket_pointer import resolve_active_bucket_id
-from ...core.i18n._render import tr
+from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.transactions.enums import BusinessClassification, is_classified
 from ._common import _bad, emit_envelope

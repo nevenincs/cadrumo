@@ -65,9 +65,6 @@ from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepos
 from ...application.auth.session_types import AeatSession as _AeatSession
 from ...application.auth.sessions import AuthenticatedAeatSessionResult as _AuthenticatedAeatSessionResult
 from ...application.auth.sessions import ensure_authenticated_aeat_session as _ensure_authenticated_aeat_session
-from ...application.calculations._iva_wallet_reconciliation import (
-    reconcile_modelo_303_iva_compensation as _reconcile_modelo_303_iva_compensation,
-)
 from ...application.calculations.iva_compensation_history import (
     IvaCompensationHistoryRepository as _IvaCompensationHistoryRepository,
 )
@@ -99,6 +96,9 @@ from ...domain.iva_compensation.carry_forward import (
 from ...domain.iva_compensation.reconciliation import IvaCompensationAuthoritySource as _IvaCompensationAuthoritySource
 from ...domain.iva_compensation.reconciliation import (
     IvaCompensationReconciliationDecision as _IvaCompensationReconciliationDecision,
+)
+from ..calculations.iva_wallet_reconciliation import (
+    reconcile_modelo_303_iva_compensation as _reconcile_modelo_303_iva_compensation,
 )
 from .errors import LiveApplicationError, LiveApplicationInputError, LiveIvaSurfaceTimeoutError
 from .filed_data_capture import capture_report_path as _capture_report_path

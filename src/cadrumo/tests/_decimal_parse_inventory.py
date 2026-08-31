@@ -217,7 +217,7 @@ import ast
 from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 
-from ._inventory import leaf_name
+from .inventory import leaf_name
 
 TOLERANT_DECIMAL_COERCERS: frozenset[str] = frozenset({"coerce_decimal", "coerce_decimal_strict"})
 """Coercers that reach ``Decimal(str(value))`` without a separator judgement.

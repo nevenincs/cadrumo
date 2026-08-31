@@ -49,17 +49,17 @@ from ....domain.modelos.calculation_revision import (
 )
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
-from .._review_package_recipient_encryption import (
-    decrypt_review_package_for_recipient,
-    encrypt_review_package_for_recipient,
-)
-from .._review_package_recipient_registry import public_key_hex_from_raw_bytes
 from .._review_package_review_only_workspace import (
     ReviewOnlyWorkspaceAuthorityError,
     assert_workspace_permits_official_action,
     open_review_only_workspace,
 )
 from ..review_package import verify_review_package
+from ..review_package_recipient_encryption import (
+    decrypt_review_package_for_recipient,
+    encrypt_review_package_for_recipient,
+)
+from ..review_package_recipient_registry import public_key_hex_from_raw_bytes
 from ._review_package_bytes_support import build_package_bytes
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

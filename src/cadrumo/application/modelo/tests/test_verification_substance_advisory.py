@@ -10,10 +10,7 @@ from ....core.casilla_id import CasillaId
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from ....domain.modelos.errors import ModeloError
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
-from .._verification_actions import (
-    evaluate_advisory_predicate_fires,
-    evaluate_verification_predicates,
-)
+from ..verification_actions import evaluate_advisory_predicate_fires, evaluate_verification_predicates
 from ._verification_substance_support import (
     _CASILLA_00501,
     _CASILLA_01,

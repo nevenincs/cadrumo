@@ -17,10 +17,10 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core.concept_lifecycle import ConceptLifecycle
-from cadrumo.core.modelo import Modelo
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.concept_lifecycle import ConceptLifecycle
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.modelo import Modelo
 
 from .. import (
     ConceptDomain,

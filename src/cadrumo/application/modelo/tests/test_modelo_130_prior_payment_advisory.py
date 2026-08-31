@@ -58,12 +58,12 @@ from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceDiagnostic
 from ...calculations.observations_repository import CalculationObservationRepository
-from .._calculation_actions import (
+from .._prior_payment_advisory import collect_prior_payment_not_deducted_diagnostics
+from ..calculation_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from .._filed_revision_observation import APP_FILING_SOURCE_KIND
-from .._prior_payment_advisory import collect_prior_payment_not_deducted_diagnostics
+from ..filed_revision_observation import APP_FILING_SOURCE_KIND
 from ..work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -14,7 +14,7 @@ from ....domain.bienes_inversion.register import BienInversionIvaRecord, BienInv
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from ....tests.secure_sql import isolated_two_bucket_runtime
 from ...aggregation import IvaLedgerAggregation
-from .._export import _resolve_m303_export_arrivals
+from ..export import _resolve_m303_export_arrivals
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

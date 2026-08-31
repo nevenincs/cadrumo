@@ -96,7 +96,7 @@ CANONICAL_PUBLIC_SYMBOLS: tuple[tuple[str, str], ...] = (
 
 REQUIRED_RELOCATED_PATHS: tuple[str, ...] = (
     "application/auth/__init__.py",
-    "adapters/inbound/justificante/_parser.py",
+    "adapters/inbound/justificante/parser.py",
     "adapters/inbound/justificante/_extract.py",
 )
 

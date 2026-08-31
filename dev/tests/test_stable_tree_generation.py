@@ -96,3 +96,40 @@ def test_pycache_churn_does_not_refuse_a_run(tmp_path: Path) -> None:
 
     with refuse_if_tree_moves(root):
         (cache / "alpha.cpython-313.pyc").write_text("bytecode", encoding="utf-8")
+
+
+def test_a_file_vanishing_mid_generation_reads_as_the_tree_moving(tmp_path: Path) -> None:
+    """A read that fails on a path the generator already found is not a generator bug.
+
+    Left unhandled it surfaces as `FileNotFoundError` naming one file, which
+    looks like a defect in the generator and tells the operator nothing about
+    what to do. It is the tree moving underneath the run, which is the one
+    thing this guard exists to say -- and in a busy worktree it is the FORM
+    that movement usually takes, because a generator enumerates the tree and
+    then reads what it enumerated.
+    """
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src" / "present.py").write_text("x = 1\n", encoding="utf-8")
+
+    with (
+        pytest.raises(TreeMovedDuringGenerationError, match="disappeared"),
+        refuse_if_tree_moves(tmp_path, roots=("src",)),
+    ):
+        raise FileNotFoundError(2, "No such file or directory", str(tmp_path / "src" / "gone.py"))
+
+
+def test_an_unrelated_error_is_not_disguised_as_tree_movement(tmp_path: Path) -> None:
+    """Only a missing FILE means the tree moved; other failures must surface as themselves.
+
+    Widening the catch to every error would make this guard swallow real
+    generator defects and report them as somebody else's churn, which is a
+    worse failure than the confusing traceback it replaces.
+    """
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src" / "present.py").write_text("x = 1\n", encoding="utf-8")
+
+    with (
+        pytest.raises(ValueError, match="a genuine generator defect"),
+        refuse_if_tree_moves(tmp_path, roots=("src",)),
+    ):
+        raise ValueError("a genuine generator defect")

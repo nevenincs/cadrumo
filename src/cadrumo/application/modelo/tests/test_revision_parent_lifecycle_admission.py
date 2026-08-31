@@ -6,9 +6,9 @@ import pytest
 
 from ....core.operator_action_enums import NoRecoveryOutcome
 from ....domain.modelos.calculation_revision import CalculationRevisionState
-from .._action_errors import CalculationRevisionNotFoundError
-from .._filing_actions import file_modelo_revision
-from .._verification_actions import verify_modelo_revision_with_preconditions
+from ..action_errors import CalculationRevisionNotFoundError
+from ..filing_actions import file_modelo_revision
+from ..verification_actions import verify_modelo_revision_with_preconditions
 from ..work_lifecycle import discard_work_unit
 from ._file_flow_support import (
     DEFAULT_130_BASELINE_INPUTS,

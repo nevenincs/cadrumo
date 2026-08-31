@@ -27,7 +27,7 @@ from ....core.operator_action_enums import ActionConditionality, ActionEvidenceP
 from ...operator_actions.models import ConditionEvidence, PreconditionVerdict
 from ...workflow.abort import WorkflowAbortReason
 from ...workflow.run_models import WorkflowResult, WorkflowStage, WorkflowStep
-from .._action_errors import ModeloWorkflowGateError
+from ..action_errors import ModeloWorkflowGateError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

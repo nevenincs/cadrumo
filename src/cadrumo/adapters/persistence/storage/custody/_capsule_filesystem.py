@@ -8,7 +8,8 @@ import sys
 from collections.abc import Mapping
 from pathlib import Path
 
-from ._filesystem_primitives import (
+from .errors import ProfileCustodyRecordError
+from .filesystem_primitives import (
     PROFILE_CUSTODY_COMMIT_FILENAME,
     is_reparse_metadata,
     posix_directory_fd,
@@ -16,7 +17,6 @@ from ._filesystem_primitives import (
     windows_create_file_api,
     windows_file_information_type,
 )
-from .errors import ProfileCustodyRecordError
 
 
 def remove_posix_staging_if_same(parent_fd: int, name: str, identity: os.stat_result) -> None:

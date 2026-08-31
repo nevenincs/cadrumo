@@ -14,9 +14,9 @@ change): ``secret_store/_secret_store.py`` independently hand-typed
 ``_INDEX_FILE_NAME = "index.json"`` alongside
 ``adapters/persistence/storage/storage_path_definitions.py``'s own
 ``SECRET_INDEX_FILENAME = "index.json"``, and
-``core/observability/_context.py`` independently re-declared
+``core/observability/context.py`` independently re-declared
 ``_EVENTS_FILENAME = "events.jsonl"`` instead of importing the declaration
-already living in ``core/observability/_store.py`` (now the public
+already living in ``core/observability/store.py`` (now the public
 ``EVENTS_FILENAME``, promoted by a later, related fix -- see the scope
 section below). Both are gone -- scanning the current tree confirms the fix
 rather than assuming it (see the precision section below).
@@ -37,7 +37,7 @@ A first design flagged any non-authority production constant whose value
 matched the taxonomy vocabulary, at all. Running it against the tree as it
 stood when this gate was written found ``SECRET_INDEX_FILENAME = "index.json"``
 in ``storage_path_definitions.py`` and ``_TRACE_FILENAME`` /
-``_EVENTS_FILENAME`` / ``_ENVELOPE_FILENAME`` in ``core/observability/_store.py``
+``_EVENTS_FILENAME`` / ``_ENVELOPE_FILENAME`` in ``core/observability/store.py``
 -- all four **sole, legitimate, already-canonical declaring sites** for a
 finer-grained (filename-level, not directory-level) piece of vocabulary the
 core taxonomy does not itself model, wrongly flagged as if they duplicated
@@ -109,7 +109,7 @@ import pytest
 
 from ..adapters.persistence.storage.storage_path_definitions import STORAGE_PATH_DEFINITIONS
 from ..core.storage_taxonomy_locations import STORAGE_TAXONOMY
-from ._inventory import aeat_relative, ast_for_path, production_python_files
+from .inventory import aeat_relative, ast_for_path, production_python_files
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -120,8 +120,8 @@ see the sibling test-side gate for the identical reasoning."""
 
 AUTHORITY_MODULES: Final[frozenset[str]] = frozenset(
     {
-        "core/_storage_taxonomy.py",
-        "core/_storage_taxonomy_locations.py",
+        "core/storage_taxonomy.py",
+        "core/storage_taxonomy_locations.py",
     },
 )
 """The two modules excluded from the scan entirely -- not just from being reported.
@@ -142,7 +142,7 @@ too, added deliberately -- not discovered by this gate reddening on it.
 HOMONYM_EXCEPTIONS: Final[frozenset[tuple[str, str]]] = frozenset(
     {
         ("core/classification/__init__.py", "financial"),
-        ("domain/categories/_spending_category.py", "financial"),
+        ("domain/categories/spending_category.py", "financial"),
         # SensitivityClass.FINANCIAL (StrEnum) -- a data-classification axis
         # (how a record must be encrypted/redacted). SpendingCategory.FINANCIAL
         # (StrEnum) -- an IRPF economic-activity deduction category ("gastos
@@ -424,7 +424,7 @@ def test_the_detector_stays_silent_on_a_docstring() -> None:
 
 def test_an_authority_module_is_excluded_from_the_gate_by_path() -> None:
     """The structural exclusion: same literal, same shape, excused only because of which file it is in."""
-    entry = _constants_in("core/_storage_taxonomy.py", 'BUCKETS_SUBPATH = "buckets"\n')[0]
+    entry = _constants_in("core/storage_taxonomy.py", 'BUCKETS_SUBPATH = "buckets"\n')[0]
     assert (entry.module, entry.value) not in HOMONYM_EXCEPTIONS  # not excused via the homonym route
     assert entry.module in AUTHORITY_MODULES  # excused via the structural route instead
 

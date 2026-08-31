@@ -18,7 +18,7 @@ See Also:
     :class:`~cadrumo.application.workflow.SubmissionEngineAdapter`
         Application workflow wrapper that invokes this read-only preflight
         surface from the ``RUNNING_PREFLIGHT`` stage.
-    :mod:`cadrumo.application.modelo._workflow_gate`
+    :mod:`cadrumo.application.modelo.workflow_gate`
         Modelo work-unit bridge that configures the deadline-window checker for
         calculation revisions before verification or local mark-as-filed paths.
 """
@@ -29,9 +29,9 @@ from datetime import date
 
 from ...core.config import Settings
 from ...core.logging import get_logger
-from ._preflight import Preflight
 from .errors import SubmissionError
 from .models import ModeloPresentado, SubmissionStatus
+from .preflight import Preflight
 from .protocols import AuthProviderProbe, DeadlineWindowChecker, ModeloDraftLike, SubmissionRepositoryProtocol
 
 _logger = get_logger(__name__)

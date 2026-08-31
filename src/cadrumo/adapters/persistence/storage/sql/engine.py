@@ -279,7 +279,7 @@ def get_engine(settings: Settings | None = None) -> Engine:
         if cached is not None:
             return cached
         engine = create_engine_from_settings(resolved)
-        from ._orm import Base
+        from .orm import Base
 
         Base.metadata.create_all(engine)
         _engines[key] = engine

@@ -39,9 +39,9 @@ import pytest
 from click.testing import Result
 from pydantic import ValidationError
 
-from ....adapters.outbound.llm._run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
-from ....core.telemetry._schema import TelemetryEventPayload
-from ....core.telemetry._tier import TelemetryTier
+from ....adapters.outbound.llm.run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
+from ....core.telemetry.schema import TelemetryEventPayload
+from ....core.telemetry.tier import TelemetryTier
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.cli_envelope import unwrap_cli_result as _json_result
 from ....tests.cli_runner import invoke_cached_cli

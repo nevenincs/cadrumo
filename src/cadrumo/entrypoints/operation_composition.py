@@ -6,7 +6,7 @@ import secrets
 from datetime import timedelta
 
 from ..adapters.outbound.google.calc_sheets_apply import apply_export_plan, preview_export_plan
-from ..adapters.outbound.storage._factory import build_google_credentials, resolve_drive_root_folder_id
+from ..adapters.outbound.storage.factory import build_google_credentials, resolve_drive_root_folder_id
 from ..adapters.persistence.operations.financial_operand_custody import (
     OperationFinancialOperandCustodyFilesystemRepository,
 )

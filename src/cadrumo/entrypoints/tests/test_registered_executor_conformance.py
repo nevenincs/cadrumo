@@ -28,11 +28,11 @@ from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogue
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...application.auth.operation_definitions import build_auth_operation_definitions
 from ...application.export.google_operation import build_google_sheets_export_operation_definition
-from ...application.modelo._calculation_actions import calculate_modelo_revision
-from ...application.modelo._verification_actions import verify_modelo_revision
+from ...application.modelo.calculation_actions import calculate_modelo_revision
 from ...application.modelo.external_import_actions import import_external_filing_evidence
 from ...application.modelo.operation_definitions import resolve_active_workflow_profile
 from ...application.modelo.tests.justificante_metadata import persist_justificante_metadata
+from ...application.modelo.verification_actions import verify_modelo_revision
 from ...application.modelo.work_lifecycle import create_work_unit
 from ...application.operations.composition import (
     OperationComposedServices,
@@ -587,7 +587,8 @@ def _seeded_modelo_edit_submission(profile_id: UUID) -> tuple[str, object]:
     )
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-    from ...application.modelo._edit_models import (
+    from ...application.modelo.edit_contract import ModeloEditCompatibilityTupleV1, ModeloEditMutationFamily
+    from ...application.modelo.edit_models import (
         ModeloEditAdmissionRequestV1,
         ModeloEditAdmittedV1,
         ModeloEditScalarAddressV1,
@@ -595,12 +596,11 @@ def _seeded_modelo_edit_submission(profile_id: UUID) -> tuple[str, object]:
         ModeloEditSubmissionV1,
         ModeloScalarEditIntentV1,
     )
-    from ...application.modelo._edit_services import (
+    from ...application.modelo.edit_services import (
         admit_modelo_edit,
         modelo_edit_request_schema_identity,
         modelo_edit_result_schema_identity,
     )
-    from ...application.modelo.edit_contract import ModeloEditCompatibilityTupleV1, ModeloEditMutationFamily
     from ...application.modelo.operation_definitions import ModeloEditApplySubmissionV1
     from ...application.modelo.work_addressing import ModeloExactWorkUnitTarget
     from ...application.modelo.workspace_models import ModeloWorkspaceExactWorkUnitTargetV1
@@ -1092,7 +1092,7 @@ def test_the_filing_authority_succeeds_on_the_same_fixture_its_operation_fails_o
     path is sound and the defect is in the executor or the supervisor -- and
     nobody has to repeat the investigation to find that out.
     """
-    from ...application.modelo._filing_actions import file_modelo_revision
+    from ...application.modelo.filing_actions import file_modelo_revision
 
     with _runtime(tmp_path / "authority-control", cleanup=_CloseWitness()) as (_driver, _registry, profile_id):
         revision_id, _report_id = _seeded_modelo_verification_report(profile_id)
@@ -1105,3 +1105,4 @@ def test_the_filing_authority_succeeds_on_the_same_fixture_its_operation_fails_o
         )
 
         assert record is not None, "the filing authority produced no record for a verified-complete revision"
+

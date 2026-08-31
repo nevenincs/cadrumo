@@ -45,7 +45,7 @@ from .._modelo_bindings import (
     LedgerRentaIncomeAggregationSourceResolver,
 )
 from .._source_mesh import CalculationSourceContext, CalculationSourceResolution
-from ._renta_income_aggregation_support import _actividad_transaction
+from .renta_income_aggregation_support import _actividad_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

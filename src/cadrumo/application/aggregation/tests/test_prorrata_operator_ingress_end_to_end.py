@@ -54,7 +54,7 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.secure_sql import isolated_runtime_profile
-from ...prorrata_register._service import ProrrataRegisterService
+from ...prorrata_register.service import ProrrataRegisterService
 from .. import aggregate_iva_ledger_observations_from_repositories
 from .._iva_ledger import resolve_iva_ledger_binding_values
 

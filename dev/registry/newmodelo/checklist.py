@@ -126,7 +126,7 @@ CHECKLIST: tuple[ChecklistItem, ...] = (
     ChecklistItem(
         title="Enroll the modelo id in the core Modelo enum",
         detail=(
-            "src/cadrumo/core/_modelo.py: add the new modelo's Modelo.M<code> member so "
+            "src/cadrumo/core/modelo.py: add the new modelo's Modelo.M<code> member so "
             "production code references it through the enum, never a bare string literal "
             "(aeat-registry-authority-flow); the registry-parity gate binds enum "
             "members to registry_modelo_codes()."

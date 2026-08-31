@@ -26,15 +26,15 @@ from __future__ import annotations
 
 import typer
 
-from ...adapters.outbound.aeat.export._registry_record_renderer import RegistryFixedWidthRecordRenderer
-from ...application.modelo._m145_communication_records import (
+from ...adapters.outbound.aeat.export.registry_record_renderer import RegistryFixedWidthRecordRenderer
+from ...application.modelo.m145_communication_period import M145CommunicationPeriod
+from ...application.modelo.m145_communication_records import (
     create_m145_communication_record,
     export_m145_communication_record,
     mark_m145_communication_record_delivered_to_payer,
     mark_m145_communication_record_locally_completed,
     validate_m145_communication_record,
 )
-from ...application.modelo.m145_communication_period import M145CommunicationPeriod
 from ._common import active_bucket_id_or_refuse
 from ._modelo_behavior_support import require_active_profile
 from ._modelo_cli_support import parse_casilla_override, resolve_default_actor

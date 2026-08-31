@@ -12,8 +12,8 @@ from __future__ import annotations
 
 import typer
 
-from ...application.bienes_inversion._service import BienesInversionRegisterService
-from ...core.i18n._render import tr
+from ...application.bienes_inversion.service import BienesInversionRegisterService
+from ...core.i18n.render import tr
 from ...domain.bienes_inversion.register import (
     BienInversionDisposal,
     BienInversionDisposalRegime,

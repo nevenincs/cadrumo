@@ -241,7 +241,7 @@ def _compute_loader_code_fingerprint(roots: Iterable[type[BaseModel]] | None = N
       :func:`_derive_embedded_foreign_types` rather than remembered in a hand
       list. Each derived type contributes its ``module.qualname`` marker and the
       bytes of its TRUE defining file, so a change to the private module that
-      defines it (``core/_period.py``, ``domain/iva/_schema.py``) invalidates the
+      defines it (``core/period.py``, ``domain/iva/schema.py``) invalidates the
       cache even though no registry module moved.
 
     Any change to either surface yields a new key, so pre-change caches can never

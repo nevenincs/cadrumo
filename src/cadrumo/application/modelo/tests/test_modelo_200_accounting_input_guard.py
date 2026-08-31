@@ -31,9 +31,9 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ...tests._wizard_catalogue_fixtures import register_wizard_catalogue
-from .._action_errors import ModeloAggregationBindingError
-from .._calculation_actions import (
+from ...tests.wizard_catalogue_fixtures import register_wizard_catalogue
+from ..action_errors import ModeloAggregationBindingError
+from ..calculation_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )

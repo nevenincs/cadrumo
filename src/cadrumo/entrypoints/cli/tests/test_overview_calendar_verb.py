@@ -25,7 +25,7 @@ from ....application.user_profile.projections import record_to_values
 from ....core.classification.policies import SensitivityClass
 from ....core.config import override_settings
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
-from ....core.i18n._render import clear_output_language_cache
+from ....core.i18n.render import clear_output_language_cache
 from ....core.period import Period
 from ....core.time.clock import frozen_clock, now, today_madrid
 from ....domain.calculations.registry.authority import bundled_authority

@@ -30,8 +30,8 @@ from __future__ import annotations
 import pytest
 
 from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
-from .._command_spec import CommandSpecNode, ParameterSpec
-from .._command_specs import COMMAND_GRAPH
+from ..command_spec import CommandSpecNode, ParameterSpec
+from ..command_specs import COMMAND_GRAPH
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.application.modelo._preconditions import build_modelo_precondition_failure
+from cadrumo.application.modelo.preconditions import build_modelo_precondition_failure
 from cadrumo.application.operator_actions.preconditions import no_action_precondition_verdict
 from cadrumo.core.json_contract import EnvelopeStatus
 from cadrumo.core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome

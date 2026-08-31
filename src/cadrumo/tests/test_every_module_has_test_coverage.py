@@ -46,7 +46,7 @@ from typing import Final
 
 import pytest
 
-from ._inventory import REPO_ROOT, SRC_CADRUMO, ast_for_path, module_name, package_python_files, repo_relative
+from .inventory import REPO_ROOT, SRC_CADRUMO, ast_for_path, module_name, package_python_files, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

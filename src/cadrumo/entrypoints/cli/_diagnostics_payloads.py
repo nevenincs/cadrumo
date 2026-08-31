@@ -29,8 +29,8 @@ from pydantic import NonNegativeInt, field_validator, model_validator
 
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.json_contract import OutputSchema
-from ...core.telemetry._schema import TelemetryEventPayload
-from ...core.telemetry._tier import TelemetryTier
+from ...core.telemetry.schema import TelemetryEventPayload
+from ...core.telemetry.tier import TelemetryTier
 from ...core.text_bounds import NonEmptyStr, PositiveCount
 from ...core.time.date_range import validate_inclusive_iso_date_range
 from ...core.unit_proportion import is_unit_proportion

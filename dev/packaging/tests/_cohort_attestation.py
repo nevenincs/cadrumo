@@ -40,7 +40,7 @@ def add_test_runtime_wheelhouse(
         "platform_floors": {
             "linux-aarch64": "glibc-2.28",
             "linux-x86-64": "glibc-2.28",
-            "macos-arm64": "macos-11.0",
+            "macos-arm64": "macos-14.0",
             "windows-x86-64": "windows-10",
         },
         "platforms": {

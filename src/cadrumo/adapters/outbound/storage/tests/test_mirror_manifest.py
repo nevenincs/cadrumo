@@ -16,7 +16,8 @@ from .....tests.secure_sql import isolated_runtime_profile
 from ....persistence.storage.namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from ....persistence.storage.namespace_taxonomy import StorageRemoteMirrorPolicy
 from .._local import LocalFileSystemProvider
-from .._mirror_manifest import (
+from ..errors import OutboundStorageIntegrityError
+from ..mirror_manifest import (
     REMOTE_MIRROR_MANIFEST_NAMESPACE,
     REMOTE_MIRROR_MANIFEST_SCHEMA_VERSION,
     build_remote_mirror_namespace_manifest,
@@ -27,8 +28,7 @@ from .._mirror_manifest import (
     put_remote_mirror_namespace_manifest,
     remote_mirror_object_key_hmac,
 )
-from .._records import RemoteMirrorIssueKind, RemoteMirrorNamespaceManifest
-from ..errors import OutboundStorageIntegrityError
+from ..records import RemoteMirrorIssueKind, RemoteMirrorNamespaceManifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -620,7 +620,7 @@ def test_manifest_refuses_child_objects_from_another_namespace() -> None:
     inspected clean and would pull another namespace's ciphertext under the
     target's identity.
     """
-    from .._records import RemoteMirrorObjectManifest
+    from ..records import RemoteMirrorObjectManifest
 
     def _entry(namespace: str) -> RemoteMirrorObjectManifest:
         return RemoteMirrorObjectManifest(
@@ -653,7 +653,7 @@ def test_manifest_refuses_child_objects_from_another_namespace() -> None:
 
 def test_manifest_refuses_a_mixed_namespace_object_set() -> None:
     """One foreign child among genuine ones is refused, and the refusal names it."""
-    from .._records import RemoteMirrorObjectManifest
+    from ..records import RemoteMirrorObjectManifest
 
     def _entry(namespace: str, key_char: str) -> RemoteMirrorObjectManifest:
         return RemoteMirrorObjectManifest(

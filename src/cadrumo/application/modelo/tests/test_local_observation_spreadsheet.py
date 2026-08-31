@@ -9,8 +9,8 @@ from zipfile import ZIP_DEFLATED, ZipFile
 import pytest
 from openpyxl import Workbook, load_workbook
 
-from .._action_errors import ModeloLocalObservationError
-from .._local_observation_spreadsheet import parse_casilla_value_spreadsheet
+from ..action_errors import ModeloLocalObservationError
+from ..local_observation_spreadsheet import parse_casilla_value_spreadsheet
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

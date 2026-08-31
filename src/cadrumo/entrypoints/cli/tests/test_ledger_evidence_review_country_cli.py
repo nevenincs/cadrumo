@@ -46,7 +46,7 @@ from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.config import load_settings
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha2
-from ._ledger_ux_support import _invoke, open_ledger_ux_session
+from .ledger_ux_support import _invoke, open_ledger_ux_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

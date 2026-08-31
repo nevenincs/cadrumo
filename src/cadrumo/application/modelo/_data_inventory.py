@@ -37,7 +37,7 @@ from ...core.logging import get_logger
 from ...core.period import Period
 from ...core.resources.bundled_data import bundled_path
 from ...domain.calculations.registry.authority import bundled_authority
-from ...domain.calculations.registry.bindings import bound_casilla_binding_ids
+from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
 from ...domain.calculations.registry.ids import (
     BindingId,
     LegalRefId,
@@ -53,7 +53,7 @@ from ...domain.calculations.registry.schema import DataBindingDefinition
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.calculations.registry.temporal import select_revision
-from ._binding_readiness import profile_resolvable_binding_ids
+from .binding_readiness import profile_resolvable_binding_ids
 
 _log = get_logger(__name__)
 

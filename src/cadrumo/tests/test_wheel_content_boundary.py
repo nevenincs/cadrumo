@@ -40,7 +40,7 @@ from pathlib import Path
 import pytest
 
 from ..core.directory_scan import scan_directory
-from ._inventory import REPO_ROOT
+from .inventory import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

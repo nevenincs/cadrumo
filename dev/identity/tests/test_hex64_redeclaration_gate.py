@@ -16,7 +16,7 @@ the shape somewhere else", which is the question that went unasked while the
 bypasses accumulated.
 
 WHAT THIS GATE ASSERTS, and deliberately as a PROPERTY rather than a tally: no
-production module outside ``core/_hex.py`` declares the hex-64 shape, except
+production module outside ``core/hex.py`` declares the hex-64 shape, except
 the sites named in the census's allowlist with a stated reason. A hardcoded
 count would encode the moment it was written, train every later author to bump
 the constant, and then detect nothing.

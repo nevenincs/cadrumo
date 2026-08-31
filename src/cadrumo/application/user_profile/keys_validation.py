@@ -1,6 +1,6 @@
 """PROFILE_KEYS-driven validation projection used by the CLI status surface.
 
-The wizard catalogue (``application/wizard/_catalogue.py``) declares
+The wizard catalogue (``application/wizard/catalogue.py``) declares
 each ``WizardQuestion.profile_key`` as a canonical schema-TOML path
 (e.g. ``identity.tax_id``, ``preferences.output_language``).
 ``compile_profile_keys`` produces :data:`PROFILE_KEYS` as a tuple of

@@ -22,11 +22,11 @@ from pathlib import Path
 import pytest
 
 from .._constants import CSV_EXTENSIONS, OFX_EXTENSIONS, PDF_EXTENSION, XLSX_EXTENSION
-from .._csv import CsvProvider
 from .._detection import provider_for_extension
 from .._ofx import OfxProvider
 from .._pdf_n26 import PdfN26Provider
 from .._xlsx import XlsxProvider
+from ..csv import CsvProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 

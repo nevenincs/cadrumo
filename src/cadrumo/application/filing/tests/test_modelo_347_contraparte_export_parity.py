@@ -230,7 +230,7 @@ def test_clave_c_uses_its_own_lower_floor_alongside_the_general_one(revision_id:
 @pytest.mark.parametrize("revision_id", _REPOINTED_REVISIONS)
 def test_binding_rows_rendering_emits_one_occurrence_per_counterparty(revision_id: str) -> None:
     """The renderer itself, not just the resolver, emits every distinct counterparty row."""
-    from .._record_renderer import _record_render_rows
+    from ..record_renderer import _record_render_rows
 
     revision = _revision(revision_id)
     record = _declarado_record(revision)

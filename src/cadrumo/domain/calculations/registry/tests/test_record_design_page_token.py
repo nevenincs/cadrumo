@@ -27,7 +27,8 @@ from __future__ import annotations
 
 import pytest
 
-from ..record_design import _page_label_from_token, _recovered_record_identity, extract_record_design
+from ..record_design import extract_record_design
+from ..record_design_pdf_state import _page_label_from_token, _recovered_record_identity
 from ..record_design_schema import RecordDesignField, RecordDesignSheet
 from .test_every_bundled_design_is_read_or_reported import _bundled_designs
 

@@ -25,8 +25,11 @@ from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
-from .. import _edit_execution, _edit_facade, _edit_models, _edit_services, _revision_persistence
-from .._edit_models import (
+from .. import _edit_execution, _edit_facade, _revision_persistence
+from .. import edit_models as _edit_models
+from .. import edit_services as _edit_services
+from ..edit_contract import ModeloEditCompatibilityTupleV1
+from ..edit_models import (
     ModeloEditAdmissionRequestV1,
     ModeloEditAdmittedV1,
     ModeloEditBaselineV1,
@@ -34,8 +37,7 @@ from .._edit_models import (
     ModeloEditMutationResultReceiptV1,
     ModeloEditStaleBaselineRefusalV1,
 )
-from .._edit_services import admit_modelo_edit, modelo_edit_request_schema_identity, modelo_edit_result_schema_identity
-from ..edit_contract import ModeloEditCompatibilityTupleV1
+from ..edit_services import admit_modelo_edit, modelo_edit_request_schema_identity, modelo_edit_result_schema_identity
 from ..work_addressing import ModeloExactWorkUnitTarget
 from ..workspace_models import ModeloWorkspaceExactWorkUnitTargetV1, ModeloWorkspaceTargetV1
 
@@ -123,7 +125,7 @@ def test_baseline_proof_admits_the_writable_scalar_surface_and_no_fabricated_row
 
 def test_stale_baseline_refusal_is_typed_and_never_a_domain_refusal_code() -> None:
     """Compare-and-swap staleness is exclusively the typed refusal."""
-    from .._edit_models import ModeloEditRefusalCode
+    from ..edit_models import ModeloEditRefusalCode
 
     refusal = ModeloEditStaleBaselineRefusalV1(
         baseline_id="a" * 64,

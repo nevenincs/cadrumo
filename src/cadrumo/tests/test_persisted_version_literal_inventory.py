@@ -55,7 +55,7 @@ from typing import TYPE_CHECKING, NamedTuple
 
 import pytest
 
-from ._inventory import discover_test_control_modules, production_ast_items, repo_relative
+from .inventory import discover_test_control_modules, production_ast_items, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

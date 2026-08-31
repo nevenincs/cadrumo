@@ -1,7 +1,7 @@
 """The Art. 81.1 post-birth alta increment, resolved through the real production path.
 
 ``resolve_maternidad_meses`` is what the calculate path actually calls
-(:func:`~cadrumo.application.modelo._calculate_input.apply_calculation_shortcut_inputs`
+(:func:`~cadrumo.application.modelo.calculate_input.apply_calculation_shortcut_inputs`
 consumes it via ``_resolved_maternidad_meses``). These tests drive it directly
 against the resident registry authority and a real
 :class:`~cadrumo.domain.user_profile.values.UserProfileRecord` -- no mocks, no

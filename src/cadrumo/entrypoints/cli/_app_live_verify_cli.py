@@ -17,7 +17,7 @@ from ...application.live.verify import (
     VerifySurface,
     VerifyVerdict,
 )
-from ...core.i18n._render import tr
+from ...core.i18n.render import tr
 from ...core.identity import tax_id_identity_token
 from ...core.time.clock import now
 from ._common import active_bucket_id_or_refuse, emit_envelope

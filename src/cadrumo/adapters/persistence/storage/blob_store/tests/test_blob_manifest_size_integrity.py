@@ -27,7 +27,7 @@ import pytest
 from ......core.classification.policies import SensitivityClass
 from ......core.external_constants import UTF_8_ENCODING
 from ...errors import BlobIntegrityError
-from .._blob_store import EncryptedBlobStore
+from ..blob_store import EncryptedBlobStore
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

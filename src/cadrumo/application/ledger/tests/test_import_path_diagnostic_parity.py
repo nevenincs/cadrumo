@@ -22,7 +22,7 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.inbound.financial.providers._base import ParsedLedgerRow
+from ....adapters.inbound.financial.providers.base import ParsedLedgerRow
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import TransactionCatalogue, derive_import_fingerprint, derive_transaction_id
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

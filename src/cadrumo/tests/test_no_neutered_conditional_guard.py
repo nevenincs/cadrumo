@@ -31,7 +31,7 @@ import ast
 
 import pytest
 
-from ._inventory import package_ast_items, repo_relative
+from .inventory import package_ast_items, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

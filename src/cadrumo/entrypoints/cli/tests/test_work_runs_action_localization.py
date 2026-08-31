@@ -30,7 +30,7 @@ from ....application.workflow.run_models import (
     WorkflowStep,
 )
 from ....core.errors.hierarchy import SiteHealthState
-from ....core.i18n._render import SUPPORTED_OUTPUT_LANGUAGES
+from ....core.i18n.render import SUPPORTED_OUTPUT_LANGUAGES
 from ....core.modelo import Modelo
 from ....core.operator_action_enums import (
     ActionArgumentSource,

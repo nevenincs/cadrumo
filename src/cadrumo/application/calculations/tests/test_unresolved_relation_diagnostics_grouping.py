@@ -15,7 +15,7 @@ import pytest
 
 from ....core.casilla_id import validated_casilla_id
 from ....domain.calculations.registry.relations import RegistryFoldRequirement
-from .._relation_prefill import _unresolved_relation_diagnostics
+from ..relation_prefill import _unresolved_relation_diagnostics
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -37,7 +37,7 @@ from typing import TYPE_CHECKING
 import typer
 
 from ...application.operator_actions.models import ActionReference
-from ...core.i18n._render import tr
+from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedNoticeAction
 from ...core.output_rendering import OutputFormat
 from ...domain.iva.classification import InvoiceKind
@@ -51,7 +51,7 @@ from ._common import (
     resolve_cli_precondition_action,
     resolve_notice_action,
 )
-from ._config._status_rendering import precondition_action_lines
+from ._config.status_rendering import precondition_action_lines
 from ._ledger_evidence_batch_payloads import EvidenceBatchResult
 
 if TYPE_CHECKING:

@@ -19,7 +19,7 @@ from ....persistence.storage.namespace_registry import STORAGE_NAMESPACE_REGISTR
 from ....persistence.storage.storage_path_definitions import BUCKET_BLOBS_DIRNAME, BUCKETS_DIRNAME
 from .._local import _SIDECAR_EXTENSION
 from .._object_name import _HMAC_PREFIX_LENGTH, sanitize_provider_object_label
-from .._path_budget import windows_worst_case_object_path_suffix_length
+from ..path_budget import windows_worst_case_object_path_suffix_length
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

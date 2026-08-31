@@ -1,13 +1,13 @@
 """The local storage provider's namespace fan-out matches its declared grammar.
 
 ``LocalFileSystemProvider`` is production's Google-Drive-alternative
-backend, constructed by ``_factory.py`` against
+backend, constructed by ``factory.py`` against
 ``bucket_paths(root, profile).blobs_dir`` -- genuinely enrolled
 (``BUCKET_BLOBS``) at its own root. But the provider then fans out one
 directory per outbound-attachment namespace beneath that root, and nothing
 declared that fan-out's shape until now. This drives a real ``put()`` through
 the real production layout (root anchored at ``buckets/<bucket_id>/blobs/``,
-matching how ``_factory.py`` constructs it) and checks the real resulting
+matching how ``factory.py`` constructs it) and checks the real resulting
 paths.
 """
 
@@ -36,7 +36,7 @@ def storage_root(tmp_path: Path) -> Path:
 
 @pytest.fixture
 def provider(storage_root: Path) -> LocalFileSystemProvider:
-    # The exact construction _factory.py uses for ProviderKind.LOCAL_FILESYSTEM.
+    # The exact construction factory.py uses for ProviderKind.LOCAL_FILESYSTEM.
     return LocalFileSystemProvider(bucket_paths(storage_root, "primary").blobs_dir)
 
 

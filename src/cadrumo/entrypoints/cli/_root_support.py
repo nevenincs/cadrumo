@@ -7,13 +7,13 @@ import typer
 from ...core.cli_metadata import is_metadata_invocation as _is_metadata_invocation
 from ...core.json_contract import strict_round_trip as _strict_round_trip
 from ...core.product_identity import PRODUCT_IDENTITY as _PRODUCT_IDENTITY
-from ._command_specs import COMMAND_GRAPH as _COMMAND_GRAPH
 from ._common import (
     active_profile_label,
     attach_cli_policy_verdict,
     emit_envelope,
     requested_cli_leaf,
 )
+from .command_specs import COMMAND_GRAPH as _COMMAND_GRAPH
 
 
 def _emit_version_report_and_exit(*, detail: bool) -> None:
@@ -58,8 +58,8 @@ def _emit_root_help_and_exit(ctx: typer.Context) -> None:
 
 def _root_profile_secret_help_lines() -> tuple[str, ...]:
     """Project graph-owned root profile-secret options into curated help."""
-    from ...core.i18n._render import tr
-    from ._command_spec import OptionSpec
+    from ...core.i18n.render import tr
+    from .command_spec import OptionSpec
 
     root = _COMMAND_GRAPH.by_key()["root"]
     options = tuple(
@@ -89,8 +89,8 @@ def _root_profile_secret_help_lines() -> tuple[str, ...]:
 
 def _root_tui_help_lines() -> tuple[str, ...]:
     """Project the graph-owned global TUI request into curated root help."""
-    from ...core.i18n._render import tr
-    from ._command_spec import OptionSpec
+    from ...core.i18n.render import tr
+    from .command_spec import OptionSpec
 
     root = _COMMAND_GRAPH.by_key()["root"]
     option = next(
@@ -339,7 +339,7 @@ def _is_introspection_only_invocation(ctx: typer.Context) -> bool:
     capture staged by :class:`CadrumoTyperGroup.invoke` (which works for both
     real-process and in-process invocations).
     """
-    from ._command_suggestions import INVOCATION_REMAINDER_META_KEY
+    from .command_suggestions import INVOCATION_REMAINDER_META_KEY
 
     remainder = list(ctx.meta.get(INVOCATION_REMAINDER_META_KEY, ()))
     if _is_metadata_invocation(remainder):
@@ -383,7 +383,7 @@ def _verb_path_from_context(ctx: typer.Context) -> str | None:
     subcommand plus the unparsed remainder so prefix matching against
     :data:`BOOTSTRAP_EXEMPT_VERB_PATHS` continues to work.
     """
-    from ._command_suggestions import INVOCATION_REMAINDER_META_KEY
+    from .command_suggestions import INVOCATION_REMAINDER_META_KEY
 
     captured = list(ctx.meta.get(INVOCATION_REMAINDER_META_KEY, ()))
     if captured:

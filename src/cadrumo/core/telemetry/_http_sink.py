@@ -54,7 +54,7 @@ from typing import TYPE_CHECKING
 from ..external_constants import UTF_8_ENCODING
 
 if TYPE_CHECKING:
-    from ._schema import TelemetryEventPayload
+    from .schema import TelemetryEventPayload
 
 __all__ = ["HttpTelemetrySink"]
 

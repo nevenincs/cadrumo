@@ -490,7 +490,7 @@ def _tool_arg_limit(value: object, default: int) -> int:
 
 def _declined_message(*, command_key: str, decision: ConfirmDecision) -> str:
     """The client-relayed, localized text for a not-confirmed call."""
-    from cadrumo.core.i18n._render import tr
+    from cadrumo.core.i18n.render import tr
 
     return tr(
         "mcp.elicitation.confirm.declined",

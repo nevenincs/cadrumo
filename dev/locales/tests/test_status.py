@@ -61,6 +61,28 @@ def manager(tmp_path: Path) -> LocaleManager:
     return LocaleManager(src_dir=source_dir, locales_dir=locales_dir)
 
 
+@pytest.fixture
+def sharded_manager(manager: LocaleManager) -> LocaleManager:
+    """Return the same catalogues resharded into per-locale shard directories.
+
+    Production ships this shape, not the flat one: each locale is a directory
+    of ``*.yml`` shards rather than a single file. The catalogue content is
+    byte-identical to the flat fixture and lands in one shard, so this isolates
+    discovery: any partition difference between the two layouts is a discovery
+    defect, not a classification one. Multi-shard deep merging is a separate
+    contract and is covered by the sharded-manager tests.
+    """
+    locales_dir = manager.locales_dir
+    for locale in _LOCALES:
+        flat = locales_dir / f"{locale}.yml"
+        body = flat.read_text(encoding="utf-8")
+        flat.unlink()
+        shard_dir = locales_dir / locale
+        shard_dir.mkdir()
+        (shard_dir / "audit.yml").write_text(body, encoding="utf-8")
+    return manager
+
+
 def test_catalogue_status_partitions_every_required_key(manager: LocaleManager) -> None:
     """Each defect lands in exactly one state and the partition sums to required."""
     by_file = {record.locale_file: record for record in catalogue_status(manager)}
@@ -193,3 +215,34 @@ def test_status_command_reports_catalogue_partition(manager: LocaleManager) -> N
     assert rows["hu.yml"]["identical_allowlisted"] == "1"
     assert rows["hu.yml"]["identical_pending"] == "1"
     assert rows["es.yml"]["extra"] == "1"
+
+
+def test_catalogue_status_reads_the_sharded_layout_production_ships(
+    sharded_manager: LocaleManager,
+    manager: LocaleManager,
+) -> None:
+    """Discovery must find shard directories, not just legacy flat files.
+
+    A discovery pass that globs one catalogue shape does not fail loudly when
+    the tree carries the other -- it returns nothing, and nothing partitions
+    into a clean report. This asserts the sharded layout yields one record per
+    locale so that silence cannot pass as a measurement.
+    """
+    records = catalogue_status(sharded_manager)
+
+    assert {record.locale_file for record in records} == {f"{locale}.yml" for locale in _LOCALES}
+    assert records, "sharded catalogues produced no status rows"
+    for record in records:
+        assert record.required > 0, f"{record.locale_file} reported a zero required set"
+
+
+def test_sharded_and_flat_layouts_partition_identically(
+    tmp_path: Path,
+    sharded_manager: LocaleManager,
+) -> None:
+    """The same catalogue content must classify the same in either layout."""
+    sharded = {record.locale_file: record.model_dump() for record in catalogue_status(sharded_manager)}
+
+    assert sharded, "sharded catalogues produced no status rows"
+    assert sharded["ca.yml"]["required"] == sharded["en.yml"]["required"]
+    assert sharded["es.yml"]["extra"] >= 1

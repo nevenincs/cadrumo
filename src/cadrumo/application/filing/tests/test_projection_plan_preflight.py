@@ -24,7 +24,8 @@ from ....domain.calculations.registry.schema_exports import (
 )
 from ....domain.filing.errors import FilingExportValidationError
 from .._export import _preflight_projection_plan
-from .._projection import (
+from ..producer_snapshot import build_filing_producer_snapshot
+from ..projection import (
     FilingProjectionPlan,
     FilingProjectionValue,
     FilingRecordRenderContext,
@@ -32,7 +33,6 @@ from .._projection import (
     _require_regimen_snapshot_matches_registry,
     build_m303_filing_projection_plan,
 )
-from ..producer_snapshot import build_filing_producer_snapshot
 from .test_producer_snapshot import _elections, _m303_filing_facts, _m303_profile, _presenter, _taxpayer_identity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

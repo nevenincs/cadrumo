@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import pytest
 
-from .._command_spec import CommandSpecGraph
-from .._config._profile_command_specs import PROFILE_COMMAND_SPECS
+from .._config.profile_command_specs import PROFILE_COMMAND_SPECS
 from .._root_command_specs import ROOT_COMMAND_SPECS
+from ..command_spec import CommandSpecGraph
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

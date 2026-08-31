@@ -141,7 +141,7 @@ def _walk_modelos() -> Iterator[EnrolmentCandidate]:
     the forms this product actually models, which is what
     ``aeat-documentation`` asks of an approved concept.
     """
-    from cadrumo.core.modelo import Modelo, NON_REGISTRY_MODELOS
+    from cadrumo.core.modelo import NON_REGISTRY_MODELOS, Modelo
 
     for modelo in sorted(Modelo, key=lambda member: member.value):
         if modelo in NON_REGISTRY_MODELOS:

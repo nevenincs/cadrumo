@@ -172,7 +172,8 @@ def repair_quarantine(
     dry_run: bool = False,
 ) -> None:
     """Move secure-object rows that fail tag verification into quarantine."""
-    from .._config_payloads import QuarantineNamespacePayload, RepairQuarantineResult
+    from .._config_payloads import RepairQuarantineResult
+    from .._config_quarantine_payloads import QuarantineNamespacePayload
 
     if not dry_run and not yes:
         raise _CliRefusedBoundaryError(

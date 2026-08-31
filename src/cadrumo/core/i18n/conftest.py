@@ -12,7 +12,7 @@ from collections.abc import Generator
 
 import pytest
 
-from ._render import _I18N_STRICT_MISSING_KEYS, _I18N_STRICT_PLACEHOLDERS
+from .render import _I18N_STRICT_MISSING_KEYS, _I18N_STRICT_PLACEHOLDERS
 
 
 @pytest.fixture(autouse=True)

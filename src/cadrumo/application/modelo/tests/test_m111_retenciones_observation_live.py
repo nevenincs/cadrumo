@@ -24,7 +24,7 @@ from ...aggregation import (
     RetencionObservationRepository,
     RetencionScheme,
 )
-from .._calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
+from ..calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from ..work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

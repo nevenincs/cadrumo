@@ -23,7 +23,8 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from .._schema import (
+from ..errors import TelemetrySchemaError
+from ..schema import (
     TELEMETRY_METRIC_REGISTRY,
     CounterSpec,
     MetricSchema,
@@ -31,7 +32,6 @@ from .._schema import (
     TimingSpec,
     build_telemetry_payload,
 )
-from ..errors import TelemetrySchemaError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

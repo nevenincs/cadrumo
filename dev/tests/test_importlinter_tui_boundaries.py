@@ -18,6 +18,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 IMPORTLINTER_CONFIG = REPO_ROOT / ".importlinter"
 CONTRACTS = (
     "tui-backend-prohibition",
+    "tui-sibling-entrypoint-prohibition",
     "tui-launcher-only-adapter-wiring",
     "tui-components-independent",
     "tui-feature-independence",
@@ -111,7 +112,7 @@ def test_tui_contracts_accept_the_declared_hexagonal_topology(tmp_path: Path) ->
     return_code, output = _run_import_linter(tmp_path)
 
     assert return_code == 0, output
-    assert "Contracts: 4 kept, 0 broken." in output
+    assert "Contracts: 5 kept, 0 broken." in output
 
 
 def test_launcher_descendant_may_wire_an_adapter_descendant(tmp_path: Path) -> None:
@@ -126,7 +127,7 @@ def test_launcher_descendant_may_wire_an_adapter_descendant(tmp_path: Path) -> N
     return_code, output = _run_import_linter(tmp_path)
 
     assert return_code == 0, output
-    assert "Contracts: 4 kept, 0 broken." in output
+    assert "Contracts: 5 kept, 0 broken." in output
 
 
 @pytest.mark.parametrize(
@@ -153,7 +154,11 @@ def test_launcher_descendant_may_wire_an_adapter_descendant(tmp_path: Path) -> N
             "TUI component implementations depend only on Textual and neutral core presentation",
         ),
         (
-            "cadrumo.entrypoints.tui.operations.worker",
+            # Two ENROLLED features. `operations` is deliberately not among
+            # them -- it is the shared surface every feature may run -- so an
+            # edge out of it no longer crosses this boundary and would prove
+            # nothing here.
+            "cadrumo.entrypoints.tui.secret.vault",
             "from cadrumo.entrypoints.tui.profile import screen\n",
             "TUI feature implementations share components rather than each other",
         ),
@@ -173,4 +178,4 @@ def test_each_tui_boundary_rejects_a_real_import_edge(
 
     assert return_code == 1, output
     assert broken_contract in " ".join(output.split())
-    assert "Contracts: 3 kept, 1 broken." in output
+    assert "Contracts: 4 kept, 1 broken." in output

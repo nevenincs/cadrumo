@@ -28,11 +28,11 @@ _EXTERNAL_IVA_LOCATOR = re.compile(
 )
 _IDENTITY_TOKEN = re.compile(r"^[A-Za-z0-9_.:/-]+$")
 _EXTERNAL_IDENTITY_TOKENS = {
-    "adapters/inbound/einvoice/_parsers.py": frozenset({"vat", "vatid"}),
+    "adapters/inbound/einvoice/parsers.py": frozenset({"vat", "vatid"}),
     "entrypoints/cli/_config/tests/test_apoderado_scopes_payload.py": frozenset({"VAT"}),
 }
 _EXTERNAL_VAT_PROSE_VALUES = {
-    "adapters/inbound/einvoice/_parsers.py": frozenset({"vat"}),
+    "adapters/inbound/einvoice/parsers.py": frozenset({"vat"}),
     "domain/calculations/registry/tests/test_registry_locales_parity.py": frozenset(
         {
             "Output VAT amount at the standard rate (21%)",
@@ -56,7 +56,7 @@ _EXTERNAL_VAT_PROSE_VALUES = {
     ),
 }
 _EXTERNAL_VAT_PROSE_FRAGMENTS = {
-    "adapters/inbound/einvoice/_parsers.py": frozenset({"``VAT``"}),
+    "adapters/inbound/einvoice/parsers.py": frozenset({"``VAT``"}),
     "application/command_search/tests/test_command_ranking_golden.py": frozenset({"file my quarterly VAT"}),
     "entrypoints/cli/tests/test_ledger_evidence_confirm_resolution_cli.py": frozenset(
         {"<cbc:ID>VAT</cbc:ID>"},

@@ -38,7 +38,7 @@ from ....tests import module_name, production_ast_items, repo_relative
 from ..error_codes import ERROR_REGISTRY, ErrorCategory, get_registered_error_code
 from ..hierarchy import CadrumoError
 from ..registry.declared_codes import _ALL_DECLARED_ERROR_CODES
-from . import describe_optional_extras
+from .optional_extras import describe_optional_extras
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -155,7 +155,7 @@ def test_raw_error_declarations_have_single_class_and_code_authority() -> None:
 def test_modelo_calculate_input_errors_have_registered_codes() -> None:
     """The public calculate CLI imports this module before handling overrides."""
 
-    module = importlib.import_module("cadrumo.application.modelo._calculate_input")
+    module = importlib.import_module("cadrumo.application.modelo.calculate_input")
     concrete_errors = [
         error_type
         for _, error_type in inspect.getmembers(module, inspect.isclass)

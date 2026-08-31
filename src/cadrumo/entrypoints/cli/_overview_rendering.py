@@ -46,7 +46,7 @@ from ...application.overview.next_actions import (
     build_overview_status_next_steps,
 )
 from ...application.overview.pipeline_health import ModeloReadinessState
-from ...core.i18n._render import tr
+from ...core.i18n.render import tr
 from ...core.json_contract import (
     Notice,
     NoticeSeverity,

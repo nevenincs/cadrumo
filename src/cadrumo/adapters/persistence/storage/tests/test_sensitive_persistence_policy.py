@@ -87,7 +87,7 @@ _SENSITIVE_SURFACES = (
     # exact failure this entry already suffered once.
     SRC_CADRUMO / "application" / "wizard",
     SRC_CADRUMO / "application" / "user_profile",
-    SRC_CADRUMO / "application" / "filing" / "_history_repository.py",
+    SRC_CADRUMO / "application" / "filing" / "history_repository.py",
     # Four entries below were repointed after the non-vacuity assertion above
     # caught them resolving to nothing: `domain/{attachments,justificante,
     # submission}/_repository.py` and `entrypoints/cli/oauth.py` no longer
@@ -197,7 +197,7 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "tempfile.NamedTemporaryFile",
     ): "shared streaming atomic-write primitive; writes caller-supplied chunks only, no data of its own",
     (
-        "src/cadrumo/adapters/persistence/storage/bucket/_sealed_archive_writer.py",
+        "src/cadrumo/adapters/persistence/storage/bucket/sealed_archive_writer.py",
         "write_sealed_archive",
         "tarfile.open",
     ): "sealed bucket archive writer emits encrypted archive payloads",
@@ -227,12 +227,12 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "target.open",
     ): "redacted diagnostic event store",
     (
-        "src/cadrumo/adapters/persistence/storage/bucket/_lockfile.py",
+        "src/cadrumo/adapters/persistence/storage/bucket/lockfile.py",
         "_try_create_lock",
         "os.open",
     ): "per-bucket concurrency lockfile; non-sensitive O_EXCL lock metadata only",
     (
-        "src/cadrumo/adapters/persistence/storage/bucket/_lockfile.py",
+        "src/cadrumo/adapters/persistence/storage/bucket/lockfile.py",
         "_write_lockfile_pid",
         "os.write",
     ): "per-bucket concurrency lockfile writes the holding PID, not sensitive data",
@@ -351,27 +351,27 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "os.open",
     ): "creates the local custody record, which holds capsule pointers and no financial data",
     (
-        "src/cadrumo/adapters/persistence/storage/custody/_filesystem_primitives.py",
+        "src/cadrumo/adapters/persistence/storage/custody/filesystem_primitives.py",
         "_write_exclusive_descriptor_fsynced",
         "os.write",
     ): "shared exclusive-create writer; writes caller-supplied custody bytes to its own O_EXCL descriptor",
     (
-        "src/cadrumo/adapters/persistence/storage/custody/_filesystem_primitives.py",
+        "src/cadrumo/adapters/persistence/storage/custody/filesystem_primitives.py",
         "posix_directory_fd",
         "os.open",
     ): "O_DIRECTORY identity anchor; writes no bytes",
     (
-        "src/cadrumo/adapters/persistence/storage/custody/_filesystem_primitives.py",
+        "src/cadrumo/adapters/persistence/storage/custody/filesystem_primitives.py",
         "posix_open_child_directory",
         "os.open",
     ): "O_DIRECTORY anchor for one child, opened relative to a pinned parent; writes no bytes",
     (
-        "src/cadrumo/adapters/persistence/storage/custody/_filesystem_primitives.py",
+        "src/cadrumo/adapters/persistence/storage/custody/filesystem_primitives.py",
         "write_exclusive_fsynced",
         "os.open",
     ): "shared O_EXCL create used by every custody file writer",
     (
-        "src/cadrumo/adapters/persistence/storage/custody/_filesystem_primitives.py",
+        "src/cadrumo/adapters/persistence/storage/custody/filesystem_primitives.py",
         "write_exclusive_fsynced_fd",
         "os.open",
     ): "the parent-relative form of the same O_EXCL create, so the target cannot be swapped under it",
@@ -434,7 +434,7 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
     ): "writes those sentinel proof bytes; the sentinel is a verifier, never key material",
     # --- operator-facing secret display -------------------------------------
     (
-        "src/cadrumo/entrypoints/cli/_config/_secure_input.py",
+        "src/cadrumo/entrypoints/cli/_config/secure_input.py",
         "write_to_controlling_terminal",
         "open",
     ): "opens the controlling terminal DEVICE (CONOUT$ / /dev/tty) to show a recovery mnemonic, "

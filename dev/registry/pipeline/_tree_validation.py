@@ -13,8 +13,8 @@ from dataclasses import dataclass
 from datetime import date
 from pathlib import Path, PurePosixPath
 
-from cadrumo.core.link_safety import is_link_like
 from cadrumo.core.directory_scan import iter_directory
+from cadrumo.core.link_safety import is_link_like
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.loader import (

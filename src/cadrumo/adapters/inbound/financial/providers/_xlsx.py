@@ -27,7 +27,8 @@ from openpyxl.worksheet.worksheet import Worksheet
 from .....core.logging import get_logger
 from .....core.workbook import FORMULA_CELL_REFUSAL, first_formula_cell_column
 from .....domain.transactions.raw_transaction import SourceFormat
-from ._base import (
+from ._constants import XLSX_EXTENSION
+from .base import (
     FinancialProvider,
     FinancialValidationError,
     InvalidFinancialSourceError,
@@ -36,8 +37,7 @@ from ._base import (
     archive_cell_text,
     default_currency,
 )
-from ._constants import XLSX_EXTENSION
-from ._csv import (
+from .csv import (
     CSV_LAYOUTS,
     CsvBankLayout,
     _find_column,

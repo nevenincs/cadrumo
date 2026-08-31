@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from ..._command_spec import OptionSpec
+from ...command_spec import OptionSpec
 from .._profile_inventory_specs import PROFILE_INVENTORY_COMMAND_SPECS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

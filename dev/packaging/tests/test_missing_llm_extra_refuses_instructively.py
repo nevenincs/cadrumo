@@ -20,8 +20,8 @@ from pathlib import Path
 import pytest
 
 from cadrumo import llm
-from cadrumo.core.optional_extras import LLM_EXTRA
 from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.optional_extras import LLM_EXTRA
 
 from .._smoke_common import (
     build_companion_wheels,

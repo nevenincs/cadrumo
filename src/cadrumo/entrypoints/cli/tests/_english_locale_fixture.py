@@ -5,7 +5,7 @@ from collections.abc import Iterator
 import pytest
 
 from ....core.config import override_settings
-from ....core.i18n._render import clear_output_language_cache
+from ....core.i18n.render import clear_output_language_cache
 
 
 @pytest.fixture(name="_english_locale", autouse=True)

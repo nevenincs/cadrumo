@@ -67,12 +67,13 @@ from .....application.user_profile.login_session import login_profile
 from .....application.user_profile.profile_record_repository import ProfileRecordRepository
 from .....application.user_profile.registration import register_profile_with_credentials
 from .....core.config import override_settings
-from .....core.i18n._render import clear_output_language_cache
+from .....core.i18n.render import clear_output_language_cache
 from .....core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from .....core.time.clock import now
 from .....domain.user_profile.values import UserProfileFact
 from .....tests.aeat_literal_fixtures import aeat_url
 from .....tests.secure_sql import isolated_profile_storage_root
+from ...components.host import ScreenHostApp
 from ..controller import OperationController
 from ..interactions import (
     OperationModalReviewInteractionV1,
@@ -713,11 +714,7 @@ def test_the_terminal_receipt_reaches_the_receipt_widget(tmp_path: Path) -> None
             watched = await _submit_censal_review(services, profile_id)
             watching = OperationController(services=services, submission=watched, actor_ref=_ACTOR)
 
-            class _Host(App[None]):
-                def on_mount(self) -> None:
-                    self.push_screen(OperationModal(watching))
-
-            host = _Host()
+            host = ScreenHostApp(OperationModal(watching))
             async with host.run_test(size=(120, 40)) as pilot:
                 modal = None
                 for _ in range(200):
@@ -780,11 +777,7 @@ def test_every_action_is_reachable_on_an_eighty_column_terminal(tmp_path: Path, 
             submitted = await _submit_censal_review(services, profile_id)
             controller = OperationController(services=services, submission=submitted, actor_ref=_ACTOR)
 
-            class _Host(App[None]):
-                def on_mount(self) -> None:
-                    self.push_screen(OperationModal(controller))
-
-            host = _Host()
+            host = ScreenHostApp(OperationModal(controller))
             async with host.run_test(size=(80, 24)) as pilot:
                 modal = await _mounted_modal(host, pilot)
                 body = modal.query_one("#operation-modal-body")
@@ -833,11 +826,7 @@ def test_the_action_row_collapses_to_one_row_when_the_body_is_wide(tmp_path: Pat
             submitted = await _submit_censal_review(services, profile_id)
             controller = OperationController(services=services, submission=submitted, actor_ref=_ACTOR)
 
-            class _Host(App[None]):
-                def on_mount(self) -> None:
-                    self.push_screen(OperationModal(controller))
-
-            host = _Host()
+            host = ScreenHostApp(OperationModal(controller))
             async with host.run_test(size=(120, 40)) as pilot:
                 modal = await _mounted_modal(host, pilot)
                 rows = {modal.query_one(selector, Button).region.y for selector in _ACTION_BUTTON_IDS}

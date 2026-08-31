@@ -25,6 +25,7 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
 from textual.screen import Screen
+from textual.widget import AwaitMount
 from textual.widgets import (
     Button,
     DataTable,
@@ -68,7 +69,7 @@ from ....core.flows import (
     FrontendCapability,
     PageStatus,
 )
-from ....core.i18n._render import tr
+from ....core.i18n.render import tr
 from ....core.parsing import parse_bool
 from ..components.dialogs import ConfirmScreen
 from ..components.host import ScreenHostApp
@@ -172,6 +173,19 @@ class FlowPresenter(Protocol):
         ...
 
 
+_APPEARANCE_BINDING = Binding("f3", "toggle_appearance", "", show=False)
+"""Appearance toggle, declared once on the flow surface.
+
+F2 is the review intent on the question page; F3 is free across every
+surface. It sits on the FLOW rather than on each page because the pages are
+now content the flow owns, so the flow is the active screen and the binding
+resolves from it -- it was previously duplicated onto both pages precisely
+because the flow was never active. Hidden and description-free: a BINDINGS
+list resolves at import time, so a ``tr`` call here would freeze the
+import-time language into the footer the pages deliberately defer.
+"""
+
+
 class FlowScreen(Screen[None]):
     """Full-screen projection of one flow run, mountable by any host.
 
@@ -179,12 +193,19 @@ class FlowScreen(Screen[None]):
     subclass's ``DEFAULT_CSS`` and ignores ``CSS`` entirely, so declaring
     the stylesheet under the wrong name drops it silently while almost
     every test still passes and only a geometry assertion notices.
-    ``SCOPED_CSS`` is off because these rules address the page screens
-    this surface opens, which are siblings on the screen stack rather
-    than descendants of this DOM.
+    The pages are content this surface owns, mounted into ``#flow-content``,
+    so its document tree and bindings participate: ``SCOPED_CSS`` keeps its
+    default because the styled nodes are genuine descendants, and the
+    appearance binding is declared once HERE rather than duplicated onto each
+    page because this surface is the one that is actually active.
     """
 
-    SCOPED_CSS = False
+    BINDINGS: ClassVar = [_APPEARANCE_BINDING]
+
+    def action_toggle_appearance(self) -> None:
+        """Flip between the light and dark appearance without leaving the flow."""
+        toggle_appearance(self.app)
+
     DEFAULT_CSS = tokenised(
         BASE_CSS
         + """
@@ -321,10 +342,37 @@ class FlowScreen(Screen[None]):
         self.final_projection: ReviewProjection | None = None
         self.saved_and_exited = False
 
-    def on_mount(self) -> None:
-        """Install shared appearance support and open the current question page."""
+    def compose(self) -> ComposeResult:
+        """Yield the region the flow's pages are mounted into.
+
+        The entry renders its own document rather than delegating to a pushed
+        sibling, which is what lets its bindings resolve and its CSS scope.
+        """
+        yield Vertical(id="flow-content")
+
+    async def on_mount(self) -> None:
+        """Install shared appearance support and show the current question page.
+
+        The initial mount is AWAITED: `mount` is asynchronous, and a caller that
+        interacts before it settles finds an empty page. That reads as a page
+        whose widget simply holds no value -- a blank required answer commits
+        nothing and the flow silently declines to advance -- rather than as a
+        missing widget, so it must be awaited rather than left to a later
+        refresh.
+        """
         install_cadrumo_themes(self.app)
-        self.app.push_screen(QuestionScreen(self))
+        await self._show(QuestionPane(self))
+
+    def _show(self, pane: Vertical) -> AwaitMount:
+        """Replace the mounted page with `pane`, returning its pending mount."""
+        region = self.query_one("#flow-content", Vertical)
+        region.remove_children()
+        return region.mount(pane)
+
+    def _pane(self, kind: type) -> object | None:
+        """The mounted page when it is of `kind`, else None."""
+        found = self.query(kind)
+        return found.first() if found else None
 
     # ── engine access for screens ───────────────────────────────────────
 
@@ -398,9 +446,9 @@ class FlowScreen(Screen[None]):
         natural click-next expectation); committed-widget pages simply
         advance — their answers already landed on selection.
         """
-        screen = self.app.screen
-        if isinstance(screen, QuestionScreen):
-            pending = screen.current_input_value()
+        pane = self._pane(QuestionPane)
+        if pane is not None:
+            pending = pane.current_input_value()
             if pending is not None:
                 self.commit_answer(pending)
                 return
@@ -413,15 +461,14 @@ class FlowScreen(Screen[None]):
         self._rerender_question()
 
     def action_go_review(self) -> None:
-        """Open the summary projection unless it is already the active screen."""
-        if not isinstance(self.app.screen, ReviewScreen):
-            self.app.push_screen(ReviewScreen(self))
+        """Show the summary projection unless it is already mounted."""
+        if self._pane(ReviewPane) is None:
+            self._show(ReviewPane(self))
 
     def action_leave_review(self) -> None:
         """Return from the summary projection to the current question."""
-        if isinstance(self.app.screen, ReviewScreen):
-            self.app.pop_screen()
-            self._rerender_question()
+        if self._pane(ReviewPane) is not None:
+            self._show(QuestionPane(self))
 
     def edit_from_review(self, page_key: str) -> None:
         """Jump to a visible row, or offer the stale-orphan confirmed reset."""
@@ -448,8 +495,9 @@ class FlowScreen(Screen[None]):
     def action_restart(self) -> None:
         """Restart the engine flow after the screen has confirmed that intent."""
         self.state = restart_flow(self.definition, self.state)
-        if isinstance(self.app.screen, ReviewScreen):
-            self.app.pop_screen()
+        if self._pane(ReviewPane) is not None:
+            self._show(QuestionPane(self))
+            return
         self._rerender_question()
 
     def action_submit(self) -> None:
@@ -490,7 +538,7 @@ class FlowScreen(Screen[None]):
         The engine state is locale-blind, so nothing in it changes; every
         zone and :class:`~cadrumo.application.flows.copy.PageCopy` re-assembles at
         render, and each screen resolves its footer bindings at mount. Popping
-        back to a single screen and pushing a fresh :class:`QuestionScreen`
+        the mounted page with a fresh :class:`QuestionPane`
         therefore re-resolves all operator-facing copy — prompts, choices,
         buttons, and footer bindings — under the active locale, with no
         substrate cache to purge.
@@ -504,9 +552,7 @@ class FlowScreen(Screen[None]):
         self.call_after_refresh(self._rebuild_screens_for_locale)
 
     def _rebuild_screens_for_locale(self) -> None:
-        while len(self.app.screen_stack) > 1:
-            self.app.pop_screen()
-        self.app.push_screen(QuestionScreen(self))
+        self._show(QuestionPane(self))
 
     # ── rendering plumbing ──────────────────────────────────────────────
 
@@ -515,19 +561,19 @@ class FlowScreen(Screen[None]):
         return bool(sequence) and sequence[-1].key == self.state.cursor
 
     def _rerender_question(self) -> None:
-        screen = self.app.screen
-        if isinstance(screen, QuestionScreen):
-            screen.render_page()
+        pane = self._pane(QuestionPane)
+        if pane is not None:
+            pane.render_page()
 
     def _refresh_answer_zones(self) -> None:
-        screen = self.app.screen
-        if isinstance(screen, QuestionScreen):
-            screen.refresh_answer_zones()
+        pane = self._pane(QuestionPane)
+        if pane is not None:
+            pane.refresh_answer_zones()
 
     def _rerender_review(self) -> None:
-        screen = self.app.screen
-        if isinstance(screen, ReviewScreen):
-            screen.render_review()
+        pane = self._pane(ReviewPane)
+        if pane is not None:
+            pane.render_review()
 
 
 def _collect_page_widgets(definition: FlowDefinition) -> dict[str, FlowWidgetKind]:
@@ -683,24 +729,43 @@ def _confirm_restart_dialog() -> ConfirmScreen:
     )
 
 
-_APPEARANCE_BINDING = Binding("f3", "toggle_appearance", "", show=False)
-"""Appearance toggle, declared on each page surface rather than on the flow.
+class _FlowPane(Vertical):
+    """What both flow pages share: their owner, and the intents that leave them.
 
-F2 is the review intent on the question page; F3 is free across every
-surface. It sits on the pages because they are the screens the operator is
-looking at -- the flow surface opens them as siblings on the screen stack,
-so it is never the active screen and a binding declared there would never
-resolve. Hidden and description-free: a BINDINGS list resolves at import
-time, so a ``tr`` call here would freeze the import-time language into the
-footer the pages deliberately defer.
-"""
+    The question and review pages are two projections of one flow run, so the
+    handle back to the presenter and the three intents that are not about the
+    page's own content -- restart, its confirmation, and save-and-exit -- are
+    identical on both. They were byte-identical duplicates before this base
+    existed; one concept written twice is one concept that can drift once.
+
+    Everything that DOES differ stays on the pages: `compose`, `on_mount`,
+    `on_button_pressed` and `_localize_bindings` are each genuinely per-page.
+    """
+
+    def __init__(self, presenter: FlowPresenter) -> None:
+        super().__init__()
+        self._presenter = presenter
+
+    @property
+    def presenter(self) -> FlowPresenter:
+        """Return the typed flow application that owns this projection."""
+        return self._presenter
+
+    def action_restart_flow(self) -> None:
+        self.app.push_screen(_confirm_restart_dialog(), self._apply_restart_decision)
+
+    def _apply_restart_decision(self, confirmed: bool | None) -> None:
+        if confirmed:
+            self.presenter.action_restart()
+
+    def action_save_exit(self) -> None:
+        self.presenter.action_save_exit()
 
 
-class QuestionScreen(Screen[None]):
+class QuestionPane(_FlowPane):
     """Render the cursor page and forward answer intents to the flow app."""
 
     BINDINGS: ClassVar = [
-        _APPEARANCE_BINDING,
         Binding("escape", "go_back", ""),
         Binding("f2", "go_review", ""),
         Binding("ctrl+r", "reset_page", ""),
@@ -708,18 +773,7 @@ class QuestionScreen(Screen[None]):
         Binding("ctrl+s", "save_exit", ""),
     ]
 
-    def action_toggle_appearance(self) -> None:
-        """Flip between the light and dark appearance without leaving the flow.
 
-        The engine state is appearance-blind, so nothing re-renders beyond
-        the stylesheet: the operator keeps their cursor, answers, and
-        scroll position across the switch.
-        """
-        toggle_appearance(self.app)
-
-    def __init__(self, presenter: FlowPresenter) -> None:
-        super().__init__()
-        self._presenter = presenter
 
     def _build_stage_strip(self, *, current_index: int = 0) -> StageNavigationStrip:
         """Build the section-level stage strip from the flow's own titles.
@@ -777,10 +831,6 @@ class QuestionScreen(Screen[None]):
             },
         )
 
-    @property
-    def presenter(self) -> FlowPresenter:
-        """Return the typed flow application that owns this projection."""
-        return self._presenter
 
     def render_page(self) -> None:
         """Render every zone for the page the engine cursor addresses."""
@@ -1042,15 +1092,8 @@ class QuestionScreen(Screen[None]):
     def action_reset_page(self) -> None:
         self.presenter.action_reset_current()
 
-    def action_restart_flow(self) -> None:
-        self.app.push_screen(_confirm_restart_dialog(), self._apply_restart_decision)
 
-    def _apply_restart_decision(self, confirmed: bool | None) -> None:
-        if confirmed:
-            self.presenter.action_restart()
 
-    def action_save_exit(self) -> None:
-        self.presenter.action_save_exit()
 
 
 _STATUS_GLYPHS: dict[PageStatus, str] = {
@@ -1068,29 +1111,17 @@ class _ReviewTable(DataTable[str]):
     """Typed flow-review table with string cell values."""
 
 
-class ReviewScreen(Screen[None]):
+class ReviewPane(_FlowPane):
     """Render a clickable summary of every question in the flow."""
 
     BINDINGS: ClassVar = [
-        _APPEARANCE_BINDING,
         Binding("escape", "back_to_question", ""),
         Binding("s", "submit_flow", ""),
         Binding("ctrl+s", "save_exit", ""),
         Binding("ctrl+n", "restart_flow", ""),
     ]
 
-    def action_toggle_appearance(self) -> None:
-        """Flip between the light and dark appearance without leaving the flow.
 
-        The engine state is appearance-blind, so nothing re-renders beyond
-        the stylesheet: the operator keeps their cursor, answers, and
-        scroll position across the switch.
-        """
-        toggle_appearance(self.app)
-
-    def __init__(self, presenter: FlowPresenter) -> None:
-        super().__init__()
-        self._presenter = presenter
 
     @override
     def compose(self) -> ComposeResult:
@@ -1129,10 +1160,6 @@ class ReviewScreen(Screen[None]):
             },
         )
 
-    @property
-    def presenter(self) -> FlowPresenter:
-        """Return the typed flow application that owns this projection."""
-        return self._presenter
 
     def render_review(self) -> None:
         """Project the engine review into the table, notices, and submit control."""
@@ -1263,15 +1290,8 @@ class ReviewScreen(Screen[None]):
     def action_submit_flow(self) -> None:
         self.presenter.action_submit()
 
-    def action_save_exit(self) -> None:
-        self.presenter.action_save_exit()
 
-    def action_restart_flow(self) -> None:
-        self.app.push_screen(_confirm_restart_dialog(), self._apply_restart_decision)
 
-    def _apply_restart_decision(self, confirmed: bool | None) -> None:
-        if confirmed:
-            self.presenter.action_restart()
 
 
 def select_flow_frontend(

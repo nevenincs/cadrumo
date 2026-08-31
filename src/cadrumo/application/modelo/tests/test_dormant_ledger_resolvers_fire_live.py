@@ -23,11 +23,11 @@ from ....domain.transactions.raw_transaction import RawProvenance, RawTransactio
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.observations_repository import CalculationObservationRepository
-from .._calculation_actions import (
+from ..calculation_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from .._filed_revision_observation import APP_FILING_SOURCE_KIND
+from ..filed_revision_observation import APP_FILING_SOURCE_KIND
 from ..work_lifecycle import create_work_unit
 from ._dormant_resolver_live_support import _T0, _T1, _revision, _seed_ready_profile
 

@@ -38,7 +38,7 @@ from ....domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_targets,
     declared_casilla_ids,
 )
-from ....domain.calculations.registry.ledger_bindings import IvaLedgerObservation
+from ....domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.flow import IvaFlowDirection
 from ....domain.iva.prorrata import RegularizacionProrrataDireccion
@@ -57,8 +57,9 @@ from ....tests import general_m303_filing_evidence
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo._revision_persistence import persist_filed_revision
-from ...prorrata_register._seed import evaluate_carried_prior_definitiva_seed
-from .._prorrata_regularizacion import (
+from ...prorrata_register.seed import evaluate_carried_prior_definitiva_seed
+from ..observations_repository import CalculationObservationRepository
+from ..prorrata_regularizacion import (
     CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA,
     build_prorrata_declared_volume_divergence_advisory,
     build_prorrata_missing_provisional_advisory,
@@ -66,7 +67,6 @@ from .._prorrata_regularizacion import (
     derive_prorrata_applicability,
     project_prorrata_regularizacion_feed,
 )
-from ..observations_repository import CalculationObservationRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

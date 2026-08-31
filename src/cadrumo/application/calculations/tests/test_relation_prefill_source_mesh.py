@@ -29,12 +29,12 @@ from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext, CalculationSourceResolution
-from .._relation_prefill import (
+from ..observations_repository import CalculationObservationRepository
+from ..relation_prefill import (
     RelationPrefillSourceResolver,
     _scoped_relation_source_requirements,
     resolve_relations_from_local_store,
 )
-from ..observations_repository import CalculationObservationRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -324,7 +324,7 @@ def test_operator_manual_relation_detail_is_a_debug_breadcrumb_not_a_warning(
     the cold-start path fired — the anti-tautology leg), and every such record is
     DEBUG, so a default WARNING-level operator surface sees none of it.
     """
-    logger_name = "cadrumo.application.calculations._relation_prefill"
+    logger_name = "cadrumo.application.calculations.relation_prefill"
     with isolated_runtime_profile(tmp_path=tmp_path):
         repository = CalculationObservationRepository()  # empty store — cold-start
         snapshot = _snapshot("202", 2025, "2P")

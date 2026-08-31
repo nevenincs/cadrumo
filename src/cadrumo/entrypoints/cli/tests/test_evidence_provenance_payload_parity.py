@@ -26,7 +26,7 @@ from ....application.ledger.invoice_draft_records import FieldAmbiguityCandidate
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from .._command_schema import command_schema_types
-from .._ledger_business_payloads import EvidenceConfirmResult, EvidenceExtractResult
+from ..ledger_business_payloads import EvidenceConfirmResult, EvidenceExtractResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

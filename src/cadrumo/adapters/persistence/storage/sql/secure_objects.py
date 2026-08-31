@@ -31,7 +31,6 @@ from ..secure_object_namespaces import (
     StorageHierarchyRegistry,
     is_former_product_namespace,
 )
-from ._orm import SecureObjectRow
 from ._secure_object_integrity import (
     iter_namespace_decryptability as _iter_namespace_decryptability,
 )
@@ -63,6 +62,7 @@ from ._secure_object_schema import (
 )
 from ._secure_object_writes import _OBJECT_KEY_SELECT_CHUNK, SecureObjectWriteOperations, _RowcountResult
 from .engine import get_engine
+from .orm import SecureObjectRow
 from .session import session_scope
 
 __all__ = ["SecureObjectUnreadable"]
@@ -294,8 +294,8 @@ class SecureObjectRepository(SecureObjectWriteOperations):
             self._registered_namespace_definition(namespace)
 
         from ..errors import SessionExpiredError
-        from ..master_key._idle_timeout import evaluate_idle
         from ..master_key.active_session import current_active_bucket_session, session_serves_bucket
+        from ..master_key.idle_timeout import evaluate_idle
 
         session = current_active_bucket_session()
         if session is None:

@@ -71,9 +71,9 @@ from ...aggregation import (
     RetencionScheme,
     aggregate_retenciones_111,
 )
-from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
-from .._relation_prefill import resolve_relations_from_local_store
+from ..multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from ..observations_repository import CalculationObservationRepository
+from ..relation_prefill import resolve_relations_from_local_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

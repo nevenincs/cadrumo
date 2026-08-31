@@ -48,7 +48,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.inbound.financial.providers._base.FinancialProviderError",
+        "cadrumo.adapters.inbound.financial.providers.base.FinancialProviderError",
         ErrorCode(
             code="ERROR_FINANCIAL_PROVIDER",
             category=ErrorCategory.ERROR,
@@ -58,7 +58,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.inbound.financial.providers._base.UnsupportedFinancialSourceError",
+        "cadrumo.adapters.inbound.financial.providers.base.UnsupportedFinancialSourceError",
         ErrorCode(
             code="REFUSED_FINANCIAL_PROVIDER_UNSUPPORTED_SOURCE",
             category=ErrorCategory.REFUSED,
@@ -68,7 +68,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.inbound.financial.providers._base.InvalidFinancialSourceError",
+        "cadrumo.adapters.inbound.financial.providers.base.InvalidFinancialSourceError",
         ErrorCode(
             code="REFUSED_FINANCIAL_PROVIDER_INVALID_SOURCE",
             category=ErrorCategory.REFUSED,
@@ -78,7 +78,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.inbound.financial.providers._base.FinancialValidationError",
+        "cadrumo.adapters.inbound.financial.providers.base.FinancialValidationError",
         ErrorCode(
             code="REFUSED_FINANCIAL_PROVIDER_VALIDATION",
             category=ErrorCategory.REFUSED,
@@ -88,7 +88,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.inbound.financial.providers._base.BankStatementParseError",
+        "cadrumo.adapters.inbound.financial.providers.base.BankStatementParseError",
         ErrorCode(
             code="REFUSED_FINANCIAL_BANK_STATEMENT_PARSE",
             category=ErrorCategory.REFUSED,
@@ -701,7 +701,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.inbound.financial.providers._base.FinancialProviderConfigError",
+        "cadrumo.adapters.inbound.financial.providers.base.FinancialProviderConfigError",
         ErrorCode(
             code="ERROR_FINANCIAL_PROVIDER_CONFIG",
             category=ErrorCategory.ERROR,

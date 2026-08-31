@@ -13,8 +13,8 @@ from ...calculations.cross_period_clean_state import (
     CrossPeriodDependencyOrigin,
     CrossPeriodDependencyRequirement,
 )
-from .._verification_actions import _CROSS_PERIOD_DEPENDENCY_LEGAL_REFS
 from .._verification_cross_period import _cross_period_clean_state_findings
+from ..verification_actions import _CROSS_PERIOD_DEPENDENCY_LEGAL_REFS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

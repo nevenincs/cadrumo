@@ -53,8 +53,8 @@ from ...domain.deadlines.models import IVARegime
 from ...domain.invoices.models import InvoiceCatalogue
 from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.iva.classification import InvoiceKind
-from ...domain.prorrata_register._protocols import ProrrataRegisterRepositoryProtocol
-from ...domain.renta._ledger_expenses import (
+from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
+from ...domain.renta.ledger_expenses import (
     RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS,
     RentaDeductibilityContext,
     RentaDeductibilityStatus,

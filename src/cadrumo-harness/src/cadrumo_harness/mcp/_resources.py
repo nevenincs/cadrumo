@@ -295,7 +295,7 @@ def _read_corpus_resource(ref: str, uri: str) -> HarnessResourceContent:
     ``ref`` is a citation id or a retrieval ``corpus_ref``; resolution routes
     through the registry legal catalogue (the single citation authority).
     """
-    from cadrumo.application.corpus_search._citation_lookup import bundled_citation_lookup
+    from cadrumo.application.corpus_search.citation_lookup import bundled_citation_lookup
     from cadrumo.application.corpus_search.errors import CorpusSearchInputError
 
     try:

@@ -6,7 +6,7 @@ from pathlib import Path
 
 import typer
 
-from ...application.modelo._action_errors import (
+from ...application.modelo.action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
     ModeloPaymentElectionCapabilityRefusedError,
@@ -15,7 +15,7 @@ from ...application.modelo._action_errors import (
     ModeloRefundElectionNotEligibleError,
     WorkUnitNotFoundError,
 )
-from ...application.modelo._export import (
+from ...application.modelo.export import (
     ModeloExportCommand,
     ModeloExportCrossBucketRefusedError,
     ModeloExportNoActiveBucketError,
@@ -23,8 +23,8 @@ from ...application.modelo._export import (
     ModeloExportResult,
     export_modelo_revision,
 )
-from ...application.modelo._iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
-from ...application.modelo._selectors import (
+from ...application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
+from ...application.modelo.selectors import (
     ModeloCalculationRevisionSelector,
     ModeloCalculationRevisionSelectorAmbiguousError,
     ModeloCalculationRevisionSelectorNotFoundError,
@@ -35,7 +35,7 @@ from ...application.modelo.work_addressing import (
     ModeloWorkPeriodTokenError,
 )
 from ...application.workflow.persistence import workflow_state_repository
-from ...core.i18n._render import tr
+from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.payment_election import PaymentElection
 from ...core.prior_domiciliation_election import PriorDomiciliationElection

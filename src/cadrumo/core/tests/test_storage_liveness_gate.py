@@ -363,7 +363,7 @@ def test_every_dormant_member_states_a_reason_and_really_is_dormant() -> None:
 
 #: The modules that DECLARE the taxonomy, as opposed to consuming it.
 _TAXONOMY_DECLARATION_MODULES = frozenset(
-    {"core/_storage_taxonomy.py", "core/_storage_taxonomy_locations.py"},
+    {"core/storage_taxonomy.py", "core/storage_taxonomy_locations.py"},
 )
 
 

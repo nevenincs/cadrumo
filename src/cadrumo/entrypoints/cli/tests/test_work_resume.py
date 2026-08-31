@@ -10,8 +10,8 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
-from ....application.modelo._workflow_gate import workflow_period_for_work_unit
 from ....application.modelo.work_lifecycle import create_work_unit
+from ....application.modelo.workflow_gate import workflow_period_for_work_unit
 from ....application.operator_actions.models import (
     ActionArgumentBinding,
     ActionReference,

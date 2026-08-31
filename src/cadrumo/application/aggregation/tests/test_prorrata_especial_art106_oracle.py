@@ -50,7 +50,7 @@ from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.prorrata import InputClassification
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations._prorrata_regularizacion import build_prorrata_especial_mandatory_advisory
+from ...calculations.prorrata_regularizacion import build_prorrata_especial_mandatory_advisory
 from .. import aggregate_iva_ledger_observations_from_repositories
 from .._iva_ledger import resolve_iva_ledger_binding_values
 

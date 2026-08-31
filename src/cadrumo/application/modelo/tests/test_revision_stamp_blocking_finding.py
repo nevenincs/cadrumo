@@ -20,10 +20,7 @@ from ...calculations.cross_period_clean_state import (
     CrossPeriodDependencyOrigin,
     CrossPeriodDependencyRequirement,
 )
-from ...modelo._verification_actions import (
-    _classify_verification_outcome,
-    _cross_period_clean_state_findings,
-)
+from ..verification_actions import _classify_verification_outcome, _cross_period_clean_state_findings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

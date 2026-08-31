@@ -32,7 +32,7 @@ from textual.screen import Screen
 from textual.widgets import Input, Label, Static
 
 from .....core.config import load_settings
-from .....core.i18n._render import tr
+from .....core.i18n.render import tr
 from ...components.theme import toggle_appearance
 from ...components.widgets import ContentScroll
 from .controller import ModeloEditController

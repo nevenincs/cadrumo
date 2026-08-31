@@ -45,7 +45,11 @@ def _late_bound_facade_names() -> frozenset[str]:
     """
     from ... import core
 
-    return frozenset(core._LAZY_EXPORTS)
+    # The facade resolved its whole public surface through a lazy map, and this
+    # read it live rather than hand-listing. The map is gone: the namespace is
+    # inert, so the set of names a settings-path module could reach back for is
+    # empty by construction rather than by policy.
+    return frozenset(getattr(core, "_LAZY_EXPORTS", ()))
 
 
 #: Modules on the settings-resolution path, which core's own body can reach.
@@ -69,8 +73,11 @@ def test_bucket_pointer_public_surface_is_defining_module_only() -> None:
 
     assert all(not hasattr(core, name) for name in names)
     assert all(hasattr(bucket_pointer, name) for name in names)
-    assert all(name not in core._LAZY_EXPORTS for name in names)
     assert all(name not in core.__all__ for name in names)
+    # There is no longer a lazy map to check against: the namespace exports
+    # nothing, which is a stronger statement than any name being absent from it.
+    assert not getattr(core, "_LAZY_EXPORTS", ())
+    assert not core.__all__
 
 
 def _facade_imported_names(module_path: Path) -> set[str]:
@@ -90,14 +97,22 @@ def _facade_imported_names(module_path: Path) -> set[str]:
 @pytest.mark.parametrize("module_name", _SETTINGS_PATH_MODULES)
 def test_settings_path_modules_never_import_late_bound_facade_names(module_name: str) -> None:
     """A module core can reach mid-init must name the owning submodule instead."""
-    late_bound = _late_bound_facade_names()
     imported = _facade_imported_names(_CORE_DIR / module_name)
 
-    assert late_bound, "the facade exposed no late-bound names; this guard would pass vacuously"
-    assert not (imported & late_bound), (
-        f"{module_name} imports {sorted(imported & late_bound)} from the "
-        "cadrumo.core facade; those names are served by __getattr__, so a module "
-        "the settings path reaches must name the owning submodule instead"
+    # This compared against the facade's late-bound names. There are none now --
+    # the namespace is inert -- and the test refused to pass vacuously against
+    # an empty set, which was the right refusal. The surviving guarantee is
+    # stronger and needs no set to compare with: a module the settings path
+    # reaches must import NOTHING from the namespace, because every such import
+    # is a mid-init reach-back regardless of which name it asks for.
+    # `from . import <submodule>` resolves against an inert namespace on its
+    # own and is exactly the "name the owning submodule" form this guard asks
+    # for, so only non-module names are a reach-back.
+    symbols = {name for name in imported if not (_CORE_DIR / f"{name}.py").exists()}
+    assert not symbols, (
+        f"{module_name} imports {sorted(symbols)} from the cadrumo.core "
+        "namespace; it is inert, and a module the settings path reaches must "
+        "name the owning submodule instead"
     )
 
 
@@ -128,8 +143,8 @@ def test_core_init_performs_no_eager_submodule_imports() -> None:
         "core/__init__ imports its own submodules at import time again: "
         f"{eager}. Every process in this tree imports this package, so an eager "
         "binding here is paid by all of them, and it re-arms the mid-init "
-        "reach-back this module exists to prevent. Add the name to _LAZY_EXPORTS "
-        "and its static binding to the TYPE_CHECKING block instead."
+        "reach-back this module exists to prevent. The namespace is inert: "
+        "import the symbol from its defining module at the consumer instead."
     )
 
 
@@ -192,7 +207,12 @@ def test_core_survives_settings_construction_while_resolving_a_facade_name() -> 
         # Resolving a name owned by the triggering module is what now drives the
         # hook, and reading it back IS the assertion: if the settings
         # construction re-entered a half-built facade this raises.
-        assert core.SecureObjectWrite is not None
+        # The facade used to resolve this name through __getattr__. It is
+        # inert now, so the same re-entrancy is reached by importing the owning
+        # module directly -- which is what the hook watches for.
+        from ..secure_object_write import SecureObjectWrite
+
+        assert SecureObjectWrite is not None
     finally:
         sys.meta_path.remove(trigger)
         for name in [key for key in sys.modules if key.startswith("cadrumo")]:

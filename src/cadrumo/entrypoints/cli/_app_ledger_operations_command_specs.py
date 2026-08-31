@@ -13,7 +13,7 @@ from ._app_ledger_command_spec_policies import (
     _POLICY_8,
     _POLICY_10,
 )
-from ._command_spec import (
+from .command_spec import (
     ArgumentSpec,
     CommandSpec,
     DeferredTarget,
@@ -95,7 +95,7 @@ LEDGER_OPERATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_POLICY_4,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._ledger_lifecycle_cli", "ledger_detach")),
+        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli.ledger_lifecycle_cli", "ledger_detach")),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget("cadrumo.entrypoints.cli._ledger_payloads", "LedgerDetachResult"),
@@ -191,7 +191,7 @@ LEDGER_OPERATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         policy=_POLICY_8,
         handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._ledger_lifecycle_cli", "ledger_evidence_pull")
+            DeferredTarget("cadrumo.entrypoints.cli.ledger_lifecycle_cli", "ledger_evidence_pull")
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
@@ -282,7 +282,7 @@ LEDGER_OPERATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         policy=_POLICY_4,
         handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._ledger_lifecycle_cli", "ledger_exclude")
+            DeferredTarget("cadrumo.entrypoints.cli.ledger_lifecycle_cli", "ledger_exclude")
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,

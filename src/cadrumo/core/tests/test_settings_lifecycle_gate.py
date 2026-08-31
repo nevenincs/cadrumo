@@ -130,11 +130,11 @@ _LITERAL_OWNERS = frozenset(
         # The taxonomy itself and the settings modules that declare its fields:
         # these MUST carry the literals, because they are what every other
         # module resolves through.
-        "core/_storage_taxonomy.py",
+        "core/storage_taxonomy.py",
         "core/config.py",
-        "core/_config_llm_fields.py",
-        "core/_config_integration_fields.py",
-        "core/_config_state_root.py",
+        "core/config_llm_fields.py",
+        "core/config_integration_fields.py",
+        "core/config_state_root.py",
     },
 )
 

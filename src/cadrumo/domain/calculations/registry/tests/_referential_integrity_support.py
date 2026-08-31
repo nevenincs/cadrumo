@@ -21,17 +21,14 @@ from .._validate_references import check_all_id_references
 from ..authority import ValidatedRegistryAuthority
 from ..errors import RegistryValidationError
 from ..schema import (
-    ApplicationLinkDefinition,
-    ConstructDefinition,
     DataBindingDefinition,
-    DeadlineWindowDefinition,
-    DependencyClassificationDefinition,
     FormulaDefinition,
     ModeloDefinition,
     ModeloRevision,
     RegistryCatalogues,
     RegistrySnapshot,
 )
+from ..schema_deadlines import DeadlineWindowDefinition
 from ..schema_exports import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
@@ -44,6 +41,11 @@ from ..schema_extraction import (
 from ..schema_formula import FormulaExpression, ParameterDefinition
 from ..schema_input_kind import InputKind
 from ..schema_references import LegalReference, SourceReference
+from ..schema_revision_members import (
+    ApplicationLinkDefinition,
+    ConstructDefinition,
+    DependencyClassificationDefinition,
+)
 from ..schema_surfaces import (
     CalculationCompletenessCasilla,
     CalculationCompletenessManifest,

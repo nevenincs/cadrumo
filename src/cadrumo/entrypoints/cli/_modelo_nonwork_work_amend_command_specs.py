@@ -4,7 +4,8 @@
 
 from __future__ import annotations
 
-from ._command_spec import (
+from ._modelo_nonwork_command_spec_policies import _INTERACTIVE_MODEL_WRITE
+from .command_spec import (
     ArgumentSpec,
     CommandSpec,
     DeferredTarget,
@@ -19,7 +20,6 @@ from ._command_spec import (
     TuiCapability,
     ValueContract,
 )
-from ._modelo_nonwork_command_spec_policies import _INTERACTIVE_MODEL_WRITE
 
 MODELO_NONWORK_WORK_AMEND_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(

@@ -26,7 +26,7 @@ from .....adapters.persistence.profile.modelos_work_units import WorkUnitCatalog
 from .....application.modelo.workspace_models import ModeloWorkspaceCapabilityName
 from .....core.config import override_settings
 from .....core.external_constants import OutputLanguage
-from .....core.i18n._render import SUPPORTED_OUTPUT_LANGUAGES
+from .....core.i18n.render import SUPPORTED_OUTPUT_LANGUAGES
 from .....tests.terminal_sizes import SUPPORTED_TERMINAL_SIZE_IDS, SUPPORTED_TERMINAL_SIZES
 from ...components.host import ScreenHostApp
 from ...components.theme import CADRUMO_DARK_THEME_NAME, CADRUMO_LIGHT_THEME_NAME

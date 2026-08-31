@@ -37,10 +37,7 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
-from .._relation_prefill import (
-    _economic_activity_conditional_source_modelos,
-    _not_applicable_source_modelos_for_bucket,
-)
+from ..relation_prefill import _economic_activity_conditional_source_modelos, _not_applicable_source_modelos_for_bucket
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

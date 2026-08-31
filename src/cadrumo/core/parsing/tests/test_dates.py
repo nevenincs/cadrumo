@@ -1,4 +1,4 @@
-"""Real-behaviour tests for :mod:`cadrumo.core.parsing._dates`.
+"""Real-behaviour tests for :mod:`cadrumo.core.parsing.dates`.
 
 Contract under test (contract / contract):
 
@@ -20,7 +20,7 @@ from datetime import date
 
 import pytest
 
-from .._dates import _parse_ddmmyyyy_date, _parse_iso8601_date
+from ..dates import _parse_ddmmyyyy_date, _parse_iso8601_date
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

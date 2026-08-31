@@ -630,7 +630,7 @@ def sandbox_notice_for_error() -> Notice | None:
     indicator must never mask the original error being reported.
     """
     try:
-        from ...application.operator_output._sandbox_notice import sandbox_notice_for_active_bucket
+        from ...application.operator_output.sandbox_notice import sandbox_notice_for_active_bucket
 
         return sandbox_notice_for_active_bucket()
     except Exception:  # the sandbox indicator must never break error emit
@@ -718,7 +718,7 @@ def render_error_payload(
         text = "\n".join((*notice_lines(authentication_notices), text))
     if notice is None:
         return text
-    from ...application.operator_output._sandbox_notice import sandbox_banner_line
+    from ...application.operator_output.sandbox_notice import sandbox_banner_line
 
     return f"{sandbox_banner_line(notice)}\n{text}"
 

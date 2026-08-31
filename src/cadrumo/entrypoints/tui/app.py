@@ -1,12 +1,19 @@
 """The root navigation join for one dedicated TUI session.
 
 An area is mounted here only once it exposes a host-agnostic screen and its
-cohort is green. Neither condition holds for any area yet: the profile,
-secret and flow areas each expose a Textual application rather than a
-mountable screen, and the Modelo area, which does expose screens, is held
-back by its own cohort gate. This root therefore mounts no area and says so
-on screen, rather than offering navigation to a destination that does not
-exist.
+cohort is green. BOTH CONDITIONS NOW HOLD FOR EVERY AREA, and this docstring
+previously said otherwise -- it recorded that profile, secret and flow expose
+a Textual application rather than a mountable screen, and that Modelo was held
+back by its own cohort gate. Neither is true any more: every area exposes
+Screen subclasses, and the application forms that remain are launch wrappers
+over those screens for callers arriving from the command line, not the areas'
+shape. A caller that already has a running application mounts the screen.
+
+What is still missing is not a precondition but a DESIGN: this root has no
+navigation model. Mounting one area would make it the whole product, and
+mounting several without a way to move between them offers destinations an
+operator cannot reach. So it mounts no area and says so on screen, rather
+than composing a join that has not been decided.
 
 The session's composed operation services are held here so that an area
 receives them at mount time without reaching for a global; nothing in this
@@ -22,7 +29,7 @@ from textual.binding import Binding
 from textual.containers import Vertical
 from textual.widgets import Footer, Static
 
-from ...core.i18n._render import tr
+from ...core.i18n.render import tr
 from .components.theme import BASE_CSS, install_cadrumo_themes, toggle_appearance, tokenised
 
 if TYPE_CHECKING:

@@ -33,7 +33,7 @@ from ....domain.fincas.models import (
 )
 
 if TYPE_CHECKING:  # pragma: no cover — type-only imports
-    from ..storage.sql import _orm
+    from ..storage.sql import orm as _orm
 
 _log = get_logger(__name__)
 
@@ -60,7 +60,7 @@ class FincaRepository:
         Returns:
             List of all :class:`Finca` records.
         """
-        from ..storage.sql import _orm
+        from ..storage.sql import orm as _orm
 
         rows = self.session.execute(select(_orm.FincaRow).order_by(_orm.FincaRow.id)).scalars().all()
         return [self._to_record(row) for row in rows]
@@ -78,7 +78,7 @@ class FincaRepository:
             RepositoryError: When no row matches.
         """
         from ..storage.errors import RepositoryError
-        from ..storage.sql import _orm
+        from ..storage.sql import orm as _orm
 
         row = self.session.get(_orm.FincaRow, record_id)
         if row is None:
@@ -91,7 +91,7 @@ class FincaRepository:
         Returns:
             The matching :class:`Finca`, or ``None`` when not found.
         """
-        from ..storage.sql import _orm
+        from ..storage.sql import orm as _orm
 
         row = self.session.execute(
             select(_orm.FincaRow).where(_orm.FincaRow.identifier == identifier),
@@ -105,7 +105,7 @@ class FincaRepository:
             The persisted :class:`Finca` with any database-generated fields populated.
         """
         from ..storage.errors import RepositoryError
-        from ..storage.sql import _orm
+        from ..storage.sql import orm as _orm
 
         row: _orm.FincaRow | None = None
         if record.id is not None:
@@ -155,7 +155,7 @@ class FincaRepository:
     def delete(self, record_id: int) -> None:
         """Delete the record with surrogate id ``record_id``."""
         from ..storage.errors import RepositoryError
-        from ..storage.sql import _orm
+        from ..storage.sql import orm as _orm
 
         row = self.session.get(_orm.FincaRow, record_id)
         if row is None:
@@ -206,14 +206,14 @@ class ArrendamientoRepository:
 
     def list_all(self) -> list[Arrendamiento]:
         """Return every :class:`Arrendamiento` record in the table, ordered by surrogate id."""
-        from ..storage.sql import _orm
+        from ..storage.sql import orm as _orm
 
         rows = self.session.execute(select(_orm.ArrendamientoRow).order_by(_orm.ArrendamientoRow.id)).scalars().all()
         return [self._to_record(row) for row in rows]
 
     def list_for_finca(self, finca_id: int) -> list[Arrendamiento]:
         """Return every :class:`Arrendamiento` record attached to the supplied finca."""
-        from ..storage.sql import _orm
+        from ..storage.sql import orm as _orm
 
         rows = (
             self.session.execute(
@@ -239,7 +239,7 @@ class ArrendamientoRepository:
             RepositoryError: When no row matches.
         """
         from ..storage.errors import RepositoryError
-        from ..storage.sql import _orm
+        from ..storage.sql import orm as _orm
 
         row = self.session.get(_orm.ArrendamientoRow, record_id)
         if row is None:
@@ -249,7 +249,7 @@ class ArrendamientoRepository:
     def upsert(self, record: Arrendamiento) -> Arrendamiento:
         """Insert or update ``record`` and return the persisted :class:`Arrendamiento`."""
         from ..storage.errors import RepositoryError
-        from ..storage.sql import _orm
+        from ..storage.sql import orm as _orm
 
         row: _orm.ArrendamientoRow | None = None
         if record.id is not None:
@@ -268,7 +268,7 @@ class ArrendamientoRepository:
     def delete(self, record_id: int) -> None:
         """Delete the record with surrogate id ``record_id``."""
         from ..storage.errors import RepositoryError
-        from ..storage.sql import _orm
+        from ..storage.sql import orm as _orm
 
         row = self.session.get(_orm.ArrendamientoRow, record_id)
         if row is None:
@@ -337,7 +337,7 @@ class FincaRendimientoRepository:
         Returns:
             List of :class:`FincaRendimientoRecord` for the given period year.
         """
-        from ..storage.sql import _orm
+        from ..storage.sql import orm as _orm
 
         rows = (
             self.session.execute(
@@ -356,7 +356,7 @@ class FincaRendimientoRepository:
         period_year: int,
     ) -> FincaRendimientoRecord | None:
         """Return the :class:`FincaRendimientoRecord` for ``contract_id`` matching ``period``, or ``None``."""
-        from ..storage.sql import _orm
+        from ..storage.sql import orm as _orm
 
         row = self.session.execute(
             select(_orm.FincaRendimientoRecordRow).where(
@@ -369,7 +369,7 @@ class FincaRendimientoRepository:
     def upsert(self, record: FincaRendimientoRecord) -> FincaRendimientoRecord:
         """Insert or update ``record`` and return the persisted :class:`FincaRendimientoRecord`."""
         from ..storage.errors import RepositoryError
-        from ..storage.sql import _orm
+        from ..storage.sql import orm as _orm
 
         row: _orm.FincaRendimientoRecordRow | None = None
         if record.id is not None:
@@ -402,7 +402,7 @@ class FincaRendimientoRepository:
     def delete(self, record_id: int) -> None:
         """Delete the record with surrogate id ``record_id``."""
         from ..storage.errors import RepositoryError
-        from ..storage.sql import _orm
+        from ..storage.sql import orm as _orm
 
         row = self.session.get(_orm.FincaRendimientoRecordRow, record_id)
         if row is None:
@@ -431,7 +431,7 @@ class FincaGastoRepository:
 
     def list_for_finca_period(self, finca_id: int, period_year: int) -> list[FincaGasto]:
         """Return every :class:`FincaGasto` record attached to ``finca_id`` within the period window."""
-        from ..storage.sql import _orm
+        from ..storage.sql import orm as _orm
 
         rows = (
             self.session.execute(
@@ -450,7 +450,7 @@ class FincaGastoRepository:
     def add(self, record: FincaGasto) -> FincaGasto:
         """Insert ``record`` and return the persisted :class:`FincaGasto` entity."""
         from ..storage.errors import RepositoryError
-        from ..storage.sql import _orm
+        from ..storage.sql import orm as _orm
 
         if record.id is not None:
             raise RepositoryError(
@@ -474,7 +474,7 @@ class FincaGastoRepository:
             The persisted :class:`FincaGasto` with any database-generated fields populated.
         """
         from ..storage.errors import RepositoryError
-        from ..storage.sql import _orm
+        from ..storage.sql import orm as _orm
 
         if record.id is None:
             return self.add(record)
@@ -492,7 +492,7 @@ class FincaGastoRepository:
     def delete(self, record_id: int) -> None:
         """Delete the record with surrogate id ``record_id``."""
         from ..storage.errors import RepositoryError
-        from ..storage.sql import _orm
+        from ..storage.sql import orm as _orm
 
         row = self.session.get(_orm.FincaGastoRow, record_id)
         if row is None:
@@ -539,7 +539,7 @@ class FincaAmortizacionLedgerRepository:
         Returns:
             List of :class:`FincaAmortizacionLedgerEntry` for the finca.
         """
-        from ..storage.sql import _orm
+        from ..storage.sql import orm as _orm
 
         rows = (
             self.session.execute(
@@ -562,7 +562,7 @@ class FincaAmortizacionLedgerRepository:
         Returns:
             The matching :class:`FincaAmortizacionLedgerEntry`, or ``None`` when absent.
         """
-        from ..storage.sql import _orm
+        from ..storage.sql import orm as _orm
 
         row = self.session.execute(
             select(_orm.FincaAmortizacionLedgerRow).where(
@@ -575,7 +575,7 @@ class FincaAmortizacionLedgerRepository:
     def upsert(self, record: FincaAmortizacionLedgerEntry) -> FincaAmortizacionLedgerEntry:
         """Insert or update ``record`` and return the persisted :class:`FincaAmortizacionLedgerEntry`."""
         from ..storage.errors import RepositoryError
-        from ..storage.sql import _orm
+        from ..storage.sql import orm as _orm
 
         row: _orm.FincaAmortizacionLedgerRow | None = None
         if record.id is not None:
@@ -614,7 +614,7 @@ class FincaAmortizacionLedgerRepository:
     def delete(self, record_id: int) -> None:
         """Delete the record with surrogate id ``record_id``."""
         from ..storage.errors import RepositoryError
-        from ..storage.sql import _orm
+        from ..storage.sql import orm as _orm
 
         row = self.session.get(_orm.FincaAmortizacionLedgerRow, record_id)
         if row is None:

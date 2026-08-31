@@ -8,7 +8,7 @@ from ._app_ledger_command_spec_policies import (
     _POLICY_2,
     _POLICY_5,
 )
-from ._command_spec import (
+from .command_spec import (
     ArgumentSpec,
     CommandSpec,
     DeferredTarget,
@@ -39,7 +39,7 @@ LEDGER_EVIDENCE_FOLLOWUP_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_business_payloads", "EvidenceConsentListResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli.ledger_business_payloads", "EvidenceConsentListResult"),
             identity="ledger.evidence.consent.list",
         ),
     ),
@@ -101,7 +101,7 @@ LEDGER_EVIDENCE_FOLLOWUP_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_business_payloads", "EvidenceConsentRederiveResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli.ledger_business_payloads", "EvidenceConsentRederiveResult"),
             identity="ledger.evidence.consent.rederive",
         ),
     ),
@@ -185,7 +185,7 @@ LEDGER_EVIDENCE_FOLLOWUP_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_business_payloads", "EvidenceReviewListResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli.ledger_business_payloads", "EvidenceReviewListResult"),
             identity="ledger.evidence.review.list",
         ),
     ),
@@ -215,7 +215,7 @@ LEDGER_EVIDENCE_FOLLOWUP_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_business_payloads", "EvidenceReviewViewResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli.ledger_business_payloads", "EvidenceReviewViewResult"),
             identity="ledger.evidence.review.view",
         ),
     ),

@@ -9,8 +9,8 @@ from ....adapters.outbound.google.errors import GoogleAuthError
 from ....adapters.outbound.google.records import DriveConfig
 from ....adapters.outbound.google.session_store import load_drive_config, save_drive_config
 from .._common import emit_envelope
-from ._google_errors import _google_refusal
 from ._google_folder_payloads import GoogleFolderSetResult, GoogleFolderViewResult
+from .google_errors import _google_refusal
 
 if TYPE_CHECKING:
     import typer

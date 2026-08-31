@@ -57,7 +57,7 @@ _BOUND_KWARGS = frozenset({"ge", "le", "gt", "lt"})
 #: Sites permitted to spell their own window on a filing-year-named field,
 #: each with the reason the canonical alias does not fit.
 EXEMPT_SITES: dict[str, str] = {
-    "core/_period.py:380": (
+    "core/period.py:381": (
         "a period is a calendar span, not a claim that a revision exists for "
         "it; it must express a pre-1995 IVA regime year and a 1999 coordinate "
         "whose refusal is the behaviour under test, so the filing-year window "

@@ -46,12 +46,12 @@ from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing import IsoDateString, require_iso8601_date
 from ...core.period import Period
-from ...domain.calculations._row_source_identity import RowSourceIdentity
 from ...domain.calculations.registry.binding_selector_utils import binding_row_set_selector
 from ...domain.calculations.registry.detail_record_bindings import (
     Modelo720RowObservation,
     resolve_foreign_asset_binding_row_values,
 )
+from ...domain.calculations.row_source_identity import RowSourceIdentity
 from .._foreign_asset_thresholds import (
     ForeignAssetDeclarationThreshold,
     foreign_asset_declaration_thresholds,

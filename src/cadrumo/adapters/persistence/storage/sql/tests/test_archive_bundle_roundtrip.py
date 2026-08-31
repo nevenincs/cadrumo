@@ -36,7 +36,7 @@ from sqlalchemy.engine import Engine
 from ......core.classification.policies import SensitivityClass
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ...tests.engine_bootstrap import bootstrap_sqlite_engine
-from .._orm import Base
+from ..orm import Base
 from ..secure_objects import SecureObjectRawRow, SecureObjectRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

@@ -25,7 +25,7 @@ from ......domain.calculations.export_field_kind import CasillaFieldKind
 from ......domain.calculations.registry.export_value_policy import ExportValuePolicy
 from ......domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
 from ......domain.modelos.errors import ModeloExportError
-from .._registry_record_renderer import RegistryFixedWidthRecordRenderer
+from ..registry_record_renderer import RegistryFixedWidthRecordRenderer
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

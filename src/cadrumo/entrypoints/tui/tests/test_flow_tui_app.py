@@ -48,7 +48,7 @@ from ....core.flows import (
     FlowWidgetKind,
     PageStatus,
 )
-from ....core.i18n._render import SUPPORTED_OUTPUT_LANGUAGES, tr
+from ....core.i18n.render import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ....tests.env_scope import activate_output_language, output_language_scope
 from ....tests.locales_root_fixture import locales_root_scope
 from ..components.host import ScreenHostApp

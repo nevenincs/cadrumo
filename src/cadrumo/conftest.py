@@ -54,9 +54,9 @@ os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = str(_COLLECTION_STORAGE_ROOT)
 # these modules' own import surfaces might trigger a premature
 # configure_logging() against is already set by the pure-stdlib lines above.
 from .core.external_constants import UTF_8_ENCODING  # noqa: E402
-from .tests._collection_storage_root import register_collection_storage_root_cleanup
-from .tests._inventory import package_python_files, prime_ast_cache
+from .tests.collection_storage_root import register_collection_storage_root_cleanup
 from .tests.env_scope import release_settings_storage_directories  # noqa: E402
+from .tests.inventory import package_python_files, prime_ast_cache
 
 # The other half of what apply_collection_storage_root(overwrite=True) used
 # to do in one call: register the atexit cleanup and stale-sibling sweep for

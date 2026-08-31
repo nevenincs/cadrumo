@@ -37,6 +37,9 @@ from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from ....llm.errors import LLMProviderError
 from ....llm.invoice_field_grounding import ground_extracted_fields, parse_invoice_extraction_response
 from ....tests.attribute_scope import scoped_attribute
+
+# The MODULE object, not names from it: the tests below scope an attribute
+# on it. `from .. import <module>` is the relative form that yields one.
 from ..document_transcription import DocumentTranscription, TranscriberIdentity
 from ..evidence_errors import PurchaseInvoiceEvidenceInputError
 from ..evidence_input import EvidenceInput

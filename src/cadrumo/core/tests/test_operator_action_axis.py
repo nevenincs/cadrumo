@@ -6,7 +6,6 @@ from pathlib import Path
 
 import pytest
 
-from ... import core
 from ...tests import modules_declaring_class
 from .. import operator_action_enums as owner
 from ..operator_action_enums import OperatorActionAxis
@@ -15,7 +14,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def test_operator_action_axis_is_the_single_public_core_identity() -> None:
-    assert core.OperatorActionAxis is owner.OperatorActionAxis
+    assert owner.OperatorActionAxis.__module__ == owner.__name__
     assert tuple(OperatorActionAxis.__members__) == (
         "SUPPLY_MANUAL_INPUT",
         "IMPORT_LEDGER_DATA",

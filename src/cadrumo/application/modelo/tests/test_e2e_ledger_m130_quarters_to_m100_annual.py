@@ -74,23 +74,19 @@ from ....domain.modelos.filing_record import ExternalEvidenceKind
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....domain.usage_ratios._model import UsageRatioProfile
+from ....domain.usage_ratios.model import UsageRatioProfile
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.env_scope import ready_clave_settings
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ...aggregation import CallerOverrideDisposition, precedence_ladder_sources
 from ...calculations.observations_repository import CalculationObservationRepository
-from .._action_errors import ModeloAggregationBindingError
-from .._calculation_actions import calculate_modelo_revision_from_bucket_aggregation
-from .._export import (
-    ModeloExportCommand,
-    ModeloExportError,
-    export_modelo_revision,
-)
-from .._filed_revision_observation import persist_filed_revision_observation
-from .._verification_actions import verify_modelo_revision
+from ..action_errors import ModeloAggregationBindingError
+from ..calculation_actions import calculate_modelo_revision_from_bucket_aggregation
+from ..export import ModeloExportCommand, ModeloExportError, export_modelo_revision
 from ..external_import_actions import import_external_filing_evidence
+from ..filed_revision_observation import persist_filed_revision_observation
+from ..verification_actions import verify_modelo_revision
 from ..work_lifecycle import create_work_unit
 from .justificante_metadata import persist_justificante_metadata
 

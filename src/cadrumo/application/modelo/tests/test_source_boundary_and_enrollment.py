@@ -45,11 +45,8 @@ from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import DEFERRED_SOURCE_KINDS, ForeignAssetClass, ForeignAssetIngestObservation
 from ...user_profile.preflight import build_profile_preflight_requirement
-from .._action_errors import (
-    ModeloAggregationBindingError,
-    ModeloProfileReadinessError,
-)
-from .._calculation_actions import (
+from ..action_errors import ModeloAggregationBindingError, ModeloProfileReadinessError
+from ..calculation_actions import (
     BucketAggregationCalculationResult,
     assert_no_novel_source_kinds,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -389,7 +386,7 @@ def test_s09_ledger_renta_income_resolver_enrolled_fires_on_m130(
         collect_unhandled_source_diagnostics,
         merge_source_resolutions,
     )
-    from ...calculations._multi_year import PreviousFilingSourceResolver
+    from ...calculations.multi_year import PreviousFilingSourceResolver
     from ...invoices.source_resolver import InvoiceCatalogueSourceResolver
 
     _wu_repo, _cr_repo, tx_repo, invoice_repo = _repos(secure_objects)

@@ -35,13 +35,13 @@ from ....domain.modelos.calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from .._action_errors import CasillaProvenanceMissingError
 from .._calculation_helpers import (
     amendment_observations as _amendment_observations,
 )
 from .._calculation_helpers import (
     build_typed_observations as _build_typed_observations,
 )
+from ..action_errors import CasillaProvenanceMissingError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _ORPHAN_CASILLA: CasillaId = validated_casilla_id("9999999", surface="_ORPHAN_CASILLA")

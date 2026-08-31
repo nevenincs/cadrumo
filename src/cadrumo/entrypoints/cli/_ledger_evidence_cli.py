@@ -20,7 +20,7 @@ from ...application.ledger.invoice_draft_extraction import extract_invoice_draft
 from ...application.user_profile.capabilities import cloud_evidence_upload_eligible_for_active_profile
 from ...core.aggregation import IntracomOperationType
 from ...core.config import load_settings
-from ...core.i18n._render import tr
+from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.invoices.enums import InvoiceClass
 from ...domain.invoices.errors import InvoiceValidationError

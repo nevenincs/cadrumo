@@ -26,7 +26,6 @@ from ....domain.iva_compensation.errors import (
 )
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
-from .._m303_carry_ingress import M303CarryIngressError
 from ..errors import IvaCompensationModeloError
 from ..iva_compensation_history import (
     IvaCompensationHistoryRepository,
@@ -35,6 +34,7 @@ from ..iva_compensation_history import (
     iva_compensation_state_from_observation_envelope,
     seed_iva_compensation_period,
 )
+from ..m303_carry_ingress import M303CarryIngressError
 from ..observations_repository import CalculationObservationRepository, ObservationSourceKind
 from ._iva_compensation_history_support import (
     _M303_POSTERIOR_CASILLA,

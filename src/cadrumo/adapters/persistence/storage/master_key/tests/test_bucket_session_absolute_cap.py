@@ -15,8 +15,8 @@ from datetime import UTC, datetime, timedelta
 import pytest
 
 from ...errors import StorageValidationError
-from .._idle_timeout import evaluate_idle
 from ..bucket_session import DEFAULT_SESSION_ABSOLUTE_MINUTES, BucketSession
+from ..idle_timeout import evaluate_idle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

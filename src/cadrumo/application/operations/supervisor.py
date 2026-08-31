@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-import secrets
-from collections.abc import Awaitable, Callable, Coroutine
+from collections.abc import Callable, Coroutine
 from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import cast
@@ -20,10 +19,10 @@ from ...core.operations import (
     OperationCancellation,
     OperationDeadline,
     OperationEffect,
-    OperationInteractionKind,
     OperationLifecycle,
     OperationTerminalCondition,
 )
+from . import supervisor_context as _supervisor_context
 from ._execution_context import DefinitionBoundContext
 from ._supervisor_lease import OperationSupervisorLeaseMixin
 from .capabilities import OperationRequestStoragePolicy
@@ -40,7 +39,6 @@ from .financial_operand_submission import (
 from .interactions import (
     OperationApplyResponse,
     OperationConsumedInteraction,
-    OperationInteractionRequest,
     OperationPendingInteraction,
     OperationRejectResponse,
 )
@@ -97,11 +95,6 @@ _AWAIT_TERMINAL_INITIAL_BACKOFF_SECONDS = 0.025
 _AWAIT_TERMINAL_MAX_BACKOFF_SECONDS = 0.25
 
 
-def _new_response_token() -> str:
-    """Create one unpersisted capability bearer for an exact REVIEW checkpoint."""
-    return secrets.token_hex(32)
-
-
 class OperationSupervisor(OperationSupervisorLeaseMixin):
     """Coordinate durable execution, interactions, recovery, and settlement."""
 
@@ -120,7 +113,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         execution_timeout: timedelta | None = None,
         cleanup_timeout: timedelta | None = None,
         response_authority_issuer: OperationResponseAuthorityIssuer | None = None,
-        response_token_factory: Callable[[], str] = _new_response_token,
+        response_token_factory: Callable[[], str] = _supervisor_context._new_response_token,
         financial_operand_custody: OperationFinancialOperandCustodyRepository | None = None,
     ) -> None:
         """Bind the registry and durable ports for one process owner."""
@@ -310,7 +303,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
             executor_entered_at=now,
         )
         context = self._build_context(running)
-        executor_context = _SupervisorExecutorContext(
+        executor_context = _supervisor_context._SupervisorExecutorContext(
             context=context,
             operands=self._operands,
             ephemeral_secret=BoundEphemeralSecretAccess(
@@ -1156,7 +1149,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
             idempotency_key=None,
         )
         context = self._build_context(snapshot)
-        executor_context = _SupervisorExecutorContext(
+        executor_context = _supervisor_context._SupervisorExecutorContext(
             context=context,
             operands=self._operands,
             ephemeral_secret=BoundEphemeralSecretAccess(
@@ -1243,119 +1236,6 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
             settled_at=self._clock(),
         )
         return await self.settle(classified.identity.operation_id, receipt)
-
-
-class _SupervisorInteractionAccess:
-    """Publish reviewed operands through secure storage before journal visibility."""
-
-    def __init__(
-        self,
-        *,
-        request_pending: Callable[[OperationPendingInteraction], Awaitable[None]],
-        operands: OperationSecureReferenceStore | None,
-        clock: Callable[[], datetime],
-        response_authority_issuer: OperationResponseAuthorityIssuer | None,
-        response_token_factory: Callable[[], str],
-    ) -> None:
-        self._request_pending = request_pending
-        self._operands = operands
-        self._clock = clock
-        self._response_authority_issuer = response_authority_issuer
-        self._response_token_factory = response_token_factory
-
-    async def request(self, pending: OperationPendingInteraction) -> None:
-        await self._request_pending(pending)
-
-    async def publish_review(
-        self,
-        *,
-        interaction_id: str,
-        identity: OperationIdentity,
-        revision: int,
-        presentation_code: str,
-        response_schema_ref: str,
-        continuation_digest: str,
-        expires_at: datetime | None,
-        reviewed_operand: BaseModel,
-        baseline_digest: str | None = None,
-        proposed_effect_digest: str | None = None,
-    ) -> None:
-        if self._operands is None:
-            raise ValueError("secure review publication requires an operand store")
-        reference = await self._operands.put(reviewed_operand, written_at=self._clock())
-        request = OperationInteractionRequest(
-            interaction_id=interaction_id,
-            identity=identity,
-            revision=revision,
-            kind=OperationInteractionKind.REVIEW,
-            presentation_code=presentation_code,
-            response_schema_ref=response_schema_ref,
-            continuation_digest=continuation_digest,
-            expires_at=expires_at,
-        )
-        response_token = self._response_token_factory()
-        try:
-            pending = OperationPendingInteraction.bind(
-                request=request,
-                response_token=response_token,
-                reviewed_proposal_digest=reference,
-                baseline_digest=baseline_digest,
-                proposed_effect_digest=proposed_effect_digest,
-            )
-            await self._request_pending(pending)
-            if self._response_authority_issuer is not None:
-                self._response_authority_issuer.issue(pending, response_token)
-        finally:
-            response_token = ""
-
-
-class _SupervisorExecutorContext:
-    """Delegate definition checks while adding supervisor-owned secure publication."""
-
-    def __init__(
-        self,
-        *,
-        context: DefinitionBoundContext,
-        operands: OperationSecureReferenceStore | None,
-        ephemeral_secret: BoundEphemeralSecretAccess,
-        financial_operand: BoundTransientFinancialOperandAccess,
-        clock: Callable[[], datetime],
-        response_authority_issuer: OperationResponseAuthorityIssuer | None,
-        response_token_factory: Callable[[], str],
-    ) -> None:
-        self.identity = context.identity
-        self.cancellation = context.cancellation
-        self.deadlines = context.deadlines
-        self.events = context.events
-        self._operands = operands
-        self.ephemeral_secret = ephemeral_secret
-        self.financial_operand = financial_operand
-        self.cleanup = context.cleanup
-        self.interactions = _SupervisorInteractionAccess(
-            request_pending=context.interactions.request,
-            operands=operands,
-            clock=clock,
-            response_authority_issuer=response_authority_issuer,
-            response_token_factory=response_token_factory,
-        )
-        self._context = context
-
-    @property
-    def operands(self) -> OperationSecureReferenceStore:
-        """Expose secure storage only when the composition root supplied it."""
-        if self._operands is None:
-            raise ValueError("operation definition has no secure operand store")
-        return self._operands
-
-    @property
-    def revision(self) -> int:
-        """Return the current durable revision without exposing journal state."""
-        return self._context.snapshot.revision
-
-    @property
-    def snapshot(self) -> OperationPersistedSnapshot:
-        """Expose the current durable view retained by the definition-bound context."""
-        return self._context.snapshot
 
 
 __all__ = ["OperationSupervisor"]

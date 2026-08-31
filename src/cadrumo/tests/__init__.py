@@ -51,7 +51,12 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ._bucket_id_fixture import bucket_id
-from ._collection_storage_root import (
+from ._storage_path_grammar import (
+    assert_grammar_vocabulary_is_declared,
+    assert_path_matches_grammar,
+    literal_directory_runs,
+)
+from .collection_storage_root import (
     apply_collection_storage_root,
     collection_storage_root,
     process_is_live,
@@ -59,8 +64,8 @@ from ._collection_storage_root import (
     reap_abandoned_numbered_dirs,
     register_collection_storage_root_cleanup,
 )
-from ._env import temporary_env
-from ._inventory import (
+from .env import temporary_env
+from .inventory import (
     REPO_ROOT,
     SRC_CADRUMO,
     aeat_relative,
@@ -89,7 +94,7 @@ from ._inventory import (
     repo_relative,
     resolve_dotted_origin,
 )
-from ._size_budget import (
+from .size_budget import (
     CALLABLE_POLICY,
     MIN_SCANNED_CALLABLES,
     MIN_SCANNED_MODULES,
@@ -104,11 +109,6 @@ from ._size_budget import (
     measure_module_lines,
     scan_callable_lines,
     scan_module_lines,
-)
-from ._storage_path_grammar import (
-    assert_grammar_vocabulary_is_declared,
-    assert_path_matches_grammar,
-    literal_directory_runs,
 )
 
 if TYPE_CHECKING:

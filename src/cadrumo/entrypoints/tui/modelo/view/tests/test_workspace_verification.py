@@ -8,34 +8,18 @@ distinctly from measured-and-empty ones.
 from __future__ import annotations
 
 import pytest
-from textual.app import App, ComposeResult
 from textual.widgets import Static
 
 from ......adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ......core.external_constants import OutputLanguage
-from ......core.i18n._render import tr
-from ....components.theme import install_cadrumo_themes
+from ......core.i18n.render import tr
+from ....components.host import ScreenHostApp
 from ....components.widgets import ContentDataTable
 from ..controller import ModeloWorkspaceReadSession, admit_workspace_session
 from ..verification import ModeloWorkspaceVerificationScreen
 from .conftest import resolve_real_result
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-
-class _VerificationHost(App[None]):
-    """Minimal host so the destination runs under a real Textual pilot."""
-
-    def __init__(self, session: ModeloWorkspaceReadSession) -> None:
-        super().__init__()
-        self._session = session
-
-    def on_mount(self) -> None:
-        install_cadrumo_themes(self)
-        self.push_screen(ModeloWorkspaceVerificationScreen(self._session))
-
-    def compose(self) -> ComposeResult:
-        return iter(())
 
 
 def _session(bucket_id: str, repository: WorkUnitCatalogueRepository) -> ModeloWorkspaceReadSession:
@@ -58,7 +42,7 @@ async def test_unmeasured_findings_are_distinguished_from_measured_and_empty(
     session = _session(bucket_id, repository)
     assert session.projection.work_review.review is None
 
-    app = _VerificationHost(session)
+    app = ScreenHostApp(ModeloWorkspaceVerificationScreen(session))
     async with app.run_test() as pilot:
         await pilot.pause()
         disposition = app.screen.query_one("#workspace-verification-findings-disposition", Static)
@@ -75,7 +59,7 @@ async def test_unmeasured_readiness_is_stated_and_no_axes_table_is_mounted(
     session = _session(bucket_id, repository)
     assert session.projection.readiness is None
 
-    app = _VerificationHost(session)
+    app = ScreenHostApp(ModeloWorkspaceVerificationScreen(session))
     async with app.run_test() as pilot:
         await pilot.pause()
         disposition = app.screen.query_one("#workspace-verification-readiness-disposition", Static)
@@ -99,7 +83,7 @@ async def test_absent_evidence_and_recovery_actions_are_stated_not_shown_empty(
     assert all(capability.facts == () for capability in session.projection.capabilities)
     assert all(capability.recovery_action is None for capability in session.projection.capabilities)
 
-    app = _VerificationHost(session)
+    app = ScreenHostApp(ModeloWorkspaceVerificationScreen(session))
     async with app.run_test() as pilot:
         await pilot.pause()
         notice = app.screen.query_one("#workspace-verification-evidence-not-carried", Static)
@@ -127,7 +111,7 @@ async def test_the_screen_shows_only_its_own_capability_not_the_whole_denominato
         if capability.capability is ModeloWorkspaceCapabilityName.VERIFICATION_READINESS
     )
 
-    app = _VerificationHost(session)
+    app = ScreenHostApp(ModeloWorkspaceVerificationScreen(session))
     async with app.run_test() as pilot:
         await pilot.pause()
         rendered = str(app.screen.query_one("#workspace-verification-capability", Static).content)
@@ -144,7 +128,7 @@ async def test_the_destination_offers_no_editing_affordance(
     from textual.widgets import Button, Checkbox, Input, RadioSet, SelectionList
 
     bucket_id, repository = bucket_and_repository
-    app = _VerificationHost(_session(bucket_id, repository))
+    app = ScreenHostApp(ModeloWorkspaceVerificationScreen(_session(bucket_id, repository)))
 
     async with app.run_test() as pilot:
         await pilot.pause()

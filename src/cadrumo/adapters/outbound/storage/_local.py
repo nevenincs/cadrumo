@@ -35,7 +35,6 @@ from ....core.time.utc import validate_utc_aware
 from ._integrity import verify_content_hash, verify_payload_byte_length
 from ._key_validation import assert_admissible_object_key_hmac
 from ._object_name import build_provider_object_name, provider_object_hmac_prefix, sanitize_provider_object_label
-from ._records import ProviderKind, ProviderObjectMetadata, ProviderProbeReport
 from .errors import (
     OutboundStorageConflictError,
     OutboundStorageIntegrityError,
@@ -45,6 +44,7 @@ from .errors import (
     OutboundStorageValidationError,
     StorageCorruptionError,
 )
+from .records import ProviderKind, ProviderObjectMetadata, ProviderProbeReport
 
 _logger = get_logger(__name__)
 

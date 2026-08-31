@@ -78,16 +78,12 @@ from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
 from ...calculations.observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository
 from ...invoices.catalogue_creation import build_catalogue_invoice
-from .._action_errors import ModeloCrossPeriodCleanStateError
-from .._calculation_actions import calculate_modelo_revision_from_bucket_aggregation
-from .._export import (
-    ModeloExportCommand,
-    ModeloExportUnsupportedError,
-    export_modelo_revision,
-)
-from .._filed_revision_observation import persist_filed_revision_observation
-from .._filing_actions import file_modelo_revision
-from .._verification_actions import verify_modelo_revision
+from ..action_errors import ModeloCrossPeriodCleanStateError
+from ..calculation_actions import calculate_modelo_revision_from_bucket_aggregation
+from ..export import ModeloExportCommand, ModeloExportUnsupportedError, export_modelo_revision
+from ..filed_revision_observation import persist_filed_revision_observation
+from ..filing_actions import file_modelo_revision
+from ..verification_actions import verify_modelo_revision
 from ..work_lifecycle import create_work_unit
 from ._export_modelo_303_support import _MODELO_303_MANUAL_RESULTADO_CASILLA_ZEROS
 

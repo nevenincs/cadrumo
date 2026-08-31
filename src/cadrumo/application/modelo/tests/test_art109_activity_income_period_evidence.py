@@ -26,8 +26,8 @@ from .._art109_activity_income import (
     Art109ActivityIncomeCoverageStatus,
     derive_art109_activity_income_coverage,
 )
-from .._calculation_actions import calculate_modelo_revision
-from .._verification_actions import verify_modelo_revision
+from ..calculation_actions import calculate_modelo_revision
+from ..verification_actions import verify_modelo_revision
 from ..work_lifecycle import create_work_unit
 from ._verification_substance_support import (
     _CASILLA_01,

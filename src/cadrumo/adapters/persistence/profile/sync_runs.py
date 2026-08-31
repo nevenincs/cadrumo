@@ -6,7 +6,7 @@ from typing import ClassVar, override
 
 from pydantic import BaseModel
 
-from ....application.storage.sync_runs._records import (
+from ....application.storage.sync_runs.records import (
     SyncRunRecord,
     SyncRunRecordRepositoryProtocol,
     sync_run_record_key,

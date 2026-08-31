@@ -16,7 +16,7 @@ from ...application.ledger.id_resolution import compute_display_id_width
 from ...application.ledger.models import LedgerReviewQuery, LedgerReviewQueryResult, LedgerReviewRow
 from ...application.review.errors import FilterParseError
 from ...application.review.filter import LedgerReviewFilterSpec
-from ...core.i18n._render import tr
+from ...core.i18n.render import tr
 from ._common import _state, _tx_repo, emit_envelope
 from ._ledger_list import ledger_review_query_for_spec
 from ._ledger_read_cli import resolve_ledger_transaction_id

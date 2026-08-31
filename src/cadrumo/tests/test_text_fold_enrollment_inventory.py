@@ -30,7 +30,7 @@ from typing import TypeGuard
 
 import pytest
 
-from ._inventory import SRC_CADRUMO, leaf_name, production_ast_items, repo_relative
+from .inventory import SRC_CADRUMO, leaf_name, production_ast_items, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

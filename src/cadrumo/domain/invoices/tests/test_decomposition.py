@@ -21,7 +21,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.outbound.fx._ecb_provider import ECB_RATE_SOURCE_ID
+from ....adapters.outbound.fx.ecb_provider import ECB_RATE_SOURCE_ID
 from ...iva.classification import InvoiceKind, TransactionKind
 from ...iva.oss import OssIossRegime
 from ...iva.schema import EUMemberState, IvaCategory, IvaRateKind

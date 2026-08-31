@@ -36,7 +36,7 @@ from ..core.directory_scan import (
     iter_directory,
 )
 from ..core.hardware import AcceleratorKind, ContentionCause, HardwareTier, hardware_tier_for_free_bytes
-from ..core.i18n._render import tr
+from ..core.i18n.render import tr
 from ..core.model_catalogue import (
     DeploymentLicencePosture,
     ModelCandidate,

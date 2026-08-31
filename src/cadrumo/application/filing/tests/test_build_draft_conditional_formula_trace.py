@@ -34,7 +34,7 @@ from ....domain.calculations.registry.ids import BindingId
 from ....domain.filing.protocols import ModeloInputs
 from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from ....domain.submission.models import ModeloDraftStatus
-from .._draft_construction import build_draft
+from ..draft_construction import build_draft
 from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

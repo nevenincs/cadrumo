@@ -26,7 +26,7 @@ from ...core.json_contract import Notice
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...domain.iva_compensation.reconciliation import IvaCompensationDecisionReason
-from ..storage.sync_runs._records import SyncRunRecordReference
+from ..storage.sync_runs.records import SyncRunRecordReference
 from .errors import LiveIvaAcquisitionFailureMode
 
 LiveIvaDiagnosticRef = Annotated[str, Field(pattern=r"^sha256:[0-9a-f]{12}$")]

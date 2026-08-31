@@ -24,7 +24,7 @@ from ....domain.calculations.registry.censo_modelos import CensoModeloEventKind
 from ....tests.secure_sql import isolated_runtime_profile
 from ....tests.write_unit_recorder import WriteUnitRecorder
 from ...live.errors import LiveApplicationInputError
-from .._m036_lifecycle import (
+from ..m036_lifecycle import (
     M036DeclarationCommand,
     M036DeclarationResult,
     _m036_declaration_repository,

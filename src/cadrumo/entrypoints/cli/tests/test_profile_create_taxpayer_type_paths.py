@@ -34,7 +34,7 @@ it now, so a later reader does not read the deletions as lost coverage:
 - legal_entity_form_flag_populates_the_legal_entity_form_field,
   activity_start_date_flag_stores_the_censo_alta_date: their subject is the
   flag-to-fact mapping of a retired path. The mapping itself is declared in
-  application/wizard/_catalogue.py, which is its own authority.
+  application/wizard/catalogue.py, which is its own authority.
 - legal_entity_profile_create_and_edit_exposes_legal_name: the create half is
   retired; the edit half is covered by the surviving edit refusals here.
 - missing_entity_type_does_not_re_report_supplied_identity_flags: its subject
@@ -53,7 +53,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.i18n._render import tr
+from ....core.i18n.render import tr
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage
 from ....tests.user_profile import register_cli_profile

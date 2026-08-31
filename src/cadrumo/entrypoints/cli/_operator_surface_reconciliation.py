@@ -83,7 +83,7 @@ def _current_operator_surface_input_schemas() -> tuple[
 
 def _current_operator_surface_callback_aliases() -> dict[str, set[tuple[str, ...]]]:
     """Return aliases derived from duplicate graph result identities."""
-    from ._command_specs import COMMAND_GRAPH
+    from .command_specs import COMMAND_GRAPH
 
     paths: dict[str, list[tuple[str, ...]]] = {}
     for node in COMMAND_GRAPH.nodes():
@@ -126,7 +126,7 @@ def _current_operator_surface_schema_rows(
         ResultSchemaInventoryRow,
     )
     from ._command_schema import command_registration_policy
-    from ._command_specs import COMMAND_GRAPH
+    from .command_specs import COMMAND_GRAPH
 
     root_landing_schema_keys = frozenset(
         identity
@@ -224,7 +224,7 @@ def _current_operator_surface_exposures(
 def _current_operator_surface_exclusions() -> tuple[ExplicitExclusionInventoryRow, ...]:
     """Project the declared root-landing omissions into reconciliation evidence."""
     from ...application.operator_surface.manifest import ExplicitExclusionInventoryRow, ReconciliationSurface
-    from ._command_specs import COMMAND_GRAPH
+    from .command_specs import COMMAND_GRAPH
 
     root_landing_schema_keys = frozenset(
         identity

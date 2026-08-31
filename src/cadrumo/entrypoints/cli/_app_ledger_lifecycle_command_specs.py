@@ -11,7 +11,7 @@ from ._app_ledger_command_spec_policies import (
     _POLICY_7,
     _POLICY_9,
 )
-from ._command_spec import (
+from .command_spec import (
     ArgumentSpec,
     CommandSpec,
     DeferredTarget,
@@ -112,7 +112,7 @@ LEDGER_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_POLICY_9,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._ledger_lifecycle_cli", "ledger_remove")),
+        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli.ledger_lifecycle_cli", "ledger_remove")),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget("cadrumo.entrypoints.cli._ledger_payloads", "LedgerRemoveResult"),
@@ -194,7 +194,7 @@ LEDGER_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_POLICY_9,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._ledger_lifecycle_cli", "ledger_reset")),
+        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli.ledger_lifecycle_cli", "ledger_reset")),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget("cadrumo.entrypoints.cli._ledger_payloads", "LedgerResetResult"),
@@ -271,7 +271,7 @@ LEDGER_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         policy=_POLICY_4,
         handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._ledger_lifecycle_cli", "ledger_restore")
+            DeferredTarget("cadrumo.entrypoints.cli.ledger_lifecycle_cli", "ledger_restore")
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
@@ -507,7 +507,7 @@ LEDGER_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_POLICY_7,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._ledger_lifecycle_cli", "ledger_split")),
+        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli.ledger_lifecycle_cli", "ledger_split")),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget("cadrumo.entrypoints.cli._ledger_payloads", "LedgerSplitResult"),
@@ -583,7 +583,7 @@ LEDGER_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_POLICY_4,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._ledger_lifecycle_cli", "ledger_stash")),
+        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli.ledger_lifecycle_cli", "ledger_stash")),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget("cadrumo.entrypoints.cli._ledger_payloads", "LedgerStashResult"),

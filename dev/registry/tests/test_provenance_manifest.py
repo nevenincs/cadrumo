@@ -8,11 +8,11 @@ import inspect
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.filing_projection_ref import (
     M303ProrrataActivityProjectionField,
     M303ProrrataActivityProjectionRef,
 )
-from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy

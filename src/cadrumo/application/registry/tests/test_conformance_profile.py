@@ -24,7 +24,7 @@ from datetime import date
 
 import pytest
 
-from ....core.access_gate._authorization import AuthorizationState
+from ....core.access_gate.authorization import AuthorizationState
 from ....core.export_layout_format import ExportLayoutFormat
 from ....core.modelo import NON_REGISTRY_MODELOS, Modelo
 from ....core.revision_review import RevisionReviewStatus

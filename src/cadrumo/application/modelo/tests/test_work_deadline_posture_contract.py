@@ -7,7 +7,7 @@ from typing import cast
 
 import pytest
 
-from .._work_plazo import ModeloWorkDeadlinePosture
+from ..work_plazo import ModeloWorkDeadlinePosture
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

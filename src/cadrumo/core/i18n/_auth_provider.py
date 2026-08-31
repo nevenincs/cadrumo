@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from ..auth_provider import AuthProviderDescription, AuthProviderKind
-from ._render import tr
+from .render import tr
 
 
 def describe_auth_provider_operator_impact(description: AuthProviderDescription) -> str:

@@ -28,7 +28,7 @@ from statistics import median
 from typing import TYPE_CHECKING, Any, cast
 
 if TYPE_CHECKING:
-    from cadrumo.entrypoints.cli._command_suggestions import LiveCommandNode
+    from cadrumo.entrypoints.cli.command_suggestions import LiveCommandNode
     from cadrumo.tests.cli_performance import CliPerformanceProfile
 
 SCHEMA = "cadrumo-cli-baseline-v1"
@@ -473,7 +473,7 @@ def capture(
 ) -> dict[str, Any]:
     """Capture controls and every dynamically enrolled live command node."""
     from cadrumo.entrypoints.cli import app
-    from cadrumo.entrypoints.cli._command_suggestions import walk_live_command_tree
+    from cadrumo.entrypoints.cli.command_suggestions import walk_live_command_tree
 
     _assert_snapshot_runtime()
     if samples < 3:
@@ -632,7 +632,7 @@ def check_baseline(
 ) -> None:
     """Reject stale, incomplete, unranked, or unsafely labelled evidence."""
     from cadrumo.entrypoints.cli import app
-    from cadrumo.entrypoints.cli._command_suggestions import walk_live_command_tree
+    from cadrumo.entrypoints.cli.command_suggestions import walk_live_command_tree
 
     if payload.get("schema") != SCHEMA:
         raise RuntimeError("unsupported or missing CLI baseline schema")

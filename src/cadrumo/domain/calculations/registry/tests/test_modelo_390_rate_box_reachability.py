@@ -43,7 +43,10 @@ from ....iva.errors import IvaRateNotFoundError
 from ....iva.invoice_classification import invoice_line_to_iva_observation
 from ....iva.schema import IvaCategory, IvaRateKind
 from ..authority import bundled_authority
-from ..ledger_bindings import IvaLedgerObservation, resolve_ledger_iva_aggregation_binding_values
+from ..ledger_iva_bindings import (
+    IvaLedgerObservation,
+    resolve_ledger_iva_aggregation_binding_values,
+)
 from ..schema import ModeloRevision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

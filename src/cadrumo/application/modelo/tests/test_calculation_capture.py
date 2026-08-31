@@ -23,7 +23,6 @@ from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.registry_revision import active_registry_revision_id
-from .._calculation_actions import get_calculation_revision
 from ..calculation import (
     ModeloCalculationCapture,
     ModeloCalculationCaptureError,
@@ -31,6 +30,7 @@ from ..calculation import (
     capture_modelo_calculation,
     read_modelo_calculation_current_coordinate,
 )
+from ..calculation_actions import get_calculation_revision
 
 if TYPE_CHECKING:
     from ._file_flow_support import _Repos

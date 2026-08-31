@@ -30,7 +30,7 @@ import pytest
 from .....core.capabilities import ServiceCapability
 from .....core.config import override_settings
 from .....tests.cli_runner import invoke_cached_cli
-from ._isolated_storage_fixture import config_check_backend, config_check_isolated_backend
+from .isolated_storage_fixture import config_check_backend, config_check_isolated_backend
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["config_check_backend", "config_check_isolated_backend"]

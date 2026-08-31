@@ -10,20 +10,20 @@ from uuid import uuid4
 
 from .....core.hashing import prefixed_digest
 from ._capsule_filesystem import fsync_directory
-from ._filesystem_primitives import (
-    ProfileCustodyPasswordReadOperation,
-    anchor_directory,
-    posix_directory_fd,
-    posix_open_child_directory,
-    write_exclusive_fsynced,
-    write_exclusive_fsynced_fd,
-)
 from .errors import ProfileCustodyRecordError
 from .filesystem import (
     PROFILE_CUSTODY_DATA_FILE_MAX_BYTES,
     PROFILE_CUSTODY_DATA_MAX_ENTRIES,
     read_regular_file,
     read_regular_file_fd,
+)
+from .filesystem_primitives import (
+    ProfileCustodyPasswordReadOperation,
+    anchor_directory,
+    posix_directory_fd,
+    posix_open_child_directory,
+    write_exclusive_fsynced,
+    write_exclusive_fsynced_fd,
 )
 from .records import ProfileCustodyEnvelope
 from .sentinel import PROFILE_CUSTODY_SENTINEL_FILENAME, PROFILE_CUSTODY_SENTINEL_MAX_BYTES

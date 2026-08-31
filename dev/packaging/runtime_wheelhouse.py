@@ -77,7 +77,26 @@ class TargetPlatform:
 SUPPORTED_TARGETS: Final[tuple[TargetPlatform, ...]] = (
     TargetPlatform("linux-aarch64", "linux", "Linux", "aarch64", "posix", "glibc-2.28"),
     TargetPlatform("linux-x86-64", "linux", "Linux", "x86_64", "posix", "glibc-2.28"),
-    TargetPlatform("macos-arm64", "darwin", "Darwin", "arm64", "posix", "macos-11.0"),
+    # The macOS floor is 14.0, NOT 11.0, and this is the same class of defect the
+    # Linux floors carried: a declared floor no wheel could satisfy.
+    #
+    # `python_cohort build` failed with
+    #
+    #     runtime lock has no macos-arm64 wheel for pikepdf==10.12.0
+    #
+    # which reads as a missing wheel and is not one. pikepdf 10.12.0 publishes
+    # six macOS arm64 wheels and every one of them is `macosx_14_0_arm64`;
+    # `_platform_rank` rejects any wheel whose minimum exceeds the declared
+    # floor, so at 11.0 the entire set was unselectable and the lock looked
+    # empty. numpy and scipy are in exactly the same position - all three now
+    # ship arm64 wheels that require macOS 14.
+    #
+    # What this drops is macOS 11 (Big Sur), 12 (Monterey) and 13 (Ventura).
+    # That is a real narrowing and is stated here rather than left implicit. It
+    # follows upstream rather than leading it: the alternative is pinning numpy,
+    # scipy and pikepdf backwards to reach older wheels, which is a dependency
+    # decision with a much wider blast radius than a floor change.
+    TargetPlatform("macos-arm64", "darwin", "Darwin", "arm64", "posix", "macos-14.0"),
     TargetPlatform("windows-x86-64", "win32", "Windows", "AMD64", "nt", "windows-10"),
 )
 PLATFORM_FLOORS: Final[dict[str, str]] = {target.name: target.floor for target in SUPPORTED_TARGETS}

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .._command_spec import (
+from ..command_spec import (
     CommandSpec,
     DeferredTarget,
     InvocationSpec,
@@ -33,7 +33,7 @@ _ROLE = OptionSpec(
 
 
 def _handler(name: str) -> LazyBinding:
-    return LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._config._provision_cli", name))
+    return LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._config.provision_cli", name))
 
 
 def _schema(name: str, identity: str) -> ResultSchemaSpec:

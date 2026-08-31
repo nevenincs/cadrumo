@@ -17,9 +17,9 @@ from ...domain.calculations.registry.schema_exports import ExportFieldDefinition
 from ...domain.filing.errors import FilingExportError, FilingExportValidationError
 from ...domain.filing.schema import ModeloDraft
 from ...domain.iva.sepa_marca import derive_sepa_marca
-from ._projection import FilingRecordRenderContext
-from ._record_types import ProjectionAddress, RecordRenderRow
 from .producer_snapshot import ChargeAccountSelection, FilingProducerSnapshot, RefundAccountSelection
+from .projection import FilingRecordRenderContext
+from .record_types import ProjectionAddress, RecordRenderRow
 
 
 def render_record(

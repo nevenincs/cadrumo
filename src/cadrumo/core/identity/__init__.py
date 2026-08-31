@@ -40,8 +40,6 @@ from typing import Annotated
 from pydantic import AfterValidator, BeforeValidator, Field
 
 from ..hex import Hex64Str as _Hex64Str
-from ._bucket import BucketId, canonical_bucket_id
-from ._digest import ContentDigest, ContentDigestOrAbsent, PrefixedContentDigest
 from ._documents import (
     IdentityDocument,
     IdentityError,
@@ -68,7 +66,6 @@ from ._nif_iva import (
     nif_iva_prefix_for_country,
     normalise_nif_iva,
 )
-from ._profile import ProfileId, canonical_profile_bucket_id
 from ._profile_label import ProfileLabel
 from ._tax_id import (
     SPANISH_TAX_ID_WIDTH,
@@ -77,6 +74,9 @@ from ._tax_id import (
     tax_id_identity_token,
     validate_spanish_tax_id,
 )
+from .bucket import BucketId, canonical_bucket_id
+from .digest import ContentDigest, ContentDigestOrAbsent, PrefixedContentDigest
+from .profile import ProfileId, canonical_profile_bucket_id
 
 SnapshotId = _Hex64Str
 """Hex-64 content-addressed snapshot identity.

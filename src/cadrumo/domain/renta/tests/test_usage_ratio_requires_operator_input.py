@@ -44,7 +44,7 @@ import pytest
 from ...categories.proportionality import ProportionalityKind
 from ...categories.registry import resolve_category_profiles
 from ...categories.spending_category import SpendingCategory
-from .._ledger_expenses import (
+from ..ledger_expenses import (
     RentaDeductibilityContext,
     RentaDeductibilityStatus,
     RentaDeductibleExpenseFact,

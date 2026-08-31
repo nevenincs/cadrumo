@@ -124,7 +124,7 @@ def _literal_ids(tree: ast.Module) -> set[int]:
     return ids
 
 
-_SKIP_FILES: frozenset[str] = frozenset({"core/_modelo.py"})
+_SKIP_FILES: frozenset[str] = frozenset({"core/modelo.py"})
 """The enum's own declaration module, where the code strings are the values."""
 
 

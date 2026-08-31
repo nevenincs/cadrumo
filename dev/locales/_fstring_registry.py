@@ -152,11 +152,11 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     stays import-error-safe. If a domain import fails, ``get_registered_keys``
     will propagate the error with full context rather than a silent empty set.
     """
-    from cadrumo.application.storage_management._models import StorageAreaDisposition, StorageOccupancy
+    from cadrumo.application.storage_management.models import StorageAreaDisposition, StorageOccupancy
     from cadrumo.application.wizard.catalogue import WIZARD_FLOWS
-    from cadrumo.core.storage_taxonomy import StorageArea
     from cadrumo.core.errors.error_codes import ErrorCategory
     from cadrumo.core.i18n import SUPPORTED_OUTPUT_LANGUAGES
+    from cadrumo.core.storage_taxonomy import StorageArea
     from cadrumo.domain.contribuyente.ccaa import CCAA
     from cadrumo.domain.contribuyente.renta_codes import FiscalResidency
     from cadrumo.domain.deadlines.models import (
@@ -211,6 +211,98 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
         *_diagnostics_range_registrations(),
         *_custody_stdin_registrations(),
         *_modelo_work_help_registrations(),
+        *_modelo_workspace_registrations(),
+    )
+
+
+def _modelo_workspace_registrations() -> tuple[FStringKeyRegistration, ...]:
+    """Register the Modelo workspace destinations table and label keys.
+
+    Every tail below is a BOUNDED enumeration pinned to a literal tuple in the
+    owning view module, so each concrete key is registered here and the scaffold
+    re-materialises it. None is open-ended: the values are column orders, label
+    rows and readiness axes the screens declare, not operator or registry data.
+
+    Held as literals rather than imported, following the ``flows.modelo_select``
+    precedent above: each source constant is module-private, and the registry
+    should not deepen a private reach into a view module. The comment beside
+    each names its source so a divergence stays findable.
+    """
+    return (
+        FStringKeyRegistration(
+            # _COLUMN_KEYS in entrypoints/tui/modelo/view/filing.py
+            description="flows.modelo_workspace_filing.column.* (filing table columns)",
+            key_factory=lambda v: f"flows.modelo_workspace_filing.column.{v}",
+            values=("capability", "disposition", "producer", "why"),
+        ),
+        FStringKeyRegistration(
+            # _WHY_KEYS values in entrypoints/tui/modelo/view/filing.py, which
+            # already carry their own why. segment, so the factory adds none.
+            description="flows.modelo_workspace_filing.why.* (capability refusal reasons)",
+            key_factory=lambda v: f"flows.modelo_workspace_filing.{v}",
+            values=("why.draft_structural", "why.export_pending_port"),
+        ),
+        FStringKeyRegistration(
+            # _COLUMN_KEYS in entrypoints/tui/modelo/view/inputs.py
+            description="flows.modelo_workspace_inputs.column.* (inputs table columns)",
+            key_factory=lambda v: f"flows.modelo_workspace_inputs.column.{v}",
+            values=("address", "label", "value", "input_kind"),
+        ),
+        FStringKeyRegistration(
+            # _CAPABILITY_COLUMN_KEYS plus the shared field/value pair every
+            # label table adds, in entrypoints/tui/modelo/view/overview.py
+            description="flows.modelo_workspace_overview.column.* (overview table columns)",
+            key_factory=lambda v: f"flows.modelo_workspace_overview.column.{v}",
+            values=("capability", "disposition", "producer", "field", "value"),
+        ),
+        FStringKeyRegistration(
+            # _ADDRESS_ROW_KEYS + _REVISION_ROW_KEYS in the same module
+            description="flows.modelo_workspace_overview.label.* (overview label rows)",
+            key_factory=lambda v: f"flows.modelo_workspace_overview.label.{v}",
+            values=(
+                "modelo",
+                "filing_year",
+                "period",
+                "work_unit",
+                "work_state",
+                "law_selected",
+                "requested_assertion",
+                "stored_assertion",
+                "review_status",
+            ),
+        ),
+        FStringKeyRegistration(
+            # The group argument of _mount_label_table, plus the capabilities
+            # group mounted directly, in entrypoints/tui/modelo/view/overview.py
+            description="flows.modelo_workspace_overview.section.* (overview disclosure groups)",
+            key_factory=lambda v: f"flows.modelo_workspace_overview.section.{v}",
+            values=("address", "revision", "capabilities"),
+        ),
+        FStringKeyRegistration(
+            # _COLUMN_KEYS in entrypoints/tui/modelo/view/provenance.py
+            description="flows.modelo_workspace_provenance.column.* (provenance table columns)",
+            key_factory=lambda v: f"flows.modelo_workspace_provenance.column.{v}",
+            values=("subject", "resolver", "source_ref"),
+        ),
+        FStringKeyRegistration(
+            # _COLUMN_KEYS in entrypoints/tui/modelo/view/results.py
+            description="flows.modelo_workspace_results.column.* (results table columns)",
+            key_factory=lambda v: f"flows.modelo_workspace_results.column.{v}",
+            values=("casilla", "value", "formula"),
+        ),
+        FStringKeyRegistration(
+            # _READINESS_ROW_KEYS in entrypoints/tui/modelo/view/verification.py
+            description="flows.modelo_workspace_verification.axis.* (readiness axes)",
+            key_factory=lambda v: f"flows.modelo_workspace_verification.axis.{v}",
+            values=("profile_ready", "registry_ready", "binding_ready", "ledger_ready", "ready"),
+        ),
+        FStringKeyRegistration(
+            # _FINDING_COLUMN_KEYS plus the axis/value pair the readiness table
+            # adds directly, in entrypoints/tui/modelo/view/verification.py
+            description="flows.modelo_workspace_verification.column.* (verification table columns)",
+            key_factory=lambda v: f"flows.modelo_workspace_verification.column.{v}",
+            values=("severity", "kind", "casilla", "axis", "value"),
+        ),
     )
 
 
@@ -281,9 +373,9 @@ def _modelo_work_help_registrations() -> tuple[FStringKeyRegistration, ...]:
 def _modelo_review_filter_registrations() -> tuple[FStringKeyRegistration, ...]:
     """Register every closed value used by the modelo-review facet labels."""
     from cadrumo.application.modelo.work_review import ModeloWorkOriginAnomaly
+    from cadrumo.core.aggregation import BindingSourceKind
     from cadrumo.core.estado_casilla_oficial import EstadoCasillaOficial
     from cadrumo.core.operator_action_enums import OperatorActionAxis
-    from cadrumo.core.aggregation import BindingSourceKind
     from cadrumo.domain.calculations.registry.handoffs import RelationConsumptionChannel
     from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
     from cadrumo.domain.filing.schema import ModeloValueKind

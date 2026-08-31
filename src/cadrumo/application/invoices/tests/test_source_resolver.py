@@ -10,7 +10,7 @@ from typing import Any
 
 import pytest
 
-from ....adapters.outbound.fx._ecb_provider import ECB_RATE_SOURCE_ID
+from ....adapters.outbound.fx.ecb_provider import ECB_RATE_SOURCE_ID
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage.errors import StorageValidationError
 from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture

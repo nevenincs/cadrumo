@@ -31,7 +31,7 @@ from pydantic import ValidationError
 from sqlalchemy import select
 
 from ....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
-from ....adapters.persistence.storage.sql._orm import SecureObjectRow
+from ....adapters.persistence.storage.sql.orm import SecureObjectRow
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json

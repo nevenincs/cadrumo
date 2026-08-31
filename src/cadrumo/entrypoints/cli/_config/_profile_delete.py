@@ -45,7 +45,7 @@ from .._common import emit_envelope
 from ..errors import CliRefusedBoundaryError
 
 if TYPE_CHECKING:
-    from ....application.bucket_maintenance._contracts import BucketDeletionAssessment
+    from ....application.bucket_maintenance.contracts import BucketDeletionAssessment
     from .._config_payloads import ConfigProfileDeleteResult
 
 
@@ -70,8 +70,8 @@ def _refuse_deleting_the_active_profile(*, bucket_id: str, label: str) -> None:
 
 def _assess(bucket_id: str) -> BucketDeletionAssessment:
     """Observe the target without unlocking it, or refuse when it is gone."""
-    from ....application.bucket_maintenance._contracts import AssessBucketDeletionCommand
-    from ....application.bucket_maintenance._service import BucketMaintenanceService
+    from ....application.bucket_maintenance.contracts import AssessBucketDeletionCommand
+    from ....application.bucket_maintenance.service import BucketMaintenanceService
 
     assessment = BucketMaintenanceService().assess_deletion(AssessBucketDeletionCommand(bucket_id=bucket_id))
     if not assessment.exists:
@@ -100,8 +100,8 @@ def _refuse_erase_inside_the_retention_floor(assessment: BucketDeletionAssessmen
     reach the same rule. No override is passed because this verb offers none,
     which is the accurate statement rather than a value withheld.
     """
-    from ....domain.retention._floor import erase_is_blocked
     from ....domain.retention.errors import RetentionFloorError
+    from ....domain.retention.floor import erase_is_blocked
 
     retention = assessment.retention
     if retention is None or not erase_is_blocked(blocks_erase=retention.blocks_erase):

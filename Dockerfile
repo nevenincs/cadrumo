@@ -281,6 +281,23 @@ RUN install -d -o runner -g runner /home/linuxbrew/.cache \
 COPY dev/runners/runner-entry-linux.sh /usr/local/bin/cadrumo-runner-entry.sh
 RUN chmod 0755 /usr/local/bin/cadrumo-runner-entry.sh
 
+# The disk-hygiene hook, baked for the same reason as the entrypoint: it must
+# live OUTSIDE /home/runner, which the runner state volume mounts over, or it
+# disappears the moment the volume is attached.
+#
+# These containers mount the host docker socket so the packaging smoke lanes can
+# start nested containers on the host daemon. Those nested runs leave anonymous
+# volumes and dangling images behind ON THE HOST, and nothing in the job
+# lifecycle reclaims them - only ACTIONS_RUNNER_HOOK_JOB_COMPLETED fires when a
+# job fails, cancels or times out.
+#
+# dev/runners/README.md already names cleanup-linux.sh as this runner's hygiene
+# script. It was never baked into the image, so the Linux runners have run
+# without it: of the seven runner installs on the shared build host, exactly one
+# has a hygiene hook, and it is the Windows one.
+COPY dev/runners/cleanup-linux.sh /usr/local/bin/cadrumo-cleanup-linux.sh
+RUN chmod 0755 /usr/local/bin/cadrumo-cleanup-linux.sh
+
 USER runner
 WORKDIR /home/runner
 

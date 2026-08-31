@@ -28,7 +28,7 @@ from .. import (
     aggregate_iva_ledger_candidates,
     validate_iva_ledger_observation,
 )
-from ._renta_income_aggregation_support import _period
+from .renta_income_aggregation_support import _period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

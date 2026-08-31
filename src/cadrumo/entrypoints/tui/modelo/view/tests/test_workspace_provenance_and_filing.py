@@ -9,14 +9,13 @@ render two structurally different unknowns as one.
 from __future__ import annotations
 
 import pytest
-from textual.app import App, ComposeResult
 from textual.widgets import Static
 
 from ......adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ......application.modelo.workspace_models import ModeloWorkspaceCapabilityName
 from ......core.external_constants import OutputLanguage
-from ......core.i18n._render import tr
-from ....components.theme import install_cadrumo_themes
+from ......core.i18n.render import tr
+from ....components.host import ScreenHostApp
 from ....components.widgets import ContentDataTable
 from ..controller import ModeloWorkspaceReadSession, admit_workspace_session
 from ..filing import ModeloWorkspaceFilingScreen
@@ -24,22 +23,6 @@ from ..provenance import ModeloWorkspaceProvenanceScreen
 from .conftest import resolve_real_result
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-
-class _Host(App[None]):
-    """Minimal host that mounts whichever destination the test names."""
-
-    def __init__(self, screen_type: type, session: ModeloWorkspaceReadSession) -> None:
-        super().__init__()
-        self._screen_type = screen_type
-        self._session = session
-
-    def on_mount(self) -> None:
-        install_cadrumo_themes(self)
-        self.push_screen(self._screen_type(self._session))
-
-    def compose(self) -> ComposeResult:
-        return iter(())
 
 
 def _session(bucket_id: str, repository: WorkUnitCatalogueRepository) -> ModeloWorkspaceReadSession:
@@ -58,7 +41,7 @@ async def test_provenance_refuses_when_the_admission_carries_no_facet(
     session = _session(bucket_id, repository)
     assert session.projection.provenance_facet is None
 
-    app = _Host(ModeloWorkspaceProvenanceScreen, session)
+    app = ScreenHostApp(ModeloWorkspaceProvenanceScreen(session))
     async with app.run_test() as pilot:
         await pilot.pause()
         notice = app.screen.query_one("#workspace-provenance-not-applicable", Static)
@@ -81,7 +64,7 @@ async def test_filing_distinguishes_a_permanent_unknown_from_a_pending_one(
     bucket_id, repository = bucket_and_repository
     session = _session(bucket_id, repository)
 
-    app = _Host(ModeloWorkspaceFilingScreen, session)
+    app = ScreenHostApp(ModeloWorkspaceFilingScreen(session))
     async with app.run_test() as pilot:
         await pilot.pause()
         table = app.screen.query_one("#workspace-filing-table", ContentDataTable)
@@ -101,7 +84,7 @@ async def test_filing_shows_only_its_own_two_capabilities(
     session = _session(bucket_id, repository)
     assert len(session.projection.capabilities) == len(ModeloWorkspaceCapabilityName)
 
-    app = _Host(ModeloWorkspaceFilingScreen, session)
+    app = ScreenHostApp(ModeloWorkspaceFilingScreen(session))
     async with app.run_test() as pilot:
         await pilot.pause()
         table = app.screen.query_one("#workspace-filing-table", ContentDataTable)
@@ -115,7 +98,7 @@ async def test_filing_states_that_state_and_history_are_not_carried(
 ) -> None:
     """Absent filing state is disclosed, never implied by an empty panel."""
     bucket_id, repository = bucket_and_repository
-    app = _Host(ModeloWorkspaceFilingScreen, _session(bucket_id, repository))
+    app = ScreenHostApp(ModeloWorkspaceFilingScreen(_session(bucket_id, repository)))
 
     async with app.run_test() as pilot:
         await pilot.pause()
@@ -131,7 +114,7 @@ async def test_filing_offers_no_submission_affordance(
     from textual.widgets import Button, Checkbox, Input, RadioSet, SelectionList
 
     bucket_id, repository = bucket_and_repository
-    app = _Host(ModeloWorkspaceFilingScreen, _session(bucket_id, repository))
+    app = ScreenHostApp(ModeloWorkspaceFilingScreen(_session(bucket_id, repository)))
 
     async with app.run_test() as pilot:
         await pilot.pause()
@@ -147,7 +130,7 @@ async def test_provenance_offers_no_editing_affordance(
     from textual.widgets import Button, Checkbox, Input, RadioSet, SelectionList
 
     bucket_id, repository = bucket_and_repository
-    app = _Host(ModeloWorkspaceProvenanceScreen, _session(bucket_id, repository))
+    app = ScreenHostApp(ModeloWorkspaceProvenanceScreen(_session(bucket_id, repository)))
 
     async with app.run_test() as pilot:
         await pilot.pause()

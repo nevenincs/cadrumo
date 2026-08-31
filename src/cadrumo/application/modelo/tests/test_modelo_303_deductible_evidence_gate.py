@@ -54,10 +54,10 @@ from ...calculations.observations_repository import IvaWalletDecisionRepository
 from ...invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
 from ...ledger.actions_manual import attach_manual_transaction_evidence, link_manual_transaction_invoice
 from ...ledger.evidence import PurchaseInvoiceEvidenceService
-from .._calculation_actions import calculate_modelo_revision_from_bucket_aggregation
-from .._export import ModeloExportCommand, ModeloExportEvidenceMissingError, export_modelo_revision
-from .._filing_actions import ModeloFilingEvidenceMissingError, file_modelo_revision
-from .._verification_actions import (
+from ..calculation_actions import calculate_modelo_revision_from_bucket_aggregation
+from ..export import ModeloExportCommand, ModeloExportEvidenceMissingError, export_modelo_revision
+from ..filing_actions import ModeloFilingEvidenceMissingError, file_modelo_revision
+from ..verification_actions import (
     _missing_evidence_findings,
     verify_modelo_revision,
     verify_modelo_revision_with_preconditions,

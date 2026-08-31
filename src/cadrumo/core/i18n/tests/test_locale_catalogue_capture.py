@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from .._render import _override_locales_root, lookup_translation_entry
 from ..locale_catalogue import (
     LocaleCatalogueCapture,
     LocaleCatalogueCaptureError,
@@ -14,6 +13,7 @@ from ..locale_catalogue import (
     capture_locale_catalogue,
     read_locale_catalogue_current_coordinate,
 )
+from ..render import _override_locales_root, lookup_translation_entry
 
 if TYPE_CHECKING:
     from pathlib import Path

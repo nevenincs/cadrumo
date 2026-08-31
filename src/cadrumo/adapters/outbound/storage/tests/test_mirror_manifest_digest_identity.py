@@ -26,8 +26,8 @@ from pydantic import TypeAdapter, ValidationError
 
 from .....core.hashing import sha256_hex
 from .....core.identity import ContentDigest
-from .._mirror_manifest import remote_mirror_object_key_hmac
-from .._records import RemoteMirrorNamespaceManifest, RemoteMirrorObjectManifest
+from ..mirror_manifest import remote_mirror_object_key_hmac
+from ..records import RemoteMirrorNamespaceManifest, RemoteMirrorObjectManifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

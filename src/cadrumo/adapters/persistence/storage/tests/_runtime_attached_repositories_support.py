@@ -42,7 +42,7 @@ from .....application.live.borrador_100 import (
     derive_borrador_100_snapshot_id,
 )
 from .....application.live.snapshot_base import SnapshotLifecycleState
-from .....application.modelo._review_package_recipient_registry import RecipientFingerprintRegistryRepository
+from .....application.modelo.review_package_recipient_registry import RecipientFingerprintRegistryRepository
 from .....application.repair_integrity import (
     RepairRemediationDecision,
     RepairRemediationDecisionRepository,
@@ -115,7 +115,7 @@ from .....domain.submission.models import (
 from .....domain.transactions.enums import TransactionDirection
 from .....domain.transactions.models import Transaction, TransactionCatalogue
 from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from .....domain.usage_ratios._model import UsageRatioProfile
+from .....domain.usage_ratios.model import UsageRatioProfile
 from .....llm.models import LLMProvider, LLMRequest, LLMResponse, UsageRecord
 from .....tests.aeat_literal_fixtures import (
     AEAT_HOST_SUFFIX_EXPECTED,
@@ -132,10 +132,10 @@ from ....outbound.aeat.sede.observation_store import FiledDeclaracionObservation
 from ....outbound.aeat.sede.schema import FiledDeclaracionArtefact
 from ....outbound.google import session_store as google_session_store
 from ....outbound.google.records import REQUIRED_SCOPES, DriveConfig, OAuthClient, OAuthMetadata, OAuthToken
-from ....outbound.llm._cache import LLMCache
-from ....outbound.llm._consent_ledger import EvidenceConsentLedger
-from ....outbound.llm._run_telemetry import LLMRunTelemetryRecorder
-from ....outbound.llm._usage import UsageRecorder
+from ....outbound.llm.cache import LLMCache
+from ....outbound.llm.consent_ledger import EvidenceConsentLedger
+from ....outbound.llm.run_telemetry import LLMRunTelemetryRecorder
+from ....outbound.llm.usage import UsageRecorder
 from ...profile.assets import load_amortizacion_ledger, load_assets, save_amortizacion_ledger, save_assets
 from ...profile.inventory import load_inventory, save_inventory
 from ...profile.recipient_replay_guard import RecipientReplayGuardRepository

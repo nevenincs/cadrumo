@@ -15,7 +15,7 @@ from .....domain.transactions.errors import LedgerNoActiveBucketError, LedgerSto
 from .....domain.transactions.models import Transaction, TransactionCatalogue
 from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .....tests.secure_sql import TestRuntimeProfile
-from ...storage.sql import _orm
+from ...storage.sql import orm as _orm
 from ...storage.sql.session import session_scope
 from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ..transactions import TransactionCatalogueRepository

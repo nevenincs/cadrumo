@@ -27,8 +27,8 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.live_gate import requires_live_enabled
 from ...calculations.observations_repository import IvaWalletDecisionRepository
-from ...modelo._iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
-from ...modelo._iva_wallet_gate import (
+from ...modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
+from ...modelo.iva_wallet_gate import (
     apply_iva_compensation_decision_binding as _apply_iva_compensation_decision_binding,
 )
 from ...user_profile.profile_record_repository import ProfileRecordRepository

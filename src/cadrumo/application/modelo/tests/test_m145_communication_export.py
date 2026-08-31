@@ -21,7 +21,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.outbound.aeat.export._registry_record_renderer import RegistryFixedWidthRecordRenderer
+from ....adapters.outbound.aeat.export.registry_record_renderer import RegistryFixedWidthRecordRenderer
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.export import ResolvedExportLayout, resolve_export_layout
@@ -29,7 +29,7 @@ from ....domain.calculations.registry.schema_exports import ExportFieldDefinitio
 from ....domain.calculations.registry.snapshot import build_snapshot
 from ....tests.registry_tree import bundled_registry_tree
 from ....tests.secure_sql import isolated_runtime_profile
-from .._m145_communication_records import (
+from ..m145_communication_records import (
     M145CommunicationCreateCommand,
     M145CommunicationExportResult,
     create_m145_communication_record,

@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from ._ledger_ux_support import _MINIMAL_PDF, _N26_HEADER, _imported_transaction_id, _invoke
+from .ledger_ux_support import _MINIMAL_PDF, _N26_HEADER, _imported_transaction_id, _invoke
 
 pytestmark = [
     pytest.mark.integration,

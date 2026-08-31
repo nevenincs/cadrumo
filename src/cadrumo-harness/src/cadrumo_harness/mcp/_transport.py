@@ -29,7 +29,7 @@ from typing import cast
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.core.errors.error_codes import ErrorEnvelope
 from cadrumo.core.external_constants import UTF_8_ENCODING
-from cadrumo.core.i18n._render import tr
+from cadrumo.core.i18n.render import tr
 from cadrumo.core.json_contract import (
     ENVELOPE_SCHEMA_VERSION,
     EnvelopeStatus,

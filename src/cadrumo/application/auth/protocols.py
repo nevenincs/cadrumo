@@ -120,7 +120,7 @@ class SessionStoreProtocol(Protocol):
     """Structural interface for the persisted browser session store.
 
     The application layer depends on this protocol rather than the concrete
-    adapter module so that application/auth/_sessions.py does not carry a
+    adapter module so that application/auth/sessions.py does not carry a
     direct import from adapters/outbound/aeat/auth/session_store.py.
     """
 

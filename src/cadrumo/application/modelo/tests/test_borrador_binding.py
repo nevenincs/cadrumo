@@ -32,7 +32,6 @@ from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext
 from ...live.borrador_100 import Borrador100Snapshot, Borrador100SnapshotRepository
 from ...live.snapshot_base import SnapshotLifecycleState
-from .._calculation_actions import calculate_modelo_revision
 from .._registry_helpers import validate_casilla_input_ids
 from ..borrador_binding import (
     Modelo100BorradorBindingCommand,
@@ -41,6 +40,7 @@ from ..borrador_binding import (
     _decimal_value,
     resolve_modelo_100_borrador_bindings,
 )
+from ..calculation_actions import calculate_modelo_revision
 from ..work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

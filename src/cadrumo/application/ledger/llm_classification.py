@@ -363,7 +363,7 @@ def _record_injected_classifier_run[T](run: Callable[[], T], *, provider: str) -
     """
     import time
 
-    from ...adapters.outbound.llm._run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
+    from ...adapters.outbound.llm.run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
     from ...llm.errors import LLMCacheError
 
     started_at = now()

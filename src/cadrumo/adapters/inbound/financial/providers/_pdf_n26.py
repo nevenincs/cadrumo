@@ -26,7 +26,8 @@ from typing import TypedDict, override
 from .....core.external_constants import DEFAULT_CURRENCY
 from .....core.logging import get_logger
 from .....domain.transactions.raw_transaction import SourceFormat
-from ._base import (
+from ._constants import PDF_EXTENSION
+from .base import (
     FinancialProvider,
     InvalidFinancialSourceError,
     ParsedLedgerRow,
@@ -36,7 +37,6 @@ from ._base import (
     parse_date_value,
     synthesize_transaction_id,
 )
-from ._constants import PDF_EXTENSION
 
 _HEADER_LINE = "Beschreibung Verbuchungsdatum Betrag"
 _BANK_MARKERS = ("N26 Bank AG", "N26 Bank SE")

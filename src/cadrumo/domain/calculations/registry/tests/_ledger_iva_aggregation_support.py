@@ -10,7 +10,7 @@ from typing import Final
 from .....application.calculations._iva_compensation_annual_partition import (
     resolve_iva_compensation_annual_partition_binding_values,
 )
-from .....application.calculations._m303_carry_ingress import normalize_m303_carry_observation_envelope
+from .....application.calculations.m303_carry_ingress import normalize_m303_carry_observation_envelope
 from .....application.calculations.observations_repository import (
     ObservationEnvelopePayload,
     ResultDispositionProjection,
@@ -37,7 +37,7 @@ from ..bindings import (
 )
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ..ids import BindingId
-from ..ledger_bindings import (
+from ..ledger_iva_bindings import (
     IvaLedgerObservation,
     resolve_ledger_iva_aggregation_binding_values,
 )

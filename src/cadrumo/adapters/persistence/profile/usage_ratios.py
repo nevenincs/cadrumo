@@ -27,9 +27,9 @@ from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
 from ....core.time.clock import now
 from ....domain.categories.spending_category import home_office_categories
-from ....domain.usage_ratios._model import ELIGIBLE_USAGE_RATIO_CATEGORIES, UsageRatioProfile
-from ....domain.usage_ratios._service import derive_home_office_ratios_from_censo, usage_ratios_object_key
 from ....domain.usage_ratios.errors import CensoRatioMismatchError, UsageRatioPersistenceError
+from ....domain.usage_ratios.model import ELIGIBLE_USAGE_RATIO_CATEGORIES, UsageRatioProfile
+from ....domain.usage_ratios.service import derive_home_office_ratios_from_censo, usage_ratios_object_key
 from ..storage.secure_object_namespaces import USAGE_RATIO_PROFILE_NAMESPACE
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard

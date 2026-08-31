@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 
-from .. import _parser
+from .. import parser as _parser
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 

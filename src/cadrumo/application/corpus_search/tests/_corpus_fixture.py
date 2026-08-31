@@ -11,7 +11,7 @@ from __future__ import annotations
 import shutil
 from pathlib import Path
 
-from .._lexical_index import bundled_corpus_html_root
+from ..lexical_index import bundled_corpus_html_root
 
 # Real bundled corpus stems with extracted triples. ley-58-2003-art-27 is
 # the recargo-por-declaración-extemporánea article (LGT art. 27), the

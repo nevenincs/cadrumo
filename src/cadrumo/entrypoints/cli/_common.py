@@ -38,14 +38,14 @@ from pydantic import BaseModel, Field, field_validator
 
 from ...core.cli_metadata import is_metadata_invocation
 from ...core.external_constants import OutputLanguage
-from ...core.i18n._render import tr
+from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedActionArgument, ResolvedPreconditionAction
 from ...core.modelo import NON_REGISTRY_MODELOS, Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.output_rendering import OutputFormat, render_command_output
 from ...core.text_bounds import NonEmptyStr
-from ._command_suggestions import INVOCATION_REMAINDER_META_KEY
 from ._operator_surface_reconciliation import current_operator_surface_reconciliation
+from .command_suggestions import INVOCATION_REMAINDER_META_KEY
 
 # The accepted-code set for every ``--modelo`` option and argument. It is derived
 # from the closed core identifier taxonomy rather than the registry authority:
@@ -263,7 +263,7 @@ def preserve_requested_cli_leaf(ctx: typer.Context) -> RequestedCliLeaf | None:
         canonical_path.append(command_name if isinstance(command_name, str) and command_name else token)
         command = child
         if not hasattr(command, "get_command"):
-            from ._command_specs import COMMAND_GRAPH
+            from .command_specs import COMMAND_GRAPH
 
             spec = COMMAND_GRAPH.resolve_path(("aeat", *canonical_path))
             identity = spec.result_schema.identity
@@ -718,7 +718,7 @@ def emit_envelope(
 
             emit_json_success(command, result, notices=resolved_notices, active_profile=None)
             return
-        from ...application.operator_output._emit import emit_operator_json_success
+        from ...application.operator_output.emit import emit_operator_json_success
 
         active_profile = active_profile_label()
         emit_operator_json_success(command, result, notices=resolved_notices, active_profile=active_profile)
@@ -731,7 +731,7 @@ def emit_envelope(
         rendered_lines = tuple(lines)
     else:
         rendered_lines = (*lines, *notice_lines(resolved_notices), *_action_text_lines(resolved_notices))
-        from ...application.operator_output._sandbox_notice import sandbox_banner_line, sandbox_notice_for_active_bucket
+        from ...application.operator_output.sandbox_notice import sandbox_banner_line, sandbox_notice_for_active_bucket
 
         sandbox_notice = sandbox_notice_for_active_bucket()
         if sandbox_notice is not None:
@@ -905,7 +905,7 @@ def _label_for(listing: AuthProviderListing) -> str:
 
 def _translate(translatable: str) -> str:
     """Render a str in the operator's preferred locale (Spanish first)."""
-    from ...core.i18n._render import tr
+    from ...core.i18n.render import tr
 
     return tr(translatable)
 
@@ -1111,7 +1111,7 @@ def activate_subcommand_output_language(ctx: typer.Context, language: OutputLang
     if language is None:
         return
     from ...core.config import override_settings
-    from ...core.i18n._render import clear_output_language_cache
+    from ...core.i18n.render import clear_output_language_cache
 
     ctx.with_resource(override_settings(cadrumo_output_language=language))
     clear_output_language_cache()

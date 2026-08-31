@@ -170,12 +170,12 @@ STANDING_LITERAL_VERSION_DECLARATIONS: Final[Mapping[tuple[str, str, str], str]]
         "schema_version",
     ): _RESPONSE_CONTRACT,
     (
-        "src/cadrumo/application/modelo/_m145_communication_records.py",
+        "src/cadrumo/application/modelo/m145_communication_records.py",
         "M145CommunicationValidationResult",
         "schema_version",
     ): _RESPONSE_CONTRACT,
     (
-        "src/cadrumo/application/modelo/_m145_communication_records.py",
+        "src/cadrumo/application/modelo/m145_communication_records.py",
         "M145CommunicationExportResult",
         "schema_version",
     ): _RESPONSE_CONTRACT,
@@ -404,7 +404,7 @@ def test_the_two_repaired_formats_stay_repaired(source_tree_ast: Mapping[Path, a
         (
             "src/cadrumo/domain/fincas/models.py",
             "FINCA_SCHEMA_VERSION",
-            "src/cadrumo/adapters/persistence/storage/sql/_orm.py",
+            "src/cadrumo/adapters/persistence/storage/sql/orm.py",
         ),
     )
     sites_by_path: dict[str, list[LiteralVersionAuthoringSite]] = {}

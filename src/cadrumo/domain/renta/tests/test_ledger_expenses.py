@@ -21,7 +21,7 @@ from ...categories.proportionality import (
 )
 from ...categories.registry import resolve_category_profiles
 from ...categories.spending_category import SpendingCategory, SpendingCategoryFamily
-from .._ledger_expenses import (
+from ..ledger_expenses import (
     RentaDeductibilityContext,
     RentaDeductibilityStatus,
     RentaDeductibleExpenseFact,

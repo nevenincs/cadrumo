@@ -40,7 +40,7 @@ import pytest
 from ..authority import bundled_authority
 from ..record_design_coverage import _CASILLA_TAG_RE
 from ..schema import ModeloRevision
-from .test_revision_span_matches_published_designs import _designs_by_year
+from ._revision_span_design_support import _designs_by_year
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

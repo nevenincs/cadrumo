@@ -49,7 +49,8 @@ from pydantic import BaseModel, Field
 from ...core.casilla_id import CasillaId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.bindings import CasillaObservation
-from ...domain.renta._maritime_exemption import (
+from ...domain.renta.errors import RentaValidationError
+from ...domain.renta.maritime_exemption import (
     MaritimeWorkerFacts,
     art_7p_eligible,
     calculate_art_7p_exemption,
@@ -58,7 +59,6 @@ from ...domain.renta._maritime_exemption import (
     guard_da41_inactive,
     rebeca_eligible,
 )
-from ...domain.renta.errors import RentaValidationError
 
 
 class MaritimeExemptionResult(BaseModel):

@@ -44,7 +44,7 @@ from .....core.logging import get_logger
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.time.clock import now
 from .....core.time.utc import validate_utc_aware
-from ..blob_store._blob_store import BlobReference, EncryptedBlobStore
+from ..blob_store.blob_store import BlobReference, EncryptedBlobStore
 from ..crypto.aead import derive_key
 from ..envelope.contract import Envelope
 from ..errors import (
@@ -59,8 +59,8 @@ from ..errors import (
 from ..errors import (
     storage_validation_error as _storage_validation_error,
 )
-from ..master_key._master_key import MasterKeyProvider
 from ..master_key.active_session import get_active_master_key
+from ..master_key.master_key import MasterKeyProvider
 from ..storage_path_definitions import (
     SECRET_INDEX_FILENAME,
     SECRET_INDEX_SCHEMA_VERSION,

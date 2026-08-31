@@ -45,6 +45,10 @@ from ...aggregation import (
     validate_iva_ledger_counterparty_category,
 )
 
+# The MODULE object, not names from it: the tests below scope an attribute
+# on it. `from .. import <module>` is the relative form that yields one.
+from .. import preflight as preflight_module
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 

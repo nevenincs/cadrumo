@@ -55,9 +55,9 @@ from ..aggregation import (
     CalculationSourceResolution,
 )
 from ..aggregation.source_resolution_operations import storage_degradation_resolution
-from ._action_errors import ModeloPreconditionErrorMixin
 from ._decimal_parsing import decimal_from_string
-from ._preconditions import build_modelo_precondition_failure
+from .action_errors import ModeloPreconditionErrorMixin
+from .preconditions import build_modelo_precondition_failure
 
 if TYPE_CHECKING:
     from ..live.borrador_100 import Borrador100Snapshot, Borrador100SnapshotRepository

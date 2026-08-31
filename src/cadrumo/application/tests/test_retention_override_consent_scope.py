@@ -27,7 +27,7 @@ _REASON = "Court order requiring erasure before the statutory retention date."
 
 
 def _assessment(*, records: int):
-    from ...domain.retention._floor import RetentionBlockingRecord, RetentionFloorAssessment
+    from ...domain.retention.floor import RetentionBlockingRecord, RetentionFloorAssessment
 
     now = datetime.now(UTC)
     return RetentionFloorAssessment(

@@ -30,7 +30,7 @@ needs a per-module judgement that only a reviewer can make. Read a green run as
 free of per-modelo branching".
 
 Scope note (no silent caps): the domain formula runtime
-(``domain/calculations/registry/_formula_runtime.py``) is deliberately NOT in
+(``domain/calculations/registry/formula_runtime.py``) is deliberately NOT in
 this list. Its per-modelo *op evaluators* (``_evaluate_m100_*`` /
 ``_evaluate_m210_*`` / ``_evaluate_m131_*``) are named per-modelo behaviour that
 is permitted, and the module is an actively-churned dispatch surface; ratcheting
@@ -57,7 +57,7 @@ from typing import TypeGuard
 
 import pytest
 
-from ._inventory import aeat_relative, production_ast_items
+from .inventory import aeat_relative, production_ast_items
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -71,7 +71,7 @@ _MODELO_ATTR_RE = re.compile(r"^M\d+$")
 #: The set for each module may only shrink. Adding a token to a baseline is a
 #: conscious, reviewed decision (a new per-modelo carve-out) - never an accident.
 _RATCHET_BASELINE: dict[str, frozenset[str]] = {
-    "application/modelo/_projection.py": frozenset(
+    "application/modelo/projection.py": frozenset(
         {
             "Modelo.M100",
             "Modelo.M130",
@@ -93,7 +93,7 @@ _RATCHET_BASELINE: dict[str, frozenset[str]] = {
     # (`_m210_gross_source_mode`), enrolled with the live IRNR income-ledger
     # resolver in the calculate mesh. A conscious, reviewed addition for a
     # shipped resolver, not an accidental accretion.
-    "application/modelo/_calculation_actions.py": frozenset({"Modelo.M210"}),
+    "application/modelo/calculation_actions.py": frozenset({"Modelo.M210"}),
     "application/modelo/_verification_cross_period.py": frozenset(
         {
             "Modelo.M202",

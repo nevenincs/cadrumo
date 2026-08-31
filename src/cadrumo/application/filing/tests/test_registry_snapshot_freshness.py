@@ -60,7 +60,7 @@ import pytest
 
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
-from .._draft_construction import _load_registry_snapshot
+from ..draft_construction import _load_registry_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

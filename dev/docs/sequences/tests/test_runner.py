@@ -738,7 +738,7 @@ class TestAmbientEnvNeutralisation:
         ``Settings.settings_customise_sources`` never returns a dotenv source,
         regardless of ``model_config["env_file"]``. The one surviving route for
         an ``env/.env``-declared value to reach a process is the repo-root
-        ``conftest.py`` bridge (:func:`cadrumo.tests._env_loader.bridge_env_file_into_environ`),
+        ``conftest.py`` bridge (:func:`cadrumo.tests.env_loader.bridge_env_file_into_environ`),
         which parses a real dotenv file and applies each pair to ``os.environ``
         via ``setdefault`` before any test runs. This drives that REAL bridge
         function against a synthetic dotenv file (anti-vacuity: the bridge is
@@ -749,7 +749,7 @@ class TestAmbientEnvNeutralisation:
         other probes exercise directly, end to end through a real sequence run."""
         import os
 
-        from cadrumo.tests._env_loader import bridge_env_file_into_environ
+        from cadrumo.tests.env_loader import bridge_env_file_into_environ
 
         from .._runner import sequence_sandbox
 

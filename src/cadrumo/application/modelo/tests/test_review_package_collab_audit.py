@@ -67,18 +67,15 @@ from .._review_package_collab_audit import (
     emit_collab_recipient_removed_event,
     emit_collab_review_only_workspace_opened_event,
 )
-from .._review_package_counter_sign import counter_sign_review_package
-from .._review_package_recipient_encryption import (
+from .._review_package_review_only_workspace import open_review_only_workspace
+from ..review_package import verify_review_package
+from ..review_package_counter_sign import counter_sign_review_package
+from ..review_package_recipient_encryption import (
     decrypt_review_package_for_recipient,
     encrypt_review_package_for_recipient,
 )
-from .._review_package_recipient_registry import (
-    RecipientFingerprintRegistryRepository,
-    public_key_hex_from_raw_bytes,
-)
-from .._review_package_review_only_workspace import open_review_only_workspace
-from .._review_package_signing import ensure_review_package_signing_keypair, sign_review_package
-from ..review_package import verify_review_package
+from ..review_package_recipient_registry import RecipientFingerprintRegistryRepository, public_key_hex_from_raw_bytes
+from ..review_package_signing import ensure_review_package_signing_keypair, sign_review_package
 from ._review_package_bytes_support import build_package_bytes
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

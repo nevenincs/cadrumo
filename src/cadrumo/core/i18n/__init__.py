@@ -23,7 +23,8 @@ from __future__ import annotations
 
 from ..external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ._auth_provider import describe_auth_provider_operator_impact
-from ._render import (
+from ._translatable import Translatable
+from .render import (
     OUTPUT_LANGUAGE_ENV_VAR,
     SUPPORTED_OUTPUT_LANGUAGES,
     MissingTranslationError,
@@ -37,8 +38,7 @@ from ._render import (
     register_profile_language_resolver,
     tr,
 )
-from ._routing import route_key_to_shard
-from ._translatable import Translatable
+from .routing import route_key_to_shard
 
 __all__ = [
     "DEFAULT_OUTPUT_LANGUAGE",

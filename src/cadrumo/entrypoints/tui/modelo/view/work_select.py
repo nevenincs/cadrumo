@@ -13,14 +13,15 @@ from __future__ import annotations
 
 from typing import ClassVar, override
 
-from textual.app import App, ComposeResult
+from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.screen import Screen
 from textual.widgets import DataTable, Static
 
-from .....core.i18n._render import tr
+from .....core.i18n.render import tr
 from .....domain.modelos.work_unit import WorkUnit
-from ...components.theme import BASE_CSS, install_cadrumo_themes, toggle_appearance, tokenised
+from ...components.host import ScreenHostApp
+from ...components.theme import BASE_CSS, toggle_appearance, tokenised
 from ...components.widgets import ContentDataTable, ContentScroll
 
 _COLUMN_KEYS: tuple[str, ...] = ("modelo", "filing_year", "period", "name", "state")
@@ -37,7 +38,7 @@ def _row_values(unit: WorkUnit) -> tuple[str, ...]:
     )
 
 
-class ModeloWorkSelectScreen(Screen[None]):
+class ModeloWorkSelectScreen(Screen["str | None"]):
     """Keyboard-navigable picker over the resolved work-unit catalogue."""
 
     BINDINGS: ClassVar = [
@@ -71,7 +72,7 @@ class ModeloWorkSelectScreen(Screen[None]):
             empty.update(tr("flows.modelo_select.empty"))
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
-        """Exit the picker with the row the operator confirmed with Enter.
+        """Leave the picker with the row the operator confirmed with Enter.
 
         ``DataTable`` owns the ``enter`` key itself (bound to
         ``select_cursor``, which raises this message) and never lets it bubble
@@ -79,11 +80,11 @@ class ModeloWorkSelectScreen(Screen[None]):
         message rather than declare its own ``enter`` binding.
         """
         if event.row_key.value is not None:
-            self.select_app.exit(event.row_key.value)
+            self.dismiss(event.row_key.value)
 
     def action_quit_select(self) -> None:
-        """Exit the picker without choosing a work unit."""
-        self.select_app.exit(None)
+        """Leave the picker without choosing a work unit."""
+        self.dismiss(None)
 
     def action_toggle_appearance(self) -> None:
         """Toggle the shared presentation theme for the select host."""
@@ -104,11 +105,15 @@ def _require_select_app(app: object) -> ModeloWorkSelectApp:
     return app
 
 
-class ModeloWorkSelectApp(App[str | None]):
+class ModeloWorkSelectApp(ScreenHostApp[str]):
     """Standalone host for the canonical modelo work-unit picker.
 
-    ``run()``/``run_async()`` returns the chosen ``work_unit_id`` (via
-    ``exit(value)``), or ``None`` when the operator quits without choosing.
+    ``run()``/``run_async()`` returns the chosen ``work_unit_id``, or
+    ``None`` when the operator leaves without choosing. The value travels
+    the ordinary route -- the screen DISMISSES with it and the shared host
+    carries that out as the application result -- rather than the screen
+    reaching into its host to end it. That is what lets the picker screen
+    be mounted somewhere other than this host without changing it.
     """
 
     CSS = tokenised(
@@ -122,13 +127,8 @@ class ModeloWorkSelectApp(App[str | None]):
 
     def __init__(self, units: tuple[WorkUnit, ...]) -> None:
         """Bind the one immutable work-unit tuple rendered by this host."""
-        super().__init__()
+        super().__init__(ModeloWorkSelectScreen())
         self.units = units
-
-    def on_mount(self) -> None:
-        """Install shared themes and open the canonical select screen."""
-        install_cadrumo_themes(self)
-        self.push_screen(ModeloWorkSelectScreen())
 
 
 __all__ = ["ModeloWorkSelectApp", "ModeloWorkSelectScreen"]

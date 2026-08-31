@@ -13,13 +13,13 @@ from __future__ import annotations
 from pathlib import Path
 
 from .....core.logging import get_logger
-from ._base import FinancialProvider
 from ._constants import CSV_EXTENSIONS, OFX_EXTENSIONS, PDF_EXTENSION, XLSX_EXTENSION
-from ._csv import CsvProvider
 from ._mapped_tabular import MappedTabularProvider
 from ._ofx import OfxProvider
 from ._pdf_n26 import PdfN26Provider
 from ._xlsx import XlsxProvider
+from .base import FinancialProvider
+from .csv import CsvProvider
 
 _logger = get_logger(__name__)
 

@@ -27,10 +27,8 @@ from ...domain.calculations.registry.authority import (
     ValidatedRegistryAuthority,
     bundled_authority,
 )
-from ...domain.calculations.registry.bindings import (
-    CasillaObservation,
-    casillas_by_binding,
-)
+from ...domain.calculations.registry.binding_targets import casillas_by_binding
+from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.export import (
     clasificar_casillas_oficiales,
     derive_export_layouts_from_bindings,
@@ -78,12 +76,8 @@ from ...domain.modelos.verification_report import (
 )
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from ._action_errors import (
-    CalculationRevisionNotFoundError,
-    StoredCalculationDriftError,
-    WorkUnitNotFoundError,
-)
 from ._row_source_identity_replay import ModeloRowSourceFingerprint, revision_row_source_fingerprints_for_review
+from .action_errors import CalculationRevisionNotFoundError, StoredCalculationDriftError, WorkUnitNotFoundError
 from .work_addressing import (
     ModeloWorkSelectorRequest,
     ModeloWorkSelectorState,

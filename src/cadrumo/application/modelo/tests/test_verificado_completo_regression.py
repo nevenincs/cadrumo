@@ -29,7 +29,7 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
-from ....adapters.inbound.pdf.utils import source_pdf_reference_path
+from ....adapters.inbound.pdf.source_provenance import source_pdf_reference_path
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -54,10 +54,10 @@ from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.cross_period_clean_state import cross_period_dependency_requirements
 from ...calculations.observations_repository import CalculationObservationRepository
-from .._action_errors import StoredCalculationDriftError
-from .._calculation_actions import calculate_modelo_revision
-from .._verification_actions import verify_modelo_revision
+from ..action_errors import StoredCalculationDriftError
+from ..calculation_actions import calculate_modelo_revision
 from ..external_import_actions import import_external_filing_evidence
+from ..verification_actions import verify_modelo_revision
 from ..work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -23,7 +23,7 @@ from collections.abc import Sequence
 
 import pytest
 
-from ....core.i18n._render import SUPPORTED_OUTPUT_LANGUAGES
+from ....core.i18n.render import SUPPORTED_OUTPUT_LANGUAGES
 from ....tests.cli_runner import invoke_cached_cli, semantic_cli_output
 from ._isolated_profile_storage_fixtures import _isolated_state
 

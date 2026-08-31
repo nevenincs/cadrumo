@@ -38,8 +38,8 @@ from ......core.storage_taxonomy_locations import bucket_scoped_storage_path
 from ....tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ...errors import UnsecuredModeRefusedError
 from ...secure_object_namespaces import USER_PROFILE_VALUE_NAMESPACE
-from .._master_key import refuse_unsecured_bucket_with_real_profile
 from ..bucket_session import BucketSession
+from ..master_key import refuse_unsecured_bucket_with_real_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

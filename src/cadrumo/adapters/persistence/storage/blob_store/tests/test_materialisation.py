@@ -14,8 +14,8 @@ from ......tests.master_key import EphemeralMasterKeyProvider
 from ......tests.profile_capsule import open_test_profile_session
 from ......tests.secure_sql import isolated_profile_storage_root
 from ...secret_store.store import SecretRecord
-from .._blob_store import EncryptedBlobStore
 from .._materialisation import get_secret_store
+from ..blob_store import EncryptedBlobStore
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

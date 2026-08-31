@@ -135,7 +135,7 @@ def test_registration_records_zero_known_open_legal_cases(tmp_path: Path) -> Non
     fact about a brand-new profile rather than an assumption of clearance,
     exactly the same class of fact already recorded for its filing history.
     """
-    from ....application.evidence._profile_legal_hold import LegalHoldCaseAuthority
+    from ...evidence.profile_legal_hold import LegalHoldCaseAuthority
     from ..lifecycle import ProfileCapsuleLifecycle
 
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:

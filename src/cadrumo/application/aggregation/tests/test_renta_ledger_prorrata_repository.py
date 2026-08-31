@@ -22,8 +22,8 @@ from ....domain.transactions.raw_transaction import RawProvenance, RawTransactio
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_two_bucket_runtime
 from .. import RentaLedgerExpenseAggregation, aggregate_renta_ledger_expenses_from_repositories
-from ._renta_income_aggregation_support import _period
 from ._secure_objects_fixtures import SECURE_OBJECTS_BUCKET_ID
+from .renta_income_aggregation_support import _period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

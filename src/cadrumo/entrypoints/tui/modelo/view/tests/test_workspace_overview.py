@@ -9,35 +9,19 @@ STATED rather than shown as an empty list.
 from __future__ import annotations
 
 import pytest
-from textual.app import App, ComposeResult
 from textual.widgets import Static
 
 from ......adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ......application.modelo.workspace_models import ModeloWorkspaceCapabilityName
 from ......core.external_constants import OutputLanguage
-from ......core.i18n._render import tr
-from ....components.theme import install_cadrumo_themes
+from ......core.i18n.render import tr
+from ....components.host import ScreenHostApp
 from ....components.widgets import ContentDataTable
 from ..controller import ModeloWorkspaceReadSession, admit_workspace_session
 from ..overview import ModeloWorkspaceOverviewScreen
 from .conftest import resolve_real_result
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-
-class _OverviewHost(App[None]):
-    """Minimal host so the destination runs under a real Textual pilot."""
-
-    def __init__(self, session: ModeloWorkspaceReadSession) -> None:
-        super().__init__()
-        self._session = session
-
-    def on_mount(self) -> None:
-        install_cadrumo_themes(self)
-        self.push_screen(ModeloWorkspaceOverviewScreen(self._session))
-
-    def compose(self) -> ComposeResult:
-        return iter(())
 
 
 def _session(bucket_id: str, repository: WorkUnitCatalogueRepository) -> ModeloWorkspaceReadSession:
@@ -60,7 +44,7 @@ async def test_absent_recovery_actions_are_stated_not_rendered_as_an_empty_list(
     session = _session(bucket_id, repository)
     assert all(capability.recovery_action is None for capability in session.projection.capabilities)
 
-    app = _OverviewHost(session)
+    app = ScreenHostApp(ModeloWorkspaceOverviewScreen(session))
     async with app.run_test() as pilot:
         await pilot.pause()
         notice = app.screen.query_one("#workspace-overview-actions", Static)
@@ -78,7 +62,7 @@ async def test_the_revision_block_shows_coordinates_and_no_chronology(
     synthesised history the projection does not carry.
     """
     bucket_id, repository = bucket_and_repository
-    app = _OverviewHost(_session(bucket_id, repository))
+    app = ScreenHostApp(ModeloWorkspaceOverviewScreen(_session(bucket_id, repository)))
 
     async with app.run_test() as pilot:
         await pilot.pause()
@@ -97,7 +81,7 @@ async def test_every_capability_appears_exactly_once_with_a_distinguishing_glyph
     denominator exists to preserve.
     """
     bucket_id, repository = bucket_and_repository
-    app = _OverviewHost(_session(bucket_id, repository))
+    app = ScreenHostApp(ModeloWorkspaceOverviewScreen(_session(bucket_id, repository)))
 
     async with app.run_test() as pilot:
         await pilot.pause()
@@ -111,7 +95,7 @@ async def test_an_absent_work_unit_renders_its_own_value_rather_than_a_blank_cel
 ) -> None:
     """The address table always has five rows, present work unit or not."""
     bucket_id, repository = bucket_and_repository
-    app = _OverviewHost(_session(bucket_id, repository))
+    app = ScreenHostApp(ModeloWorkspaceOverviewScreen(_session(bucket_id, repository)))
 
     async with app.run_test() as pilot:
         await pilot.pause()
@@ -127,7 +111,7 @@ async def test_the_destination_offers_no_editing_affordance(
     from textual.widgets import Button, Checkbox, Input, RadioSet, SelectionList
 
     bucket_id, repository = bucket_and_repository
-    app = _OverviewHost(_session(bucket_id, repository))
+    app = ScreenHostApp(ModeloWorkspaceOverviewScreen(_session(bucket_id, repository)))
 
     async with app.run_test() as pilot:
         await pilot.pause()

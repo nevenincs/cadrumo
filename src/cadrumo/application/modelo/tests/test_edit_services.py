@@ -15,7 +15,8 @@ from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ...operations.registry import OperationSchemaIdentityV1
-from .._edit_models import (
+from ..edit_contract import ModeloEditCompatibilityTupleV1
+from ..edit_models import (
     ModeloEditAdmissionRequestV1,
     ModeloEditAdmittedV1,
     ModeloEditBindingIntentKind,
@@ -42,7 +43,7 @@ from .._edit_models import (
     ModeloRowEditIntentV1,
     ModeloScalarEditIntentV1,
 )
-from .._edit_services import (
+from ..edit_services import (
     _completeness_manifest_digest,
     _writable_binding_override_entries,
     _writable_row_group_entries,
@@ -53,7 +54,6 @@ from .._edit_services import (
     preflight_modelo_edit,
     reconfirm_modelo_edit_baseline,
 )
-from ..edit_contract import ModeloEditCompatibilityTupleV1
 from ..work_addressing import ModeloExactWorkUnitTarget
 from ..workspace_models import ModeloWorkspaceExactWorkUnitTargetV1, ModeloWorkspaceTargetV1
 

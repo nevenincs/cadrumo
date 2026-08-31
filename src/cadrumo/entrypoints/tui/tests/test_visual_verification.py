@@ -236,6 +236,17 @@ def _status_populated(tmp_path: Path) -> Iterator[ScreenHostApp[None]]:
             label=_VISUAL_LABEL,
             passphrase=_VISUAL_PASSWORD,
         )
+        # The notice is capsule-backed, and registration alone does not open the
+        # capsule. ``build_status_page_data`` reads the calculation observations
+        # to decide whether any AEAT-sourced one exists, that read refuses on a
+        # locked capsule, and the status projection ABSORBS the refusal by
+        # design -- a read-only zone does not turn unavailable custody into a
+        # failure. So a fixture without a session yields zero notices, the
+        # notices panel removes itself, and this surface silently degrades into
+        # the empty ``_status`` it exists to be different from. Authenticating
+        # is what makes the populated state reachable, the same reason
+        # :func:`_manager_populated` logs in.
+        login_profile(name=_VISUAL_LABEL, passphrase_callback=lambda: _VISUAL_PASSWORD)
         yield ScreenHostApp(StatusScreen(build_status_page_data()))
 
 
@@ -488,14 +499,12 @@ _CONDITIONAL_REGION_SURFACES = [
     pytest.param(
         _status_populated,
         "panel-notices",
-        ("panel-profile", "panel-profiles", "panel-auth", "panel-recovery"),
+        # Exactly the siblings ``StatusScreen.compose`` yields beside the notices
+        # panel. ``panel-recovery`` was listed here and is composed nowhere in
+        # the screen, so it could only ever have been reported as a starved
+        # sibling -- an id that cannot mount is not evidence of eviction.
+        ("panel-profile", "panel-profiles", "panel-auth"),
         id="status-populated",
-    ),
-    pytest.param(
-        _manager_populated,
-        "section-activities",
-        ("section-identity", "section-preferences", "section-activities"),
-        id="manager-populated",
     ),
 ]
 """Every surface audited for a REGION a populated state could evict, paired
@@ -525,6 +534,26 @@ terminal, so exceeding that is the growth this test exists to catch,
 independent of exactly how far it then pushes anything below it.
 
 Audited but NOT enrolled, with the reason stated rather than left silent:
+
+- ``manager`` (:mod:`profile/overview.py`): enrolled here once on
+  ``section-activities`` and removed because the enrolment was UNSOUND --
+  it could not fail. Proven by driving the defect rather than reasoned:
+  forcing ``.manager-section { height: 1fr; }`` left the parametrisation
+  passing. The arithmetic is why. The manager composes 26 sibling sections
+  into one column, so an unconstrained ``fr`` share is about a
+  twenty-sixth of it and can never reach the half-viewport bound this
+  property tests. A region that cannot grow past the bound cannot evidence
+  the bound. The manager DOES own a region of the exact defect shape --
+  ``#manager-notice-band``, a :class:`NoticeBand` mounted into
+  ``#manager-context`` rather than statically composed, which would
+  additionally cover the dynamic-mount path -- but the overview builds its
+  notices from ``censo_divergence_notice`` ALONE, so reaching a populated
+  band needs a stored censo snapshot deliberately diverged from profile
+  facts (measured: this fixture's ``#manager-context`` holds only
+  ``#manager-requirements``). That is scaffolding out of proportion to the
+  property, on the same ground as the entries below. ``manager-populated``
+  remains enrolled in every OTHER gate in this module; it is only this
+  eviction property it cannot evidence.
 
 - ``registration``/``login`` (:mod:`_credential_screen.py`): the refusal
   line is ``.credential-refusal``, a bare :class:`~textual.widgets.Static`,
@@ -577,7 +606,7 @@ async def test_populating_a_conditional_region_does_not_evict_its_siblings(
             await pilot.pause()
             _, height = _VIEWPORT
             try:
-                growing = app.query_one(f"#{growing_region_id}", Static)
+                growing = app.screen.query_one(f"#{growing_region_id}", Static)
             except NoMatches:
                 pytest.fail(f"#{growing_region_id} was never mounted -- the fixture must populate it")
             assert growing.region.height <= height // 2, (
@@ -588,7 +617,7 @@ async def test_populating_a_conditional_region_does_not_evict_its_siblings(
             starved = []
             for region_id in region_ids:
                 try:
-                    widget = app.query_one(f"#{region_id}", Static)
+                    widget = app.screen.query_one(f"#{region_id}", Static)
                 except NoMatches:
                     starved.append(f"#{region_id} (not mounted)")
                     continue

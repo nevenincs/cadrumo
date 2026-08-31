@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from datetime import date as _date
 
-from ...core.i18n._render import tr
+from ...core.i18n.render import tr
 from ._common import _bad
 
 __all__ = ["_parse_iso_date", "_parse_iso_date_str", "_parse_optional_iso_date_str"]

@@ -40,7 +40,7 @@ from pathlib import Path
 import pytest
 
 from ..core.errors.error_codes import ErrorCode, declared_error_codes
-from ._inventory import SRC_CADRUMO, repo_relative
+from .inventory import SRC_CADRUMO, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

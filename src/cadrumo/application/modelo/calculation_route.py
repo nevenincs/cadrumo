@@ -26,13 +26,13 @@ from ..aggregation import (
     build_binding_source_dispositions,
 )
 from ..aggregation._modelo_bindings_renta_expenses import LedgerRentaGastosEstimacionDirectaAggregationSourceResolver
-from ..calculations._bienes_inversion_regularizacion import BienesInversionRegularizacionSourceResolver
 from ..calculations._iva_compensation_annual_partition import IvaCompensationAnnualPartitionSourceResolver
-from ..calculations._iva_wallet_reconciliation import IvaWalletDecisionSourceResolver
-from ..calculations._m303_regimen_simplificado_annual_summary import M303RegimenSimplificadoAnnualSummarySourceResolver
-from ..calculations._multi_year import PreviousFilingSourceResolver
-from ..calculations._prorrata_regularizacion import ProrrataRegularizacionSourceResolver
-from ..calculations._relation_prefill import RelationPrefillSourceResolver
+from ..calculations.bienes_inversion_regularizacion import BienesInversionRegularizacionSourceResolver
+from ..calculations.iva_wallet_reconciliation import IvaWalletDecisionSourceResolver
+from ..calculations.m303_regimen_simplificado_annual_summary import M303RegimenSimplificadoAnnualSummarySourceResolver
+from ..calculations.multi_year import PreviousFilingSourceResolver
+from ..calculations.prorrata_regularizacion import ProrrataRegularizacionSourceResolver
+from ..calculations.relation_prefill import RelationPrefillSourceResolver
 from ..invoices.source_resolver import InvoiceCatalogueSourceResolver
 from .borrador_binding import Modelo100BorradorSourceResolver
 

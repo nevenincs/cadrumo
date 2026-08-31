@@ -108,7 +108,7 @@ def compare_calculation_to_filed_observation(
     ``application/live``: that one compares two captures of the SAME filing and
     deliberately ignores casillas present on only one side, whereas this one
     reports them as missing-in-filed or extra-in-filed. Nor with the
-    revision-vs-revision delta in ``application/modelo/_projection.py``, which
+    revision-vs-revision delta in ``application/modelo/projection.py``, which
     compares two of the application's own calculations rather than local
     against AEAT.
 

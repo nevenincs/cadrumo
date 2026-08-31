@@ -22,7 +22,7 @@ actividades within the same casilla set, so the gate prompts a review
 rather than refusing the draft.
 
 See Also:
-    :func:`~domain.calculations.registry._formula_runtime._evaluate_m100_resolve_eo_agraria_indices_correctores`
+    :func:`~domain.calculations.registry.formula_runtime_m100.evaluate_m100_resolve_eo_agraria_indices_correctores`
         Registry runtime evaluator whose índice cascade this advisory guards.
     :func:`~application.modelo._verification_actions.evaluate_verification_predicates`
         Application verification entry point that emits the advisory findings.
@@ -47,7 +47,7 @@ from ....domain.calculations.registry.loader import load_modelo_path
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
-from .._verification_actions import evaluate_verification_predicates
+from ..verification_actions import evaluate_verification_predicates
 from ._verification_substance_support import _workflow_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

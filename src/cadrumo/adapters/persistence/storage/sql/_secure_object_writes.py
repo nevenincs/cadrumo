@@ -26,9 +26,9 @@ from ..crypto.encrypted_columns import (
     secure_object_payload_aad,
 )
 from ..errors import RepositoryError, SecureObjectRevisionConflictError, StorageValidationError
-from ._orm import SecureObjectRow
-from ._secure_object_crypto import derive_revision_id
 from ._secure_object_records import SecureObjectDeletion
+from .orm import SecureObjectRow
+from .secure_object_crypto import derive_revision_id
 from .session import session_scope
 
 _DEFAULT_WRITE_PROVENANCE = DEFAULT_WRITE_PROVENANCE

@@ -15,7 +15,7 @@ from typing import cast
 import pytest
 from pydantic import AnyHttpUrl
 
-from ....adapters.inbound.pdf.utils import source_pdf_reference_path
+from ....adapters.inbound.pdf.source_provenance import source_pdf_reference_path
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.config import override_settings
 from ....core.errors.error_codes import resolve_error_message

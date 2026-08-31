@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from ..core.config import Settings
-from ._env_loader import bridge_env_file_into_environ, load_env_file, parse_env_text
+from .env_loader import bridge_env_file_into_environ, load_env_file, parse_env_text
 from .env_scope import scoped_env_var
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

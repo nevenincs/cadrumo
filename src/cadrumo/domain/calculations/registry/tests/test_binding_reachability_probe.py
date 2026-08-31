@@ -30,10 +30,12 @@ from ....iva.schema import (
     IvaLedgerObservationRole,
     IvaRateKind,
 )
-from ..ledger_bindings import (
+from ..ledger_iva_bindings import (
     _iva_build_matcher,
     _iva_reachability_probe,
     _IvaLedgerSelector,
+)
+from ..ledger_renta_gastos_pago_fraccionado_bindings import (
     _renta_gastos_pago_fraccionado_build_matcher,
     _RentaLedgerGastosPagoFraccionadoSelector,
 )

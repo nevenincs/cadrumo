@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field, NonNegativeInt
 
-from ..core.identity._digest import ContentDigest
+from ..core.identity.digest import ContentDigest
 from ..core.models import STRICT_FROZEN_CONFIG
 
 

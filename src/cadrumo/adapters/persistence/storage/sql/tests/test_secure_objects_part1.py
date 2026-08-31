@@ -45,8 +45,8 @@ def test_revision_id_round_trips_for_self_consistency_check(tmp_path: Path) -> N
 
     from sqlalchemy import select
 
-    from .._orm import SecureObjectRow
-    from .._secure_object_crypto import derive_revision_id
+    from ..orm import SecureObjectRow
+    from ..secure_object_crypto import derive_revision_id
     from ..session import session_scope
 
     with _ephemeral_secure_repo(tmp_path, "revision-fidelity.db") as (_db_path, engine, repo):
@@ -134,7 +134,7 @@ def test_save_refuses_a_written_at_that_could_not_be_read_back(
         # The refusal is pre-commit: no row was left behind for this key.
         from sqlalchemy import func, select
 
-        from .._orm import SecureObjectRow
+        from ..orm import SecureObjectRow
         from ..session import session_scope
 
         with session_scope(engine) as session:

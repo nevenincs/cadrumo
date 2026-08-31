@@ -8,7 +8,7 @@ from ....core.period import Period
 from ...calculations.observations_repository import CalculationObservationRepository
 from ...workflow.persistence import WorkflowRunRepository
 from ...workflow.run_models import WorkflowDeadlineContextDetails
-from .._filed_revision_observation import APP_FILING_SOURCE_KIND
+from ..filed_revision_observation import APP_FILING_SOURCE_KIND
 from ._file_flow_support import (
     DEFAULT_130_BASELINE_INPUTS,
     DEFAULT_130_BINDING_VALUES,

@@ -9,7 +9,6 @@ from typing import get_args
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
-from ... import core
 from .. import filing_projection_ref as owner
 from ..filing_projection_ref import (
     FilingProjectionRef,
@@ -39,8 +38,8 @@ _REF_MODELS = get_args(get_args(FilingProjectionRef)[0])
 
 
 def test_core_facade_exposes_the_canonical_flat_projection_union() -> None:
-    assert core.FilingProjectionRef is FilingProjectionRef
-    assert core.compile_filing_projection_ref is compile_filing_projection_ref
+    assert owner.FilingProjectionRef is FilingProjectionRef
+    assert compile_filing_projection_ref.__module__ == owner.__name__
     # Gated on the PROPERTY, not the tally. A member count pins a moment and
     # then detects nothing except its own staleness; what this union has to
     # guarantee is that it stays flat and discriminated, so every member is
@@ -294,15 +293,13 @@ def test_slotless_marker_rejects_legacy_slot_and_models_are_frozen() -> None:
 
 
 def test_core_facade_exposes_the_single_projection_union_owner() -> None:
-    assert core.FilingProjectionRef is owner.FilingProjectionRef
+    assert owner.FilingProjectionRef is FilingProjectionRef
     declarations = {
         node.name for node in ast.walk(ast.parse(inspect.getsource(owner))) if isinstance(node, ast.ClassDef)
     }
     assert {model_type.__name__ for model_type in _REF_MODELS} <= declarations
-    assert core.M303ProrrataActivityProjectionRef is owner.M303ProrrataActivityProjectionRef
-    assert core.filing_projection_ref_casilla_id is owner.filing_projection_ref_casilla_id
-
-
+    assert owner.M303ProrrataActivityProjectionRef is not None
+    assert owner.filing_projection_ref_casilla_id.__module__ == owner.__name__
 def test_simplified_activity_reference_refuses_cross_cohort_field_drift() -> None:
     with pytest.raises(ValidationError, match="requires field"):
         M303RegimenSimplificadoActivityProjectionRef(

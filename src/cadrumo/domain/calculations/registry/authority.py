@@ -19,7 +19,7 @@ from threading import Condition, RLock
 from typing import Protocol, override
 
 from .... import __version__
-from ....core.access_gate._authorization import (
+from ....core.access_gate.authorization import (
     AuthorizationManifest,
     ModeloAuthorization,
     derive_modelo_authorization,
@@ -53,12 +53,12 @@ from .identity import (
 )
 from .ids import RevisionId
 from .schema import (
-    DeadlineWindowDefinition,
     ModeloDefinition,
     ModeloRevision,
     RegistryCatalogues,
     RegistrySnapshot,
 )
+from .schema_deadlines import DeadlineWindowDefinition
 from .static_inspection import RegistryRevisionInspection
 from .temporal import select_revision
 

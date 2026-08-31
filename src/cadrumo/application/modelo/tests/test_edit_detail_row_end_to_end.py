@@ -35,7 +35,8 @@ from ....tests.profile_capsule import seed_modelo_ready_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...operations.registry import OperationSchemaIdentityV1
 from .._edit_execution import apply_modelo_edit
-from .._edit_models import (
+from ..edit_contract import ModeloEditCompatibilityTupleV1
+from ..edit_models import (
     ModeloDetailRowEditIntentV1,
     ModeloEditAdmissionRequestV1,
     ModeloEditAdmittedV1,
@@ -48,8 +49,7 @@ from .._edit_models import (
     ModeloEditSubmissionV1,
     ModeloEditWritableDetailRowSurfaceEntryV1,
 )
-from .._edit_services import admit_modelo_edit, modelo_edit_request_schema_identity, modelo_edit_result_schema_identity
-from ..edit_contract import ModeloEditCompatibilityTupleV1
+from ..edit_services import admit_modelo_edit, modelo_edit_request_schema_identity, modelo_edit_result_schema_identity
 from ..work_addressing import ModeloExactWorkUnitTarget
 from ..workspace_models import ModeloWorkspaceExactWorkUnitTargetV1, ModeloWorkspaceTargetV1
 

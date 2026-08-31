@@ -138,7 +138,7 @@ from .coverage import build_obligation_coverage
 from .next_actions import declare_next_action as _declare_next_action
 
 if TYPE_CHECKING:
-    from ...domain.calculations.registry.schema import DeadlineWindowDefinition
+    from ...domain.calculations.registry.schema_deadlines import DeadlineWindowDefinition
     from ...domain.justificante import Justificante
     from ...domain.modelos.filing_record import ModeloRecord
     from ..live.expedientes import PersistedExpedientesSnapshot

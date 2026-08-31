@@ -27,7 +27,7 @@ from .....core.hardware import AcceleratorKind, ContentionCause
 from .....tests.cli_runner import invoke_cached_cli
 from .._check_hardware_rows import CONTENTION_ROW_ID, contention_row
 from .._check_payloads import CheckDependencyPayload
-from ._isolated_storage_fixture import config_check_backend, config_check_isolated_backend
+from .isolated_storage_fixture import config_check_backend, config_check_isolated_backend
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["config_check_backend", "config_check_isolated_backend"]

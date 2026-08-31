@@ -70,8 +70,8 @@ def test_each_code_set_is_declared_exactly_once_in_the_tree() -> None:
     for code_set in (TipoVinculacion, TipoOperacionVinculada, MetodoValoracion):
         codes = frozenset(str(member) for member in code_set if str(member))
         declaring = _modules_declaring_the_literal_set(codes)
-        assert declaring == {"core/_modelo_232_codigos.py"}, (
-            f"{code_set.__name__} is declared in {sorted(declaring)}; the single home is core/_modelo_232_codigos.py"
+        assert declaring == {"core/modelo_232_codigos.py"}, (
+            f"{code_set.__name__} is declared in {sorted(declaring)}; the single home is core/modelo_232_codigos.py"
         )
 
 

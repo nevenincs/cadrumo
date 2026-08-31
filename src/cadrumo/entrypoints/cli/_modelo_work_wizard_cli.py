@@ -48,15 +48,15 @@ import typer
 from pydantic import ValidationError
 
 from ...application.flows.line_frontend import LineFlowFrontend
-from ...application.modelo._action_errors import (
+from ...application.modelo.action_errors import (
     CalculationRegistryUnavailableError,
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
     modelo_work_wizard_retry_exhausted_precondition,
 )
-from ...application.modelo._calculate_input import calculate_modelo_work_revision
-from ...application.modelo._iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from ...application.modelo.borrador_binding import Modelo100BorradorBindingError
+from ...application.modelo.calculate_input import calculate_modelo_work_revision
+from ...application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from ...application.modelo.work_wizard import (
     ModeloWorkWizardRun,
     ModeloWorkWizardStep,
@@ -65,7 +65,7 @@ from ...application.modelo.work_wizard import (
 )
 from ...core.external_constants import OutputLanguage
 from ...core.flows import FlowMode
-from ...core.i18n._render import tr
+from ...core.i18n.render import tr
 from ...core.json_contract import Notice
 from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 from ._common import activate_subcommand_output_language, attach_cli_policy_verdict, emit_envelope
@@ -85,7 +85,7 @@ from ._modelo_work_wizard_payloads import WizardPromptedCasillaPayload, WorkWiza
 from .errors import CliOutboundPayloadBoundaryError, CliRefusedBoundaryError
 
 if TYPE_CHECKING:
-    from ...application.modelo._calculate_input import ModeloWorkCalculationServiceResult
+    from ...application.modelo.calculate_input import ModeloWorkCalculationServiceResult
     from ...domain.modelos.work_unit import WorkUnit
 
 

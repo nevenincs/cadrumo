@@ -39,7 +39,7 @@ from ...application.overview.calendar_models import (
     OverviewCalendarRange,
 )
 from ...core.external_constants import OutputLanguage
-from ...core.i18n._render import tr
+from ...core.i18n.render import tr
 from ...core.json_contract import Notice, strict_round_trip
 from ...core.logging import get_logger
 from ...core.time.clock import today_madrid
@@ -84,7 +84,7 @@ from ._overview_rendering import (
     overview_prepare_output,
     overview_status_output,
 )
-from ._period_parsing import _canonical_period
+from .period_parsing import _canonical_period
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -842,8 +842,8 @@ def overview_pipeline(
     from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ...application.ledger.actions_manual import summarize_manual_transactions
-    from ...application.modelo._calculation_actions import get_calculation_revision
-    from ...application.modelo._filing_actions import list_verification_reports
+    from ...application.modelo.calculation_actions import get_calculation_revision
+    from ...application.modelo.filing_actions import list_verification_reports
     from ...application.modelo.work_lifecycle import list_work_units
     from ...application.overview.pipeline_health import build_pipeline_health_report
     from ...domain.modelos.calculation_revision import CalculationRevision

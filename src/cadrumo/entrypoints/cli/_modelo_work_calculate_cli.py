@@ -28,16 +28,16 @@ from typing import TYPE_CHECKING, Any
 import typer
 from pydantic import ValidationError
 
-from ...application.modelo._action_errors import (
+from ...application.modelo.action_errors import (
     CalculationRegistryUnavailableError,
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
 )
-from ...application.modelo._calculate_input import calculate_modelo_work_revision
-from ...application.modelo._iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from ...application.modelo.borrador_binding import Modelo100BorradorBindingError
+from ...application.modelo.calculate_input import calculate_modelo_work_revision
+from ...application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from ...core.external_constants import OutputLanguage
-from ...core.i18n._render import tr
+from ...core.i18n.render import tr
 from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.json_contract import Notice
 from ...core.rescate_type import RescateType
@@ -66,7 +66,7 @@ from .errors import CliOutboundPayloadBoundaryError
 
 if TYPE_CHECKING:
     from ...application.aggregation import CalculationSourceDiagnostic
-    from ...application.modelo._calculate_input import ModeloWorkCalculationServiceResult
+    from ...application.modelo.calculate_input import ModeloWorkCalculationServiceResult
     from ...domain.modelos.calculation_revision import CalculationRevision
     from ...domain.modelos.work_unit import WorkUnit
 

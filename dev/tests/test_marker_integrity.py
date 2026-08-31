@@ -265,7 +265,7 @@ _LIVE_ENV_NAME = "CADRUMO_LIVE_TESTS_ENABLED"
 _LIVE_TEST_OPT_IN_TOKENS = ("CADRUMO_LIVE_TESTS_ENABLED", "cadrumo_live_tests_enabled")
 _LIVE_TEST_OPT_IN_AUTHORITY_FILES = frozenset(
     {
-        Path("src/cadrumo/core/_config_live_tests.py"),
+        Path("src/cadrumo/core/config_live_tests.py"),
         Path("src/cadrumo/core/config.py"),
         Path("src/cadrumo/core/access_gate/__init__.py"),
         Path("src/cadrumo/core/access_gate/errors.py"),

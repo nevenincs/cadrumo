@@ -184,8 +184,8 @@ def test_extract_statement_currency_uses_default_currency() -> None:
 
 def test_extract_statement_currency_raises_on_missing_currency() -> None:
     """Pages with no currency marker must raise InvalidFinancialSourceError."""
-    from .._base import InvalidFinancialSourceError
     from .._pdf_n26 import _extract_statement_currency
+    from ..base import InvalidFinancialSourceError
 
     pages = (("no currency info here",),)
     with pytest.raises(InvalidFinancialSourceError):

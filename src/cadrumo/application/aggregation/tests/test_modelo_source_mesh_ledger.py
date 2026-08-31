@@ -54,7 +54,7 @@ from .. import (
 from .._preconditions import AggregationPreconditionCondition
 from .._source_mesh import CalculationSourceResolution
 from ..source_resolution_operations import merge_source_resolutions
-from ._iva_authority_support import aggregate_iva_ledger_observations
+from .iva_authority_support import aggregate_iva_ledger_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

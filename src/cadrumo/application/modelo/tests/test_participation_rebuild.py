@@ -38,7 +38,7 @@ from ....domain.modelos.participation_index import (
 from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....tests.secure_sql import isolated_runtime_profile
-from .._participation_index_rebuild import rebuild_participation_index
+from ..participation_index_rebuild import rebuild_participation_index
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

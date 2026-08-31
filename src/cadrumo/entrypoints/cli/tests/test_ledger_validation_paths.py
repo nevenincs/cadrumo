@@ -168,7 +168,7 @@ def test_ledger_add_gross_mismatch_above_substrate_hints_recargo_amount(
     recorded, must hint ``--recargo-amount`` rather than a bare arithmetic
     mismatch.
 
-    ``_gross_mismatch_detail`` (``domain/transactions/_models.py``) names the
+    ``_gross_mismatch_detail`` (``domain/transactions/models.py``) names the
     one field that would legitimately explain this direction of the gap: a
     supply to or from a comerciante minorista under recargo de equivalencia
     (LIVA art. 161) charges the surcharge on top of the cuota, so the cash the

@@ -56,19 +56,16 @@ from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ....tests.write_unit_recorder import WriteUnitRecorder
-from .._action_errors import (
+from ..action_errors import (
     AmendmentEvidenceMissingError,
     AmendmentOverrideCasillaError,
     AmendmentTargetStateError,
     CalculationRevisionStateError,
 )
-from .._amendment_actions import amend_modelo_revision
-from .._calculation_actions import (
-    calculate_modelo_revision,
-    get_calculation_revision,
-)
-from .._filing_actions import get_filing_record
-from .._verification_actions import verify_modelo_revision
+from ..amendment_actions import amend_modelo_revision
+from ..calculation_actions import calculate_modelo_revision, get_calculation_revision
+from ..filing_actions import get_filing_record
+from ..verification_actions import verify_modelo_revision
 from ..work_lifecycle import (
     create_work_unit,
     get_work_unit,
@@ -885,7 +882,7 @@ def test_export_guard_would_refuse_an_amendment_carrying_contributors(repos: _Re
     states the whole invariant rather than half of it — the reachability
     fact and the consequence are recorded together.
     """
-    from .._export import ModeloExportEvidenceMissingError, _raise_if_ledger_export_evidence_missing
+    from ..export import ModeloExportEvidenceMissingError, _raise_if_ledger_export_evidence_missing
 
     outcome = _drive_amend_creates_complementaria(repos)
     _, cr_repo, _, _, _ = repos

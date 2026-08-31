@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
-from ....adapters.inbound.pdf.utils import source_pdf_reference_path
+from ....adapters.inbound.pdf.source_provenance import source_pdf_reference_path
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -54,9 +54,9 @@ from ...calculations.cross_period_clean_state import (
     cross_period_dependency_requirements,
 )
 from ...calculations.observations_repository import CalculationObservationRepository
-from .._verification_actions import verify_modelo_revision
 from .._verification_cross_period import _cross_period_clean_state_findings
 from ..external_import_actions import import_external_filing_evidence
+from ..verification_actions import verify_modelo_revision
 from ..work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

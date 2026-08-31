@@ -123,7 +123,7 @@ def test_snapshot_not_found_subclasses_still_work() -> None:
 
 
 def test_modelo_applicability_filter_error_enrolled() -> None:
-    from ..modelo._action_errors import ModeloApplicabilityFilterError
+    from ..modelo.action_errors import ModeloApplicabilityFilterError
 
     envelope = _assert_enrolled(ModeloApplicabilityFilterError, "Unknown applicability filter: 'bad_filter'")
     assert envelope.code is not None

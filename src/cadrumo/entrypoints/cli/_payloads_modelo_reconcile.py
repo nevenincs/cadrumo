@@ -17,12 +17,12 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from ...application.modelo._taxation_comparison import TaxationRecommendation
 from ...application.modelo.reconciliation_records import (
     ModeloReconciliationDiffKind,
     ModeloReconciliationEvidenceKind,
     ModeloReconciliationVerdict,
 )
+from ...application.modelo.taxation_comparison import TaxationRecommendation
 from ...core.filing_year import FilingYear
 from ...core.identity import BucketId, WorkUnitId
 from ...core.json_contract import OutputSchema

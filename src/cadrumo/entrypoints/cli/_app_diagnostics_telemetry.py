@@ -37,8 +37,8 @@ from __future__ import annotations
 
 import typer
 
-from ...core.i18n._render import tr
-from ...core.telemetry._tier import TelemetryTier
+from ...core.i18n.render import tr
+from ...core.telemetry.tier import TelemetryTier
 from ._common import emit_envelope
 from ._diagnostics_payloads import (
     TelemetryFlushResult,

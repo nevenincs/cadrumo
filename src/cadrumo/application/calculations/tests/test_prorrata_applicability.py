@@ -23,10 +23,7 @@ import pytest
 
 from ....core.prorrata_register import ProrrataRegisterRegime
 from ....domain.prorrata_register.register import ProrrataRegisterEntry
-from .._prorrata_regularizacion import (
-    ProrrataDeclaredVolumeLedgerRollup,
-    derive_prorrata_applicability,
-)
+from ..prorrata_regularizacion import ProrrataDeclaredVolumeLedgerRollup, derive_prorrata_applicability
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

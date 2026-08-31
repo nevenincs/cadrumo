@@ -41,8 +41,8 @@ from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.loader import load_user_profile_schema
 from ..user_profile.profile_record_repository import ProfileRecordRepository
 from ..user_profile.projections import profile_fact_index
-from ._action_errors import ModeloRequiredBindingsMissingError
-from ._preconditions import build_modelo_precondition_failure
+from .action_errors import ModeloRequiredBindingsMissingError
+from .preconditions import build_modelo_precondition_failure
 from .profile_binding import resolve_profile_binding_value
 
 

@@ -42,7 +42,7 @@ from cadrumo.entrypoints.cli.command_api import (
     command_spec_nodes,
 )
 from cadrumo.core.json_contract import ENVELOPE_SCHEMA_VERSION
-from cadrumo.entrypoints.cli._command_spec import SchemaState
+from cadrumo.entrypoints.cli.command_spec import SchemaState
 
 nodes = command_spec_nodes()
 specs = {node.spec.key: node.spec for node in nodes}

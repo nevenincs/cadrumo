@@ -20,7 +20,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .._run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
+from ..run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

@@ -82,31 +82,6 @@ from ._capsule_filesystem import (
 from ._capsule_filesystem import (
     write_through_windows_publication_fence as _write_through_windows_publication_fence,
 )
-from ._filesystem_primitives import (
-    PROFILE_CUSTODY_COMMIT_FILENAME,
-    ProfileCustodyPasswordReadOperation,
-)
-from ._filesystem_primitives import (
-    anchor_directory as _anchor_directory,
-)
-from ._filesystem_primitives import (
-    ensure_real_directory as _ensure_real_directory,
-)
-from ._filesystem_primitives import (
-    posix_directory_fd as _posix_directory_fd,
-)
-from ._filesystem_primitives import (
-    posix_mkdir_child_directory as _posix_mkdir_child_directory,
-)
-from ._filesystem_primitives import (
-    posix_open_child_directory as _posix_open_child_directory,
-)
-from ._filesystem_primitives import (
-    write_exclusive_fsynced as _write_exclusive_fsynced,
-)
-from ._filesystem_primitives import (
-    write_exclusive_fsynced_fd as _write_exclusive_fsynced_fd,
-)
 from ._inventory import (
     PROFILE_CUSTODY_INVENTORY_MAX_ENTRIES as _INVENTORY_MAX_ENTRIES,
 )
@@ -157,6 +132,14 @@ from .filesystem import (
 from .filesystem import (
     read_regular_file_fd as _read_regular_file_fd,
 )
+from .filesystem_primitives import PROFILE_CUSTODY_COMMIT_FILENAME, ProfileCustodyPasswordReadOperation
+from .filesystem_primitives import anchor_directory as _anchor_directory
+from .filesystem_primitives import ensure_real_directory as _ensure_real_directory
+from .filesystem_primitives import posix_directory_fd as _posix_directory_fd
+from .filesystem_primitives import posix_mkdir_child_directory as _posix_mkdir_child_directory
+from .filesystem_primitives import posix_open_child_directory as _posix_open_child_directory
+from .filesystem_primitives import write_exclusive_fsynced as _write_exclusive_fsynced
+from .filesystem_primitives import write_exclusive_fsynced_fd as _write_exclusive_fsynced_fd
 from .paths import profile_custody_path
 from .records import (
     PROFILE_CUSTODY_ENVELOPE_FILENAME,

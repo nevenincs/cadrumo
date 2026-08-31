@@ -61,8 +61,10 @@ from ....adapters.outbound.google.session_store import (
     save_metadata,
     save_token,
 )
-from ....adapters.outbound.storage._factory import get_storage_provider
-from ....adapters.outbound.storage._mirror_manifest import (
+from ....adapters.outbound.storage._protocol import StorageProvider
+from ....adapters.outbound.storage.errors import OutboundStorageError, OutboundStorageValidationError
+from ....adapters.outbound.storage.factory import get_storage_provider
+from ....adapters.outbound.storage.mirror_manifest import (
     build_remote_mirror_namespace_manifest,
     compare_remote_mirror_manifests,
     get_remote_mirror_namespace_manifest,
@@ -72,18 +74,16 @@ from ....adapters.outbound.storage._mirror_manifest import (
     remote_mirror_object_key_hmac,
     remote_mirror_object_label,
 )
-from ....adapters.outbound.storage._protocol import StorageProvider
-from ....adapters.outbound.storage._records import (
+from ....adapters.outbound.storage.records import (
     RemoteMirrorIssue,
     RemoteMirrorIssueKind,
     RemoteMirrorNamespaceManifest,
 )
-from ....adapters.outbound.storage.errors import OutboundStorageError, OutboundStorageValidationError
 from ....adapters.persistence.storage.namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from ....adapters.persistence.storage.namespace_taxonomy import StorageRemoteMirrorPolicy
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....adapters.persistence.storage.secure_object_namespaces import SecureObjectNamespaceDefinition
-from ....adapters.persistence.storage.sql._secure_object_crypto import verify_revision_self_consistency
+from ....adapters.persistence.storage.sql.secure_object_crypto import verify_revision_self_consistency
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRawRow, SecureObjectRepository
 from ....core.config import load_settings
 from ....core.hashing import sha256_hex
@@ -98,7 +98,6 @@ from ._archive_push_payloads import (
     ProfileArchivePushFailedObjectPayload,
     ProfileArchivePushResult,
 )
-from ._google_errors import _google_refusal
 from ._google_payloads import (
     GoogleLoginResult,
     GoogleLogoutResult,
@@ -106,6 +105,7 @@ from ._google_payloads import (
     GoogleStatusResult,
     GoogleSyncProbeResult,
 )
+from .google_errors import _google_refusal
 
 if TYPE_CHECKING:
     import typer

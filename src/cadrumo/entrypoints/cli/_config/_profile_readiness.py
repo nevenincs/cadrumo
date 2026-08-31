@@ -5,7 +5,7 @@ from __future__ import annotations
 import typer
 
 from .._common import emit_envelope, resolve_cli_precondition_action
-from ._status_rendering import precondition_action_lines
+from .status_rendering import precondition_action_lines
 
 
 def _emit_profile_record_missing(ctx: typer.Context, *, profile_id: str, bucket_id: str, label: str) -> None:

@@ -42,7 +42,7 @@ from .....core.prorrata_register import (
     SectorDiferenciadoLetra,
 )
 from .....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
-from .....domain.prorrata_register._protocols import ProrrataRegisterRepositoryProtocol
+from .....domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from .....domain.prorrata_register.register import (
     PRORRATA_REGISTER_SCHEMA_VERSION,
     ProrrataActivityRow,

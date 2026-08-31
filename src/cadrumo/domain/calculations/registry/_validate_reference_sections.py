@@ -2,13 +2,13 @@
 
 Per-section walkers that traverse the typed-ID fields of a
 :class:`~cadrumo.domain.calculations.registry.ModeloRevision` and call into an
-:class:`~cadrumo.domain.calculations.registry.validate_reference_checker.IdReferenceChecker`
+:class:`~cadrumo.domain.calculations.registry._validate_reference_checker.IdReferenceChecker`
 to accumulate dangling-reference diagnostics.
 
 See Also:
     :func:`domain.calculations.registry._validate_references.check_all_id_references`
         Snapshot-level referential-integrity gate that invokes these walkers.
-    :mod:`cadrumo.domain.calculations.registry.validate_reference_checker`
+    :mod:`cadrumo.domain.calculations.registry._validate_reference_checker`
         Accumulator that owns the per-kind typed-id sets used here.
 """
 
@@ -45,7 +45,7 @@ def check_construct_refs(checker: IdReferenceChecker, revision: ModeloRevision) 
 
     The :class:`~cadrumo.domain.calculations.registry.ModeloRevision` supplies
     construct declarations. The
-    :class:`~cadrumo.domain.calculations.registry.validate_reference_checker.IdReferenceChecker`
+    :class:`~cadrumo.domain.calculations.registry._validate_reference_checker.IdReferenceChecker`
     supplies the typed member-id sets and legal/source-ref closure checks.
     """
     for construct in revision.constructs:

@@ -33,7 +33,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
-from ._edit_models import (
+from .edit_models import (
     ModeloDetailRowEditIntentV1,
     ModeloEditAdmissionRequestV1,
     ModeloEditAdmittedV1,
@@ -48,7 +48,7 @@ from ._edit_models import (
     ModeloEditWritableScalarSurfaceEntryV1,
     ModeloScalarEditIntentV1,
 )
-from ._edit_services import (
+from .edit_services import (
     admit_modelo_edit,
     detail_row_identity_components,
     detail_row_natural_key,
@@ -69,7 +69,7 @@ if TYPE_CHECKING:
     from ...domain.calculations.registry.schema_input_kind import InputKind
     from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue, ModeloDetailRow
     from ...domain.modelos.work_unit import WorkUnitCatalogue
-    from ._edit_models import (
+    from .edit_models import (
         ModeloEditBaselineV1,
         ModeloEditCompatibilityTupleV1,
         ModeloEditMutationFamily,

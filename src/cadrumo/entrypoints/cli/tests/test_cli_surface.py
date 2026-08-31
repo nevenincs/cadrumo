@@ -230,7 +230,7 @@ def _seed_usage_ratio_for_telefonia(bucket_id: str) -> None:
     """Persist a usage-ratio profile so the next allocate verb can resolve TELEFONIA_MOVIL."""
     from ....adapters.persistence.profile.usage_ratios import save_usage_ratios
     from ....domain.categories.spending_category import SpendingCategory
-    from ....domain.usage_ratios._model import UsageRatioProfile
+    from ....domain.usage_ratios.model import UsageRatioProfile
 
     save_usage_ratios(
         UsageRatioProfile(ratios={SpendingCategory.TELEFONIA_MOVIL: Decimal("0.60")}),

@@ -47,10 +47,10 @@ if TYPE_CHECKING:
     # leaving the runtime edge deferred, which is what breaks the cycle the
     # split creates: the stores import this package for the shared error and
     # model types, and the client refers back to them.
-    from ..adapters.outbound.llm._cache import LLMCache
-    from ..adapters.outbound.llm._consent_ledger import EvidenceConsentLedger
-    from ..adapters.outbound.llm._run_telemetry import LLMRunTelemetryRecorder
-    from ..adapters.outbound.llm._usage import UsageRecorder
+    from ..adapters.outbound.llm.cache import LLMCache
+    from ..adapters.outbound.llm.consent_ledger import EvidenceConsentLedger
+    from ..adapters.outbound.llm.run_telemetry import LLMRunTelemetryRecorder
+    from ..adapters.outbound.llm.usage import UsageRecorder
 
     # The headroom measurements the contention authority consumes. Type-only
     # for the same reason as the stores above: the runtime edge into the
@@ -412,10 +412,10 @@ class LLMClient:
         # types, so binding them at module load would close the cycle. Resolved
         # here, at construction, through that package's public facade -- the
         # sanctioned cycle-break target, never a private submodule.
-        from ..adapters.outbound.llm._cache import LLMCache
-        from ..adapters.outbound.llm._consent_ledger import EvidenceConsentLedger
-        from ..adapters.outbound.llm._run_telemetry import LLMRunTelemetryRecorder
-        from ..adapters.outbound.llm._usage import UsageRecorder
+        from ..adapters.outbound.llm.cache import LLMCache
+        from ..adapters.outbound.llm.consent_ledger import EvidenceConsentLedger
+        from ..adapters.outbound.llm.run_telemetry import LLMRunTelemetryRecorder
+        from ..adapters.outbound.llm.usage import UsageRecorder
 
         self.settings = settings or Settings()
         self.cache = cache or LLMCache(root_dir=self.settings.cadrumo_llm_cache_dir)
@@ -1039,6 +1039,6 @@ def _llm_run_record() -> type:
     rather than at module load, so the import cycle the split creates never
     closes (see the TYPE_CHECKING block above for why the edge exists at all).
     """
-    from ..adapters.outbound.llm._run_telemetry import LLMRunRecord
+    from ..adapters.outbound.llm.run_telemetry import LLMRunRecord
 
     return LLMRunRecord

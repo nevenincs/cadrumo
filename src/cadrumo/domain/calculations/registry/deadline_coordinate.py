@@ -8,7 +8,7 @@ from ....core.irnr import M210_TIPO_RENTA_CODE_PROJECTION
 from ....core.modelo import Modelo
 from ....core.period import Period, registry_period_kind
 from ....core.result_disposition import ResultDisposition
-from .schema import DeadlineWindowDefinition
+from .schema_deadlines import DeadlineWindowDefinition
 
 
 class DeadlineSemanticCoordinate(NamedTuple):

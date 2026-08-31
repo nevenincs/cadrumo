@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import typer
 
-from ...application.modelo._export import modelo_export_readiness_refusal
+from ...application.modelo.export import modelo_export_readiness_refusal
 from ...application.state_projection import (
     ModeloReadinessRequest,
     ProjectionModeloReadiness,
@@ -108,7 +108,7 @@ def _resolve_readiness_period(*, modelo: str, filing_year: int, period: str | No
 
 def _readiness_report(request: ModeloReadinessRequest) -> ProjectionModeloReadiness:
     from ...core.bucket_pointer import resolve_active_bucket_id
-    from ...core.i18n._render import tr as _tr
+    from ...core.i18n.render import tr as _tr
 
     if resolve_active_bucket_id() is None:
         raise _no_active_profile_refusal()

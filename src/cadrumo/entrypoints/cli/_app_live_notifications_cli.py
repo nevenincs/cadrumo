@@ -28,7 +28,7 @@ from typing import TYPE_CHECKING, Literal, TypedDict
 
 import typer
 
-from ...adapters.inbound.notificacion._document_reader import NotificationDocumentReader
+from ...adapters.inbound.notificacion.document_reader import NotificationDocumentReader
 from ...adapters.outbound.aeat.sede.notifications import (
     assert_notification_content_readable,
     fetch_notification_document,
@@ -50,7 +50,7 @@ from ...application.live.notifications import (
     pull_notification_document,
 )
 from ...core.config import Settings, load_settings
-from ...core.i18n._render import tr
+from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ._app_live_auth_preflight import _emit_live_auth_preflight
 from ._app_live_notifications_payloads import (

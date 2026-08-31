@@ -72,8 +72,8 @@ from .....domain.iva_compensation.filed_derivation import (
     M303CompensationAvailableDerivation,
     derive_m303_compensation_available_from_casillas,
 )
-from ....inbound.declaracion._parser import parse_declaracion_bytes
 from ....inbound.declaracion.errors import DeclaracionParseError
+from ....inbound.declaracion.parser import parse_declaracion_bytes
 from .declarations_schema import Declaracion
 from .errors import SedeParseError, SedeValidationError
 from .schema import (

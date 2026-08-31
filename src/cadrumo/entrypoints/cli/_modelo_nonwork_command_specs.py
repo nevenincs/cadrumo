@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from ._command_spec import CommandSpec
 from ._modelo_nonwork_bindings_command_specs import MODELO_NONWORK_BINDINGS_COMMAND_SPECS
 from ._modelo_nonwork_calculations_command_specs import MODELO_NONWORK_CALCULATION_COMMAND_SPECS
 from ._modelo_nonwork_discovery_command_specs import MODELO_NONWORK_DISCOVERY_COMMAND_SPECS
@@ -16,6 +15,7 @@ from ._modelo_nonwork_review_package_command_specs import MODELO_NONWORK_REVIEW_
 from ._modelo_nonwork_verification_report_command_specs import MODELO_NONWORK_VERIFICATION_REPORT_COMMAND_SPECS
 from ._modelo_nonwork_work_amend_command_specs import MODELO_NONWORK_WORK_AMEND_COMMAND_SPECS
 from ._modelo_nonwork_work_preview_command_specs import MODELO_NONWORK_WORK_PREVIEW_COMMAND_SPECS
+from .command_spec import CommandSpec
 
 MODELO_NONWORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     *MODELO_NONWORK_GROUP_COMMAND_SPECS,

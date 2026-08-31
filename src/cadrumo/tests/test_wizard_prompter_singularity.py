@@ -69,7 +69,7 @@ from typing import TYPE_CHECKING, override
 
 import pytest
 
-from ._inventory import SRC_CADRUMO, aeat_relative, module_name, production_ast_items, repo_relative
+from .inventory import SRC_CADRUMO, aeat_relative, module_name, production_ast_items, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

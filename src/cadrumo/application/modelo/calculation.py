@@ -3,7 +3,7 @@
 This module owns the operator-facing capture contract over a materialized
 :class:`~CalculationRevision`. It computes nothing: the
 revision and its provenance come from the sole calculation-revision authority
-in :mod:`cadrumo.application.modelo._calculation_actions`, which remains a
+in :mod:`cadrumo.application.modelo.calculation_actions`, which remains a
 package-private implementation collaborator. There is no parallel calculation,
 source-graph, persistence or redaction path here, and none may be added.
 
@@ -27,7 +27,7 @@ from typing import TYPE_CHECKING
 
 from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import content_hash_hex
-from ._calculation_actions import get_calculation_revision
+from .calculation_actions import get_calculation_revision
 
 if TYPE_CHECKING:
     from ...core.identity import CalculationRevisionId
@@ -176,7 +176,7 @@ def capture_modelo_calculation(
     """Materialize one calculation revision over a window in which it did not move.
 
     The catalogue limb is read either side of the sole
-    :func:`~cadrumo.application.modelo._calculation_actions.get_calculation_revision`
+    :func:`~cadrumo.application.modelo.calculation_actions.get_calculation_revision`
     authority, so a write landing mid-read is retried rather than published as a
     revision paired with a coordinate from another catalogue state.
     """

@@ -44,7 +44,7 @@ from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.filing_record import ModeloRecord, derive_filing_record_id
 from ... import user_profile as user_profiles
-from ...evidence._profile_legal_hold import LegalHoldCaseAuthority
+from ...evidence.profile_legal_hold import LegalHoldCaseAuthority
 from ...filing.retention import FilingRetentionAuthority
 from ..custody_hold_models import ProfileCustodyHoldEvidence
 from ..custody_repository import profile_custody_transaction_lock

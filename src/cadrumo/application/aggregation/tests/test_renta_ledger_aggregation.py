@@ -30,7 +30,7 @@ import pytest
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.resources.registry import resources
 from ....domain.categories.spending_category import SpendingCategory
-from ....domain.renta._ledger_expenses import (
+from ....domain.renta.ledger_expenses import (
     RentaDeductibilityContext,
     RentaDeductibleExpenseFact,
     RentaDeductibleExpenseObservation,
@@ -39,7 +39,7 @@ from ....domain.renta._ledger_expenses import (
     evaluate_renta_deductibility,
 )
 from .._renta_ledger import _casilla_aggregation
-from ._renta_income_aggregation_support import _period
+from .renta_income_aggregation_support import _period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -88,9 +88,10 @@ from ..operations.registry import (
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
 )
-from ._amendment_actions import amend_modelo_revision
 from ._edit_execution import apply_modelo_edit
-from ._edit_models import (
+from .amendment_actions import amend_modelo_revision
+from .edit_contract import ModeloEditCompatibilityTupleV1
+from .edit_models import (
     ModeloBindingEditIntentV1,
     ModeloDetailRowEditIntentV1,
     ModeloEditApplyRequestV1,
@@ -112,11 +113,10 @@ from ._edit_models import (
     ModeloRowEditIntentV1,
     ModeloScalarEditIntentV1,
 )
-from ._edit_services import DETAIL_ROW_NATURAL_KEY_SEPARATOR
-from ._export import ModeloExportCommand, export_modelo_revision
-from ._filing_actions import file_modelo_revision
-from ._verification_actions import verify_modelo_revision
-from .edit_contract import ModeloEditCompatibilityTupleV1
+from .edit_services import DETAIL_ROW_NATURAL_KEY_SEPARATOR
+from .export import ModeloExportCommand, export_modelo_revision
+from .filing_actions import file_modelo_revision
+from .verification_actions import verify_modelo_revision
 from .work_lifecycle import discard_work_unit, get_work_unit, rename_work_unit
 from .workspace_models import ModeloWorkspaceRefreshTargetV1
 
@@ -125,7 +125,7 @@ if TYPE_CHECKING:
     from ...domain.modelos.verification_report import VerificationReport
     from ..operations.models import OperationRequest
     from ..operations.owner import OperationExecutorContext
-    from ._export import ModeloExportResult
+    from .export import ModeloExportResult
 
 MODELO_WORK_RENAME_OPERATION_DEFINITION_ID = "modelo.work.rename"
 MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID = "modelo.work.discard"

@@ -72,7 +72,7 @@ from ._decimal_parse_inventory import (
     string_parse_decimal_violations,
     tolerant_coercion_text_violations,
 )
-from ._inventory import SRC_CADRUMO, aeat_relative, leaf_name, production_ast_items, repo_relative
+from .inventory import SRC_CADRUMO, aeat_relative, leaf_name, production_ast_items, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -101,13 +101,13 @@ scope by default rather than by enumeration.
 """
 
 _STRING_PARSE_EXEMPTIONS: Mapping[tuple[str, str], str] = {
-    ("application/modelo/_calculate_input.py", "_validated_declarante_selector"): (
+    ("application/modelo/calculate_input.py", "_validated_declarante_selector"): (
         "Inverted use: the constructor is a numeric-ness PREDICATE, not a parse. "
         "Success means REFUSE (an amount was typed into a declarante-selector "
         "text casilla). Routing it through the strict grammar would make the "
         "guard more permissive, letting a mis-routed '1e3' past it."
     ),
-    ("application/calculations/_foreign_asset_redeclaration.py", "_decimal_or_none"): (
+    ("application/calculations/foreign_asset_redeclaration.py", "_decimal_or_none"): (
         "Modelo 720/721 valuation read, and filing-grade, so the provenance was "
         "traced to both its callers rather than assumed. Neither can carry the "
         "ambiguous shape. The casilla caller reads "
@@ -131,17 +131,17 @@ _STRING_PARSE_EXEMPTIONS: Mapping[tuple[str, str], str] = {
     # --- adapters + core, admitted to scope when rule 3 moved from a layer
     # allowlist to a call-site scope. Every adapter entry below reads
     # machine-produced text, which is the extraction posture, not the strict one.
-    ("adapters/inbound/financial/providers/_base.py", "parse_amount_value"): (
+    ("adapters/inbound/financial/providers/base.py", "parse_amount_value"): (
         "Bank-statement import: the amount comes from a downloaded provider file, not from an operator keystroke."
     ),
-    ("adapters/inbound/pdf/_label_regex.py", "parse_spanish_decimal"): (
+    ("adapters/inbound/pdf/label_regex.py", "parse_spanish_decimal"): (
         "PDF label scrape of a printed document; the extraction posture, and "
         "the function is named for the convention it reads."
     ),
     ("adapters/outbound/aeat/sede/_iva_compensation_wallet_parsing.py", "_parse_spanish_decimal"): (
         "Same AEAT sede source as its sibling above."
     ),
-    ("adapters/outbound/fx/_ecb_provider.py", "_parse_observations"): (
+    ("adapters/outbound/fx/ecb_provider.py", "_parse_observations"): (
         "ECB reference-rate feed: machine XML from the central bank."
     ),
     ("core/setup_answers.py", "_validate_incn_prior_12_months"): (
@@ -186,19 +186,19 @@ _STRING_PARSE_EXEMPTIONS: Mapping[tuple[str, str], str] = {
         "Re-hydrates a casilla observation's Decimal from the JSON this "
         "application wrote; raises RegistryValidationError on a non-numeric."
     ),
-    ("domain/iva/_schema.py", "_coerce_decimal_field"): (
+    ("domain/iva/schema.py", "_coerce_decimal_field"): (
         "Re-hydrates cash-accounting payment evidence from "
         "Envelope[Transaction].model_validate_json, whose string form this "
         "application serialised."
     ),
-    ("domain/transactions/_lineage_models.py", "_coerce_inbound"): (
+    ("domain/transactions/lineage_models.py", "_coerce_inbound"): (
         "Same JSON re-hydration for the classification confidence and "
         "business_pct fields, from the app's own persisted envelope."
     ),
-    ("domain/transactions/_models.py", "_coerce_decimal_field"): (
+    ("domain/transactions/models.py", "_coerce_decimal_field"): (
         "Same JSON re-hydration as its _coerce_inbound sibling above, on the model's own Decimal fields."
     ),
-    ("domain/deadlines/_profiles.py", "_parse_decimal"): (
+    ("domain/deadlines/profiles.py", "_parse_decimal"): (
         "Reads canonical profile facts already persisted, so the text grammar "
         "belongs to the profile write boundary rather than here. Reported as a "
         "residual finding rather than tightened: the profile fact carrier "

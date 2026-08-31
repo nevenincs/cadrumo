@@ -16,11 +16,11 @@ from typing import IO, Any, cast, override
 
 import yaml
 
-from cadrumo.core.product_identity import normalise_product_identity_references
 from cadrumo.core.directory_scan import iter_directory
 from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
 from cadrumo.core.i18n import extract_placeholders
 from cadrumo.core.logging import get_logger
+from cadrumo.core.product_identity import normalise_product_identity_references
 
 from ._registry_scanner import scan_modelo_schema_keys, scan_profile_schema_keys, scan_registry_keys
 from ._revision_drift import RevisionMoveCandidate, classify_revision_moves
@@ -244,6 +244,31 @@ def locale_catalogue_source(locales_dir: Path, locale: str) -> Path | None:
     return None
 
 
+def discover_locale_codes(locales_dir: Path) -> set[str]:
+    """Return every locale code carried as a shard directory or legacy flat file.
+
+    This is the discovery half of the pair completed by
+    :func:`locale_catalogue_source`: discovery answers which catalogues exist,
+    resolution answers which path to read for one of them. A caller that wants
+    "every committed catalogue" needs both, and must not substitute a glob for
+    a single shape. A glob is the more dangerous mistake of the two, because
+    the hardcoded-path failure at least raises: a glob for the shape the tree
+    does not carry returns an empty result, and an empty result reports as a
+    clean pass.
+    """
+    locales: set[str] = set()
+    if not locales_dir.is_dir():
+        return locales
+    for item in locales_dir.iterdir():
+        if item.name.startswith(("_", ".")):
+            continue
+        if item.is_dir():
+            locales.add(item.name)
+        elif item.is_file() and item.suffix == ".yml":
+            locales.add(item.stem)
+    return locales
+
+
 class LocaleManager:
     """API for managing locale files, scaffolding, and structural health."""
 
@@ -397,17 +422,7 @@ class LocaleManager:
 
     def _discover_locales(self) -> set[str]:
         """Discover available locale codes across sharded directories and legacy files."""
-        locales: set[str] = set()
-        if not self.locales_dir.is_dir():
-            return locales
-        for item in self.locales_dir.iterdir():
-            if item.name.startswith(("_", ".")):
-                continue
-            if item.is_dir():
-                locales.add(item.name)
-            elif item.is_file() and item.suffix == ".yml":
-                locales.add(item.stem)
-        return locales
+        return discover_locale_codes(self.locales_dir)
 
     def _load_audit_leaves(self) -> dict[str, dict[str, object]]:
         """Flatten every catalogue's raw leaves keyed by locale file name."""
@@ -475,7 +490,7 @@ class LocaleManager:
 
     def scaffold(self) -> None:
         """Parse codebase, generate locale files, auto-sort, and prune extra keys."""
-        from cadrumo.core.i18n._routing import route_key_to_shard
+        from cadrumo.core.i18n.routing import route_key_to_shard
 
         codebase_keys = self.get_codebase_keys()
         namespace_prefixes = tuple(
@@ -599,7 +614,7 @@ class LocaleManager:
 
         target = self._locale_path(locale)
         if target.is_dir():
-            from cadrumo.core.i18n._routing import route_key_to_shard
+            from cadrumo.core.i18n.routing import route_key_to_shard
 
             rel_shard = route_key_to_shard(dotted_key)
             shard_path = target / rel_shard
@@ -625,7 +640,7 @@ class LocaleManager:
         """Set a validated batch of leaves with one atomic catalogue rewrite."""
         target = self._locale_path(locale)
         if target.is_dir():
-            from cadrumo.core.i18n._routing import route_key_to_shard
+            from cadrumo.core.i18n.routing import route_key_to_shard
 
             by_shard: dict[Path, dict[str, str | None]] = {}
             for dotted_key, raw_val in values.items():
@@ -711,7 +726,7 @@ class LocaleManager:
 
         target = self._locale_path(locale)
         if target.is_dir():
-            from cadrumo.core.i18n._routing import route_key_to_shard
+            from cadrumo.core.i18n.routing import route_key_to_shard
 
             rel_shard = route_key_to_shard(dotted_key)
             shard_path = target / rel_shard
@@ -757,7 +772,7 @@ class LocaleManager:
 
         target = self._locale_path(locale)
         if target.is_dir():
-            from cadrumo.core.i18n._routing import route_key_to_shard
+            from cadrumo.core.i18n.routing import route_key_to_shard
 
             by_shard: dict[Path, list[str]] = {}
             for k in keys:
@@ -898,7 +913,7 @@ class LocaleManager:
         if not edits and not removals:
             return ()
         if target.is_dir():
-            from cadrumo.core.i18n._routing import route_key_to_shard
+            from cadrumo.core.i18n.routing import route_key_to_shard
 
             by_shard: dict[Path, tuple[dict[str, str | None], list[str]]] = {}
             for key, value in edits.items():

@@ -19,8 +19,8 @@ from ....core.directory_scan import (
 from ....core.storage_materialization import STORAGE_ROOT_MODE, ensure_storage_tree
 from ....core.storage_taxonomy import StorageArea, StorageCategory, StorageNodeKind, StorageScope
 from ....core.storage_taxonomy_locations import STORAGE_TAXONOMY, storage_path
-from .._models import StorageAreaDisposition, StorageOccupancy, StorageTreeIssueKind
-from .._service import (
+from ..models import StorageAreaDisposition, StorageOccupancy, StorageTreeIssueKind
+from ..service import (
     collect_storage_area_inventory,
     collect_storage_inventory,
     inspect_storage_tree,

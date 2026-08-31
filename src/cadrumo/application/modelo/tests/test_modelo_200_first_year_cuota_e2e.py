@@ -59,12 +59,12 @@ from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ...calculations.observations_repository import CalculationObservationRepository
-from ...tests._wizard_catalogue_fixtures import register_wizard_catalogue
-from .._calculation_actions import (
+from ...tests.wizard_catalogue_fixtures import register_wizard_catalogue
+from ..calculation_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from .._verification_actions import verify_modelo_revision
+from ..verification_actions import verify_modelo_revision
 from ..work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

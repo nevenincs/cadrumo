@@ -8,19 +8,14 @@ from dataclasses import dataclass
 import typer
 
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ...application.modelo._action_errors import (
+from ...application.modelo.action_errors import (
     WorkUnitAlreadyDiscardedError,
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
 )
-from ...application.modelo._profile_readiness_gate import (
+from ...application.modelo.profile_readiness_gate import (
     require_existing_profile_baseline_ready_for_modelo_work,
     require_profile_ready_for_modelo_work,
-)
-from ...application.modelo._work_create_policy import (
-    guard_active_profile_foral_ccaa,
-    modelo_work_create_applicability_refusal,
-    modelo_work_create_refusal_locale_key,
 )
 from ...application.modelo.work_addressing import (
     ModeloWorkRegistryYearMismatchError,
@@ -31,6 +26,11 @@ from ...application.modelo.work_addressing import (
     ensure_modelo_work_unit_for_active_target,
     law_selected_revision_for_work_target,
 )
+from ...application.modelo.work_create_policy import (
+    guard_active_profile_foral_ccaa,
+    modelo_work_create_applicability_refusal,
+    modelo_work_create_refusal_locale_key,
+)
 from ...application.modelo.work_lifecycle import (
     discard_work_unit,
     lifecycle_continuation_for_work_list,
@@ -40,7 +40,7 @@ from ...application.modelo.work_lifecycle import (
 )
 from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
-from ...core.i18n._render import tr
+from ...core.i18n.render import tr
 from ...core.json_contract import Notice
 from ...core.modelo import Modelo
 from ...core.period import Period

@@ -30,7 +30,7 @@ from typing import Any
 
 import pytest
 
-from ....application.modelo._work_plazo import ModeloWorkDeadlinePosture
+from ....application.modelo.work_plazo import ModeloWorkDeadlinePosture
 from ....core.period import Period, PeriodKind, registry_period_kind
 from ....core.time.clock import MADRID_TZ, frozen_clock
 from ....domain.calculations.registry.authority import bundled_authority

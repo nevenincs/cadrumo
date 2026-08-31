@@ -25,13 +25,9 @@ from .....core.hashing import (
     validate_prefixed_digest,
 )
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ._filesystem_primitives import (
-    WindowsDirectoryAnchorErrors,
-    windows_directory_anchor,
-    windows_file_information_type,
-)
 from .digest_model import CustodyDigestModel
 from .errors import ProfileCustodyRecordError
+from .filesystem_primitives import WindowsDirectoryAnchorErrors, windows_directory_anchor, windows_file_information_type
 from .kdf_supervision import (
     unlock_profile_custody,
     unlock_profile_custody_recovery_material,

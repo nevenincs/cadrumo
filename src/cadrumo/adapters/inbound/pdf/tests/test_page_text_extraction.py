@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from .. import PdfModeloImportError
+from .....domain.justificante.errors import PdfModeloImportError
 from ..page_text_extraction import extract_pages_text_concatenated, extract_pages_text_from_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]

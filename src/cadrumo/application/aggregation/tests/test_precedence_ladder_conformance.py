@@ -4,7 +4,7 @@ The calculate-path caller-override precedence ladder is declared once as
 ordered tier data, ``CALLER_OVERRIDE_PRECEDENCE_LADDER`` in
 :mod:`cadrumo.application.aggregation._source_mesh`. The two caller-override guard
 invocations in the calculate orchestrator consume the lock / carry source sets
-exported by :mod:`cadrumo.application.modelo._calculation_source_policy`, which are
+exported by :mod:`cadrumo.application.modelo.calculation_source_policy`, which are
 DERIVED from that declaration via :func:`precedence_ladder_sources`.
 
 This gate binds the guard's sets to the declaration so the two cannot silently
@@ -22,10 +22,7 @@ from __future__ import annotations
 import pytest
 
 from ....core.aggregation import BindingSourceKind
-from ...modelo._calculation_source_policy import (
-    BUCKET_AGGREGATION_LOCK_SOURCES,
-    CALLER_OVERRIDABLE_CARRY_SOURCES,
-)
+from ...modelo.calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES, CALLER_OVERRIDABLE_CARRY_SOURCES
 from .._source_mesh import (
     CALLER_OVERRIDE_PRECEDENCE_LADDER,
     CallerOverrideDisposition,

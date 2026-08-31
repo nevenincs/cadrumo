@@ -29,7 +29,7 @@ from ....core.ed25519_signing import (
     sign_digest_hex,
 )
 
-review_signing = import_module("cadrumo.application.modelo._review_package_signing")
+review_signing = import_module("cadrumo.application.modelo.review_package_signing")
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

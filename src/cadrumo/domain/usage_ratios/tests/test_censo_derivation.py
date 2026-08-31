@@ -16,8 +16,8 @@ from decimal import Decimal
 import pytest
 
 from ...categories.spending_category import SpendingCategory, SpendingCategoryFamily, categories_for_family
-from .._service import derive_home_office_ratios_from_censo
 from ..errors import UsageRatioValidationError
+from ..service import derive_home_office_ratios_from_censo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

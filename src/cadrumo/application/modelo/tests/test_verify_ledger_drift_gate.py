@@ -43,7 +43,7 @@ from ....tests.secure_sql import isolated_runtime_profile
 from ...ledger.actions_manual import attach_manual_transaction_evidence, update_manual_transaction_fields
 from ...ledger.evidence import PurchaseInvoiceEvidenceService
 from ...ledger.models import ManualLedgerTransactionPatch
-from .._verification_actions import verify_modelo_revision
+from ..verification_actions import verify_modelo_revision
 from .test_modelo_303_deductible_evidence_gate import (
     _BUCKET_ID,
     _TAX_ID,

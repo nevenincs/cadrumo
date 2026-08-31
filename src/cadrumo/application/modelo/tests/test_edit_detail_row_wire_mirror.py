@@ -31,8 +31,8 @@ from ....domain.modelos.row_models import (
     Modelo349RectificacionRow,
 )
 from ...operations.registry import _strict_model_json_schema, _validate_credential_free_schema
-from .._edit_models import ModeloEditDetailRowIntentKind
-from .._edit_services import DETAIL_ROW_NATURAL_KEY_SEPARATOR, detail_row_natural_key
+from ..edit_models import ModeloEditDetailRowIntentKind
+from ..edit_services import DETAIL_ROW_NATURAL_KEY_SEPARATOR, detail_row_natural_key
 from ..operation_definitions import (
     ModeloEditApply184MemberRowV1,
     ModeloEditApply210AgrupacionRentaRowV1,

@@ -53,8 +53,8 @@ from ..fincas.amortization_ledger import compute_amortization_for_year
 from ..fincas.enums import ExpenseCategory, UseType
 from ..fincas.expense_rollup import CarryForwardEntry, compute_gastos_for_year
 from ..fincas.models import Finca, FincaGasto, FincaRendimientoRecord
-from ..renta._ledger_expenses import RentaDeductibilityContext, RentaDeductibleExpenseFact, evaluate_renta_deductibility
-from ..renta._maritime_exemption import MaritimeWorkerFacts, calculate_art_7p_exemption
+from ..renta.ledger_expenses import RentaDeductibilityContext, RentaDeductibleExpenseFact, evaluate_renta_deductibility
+from ..renta.maritime_exemption import MaritimeWorkerFacts, calculate_art_7p_exemption
 
 _SiteKey = tuple[str, str]
 
@@ -221,14 +221,14 @@ def _witness_renta_statutory_cap() -> tuple[object, object]:
 
 #: Regulatory cap sites, each bound to the witness proving its cap can bind.
 REGULATORY_CAP_WITNESSES: Mapping[_SiteKey, Callable[..., tuple[object, object]]] = {
-    ("domain/contribuyente/_family_profile.py", "incremento_guarderia_0613"): _witness_guarderia_prorated_cap,
+    ("domain/contribuyente/family_profile.py", "incremento_guarderia_0613"): _witness_guarderia_prorated_cap,
     (
-        "domain/contribuyente/_deduccion_maternidad.py",
+        "domain/contribuyente/deduccion_maternidad.py",
         "compute_deduccion_maternidad_0611",
     ): _witness_maternidad_anual_cap,
-    ("domain/renta/_maritime_exemption.py", "calculate_art_7p_exemption"): _witness_art_7p_exemption_cap,
-    ("domain/fincas/_amortization_ledger.py", "compute_amortization_for_year"): _witness_amortizacion_remaining_cap,
-    ("domain/fincas/_expense_rollup.py", "compute_gastos_for_year"): _witness_art_23_1_capped_subtotal,
-    ("domain/fincas/_expense_rollup.py", "_consume_carry"): _witness_art_23_1_carry_capacity,
-    ("domain/renta/_ledger_expenses.py", "evaluate_renta_deductibility"): _witness_renta_statutory_cap,
+    ("domain/renta/maritime_exemption.py", "calculate_art_7p_exemption"): _witness_art_7p_exemption_cap,
+    ("domain/fincas/amortization_ledger.py", "compute_amortization_for_year"): _witness_amortizacion_remaining_cap,
+    ("domain/fincas/expense_rollup.py", "compute_gastos_for_year"): _witness_art_23_1_capped_subtotal,
+    ("domain/fincas/expense_rollup.py", "_consume_carry"): _witness_art_23_1_carry_capacity,
+    ("domain/renta/ledger_expenses.py", "evaluate_renta_deductibility"): _witness_renta_statutory_cap,
 }

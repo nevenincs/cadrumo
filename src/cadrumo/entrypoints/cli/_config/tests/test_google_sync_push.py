@@ -11,15 +11,15 @@ from pydantic import ValidationError
 from sqlalchemy import text
 
 from .....adapters.outbound.storage._local import LocalFileSystemProvider
-from .....adapters.outbound.storage._mirror_manifest import (
+from .....adapters.outbound.storage.errors import OutboundStorageNotFoundError, OutboundStorageValidationError
+from .....adapters.outbound.storage.mirror_manifest import (
     REMOTE_MIRROR_MANIFEST_NAMESPACE,
     build_remote_mirror_namespace_manifest,
     put_remote_mirror_namespace_manifest,
     remote_mirror_object_key_hmac,
     remote_mirror_object_label,
 )
-from .....adapters.outbound.storage._records import ProviderKind, RemoteMirrorNamespaceManifest
-from .....adapters.outbound.storage.errors import OutboundStorageNotFoundError, OutboundStorageValidationError
+from .....adapters.outbound.storage.records import ProviderKind, RemoteMirrorNamespaceManifest
 from .....adapters.persistence.storage.namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from .....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from .....core.i18n import tr

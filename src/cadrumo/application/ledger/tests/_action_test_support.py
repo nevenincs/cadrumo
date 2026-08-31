@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.inbound.financial.providers._base import ParsedLedgerRow
+from ....adapters.inbound.financial.providers.base import ParsedLedgerRow
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -61,7 +61,7 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.errors import TransactionValidationError
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....domain.usage_ratios._model import UsageRatioProfile
+from ....domain.usage_ratios.model import UsageRatioProfile
 from ....tests import general_m303_filing_evidence
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import (

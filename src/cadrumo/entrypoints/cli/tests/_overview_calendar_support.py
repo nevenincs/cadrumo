@@ -12,11 +12,11 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
-from ....adapters.inbound.pdf.utils import source_pdf_reference_path
+from ....adapters.inbound.pdf.source_provenance import source_pdf_reference_path
 from ....application.user_profile.censo_sync import CENSO_SOURCE_TAG
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
-from ....domain.justificante._schema import Justificante
+from ....domain.justificante.schema import Justificante
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.filing_record import (
     ExternalEvidence,

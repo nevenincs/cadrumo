@@ -37,8 +37,8 @@ from .._renta_ledger import (
     _SEGURO_GENERAL_VARIANT,
     aggregate_renta_ledger_expenses,
 )
-from ._renta_income_aggregation_support import _period
 from ._secure_objects_fixtures import SECURE_OBJECTS_BUCKET_ID
+from .renta_income_aggregation_support import _period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

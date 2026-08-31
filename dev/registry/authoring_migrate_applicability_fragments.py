@@ -41,7 +41,7 @@ from cadrumo.domain.calculations.registry.applicability import (
     iter_modelo_applicability_rules,
 )
 from cadrumo.domain.calculations.registry.loader import load_modelo_directory
-from cadrumo.domain.calculations.registry.schema import ApplicabilityRuleDefinition
+from cadrumo.domain.calculations.registry.schema_revision_members import ApplicabilityRuleDefinition
 
 MODELOS_ROOT = bundled_path("registry", "aeat", "modelos")
 

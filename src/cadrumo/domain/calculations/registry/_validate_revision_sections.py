@@ -9,7 +9,7 @@ and closure validators. Legal/source refs are checked through the shared
 See Also:
     :class:`cadrumo.domain.calculations.registry.RegistryValidator`
         Registry-level validator that calls :func:`validate_revision_definition`.
-    :mod:`cadrumo.domain.calculations.registry.validate_revision_closure`
+    :mod:`cadrumo.domain.calculations.registry._validate_revision_closure`
         Closure validators dispatched after section-level checks.
 """
 

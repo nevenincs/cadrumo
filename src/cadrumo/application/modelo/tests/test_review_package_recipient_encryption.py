@@ -50,7 +50,7 @@ from ....adapters.persistence.profile.recipient_replay_guard import (
 from ....adapters.persistence.storage.secure_object_namespaces import (
     MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE as _ENCRYPTION_KEY_NAMESPACE,
 )
-from ....adapters.persistence.storage.sql._orm import SecureObjectRow
+from ....adapters.persistence.storage.sql.orm import SecureObjectRow
 from ....adapters.persistence.storage.sql.session import session_scope
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
@@ -63,7 +63,7 @@ from ....domain.modelos.calculation_revision import (
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
 from ....tests.secure_sql import isolated_runtime_profile
-from .._review_package_recipient_encryption import (
+from ..review_package_recipient_encryption import (
     RecipientDecryptionError,
     RecipientEncryptionError,
     RecipientEncryptionKeypair,
@@ -75,10 +75,7 @@ from .._review_package_recipient_encryption import (
     load_recipient_encryption_keypair,
     recipient_encryption_public_key,
 )
-from .._review_package_recipient_registry import (
-    RecipientFingerprintRegistryRepository,
-    public_key_hex_from_raw_bytes,
-)
+from ..review_package_recipient_registry import RecipientFingerprintRegistryRepository, public_key_hex_from_raw_bytes
 from ._review_package_bytes_support import build_package_bytes
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -537,7 +534,7 @@ def test_envelope_nonce_is_independent_across_two_encryptions_of_identical_input
 
 def test_envelope_rejects_valid_until_at_or_before_issued_at() -> None:
     """Model-level guard: a self-contradictory envelope never validates."""
-    from .._review_package_recipient_encryption import RecipientEncryptedPackage
+    from ..review_package_recipient_encryption import RecipientEncryptedPackage
 
     with pytest.raises(ValueError, match="valid_until"):
         RecipientEncryptedPackage(
@@ -634,7 +631,7 @@ def test_ensure_recipient_encryption_keypair_refuses_a_naive_or_non_utc_generate
 
 
 def test_load_recipient_encryption_keypair_refuses_before_mint(tmp_path: Path) -> None:
-    from .._review_package_recipient_encryption import RecipientEncryptionKeyNotFoundError
+    from ..review_package_recipient_encryption import RecipientEncryptionKeyNotFoundError
 
     with (
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id="df232797-fe0c-4e0f-9f80-c608b60391e7") as profile,

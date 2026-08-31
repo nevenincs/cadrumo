@@ -27,7 +27,7 @@ from textual.widget import Widget
 from textual.widgets import Button, Footer, Static
 
 from ....application.user_profile.presentation import ProfilePresentationV1
-from ....core.i18n._render import tr
+from ....core.i18n.render import tr
 from ..components.theme import BASE_CSS, install_cadrumo_themes, toggle_appearance, tokenised
 from ..components.widgets import ContentScroll, StageNavigationStrip
 from .journey_status import ReadyStageBody, compose_required_stage, overview_readiness_summary

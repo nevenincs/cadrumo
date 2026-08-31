@@ -15,7 +15,7 @@ fails here. The refusal case is the one that matters most and is the reason the
 enumeration below is deliberately naive.
 
 WHY THE ENUMERATION IS INDEPENDENT, and it is the lesson this module is built on.
-The sibling guard in ``test_revision_span_matches_published_designs`` exists to
+The sibling guard in ``test_revision_span_boundaries`` exists to
 catch its own inventory dropping a design file, and it derived its "what is on
 disk" set with the SAME ``files/*`` glob shape the inventory used. Two derivations
 of one fact, which is the right instinct -- but both inherited one directory-shape

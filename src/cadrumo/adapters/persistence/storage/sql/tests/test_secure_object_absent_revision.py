@@ -170,7 +170,7 @@ def test_lineage_gate_refuses_an_absent_revision_id_directly(tmp_path: Path) -> 
     it directly must get the same answer. ``tmp_path`` is unused by design --
     this exercises the pure metadata predicate with no stored row at all.
     """
-    from .._secure_object_crypto import derive_revision_id, verify_revision_self_consistency
+    from ..secure_object_crypto import derive_revision_id, verify_revision_self_consistency
 
     written_at = datetime(2026, 1, 2, 3, 4, 5, tzinfo=UTC)
     object_key = b"\x11" * 32

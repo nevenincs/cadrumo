@@ -15,13 +15,13 @@ from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.row_models import Modelo349OperadorRow
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from .._action_errors import ModeloAggregationBindingError
 from .._calculation_modelo_adjustments import (
     _m390_303_reconciliation_targets,
     detail_row_binding_values_for_calculation,
     uncovered_detail_row_kinds,
     union_detail_rows_by_identity,
 )
+from ..action_errors import ModeloAggregationBindingError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

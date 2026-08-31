@@ -49,7 +49,7 @@ DECLARED_EXCEPTIONS: dict[str, str] = {
         "a sloppy code should fail the author at load; IsoCurrencyCode would "
         "normalise an authored 'eur' and repair it behind them"
     ),
-    "adapters/inbound/financial/providers/_csv.py::currency": (
+    "adapters/inbound/financial/providers/csv.py::currency": (
         "a raw parsed cell, held exactly as the bank exported it so the adapter "
         "can name the offending value; normalisation happens once at the "
         "RawTransaction boundary this feeds, not twice"
@@ -58,7 +58,7 @@ DECLARED_EXCEPTIONS: dict[str, str] = {
         "the same raw parse struct as the CSV provider, for the same reason: it "
         "carries the source cell, and RawTransaction normalises it"
     ),
-    "entrypoints/cli/_ledger_business_payloads.py::currency": (
+    "entrypoints/cli/ledger_business_payloads.py::currency": (
         "one field of an EvidenceExtractResult, the extractor's reading of a "
         "document, sitting beside taxable_base and iva_rate which are strings "
         "for the same reason: the payload shows the operator what was read, "
@@ -78,7 +78,7 @@ DECLARED_EXCEPTIONS: dict[str, str] = {
         "a suggestion the operator has not accepted yet, so it carries the "
         "model's output verbatim; it is validated when accepted, not when read"
     ),
-    "domain/renta/_ledger_expenses.py::currency": (
+    "domain/renta/ledger_expenses.py::currency": (
         "Literal['EUR'] is STRICTER than the canonical annotation, not looser: "
         "this expense projection is euro-only by construction and the literal "
         "states that in the type rather than in a comment"

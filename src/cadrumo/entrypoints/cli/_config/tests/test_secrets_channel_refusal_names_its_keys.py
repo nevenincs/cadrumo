@@ -22,7 +22,7 @@ import pytest
 from pydantic import BaseModel, ConfigDict, SecretStr
 
 from ...errors import CliRefusedBoundaryError
-from .._secure_input import _validate_secrets_payload
+from ..secure_input import _validate_secrets_payload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

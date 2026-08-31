@@ -271,7 +271,7 @@ def test_stale_revision_advisory_names_no_harmful_recovery_verb(profile: TestRun
     # returns the discarded unit, stranding the target permanently. The advisory
     # must therefore never point at either. Asserted on the notice's structured
     # suggestion, not on localized prose.
-    from ....entrypoints.cli._ledger_lifecycle_cli import _stale_finalized_revision_notices
+    from ....entrypoints.cli.ledger_lifecycle_cli import _stale_finalized_revision_notices
 
     blocker = LedgerRemovalBlocker(
         work_unit_id="ab" * 32,

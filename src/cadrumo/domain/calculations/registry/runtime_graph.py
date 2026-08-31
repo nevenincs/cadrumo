@@ -6,7 +6,7 @@ extract casilla, binding, parameter, relation, and date-binding references, and
 produces topologically sorted evaluation orders for the formula engine.
 
 See Also:
-    :mod:`cadrumo.domain.calculations.registry.validate_formulas`
+    :mod:`cadrumo.domain.calculations.registry._validate_formulas`
         Validation layer that rejects dangling expression refs and formula
         dependency cycles before runtime graph builders are used.
     :mod:`cadrumo.domain.calculations.registry.formula_runtime`

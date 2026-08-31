@@ -71,7 +71,7 @@ from ._google_credential_source_payloads import (
     GoogleCredentialSourceSetResult,
     GoogleCredentialSourceViewResult,
 )
-from ._google_errors import _google_refusal
+from .google_errors import _google_refusal
 
 if TYPE_CHECKING:
     import typer

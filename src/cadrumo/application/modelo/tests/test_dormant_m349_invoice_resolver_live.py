@@ -21,7 +21,7 @@ from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine, d
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.schema import IvaCategory
 from ....tests.secure_sql import isolated_runtime_profile
-from .._calculation_actions import (
+from ..calculation_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )

@@ -13,7 +13,7 @@ from ....core.i18n import OutputLanguage, tr
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._common import emit_envelope
 from ..errors import CliRefusedBoundaryError
-from ._secure_input import MachineSecretPayload
+from .secure_input import MachineSecretPayload
 
 if TYPE_CHECKING:
     from ....application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
@@ -29,7 +29,7 @@ class PassphraseChangeSecrets(MachineSecretPayload):
 
 def _collect_passphrases(*, secrets_stdin: bool, secrets_fd: int | None) -> PassphraseChangeSecrets:
     """Resolve all three rotation values through one explicit or interactive door."""
-    from ._secure_input import prompt_secret_no_echo, read_machine_secret_payload, select_machine_secret_channel
+    from .secure_input import prompt_secret_no_echo, read_machine_secret_payload, select_machine_secret_channel
 
     selection = select_machine_secret_channel(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
     if selection is not None:

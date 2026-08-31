@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from ....domain.categories.spending_category import SpendingCategory
-from ._ledger_ux_support import _imported_transaction_id, _invoke, _open_bucket_session
+from .ledger_ux_support import _imported_transaction_id, _invoke, _open_bucket_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["_open_bucket_session"]

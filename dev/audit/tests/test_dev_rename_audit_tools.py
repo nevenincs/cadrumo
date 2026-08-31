@@ -67,7 +67,7 @@ def _semantic_gate_violations(result: dict[str, object]) -> tuple[str, ...]:
 def test_semantic_gate_fails_for_adapter_tax_base_calculation() -> None:
     """An adapter that divides gross by a rate is a real tax-base calculation leak."""
     result: dict[str, object] = {
-        "path": "src/cadrumo/adapters/inbound/einvoice/_parsers.py",
+        "path": "src/cadrumo/adapters/inbound/einvoice/parsers.py",
         "score": 0.64,
         "function_name": "calculate_tax_base",
         "snippet": "def calculate_tax_base(gross, rate):\n    return gross / (1 + rate)\n",
@@ -76,14 +76,14 @@ def test_semantic_gate_fails_for_adapter_tax_base_calculation() -> None:
     assert _semantic_gate_violations(result) == (
         "Leak detected for query 'calculate tax base' "
         "(tax-base arithmetic in calculate_tax_base; score 0.64): "
-        "src/cadrumo/adapters/inbound/einvoice/_parsers.py",
+        "src/cadrumo/adapters/inbound/einvoice/parsers.py",
     )
 
 
 def test_semantic_gate_keeps_structured_tax_base_read_transcriptive() -> None:
     """A parser reading Facturae's named base is not a second base calculation."""
     result: dict[str, object] = {
-        "path": "src/cadrumo/adapters/inbound/einvoice/_parsers.py",
+        "path": "src/cadrumo/adapters/inbound/einvoice/parsers.py",
         "score": 0.59,
         "snippet": (
             'parsed.taxable_base = _decimal(_first_text(totals, "TotalGrossAmountBeforeTaxes"))\n'

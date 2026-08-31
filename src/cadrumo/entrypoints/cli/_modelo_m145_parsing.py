@@ -21,12 +21,10 @@ from collections.abc import Callable
 
 import typer
 
-from ...application.modelo._m145_communication_records import (
-    M145CommunicationCreateCommand,
-)
 from ...application.modelo.m145_communication_period import M145CommunicationPeriod
+from ...application.modelo.m145_communication_records import M145CommunicationCreateCommand
 from ...core.casilla_id import CasillaId
-from ...core.i18n._render import tr
+from ...core.i18n.render import tr
 
 type ParseCasillaOverride = Callable[[str], tuple[CasillaId, str]]
 

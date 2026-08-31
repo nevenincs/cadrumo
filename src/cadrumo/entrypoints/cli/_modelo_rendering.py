@@ -21,15 +21,15 @@ from collections.abc import Mapping, Sequence
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from ...application.modelo._result_summary import calculation_result_summary
-from ...application.modelo._verification_preconditions import VerificationFindingPreconditionProjection
-from ...application.modelo._work_plazo import (
+from ...application.modelo.result_summary import calculation_result_summary
+from ...application.modelo.verification_preconditions import VerificationFindingPreconditionProjection
+from ...application.modelo.work_plazo import (
     M210PlazoResolution,
     ModeloWorkDeadlinePosture,
     modelo_work_deadline_posture,
 )
 from ...core.casilla_id import CasillaId
-from ...core.i18n._render import tr
+from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedPreconditionAction
 from ...domain.calculations.registry.binding_selector_utils import BooleanBindingEncodedValue
 from ...domain.calculations.registry.bindings import CasillaObservation

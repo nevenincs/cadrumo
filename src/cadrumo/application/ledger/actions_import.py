@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING, NamedTuple
 from ...core.hashing import sha256_hex
 
 if TYPE_CHECKING:
-    from ...adapters.inbound.financial.providers._base import ParsedLedgerRow, ProviderValidation
+    from ...adapters.inbound.financial.providers.base import ParsedLedgerRow, ProviderValidation
 
 from collections.abc import Sequence
 
@@ -48,9 +48,9 @@ from ...domain.transactions.models import (
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.transactions.raw_transaction import RawTransaction
 from ...domain.transactions.repository import ImportSummary
-from ..transactions._diagnostics import LedgerImportDiagnostic
 from ..transactions._import import import_ledger_with_diagnostics
-from ..transactions._import_classification import classify_import_row
+from ..transactions.diagnostics import LedgerImportDiagnostic
+from ..transactions.import_classification import classify_import_row
 from .actions_common import (
     build_ledger_bucket_event,
     normalise_timestamp,
@@ -339,7 +339,7 @@ def import_ledger_source(
     provider = _resolve_financial_provider(command.provider, command.path)
     validation = _validate_import_source(provider, command.path)
     source_verification = _build_source_verification(source=command.source, verify=command.verify)
-    from ...adapters.inbound.financial.providers._base import FinancialProviderError
+    from ...adapters.inbound.financial.providers.base import FinancialProviderError
 
     try:
         parsed_rows = tuple(provider.ingest(command.path))
@@ -445,11 +445,11 @@ def import_ledger_source(
 
 
 def _resolve_financial_provider(provider: str, path: Path) -> FinancialProviderProtocol:
-    from ...adapters.inbound.financial.providers._csv import CsvProvider
     from ...adapters.inbound.financial.providers._detection import detect_provider
     from ...adapters.inbound.financial.providers._ofx import OfxProvider
     from ...adapters.inbound.financial.providers._pdf_n26 import PdfN26Provider
     from ...adapters.inbound.financial.providers._xlsx import XlsxProvider
+    from ...adapters.inbound.financial.providers.csv import CsvProvider
 
     try:
         provider_id = LedgerProviderID(provider.strip().lower())

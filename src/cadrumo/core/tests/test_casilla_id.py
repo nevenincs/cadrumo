@@ -7,13 +7,20 @@ from decimal import Decimal
 import pytest
 
 from ...domain.calculations import registry
-from .. import __all__ as core_exports
 from ..casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-def test_casilla_id_capabilities_are_public_only_from_core() -> None:
+def test_casilla_id_capabilities_have_exactly_one_owning_module() -> None:
+    """One definition, at its own module, not re-declared by the registry.
+
+    This also asserted membership in the ``cadrumo.core`` facade's ``__all__``.
+    That facade is now an inert namespace, so the assertion is dropped rather
+    than relaxed: what it protected -- a single owning module, and no rival
+    definition in the registry -- is asserted here directly and is the part
+    that bites.
+    """
     canonical_capabilities = {
         "CasillaId": CasillaId,
         "validated_casilla_id": validated_casilla_id,
@@ -21,7 +28,6 @@ def test_casilla_id_capabilities_are_public_only_from_core() -> None:
     }
 
     for name, capability in canonical_capabilities.items():
-        assert name in core_exports
         assert capability.__module__ == "cadrumo.core.casilla_id"
         assert not hasattr(registry, name)
         assert name not in registry.__all__

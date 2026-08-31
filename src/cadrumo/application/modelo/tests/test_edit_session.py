@@ -29,8 +29,8 @@ from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ...operations.registry import OperationSchemaIdentityV1
-from .._edit_services import modelo_edit_request_schema_identity, modelo_edit_result_schema_identity
 from ..edit_contract import ModeloEditCompatibilityTupleV1, ModeloEditMutationFamily
+from ..edit_services import modelo_edit_request_schema_identity, modelo_edit_result_schema_identity
 from ..edit_session import (
     ModeloEditSession,
     ModeloEditSessionClosedError,

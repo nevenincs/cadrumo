@@ -69,7 +69,7 @@ from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...live.filed_observation_persistence import persist_filed_calculation_observation
-from ...modelo._calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
+from ...modelo.calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from ...modelo.work_lifecycle import create_work_unit
 from ..observations_repository import CalculationObservationRepository, ObservationSourceKind
 

@@ -91,7 +91,7 @@ from ...domain.iva.schema import (
     IvaLedgerObservationRole,
     IvaRateKind,
 )
-from ...domain.prorrata_register._protocols import ProrrataRegisterRepositoryProtocol
+from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.prorrata_register.register import ProrrataRegister
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.models import OutOfWindowTransactionSummary, Transaction, TransactionCatalogue

@@ -128,8 +128,8 @@ def _parse_time_output_language() -> str:
     override is already torn down by the time this terminal handler runs, and a
     Choice ``BadParameter`` carries no context to walk.
     """
-    from ...core.i18n._render import output_language
-    from ._language_argv import language_from_argv
+    from ...core.i18n.render import output_language
+    from .language_argv import language_from_argv
 
     explicit = language_from_argv(_invocation_argv())
     if explicit is not None:
@@ -201,7 +201,7 @@ def _localise_parse_failure(exc: BaseException, detail: str, locale: str) -> tup
 
 def _missing_argument_failure(exc: BaseException, detail: str, locale: str) -> tuple[str, dict[str, str]] | None:
     """Recognise click's missing-argument failure."""
-    from ...core.i18n._render import tr
+    from ...core.i18n.render import tr
 
     if not _has_base(exc, "MissingParameter"):
         return None
@@ -212,7 +212,7 @@ def _missing_argument_failure(exc: BaseException, detail: str, locale: str) -> t
 
 def _unknown_option_failure(exc: BaseException, _detail: str, locale: str) -> tuple[str, dict[str, str]] | None:
     """Recognise an unknown or misused option, carrying click's own suggestions."""
-    from ...core.i18n._render import tr
+    from ...core.i18n.render import tr
 
     option_name = getattr(exc, "option_name", None)
     if not option_name or not (_has_base(exc, "NoSuchOption") or _has_base(exc, "BadOptionUsage")):
@@ -230,7 +230,7 @@ def _invalid_choice_failure(exc: BaseException, detail: str, locale: str) -> tup
     The accepted set is what the CLI-boundary contract requires a refusal to
     name, so it is parsed out of click's own rendering rather than dropped.
     """
-    from ...core.i18n._render import tr
+    from ...core.i18n.render import tr
 
     choice = _CHOICE_DETAIL_RE.search(detail)
     if choice is None:
@@ -243,7 +243,7 @@ def _invalid_choice_failure(exc: BaseException, detail: str, locale: str) -> tup
 
 def _unknown_command_failure(_exc: BaseException, detail: str, locale: str) -> tuple[str, dict[str, str]] | None:
     """Recognise an unknown command name."""
-    from ...core.i18n._render import tr
+    from ...core.i18n.render import tr
 
     unknown_command = _NO_SUCH_COMMAND_RE.search(detail)
     if unknown_command is None:

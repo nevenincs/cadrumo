@@ -69,7 +69,8 @@ from ..registry import (
     OperationRegistry,
     OperationSchemaBindingV1,
 )
-from ..supervisor import OperationSupervisor, _SupervisorExecutorContext
+from ..supervisor import OperationSupervisor
+from ..supervisor_context import _SupervisorExecutorContext
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
