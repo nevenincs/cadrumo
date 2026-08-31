@@ -10,7 +10,7 @@ related:
   - '[[2026-06-01-registry-period-code-union-cli-boundary-adr]]'
   - '[[2026-08-05-ci-lane-deconflation-step-check-attribution-audit]]'
 modified: '2026-08-31'
-body_hash: 'sha256:b97055f92707f5a61c1184fc2f4f32f94b8e3396f88f5d56839259caf930986a'
+body_hash: 'sha256:e306a5c62ace9fc568c2a24083abd442be8c5f3c7715dac0067e65c533616b02'
 ---
 
 <!-- RETIRED: S01, S10, S181, S184, S186, S189, S191, S193, S194, S197, S199, S201, S203, S205, S207, S209, S211, S213, S215, S217, S219, S221 -->
@@ -254,7 +254,7 @@ Decompose every live size-budget subject by its owning source file, then regener
 - [ ] `P05.S169` - Refactor the size-budget subjects in state_projection.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/state_projection.py`.
 - [ ] `P05.S170` - Refactor the size-budget subjects in custody_ports.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/user_profile/custody_ports.py`.
 - [ ] `P05.S171` - Refactor the size-budget subjects in login_session.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/user_profile/login_session.py`.
-- [ ] `P05.S172` - Refactor the size-budget subjects in registration.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/user_profile/registration.py`.
+- [x] `P05.S172` - Refactor the size-budget subjects in registration.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/user_profile/registration.py`.
 - [ ] `P05.S173` - Refactor the size-budget subjects in test_login_handover.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/user_profile/tests/test_login_handover.py`.
 - [ ] `P05.S174` - Refactor the size-budget subjects in commands.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/wizard/commands.py`.
 - [ ] `P05.S175` - Refactor the size-budget subjects in engine.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/workflow/engine.py`.
