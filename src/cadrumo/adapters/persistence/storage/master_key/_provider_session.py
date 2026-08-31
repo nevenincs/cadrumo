@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Protocol
 
-from ._active_session import close_active_bucket_session, current_active_bucket_session
+from .active_session import close_active_bucket_session, current_active_bucket_session
 
 if TYPE_CHECKING:
     import types
     from contextlib import AbstractContextManager
 
-    from ._bucket_session import BucketSession
+    from .bucket_session import BucketSession
 
 
 class ProviderSessionOwner(Protocol):

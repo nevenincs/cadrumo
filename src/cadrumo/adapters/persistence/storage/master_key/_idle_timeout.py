@@ -20,13 +20,13 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, NonNegativeInt
 
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..errors import (
     storage_validation_error as _storage_validation_error,
 )
-from ._bucket_session import BucketSession
+from .bucket_session import BucketSession
 
 DEFAULT_IDLE_LOCK_MINUTES = 15
 
@@ -37,7 +37,7 @@ class IdleEvaluation(BaseModel):
     model_config = _STRICT_FROZEN
 
     expired: bool
-    remaining_seconds: int = Field(ge=0)
+    remaining_seconds: NonNegativeInt
 
 
 def evaluate_idle(

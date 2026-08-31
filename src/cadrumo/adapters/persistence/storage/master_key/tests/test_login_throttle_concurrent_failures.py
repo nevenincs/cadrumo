@@ -35,7 +35,7 @@ from pathlib import Path
 
 import pytest
 
-from .._login_throttle import (
+from ..login_throttle import (
     evaluate_login_throttle,
     record_login_failure,
 )

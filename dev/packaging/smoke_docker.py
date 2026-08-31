@@ -320,8 +320,8 @@ from cadrumo.adapters.outbound.llm._client import LLMClient
 from cadrumo.adapters.outbound.llm.errors import LLMConfigError
 from cadrumo.adapters.outbound.llm._models import LLMProvider
 from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
-from cadrumo.adapters.persistence.storage.master_key import activate_session
-from cadrumo.adapters.persistence.storage.master_key._bucket_session import BucketSession
+from cadrumo.adapters.persistence.storage.master_key.active_session import activate_session
+from cadrumo.adapters.persistence.storage.master_key.bucket_session import BucketSession
 from cadrumo.adapters.persistence.storage.sql import SecureObjectRepository, dispose_engine, get_engine
 from cadrumo.core.config import Settings
 from cadrumo.domain.attachments import (

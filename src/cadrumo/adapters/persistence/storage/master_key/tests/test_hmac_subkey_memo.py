@@ -15,9 +15,9 @@ from datetime import UTC, datetime
 
 import pytest
 
-from ...bucket import BucketLockedError
+from ...bucket.errors import BucketLockedError
 from ...crypto.aead import derive_key
-from .._bucket_session import BucketSession
+from ..bucket_session import BucketSession
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

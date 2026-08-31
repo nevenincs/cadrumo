@@ -1,6 +1,6 @@
 """A session left open at interpreter exit is sealed by the exit hook.
 
-``_active_session`` registers ``_close_active_session_at_exit`` with ``atexit``
+``active_session`` registers ``_close_active_session_at_exit`` with ``atexit``
 at import, and that hook sweeps every live session through
 ``close_all_live_bucket_sessions``. It exists because the context-scoped close
 is not enough on its own: ``atexit`` hooks run on the MAIN thread, and by PEP
@@ -63,7 +63,8 @@ atexit.register(_observe_after_the_substrate_hook)
 # Imported only now, so the substrate's hook is registered after the observer.
 from datetime import UTC, datetime
 
-from cadrumo.adapters.persistence.storage.master_key import BucketSession
+from cadrumo.adapters.persistence.storage.master_key import active_session as _substrate  # noqa: F401
+from cadrumo.adapters.persistence.storage.master_key.bucket_session import BucketSession
 
 session = BucketSession.open(
     bucket_id="exit-hook-probe",
@@ -101,7 +102,7 @@ def test_a_session_left_open_is_sealed_by_the_interpreter_exit_hook(tmp_path: Pa
     )
     assert observed["sealed_at_exit"] is True, (
         "a session left open was still unsealed after the interpreter's exit hooks ran; the "
-        "atexit sweep in `_active_session` is not reaching live sessions"
+        "atexit sweep in `active_session` is not reaching live sessions"
     )
 
 
@@ -118,7 +119,7 @@ def test_the_observation_is_taken_after_the_substrate_hook_runs(tmp_path: Path) 
         'observed["sealed_before_exit"] = session.sealed',
         'observed["sealed_before_exit"] = session.sealed\n'
         "import atexit as _a\n"
-        "from cadrumo.adapters.persistence.storage.master_key import _active_session as _s\n"
+        "from cadrumo.adapters.persistence.storage.master_key import active_session as _s\n"
         "_a.unregister(_s._close_active_session_at_exit)\n",
     )
 

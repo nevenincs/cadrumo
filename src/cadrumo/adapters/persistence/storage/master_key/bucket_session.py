@@ -28,8 +28,8 @@ from typing import TYPE_CHECKING
 from sqlalchemy.exc import SQLAlchemyError
 
 from .....core.logging import get_logger
-from .....core.time import validate_utc_aware
-from ..bucket import BucketLockedError
+from .....core.time._utc import validate_utc_aware
+from ..bucket.errors import BucketLockedError
 from ..crypto.aead import KEY_SIZE
 from ..custody.zeroise import zeroise as _zeroise
 from ..errors import (

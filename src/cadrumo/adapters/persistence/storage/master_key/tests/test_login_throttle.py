@@ -23,7 +23,7 @@ from typing import Final
 
 import pytest
 
-from .._login_throttle import (
+from ..login_throttle import (
     LOGIN_THROTTLE_FILENAME,
     LOGIN_THROTTLE_SCHEMA_VERSION,
     THROTTLE_BACKOFF_CAP_SECONDS,

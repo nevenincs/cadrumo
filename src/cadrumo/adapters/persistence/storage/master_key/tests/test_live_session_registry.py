@@ -18,16 +18,16 @@ import threading
 
 import pytest
 
-from ......core.time import now
-from .._active_session import (
-    activate_session,
-    close_active_bucket_session,
-)
-from .._bucket_session import BucketSession
+from ......core.time._clock import now
 from .._live_sessions import (
     close_all_live_bucket_sessions,
     live_bucket_session_count,
 )
+from ..active_session import (
+    activate_session,
+    close_active_bucket_session,
+)
+from ..bucket_session import BucketSession
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

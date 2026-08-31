@@ -147,6 +147,7 @@ def check_generated_export_tree(
         render_profile=render_profile,
         render_profile_source_evidence=render_profile_source_evidence,
     )
+    _refuse_repeat_the_semantic_map_cannot_express(published_layout, candidate.layout)
     if normalised_loader_semantics(published_layout) != normalised_loader_semantics(candidate.layout):
         raise RegistryValidationError("published export loader semantics do not match fresh generated semantics")
     _require_exact_tree_bytes(
@@ -379,3 +380,44 @@ def _contains(parent: Path, child: Path) -> bool:
     except ValueError:
         return False
     return True
+
+
+def _refuse_repeat_the_semantic_map_cannot_express(
+    published_layout: ExportLayoutDefinition,
+    candidate_layout: ExportLayoutDefinition,
+) -> None:
+    """Refuse when a published repeat exists that the semantic map cannot declare.
+
+    ``ExportRecordDefinition.repeat`` admits ``binding_rows`` and
+    ``projection_rows``; the semantic map's record model admits only
+    ``projection_rows``. The generator's input vocabulary is therefore a strict
+    subset of the schema it generates into, and a ``binding_rows`` record cannot
+    survive a regeneration: the fresh candidate silently drops the repeat and
+    renders single-valued fields instead of a row sequence.
+
+    That difference would otherwise surface as ordinary byte drift, and the
+    obvious response to byte drift -- regenerate and commit -- is precisely the
+    action that ships the truncation. Modelo 347's Tipo-2 declarado record is the
+    live case: its AEAT design prescribes "tantos registros del tipo 2 como
+    declarados ... tenga la declaracion", so a regenerated tree would declare the
+    FIRST counterparty and drop every other one.
+
+    Raised BEFORE the loader-semantics and byte comparisons so the operator is
+    told the vocabulary is missing a term, not that two trees differ.
+    """
+    candidate_repeats = {record.id: record.repeat for record in candidate_layout.records}
+    inexpressible = sorted(
+        str(record.id)
+        for record in published_layout.records
+        if record.repeat == "binding_rows" and candidate_repeats.get(record.id) != "binding_rows"
+    )
+    if inexpressible:
+        raise RegistryValidationError(
+            "published export declares repeat='binding_rows' on record(s) "
+            f"{inexpressible}, and the fresh candidate does not, because the semantic "
+            "map cannot express that repeat: its record model admits only "
+            "'projection_rows'. Regenerating this tree would replace a row sequence "
+            "with single-valued fields and silently under-declare. Widen the semantic "
+            "map vocabulary AND teach the renderer to materialise binding rows before "
+            "regenerating; do not publish the candidate.",
+        )

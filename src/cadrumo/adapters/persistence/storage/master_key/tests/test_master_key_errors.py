@@ -16,7 +16,7 @@ from ......core.config import override_settings
 from ......core.errors.error_codes import ERROR_REGISTRY, build_error_envelope, render_error_text
 from ......core.i18n import clear_output_language_cache
 from ......tests.master_key import EphemeralMasterKeyProvider
-from ...bucket import BucketLockedError
+from ...bucket.errors import BucketLockedError
 from ..errors import MasterKeyReentrantError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

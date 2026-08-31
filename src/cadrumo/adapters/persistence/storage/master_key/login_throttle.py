@@ -41,15 +41,15 @@ import math
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, NonNegativeInt
 
-from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from .....core.locks import exclusive_file_lock
 from .....core.atomic_write import atomic_write_hardened_bytes
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
+from .....core.locks import exclusive_file_lock
 from .....core.locks_errors import LockAcquisitionError
 from .....core.logging import get_logger
-from .....core.time import UtcInstant
+from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.time._utc import UtcInstant
 from .._storage_path_definitions import LOGIN_THROTTLE_FILENAME
 
 _log = get_logger(__name__)
@@ -95,8 +95,8 @@ class ThrottleEvaluation(BaseModel):
     model_config = _STRICT_FROZEN
 
     throttled: bool
-    remaining_seconds: int = Field(ge=0)
-    consecutive_failures: int = Field(ge=0)
+    remaining_seconds: NonNegativeInt
+    consecutive_failures: NonNegativeInt
 
 
 def _required_wait_seconds(consecutive_failures: int) -> int:
@@ -113,7 +113,7 @@ def _required_wait_seconds(consecutive_failures: int) -> int:
 
 def login_throttle_path(*, storage_root: Path, bucket_id: str) -> Path:
     """Return the throttle sidecar path inside the bucket keystore directory."""
-    from ..bucket import keystore_sidecar_path
+    from ..bucket._keystore_paths import keystore_sidecar_path
 
     return keystore_sidecar_path(storage_root=storage_root, bucket_id=bucket_id, filename=LOGIN_THROTTLE_FILENAME)
 

@@ -30,8 +30,8 @@ from contextvars import copy_context
 
 import pytest
 
-from ......core.time import now
-from .._active_session import (
+from ......core.time._clock import now
+from ..active_session import (
     activate_session,
     bind_active_bucket_session,
     close_active_bucket_session,
@@ -39,7 +39,7 @@ from .._active_session import (
     has_active_bucket_session,
     suspend_active_session,
 )
-from .._bucket_session import BucketSession
+from ..bucket_session import BucketSession
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
