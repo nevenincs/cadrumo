@@ -10,7 +10,7 @@ related:
   - '[[2026-06-01-registry-period-code-union-cli-boundary-adr]]'
   - '[[2026-08-05-ci-lane-deconflation-step-check-attribution-audit]]'
 modified: '2026-08-31'
-body_hash: 'sha256:719aba84ce08f832ba7d726655b51f293876ffccaec7713db9d994bc2f142736'
+body_hash: 'sha256:ce5f1d8534c817237eac3f075bea039673c736152ab9b4fc8bce5c3b74975439'
 ---
 
 <!-- RETIRED: S01, S10, S181, S184, S186, S189, S191, S193, S194, S197, S199, S201, S203, S205, S207, S209, S211, S213, S215, S217, S219, S221 -->
@@ -238,7 +238,7 @@ Decompose every live size-budget subject by its owning source file, then regener
 - [ ] `P05.S163` - Refactor the size-budget subjects in workspace.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/modelo/workspace.py`.
 - [ ] `P05.S164` - Refactor the size-budget subjects in supervisor.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/operations/supervisor.py`.
 - [ ] `P05.S165` - Refactor the size-budget subjects in test_supervisor.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/operations/tests/test_supervisor.py`.
-- [ ] `P05.S166` - Refactor the size-budget subjects in help.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/operator_surface/help.py`.
+- [x] `P05.S166` - Refactor the size-budget subjects in help.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/operator_surface/help.py`.
 - [ ] `P05.S167` - Refactor the size-budget subjects in conformance.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/registry/conformance.py`.
 - [ ] `P05.S168` - Refactor the size-budget subjects in repair_integrity.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/repair_integrity.py`.
 - [ ] `P05.S169` - Refactor the size-budget subjects in state_projection.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/state_projection.py`.
