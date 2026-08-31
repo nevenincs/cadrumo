@@ -12,8 +12,8 @@ from typing import TYPE_CHECKING
 
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.config import Settings, StorageRouteKind, classify_storage_route, load_settings
-from ._namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from .errors import StorageValidationError
+from .namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from .runtime import StorageRuntimeReadinessCode, inspect_bucket_storage_runtime, runtime_not_ready_error
 from .sql import SecureObjectRepository
 

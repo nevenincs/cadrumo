@@ -2,8 +2,8 @@
 
 import pytest
 
-from .._storage_path_definitions import LOGIN_THROTTLE_FILENAME
 from ..master_key import login_throttle
+from ..storage_path_definitions import LOGIN_THROTTLE_FILENAME
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

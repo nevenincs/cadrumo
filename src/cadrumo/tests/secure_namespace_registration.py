@@ -15,7 +15,7 @@ scaffolding.
 
 from __future__ import annotations
 
-from ..adapters.persistence.storage._secure_object_namespaces import (
+from ..adapters.persistence.storage.secure_object_namespaces import (
     SecureObjectNamespaceDefinition,
     StorageHierarchyRegistry,
 )

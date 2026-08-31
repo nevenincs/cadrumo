@@ -26,7 +26,7 @@ from typing import Annotated, override
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
-from ...adapters.persistence.storage._secure_object_namespaces import (
+from ...adapters.persistence.storage.secure_object_namespaces import (
     LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE as BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE,
 )
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -47,7 +47,6 @@ from .snapshot_base import (
 
 BORRADOR_100_SNAPSHOT_NAMESPACE = BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE.namespace
 type _BorradorValue = Decimal | str
-
 
 
 BorradorSourceUrl = Annotated[str, StringConstraints(min_length=1, max_length=2048)]

@@ -46,7 +46,7 @@ _CUSTODY_ENVELOPE = "custody/envelope.v1.json"
 
 
 def _capsule_dir(root: Path) -> Path:
-    from ...adapters.persistence.storage._storage_path_definitions import BUCKETS_DIRNAME
+    from ...adapters.persistence.storage.storage_path_definitions import BUCKETS_DIRNAME
 
     return root / BUCKETS_DIRNAME / _PROFILE_ID
 

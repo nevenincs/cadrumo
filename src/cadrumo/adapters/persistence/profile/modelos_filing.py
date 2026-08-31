@@ -42,8 +42,8 @@ from ....core.logging import get_logger
 from ....domain.modelos.errors import raise_catalogue_integrity_error
 from ....domain.modelos.filing_record import ModeloRecordCatalogue
 from ....domain.modelos.filing_repository import ModeloRecordPersistenceError
-from ..storage._secure_object_namespaces import MODELO_FILING_RECORD_CATALOGUE_NAMESPACE
 from ..storage.runtime_repository import secure_object_repository_for_bucket
+from ..storage.secure_object_namespaces import MODELO_FILING_RECORD_CATALOGUE_NAMESPACE
 from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
@@ -195,12 +195,12 @@ class ModeloRecordCatalogueRepository:
                 its on-disk classification is not FINANCIAL, or if it was
                 written at a schema version newer than this consumer supports.
         """
-        from ..storage._schema_lineage import (
+        from ..storage.envelope._envelope import Envelope
+        from ..storage.errors import ClassificationError, EnvelopeVersionError
+        from ..storage.schema_lineage import (
             inner_envelope_classification_is_expected,
             inner_envelope_version_is_current,
         )
-        from ..storage.envelope._envelope import Envelope
-        from ..storage.errors import ClassificationError, EnvelopeVersionError
 
         try:
             record = self._objects.load(

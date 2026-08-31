@@ -37,9 +37,9 @@ from typing import ClassVar, override
 
 from pydantic import BaseModel, Field
 
-from ...adapters.persistence.storage._path_safety import safe_repository_id
-from ...adapters.persistence.storage._secure_object_namespaces import IVA_COMPENSATION_HISTORY_NAMESPACE
 from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
+from ...adapters.persistence.storage.path_safety import safe_repository_id
+from ...adapters.persistence.storage.secure_object_namespaces import IVA_COMPENSATION_HISTORY_NAMESPACE
 from ...core.casilla_id import CasillaId
 from ...core.casilla_value_kind import CasillaValueKind
 from ...core.classification.policies import SensitivityClass

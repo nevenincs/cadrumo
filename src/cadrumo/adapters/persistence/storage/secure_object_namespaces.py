@@ -12,16 +12,16 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from ....core.classification.policies import SensitivityClass
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.storage_taxonomy import StorageCustodyProfile
-from ._namespace_taxonomy import (
+from .errors import NamespaceRegistryError
+from .namespace_taxonomy import (
     _CUSTODY_PROFILE_DISPOSITIONS,
     StorageCustodyDisposition,
     StorageNamespaceScope,
     StorageRemoteMirrorPolicy,
 )
-from ._storage_path_definitions import (
+from .storage_path_definitions import (
     StoragePathDefinition,
 )
-from .errors import NamespaceRegistryError
 
 SECURE_OBJECT_SCHEMA_VERSION_V1 = 1
 SECURE_OBJECT_SCHEMA_VERSION_V2 = 2
@@ -33,11 +33,9 @@ SECURE_OBJECT_DEFAULT_KEY = "default"
 SECURE_OBJECT_WORKFLOW_STATE_KEY = "state"
 
 # The bucket/keystore layout names, the fan-out shape declarations, and
-# StoragePathDefinition itself live in _storage_path_definitions.py --
-# imported above, re-exported below -- so every existing caller of
-# `from .._secure_object_namespaces import BUCKETS_DIRNAME` (etc.) keeps working
-# unchanged. The SQL secure-object namespace keys below are the concern that
-# stays: logical database keys, not filesystem paths.
+# StoragePathDefinition itself live in storage_path_definitions.py, which
+# callers import directly. The SQL secure-object namespace keys below are the
+# concern that stays here: logical database keys, not filesystem paths.
 _SECURE_OBJECTS_TABLE_PATH_KEY = "secure_objects_table"
 FORMER_PRODUCT_NAMESPACE_PREFIXES = ("aeat.", "aeat-test.", "aeat-tests.")
 

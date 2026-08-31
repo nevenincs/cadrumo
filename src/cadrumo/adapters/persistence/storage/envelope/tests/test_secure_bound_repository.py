@@ -24,8 +24,8 @@ from sqlalchemy import Engine, text
 from ......core.classification.policies import SensitivityClass
 from ......core.config import override_settings
 from ......tests.master_key import EphemeralMasterKeyProvider
-from ..._runtime_readiness import StorageRuntimeReadinessCode
 from ...errors import EnvelopeVersionError, SecureObjectUnreadableError, StorageValidationError
+from ...runtime_readiness import StorageRuntimeReadinessCode
 from ...sql import SecureObjectRepository
 from ...sql.secure_objects import SecureObjectRecord, SecureObjectUnreadable
 from ...sql.session import session_scope

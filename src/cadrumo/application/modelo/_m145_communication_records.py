@@ -38,7 +38,7 @@ from typing import TYPE_CHECKING, Annotated
 from pydantic import BaseModel, Field, NonNegativeInt, TypeAdapter, field_validator, model_validator
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ...adapters.persistence.storage._secure_object_namespaces import M145_COMMUNICATION_RECORD_NAMESPACE
+from ...adapters.persistence.storage.secure_object_namespaces import M145_COMMUNICATION_RECORD_NAMESPACE
 from ...core.casilla_id import CasillaId, validated_casilla_id_map
 from ...core.decimal.coercion import coerce_decimal_strict
 from ...core.errors.error_codes import resolve_error_message

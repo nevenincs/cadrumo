@@ -57,8 +57,8 @@ from ....domain.modelos.calculation_revision_aggregate import (
     CalculationRevisionAggregateContext,
 )
 from ....domain.modelos.errors import raise_catalogue_integrity_error
-from ..storage._secure_object_namespaces import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
 from ..storage.runtime_repository import secure_object_repository_for_bucket
+from ..storage.secure_object_namespaces import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
 from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
@@ -167,12 +167,12 @@ class CalculationRevisionCatalogueRepository:
                 supports, or an integrity error surfaces while decrypting and
                 decoding the record.
         """
-        from ..storage._schema_lineage import (
+        from ..storage.envelope._envelope import Envelope
+        from ..storage.errors import ClassificationError, EnvelopeVersionError
+        from ..storage.schema_lineage import (
             inner_envelope_classification_is_expected,
             inner_envelope_version_is_current,
         )
-        from ..storage.envelope._envelope import Envelope
-        from ..storage.errors import ClassificationError, EnvelopeVersionError
 
         try:
             record = self._objects.load(

@@ -23,8 +23,8 @@ from typing import Final
 import pytest
 
 from .....tests import assert_grammar_vocabulary_is_declared
-from .._namespace_registry import STORAGE_NAMESPACE_REGISTRY
-from .._namespace_taxonomy import StoragePathKind
+from ..namespace_registry import STORAGE_NAMESPACE_REGISTRY
+from ..namespace_taxonomy import StoragePathKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

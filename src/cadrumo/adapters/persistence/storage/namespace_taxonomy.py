@@ -13,9 +13,10 @@ Separated from the namespace registry so the registry file holds namespace
 declarations rather than the vocabulary they are declared in.
 
 See Also:
-    :mod:`~cadrumo.adapters.persistence.storage._secure_object_namespaces`
-        Declares every namespace using this vocabulary, and re-exports these
-        names for the consumers that reach the registry directly.
+    :mod:`~cadrumo.adapters.persistence.storage.secure_object_namespaces`
+        Declares every namespace using this vocabulary. It is a consumer of
+        these names, not a second source for them: callers that need the
+        vocabulary itself import it from here.
 """
 
 from __future__ import annotations

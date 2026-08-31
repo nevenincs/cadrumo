@@ -216,7 +216,7 @@ def test_a_dropped_identification_on_disk_does_not_reload_as_an_answer(
     """
     import json
 
-    from ....adapters.persistence.storage._secure_object_namespaces import LEDGER_CONFIRMED_COUNTERPARTY_FACTS_NAMESPACE
+    from ....adapters.persistence.storage.secure_object_namespaces import LEDGER_CONFIRMED_COUNTERPARTY_FACTS_NAMESPACE
     from ....core.classification.policies import SensitivityClass
 
     stored = _confirm(repository, identification_state=EUMemberState.DE)

@@ -60,15 +60,14 @@ from ....core.time.clock import now
 from ....core.time.utc import UtcInstant
 from ....llm.errors import LLMCacheError
 from ....llm.retention import select_retention_removal_keys
-from ...persistence.storage._secure_object_namespaces import LLM_RUN_TELEMETRY_NAMESPACE
 from ...persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+from ...persistence.storage.secure_object_namespaces import LLM_RUN_TELEMETRY_NAMESPACE
 
 __all__ = ["LLMRunRecord", "LLMRunTelemetryRecorder", "LLMRunTelemetrySummary"]
 
 _RUN_TELEMETRY_NAMESPACE = LLM_RUN_TELEMETRY_NAMESPACE.namespace
 _RUN_TELEMETRY_VERSION = LLM_RUN_TELEMETRY_NAMESPACE.schema_version
 _RUN_TELEMETRY_SENSITIVITY = LLM_RUN_TELEMETRY_NAMESPACE.sensitivity
-
 
 
 #: Deliberately NOT the canonical ``STRICT_FROZEN_CONFIG``: the records below are

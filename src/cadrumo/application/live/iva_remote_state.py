@@ -52,12 +52,12 @@ from ...adapters.outbound.aeat.sede.observation_store import (
 )
 from ...adapters.outbound.aeat.sede.schema import FiledDeclaracionObservation as _FiledDeclaracionObservation
 from ...adapters.outbound.aeat.sede.schema import IvaCompensationWalletObservation as _IvaCompensationWalletObservation
-from ...adapters.persistence.storage._secure_object_namespaces import (
-    LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE as _LIVE_IVA_REMOTE_STATE_ACQUISITIONS_STORAGE_NAMESPACE,
-)
 from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository as _SecureBoundRepository
 from ...adapters.persistence.storage.runtime_repository import (
     secure_object_repository_for_active_bucket as _secure_object_repository_for_active_bucket,
+)
+from ...adapters.persistence.storage.secure_object_namespaces import (
+    LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE as _LIVE_IVA_REMOTE_STATE_ACQUISITIONS_STORAGE_NAMESPACE,
 )
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository as _SecureObjectRepository
 from ...application.auth.session_types import AeatSession as _AeatSession

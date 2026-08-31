@@ -50,9 +50,9 @@ from ....core.hashing import canonical_json_bytes
 from ....core.time.clock import now
 from ....domain.evidence_consent._record import EvidenceConsentLedgerEntry, evidence_consent_ledger_entry_object_key
 from ....llm.errors import LLMConsentError
-from ...persistence.storage._secure_object_namespaces import LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE
 from ...persistence.storage.master_key.active_session import current_active_bucket_session
 from ...persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+from ...persistence.storage.secure_object_namespaces import LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE
 
 __all__ = ["EvidenceConsentLedger"]
 

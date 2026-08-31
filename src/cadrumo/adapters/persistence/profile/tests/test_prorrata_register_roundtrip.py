@@ -166,11 +166,11 @@ def test_register_outer_secure_schema_matches_the_v2_document(tmp_path: Path) ->
     from sqlalchemy import select
 
     from ....persistence.storage.sql.session import session_scope
-    from ...storage._secure_object_namespaces import (
+    from ...storage.crypto.encrypted_columns import decrypt_secure_object_payload, secure_object_payload_aad
+    from ...storage.secure_object_namespaces import (
         PROFILE_PRORRATA_REGISTER_NAMESPACE,
         SECURE_OBJECT_SCHEMA_VERSION_V2,
     )
-    from ...storage.crypto.encrypted_columns import decrypt_secure_object_payload, secure_object_payload_aad
     from ...storage.sql import SecureObjectRow
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="f9d6d231-3774-48bb-a542-0a4bb1d1f5a6") as profile:
@@ -200,12 +200,12 @@ def test_register_outer_v1_row_refuses_without_a_tolerant_read(tmp_path: Path) -
     from sqlalchemy import select
 
     from ....persistence.storage.sql.session import session_scope
-    from ...storage._secure_object_namespaces import PROFILE_PRORRATA_REGISTER_NAMESPACE
     from ...storage.crypto.encrypted_columns import (
         decrypt_secure_object_payload,
         encrypt_secure_object_payload,
         secure_object_payload_aad,
     )
+    from ...storage.secure_object_namespaces import PROFILE_PRORRATA_REGISTER_NAMESPACE
     from ...storage.sql import SecureObjectRow
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="c791265a-e7b5-4dcb-af93-d28e011972ca") as profile:
@@ -314,7 +314,7 @@ def test_register_corrupted_percentage_surfaces_at_load(tmp_path: Path) -> None:
     """
     from sqlalchemy import select
 
-    from ...storage._secure_object_namespaces import PROFILE_PRORRATA_REGISTER_NAMESPACE
+    from ...storage.secure_object_namespaces import PROFILE_PRORRATA_REGISTER_NAMESPACE
     from ...storage.sql import SecureObjectRow
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="519ac791-622a-4e61-b3c0-84d953c7cfee") as profile:
@@ -349,7 +349,7 @@ def test_register_missing_regime_surfaces_at_load(tmp_path: Path) -> None:
     """
     from sqlalchemy import select
 
-    from ...storage._secure_object_namespaces import PROFILE_PRORRATA_REGISTER_NAMESPACE
+    from ...storage.secure_object_namespaces import PROFILE_PRORRATA_REGISTER_NAMESPACE
     from ...storage.sql import SecureObjectRow
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="3db70f92-5cec-4355-a65b-62dc53f15ada") as profile:
@@ -376,7 +376,7 @@ def test_register_v1_document_refuses_at_encrypted_load(tmp_path: Path) -> None:
     """A v1 durable document is not upgraded or silently re-persisted as v2."""
     from sqlalchemy import select
 
-    from ...storage._secure_object_namespaces import PROFILE_PRORRATA_REGISTER_NAMESPACE
+    from ...storage.secure_object_namespaces import PROFILE_PRORRATA_REGISTER_NAMESPACE
     from ...storage.sql import SecureObjectRow
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="91ee6d98-f877-42b0-8e13-c783a6209b37") as profile:

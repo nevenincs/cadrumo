@@ -8,14 +8,14 @@ from pathlib import Path
 
 import pytest
 
-from ..adapters.persistence.storage._secure_object_namespaces import (
+from ..adapters.persistence.storage.bucket._layout import bucket_paths
+from ..adapters.persistence.storage.master_key.active_session import activate_session
+from ..adapters.persistence.storage.master_key.bucket_session import BucketSession
+from ..adapters.persistence.storage.secure_object_namespaces import (
     MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE,
     MODELO_WORK_UNIT_CATALOGUE_NAMESPACE,
     WORKFLOW_STATE_NAMESPACE,
 )
-from ..adapters.persistence.storage.bucket._layout import bucket_paths
-from ..adapters.persistence.storage.master_key.active_session import activate_session
-from ..adapters.persistence.storage.master_key.bucket_session import BucketSession
 from ..adapters.persistence.storage.sql.engine import dispose_engine
 from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ..adapters.persistence.storage.tests.profile_capsule_runtime import (

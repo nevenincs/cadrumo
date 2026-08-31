@@ -44,11 +44,6 @@ from .....core.logging import get_logger
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.time.clock import now
 from .....core.time.utc import validate_utc_aware
-from .._storage_path_definitions import (
-    SECRET_INDEX_FILENAME,
-    SECRET_INDEX_SCHEMA_VERSION,
-    SECRET_RECORD_SCHEMA_VERSION,
-)
 from ..blob_store._blob_store import BlobReference, EncryptedBlobStore
 from ..crypto.aead import derive_key
 from ..envelope._envelope import Envelope
@@ -66,6 +61,11 @@ from ..errors import (
 )
 from ..master_key._master_key import MasterKeyProvider
 from ..master_key.active_session import get_active_master_key
+from ..storage_path_definitions import (
+    SECRET_INDEX_FILENAME,
+    SECRET_INDEX_SCHEMA_VERSION,
+    SECRET_RECORD_SCHEMA_VERSION,
+)
 
 _log = get_logger(__name__)
 

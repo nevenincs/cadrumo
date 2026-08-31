@@ -44,8 +44,8 @@ from ...adapters.outbound.aeat.sede.notifications import (
     fetch_notifications_query,
 )
 from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
-from ...adapters.persistence.storage._secure_object_namespaces import LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+from ...adapters.persistence.storage.secure_object_namespaces import LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE
 from ...core.config import Settings, load_settings
 from ...core.hashing import content_hash_hex, sha256_hex
 from ...core.identity import BucketId, SnapshotId

@@ -23,10 +23,10 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from ....adapters.persistence.storage._recovery_key import RecoveryKey, generate_recovery_key
 from ....adapters.persistence.storage.custody.errors import ProfileCustodyRecordError
 from ....adapters.persistence.storage.custody.records import ProfileCustodyEnvelope
 from ....adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
+from ....adapters.persistence.storage.recovery_key import RecoveryKey, generate_recovery_key
 from ....core.config import override_settings
 from ....core.errors.error_codes import build_error_envelope, render_error_text
 from ....core.i18n import tr

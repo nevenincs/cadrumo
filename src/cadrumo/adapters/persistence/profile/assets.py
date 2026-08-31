@@ -29,7 +29,7 @@ from ....domain.contribuyente.assets.records import (
     AssetRecordError,
     AssetsLedgerDocument,
 )
-from ..storage._secure_object_namespaces import (
+from ..storage.secure_object_namespaces import (
     PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE,
     PROFILE_ASSETS_LEDGER_NAMESPACE,
 )

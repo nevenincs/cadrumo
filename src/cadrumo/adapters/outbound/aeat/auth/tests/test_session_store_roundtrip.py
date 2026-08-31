@@ -28,8 +28,8 @@ from ......core.config import AEAT_CERTIFICATE_PROTECTED_URL
 from ......core.time.clock import now
 from ......tests.aeat_literal_fixtures import AEAT_HOST_SUFFIX_EXPECTED, aeat_url
 from ......tests.secure_sql import isolated_runtime_profile
-from .....persistence.storage._secure_object_namespaces import AEAT_BROWSER_SESSION_NAMESPACE
 from .....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+from .....persistence.storage.secure_object_namespaces import AEAT_BROWSER_SESSION_NAMESPACE
 from .. import session_store as session_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

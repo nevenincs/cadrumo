@@ -31,8 +31,8 @@ from pydantic import BaseModel, Field
 from ...adapters.outbound.aeat.sede.declarations import open_declarations_register, shared_playwright
 from ...adapters.outbound.aeat.sede.declarations_schema import Declaracion
 from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
-from ...adapters.persistence.storage._secure_object_namespaces import LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+from ...adapters.persistence.storage.secure_object_namespaces import LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE
 from ...core.config import Settings, load_settings
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId, SnapshotId

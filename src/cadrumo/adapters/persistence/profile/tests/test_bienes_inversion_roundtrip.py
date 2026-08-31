@@ -105,7 +105,7 @@ def test_register_corrupted_prorrata_surfaces_at_load(tmp_path: Path) -> None:
     """
     from sqlalchemy import select
 
-    from ...storage._secure_object_namespaces import PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE
+    from ...storage.secure_object_namespaces import PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE
     from ...storage.sql import SecureObjectRow
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="95f73d79-f5cb-4bb7-984d-0991c85c698d") as profile:
@@ -140,7 +140,7 @@ def test_register_missing_cuota_surfaces_at_load(tmp_path: Path) -> None:
     """
     from sqlalchemy import select
 
-    from ...storage._secure_object_namespaces import PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE
+    from ...storage.secure_object_namespaces import PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE
     from ...storage.sql import SecureObjectRow
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="736f0917-5f82-4fad-9731-22994886baf9") as profile:

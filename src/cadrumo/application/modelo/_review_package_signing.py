@@ -52,7 +52,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import (
 )
 from pydantic import BaseModel, Field
 
-from ...adapters.persistence.storage._secure_object_namespaces import (
+from ...adapters.persistence.storage.secure_object_namespaces import (
     MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE as _NAMESPACE,
 )
 from ...core.corpus_manifest.errors import CorpusBundleError, CorpusManifestTamperError

@@ -23,8 +23,8 @@ from urllib.parse import urlsplit
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...adapters.persistence.storage._secure_object_namespaces import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+from ...adapters.persistence.storage.secure_object_namespaces import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.external_constants import UTF_8_ENCODING, load_external_constants

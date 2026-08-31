@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from ..._schema_lineage import (
+from ...schema_lineage import (
     deregister_secure_object_schema_upgrader,
     register_secure_object_schema_upgrader,
 )

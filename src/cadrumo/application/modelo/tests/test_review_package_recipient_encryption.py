@@ -47,7 +47,7 @@ from ....adapters.persistence.profile.recipient_replay_guard import (
     RecipientPackageReplayedError,
     RecipientReplayGuardRepository,
 )
-from ....adapters.persistence.storage._secure_object_namespaces import (
+from ....adapters.persistence.storage.secure_object_namespaces import (
     MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE as _ENCRYPTION_KEY_NAMESPACE,
 )
 from ....adapters.persistence.storage.sql._orm import SecureObjectRow

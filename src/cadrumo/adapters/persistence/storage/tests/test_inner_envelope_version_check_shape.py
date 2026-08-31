@@ -1,7 +1,7 @@
 """Structural gate: no persisted read path compares an inner envelope version with an inequality.
 
 The inner-``Envelope`` contract is strict EQUALITY, held by
-:func:`.._schema_lineage.inner_envelope_version_is_current`. An inequality
+:func:`..schema_lineage.inner_envelope_version_is_current`. An inequality
 there accepts a below-current inner stamp silently, and a below-current inner
 stamp is exactly what a half-written upgrader produces on a row the outer
 layer has already re-stamped to current. Twenty read paths had drifted onto
@@ -283,7 +283,7 @@ def load(record):
 
 _OUTER_ROW_UPGRADE_PATH = """
 from ..storage import Envelope
-from .._schema_lineage import upgrade_secure_object_payload
+from ..schema_lineage import upgrade_secure_object_payload
 
 def decode(row, max_supported_version):
     envelope = Envelope
@@ -343,7 +343,7 @@ def test_detector_ignores_a_module_that_does_not_read_the_inner_envelope() -> No
     assert (
         inner_envelope_inequality_violations(
             _LAYER_ONE_GATE,
-            "cadrumo.adapters.persistence.storage._schema_lineage",
+            "cadrumo.adapters.persistence.storage.schema_lineage",
         )
         == []
     )

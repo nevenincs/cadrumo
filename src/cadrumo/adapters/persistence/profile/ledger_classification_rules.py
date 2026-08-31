@@ -6,8 +6,8 @@ from typing import override
 
 from ....application.ledger.rule_repository import ledger_classification_rule_object_key
 from ....domain.transactions.classification_rule import LedgerClassificationRule
-from ..storage._secure_object_namespaces import LEDGER_CLASSIFICATION_RULES_NAMESPACE
 from ..storage.envelope._secure_repository import SecureBoundRepository
+from ..storage.secure_object_namespaces import LEDGER_CLASSIFICATION_RULES_NAMESPACE
 
 
 class LedgerClassificationRuleRepository(SecureBoundRepository[LedgerClassificationRule]):

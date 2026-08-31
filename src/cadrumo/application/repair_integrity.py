@@ -44,11 +44,11 @@ from typing import Literal, Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field, NonNegativeInt
 
-from ..adapters.persistence.storage._namespace_registry import STORAGE_NAMESPACE_REGISTRY
-from ..adapters.persistence.storage._secure_object_namespaces import (
+from ..adapters.persistence.storage.namespace_registry import STORAGE_NAMESPACE_REGISTRY
+from ..adapters.persistence.storage.secure_object_namespaces import (
     REPAIR_INTEGRITY_DECISION_NAMESPACE as REPAIR_DECISION_STORAGE_NAMESPACE,
 )
-from ..adapters.persistence.storage._secure_object_namespaces import (
+from ..adapters.persistence.storage.secure_object_namespaces import (
     SYNC_RUN_RECORDS_NAMESPACE,
     USER_PROFILE_VALUE_NAMESPACE,
     WORKFLOW_STATE_NAMESPACE,

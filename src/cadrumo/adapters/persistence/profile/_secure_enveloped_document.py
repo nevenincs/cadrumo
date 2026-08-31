@@ -46,9 +46,9 @@ from pydantic import BaseModel
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from ....core.time.clock import now
-from ..storage._namespace_registry import secure_object_logical_path
-from ..storage._secure_object_namespaces import SecureObjectNamespaceDefinition
 from ..storage.errors import SecureObjectRevisionConflictError
+from ..storage.namespace_registry import secure_object_logical_path
+from ..storage.secure_object_namespaces import SecureObjectNamespaceDefinition
 from ..storage.sql import SecureObjectRepository, SecureObjectWrite
 
 
@@ -122,11 +122,11 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
 
     def _decode_record(self, payload: bytes) -> DocumentT:
         """Validate one loaded encrypted payload against the Envelope contract."""
-        from ..storage._schema_lineage import (
+        from ..storage.envelope._envelope import Envelope
+        from ..storage.schema_lineage import (
             inner_envelope_classification_is_expected,
             inner_envelope_version_is_current,
         )
-        from ..storage.envelope._envelope import Envelope
 
         envelope = Envelope.for_payload_type(self._model_type).model_validate_json(payload)
         if not inner_envelope_classification_is_expected(envelope.classification, self._definition.sensitivity):

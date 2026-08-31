@@ -52,7 +52,7 @@ def _held_profile(root: Path) -> None:
 
 
 def _bucket_dir(root: Path) -> Path:
-    from ...adapters.persistence.storage._storage_path_definitions import BUCKETS_DIRNAME
+    from ...adapters.persistence.storage.storage_path_definitions import BUCKETS_DIRNAME
 
     return root / BUCKETS_DIRNAME / _PROFILE_ID
 

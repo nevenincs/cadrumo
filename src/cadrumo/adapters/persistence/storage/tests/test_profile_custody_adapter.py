@@ -12,10 +12,10 @@ from .....application.user_profile.custody_ports import (
     ProfileRecordCryptoError,
     ProfileRecordEncryptedBlob,
 )
-from .._profile_custody import build_profile_custody_port
 from ..custody.capsule_records import ProfileCustodyCapsuleLabel
 from ..custody.label_head_models import ProfileLabelHead
 from ..custody.label_head_repository import ProfileLabelHeadRepository
+from ..profile_custody import build_profile_custody_port
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

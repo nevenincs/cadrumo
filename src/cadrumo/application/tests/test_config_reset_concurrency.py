@@ -210,8 +210,8 @@ def _release_parent_bucket_handles(root: Path) -> None:
     so the handles are released here rather than left to disguise themselves as
     a reset defect.
     """
-    from ...adapters.persistence.storage._storage_path_definitions import BUCKETS_DIRNAME
     from ...adapters.persistence.storage.sql.engine import dispose_engines_for_bucket
+    from ...adapters.persistence.storage.storage_path_definitions import BUCKETS_DIRNAME
 
     buckets = root / BUCKETS_DIRNAME
     if not buckets.is_dir():

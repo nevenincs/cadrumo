@@ -127,7 +127,7 @@ def test_reset_workflow_state_emit_failure_leaves_row_intact() -> None:
     through the repository's ``emit_reset`` constructor argument.
     """
 
-    from ....adapters.persistence.storage._secure_object_namespaces import WORKFLOW_STATE_NAMESPACE
+    from ....adapters.persistence.storage.secure_object_namespaces import WORKFLOW_STATE_NAMESPACE
     from ..persistence import WorkflowStateRepository
     from ..state_models import WorkflowState
 

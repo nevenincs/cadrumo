@@ -14,8 +14,8 @@ from sqlalchemy import text
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage._secure_object_namespaces import TRANSACTION_CATALOGUE_NAMESPACE
 from ....adapters.persistence.storage.errors import EnvelopeVersionError
+from ....adapters.persistence.storage.secure_object_namespaces import TRANSACTION_CATALOGUE_NAMESPACE
 from ....adapters.persistence.storage.sql import SecureObjectRepository, session_scope
 from ....core.aggregation import BindingSourceKind
 from ....core.classification.policies import SensitivityClass

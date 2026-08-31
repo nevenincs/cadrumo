@@ -17,12 +17,6 @@ from sqlalchemy import event as event
 
 from ......core.classification.policies import SensitivityClass
 from ......tests.master_key import EphemeralMasterKeyProvider
-from ..._namespace_registry import STORAGE_NAMESPACE_REGISTRY as STORAGE_NAMESPACE_REGISTRY
-from ..._secure_object_namespaces import WORKFLOW_STATE_NAMESPACE as WORKFLOW_STATE_NAMESPACE
-from ..._secure_object_namespaces import SecureObjectNamespaceDefinition as SecureObjectNamespaceDefinition
-from ..._secure_object_namespaces import StorageCustodyDisposition as StorageCustodyDisposition
-from ..._secure_object_namespaces import StorageHierarchyRegistry as StorageHierarchyRegistry
-from ..._secure_object_namespaces import StorageNamespaceScope as StorageNamespaceScope
 from ...errors import (
     ClassificationError as ClassificationError,
 )
@@ -38,6 +32,12 @@ from ...errors import (
 from ...errors import (
     StorageValidationError as StorageValidationError,
 )
+from ...namespace_registry import STORAGE_NAMESPACE_REGISTRY as STORAGE_NAMESPACE_REGISTRY
+from ...secure_object_namespaces import WORKFLOW_STATE_NAMESPACE as WORKFLOW_STATE_NAMESPACE
+from ...secure_object_namespaces import SecureObjectNamespaceDefinition as SecureObjectNamespaceDefinition
+from ...secure_object_namespaces import StorageCustodyDisposition as StorageCustodyDisposition
+from ...secure_object_namespaces import StorageHierarchyRegistry as StorageHierarchyRegistry
+from ...secure_object_namespaces import StorageNamespaceScope as StorageNamespaceScope
 from ...tests.engine_bootstrap import bootstrap_sqlite_engine
 from .. import SecureObjectNamespaceIntegrity as SecureObjectNamespaceIntegrity
 from .. import SecureObjectWrite as SecureObjectWrite

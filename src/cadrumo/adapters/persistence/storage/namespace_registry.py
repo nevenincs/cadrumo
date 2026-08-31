@@ -1,7 +1,7 @@
 """Storage hierarchy assembly and secure-object logical-path helpers.
 
 Namespace definitions and their contracts live in
-:mod:`._secure_object_namespaces`. This module owns the one aggregate hierarchy
+:mod:`.secure_object_namespaces`. This module owns the one aggregate hierarchy
 that combines those declarations with the independently declared filesystem
 paths; it does not re-export namespace definitions.
 """
@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ._secure_object_namespaces import (
+from .secure_object_namespaces import (
     AEAT_BROWSER_SESSION_NAMESPACE,
     AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
     AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE,
@@ -77,7 +77,7 @@ from ._secure_object_namespaces import (
     WORKFLOW_STATE_NAMESPACE,
     StorageHierarchyRegistry,
 )
-from ._storage_path_definitions import STORAGE_PATH_DEFINITIONS
+from .storage_path_definitions import STORAGE_PATH_DEFINITIONS
 
 _SECURE_OBJECTS_TABLE_PATH_KEY = "secure_objects_table"
 

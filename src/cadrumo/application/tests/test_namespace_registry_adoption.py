@@ -33,7 +33,7 @@ from pathlib import Path
 
 import pytest
 
-from ...adapters.persistence.storage._namespace_registry import STORAGE_NAMESPACE_REGISTRY
+from ...adapters.persistence.storage.namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from ...tests import SRC_CADRUMO, leaf_name, production_ast_items, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

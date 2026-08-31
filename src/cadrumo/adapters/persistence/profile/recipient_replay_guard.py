@@ -59,7 +59,7 @@ from ....core.hex import HEX_PATTERN_64 as _HEX_PATTERN_64
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.time.clock import now as _utc_now
 from ....core.time.utc import UtcInstant
-from ..storage._secure_object_namespaces import MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE as _NAMESPACE
+from ..storage.secure_object_namespaces import MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE as _NAMESPACE
 from ._secure_model_document import ProfileBareModelSecurePersistence, resolve_profile_secure_object_repository
 
 if TYPE_CHECKING:

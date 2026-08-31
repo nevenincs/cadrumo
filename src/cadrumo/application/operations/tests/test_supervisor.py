@@ -18,8 +18,8 @@ from ....adapters.persistence.operations.secure_references import (
     OperationSecureReferenceRepository,
     operation_secure_reference_repository,
 )
-from ....adapters.persistence.storage._namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from ....adapters.persistence.storage.errors import RepositoryError
+from ....adapters.persistence.storage.namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core.access_gate.errors import AeatLiveReadNotEnabledError
 from ....core.directory_scan import scan_directory

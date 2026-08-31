@@ -25,8 +25,9 @@ from .....core.compatibility_lifecycle import (
     expected_floor,
     lineage_obligations,
 )
-from .._namespace_registry import STORAGE_NAMESPACE_REGISTRY
-from .._schema_lineage import (
+from ..errors import EnvelopeVersionError, StorageValidationError
+from ..namespace_registry import STORAGE_NAMESPACE_REGISTRY
+from ..schema_lineage import (
     SECURE_OBJECT_DURABILITY_FLOOR,
     deregister_secure_object_schema_upgrader,
     ensure_schema_version_readable,
@@ -34,7 +35,6 @@ from .._schema_lineage import (
     register_secure_object_schema_upgrader,
     upgrade_secure_object_payload,
 )
-from ..errors import EnvelopeVersionError, StorageValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

@@ -8,12 +8,12 @@ from uuid import UUID
 
 import pytest
 
-from .._profile_login_session import build_profile_login_session_port
 from ..custody.acceleration_receipt import ProfileSessionResumeOutcome, profile_session_path
 from ..custody.acceleration_receipt_crypto import PersistedProfileSession
 from ..errors import KeyringUnavailableError
 from ..master_key.bucket_session import BucketSession
 from ..master_key.login_throttle import ThrottleEvaluation
+from ..profile_login_session import build_profile_login_session_port
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

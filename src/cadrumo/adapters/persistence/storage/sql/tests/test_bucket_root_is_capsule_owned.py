@@ -15,8 +15,8 @@ import pytest
 from sqlalchemy import text
 
 from ......core.config import Settings
-from ..._storage_path_definitions import BUCKET_DATABASE_FILENAME, BUCKET_DB_DIRNAME, BUCKETS_DIRNAME
 from ...errors import StorageError
+from ...storage_path_definitions import BUCKET_DATABASE_FILENAME, BUCKET_DB_DIRNAME, BUCKETS_DIRNAME
 from .. import create_engine_from_settings, dispose_engine
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

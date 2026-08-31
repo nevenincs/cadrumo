@@ -252,7 +252,7 @@ def test_filing_amendment_emptied_delta_surfaces_at_load(
 
     from sqlalchemy import select
 
-    from ....adapters.persistence.storage._secure_object_namespaces import FILING_AMENDMENTS_NAMESPACE
+    from ....adapters.persistence.storage.secure_object_namespaces import FILING_AMENDMENTS_NAMESPACE
     from ....adapters.persistence.storage.sql._orm import SecureObjectRow
     from ....adapters.persistence.storage.sql.session import session_scope
 

@@ -656,8 +656,8 @@ def test_the_ledger_read_refuses_an_unreadable_row_rather_than_skipping_it(tmp_p
     own namespace, so it is reached by exactly the read path production uses.
     """
     from ...adapters.outbound.llm._consent_ledger import EvidenceConsentLedger
-    from ...adapters.persistence.storage._secure_object_namespaces import LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE
     from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+    from ...adapters.persistence.storage.secure_object_namespaces import LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE
     from ...core.hashing import canonical_json_bytes
     from ...core.time.clock import now
 

@@ -27,8 +27,8 @@ from typing import ClassVar, override
 
 from ....core.classification.policies import SensitivityClass
 from ....domain.justificante import Justificante
-from ..storage._secure_object_namespaces import JUSTIFICANTE_METADATA_NAMESPACE
 from ..storage.envelope._secure_repository import SecureBoundRepository
+from ..storage.secure_object_namespaces import JUSTIFICANTE_METADATA_NAMESPACE
 
 
 class JustificanteRepository(SecureBoundRepository[Justificante]):

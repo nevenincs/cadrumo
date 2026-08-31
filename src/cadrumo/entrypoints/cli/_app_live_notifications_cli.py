@@ -34,9 +34,9 @@ from ...adapters.outbound.aeat.sede.notifications import (
     fetch_notification_document,
 )
 from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
-from ...adapters.persistence.storage._secure_object_namespaces import LIVE_NOTIFICATION_DOCUMENT_NAMESPACE
 from ...adapters.persistence.storage.attachment import AttachmentStore
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+from ...adapters.persistence.storage.secure_object_namespaces import LIVE_NOTIFICATION_DOCUMENT_NAMESPACE
 from ...application.live.errors import LiveApplicationInputError
 from ...application.live.notification_documents import (
     NotificationDocumentNotFoundError,

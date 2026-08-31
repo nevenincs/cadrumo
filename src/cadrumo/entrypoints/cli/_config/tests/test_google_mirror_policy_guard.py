@@ -17,13 +17,13 @@ import pytest
 
 from .....adapters.outbound.storage._protocol import StorageProvider
 from .....adapters.outbound.storage._records import ProviderObjectMetadata, ProviderProbeReport
-from .....adapters.persistence.storage._namespace_registry import STORAGE_NAMESPACE_REGISTRY
-from .....adapters.persistence.storage._secure_object_namespaces import (
-    SecureObjectNamespaceDefinition,
+from .....adapters.persistence.storage.namespace_registry import STORAGE_NAMESPACE_REGISTRY
+from .....adapters.persistence.storage.namespace_taxonomy import (
     StorageCustodyDisposition,
     StorageNamespaceScope,
     StorageRemoteMirrorPolicy,
 )
+from .....adapters.persistence.storage.secure_object_namespaces import SecureObjectNamespaceDefinition
 from .....core.classification.policies import SensitivityClass
 from .._google import (
     _mirror_refusal_for_definition,

@@ -1,7 +1,7 @@
 """Production-root adoption gate for secure-object namespace metadata.
 
 Every secure-object namespace declared in
-:data:`~adapters.persistence.storage._namespace_registry.STORAGE_NAMESPACE_REGISTRY`
+:data:`~adapters.persistence.storage.namespace_registry.STORAGE_NAMESPACE_REGISTRY`
 carries a :class:`~adapters.persistence.storage.SecureObjectNamespaceDefinition`
 that is the single authority for its ``namespace`` string, ``sensitivity``
 :class:`~core.classification.SensitivityClass`, and envelope ``schema_version``.
@@ -58,7 +58,7 @@ from pathlib import Path
 
 import pytest
 
-from ...adapters.persistence.storage._namespace_registry import STORAGE_NAMESPACE_REGISTRY
+from ...adapters.persistence.storage.namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from ...core.directory_scan import scan_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -80,7 +80,7 @@ _BOUND_METADATA_CLASSVARS = ("namespace", "sensitivity", "schema_version")
 # The registry-authoring module legitimately constructs definitions from raw
 # ``SensitivityClass`` members; it is the authority, not a consumer, so it is
 # excluded from the redeclaration scan.
-_REGISTRY_AUTHORING_MODULE = "_secure_object_namespaces.py"
+_REGISTRY_AUTHORING_MODULE = "secure_object_namespaces.py"
 
 
 def _package_root() -> Path:

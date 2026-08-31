@@ -36,7 +36,7 @@ from .....domain.contribuyente.assets.records import (
 from .....tests.secure_sql import isolated_runtime_profile
 from ....persistence.storage.sql import SecureObjectRow
 from ....persistence.storage.sql.session import session_scope
-from ...storage._secure_object_namespaces import (
+from ...storage.secure_object_namespaces import (
     PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE,
     PROFILE_ASSETS_LEDGER_NAMESPACE,
 )

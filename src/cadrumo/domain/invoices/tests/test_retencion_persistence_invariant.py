@@ -42,7 +42,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ....adapters.persistence.storage._secure_object_namespaces import INVOICE_CATALOGUE_NAMESPACE
+from ....adapters.persistence.storage.secure_object_namespaces import INVOICE_CATALOGUE_NAMESPACE
 from ....tests.secure_sql import isolated_runtime_profile
 from ...iva.classification import InvoiceKind
 from ...iva.schema import IvaCategory

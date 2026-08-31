@@ -29,18 +29,18 @@ Submodules
    :maxdepth: 4
 
    cadrumo.adapters.persistence.storage._kdf_salt
-   cadrumo.adapters.persistence.storage._namespace_registry
-   cadrumo.adapters.persistence.storage._namespace_taxonomy
-   cadrumo.adapters.persistence.storage._path_safety
-   cadrumo.adapters.persistence.storage._profile_custody
    cadrumo.adapters.persistence.storage._profile_custody_carry
-   cadrumo.adapters.persistence.storage._profile_login_session
-   cadrumo.adapters.persistence.storage._recovery_key
-   cadrumo.adapters.persistence.storage._runtime_readiness
-   cadrumo.adapters.persistence.storage._schema_lineage
-   cadrumo.adapters.persistence.storage._secure_object_namespaces
-   cadrumo.adapters.persistence.storage._storage_path_definitions
    cadrumo.adapters.persistence.storage.attachment
    cadrumo.adapters.persistence.storage.errors
+   cadrumo.adapters.persistence.storage.namespace_registry
+   cadrumo.adapters.persistence.storage.namespace_taxonomy
+   cadrumo.adapters.persistence.storage.path_safety
+   cadrumo.adapters.persistence.storage.profile_custody
+   cadrumo.adapters.persistence.storage.profile_login_session
+   cadrumo.adapters.persistence.storage.recovery_key
    cadrumo.adapters.persistence.storage.runtime
+   cadrumo.adapters.persistence.storage.runtime_readiness
    cadrumo.adapters.persistence.storage.runtime_repository
+   cadrumo.adapters.persistence.storage.schema_lineage
+   cadrumo.adapters.persistence.storage.secure_object_namespaces
+   cadrumo.adapters.persistence.storage.storage_path_definitions

@@ -16,13 +16,6 @@ from .....core.logging import get_logger
 from .....core.secure_object_write import SecureObjectWrite
 from .....core.time.clock import now as _utc_now
 from .....core.time.utc import coerce_utc_aware
-from .._runtime_readiness import StorageRuntimeReadinessCode, runtime_not_ready_error
-from .._schema_lineage import ensure_schema_version_readable, inner_envelope_classification_is_expected
-from .._secure_object_namespaces import (
-    SecureObjectNamespaceDefinition,
-    StorageHierarchyRegistry,
-    is_former_product_namespace,
-)
 from ..crypto.encrypted_columns import secure_object_key_digest
 from ..errors import (
     ClassificationError,
@@ -30,6 +23,13 @@ from ..errors import (
     NamespaceRegistryError,
     SecureObjectUnreadableError,
     StorageValidationError,
+)
+from ..runtime_readiness import StorageRuntimeReadinessCode, runtime_not_ready_error
+from ..schema_lineage import ensure_schema_version_readable, inner_envelope_classification_is_expected
+from ..secure_object_namespaces import (
+    SecureObjectNamespaceDefinition,
+    StorageHierarchyRegistry,
+    is_former_product_namespace,
 )
 from ._orm import SecureObjectRow
 from ._secure_object_integrity import (

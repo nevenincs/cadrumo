@@ -30,7 +30,7 @@ from ....domain.bienes_inversion.register import (
     BienInversionIvaRecord,
     BienInversionRecordError,
 )
-from ..storage._secure_object_namespaces import PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE
+from ..storage.secure_object_namespaces import PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE
 from ..storage.sql import SecureObjectRepository
 from ._secure_model_document import (
     ProfileBareModelSecurePersistence,

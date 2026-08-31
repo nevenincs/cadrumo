@@ -10,9 +10,9 @@ import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.inventory import InventoryLedgerRepository
-from ....adapters.persistence.storage._runtime_readiness import StorageRuntimeReadinessCode
-from ....adapters.persistence.storage._secure_object_namespaces import PROFILE_INVENTORY_LEDGER_NAMESPACE
 from ....adapters.persistence.storage.errors import StorageValidationError
+from ....adapters.persistence.storage.runtime_readiness import StorageRuntimeReadinessCode
+from ....adapters.persistence.storage.secure_object_namespaces import PROFILE_INVENTORY_LEDGER_NAMESPACE
 from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ....domain.buckets.event import BucketEventType
 from ....domain.contribuyente.inventory.records import (

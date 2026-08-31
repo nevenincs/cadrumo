@@ -25,8 +25,8 @@ from .....tests.secure_sql import (
     mutate_encrypted_secure_object_json,
     read_db_at_rest_bytes,
 )
-from ...storage._secure_object_namespaces import FILING_EXPORT_REPLAY_PROOFS_NAMESPACE
 from ...storage.errors import SecureObjectRowIdentityError
+from ...storage.secure_object_namespaces import FILING_EXPORT_REPLAY_PROOFS_NAMESPACE
 from ...storage.sql import SecureObjectRow
 from ..filing_export_replay import FilingExportReplayCustodyRepository, _require_source_pinned_probe_bytes
 

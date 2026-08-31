@@ -47,9 +47,9 @@ from typing import Final
 
 import pytest
 
-from ..adapters.persistence.storage._namespace_registry import STORAGE_NAMESPACE_REGISTRY
-from ..adapters.persistence.storage._namespace_taxonomy import StoragePathKind
-from ..adapters.persistence.storage._secure_object_namespaces import SecureObjectNamespaceDefinition
+from ..adapters.persistence.storage.namespace_registry import STORAGE_NAMESPACE_REGISTRY
+from ..adapters.persistence.storage.namespace_taxonomy import StoragePathKind
+from ..adapters.persistence.storage.secure_object_namespaces import SecureObjectNamespaceDefinition
 from ..core.compatibility_lifecycle import (
     PERSISTED_FORMATS,
     PersistedFormatClass,

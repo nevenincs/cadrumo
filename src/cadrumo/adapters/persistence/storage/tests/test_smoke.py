@@ -66,12 +66,12 @@ def test_runtime_master_key_and_namespace_boundaries_are_public() -> None:
             "inspect_bucket_storage_runtime",
             "inspect_storage_runtime",
         },
-        "_namespace_registry": {
+        "namespace_registry": {
             "STORAGE_NAMESPACE_REGISTRY",
             "secure_object_logical_path",
         },
-        "_runtime_readiness": {"StorageRuntimeReadiness"},
-        "_storage_path_definitions": {"STORAGE_PATH_DEFINITIONS"},
+        "runtime_readiness": {"StorageRuntimeReadiness"},
+        "storage_path_definitions": {"STORAGE_PATH_DEFINITIONS"},
     }
 
     unresolved: list[str] = []

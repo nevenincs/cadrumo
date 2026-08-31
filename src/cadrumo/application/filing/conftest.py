@@ -39,7 +39,7 @@ import pytest
 from sqlalchemy import inspect as sa_inspect
 from sqlalchemy import text as sa_text
 
-from ...adapters.persistence.storage._secure_object_namespaces import USER_PROFILE_VALUE_NAMESPACE
+from ...adapters.persistence.storage.secure_object_namespaces import USER_PROFILE_VALUE_NAMESPACE
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 

@@ -68,8 +68,8 @@ def windows_worst_case_object_path_suffix_length() -> int:
         The suffix length in characters, for
         :func:`~core.paths.windows_storage_root_long_path_margin`.
     """
-    from ...persistence.storage._namespace_registry import STORAGE_NAMESPACE_REGISTRY
-    from ...persistence.storage._storage_path_definitions import BUCKET_BLOBS_DIRNAME, BUCKETS_DIRNAME
+    from ...persistence.storage.namespace_registry import STORAGE_NAMESPACE_REGISTRY
+    from ...persistence.storage.storage_path_definitions import BUCKET_BLOBS_DIRNAME, BUCKETS_DIRNAME
     from ._local import _SIDECAR_EXTENSION
     from ._object_name import _HMAC_PREFIX_LENGTH, _LABEL_MAX_LENGTH
 

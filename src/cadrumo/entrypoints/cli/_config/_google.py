@@ -79,12 +79,10 @@ from ....adapters.outbound.storage._records import (
     RemoteMirrorNamespaceManifest,
 )
 from ....adapters.outbound.storage.errors import OutboundStorageError, OutboundStorageValidationError
-from ....adapters.persistence.storage._namespace_registry import STORAGE_NAMESPACE_REGISTRY
-from ....adapters.persistence.storage._secure_object_namespaces import (
-    SecureObjectNamespaceDefinition,
-    StorageRemoteMirrorPolicy,
-)
+from ....adapters.persistence.storage.namespace_registry import STORAGE_NAMESPACE_REGISTRY
+from ....adapters.persistence.storage.namespace_taxonomy import StorageRemoteMirrorPolicy
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+from ....adapters.persistence.storage.secure_object_namespaces import SecureObjectNamespaceDefinition
 from ....adapters.persistence.storage.sql._secure_object_crypto import verify_revision_self_consistency
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRawRow, SecureObjectRepository
 from ....core.config import load_settings

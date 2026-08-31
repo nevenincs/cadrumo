@@ -49,8 +49,8 @@ from .....tests.secure_sql import (
 from ....persistence.storage.sql import SecureObjectRow
 from ....persistence.storage.sql.engine import get_engine
 from ....persistence.storage.sql.session import session_scope
-from ...storage._secure_object_namespaces import PROFILE_INVENTORY_LEDGER_NAMESPACE
 from ...storage.crypto.encrypted_columns import HashedLookup
+from ...storage.secure_object_namespaces import PROFILE_INVENTORY_LEDGER_NAMESPACE
 from ..inventory import InventoryLedgerRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

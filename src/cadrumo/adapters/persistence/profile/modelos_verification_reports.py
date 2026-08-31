@@ -42,8 +42,8 @@ from ....core.logging import get_logger
 from ....domain.modelos.errors import raise_catalogue_integrity_error
 from ....domain.modelos.verification_report import VerificationReportCatalogue
 from ....domain.modelos.verification_repository import VerificationReportPersistenceError
-from ..storage._secure_object_namespaces import MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE
 from ..storage.runtime_repository import secure_object_repository_for_bucket
+from ..storage.secure_object_namespaces import MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE
 from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
@@ -170,12 +170,12 @@ class VerificationReportCatalogueRepository:
                 storage-layer classification or envelope-version integrity
                 error.
         """
-        from ..storage._schema_lineage import (
+        from ..storage.envelope._envelope import Envelope
+        from ..storage.errors import ClassificationError, EnvelopeVersionError
+        from ..storage.schema_lineage import (
             inner_envelope_classification_is_expected,
             inner_envelope_version_is_current,
         )
-        from ..storage.envelope._envelope import Envelope
-        from ..storage.errors import ClassificationError, EnvelopeVersionError
 
         try:
             record = self._objects.load(

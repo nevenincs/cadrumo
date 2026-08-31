@@ -28,7 +28,7 @@ from typing import TYPE_CHECKING
 from ....core.logging import get_logger
 from ....domain.invoices.errors import InvoicePersistenceError
 from ....domain.invoices.models import InvoiceCatalogue
-from ..storage._secure_object_namespaces import INVOICE_CATALOGUE_NAMESPACE
+from ..storage.secure_object_namespaces import INVOICE_CATALOGUE_NAMESPACE
 from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
 
 if TYPE_CHECKING:

@@ -67,8 +67,6 @@ from ..profile.buckets import BucketEventHistoryRepository
 from ..profile.snapshots import SecureSnapshotRepository
 from . import bucket
 from ._kdf_salt import KDF_SALT_BYTES
-from ._recovery_key import generate_recovery_key
-from ._secure_object_namespaces import USER_PROFILE_SNAPSHOT_NAMESPACE, USER_PROFILE_VALUE_NAMESPACE
 from .crypto.aead import EncryptedBlob, decrypt_record, encrypt_record
 from .custody._filesystem_primitives import ensure_profile_custody_local_directory
 from .custody.capsule import (
@@ -154,11 +152,13 @@ from .master_key.kdf_params import (
     KdfParams,
 )
 from .master_key.master_key_derivation import derive_kek_with_params
+from .recovery_key import generate_recovery_key
 from .runtime_repository import (
     secure_object_repository_for_active_bucket,
     secure_object_repository_for_bucket,
     secure_object_repository_for_staged_bucket,
 )
+from .secure_object_namespaces import USER_PROFILE_SNAPSHOT_NAMESPACE, USER_PROFILE_VALUE_NAMESPACE
 from .sql import SecureObjectRepository
 
 

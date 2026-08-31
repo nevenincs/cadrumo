@@ -16,7 +16,6 @@ from ......core.errors.error_codes import build_error_envelope, resolve_error_me
 from ......core.external_constants import UTF_8_ENCODING
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ......tests.path_obstruction import obstructed_path
-from ..._storage_path_definitions import BLOB_MANIFEST_SCHEMA_VERSION
 from ...crypto.aead import KEY_SIZE
 from ...envelope._envelope import Envelope
 from ...errors import (
@@ -28,6 +27,7 @@ from ...errors import (
 )
 from ...master_key.active_session import NoActiveBucketSessionError, activate_session
 from ...master_key.bucket_session import BucketSession
+from ...storage_path_definitions import BLOB_MANIFEST_SCHEMA_VERSION
 from .._blob_store import BlobManifest, BlobReference, EncryptedBlobStore
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

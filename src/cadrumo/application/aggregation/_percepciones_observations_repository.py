@@ -51,9 +51,9 @@ from typing import ClassVar, override
 
 from pydantic import BaseModel, Field
 
-from ...adapters.persistence.storage._path_safety import safe_repository_id
-from ...adapters.persistence.storage._secure_object_namespaces import WITHHOLDING_OBSERVATIONS_NAMESPACE
 from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
+from ...adapters.persistence.storage.path_safety import safe_repository_id
+from ...adapters.persistence.storage.secure_object_namespaces import WITHHOLDING_OBSERVATIONS_NAMESPACE
 from ...core.aggregation import AggregationCaptureKind
 from ...core.classification.policies import SensitivityClass
 from ...core.filing_year import FilingYear

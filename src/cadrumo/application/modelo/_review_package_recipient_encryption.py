@@ -121,11 +121,11 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import (
 )
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
-from ...adapters.persistence.storage._secure_object_namespaces import (
-    MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE as _NAMESPACE,
-)
 from ...adapters.persistence.storage.crypto.aead import EncryptedBlob, decrypt_record, derive_key, encrypt_record
 from ...adapters.persistence.storage.errors import DecryptionError
+from ...adapters.persistence.storage.secure_object_namespaces import (
+    MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE as _NAMESPACE,
+)
 from ...core.errors.hierarchy import CadrumoError
 from ...core.hex import HEX_PATTERN_64 as _HEX_PATTERN_64
 from ...core.identity import BucketId, canonical_bucket_id

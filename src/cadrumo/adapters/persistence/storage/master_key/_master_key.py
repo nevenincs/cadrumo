@@ -144,8 +144,8 @@ def refuse_unsecured_bucket_with_real_profile(session: BucketSession) -> None:
     """
     from .....core.config import load_settings
     from .....core.storage_taxonomy_locations import bucket_scoped_storage_path
-    from .._secure_object_namespaces import USER_PROFILE_VALUE_NAMESPACE
     from ..crypto.encrypted_columns import decrypt_encrypted_bytes_column
+    from ..secure_object_namespaces import USER_PROFILE_VALUE_NAMESPACE
 
     if session.bucket_id == "unsecured":
         return
