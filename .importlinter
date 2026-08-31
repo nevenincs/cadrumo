@@ -449,7 +449,6 @@ ignore_imports =
     # ── application → adapters (permitted by architecture ADR sec. 538) ──
     # application/ may import adapters/ for outbound wiring; full inversion
     # would require a major refactor and is deferred.
-    cadrumo.application.aggregation._modelo_bindings -> cadrumo.adapters.persistence.**
     cadrumo.application.aggregation._oss_ioss -> cadrumo.adapters.persistence.**
     cadrumo.application.aggregation._percepciones_observations_repository -> cadrumo.adapters.persistence.storage
     cadrumo.application.aggregation._retencion_observations_repository -> cadrumo.adapters.persistence.storage
