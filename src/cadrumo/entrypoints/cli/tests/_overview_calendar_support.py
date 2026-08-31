@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
-from ....adapters.inbound.pdf._utils import source_pdf_reference_path
+from ....adapters.inbound.pdf.utils import source_pdf_reference_path
 from ....application.user_profile.censo_sync import CENSO_SOURCE_TAG
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period

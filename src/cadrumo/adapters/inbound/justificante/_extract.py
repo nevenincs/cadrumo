@@ -41,8 +41,8 @@ from ....domain.justificante import (
     JustificanteCsvNotFoundError,
     JustificanteParseError,
 )
-from ..pdf._label_regex import EJERCICIO_LABEL, MODELO_LABEL, PRESENTADOR_NIF_LABEL, parse_spanish_decimal
-from ..pdf._utils import sha256_file, source_pdf_reference_path
+from ..pdf.label_regex import EJERCICIO_LABEL, MODELO_LABEL, PRESENTADOR_NIF_LABEL, parse_spanish_decimal
+from ..pdf.utils import sha256_file, source_pdf_reference_path
 
 _logger = get_logger(__name__)
 _ANY_HTTP_URL_ADAPTER = TypeAdapter(AnyHttpUrl)

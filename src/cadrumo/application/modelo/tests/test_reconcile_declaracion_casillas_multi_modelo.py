@@ -34,7 +34,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.inbound.declaracion._schema import InboundDeclaracionObservation, TemplateRevision
-from ....adapters.inbound.pdf._shared import ExtractedCasilla
+from ....adapters.inbound.pdf.extracted_casilla import ExtractedCasilla
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core.casilla_id import validated_casilla_id

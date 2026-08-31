@@ -10,7 +10,7 @@ from typing import Literal
 
 from pydantic import AnyHttpUrl, TypeAdapter
 
-from ....adapters.inbound.pdf._utils import source_pdf_reference_path
+from ....adapters.inbound.pdf.utils import source_pdf_reference_path
 from ....adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact, FiledDeclaracionObservation
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
