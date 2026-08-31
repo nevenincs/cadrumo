@@ -103,7 +103,7 @@ def hardening_inventory() -> _HardeningInventory:
 
 
 def test_bucket_session_cleanup_observability_does_not_use_suppression_markers() -> None:
-    path = repo_path("src/cadrumo/adapters/persistence/storage/master_key/_bucket_session.py")
+    path = repo_path("src/cadrumo/adapters/persistence/storage/master_key/bucket_session.py")
     function = _function_named(path, "_dispose_engine")
     segment = _source_segment(path, function)
 
@@ -116,7 +116,7 @@ def test_bucket_session_cleanup_observability_does_not_use_suppression_markers()
 
 def test_named_bucket_settings_derivation_stays_in_core_settings_boundary() -> None:
     runtime_path = repo_path("src/cadrumo/adapters/persistence/storage/runtime.py")
-    route_path = repo_path("src/cadrumo/core/_config_storage_route.py")
+    route_path = repo_path("src/cadrumo/core/config_storage_route.py")
 
     runtime_text = runtime_path.read_text(encoding="utf-8")
     assert "__pydantic_fields_set__" not in runtime_text
