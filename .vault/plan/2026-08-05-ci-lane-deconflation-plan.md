@@ -10,7 +10,7 @@ related:
   - '[[2026-06-01-registry-period-code-union-cli-boundary-adr]]'
   - '[[2026-08-05-ci-lane-deconflation-step-check-attribution-audit]]'
 modified: '2026-08-31'
-body_hash: 'sha256:28c770a3fbdc27d754ffae6c3803b01b50229f71c3afdf9598b543f010190f4a'
+body_hash: 'sha256:2a16dbfe5f05307c0370cd4cda1877dde7930980060a4d1da367f3c917d74c3d'
 ---
 
 <!-- RETIRED: S01, S10, S181, S184, S186, S189, S191, S193, S194, S197, S199, S201, S203, S205, S207, S209, S211, S213, S215, S217, S219, S221 -->
@@ -279,7 +279,7 @@ Decompose every live size-budget subject by its owning source file, then regener
 - [ ] `P05.S222` - Refactor the size-budget subjects in models.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/transactions/models.py`.
 - [ ] `P05.S223` - Refactor _config_payloads.py below the default size ceiling without raising its stale threshold.; `src/cadrumo/entrypoints/cli/_config_payloads.py`.
 - [ ] `P05.S224` - Refactor the size-budget subjects in _modelo_payloads.py into cohesive siblings without raising any threshold.; `src/cadrumo/entrypoints/cli/_modelo_payloads.py`.
-- [ ] `P05.S225` - Refactor the size-budget subjects in test_machine_secret_channels_subprocess.py into cohesive siblings without raising any threshold.; `src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py`.
+- [x] `P05.S225` - Refactor the size-budget subjects in test_machine_secret_channels_subprocess.py into cohesive siblings without raising any threshold.; `src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py`.
 - [ ] `P05.S226` - Refactor the size-budget subjects in app.py into cohesive siblings without raising any threshold.; `src/cadrumo/entrypoints/tui/flows/app.py`.
 - [ ] `P05.S227` - Regenerate only stale size-budget pins after every live source-file subject is compliant, verify no threshold is raised, and do not use --accept-growth.; `dev/audit/size_budget_baseline.json`.
 
