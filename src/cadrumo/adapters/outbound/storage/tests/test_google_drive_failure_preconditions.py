@@ -22,9 +22,10 @@ from .. import (
     OutboundStorageUnavailableError,
 )
 from .. import _google_drive as drive_module
-from .._google_drive import (
+from .. import _google_drive_metadata as drive_metadata_module
+from .._google_drive import GoogleDriveProvider
+from .._google_drive_metadata import (
     DriveStoragePreconditionCondition,
-    GoogleDriveProvider,
     _drive_storage_content_hash,
     _parse_drive_modified_time,
     _parse_drive_size,
@@ -395,36 +396,37 @@ def _fact_expressions_from_precondition(call: ast.Call) -> tuple[tuple[str, str]
 
 
 def _external_failure_carriers() -> dict[str, ast.Call]:
-    tree = ast.parse(inspect.getsource(drive_module))
     carriers: dict[str, ast.Call] = {}
+    for module in (drive_module, drive_metadata_module):
+        tree = ast.parse(inspect.getsource(module))
 
-    class Visitor(ast.NodeVisitor):
-        owner = "<module>"
+        class Visitor(ast.NodeVisitor):
+            owner = "<module>"
 
-        @override
-        def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
-            prior_owner = self.owner
-            self.owner = node.name
-            self.generic_visit(node)
-            self.owner = prior_owner
+            @override
+            def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+                prior_owner = self.owner
+                self.owner = node.name
+                self.generic_visit(node)
+                self.owner = prior_owner
 
-        @override
-        def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
-            prior_owner = self.owner
-            self.owner = node.name
-            self.generic_visit(node)
-            self.owner = prior_owner
+            @override
+            def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+                prior_owner = self.owner
+                self.owner = node.name
+                self.generic_visit(node)
+                self.owner = prior_owner
 
-        @override
-        def visit_Call(self, node: ast.Call) -> None:
-            error_type = _call_name(node.func)
-            if error_type in _EXTERNAL_ERROR_TYPES:
-                key = f"{self.owner}:{error_type}:{_carrier_message(node)}"
-                assert key not in carriers, f"duplicate Drive failure carrier {key}"
-                carriers[key] = node
-            self.generic_visit(node)
+            @override
+            def visit_Call(self, node: ast.Call) -> None:
+                error_type = _call_name(node.func)
+                if error_type in _EXTERNAL_ERROR_TYPES:
+                    key = f"{self.owner}:{error_type}:{_carrier_message(node)}"
+                    assert key not in carriers, f"duplicate Drive failure carrier {key}"
+                    carriers[key] = node
+                self.generic_visit(node)
 
-    Visitor().visit(tree)
+        Visitor().visit(tree)
     return carriers
 
 
@@ -476,7 +478,7 @@ def test_drive_failure_carrier_totality_uses_the_canonical_no_action_authority()
         assert _fact_keys_from_precondition(precondition) == expected.fact_keys, key
         assert _fact_expressions_from_precondition(precondition) == _FAILURE_CARRIER_FACT_EXPRESSIONS[key], key
 
-    source = inspect.getsource(drive_module)
+    source = "\n".join(inspect.getsource(module) for module in (drive_module, drive_metadata_module))
     assert "PreconditionVerdict(" not in source
     assert "ConditionEvidence(" not in source
 
