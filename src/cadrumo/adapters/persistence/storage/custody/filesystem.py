@@ -28,31 +28,13 @@ from ._filesystem_primitives import (
     anchor_directory as _anchor_directory,
 )
 from ._filesystem_primitives import (
-    ensure_real_directory as _ensure_real_directory,
-)
-from ._filesystem_primitives import (
-    is_reparse_metadata as _is_reparse_metadata,
-)
-from ._filesystem_primitives import (
     posix_directory_fd as _posix_directory_fd,
-)
-from ._filesystem_primitives import (
-    posix_mkdir_child_directory as _posix_mkdir_child_directory,
-)
-from ._filesystem_primitives import (
-    posix_open_child_directory as _posix_open_child_directory,
 )
 from ._filesystem_primitives import (
     windows_create_file_api as _windows_create_file_api,
 )
 from ._filesystem_primitives import (
     windows_file_information_type as _windows_file_information_type,
-)
-from ._filesystem_primitives import (
-    write_exclusive_fsynced as _write_exclusive_fsynced,
-)
-from ._filesystem_primitives import (
-    write_exclusive_fsynced_fd as _write_exclusive_fsynced_fd,
 )
 from .errors import ProfileCustodyRecordError
 
@@ -1110,19 +1092,11 @@ def _renameat2_exchange(*, parent_fd: int, first_name: str, second_name: str) ->
     )
 
 
-anchor_directory = _anchor_directory
-ensure_real_directory = _ensure_real_directory
-is_reparse_metadata = _is_reparse_metadata
 lexists = _lexists
 posix_child_exists = _posix_child_exists
-posix_directory_fd = _posix_directory_fd
-posix_mkdir_child_directory = _posix_mkdir_child_directory
-posix_open_child_directory = _posix_open_child_directory
 read_regular_file = _read_regular_file
 read_regular_file_fd = _read_regular_file_fd
 windows_regular_file_anchor = _windows_regular_file_anchor
-write_exclusive_fsynced = _write_exclusive_fsynced
-write_exclusive_fsynced_fd = _write_exclusive_fsynced_fd
 
 
 __all__ = [

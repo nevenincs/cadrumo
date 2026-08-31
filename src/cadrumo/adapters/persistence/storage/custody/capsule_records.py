@@ -22,9 +22,9 @@ from .....core.hashing import (
 from .....core.identity import PrefixedContentDigest, ProfileLabel, canonical_profile_bucket_id
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.time import now as _now
+from ._filesystem_primitives import ProfileCustodyPasswordReadOperation
 from .digest_model import CustodyDigestModel
 from .errors import ProfileCustodyRecordError
-from .filesystem import ProfileCustodyPasswordReadOperation
 from .records import ProfileCustodyEnvelope
 from .sentinel_contract import ProfileCustodySentinelRecord
 
