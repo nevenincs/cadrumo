@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#tui-architecture'
 date: '2026-08-30'
-modified: '2026-08-30'
+modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:d6970576a15eda80e14cdcc6c5e16603237de10940172cfe445f3d9fe5128496'
+body_hash: 'sha256:53a09a8d0a114e5cb494bede7652a44a7079536b99dc110d8fa739b3340a81da'
 step_id: 'S352'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -71,6 +71,11 @@ at this HEAD (so `export_layouts` is legitimately empty), and modelo 390
 declares no 2026 revision while the test requests one. Both are registry
 coverage state, the same class as the modelo 303 2021 failures seen earlier.
 The remaining eleven are unattributed.
+
+Re-attested through the owning edit verb after hand-authoring, so the body
+fingerprint matches its stamp.
+
+Re-attested through the owning edit verb; body fingerprint matches its stamp.
 
 ## Notes (continued)
 

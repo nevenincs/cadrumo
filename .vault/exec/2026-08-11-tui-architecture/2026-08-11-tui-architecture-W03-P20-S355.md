@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#tui-architecture'
 date: '2026-08-30'
-modified: '2026-08-30'
+modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:6ca9c62b79a01f154284b6f8557f1024c6bd660c837f8ef45e510673e5084b4f'
+body_hash: 'sha256:955e91a5093bed54f28a364e4508cf051e87096a827adf919fa5969956aa389a'
 step_id: 'S355'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Project the modelo's REAL section structure into the workspace schema facet, which is a separate gap from the section_path naming collision and must not be closed by the rename. Even with the field correctly renamed to a record-family label, the modelo's declared sections remain unavailable to any Workspace consumer, so an operator sees one group called casillas rather than the sections the modelo actually declares. The calc-sheets layout module already reads the real structure from the casilla definition, so the data exists and is reachable -- what is missing is a contributor path carrying it into an admission
 
@@ -60,3 +55,8 @@ incomplete change. The manifest shares no identifier with anything edited, so
 no symbol-level check could have found it; the gate refusing the unclassified
 case is what found it, which is the behaviour this campaign keeps asking gates
 to have. Enrolled, and the re-run is clean.
+
+Re-attested through the owning edit verb after hand-authoring, so the body
+fingerprint matches its stamp.
+
+Re-attested through the owning edit verb; body fingerprint matches its stamp.

@@ -17,8 +17,8 @@ related:
   - '[[2026-08-24-modelo-edit-contract-adr]]'
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-modelo-workspace-interface-research]]'
-modified: '2026-08-30'
-body_hash: 'sha256:1b841e02b8e0570668bedc971945b3deccf8274350a0b5c4d934d315155a0432'
+modified: '2026-08-31'
+body_hash: 'sha256:470f8e7707936297111d89b1519279375fe7112be09386c76e78479ba1cbc684'
 ---
 
 <!-- RETIRED: P09, S26, S35, S109 -->
@@ -193,7 +193,7 @@ Consume the architecture-owned C0, Workspace C2, Edit Contract, and transient-fi
 
 Map the admitted edit contract into TUI-local scalar and row state, review-only submission, stale conflict, and typed post-operation refresh without retaining financial values outside permitted memory.
 
-- [ ] `W06.P12b.S72` - Define the memory-only ModeloEditSession and DraftRowId state machine with separate read and edit baselines, semantic dirty addresses, canonical typed staged values, ordered row intents, validation, and explicit abandon; `src/cadrumo/entrypoints/tui/modelo/edit/session.py`.
+- [ ] `W06.P12b.S72` - Define the memory-only ModeloEditSession and DraftRowId state machine with separate read and edit baselines, semantic dirty addresses, canonical typed staged values, ordered row intents, validation, and explicit abandon; `src/cadrumo/entrypoints/tui/modelo/edit/session.py`. BLOCKED ON A PREREQUISITE RELOCATION, MEASURED 2026-08-31, AND THIS ROW READS AS UNSTARTED WHEN IT IS NOT. The contract these five modules must consume has no public defining module: ModeloEditSubmissionV1, ModeloEditBaselineV1, ModeloScalarEditIntentV1, ModeloEditNewRowCorrelationV1 and 59 further exports live in application/modelo/_edit_models.py, with nine more in _edit_services.py, both underscore-private. Every current importer of either sits INSIDE application/modelo/, which is package-internal and legal; the TUI's existing workspace destinations by contrast reach their types through the PUBLIC application.modelo.workspace_models, and application.modelo itself is an inert namespace binding nothing. So a TUI editor module has NO legal route: the namespace yields nothing and the private module is the cross-package private import the architecture rule forbids at a hard-zero baseline. Found by writing the session module and hitting the wall; it was removed rather than left importing a private path. The unblocking step is a hard-move of both modules to public names with every consumer updated and the old paths deleted atomically -- 72 exported symbols, one indexed commit, owned by whoever holds that atomicity. DO NOT start S72 by importing the private module to get moving; that trades a blocked row for a hard-zero gate violation. ALSO MEASURED, so the build does not redeclare it: this row's DraftRowId already exists as ModeloEditNewRowCorrelationV1.client_correlation_id, the contract's own opaque correlation for a row not yet assigned persistence identity. The session holds that type; it does not mint a parallel identity.; `src/cadrumo/entrypoints/tui/modelo/edit/session.py`.
 - [ ] `W06.P12b.S73` - Render scalar controls only from the admitted permitted surface, delegate every lexeme to ModeloEditParseRequestV1, preserve zero, false, clear, override removal, and unchanged distinctions, and block review on an unresolved locale-tagged lexeme; `src/cadrumo/entrypoints/tui/modelo/edit/fields.py`.
 - [ ] `W06.P12b.S74` - Render stable-key repeated rows with whole-row add, update, delete, and explicitly permitted move behavior, never using widget position as identity or submitting an incomplete draft row; `src/cadrumo/entrypoints/tui/modelo/edit/rows.py`.
 - [ ] `W06.P12b.S75` - Build the mandatory modelo.edit.review transaction gate with every changed semantic address, scalar and row intent, addressable validation, focus return, unsaved-change stay or abandon choice, and no fabricated supervisor approval; `src/cadrumo/entrypoints/tui/modelo/edit/review.py`.

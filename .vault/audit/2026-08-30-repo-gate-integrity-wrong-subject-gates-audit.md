@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#repo-gate-integrity'
 date: '2026-08-30'
-modified: '2026-08-30'
+modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:b5404499caf35b30707cfa8b01fca8bb9b7a924463d9cc7e855eb83c1242d188'
+body_hash: 'sha256:00341726babbeb32d343e843f359204c132e8b5eb3d0baaaa36dbfb65c3dbdfa'
 related: []
 ---
 
@@ -2517,3 +2517,49 @@ raise block. It parsed, it lint-passed, and it would have sat permanently in one
 of the most safety-critical functions in the tree. Caught by reading the diff,
 not by any tool -- the third mechanical edit this session that was syntactically
 clean and wrong.
+
+### Blocked 2026-08-31: the C3 editor cannot be built until the edit contract is public
+
+**Pathway:** plan rows `W06.P12b.S72` through `S79` of the tui-interface plan,
+which specify five TUI modules under `entrypoints/tui/modelo/edit/`.
+
+The directory does not exist, and the reason is not that nobody started: the
+contract those modules must consume has no public defining module.
+`ModeloEditSubmissionV1`, `ModeloEditBaselineV1`, `ModeloScalarEditIntentV1`,
+`ModeloEditNewRowCorrelationV1` and 59 further exports live in
+`application/modelo/_edit_models.py`, with nine more in `_edit_services.py`.
+Both are underscore-private.
+
+Measured: every current importer of either module sits INSIDE
+`application/modelo/`, which is package-internal and legal. The contrast is
+exact -- the TUI's existing workspace destinations reach their types through
+the PUBLIC `application.modelo.workspace_models`, and `application.modelo`
+itself is an inert namespace that binds nothing. So a TUI editor module has no
+legal route: importing `application.modelo` gets nothing, and importing
+`application.modelo._edit_models` is the cross-package private import the
+architecture rule forbids and the import-hygiene family holds at a hard-zero
+baseline.
+
+This was found by writing the session module and discovering it could not
+import what it needs. The module was removed rather than left in the tree
+importing a private path, because a file that cannot legally import its own
+dependencies is not partial progress.
+
+**Remediation.** A prerequisite relocation, not editor work: hard-move
+`_edit_models.py` and `_edit_services.py` to public defining modules, updating
+every production, test and annotation consumer and deleting the old paths
+atomically, exactly as `workspace_models.py` already is. 72 exported symbols
+across the two. It is one relocation per the campaign's own discipline, and it
+belongs to whoever owns that atomicity, since it must land as a single indexed
+commit.
+
+**Why this matters beyond the eight rows.** They read as an unstarted build,
+and they are not: they are blocked on an architectural precondition none of
+them names. Anyone picking up `S72` will write the same module and hit the same
+wall, having spent the effort to discover it. The rows should carry the
+prerequisite so the next reader does not rediscover it.
+
+Re-attested through the owning edit verb after this session's findings were
+appended by hand, so the body fingerprint matches its stamp.
+
+Re-attested through the owning edit verb; body fingerprint matches its stamp.

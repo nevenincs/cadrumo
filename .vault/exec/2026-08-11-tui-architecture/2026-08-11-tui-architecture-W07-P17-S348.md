@@ -5,16 +5,11 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:98ea01e4f1f61e63f7a762fdfd3370e41e9c6050e8128a279474b09ddd5c0663'
+body_hash: 'sha256:7d4194dc96fd936bfb1084d3f79a23c853bbddcf48017a5299feec6a215b4cf9'
 step_id: 'S348'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Regenerate the six GENERATED dev inventories that carry stale source paths, once the tree is quiet enough that regenerating does not bake in half-landed work: roughly 220 of 299 measured stale paths sit in artefacts that declare themselves generated, two of which name their own regeneration command -- a registry facade census, a complexity baseline, a fixture-ownership inventory marked do-not-hand-edit, an authority consumer census, a size-budget baseline and an import-hygiene baseline. They are stale because dozens of private-to-public relocations moved the modules they name. DO NOT hand-edit any of them, and DO NOT regenerate while the tree is churning: a regeneration absorbs whatever is mid-flight at that moment, which is precisely the contaminated-artefact hazard this campaign hit three times -- an evidence snapshot that ingested a gitignored source mirror, a consumer census 44 per cent contaminated by it, and a vacuity screen whose denominator was 86 per cent phantom paths. Regenerate each through its own declared command, then verify the regenerated artefact names only tracked files. THE SCAN THAT FOUND THEM, reproducible and to be re-run after any sweep: resolve every `src/cadrumo/**.py` path string in every tracked inventory under the dev quality, audit and registry-analysis trees against `git ls-files`, never against a filesystem walk -- a walk would absorb untracked and mid-relocation files and report a peer's in-flight work as drift. KNOWN LIMIT of that scan, stated by its author: it reports paths that no longer RESOLVE, not paths that resolve to the WRONG thing, so an entry silently re-pointed at a different module by a rename that split or merged one passes it. That is a second and harder question nobody has answered
 
@@ -71,3 +66,8 @@ THE ROW'S OWN STATED LIMIT STILL STANDS AND IS NOT CLOSED HERE: the scan reports
 paths that no longer RESOLVE, never paths that resolve to the WRONG module. An
 entry silently re-pointed by a rename that split or merged a module passes it
 clean. Nothing in this work answers that second question.
+
+Re-attested through the owning edit verb after hand-authoring, so the body
+fingerprint matches its stamp.
+
+Re-attested through the owning edit verb; body fingerprint matches its stamp.
