@@ -5,7 +5,7 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:f5d2e7a24852b9f287f28d787e47947682d834f4c9b54e994cbfbfdb9d7f5a4c'
+body_hash: 'sha256:2ec990b7789836dd89df4896699d3d2fba5f5231f08d12d927f418a965d6e625'
 step_id: 'S190'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
@@ -60,6 +60,7 @@ related:
 
 ## Notes
 
+- Source split provenance: `1cfa61f8705c57ce91c9f4a8eb882ad96e2a9169`.
 - The canonical surface remains `record_design.py`; it owns the public `extract_record_design*` contract and delegates implementation to cohesive private siblings. There is no facade or re-export compatibility layer.
 - Measured modules are all below the unchanged 1,250-line policy: primary 254; coverage 861; layout markers 36; PDF orchestration 297; PDF repairs 974; PDF rows 592; PDF state 1,043; PDF visual 430; sources 211; workbook 784; workbook headers 378. The largest measured production callable in the changed family is `derive_calculation_completeness_casillas` at 136 lines, below the unchanged 180-line limit. No baseline or threshold file is part of this Step.
 - The global `python -m dev.audit.size_budget` scan reported 64 pre-existing out-of-scope findings; none names a changed `record_design*` production module or callable. This record does not claim that global audit is green.

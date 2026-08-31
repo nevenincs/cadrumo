@@ -5,7 +5,7 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:c0dd13218f2b65f5331199490ee3279919c90ca1b299dc2b56340a33a6969210'
+body_hash: 'sha256:e4047550f6321f3038bcf13e0a52d9c0a034880ed3f08c85c569a51a560dbab4'
 related:
   - "[[2026-08-05-ci-lane-deconflation-P05-S190]]"
 ---
@@ -14,7 +14,7 @@ related:
 
 ## Scope
 
-Self-review of the P05.S190 execution record, its isolated source/test staging manifest, the extracted record-design sibling family, and the stated verification evidence before independent review.
+Self-review of the P05.S190 execution record, source commit `1cfa61f8705c57ce91c9f4a8eb882ad96e2a9169`, its isolated source/test staging manifest, the extracted record-design sibling family, and the stated verification evidence before independent review.
 
 ## Findings
 
