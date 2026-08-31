@@ -44,4 +44,3 @@ The new PowerShell command names the correct eight peer imports and runs success
 ## Recommendations
 
 For `s143-peer-order-proof`, repair only the execution record with a positional comparison, for example joining both filtered arrays with a newline and comparing those joined strings using case-sensitive equality, while retaining the full literal parent and step output and exit status. Re-run and record the exact result before approval.
-
