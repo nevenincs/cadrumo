@@ -40,9 +40,9 @@ from ...domain.contribuyente.inventory.records import (
     MovementKind,
     MovementRecord,
     ValuationMethod,
+    compute_inventory_valuation,
     parse_valuation_method,
 )
-from ...domain.contribuyente.inventory.valuation import compute_inventory_valuation
 from .errors import (
     InventoryActividadConflictError,
     InventoryActividadNotFoundError,

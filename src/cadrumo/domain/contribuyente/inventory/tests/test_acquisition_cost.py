@@ -20,8 +20,9 @@ from ..records import (
     MovementKind,
     MovementRecord,
     ValuationMethod,
+    compute_inventory_valuation,
+    inventory_acquisition_fingerprint,
 )
-from ..valuation import compute_inventory_valuation, inventory_acquisition_fingerprint
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

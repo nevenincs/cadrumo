@@ -34,9 +34,9 @@ from ..records import (
     PriorAuthoritativeClosingLink,
     PriorClosingContinuityEvidence,
     ValuationMethod,
+    compute_inventory_anexo_d_projection,
     fingerprint_prior_authoritative_closing,
 )
-from ..valuation import compute_inventory_anexo_d_projection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
