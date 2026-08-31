@@ -86,13 +86,14 @@ from ...domain.calculations.registry.ids import (
 )
 from ...domain.calculations.registry.iva_wallet_relation_targets import is_iva_wallet_owned_relation_target
 from ...domain.calculations.registry.observation_fold import resolve_observed_requirement_value
+from ...domain.calculations.registry.queries import relations_by_target_binding
 from ...domain.calculations.registry.relations import (
     RegistryFoldRequirement,
     materialize_relation_binding_values,
     relation_requirement_index,
     relation_source_requirements,
 )
-from ...domain.calculations.registry.schema import RegistrySnapshot
+from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from ...domain.calculations.registry.schema_surfaces import RelationDefinition
 from ..aggregation import (
     CalculationSourceContext,
@@ -104,9 +105,6 @@ from ..aggregation.source_resolution_operations import storage_degradation_resol
 from ..storage.calc_sheets import (
     RelationValue,
     RelationValues,
-)
-from ._relation_prefill_m202 import (
-    modelo_202_first_period_previous_payment_defaults as _modelo_202_first_period_previous_payment_defaults,
 )
 from ._revision_carry_gate import revision_carry_outcome
 from .m111_no_retenciones import (
@@ -1231,7 +1229,63 @@ class RelationPrefillSourceResolver:
         )
 
 
+def relation_prefill_period_zero_default_binding_ids(
+    revision: ModeloRevision,
+    *,
+    modelo: str,
+    period: str,
+) -> frozenset[BindingId]:
+    """Return the relation-prefill binding ids calculate resolves to zero for ``period``.
+
+    ``revision`` is the :class:`ModeloRevision` whose bindings are inspected.
+
+    A Modelo 202 same-model previous-payment carry (``previous_period`` relation
+    sourcing the same modelo) has no upstream filing before its first target
+    period, so the resolver materialises its ``target_binding`` slot as zero
+    rather than leaving it absent. This is the single authority for "which
+    relation-prefill bindings are pre-satisfied with a zero default in this
+    period"; both the calculate resolver
+    (:func:`_modelo_202_first_period_previous_payment_defaults`) and the
+    readiness missing-bindings projection consume it, so readiness and calculate
+    agree on the missing set by construction
+    (``aeat-calculation-aggregation``).
+    """
+    if modelo != Modelo.M202.value:
+        return frozenset[BindingId]()
+    relations_by_target = relations_by_target_binding(revision)
+    zero_defaulted: set[BindingId] = set()
+    for binding in revision.bindings:
+        if binding.source is not BindingSourceKind.RELATION_PREFILL:
+            continue
+        relations = relations_by_target.get(binding.id, ())
+        if not relations:
+            continue
+        if any(not relation.target_periods or period in relation.target_periods for relation in relations):
+            continue
+        if all(relation.kind == "previous_period" and str(relation.source_modelo) == modelo for relation in relations):
+            zero_defaulted.add(binding.id)
+    return frozenset(zero_defaulted)
+
+
+def _modelo_202_first_period_previous_payment_defaults(
+    revision: ModeloRevision,
+    *,
+    modelo: str,
+    period: str,
+) -> dict[BindingId, Decimal]:
+    """Resolve M202 same-model previous-payment carries to zero before their first target period."""
+    return {
+        binding_id: Decimal("0")
+        for binding_id in relation_prefill_period_zero_default_binding_ids(
+            revision,
+            modelo=modelo,
+            period=period,
+        )
+    }
+
+
 __all__ = [
     "RelationPrefillSourceResolver",
+    "relation_prefill_period_zero_default_binding_ids",
     "resolve_relations_from_local_store",
 ]

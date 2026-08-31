@@ -5,14 +5,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from ...core.filing_producer_key import FilingProducerKey
-from ...core.period import Period
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.prorrata_register import ProrrataEspecialTransitionKind
+from ...core.period import Period
 from ...domain.deadlines.models import M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile
 from ...domain.filing.errors import FilingExportValidationError
 from ...domain.iva.refund_eligibility import is_last_filing_period_of_year
 from ...domain.modelos.calculation_revision_amendment import M303RectificativaMotive
-from ._producer_ownership import filing_producer_ownership as _filing_producer_ownership
 from ._producer_snapshot import (
     AmendmentEvidence,
     ChargeAccountSelection,
@@ -21,6 +20,7 @@ from ._producer_snapshot import (
     M303FilingFacts,
     M303InsolvencyFilingSubtype,
     Modelo111ProfileFacts,
+    Modelo200ProfileFacts,
     Modelo202ProducerProfile,
     Modelo210ProfileFacts,
     Modelo222ProfileFacts,
@@ -28,7 +28,6 @@ from ._producer_snapshot import (
     Modelo353ProfileFacts,
     RefundAccountSelection,
 )
-from ._producer_snapshot_m200 import Modelo200ProfileFacts
 
 
 @dataclass(frozen=True)
@@ -72,24 +71,31 @@ class M303ForalLexicals:
     prorrata_special_revocation: str | None
 
 
-_M296_DECLARANTE_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
-    FilingProducerKey.M296_DEC_EJERCICIO: "ejercicio",
-    FilingProducerKey.M296_DEC_NIF_DEL_DECLARANTE: "nif_del_declarante",
-    FilingProducerKey.M296_DEC_APELLIDOS_Y_NOMBRE_O_RAZON_SOCIAL_DEL: "apellidos_y_nombre_o_razon_social_del",
-    FilingProducerKey.M296_DEC_TIPO_DE_SOPORTE: "tipo_de_soporte",
-    FilingProducerKey.M296_DEC_TELEFONO: "telefono",
-    FilingProducerKey.M296_DEC_APELLIDOS_Y_NOMBRE: "apellidos_y_nombre",
-    FilingProducerKey.M296_DEC_NUMERO_IDENTIFICATIVO_DE_LA_DECLARACIO: "numero_identificativo_de_la_declaracio",
-    FilingProducerKey.M296_DEC_DECLARACION_COMPLEMENTARIA_O_SUSTITUTI: "declaracion_complementaria_o_sustituti",
-    FilingProducerKey.M296_DEC_NUMERO_IDENTIFICATIVO_DE_LA_DECLARACIO_2: "numero_identificativo_de_la_declaracio_2",
-    FilingProducerKey.M296_DEC_NUMERO_TOTAL_DE_PERCEPTORES: "numero_total_de_perceptores",
-    FilingProducerKey.M296_DEC_N: "n",
-    FilingProducerKey.M296_DEC_SELLO_ELECTRONICO: "sello_electronico",
+_MODELO_PRODUCER_NAMESPACE_OWNERS = {
+    "amendment_evidence": "modelo_specific_amendment",
+    "contact_person": "modelo_specific_contact",
+    "entidad_desarrolladora": "product_software_identity",
+    "irnr": "modelo_210",
+    "m111": "modelo_111",
+    "m200": "modelo_200",
+    "m202": "modelo_202",
+    "m222": "modelo_222",
+    "m296": "modelo_296",
+    "m303": "modelo_303",
+    "m353": "modelo_353",
+    "m360": "modelo_360",
+    "m840": "modelo_840",
+    "presenter": "modelo_specific_presenter",
+    "filing": "modelo_specific_filing",
+    "prior_domiciliation": "modelo_specific_domiciliation",
+    "selected_account": "modelo_specific_account",
+    "taxpayer": "modelo_specific_taxpayer",
 }
 
 
-_SHARED_SNAPSHOT_PRODUCER_KEYS = frozenset(
-    {
+def filing_producer_ownership() -> dict[FilingProducerKey, str]:
+    """Return the exhaustive owner dispatch for the closed producer vocabulary."""
+    shared = {
         FilingProducerKey.PRESENTER_TAX_ID,
         FilingProducerKey.FILING_RESULT_DISPOSITION,
         FilingProducerKey.TAXPAYER_TAX_ID,
@@ -416,7 +422,16 @@ _SHARED_SNAPSHOT_PRODUCER_KEYS = frozenset(
         # exhaustiveness assertion below would then fire on a key one of them forgot.
         *_M296_DECLARANTE_FIELD_BY_KEY,
     }
-)
+    owners = {key: "shared_snapshot" for key in shared}
+    for key in FilingProducerKey:
+        if key in owners:
+            continue
+        namespace = key.value.partition(".")[0]
+        owner = _MODELO_PRODUCER_NAMESPACE_OWNERS.get(namespace)
+        if owner is None:
+            raise FilingExportValidationError(f"filing producer key {key.value!r} has no declared owner")
+        owners[key] = owner
+    return owners
 
 
 _M222_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
@@ -461,6 +476,22 @@ def m222_producer_values(model_profile: FilingModelProfileFacts) -> dict[FilingP
     return {
         key: (getattr(profile, field) if profile is not None else None) for key, field in _M222_FIELD_BY_KEY.items()
     }
+
+
+_M296_DECLARANTE_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
+    FilingProducerKey.M296_DEC_EJERCICIO: "ejercicio",
+    FilingProducerKey.M296_DEC_NIF_DEL_DECLARANTE: "nif_del_declarante",
+    FilingProducerKey.M296_DEC_APELLIDOS_Y_NOMBRE_O_RAZON_SOCIAL_DEL: "apellidos_y_nombre_o_razon_social_del",
+    FilingProducerKey.M296_DEC_TIPO_DE_SOPORTE: "tipo_de_soporte",
+    FilingProducerKey.M296_DEC_TELEFONO: "telefono",
+    FilingProducerKey.M296_DEC_APELLIDOS_Y_NOMBRE: "apellidos_y_nombre",
+    FilingProducerKey.M296_DEC_NUMERO_IDENTIFICATIVO_DE_LA_DECLARACIO: "numero_identificativo_de_la_declaracio",
+    FilingProducerKey.M296_DEC_DECLARACION_COMPLEMENTARIA_O_SUSTITUTI: "declaracion_complementaria_o_sustituti",
+    FilingProducerKey.M296_DEC_NUMERO_IDENTIFICATIVO_DE_LA_DECLARACIO_2: "numero_identificativo_de_la_declaracio_2",
+    FilingProducerKey.M296_DEC_NUMERO_TOTAL_DE_PERCEPTORES: "numero_total_de_perceptores",
+    FilingProducerKey.M296_DEC_N: "n",
+    FilingProducerKey.M296_DEC_SELLO_ELECTRONICO: "sello_electronico",
+}
 
 
 def m296_producer_values(model_profile: FilingModelProfileFacts) -> dict[FilingProducerKey, object]:
@@ -1007,13 +1038,7 @@ def filing_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProdu
     values.update(m200_producer_values(snapshot.model_profile))
     values.update(m296_producer_values(snapshot.model_profile))
     values.update(m353_producer_values(snapshot.model_profile))
-    shared_owned = {
-        key
-        for key, owner in _filing_producer_ownership(
-            shared_snapshot_keys=_SHARED_SNAPSHOT_PRODUCER_KEYS,
-        ).items()
-        if owner == "shared_snapshot"
-    }
+    shared_owned = {key for key, owner in filing_producer_ownership().items() if owner == "shared_snapshot"}
     if set(values) != shared_owned:
         raise FilingExportValidationError("shared filing producer resolver is not exhaustive over its owned keys")
     return values
@@ -1136,6 +1161,7 @@ __all__ = [
     "M303ForalLexicals",
     "M303ProfileLexicals",
     "SelectedAccountLexicals",
+    "filing_producer_ownership",
     "filing_producer_values",
     "m303_filing_lexicals",
     "m303_foral_lexicals",
