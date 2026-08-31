@@ -30,10 +30,10 @@ from cadrumo.core.period import Period
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.product_identity import AeatProductSoftwareIdentity
 from cadrumo.core.time.clock import now
-from cadrumo.domain.calculations.registry.authority import (
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.diagnostic_classification import (
     RegistryDiagnosticFilingRevision,
     UnvalidatedRegistryClassification,
-    ValidatedRegistryAuthority,
     derive_filing_revision_classifications,
 )
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
