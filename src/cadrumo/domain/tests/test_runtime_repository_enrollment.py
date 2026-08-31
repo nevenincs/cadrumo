@@ -10,7 +10,7 @@ import pytest
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...adapters.persistence.storage.bucket._layout import bucket_paths
+from ...adapters.persistence.storage.bucket.directory_layout import bucket_paths
 from ...tests.secure_sql import isolated_runtime_profile
 from ..invoices.enums import IvaRate, PaymentStatus
 from ..invoices.models import Invoice, InvoiceCatalogue, InvoiceLine

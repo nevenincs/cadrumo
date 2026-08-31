@@ -10,7 +10,7 @@ from pydantic import ValidationError
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
-from .._records import (
+from ..records import (
     SheetCellAddress,
     SheetEvidenceContributorRow,
     SheetEvidenceFacet,

@@ -44,7 +44,7 @@ from cadrumo.domain.calculations.registry.export_value_policy import ExportValue
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.deadlines.models import RefundAccount
 from cadrumo.domain.filing.schema import ModeloDraft, ModeloValue, ModeloValueKind
-from cadrumo.domain.submission._protocols import ModeloDraftStatus
+from cadrumo.domain.submission.models import ModeloDraftStatus
 
 from ...filing_export_proof import (
     FilingExportLiveProofEntry,

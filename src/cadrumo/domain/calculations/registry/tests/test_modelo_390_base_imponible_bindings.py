@@ -37,10 +37,7 @@ from ....iva.flow import IvaFlowDirection
 from ....iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from ..authority import bundled_authority
 from ..binding_selector_utils import selector_as_dict
-from ..ledger_iva_bindings import (
-    IvaLedgerObservation,
-    resolve_ledger_iva_aggregation_binding_values,
-)
+from ..ledger_bindings import IvaLedgerObservation, resolve_ledger_iva_aggregation_binding_values
 from ..schema import ModeloRevision
 from ..schema_input_kind import InputKind
 from ._ledger_iva_aggregation_support import _deduction_provenance

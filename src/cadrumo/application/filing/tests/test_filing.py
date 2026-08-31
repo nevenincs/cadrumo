@@ -20,7 +20,7 @@ from ....domain.filing.protocols import CasillaSchemaProvider
 from ....domain.filing.schema import ModeloDraft, ModeloValidationFinding, ModeloValueKind, compute_modelo_draft_id
 from ....domain.filing.validator import ModeloValidator
 from ....domain.invoices.models import InvoiceCatalogue
-from ....domain.submission._protocols import ModeloDraftStatus
+from ....domain.submission.models import ModeloDraftStatus
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

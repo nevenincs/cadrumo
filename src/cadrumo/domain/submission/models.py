@@ -29,6 +29,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
+from ...core.errors.severity import BaseSeverity
 from ...core.hashing import sha256_hex
 from ...core.identity import AeatCsv, SubjectTaxId
 from ...core.modelo import Modelo
@@ -90,6 +91,61 @@ class SubmissionStatus(StrEnum):
     ACEPTADA = "ACEPTADA"
     RECHAZADA = "RECHAZADA"
     FALLIDA = "FALLIDA"
+
+
+class ModeloDraftStatus(StrEnum):
+    """Lifecycle status of a modelo draft, spanning preparation and submission.
+
+    The state machine carries a draft from creation through validation,
+    operator approval, submission, and the AEAT-side terminal states.
+    The preflight engine consumes only :attr:`APROBADO` and
+    :attr:`APROBACION_CADUCADA` on its happy path; the broader filing /
+    submission stack consumes the full lifecycle. Member names and
+    values mirror the AEAT Sede labels.
+
+    Attributes:
+        BORRADOR: New draft, not yet validated.
+        VALIDADO: Validation rules executed without errors.
+        LISTO_PARA_PRESENTAR: Draft fully prepared for an attempt.
+        APROBADO: Operator-approved for submission.
+        APROBACION_CADUCADA: Approval timestamp aged out.
+        PRESENTADA: A submission attempt is recorded.
+        ACEPTADA: AEAT acknowledged the filing.
+        RECHAZADA: AEAT rejected the filing.
+        ENMENDADO: Superseded by an amendment record.
+        ANULADO: Operator cancelled before submission.
+    """
+
+    BORRADOR = "BORRADOR"
+    VALIDADO = "VALIDADO"
+    LISTO_PARA_PRESENTAR = "LISTO_PARA_PRESENTAR"
+    APROBADO = "APROBADO"
+    APROBACION_CADUCADA = "APROBACION_CADUCADA"
+    PRESENTADA = "PRESENTADA"
+    ACEPTADA = "ACEPTADA"
+    RECHAZADA = "RECHAZADA"
+    ENMENDADO = "ENMENDADO"
+    ANULADO = "ANULADO"
+
+
+class ModeloFinding(BaseModel):
+    """Minimal finding record consumed by the preflight gate.
+
+    Distinct from :class:`domain.filing.ModeloValidationFinding`,
+    which carries the validator's full provenance graph; the submission
+    engine reads only ``severity`` to decide whether the draft is
+    blocked. Structurally conforms to
+    :class:`cadrumo.domain.submission.protocols.ModeloFindingLike`.
+
+    Attributes:
+        severity: The finding severity; ``ERROR`` blocks submission.
+        message: Multilingual finding message.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    severity: BaseSeverity
+    message: str
 
 
 class SubmissionAttempt(BaseModel):

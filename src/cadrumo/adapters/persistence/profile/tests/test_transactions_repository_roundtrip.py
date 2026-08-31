@@ -42,7 +42,7 @@ from .....domain.transactions.errors import StoredTransactionDriftError
 from .....domain.transactions.models import Transaction, TransactionCatalogue, derive_transaction_id
 from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .....tests.secure_sql import isolated_runtime_profile
-from ...storage.bucket._layout import bucket_paths
+from ...storage.bucket.directory_layout import bucket_paths
 from ...storage.errors import ClassificationError, EnvelopeVersionError, SecureObjectRowIdentityError
 from ...storage.sql import SecureObjectRawRow, SecureObjectRepository
 from ..transactions import (

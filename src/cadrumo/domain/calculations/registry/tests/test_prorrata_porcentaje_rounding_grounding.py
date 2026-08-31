@@ -50,7 +50,7 @@ from ..authority import bundled_authority
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..formula_runtime import calculate_registry_snapshot
 from ..formula_runtime_ops import apply_rounding
-from ..ledger_iva_bindings import resolve_ledger_iva_aggregation_binding_values
+from ..ledger_bindings import resolve_ledger_iva_aggregation_binding_values
 from ..schema_rounding import RegistryRoundingCode
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

@@ -113,7 +113,7 @@ def _required_wait_seconds(consecutive_failures: int) -> int:
 
 def login_throttle_path(*, storage_root: Path, bucket_id: str) -> Path:
     """Return the throttle sidecar path inside the bucket keystore directory."""
-    from ..bucket._keystore_paths import keystore_sidecar_path
+    from ..bucket.keystore_paths import keystore_sidecar_path
 
     return keystore_sidecar_path(storage_root=storage_root, bucket_id=bucket_id, filename=LOGIN_THROTTLE_FILENAME)
 

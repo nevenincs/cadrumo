@@ -30,14 +30,12 @@ from .....core.directory_scan import scan_directory
 from .....tests import REPO_ROOT
 from .._cross_revision_divergence import CrossRevisionCasillaDivergence
 from ..formula_runtime_ops import resolve_keyed_bracket, resolve_parameter
-from ..ledger_iva_bindings import (
+from ..ledger_bindings import (
     IvaLedgerObservation,
-    resolve_ledger_iva_aggregation_binding_values,
-    validate_ledger_iva_aggregation_binding_definition,
-)
-from ..ledger_oss_bindings import (
     OssIossLedgerObservation,
+    resolve_ledger_iva_aggregation_binding_values,
     resolve_ledger_oss_aggregation_binding_values,
+    validate_ledger_iva_aggregation_binding_definition,
     validate_ledger_oss_aggregation_binding_definition,
 )
 from ..runtime_graph import (
@@ -81,10 +79,7 @@ def test_registry_ledger_binding_substrate_lives_in_its_defining_module() -> Non
     )
 
     assert tuple(contract.__name__ for contract in contracts) == _LEDGER_BINDING_PUBLIC_NAMES
-    assert {contract.__module__ for contract in contracts} == {
-        "cadrumo.domain.calculations.registry.ledger_iva_bindings",
-        "cadrumo.domain.calculations.registry.ledger_oss_bindings",
-    }
+    assert {contract.__module__ for contract in contracts} == {"cadrumo.domain.calculations.registry.ledger_bindings"}
 
 
 def test_registry_casilla_continuity_reports_live_in_their_defining_modules() -> None:

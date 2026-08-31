@@ -45,7 +45,7 @@ from typing import Any, Final
 
 from pydantic import BaseModel, Field, NonNegativeInt
 
-from ....application.storage.calc_sheets._records import SheetCellAddress, SheetExportPlan, SheetValueCell, TabName
+from ....application.storage.calc_sheets.records import SheetCellAddress, SheetExportPlan, SheetValueCell, TabName
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ..storage.errors import OutboundStorageError, OutboundStorageNetworkError, OutboundStorageValidationError

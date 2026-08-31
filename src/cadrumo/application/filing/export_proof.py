@@ -25,7 +25,7 @@ from ...domain.calculations.registry.ids import (
     RevisionId,
 )
 from ...domain.filing.schema import ModeloDraft
-from ...domain.submission._protocols import ModeloDraftStatus
+from ...domain.submission.models import ModeloDraftStatus
 from ._export import export_draft
 from .export_verification import (
     DeclaracionExportResult,

@@ -14,7 +14,7 @@ from typing import Final
 import pytest
 from pydantic import ValidationError
 
-from ...adapters.persistence.storage.bucket._layout import bucket_paths
+from ...adapters.persistence.storage.bucket.directory_layout import bucket_paths
 from ...core.bucket_pointer import BucketPointer
 from ...core.directory_scan import scan_directory
 from ...core.storage_taxonomy import StorageCategory

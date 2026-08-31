@@ -40,7 +40,7 @@ from ....core.period import Period
 from ....core.storage_taxonomy import StorageCategory
 from ....core.storage_taxonomy_locations import storage_path
 from ....domain.deadlines.models import ObligationStatus
-from ....domain.submission._protocols import ModeloDraftStatus
+from ....domain.submission.models import ModeloDraftStatus
 from ....tests.secure_sql import isolated_runtime_profile
 from ...operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
 from ..errors import WorkflowError

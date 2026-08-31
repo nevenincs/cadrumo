@@ -21,7 +21,7 @@ from ....core.time.clock import frozen_clock
 from ....domain.buckets.event import BucketEventType
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.filing.schema import ModeloDraft, compute_modelo_draft_id, registry_schema_version
-from ....domain.submission._protocols import ModeloDraftStatus
+from ....domain.submission.models import ModeloDraftStatus
 from ....tests.profile_storage_root_fixture import bucket_session_storage_fixture
 from ....tests.user_profile import register_minimal_profile
 from ..._state_projection_auth import ProjectionAuthReadiness

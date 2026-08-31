@@ -55,7 +55,9 @@ def test_m100_gate_runs_without_this_namespace_ever_being_imported() -> None:
         import sys
 
         from cadrumo.domain.calculations.registry.authority import bundled_authority
-        from cadrumo.domain.calculations.registry.ledger_renta_gastos_estimacion_directa_bindings import renta_first_slice_binding_target_casillas
+        from cadrumo.domain.calculations.registry.ledger_bindings import (
+            renta_first_slice_binding_target_casillas,
+        )
         from cadrumo.domain.calculations.registry.validate_cross_domain_snapshot import (
             _CROSS_DOMAIN_SNAPSHOT_CHECKS,
         )

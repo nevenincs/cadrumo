@@ -15,7 +15,7 @@ from ....core.config import override_settings
 from ....core.hashing import content_hash_hex
 from ....core.period import Period
 from ....domain.filing.schema import ModeloDraft
-from ....domain.submission._protocols import ModeloDraftStatus
+from ....domain.submission.models import ModeloDraftStatus
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

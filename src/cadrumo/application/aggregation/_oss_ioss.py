@@ -38,7 +38,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money.rounding import CENT, round_to_cents
 from ...core.period import Period
 from ...domain.calculations.registry.ids import BindingId
-from ...domain.calculations.registry.ledger_oss_bindings import (
+from ...domain.calculations.registry.ledger_bindings import (
     OssIossLedgerObservation,
     resolve_ledger_oss_aggregation_binding_values,
     unsupported_ledger_oss_observations,

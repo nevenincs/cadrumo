@@ -23,7 +23,7 @@ from pathlib import Path
 from uuid import UUID, uuid4
 
 from .....core.config import Settings
-from ..bucket._layout import bucket_paths
+from ..bucket.directory_layout import bucket_paths
 from ..custody.capsule import publish_profile_custody_capsule
 from ..custody.records import ProfileCustodyEnvelope, ProfileCustodyKdfParameters, ProfileCustodyWrappedDek
 from ..custody.sentinel import create_profile_custody_sentinel

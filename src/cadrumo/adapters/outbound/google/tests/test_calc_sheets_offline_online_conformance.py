@@ -16,7 +16,7 @@ from io import BytesIO
 import pytest
 from openpyxl import load_workbook
 
-from .....application.storage.calc_sheets._records import (
+from .....application.storage.calc_sheets.records import (
     SheetCellAddress,
     SheetEvidenceContributorRow,
     SheetEvidenceFacet,
@@ -28,7 +28,7 @@ from .....application.storage.calc_sheets._records import (
     SheetValueCell,
     TabName,
 )
-from .....application.storage.calc_sheets._workbook_export import guide_stamps, serialize_offline_workbook
+from .....application.storage.calc_sheets.workbook_export import guide_stamps, serialize_offline_workbook
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
 from .._calc_sheets_apply_formatting import (
@@ -127,7 +127,7 @@ def test_apply_adapter_emits_number_format_and_emphasis_requests() -> None:
     # contract: the online apply renders number formats + start/final + section
     # headers, not just values. A plan with a money number format yields a
     # NUMBER repeatCell; section headers / anchors yield bold repeatCells.
-    from .....application.storage.calc_sheets._records import SheetAnchor, SheetSectionHeader
+    from .....application.storage.calc_sheets.records import SheetAnchor, SheetSectionHeader
 
     plan = _plan().model_copy(
         update={

@@ -39,7 +39,7 @@ from cadrumo.domain.filing.schema import (
     compute_modelo_draft_id,
     registry_schema_version,
 )
-from cadrumo.domain.submission._protocols import ModeloDraftStatus
+from cadrumo.domain.submission.models import ModeloDraftStatus
 from cadrumo.entrypoints.cli._common import resolve_notice_action
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices
 from cadrumo.tests.cli_runner import invoke_cached_cli

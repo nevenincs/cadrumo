@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
-from ....adapters.persistence.storage.bucket._layout import bucket_paths
+from ....adapters.persistence.storage.bucket.directory_layout import bucket_paths
 from ....adapters.persistence.storage.envelope.contract import Envelope
 from ....adapters.persistence.storage.errors import ClassificationError
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -29,7 +29,7 @@ from ....domain.filing.schema import (
     compute_modelo_draft_id,
     registry_schema_version,
 )
-from ....domain.submission._protocols import ModeloDraftStatus
+from ....domain.submission.models import ModeloDraftStatus
 from ....tests.secure_sql import TestRuntimeProfile
 from ..conftest import _BUCKET_ID
 

@@ -9,7 +9,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from .._export_header import ARCHIVE_SCHEMA_VERSION, ExportArchiveHeader
+from ..export_archive_header import ARCHIVE_SCHEMA_VERSION, ExportArchiveHeader
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

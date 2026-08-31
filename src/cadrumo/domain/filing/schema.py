@@ -36,7 +36,7 @@ from ...core.time.utc import UtcInstant
 from ..calculations._row_source_identity import RowSourceIdentity
 from ..calculations.registry.ids import BindingId, FormulaId, LegalRefId, RevisionId, SourceRefId
 from ..calculations.registry.schema_references import RegistrySnapshotRef
-from ..submission._protocols import ModeloDraftStatus
+from ..submission.models import ModeloDraftStatus
 from .errors import FilingValidationError
 
 APPROVAL_BASIS_VERSION = "review-basis-v4"

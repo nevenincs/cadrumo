@@ -14,7 +14,7 @@ from ....core.i18n import Translatable as tr
 from ....core.operator_action_enums import ActionConditionality, NoRecoveryOutcome
 from ....core.period import Period
 from ....domain.filing.schema import ModeloDraft, ModeloValidationFinding
-from ....domain.submission._protocols import ModeloDraftStatus
+from ....domain.submission.models import ModeloDraftStatus
 from ....tests.filing import build_registry_filing_draft
 from .._calculate import summarise_calculation
 from ..errors import FilingPreconditionCondition

@@ -9,7 +9,7 @@ leaking raw storage details.
 See Also:
     :mod:`~adapters.persistence.storage.bucket.errors`
         Error hierarchy and payload constructors under test.
-    :mod:`~adapters.persistence.storage.bucket._lockfile`
+    :mod:`~adapters.persistence.storage.bucket.lockfile`
         PID-stamped lock primitive that raises busy / locked bucket failures.
 
 Adverse storage failures must fail closed with redacted diagnostics rather

@@ -336,7 +336,7 @@ def _delete_acceleration_secret(
 
 def profile_session_path(*, storage_root: Path, profile_id: UUID) -> Path:
     """Return the locator consumed exclusively by custody local-record operations."""
-    from ..bucket._keystore_paths import keystore_sidecar_path
+    from ..bucket.keystore_paths import keystore_sidecar_path
 
     return keystore_sidecar_path(
         storage_root=storage_root,

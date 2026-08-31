@@ -17,7 +17,7 @@ from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...core.time.clock import now as utc_now
-from ...domain.submission._protocols import ModeloDraftStatus
+from ...domain.submission.models import ModeloDraftStatus
 from ..auth.models import AuthState
 from ._identity import period_identity_segment
 from .active_profile import (

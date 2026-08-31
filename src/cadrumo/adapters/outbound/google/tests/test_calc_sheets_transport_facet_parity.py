@@ -26,10 +26,10 @@ from io import BytesIO
 import pytest
 from openpyxl import load_workbook
 
-from .....application.storage.calc_sheets._engine import build_export_plan
-from .....application.storage.calc_sheets._records import SheetExportPlan
-from .....application.storage.calc_sheets._theme import STYLED_RANGE_VERTICAL_ALIGN
-from .....application.storage.calc_sheets._workbook_export import serialize_offline_workbook
+from .....application.storage.calc_sheets.engine import build_export_plan
+from .....application.storage.calc_sheets.records import SheetExportPlan
+from .....application.storage.calc_sheets.theme import STYLED_RANGE_VERTICAL_ALIGN
+from .....application.storage.calc_sheets.workbook_export import serialize_offline_workbook
 from .....domain.calculations.registry.authority import bundled_authority
 from .._calc_sheets_apply_formatting import (
     _build_protected_range_requests,

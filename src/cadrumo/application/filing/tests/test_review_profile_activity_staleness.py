@@ -40,7 +40,7 @@ from ....core.config import load_settings
 from ....core.period import Period
 from ....domain.filing.protocols import CasillaSchemaProvider
 from ....domain.filing.schema import ModeloDraft
-from ....domain.submission._protocols import ModeloDraftStatus
+from ....domain.submission.models import ModeloDraftStatus
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.profile_capsule import open_test_profile_session, set_active_test_profile_facts
 from ....tests.secure_sql import isolated_profile_storage_root

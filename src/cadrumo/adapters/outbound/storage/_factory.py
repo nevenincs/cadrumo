@@ -256,7 +256,7 @@ def get_storage_provider(
     profile = _resolve_profile()
 
     if kind is ProviderKind.LOCAL_FILESYSTEM:
-        from ...persistence.storage.bucket._layout import bucket_paths
+        from ...persistence.storage.bucket.directory_layout import bucket_paths
         from ._local import LocalFileSystemProvider
 
         root = bucket_paths(settings_resolved.cadrumo_local_storage_root, profile).blobs_dir

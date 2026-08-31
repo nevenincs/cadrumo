@@ -30,14 +30,9 @@ from datetime import date
 from ...core.config import Settings
 from ...core.logging import get_logger
 from ._preflight import Preflight
-from ._protocols import (
-    AuthProviderProbe,
-    DeadlineWindowChecker,
-    ModeloDraftLike,
-    SubmissionRepositoryProtocol,
-)
 from .errors import SubmissionError
 from .models import ModeloPresentado, SubmissionStatus
+from .protocols import AuthProviderProbe, DeadlineWindowChecker, ModeloDraftLike, SubmissionRepositoryProtocol
 
 _logger = get_logger(__name__)
 

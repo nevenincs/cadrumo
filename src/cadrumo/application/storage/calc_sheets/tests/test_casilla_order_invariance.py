@@ -37,7 +37,7 @@ import pytest
 from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.schema import RegistrySnapshot
 from ....filing.runtime import collection_from_snapshot
-from .._engine import build_export_plan, registry_sha
+from ..engine import build_export_plan, registry_sha
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

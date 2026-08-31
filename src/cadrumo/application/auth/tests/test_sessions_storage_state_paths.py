@@ -30,7 +30,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.outbound.aeat.auth import session_store
-from ....adapters.persistence.storage.bucket._layout import bucket_paths
+from ....adapters.persistence.storage.bucket.directory_layout import bucket_paths
 from ....core.auth_provider import AuthProviderKind
 from ....core.config import override_settings
 from ....core.directory_scan import DirectoryEntryKind, scan_directory

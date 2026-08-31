@@ -2,7 +2,7 @@
 
 No dedicated test file existed for :class:`Preflight` before this one.
 Exercises the four-gate validator with hand-rolled Protocol-conforming
-classes, per this package's own documented testing philosophy (``_protocols.py``:
+classes, per this package's own documented testing philosophy (``protocols.py``:
 "no mocks, no patches"). Gates 3 and 4 are skipped in every test here since
 gate-2 -- the subject of this file -- runs before either.
 """
@@ -17,8 +17,9 @@ from ....core.auth_provider import AuthProviderDescription
 from ....core.errors.severity import BaseSeverity
 from ....core.period import Period
 from .._preflight import Preflight
-from .._protocols import ModeloDraftStatus, ModeloFinding, ModeloFindingLike
 from ..errors import SubmissionPreflightError
+from ..models import ModeloDraftStatus, ModeloFinding
+from ..protocols import ModeloFindingLike
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

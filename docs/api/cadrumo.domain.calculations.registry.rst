@@ -97,6 +97,7 @@ Submodules
    cadrumo.domain.calculations.registry.authority
    cadrumo.domain.calculations.registry.binding_aggregation
    cadrumo.domain.calculations.registry.binding_selector_utils
+   cadrumo.domain.calculations.registry.binding_targets
    cadrumo.domain.calculations.registry.bindings
    cadrumo.domain.calculations.registry.bindings_previous_filing
    cadrumo.domain.calculations.registry.casilla_membership
@@ -110,6 +111,7 @@ Submodules
    cadrumo.domain.calculations.registry.deadline_coordinate
    cadrumo.domain.calculations.registry.design_constant_bindings
    cadrumo.domain.calculations.registry.detail_record_bindings
+   cadrumo.domain.calculations.registry.diagnostic_classification
    cadrumo.domain.calculations.registry.donativo_bindings
    cadrumo.domain.calculations.registry.errors
    cadrumo.domain.calculations.registry.export
@@ -121,6 +123,7 @@ Submodules
    cadrumo.domain.calculations.registry.fixed_width_codec
    cadrumo.domain.calculations.registry.formula_initial_values
    cadrumo.domain.calculations.registry.formula_runtime
+   cadrumo.domain.calculations.registry.formula_runtime_m100
    cadrumo.domain.calculations.registry.formula_runtime_ops
    cadrumo.domain.calculations.registry.formula_text_inputs
    cadrumo.domain.calculations.registry.gasto193_bindings
@@ -132,8 +135,13 @@ Submodules
    cadrumo.domain.calculations.registry.invoice_bindings
    cadrumo.domain.calculations.registry.irnr_ledger_bindings
    cadrumo.domain.calculations.registry.iva_wallet_relation_targets
-   cadrumo.domain.calculations.registry.ledger_bindings
+   cadrumo.domain.calculations.registry.ledger_binding_selector_support
    cadrumo.domain.calculations.registry.ledger_impatriado_bindings
+   cadrumo.domain.calculations.registry.ledger_iva_bindings
+   cadrumo.domain.calculations.registry.ledger_oss_bindings
+   cadrumo.domain.calculations.registry.ledger_renta_gastos_estimacion_directa_bindings
+   cadrumo.domain.calculations.registry.ledger_renta_gastos_pago_fraccionado_bindings
+   cadrumo.domain.calculations.registry.ledger_renta_income_bindings
    cadrumo.domain.calculations.registry.legal
    cadrumo.domain.calculations.registry.live_parity
    cadrumo.domain.calculations.registry.loader
@@ -146,6 +154,7 @@ Submodules
    cadrumo.domain.calculations.registry.m303_orden_projection_models
    cadrumo.domain.calculations.registry.m303_orden_resolution
    cadrumo.domain.calculations.registry.m303_prorrata_activity_projection
+   cadrumo.domain.calculations.registry.m303_regimen_simplificado_annual_summary_bindings
    cadrumo.domain.calculations.registry.m303_regimen_simplificado_projection
    cadrumo.domain.calculations.registry.manual_input_selector
    cadrumo.domain.calculations.registry.modelo_localization
@@ -159,7 +168,16 @@ Submodules
    cadrumo.domain.calculations.registry.rate_box_partition
    cadrumo.domain.calculations.registry.record_design
    cadrumo.domain.calculations.registry.record_design_coverage
+   cadrumo.domain.calculations.registry.record_design_layout_markers
+   cadrumo.domain.calculations.registry.record_design_pdf_orchestration
+   cadrumo.domain.calculations.registry.record_design_pdf_repairs
+   cadrumo.domain.calculations.registry.record_design_pdf_rows
+   cadrumo.domain.calculations.registry.record_design_pdf_state
+   cadrumo.domain.calculations.registry.record_design_pdf_visual
    cadrumo.domain.calculations.registry.record_design_schema
+   cadrumo.domain.calculations.registry.record_design_sources
+   cadrumo.domain.calculations.registry.record_design_workbook
+   cadrumo.domain.calculations.registry.record_design_workbook_headers
    cadrumo.domain.calculations.registry.record_spec
    cadrumo.domain.calculations.registry.relations
    cadrumo.domain.calculations.registry.remote_state_guard

@@ -23,7 +23,7 @@ from typing import Literal
 
 import pytest
 
-from .....application.storage.calc_sheets._records import (
+from .....application.storage.calc_sheets.records import (
     RelationValue,
     RelationValues,
     SheetCellAddress,

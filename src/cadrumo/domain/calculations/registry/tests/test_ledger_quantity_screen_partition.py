@@ -21,12 +21,10 @@ from decimal import Decimal
 import pytest
 
 from ..errors import RegistryValidationError
-from ..ledger_iva_bindings import (
+from ..ledger_bindings import (
     _IVA_ALTERNATIVE_MEASURE_FACTS,
     _IVA_INDEPENDENT_QUANTITY_FACTS,
     _IVA_SUPPORTED_FACTS,
-)
-from ..ledger_renta_income_bindings import (
     _RENTA_INCOME_ALTERNATIVE_MEASURE_FACTS,
     _RENTA_INCOME_INDEPENDENT_QUANTITY_FACTS,
 )

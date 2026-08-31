@@ -16,7 +16,8 @@ from ......domain.calculations.registry.schema_references import RegistrySnapsho
 from ......domain.deadlines.engine import DeadlineEngine
 from ......domain.deadlines.models import IVARegime, TaxpayerProfile
 from ......domain.filing.schema import ModeloDraft, ModeloValidationFinding
-from ......domain.submission._protocols import DeadlineWindowChecker, ModeloDraftStatus
+from ......domain.submission.models import ModeloDraftStatus
+from ......domain.submission.protocols import DeadlineWindowChecker
 
 _DRAFT_TIME = datetime(2026, 4, 10, 12, 0, tzinfo=UTC)
 

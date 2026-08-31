@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.bucket._layout import bucket_paths
+from ....adapters.persistence.storage.bucket.directory_layout import bucket_paths
 from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ....core.directory_scan import scan_directory
 from ..errors import WorkflowError

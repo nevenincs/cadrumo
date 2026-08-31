@@ -24,13 +24,13 @@ from typing import Final
 import pytest
 
 from ......core.errors.error_codes import build_error_envelope
-from .._keystore_paths import (
+from ..errors import BucketValidationError
+from ..keystore_paths import (
     keystore_path,
     keystore_root,
     keystore_sidecar_path,
     validate_keystore_separation,
 )
-from ..errors import BucketValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

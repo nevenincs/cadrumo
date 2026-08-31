@@ -12,8 +12,8 @@ from typing import Any, cast
 
 import pytest
 
-from .....application.storage.calc_sheets._engine import CALC_SHEETS_ENGINE_VERSION
-from .....application.storage.calc_sheets._records import SheetExportPlan
+from .....application.storage.calc_sheets.engine import CALC_SHEETS_ENGINE_VERSION
+from .....application.storage.calc_sheets.records import SheetExportPlan
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....core.tax_domain import TaxDomain
 from .....domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistrySnapshot

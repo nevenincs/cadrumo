@@ -18,7 +18,7 @@ from .....core.aggregation import BindingAggregation, BindingAggregationOp, Bind
 from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.errors import RegistryValidationError
 from .....domain.calculations.registry.schema import DataBindingDefinition
-from .._engine import collect_row_sets
+from ..engine import collect_row_sets
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

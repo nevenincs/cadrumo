@@ -7,7 +7,7 @@ import pytest
 from .....core.resources.bundled_data import bundled_path
 from .._relation_aggregation import relation_aggregation_op
 from ..authority import bundled_authority
-from ..binding_targets import bound_casilla_binding_ids
+from ..bindings import bound_casilla_binding_ids
 from ..handoffs import (
     RegistryRelationHandoffApplicabilityAudit,
     RegistryRelationHandoffAudit,

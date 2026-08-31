@@ -356,7 +356,7 @@ def test_the_keystore_anchor_passes_the_production_separation_check(tmp_path: Pa
     under the bucket tree, so a regression that renests the keystore under
     ``buckets/`` reds here structurally rather than by restating a coordinate.
     """
-    from ...adapters.persistence.storage.bucket._keystore_paths import validate_keystore_separation
+    from ...adapters.persistence.storage.bucket.keystore_paths import validate_keystore_separation
 
     root = tmp_path / "state"
     with override_settings(cadrumo_local_storage_root=root):
@@ -374,8 +374,8 @@ def test_the_production_separation_check_still_refuses_a_nested_keystore(tmp_pat
     validator that had degraded to a no-op, which is the exact failure mode a
     security check silently disabled looks like.
     """
-    from ...adapters.persistence.storage.bucket._keystore_paths import validate_keystore_separation
     from ...adapters.persistence.storage.bucket.errors import BucketValidationError
+    from ...adapters.persistence.storage.bucket.keystore_paths import validate_keystore_separation
 
     root = tmp_path / "state"
     # Deliberately the WRONG shape -- this is the composition

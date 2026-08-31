@@ -20,7 +20,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....application.storage.calc_sheets._engine import CALC_SHEETS_ENGINE_VERSION
+from .....application.storage.calc_sheets.engine import CALC_SHEETS_ENGINE_VERSION
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.schema_input_kind import InputKind
@@ -54,7 +54,7 @@ def _modelo_303_snapshot():
 def _matching_metadata(snapshot) -> PullMetadata:
     """Build a PullMetadata that matches the snapshot's registry-SHA stamp."""
 
-    from .....application.storage.calc_sheets._engine import registry_sha
+    from .....application.storage.calc_sheets.engine import registry_sha
 
     return PullMetadata(
         modelo_id=snapshot.modelo.id,

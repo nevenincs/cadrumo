@@ -19,7 +19,7 @@ from ....iva.schema import (
     IvaRateKind,
 )
 from ..errors import RegistryValidationError
-from ..ledger_iva_bindings import (
+from ..ledger_bindings import (
     IvaLedgerObservation,
     _IvaLedgerSelector,
     resolve_ledger_iva_aggregation_binding_values,

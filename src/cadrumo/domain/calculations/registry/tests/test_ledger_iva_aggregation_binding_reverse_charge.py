@@ -20,10 +20,7 @@ from ....iva.classification import (
 from ....iva.components import category_cuota_is_zero_by_law
 from ....iva.flow import IvaFlowDirection, derive_flow_for_classification
 from ....iva.schema import CUOTA_LESS_M303_IVA_CATEGORIES, EUMemberState, IvaCategory, IvaRateKind
-from ..ledger_iva_bindings import (
-    resolve_ledger_iva_aggregation_binding_values,
-    unsupported_ledger_iva_observations,
-)
+from ..ledger_bindings import resolve_ledger_iva_aggregation_binding_values, unsupported_ledger_iva_observations
 from ._ledger_iva_aggregation_support import (
     _M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEDUCIBLE_CASILLA,
     _M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEVENGADO_CASILLA,

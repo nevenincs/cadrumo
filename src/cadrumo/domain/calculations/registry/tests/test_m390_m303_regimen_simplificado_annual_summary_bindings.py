@@ -11,7 +11,7 @@ from .....core.casilla_id import CasillaId
 from .....core.filing_projection_ref import FilingProjectionRef
 from .....domain.modelos.calculation_revision import M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS
 from ..authority import bundled_authority
-from ..m303_regimen_simplificado_annual_summary_bindings import (
+from ..bindings import (
     m303_regimen_simplificado_annual_summary_requirement,
     validate_m303_regimen_simplificado_annual_summary_revision,
 )

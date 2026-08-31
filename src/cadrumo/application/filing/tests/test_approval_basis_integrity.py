@@ -31,7 +31,7 @@ from ....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.filing.schema import APPROVAL_BASIS_VERSION, ModeloApprovalBasis, ModeloDraft
-from ....domain.submission._protocols import ModeloDraftStatus
+from ....domain.submission.models import ModeloDraftStatus
 from ....tests.filing import build_registry_filing_draft_from_decimals
 from ....tests.secure_sql import isolated_runtime_profile
 from ..draft_review import (

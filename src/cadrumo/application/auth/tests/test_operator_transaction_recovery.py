@@ -16,7 +16,7 @@ from pydantic import SecretStr
 
 from ....adapters.outbound.aeat.auth import session_store
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ....adapters.persistence.storage.bucket._layout import bucket_paths
+from ....adapters.persistence.storage.bucket.directory_layout import bucket_paths
 from ....adapters.persistence.storage.errors import RepositoryError
 from ....application.wizard.catalogue import WIZARD_FLOWS
 from ....core.auth_provider import AuthProviderKind

@@ -11,7 +11,7 @@ from collections.abc import Iterable, Mapping
 from decimal import Decimal
 from typing import Any, Final
 
-from ....application.storage.calc_sheets._records import (
+from ....application.storage.calc_sheets.records import (
     SheetAutoFilter,
     SheetCellConstraint,
     SheetColumnWidth,
@@ -20,7 +20,7 @@ from ....application.storage.calc_sheets._records import (
     SheetProtectedRange,
     TabName,
 )
-from ....application.storage.calc_sheets._theme import (
+from ....application.storage.calc_sheets.theme import (
     ROLE_STYLES,
     STYLED_RANGE_VERTICAL_ALIGN,
     WORKBOOK_FONT_FAMILY,

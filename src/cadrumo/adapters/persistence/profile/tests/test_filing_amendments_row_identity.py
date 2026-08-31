@@ -35,7 +35,7 @@ from .....domain.filing.schema import (
     compute_modelo_draft_id,
     registry_schema_version,
 )
-from .....domain.submission._protocols import ModeloDraftStatus
+from .....domain.submission.models import ModeloDraftStatus
 from ...storage.envelope.contract import Envelope
 from ...storage.errors import SecureObjectRowIdentityError
 from ...storage.secure_object_namespaces import FILING_AMENDMENTS_NAMESPACE

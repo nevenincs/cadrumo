@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.bucket._layout import bucket_paths
+from ....adapters.persistence.storage.bucket.directory_layout import bucket_paths
 from ....adapters.persistence.storage.envelope.contract import Envelope
 from ....adapters.persistence.storage.errors import ClassificationError, SecureObjectRowIdentityError
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository

@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....application.storage.calc_sheets._records import SheetCellAddress, SheetRowSet, SheetRowSetColumn, TabName
+from .....application.storage.calc_sheets.records import SheetCellAddress, SheetRowSet, SheetRowSetColumn, TabName
 from ..calc_sheets_apply import _build_row_set_header_data
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

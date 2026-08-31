@@ -64,7 +64,7 @@ _CASE_TRANSFORMS = frozenset({"upper", "lower", "casefold"})
 _CSV_IDENTIFIER = re.compile(r"^csvs?(_|$)|(^|_)csvs?$", re.IGNORECASE)
 
 #: The canonical home. It is the one module allowed to write the transform.
-_CANONICAL = Path("src/cadrumo/core/_aeat_csv.py")
+_CANONICAL = Path("src/cadrumo/core/aeat_csv.py")
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 _PRODUCTION_ROOT = _REPO_ROOT / "src" / "cadrumo"

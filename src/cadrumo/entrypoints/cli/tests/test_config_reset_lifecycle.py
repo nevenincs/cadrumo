@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from ....adapters.persistence.storage.bucket._layout import bucket_paths
+from ....adapters.persistence.storage.bucket.directory_layout import bucket_paths
 from ....core.config import override_settings
 from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode

@@ -22,8 +22,8 @@ from decimal import Decimal
 
 import pytest
 
-from .....application.storage.calc_sheets._engine import CALC_SHEETS_ENGINE_VERSION, build_export_plan, registry_sha
-from .....application.storage.calc_sheets._records import OperatorInput, OperatorInputs, RelationValues
+from .....application.storage.calc_sheets.engine import CALC_SHEETS_ENGINE_VERSION, build_export_plan, registry_sha
+from .....application.storage.calc_sheets.records import OperatorInput, OperatorInputs, RelationValues
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
 from .....domain.calculations.registry.authority import bundled_authority

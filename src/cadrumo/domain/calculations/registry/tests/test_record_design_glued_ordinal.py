@@ -29,7 +29,7 @@ from __future__ import annotations
 
 import pytest
 
-from ..record_design_pdf_rows import _split_glued_ordinal_position
+from ..record_design import _split_glued_ordinal_position
 from ..record_design_schema import RecordDesignField
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

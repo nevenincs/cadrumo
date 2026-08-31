@@ -55,8 +55,8 @@ from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
 )
-from ..storage.calc_sheets._engine import build_export_plan
-from ..storage.calc_sheets._records import OperatorInputs, RelationValues, SheetExportPlan
+from ..storage.calc_sheets.engine import build_export_plan
+from ..storage.calc_sheets.records import OperatorInputs, RelationValues, SheetExportPlan
 from ..user_profile.capabilities import resolve_active_capability
 
 GOOGLE_SHEETS_EXPORT_OPERATION_DEFINITION_ID = "export.google-sheets"

@@ -63,11 +63,11 @@ def test_bucket_lockfile_and_acquisition_lock_share_one_probe() -> None:
     the moment either module re-grows a private duplicate, even if that
     duplicate happens to behave identically at first.
     """
-    from ...adapters.persistence.storage.bucket import _lockfile
+    from ...adapters.persistence.storage.bucket import lockfile
     from ...application.auth import acquisition_lock as acquisition_lock
 
-    assert not hasattr(_lockfile, "_pid_is_alive")
+    assert not hasattr(lockfile, "_pid_is_alive")
     assert not hasattr(acquisition_lock, "_pid_is_running_windows")
-    assert _lockfile.pid_is_alive is pid_is_alive
+    assert lockfile.pid_is_alive is pid_is_alive
     assert acquisition_lock.pid_is_alive is pid_is_alive
     assert pid_is_alive is _canonical_pid_is_alive

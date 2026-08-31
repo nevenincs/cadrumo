@@ -41,7 +41,7 @@ from ....domain.filing.protocols import CasillaSchemaProvider
 from ....domain.filing.schema import ModeloDraft
 from ....domain.invoices.models import Invoice, InvoiceCatalogue
 from ....domain.iva.classification import InvoiceKind
-from ....domain.submission._protocols import ModeloDraftStatus
+from ....domain.submission.models import ModeloDraftStatus
 from ....tests.secure_sql import TestRuntimeProfile
 from ...invoices._creation import build_catalogue_invoice
 from .._draft_construction import build_draft

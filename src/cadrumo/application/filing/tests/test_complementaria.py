@@ -22,8 +22,13 @@ from ....domain.filing.schema import (
     compute_modelo_draft_id,
     registry_schema_version,
 )
-from ....domain.submission._protocols import ModeloDraftStatus
-from ....domain.submission.models import ModeloPresentado, SubmissionAttempt, SubmissionStatus, make_submission_id
+from ....domain.submission.models import (
+    ModeloDraftStatus,
+    ModeloPresentado,
+    SubmissionAttempt,
+    SubmissionStatus,
+    make_submission_id,
+)
 from .._complementaria import build_complementaria, load_amendment
 from .._draft_construction import build_draft
 from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider

@@ -13,7 +13,7 @@ from openpyxl import load_workbook
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
-from .._records import (
+from ..records import (
     SheetCellAddress,
     SheetEvidenceContributorRow,
     SheetEvidenceFacet,
@@ -26,7 +26,7 @@ from .._records import (
     SheetValueCell,
     TabName,
 )
-from .._workbook_export import serialize_offline_export, serialize_offline_workbook
+from ..workbook_export import serialize_offline_export, serialize_offline_workbook
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _BASE_CASILLA: CasillaId = validated_casilla_id("base", surface="_BASE_CASILLA")

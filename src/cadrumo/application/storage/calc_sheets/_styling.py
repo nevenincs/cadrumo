@@ -3,7 +3,7 @@
 Pure functions that derive the workbook's visual layout from the resolved
 :class:`SheetLayout` plus the already-computed structural facets (section
 headers, anchors, provenance / evidence extents). The output is consumed
-verbatim by both transports through the shared ``_theme`` palette, so the
+verbatim by both transports through the shared ``theme`` palette, so the
 offline xls and online Sheets present the same official-modelo look. Keeping
 this computation in one place is what makes the design uniform across every
 modelo and every transport.
@@ -15,8 +15,8 @@ have their own widths declared below.
 
 from __future__ import annotations
 
-from ._layout import SheetLayout
-from ._records import (
+from .layout import SheetLayout
+from .records import (
     SheetAnchor,
     SheetAutoFilter,
     SheetColumnWidth,
@@ -26,7 +26,7 @@ from ._records import (
     SheetStyledRange,
     TabName,
 )
-from ._theme import StyleRole
+from .theme import StyleRole
 
 # Column indices shared by the two data tabs.
 _COL_SECTION = 1
