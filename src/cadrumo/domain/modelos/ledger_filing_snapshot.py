@@ -19,11 +19,12 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field, field_validator
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.casilla_id import CasillaId
 from ...core.country_code import CountryCodeAlpha2
 from ...core.hashing import sha256_hex
 from ...core.identity import SnapshotId, TransactionId
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.parsing import IsoCurrencyCode
 from ...core.time import UtcInstant
 from ...core.unit_proportion import UnitProportion
 from ..calculations.registry.ids import LegalRefId, SourceRefId
@@ -155,7 +156,7 @@ class LedgerEvidenceRow(BaseModel):
     # ``direction``, never by the sign (the amount mirrors the already-absolute
     # ``value_in_eur`` projection).
     amount: Decimal
-    currency: str = Field(min_length=1)
+    currency: IsoCurrencyCode
     direction: str = Field(min_length=1)
     business_classification: str = Field(min_length=1)
     business_pct: Decimal | None = None

@@ -16,13 +16,13 @@ from ....application.user_profile.login_session_port import (
 )
 from . import master_key
 from .custody.acceleration_receipt import (
-    PersistedProfileSession,
     advance_persisted_profile_session_idle_deadline,
     delete_profile_session,
     mint_profile_session,
     profile_session_path,
     resume_profile_session,
 )
+from .custody.acceleration_receipt_crypto import PersistedProfileSession
 from .custody.zeroise import zeroise
 
 

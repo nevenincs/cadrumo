@@ -182,11 +182,15 @@ _POSTAL = TypeAdapter(PostalCode)
 
 class TestPostalCode:
     def test_accepted(self) -> None:
-        for code in ("28013", "08001", "00001", "99999"):
+        for code in ("28013", "08001", "01001", "52001"):
             assert _POSTAL.validate_python(code) == code, code
 
     def test_rejected(self) -> None:
-        for raw in ("", "1234", "123456", "ABCDE", "28-13"):
+        # The last three are the point. A postal code is five digits led by a
+        # REAL province code, 01 to 52, and this validator used to take any five
+        # digits -- so "99999" passed as a Spanish postcode while the core
+        # authority refused it. The two were merged; these pin the tightening.
+        for raw in ("", "1234", "123456", "ABCDE", "28-13", "99999", "00001", "53000"):
             with pytest.raises(ValidationError):
                 _POSTAL.validate_python(raw)
 
@@ -198,11 +202,13 @@ _MUNI = TypeAdapter(MunicipalityCode)
 
 class TestMunicipalityCode:
     def test_accepted(self) -> None:
-        for code in ("28079", "08019", "00001"):
+        for code in ("28079", "08019", "01001"):
             assert _MUNI.validate_python(code) == code, code
 
     def test_rejected(self) -> None:
-        for raw in ("", "123", "ABCDE", "12-345"):
+        # An INE code carries the same province prefix a postcode does, so a
+        # nonexistent province is refused here for the same reason.
+        for raw in ("", "123", "ABCDE", "12-345", "00001", "99999"):
             with pytest.raises(ValidationError):
                 _MUNI.validate_python(raw)
 

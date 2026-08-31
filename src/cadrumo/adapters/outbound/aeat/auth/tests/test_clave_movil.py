@@ -75,10 +75,40 @@ def test_auth_browser_action_policy_admits_aeat_sibling_and_refuses_external_hos
 
 @pytest.mark.parametrize(
     ("identity", "expected_kind"),
-    [("12345678Z", "DNI"), ("X1234567L", "NIE")],
+    [("12345678Z", "DNI"), ("X1234567L", "NIE"), ("K1234567L", "DNI"), ("M1234567L", "DNI")],
 )
 def test_identity_classification_accepts_supported_people(identity: str, expected_kind: str) -> None:
+    """Every natural-person document the domain recognises reaches the flow.
+
+    The last two are the ones that did not. A ``K``/``L``/``M`` NIF is the
+    number a natural person holds when they have no DNI or NIE -- a minor, or a
+    foreign national whose number is not yet assigned -- and this function
+    carried its own DNI and NIE regexes with no branch for it. A
+    checksum-valid identifier was refused, and the message told its holder the
+    identifier was not valid.
+
+    Nothing anywhere stated that exclusion, unlike the CIF one below, which is
+    why it was a copy going stale rather than a policy. Classification now comes
+    from the domain, so a document the domain recognises cannot be dropped by a
+    pattern here that was never updated.
+    """
     assert _classify_identity(identity) == expected_kind
+
+
+def test_identity_classification_refuses_an_organisation_by_naming_what_it_is() -> None:
+    """A CIF is refused for a stated reason, and the refusal says which reason.
+
+    Cl@ve Movil authenticates a natural person, so this exclusion is a real
+    policy rather than an oversight. The operator is told they supplied an
+    organisation identifier and what to supply instead -- where the shape-gate
+    version could only report that the value was not a DNI or NIE, which is
+    also true of a typo and of an empty string.
+    """
+    with pytest.raises(ClaveMovilConfigurationError) as excinfo:
+        _classify_identity("B66012345")
+    message = str(excinfo.value)
+    assert "CIF" in message
+    assert "natural person" in message
 
 
 @pytest.mark.parametrize("identity", ["B12345674", ""])

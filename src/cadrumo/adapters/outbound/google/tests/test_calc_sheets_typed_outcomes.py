@@ -19,9 +19,6 @@ from .....domain.calculations.registry.schema import ModeloDefinition, ModeloRev
 from ...storage import OutboundStorageConflictError, OutboundStorageError, OutboundStorageValidationError
 from ..calc_sheets_apply import apply_export_plan, preview_export_plan
 from ..calc_sheets_pull import (
-    MetadataMatchState,
-    OperatorEdit,
-    PullMetadata,
     _coerce_edit_value_to_decimal,
     _collect_input_casilla_values,
     _merge_developer_metadata_entries,
@@ -31,6 +28,7 @@ from ..calc_sheets_pull import (
     _verify_ownership,
     pull_operator_edits,
 )
+from ..calc_sheets_pull_records import MetadataMatchState, OperatorEdit, PullMetadata
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

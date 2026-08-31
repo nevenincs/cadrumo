@@ -35,19 +35,22 @@ from __future__ import annotations
 
 import io
 from collections.abc import Iterator, Mapping
-from datetime import datetime
-from enum import StrEnum
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from ....application.operator_actions import no_action_precondition_verdict
-from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.config import FORMER_PRODUCT_GOOGLE_DRIVE_VAULT_FOLDER_NAME, load_settings
-from ....core.errors.hierarchy import CoreValidationError
 from ....core.external_constants import BINARY_MIME_TYPE as _BINARY_MIME_TYPE
 from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
-from ....core.time import parse_iso_datetime, validate_utc_aware
+from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ._drive_pagination import next_drive_page_token
+from ._google_drive_metadata import (
+    DriveStoragePreconditionCondition,
+    _drive_external_verdict,
+    _drive_storage_app_properties,
+    _drive_storage_content_hash,
+    _metadata_from_drive_entry,
+)
 from ._integrity import require_full_sha256_content_hash, verify_content_hash, verify_payload_byte_length
 from ._key_validation import assert_admissible_object_key_hmac
 from ._object_name import build_provider_object_name, provider_object_hmac_prefix, sanitize_provider_object_label
@@ -55,7 +58,6 @@ from ._records import ProviderKind, ProviderObjectMetadata, ProviderProbeReport
 from .errors import (
     OutboundStorageConflictError,
     OutboundStorageError,
-    OutboundStorageIntegrityError,
     OutboundStorageNetworkError,
     OutboundStorageNotFoundError,
     OutboundStoragePermissionError,
@@ -63,9 +65,6 @@ from .errors import (
     OutboundStorageUnavailableError,
     OutboundStorageValidationError,
 )
-
-if TYPE_CHECKING:
-    from ..google.records import DriveAppProperties
 
 _FOLDER_MIME = "application/vnd.google-apps.folder"
 _FILE_EXTENSION = ".bin"
@@ -79,42 +78,6 @@ _PROBE_NAMESPACE = "_probe"
 _OWNERSHIP_KEY = "cadrumo_vault_app"
 _OWNERSHIP_VALUE = "cadrumo"
 _LOG = get_logger(__name__)
-
-
-class DriveStoragePreconditionCondition(StrEnum):
-    """Closed terminal conditions for observed Google Drive provider failures."""
-
-    API_CLIENT_AVAILABLE = "storage.google_drive.api_client.available"
-    REQUEST_AUTHORIZED = "storage.google_drive.request.authorized"
-    TARGET_PRESENT = "storage.google_drive.target.present"
-    REQUEST_CONFLICT_FREE = "storage.google_drive.request.conflict_free"
-    REQUEST_WITHIN_QUOTA = "storage.google_drive.request.within_quota"
-    REQUEST_AVAILABLE = "storage.google_drive.request.available"
-    REQUEST_TRANSPORT_AVAILABLE = "storage.google_drive.request.transport_available"
-    RESPONSE_IDENTIFIER_PRESENT = "storage.google_drive.response.identifier_present"
-    OWNERSHIP_ALIGNED = "storage.google_drive.ownership.aligned"
-    RESPONSE_MAPPING = "storage.google_drive.response.mapping"
-    NAMESPACE_PRESENT = "storage.google_drive.namespace.present"
-    OBJECT_PRESENT = "storage.google_drive.object.present"
-    MEDIA_PAYLOAD_BYTES = "storage.google_drive.media.payload_bytes"
-    METADATA_SIZE_VALID = "storage.google_drive.metadata.size_valid"
-    METADATA_MODIFIED_TIME_VALID = "storage.google_drive.metadata.modified_time_valid"
-    METADATA_APP_PROPERTIES_VALID = "storage.google_drive.metadata.app_properties_valid"
-
-
-def _drive_external_verdict(
-    condition: DriveStoragePreconditionCondition,
-    *,
-    facts: Mapping[str, str | bool],
-    outcome: NoRecoveryOutcome,
-):
-    """Project an observed Drive-provider refusal through the public no-action authority."""
-    return no_action_precondition_verdict(
-        condition_id=condition.value,
-        facts=facts,
-        provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-        outcome=outcome,
-    )
 
 
 def _drive_validation_verdict(
@@ -1171,191 +1134,6 @@ def _build_media_body(payload: bytes) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE-DRI
             ),
         ) from exc
     return MediaIoBaseUpload(io.BytesIO(payload), mimetype=_BINARY_MIME_TYPE, resumable=False)
-
-
-# ADAPTER-INTERNAL-ALIAS-RATIONALE-DRIVE-ENTRY: raw Google Drive API file
-# resource (untyped googleapiclient dict); narrowed via explicit key access.
-def _parse_drive_size(value: object, *, provider_object_id: str) -> int:
-    """Return the byte length Drive reported, or refuse the response.
-
-    The coercion here used to catch every ``TypeError``/``ValueError`` and
-    substitute ``0``, so a malformed remote ``size`` asserted a zero-byte
-    contract that nothing downstream re-tested. ``get`` compares the
-    DOWNLOADED payload's length against this value, so the two agreed
-    trivially for an empty object and the malformed response passed clean;
-    ``iter_objects`` downloads nothing at all and so had no second opinion to
-    offer. An operator reading either surface saw a confident ``0``.
-
-    Drive sends ``size`` as a decimal string for binary content, which is the
-    only shape this adapter's own objects take: every object it writes is an
-    uploaded blob, never a native Google document (the file kind whose size
-    Drive genuinely omits). A value that is absent, non-numeric, or negative
-    is therefore a broken response rather than a variation to absorb.
-
-    Raises:
-        :class:`adapters.outbound.storage.OutboundStorageIntegrityError`: When
-            the field is absent, is not an integer or a decimal string, or is
-            negative.
-    """
-    if isinstance(value, bool) or not isinstance(value, (int, str)):
-        raise OutboundStorageIntegrityError(
-            "drive object metadata carries no usable size",
-            context={"provider_object_id": provider_object_id, "actual_value": repr(value)},
-            translated_message="adapters.outbound.storage.google_drive.errors.size_invalid",
-            precondition_verdict=_drive_external_verdict(
-                DriveStoragePreconditionCondition.METADATA_SIZE_VALID,
-                facts={"field": "size", "valid": False},
-                outcome=NoRecoveryOutcome.SAFETY,
-            ),
-        )
-    try:
-        byte_length = int(value)
-    except ValueError:
-        raise OutboundStorageIntegrityError(
-            "drive object size is not an integer",
-            context={"provider_object_id": provider_object_id, "actual_value": str(value)},
-            translated_message="adapters.outbound.storage.google_drive.errors.size_invalid",
-            precondition_verdict=_drive_external_verdict(
-                DriveStoragePreconditionCondition.METADATA_SIZE_VALID,
-                facts={"field": "size", "valid": False},
-                outcome=NoRecoveryOutcome.SAFETY,
-            ),
-        ) from None
-    if byte_length < 0:
-        raise OutboundStorageIntegrityError(
-            "drive object size is negative",
-            context={"provider_object_id": provider_object_id, "actual_value": str(value)},
-            translated_message="adapters.outbound.storage.google_drive.errors.size_invalid",
-            precondition_verdict=_drive_external_verdict(
-                DriveStoragePreconditionCondition.METADATA_SIZE_VALID,
-                facts={"field": "size", "valid": False},
-                outcome=NoRecoveryOutcome.SAFETY,
-            ),
-        )
-    return byte_length
-
-
-def _parse_drive_modified_time(value: object, *, provider_object_id: str) -> datetime:
-    """Return the write instant Drive reported, or refuse the response.
-
-    A missing or unparseable ``modifiedTime`` used to fall back to ``now()``,
-    so an upstream metadata corruption was reported as a freshly written
-    object. ``get`` and ``iter_objects`` are two separate Drive calls made at
-    two different instants, so the same object then exposed two different
-    ``written_at`` values depending on which surface an operator read it
-    through — the remote analogue of the local sidecar-timestamp failure, and
-    just as invisible while the payload itself stayed intact.
-
-    Drive is asked for ``modifiedTime`` on every read that builds metadata and
-    always returns it as an RFC 3339 instant for a real file, so an absent or
-    malformed one is not a variation this adapter should absorb: it is a
-    response that does not meet the storage metadata contract, and the caller
-    is better served by being told than by a plausible wrong answer. A
-    tz-naive value is refused for the same reason rather than assumed UTC.
-
-    Raises:
-        :class:`adapters.outbound.storage.OutboundStorageIntegrityError`: When
-            the field is absent, is not a string, does not parse, or carries
-            no timezone.
-    """
-    if not isinstance(value, str) or not value.strip():
-        raise OutboundStorageIntegrityError(
-            "drive object metadata carries no modifiedTime",
-            context={"provider_object_id": provider_object_id, "actual_value": repr(value)},
-            translated_message="adapters.outbound.storage.google_drive.errors.modified_time_invalid",
-            precondition_verdict=_drive_external_verdict(
-                DriveStoragePreconditionCondition.METADATA_MODIFIED_TIME_VALID,
-                facts={"field": "modifiedTime", "valid": False},
-                outcome=NoRecoveryOutcome.SAFETY,
-            ),
-        )
-    try:
-        written_at = parse_iso_datetime(value)
-    except ValueError:
-        raise OutboundStorageIntegrityError(
-            "drive object modifiedTime is not an RFC 3339 instant",
-            context={"provider_object_id": provider_object_id, "actual_value": value},
-            translated_message="adapters.outbound.storage.google_drive.errors.modified_time_invalid",
-            precondition_verdict=_drive_external_verdict(
-                DriveStoragePreconditionCondition.METADATA_MODIFIED_TIME_VALID,
-                facts={"field": "modifiedTime", "valid": False},
-                outcome=NoRecoveryOutcome.SAFETY,
-            ),
-        ) from None
-    try:
-        validate_utc_aware(written_at)
-    except CoreValidationError:
-        raise OutboundStorageIntegrityError(
-            "drive object modifiedTime carries no timezone",
-            context={"provider_object_id": provider_object_id, "actual_value": value},
-            translated_message="adapters.outbound.storage.google_drive.errors.modified_time_invalid",
-            precondition_verdict=_drive_external_verdict(
-                DriveStoragePreconditionCondition.METADATA_MODIFIED_TIME_VALID,
-                facts={"field": "modifiedTime", "valid": False},
-                outcome=NoRecoveryOutcome.SAFETY,
-            ),
-        ) from None
-    return written_at
-
-
-# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: dict[str, Any] is the
-# irreducible Drive API boundary shape; google-api-python-client stubs
-# surface entry metadata as Any, so narrowing breaks string-key lookups.
-def _metadata_from_drive_entry(
-    entry: dict[str, Any],
-    *,
-    namespace: str,
-    object_key_hmac: str,
-) -> ProviderObjectMetadata:
-    """Convert a Drive ``files().get/list`` response into :class:`ProviderObjectMetadata`."""
-    provider_object_id = str(entry.get("id", ""))
-    byte_length = _parse_drive_size(entry.get("size"), provider_object_id=provider_object_id)
-    written_at = _parse_drive_modified_time(entry.get("modifiedTime"), provider_object_id=provider_object_id)
-
-    app_properties = entry.get("appProperties") or {}
-    content_hash = str(app_properties.get("content_hash", "") or "")
-    if not content_hash:
-        md5 = entry.get("md5Checksum")
-        content_hash = f"md5-{md5}" if md5 else "sha256-unverified"
-
-    return ProviderObjectMetadata(
-        namespace=namespace,
-        object_key_hmac=object_key_hmac,
-        provider_object_id=str(entry.get("id", "")),
-        byte_length=byte_length,
-        content_hash=content_hash,
-        written_at=written_at,
-    )
-
-
-# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: see
-# _metadata_from_drive_entry above.
-def _drive_storage_app_properties(entry: dict[str, Any]) -> DriveAppProperties:
-    """Return the validated app-owned metadata for a Drive storage object."""
-    from pydantic import ValidationError
-
-    from ..google.records import DriveAppProperties
-
-    try:
-        return DriveAppProperties.model_validate(entry.get("appProperties"))
-    except ValidationError as exc:
-        raise OutboundStorageIntegrityError(
-            "drive object appProperties do not match the storage metadata contract",
-            context={"provider_object_id": str(entry.get("id", ""))},
-            translated_message="adapters.outbound.storage.google_drive.errors.content_hash_mismatch",
-            precondition_verdict=_drive_external_verdict(
-                DriveStoragePreconditionCondition.METADATA_APP_PROPERTIES_VALID,
-                facts={"field": "appProperties", "valid": False},
-                outcome=NoRecoveryOutcome.SAFETY,
-            ),
-        ) from exc
-
-
-# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: see
-# _metadata_from_drive_entry above.
-def _drive_storage_content_hash(entry: dict[str, Any]) -> str:
-    """Return the validated storage content hash for a Drive read."""
-    return _drive_storage_app_properties(entry).content_hash
 
 
 __all__ = ["GoogleDriveProvider"]

@@ -22,7 +22,6 @@ from pydantic import BaseModel, Field, field_serializer, field_validator, model_
 
 from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from ...core.aggregation import IntracomOperationType, TravelAgencyMediationType
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.country_code import CountryCodeAlpha2
 from ...core.decimal import coerce_decimal
 from ...core.errors.hierarchy import CoreValidationError
@@ -34,8 +33,8 @@ from ...core.identity import (
     InvoiceId,
     TaxIdIdentityToken,
     tax_id_identity_token,
-    validate_spanish_tax_id,
 )
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.money import CENT, round_to_cents
 from ...core.parsing import normalise_iso_4217_currency
 from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
@@ -60,10 +59,11 @@ from .errors import InvoiceValidationError
 
 if TYPE_CHECKING:
     pass
+from ...core.parsing import IsoCurrencyCode
 from .validators import (
     is_eu_member_state_code,
+    validate_counterparty_tax_id,
     validate_country_code,
-    validate_iva_number,
 )
 
 """Rounding slack allowed between a declared retención amount and rate.
@@ -260,15 +260,10 @@ def _normalise_invoice_counterparty(payload: dict[str, object]) -> dict[str, obj
         tax_id_raw = tax_id_identity_token(tax_id)
         country = payload.get("counterparty_country")
         country_key = country if isinstance(country, str) else None
-        validators: Mapping[str | None, Callable[[str], str]] = {
-            None: lambda value: value,
-            "ES": validate_spanish_tax_id,
-        }
-        validator = validators.get(
-            country_key,
-            lambda value: validate_iva_number(value, cast(str, country_key)),
+        payload["counterparty_tax_id"] = _judging(
+            "counterparty_tax_id",
+            lambda: validate_counterparty_tax_id(tax_id_raw, country=country_key),
         )
-        payload["counterparty_tax_id"] = _judging("counterparty_tax_id", lambda: validator(tax_id_raw))
     # Every structured creation path -- bulk import, the wizard, the CLI, the
     # ingestion mapper -- reaches this one normaliser, so reading the
     # identification off the identifier HERE is what makes the fact present on
@@ -611,7 +606,7 @@ class Invoice(BaseModel):
     base_total: Decimal
     iva_total: Decimal
     grand_total: Decimal
-    currency: str = Field(min_length=3, max_length=3)
+    currency: IsoCurrencyCode
     lines: tuple[InvoiceLine, ...]
     payment_status: PaymentStatus
     linked_transaction_ids: tuple[str, ...] = ()

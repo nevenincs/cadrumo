@@ -21,7 +21,7 @@ from .....core import OperatorProgress
 from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import AuthError
 from .....core.hashing import sha256_hex
-from .....core.identity import IdentityError, validate_spanish_tax_id
+from .....core.identity import IdentityDocument, IdentityError, validate_identity
 from .....core.logging import get_logger
 from .....domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy
 from ....persistence.storage import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE
@@ -126,8 +126,13 @@ class ClaveMovilFailureMode(StrEnum):
     APPROVAL_TIMEOUT = "approval_timeout"
 
 
-_DNI_RE: Final[re.Pattern[str]] = re.compile(r"^\d{8}[A-Z]$", re.IGNORECASE)
-_NIE_RE: Final[re.Pattern[str]] = re.compile(r"^[XYZ]\d{7}[A-Z]$", re.IGNORECASE)
+#: The Cl@ve kind name this flow reports for each document the domain
+#: recognises. A document absent from this mapping is refused, which is how the
+#: exclusion becomes a stated decision rather than a gap in a regex.
+_CLAVE_KIND_BY_DOCUMENT: Final[dict[IdentityDocument, str]] = {
+    IdentityDocument.NIF: "DNI",
+    IdentityDocument.NIE: "NIE",
+}
 _HTML_TAG_RE: Final[re.Pattern[str]] = re.compile(r"<[^>]+>")
 _VERIFICATION_CODE_TEXT_RE: Final[re.Pattern[str]] = re.compile(
     r"c[oó]digo\s+de\s+verificaci[oó]n\s+(?P<code>[A-Z0-9]{3,8})",
@@ -138,34 +143,44 @@ _VERIFICATION_CODE_TEXT_RE: Final[re.Pattern[str]] = re.compile(
 def classify_identity(raw: str) -> str:
     """Return the configured Cl@ve identity kind as ``DNI`` or ``NIE``.
 
-    Values outside the provider-supported DNI/NIE formats raise
-    :class:`ClaveMovilConfigurationError`; CIF-style organization identifiers
-    are intentionally rejected by the Cl@ve Movil flow.
+    Classification is the domain's, through
+    :func:`~core.identity.validate_identity`, which settles the shape and the
+    checksum together. This function only maps the resulting document to the
+    name Cl@ve uses and refuses what the flow does not serve: a CIF-style
+    organization identifier is intentionally rejected, because Cl@ve Movil
+    authenticates a natural person.
 
-    The shape gate selects the kind, then
-    :func:`~core.identity.validate_spanish_tax_id` verifies the checksum
-    letter. ``raw`` is operator-entered configuration text, so a mistyped
-    identifier is refused here rather than surfacing later as an opaque
-    rejection from the live AEAT portal.
+    It used to carry its own two regexes for the shape and call the checksum
+    separately, and the copy was incomplete: it had no branch for a ``K``/``L``/
+    ``M`` NIF, the number a natural person holds when they have no DNI or NIE.
+    A checksum-valid identifier was refused with a message telling its holder it
+    was not valid -- not a policy, since nothing stated it, but a gap in a
+    hand-written pattern. Reading the kind from the domain removes the gap and
+    the copy in the same move.
+
+    If AEAT is found to bar a prefixed NIF from Cl@ve Movil specifically, the
+    exclusion belongs in :data:`_CLAVE_KIND_BY_DOCUMENT` as a decision someone
+    made, with the evidence beside it.
+
+    ``raw`` is operator-entered configuration text, so a mistyped identifier is
+    refused here rather than surfacing later as an opaque rejection from the
+    live AEAT portal.
     """
     value = (raw or "").strip().upper()
-    if _DNI_RE.match(value):
-        kind = "DNI"
-    elif _NIE_RE.match(value):
-        kind = "NIE"
-    else:
-        raise ClaveMovilConfigurationError(
-            f"The value you entered (length {len(value)}) is not a valid DNI "
-            "(8 digits + letter) or NIE (X/Y/Z + 7 digits + letter). "
-            "Check the identity on your document and try again.",
-        )
     try:
-        validate_spanish_tax_id(value)
+        document = validate_identity(value)
     except IdentityError as exc:
         raise ClaveMovilConfigurationError(
             translated_message="errors.auth.clave_movil_identity_checksum",
             context={"detail": resolve_error_message(exc)},
         ) from exc
+    kind = _CLAVE_KIND_BY_DOCUMENT.get(document)
+    if kind is None:
+        raise ClaveMovilConfigurationError(
+            f"The value you entered is a {document.value}, and Cl@ve Movil "
+            "authenticates a natural person. Configure the DNI or NIE of the "
+            "person who holds the certificate instead.",
+        )
     return kind
 
 

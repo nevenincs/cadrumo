@@ -23,10 +23,10 @@ from typing import Final, Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field
 
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.calendar_shift import shift_by_calendar_years
 from ...core.filing_year import FilingYear
 from ...core.identity import FilingRecordId
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time import UtcInstant
 
 #: Legal retention floor (in whole years) for a filed tax record before it may
@@ -118,6 +118,32 @@ class RetentionFloorAssessment(BaseModel):
         if not self.retained:
             return None
         return max(record.earliest_safe_erase_date for record in self.retained)
+
+
+def erase_is_blocked(*, blocks_erase: bool, override_approved: bool = False) -> bool:
+    """Whether the retention floor refuses a destructive erase.
+
+    The one place the rule is decided. Both destructive surfaces reach it, and
+    they carry the two facts rather than an assessment because they hold
+    different types: the all-profile reset works from a
+    ``ConfigResetRetentionDecision`` it has already resolved, the single-target
+    delete from a :class:`RetentionFloorAssessment` straight off the
+    maintenance authority. Taking the facts keeps one rule serving both without
+    forcing either into the other's model.
+
+    ``override_approved`` defaults to false because a surface that offers no
+    override must not have to say so. The single-target delete has no override
+    to record, and passing nothing is the accurate statement of that.
+
+    Before this existed the decision was written twice and the CLI verb's
+    docstring said so plainly: the reset tested the flag together with an
+    override, the delete tested the flag alone, and a third condition added to
+    the retention contract would have reached one and not the other. The NUMBERS
+    were never duplicated -- both read the retained count and the safe-erase date
+    from the same assessment -- so the risk was never a wrong figure. It was the
+    two surfaces coming to different conclusions about the same records.
+    """
+    return blocks_erase and not override_approved
 
 
 def assess_retention_floor(

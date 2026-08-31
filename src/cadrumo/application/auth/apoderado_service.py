@@ -52,6 +52,7 @@ from ...domain.auth import (
     load_default_catalogue,
     parse_scope_tokens,
 )
+from .apoderado_text import ApoderadoNotes
 
 
 class ApoderadoConfigurationNotSetError(CadrumoError):
@@ -112,7 +113,7 @@ class ApoderadoConfiguration(BaseModel):
     granted_scopes: tuple[str, ...] = Field(default_factory=tuple)
     catalogue_version: str = Field(min_length=1)
     configured_at: datetime
-    notes: str = Field(default="", max_length=500)
+    notes: ApoderadoNotes = ""
 
 
 class ApoderadoStatus(BaseModel):

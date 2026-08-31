@@ -30,10 +30,27 @@ from pydantic import StringConstraints
 #: Every ISO 3166-1 alpha-2 code is exactly this long.
 COUNTRY_CODE_LENGTH: Final[int] = 2
 
+COUNTRY_CODE_ALPHA2_PATTERN: Final[str] = r"[A-Z]{2}"
+"""The canonical alpha-2 SHAPE: two uppercase ASCII letters, unanchored.
+
+Separate from :obj:`CountryCodeAlpha2`, which states length only for the reason
+given above. This is for the validators that DO check the charset, so they stop
+each writing out the same two characters -- the registry scalar boundary and the
+invoice counterparty boundary had one apiece.
+
+The shape is all they share. Whether a lowercase token is FOLDED to this shape
+or REFUSED against it is a policy the two disagree on, deliberately at one of
+them: :func:`~cadrumo.core.parsing.normalise_iso_3166_alpha2_jurisdiction`
+refuses ``"es"`` because the jurisdiction axis selects a row's regulatory
+treatment and it will not guess one, while the invoice validator folds. That
+question is open and is not settled by sharing a pattern; each caller states its
+own answer at its own site.
+"""
+
 CountryCodeAlpha2 = Annotated[
     str,
     StringConstraints(min_length=COUNTRY_CODE_LENGTH, max_length=COUNTRY_CODE_LENGTH),
 ]
 """A two-letter country code, as AEAT states a jurisdiction on a filing."""
 
-__all__ = ["COUNTRY_CODE_LENGTH", "CountryCodeAlpha2"]
+__all__ = ["COUNTRY_CODE_ALPHA2_PATTERN", "COUNTRY_CODE_LENGTH", "CountryCodeAlpha2"]

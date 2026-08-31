@@ -10,7 +10,7 @@ from ..core.bucket_pointer import BucketPointer
 from ..core.config import load_settings
 from ..core.errors.hierarchy import CadrumoError
 from ..core.time import now
-from ..domain.retention import RetentionFloorAssessment, RetentionFloorError
+from ..domain.retention import RetentionFloorAssessment, RetentionFloorError, erase_is_blocked
 from ._config_reset_models import (
     ConfigResetAuthClearance,
     ConfigResetAuthClearanceMode,
@@ -313,7 +313,10 @@ def _target_from_assessment(
         acknowledge_retention_override=acknowledge_retention_override,
         retention_override_reason=retention_override_reason,
     )
-    resolved = not retention.blocks_erase or retention.override_approved
+    resolved = not erase_is_blocked(
+        blocks_erase=retention.blocks_erase,
+        override_approved=retention.override_approved,
+    )
     return (
         ConfigResetTarget(
             bucket_id=assessment.bucket_id,
@@ -469,7 +472,10 @@ def _resume_target_outcome(
         acknowledge_retention_override=acknowledge_retention_override,
         retention_override_reason=retention_override_reason,
     )
-    resolved = not retention.blocks_erase or retention.override_approved
+    resolved = not erase_is_blocked(
+        blocks_erase=retention.blocks_erase,
+        override_approved=retention.override_approved,
+    )
     phase = target.phase
     if _phase_before(phase, ConfigResetTargetPhase.AUTH_CLEARING):
         phase = ConfigResetTargetPhase.RETENTION_APPROVED if resolved else ConfigResetTargetPhase.SNAPSHOTTED

@@ -13,7 +13,7 @@ Separated from the namespace registry so the registry file holds namespace
 declarations rather than the vocabulary they are declared in.
 
 See Also:
-    :mod:`~cadrumo.adapters.persistence.storage._namespace_registry`
+    :mod:`~cadrumo.adapters.persistence.storage._secure_object_namespaces`
         Declares every namespace using this vocabulary, and re-exports these
         names for the consumers that reach the registry directly.
 """

@@ -28,14 +28,14 @@ from ...storage import (
     OutboundStorageConflictError,
     OutboundStorageValidationError,
 )
-from ..calc_sheets_pull import (
+from ..calc_sheets_pull import compute_from_pull
+from ..calc_sheets_pull_records import (
     BindingEdit,
     MetadataMatchState,
     OperatorEdit,
     PullMetadata,
     PullResult,
     RelationEdit,
-    compute_from_pull,
 )
 from ._calc_sheets_support import modelo_130_2025_1t_snapshot
 

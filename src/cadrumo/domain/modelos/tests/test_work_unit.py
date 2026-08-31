@@ -596,10 +596,10 @@ def test_no_parallel_work_unit_storage_namespace() -> None:
 
     source_root = REPO_ROOT / "src" / "cadrumo"
     canonical = source_root / "domain" / "modelos" / "_repository.py"
-    # _namespace_registry.py is the centralised namespace declaration table;
+    # _secure_object_namespaces.py is the centralised namespace declaration table;
     # it legitimately holds every storage namespace string as a registry entry
     # and is not a competing storage location.
-    canonical_namespace_registry = source_root / "adapters" / "persistence" / "storage" / "_namespace_registry.py"
+    canonical_namespace_registry = source_root / "adapters" / "persistence" / "storage" / "_secure_object_namespaces.py"
     # The custody bundle/carry coverage manifests enumerate every storage
     # namespace in a frozenset to assert full-custody coverage and to skip
     # double-carrying the typed categories; they name the namespace as a

@@ -39,7 +39,7 @@ from pydantic import NonNegativeInt, StringConstraints, field_validator, model_v
 
 from ...core import ART_58_2_ENTITLING_RELACIONES, DescendantRelacion
 from ...core.json_contract import OutputSchema
-from ...core.text_bounds import CalendarMonth
+from ...core.text_bounds import CalendarMonth, is_calendar_month
 from ...core.time import today_madrid
 from ...domain.contribuyente.descendant_record import DescendantRecordFields
 
@@ -90,7 +90,7 @@ class ProfileDescendientePayload(DescendantRecordFields, OutputSchema):
         only on the wire.
         """
         for month in value:
-            if not (1 <= month <= 12):
+            if not is_calendar_month(month):
                 raise ValueError(f"meses_madre_trabajo names month {month}, outside 1-12")
         if len(set(value)) != len(value):
             raise ValueError("meses_madre_trabajo declares a month more than once")

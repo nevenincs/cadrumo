@@ -28,11 +28,15 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import TYPE_CHECKING, Annotated
 
-from pydantic import AfterValidator, NonNegativeInt
+from pydantic import AfterValidator, NonNegativeInt, field_validator
 
+from ...core.decimal import is_non_negative_canonical_decimal
 from ...core.identity import BucketId, InvoiceId, TaxIdIdentityToken
 from ...core.json_contract import OutputSchema
+from ...core.parsing import IsoCurrencyCode
+from ...core.percentage import PERCENTAGE_MAX, PERCENTAGE_MIN
 from ...core.text_bounds import NonEmptyStr, PositiveCount
+from ...core.unit_proportion import UNIT_PROPORTION_MAX, UNIT_PROPORTION_MIN
 from ...domain.contribuyente.inventory import (
     INVENTORY_SCHEMA_VERSION,
     InventoryYear,
@@ -43,16 +47,21 @@ from ._decimal_wire import bounded_decimal_wire_text
 from ._wire_scalars import IsoDateText, enum_value_text
 
 _ZERO = Decimal("0")
-_HUNDRED = Decimal("100")
-_ONE = Decimal("1")
 
 # The inventory transport is built by dumping the canonical InventoryLedger to
 # JSON and re-validating the mapping, so every field below stays a string on
 # the wire while carrying the canonical model's own bound.
+#
+# The two SCALE bounds read the constants that define those scales rather than
+# respelling the numbers. That matters more here than the saving suggests: the
+# same subsystem carries an ``iva_rate`` on the percentage scale and a
+# deductible ratio on the share scale, and a local ``_HUNDRED`` beside a local
+# ``_ONE`` is exactly the pairing that lets one field silently take the other
+# convention. Named constants say which scale is meant.
 _PositiveQuantity = bounded_decimal_wire_text(minimum=_ZERO, exclusive_minimum=True)
 _NonNegativeAmount = bounded_decimal_wire_text(minimum=_ZERO)
-_IvaRatePct = bounded_decimal_wire_text(minimum=_ZERO, maximum=_HUNDRED)
-_DeductibleRatio = bounded_decimal_wire_text(minimum=_ZERO, maximum=_ONE)
+_IvaRatePct = bounded_decimal_wire_text(minimum=PERCENTAGE_MIN, maximum=PERCENTAGE_MAX)
+_DeductibleRatio = bounded_decimal_wire_text(minimum=UNIT_PROPORTION_MIN, maximum=UNIT_PROPORTION_MAX)
 _MovementKindText = enum_value_text(MovementKind)
 _ValuationMethodText = enum_value_text(ValuationMethod)
 
@@ -192,6 +201,18 @@ class InventoryValuationPreviewPayload(OutputSchema):
     derived_closing_value: str
     cogs: str
     bucket_event_ids: list[str] = []
+
+    @field_validator("derived_closing_value", "cogs")
+    @classmethod
+    def _is_a_non_negative_canonical_amount(cls, value: str) -> str:
+        """A closing inventory value and a cost of goods sold are magnitudes.
+
+        Both are bounded ``ge=0`` on the record this payload flattens, and both
+        lost that bound in the projection to a string.
+        """
+        if not is_non_negative_canonical_decimal(value):
+            raise ValueError(f"amount must be a non-negative canonical decimal, got {value!r}")
+        return value
 
     @classmethod
     def from_result(cls, result: _AppInventoryValuationPreviewResult) -> InventoryValuationPreviewPayload:
@@ -584,7 +605,7 @@ class EvidenceConfirmResult(OutputSchema):
     base_total: str
     iva_total: str
     grand_total: str
-    currency: str
+    currency: IsoCurrencyCode
     payment_status: str
     linked_transaction_ids: list[str] = []
     notes: str = ""

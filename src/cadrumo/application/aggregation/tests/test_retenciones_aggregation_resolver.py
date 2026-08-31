@@ -25,7 +25,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from ....tests.secure_sql import isolated_runtime_profile
-from .._modelo_bindings import RetencionesAggregationSourceResolver
+from .._modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 from .._preconditions import AggregationPreconditionCondition
 from .._retencion_observations_repository import RetencionObservationRepository
 from .._retenciones import RetencionObservation, RetencionScheme

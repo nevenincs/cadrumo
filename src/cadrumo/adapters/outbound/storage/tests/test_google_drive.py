@@ -15,12 +15,13 @@ from urllib.parse import parse_qs
 
 import pytest
 
-from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....core.errors.error_codes import resolve_error_message
 from .....core.i18n import tr
+from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ...google.tests.drive_media_server import drive_files_list_endpoint
 from .. import OutboundStorageIntegrityError, OutboundStorageNetworkError, OutboundStorageValidationError
-from .._google_drive import GoogleDriveProvider, _drive_storage_content_hash
+from .._google_drive import GoogleDriveProvider
+from .._google_drive_metadata import _drive_storage_content_hash
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

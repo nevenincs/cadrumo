@@ -41,26 +41,26 @@ from ... import (
 from ... import (
     StorageNamespaceScope as StorageNamespaceScope,
 )
-from ...errors import ClassificationError as ClassificationError
-from ...errors import StorageValidationError as StorageValidationError
-from ...tests.engine_bootstrap import bootstrap_sqlite_engine
-from ..secure_objects import (
+from ...errors import (
+    ClassificationError as ClassificationError,
+)
+from ...errors import (
     EnvelopeVersionError as EnvelopeVersionError,
 )
-from ..secure_objects import (
-    SecureObjectRecord as SecureObjectRecord,
-)
-from ..secure_objects import (
-    SecureObjectRepository,
-)
-from ..secure_objects import (
+from ...errors import (
     SecureObjectRevisionConflictError as SecureObjectRevisionConflictError,
 )
-from ..secure_objects import (
-    SecureObjectUnreadable as SecureObjectUnreadable,
-)
-from ..secure_objects import (
+from ...errors import (
     SecureObjectUnreadableError as SecureObjectUnreadableError,
+)
+from ...errors import (
+    StorageValidationError as StorageValidationError,
+)
+from ...tests.engine_bootstrap import bootstrap_sqlite_engine
+from .._secure_object_records import SecureObjectRecord as SecureObjectRecord
+from .._secure_object_records import SecureObjectUnreadable as SecureObjectUnreadable
+from ..secure_objects import (
+    SecureObjectRepository,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

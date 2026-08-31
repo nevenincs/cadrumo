@@ -72,7 +72,7 @@ from .._foreign_assets import (
     _registry_observations_from_foreign_assets_aggregation,
     aggregate_foreign_assets_720,
 )
-from .._modelo_bindings import RetencionesAggregationSourceResolver
+from .._modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 from .._preconditions import AggregationPreconditionCondition
 from .._source_mesh import CalculationSourceContext
 

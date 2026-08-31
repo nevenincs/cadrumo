@@ -46,15 +46,18 @@ from ....application.modelo._m145_communication_records import (
 from ....application.user_profile.custody_ports import ProfileCustodyCarryMaterial
 from ....application.user_profile.repository import user_profile_snapshot_object_key
 from ....core import StorageCustodyProfile
-from ....core.secure_object_write import SecureObjectWrite
 from ....core.external_constants import UTF_8_ENCODING as _UTF_8
 from ....core.hashing import canonical_json_bytes, sha256_hex
+from ....core.secure_object_write import SecureObjectWrite
 from ....domain.evidence_consent import EvidenceConsentLedgerEntry, evidence_consent_ledger_entry_object_key
 from ....domain.transactions.classification_rule import LedgerClassificationRule
 from ....domain.user_profile.errors import ProfileExportError
 from ....domain.user_profile.portable_export import CarriedSecureObject
 from ....domain.user_profile.values import UserProfileSnapshot
-from ...outbound.aeat.sede.observation_store import filed_declaracion_observation_object_key, iva_compensation_wallet_observation_object_key
+from ...outbound.aeat.sede.observation_store import (
+    filed_declaracion_observation_object_key,
+    iva_compensation_wallet_observation_object_key,
+)
 from ...outbound.aeat.sede.schema import FiledDeclaracionObservation, IvaCompensationWalletObservation
 from ..profile.filing_drafts import ModeloDraftRepository
 from ..profile.justificante import JustificanteRepository
@@ -186,39 +189,6 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
     resolvers["cadrumo.modelo.reconciliation.records"] = _bound_resolver(_reconciliation_records_repo)
     resolvers["cadrumo.domain.buckets.event_history"] = _fixed_resolver(SECURE_OBJECT_CATALOGUE_KEY)
 
-    def _justificante_payload() -> type[JustificanteCaptureSnapshot]:
-        return JustificanteCaptureSnapshot
-
-    def _justificante_key(bucket_id: str, snapshot_id: str) -> str:
-        return justificante_capture_snapshot_object_key(bucket_id, snapshot_id)
-
-    resolvers["cadrumo.application.live.justificante_capture_snapshot"] = _snapshot_resolver(
-        _justificante_payload,
-        _justificante_key,
-    )
-
-    def _notifications_payload() -> type[PersistedNotificationsSnapshot]:
-        return PersistedNotificationsSnapshot
-
-    def _notifications_key(bucket_id: str, snapshot_id: str) -> str:
-        return notifications_snapshot_object_key(bucket_id, snapshot_id)
-
-    resolvers["cadrumo.application.live.notifications_snapshot"] = _snapshot_resolver(
-        _notifications_payload,
-        _notifications_key,
-    )
-
-    def _expedientes_payload() -> type[PersistedExpedientesSnapshot]:
-        return PersistedExpedientesSnapshot
-
-    def _expedientes_key(bucket_id: str, snapshot_id: str) -> str:
-        return expedientes_snapshot_object_key(bucket_id, snapshot_id)
-
-    resolvers["cadrumo.application.live.expedientes_snapshot"] = _snapshot_resolver(
-        _expedientes_payload,
-        _expedientes_key,
-    )
-
     def _justificante_metadata_repo() -> JustificanteRepository:
         return JustificanteRepository()
 
@@ -275,28 +245,85 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
     resolvers["cadrumo.domain.usage_ratios"] = _bucket_template_resolver("profile:{bucket_id}")
     resolvers["cadrumo.auth.apoderado"] = _bucket_template_resolver("{bucket_id}")
 
+    resolvers.update(_live_snapshot_natural_key_resolvers())
+    resolvers.update(_modelo_natural_key_resolvers())
+    resolvers.update(_sede_natural_key_resolvers())
+    resolvers.update(_ledger_extraction_and_live_deudas_natural_key_resolvers())
+    return resolvers
+
+
+def _live_snapshot_natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
+    def _justificante_payload() -> type[JustificanteCaptureSnapshot]:
+        return JustificanteCaptureSnapshot
+
+    def _justificante_key(bucket_id: str, snapshot_id: str) -> str:
+        return justificante_capture_snapshot_object_key(bucket_id, snapshot_id)
+
+    def _notifications_payload() -> type[PersistedNotificationsSnapshot]:
+        return PersistedNotificationsSnapshot
+
+    def _notifications_key(bucket_id: str, snapshot_id: str) -> str:
+        return notifications_snapshot_object_key(bucket_id, snapshot_id)
+
+    def _expedientes_payload() -> type[PersistedExpedientesSnapshot]:
+        return PersistedExpedientesSnapshot
+
+    def _expedientes_key(bucket_id: str, snapshot_id: str) -> str:
+        return expedientes_snapshot_object_key(bucket_id, snapshot_id)
+
     def _borrador_payload() -> type[Borrador100Snapshot]:
         return Borrador100Snapshot
 
     def _borrador_key(bucket_id: str, snapshot_id: str) -> str:
         return borrador_100_snapshot_object_key(bucket_id, snapshot_id)
 
-    resolvers["cadrumo.application.live.borrador_100_snapshot"] = _snapshot_resolver(
-        _borrador_payload,
-        _borrador_key,
-    )
+    def _verify_payload() -> type[VerifyObservation]:
+        return VerifyObservation
 
+    def _verify_key(bucket_id: str, observation_id: str) -> str:
+        return verify_observation_object_key(bucket_id, observation_id)
+
+    def _profile_snapshot_payload() -> type[UserProfileSnapshot]:
+        return UserProfileSnapshot
+
+    def _profile_snapshot_key(bucket_id: str, snapshot_id: str) -> str:
+        return user_profile_snapshot_object_key(bucket_id, snapshot_id)
+
+    return {
+        "cadrumo.application.live.justificante_capture_snapshot": _snapshot_resolver(
+            _justificante_payload,
+            _justificante_key,
+        ),
+        "cadrumo.application.live.notifications_snapshot": _snapshot_resolver(
+            _notifications_payload,
+            _notifications_key,
+        ),
+        "cadrumo.application.live.expedientes_snapshot": _snapshot_resolver(
+            _expedientes_payload,
+            _expedientes_key,
+        ),
+        "cadrumo.application.live.borrador_100_snapshot": _snapshot_resolver(
+            _borrador_payload,
+            _borrador_key,
+        ),
+        "cadrumo.application.live.verify_observations": _snapshot_resolver(
+            _verify_payload,
+            _verify_key,
+            snapshot_id_attr="observation_id",
+        ),
+        "cadrumo.application.user_profile.snapshot": _snapshot_resolver(
+            _profile_snapshot_payload,
+            _profile_snapshot_key,
+        ),
+    }
+
+
+def _modelo_natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
     def _m036_payload() -> type[M036DeclarationResult]:
         return M036DeclarationResult
 
     def _m036_key(bucket_id: str, declaration_id: str) -> str:
         return m036_declaration_object_key(bucket_id, declaration_id)
-
-    resolvers["cadrumo.application.modelo.m036_declaration"] = _snapshot_resolver(
-        _m036_payload,
-        _m036_key,
-        snapshot_id_attr="declaration_id",
-    )
 
     def _m145_communication_key(record: SecureObjectRecord, bucket_id: str) -> str:
         communication = _envelope_payload(record, M145CommunicationRecord)
@@ -307,33 +334,17 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
             communication.communication_record_id,
         )
 
-    resolvers["cadrumo.application.modelo.m145_communication_record"] = _m145_communication_key
+    return {
+        "cadrumo.application.modelo.m036_declaration": _snapshot_resolver(
+            _m036_payload,
+            _m036_key,
+            snapshot_id_attr="declaration_id",
+        ),
+        "cadrumo.application.modelo.m145_communication_record": _m145_communication_key,
+    }
 
-    def _verify_payload() -> type[VerifyObservation]:
-        return VerifyObservation
 
-    def _verify_key(bucket_id: str, observation_id: str) -> str:
-        return verify_observation_object_key(bucket_id, observation_id)
-
-    resolvers["cadrumo.application.live.verify_observations"] = _snapshot_resolver(
-        _verify_payload,
-        _verify_key,
-        snapshot_id_attr="observation_id",
-    )
-
-    def _profile_snapshot_payload() -> type[UserProfileSnapshot]:
-        return UserProfileSnapshot
-
-    def _profile_snapshot_key(bucket_id: str, snapshot_id: str) -> str:
-        return user_profile_snapshot_object_key(bucket_id, snapshot_id)
-
-    resolvers["cadrumo.application.user_profile.snapshot"] = _snapshot_resolver(
-        _profile_snapshot_payload,
-        _profile_snapshot_key,
-    )
-
-    resolvers["cadrumo.outbound.aeat.sede.filed_declaration.artefacts"] = _sha256_payload_resolver
-
+def _sede_natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
     def _filed_observation_key(record: SecureObjectRecord, _bucket_id: str) -> str:
         observation = _envelope_payload(record, FiledDeclaracionObservation)
         return filed_declaracion_observation_object_key(
@@ -342,8 +353,6 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
             observation.period,
             observation.expediente_id,
         )
-
-    resolvers["cadrumo.outbound.aeat.sede.filed_declaration.observations"] = _filed_observation_key
 
     def _iva_wallet_observation_key(record: SecureObjectRecord, _bucket_id: str) -> str:
         observation = _envelope_payload(record, IvaCompensationWalletObservation)
@@ -354,9 +363,11 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
             observation.captured_at.isoformat(),
         )
 
-    resolvers["cadrumo.outbound.aeat.sede.iva_compensation_wallet.observations"] = _iva_wallet_observation_key
-    resolvers.update(_ledger_extraction_and_live_deudas_natural_key_resolvers())
-    return resolvers
+    return {
+        "cadrumo.outbound.aeat.sede.filed_declaration.artefacts": _sha256_payload_resolver,
+        "cadrumo.outbound.aeat.sede.filed_declaration.observations": _filed_observation_key,
+        "cadrumo.outbound.aeat.sede.iva_compensation_wallet.observations": _iva_wallet_observation_key,
+    }
 
 
 def _ledger_extraction_and_live_deudas_natural_key_resolvers() -> dict[str, NaturalKeyResolver]:

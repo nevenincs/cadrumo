@@ -31,9 +31,7 @@ from ...errors import DecryptionError, EncryptionError, KeyringUnavailableError,
 from ..acceleration_receipt import (
     PROFILE_SESSION_KEYCHAIN_SERVICE,
     PROFILE_SESSION_RECORD_MAX_BYTES,
-    PROFILE_SESSION_SCHEMA_VERSION,
     AccelerationReceiptRevocationError,
-    PersistedProfileSession,
     _pending_retirement_bytes,
     _profile_session_lock_path,
     _profile_session_retirement_path,
@@ -44,6 +42,10 @@ from ..acceleration_receipt import (
     mint_profile_session,
     profile_session_path,
     resume_profile_session,
+)
+from ..acceleration_receipt_crypto import (
+    PROFILE_SESSION_SCHEMA_VERSION,
+    PersistedProfileSession,
     unwrap_profile_session_dek,
     wrap_profile_session_dek,
 )

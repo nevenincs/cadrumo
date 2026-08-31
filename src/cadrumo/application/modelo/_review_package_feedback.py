@@ -57,10 +57,10 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ...core.identity import BucketId, CalculationRevisionId, WorkUnitId
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time import UtcInstant
 from ...core.time import now as _utc_now
 from ._review_package_counter_sign import CounterSignedReceipt, verify_counter_signed_receipt
@@ -70,6 +70,7 @@ from ._review_package_recipient_encryption import (
     decrypt_review_package_for_recipient,
     encrypt_review_package_for_recipient,
 )
+from .review_package_text import ReviewFeedbackNote
 
 if TYPE_CHECKING:
     from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
@@ -120,7 +121,7 @@ class FeedbackPackage(BaseModel):
     bucket_id: BucketId
     work_unit_id: WorkUnitId
     calculation_revision_id: CalculationRevisionId
-    note: str = Field(default="", max_length=4000)
+    note: ReviewFeedbackNote = ""
     counter_signed_receipt: CounterSignedReceipt | None = Field(default=None)
     submitted_at: UtcInstant
     submitted_by: str = Field(min_length=1, max_length=128)

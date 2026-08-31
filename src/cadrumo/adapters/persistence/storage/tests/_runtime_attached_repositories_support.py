@@ -114,7 +114,7 @@ from ...profile.recipient_replay_guard import RecipientReplayGuardRepository
 from ...profile.submission import SubmissionRepository
 from ...profile.usage_ratios import load_usage_ratios, save_usage_ratios
 from .. import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE, AttachmentStore, SensitivityClass, StorageValidationError
-from .._namespace_registry import LLM_USAGE_NAMESPACE
+from .._secure_object_namespaces import LLM_USAGE_NAMESPACE
 from ..master_key import BucketSession, activate_session
 from ..runtime_repository import secure_object_repository_for_active_bucket
 from ..sql.engine import dispose_engine

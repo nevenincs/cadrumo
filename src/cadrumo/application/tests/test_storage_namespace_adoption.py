@@ -80,7 +80,7 @@ _BOUND_METADATA_CLASSVARS = ("namespace", "sensitivity", "schema_version")
 # The registry-authoring module legitimately constructs definitions from raw
 # ``SensitivityClass`` members; it is the authority, not a consumer, so it is
 # excluded from the redeclaration scan.
-_REGISTRY_AUTHORING_MODULE = "_namespace_registry.py"
+_REGISTRY_AUTHORING_MODULE = "_secure_object_namespaces.py"
 
 
 def _package_root() -> Path:

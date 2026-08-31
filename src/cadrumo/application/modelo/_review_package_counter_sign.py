@@ -53,9 +53,9 @@ from pydantic import BaseModel, Field
 
 from ...core import HEX_PATTERN_64 as _HEX_PATTERN_64
 from ...core import HEX_PATTERN_128 as _HEX_PATTERN_128
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time import UtcInstant
 from ...core.time import now as _utc_now
 from ._review_package_signing import (
@@ -63,6 +63,7 @@ from ._review_package_signing import (
     SignedReviewPackage,
     verify_review_package_signature,
 )
+from .review_package_text import ReviewPackageNote
 
 #: Wire-format version of the counter-signature envelope. Bumped when the
 #: envelope schema changes shape.
@@ -90,7 +91,7 @@ class CounterSignedReceipt(BaseModel):
 
     envelope_version: int = Field(default=_COUNTER_SIGNATURE_ENVELOPE_VERSION, ge=1)
     original_signature: SignedReviewPackage
-    note: str = Field(default="", max_length=2000)
+    note: ReviewPackageNote = ""
     counter_signature_hex: str = Field(pattern=_HEX_PATTERN_128)
     counter_public_key_hex: str = Field(pattern=_HEX_PATTERN_64)
     counter_signed_at: UtcInstant

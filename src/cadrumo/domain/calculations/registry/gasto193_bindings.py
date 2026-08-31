@@ -16,9 +16,9 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.aggregation import BindingAggregationOp
 from ....core.identity import TaxIdIdentityToken
+from ....core.models import STRICT_FROZEN_CONFIG
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import (
     BindingExportDataType,
@@ -54,7 +54,7 @@ class Gasto193Observation(BaseModel):
     source_id: str = Field(min_length=1, max_length=128)
     contributor_tax_id: TaxIdIdentityToken = Field(min_length=1, max_length=64)
     contributor_legal_name: str = Field(default="", max_length=200)
-    representative_tax_id: str | None = Field(default=None, min_length=9, max_length=9)
+    representative_tax_id: TaxIdIdentityToken | None = Field(default=None, min_length=9, max_length=9)
     """NIF of the minor's legal representative, declared by the design only when
     the contribuyente is a minor; spaces elsewhere."""
     transaction_date: date

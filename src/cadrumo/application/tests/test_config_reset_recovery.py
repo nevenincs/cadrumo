@@ -128,7 +128,13 @@ _CRASH_HARNESS = _SETTINGS_PREAMBLE + dedent(
     effect_return_by_boundary = {
         "auth_clearing_after_effect": ("operator_cleanup.py", "clear_operator_auth_acquisition_locks"),
         "pointer_reconciling_after_effect": ("profile_pointer.py", "clear"),
-        "deleting_after_effect": ("_lifecycle.py", "delete"),
+        # The module holding ProfileCapsuleLifecycle.delete was renamed from
+        # _lifecycle.py to lifecycle.py. This pin kept the old spelling, which
+        # then matched only the unrelated invoices/_lifecycle.py -- a module
+        # with no delete at all -- so the trace never fired and the boundary
+        # was never injected. A pin naming a file is a rename away from
+        # testing nothing, which is why the RuntimeError below exists.
+        "deleting_after_effect": ("user_profile/lifecycle.py", "delete"),
     }
 
     def durable_target_phase() -> str | None:
@@ -149,7 +155,8 @@ _CRASH_HARNESS = _SETTINGS_PREAMBLE + dedent(
         expected_effect = effect_return_by_boundary.get(boundary)
         if expected_effect is not None:
             filename, function_name = expected_effect
-            if frame.f_code.co_filename.endswith(filename) and frame.f_code.co_name == function_name:
+            native = filename.replace("/", os.sep)
+            if frame.f_code.co_filename.endswith(native) and frame.f_code.co_name == function_name:
                 effect_frame_seen.append(True)
                 if durable_target_phase() == phase_by_boundary[boundary]:
                     os._exit(91)

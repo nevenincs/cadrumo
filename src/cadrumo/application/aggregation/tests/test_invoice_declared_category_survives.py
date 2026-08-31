@@ -43,7 +43,7 @@ from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.flow import IvaFlowDirection
 from ....domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from .._iva_ledger import resolve_iva_ledger_binding_values
-from .._modelo_bindings import (
+from .._modelo_bindings_invoice_iva import (
     _invoice_line_iva_observation,
     _reverse_charge_cuota_not_derivable,
     _screened_invoice_iva_result,

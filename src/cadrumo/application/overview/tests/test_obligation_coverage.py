@@ -51,7 +51,7 @@ _TODAY = date(2026, 7, 1)
 def _paying_autonomo() -> TaxpayerProfile:
     """An autónomo who pays withholding-subject income (has employees)."""
     return TaxpayerProfile(
-        tax_id="A4567890A",
+        tax_id="A45678901",
         entity_type=EntityType.NATURAL_PERSON,
         irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
         irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,

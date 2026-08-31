@@ -28,7 +28,6 @@ from ...storage import (
     OutboundStorageValidationError,
 )
 from ..calc_sheets_pull import (
-    MetadataMatchState,
     _classify_metadata_match,
     _coerce_value,
     _merge_developer_metadata_entries,
@@ -36,6 +35,7 @@ from ..calc_sheets_pull import (
     _require_matching_metadata,
     pull_operator_edits,
 )
+from ..calc_sheets_pull_records import MetadataMatchState
 from ._calc_sheets_support import modelo_130_2025_1t_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

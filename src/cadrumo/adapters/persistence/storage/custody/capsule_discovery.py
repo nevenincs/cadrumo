@@ -24,6 +24,7 @@ from typing import Protocol
 from uuid import UUID
 
 from .....core import StorageCategory, storage_location
+from ._filesystem_primitives import anchor_directory, posix_directory_fd, posix_open_child_directory
 from .errors import (
     ProfileCustodyRecordError,
     ProfileCustodyRecoveryGuidance,
@@ -31,11 +32,8 @@ from .errors import (
     ProfileCustodyRefusedError,
 )
 from .filesystem import (
-    anchor_directory,
     lexists,
     posix_child_exists,
-    posix_directory_fd,
-    posix_open_child_directory,
     read_regular_file,
     read_regular_file_fd,
 )

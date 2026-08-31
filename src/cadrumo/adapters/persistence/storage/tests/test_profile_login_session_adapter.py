@@ -8,8 +8,9 @@ from uuid import UUID
 
 import pytest
 
-from ..custody.acceleration_receipt import PersistedProfileSession, ProfileSessionResumeOutcome, profile_session_path
 from .. import KeyringUnavailableError, build_profile_login_session_port, master_key
+from ..custody.acceleration_receipt import ProfileSessionResumeOutcome, profile_session_path
+from ..custody.acceleration_receipt_crypto import PersistedProfileSession
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

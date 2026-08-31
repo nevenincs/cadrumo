@@ -46,7 +46,7 @@ from ....domain.invoices.models import InvoiceCatalogue
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.schema import IvaCategory
 from ...invoices import build_catalogue_invoice
-from .._modelo_bindings import (
+from .._modelo_bindings_invoice_iva import (
     _category_counterparty_mismatch_diagnostics,
     _claims_a_base_only_category,
     _screened_invoice_iva_observations,

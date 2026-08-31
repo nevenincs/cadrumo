@@ -57,7 +57,6 @@ from .. import (
     SECURE_OBJECT_CATALOGUE_KEY,
     SECURE_OBJECT_DEFAULT_KEY,
     SECURE_OBJECT_WORKFLOW_STATE_KEY,
-    STORAGE_NAMESPACE_REGISTRY,
     TEST_SECURE_BOUND_CONTRACT_NAMESPACE,
     TEST_SESSION_LIFECYCLE_NAMESPACE,
     TEST_SNAPSHOT_BASE_PROBE_NAMESPACE,
@@ -70,15 +69,103 @@ from .. import (
     StorageRemoteMirrorPolicy,
 )
 from .._namespace_registry import (
-    StoragePathAnchor,
-    StoragePathDefinition,
-    StoragePathKind,
+    STORAGE_NAMESPACE_REGISTRY,
     secure_object_logical_path,
     secure_object_namespace_logical_path,
 )
+from .._namespace_taxonomy import StoragePathAnchor, StoragePathKind
+from .._storage_path_definitions import StoragePathDefinition
 from ..errors import NamespaceRegistryError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+_EXPECTED_NAMESPACE_KEYS_IN_ORDER = (
+    "workflow_state",
+    "workflow_runs",
+    "operation_secure_references",
+    "user_profile_value",
+    "user_profile_snapshot",
+    "profile_inventory_ledger",
+    "profile_assets_ledger",
+    "profile_assets_amortization_ledger",
+    "profile_bienes_inversion_iva_register",
+    "profile_prorrata_register",
+    "repair_integrity_decisions",
+    "application_filing_history",
+    "auth_apoderado_configuration",
+    "calculation_observations",
+    "retencion_observations",
+    "withholding_observations",
+    "iva_wallet_reconciliation_decisions",
+    "iva_wallet_reconciliation_decision_events",
+    "modelo_reconciliation_records",
+    "modelo_edit_receipt",
+    "sync_run_records",
+    "iva_compensation_history",
+    "live_iva_remote_state_acquisitions",
+    "application_evidence_bundles",
+    "ledger_purchase_invoice_evidence",
+    "ledger_extracted_document_cache",
+    "ledger_extraction_draft",
+    "ledger_confirmation_record",
+    "ledger_confirmed_counterparty_facts",
+    "ledger_classification_rules",
+    "live_borrador_100_snapshot",
+    "live_m036_declaration",
+    "m145_communication_record",
+    "test_snapshot_base_probe",
+    "test_session_lifecycle",
+    "test_secure_bound_contract",
+    "test_runtime_profile",
+    "live_expedientes_snapshot",
+    "live_deudas_snapshot",
+    "live_notifications_snapshot",
+    "live_notification_document",
+    "live_justificante_capture_snapshot",
+    "live_verify_observations",
+    "attachment_blobs",
+    "attachment_manifests",
+    "aeat_browser_sessions",
+    "clave_movil_diagnostics",
+    "google_oauth_client",
+    "google_oauth_token",
+    "google_oauth_metadata",
+    "google_drive_config",
+    "google_credential_source",
+    "llm_cache",
+    "llm_usage",
+    "llm_run_telemetry",
+    "llm_evidence_consent_ledger",
+    "aeat_filed_declaration_artefacts",
+    "aeat_filed_declaration_observations",
+    "aeat_iva_wallet_observations",
+    "modelo_review_package_signing_key",
+    "modelo_review_package_recipient_fingerprint_registry",
+    "modelo_review_package_recipient_replay_guard",
+    "modelo_review_package_recipient_encryption_key",
+    "bucket_event_history",
+    "submission_records",
+    "justificante_metadata",
+    "filing_drafts",
+    "filing_export_replay_proofs",
+    "filing_amendments",
+    "invoice_catalogue",
+    "transaction_catalogue",
+    "usage_ratio_profile",
+    "modelo_work_unit_catalogue",
+    "modelo_verification_report_catalogue",
+    "modelo_filing_record_catalogue",
+    "modelo_calculation_revision_catalogue",
+    "transaction_participation_index",
+)
+
+
+def test_secure_object_registry_preserves_the_declared_namespace_sequence() -> None:
+    """The aggregate registry's order is a stable hierarchy contract."""
+    assert (
+        tuple(definition.key for definition in STORAGE_NAMESPACE_REGISTRY.namespaces)
+        == _EXPECTED_NAMESPACE_KEYS_IN_ORDER
+    )
 
 
 def test_secure_object_registry_names_application_namespaces() -> None:
@@ -95,7 +182,7 @@ def test_secure_object_registry_names_live_m036_declaration_namespace() -> None:
     """The M036 declarative-recording verbs
     persist operator declarations through this namespace.
     """
-    from .._namespace_registry import LIVE_M036_DECLARATION_NAMESPACE
+    from .._secure_object_namespaces import LIVE_M036_DECLARATION_NAMESPACE
 
     declaration = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("live_m036_declaration")
 
@@ -797,7 +884,7 @@ def _iter_aeat_production_sources() -> tuple[Path, ...]:
         sorted(
             path
             for path in package_python_files(include_data=True)
-            if not _is_test_surface(path) and path.name != "_namespace_registry.py"
+            if not _is_test_surface(path) and path.name != "_secure_object_namespaces.py"
         ),
     )
 
@@ -878,19 +965,19 @@ def _collect_imported_registry_namespace_bindings(tree: ast.AST) -> dict[str, st
 def _is_storage_namespace_import(node: ast.ImportFrom) -> bool:
     return node.module in {
         "cadrumo.adapters.persistence.storage",
-        "cadrumo.adapters.persistence.storage._namespace_registry",
-        "_namespace_registry",
+        "cadrumo.adapters.persistence.storage._secure_object_namespaces",
+        "_secure_object_namespaces",
     } or (
         node.level > 0
         and node.module
         in {
             "adapters.persistence.storage",
-            "adapters.persistence.storage._namespace_registry",
+            "adapters.persistence.storage._secure_object_namespaces",
             "persistence.storage",
-            "persistence.storage._namespace_registry",
+            "persistence.storage._secure_object_namespaces",
             "storage",
-            "storage._namespace_registry",
-            "_namespace_registry",
+            "storage._secure_object_namespaces",
+            "_secure_object_namespaces",
         }
     )
 

@@ -62,9 +62,9 @@ def test_a_planted_module_is_reported_unclassified() -> None:
 
 def test_a_real_module_resolves_so_the_planted_proof_is_not_vacuous() -> None:
     """The same resolver answers for a module that IS covered."""
-    resolved = classify_universe(frozenset({f"{REGISTRY_PACKAGE}._loader"}))
+    resolved = classify_universe(frozenset({f"{REGISTRY_PACKAGE}.loader"}))
 
-    assert resolved[f"{REGISTRY_PACKAGE}._loader"].classification == "live"
+    assert resolved[f"{REGISTRY_PACKAGE}.loader"].classification == "live"
 
 
 def test_every_conditionally_reachable_rule_names_its_trigger() -> None:

@@ -9,9 +9,7 @@ from typing import Annotated, Self
 
 from pydantic import AfterValidator, BaseModel, Field, StringConstraints, field_validator, model_validator
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Art104TresExclusion, Hex64Str, IvaDeductionFactKind
-from ...core.period import Period
 
 # CLASSIFIED_BY_MANUAL is re-exported for constants centralisation tests.
 from ...core.external_constants import (
@@ -22,15 +20,24 @@ from ...core.external_constants import (
 )
 from ...core.filing_year import FilingYear
 from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, TransactionId, WorkUnitId
-from ...core.parsing import normalise_iso_3166_alpha2_jurisdiction, normalise_iso_4217_currency
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.parsing import IsoCurrencyCode, normalise_iso_3166_alpha2_jurisdiction, normalise_iso_4217_currency
+from ...core.period import Period
+from ...core.text_bounds import NonEmptyStr
 from ...domain.iva.prorrata import InputClassification
 from ...domain.iva.schema import EUMemberState, IvaCategory
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.m210_income_classification import M210IncomeClassification
-from ...domain.transactions.models import BucketTransactionRef, Transaction, TransactionEditLineageEntry, TransactionEvidenceProvenanceEntry, TransactionLifecycleLineageEntry
-from ...domain.transactions.repository import ImportSummary
 from ...domain.transactions.model_validation import validate_business_pct_coupling
+from ...domain.transactions.models import (
+    BucketTransactionRef,
+    Transaction,
+    TransactionEditLineageEntry,
+    TransactionEvidenceProvenanceEntry,
+    TransactionLifecycleLineageEntry,
+)
+from ...domain.transactions.repository import ImportSummary
 from ..export import ExportSerializationFormat, verify_export_metadata
 from ..review.filter import LedgerReviewStatus
 
@@ -83,6 +90,26 @@ def _normalise_optional_ledger_text(value: str | None) -> str | None:
 
 _LedgerOptionalText = Annotated[str | None, AfterValidator(_normalise_optional_ledger_text)]
 
+#: Longest a manual transaction's group label may be, stated once.
+_GROUP_LABEL_MAX_LENGTH = 64
+
+_LedgerOptionalGroupLabel = Annotated[
+    Annotated[str, StringConstraints(max_length=_GROUP_LABEL_MAX_LENGTH)] | None,
+    AfterValidator(_normalise_optional_ledger_text),
+]
+"""An optional group label, carrying the bound its create counterpart carries.
+
+The patch model used the plain optional-text alias, which normalises but sets no
+length, while the create command bounded the same field at sixty-four. So a
+label too long to CREATE could be applied by EDITING, and nothing on the patch
+path said otherwise. The two now read the same constant.
+
+The bound sits on the ``str`` arm rather than on the union: a length constraint
+applied to ``str | None`` is asked to measure ``None`` and raises at validation
+time, which is not a subtle failure but is a confusing one -- it surfaces as a
+TypeError from eleven unrelated tests rather than as a message about this field.
+"""
+
 
 class _LedgerCountryCodeModel(BaseModel):
     """Canonical ISO-country normalization for ledger command and read models."""
@@ -123,7 +150,7 @@ class ManualLedgerTransactionCommand(_ManualLedgerTransactionInput):
     booked_date: date
     value_date: date | None = None
     amount: Decimal
-    currency: CurrencyCode = DEFAULT_CURRENCY
+    currency: IsoCurrencyCode = DEFAULT_CURRENCY
     direction: TransactionDirection
     counterparty: _LedgerOptionalText = None
     description: str = Field(min_length=1)
@@ -156,7 +183,7 @@ class ManualLedgerTransactionCommand(_ManualLedgerTransactionInput):
     idempotency_key: _LedgerOptionalText = None
     classified_by_override: _LedgerOptionalText = None
     source_jurisdiction: str | None = None
-    group_label: str | None = Field(default=None, max_length=64)
+    group_label: str | None = Field(default=None, max_length=_GROUP_LABEL_MAX_LENGTH)
 
     @field_validator(
         "bucket_id",
@@ -230,7 +257,10 @@ class ManualLedgerTransactionPatch(_ManualLedgerTransactionInput):
     booked_date: date | None = None
     value_date: date | None = None
     amount: Decimal | None = None
-    currency: str | None = None
+    # The create command validates this and the patch did not, so an operator
+    # could not CREATE a row with a malformed currency but could EDIT one into
+    # having it. Same operator, same field, two answers.
+    currency: IsoCurrencyCode | None = None
     direction: TransactionDirection | None = None
     counterparty: _LedgerOptionalText = None
     description: _LedgerOptionalText = None
@@ -253,7 +283,7 @@ class ManualLedgerTransactionPatch(_ManualLedgerTransactionInput):
     counterparty_country: str | None = None
     counterparty_identification_state: EUMemberState | None = None
     source_jurisdiction: str | None = None
-    group_label: _LedgerOptionalText = None
+    group_label: _LedgerOptionalGroupLabel = None
 
     @model_validator(mode="after")
     def _require_change(self) -> Self:
@@ -285,9 +315,6 @@ class ManualLedgerTransactionResult(BaseModel):
 IsoDateText = Annotated[str, StringConstraints(min_length=10, max_length=10)]
 """A calendar date as the wire carries it, ``YYYY-MM-DD``, fixed at ten characters."""
 
-CurrencyCode = Annotated[str, StringConstraints(min_length=3, max_length=3)]
-"""An ISO-4217 code, which is three characters by definition of the standard."""
-
 DiagnosticKind = Annotated[str, StringConstraints(min_length=1, max_length=32)]
 """What an import diagnostic is about."""
 
@@ -305,7 +332,7 @@ class LedgerTransactionPayload(_LedgerCountryCodeModel):
     booked_date: IsoDateText
     value_date: str | None = None
     amount: str = Field(min_length=1)
-    currency: CurrencyCode
+    currency: IsoCurrencyCode
     direction: str = Field(min_length=1)
     counterparty: str = ""
     description: str = Field(min_length=1)
@@ -820,16 +847,16 @@ class LedgerExportRow(BaseModel):
 
     bucket_id: BucketId
     transaction_id: TransactionId
-    lifecycle_state: str = Field(min_length=1)
+    lifecycle_state: NonEmptyStr
     booked_date: IsoDateText
     value_date: str = ""
     effective_date: IsoDateText
-    amount: str = Field(min_length=1)
-    currency: CurrencyCode
-    direction: str = Field(min_length=1)
+    amount: NonEmptyStr
+    currency: IsoCurrencyCode
+    direction: NonEmptyStr
     counterparty: str = ""
-    description: str = Field(min_length=1)
-    business_classification: str = Field(min_length=1)
+    description: NonEmptyStr
+    business_classification: NonEmptyStr
     business_pct: str = ""
     category_id: str = ""
     taxable_base: str = ""

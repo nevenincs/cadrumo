@@ -45,7 +45,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Annotated
 
-from pydantic import BaseModel, Field, StringConstraints, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, ValidationError
 
 from ...core import read_toml
 from ...core.modelo import Modelo
@@ -146,10 +146,28 @@ class HolidayCalendar(BaseModel):
     ccaa: tuple[Holiday, ...] = Field(default_factory=tuple)
 
 
+#: The authoring-boundary config for the festivos TOML rows below.
+#:
+#: Frozen and closed like every other model here, but NOT strict, because these
+#: three rows are the hydration boundary: registry TOML is authored free-form
+#: and this is where its scalars become typed. A ``ccaa_code`` arrives from the
+#: parser as the string ``"ES-MD"``, and strict mode refuses to make it a
+#: :class:`CalendarCCAA` -- so the model that exists to coerce was refusing to.
+#:
+#: It failed closed and then failed quiet. Every bundled calendar raised on load,
+#: :func:`shift_deadline` raised for every input, and its one caller catches that
+#: error and falls back to the unshifted date with a DEBUG log. The AEAT
+#: business-day rule was inert for every year shipped, and nothing said so.
+#:
+#: :class:`Holiday` and :class:`HolidayCalendar` -- the records these rows are
+#: projected onto -- stay strict, which is where strictness belongs.
+_TOML_ROW_CONFIG: ConfigDict = ConfigDict(frozen=True, extra="forbid", validate_default=True)
+
+
 class _NationalHolidayRow(BaseModel):
     """One ``[[national]]`` row as authored in a festivos TOML file."""
 
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = _TOML_ROW_CONFIG
 
     date: date
     name: _NonEmptyShortString
@@ -158,7 +176,7 @@ class _NationalHolidayRow(BaseModel):
 class _CcaaHolidayRow(BaseModel):
     """One ``[[ccaa]]`` row as authored in a festivos TOML file."""
 
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = _TOML_ROW_CONFIG
 
     date: date
     ccaa_code: CalendarCCAA
@@ -175,7 +193,7 @@ class _HolidayCalendarToml(BaseModel):
     / :class:`HolidayCalendar` domain records, which stay strict.
     """
 
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = _TOML_ROW_CONFIG
 
     year: Annotated[int, Field(ge=2000, le=2100)]
     boe_ref: _NonEmptyShortString

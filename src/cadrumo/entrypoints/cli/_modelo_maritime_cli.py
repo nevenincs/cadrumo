@@ -87,7 +87,7 @@ def work_preview_maritime_exemption(
         waters_type=facts.waters_type,
         vessel_registry=facts.vessel_registry,
         retmar_registered=facts.retmar_registered,
-        retmar_mandatory_filing=result.retmar_mandatory_filing or facts.retmar_registered,
+        retmar_mandatory_filing=preview.retmar_mandatory_filing,
         retmar_warning=retmar_warning,
         casilla_values=casilla_values,
         observations=observation_payloads,

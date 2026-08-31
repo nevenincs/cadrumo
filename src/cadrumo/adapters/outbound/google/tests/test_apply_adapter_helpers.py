@@ -34,15 +34,14 @@ from .....application.storage.calc_sheets import (
     SheetProtectedRange,
     TabName,
 )
-from .....core.period import Period
 from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.period import Period
 from .....domain.calculations.registry.ids import LegalRefId
+from .._calc_sheets_apply_formatting import _condition_for_constraint, _input_message_for_constraint
+from .._calc_sheets_apply_values import _coerce_cell_value
 from ..calc_sheets_apply import (
     _build_structural_cleanup_requests,
-    _coerce_cell_value,
-    _condition_for_constraint,
     _developer_metadata_pairs,
-    _input_message_for_constraint,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

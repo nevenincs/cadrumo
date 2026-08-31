@@ -38,16 +38,15 @@ from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogue
 from ...core import (
     FETCH_GATED_M210_TIPO_RENTA_CODES,
     M210_TIPO_RENTA_CODE_PROJECTION,
-    DescendantRelacion,
     M210GrossIncomeSourceMode,
     RegistryAuthorityGrade,
     RescateType,
 )
-from ...core.modelo import Modelo
 from ...core.casilla_id import CasillaId
-from ...core.external_constants import M347_THRESHOLD_EUR
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.errors.hierarchy import CadrumoError
+from ...core.external_constants import M347_THRESHOLD_EUR
+from ...core.modelo import Modelo
 from ...core.resources import bundled_path
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.binding_selector_utils import boolean_binding_encoded_values
@@ -74,12 +73,25 @@ from ...domain.calculations.registry.schema_scalars import (
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.calculations.registry.temporal import select_revision
 from ...domain.contribuyente.descendant_facts import descendant_list_from_facts
-from ...domain.modelos.dt12_reduccion import Dt12WindowEligibility, compute_dt12_reduccion_plan_pensiones, dt12_regime_window_eligibility
-from ...domain.modelos.row_models import Modelo184MemberRow, Modelo184ShareSumError, Modelo347ContraparteRow, Modelo347ThresholdError, ModeloDetailRow, validate_m184_member_share_sum, validate_m347_threshold
+from ...domain.contribuyente.descendant_maternity import relacion_is_ambiguous_for_maternidad
+from ...domain.modelos.calculation_revision import CalculationRevision, FilingInstanceEvidence
+from ...domain.modelos.dt12_reduccion import (
+    Dt12WindowEligibility,
+    compute_dt12_reduccion_plan_pensiones,
+    dt12_regime_window_eligibility,
+)
+from ...domain.modelos.errors import ModeloError
+from ...domain.modelos.row_models import (
+    Modelo184MemberRow,
+    Modelo184ShareSumError,
+    Modelo347ContraparteRow,
+    Modelo347ThresholdError,
+    ModeloDetailRow,
+    validate_m184_member_share_sum,
+    validate_m347_threshold,
+)
 from ...domain.modelos.sal_reserva_especial import compute_sal_reserva_especial_dotacion
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
-from ...domain.modelos.calculation_revision import CalculationRevision, FilingInstanceEvidence
-from ...domain.modelos.errors import ModeloError
 from ..aggregation import CalculationSourceDiagnostic
 
 # Intra-package reuse of a sibling module's cap, permitted by the architecture
@@ -866,20 +878,11 @@ def _ambiguous_relacion_hijo_ids(work_unit: WorkUnit, contributing_hijo_ids: fro
     contributing descendant's relación is unstated — is orthogonal to the
     months resolution that function answers.
 
-    ``DESCENDIENTE`` is the ONLY ambiguous value. The AEAT manual positively
-    documents, for Art. 58.1, a grandchild or other descendant by consanguinidad
-    other than a child as a literal "descendiente", and a minor held under
-    guarda y custodia by judicial resolución as a third assimilated category
-    distinct from tutela and acogimiento — both mínimo-eligible, and both
-    excluded from Art. 81.1 by the same manual, in terms, across every served
-    filing year. The relación axis has no member for either population today,
-    so a filer with either child has no truthful value but ``DESCENDIENTE``
-    to record — and that is
-    also the value a filer with a genuine hijo gets by never being asked, since
-    the fact is never written for the default even when the operator typed it
-    explicitly. The two cases are indistinguishable at the stored fact; every
-    other :class:`~cadrumo.core.DescendantRelacion` member names a relationship
-    the manual resolves unambiguously and is excluded from this check.
+    Which relación is ambiguous is stated once, with the manual's reasoning, by
+    :func:`~domain.contribuyente.relacion_is_ambiguous_for_maternidad`. The
+    reasoning used to be written out here AND at the declaration-time surface
+    that asks the same question, so a member added to the axis for either
+    population would have had to reach two places that only agreed by hand.
 
     Returns the empty set when *contributing_hijo_ids* is empty, without
     loading the profile at all — this question only has cost for a filing that
@@ -901,7 +904,7 @@ def _ambiguous_relacion_hijo_ids(work_unit: WorkUnit, contributing_hijo_ids: fro
         for hijo_id in contributing_hijo_ids
         if hijo_id.isdigit()
         and int(hijo_id) < len(descendientes)
-        and descendientes[int(hijo_id)].relacion is DescendantRelacion.DESCENDIENTE
+        and relacion_is_ambiguous_for_maternidad(descendientes[int(hijo_id)].relacion)
     )
 
 

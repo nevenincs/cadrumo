@@ -43,11 +43,11 @@ from typing import ClassVar, Literal
 from pydantic import BaseModel, Field, ValidationError
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.country_code import CountryCodeAlpha2
 from ...core.decimal import coerce_decimal, normalize_decimal_separators, try_parse_canonical_decimal
 from ...core.external_constants import DEFAULT_CURRENCY
-from ...core.parsing import parse_iso8601_date
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.parsing import IsoCurrencyCode, parse_iso8601_date
 from ...core.tabular import TabularSourceError, coerce_cell_text, normalize_tabular_bytes
 from ...core.workbook import FORMULA_CELL_REFUSAL, WorkbookCell, first_formula_cell_column
 from ...domain.invoices.errors import InvoiceValidationError
@@ -153,7 +153,7 @@ class BulkInvoiceImportRow(BaseModel):
     taxable_base: Decimal
     iva_rate: Decimal | None = None
     retencion_amount: Decimal | None = None
-    currency: str = DEFAULT_CURRENCY
+    currency: IsoCurrencyCode = DEFAULT_CURRENCY
     # Required, and deliberately not defaulted to Spain. The counterparty's
     # country decides whether the invoice is treated as domestic or as an
     # intra-community operation, so inferring ES for a row that never stated

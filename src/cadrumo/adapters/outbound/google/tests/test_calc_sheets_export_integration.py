@@ -18,16 +18,18 @@ import pytest
 
 from .....application.storage.calc_sheets import build_export_plan
 from .....domain.calculations.registry.authority import bundled_authority
-from ..calc_sheets_apply import (
+from .._calc_sheets_apply_formatting import (
     _build_auto_filter_requests,
     _build_base_font_requests,
     _build_column_width_requests,
     _build_emphasis_format_requests,
-    _build_evidence_value_data,
-    _build_formula_data,
     _build_frozen_view_requests,
     _build_number_format_requests,
     _build_styled_range_requests,
+)
+from .._calc_sheets_apply_values import (
+    _build_evidence_value_data,
+    _build_formula_data,
     _build_value_data,
 )
 

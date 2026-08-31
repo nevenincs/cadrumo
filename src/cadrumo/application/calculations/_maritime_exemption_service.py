@@ -46,8 +46,8 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field
 
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.casilla_id import CasillaId
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.renta import (
     MaritimeWorkerFacts,
@@ -175,11 +175,31 @@ def resolve_maritime_exemption(
 
     return MaritimeExemptionResult(
         observations=tuple(observations),
-        retmar_mandatory_filing=facts.retmar_registered,
+        retmar_mandatory_filing=retmar_mandatory_filing(facts),
     )
+
+
+def retmar_mandatory_filing(facts: MaritimeWorkerFacts) -> bool:
+    """Whether RETMAR registration makes the filing mandatory for this worker.
+
+    Its own function because the answer is needed on a path where the full
+    resolution cannot run. When the profile is incomplete the preview reruns
+    :func:`resolve_maritime_exemption` against facts with the RETMAR flag
+    CLEARED -- the only way to obtain observations at all from incomplete data --
+    and the value on that rerun result is therefore always false, precisely when
+    the real answer may be true.
+
+    The CLI was quietly repairing that by reaching past the result to the
+    untouched fact and folding the two with ``or``. It produced the right
+    answer, so nothing failed; but the determination had moved into a renderer,
+    and it would have stopped tracking this function the moment a second
+    condition joined it here.
+    """
+    return facts.retmar_registered
 
 
 __all__ = [
     "MaritimeExemptionResult",
     "resolve_maritime_exemption",
+    "retmar_mandatory_filing",
 ]

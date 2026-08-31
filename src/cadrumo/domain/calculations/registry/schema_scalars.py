@@ -10,10 +10,12 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, BeforeValidator, Field, SerializeAsAny
 
 from ....core import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
-from ....core.period import StandardPeriodCode
+from ....core.country_code import COUNTRY_CODE_ALPHA2_PATTERN
 from ....core.decimal import coerce_decimal
 from ....core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
 from ....core.identity import IdentityError, validate_spanish_tax_id
+from ....core.period import StandardPeriodCode
+from ....core.spanish_postcode import SPANISH_POSTCODE_PATTERN, SPANISH_PROVINCE_CODE_PATTERN
 from .errors import RegistryValidationError
 
 __all__ = [
@@ -159,14 +161,21 @@ validate a period token independently of a casilla declaration.
 """
 
 
-_COUNTRY_CODE_RE = re.compile(r"^[A-Z]{2}$")
+_COUNTRY_CODE_RE = re.compile(rf"^{COUNTRY_CODE_ALPHA2_PATTERN}$")
 
 
 def _validate_country_code(value: object) -> object:
     """Validate a two-character ISO 3166-1 alpha-2 country code.
 
-    Format-only validation: enforces uppercase ASCII letters and
-    exact length 2. Membership against the AEAT-supported country
+    Format-only validation against the shared
+    :data:`~cadrumo.core.country_code.COUNTRY_CODE_ALPHA2_PATTERN`: uppercase
+    ASCII letters, exact length 2. A lowercase token is REFUSED rather than
+    folded, matching
+    :func:`~cadrumo.core.parsing.normalise_iso_3166_alpha2_jurisdiction`: a
+    country code on a casilla selects a regulatory treatment, so the operator
+    declares the canonical code rather than having one guessed.
+
+    Membership against the AEAT-supported country
     list is delegated to per-casilla `constraints.enum` declarations
     (Plan B) and to the semantic-role consistency layer (Plan C).
     Country casillas declaring `data_type = "country_code"` are
@@ -316,7 +325,7 @@ authority. See the note on the accepted set above.
 """
 
 
-_PROVINCE_CODE_RE = re.compile(r"^(0[1-9]|[1-4][0-9]|5[0-2])$")
+_PROVINCE_CODE_RE = re.compile(rf"^{SPANISH_PROVINCE_CODE_PATTERN}$")
 
 
 def _validate_province_code(value: object) -> object:
@@ -334,11 +343,16 @@ ProvinceCode = Annotated[str, BeforeValidator(_validate_province_code)]
 """Two-digit Spanish province code for the registry boundary."""
 
 
-_POSTAL_CODE_RE = re.compile(r"^\d{5}$")
+_POSTAL_CODE_RE = re.compile(rf"^{SPANISH_POSTCODE_PATTERN}$")
 
 
 def _validate_postal_code(value: object) -> object:
-    """Validate a Spanish postal code (five digits)."""
+    """Validate a Spanish postal code against the one shape authority.
+
+    Five digits whose leading pair is a real province code. The refusal stays
+    here, in the registry's own error type, because a caller loading a registry
+    fragment must be told which fragment is malformed; only the SHAPE is shared.
+    """
     if not isinstance(value, str):
         raise RegistryValidationError(f"postal_code value must be a string, got {type(value).__name__}")
     if not _POSTAL_CODE_RE.match(value):
@@ -350,15 +364,24 @@ PostalCode = Annotated[str, BeforeValidator(_validate_postal_code)]
 """Five-digit Spanish postal code for the registry boundary."""
 
 
-_MUNICIPALITY_CODE_RE = re.compile(r"^\d{5}$")
+_MUNICIPALITY_CODE_RE = re.compile(rf"^{SPANISH_PROVINCE_CODE_PATTERN}[0-9]{{3}}$")
 
 
 def _validate_municipality_code(value: object) -> object:
-    """Validate a five-digit INE municipality code."""
+    """Validate a five-digit INE municipality code.
+
+    An INE code is a province code followed by a three-digit municipality
+    number, so it reads the same province alternation as a postcode without
+    being the same concept: ``28079`` is Madrid the municipality, not a postal
+    district.
+    """
     if not isinstance(value, str):
         raise RegistryValidationError(f"municipality_code value must be a string, got {type(value).__name__}")
     if not _MUNICIPALITY_CODE_RE.match(value):
-        raise RegistryValidationError(f"municipality_code value {value!r} must be a five-digit INE municipality code")
+        raise RegistryValidationError(
+            f"municipality_code value {value!r} must be an INE code: "
+            "a province code (01-52) followed by three digits",
+        )
     return value
 
 

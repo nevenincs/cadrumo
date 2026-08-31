@@ -36,6 +36,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 ACCELERATION_RECEIPT_PATHS: tuple[str, ...] = (
     "adapters/persistence/storage/custody/acceleration_receipt.py",
+    "adapters/persistence/storage/custody/acceleration_receipt_crypto.py",
     "application/user_profile/login_session.py",
 )
 """Modules owning the keystore-resident acceleration receipt."""
@@ -69,7 +70,7 @@ RECEIPT_SIDE_EXEMPTIONS: dict[tuple[str, str], str] = {
         "would be a migration path. The token lags the concept name by decision."
     ),
     (
-        "adapters/persistence/storage/custody/acceleration_receipt.py",
+        "adapters/persistence/storage/custody/acceleration_receipt_crypto.py",
         "PROFILE_SESSION_SCHEMA_VERSION",
     ): "Versions the wire record the keychain service addresses; moves only with that token.",
 }

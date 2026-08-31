@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import ART_58_2_ENTITLING_RELACIONES, DescendantRelacion
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.text_bounds import CalendarMonth, is_calendar_month
 from ...core.time import today_madrid
 from .errors import ProfileValidationError
 from .family_types import (
@@ -39,8 +40,8 @@ class DescendantRecordFields(BaseModel):
     presenta_declaracion_propia: bool = False
     prorrata_minimo: bool | None = None
     meses_madre_trabajo: tuple[int, ...] = ()
-    alta_posterior_nacimiento_mes: int | None = Field(default=None, ge=1, le=12)
-    segundo_ciclo_infantil_inicio_mes: int | None = Field(default=None, ge=1, le=12)
+    alta_posterior_nacimiento_mes: CalendarMonth | None = None
+    segundo_ciclo_infantil_inicio_mes: CalendarMonth | None = None
     gastos_guarderia_euros: int = Field(default=0, ge=0)
     gastos_guarderia_mensuales: tuple[GuarderiaMonthSpend, ...] = ()
     nif: str | None = None
@@ -374,7 +375,7 @@ class DescendantRecordBase(DescendantRecordFields):
         changing nothing the operator could see.
         """
         for month in value:
-            if not (1 <= month <= 12):
+            if not is_calendar_month(month):
                 raise ProfileValidationError(
                     f"meses_madre_trabajo names month {month}, outside 1-12.",
                 )

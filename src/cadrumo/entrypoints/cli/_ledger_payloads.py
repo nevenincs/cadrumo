@@ -38,14 +38,13 @@ from typing import TYPE_CHECKING
 from pydantic import NonNegativeInt, field_validator, model_validator
 
 from ...application.ledger.models import (
-    CurrencyCode,
     DiagnosticKind,
     DiagnosticMessage,
     DiagnosticSeverity,
     IsoDateText,
 )
 from ...core import LinkInconsistencyDirection
-from ...core.decimal import try_parse_canonical_decimal
+from ...core.decimal import is_non_negative_canonical_decimal, try_parse_canonical_decimal
 from ...core.identity import (
     BucketId,
     CalculationRevisionId,
@@ -60,6 +59,7 @@ from ...core.parsing import IsoCurrencyCode, parse_iso8601_date
 from ...core.period import Period
 from ...core.prose_elision import IssueDetail
 from ...core.text_bounds import NonEmptyStr
+from ...core.unit_proportion import is_unit_proportion
 from ._ledger_business_payloads import (
     AttachmentReviewPayload,
     AttachmentReviewQueueResult,
@@ -161,6 +161,35 @@ class M210IncomeClassificationPayload(OutputSchema):
     payer_id: str | None = None
     asset_or_right_id: str | None = None
 
+    @field_validator("gross_income_amount")
+    @classmethod
+    def _is_a_non_negative_canonical_amount(cls, value: str) -> str:
+        """Gross income is a magnitude, bounded ``ge=0`` on the record.
+
+        The bound does not survive the projection to a string, so the wire
+        re-asserts it rather than publishing a schema looser than the fact.
+        """
+        if not is_non_negative_canonical_decimal(value):
+            raise ValueError(f"gross_income_amount must be a non-negative canonical decimal, got {value!r}")
+        return value
+
+    @field_validator("applicable_rate")
+    @classmethod
+    def _is_a_share_of_one(cls, value: str) -> str:
+        """The M210 rate is a share of one, not merely a non-negative number.
+
+        The record bounds it at ``ge=0, le=1``, which is
+        :obj:`~core.unit_proportion.UnitProportion`. Asserting only
+        non-negativity here would let a rate of ``5`` onto the wire -- five
+        hundred per cent, which reads as a plausible percentage typed into a
+        share field, so the upper bound is the half that catches the real
+        mistake.
+        """
+        parsed = try_parse_canonical_decimal(value, signed=False)
+        if parsed is None or not is_unit_proportion(parsed):
+            raise ValueError(f"applicable_rate must be a decimal share between 0 and 1, got {value!r}")
+        return value
+
 
 class TransactionPayload(OutputSchema):
     """Nested CLI copy of :class:`LedgerTransactionPayload`.
@@ -175,7 +204,7 @@ class TransactionPayload(OutputSchema):
     booked_date: IsoDateText
     value_date: str | None = None
     amount: NonEmptyStr
-    currency: CurrencyCode
+    currency: IsoCurrencyCode
     direction: NonEmptyStr
     counterparty: str = ""
     description: NonEmptyStr
@@ -640,7 +669,7 @@ class LedgerListRowPayload(OutputSchema):
     booked_date: str
     value_date: str | None = None
     amount: str
-    currency: str
+    currency: IsoCurrencyCode
     direction: str
     counterparty: str = ""
     description: str
@@ -790,20 +819,29 @@ class LedgerExportRowPayload(OutputSchema):
     ``model_dump(mode="json")``. The flow stays the non-negative ``amount``
     magnitude plus the ``direction`` authority; every other column is
     a string the serializer already emits ("" for an absent optional column).
+
+    "Mirrors" is meant literally, and for four columns it was not true. The
+    canonical row requires content in ``lifecycle_state``, ``direction``,
+    ``description`` and ``business_classification``; this payload accepted an
+    empty string in each. A payload looser than the record it projects lets a
+    consumer validate a row the producer could never have emitted, so the
+    published schema promised less than the data actually carries. The columns
+    that are genuinely optional keep their ``""`` default -- that is the
+    serializer's absent-column spelling, not a missing bound.
     """
 
     bucket_id: BucketId
     transaction_id: TransactionId
-    lifecycle_state: str
+    lifecycle_state: NonEmptyStr
     booked_date: IsoDateText
     value_date: str = ""
     effective_date: IsoDateText
     amount: NonEmptyStr
     currency: IsoCurrencyCode
-    direction: str
+    direction: NonEmptyStr
     counterparty: str = ""
-    description: str
-    business_classification: str
+    description: NonEmptyStr
+    business_classification: NonEmptyStr
     business_pct: str = ""
     category_id: str = ""
     taxable_base: str = ""
@@ -852,7 +890,7 @@ class LedgerExportRowPayload(OutputSchema):
         """
         if not value:
             return value
-        if try_parse_canonical_decimal(value, signed=False) is None:
+        if not is_non_negative_canonical_decimal(value):
             raise ValueError("must be a non-negative canonical decimal")
         return value
 

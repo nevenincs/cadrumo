@@ -20,7 +20,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
 from ....tests.secure_sql import isolated_runtime_profile
-from .._modelo_bindings import RetencionesAggregationSourceResolver
+from .._modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 from .._preconditions import AggregationPreconditionCondition
 from .._source_mesh import CalculationSourceContext
 from ..errors import AggregationValidationError
