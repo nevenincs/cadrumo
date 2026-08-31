@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core import ResultDisposition
+from .....core.result_disposition import ResultDisposition
 from .._loader_internals import load_modelo_file
 from ..errors import RegistryLoadError
 from ..loader import load_modelo_directory

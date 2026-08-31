@@ -6,7 +6,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import (
+from .....core.result_disposition import (
     ResultDisposition,
     derive_result_disposition,
     modelo_has_codified_disposition,
@@ -51,5 +51,4 @@ def test_codified_result_disposition_specs_resolve_against_bundled_revisions() -
 
     assert checked_revisions, "no bundled revisions exercised a codified result-disposition spec"
     assert not offences, "codified result-disposition casilla ids are not registry-backed:\n  " + "\n  ".join(
-        offences,
-    )
+     
