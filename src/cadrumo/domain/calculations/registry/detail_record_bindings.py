@@ -15,7 +15,6 @@ from ....core.country_code import CountryCodeAlpha2
 from ....core.external_constants import DEFAULT_CURRENCY
 from ....core.identity import TaxIdIdentityToken
 from ....core.models import STRICT_FROZEN_CONFIG
-from ....core.parsing import IsoCurrencyCode
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import (
     BindingExportDataType,
@@ -276,7 +275,7 @@ class Modelo720RowObservation(BaseModel):
     source_id: str = Field(min_length=1, max_length=128)
     asset_class_code: M720AssetClassCode
     country_code: CountryCodeAlpha2
-    currency_code: IsoCurrencyCode = DEFAULT_CURRENCY
+    currency_code: str = Field(default=DEFAULT_CURRENCY, min_length=3, max_length=3)
     asset_identifier: str = Field(default="", max_length=128)
     acquisition_date: date
     valuation_amount: Decimal

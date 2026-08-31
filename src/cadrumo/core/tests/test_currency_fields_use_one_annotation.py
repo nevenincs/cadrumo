@@ -77,6 +77,13 @@ DECLARED_EXCEPTIONS: dict[str, str] = {
         "this expense projection is euro-only by construction and the literal "
         "states that in the type rather than in a comment"
     ),
+    "domain/calculations/registry/detail_record_bindings.py::currency_code": (
+        "governed by the shared uppercase_alpha_code validator this model "
+        "already applies to country_code beside it, which REFUSES a lowercase "
+        "code rather than folding it -- a Modelo 720 declaration states the "
+        "code, and a normalising annotation here would layer a second policy "
+        "over the one its sibling field follows"
+    ),
     "domain/transactions/raw_transaction.py::currency": (
         "carries the length bound as an annotation but normalises through "
         "normalise_iso_4217_currency in a mode='before' validator, so it "

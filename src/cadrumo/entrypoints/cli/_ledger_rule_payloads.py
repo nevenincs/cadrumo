@@ -15,17 +15,20 @@ command emitters keep one payload import surface.
 
 from __future__ import annotations
 
-from datetime import datetime
-
 from pydantic import NonNegativeInt, model_validator
 
 from ...application.ledger.llm_diagnostics import LlmProviderName
 from ...core import Hex64Str
 from ...core.identity import TransactionId
 from ...core.json_contract import OutputSchema
-from ...domain.transactions.classification_rule import LedgerClassificationRule
+from ...core.time import UtcInstant
+from ...domain.transactions.classification_rule import (
+    LedgerClassificationRule,
+    RuleActor,
+    RuleDescriptionPattern,
+    RulePriority,
+)
 from ...domain.transactions.enums import BusinessClassification
-from ...domain.transactions.classification_rule import RuleActor, RuleDescriptionPattern, RulePriority
 from ._decimal_wire import DecimalWireText
 
 
@@ -48,7 +51,7 @@ class ClassificationRulePayload(OutputSchema):
     category_id: str | None = None
     priority: RulePriority
     actor: RuleActor
-    created_at: datetime
+    created_at: UtcInstant
 
     @model_validator(mode="after")
     def _validate_canonical_rule(self) -> ClassificationRulePayload:

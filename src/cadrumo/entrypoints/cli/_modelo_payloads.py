@@ -56,6 +56,7 @@ from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
 from ...core.period import Period
 from ...core.prose_elision import IssueDetail
 from ...core.text_bounds import NonEmptyStr
+from ...core.time import UtcInstant
 from ...domain.buckets.event import (
     BucketActorLabel,
     BucketEventId,
@@ -414,7 +415,7 @@ class ModeloRecordPayload(OutputSchema):
     modelo: ModeloCode
     filing_year: FilingYear
     period: Period
-    filed_at: datetime
+    filed_at: UtcInstant
     filed_by: ModeloActorLabel
     notes: FilingNotes | None = None
     aeat_accepted: bool = False

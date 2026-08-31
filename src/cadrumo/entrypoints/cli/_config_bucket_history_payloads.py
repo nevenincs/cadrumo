@@ -30,8 +30,14 @@ from datetime import datetime
 from ...core.identity import BucketId
 from ...core.json_contract import OutputSchema
 from ...core.text_bounds import PositiveCount
-from ...domain.buckets.event import BucketActorLabel, BucketEventId, BucketEventObjectType, BucketEventType
-from ...domain.buckets.event import BucketObjectId
+from ...core.time import UtcInstant
+from ...domain.buckets.event import (
+    BucketActorLabel,
+    BucketEventId,
+    BucketEventObjectType,
+    BucketEventType,
+    BucketObjectId,
+)
 
 
 class BucketHistoryEventPayload(OutputSchema):
@@ -48,7 +54,7 @@ class BucketHistoryEventPayload(OutputSchema):
 
     event_id: BucketEventId
     event_type: BucketEventType
-    occurred_at: datetime
+    occurred_at: UtcInstant
     actor: BucketActorLabel
     object_type: BucketEventObjectType
     object_id: BucketObjectId
