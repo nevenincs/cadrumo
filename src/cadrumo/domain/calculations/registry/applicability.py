@@ -115,7 +115,7 @@ from .applicability_routes import TAX_ROUTE_FOR_ENTITY_TYPE as _TAX_ROUTE_FOR_EN
 from .applicability_routes import TaxRoute
 from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryValidationError
 from .ids import LegalRefId, ModeloId
-from .schema import ApplicabilityRuleDefinition
+from .schema_revision_members import ApplicabilityRuleDefinition
 
 type _OperatorReason = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 

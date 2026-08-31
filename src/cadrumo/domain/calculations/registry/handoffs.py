@@ -29,13 +29,13 @@ from .iva_wallet_relation_targets import is_iva_wallet_owned_relation_target
 from .relations import RegistryFoldRequirement, relation_source_requirements
 from .runtime_graph import expression_binding_refs, expression_relation_refs
 from .schema import (
-    DependencyClassificationDefinition,
     ModeloDefinition,
     ModeloRevision,
     RegistryCatalogues,
     RegistrySnapshot,
 )
 from .schema_references import PeriodSelector
+from .schema_revision_members import DependencyClassificationDefinition
 from .schema_surfaces import RelationDefinition, RelationPeriodAlignment, RelationRevisionSelector
 
 __all__ = [

@@ -53,12 +53,12 @@ from .identity import (
 )
 from .ids import RevisionId
 from .schema import (
-    DeadlineWindowDefinition,
     ModeloDefinition,
     ModeloRevision,
     RegistryCatalogues,
     RegistrySnapshot,
 )
+from .schema_deadlines import DeadlineWindowDefinition
 from .static_inspection import RegistryRevisionInspection
 from .temporal import select_revision
 

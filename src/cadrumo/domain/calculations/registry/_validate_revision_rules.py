@@ -21,7 +21,8 @@ from ._validate_parameter_temporal import validate_dated_values as validate_date
 from ._validate_relation_sources import period_selectors_overlap
 from .deadline_coordinate import DeadlineSemanticCoordinate, deadline_window_semantic_coordinates
 from .errors import RegistrySnapshotError
-from .schema import ModeloDefinition, ModeloRevision, filing_schedule_period_kind_mismatches
+from .schema import ModeloDefinition, ModeloRevision
+from .schema_deadlines import filing_schedule_period_kind_mismatches
 from .schema_input_kind import InputKind
 from .temporal import select_revision
 

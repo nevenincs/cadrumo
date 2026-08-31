@@ -50,10 +50,8 @@ from ...domain.retention._floor import TAX_RECORD_RETENTION_FLOOR_YEARS
 from .errors import OverviewExplainError
 
 if TYPE_CHECKING:
-    from ...domain.calculations.registry.schema import (
-        DeadlineWindowDefinition,
-        ModeloRevision,
-    )
+    from ...domain.calculations.registry.schema import ModeloRevision
+    from ...domain.calculations.registry.schema_deadlines import DeadlineWindowDefinition
 
 _ProfileFactValue = str | bool | int
 """Closed value type for the explain payload's ``profile_facts`` map.
