@@ -51,7 +51,7 @@ LEDGER_PRORRATA_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="letra",
                 declarations=("--letra",),
-                value=ValueContract(DeferredTarget("cadrumo.core", "SectorDiferenciadoLetra")),
+                value=ValueContract(DeferredTarget("cadrumo.core.prorrata_register", "SectorDiferenciadoLetra")),
                 default=ParameterDefault.required(),
                 help_key=TranslationKey("cli.app.ledger.prorrata.letra_help"),
                 metavar=None,
@@ -151,7 +151,7 @@ LEDGER_PRORRATA_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="provenance",
                 declarations=("--provenance",),
-                value=ValueContract(DeferredTarget("cadrumo.core", "ProrrataProvisionalProvenance")),
+                value=ValueContract(DeferredTarget("cadrumo.core.prorrata_register", "ProrrataProvisionalProvenance")),
                 default=ParameterDefault.value("carried_prior_definitiva"),
                 help_key=TranslationKey("cli.app.ledger.prorrata.provenance_help"),
                 metavar=None,
@@ -251,7 +251,7 @@ LEDGER_PRORRATA_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="provenance",
                 declarations=("--provenance",),
-                value=ValueContract(DeferredTarget("cadrumo.core", "ProrrataProvisionalProvenance")),
+                value=ValueContract(DeferredTarget("cadrumo.core.prorrata_register", "ProrrataProvisionalProvenance")),
                 default=ParameterDefault.value("carried_prior_definitiva"),
                 help_key=TranslationKey("cli.app.ledger.prorrata.provenance_help"),
                 metavar=None,
@@ -386,7 +386,7 @@ LEDGER_PRORRATA_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="provenance",
                 declarations=("--provenance",),
-                value=ValueContract(DeferredTarget("cadrumo.core", "ProrrataProvisionalProvenance")),
+                value=ValueContract(DeferredTarget("cadrumo.core.prorrata_register", "ProrrataProvisionalProvenance")),
                 default=ParameterDefault.value("carried_prior_definitiva"),
                 help_key=TranslationKey("cli.app.ledger.prorrata.provenance_help"),
                 metavar=None,

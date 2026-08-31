@@ -20,11 +20,11 @@ from ._spec_policies import BOOTSTRAP_DESTRUCTIVE, BOOTSTRAP_WRITE, PROFILE_READ
 _OUTPUT_LANGUAGE_OPTION = OptionSpec(
     name="output_language",
     declarations=("--output-language", "--language"),
-    value=ValueContract(DeferredTarget("cadrumo.core", "OutputLanguage")),
+    value=ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage")),
     default=ParameterDefault.value(None),
     help_key=TranslationKey("cli.config.auth.output_language_help"),
 )
-_AREA = ValueContract(DeferredTarget("cadrumo.core", "StorageArea"))
+_AREA = ValueContract(DeferredTarget("cadrumo.core.storage_taxonomy", "StorageArea"))
 
 
 def _schema(name: str, identity: str) -> ResultSchemaSpec:

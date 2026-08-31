@@ -117,7 +117,7 @@ LEDGER_EVIDENCE_FOLLOWUP_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="reason",
                 declarations=("--reason",),
-                value=ValueContract(DeferredTarget("cadrumo.core", "ConfirmationBlockReason")),
+                value=ValueContract(DeferredTarget("cadrumo.core.confirmation_gate", "ConfirmationBlockReason")),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.app.ledger.evidence.review.reason_help"),
                 metavar=None,
@@ -133,7 +133,7 @@ LEDGER_EVIDENCE_FOLLOWUP_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="finding",
                 declarations=("--finding",),
-                value=ValueContract(DeferredTarget("cadrumo.core", "DraftDiscrepancyKind")),
+                value=ValueContract(DeferredTarget("cadrumo.core.draft_discrepancy", "DraftDiscrepancyKind")),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.app.ledger.evidence.review.finding_help"),
                 metavar=None,
@@ -149,7 +149,7 @@ LEDGER_EVIDENCE_FOLLOWUP_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="advisory",
                 declarations=("--advisory",),
-                value=ValueContract(DeferredTarget("cadrumo.core", "ReviewAdvisoryKind")),
+                value=ValueContract(DeferredTarget("cadrumo.core.confirmation_gate", "ReviewAdvisoryKind")),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.app.ledger.evidence.review.advisory_help"),
                 metavar=None,

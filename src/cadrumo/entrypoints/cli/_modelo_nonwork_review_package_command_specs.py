@@ -147,7 +147,7 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="refund_election",
                 declarations=("--refund-election",),
-                value=ValueContract(DeferredTarget("cadrumo.core", "RefundElection")),
+                value=ValueContract(DeferredTarget("cadrumo.core.refund_election", "RefundElection")),
                 default=ParameterDefault.value("compensar"),
                 help_key=TranslationKey("cli.app.modelo.work.refund_election_help"),
                 multiple=False,
@@ -158,7 +158,7 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="payment_election",
                 declarations=("--payment-election",),
-                value=ValueContract(DeferredTarget("cadrumo.core", "PaymentElection")),
+                value=ValueContract(DeferredTarget("cadrumo.core.payment_election", "PaymentElection")),
                 default=ParameterDefault.value("ingreso"),
                 help_key=TranslationKey("cli.app.modelo.work.payment_election_help"),
                 multiple=False,
@@ -169,7 +169,7 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="prior_domiciliation_election",
                 declarations=("--prior-domiciliation-election",),
-                value=ValueContract(DeferredTarget("cadrumo.core", "PriorDomiciliationElection")),
+                value=ValueContract(DeferredTarget("cadrumo.core.prior_domiciliation_election", "PriorDomiciliationElection")),
                 default=ParameterDefault.value("keep"),
                 help_key=TranslationKey("cli.app.modelo.work.prior_domiciliation_election_help"),
                 multiple=False,

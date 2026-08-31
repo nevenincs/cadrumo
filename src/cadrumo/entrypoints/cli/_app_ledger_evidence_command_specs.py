@@ -476,7 +476,7 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="operation_type",
                 declarations=("--operation-type",),
-                value=ValueContract(DeferredTarget("cadrumo.core", "IntracomOperationType")),
+                value=ValueContract(DeferredTarget("cadrumo.core.aggregation", "IntracomOperationType")),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.app.ledger.evidence.confirm_operation_type_help"),
                 metavar=None,
@@ -653,7 +653,7 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="off_host_provider",
                 declarations=("--off-host-provider",),
-                value=ValueContract(DeferredTarget("cadrumo.core", "LLMProvider")),
+                value=ValueContract(DeferredTarget("cadrumo.core.config_support", "LLMProvider")),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.app.ledger.evidence.extract_off_host_provider_help"),
                 metavar=None,

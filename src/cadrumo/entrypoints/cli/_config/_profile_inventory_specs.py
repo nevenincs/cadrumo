@@ -17,7 +17,7 @@ from .._command_spec import (
 )
 from ._spec_policies import CALCULATION_READ, PROFILE_READ
 
-_OUTPUT_LANGUAGE = ValueContract(DeferredTarget("cadrumo.core", "OutputLanguage"))
+_OUTPUT_LANGUAGE = ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage"))
 _OUTPUT_LANGUAGE_OPTION = OptionSpec(
     name="output_language",
     declarations=("--output-language", "--language"),

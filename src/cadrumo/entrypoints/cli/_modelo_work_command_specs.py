@@ -30,18 +30,18 @@ _STR = ValueContract(DeferredTarget("builtins", "str"))
 _INT = ValueContract(DeferredTarget("builtins", "int"))
 _BOOL = ValueContract(DeferredTarget("builtins", "bool"))
 _PATH = ValueContract(DeferredTarget("pathlib", "Path"))
-_LANGUAGE = ValueContract(DeferredTarget("cadrumo.core", "OutputLanguage"))
+_LANGUAGE = ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage"))
 _MODELO = ValueContract(
     DeferredTarget("builtins", "str"),
     click_type=DeferredTarget("cadrumo.entrypoints.cli._common", "MODELO_CODE_CHOICE"),
 )
 _MODELO_OPEN = ValueContract(DeferredTarget("builtins", "str"))
-_M210_SOURCE = ValueContract(DeferredTarget("cadrumo.core", "M210GrossIncomeSourceMode"))
-_RESCATE_TYPE = ValueContract(DeferredTarget("cadrumo.core", "RescateType"))
+_M210_SOURCE = ValueContract(DeferredTarget("cadrumo.core.irnr", "M210GrossIncomeSourceMode"))
+_RESCATE_TYPE = ValueContract(DeferredTarget("cadrumo.core.rescate_type", "RescateType"))
 _VERIFY_SELECTOR = ValueContract(DeferredTarget("cadrumo.application.modelo.verify_selector", "ModeloVerifySelector"))
-_REFUND = ValueContract(DeferredTarget("cadrumo.core", "RefundElection"))
-_PAYMENT = ValueContract(DeferredTarget("cadrumo.core", "PaymentElection"))
-_DOMICILIATION = ValueContract(DeferredTarget("cadrumo.core", "PriorDomiciliationElection"))
+_REFUND = ValueContract(DeferredTarget("cadrumo.core.refund_election", "RefundElection"))
+_PAYMENT = ValueContract(DeferredTarget("cadrumo.core.payment_election", "PaymentElection"))
+_DOMICILIATION = ValueContract(DeferredTarget("cadrumo.core.prior_domiciliation_election", "PriorDomiciliationElection"))
 
 
 def _key(value: str) -> TranslationKey:

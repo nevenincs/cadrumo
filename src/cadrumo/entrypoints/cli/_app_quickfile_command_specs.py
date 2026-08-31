@@ -27,7 +27,7 @@ _POLICY = ExecutionPolicySpec(
 _STR = ValueContract(DeferredTarget("builtins", "str"))
 _INT = ValueContract(DeferredTarget("builtins", "int"))
 _PATH = ValueContract(DeferredTarget("pathlib", "Path"))
-_LANG = ValueContract(DeferredTarget("cadrumo.core", "OutputLanguage"))
+_LANG = ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage"))
 
 
 def _option(
@@ -93,21 +93,21 @@ QUICKFILE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _option(
                 "refund_election",
                 ("--refund-election",),
-                ValueContract(DeferredTarget("cadrumo.core", "RefundElection")),
+                ValueContract(DeferredTarget("cadrumo.core.refund_election", "RefundElection")),
                 "cli.app.modelo.work.refund_election_help",
                 default="compensar",
             ),
             _option(
                 "payment_election",
                 ("--payment-election",),
-                ValueContract(DeferredTarget("cadrumo.core", "PaymentElection")),
+                ValueContract(DeferredTarget("cadrumo.core.payment_election", "PaymentElection")),
                 "cli.app.modelo.work.payment_election_help",
                 default="ingreso",
             ),
             _option(
                 "prior_domiciliation_election",
                 ("--prior-domiciliation-election",),
-                ValueContract(DeferredTarget("cadrumo.core", "PriorDomiciliationElection")),
+                ValueContract(DeferredTarget("cadrumo.core.prior_domiciliation_election", "PriorDomiciliationElection")),
                 "cli.app.modelo.work.prior_domiciliation_election_help",
                 default="keep",
             ),

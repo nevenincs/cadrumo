@@ -22,8 +22,8 @@ from ._command_spec import (
 _STRING = ValueContract(DeferredTarget("builtins", "str"))
 _BOOL = ValueContract(DeferredTarget("builtins", "bool"))
 _INT = ValueContract(DeferredTarget("builtins", "int"))
-_OUTPUT_LANGUAGE = ValueContract(DeferredTarget("cadrumo.core", "OutputLanguage"))
-_OUTPUT_FORMAT = ValueContract(DeferredTarget("cadrumo.core", "OutputFormat"))
+_OUTPUT_LANGUAGE = ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage"))
+_OUTPUT_FORMAT = ValueContract(DeferredTarget("cadrumo.core.output_rendering", "OutputFormat"))
 _STATE_FREE = ExecutionPolicySpec(
     capabilities=frozenset({"state-free"}),
     side_effects=frozenset({"none"}),

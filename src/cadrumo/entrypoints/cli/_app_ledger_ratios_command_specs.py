@@ -53,7 +53,7 @@ LEDGER_RATIOS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="output_language",
                 declarations=("--output-language", "--language"),
-                value=ValueContract(DeferredTarget("cadrumo.core", "OutputLanguage")),
+                value=ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage")),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.config.auth.output_language_help"),
                 metavar=None,
@@ -103,7 +103,7 @@ LEDGER_RATIOS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="output_language",
                 declarations=("--output-language", "--language"),
-                value=ValueContract(DeferredTarget("cadrumo.core", "OutputLanguage")),
+                value=ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage")),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.config.auth.output_language_help"),
                 metavar=None,
@@ -173,7 +173,7 @@ LEDGER_RATIOS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="output_language",
                 declarations=("--output-language", "--language"),
-                value=ValueContract(DeferredTarget("cadrumo.core", "OutputLanguage")),
+                value=ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage")),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.config.auth.output_language_help"),
                 metavar=None,
@@ -217,7 +217,7 @@ LEDGER_RATIOS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="output_language",
                 declarations=("--output-language", "--language"),
-                value=ValueContract(DeferredTarget("cadrumo.core", "OutputLanguage")),
+                value=ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage")),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.config.auth.output_language_help"),
                 metavar=None,
@@ -251,7 +251,7 @@ LEDGER_RATIOS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="output_language",
                 declarations=("--output-language", "--language"),
-                value=ValueContract(DeferredTarget("cadrumo.core", "OutputLanguage")),
+                value=ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage")),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.config.auth.output_language_help"),
                 metavar=None,

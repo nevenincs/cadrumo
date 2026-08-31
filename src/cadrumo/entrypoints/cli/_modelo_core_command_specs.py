@@ -30,7 +30,7 @@ _CALCULATION_WRITE = ExecutionPolicySpec(
 )
 _STR = ValueContract(DeferredTarget("builtins", "str"))
 _INT = ValueContract(DeferredTarget("builtins", "int"))
-_LANGUAGE = ValueContract(DeferredTarget("cadrumo.core", "OutputLanguage"))
+_LANGUAGE = ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage"))
 _MODELO = ValueContract(
     DeferredTarget("builtins", "str"),
     click_type=DeferredTarget("cadrumo.entrypoints.cli._common", "MODELO_CODE_CHOICE"),

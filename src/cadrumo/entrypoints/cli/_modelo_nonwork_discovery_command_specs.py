@@ -47,7 +47,7 @@ MODELO_NONWORK_DISCOVERY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="domain",
                 declarations=("--domain",),
-                value=ValueContract(DeferredTarget("cadrumo.core", "TaxDomain")),
+                value=ValueContract(DeferredTarget("cadrumo.core.tax_domain", "TaxDomain")),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.app.modelo.list.domain_help"),
                 multiple=False,

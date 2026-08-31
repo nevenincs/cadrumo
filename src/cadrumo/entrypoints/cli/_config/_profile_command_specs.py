@@ -46,8 +46,8 @@ _BOOL = ValueContract(DeferredTarget("builtins", "bool"))
 _INT = ValueContract(DeferredTarget("builtins", "int"))
 _PATH = ValueContract(DeferredTarget("pathlib", "Path"))
 _STR = ValueContract(DeferredTarget("builtins", "str"))
-_LANG = ValueContract(DeferredTarget("cadrumo.core", "OutputLanguage"))
-_CAPABILITY = ValueContract(DeferredTarget("cadrumo.core", "ServiceCapability"))
+_LANG = ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage"))
+_CAPABILITY = ValueContract(DeferredTarget("cadrumo.core.capabilities", "ServiceCapability"))
 _TOGGLE = ValueContract(
     DeferredTarget("builtins", "str"),
     choices=("on", "off"),
