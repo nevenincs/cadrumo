@@ -210,6 +210,32 @@ def _validate_revision_surface_sections(
     failures.extend(
         validate_export_layout_record_coverage(prefix=prefix, revision=revision, source_refs=source_refs),
     )
+    _validate_revision_tail_sections(
+        failures,
+        prefix=prefix,
+        modelo_id=modelo_id,
+        revision=revision,
+        context=context,
+        legal_refs=legal_refs,
+        source_refs=source_refs,
+        evidence=evidence,
+        justificante_corpus_root=justificante_corpus_root,
+    )
+
+
+def _validate_revision_tail_sections(
+    failures: list[str],
+    *,
+    prefix: str,
+    modelo_id: str,
+    revision: ModeloRevision,
+    context: RevisionValidationContext,
+    legal_refs: Mapping[str, LegalReference],
+    source_refs: Mapping[str, SourceReference],
+    evidence: EvidenceValidator,
+    justificante_corpus_root: Path | None,
+) -> None:
+    """Append identity, extraction, and cross-surface validation failures."""
     failures.extend(validate_revision_id_window_agreement(prefix=prefix, revision=revision))
     failures.extend(validate_valid_from_ejercicio_convention(prefix=prefix, revision=revision))
     failures.extend(
