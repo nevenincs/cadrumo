@@ -1177,8 +1177,8 @@ errors:
       con el modelo %{modelo_id}: %{candidate_ids}. Indique el periodo de declaración,
       o una fecha de referencia, para seleccionar una de ellas.'
     modelo_not_registered: El modelo no está registrado en el registro.
-    no_revision_for_period: Ninguna revisión del registro cubre el modelo %{modelo_id}
-      ejercicio %{filing_year} periodo %{period}.
+    no_revision_for_period: 'Ninguna revisión del registro cubre el modelo %{modelo_id}
+      del ejercicio %{filing_year} y periodo %{period}; revisiones disponibles: %{available_revision_ids}.'
   storage:
     engine:
       create_failed: No se pudo crear el motor de base de datos de almacenamiento.

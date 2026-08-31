@@ -368,8 +368,8 @@ class NoRevisionForPeriodError(RegistrySnapshotError):
     preflight`` resolver) can build an instructive refusal without
     parsing the message. Catchable as :class:`RegistrySnapshotError`.
 
-    Structured attributes: ``modelo_id``, ``filing_year``,
-    ``period``, ``revision_id``.
+    Structured attributes: ``modelo_id``, ``filing_year``, ``period``,
+    ``revision_id``, ``available_revision_ids``.
     """
 
     def __init__(

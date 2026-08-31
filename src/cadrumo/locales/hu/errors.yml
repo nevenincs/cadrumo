@@ -1110,8 +1110,8 @@ errors:
       a(z) %{modelo_id} modellhez: %{candidate_ids}. Adja meg a bevallási időszakot
       vagy egy vonatkozási dátumot az egyik kiválasztásához.'
     modelo_not_registered: A modell nincs regisztrálva a nyilvántartásban.
-    no_revision_for_period: A nyilvántartásban nincs a(z) %{modelo_id} modellt %{filing_year}
-      adóévben %{period} időszakban lefedő revízió.
+    no_revision_for_period: 'A nyilvántartásban nincs a(z) %{modelo_id} modellt %{filing_year}
+      adóévben %{period} időszakban lefedő revízió; elérhető revíziók: %{available_revision_ids}.'
   storage:
     engine:
       create_failed: A tárolási adatbázis-motort nem sikerült létrehozni. Ellenőrizze

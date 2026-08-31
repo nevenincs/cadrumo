@@ -20,6 +20,7 @@ import pytest
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.directory_scan import scan_directory
+from .....core.errors.error_codes import resolve_error_message
 from .._validate_revision_rules import validate_revision_windows
 from ..authority import bundled_authority
 from ..errors import (
@@ -197,6 +198,15 @@ def test_modelo_390_2026_refusal_lists_the_enrolled_revision_set() -> None:
         "modelo 390: no revision for year=2026 period='0A' revision=None; "
         "modelo 390 declares: 2021, 2022, 2023, 2024, 2025"
     )
+
+
+@pytest.mark.parametrize("locale", ("en", "es", "ca", "hu"))
+def test_modelo_390_2026_localized_refusal_lists_the_enrolled_revision_set(locale: str) -> None:
+    """The canonical renderer preserves the accepted set in every shipped locale."""
+    with pytest.raises(NoRevisionForPeriodError) as excinfo:
+        bundled_authority().snapshot("390", filing_year=2026, period="0A")
+
+    assert "2021,2022,2023,2024,2025" in resolve_error_message(excinfo.value, locale=locale)
 
 
 def test_ambiguous_selection_raises_typed_subclass_with_candidate_ids() -> None:

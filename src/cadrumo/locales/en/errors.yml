@@ -1090,8 +1090,8 @@ errors:
       modelo %{modelo_id}: %{candidate_ids}. Supply the filing period, or an as-of
       date, to select one of them.'
     modelo_not_registered: Model is not registered in the registry.
-    no_revision_for_period: No registry revision covers modelo %{modelo_id} filing
-      year %{filing_year} period %{period}.
+    no_revision_for_period: 'No registry revision covers modelo %{modelo_id} filing
+      year %{filing_year} period %{period}; available revisions: %{available_revision_ids}.'
   storage:
     engine:
       create_failed: The storage database engine could not be created. Check the configured
