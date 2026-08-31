@@ -42,14 +42,14 @@ from __future__ import annotations
 from ....adapters.persistence.storage.crypto.encrypted_columns import secure_object_key_digest
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.time.clock import now
-from ...persistence.storage._secure_object_namespaces import (
+from ...persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+from ...persistence.storage.secure_object_namespaces import (
     GOOGLE_CREDENTIAL_SOURCE_NAMESPACE,
     GOOGLE_DRIVE_CONFIG_NAMESPACE,
     GOOGLE_OAUTH_CLIENT_NAMESPACE,
     GOOGLE_OAUTH_METADATA_NAMESPACE,
     GOOGLE_OAUTH_TOKEN_NAMESPACE,
 )
-from ...persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ...persistence.storage.sql import SecureObjectDeletion, SecureObjectRepository
 from .impersonation import GoogleCredentialSourceSelection
 from .records import DriveConfig, OAuthClient, OAuthMetadata, OAuthToken

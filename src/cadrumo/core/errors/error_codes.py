@@ -196,7 +196,7 @@ def register(code: ErrorCode) -> ErrorCode:
     return code
 
 
-from .registry import _ALL_DECLARED_ERROR_CODES  # pyright: ignore[reportPrivateUsage]
+from .registry.declared_codes import _ALL_DECLARED_ERROR_CODES
 
 
 def _build_declared_code_map(rows: tuple[tuple[str, ErrorCode], ...]) -> Mapping[str, ErrorCode]:

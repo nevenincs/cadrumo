@@ -30,7 +30,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....adapters.persistence.storage._secure_object_namespaces import (
+from ....adapters.persistence.storage.secure_object_namespaces import (
     BUCKET_EVENT_HISTORY_NAMESPACE,
     MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE,
     MODELO_FILING_RECORD_CATALOGUE_NAMESPACE,

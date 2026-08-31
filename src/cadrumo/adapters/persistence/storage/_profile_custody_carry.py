@@ -63,8 +63,12 @@ from ..profile.filing_drafts import ModeloDraftRepository
 from ..profile.justificante import JustificanteRepository
 from ..profile.modelo_reconciliation import ModeloReconciliationRecordRepository
 from ..profile.submission import SubmissionRepository
-from ._namespace_registry import STORAGE_NAMESPACE_REGISTRY
-from ._secure_object_namespaces import (
+from .attachment import unwrap_blob_payload
+from .envelope._envelope import Envelope
+from .envelope._secure_repository import SecureBoundRepository
+from .namespace_registry import STORAGE_NAMESPACE_REGISTRY
+from .runtime_repository import secure_object_repository_for_bucket
+from .secure_object_namespaces import (
     ATTACHMENT_MANIFEST_NAMESPACE,
     MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE,
     MODELO_FILING_RECORD_CATALOGUE_NAMESPACE,
@@ -74,10 +78,6 @@ from ._secure_object_namespaces import (
     USER_PROFILE_VALUE_NAMESPACE,
     SecureObjectNamespaceDefinition,
 )
-from .attachment import unwrap_blob_payload
-from .envelope._envelope import Envelope
-from .envelope._secure_repository import SecureBoundRepository
-from .runtime_repository import secure_object_repository_for_bucket
 from .sql import SecureObjectRecord
 
 _TYPED_CATEGORY_NAMESPACES: frozenset[str] = frozenset(

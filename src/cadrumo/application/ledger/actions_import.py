@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 
 from collections.abc import Sequence
 
-from ...adapters.persistence.storage._secure_object_namespaces import TRANSACTION_CATALOGUE_NAMESPACE
+from ...adapters.persistence.storage.secure_object_namespaces import TRANSACTION_CATALOGUE_NAMESPACE
 from ...core.errors.error_codes import resolve_error_message
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import canonical_json_bytes, sha256_file

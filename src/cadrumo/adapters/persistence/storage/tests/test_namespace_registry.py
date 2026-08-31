@@ -19,13 +19,14 @@ from .....tests import (
     package_python_files,
     repo_relative,
 )
-from .._namespace_registry import (
+from ..errors import NamespaceRegistryError
+from ..namespace_registry import (
     STORAGE_NAMESPACE_REGISTRY,
     secure_object_logical_path,
     secure_object_namespace_logical_path,
 )
-from .._namespace_taxonomy import StoragePathAnchor, StoragePathKind
-from .._secure_object_namespaces import (
+from ..namespace_taxonomy import StoragePathAnchor, StoragePathKind
+from ..secure_object_namespaces import (
     AEAT_BROWSER_SESSION_NAMESPACE,
     AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
     AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE,
@@ -69,7 +70,7 @@ from .._secure_object_namespaces import (
     StorageNamespaceScope,
     StorageRemoteMirrorPolicy,
 )
-from .._storage_path_definitions import (
+from ..storage_path_definitions import (
     BLOB_MANIFEST_SCHEMA_VERSION,
     BUCKET_DB_DIRNAME,
     BUCKET_LOCK_FILENAME,
@@ -77,7 +78,6 @@ from .._storage_path_definitions import (
     BUCKETS_DIRNAME,
     StoragePathDefinition,
 )
-from ..errors import NamespaceRegistryError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -184,7 +184,7 @@ def test_secure_object_registry_names_live_m036_declaration_namespace() -> None:
     """The M036 declarative-recording verbs
     persist operator declarations through this namespace.
     """
-    from .._secure_object_namespaces import LIVE_M036_DECLARATION_NAMESPACE
+    from ..secure_object_namespaces import LIVE_M036_DECLARATION_NAMESPACE
 
     declaration = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("live_m036_declaration")
 
@@ -196,7 +196,7 @@ def test_secure_object_registry_names_live_m036_declaration_namespace() -> None:
 
 def test_secure_object_registry_names_m145_communication_record_namespace() -> None:
     """Modelo 145 local communication records persist through this namespace."""
-    from .._secure_object_namespaces import M145_COMMUNICATION_RECORD_NAMESPACE
+    from ..secure_object_namespaces import M145_COMMUNICATION_RECORD_NAMESPACE
 
     record = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("m145_communication_record")
 
@@ -296,7 +296,7 @@ def test_modelo_catalogue_namespaces_pin_their_persisted_addresses() -> None:
     deliberate pin that replaces it, alongside the singleton catalogue object key
     each of the four addresses its single row by.
     """
-    from .._secure_object_namespaces import (
+    from ..secure_object_namespaces import (
         MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE,
         MODELO_FILING_RECORD_CATALOGUE_NAMESPACE,
         MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE,
@@ -886,7 +886,7 @@ def _iter_aeat_production_sources() -> tuple[Path, ...]:
         sorted(
             path
             for path in package_python_files(include_data=True)
-            if not _is_test_surface(path) and path.name != "_secure_object_namespaces.py"
+            if not _is_test_surface(path) and path.name != "secure_object_namespaces.py"
         ),
     )
 
@@ -967,19 +967,19 @@ def _collect_imported_registry_namespace_bindings(tree: ast.AST) -> dict[str, st
 def _is_storage_namespace_import(node: ast.ImportFrom) -> bool:
     return node.module in {
         "cadrumo.adapters.persistence.storage",
-        "cadrumo.adapters.persistence.storage._secure_object_namespaces",
-        "_secure_object_namespaces",
+        "cadrumo.adapters.persistence.storage.secure_object_namespaces",
+        "secure_object_namespaces",
     } or (
         node.level > 0
         and node.module
         in {
             "adapters.persistence.storage",
-            "adapters.persistence.storage._secure_object_namespaces",
+            "adapters.persistence.storage.secure_object_namespaces",
             "persistence.storage",
-            "persistence.storage._secure_object_namespaces",
+            "persistence.storage.secure_object_namespaces",
             "storage",
-            "storage._secure_object_namespaces",
-            "_secure_object_namespaces",
+            "storage.secure_object_namespaces",
+            "secure_object_namespaces",
         }
     )
 

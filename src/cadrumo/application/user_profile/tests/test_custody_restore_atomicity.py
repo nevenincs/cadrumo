@@ -20,9 +20,9 @@ from datetime import UTC, datetime
 
 import pytest
 
-from ....adapters.persistence.storage._secure_object_namespaces import WORKFLOW_RUN_NAMESPACE
 from ....adapters.persistence.storage.errors import ClassificationError
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+from ....adapters.persistence.storage.secure_object_namespaces import WORKFLOW_RUN_NAMESPACE
 from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ....core.classification.policies import SensitivityClass
 from ....domain.user_profile.portable_export import CarriedSecureObject

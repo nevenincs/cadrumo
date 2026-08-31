@@ -136,12 +136,12 @@ from ...profile.inventory import load_inventory, save_inventory
 from ...profile.recipient_replay_guard import RecipientReplayGuardRepository
 from ...profile.submission import SubmissionRepository
 from ...profile.usage_ratios import load_usage_ratios, save_usage_ratios
-from .._secure_object_namespaces import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE, LLM_USAGE_NAMESPACE
 from ..attachment import AttachmentStore
 from ..errors import StorageValidationError
 from ..master_key.active_session import activate_session
 from ..master_key.bucket_session import BucketSession
 from ..runtime_repository import secure_object_repository_for_active_bucket
+from ..secure_object_namespaces import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE, LLM_USAGE_NAMESPACE
 from ..sql.engine import dispose_engine
 from .registered_bucket import ensure_registered_bucket
 

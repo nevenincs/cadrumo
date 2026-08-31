@@ -14,8 +14,8 @@ from pydantic import ValidationError
 
 from ....adapters.outbound.aeat.auth.clave_movil_support import ClaveMovilApprovalTimeoutError
 from ....adapters.outbound.aeat.sede.errors import SedeFailureMode, SedeNavigationError
-from ....adapters.persistence.storage._secure_object_namespaces import LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE
 from ....adapters.persistence.storage.errors import SecureObjectRowIdentityError, StorageValidationError
+from ....adapters.persistence.storage.secure_object_namespaces import LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE
 from ....core.auth_provider import AuthProviderKind
 from ....core.config import Settings
 from ....core.identity import nif_check_letter

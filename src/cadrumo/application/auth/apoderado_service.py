@@ -34,10 +34,10 @@ from typing import Annotated, ClassVar, override
 
 from pydantic import BaseModel, Field, StringConstraints
 
-from ...adapters.persistence.storage._path_safety import safe_repository_id
-from ...adapters.persistence.storage._secure_object_namespaces import AUTH_APODERADO_CONFIGURATION_NAMESPACE
 from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
 from ...adapters.persistence.storage.errors import SecureObjectRowIdentityError
+from ...adapters.persistence.storage.path_safety import safe_repository_id
+from ...adapters.persistence.storage.secure_object_namespaces import AUTH_APODERADO_CONFIGURATION_NAMESPACE
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...core.classification.policies import SensitivityClass
 from ...core.config import Settings

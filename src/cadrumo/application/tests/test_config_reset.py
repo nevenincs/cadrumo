@@ -116,8 +116,8 @@ def _remove_bucket_directory_out_of_band(profile_id: str, *, root: Path) -> None
     Replaces the retired ``remove_profile_bucket_directory``. No supported path
     produces this state; forging it is the only way to exercise the detector.
     """
-    from ...adapters.persistence.storage._storage_path_definitions import BUCKETS_DIRNAME
     from ...adapters.persistence.storage.sql.engine import dispose_engines_for_bucket
+    from ...adapters.persistence.storage.storage_path_definitions import BUCKETS_DIRNAME
 
     # An out-of-band remover is some OTHER actor, which would not be holding
     # this process's SQLite handle on the bucket. Releasing it first is what
@@ -128,7 +128,7 @@ def _remove_bucket_directory_out_of_band(profile_id: str, *, root: Path) -> None
 
 
 def _capsule_dir_for(root: Path, profile_id: str) -> Path:
-    from ...adapters.persistence.storage._storage_path_definitions import BUCKETS_DIRNAME
+    from ...adapters.persistence.storage.storage_path_definitions import BUCKETS_DIRNAME
 
     return root / BUCKETS_DIRNAME / profile_id
 

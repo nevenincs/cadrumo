@@ -45,9 +45,9 @@ from .....llm.consent import EvidenceConsentToken
 from .....llm.errors import LLMConsentError
 from .....llm.models import LLMProvider, LLMRequest
 from .....llm.providers.base import ProviderAdapter, ProviderCompletion, ProviderRequest
-from ....persistence.storage._secure_object_namespaces import LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE
 from ....persistence.storage.master_key.active_session import close_active_bucket_session
 from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+from ....persistence.storage.secure_object_namespaces import LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE
 from .._consent_ledger import EvidenceConsentLedger
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

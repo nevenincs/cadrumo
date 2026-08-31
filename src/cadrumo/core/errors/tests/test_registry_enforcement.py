@@ -37,7 +37,7 @@ import pytest
 from ....tests import module_name, production_ast_items, repo_relative
 from ..error_codes import ERROR_REGISTRY, ErrorCategory, get_registered_error_code
 from ..hierarchy import CadrumoError
-from ..registry import _ALL_DECLARED_ERROR_CODES
+from ..registry.declared_codes import _ALL_DECLARED_ERROR_CODES
 from . import describe_optional_extras
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

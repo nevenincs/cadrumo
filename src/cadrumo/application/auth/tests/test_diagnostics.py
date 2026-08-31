@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.outbound.aeat.auth.clave_movil_support import mint_diagnostic_id
-from ....adapters.persistence.storage._secure_object_namespaces import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE
+from ....adapters.persistence.storage.secure_object_namespaces import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.classification.policies import SensitivityClass
 from ....core.errors.error_codes import ERROR_REGISTRY, build_error_envelope

@@ -48,12 +48,12 @@ from typing import TYPE_CHECKING
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PublicKey
 from pydantic import BaseModel, Field, model_validator
 
-from ...adapters.persistence.storage._secure_object_namespaces import (
-    MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE as _NAMESPACE,
-)
 from ...adapters.persistence.storage.runtime_repository import (
     secure_object_repository_for_active_bucket,
     secure_object_repository_for_bucket,
+)
+from ...adapters.persistence.storage.secure_object_namespaces import (
+    MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE as _NAMESPACE,
 )
 from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING

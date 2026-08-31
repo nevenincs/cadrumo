@@ -50,8 +50,6 @@ from .....core.identity import ContentDigest
 from .....core.logging import get_logger
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.time.clock import now
-from .._namespace_registry import STORAGE_NAMESPACE_REGISTRY
-from .._storage_path_definitions import BLOB_MANIFEST_SCHEMA_VERSION
 from ..crypto.aead import KEY_SIZE, EncryptedBlob, decrypt_record, encrypt_record
 from ..envelope._envelope import EncryptionMetadata, Envelope, load_envelope, save_envelope
 from ..errors import (
@@ -65,6 +63,8 @@ from ..errors import (
 )
 from ..master_key._master_key import MasterKeyProvider
 from ..master_key.active_session import get_active_master_key
+from ..namespace_registry import STORAGE_NAMESPACE_REGISTRY
+from ..storage_path_definitions import BLOB_MANIFEST_SCHEMA_VERSION
 
 _log = get_logger(__name__)
 

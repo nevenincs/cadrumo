@@ -65,8 +65,8 @@ _HARNESS = (
     import sys
     from contextlib import ExitStack
 
-    from cadrumo.adapters.persistence.storage._profile_custody import build_profile_custody_port
-    from cadrumo.adapters.persistence.storage._profile_login_session import build_profile_login_session_port
+    from cadrumo.adapters.persistence.storage.profile_custody import build_profile_custody_port
+    from cadrumo.adapters.persistence.storage.profile_login_session import build_profile_login_session_port
     from cadrumo.application.user_profile.custody_ports import bind_profile_custody_port
     from cadrumo.application.user_profile.login_session_port import bind_profile_login_session_port
     from cadrumo.core import config as config_module
@@ -149,8 +149,8 @@ _WINDOWS_HANDLE_HARNESS = (
     import sys
     from contextlib import ExitStack
 
-    from cadrumo.adapters.persistence.storage._profile_custody import build_profile_custody_port
-    from cadrumo.adapters.persistence.storage._profile_login_session import build_profile_login_session_port
+    from cadrumo.adapters.persistence.storage.profile_custody import build_profile_custody_port
+    from cadrumo.adapters.persistence.storage.profile_login_session import build_profile_login_session_port
     from cadrumo.application.user_profile.custody_ports import bind_profile_custody_port
     from cadrumo.application.user_profile.login_session_port import bind_profile_login_session_port
     from cadrumo.core import config as config_module

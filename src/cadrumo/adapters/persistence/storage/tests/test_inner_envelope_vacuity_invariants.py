@@ -45,9 +45,9 @@ import pytest
 from pydantic import BaseModel, Field
 
 from .....tests import production_python_files, repo_relative
-from .._namespace_registry import STORAGE_NAMESPACE_REGISTRY
-from .._schema_lineage import SECURE_OBJECT_DURABILITY_FLOOR
 from ..envelope._envelope import Envelope
+from ..namespace_registry import STORAGE_NAMESPACE_REGISTRY
+from ..schema_lineage import SECURE_OBJECT_DURABILITY_FLOOR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

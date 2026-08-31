@@ -50,14 +50,14 @@ from .....core.time.clock import now
 from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.casilla_membership import undeclared_casilla_ids
 from .....domain.calculations.registry.errors import RegistrySnapshotError
-from ....persistence.storage._secure_object_namespaces import (
+from ....persistence.storage.envelope._secure_repository import SecureBoundRepository
+from ....persistence.storage.errors import SecureObjectRowIdentityError
+from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+from ....persistence.storage.secure_object_namespaces import (
     AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
     AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE,
     AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE,
 )
-from ....persistence.storage.envelope._secure_repository import SecureBoundRepository
-from ....persistence.storage.errors import SecureObjectRowIdentityError
-from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....persistence.storage.sql import SecureObjectRepository
 from .errors import ExpedienteNotFoundError, SedeValidationError
 from .schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, IvaCompensationWalletObservation

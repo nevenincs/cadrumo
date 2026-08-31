@@ -22,9 +22,9 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.persistence.storage._secure_object_namespaces import WORKFLOW_RUN_NAMESPACE
 from ....adapters.persistence.storage.envelope._envelope import Envelope
 from ....adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
+from ....adapters.persistence.storage.secure_object_namespaces import WORKFLOW_RUN_NAMESPACE
 from ....core.classification.policies import SensitivityClass
 from ....core.config import override_settings
 from ....core.errors.hierarchy import SiteHealthState

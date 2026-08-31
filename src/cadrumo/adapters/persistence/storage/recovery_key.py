@@ -80,6 +80,16 @@ class RecoveryKey:
     __slots__ = ("_mnemonic_buffer", "_raw_buffer")
 
     def __init__(self, *, raw: Buffer, mnemonic: str) -> None:
+        """Copy ``raw`` and ``mnemonic`` into the wipeable buffers this key owns.
+
+        Args:
+            raw: The entropy, which must be exactly the recovery-key size.
+            mnemonic: The non-empty mnemonic encoding that entropy.
+
+        Raises:
+            StorageValidationError: If the entropy is the wrong length or the
+                mnemonic is empty.
+        """
         raw_buffer = bytearray(raw)
         if len(raw_buffer) != _RECOVERY_KEY_SIZE:
             raise _storage_validation_error(
@@ -114,9 +124,11 @@ class RecoveryKey:
         _zeroise(self._mnemonic_buffer)
 
     def __enter__(self) -> Self:
+        """Return this key, so a ``with`` block bounds the secret's lifetime."""
         return self
 
     def __exit__(self, *_exc_info: object) -> None:
+        """Wipe the buffers on block exit, whether or not the body raised."""
         self.wipe()
 
 

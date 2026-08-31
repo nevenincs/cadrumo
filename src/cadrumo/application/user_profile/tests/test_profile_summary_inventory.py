@@ -17,7 +17,6 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.persistence.storage._profile_custody import build_profile_custody_port
 from ....adapters.persistence.storage.custody.capsule import publish_profile_custody_capsule
 from ....adapters.persistence.storage.custody.capsule_records import ProfileCustodyCapsuleLabel
 from ....adapters.persistence.storage.custody.records import (
@@ -26,6 +25,7 @@ from ....adapters.persistence.storage.custody.records import (
     ProfileCustodyWrappedDek,
 )
 from ....adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
+from ....adapters.persistence.storage.profile_custody import build_profile_custody_port
 from ....core.config import Settings
 from ....core.profile_discovery import ProfileSummaryOutcome
 from ..custody_ports import bind_profile_custody_port

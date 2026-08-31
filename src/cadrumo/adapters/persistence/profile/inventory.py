@@ -34,7 +34,7 @@ from ....domain.contribuyente.inventory.records import (
     InventoryLedgerError,
     MovementRecord,
 )
-from ..storage._secure_object_namespaces import PROFILE_INVENTORY_LEDGER_NAMESPACE
+from ..storage.secure_object_namespaces import PROFILE_INVENTORY_LEDGER_NAMESPACE
 from ..storage.sql import SecureObjectRepository
 from ._secure_model_document import (
     ProfileBareModelSecurePersistence,

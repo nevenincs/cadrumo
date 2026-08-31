@@ -28,8 +28,8 @@ from decimal import Decimal
 import pytest
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ....adapters.persistence.storage._secure_object_namespaces import INVOICE_CATALOGUE_NAMESPACE
 from ....adapters.persistence.storage.envelope._envelope import Envelope
+from ....adapters.persistence.storage.secure_object_namespaces import INVOICE_CATALOGUE_NAMESPACE
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....application.invoices._creation import build_catalogue_invoice
 from ....core.aggregation import IntracomOperationType

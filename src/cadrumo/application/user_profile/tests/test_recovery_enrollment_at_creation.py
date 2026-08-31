@@ -16,7 +16,6 @@ from uuid import UUID
 
 import pytest
 
-from ....adapters.persistence.storage._recovery_key import RecoveryKey, generate_recovery_key
 from ....adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from ....adapters.persistence.storage.custody.errors import ProfileCustodyRecoverySecretError
 from ....adapters.persistence.storage.custody.recovery import (
@@ -24,6 +23,7 @@ from ....adapters.persistence.storage.custody.recovery import (
     parse_profile_custody_recovery_envelope,
     unlock_profile_custody_recovery,
 )
+from ....adapters.persistence.storage.recovery_key import RecoveryKey, generate_recovery_key
 from ....tests.secure_sql import isolated_profile_storage_root
 from ..profile_repository import CommittedProfileRepository
 from ..registration import ProfileRegistrationError, register_profile_with_credentials

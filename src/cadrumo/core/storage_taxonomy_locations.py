@@ -606,7 +606,7 @@ _BUCKET_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.BUCKET_DATABASE,
         _BUCKET_DATABASE_DIRNAME,
-        consumer_module="adapters/persistence/storage/_storage_path_definitions.py",
+        consumer_module="adapters/persistence/storage/storage_path_definitions.py",
         scope=StorageScope.BUCKET_RELATIVE,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
@@ -630,7 +630,7 @@ _BUCKET_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.BUCKET_BLOBS,
         "blobs",
-        consumer_module="adapters/persistence/storage/_storage_path_definitions.py",
+        consumer_module="adapters/persistence/storage/storage_path_definitions.py",
         scope=StorageScope.BUCKET_RELATIVE,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
@@ -655,7 +655,7 @@ _BUCKET_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.BUCKET_LOCK,
         ".lock",
-        consumer_module="adapters/persistence/storage/_storage_path_definitions.py",
+        consumer_module="adapters/persistence/storage/storage_path_definitions.py",
         node_kind=StorageNodeKind.FILE,
         scope=StorageScope.BUCKET_RELATIVE,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
@@ -665,7 +665,7 @@ _BUCKET_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.BUCKET_OUTPUT_LANGUAGE_HINT,
         "output-language.hint",
-        consumer_module="adapters/persistence/storage/_storage_path_definitions.py",
+        consumer_module="adapters/persistence/storage/storage_path_definitions.py",
         node_kind=StorageNodeKind.FILE,
         scope=StorageScope.BUCKET_RELATIVE,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
@@ -680,7 +680,7 @@ _BUCKET_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         # bucket-id-parameterized root, not BUCKET_RELATIVE.
         StorageCategory.BUCKET_KEYSTORE,
         "keystore",
-        consumer_module="adapters/persistence/storage/_storage_path_definitions.py",
+        consumer_module="adapters/persistence/storage/storage_path_definitions.py",
         scope=StorageScope.KEYSTORE_ROOT,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
@@ -737,7 +737,7 @@ _BUCKET_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.KEYSTORE_PROFILE_SESSION,
         "session.v2.json",
-        consumer_module="adapters/persistence/storage/_storage_path_definitions.py",
+        consumer_module="adapters/persistence/storage/storage_path_definitions.py",
         node_kind=StorageNodeKind.FILE,
         scope=StorageScope.KEYSTORE_RELATIVE,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
@@ -747,7 +747,7 @@ _BUCKET_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.KEYSTORE_PROFILE_SESSION_RETIREMENT,
         "session.v2.retirement.json",
-        consumer_module="adapters/persistence/storage/_storage_path_definitions.py",
+        consumer_module="adapters/persistence/storage/storage_path_definitions.py",
         node_kind=StorageNodeKind.FILE,
         scope=StorageScope.KEYSTORE_RELATIVE,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
@@ -757,7 +757,7 @@ _BUCKET_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.KEYSTORE_LOGIN_THROTTLE,
         "login-throttle.json",
-        consumer_module="adapters/persistence/storage/_storage_path_definitions.py",
+        consumer_module="adapters/persistence/storage/storage_path_definitions.py",
         node_kind=StorageNodeKind.FILE,
         scope=StorageScope.KEYSTORE_RELATIVE,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,

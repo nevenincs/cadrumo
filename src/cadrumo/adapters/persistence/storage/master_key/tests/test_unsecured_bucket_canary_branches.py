@@ -36,8 +36,8 @@ from ......core.config import load_settings, override_settings
 from ......core.storage_taxonomy import StorageCategory
 from ......core.storage_taxonomy_locations import bucket_scoped_storage_path
 from ....tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
-from ..._secure_object_namespaces import USER_PROFILE_VALUE_NAMESPACE
 from ...errors import UnsecuredModeRefusedError
+from ...secure_object_namespaces import USER_PROFILE_VALUE_NAMESPACE
 from .._master_key import refuse_unsecured_bucket_with_real_profile
 from ..bucket_session import BucketSession
 

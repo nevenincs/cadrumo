@@ -12,9 +12,9 @@ from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import sha256_hex
 from ....core.identity import ContentDigest
 from ....core.time.utc import validate_utc_aware
-from ..storage._secure_object_namespaces import OPERATION_SECURE_REFERENCE_NAMESPACE, SecureObjectNamespaceDefinition
 from ..storage.errors import RepositoryError
 from ..storage.runtime_repository import secure_object_repository_for_active_bucket
+from ..storage.secure_object_namespaces import OPERATION_SECURE_REFERENCE_NAMESPACE, SecureObjectNamespaceDefinition
 from ..storage.sql import SecureObjectRepository
 
 _SECURE_REFERENCE_SCHEMA_VERSION = 1

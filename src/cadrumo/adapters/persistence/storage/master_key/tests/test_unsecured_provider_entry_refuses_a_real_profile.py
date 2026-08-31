@@ -32,9 +32,9 @@ from sqlalchemy.engine.default import DefaultDialect
 from ......core.config import load_settings, override_settings
 from ......core.storage_taxonomy import StorageCategory
 from ......core.storage_taxonomy_locations import bucket_scoped_storage_path
-from ..._secure_object_namespaces import USER_PROFILE_VALUE_NAMESPACE
 from ...crypto.encrypted_columns import EncryptedBytes
 from ...errors import UnsecuredModeRefusedError
+from ...secure_object_namespaces import USER_PROFILE_VALUE_NAMESPACE
 from .._master_key import UnsecuredMasterKeyProvider
 from ..active_session import activate_session, current_active_bucket_session
 from ..bucket_session import BucketSession

@@ -23,15 +23,15 @@ from __future__ import annotations
 
 import pytest
 
-from .._recovery_key import (
+from ..custody.errors import WipeTypeError
+from ..custody.zeroise import zeroise
+from ..errors import StorageValidationError
+from ..recovery_key import (
     RecoveryKey,
     decode_mnemonic,
     encode_mnemonic,
     generate_recovery_key,
 )
-from ..custody.errors import WipeTypeError
-from ..custody.zeroise import zeroise
-from ..errors import StorageValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

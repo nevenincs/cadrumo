@@ -24,7 +24,7 @@ from .....core.identity import IdentityDocument, IdentityError, validate_identit
 from .....core.logging import get_logger
 from .....core.operator_progress import OperatorProgress
 from .....domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy
-from ....persistence.storage._secure_object_namespaces import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE
+from ....persistence.storage.secure_object_namespaces import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE
 from ..operator_progress import emit_operator_progress
 from .errors import AuthConfigurationError
 

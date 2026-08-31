@@ -43,8 +43,8 @@ from .....core.external_constants import UTF_8_ENCODING
 from .....core.hashing import sha256_hex
 from .....core.logging import get_logger
 from .....core.paths import resolve_project_path
-from .._storage_path_definitions import BUCKETS_DIRNAME
 from ..errors import StorageError
+from ..storage_path_definitions import BUCKETS_DIRNAME
 
 _log = get_logger(__name__)
 # Cache key axes: ("bucket", <resolved storage root>, <bucket id>) for

@@ -6,17 +6,17 @@ import ast
 import inspect
 from dataclasses import replace
 from pathlib import Path
-from typing import Final, TypedDict
+from typing import Final, TypedDict, get_args
 
 import pytest
 
+from cadrumo.core.directory_scan import (
+    scan_directory,
+)
 from cadrumo.core.filing_producer_key import FilingProducerKey
 from cadrumo.core.filing_projection_ref import (
     M303ProrrataActivityProjectionField,
     M303ProrrataActivityProjectionRef,
-)
-from cadrumo.core.directory_scan import (
-    scan_directory,
 )
 from cadrumo.core.resources._boundary import bundled_path
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
@@ -53,6 +53,7 @@ from ..pipeline._render_profile import (
     RenderProfileSourceEvidence,
     ReviewedPolicyDecision,
     SingletonNumericRule,
+    Width17MembershipRule,
 )
 from ..pipeline._semantic_map import SemanticMap
 from ..pipeline._semantic_map_join import JoinedRecordDesign, join_record_design_semantics
@@ -1756,3 +1757,21 @@ def test_bare_record_tag_is_recognised_without_a_constante_label() -> None:
     assert matcher.fullmatch("blanco o 'C' (compl.)") is None
     assert matcher.fullmatch("BLANCOS") is None
     assert matcher.fullmatch("15 enteros + 2 decimales") is None
+
+
+def test_width_17_sign_policies_cover_every_declared_policy() -> None:
+    """The signed/unsigned pair must be the whole policy set the model admits.
+
+    ``_profile_width_17_derivation`` coerces ``sign_policy`` to a boolean, and that
+    boolean picks ``data_type`` (money vs decimal), ``signed``, and whether the
+    rule's scale is emitted at all. A policy admitted by the model but unknown to
+    that coercion therefore renders as an unsigned decimal with a scale -- wrong in
+    all three -- and nothing refuses, because the comparison simply evaluates
+    false. Adding a policy must break here rather than in a filed amount.
+    """
+    declared = set(get_args(Width17MembershipRule.model_fields["sign_policy"].annotation))
+    handled = {_export_tree._WIDTH_17_SIGNED_POLICY, _export_tree._WIDTH_17_UNSIGNED_POLICY}
+    assert handled == declared, (
+        f"width-17 sign policies handled by the derivation {sorted(handled)} do not match the "
+        f"declared set {sorted(declared)}; an unhandled policy renders as unsigned decimal"
+    )

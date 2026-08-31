@@ -32,7 +32,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
 if TYPE_CHECKING:
-    from ..adapters.persistence.storage._namespace_taxonomy import StoragePathKind
+    from ..adapters.persistence.storage.namespace_taxonomy import StoragePathKind
 
 _PLACEHOLDER_PATTERNS: Final[dict[str, str]] = {
     # Content-hash fan-out (blob store, both root- and bucket-scoped).
@@ -132,7 +132,7 @@ def assert_path_matches_grammar(*, key: str, root: Path, produced: Path) -> None
     # operator's real one, since isolation has not landed yet. This helper is
     # only ever called from inside a test body, well after isolation is in
     # place, so the import costs nothing to defer here.
-    from ..adapters.persistence.storage._namespace_registry import STORAGE_NAMESPACE_REGISTRY
+    from ..adapters.persistence.storage.namespace_registry import STORAGE_NAMESPACE_REGISTRY
 
     definition = STORAGE_NAMESPACE_REGISTRY.path_by_key(key)
     pattern = _grammar_to_pattern(definition.grammar, root)
@@ -186,7 +186,7 @@ def literal_directory_runs(*, grammar: str, kind: StoragePathKind) -> tuple[str,
     components = remainder.split("/")
     is_literal = ["<" not in component for component in components]
     # Deferred for the same early-collection reason as assert_path_matches_grammar above.
-    from ..adapters.persistence.storage._namespace_taxonomy import StoragePathKind
+    from ..adapters.persistence.storage.namespace_taxonomy import StoragePathKind
 
     if kind in (StoragePathKind.FILE, StoragePathKind.BLOB_OBJECT):
         is_literal[-1] = False

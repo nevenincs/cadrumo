@@ -79,7 +79,6 @@ from .....core.logging import get_logger
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.profile_session import ProfileSessionRefusalReason
 from .....core.time.utc import validate_utc_aware
-from .._storage_path_definitions import PROFILE_SESSION_FILENAME, PROFILE_SESSION_RETIREMENT_FILENAME
 from ..crypto.aead import KEY_SIZE
 from ..errors import (
     DecryptionError,
@@ -88,6 +87,7 @@ from ..errors import (
     StorageError,
     StorageValidationError,
 )
+from ..storage_path_definitions import PROFILE_SESSION_FILENAME, PROFILE_SESSION_RETIREMENT_FILENAME
 from . import acceleration_receipt_crypto as _crypto
 from .errors import ProfileCustodyRecordError
 from .filesystem import (

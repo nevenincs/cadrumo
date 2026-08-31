@@ -56,10 +56,10 @@ from typing import override
 from pydantic import BaseModel, Field, field_serializer
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ...adapters.persistence.storage._secure_object_namespaces import LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE
 from ...adapters.persistence.storage.attachment import AttachmentStore
 from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+from ...adapters.persistence.storage.secure_object_namespaces import LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE
 from ...core.config import Settings
 from ...core.external_constants import PDF_EXTENSION, PDF_MIME_TYPE, XML_MIME_TYPE
 from ...core.hashing import content_hash_hex

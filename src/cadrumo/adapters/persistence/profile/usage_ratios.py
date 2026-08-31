@@ -30,7 +30,7 @@ from ....domain.categories.spending_category import home_office_categories
 from ....domain.usage_ratios._model import ELIGIBLE_USAGE_RATIO_CATEGORIES, UsageRatioProfile
 from ....domain.usage_ratios._service import derive_home_office_ratios_from_censo, usage_ratios_object_key
 from ....domain.usage_ratios.errors import CensoRatioMismatchError, UsageRatioPersistenceError
-from ..storage._secure_object_namespaces import USAGE_RATIO_PROFILE_NAMESPACE
+from ..storage.secure_object_namespaces import USAGE_RATIO_PROFILE_NAMESPACE
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from ..storage.sql import SecureObjectRepository
@@ -54,10 +54,10 @@ def load_usage_ratios(*, bucket_id: str, objects: SecureObjectRepository | None 
         bucket_id: Profile bucket identifier.
         objects: Optional :class:`SecureObjectRepository` override; resolved from settings when absent.
     """
-    from ..storage._schema_lineage import inner_envelope_classification_is_expected, inner_envelope_version_is_current
     from ..storage.envelope._envelope import Envelope
     from ..storage.errors import ClassificationError, EnvelopeVersionError
     from ..storage.runtime_repository import secure_object_repository_for_bucket
+    from ..storage.schema_lineage import inner_envelope_classification_is_expected, inner_envelope_version_is_current
 
     object_key = usage_ratios_object_key(bucket_id)
     repository = objects if objects is not None else secure_object_repository_for_bucket(bucket_id)

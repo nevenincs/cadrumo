@@ -1603,7 +1603,7 @@ writer pins so archive bytes are reproducible. A file-format constant.
 """
 
 [[decision]]
-path = "src/cadrumo/adapters/persistence/storage/_recovery_key.py"
+path = "src/cadrumo/adapters/persistence/storage/recovery_key.py"
 enclosing_symbol = "encode_mnemonic"
 kind = "filing_year_literal"
 disposition = "not_regulatory"

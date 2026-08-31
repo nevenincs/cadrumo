@@ -59,7 +59,7 @@ from ....core.logging import get_logger
 from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from ....domain.buckets.event import BucketEventHistoryCatalogue
 from ....domain.buckets.event_repository import BucketEventHistoryPersistenceError
-from ..storage._secure_object_namespaces import BUCKET_EVENT_HISTORY_NAMESPACE
+from ..storage.secure_object_namespaces import BUCKET_EVENT_HISTORY_NAMESPACE
 from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
 
 if TYPE_CHECKING:
@@ -149,12 +149,12 @@ class BucketEventHistoryRepository:
 
     def load_revisioned(self) -> tuple[BucketEventHistoryCatalogue, str]:
         """Load the catalogue and the exact secure-object revision observed."""
-        from ..storage._schema_lineage import (
+        from ..storage.envelope._envelope import Envelope
+        from ..storage.errors import ClassificationError, EnvelopeVersionError
+        from ..storage.schema_lineage import (
             inner_envelope_classification_is_expected,
             inner_envelope_version_is_current,
         )
-        from ..storage.envelope._envelope import Envelope
-        from ..storage.errors import ClassificationError, EnvelopeVersionError
 
         try:
             record = self._objects.load(

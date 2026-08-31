@@ -28,9 +28,9 @@ from .....domain.modelos.participation_index import (
     TransactionRevisionParticipation,
     TransactionRevisionParticipationIndex,
 )
-from ...storage._secure_object_namespaces import TRANSACTION_PARTICIPATION_INDEX_NAMESPACE
 from ...storage.envelope._envelope import Envelope
 from ...storage.errors import SecureObjectRowIdentityError
+from ...storage.secure_object_namespaces import TRANSACTION_PARTICIPATION_INDEX_NAMESPACE
 from ...storage.sql.secure_objects import SecureObjectRepository
 from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ..participation_index import TransactionParticipationIndexRepository

@@ -1168,13 +1168,23 @@ def _render_profile_numeric_derivation(
     )
 
 
+#: The width-17 sign policies this derivation distinguishes. ``signed`` below is a
+#: boolean coercion of a two-member set, and it drives ``data_type``, ``signed``
+#: and ``decimals`` together -- so a third policy admitted by
+#: ``Width17MembershipRule.sign_policy`` without a decision here would not refuse;
+#: it would render as an unsigned decimal carrying the rule's scale, wrong in all
+#: three at once. The owning test holds this pair exhaustive against that field.
+_WIDTH_17_SIGNED_POLICY: Final[str] = "n-prefix-negative-blank-nonnegative"
+_WIDTH_17_UNSIGNED_POLICY: Final[str] = "unsigned"
+
+
 def _profile_width_17_derivation(
     joined_field: JoinedRecordDesignField,
     rule: Width17MembershipRule,
     *,
     export_record_id: str,
 ) -> ExportFieldDerivation:
-    signed = rule.sign_policy == "n-prefix-negative-blank-nonnegative"
+    signed = rule.sign_policy == _WIDTH_17_SIGNED_POLICY
     return _schema_field(
         joined_field,
         data_type="money" if signed else "decimal",

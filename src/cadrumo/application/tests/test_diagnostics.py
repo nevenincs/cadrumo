@@ -10,7 +10,6 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, ValidationError
 
-from ...adapters.persistence.storage._secure_object_namespaces import SECURE_OBJECT_WORKFLOW_STATE_KEY
 from ...adapters.persistence.storage.errors import StorageValidationError
 from ...adapters.persistence.storage.master_key.active_session import (
     activate_session,
@@ -19,6 +18,7 @@ from ...adapters.persistence.storage.master_key.active_session import (
 )
 from ...adapters.persistence.storage.master_key.bucket_session import BucketSession
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+from ...adapters.persistence.storage.secure_object_namespaces import SECURE_OBJECT_WORKFLOW_STATE_KEY
 from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...core.classification.policies import SensitivityClass

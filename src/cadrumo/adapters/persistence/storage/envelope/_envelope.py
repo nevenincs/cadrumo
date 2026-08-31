@@ -47,7 +47,6 @@ from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.logging import get_logger
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.time.utc import validate_utc_aware
-from .._schema_lineage import inner_envelope_classification_is_expected
 from ..crypto.aead import EncryptedBlob, decrypt_record, derive_key, encrypt_record
 from ..errors import (
     ClassificationError,
@@ -59,6 +58,7 @@ from ..errors import (
     storage_validation_error as _storage_validation_error,
 )
 from ..master_key._master_key import MasterKeyProvider
+from ..schema_lineage import inner_envelope_classification_is_expected
 
 _log = get_logger(__name__)
 

@@ -17,8 +17,8 @@ from typing import Final
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.persistence.storage._secure_object_namespaces import LIVE_VERIFY_OBSERVATION_NAMESPACE
 from ....adapters.persistence.storage.envelope._envelope import Envelope
+from ....adapters.persistence.storage.secure_object_namespaces import LIVE_VERIFY_OBSERVATION_NAMESPACE
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile, read_db_at_rest_bytes
 from ..errors import LiveApplicationInputError
 from ..verify import (

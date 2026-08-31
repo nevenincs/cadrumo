@@ -20,7 +20,7 @@ from .....adapters.outbound.storage._mirror_manifest import (
 )
 from .....adapters.outbound.storage._records import ProviderKind, RemoteMirrorNamespaceManifest
 from .....adapters.outbound.storage.errors import OutboundStorageNotFoundError, OutboundStorageValidationError
-from .....adapters.persistence.storage._namespace_registry import STORAGE_NAMESPACE_REGISTRY
+from .....adapters.persistence.storage.namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from .....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from .....core.i18n import tr
 from .....tests.path_obstruction import obstructed_path

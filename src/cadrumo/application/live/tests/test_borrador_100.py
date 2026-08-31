@@ -8,10 +8,10 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.persistence.storage._secure_object_namespaces import (
+from ....adapters.persistence.storage.envelope._envelope import Envelope
+from ....adapters.persistence.storage.secure_object_namespaces import (
     LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE as BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE,
 )
-from ....adapters.persistence.storage.envelope._envelope import Envelope
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core.classification.policies import SensitivityClass
 from ....core.period import Period

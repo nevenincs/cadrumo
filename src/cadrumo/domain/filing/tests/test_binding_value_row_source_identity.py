@@ -11,7 +11,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
-from ....adapters.persistence.storage._secure_object_namespaces import FILING_DRAFTS_NAMESPACE
+from ....adapters.persistence.storage.secure_object_namespaces import FILING_DRAFTS_NAMESPACE
 from ....core.aggregation import BindingSourceKind
 from ....core.period import Period
 from ....tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes

@@ -25,7 +25,7 @@ from sqlalchemy import event
 from sqlalchemy.engine import Engine
 
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....adapters.persistence.storage._secure_object_namespaces import MODELO_WORK_UNIT_CATALOGUE_NAMESPACE
+from ....adapters.persistence.storage.secure_object_namespaces import MODELO_WORK_UNIT_CATALOGUE_NAMESPACE
 from ....core.classification.policies import SensitivityClass
 from ....core.period import Period
 from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID

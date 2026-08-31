@@ -26,8 +26,8 @@ from ....core.time.clock import now
 from ....llm.errors import LLMCacheError
 from ....llm.models import LLMResponse, UsageRecord, UsageSummary
 from ....llm.retention import select_retention_removal_keys
-from ...persistence.storage._secure_object_namespaces import LLM_USAGE_NAMESPACE
 from ...persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+from ...persistence.storage.secure_object_namespaces import LLM_USAGE_NAMESPACE
 
 _USAGE_NAMESPACE = LLM_USAGE_NAMESPACE.namespace
 _USAGE_VERSION = LLM_USAGE_NAMESPACE.schema_version

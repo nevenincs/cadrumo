@@ -32,7 +32,7 @@ from ....domain.prorrata_register.register import (
     ProrrataRegisterError,
     SectorDefinition,
 )
-from ..storage._secure_object_namespaces import PROFILE_PRORRATA_REGISTER_NAMESPACE
+from ..storage.secure_object_namespaces import PROFILE_PRORRATA_REGISTER_NAMESPACE
 from ..storage.sql import SecureObjectRepository, SecureObjectWrite
 from ._secure_model_document import (
     ProfileBareModelSecurePersistence,

@@ -50,7 +50,7 @@ from ._inventory import SRC_CADRUMO, aeat_relative, production_ast_items
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_CANONICAL_MODULE = "adapters/persistence/storage/_schema_lineage.py"
+_CANONICAL_MODULE = "adapters/persistence/storage/schema_lineage.py"
 """The one module allowed to declare the classification equality itself.
 
 Its own predicate body compares two bare parameter names (``stored is

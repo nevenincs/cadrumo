@@ -7,7 +7,7 @@ from typing import cast
 import pytest
 
 from .....core.period import Period
-from .._runtime_readiness import StorageRuntimeReadinessCode
+from ..runtime_readiness import StorageRuntimeReadinessCode
 from ..runtime_repository import secure_object_repository_for_active_bucket_or_default_route
 from ._runtime_attached_repositories_support import (
     _BUCKET_A_ATTACHMENT_PAYLOAD,

@@ -30,10 +30,10 @@ from pydantic import BaseModel
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID, DEFAULT_WRITE_PROVENANCE
 from ....core.time.clock import now
-from ..storage._namespace_registry import secure_object_logical_path
-from ..storage._secure_object_namespaces import SecureObjectNamespaceDefinition
 from ..storage.errors import SecureObjectRevisionConflictError
+from ..storage.namespace_registry import secure_object_logical_path
 from ..storage.runtime_repository import secure_object_repository_for_active_bucket, secure_object_repository_for_bucket
+from ..storage.secure_object_namespaces import SecureObjectNamespaceDefinition
 from ..storage.sql import SecureObjectRepository, SecureObjectWrite
 
 

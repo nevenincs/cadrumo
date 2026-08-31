@@ -20,7 +20,7 @@ import pytest
 
 from .....core.storage_taxonomy import StorageCategory, StorageScope
 from .....core.storage_taxonomy_locations import STORAGE_TAXONOMY, storage_location
-from .._storage_path_definitions import (
+from ..storage_path_definitions import (
     BUCKET_BLOBS_DIRNAME,
     BUCKET_DATABASE_FILENAME,
     BUCKET_DB_DIRNAME,
@@ -41,8 +41,8 @@ from .._storage_path_definitions import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_DEFINITIONS_MODULE = Path(__file__).resolve().parent.parent / "_storage_path_definitions.py"
-_REGISTRY_MODULE = Path(__file__).resolve().parent.parent / "_secure_object_namespaces.py"
+_DEFINITIONS_MODULE = Path(__file__).resolve().parent.parent / "storage_path_definitions.py"
+_REGISTRY_MODULE = Path(__file__).resolve().parent.parent / "secure_object_namespaces.py"
 
 #: Each exported constant beside the taxonomy member that declares it.
 _BOUND_CONSTANTS = (
@@ -110,7 +110,7 @@ def test_the_layout_names_are_resolved_not_re_typed() -> None:
 
     governed = {constant for constant, _category in _BOUND_CONSTANTS}
     assert not (governed & literals), (
-        f"_storage_path_definitions.py re-types governed layout names {sorted(governed & literals)}; "
+        f"storage_path_definitions.py re-types governed layout names {sorted(governed & literals)}; "
         "read the taxonomy instead"
     )
 

@@ -93,16 +93,16 @@ from ....domain.transactions.models import (
     TransactionCatalogue,
 )
 from ....domain.transactions.repository import transaction_index_object_key, transaction_object_key
-from ..storage._secure_object_namespaces import (
+from ..storage.errors import SecureObjectRowIdentityError
+from ..storage.secure_object_namespaces import (
     PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE,
     TRANSACTION_CATALOGUE_NAMESPACE,
 )
-from ..storage.errors import SecureObjectRowIdentityError
 from ..storage.sql import SecureObjectMigrationTarget, TransactionDateIndexRow
 from .bienes_inversion import BienesInversionIvaRegisterRepository
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
-    from ..storage._secure_object_namespaces import SecureObjectNamespaceDefinition
+    from ..storage.secure_object_namespaces import SecureObjectNamespaceDefinition
     from ..storage.sql import SecureObjectDeletion, SecureObjectRepository, SecureObjectWrite
 
 _log = get_logger(__name__)
@@ -364,12 +364,12 @@ class TransactionCatalogueRepository:
             StoredTransactionDriftError: If a row payload fails pydantic schema
                 validation on deserialization.
         """
-        from ..storage._schema_lineage import (
+        from ..storage.envelope._envelope import Envelope
+        from ..storage.errors import ClassificationError, EnvelopeVersionError
+        from ..storage.schema_lineage import (
             inner_envelope_classification_is_expected,
             inner_envelope_version_is_current,
         )
-        from ..storage.envelope._envelope import Envelope
-        from ..storage.errors import ClassificationError, EnvelopeVersionError
 
         index_ids = self._load_index_ids()
         if not index_ids:
@@ -1183,8 +1183,8 @@ class TransactionCatalogueRepository:
 
     def _load_index_ids(self, *, require_current: bool = True) -> set[str]:
         """Return the transaction ids the per-bucket membership index records."""
-        from ..storage._schema_lineage import inner_envelope_version_is_current
         from ..storage.envelope._envelope import Envelope
+        from ..storage.schema_lineage import inner_envelope_version_is_current
 
         index_key = transaction_index_object_key(self._bucket_id)
         record = self._objects.load(

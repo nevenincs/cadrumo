@@ -18,7 +18,7 @@ from pydantic import ValidationError
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
-from ....adapters.persistence.storage._secure_object_namespaces import MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE
+from ....adapters.persistence.storage.secure_object_namespaces import MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.classification.policies import SensitivityClass
 from ....tests.secure_sql import isolated_runtime_profile

@@ -32,15 +32,15 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
-from ...adapters.persistence.storage._schema_lineage import (
-    inner_envelope_classification_is_expected,
-    inner_envelope_version_is_current,
-)
-from ...adapters.persistence.storage._secure_object_namespaces import LIVE_VERIFY_OBSERVATION_NAMESPACE
 from ...adapters.persistence.storage.crypto.encrypted_columns import HashedLookup
 from ...adapters.persistence.storage.envelope._envelope import Envelope
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+from ...adapters.persistence.storage.schema_lineage import (
+    inner_envelope_classification_is_expected,
+    inner_envelope_version_is_current,
+)
+from ...adapters.persistence.storage.secure_object_namespaces import LIVE_VERIFY_OBSERVATION_NAMESPACE
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRecord, SecureObjectRepository
 from ...core.config import Settings, load_settings
 from ...core.errors.hierarchy import CadrumoError

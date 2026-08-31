@@ -12,7 +12,7 @@ constant) rather than mint a second copy that happens to agree today, per
 Real bugs, already fixed while measuring this gate's precision (not by this
 change): ``secret_store/_secret_store.py`` independently hand-typed
 ``_INDEX_FILE_NAME = "index.json"`` alongside
-``adapters/persistence/storage/_storage_path_definitions.py``'s own
+``adapters/persistence/storage/storage_path_definitions.py``'s own
 ``SECRET_INDEX_FILENAME = "index.json"``, and
 ``core/observability/_context.py`` independently re-declared
 ``_EVENTS_FILENAME = "events.jsonl"`` instead of importing the declaration
@@ -36,14 +36,14 @@ Why pairwise, not vocabulary-membership alone
 A first design flagged any non-authority production constant whose value
 matched the taxonomy vocabulary, at all. Running it against the tree as it
 stood when this gate was written found ``SECRET_INDEX_FILENAME = "index.json"``
-in ``_storage_path_definitions.py`` and ``_TRACE_FILENAME`` /
+in ``storage_path_definitions.py`` and ``_TRACE_FILENAME`` /
 ``_EVENTS_FILENAME`` / ``_ENVELOPE_FILENAME`` in ``core/observability/_store.py``
 -- all four **sole, legitimate, already-canonical declaring sites** for a
 finer-grained (filename-level, not directory-level) piece of vocabulary the
 core taxonomy does not itself model, wrongly flagged as if they duplicated
 something. (The three ``_store.py`` names have since been promoted to public
 -- ``TRACE_FILENAME`` / ``EVENTS_FILENAME`` / ``ENVELOPE_FILENAME`` -- and read
-by ``_storage_path_definitions.py``'s own grammar, a related but separate fix;
+by ``storage_path_definitions.py``'s own grammar, a related but separate fix;
 see the scope section below. Kept here as the worked example that falsified
 the membership-only design, not as a claim about the tree today.) A constant
 is only evidence of duplication when a SECOND independent site declares the
@@ -70,7 +70,7 @@ NAMED constant meant to be imported, and by convention in this codebase that
 lives at module or class level, not inside a function body. NOT reachable at
 all, as a matter of the AST shape rather than the current tree's content: a
 literal embedded inside an f-string template. Several
-``StoragePathDefinition.grammar`` entries in ``_storage_path_definitions.py``
+``StoragePathDefinition.grammar`` entries in ``storage_path_definitions.py``
 used to hardcode a leaf filename this way instead of interpolating a named
 constant the way ``{RUNS_DIRNAME}`` already was -- ``run_trace`` / ``run_events``
 / ``run_envelope`` were the found instance, fixed
@@ -107,7 +107,7 @@ from typing import Final, cast
 
 import pytest
 
-from ..adapters.persistence.storage._storage_path_definitions import STORAGE_PATH_DEFINITIONS
+from ..adapters.persistence.storage.storage_path_definitions import STORAGE_PATH_DEFINITIONS
 from ..core.storage_taxonomy_locations import STORAGE_TAXONOMY
 from ._inventory import aeat_relative, ast_for_path, production_python_files
 

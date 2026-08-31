@@ -29,7 +29,7 @@ from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...adapters.persistence.profile.usage_ratios import load_usage_ratios
-from ...adapters.persistence.storage._secure_object_namespaces import TRANSACTION_CATALOGUE_NAMESPACE
+from ...adapters.persistence.storage.secure_object_namespaces import TRANSACTION_CATALOGUE_NAMESPACE
 from ...core.time.utc import coerce_utc_aware
 from ...domain.attachments.errors import AttachmentNotFoundError, AttachmentValidationError
 from ...domain.attachments.protocols import AttachmentStoreProtocol as _AttachmentStoreProtocol

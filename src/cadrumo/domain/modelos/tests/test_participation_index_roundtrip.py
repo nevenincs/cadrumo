@@ -27,7 +27,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
-from ....adapters.persistence.storage._secure_object_namespaces import TRANSACTION_PARTICIPATION_INDEX_NAMESPACE
+from ....adapters.persistence.storage.secure_object_namespaces import TRANSACTION_PARTICIPATION_INDEX_NAMESPACE
 from ....core.classification.policies import SensitivityClass
 from ....core.period import Period
 from ....tests.secure_sql import isolated_runtime_profile

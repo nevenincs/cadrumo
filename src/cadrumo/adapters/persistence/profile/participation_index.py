@@ -30,8 +30,8 @@ from ....domain.modelos.participation_index import (
     TransactionRevisionParticipationIndex,
     derive_participation_index_id,
 )
-from ..storage._secure_object_namespaces import TRANSACTION_PARTICIPATION_INDEX_NAMESPACE
 from ..storage.runtime_repository import secure_object_repository_for_bucket
+from ..storage.secure_object_namespaces import TRANSACTION_PARTICIPATION_INDEX_NAMESPACE
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from collections.abc import Iterable
@@ -114,13 +114,13 @@ class TransactionParticipationIndexRepository:
                 condition is the one recognisable failure across every
                 key-addressed repository instead of a per-repository dialect.
         """
-        from ..storage._schema_lineage import (
-            inner_envelope_classification_is_expected,
-            inner_envelope_version_is_current,
-        )
         from ..storage.crypto.encrypted_columns import secure_object_key_digest
         from ..storage.envelope._envelope import Envelope
         from ..storage.errors import ClassificationError, EnvelopeVersionError, SecureObjectRowIdentityError
+        from ..storage.schema_lineage import (
+            inner_envelope_classification_is_expected,
+            inner_envelope_version_is_current,
+        )
 
         object_key = derive_participation_index_id(transaction_id)
         try:

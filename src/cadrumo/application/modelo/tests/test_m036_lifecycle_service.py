@@ -18,7 +18,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ....adapters.persistence.storage._secure_object_namespaces import LIVE_M036_DECLARATION_NAMESPACE
+from ....adapters.persistence.storage.secure_object_namespaces import LIVE_M036_DECLARATION_NAMESPACE
 from ....domain.buckets.event import BucketEventType
 from ....domain.calculations.registry.censo_modelos import CensoModeloEventKind
 from ....tests.secure_sql import isolated_runtime_profile

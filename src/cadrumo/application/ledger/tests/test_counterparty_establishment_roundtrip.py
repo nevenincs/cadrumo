@@ -27,7 +27,7 @@ from ._ledger_value_fixtures import secure_objects
 __all__ = ["secure_objects"]
 from pydantic import ValidationError
 
-from ....adapters.persistence.storage._secure_object_namespaces import LEDGER_CONFIRMED_COUNTERPARTY_FACTS_NAMESPACE
+from ....adapters.persistence.storage.secure_object_namespaces import LEDGER_CONFIRMED_COUNTERPARTY_FACTS_NAMESPACE
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.classification.policies import SensitivityClass
 from ....core.classifier_input_source import ClassifierInputSource

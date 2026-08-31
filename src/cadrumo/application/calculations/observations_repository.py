@@ -42,14 +42,14 @@ from typing import ClassVar, Literal, override
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...adapters.persistence.storage._path_safety import safe_repository_id
-from ...adapters.persistence.storage._secure_object_namespaces import (
+from ...adapters.persistence.storage.envelope._envelope import Envelope
+from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
+from ...adapters.persistence.storage.path_safety import safe_repository_id
+from ...adapters.persistence.storage.secure_object_namespaces import (
     CALCULATION_OBSERVATIONS_NAMESPACE,
     IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE,
     IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE,
 )
-from ...adapters.persistence.storage.envelope._envelope import Envelope
-from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
 from ...core.classification.policies import SensitivityClass
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex

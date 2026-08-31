@@ -34,8 +34,6 @@ from .....core.config import Settings
 from .....core.logging import get_logger
 from .....core.secure_object_write import SecureObjectWrite
 from .....core.time.clock import now
-from .._path_safety import safe_repository_id
-from .._schema_lineage import inner_envelope_classification_is_expected
 from ..crypto.encrypted_columns import secure_object_key_digest
 from ..errors import (
     ClassificationError,
@@ -43,10 +41,12 @@ from ..errors import (
     RepositorySetupError,
     SecureObjectRowIdentityError,
 )
+from ..path_safety import safe_repository_id
 from ..runtime_repository import (
     secure_object_repository_for_active_bucket_or_default_route,
     secure_object_repository_for_bucket,
 )
+from ..schema_lineage import inner_envelope_classification_is_expected
 from ..sql import SecureObjectDeletion, SecureObjectRecord, SecureObjectRepository
 from ._envelope import Envelope, _parameterized_envelope_type
 

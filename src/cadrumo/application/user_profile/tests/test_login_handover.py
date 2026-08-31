@@ -26,8 +26,6 @@ from uuid import UUID
 import pytest
 from sqlalchemy.exc import DatabaseError as SqlDatabaseError
 
-from ....adapters.persistence.storage._profile_custody import build_profile_custody_port
-from ....adapters.persistence.storage._profile_login_session import build_profile_login_session_port
 from ....adapters.persistence.storage.custody.acceleration_receipt import profile_session_path, resume_profile_session
 from ....adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from ....adapters.persistence.storage.custody.errors import ProfileCustodyRecordError
@@ -40,6 +38,8 @@ from ....adapters.persistence.storage.master_key.active_session import (
     current_active_bucket_session,
 )
 from ....adapters.persistence.storage.master_key.login_throttle import evaluate_login_throttle
+from ....adapters.persistence.storage.profile_custody import build_profile_custody_port
+from ....adapters.persistence.storage.profile_login_session import build_profile_login_session_port
 from ....core import config as config_module
 from ....core.bucket_pointer import BucketPointer, read_pointer, write_pointer
 from ....core.config import Settings
