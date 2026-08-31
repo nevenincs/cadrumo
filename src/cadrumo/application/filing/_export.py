@@ -71,11 +71,19 @@ from ...domain.filing.schema import ModeloCasillaProvenance, ModeloDraft
 from ...domain.submission import ModeloDraftStatus
 from ._envelope_modelo_policy import filing_envelope_modelo_policy
 from ._export_envelope import (
-    FilingEnvelopeOccurrence,
-    FilingEnvelopeRenderRequest,
-    FilingEnvelopeRenderResult,
-    envelope_closer_bytes,
-    render_declared_prefix,
+    FilingEnvelopeOccurrence as _FilingEnvelopeOccurrence,
+)
+from ._export_envelope import (
+    FilingEnvelopeRenderRequest as _FilingEnvelopeRenderRequest,
+)
+from ._export_envelope import (
+    FilingEnvelopeRenderResult as _FilingEnvelopeRenderResult,
+)
+from ._export_envelope import (
+    envelope_closer_bytes as _envelope_closer_bytes,
+)
+from ._export_envelope import (
+    render_declared_prefix as _render_declared_prefix,
 )
 from ._export_parity import (
     assert_export_mirrors_manifest,
@@ -84,17 +92,28 @@ from ._export_parity import (
 )
 from ._export_producer import filing_producer_values as _filing_producer_values
 from ._export_verification import (
-    DeclaracionExportFormat,
-    DeclaracionExportResult,
-    DeclaracionVerifyResult,
-    DeclaracionVerifyVerdict,
-    FilingExportConsumedResult,
-    FilingExportPayloadConsumer,
-    FilingExportValidatedPayload,
-    assert_export_artifact_matches_receipt,
-    exported_casilla_provenance,
-    verify_export,
-    verify_written_export,
+    DeclaracionExportFormat as _DeclaracionExportFormat,
+)
+from ._export_verification import (
+    DeclaracionExportResult as _DeclaracionExportResult,
+)
+from ._export_verification import (
+    FilingExportConsumedResult as _FilingExportConsumedResult,
+)
+from ._export_verification import (
+    FilingExportPayloadConsumer as _FilingExportPayloadConsumer,
+)
+from ._export_verification import (
+    FilingExportValidatedPayload as _FilingExportValidatedPayload,
+)
+from ._export_verification import (
+    assert_export_artifact_matches_receipt as _assert_export_artifact_matches_receipt,
+)
+from ._export_verification import (
+    exported_casilla_provenance as _exported_casilla_provenance,
+)
+from ._export_verification import (
+    verify_written_export as _verify_written_export,
 )
 from ._export_xml_dictionary import render_xml_dictionary_layout
 from ._m200_projection import build_m200_filing_projection_plan
@@ -280,7 +299,7 @@ def _render_prepared_export(
         assert prior_domiciliation_election is not None
         assert product_software_identity is not None
         return render_filing_envelope(
-            FilingEnvelopeRenderRequest(
+            _FilingEnvelopeRenderRequest(
                 registry_snapshot=prepared.registry_snapshot,
                 layout=prepared.layout,
                 draft=draft,
@@ -317,7 +336,7 @@ def _validate_prepared_export(
                 "layout_format": prepared.layout.format.value,
             },
         )
-    casilla_provenance = exported_casilla_provenance(
+    casilla_provenance = _exported_casilla_provenance(
         prepared.layout,
         draft=draft,
         schema_provider=prepared.provider,
@@ -344,15 +363,15 @@ def _write_prepared_export(
     prepared: _PreparedExportDraft,
     payload: bytes,
     casilla_provenance: tuple[ModeloCasillaProvenance, ...],
-) -> DeclaracionExportResult:
+) -> _DeclaracionExportResult:
     atomic_write_bytes(output_path, payload)
     if not prepared.renders_filing_envelope:
-        verify_written_export(
+        _verify_written_export(
             draft,
             file_path=output_path,
             schema_provider=prepared.provider,
         )
-    receipt = DeclaracionExportResult(
+    receipt = _DeclaracionExportResult(
         draft_id=draft.draft_id,
         modelo=draft.modelo,
         period=draft.period,
@@ -364,7 +383,7 @@ def _write_prepared_export(
         narrative="filing.export.written",
         casilla_provenance=casilla_provenance,
     )
-    assert_export_artifact_matches_receipt(receipt, artifact_path=output_path)
+    _assert_export_artifact_matches_receipt(receipt, artifact_path=output_path)
     return receipt
 
 
@@ -374,12 +393,12 @@ def _consume_prepared_export(
     prepared: _PreparedExportDraft,
     payload: bytes,
     casilla_provenance: tuple[ModeloCasillaProvenance, ...],
-    payload_consumer: FilingExportPayloadConsumer,
-) -> FilingExportConsumedResult:
+    payload_consumer: _FilingExportPayloadConsumer,
+) -> _FilingExportConsumedResult:
     """Deliver validated bytes synchronously without materialising a plaintext file."""
     format_ = _declaracion_export_format(prepared.layout)
     payload_consumer.consume_validated_payload(
-        FilingExportValidatedPayload(
+        _FilingExportValidatedPayload(
             draft_id=draft.draft_id,
             modelo=draft.modelo,
             period=draft.period,
@@ -388,7 +407,7 @@ def _consume_prepared_export(
             casilla_provenance=casilla_provenance,
         ),
     )
-    return FilingExportConsumedResult(
+    return _FilingExportConsumedResult(
         draft_id=draft.draft_id,
         modelo=draft.modelo,
         period=draft.period,
@@ -411,30 +430,30 @@ def export_draft(
     prior_domiciliation_election: PriorDomiciliationElection | None = None,
     product_software_identity: AeatProductSoftwareIdentity | None = None,
     schema_provider: RegistrySchemaAccessor | None = None,
-) -> DeclaracionExportResult: ...
+) -> _DeclaracionExportResult: ...
 @overload
 def export_draft(
     draft: ModeloDraft,
     *,
     output_path: None = None,
-    payload_consumer: FilingExportPayloadConsumer,
+    payload_consumer: _FilingExportPayloadConsumer,
     producer_snapshot: FilingProducerSnapshot,
     dictionary_values: Mapping[str, object] | None = None,
     prior_domiciliation_election: PriorDomiciliationElection | None = None,
     product_software_identity: AeatProductSoftwareIdentity | None = None,
     schema_provider: RegistrySchemaAccessor | None = None,
-) -> FilingExportConsumedResult: ...
+) -> _FilingExportConsumedResult: ...
 def export_draft(
     draft: ModeloDraft,
     *,
     output_path: Path | None = None,
-    payload_consumer: FilingExportPayloadConsumer | None = None,
+    payload_consumer: _FilingExportPayloadConsumer | None = None,
     producer_snapshot: FilingProducerSnapshot,
     dictionary_values: Mapping[str, object] | None = None,
     prior_domiciliation_election: PriorDomiciliationElection | None = None,
     product_software_identity: AeatProductSoftwareIdentity | None = None,
     schema_provider: RegistrySchemaAccessor | None = None,
-) -> DeclaracionExportResult | FilingExportConsumedResult:
+) -> _DeclaracionExportResult | _FilingExportConsumedResult:
     """Write an approved draft to a local fichero-BOE file and return a receipt.
 
     The function selects the active registry
@@ -592,10 +611,10 @@ def _raise_if_export_layout_not_renderable(modelo: str, layout: ExportLayoutDefi
         raise _export_layout_not_renderable_error(modelo, layout)
 
 
-def _declaracion_export_format(layout: ExportLayoutDefinition) -> DeclaracionExportFormat:
+def _declaracion_export_format(layout: ExportLayoutDefinition) -> _DeclaracionExportFormat:
     if layout.format is ExportLayoutFormat.XML_DICTIONARY:
-        return DeclaracionExportFormat.XML_DICTIONARY
-    return DeclaracionExportFormat.FICHERO_BOE
+        return _DeclaracionExportFormat.XML_DICTIONARY
+    return _DeclaracionExportFormat.FICHERO_BOE
 
 
 def _render_export_layout(
@@ -661,7 +680,7 @@ def _render_layout(
         raise FilingExportValidationError(
             "an auxiliary-envelope-header export requires explicit product/software identity authority",
         )
-    prefix = render_declared_prefix(
+    prefix = _render_declared_prefix(
         auxiliary_header.prefix_fields,
         prefix_extent=auxiliary_header.prefix_extent,
         modelo=Modelo(draft.modelo),
@@ -713,7 +732,7 @@ def _render_layout_occurrences(
     )
 
 
-def render_filing_envelope(request: FilingEnvelopeRenderRequest) -> FilingEnvelopeRenderResult:
+def render_filing_envelope(request: _FilingEnvelopeRenderRequest) -> _FilingEnvelopeRenderResult:
     """Render one modelo's variable envelope from the closed, validated request."""
     envelope = request.layout.filing_envelope
     if envelope is None:  # The request validator makes this unreachable; retain type narrowing at the public boundary.
@@ -728,7 +747,7 @@ def render_filing_envelope(request: FilingEnvelopeRenderRequest) -> FilingEnvelo
         prior_domiciliation_election=request.prior_domiciliation_election,
     )
     occurrences = tuple(
-        FilingEnvelopeOccurrence(
+        _FilingEnvelopeOccurrence(
             record_id=item.record_id,
             occurrence=item.occurrence,
             payload=item.payload,
@@ -737,16 +756,16 @@ def render_filing_envelope(request: FilingEnvelopeRenderRequest) -> FilingEnvelo
         for item in rendered_occurrences
     )
     _require_envelope_required_occurrences(request.layout, occurrences)
-    prefix = render_declared_prefix(
+    prefix = _render_declared_prefix(
         envelope.prefix_fields,
         prefix_extent=envelope.prefix_extent,
         modelo=request.modelo,
         period=request.draft.period,
         product_software_identity=request.product_software_identity,
     )
-    closer = envelope_closer_bytes(modelo=request.modelo, period=request.draft.period)
+    closer = _envelope_closer_bytes(modelo=request.modelo, period=request.draft.period)
     payload = prefix + b"".join(item.payload for item in occurrences) + closer
-    return FilingEnvelopeRenderResult(
+    return _FilingEnvelopeRenderResult(
         draft_id=request.draft.draft_id,
         revision_id=str(request.registry_snapshot.revision.id),
         layout_id=str(request.layout.id),
@@ -764,7 +783,7 @@ def render_filing_envelope(request: FilingEnvelopeRenderRequest) -> FilingEnvelo
 
 def _require_envelope_required_occurrences(
     layout: ExportLayoutDefinition,
-    occurrences: tuple[FilingEnvelopeOccurrence, ...],
+    occurrences: tuple[_FilingEnvelopeOccurrence, ...],
 ) -> None:
     present = {item.record_id for item in occurrences}
     missing = tuple(str(record.id) for record in layout.records if record.required and record.id not in present)
