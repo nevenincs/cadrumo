@@ -37,10 +37,8 @@ from ...core.modelo import Modelo
 from ...core.money.rounding import round_to_cents
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.calculations.registry.binding_selector_utils import manual_input_record_field_selector
-from ...domain.calculations.registry.bindings import (
-    CasillaObservation,
-    casillas_by_binding,
-)
+from ...domain.calculations.registry.binding_targets import casillas_by_binding
+from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,

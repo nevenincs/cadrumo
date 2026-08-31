@@ -33,11 +33,11 @@ from ._validate_extraction_profiles import (
 from ._validate_helpers import missing_refs
 from ._validate_revision_rules import validate_dated_values
 from .binding_selector_utils import selector_as_dict
-from .bindings import (
-    validate_binding_selector_shape,
+from .bindings import validate_binding_selector_shape
+from .ids import BindingId
+from .m303_regimen_simplificado_annual_summary_bindings import (
     validate_m303_regimen_simplificado_annual_summary_revision,
 )
-from .ids import BindingId
 from .manual_input_selector import is_layout_binding_selector
 from .schema import DataBindingDefinition, FormulaDefinition, ModeloRevision
 from .schema_base import REGISTRY_SOURCE_GROUNDING_TIERS

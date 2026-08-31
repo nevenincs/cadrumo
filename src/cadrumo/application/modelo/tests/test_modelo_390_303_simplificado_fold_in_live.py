@@ -34,8 +34,10 @@ from ....core.filing_projection_ref import M303RegimenSimplificadoFact
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.binding_selector_utils import selector_as_dict
-from ....domain.calculations.registry.bindings import m303_regimen_simplificado_annual_summary_requirement
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
+from ....domain.calculations.registry.m303_regimen_simplificado_annual_summary_bindings import (
+    m303_regimen_simplificado_annual_summary_requirement,
+)
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva.regimen_simplificado_rows import (
