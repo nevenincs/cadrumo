@@ -303,6 +303,22 @@ source_modules =
 forbidden_modules =
     cadrumo.entrypoints.tui
 
+[importlinter:contract:tui-sibling-entrypoint-prohibition]
+name = The TUI must not depend on a sibling entrypoint
+# The existing backend prohibition covers the OPPOSITE direction -- nothing may
+# depend on the TUI -- and says nothing about the TUI reaching sideways.  Two
+# entrypoints are peers: neither is a library for the other, and a TUI that
+# imports the CLI would take that package's initialiser, and with it Typer, into
+# a process that has no command line.  The reach is currently zero, which is why
+# this contract can be a hard prohibition with no exceptions rather than a
+# baseline; it exists so the zero is guarded rather than merely true.
+type = forbidden
+source_modules =
+    cadrumo.entrypoints.tui
+    cadrumo.entrypoints.tui.*
+forbidden_modules =
+    cadrumo.entrypoints.cli
+
 [importlinter:contract:tui-launcher-only-adapter-wiring]
 name = Only the TUI launcher may wire concrete adapters
 # Match future TUI children without requiring the package to exist before its
@@ -611,7 +627,7 @@ ignore_imports =
     # creation path constructs the default ECB rate provider (the concrete
     # ExchangeRateProvider) — the outbound-wiring edge sec. 538 permits, pinned
     # at the narrow fx target rather than a broad adapters wildcard.
-    cadrumo.application.invoices.catalogue_creation -> cadrumo.adapters.outbound.fx._ecb_provider
+    cadrumo.application.invoices.catalogue_creation -> cadrumo.adapters.outbound.fx.ecb_provider
     cadrumo.application.invoices.source_resolver -> cadrumo.adapters.persistence.**
     # ── application/ledger narrowed from `adapters.**` to the layer each module
     #    actually reaches. A broad wildcard admits an INBOUND-adapter edge from
