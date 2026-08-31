@@ -5,7 +5,7 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:e0e9aec22b62df6a4ae9cc332929471cd098b4499e14a322252495b97e9ca42f'
+body_hash: 'sha256:fd70420acc42bf7c4f5d5ae7941a7b007f068cd9d2c410ec23d21c7c77f58f38'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
 ---
@@ -22,7 +22,16 @@ Independent review of P05.S123 at `dbf6981efc216c9b286b943e2ea8d61635d4d77c` and
 
 The record extraction updates runtime consumers and the Sede observer's coverage link, but leaves eight Sphinx targets naming record types under `calc_sheets_pull.py`: three in `application/calculations/row_set_assembly.py` for `RowSetEdit` or `RowSetCellEdit`, and five in `calc_sheets_pull.py` for `OperatorEdit`, `BindingEdit`, or `RelationEdit`. The adapter deliberately has no public re-export, so those targets are stale after the move and should name `calc_sheets_pull_records` directly.
 
+### non-reproducible-original-lint-evidence | high | The original extraction lint checks still use placeholders
+
+The S123 execution record lines 43 and 44 retain `ruff check <S123 paths>` and `ruff format --check <S123 paths>`. The later repair records exact ruff commands for only `row_set_assembly.py` and `calc_sheets_pull.py`; it cannot establish the original extraction's full lint scope. The exact original file list must replace both placeholders before the step can claim reproducible lint evidence.
+
+### repair-verification | low | The eight moved-record links are now canonical
+
+Commit `cd2c75755fee6f0061a68d817deead3488c0ac1a` changes the exact five `calc_sheets_pull.py` and three `row_set_assembly.py` links, and the current stale-reference search returns no old record targets. `test_qualified_docstring_references_resolve.py` remains red only in its four unrelated assertions: unresolved user-profile/storage targets, an unrelated scan-population threshold, pydantic-field resolution, and a lazy user-profile resolver fixture. No repaired S123 target appears in that output.
+
 ## Recommendations
 
 - For `stale-record-doc-targets`, update the eight record links to the canonical `calc_sheets_pull_records` module and rerun the affected documentation reference gate when S53 performs its sweep.
+- For `non-reproducible-original-lint-evidence`, replace both placeholder lint commands with the exact original S123 source/test path list, rerun that command set, and record its actual exit result.
 
