@@ -42,7 +42,7 @@ forbidden_modules =
 # domain-not-application contract.
 ignore_imports =
     # ── W09: re-sanctioned test-file roundtrip/fixture/oracle edges (prior ignores went stale on test rename) ──
-    cadrumo.domain.calculations.registry.tests.test_ledger_renta_gastos_estimacion_directa_binding -> cadrumo.domain.renta._ledger_expenses
+    cadrumo.domain.calculations.registry.tests.test_ledger_renta_gastos_estimacion_directa_binding -> cadrumo.domain.renta.ledger_expenses
     # W09.S90: parity-scenario test consumers trigger the renta first-slice
     # registration directly (relocated out of the production _scenarios harness)
 
@@ -492,7 +492,7 @@ ignore_imports =
     cadrumo.application.modelo.m145_communication_records -> cadrumo.adapters.persistence.profile.snapshots
     cadrumo.application.modelo._review_package_recipient_encryption -> cadrumo.adapters.persistence.storage.**
     cadrumo.application.modelo._review_package_recipient_encryption -> cadrumo.adapters.persistence.storage.crypto.aead
-    cadrumo.application.modelo._review_package_recipient_registry -> cadrumo.adapters.persistence.storage.**
+    cadrumo.application.modelo.review_package_recipient_registry -> cadrumo.adapters.persistence.storage.**
     cadrumo.application.modelo._review_package_signing -> cadrumo.adapters.persistence.storage.secure_object_namespaces
     # The mint-or-load-winner keypair primitive was extracted from the signing and
     # recipient-encryption modules above; both are pinned, so the extraction inherits
@@ -529,7 +529,7 @@ ignore_imports =
     cadrumo.application.calculations.relation_prefill -> cadrumo.adapters.persistence.**
     cadrumo.application.diagnostics -> cadrumo.adapters.outbound.aeat.browser.**
     cadrumo.application.diagnostics -> cadrumo.adapters.persistence.**
-    cadrumo.application.diagnostics_run_health -> cadrumo.adapters.outbound.llm._run_telemetry
+    cadrumo.application.diagnostics_run_health -> cadrumo.adapters.outbound.llm.run_telemetry
     # The ledger draft path reaches the gated local-inference subpackage for a
     # scan-only document. Deferred inside the function, and pinned here for the
     # same reason the outbound.llm edges above are: cadrumo.llm sits at the
