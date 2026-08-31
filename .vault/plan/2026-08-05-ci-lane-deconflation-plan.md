@@ -10,7 +10,7 @@ related:
   - '[[2026-06-01-registry-period-code-union-cli-boundary-adr]]'
   - '[[2026-08-05-ci-lane-deconflation-step-check-attribution-audit]]'
 modified: '2026-08-31'
-body_hash: 'sha256:989b22a903e39f6f27f19801757d3afda3e287c53487d28c2ace7eb7054c4532'
+body_hash: 'sha256:a1be3b5fb19a5e7b3bb3604914e683b5fca36a3b514ea9344cc3f121e74d4b82'
 ---
 
 <!-- RETIRED: S01, S10, S181, S184, S186, S189, S191, S193, S194, S197, S199, S201, S203, S205, S207, S209, S211, S213, S215, S217, S219, S221 -->
@@ -206,7 +206,7 @@ Decompose every live size-budget subject by its owning source file, then regener
 - [x] `P05.S138` - Refactor the size-budget subjects in _relation_prefill.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/calculations/_relation_prefill.py`.
 - [x] `P05.S139` - Refactor the size-budget subjects in cross_period_clean_state.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/calculations/cross_period_clean_state.py`.
 - [x] `P05.S140` - Refactor the size-budget subjects in diagnostics.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/diagnostics.py`.
-- [ ] `P05.S141` - Refactor the size-budget subjects in _export_producer.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/filing/_export_producer.py`.
+- [x] `P05.S141` - Refactor the size-budget subjects in _export_producer.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/filing/_export_producer.py`.
 - [ ] `P05.S142` - Refactor the size-budget subjects in _export.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/filing/_export.py`.
 - [ ] `P05.S143` - Refactor the size-budget subjects in _producer_snapshot.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/filing/_producer_snapshot.py`.
 - [ ] `P05.S144` - Refactor the size-budget subjects in test_source_resolver.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/invoices/tests/test_source_resolver.py`.
