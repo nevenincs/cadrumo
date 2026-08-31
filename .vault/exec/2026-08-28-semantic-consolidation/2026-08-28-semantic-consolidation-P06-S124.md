@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#semantic-consolidation'
 date: '2026-08-30'
-modified: '2026-08-30'
+modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:98d397fe879ac5c0c7a82350196df9a689dc3a3092a5ed8f0406ae29bce46288'
+body_hash: 'sha256:121c430bde2d4c5b21c9166fb9c22524d284094fd492c0f0485f29c96c2509d8'
 step_id: 'S124'
 related:
   - "[[2026-08-28-semantic-consolidation-plan]]"
@@ -20,32 +20,50 @@ related:
 ## Changes
 
 - `M` `src/cadrumo/adapters/persistence/storage/custody/records.py`
-- `M` `src/cadrumo/adapters/persistence/storage/custody/recovery.py`
 - `M` `src/cadrumo/adapters/persistence/storage/custody/capsule_records.py`
-- `verify:` digest equality across seven records, before vs after -> `identical`
-- `verify:` `pytest src/cadrumo/adapters/persistence/storage/custody -n 0` -> `pass` (238)
+- `verify:` all three digest-format checks probed against the canonical on 6 inputs -- identical on every one
+- `verify:` `pytest storage/tests -k "custody or capsule or digest or envelope" -n 0 -m ""` -> 39 pass, 1 pre-existing
 
 ## Notes
 
-All five self-verifying custody records now inherit the computation, the payload
-exclusion, the canonical bytes and the mismatch refusal, keeping only their own
-digest-SHAPE validator, which genuinely differs between them. Hand-rolled digest
-methods across the package fall from eighteen to three.
+The move the step names is already done: the envelope, the recovery envelope and
+the capsule commit all extend `CustodyDigestModel`, as does the recovery
+artifact. The digests are proved unchanged by the roundtrip suite rather than by
+a fresh proof, since the move landed earlier in the campaign.
 
-The three that remain are both correctly out of scope, and were checked rather
-than assumed. `ProfileCustodyCapsuleLabel` chains two digests -- a content digest
-and then a self digest over a payload INCLUDING it -- which is a wider shape the
-base does not cover. `ProfileCustodySentinelRecord` has no ``self_digest`` field
-at all; it only serialises canonically, so the base has nothing to give it.
+`ProfileCustodyCapsuleLabel` stays off the base, correctly -- it chains two
+digests, computing one over a payload that already contains another, which the
+base's single-digest shape cannot express.
 
-The proof set was widened to seven: the five records plus two controls, the
-chained-digest label and an already-migrated label head. All seven hashes are
-identical before and after, so the change is neutral for the records it moved
-AND for the ones it deliberately left.
+What remained was a different duplication in the same files: the digest-STRING
+format check, written three ways. `recovery.py` and `recovery_artifact.py` call
+the canonical `validate_prefixed_digest`; `records.py` had a rival regex
+implementation; `capsule_records.py` inlined the length, prefix and alphabet
+checks by hand -- while ALREADY IMPORTING the canonical at the top of the file.
+That last one is the sharpest version of this campaign's shape: the canonical was
+in scope and the check was written out anyway.
 
-The refusal is proved by a test that already existed: the records parser test
-swaps a stored digest for ``sha256:ff...`` and asserts the parse is refused. It
-passes against the inherited check.
+Probed all three against the canonical before collapsing them, on six inputs
+including uppercase hex and a wrong length. Identical on every one, so the
+collapse changes nothing but the number of places the rule lives.
 
-The two subprocess reset tests that failed alongside the previous Step now pass,
-which confirms that was ordering rather than the rebase.
+### A regression this found, and did not re-baseline
+
+`test_inner_envelope_vacuity_invariants` fails at `assert 15 >= 16`: one read
+path has stopped calling `inner_envelope_version_is_current`. It is NOT this
+change -- neither file mentions that predicate and the diff contains zero
+references -- and the gate's own docstring is explicit about what to do:
+"Lowering this floor is only ever legitimate alongside evidence that the missing
+calls moved into a shared reader. A drop with no such consolidation is the
+regression this gate exists to catch: verify before re-baselining, never the
+reverse."
+
+So it is left red. Fifteen call sites across thirteen files, listed by a scan
+run for this purpose; the shared kernel in `profile/_secure_enveloped_document.py`
+is still among them, so the loss is one of the individual readers rather than the
+inherited check.
+
+Worth recording how nearly I mis-reported it: the first scan output was piped
+through `tail` and the kernel fell off the visible list, which read exactly like
+the kernel having lost its call. A truncated list of members is not a
+measurement of the population.

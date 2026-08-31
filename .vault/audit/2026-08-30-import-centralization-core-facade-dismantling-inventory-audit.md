@@ -5,7 +5,7 @@ tags:
 date: '2026-08-30'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:e7a2a6d5e79bfe73ee87abc32cc2763bb58fbb7d6364acc716b0ef1e43402254'
+body_hash: 'sha256:036d74fa7d0d98407295c83499e8be6e9ea98fff997257e7294e73793dea42c3'
 related:
   - "[[2026-07-01-import-centralization-adr]]"
 ---
@@ -102,7 +102,6 @@ It belongs to whoever holds those uncommitted files.
 Until that lands, no slice of this campaign is verifiable, and an unverifiable
 import sweep of the innermost package is not worth its risk.
 
-
 ## Outcome: zero remaining sites
 
 The campaign ran to completion on 2026-08-31. Measured against the same method
@@ -180,4 +179,3 @@ commits: these file sets run past the argv limit.
 The eight residual collection errors throughout belonged to concurrent uncommitted
 relocations under `adapters/persistence/storage` and `application/aggregation` and
 were excluded from every commit in this campaign.
-
