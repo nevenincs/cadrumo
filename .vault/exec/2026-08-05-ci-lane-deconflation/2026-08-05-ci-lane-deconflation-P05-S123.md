@@ -5,7 +5,7 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:76c60fe3a731e2ea62fa4c6da83377637978a5e94dd514d24bf218b3124b1b7d'
+body_hash: 'sha256:e2afaaad0f21d6e76f4ad36ef209a4b8777418c71f78e9a18cf58b6e255ca2bf'
 step_id: 'S123'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
@@ -50,6 +50,7 @@ related:
 
 ## Notes
 
-Predecessor exception: shared-worktree commit `0b578b3458c40279cd68ee765ccdc1b0b997a93a` captured the typed-record extraction and its direct consumer moves during the S123 validation run; its source-target diff is verified above. This step's remaining commit records the coverage extraction and traceability close. The target measured 1,369 source lines before the extraction and 1,228 under the canonical budget measurer after it. An earlier 13-module diagnostic run exited 1 with 133 passed and four unrelated existing failures: strict list-vs-tuple CLI references, missing expected pull observation, withholding `'0'` versus `0` identity drift, and an empty atribucion `clave`; the focused S123 evidence is green. No baseline was changed. Review repair: all eight stale Sphinx references now name `calc_sheets_pull_records`; no code behavior changed. The doc-reference resolver reports four unrelated repository-wide failures: stale user-profile/storage targets, a population threshold, and two resolver fixtures; none is one of the eight repaired targets.
+Predecessor exception: shared-worktree commit `0b578b3458c40279cd68ee765ccdc1b0b997a93a` captured the typed-record extraction and its direct consumer moves during the S123 validation run; its source-target diff is verified above. This step's remaining commit records the coverage extraction and traceability close. The target measured 1,369 source lines before the extraction and 1,228 under the canonical budget measurer after it. An earlier 13-module diagnostic run exited 1 with 133 passed and four unrelated existing failures: strict list-vs-tuple CLI references, missing expected pull observation, withholding `'0'` versus `0` identity drift, and an empty atribucion `clave`; the focused S123 evidence is green. No baseline was changed. Review repair: all eight stale Sphinx references now name `calc_sheets_pull_records`; no code behavior changed. The doc-reference resolver reports four unrelated repository-wide failures: stale user-profile/storage targets, a population threshold, and two resolver fixtures; none is one of the eight repaired targets. Repair predecessor exception: shared-worktree commit `cd2c75755fee6f0061a68d817deead3488c0ac1a` captured exactly the five `calc_sheets_pull.py` and three `row_set_assembly.py` canonical-reference substitutions during validation; its source-target diff is verified.
+
 
 
