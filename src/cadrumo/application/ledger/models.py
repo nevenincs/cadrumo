@@ -90,6 +90,26 @@ def _normalise_optional_ledger_text(value: str | None) -> str | None:
 
 _LedgerOptionalText = Annotated[str | None, AfterValidator(_normalise_optional_ledger_text)]
 
+#: Longest a manual transaction's group label may be, stated once.
+_GROUP_LABEL_MAX_LENGTH = 64
+
+_LedgerOptionalGroupLabel = Annotated[
+    Annotated[str, StringConstraints(max_length=_GROUP_LABEL_MAX_LENGTH)] | None,
+    AfterValidator(_normalise_optional_ledger_text),
+]
+"""An optional group label, carrying the bound its create counterpart carries.
+
+The patch model used the plain optional-text alias, which normalises but sets no
+length, while the create command bounded the same field at sixty-four. So a
+label too long to CREATE could be applied by EDITING, and nothing on the patch
+path said otherwise. The two now read the same constant.
+
+The bound sits on the ``str`` arm rather than on the union: a length constraint
+applied to ``str | None`` is asked to measure ``None`` and raises at validation
+time, which is not a subtle failure but is a confusing one -- it surfaces as a
+TypeError from eleven unrelated tests rather than as a message about this field.
+"""
+
 
 class _LedgerCountryCodeModel(BaseModel):
     """Canonical ISO-country normalization for ledger command and read models."""
@@ -163,7 +183,7 @@ class ManualLedgerTransactionCommand(_ManualLedgerTransactionInput):
     idempotency_key: _LedgerOptionalText = None
     classified_by_override: _LedgerOptionalText = None
     source_jurisdiction: str | None = None
-    group_label: str | None = Field(default=None, max_length=64)
+    group_label: str | None = Field(default=None, max_length=_GROUP_LABEL_MAX_LENGTH)
 
     @field_validator(
         "bucket_id",
@@ -237,7 +257,10 @@ class ManualLedgerTransactionPatch(_ManualLedgerTransactionInput):
     booked_date: date | None = None
     value_date: date | None = None
     amount: Decimal | None = None
-    currency: str | None = None
+    # The create command validates this and the patch did not, so an operator
+    # could not CREATE a row with a malformed currency but could EDIT one into
+    # having it. Same operator, same field, two answers.
+    currency: IsoCurrencyCode | None = None
     direction: TransactionDirection | None = None
     counterparty: _LedgerOptionalText = None
     description: _LedgerOptionalText = None
@@ -260,7 +283,7 @@ class ManualLedgerTransactionPatch(_ManualLedgerTransactionInput):
     counterparty_country: str | None = None
     counterparty_identification_state: EUMemberState | None = None
     source_jurisdiction: str | None = None
-    group_label: _LedgerOptionalText = None
+    group_label: _LedgerOptionalGroupLabel = None
 
     @model_validator(mode="after")
     def _require_change(self) -> Self:

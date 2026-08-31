@@ -73,9 +73,21 @@ DECLARED_EXCEPTIONS: dict[str, str] = {
 }
 
 
-def _country_fields() -> dict[str, str]:
-    """Map ``path::field`` -> annotation source for every country-named field."""
-    found: dict[str, str] = {}
+def _country_fields() -> dict[str, set[str]]:
+    """Map ``path::field`` -> the set of annotations declared under that name.
+
+    A SET, not a single annotation, because one module can declare the same
+    field name on several models -- ``operation_definitions.py`` carries ``pais``
+    twice and ``codigo_pais`` twice. Keying to a single value let the later
+    declaration overwrite the earlier one, so the gate reported whichever it
+    happened to walk last and was blind to the other. A mutation probe caught
+    that: a hand-spelled bound introduced on one of the two ``pais`` fields did
+    not red the gate at all.
+
+    The key stays ``path::field`` rather than gaining a line number, because an
+    exception keyed by line goes stale on the next edit above it.
+    """
+    found: dict[str, set[str]] = {}
     for path in sorted(_SRC.rglob("*.py")):
         parts = path.relative_to(_SRC).parts
         if "tests" in parts or path.name.startswith("test_"):
@@ -105,16 +117,17 @@ def _country_fields() -> dict[str, str]:
             # boundary declaring its own shape.
             if annotation in {"str", "str | None"} and not declares_a_bound:
                 continue
-            found[f"{relative}::{node.target.id}"] = annotation if annotation not in {"str", "str | None"} else assigned
+            declared = annotation if annotation not in {"str", "str | None"} else assigned
+            found.setdefault(f"{relative}::{node.target.id}", set()).add(declared)
     return found
 
 
 def test_every_bounded_country_field_uses_the_canonical_annotation() -> None:
     """A field that states a country-code bound must state the canonical one."""
     offenders = {
-        site: annotation
-        for site, annotation in _country_fields().items()
-        if annotation not in _CANONICAL and site not in DECLARED_EXCEPTIONS
+        site: sorted(annotations - _CANONICAL)
+        for site, annotations in _country_fields().items()
+        if not annotations <= _CANONICAL and site not in DECLARED_EXCEPTIONS
     }
 
     assert not offenders, (
@@ -137,7 +150,7 @@ def test_declared_exceptions_still_exist() -> None:
 def test_declared_exceptions_have_not_quietly_adopted_the_canonical() -> None:
     """An exception that now uses the canonical is stale, not a standing permission."""
     sites = _country_fields()
-    redundant = sorted(site for site in DECLARED_EXCEPTIONS if sites.get(site) in _CANONICAL)
+    redundant = sorted(site for site in DECLARED_EXCEPTIONS if sites.get(site, set()) <= _CANONICAL and site in sites)
 
     assert not redundant, f"these fields now use the canonical annotation and need no exception: {redundant}"
 
@@ -158,6 +171,6 @@ def test_the_gate_finds_country_fields_at_all() -> None:
     sites = _country_fields()
 
     assert len(sites) >= 10, f"only {len(sites)} bounded country fields discovered; the checks above prove little"
-    assert any(annotation in _CANONICAL for annotation in sites.values()), (
+    assert any(annotations & _CANONICAL for annotations in sites.values()), (
         "no field uses the canonical annotation, so the gate is measuring the wrong thing"
     )

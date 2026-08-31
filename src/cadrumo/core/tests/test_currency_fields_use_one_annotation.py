@@ -58,6 +58,12 @@ DECLARED_EXCEPTIONS: dict[str, str] = {
         "the same raw parse struct as the CSV provider, for the same reason: it "
         "carries the source cell, and RawTransaction normalises it"
     ),
+    "entrypoints/cli/_ledger_business_payloads.py::currency": (
+        "one field of an EvidenceExtractResult, the extractor's reading of a "
+        "document, sitting beside taxable_base and iva_rate which are strings "
+        "for the same reason: the payload shows the operator what was read, "
+        "including when what was read is wrong"
+    ),
     "application/ledger/evidence_draft.py::currency": (
         "read off a document rather than declared, so it must hold whatever the "
         "invoice actually said -- a refusal that cannot quote the unreadable "
@@ -93,9 +99,20 @@ DECLARED_EXCEPTIONS: dict[str, str] = {
 }
 
 
-def _currency_fields() -> dict[str, str]:
-    """Map ``path::field`` -> annotation source for every currency-named field."""
-    found: dict[str, str] = {}
+def _currency_fields() -> dict[str, set[str]]:
+    """Map ``path::field`` -> the set of annotations declared under that name.
+
+    A SET, not a single annotation. Five modules declare a currency field name
+    more than once -- ``application/ledger/models.py`` does it four times -- and
+    keying to a single value let the last declaration overwrite the rest, so the
+    gate could see only one of four and reported nothing about the others. The
+    sibling country gate had the identical flaw and a mutation probe exposed it
+    there; this is the same fix applied before it could hide anything here.
+
+    The key stays ``path::field`` rather than gaining a line number, because an
+    exception keyed by line goes stale on the next edit above it.
+    """
+    found: dict[str, set[str]] = {}
     for path in sorted(_SRC.rglob("*.py")):
         parts = path.relative_to(_SRC).parts
         if "tests" in parts or path.name.startswith("test_"):
@@ -114,16 +131,16 @@ def _currency_fields() -> dict[str, str]:
             # A settings CONSTANT is not a model field carrying a value.
             if annotation.startswith("Final["):
                 continue
-            found[f"{relative}::{node.target.id}"] = annotation
+            found.setdefault(f"{relative}::{node.target.id}", set()).add(annotation)
     return found
 
 
 def test_every_currency_field_uses_the_canonical_annotation() -> None:
     """A new currency field must adopt the one annotation or declare why not."""
     offenders = {
-        site: annotation
-        for site, annotation in _currency_fields().items()
-        if annotation not in _CANONICAL and site not in DECLARED_EXCEPTIONS
+        site: sorted(annotations - _CANONICAL)
+        for site, annotations in _currency_fields().items()
+        if not annotations <= _CANONICAL and site not in DECLARED_EXCEPTIONS
     }
 
     assert not offenders, (
@@ -148,7 +165,7 @@ def test_declared_exceptions_still_exist() -> None:
 def test_declared_exceptions_have_not_quietly_adopted_the_canonical() -> None:
     """An exception that now uses the canonical is a stale entry, not a permission."""
     sites = _currency_fields()
-    redundant = sorted(site for site in DECLARED_EXCEPTIONS if sites.get(site) in _CANONICAL)
+    redundant = sorted(site for site in DECLARED_EXCEPTIONS if site in sites and sites[site] <= _CANONICAL)
 
     assert not redundant, f"these fields now use the canonical annotation and need no exception: {redundant}"
 
@@ -173,6 +190,6 @@ def test_the_gate_finds_currency_fields_at_all() -> None:
     sites = _currency_fields()
 
     assert len(sites) >= 10, f"only {len(sites)} currency fields discovered; the checks above would prove little"
-    assert any(annotation in _CANONICAL for annotation in sites.values()), (
+    assert any(annotations & _CANONICAL for annotations in sites.values()), (
         "no field uses the canonical annotation, so the gate is measuring the wrong thing"
     )

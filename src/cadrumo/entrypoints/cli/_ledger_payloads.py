@@ -669,7 +669,7 @@ class LedgerListRowPayload(OutputSchema):
     booked_date: str
     value_date: str | None = None
     amount: str
-    currency: str
+    currency: IsoCurrencyCode
     direction: str
     counterparty: str = ""
     description: str
