@@ -22,15 +22,17 @@ registry snapshot locally).
 The observation-persistence path reads captured filed state through the
 active-bucket encrypted observation store.
 
-THIS NAMESPACE IS NOT INERT TO IMPORT: the root still eagerly runs
-``import_module("cadrumo.domain.renta")`` at module scope to register the
-first-slice routing cross-domain snapshot check required by Modelo 100
-snapshots. That import alone costs roughly 613 modules and ~1.3s wall
-time (measured against a clean interpreter) -- retiring the lazy-export
-map and moving the tree/filed-state definitions out did NOT make touching
-this package cheap. Any future consumer measuring this package's cost
-must account for that eager renta import, not just the (now-retired) lazy
-map.
+This namespace is inert: it declares an empty ``__all__``, defines nothing
+and imports nothing. It once ran ``import_module("cadrumo.domain.renta")``
+at module scope for one side effect -- registering the renta first-slice
+routing cross-domain snapshot check that a Modelo 100 snapshot requires.
+That registration is no longer a composition-root duty: the snapshot builder
+imports the registering module by name at the start of every snapshot build,
+so the gate is present regardless of which packages the importing process
+happened to load. Importing this root now costs only its parent packages;
+the weight is in the submodules, and :mod:`application.registry.tree` alone
+pulls in roughly six hundred. A consumer measuring this package's cost must
+measure the submodule it actually imports, never the root.
 
 See Also:
     :class:`domain.calculations.registry.ValidatedRegistryAuthority`
@@ -59,21 +61,5 @@ See Also:
 """
 
 from __future__ import annotations
-
-from importlib import import_module
-
-# RULED SUPERSEDED, not yet removed. This import exists to trigger
-# ``cadrumo.domain.renta``'s cross-domain check registration, and
-# ``domain.calculations.registry._snapshot_internals`` now does the same thing
-# better: idempotent, flag-guarded, and run at the start of EVERY snapshot
-# build. Its docstring names this site as the problem it solves -- "registration
-# no longer relies on a composition root happening to import renta before the
-# first M100 snapshot".
-#
-# So this namespace is inert (`__all__` is empty) and its only content is a side
-# effect, which is the worst pairing: nothing to import it FOR, yet importing it
-# does work. Removing it is a behaviour change on a registration path and wants
-# a green tree to land against; recorded here rather than deleted blind.
-import_module("cadrumo.domain.renta")
 
 __all__: tuple[str, ...] = ()

@@ -64,7 +64,7 @@ DECLARED_EXCEPTIONS: dict[str, str] = {
         "for the same reason: the payload shows the operator what was read, "
         "including when what was read is wrong"
     ),
-    "application/ledger/evidence_draft.py::currency": (
+    "application/ledger/invoice_draft_records.py::currency": (
         "read off a document rather than declared, so it must hold whatever the "
         "invoice actually said -- a refusal that cannot quote the unreadable "
         "value tells the operator nothing about which document to fix"

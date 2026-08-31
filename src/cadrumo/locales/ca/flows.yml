@@ -70,6 +70,19 @@ flows:
     required_field_unavailable: Camp obligatori del perfil
     section_title: '{title} - {present}/{total}'
     title: 'Perfil: {profile}'
+  modelo_edit:
+    footer: F2 revisa · Esc surt · F3 aparença
+    review:
+      nothing_staged: No hi ha canvis per revisar.
+      unresolved_entries: Hi ha valors sense resoldre. Corregiu-los abans de revisar.
+    review_ready: 'Revisió a punt. Caselles modificades: {changed}.'
+    stale_conflict: Les dades han canviat des que es va obrir l'edició. Reviseu abans
+      de continuar.
+    title: Edita el model
+    unresolved: 'Valor no reconegut a la casella {casilla_id}. Caselles pendents:
+      {count}.'
+    unsaved_on_leave: Hi ha canvis sense desar. Reviseu-los o descarteu-los abans
+      de sortir.
   modelo_review:
     column:
       action: Acció

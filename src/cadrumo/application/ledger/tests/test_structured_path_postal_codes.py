@@ -13,7 +13,7 @@ legend had exactly this shape until its structured carry landed.
 
 Every case drives the REAL path: bytes are written through the real encrypted
 evidence service and read back through
-:func:`~application.ledger.evidence_draft.extract_invoice_draft_from_evidence`, the function the
+:func:`~application.ledger.invoice_draft_extraction.extract_invoice_draft_from_evidence`, the function the
 CLI calls. Nothing constructs a draft or calls a parser directly, because a unit
 test on the parser passes whether or not the draft path ever reaches it.
 
@@ -40,7 +40,7 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.config import Settings
 from ....domain.iva.classification import IvaTerritorialScope
 from ....domain.iva.establishment import territorial_scope_for_spanish_postal_code
-from ..evidence_draft import extract_invoice_draft_from_evidence
+from ..invoice_draft_extraction import extract_invoice_draft_from_evidence
 from ..invoice_draft_records import InvoiceDraft
 from ._evidence_test_support import _BUCKET_ID, _make_svc
 from ._evidence_test_support import runtime_profile as runtime_profile

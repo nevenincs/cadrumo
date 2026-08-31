@@ -42,10 +42,10 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.inbound.einvoice import parse_einvoice_document
+from ....adapters.inbound.einvoice._parsers import parse_einvoice_document
+from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....domain.invoices.decomposition import InvoiceComponents
 from ..closure_findings import closure_findings
-from ..evidence_draft import DraftDiscrepancyKind
 from ..invoice_draft_records import InvoiceDraft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

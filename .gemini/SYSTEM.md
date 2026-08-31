@@ -2,8 +2,7 @@
 
 ## Vaultspec Skills
 
-- **aeat-continuidad-grounding**: Ground casilla continuity chains: derive the candidate evidence programmatically, adjudicate identity against official AEAT/BOE sources, author the continuidad_id stamps and evolution records, and verify through the registry's strict cross-revision gates. Use when stamping chains, reviewing continuity candidates, or preparing the grounding worklist.
-- **feature-surface-gate**: Path-scoped CI gate for feature commits on the shared `chore/*` factory- direct branch. Runs ruff + pytest + vault check against only the files the feature touches, isolating the feature owner from unrelated WIP carried by other concurrent agents on the same branch.
+- **aeat-continuidad-grounding**: Ground or review cross-revision casilla continuity using the validated registry authority and official AEAT/BOE evidence. Use when assigning a continuidad_id, authoring evolution records, resolving an ambiguous chain, or preparing a continuity worklist.
 - **vaultspec-adr**: Capture an architectural decision as an ADR in .vault/adr/. Use after research, before planning, when a significant design choice and its trade-offs must be recorded.
 - **vaultspec-code-research**: Ground a coding task in real source code, reference implementations, and library docs. Use before implementing a complex feature or when documentation is thin.
 - **vaultspec-code-review**: Run a formal code review for safety, intent, and quality. Use to verify completed work before marking it done.

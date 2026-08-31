@@ -70,6 +70,16 @@ flows:
     required_field_unavailable: Required profile field
     section_title: '{title} - {present}/{total}'
     title: 'Profile: {profile}'
+  modelo_edit:
+    footer: F2 review · Esc leave · F3 appearance
+    review:
+      nothing_staged: There are no changes to review.
+      unresolved_entries: Some values are unresolved. Correct them before reviewing.
+    review_ready: 'Review ready. Casillas changed: {changed}.'
+    stale_conflict: The data changed since this edit was opened. Review before continuing.
+    title: Edit modelo
+    unresolved: 'Unrecognised value in casilla {casilla_id}. Casillas pending: {count}.'
+    unsaved_on_leave: There are unsaved changes. Review or discard before leaving.
   modelo_review:
     column:
       action: Action

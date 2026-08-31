@@ -107,7 +107,7 @@ def test_an_operator_confirming_the_misread_identifier_is_still_refused(tmp_path
     """Agreeing with the misread must not be a way past the guard.
 
     The document carries the filer's own NIF and the operator supplies the same
-    value, so ``_agreed_counterparty_tax_id`` is satisfied -- the two sides
+    value, so ``agreed_counterparty_tax_id`` is satisfied -- the two sides
     agree. That earlier check answers "do these match?", not "is this a real
     counterparty?", so only this guard stands between an operator who rubber-
     stamps the misread and a self-dealing row.

@@ -32,7 +32,7 @@ from ....core.config import Settings
 from ....domain.invoices.errors import InvoiceValidationError
 from ....domain.invoices.models import Invoice
 from ....domain.iva.classification import InvoiceKind
-from ..evidence_draft import (
+from ..invoice_confirmation import (
     _INVOICE_FIELDS_A_CONFIRM_DOES_NOT_AUTHOR,
     InvoiceConfirmationResult,
     _fields_a_reconfirm_would_change,

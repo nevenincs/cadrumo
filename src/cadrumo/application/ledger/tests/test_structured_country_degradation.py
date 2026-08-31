@@ -48,7 +48,7 @@ positive case here while destroying the distinction they exist to establish.
 
 Every case drives the REAL path: bytes through the real encrypted evidence
 service, read back through
-:func:`~application.ledger.evidence_draft.extract_invoice_draft_from_evidence` -- the function
+:func:`~application.ledger.invoice_draft_extraction.extract_invoice_draft_from_evidence` -- the function
 the CLI calls -- and reported through
 :func:`~application.ledger.country_vocabulary_advisory`, the authority the review
 surface projects its notices from. Nothing constructs a draft by hand, because a
@@ -91,7 +91,7 @@ from ..classifier_inputs import collect_classifier_inputs
 from ..confirm_establishment import ConfirmedEstablishment, resolve_confirmed_establishment
 from ..country_vocabulary_advisory import country_vocabulary_advisory
 from ..establishment_ladder import resolve_draft_counterparty_establishment
-from ..evidence_draft import extract_invoice_draft_from_evidence
+from ..invoice_draft_extraction import extract_invoice_draft_from_evidence
 from ..invoice_draft_records import InvoiceDraft
 from ._evidence_test_support import _BUCKET_ID, _make_svc
 from ._evidence_test_support import runtime_profile as runtime_profile

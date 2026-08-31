@@ -29,7 +29,7 @@ See Also:
         Single catalogue writer used after field validation succeeds.
     :func:`~application.invoices.import_invoices_from_rows`
         Spreadsheet-oriented sibling path with matching idempotency semantics.
-    :func:`~application.ledger.evidence_draft.extract_invoice_draft_from_evidence`
+    :func:`~application.ledger.invoice_draft_extraction.extract_invoice_draft_from_evidence`
         Automated evidence extraction path this non-interactive wizard
         complements when OCR is unavailable or insufficient.
 """
@@ -46,7 +46,7 @@ from pydantic import BaseModel, ValidationError
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core.aggregation import IntracomOperationType
-from ...core.decimal import try_parse_canonical_decimal
+from ...core.decimal._grammar import try_parse_canonical_decimal
 from ...core.errors.error_codes import resolve_error_message
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.identity import IdentityError, validate_spanish_tax_id

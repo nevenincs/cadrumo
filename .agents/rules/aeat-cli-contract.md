@@ -3,169 +3,22 @@ name: aeat-cli-contract
 trigger: always_on
 ---
 
-# AEAT CLI contract: verbs, notices, single-subject mutations
+# AEAT CLI contract
 
-## Transport verbs are keyed on the counterparty
+## Command surface
 
-Two axes, four tokens. A **remote counterparty** — the AEAT sede, a Drive or
-Sheets store, a model distribution host — is read with `pull` and written with
-`push`. A **local filesystem** counterparty is read with `import` and written
-with `export`. The AEAT axis has no outbound half, permanently, because live
-submission is prohibited.
+- The root command families are `config` and `app`. Commands extend the established subject hierarchy and do not create aliases or parallel spellings.
+- The subject is positional where the hierarchy already makes it the command target. Options represent modifiers or explicit parameter loci; do not encode the same concept both positionally and as an option.
+- Use stable transport tokens and machine-readable identifiers at the CLI boundary. Localized presentation text is output, never an input protocol.
+- Local file ingestion uses the subject's `import --file` flow, for example `aeat config profile censo import --file ...`; do not revive retired `file` command families.
 
-`capture`, `refresh`, `fetch`, `download`, `upload`, `sync`, `send`, `get`,
-`mirror`, `probe` and `file` MUST NOT name a verb whose primary purpose is
-moving data. `file` retains only its domain meaning, the act of filing a
-declaration, and that meaning is exclusive.
+## Behavior
 
-There are three verb categories, not two. A TRANSPORT verb moves data and takes
-one of the four tokens. A COMPUTATION verb names the computation. A CREATING verb
-names the record it creates. In the latter two the local path or remote handle is
-declared on the parameters and never claims the verb: `app ledger evidence add`
-registers evidence from a PDF, `config auth certificate register` enrols a
-certificate from a file, `app modelo spreadsheet calculate` computes from a
-workbook it reads. Renaming any of them to `import` would name the mechanism and
-hide the outcome.
+- Commands are deterministic and idempotent where they mutate local configuration. Refuse ambiguous state instead of guessing.
+- User-facing notices go through the established notice/output channel. Do not mix diagnostics with structured output or write directly to arbitrary streams.
+- Parse, validate, and normalize at the boundary, then call the same application service used by non-CLI entrypoints. The CLI must not carry a second business implementation.
+- Help, completion, examples, and generated CLI reference derive from the live command tree. Do not maintain hand-copied inventories.
 
-A command reconciling from either transport MUST be a subgroup of `pull` and
-`import --file`, never one verb multiplexed by `--from-*` flags.
+## Verification
 
-Compounds are legal as `<token>-<subject>` and `<token>-all`; `<token>-<locus>`
-is not, because locus belongs in an option.
-
-The reconcile surface had grown four divergent `--from-*` flags plus a sugar
-verb while sibling surfaces used `capture`, `refresh` and `--source`, so no
-operator could transfer knowledge across verbs. Fixing that with one token per
-AEAT fetch left every OTHER remote read unnamed, so the axis was widened from
-"AEAT" to "remote" and given a `push` partner.
-
-## Local paths are spelled by declared locus, shape and role
-
-The parameter spec declares a `TransportLocus`, `TransportShape` and
-`TransportRole`; a gate reads the declaration rather than guessing, because
-type cannot tell a Drive folder id from a filesystem directory and a spelling
-gate that reads spellings proves nothing.
-
-Exactly ONE local input per verb is primary, spelled `--file` or the positional
-subject; one local output is primary, spelled `--output`. A bulk local directory
-is `--directory`, a local output directory `--output-root`, a resolution base
-`--<name>-root`. Every FURTHER local input is auxiliary and is named for the
-role it plays — `--verify-source`, `--receipt`, `--scenario` — because an
-auxiliary's name is the only place that job is written down.
-
-A single-file input MUST NOT be `--source`, `--path`, `--from-file`, or a
-bespoke `--from-*` family. A parameter declaring locus `none` is outside this
-table entirely, which is what protects a closed-enum discriminator that happens
-to be named `--source`, and `--from-year`.
-
-**A verb rename MUST be swept by hand through the surfaces the gates do NOT
-scan:** the runtime write-policy allowlist (`storage_write_policy.py`), the
-error-registry `default_suggestion` fields, the cross-period `next_action`
-builders, the curated operator help surface (`operator_surface/_help.py`), and
-the envelope `command=` identifiers. Updating only the verb registrations leaves
-dead operator instructions and drops the verb out of the profile-bound write
-guard, which then fails open.
-
-The censal reader is pinned to the read-only consulta view and fails closed on a
-filing-tool or procedure-launcher landing; that guard binds regardless of the
-verb's name.
-
-## Notices are the only diagnostic channel
-
-Operator-facing non-blocking diagnostics — warnings, advisories, next-step hints
-— MUST be emitted through the typed `Notice` channel on the shared CLI envelope
-spine (`cadrumo.core.json_contract.Notice`, via `_emit_envelope(...,
-notices=[...])` / `emit_json_success(..., notices=[...])`).
-
-A command MUST NOT re-introduce a bespoke advisory, `next` or `suggestion` field
-inside its `result` payload. The shared spine (`schema_version`, `command`,
-`status`, `notices`) is uniform across the success envelope and the stderr error
-document; `status` derives from notice severity and stays in lock-step with the
-`ExitCode` table.
-
-The success and error envelopes were once disjoint with no shared `status`, the
-success `warnings` channel was structurally dead, and advisories were smuggled as
-bespoke `result` fields — so the contract was un-introspectable and bypassed the
-envelope redaction funnel.
-
-**Allowed, not a violation:** primary structured result data a command exists to
-produce — verify `findings`, calendar `warnings`, a `next_due` date, a
-per-finding `next_action`. These are output, not incidental diagnostics.
-
-## Single-subject verbs: positional id, uniform result, idempotent
-
-**The subject id is positional.** A verb addressing one ledger transaction
-accepts the id as a positional `Argument` resolved through the single shared
-transaction-id resolver — never a `--id` option, never a duplicated resolver
-helper. The subject is an argument; flags configure the operation.
-
-**Single-transaction mutations return the uniform quintet**
-`{bucket_id, transaction_id, bucket_event_ids, review_status, transaction}`
-through the shared ledger mutation result shape. Structural verbs that act on a
-set or destroy the subject (`split`, `merge`, `remove`, `reset`) are different
-operations and declare their own typed schemas.
-
-**Creating mutations are idempotent-guarded.** Every verb that CREATES one
-addressable record: a retry carrying the same caller-supplied idempotency key, or
-the same deterministic clock-free derived id, returns the EXISTING record as a
-no-op (no second lifecycle event, no `created_at`/`modified_at` re-stamp, no
-re-run of side effects), surfaced through the uniform result shape plus an info
-`Notice`. A same-key call whose content DIFFERS refuses with an instructive
-localised conflict naming the divergent fields. A deliberately additive verb is
-`non_idempotent_append` and MUST document that choice.
-
-**Identity MUST be clock-free.** The timestamp is a non-identity last-seen body
-field, never folded into the derived id.
-
-This CLI's operator is an autonomous agent that retries calls, so a
-non-retry-safe creating mutation silently double-writes — a duplicate ledger
-transaction inflates every downstream modelo aggregation. The subtler failure is
-a **no-op match that omits a persisted field**, silently dropping the new value.
-**The match compares EVERY persisted field.**
-
-## The operator harness cites only the live surface
-
-Every agent-harness document under `src/cadrumo-harness/` that names a CLI
-verb or a JSON-envelope field MUST cite only verbs resolving against the live
-operator-surface manifest and fields existing on the live envelope models, and
-MUST be co-committed with the CLI surface it couples to. A citation to a renamed
-verb hands the agent a dead instruction it cannot recover from.
-
-## How
-
-- **Good:** `aeat app live filed pull`, `pull-all`, `pull-sources`;
-  `aeat app ledger import --file STATEMENT.csv`; a dual-transport reconcile as
-  `reconcile pull` + `reconcile import --file PATH`. `aeat config profile censo`
-  is the worked example: `censo import --file` and `censo pull`, both reconciling
-  through the one `apply_cotejo` authority behind the same `--apply` door.
-- **Good:** an advisory projected with `advisory_notice(code, message,
-  context={...})` and passed via `notices=`, its text line rebuilt from the same
-  notice so JSON and text cannot drift.
-- **Good:** derived verification and filing record ids fold the OUTCOME
-  (revision, status or findings, actor) and drop the timestamp.
-- **Bad:** a new `capture`/`refresh`/`fetch` verb for an AEAT read, a `--source`
-  file input, or multiplexing one verb with a `--from-*` family.
-- **Bad:** adding `authorization_advisory`, `source_advisories`, or any
-  `*_advisory` / bare `next` / `suggestion` as a top-level field on a registered
-  `OutputSchema`.
-- **Bad:** `ledger view --id tx_123` for a one-subject verb; a mutation returning
-  only `transaction_id`; an id that folds the clock; or a guarded no-op whose
-  match omits a field.
-- **Bad:** citing a harness verb that does not exist, or renaming a CLI verb
-  without sweeping the harness documents.
-
-Gates in this repository: `test_documented_command_conformance.py` and
-`test_json_schema_conformance.py`. The latter was rebuilt against the command-spec
-`ResultSchemaSpec` kernel after the `SCHEMA_REGISTRY` it originally walked was
-retired; it walks every spec declaring a result-schema target and refuses a
-bespoke `next` / `suggestion` / `*_advisory` field beside the envelope's one
-diagnostic channel. `test_rule_surface_conformance.py`, in the harness's own
-test package, enforces the harness-citation clause above: it resolves every verb
-cited in an operator rule, persona or skill against the live manifest. The
-harness client was rehomed out of this repository and later restored, so check
-the tree before concluding a harness gate is gone -- and expect the restored
-client to lag the product surfaces it couples to. Source:
-ADRs `2026-06-10-cli-pull-file-standard-adr`,
-`2026-06-10-cli-envelope-notice-standardisation-adr`,
-`2026-06-10-ledger-interface-contract-adr`,
-`2026-06-30-ledger-add-idempotency-adr`, `2026-06-30-agent-harness-adr`.
+Test the live parser and command registration, including success, refusal, idempotency, output channel, and machine-readable form. When changing a command, update its generated reference through the owning CLI generator rather than editing generated output.

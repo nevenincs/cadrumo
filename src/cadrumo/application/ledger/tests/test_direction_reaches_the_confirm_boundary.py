@@ -44,8 +44,9 @@ from ....tests.profile_capsule import open_test_profile_session, set_active_test
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ..confirmation_gate import ConfirmationBlockedError, confirmation_blockers
-from ..evidence_draft import confirm_invoice_draft_from_evidence, extract_invoice_draft_from_evidence
 from ..filer_establishment import FILER_TAX_ID_FACT_PATH
+from ..invoice_confirmation import confirm_invoice_draft_from_evidence
+from ..invoice_draft_extraction import extract_invoice_draft_from_evidence
 from ..invoice_draft_records import InvoiceDraft
 from ._loopback_reader import READING_RUNTIME_MODEL
 
@@ -273,7 +274,7 @@ def test_confirming_in_the_direction_the_document_supports_raises_no_direction_b
     """
     draft = live_document(_PURCHASE_LINES, _PURCHASE_READ).extract()
 
-    from ..evidence_draft import _with_direction_contradiction
+    from ..invoice_confirmation import _with_direction_contradiction
 
     stamped = _with_direction_contradiction(draft, kind=InvoiceKind.RECEIVED)
 

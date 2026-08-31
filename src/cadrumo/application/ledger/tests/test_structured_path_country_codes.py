@@ -25,7 +25,7 @@ which would prove the parse and not the point.
 
 Every case drives the REAL path: bytes are written through the real encrypted
 evidence service and read back through
-:func:`~application.ledger.evidence_draft.extract_invoice_draft_from_evidence`, the function the
+:func:`~application.ledger.invoice_draft_extraction.extract_invoice_draft_from_evidence`, the function the
 CLI calls, and the territory is resolved through
 :func:`~application.ledger.establishment_ladder.resolve_draft_counterparty_establishment`, the
 function confirm calls. Nothing constructs a draft or calls a parser directly.
@@ -43,7 +43,7 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.inbound.einvoice import parse_einvoice_document
+from ....adapters.inbound.einvoice._parsers import parse_einvoice_document
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.config import Settings
 from ....core.field_grounding import FieldGroundingOutcome
@@ -51,8 +51,8 @@ from ....core.field_origin import FieldOrigin
 from ....domain.iva.classification import InvoiceKind, IvaTerritorialScope
 from ....domain.iva.establishment import country_code_for_stated_country_code, territorial_scope_for_country
 from ..establishment_ladder import EstablishmentRung, resolve_draft_counterparty_establishment
-from ..evidence_draft import extract_invoice_draft_from_evidence
 from ..grounding_anchor import ground_structured_value
+from ..invoice_draft_extraction import extract_invoice_draft_from_evidence
 from ..invoice_draft_records import FieldProvenance, InvoiceDraft
 from ._evidence_test_support import _BUCKET_ID, _make_svc
 from ._evidence_test_support import runtime_profile as runtime_profile

@@ -3,7 +3,9 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.aggregation import collect_unhandled_source_diagnostics
+from cadrumo.application.aggregation.source_resolution_operations import (
+    collect_unhandled_source_diagnostics,
+)
 from cadrumo.application.modelo.calculation_route import (
     CALCULATION_ROUTE_RESOLVER_OWNERSHIP,
     CALCULATION_ROUTE_SOURCE_DISPOSITIONS,
@@ -52,7 +54,7 @@ def test_m232_related_party_dispatch_locator_bites_on_the_pre_dispatch_line() ->
     )
     focused = load_source_connectivity_census().model_copy(update={"entries": (entry,)})
     evidence = discovered_source_capability_evidence(REPO_ROOT)
-    canonical = "src/cadrumo/application/calculations/row_set_assembly.py:170"
+    canonical = "src/cadrumo/application/calculations/row_set_assembly.py:172"
 
     assert canonical in entry.capability_locators
     assert any(item.reference == canonical for item in entry.grounding)

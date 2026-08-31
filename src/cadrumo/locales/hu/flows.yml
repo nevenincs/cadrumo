@@ -70,6 +70,20 @@ flows:
     required_field_unavailable: Kötelező profilmező
     section_title: '{title} - {present}/{total}'
     title: 'Profil: {profile}'
+  modelo_edit:
+    footer: F2 ellenőrzés · Esc kilépés · F3 megjelenés
+    review:
+      nothing_staged: Nincs ellenőrizendő módosítás.
+      unresolved_entries: Vannak feloldatlan értékek. Ellenőrzés előtt javítsa ki
+        őket.
+    review_ready: 'Az ellenőrzés kész. Módosított casilla mezők: {changed}.'
+    stale_conflict: Az adatok megváltoztak a szerkesztés megnyitása óta. Folytatás
+      előtt ellenőrizze.
+    title: Modelo szerkesztése
+    unresolved: 'Nem értelmezhető érték a(z) {casilla_id} casilla mezőben. Függőben:
+      {count}.'
+    unsaved_on_leave: Nem mentett módosítások vannak. Kilépés előtt ellenőrizze vagy
+      vesse el őket.
   modelo_review:
     column:
       action: Művelet

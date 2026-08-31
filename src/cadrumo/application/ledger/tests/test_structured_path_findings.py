@@ -16,7 +16,7 @@ silently read as making them safe from being wrong.
 
 Every case here drives the REAL path: bytes are written through the real
 encrypted-bucket evidence service and read back through
-:func:`~application.ledger.evidence_draft.extract_invoice_draft_from_evidence`, which is the
+:func:`~application.ledger.invoice_draft_extraction.extract_invoice_draft_from_evidence`, which is the
 function the CLI calls. No draft is constructed and no producer is called
 directly -- doing either would reproduce exactly the gates that were already
 green while this path ran nothing.
@@ -27,7 +27,7 @@ The corpus tree itself is never written to.
 See Also:
     :func:`~application.ledger.deterministic_findings`
         The shared list both readers now run.
-    :func:`~application.ledger.evidence_draft.extract_invoice_draft_from_evidence`
+    :func:`~application.ledger.invoice_draft_extraction.extract_invoice_draft_from_evidence`
         The real entry point these cases drive.
 """
 
@@ -38,9 +38,9 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.config import Settings
-from ..evidence_draft import extract_invoice_draft_from_evidence
+from ....core.draft_discrepancy import DraftDiscrepancyKind
+from ..invoice_draft_extraction import extract_invoice_draft_from_evidence
 from ._evidence_test_support import _BUCKET_ID, _make_svc
 from ._evidence_test_support import runtime_profile as runtime_profile
 from ._ledger_value_fixtures import isolated_settings, secure_objects

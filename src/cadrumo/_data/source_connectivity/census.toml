@@ -213,7 +213,7 @@ owner = "source-connectivity-campaign"
 review_condition = "Retain deferral until the M232 carrier preserves official direction and relationship type, one secure worksheet/source owner supplies durable identities, and S94 proves the real encrypted revision route."
 expires_on = 2026-12-31
 capability_locators = [
-  "src/cadrumo/application/calculations/_row_set_assembly.py:170",
+  "src/cadrumo/application/calculations/row_set_assembly.py:172",
 ]
 capability_ids = ["row_assembler:per_related_party_operation"]
 advisory_destination_refs = ["modelo:232:rows:related-party-operation"]
@@ -228,7 +228,7 @@ summary = "Validated Modelo 232 bindings already declare the related-party sourc
 
 [[entries.grounding]]
 locator_kind = "repository"
-reference = "src/cadrumo/application/calculations/_row_set_assembly.py:170"
+reference = "src/cadrumo/application/calculations/row_set_assembly.py:172"
 summary = "Worksheet rows dispatch to the typed related-party observation assembler."
 
 [entries.bounded_follow_up]
@@ -244,7 +244,7 @@ owner = "source-connectivity-campaign"
 review_condition = "Reopen only when a secure owner retains the full official M360 request/document carrier: refund country/year/period, operation type, invoice/import document number/date, base, VAT quota, deductible proportion, requested amount, currency, nature (including Other description), and supplier VAT identity/name/address; every document has immutable durable identity/fingerprint; and S98 proves encrypted revision persistence/replay, diagnostics, review, and supported official repeated-record export."
 expires_on = 2026-12-31
 capability_locators = [
-  "src/cadrumo/application/calculations/_row_set_assembly.py:176",
+  "src/cadrumo/application/calculations/row_set_assembly.py:178",
 ]
 capability_ids = ["row_assembler:per_refund_operation"]
 advisory_destination_refs = ["modelo:360:rows:refund-operation"]
@@ -259,7 +259,7 @@ summary = "Validated Modelo 360 bindings already declare the refund-operation so
 
 [[entries.grounding]]
 locator_kind = "repository"
-reference = "src/cadrumo/application/calculations/_row_set_assembly.py:176"
+reference = "src/cadrumo/application/calculations/row_set_assembly.py:178"
 summary = "Worksheet rows dispatch to the typed refund-operation observation assembler."
 
 [entries.bounded_follow_up]
@@ -275,7 +275,7 @@ owner = "source-connectivity-campaign"
 review_condition = "Donor bindings and worksheet assembler are only a partial type-2 carrier, not distinct non-lossy type-1 declarant/header and type-2 donor-detail carriers. Reopen only when secure owner(s) retain both at native grain, with nature-3 administrator/holder identity, durable immutable identity/fingerprint, and lifecycle proof through diagnostics, provenance, encrypted revision persistence/replay, and review. Export stays negative until supported; then it needs positive non-lossy repeated-record proof."
 expires_on = 2026-12-31
 capability_locators = [
-  "src/cadrumo/application/calculations/_row_set_assembly.py:178",
+  "src/cadrumo/application/calculations/row_set_assembly.py:180",
 ]
 capability_ids = ["row_assembler:per_donativo_donor"]
 advisory_destination_refs = ["modelo:182:rows:donativo-donor"]
@@ -290,7 +290,7 @@ summary = "Validated Modelo 182 bindings already declare the donor source family
 
 [[entries.grounding]]
 locator_kind = "repository"
-reference = "src/cadrumo/application/calculations/_row_set_assembly.py:178"
+reference = "src/cadrumo/application/calculations/row_set_assembly.py:180"
 summary = "Worksheet rows dispatch to the typed donor observation assembler."
 
 [entries.bounded_follow_up]
@@ -306,7 +306,7 @@ owner = "source-connectivity-campaign"
 review_condition = "Manual M193 gasto casillas remain direct entry, not source ownership; withholding storage is separate. Reopen only when a secure owner retains a non-synthetic contributor/representative carrier with durable identity/fingerprint and capture provenance, a resolver resolves canonical gasto193_contributor, and diagnostics, provenance, encrypted persistence/replay, review, and supported repeated-record export are proven for both revisions."
 expires_on = 2026-12-31
 capability_locators = [
-  "src/cadrumo/application/calculations/_row_set_assembly.py:180",
+  "src/cadrumo/application/calculations/row_set_assembly.py:182",
 ]
 capability_ids = ["row_assembler:per_gasto193_contribuyente"]
 advisory_destination_refs = ["modelo:193:rows:gasto-contributor"]
@@ -322,7 +322,7 @@ summary = "Validated Modelo 193 bindings already declare the gasto-contributor s
 
 [[entries.grounding]]
 locator_kind = "repository"
-reference = "src/cadrumo/application/calculations/_row_set_assembly.py:180"
+reference = "src/cadrumo/application/calculations/row_set_assembly.py:182"
 summary = "Worksheet rows dispatch to the typed gasto-contributor observation assembler."
 
 [entries.bounded_follow_up]
@@ -338,7 +338,7 @@ owner = "source-connectivity-campaign"
 review_condition = "Manual M296 box/direct caller paths are not canonical recipient sources; M180/M193 withholding storage is separate. Reopen only when a secure non-lossy M296 repository retains declarant-owned recipient, representative, Annex and conditional-field identity/fingerprint/provenance, a row-preserving withholding296 resolver proves encrypted persistence/replay, diagnostics, review, and source-owned repeated-record export."
 expires_on = 2026-12-31
 capability_locators = [
-  "src/cadrumo/application/calculations/_row_set_assembly.py:182",
+  "src/cadrumo/application/calculations/row_set_assembly.py:184",
 ]
 capability_ids = ["row_assembler:per_perceptor_296"]
 advisory_destination_refs = ["modelo:296:rows:withholding"]
@@ -350,7 +350,7 @@ summary = "Current Modelo 296 registry bindings are relation-prefill declaration
 
 [[entries.grounding]]
 locator_kind = "repository"
-reference = "src/cadrumo/application/calculations/_row_set_assembly.py:182"
+reference = "src/cadrumo/application/calculations/row_set_assembly.py:184"
 summary = "Worksheet rows already dispatch to a typed Withholding296 observation assembler."
 
 [entries.bounded_follow_up]

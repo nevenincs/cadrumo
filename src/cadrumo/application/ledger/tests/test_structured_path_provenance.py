@@ -14,7 +14,7 @@ system getting the least apparatus.
 
 Every case drives the REAL path: bytes through the real encrypted evidence
 service, read back through
-:func:`~application.ledger.evidence_draft.extract_invoice_draft_from_evidence`.
+:func:`~application.ledger.invoice_draft_extraction.extract_invoice_draft_from_evidence`.
 
 See Also:
     :class:`~core.FieldOrigin`
@@ -33,8 +33,8 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.config import Settings
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
-from ..evidence_draft import extract_invoice_draft_from_evidence
 from ..grounding_anchor import normalise_for_anchor_search
+from ..invoice_draft_extraction import extract_invoice_draft_from_evidence
 from ..invoice_draft_records import InvoiceDraft
 from ._evidence_test_support import _BUCKET_ID, _make_svc
 from ._evidence_test_support import runtime_profile as runtime_profile
