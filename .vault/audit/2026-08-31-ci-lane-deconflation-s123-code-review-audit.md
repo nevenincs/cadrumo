@@ -5,7 +5,7 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:aa48c55e9e4c51b2656ac4da8b38be1cb9ec94b03482bad106489caaaac31f1d'
+body_hash: 'sha256:e0e9aec22b62df6a4ae9cc332929471cd098b4499e14a322252495b97e9ca42f'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
 ---
@@ -20,9 +20,9 @@ Independent review of P05.S123 at `dbf6981efc216c9b286b943e2ea8d61635d4d77c` and
 
 ### stale-record-doc-targets | low | Record docstrings still resolve through the removed defining path
 
-The record extraction updates runtime consumers and the Sede observer's coverage link, but leaves seven Sphinx targets naming record types under `calc_sheets_pull.py`: three in `application/calculations/row_set_assembly.py` for `RowSetEdit` or `RowSetCellEdit`, and four in `calc_sheets_pull.py` for `OperatorEdit`, `BindingEdit`, or `RelationEdit`. The adapter deliberately has no public re-export, so those targets are stale after the move and should name `calc_sheets_pull_records` directly.
+The record extraction updates runtime consumers and the Sede observer's coverage link, but leaves eight Sphinx targets naming record types under `calc_sheets_pull.py`: three in `application/calculations/row_set_assembly.py` for `RowSetEdit` or `RowSetCellEdit`, and five in `calc_sheets_pull.py` for `OperatorEdit`, `BindingEdit`, or `RelationEdit`. The adapter deliberately has no public re-export, so those targets are stale after the move and should name `calc_sheets_pull_records` directly.
 
 ## Recommendations
 
-- For `stale-record-doc-targets`, update the seven record links to the canonical `calc_sheets_pull_records` module and rerun the affected documentation reference gate when S53 performs its sweep.
+- For `stale-record-doc-targets`, update the eight record links to the canonical `calc_sheets_pull_records` module and rerun the affected documentation reference gate when S53 performs its sweep.
 
