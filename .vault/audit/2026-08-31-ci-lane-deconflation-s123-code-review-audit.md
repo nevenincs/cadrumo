@@ -5,7 +5,7 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:fd70420acc42bf7c4f5d5ae7941a7b007f068cd9d2c410ec23d21c7c77f58f38'
+body_hash: 'sha256:5a2f821bb0f984acdf765c3233e1de4908d032f57de22c57dd1cff712c4daf4e'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
 ---
@@ -29,6 +29,10 @@ The S123 execution record lines 43 and 44 retain `ruff check <S123 paths>` and `
 ### repair-verification | low | The eight moved-record links are now canonical
 
 Commit `cd2c75755fee6f0061a68d817deead3488c0ac1a` changes the exact five `calc_sheets_pull.py` and three `row_set_assembly.py` links, and the current stale-reference search returns no old record targets. `test_qualified_docstring_references_resolve.py` remains red only in its four unrelated assertions: unresolved user-profile/storage targets, an unrelated scan-population threshold, pydantic-field resolution, and a lazy user-profile resolver fixture. No repaired S123 target appears in that output.
+
+### final-evidence-repair | low | The outstanding placeholder evidence is resolved
+
+Record-only commit `924b08e4f117f7f9bb777bb3bd8b5c4c3460ba82` replaces both placeholder lint entries with the exact 19 original S123 source/test paths and their recorded passing results. No placeholder remains, and the commit changes no source, plan, or size baseline. The prior high evidence finding is resolved.
 
 ## Recommendations
 
