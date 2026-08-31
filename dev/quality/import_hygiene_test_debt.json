@@ -118,37 +118,6 @@
         "reason": "Parity-of-two-paths reach: the test proves the dedup decision is identical whether a row arrives by import or by the manual path, which requires calling the import path's own row evaluator directly. The public import action also WRITES, so driving it would compare a decision against a persisted side effect rather than against the other decision. Deliberately NOT promoted: `_evaluate_import_rows` is an internal step of one action, and exposing it would offer callers a way to evaluate rows without the write the action exists to perform. This reach is STILL LIVE and unchanged in the source. It stopped being reported because its target module was promoted from a private to a public name, and the scanner decides what is private from the module path alone without ever inspecting the imported names, so a private symbol reached through a public module is invisible to it. The entry is retained deliberately: deleting it would record a resolution that did not happen, and it will answer a live occurrence again once the scanner judges imported names too."
       },
       {
-        "importer_path": "src/cadrumo/application/workflow/tests/test_models.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.adapters.outbound.aeat.browser._site_health",
-        "imported_names": [
-          "SiteHealthEvidence",
-          "SiteHealthStatus",
-          "parse_site_health_url"
-        ],
-        "reason": "White-box test reach into the browser package's private site-health module: the workflow state tests build a real parsed site-health URL rather than a hand-shaped string, so the persisted workflow record is exercised against the value the browser adapter actually produces. The reach is unchanged; only the symbol it imports changed, from the module's URL adapter constant to the parse helper that wraps it. The entry previously named the constant and so stopped matching, which made a live violation look resolved. Updated again on 2026-08-31: the reach still exists and the module is unchanged; the test now imports the evidence and status types alongside the parse helper, so the recorded symbol set grew from one name to three. The entry is corrected rather than deleted -- a recorded tuple that no longer matches reads identically to a reach that is gone, and deleting it would have dropped a live white-box reach out of the ratchet entirely."
-      },
-      {
-        "importer_path": "src/cadrumo/application/workflow/tests/test_resume.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.adapters.outbound.aeat.browser._site_health",
-        "imported_names": [
-          "SiteHealthEvidence",
-          "SiteHealthStatus",
-          "parse_site_health_url"
-        ],
-        "reason": "White-box test reach into the browser package's private site-health module: the workflow state tests build a real parsed site-health URL rather than a hand-shaped string, so the persisted workflow record is exercised against the value the browser adapter actually produces. The reach is unchanged; only the symbol it imports changed, from the module's URL adapter constant to the parse helper that wraps it. The entry previously named the constant and so stopped matching, which made a live violation look resolved. Updated again on 2026-08-31: the reach still exists and the module is unchanged; the test now imports the evidence and status types alongside the parse helper, so the recorded symbol set grew from one name to three. The entry is corrected rather than deleted -- a recorded tuple that no longer matches reads identically to a reach that is gone, and deleting it would have dropped a live white-box reach out of the ratchet entirely."
-      },
-      {
-        "importer_path": "src/cadrumo/core/tests/test_logging.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.adapters.inbound.pdf._pdfplumber",
-        "imported_names": [
-          "__all__"
-        ],
-        "reason": "Structural introspection test reading the private _pdfplumber submodule's own __all__ list to confirm suppress_pdfminer_debug_logging stays exported from it. Testing the submodule's own export surface, not importing a symbol through it -- no promotion candidate exists."
-      },
-      {
         "importer_path": "src/cadrumo/core/time/tests/test_clock.py",
         "occurrence": 1,
         "target_mod": "cadrumo.application.storage.calc_sheets.records",
@@ -216,15 +185,6 @@
           "_locale_map"
         ],
         "reason": "White-box test reading the private per-locale translation-key map to detect self-referential (untranslated) string leaks. Internal catalogue cache, not the public tr() translation surface."
-      },
-      {
-        "importer_path": "src/cadrumo/entrypoints/cli/tests/test_source_diagnostic_notice_context.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.application.calculations._relation_prefill",
-        "imported_names": [
-          "_absent_bound_carry_diagnostics"
-        ],
-        "reason": "White-box test reach: the gate asserts that every absent-bound-carry advisory is distinguishable by its notice context alone, so it must build the REAL diagnostics from the loaded registry authority -- requirements, target bindings and self-carries all come from the M200 snapshot rather than a fixture, so a registry change flows into the gate instead of being masked. `_absent_bound_carry_diagnostics` is an internals-only builder taking four internal-shaped arguments, with a single production caller inside _relation_prefill itself. Deliberately NOT promoted: putting a four-argument diagnostic assembly step on the application.calculations facade would publish implementation detail no production consumer needs, for one test."
       },
       {
         "importer_path": "src/cadrumo/tests/fixtures/manual_annexes/tests/test_manual_annex_provenance.py",
