@@ -10,7 +10,7 @@ related:
   - '[[2026-06-01-registry-period-code-union-cli-boundary-adr]]'
   - '[[2026-08-05-ci-lane-deconflation-step-check-attribution-audit]]'
 modified: '2026-08-31'
-body_hash: 'sha256:328fc336be2a86be7bd3e84dde2ff80c33eb74794e17ea03184f1f1175ed747a'
+body_hash: 'sha256:7270f2e43600a5232563a2a0b35b2dbb379aa729ab58c296412a61dddcb74313'
 ---
 
 <!-- RETIRED: S01, S10, S181, S184, S186, S189, S191, S193, S194, S197, S199, S201, S203, S205, S207, S209, S211, S213, S215, S217, S219, S221 -->
@@ -216,7 +216,7 @@ Decompose every live size-budget subject by its owning source file, then regener
 - [ ] `P05.S145` - Refactor the size-budget subjects in actions_manual.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/ledger/actions_manual.py`.
 - [ ] `P05.S146` - Refactor the size-budget subjects in classification_assembly.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/ledger/classification_assembly.py`.
 - [ ] `P05.S147` - Refactor the size-budget subjects in evidence_draft.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/ledger/evidence_draft.py`.
-- [ ] `P05.S148` - Refactor the size-budget subjects in evidence.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/ledger/evidence.py`.
+- [x] `P05.S148` - Refactor the size-budget subjects in evidence.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/ledger/evidence.py`.
 - [ ] `P05.S149` - Refactor the size-budget subjects in identity_roles.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/ledger/identity_roles.py`.
 - [ ] `P05.S150` - Refactor the size-budget subjects in llm_classification.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/ledger/llm_classification.py`.
 - [ ] `P05.S151` - Refactor the size-budget subjects in filed_data_capture.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/live/filed_data_capture.py`.
