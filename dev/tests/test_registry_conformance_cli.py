@@ -47,7 +47,7 @@ import pytest
 from pydantic import ValidationError
 from typer.testing import CliRunner, Result
 
-from cadrumo.application.registry import (
+from cadrumo.application.registry.conformance import (
     RegistryConformanceProfile,
     audit_bundled_registry_conformance,
     compare_annual_casilla_population,

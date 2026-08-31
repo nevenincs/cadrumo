@@ -13,9 +13,6 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-
 from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from .....adapters.persistence.profile.filing_amendments import ModeloAmendmentRepository
 from .....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
@@ -64,6 +61,8 @@ from .....domain.buckets import (
     BucketEventType,
     derive_bucket_event_id,
 )
+from .....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from .....domain.categories import SpendingCategory
 from .....domain.contribuyente.assets import AmortizacionEntry, AmortizacionLedger, AssetClass, AssetRecord
 from .....domain.contribuyente.inventory import InventoryLedger, ValuationMethod
@@ -84,9 +83,6 @@ from .....domain.iva import InvoiceKind
 from .....domain.iva_compensation import IvaCompensationPeriodState, IvaCompensationReconciliationDecision
 from .....domain.justificante import Justificante
 from .....domain.modelos import (
-    CalculationRevision,
-    CalculationRevisionCatalogue,
-    CalculationRevisionState,
     ExternalEvidence,
     ExternalEvidenceKind,
     ModeloCode,
@@ -98,10 +94,15 @@ from .....domain.modelos import (
     WorkUnit,
     WorkUnitCatalogue,
     WorkUnitState,
-    derive_calculation_revision_id,
     derive_filing_record_id,
     derive_verification_report_id,
     derive_work_unit_id,
+)
+from .....domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionCatalogue,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
 )
 from .....domain.submission import (
     ModeloDraftStatus,

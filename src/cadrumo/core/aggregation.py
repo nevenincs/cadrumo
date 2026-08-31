@@ -264,6 +264,12 @@ class BindingSourceKind(StrEnum):
     PREVIOUS_FILING = "previous_filing"
     RELATION_PREFILL = "relation_prefill"
     MANUAL_INPUT = "manual_input"
+    # A byte run whose value AEAT fixes in the diseno de registro itself -- the
+    # record-type marker, the modelo number, a sheet discriminator. Distinct from
+    # MANUAL_INPUT because no operator supplies it: routing a constant through the
+    # manual channel makes it answerable-blank, and a blank emits behind a valid
+    # digest. The value rides on the binding selector; see design_constant_bindings.
+    DESIGN_CONSTANT = "design_constant"
     # Ledger-aggregation sources (all five ledger kinds).
     LEDGER_OSS_AGGREGATION = "ledger_oss_aggregation"
     LEDGER_IVA_AGGREGATION = "ledger_iva_aggregation"
@@ -356,6 +362,26 @@ class BindingSourceKind(StrEnum):
     # Invoice / counterpart aggregation sources.
     PAYABLE_INVOICE = "payable_invoice"
     COLLECTIBLE_INVOICE = "collectible_invoice"
+    # Modelo 347 "operaciones con terceras personas" combined-direction source.
+    # RD 1065/2007 art. 33.1 defines the declared population as one
+    # undifferentiated concept before any direction split: "tendran la
+    # consideracion de operaciones tanto las entregas de bienes y
+    # prestaciones de servicios como las adquisiciones de los mismos" -- a
+    # sale and a purchase are the SAME "operacion" concept the annual
+    # declaration reports, not two. A binding that declares one direction
+    # (payable or collectible) while its resolver reads both is untruthful
+    # about what it consumes; this member names the combined population the
+    # law itself already treats as singular, for bindings whose selector
+    # spans both invoice directions (the M347 declarante-summary totals and
+    # the per-counterparty contraparte_clave row family). It is invoice-
+    # shaped (a member of INVOICE_BINDING_SOURCE_KINDS) and resolved by the
+    # same InvoiceCatalogueSourceResolver as PAYABLE_INVOICE/COLLECTIBLE_INVOICE;
+    # each underlying InvoiceObservation still carries its own true
+    # PAYABLE_INVOICE/COLLECTIBLE_INVOICE direction as its own source_kind, so
+    # per-invoice direction (art. 33.1's quarterly separate accounting of
+    # entregas y adquisiciones) is never lost, only the BINDING's declared
+    # source is honest about spanning both.
+    M347_THIRD_PARTY_OPERATION = "m347_third_party_operation"
     LEDGER_TRANSACTION = "ledger_transaction"
     PURCHASE_INVOICE_EVIDENCE = "purchase_invoice_evidence"
     # Detail-record families. WITHHOLDING / FOREIGN_ASSET reuse the
@@ -413,6 +439,7 @@ INVOICE_BINDING_SOURCE_KINDS: Final[frozenset[BindingSourceKind]] = frozenset(
         BindingSourceKind.COLLECTIBLE_INVOICE,
         BindingSourceKind.PAYABLE_INVOICE,
         BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
+        BindingSourceKind.M347_THIRD_PARTY_OPERATION,
     },
 )
 """Invoice-shaped binding source kinds, derived from :class:`BindingSourceKind`."""
@@ -432,14 +459,22 @@ evidence row, or a payable/collectible invoice. Replaces the former
 ``AggregationSourceKind``-derived subset, which was deleted in the same change.
 """
 
-COUNTERPART_SOURCE_KINDS: Final[frozenset[CounterpartSourceKind]] = frozenset(
-    {
-        BindingSourceKind.LEDGER_TRANSACTION,
-        BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
-        BindingSourceKind.PAYABLE_INVOICE,
-        BindingSourceKind.COLLECTIBLE_INVOICE,
-    },
+COUNTERPART_SOURCE_KIND_ORDER: Final[tuple[CounterpartSourceKind, ...]] = (
+    BindingSourceKind.LEDGER_TRANSACTION,
+    BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
+    BindingSourceKind.PAYABLE_INVOICE,
+    BindingSourceKind.COLLECTIBLE_INVOICE,
 )
+"""Operator-facing display order for :data:`COUNTERPART_SOURCE_KINDS`.
+
+This is the order the ``--kind`` help text and alias table present to an
+operator (documented in ``docs/how-to/review-queue.md``), so it is
+authoritative and MUST NOT be reordered incidentally.
+:data:`COUNTERPART_SOURCE_KINDS` derives its membership from this tuple so
+the two can never drift apart.
+"""
+
+COUNTERPART_SOURCE_KINDS: Final[frozenset[CounterpartSourceKind]] = frozenset(COUNTERPART_SOURCE_KIND_ORDER)
 
 
 def counterpart_source_kind(value: object) -> CounterpartSourceKind:
@@ -868,6 +903,93 @@ class IntracomOperationType(StrEnum):
     ADQUISICION_SERVICIOS = "I"
     D = "D"
     C = "C"
+
+
+class TravelAgencyMediationType(StrEnum):
+    """RD 1619/2012 disposición adicional cuarta mediation-service classification.
+
+    That disposition lets a travel agency, acting as intermediary "en nombre
+    y por cuenta ajena", invoice a listed set of services (passenger
+    transport and luggage; hostelería/acampamento/balneario; restauración y
+    catering; short-term transport-means rental; visits to museums/galleries/
+    monuments/gardens/parks; access to cultural/artistic/sporting/scientific/
+    educational/recreational events, fairs and exhibitions; travel insurance;
+    and services under the special travel-agency IVA regime) under the
+    agency's own invoice series rather than the actual supplier's. Modelo
+    347's claves F ("ventas agencia viaje", any listed service, ISSUED
+    direction) and G ("compras agencia viaje", air passenger transport only,
+    RECEIVED direction) key on this fact, not on invoice direction alone.
+
+    ``MEDIATED_SERVICE`` covers the full listed set and is the fact clave F
+    checks for. ``AIR_PASSENGER_TRANSPORT`` is the narrower subset clave G
+    checks for -- G names only "transportes de viajeros y sus equipajes por
+    vía aérea", not the disposition's full service list, so a RECEIVED
+    invoice for a non-air mediated service (e.g. mediated hostelería) is
+    neither F nor G and falls through to the ordinary A/B classification.
+    """
+
+    MEDIATED_SERVICE = "mediated_service"
+    AIR_PASSENGER_TRANSPORT = "air_passenger_transport"
+
+
+class ThirdPartyDeclarationRole(StrEnum):
+    """The filer's Modelo 347 declaring role -- orthogonal to :class:`EntityType`.
+
+    :class:`EntityType` selects the TAX a taxpayer is assessed under (IRPF,
+    Impuesto sobre Sociedades, or régimen de atribución de rentas), and that
+    selection in turn drives which modelos, calendar and rate schedule apply.
+    This axis answers a different question entirely: whether the filer's own
+    institutional ROLE additionally requires declaring Modelo 347 claves C, D
+    or E, a fact that coexists with any :class:`EntityType` value unchanged. A
+    colegio profesional that also collects fees on behalf of its colegiados
+    is a ``LEGAL_ENTITY`` for tax purposes, full stop; it is SEPARATELY a
+    ``THIRD_PARTY_FEE_COLLECTOR`` for Modelo 347 clave C purposes, and neither
+    fact touches the other.
+
+    Every member is named for the population it identifies rather than for
+    the article that names it, because article numbers renumber and a
+    renumbering should be a citation update, not a member rename. Legal
+    grounding lives here and in each binding's own ``legal_refs``, never in
+    the member's own name:
+
+    Attributes:
+        THIRD_PARTY_FEE_COLLECTOR: RD 1065/2007 art. 31.3 -- a sociedad,
+            asociación, colegio profesional or other entity that collects
+            professional fees or intellectual/industrial/authorship-rights
+            income on behalf of its socios, asociados or colegiados. Feeds
+            clave C alone, at its own 300,51 EUR threshold (arts. 32.c,
+            33.4) rather than the general 3.005,06 EUR floor.
+        PROPIEDAD_HORIZONTAL_ENTITY: RD 1065/2007 art. 31.1's last
+            paragraph -- a comunidad de propietarios under Ley 49/1960 sobre
+            propiedad horizontal. Feeds clave D.
+        SOCIAL_CHARACTER_ENTITY: RD 1065/2007 art. 31.1's last paragraph,
+            cross-referencing Ley 37/1992 (LIVA) art. 20.tres -- a private
+            entity or establishment of carácter social. Feeds clave D.
+        STATUTORY_INFORMATION_DUTY_ENTITY: RD 1065/2007 art. 31.2,
+            cross-referencing Ley 58/2003 (LGT) art. 94.1 and 94.2 -- the
+            authorities, public bodies, cámaras y corporaciones, colegios y
+            asociaciones profesionales, mutualidades de previsión social and
+            other entities exercising public functions subject to the
+            general duty to supply tax information, together with the
+            partidos políticos, sindicatos and asociaciones empresariales
+            LGT art. 94.2 subjects to the same duty. Feeds clave D.
+        PUBLIC_ADMINISTRATION_ENTITY: RD 1065/2007 art. 31.2's second
+            paragraph -- "las entidades integradas en las distintas
+            Administraciones públicas", a narrower population properly
+            contained within ``STATUTORY_INFORMATION_DUTY_ENTITY`` but named
+            as its own member because clave E is EXCLUSIVE to it while
+            clave D is not: modelling the subset as a distinct member lets
+            clave D check the broader set and clave E check this member
+            alone, without re-deriving the subset relationship at each call
+            site. Feeds clave D (as part of the broader population) and,
+            exclusively, clave E.
+    """
+
+    THIRD_PARTY_FEE_COLLECTOR = "third_party_fee_collector"
+    PROPIEDAD_HORIZONTAL_ENTITY = "propiedad_horizontal_entity"
+    SOCIAL_CHARACTER_ENTITY = "social_character_entity"
+    STATUTORY_INFORMATION_DUTY_ENTITY = "statutory_information_duty_entity"
+    PUBLIC_ADMINISTRATION_ENTITY = "public_administration_entity"
 
 
 class ForeignAssetClass(StrEnum):

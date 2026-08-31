@@ -15,6 +15,7 @@ import pytest
 from ....adapters.persistence.operations.journal import OperationJournalRepository
 from ....adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ....adapters.persistence.operations.secure_references import operation_secure_reference_repository
+from ....adapters.persistence.storage import SecureObjectRepository
 from ....core import AuthProviderKind
 from ....core.operations import (
     OperationEffect,
@@ -54,15 +55,13 @@ _REPLACEMENT = "s39-replacement-profile-passphrase"
 def _supervisor(
     root: Path,
     *,
-    profile_objects: object | None = None,
+    profile_objects: SecureObjectRepository | None = None,
     clock: Callable[[], datetime] | None = None,
     owner_id: str = "1" * 64,
     lease_token: str = "2" * 64,
 ) -> OperationSupervisor:
     journal = OperationJournalRepository(storage_root=root)
-    operands = (
-        None if profile_objects is None else operation_secure_reference_repository(objects=profile_objects)  # type: ignore[arg-type]
-    )
+    operands = None if profile_objects is None else operation_secure_reference_repository(objects=profile_objects)
     return OperationSupervisor(
         registry=OperationRegistry(
             definitions=AUTH_OPERATION_DEFINITIONS,
@@ -230,6 +229,7 @@ def test_passphrase_rotation_uses_one_ephemeral_payload_and_changes_real_custody
             }
         ).encode("utf-8")
         with profile_custody_secure_object_repository(profile_id=profile_id, dek=b"", root=root) as objects:
+            assert isinstance(objects, SecureObjectRepository)
             supervisor = _supervisor(root, profile_objects=objects)
             terminal = _run_secret_operation(
                 supervisor=supervisor,

@@ -10,7 +10,8 @@ committed registry files under ``registry/aeat/iva``.
 The facade exposes closed identifiers such as :class:`IvaCategory`,
 :class:`EUMemberState`, :class:`IvaRateKind`,
 :class:`IvaFlowDirection`, and :class:`IvaSettlementSide`; loaders and lookups
-such as :func:`load_iva_catalogues`, :func:`resolve_catalogue`,
+such as :func:`bundled_iva_catalogue`, :func:`iva_catalogue_years`,
+:func:`resolve_catalogue`,
 :func:`load_iva_rate_table`, :func:`lookup_rate`, :func:`load_recargo_rates`,
 and :func:`recargo_rate_for_applied_rate`; and the classification axis stack
 (:class:`IvaTerritorialScope`, :class:`CustomerTaxStatus`,
@@ -48,7 +49,7 @@ See Also:
 
 from __future__ import annotations
 
-from ._catalogue import load_iva_catalogues, resolve_catalogue
+from ._catalogue import bundled_iva_catalogue, iva_catalogue_years, resolve_catalogue
 from ._classification import (
     CustomerTaxStatus,
     InvoiceKind,
@@ -101,6 +102,7 @@ from ._flow import (
     IvaFlowDirection,
     IvaSettlementSide,
     derive_flow_for_classification,
+    flow_direction_for_invoice_kind,
     is_deducible_flow,
     is_devengada_flow,
     settlement_sides_for_flow,
@@ -140,8 +142,9 @@ from ._oss import (
 )
 from ._place_of_supply import (
     IvaPlaceOfSupplyRule,
-    load_place_of_supply_rules,
+    load_place_of_supply_table,
     place_of_supply_rule,
+    place_of_supply_years,
     required_supply_nature_for_rule,
 )
 from ._prorrata import (
@@ -223,7 +226,6 @@ from ._schema import (
     IvaCatalogue,
     IvaCategory,
     IvaCitation,
-    IvaCitationGrounding,
     IvaExemptionArticle,
     IvaLedgerObservationRole,
     IvaRateKind,
@@ -305,7 +307,6 @@ __all__ = [
     "IvaCategoryComponents",
     "IvaCategoryNotFoundError",
     "IvaCitation",
-    "IvaCitationGrounding",
     "IvaClassificationError",
     "IvaClassificationResult",
     "IvaComponentPresence",
@@ -369,6 +370,7 @@ __all__ = [
     "SupplyNatureDerivation",
     "SupplyNatureDerivationOutcome",
     "TransactionKind",
+    "bundled_iva_catalogue",
     "category_bears_taxable_base",
     "category_components",
     "category_cuota_is_zero_by_law",
@@ -393,6 +395,7 @@ __all__ = [
     "domestic_categories_by_rate_kind",
     "domestic_rate_tier_is_required",
     "especial_mandatory_rule",
+    "flow_direction_for_invoice_kind",
     "identification_state_for_printed_tax_identifier",
     "invoice_line_to_iva_observation",
     "is_deducible_flow",
@@ -400,10 +403,10 @@ __all__ = [
     "is_especial_mandatory",
     "is_last_filing_period_of_year",
     "is_m303_annual_settlement_period",
-    "load_iva_catalogues",
+    "iva_catalogue_years",
     "load_iva_rate_table",
     "load_iva_rules_from_manual",
-    "load_place_of_supply_rules",
+    "load_place_of_supply_table",
     "load_recargo_rate_table",
     "load_recargo_rates",
     "lookup_rate",
@@ -413,6 +416,7 @@ __all__ = [
     "match_regime_legend",
     "match_statutory_citations",
     "place_of_supply_rule",
+    "place_of_supply_years",
     "rate_kind_for_domestic_category",
     "rate_kinds_for_declared_rate",
     "rate_table_covers",

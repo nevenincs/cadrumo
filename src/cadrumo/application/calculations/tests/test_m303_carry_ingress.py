@@ -8,11 +8,10 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
-from cadrumo.domain.calculations.registry.casilla_membership import casillas_by_id
-
 from ....core import CasillaId, Modelo, ObservedHeaderFact, Period, ResultDisposition
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from ....domain.calculations.registry.casilla_membership import casillas_by_id
 from ....domain.iva_compensation import (
     M303_COMPENSATION_AVAILABLE_CASILLA,
     M303_COMPENSATION_GENERADA_CASILLA,
@@ -21,7 +20,7 @@ from ....domain.iva_compensation import (
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from .._m303_carry_ingress import M303CarryIngressError
-from .._observations_repository import (
+from ..observations_repository import (
     CalculationObservationRepository,
     ObservationSourceKind,
     ResultDispositionProjection,

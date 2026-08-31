@@ -11,9 +11,6 @@ from typing import TypedDict, cast
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.ids import RelationId
-from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
-
 from ....core import (
     BindingSourceKind,
     CalculationSourceLineageRole,
@@ -28,13 +25,15 @@ from ....core.directory_scan import (
 from ....tests.filing_evidence import regimen_simplificado_filing_evidence
 from ...calculations import RowSourceIdentity
 from ...calculations.registry.authority import bundled_authority
+from ...calculations.registry.ids import RelationId
+from ...calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ...filing_evidence import FilingEvidenceReference
 from ...iva import (
     M303RegimenSimplificadoScope,
     M303RegimenSimplificadoScopeDecision,
     RegimenSimplificadoFilingRows,
 )
-from .._calculation_revision import (
+from ..calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     CalculationSourceRef,
@@ -1130,9 +1129,8 @@ def test_observations_consistency_validator_accepts_matching_projection() -> Non
     must equal the projection of observations. Matching pair validates clean."""
     from datetime import UTC, datetime
 
-    from cadrumo.domain.calculations.registry.bindings import CasillaObservation
-
-    from .._calculation_revision import CalculationRevision, CalculationRevisionState
+    from ...calculations.registry.bindings import CasillaObservation
+    from ..calculation_revision import CalculationRevision, CalculationRevisionState
 
     work_unit_id = "d" * 64
     casilla_values = {
@@ -1185,9 +1183,8 @@ def test_observations_consistency_validator_rejects_drift() -> None:
 
     import pydantic
 
-    from cadrumo.domain.calculations.registry.bindings import CasillaObservation
-
-    from .._calculation_revision import CalculationRevision, CalculationRevisionState
+    from ...calculations.registry.bindings import CasillaObservation
+    from ..calculation_revision import CalculationRevision, CalculationRevisionState
 
     work_unit_id = "e" * 64
     casilla_values = {_OBSERVATION_CASILLA_100: Decimal("250.00")}
@@ -1230,7 +1227,7 @@ def test_observations_consistency_validator_rejects_non_empty_values_without_obs
 
     import pydantic
 
-    from .._calculation_revision import CalculationRevision, CalculationRevisionState
+    from ..calculation_revision import CalculationRevision, CalculationRevisionState
 
     work_unit_id = "f" * 64
     casilla_values = {_OBSERVATION_CASILLA_100: Decimal("250.00")}
@@ -1319,7 +1316,7 @@ def test_detail_rows_sort_key_handles_all_four_row_types() -> None:
     )
 
     # Create one row of each type with distinct nif/nif_comunitario values.
-    m184_row = Modelo184MemberRow(nif="12345678A", porcentaje=Decimal("50.00"), importe=Decimal("100.00"))
+    m184_row = Modelo184MemberRow(nif="12345678A", porcentaje=Decimal("50.00"), importe=Decimal("100.00"), clave="D")
     m232_row = Modelo232VinculadaRow(pais="ES", nif="87654321B", importe=Decimal("200.00"))
     m349_row = Modelo349OperadorRow(
         codigo_pais="DE",

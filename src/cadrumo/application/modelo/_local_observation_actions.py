@@ -18,7 +18,7 @@ See Also:
     :func:`~application.modelo._filed_revision_observation.persist_filed_revision_observation`:
         Local-filing projection that uses ``app_filing`` rather than
         operator-manual source.
-    :mod:`~application.calculations._cross_period_clean_state`:
+    :mod:`~application.calculations.cross_period_clean_state`:
         Classifies local observations as non-official for filing-grade readiness.
 """
 
@@ -54,7 +54,7 @@ from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.temporal import select_revision
 from ..calculations import CalculationObservationRepository, ObservationSourceKind, observation_key
 from ._action_errors import ModeloLocalObservationError
-from ._registry_helpers import _NUMERIC_CASILLA_DATA_TYPES
+from ._registry_helpers import NUMERIC_CASILLA_DATA_TYPES
 
 OPERATOR_MANUAL_OBSERVATION_SOURCE_KIND: Final = ObservationSourceKind.OPERATOR_MANUAL
 """Non-official source kind for operator-supplied local observations."""
@@ -231,7 +231,7 @@ def _canonical_casilla_values[CasillaKey](
 
     declared = casillas_by_id(revision)
     non_numeric = sorted(
-        casilla_id for casilla_id in canonical if declared[casilla_id].data_type not in _NUMERIC_CASILLA_DATA_TYPES
+        casilla_id for casilla_id in canonical if declared[casilla_id].data_type not in NUMERIC_CASILLA_DATA_TYPES
     )
     if non_numeric:
         raise ModeloLocalObservationError(

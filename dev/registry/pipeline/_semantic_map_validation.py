@@ -19,8 +19,19 @@ from cadrumo.domain.calculations.registry.ids import SourceRefId
 from cadrumo.domain.calculations.registry.schema_exports import ProjectionEndpointDeclaration
 from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactInspection
 
-from ._record_design_ir import RecordDesignIntermediate, RecordDesignIntermediateField
-from ._semantic_map import SemanticMap, SemanticMapAnchor, SemanticMapEntry, SemanticMapRecord
+from ._record_design_ir import (
+    AnchorKey,
+    RecordDesignIntermediate,
+    RecordKey,
+    intermediate_anchor_key,
+    intermediate_record_key,
+)
+from ._semantic_map import (
+    SemanticMap,
+    SemanticMapEntry,
+    semantic_anchor_key,
+    semantic_record_key,
+)
 from ._variable_envelope import validate_variable_envelope
 
 __all__ = [
@@ -49,10 +60,6 @@ class SemanticMapAnomalyException(_StrictModel):
     source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     category: Literal["parser_anomaly", "source_anomaly"]
     reason: str = Field(min_length=1)
-
-
-_AnchorKey = tuple[str, int, str | None, str | None, str]
-type _RecordKey = tuple[str, str]
 
 
 def validate_semantic_map(
@@ -207,10 +214,9 @@ def _validate_variable_envelope_boundary(
             f"reviewed variable-envelope contract names {semantic.record_identity!r} but the parser owns "
             f"{parser_envelope.record_identity!r}",
         )
-    records_by_anchor = {_semantic_record_key(record): record for record in semantic_map.records}
+    records_by_anchor = {semantic_record_key(record): record for record in semantic_map.records}
     body_record_ids = tuple(
-        records_by_anchor[_intermediate_record_key(sheet.sheet, sheet.record_identity)].export_record_id
-        for sheet in intermediate.sheets
+        records_by_anchor[intermediate_record_key(sheet)].export_record_id for sheet in intermediate.sheets
     )
     validate_variable_envelope(
         semantic,
@@ -225,10 +231,8 @@ def _validate_exact_bijection(
     semantic_map: SemanticMap,
     intermediate: RecordDesignIntermediate,
 ) -> None:
-    intermediate_keys = tuple(
-        _intermediate_anchor_key(field) for sheet in intermediate.sheets for field in sheet.fields
-    )
-    semantic_keys = tuple(_semantic_anchor_key(entry.anchor) for entry in semantic_map.entries)
+    intermediate_keys = tuple(intermediate_anchor_key(field) for sheet in intermediate.sheets for field in sheet.fields)
+    semantic_keys = tuple(semantic_anchor_key(entry.anchor) for entry in semantic_map.entries)
     duplicate_intermediate = _duplicate_anchor_keys(intermediate_keys)
     if duplicate_intermediate:
         raise RegistryValidationError(
@@ -344,10 +348,8 @@ def _validate_exact_record_bijection(
     semantic_map: SemanticMap,
     intermediate: RecordDesignIntermediate,
 ) -> None:
-    intermediate_keys = tuple(
-        _intermediate_record_key(sheet.sheet, sheet.record_identity) for sheet in intermediate.sheets
-    )
-    semantic_keys = tuple(_semantic_record_key(record) for record in semantic_map.records)
+    intermediate_keys = tuple(intermediate_record_key(sheet) for sheet in intermediate.sheets)
+    semantic_keys = tuple(semantic_record_key(record) for record in semantic_map.records)
     duplicate_intermediate = _duplicate_record_keys(intermediate_keys)
     if duplicate_intermediate:
         raise RegistryValidationError(
@@ -401,23 +403,7 @@ def _projection_endpoint_index(
     return {projection_ref: tuple(declarations) for projection_ref, declarations in index.items()}
 
 
-def _intermediate_anchor_key(field: RecordDesignIntermediateField) -> _AnchorKey:
-    return field.sheet, field.source_row, field.source_cell, field.ordinal, field.record_identity
-
-
-def _semantic_anchor_key(anchor: SemanticMapAnchor) -> _AnchorKey:
-    return anchor.sheet, anchor.source_row, anchor.source_cell, anchor.ordinal, anchor.record_identity
-
-
-def _intermediate_record_key(sheet: str, record_identity: str) -> _RecordKey:
-    return sheet, record_identity
-
-
-def _semantic_record_key(record: SemanticMapRecord) -> _RecordKey:
-    return record.sheet, record.record_identity
-
-
-def _duplicate_anchor_keys(keys: tuple[_AnchorKey, ...]) -> tuple[_AnchorKey, ...]:
+def _duplicate_anchor_keys(keys: tuple[AnchorKey, ...]) -> tuple[AnchorKey, ...]:
     counts = Counter(keys)
     return tuple(sorted(key for key, count in counts.items() if count > 1))
 
@@ -427,12 +413,12 @@ def _duplicate_string_keys(keys: tuple[str, ...]) -> tuple[str, ...]:
     return tuple(sorted(key for key, count in counts.items() if count > 1))
 
 
-def _duplicate_record_keys(keys: tuple[_RecordKey, ...]) -> tuple[_RecordKey, ...]:
+def _duplicate_record_keys(keys: tuple[RecordKey, ...]) -> tuple[RecordKey, ...]:
     counts = Counter(keys)
     return tuple(sorted(key for key, count in counts.items() if count > 1))
 
 
-def _format_anchor_keys(keys: tuple[_AnchorKey, ...]) -> str:
+def _format_anchor_keys(keys: tuple[AnchorKey, ...]) -> str:
     return ", ".join(
         f"(sheet={sheet!r}, source_row={source_row}, source_cell={source_cell!r}, ordinal={ordinal}, "
         f"record_identity={record_identity!r})"
@@ -440,5 +426,5 @@ def _format_anchor_keys(keys: tuple[_AnchorKey, ...]) -> str:
     )
 
 
-def _format_record_keys(keys: tuple[_RecordKey, ...]) -> str:
+def _format_record_keys(keys: tuple[RecordKey, ...]) -> str:
     return ", ".join(f"(sheet={sheet!r}, record_identity={record_identity!r})" for sheet, record_identity in keys)

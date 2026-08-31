@@ -27,8 +27,8 @@ from ....domain.transactions import (
 )
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.user_profile import register_minimal_profile
-from .._enums import ReviewState
-from .._operator import project_review_queue
+from ..enums import ReviewState
+from ..operator import project_review_queue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

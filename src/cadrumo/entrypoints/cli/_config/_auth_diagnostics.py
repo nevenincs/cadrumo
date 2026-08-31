@@ -44,7 +44,7 @@ def auth_diagnostics_list(
     emit_envelope(ctx, command="config.auth.diagnostics.list", result=list_result, lines=lines)
 
 
-def auth_diagnostics_show(
+def auth_diagnostics_view(
     ctx: typer.Context,
     diagnostic_id: str,
     output_language: OutputLanguage | None = None,
@@ -59,12 +59,12 @@ def auth_diagnostics_show(
             translated_message="cli.config.auth.diagnostics.not_found",
             context={"diagnostic_id": diagnostic_id},
         )
-    from .._config_payloads import AuthDiagnosticsShowResult
+    from .._config_payloads import AuthDiagnosticsViewResult
 
     reported_at = detail.phone_state_reported_at.isoformat() if detail.phone_state_reported_at is not None else ""
     observed_at = detail.phone_state_observed_at.isoformat() if detail.phone_state_observed_at is not None else ""
     bool_value = _optional_bool_text
-    show_result = AuthDiagnosticsShowResult(**detail.model_dump())
+    show_result = AuthDiagnosticsViewResult(**detail.model_dump())
     emit_envelope(
         ctx,
         command="config.auth.diagnostics.show",
@@ -155,4 +155,4 @@ def auth_diagnostics_report(
     )
 
 
-__all__ = ["auth_diagnostics_list", "auth_diagnostics_report", "auth_diagnostics_show"]
+__all__ = ["auth_diagnostics_list", "auth_diagnostics_report", "auth_diagnostics_view"]

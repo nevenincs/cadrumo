@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#test-harness-sanity'
 date: '2026-08-16'
-modified: '2026-08-16'
+modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:b9abbc4c3eeb3f69a77c581b718e4a5b9fc6dd162f58191f68fa6a2f86118980'
+body_hash: 'sha256:b0dc99479686c62b7bd6dec78f60028be4a212fbbb438c5c43fe7e090d9616f5'
 related:
   - "[[2026-08-14-test-harness-sanity-harness-performance-audit]]"
 ---
@@ -78,7 +78,7 @@ Four instrument failures are recorded in the audit. The rules they cost:
 
 Operational notes: pass an explicit private `--basetemp`, because a concurrent
 peer session can destroy a completed run's report through the shared
-`pytest-of-hello` root; keep the log until the analysis is finished, because
+`pytest-of-<operator>` root; keep the log until the analysis is finished, because
 collection costs half an hour and analysis is cheap and iterative; and use
 `--tb=no`, because one full run produced a 329 MB log without it.
 

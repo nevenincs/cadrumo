@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import override
 
 import pytest
 from textual.app import App, ComposeResult
@@ -35,6 +36,7 @@ async def test_bounded_log_panel_retains_only_the_requested_safe_tail() -> None:
     )
 
     class _Harness(App[None]):
+        @override
         def compose(self) -> ComposeResult:
             yield BoundedLogPanel(records, maximum_entries=2, id="logs")
 

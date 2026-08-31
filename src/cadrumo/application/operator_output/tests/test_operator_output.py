@@ -22,12 +22,12 @@ from uuid import UUID
 
 import pytest
 
-from ....adapters.persistence.storage.custody import (
+from ....adapters.persistence.storage.custody.records import (
     ProfileCustodyEnvelope,
     ProfileCustodyKdfParameters,
     ProfileCustodyWrappedDek,
-    create_profile_custody_sentinel,
 )
+from ....adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
 from ....core.config import override_settings
 from ....core.json_contract import NoticeSeverity, OutputSchemaError
 from ....domain.user_profile.values import ProfileSetupState, UserProfileRecord
@@ -191,26 +191,54 @@ def test_emit_operator_json_success_omits_sandbox_notice_when_not_sandbox(
     assert codes == ["probe.caller_notice"]
 
 
-def test_emit_operator_json_success_refuses_an_unregistered_command(
+def test_emit_operator_json_success_validates_result_shape_not_command_registration(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """The operator funnel cannot wrap an arbitrary result under a command key."""
+    """The funnel validates the RESULT's schema; the command binding is a static contract.
+
+    This asserted a runtime refusal for an unregistered command key, matching
+    "has no registered output schema". That message exists nowhere in production
+    any more: commit ``4b78f996de`` retired the ``SCHEMA_REGISTRY`` mapping in
+    ``core.json_contract`` and moved schema identity onto the command specs.
+
+    The removal was structural rather than an oversight. ``emit_operator_json_success``
+    sits in the application layer and the specs live in ``entrypoints``, so
+    consulting them here would invert the hexagonal direction. What the funnel
+    can still guarantee -- and does -- is that the result is a strict
+    :class:`OutputSchema` revalidated against its own declared type, which the
+    sibling case above covers by feeding it a raw dict.
+
+    So an unregistered key with a WELL-FORMED result now emits, and that is
+    recorded here rather than left as a stale expectation someone re-adds. The
+    command-to-schema binding is enforced statically instead, by
+    ``entrypoints/cli/tests/test_json_schema_conformance.py`` walking
+    ``COMMAND_SPECS``.
+    """
     result = ConfigProfileCreateResult(profile_name="probe", status=ProfileWizardStatus.CREATED, active_profile="probe")
 
-    with pytest.raises(OutputSchemaError, match="has no registered output schema"):
-        emit_operator_json_success("operator_output.tests.probe", result)
+    emit_operator_json_success("operator_output.tests.probe", result)
 
-    assert capsys.readouterr().out == ""
+    document = json.loads(capsys.readouterr().out)
+    assert document["command"] == "operator_output.tests.probe"
+    assert document["result"]["profile_name"] == "probe"
 
 
 def test_emit_operator_json_success_refuses_a_result_outside_the_registered_schema(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     """A registered command cannot use the envelope to bypass strict result fields."""
-    with pytest.raises(OutputSchemaError, match="does not conform to the registered schema"):
+    with pytest.raises(OutputSchemaError) as refusal:
         emit_operator_json_success(
             "config.profile.create",
             {"profile_name": "probe", "status": 1, "active_profile": "probe"},
         )
+
+    # ``OutputSchemaError`` carries no translated key or context, so prose is
+    # the only surface here. Match the semantic core plus the command it names
+    # rather than the older sentence ("does not conform to the registered
+    # schema"), which the raise site no longer produces.
+    message = str(refusal.value)
+    assert "config.profile.create" in message
+    assert "is not a strict output schema" in message
 
     assert capsys.readouterr().out == ""

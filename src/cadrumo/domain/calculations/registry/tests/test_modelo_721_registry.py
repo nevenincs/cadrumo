@@ -14,7 +14,6 @@ from ..corpus_catalogue import verify_source_file
 from ..errors import NoRevisionForPeriodError, RegistryValidationError
 from ..legal import verify_legal_catalogue
 from ..schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
-from ..snapshot import _source_applies_across
 from ..temporal import select_revision
 from ._registry_schema_support import _committed_modelo
 
@@ -90,6 +89,7 @@ def test_modelo_721_selects_only_its_two_hash_pinned_boe_form_spec_eras() -> Non
         revision = modelo.revisions[str(filing_year)]
         source = catalogues.sources[source_ref]
 
+        assert revision.authority_grade is not None
         assert revision.authority_grade.value == "applicability"
         assert revision.valid_from == date(filing_year, 1, 1)
         assert revision.valid_to == date(filing_year, 12, 31)
@@ -136,7 +136,7 @@ def test_modelo_721_refuses_a_mutated_2024_selector_past_its_boe_package_window(
     source = catalogues.sources[source_ref]
 
     assert source.applies_to == date(2024, 12, 31)
-    assert not _source_applies_across(source, date(2025, 1, 1), date(2025, 12, 31))
+    assert not source.applies_across(date(2025, 1, 1), date(2025, 12, 31))
 
 
 def test_modelo_721_refuses_a_mutated_boe_package_hash() -> None:
@@ -160,7 +160,9 @@ def test_modelo_721_does_not_claim_pair_complete_aeat_soap_xml_contract_authorit
     assert "boe-modelo-721-2023-form" not in catalogues.sources
     assert catalogues.sources["aeat-modelo-721-procedure"].evidence_tier == "official_source_guidance"
     for revision in modelo.revisions.values():
+        assert revision.reviewed_by is not None
         assert "AEAT SOAP/XML material is not pair-complete" in revision.reviewed_by
+        assert revision.authority_grade is not None
         assert revision.authority_grade.value == "applicability"
         assert revision.export_layouts == ()
 

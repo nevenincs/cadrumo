@@ -6,7 +6,14 @@ from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from datetime import datetime
 
-from cadrumo.application.operations.persistence.events import (
+from ...core import OperationEffect, OperationLifecycle
+from ...core.async_cleanup import AsyncCloseable
+from .capabilities import OperationOwnedResource
+from .errors import OperationDeclarationError
+from .events import OperationEventCode, OperationLogSeverity
+from .interactions import OperationPendingInteraction
+from .models import OperationDiagnosticReference, OperationId
+from .persistence.events import (
     OperationDiagnosticEvent,
     OperationEffectEvent,
     OperationEvent,
@@ -16,18 +23,7 @@ from cadrumo.application.operations.persistence.events import (
     OperationPhaseEvent,
     OperationProgressEvent,
 )
-from cadrumo.application.operations.persistence.journal import (
-    OperationPersistedSnapshot,
-    OperationSecureReferenceStore,
-)
-
-from ...core import OperationEffect, OperationLifecycle
-from ...core.async_cleanup import AsyncCloseable
-from .capabilities import OperationOwnedResource
-from .errors import OperationDeclarationError
-from .events import OperationEventCode, OperationLogSeverity
-from .interactions import OperationPendingInteraction
-from .models import OperationDiagnosticReference, OperationId
+from .persistence.journal import OperationPersistedSnapshot, OperationSecureReferenceStore
 from .registry import OperationRegistry
 
 

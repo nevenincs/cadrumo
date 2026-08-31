@@ -67,9 +67,9 @@ def test_each_destruction_function_releases_handles_before_it_acts(function_name
     handle can be re-opened between the two steps, and an open file blocks the
     delete as surely as it blocks the rename.
     """
-    from .. import _capsule
+    from .. import capsule
 
-    function = getattr(_capsule, function_name)
+    function = getattr(capsule, function_name)
 
     assert _first_statement_calls(function, _RELEASE_HELPER), (
         f"{function_name} must call {_RELEASE_HELPER} before it touches the capsule directory"
@@ -83,9 +83,9 @@ def test_the_release_helper_is_bucket_scoped() -> None:
     process: a reset erasing one profile must not tear down engines another
     profile is using.
     """
-    from .. import _capsule
+    from .. import capsule
 
-    source = inspect.getsource(_capsule._release_bucket_file_handles)
+    source = inspect.getsource(capsule._release_bucket_file_handles)
 
     assert "dispose_engines_for_bucket" in source
     assert "str(profile_id)" in source

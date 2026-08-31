@@ -34,9 +34,6 @@ from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from typing import Literal
 
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import (
     FETCH_GATED_M210_TIPO_RENTA_CODES,
@@ -51,7 +48,6 @@ from ...core import (
 )
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.errors import CadrumoError
-from ...core.json_contract import Notice
 from ...core.resources import bundled_path
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.binding_selector_utils import boolean_binding_encoded_values
@@ -70,22 +66,21 @@ from ...domain.calculations.registry.runtime_graph import (
     enum_consumed_binding_ids,
     revision_date_binding_ids,
 )
+from ...domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
 from ...domain.calculations.registry.schema_scalars import (
     registry_scalar_value_type,
     validate_registry_text_scalar,
 )
+from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.calculations.registry.temporal import select_revision
 from ...domain.contribuyente import descendant_list_from_facts
 from ...domain.modelos import (
-    CalculationRevision,
     Dt12WindowEligibility,
-    FilingInstanceEvidence,
     Modelo184MemberRow,
     Modelo184ShareSumError,
     Modelo347ContraparteRow,
     Modelo347ThresholdError,
     ModeloDetailRow,
-    ModeloError,
     WorkUnit,
     WorkUnitCatalogue,
     compute_dt12_reduccion_plan_pensiones,
@@ -94,6 +89,8 @@ from ...domain.modelos import (
     validate_m184_member_share_sum,
     validate_m347_threshold,
 )
+from ...domain.modelos.calculation_revision import CalculationRevision, FilingInstanceEvidence
+from ...domain.modelos.errors import ModeloError
 from ..aggregation import CalculationSourceDiagnostic
 
 # Intra-package reuse of a sibling module's cap, permitted by the architecture
@@ -104,6 +101,7 @@ from ._semantic_role_resolution import (
     AmbiguousSemanticRoleCasillaError,
     casilla_id_for_unique_revision_semantic_role,
 )
+from ._work_plazo import M210PlazoResolution
 from .profile_binding import MaternidadMesesResolution
 from .work_addressing import (
     ModeloWorkSelectorRequest,
@@ -197,7 +195,7 @@ class WorkCalculateInputBundle:
     shortcut_diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
     """Non-blocking advisories raised while resolving shortcut inputs.
 
-    Carries the DT 12ª apartado-4 window diagnostics
+    Carries the DT 12ª apartado-3 window diagnostics
     (:func:`apply_calculation_shortcut_inputs`) so the calculate service can fold
     them into its ``source_diagnostics`` / ``source_advisories`` channel. The
     shortcut path is the only site with the contingencia/rescate year facts, so
@@ -310,7 +308,7 @@ class ModeloWorkCalculationServiceResult:
     modality: Modelo202ModalitySummary | None = None
     authorization_advisory: ModeloAuthorizationAdvisorySummary | None = None
     source_diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
-    plazo_notices: tuple[Notice, ...] = ()
+    plazo_resolutions: tuple[M210PlazoResolution, ...] = ()
 
 
 def calculate_modelo_work_revision(
@@ -356,25 +354,25 @@ def calculate_modelo_work_revision(
         catalogue=catalogue,
         bucket_id=bucket_id,
     )
-    plazo_notices: tuple[Notice, ...] = ()
+    plazo_resolutions: tuple[M210PlazoResolution, ...] = ()
     if work_unit.modelo == Modelo.M210:
         from ._m303_regimen_simplificado_scope import active_taxpayer_profile
-        from ._work_plazo import calculated_m210_plazo_notice
+        from ._work_plazo import calculated_m210_plazo_resolution
 
-        notice = calculated_m210_plazo_notice(
+        resolution = calculated_m210_plazo_resolution(
             work_unit=work_unit,
             revision=revision,
             workflow_profile=active_taxpayer_profile(work_unit),
         )
-        if notice is not None:
-            plazo_notices = (notice,)
+        if resolution is not None:
+            plazo_resolutions = (resolution,)
     return ModeloWorkCalculationServiceResult(
         revision=revision,
         work_unit=work_unit,
         modality=modelo_202_modality_for_work_unit(work_unit),
         authorization_advisory=authorization_advisory_for_modelo(str(work_unit.modelo)),
         source_diagnostics=(*inputs.shortcut_diagnostics, *calculation.source_diagnostics),
-        plazo_notices=plazo_notices,
+        plazo_resolutions=plazo_resolutions,
     )
 
 
@@ -1095,10 +1093,9 @@ def modelo_202_modality_for_work_unit(work_unit: WorkUnit) -> Modelo202ModalityS
     if str(work_unit.modelo) != Modelo.M202:
         return None
 
-    from cadrumo.application.workflow.persistence import workflow_state_repository
-    from cadrumo.domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
-
+    from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
     from ..user_profile.projections import projection_for_taxpayer
+    from ..workflow.persistence import workflow_state_repository
 
     state = workflow_state_repository().load()
     record = state.active_profile_record()
@@ -1289,7 +1286,7 @@ def apply_calculation_shortcut_inputs(
     unique semantic-role casillas. The Modelo 303 autoconsumo-promotor shortcut
     writes the backend-owned binding consumed by the registry engine.
 
-    The DT 12ª pension-rescate shortcut is fact-gated by the apartado-4 time
+    The DT 12ª pension-rescate shortcut is fact-gated by the apartado-3 time
     window (LIRPF DT 12ª.4, added by Ley 26/2014). When the operator declares the
     contingencia year and the window predicate
     (:func:`~cadrumo.domain.modelos.dt12_regime_window_eligibility`) proves the
@@ -1355,7 +1352,7 @@ def _dt12_window_verdict(
     contingencia_year: int | None,
     rescate_year: int | None,
 ) -> Dt12WindowEligibility | None:
-    """Evaluate the DT 12ª apartado-4 window when the contingencia year is declared.
+    """Evaluate the DT 12ª apartado-3 window when the contingencia year is declared.
 
     The contingencia year is the load-bearing fact: without it the window cannot
     be evaluated and the caller emits the unverified-window advisory. The rescate
@@ -1390,7 +1387,7 @@ def _dt12_window_decision(
             reason="dt12_regime_window_unverified",
             source_kind="dt12_regime_window",
             message=(
-                "DT 12ª: the 40% pension-rescate reducción was applied, but the apartado-4 time "
+                "DT 12ª: the 40% pension-rescate reducción was applied, but the apartado-3 time "
                 "window (LIRPF DT 12ª.4, Ley 26/2014) was not verified because no contingencia year "
                 "was declared. The régimen applies only to prestaciones percibidas within the window "
                 "measured from the contingencia year (the contingencia year plus the two following, "
@@ -1410,7 +1407,7 @@ def _dt12_window_decision(
         reason="dt12_regime_window_closed",
         source_kind="dt12_regime_window",
         message=(
-            "DT 12ª: the 40% pension-rescate reducción was WITHHELD. The apartado-4 time window "
+            "DT 12ª: the 40% pension-rescate reducción was WITHHELD. The apartado-3 time window "
             "(LIRPF DT 12ª.4, Ley 26/2014) is CLOSED for this rescate: a contingencia in "
             f"{eligibility.contingencia_year} was eligible only for prestaciones percibidas through "
             f"{eligibility.eligible_through_year}, but the rescate is declared in "
@@ -1429,7 +1426,7 @@ def _dt12_parcial_guidance_advisory(reduccion_casilla_id: CasillaId) -> Calculat
         source_kind="dt12_regime_window",
         message=(
             "DT 12ª parcial rescate: every partial cobro of the same contingency shares ONE "
-            "apartado-4 time window, measured once from the contingencia year (it does not restart "
+            "apartado-3 time window, measured once from the contingencia year (it does not restart "
             "per withdrawal). Confirm each cobro falls inside that window, and note that a mixed "
             "capital/renta rescate may forfeit the transitional régimen (DGT criteria: the "
             "prestación must be received en forma de capital)."

@@ -22,7 +22,7 @@ from ....adapters.persistence.storage import (
 )
 from ....core import Period
 from ....core.config import Settings
-from ....domain.modelos import CalculationRevisionState
+from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ...calculations import IvaWalletDecisionRepository
 from .._export import ModeloExportCommand, export_modelo_revision
 from .._filing_actions import file_modelo_revision

@@ -23,6 +23,7 @@ from ...core import (
 from ...core.async_cleanup import AsyncCloseable
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.identity import ContentDigest, ContentDigestOrAbsent, ProfileId
+from ...core.operations import EFFECTS_WITHOUT_PARTIAL_COMMIT
 from ...domain.user_profile.values import UserProfileRecord
 from ..operations.capabilities import (
     OperationBaselinePolicy,
@@ -123,7 +124,7 @@ class CensalProfileBaseline(BaseModel):
 #: bare default so the number has one home: a reader can find every site bound
 #: to this shape, and a bump cannot land on the model while a writer stamping
 #: the old number silently disagrees with it.
-CENSAL_REVIEWED_OPERAND_SCHEMA_VERSION: Final[int] = 1
+CENSAL_REVIEWED_OPERAND_SCHEMA_VERSION: Final[Literal[1]] = 1
 
 
 class CensalReviewedOperand(BaseModel):
@@ -468,10 +469,7 @@ async def _pull_censal_datos() -> CensalObservation:
     """Acquire through the sole public live application door."""
     from ..live.censo import pull_censal_datos
 
-    observation = await pull_censal_datos()
-    if not isinstance(observation, CensalObservation):
-        raise TypeError("censal acquisition returned an invalid observation")
-    return observation
+    return await pull_censal_datos()
 
 
 def _require_current_operand_baseline(operand: CensalReviewedOperand) -> None:
@@ -533,7 +531,7 @@ def build_censal_operation_definition(
             sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
             conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
             owned_resources=frozenset({OperationOwnedResource.ASYNC_TASK}),
-            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
+            permitted_effects=EFFECTS_WITHOUT_PARTIAL_COMMIT,
             close_policy=OperationClosePolicy.DETACH_ALLOWED,
         ),
         reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT,

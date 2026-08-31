@@ -50,7 +50,7 @@ from datetime import date
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, Literal
 
-from pydantic import AnyHttpUrl, BaseModel, TypeAdapter, model_validator
+from pydantic import AnyHttpUrl, BaseModel, Field, TypeAdapter, model_validator
 
 from .. import __version__
 from ..core import (
@@ -109,16 +109,21 @@ class RegistryVersionSummary(BaseModel):
     :class:`~domain.calculations.registry.ValidatedRegistryAuthority` when
     registry detail is requested, then embedded in both :class:`CliVersionReport`
     and :class:`ConfigRepairReport`.
+
+    Every count is an inventory tally -- a ``len()`` over a loaded collection --
+    so it is non-negative by construction and declares that bound. The
+    unavailable-registry branch reports zeroes rather than omitting the summary,
+    which is why the counts default to ``0``.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
     available: bool
     registry_root: str
-    modelo_count: int = 0
-    revision_count: int = 0
-    casilla_count: int = 0
-    formula_count: int = 0
+    modelo_count: int = Field(default=0, ge=0)
+    revision_count: int = Field(default=0, ge=0)
+    casilla_count: int = Field(default=0, ge=0)
+    formula_count: int = Field(default=0, ge=0)
     revision_ids: tuple[str, ...] = ()
     error: str | None = None
 
@@ -703,7 +708,7 @@ def _finding_tag(finding: DiagnosticFinding) -> str:
 
 
 def _build_registry_version_summary(registry_root: Path) -> RegistryVersionSummary:
-    from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+    from ..domain.calculations.registry.authority import ValidatedRegistryAuthority
 
     try:
         authority = ValidatedRegistryAuthority.load(registry_root, source_root=bundled_path())
@@ -845,8 +850,8 @@ def _registry_cross_domain_integrity_check(registry_root: Path) -> DiagnosticChe
     A failure routes the operator to a structured diagnostic rather
     than a runtime KeyError mid-calculation.
     """
-    from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-    from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+    from ..domain.calculations.registry.authority import ValidatedRegistryAuthority
+    from ..domain.calculations.registry.errors import RegistryValidationError
 
     try:
         authority = ValidatedRegistryAuthority.load(registry_root, source_root=bundled_path())

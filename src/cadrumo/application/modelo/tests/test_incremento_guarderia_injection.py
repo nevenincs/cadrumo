@@ -19,9 +19,8 @@ from typing import Any
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list, parse_guarderia_mensual
 from ..profile_binding import (
     _declared_profile_selectors,

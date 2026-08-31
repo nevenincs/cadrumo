@@ -8,7 +8,7 @@ import pytest
 from pydantic import ValidationError
 
 from ... import core
-from ...domain.modelos import CalculationSourceRef
+from ...domain.modelos.calculation_revision import CalculationSourceRef
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

@@ -43,7 +43,8 @@ from ...application.modelo.external_import_actions import (
 from ...core import CasillaId, Period, PeriodError, validated_casilla_id
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.i18n import tr
-from ...domain.modelos import ExternalEvidenceKind, ModeloCode, ModeloValidationError
+from ...domain.modelos import ExternalEvidenceKind, ModeloCode
+from ...domain.modelos.errors import ModeloValidationError
 from ._common import _declared_tax_id, emit_envelope
 from ._modelo_cli_support import (
     bad_parameter_from_error,
@@ -191,7 +192,7 @@ def filing_record_import(
     if not casilla_values and file is None:
         raise typer.BadParameter(tr("cli.app.modelo.filing_record.import_set_required"))
     try:
-        from cadrumo.application.workflow.persistence import workflow_state_repository
+        from ...application.workflow.persistence import workflow_state_repository
 
         expected_tax_id = _declared_tax_id(workflow_state_repository().load().active_profile_record())
         if file is not None:

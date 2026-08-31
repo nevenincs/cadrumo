@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-temporal-coverage'
 date: '2026-08-14'
-modified: '2026-08-14'
+modified: '2026-08-27'
 body_schema: 'body-v1'
-body_hash: 'sha256:46c6df55e73ecdb2c3936f14a410de6a61f24bd3db8cadcf7978bc0709f78049'
+body_hash: 'sha256:203860ad32cace6c5155eec41e643baf7e0e40fe7dc341de8150c43c85e2d4aa'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
@@ -271,3 +271,37 @@ Treat the imported-but-never-executed position as a review signal in its own
 right for the coverage-ledger reconciliation rows. Three modules occupy it, and
 the two defects already found in that position were both found by reading rather
 than by any gate.
+
+### Correction, 2026-08-27: the sixth validator's classification was wrong in substance
+
+The finding above records `validate_cross_revision_advisory` as alive because
+`_validate_cross_revision` imports it on every cold load. Re-read at HEAD, that
+is wrong in substance rather than merely stale, and in two ways.
+
+The import it cited was a **re-export, not a call site**. At the cited revision
+the two names appear in that file only at its import block and its `__all__`;
+no production call site has ever existed, in any commit. The census conflated
+import with execution, and conflated this module with
+`_validate_cross_revision_contiguity`, which is the module that genuinely fires
+during validation and is reached from `_validate_cross_revision_evolution`.
+The same mis-attribution was copied into the classification rule in
+`dev/registry/analysis/load_census_classification.py`, whose stated reason
+described contiguity while its members named the advisory; that rule has been
+re-pointed at the module its prose actually describes.
+
+The re-export was removed deliberately by the export-hygiene sweep, and the
+module's own stated expiry condition -- that it hold the line until a
+corpus-wide continuity completeness gate existed -- has since been met by the
+shipped continuidad completeness ratchet. No accepted ADR mandated the
+advisory; two accepted records disfavour its premise, both holding that
+repeated identifiers do not authorize continuity, which is exactly what its
+non-overlapping grouping inferred.
+
+`W01.P04.S21`'s deletion clause therefore acquired **exactly one member**, and
+the module has been retired. The other five members stand as classified. One
+capability is genuinely not carried forward: the advisory produced a finer
+(modelo, revision-pair, field) inventory with an evolution-covered split that
+the ratchet's per-modelo counting does not reproduce. Nothing consumed it. If
+the grounding campaign wants it as a work queue it belongs in `dev/` behind a
+real caller, over the surviving divergence iterator -- not as an uncalled
+module under `src/`.

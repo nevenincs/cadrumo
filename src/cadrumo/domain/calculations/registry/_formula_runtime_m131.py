@@ -31,8 +31,6 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
-
 from ....core import CasillaId
 from .errors import RegistryValidationError
 from .formula_runtime_ops import (
@@ -48,6 +46,7 @@ from .formula_runtime_ops import (
     resolve_scalar_parameter as _resolve_scalar_parameter,
 )
 from .ids import ParameterId
+from .schema_formula import FormulaExpression
 
 if TYPE_CHECKING:
     from .formula_runtime import EvalContext

@@ -144,7 +144,7 @@ def _link_attachment(
 ) -> Attachment:
     """Append one typed relation to a manifest through the sole update write path."""
     attachment = store.load_manifest(attachment_id)
-    related_ids: tuple[str, ...] = getattr(attachment, field)
+    related_ids = attachment.linked_invoice_ids if field == "linked_invoice_ids" else attachment.linked_transaction_ids
     if related_id in related_ids:
         return attachment
     updated = attachment.model_copy(update={field: (*related_ids, related_id)})

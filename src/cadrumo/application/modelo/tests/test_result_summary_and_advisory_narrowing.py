@@ -17,7 +17,7 @@ from typing import NoReturn
 import pytest
 
 from ....core.setup_answers import ProjectAnswersNotRegisteredError
-from ....domain.modelos import (
+from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,

@@ -14,13 +14,6 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, FormulaDefinition, RegistrySnapshot
-from cadrumo.domain.calculations.registry.schema_surfaces import (
-    CasillaConstraints,
-    CasillaDefinition,
-    RelationDefinition,
-)
-
 from ...core import (
     STRICT_FROZEN_CONFIG,
     BindingSourceKind,
@@ -66,16 +59,15 @@ from ...domain.calculations.registry.runtime_graph import (
     expression_relation_refs,
     revision_date_binding_ids,
 )
+from ...domain.calculations.registry.schema import DataBindingDefinition, FormulaDefinition, RegistrySnapshot
 from ...domain.calculations.registry.schema_input_kind import InputKind
+from ...domain.calculations.registry.schema_surfaces import CasillaConstraints, CasillaDefinition, RelationDefinition
 from ...domain.calculations.registry.temporal import select_revision
 from ...domain.filing import ModeloScalar, ModeloValueKind
 from ...domain.modelos import (
     OPERATOR_ACTION_BY_MODELO_VERIFICATION_FINDING_KIND,
-    CalculationRevision,
     CalculationRevisionCatalogueRepositoryProtocol,
-    CalculationRevisionState,
     ModeloCode,
-    ModeloError,
     ModeloVerificationFinding,
     ModeloVerificationFindingSeverity,
     VerificationCompletenessStatus,
@@ -84,6 +76,8 @@ from ...domain.modelos import (
     WorkUnit,
     WorkUnitCatalogue,
 )
+from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
+from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ._action_errors import (
     CalculationRevisionNotFoundError,
@@ -721,8 +715,6 @@ def build_modelo_work_review(
     )
 
 
-
-
 _WORK_REVIEW_CAPTURE_MAX_ATTEMPTS = 8
 _work_review_capture_process_pid = os.getpid()
 _work_review_capture_process_nonce = token_bytes(32)
@@ -928,6 +920,7 @@ def capture_modelo_work_review(
         translated_message="errors.refused.modelo_work_review_capture_not_current",
         context={"reason": "contended", "attempts": _WORK_REVIEW_CAPTURE_MAX_ATTEMPTS},
     )
+
 
 __all__ = [
     "BlockerRef",

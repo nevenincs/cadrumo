@@ -27,12 +27,12 @@ preserve as any other invoice-creation path.
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import pytest
 
 from ....application.invoices import BULK_INVOICE_IMPORT_REQUIRED_COLUMNS
+from ....tests.cli_envelope import parse_json_object
 from ....tests.cli_envelope import require_schema_envelope as _json_result
 from ....tests.cli_runner import invoke_cached_cli
 from ._isolated_profile_storage_fixtures import active_profile_isolated_backend
@@ -224,7 +224,7 @@ def test_bulk_import_all_rows_refused_exits_nonzero_with_notice(tmp_path: Path) 
         ],
     )  # fmt: skip
     assert result.exit_code == 1, result.output
-    envelope: dict[str, object] = json.loads(result.output)
+    envelope = parse_json_object(result.output)
     notices = _get_list_value(envelope, "notices")
     assert notices, "all-refused import must carry a notice"
     first_notice = next((n for n in notices if isinstance(n, dict)), None)

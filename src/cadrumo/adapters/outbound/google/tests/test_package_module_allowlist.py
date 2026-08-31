@@ -38,19 +38,22 @@ _ALLOWED_MODULES: frozenset[str] = frozenset(
         "__init__.py",
         "_api.py",
         "_calc_sheets_apply.py",
-        "_calc_sheets_pull.py",
+        "calc_sheets_pull.py",
         "_calc_sheets_support.py",  # shared modelo-130 registry snapshot fixture builder
         "test_calc_sheets_transport_facet_parity.py",  # contract: offline/online transports render the same plan facets (alignment, protection)
-        "_document_link_resolver.py",  # follow-up contract: scope-compatible Drive doclink resolution
+        "document_link_resolver.py",  # follow-up contract: scope-compatible Drive doclink resolution
         "_drive_entries.py",  # shared Drive owned-entry query escaping, lookup/backfill policy, and id validation
         "drive_media_server.py",  # contract: real local Drive media endpoint for resolver roundtrips
         "errors.py",
         "_impersonation.py",  # service-account impersonation credential source
         "_oauth_flow.py",
-        "_active_profile.py",
+        "active_profile.py",
         "_records.py",
         "session_store.py",
         "test_session_store_logout_atomicity.py",  # contract: logout removes the token and its companion metadata, or neither
+        "test_auth_preconditions.py",  # contract: every Google-auth refusal producer states its terminal precondition
+        "test_calc_sheets_typed_outcomes.py",  # contract: the calculation-sheet adapters return typed terminal outcomes
+        "test_preconditions_structure.py",  # contract: terminal-precondition transport stays owned by its declaring module
         "test_session_store_namespace_binding.py",  # contract: session-store secure-object namespace-binding roundtrip
         "test_api.py",  # contract: execute_request typed response + error-translation contract
         "test_api_typeddicts.py",  # contract: API response TypedDicts declare their required keys

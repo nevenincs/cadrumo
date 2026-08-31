@@ -3,7 +3,7 @@
 ``read_profile_bucket`` raises :class:`ProfileLabelAmbiguousError` (a
 ``WorkflowError``, NOT a ``ValueError``) when two or more LIVE profiles share a
 casefold-equal label. The three ``_read_profile_bucket`` call sites in the
-config facade (``_resolve_profile_by_label``, ``config profile show``,
+config facade (``_resolve_profile_by_label``, ``config profile view``,
 ``config profile validate``) previously guarded only ``except ValueError``, so
 an ambiguous label escaped to an unhandled traceback rather than producing a
 clean operator-facing refusal.
@@ -105,8 +105,8 @@ def _assert_clean_ambiguity_refusal(result: Result) -> None:
     assert "ProfileLabelAmbiguousError" not in combined, combined
 
 
-def test_config_profile_show_ambiguous_label_refuses_cleanly() -> None:
-    """``config profile show <label>`` refuses cleanly on a casefold-ambiguous label.
+def test_config_profile_view_ambiguous_label_refuses_cleanly() -> None:
+    """``config profile view <label>`` refuses cleanly on a casefold-ambiguous label.
 
     RED against the pre-fix code: ``read_profile_bucket`` raises
     ``ProfileLabelAmbiguousError`` which escapes the ``except ValueError`` guard
@@ -115,7 +115,7 @@ def test_config_profile_show_ambiguous_label_refuses_cleanly() -> None:
     """
     _provision_casefold_collision()
 
-    result = invoke_cached_cli(["config", "profile", "show", "ambig", "--language", "en"])
+    result = invoke_cached_cli(["config", "profile", "view", "ambig", "--language", "en"])
 
     _assert_clean_ambiguity_refusal(result)
 

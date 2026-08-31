@@ -36,7 +36,7 @@ from ...core import STRICT_FROZEN_CONFIG
 from ...core.errors import CadrumoError
 from ...core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT
 from ...core.identity import validate_spanish_tax_id
-from ..user_profile import UserProfileFact
+from ..user_profile.values import UserProfileFact
 
 
 class CertificadoCensalError(CadrumoError):

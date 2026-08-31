@@ -11,8 +11,6 @@ Public surface:
 
 * :func:`assess_retention_floor` — pure assessment of a filed-record set
   against the floor as of an instant.
-* :func:`earliest_safe_erase_date` — the earliest instant one record may be
-  erased.
 * :class:`RetentionFloorAssessment` — the assessment outcome, exposing
   ``blocks_erase`` and ``latest_safe_erase_date``.
 * :class:`RetentionBlockingRecord` — one record still inside its window.
@@ -40,9 +38,7 @@ from ._floor import (
     RetainableFilingRecord,
     RetentionBlockingRecord,
     RetentionFloorAssessment,
-    add_prescription_years,
     assess_retention_floor,
-    earliest_safe_erase_date,
 )
 from .errors import RetentionError, RetentionFloorError
 
@@ -53,7 +49,5 @@ __all__ = [
     "RetentionError",
     "RetentionFloorAssessment",
     "RetentionFloorError",
-    "add_prescription_years",
     "assess_retention_floor",
-    "earliest_safe_erase_date",
 ]

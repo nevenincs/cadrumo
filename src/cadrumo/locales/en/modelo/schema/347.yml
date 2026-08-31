@@ -81,6 +81,9 @@ modelo:
               help: Box contraparte.pais-codigo of modelo 347, tax year 2008.
               label: Country code of the counterparty (ISO 3166-1 alpha-2; blank for
                 domestic counterparties)
+            x-cdnmst3ic5o62sjkckn70sjfepkmsor9c4mm6rr4d5jmu:
+              help: Box contraparte.provincia-codigo of modelo 347.
+              label: Province code of the counterparty (two digits)
             x-cdnmst3ic5o62sjkckn74pbge9in6pbeehgmst355lm6apr1dgmmsqb6:
               help: Field declared on modelo 347, the annual return of transactions
                 with third parties.
@@ -264,6 +267,9 @@ modelo:
               help: Box contraparte.pais-codigo of modelo 347, tax year 2025.
               label: Country code of the counterparty (ISO 3166-1 alpha-2; blank for
                 domestic counterparties)
+            x-cdnmst3ic5o62sjkckn70sjfepkmsor9c4mm6rr4d5jmu:
+              help: Box contraparte.provincia-codigo of modelo 347.
+              label: Province code of the counterparty (two digits)
             x-cdnmst3ic5o62sjkckn74pbge9in6pbeehgmst355lm6apr1dgmmsqb6:
               help: Field declared on modelo 347, the annual return of transactions
                 with third parties.

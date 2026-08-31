@@ -14,26 +14,21 @@ from __future__ import annotations
 from collections import defaultdict
 from collections.abc import Iterable, Mapping
 
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-
 from ....core import CasillaId
 from ....core.i18n import MissingTranslationError
 from . import _validate_semantic_role_typos as _semantic_role_typos
-from ._validate_semantic_role_required import REQUIRED_ROLE_LABEL_PATTERNS, required_role_declaration_failures
 from ._validate_semantic_role_required import (
     collect_casillas_by_semantic_role as collect_casillas_by_semantic_role,
 )
 from .ids import RevisionId
+from .schema import ModeloDefinition
+from .schema_surfaces import CasillaDefinition
 
-__all__ = (
-    "REQUIRED_ROLE_LABEL_PATTERNS",
-    "collect_casillas_by_semantic_role",
-    "required_role_declaration_failures",
+__all__ = [
     "semantic_role_cardinality_failures",
     "semantic_role_consistency_failures",
     "semantic_role_typo_twin_failures",
-)
+]
 
 
 class _RoleObservation:

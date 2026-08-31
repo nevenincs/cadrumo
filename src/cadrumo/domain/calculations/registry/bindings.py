@@ -40,52 +40,18 @@ from ....core import (
     Period,
     RegistryPeriodCode,
 )
-from ....core.aggregation import (
-    INVOICE_BINDING_SOURCE_KINDS,
-    LEDGER_BINDING_SOURCE_KINDS,
-    BindingAggregationOp,
-    BindingSourceKind,
-    CounterpartSourceKind,
-)
+from ....core.aggregation import BindingSourceKind
 from ...iva_compensation import (
     M303_COMPENSATION_APLICADA_CASILLA,
     M303_COMPENSATION_AVAILABLE_CASILLA,
     M303_COMPENSATION_GENERADA_CASILLA,
     M303_COMPENSATION_POSTERIOR_CASILLA,
 )
-from .binding_aggregation import binding_aggregation_op, default_binding_aggregation_op
 from .binding_selector_utils import selector_against_model, selector_as_dict
-from .bindings_previous_filing import (
-    PreviousModeloSelector,
-    previous_filing_binding_source_casilla_ids,
-    previous_filing_observation_requirements,
-    previous_filing_source_reference,
-    resolve_previous_filing_binding_values,
-    validate_previous_filing_binding,
-)
-from .counterpart_bindings import (
-    CounterpartAggregationObservation,
-    CounterpartObservationRequirement,
-    counterpart_binding_requirements,
-    resolve_counterpart_binding_row_values,
-    resolve_counterpart_binding_values,
-    validate_counterpart_binding,
-)
-from .detail_record_bindings import (
-    AtributionMemberObservation,
-    Modelo720RowObservation,
-    RefundOperationObservation,
-    RelatedPartyOperationObservation,
-    foreign_asset_binding_row_field,
-    resolve_atribucion_binding_row_values,
-    resolve_foreign_asset_binding_row_values,
-    resolve_refund_binding_row_values,
-    resolve_related_party_binding_row_values,
-    validate_atribucion_binding,
-    validate_foreign_asset_binding,
-    validate_refund_binding,
-    validate_related_party_binding,
-)
+from .bindings_previous_filing import PreviousModeloSelector, validate_previous_filing_binding
+from .bindings_previous_filing import previous_filing_source_reference as _previous_filing_source_reference
+from .counterpart_bindings import validate_counterpart_binding
+from .design_constant_bindings import DesignConstantSelector, validate_design_constant_binding
 from .detail_record_bindings import (
     AtributionSelector as _AtributionSelector,
 )
@@ -99,90 +65,29 @@ from .detail_record_bindings import (
     RelatedPartySelector as _RelatedPartySelector,
 )
 from .detail_record_bindings import (
-    build_foreign_asset_rows as _build_foreign_asset_rows,
-)
-from .detail_record_bindings import (
-    build_related_party_rows as _build_related_party_rows,
-)
-from .donativo_bindings import (
-    DonativoDonorObservation,
-    resolve_donativo_binding_row_values,
-    validate_donativo_binding,
+    validate_atribucion_binding,
+    validate_foreign_asset_binding,
+    validate_refund_binding,
+    validate_related_party_binding,
 )
 from .donativo_bindings import (
     DonativoSelector as _DonativoSelector,
 )
+from .donativo_bindings import validate_donativo_binding
 from .errors import RegistryValidationError
-from .gasto193_bindings import (
-    Gasto193Observation,
-    _Gasto193Selector,
-    resolve_gasto193_binding_row_values,
-    resolve_gasto193_binding_values,
-    validate_gasto193_binding_selector_shape,
-)
+from .gasto193_bindings import _Gasto193Selector, validate_gasto193_binding_selector_shape
 from .ids import BindingId, FormulaId, LegalRefId, ModeloId, OracleId, SourceRefId
-from .inventory_bindings import (
-    InventoryProjectionOperation,
-    InventorySelector,
-    validate_inventory_binding,
-)
-from .invoice_bindings import (
-    InvoiceObservation,
-    InvoiceObservationRequirement,
-    Modelo349OperadorClaveTotal,
-    Modelo349OperadorTotalsParity,
-    compute_modelo_349_operador_totals_parity,
-    invoice_binding_requirements,
-    is_m347_declarante_summary_invoice_binding,
-    resolve_invoice_binding_row_values,
-    resolve_invoice_binding_values,
-    validate_invoice_binding,
-    validate_invoice_binding_definition,
-)
+from .inventory_bindings import InventorySelector as _InventorySelector
+from .inventory_bindings import validate_inventory_binding
 from .invoice_bindings import (
     InvoiceSelector as _InvoiceSelector,
 )
-from .irnr_ledger_bindings import (
-    IrnrIncomeObservationProtocol,
-    _IrnrLedgerIncomeSelector,
-    resolve_ledger_irnr_income_aggregation_binding_values,
-    unsupported_ledger_irnr_income_observations,
-    validate_ledger_irnr_income_aggregation_binding,
-    validate_ledger_irnr_income_aggregation_binding_definition,
+from .invoice_bindings import (
+    validate_invoice_binding,
 )
-from .ledger_binding_resolution import UnroutedLedgerQuantity
-from .ledger_bindings import (
-    IvaLedgerObservation,
-    OssIossLedgerObservation,
-    RentaGastosEstimacionDirectaObservationProtocol,
-    RentaGastosPagoFraccionadoObservationProtocol,
-    RentaIncomeObservationProtocol,
-    UngroundedRentaIncome,
-    renta_first_slice_binding_target_casillas,
-    resolve_ledger_iva_aggregation_binding_values,
-    resolve_ledger_oss_aggregation_binding_values,
-    resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values,
-    resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values,
-    resolve_ledger_renta_income_aggregation_binding_values,
-    structurally_unroutable_iva_base_categories,
-    ungrounded_ledger_renta_income_observations,
-    unrouted_ledger_iva_quantities,
-    unrouted_ledger_renta_income_quantities,
-    unsupported_ledger_iva_observations,
-    unsupported_ledger_oss_observations,
-    unsupported_ledger_renta_gastos_estimacion_directa_observations,
-    unsupported_ledger_renta_gastos_pago_fraccionado_observations,
-    unsupported_ledger_renta_income_observations,
-    validate_ledger_iva_aggregation_binding,
-    validate_ledger_iva_aggregation_binding_definition,
-    validate_ledger_oss_aggregation_binding,
-    validate_ledger_oss_aggregation_binding_definition,
-    validate_ledger_renta_gastos_estimacion_directa_aggregation_binding,
-    validate_ledger_renta_gastos_estimacion_directa_aggregation_binding_definition,
-    validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding,
-    validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding_definition,
-    validate_ledger_renta_income_aggregation_binding,
-    validate_ledger_renta_income_aggregation_binding_definition,
+from .irnr_ledger_bindings import (
+    _IrnrLedgerIncomeSelector,
+    validate_ledger_irnr_income_aggregation_binding,
 )
 from .ledger_bindings import (
     IvaLedgerSelector as _IvaLedgerSelector,
@@ -199,158 +104,58 @@ from .ledger_bindings import (
 from .ledger_bindings import (
     RentaLedgerIncomeSelector as _RentaLedgerIncomeSelector,
 )
-from .ledger_impatriado_bindings import (
-    ImpatriadoIncomeObservationProtocol,
-    resolve_ledger_impatriado_income_aggregation_binding_values,
-    unsupported_ledger_impatriado_income_observations,
-    validate_ledger_impatriado_income_aggregation_binding,
-    validate_ledger_impatriado_income_aggregation_binding_definition,
+from .ledger_bindings import (
+    validate_ledger_iva_aggregation_binding,
+    validate_ledger_oss_aggregation_binding,
+    validate_ledger_renta_gastos_estimacion_directa_aggregation_binding,
+    validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding,
+    validate_ledger_renta_income_aggregation_binding,
 )
 from .ledger_impatriado_bindings import (
     ImpatriadoLedgerIncomeSelector as _ImpatriadoLedgerIncomeSelector,
 )
+from .ledger_impatriado_bindings import (
+    validate_ledger_impatriado_income_aggregation_binding,
+)
+from .manual_input_selector import ManualInputSelector as _ManualInputSelector
 from .period_selector_match import selector_period_matches_request
 from .retenciones_bindings import (
     RetencionesAggregationSelector as _RetencionesAggregationSelector,
 )
 from .retenciones_bindings import (
-    resolve_retenciones_aggregation_binding_values,
     validate_retenciones_aggregation_binding,
 )
 from .schema import DataBindingDefinition, ModeloRevision
 from .schema_input_kind import InputKind
 from .schema_surfaces import CasillaDefinition
 from .withholding296_bindings import (
-    Withholding296Observation,
     _Withholding296Selector,
-    resolve_withholding296_binding_row_values,
     validate_withholding296_binding_selector_shape,
-)
-from .withholding_bindings import (
-    WithholdingClaveBreakdown,
-    WithholdingObservation,
-    WithholdingObservationRequirement,
-    WithholdingTotalsParity,
-    aggregate_withholding_by_clave,
-    compute_withholding_totals_parity,
-    resolve_withholding_binding_row_values,
-    resolve_withholding_binding_values,
-    validate_withholding_binding_selector_shape,
-    withholding_binding_requirements,
 )
 from .withholding_bindings import (
     WithholdingSelector as _WithholdingSelector,
 )
+from .withholding_bindings import (
+    validate_withholding_binding_selector_shape,
+)
 
 __all__ = [
-    "INVOICE_BINDING_SOURCE_KINDS",
-    "LEDGER_BINDING_SOURCE_KINDS",
-    "AtributionMemberObservation",
-    "BindingAggregationOp",
     "CasillaObservation",
-    "CounterpartAggregationObservation",
-    "CounterpartObservationRequirement",
-    "CounterpartSourceKind",
-    "DataBindingDefinition",
-    "DonativoDonorObservation",
-    "Gasto193Observation",
-    "ImpatriadoIncomeObservationProtocol",
-    "InventoryProjectionOperation",
-    "InventorySelector",
-    "InvoiceObservation",
-    "InvoiceObservationRequirement",
-    "IrnrIncomeObservationProtocol",
     "IvaCompensationAnnualPartitionRequirement",
-    "IvaLedgerObservation",
     "M303RegimenSimplificadoAnnualSummaryRequirement",
-    "Modelo349OperadorClaveTotal",
-    "Modelo349OperadorTotalsParity",
-    "Modelo720RowObservation",
     "OracleModeloObservation",
-    "OssIossLedgerObservation",
     "ProfileSelector",
-    "RefundOperationObservation",
     "RegistryModeloObservation",
-    "RelatedPartyOperationObservation",
-    "RentaGastosEstimacionDirectaObservationProtocol",
-    "RentaGastosPagoFraccionadoObservationProtocol",
-    "RentaIncomeObservationProtocol",
-    "UngroundedRentaIncome",
-    "UnroutedLedgerQuantity",
-    "Withholding296Observation",
-    "WithholdingClaveBreakdown",
-    "WithholdingObservation",
-    "WithholdingObservationRequirement",
-    "WithholdingTotalsParity",
-    "_build_foreign_asset_rows",
-    "_build_related_party_rows",
-    "aggregate_withholding_by_clave",
-    "binding_aggregation_op",
     "binding_source_casilla_ids",
     "binding_source_modelo",
     "bound_casilla_binding_ids",
     "casillas_by_binding",
-    "compute_modelo_349_operador_totals_parity",
-    "compute_withholding_totals_parity",
-    "counterpart_binding_requirements",
-    "default_binding_aggregation_op",
-    "foreign_asset_binding_row_field",
-    "invoice_binding_requirements",
-    "is_m347_declarante_summary_invoice_binding",
     "iva_compensation_annual_partition_requirement",
     "m303_regimen_simplificado_annual_summary_requirement",
-    "previous_filing_binding_source_casilla_ids",
-    "previous_filing_observation_requirements",
-    "previous_filing_source_reference",
-    "renta_first_slice_binding_target_casillas",
-    "resolve_atribucion_binding_row_values",
     "resolve_available_bound_inputs_by_casilla_id",
     "resolve_bound_casilla_binding_value",
-    "resolve_counterpart_binding_row_values",
-    "resolve_counterpart_binding_values",
-    "resolve_donativo_binding_row_values",
-    "resolve_foreign_asset_binding_row_values",
-    "resolve_gasto193_binding_row_values",
-    "resolve_gasto193_binding_values",
-    "resolve_invoice_binding_row_values",
-    "resolve_invoice_binding_values",
-    "resolve_ledger_impatriado_income_aggregation_binding_values",
-    "resolve_ledger_irnr_income_aggregation_binding_values",
-    "resolve_ledger_iva_aggregation_binding_values",
-    "resolve_ledger_oss_aggregation_binding_values",
-    "resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values",
-    "resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values",
-    "resolve_ledger_renta_income_aggregation_binding_values",
-    "resolve_previous_filing_binding_values",
-    "resolve_refund_binding_row_values",
-    "resolve_related_party_binding_row_values",
-    "resolve_retenciones_aggregation_binding_values",
-    "resolve_withholding296_binding_row_values",
-    "resolve_withholding_binding_row_values",
-    "resolve_withholding_binding_values",
     "selector_model_for_source",
-    "structurally_unroutable_iva_base_categories",
-    "ungrounded_ledger_renta_income_observations",
-    "unrouted_ledger_iva_quantities",
-    "unrouted_ledger_renta_income_quantities",
-    "unsupported_ledger_impatriado_income_observations",
-    "unsupported_ledger_irnr_income_observations",
-    "unsupported_ledger_iva_observations",
-    "unsupported_ledger_oss_observations",
-    "unsupported_ledger_renta_gastos_estimacion_directa_observations",
-    "unsupported_ledger_renta_gastos_pago_fraccionado_observations",
-    "unsupported_ledger_renta_income_observations",
-    "validate_invoice_binding_definition",
-    "validate_ledger_impatriado_income_aggregation_binding_definition",
-    "validate_ledger_irnr_income_aggregation_binding_definition",
-    "validate_ledger_iva_aggregation_binding_definition",
-    "validate_ledger_oss_aggregation_binding_definition",
-    "validate_ledger_renta_gastos_estimacion_directa_aggregation_binding_definition",
-    "validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding_definition",
-    "validate_ledger_renta_income_aggregation_binding_definition",
     "validate_m303_regimen_simplificado_annual_summary_revision",
-    "validate_retenciones_aggregation_binding",
-    "withholding_binding_requirements",
 ]
 
 #: One per-family ``validate(binding) -> list[str]`` accumulating validator. Every
@@ -677,7 +482,6 @@ def resolve_available_bound_inputs_by_casilla_id(
 # Binding-family implementations are split by source family. This module keeps
 # the historical registry import surface and owns cross-family selector-shape
 # dispatch only.
-_ManualInputDataType = Literal["boolean", "integer", "text", "decimal", "money"]
 
 
 class _RelationPrefillSelector(BaseModel):
@@ -1110,7 +914,7 @@ def validate_m303_regimen_simplificado_annual_summary_revision(
     if requirement is None:
         return []
 
-    from ...modelos import M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS
+    from ...modelos.calculation_revision import M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS
 
     expected_casilla_ids = M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS
     expected_set = set(expected_casilla_ids)
@@ -1203,7 +1007,7 @@ class _ProrrataRegularizacionSelector(BaseModel):
 def binding_source_casilla_ids(binding: DataBindingDefinition) -> tuple[CasillaId, ...]:
     """Return typed source casilla ids declared by binding families that have them."""
     if binding.source == BindingSourceKind.PREVIOUS_FILING:
-        return previous_filing_source_reference(binding).source_casilla_ids
+        return _previous_filing_source_reference(binding).source_casilla_ids
     if binding.source == BindingSourceKind.RELATION_PREFILL:
         return _relation_prefill_source_ids(_relation_prefill_selector(binding))
     if binding.source == BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION:
@@ -1221,7 +1025,7 @@ def binding_source_casilla_ids(binding: DataBindingDefinition) -> tuple[CasillaI
 def binding_source_modelo(binding: DataBindingDefinition) -> ModeloId | None:
     """Return the typed source modelo declared by binding families that have one."""
     if binding.source == BindingSourceKind.PREVIOUS_FILING:
-        return previous_filing_source_reference(binding).source_modelo
+        return _previous_filing_source_reference(binding).source_modelo
     if binding.source == BindingSourceKind.RELATION_PREFILL:
         return _relation_prefill_selector(binding).source_modelo
     if binding.source == BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION:
@@ -1307,112 +1111,6 @@ class ProfileSelector(BaseModel):
         return self
 
 
-_MANUAL_INPUT_RECORD_SHAPE_KEYS: frozenset[str] = frozenset(("record", "field", "offset", "length"))
-"""Canonical record-field shape keys on the manual_input selector.
-
-Single source of truth for both the typed validator in
-:class:`_ManualInputSelector` and the layout-binding predicate at
-:func:`domain.calculations.registry._validate_record_sections._is_layout_binding`.
-"""
-
-
-def is_layout_binding_selector(selector: Mapping[str, object]) -> bool:
-    """Return True when ``selector`` carries the record-field layout shape.
-
-    The predicate intentionally mirrors the record-shape keys declared
-    on :class:`_ManualInputSelector` rather than re-implementing the
-    check via raw key inspection. Validate gate behaviour stays
-    coupled to the typed model: if the manual_input record-shape key
-    set is ever extended or renamed, the layout predicate follows
-    automatically.
-    """
-    if "data_type" not in selector:
-        return False
-    return _MANUAL_INPUT_RECORD_SHAPE_KEYS.issubset(selector)
-
-
-class _ManualInputSelector(BaseModel):
-    """Strict validator for the selector mapping of a manual_input binding.
-
-    Two shapes are accepted, gated by ``_validate_manual_input_shape``:
-
-    * **Casilla shape** ``{casilla_id, data_type, true_value?, false_value?}``:
-      The operator types the value directly into a registry casilla; the
-      ``casilla_id`` names the canonical ``casilla.id`` and ``data_type``
-      declares how the typed enum / boolean maps to the on-wire payload
-      string. Used for boolean casillas like M100/0168
-      (estimacion-directa modality flag).
-    * **Record-field shape** ``{record, field, offset, length, data_type}``:
-      The operator types a value that lands in a fichero-BOE record field
-      at a specific byte offset / length. Used by M131 and other modelos
-      whose bindings inject operator-typed metadata into fixed-width
-      records.
-
-    The two shapes are exclusive at the validator level.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    # casilla shape
-    casilla_id: CasillaId | None = Field(default=None, min_length=1, max_length=64)
-    true_value: str | None = Field(default=None, min_length=1, max_length=64)
-    false_value: str | None = Field(default=None, min_length=1, max_length=64)
-    # record-field shape
-    record: str | None = Field(default=None, min_length=1, max_length=64)
-    field: str | None = Field(default=None, min_length=1, max_length=128)
-    offset: int | None = Field(default=None, ge=1)
-    length: int | None = Field(default=None, ge=1)
-    # implicit-decimal scale of a record-field slot, declared per the diseno de
-    # registro because the width alone does not imply it
-    decimals: int | None = Field(default=None, ge=0)
-    # Whether the record-field slot carries AEAT's sign marker in position 1,
-    # declared per the diseno de registro: a row AEAT types ``N`` reserves that
-    # byte and a row typed ``Num`` does not, and the width alone cannot say
-    # which. Only meaningful for the record-field shape.
-    signed: bool | None = None
-    # both shapes
-    data_type: _ManualInputDataType
-
-    @model_validator(mode="after")
-    def _validate_manual_input_shape(self) -> _ManualInputSelector:
-        record_shape_keys = _MANUAL_INPUT_RECORD_SHAPE_KEYS
-        has_casilla = self.casilla_id is not None
-        has_record_shape = any(getattr(self, key) is not None for key in record_shape_keys)
-        if has_casilla and has_record_shape:
-            raise RegistryValidationError(
-                "manual_input selector must declare either the casilla shape or the record-field shape, not both",
-            )
-        if not has_casilla and not has_record_shape:
-            raise RegistryValidationError("manual_input selector must declare a casilla_id or a record-field shape")
-        if has_record_shape:
-            missing = [key for key in record_shape_keys if getattr(self, key) is None]
-            if missing:
-                raise RegistryValidationError(
-                    f"manual_input record-field selector is missing required keys: {sorted(missing)!r}",
-                )
-        # Boolean casilla shape always pairs the data_type with explicit
-        # true_value / false_value strings so the on-wire encoding is
-        # deterministic.
-        if has_casilla and self.data_type == "boolean" and (self.true_value is None or self.false_value is None):
-            raise RegistryValidationError(
-                "manual_input boolean-casilla_id selector must declare true_value and false_value",
-            )
-        if self.signed is not None:
-            # The sign marker is a byte of the fixed-width slot, so it is only
-            # meaningful where the selector names one.
-            if has_casilla:
-                raise RegistryValidationError(
-                    "manual_input casilla-shape selector cannot declare signed: the sign marker is a "
-                    "byte of a fixed-width record slot, which the casilla shape does not name",
-                )
-            if self.signed and self.data_type != "money":
-                raise RegistryValidationError(
-                    f"manual_input record-field selector can declare signed only for money data, "
-                    f"not {self.data_type!r}",
-                )
-        return self
-
-
 # ---------------------------------------------------------------------------
 # Discriminated-selector registry
 #
@@ -1440,6 +1138,7 @@ _BINDING_SELECTOR_REGISTRY: dict[BindingSourceKind, type[BaseModel]] = {
     BindingSourceKind.PURCHASE_INVOICE_EVIDENCE: _InvoiceSelector,
     BindingSourceKind.PAYABLE_INVOICE: _InvoiceSelector,
     BindingSourceKind.COLLECTIBLE_INVOICE: _InvoiceSelector,
+    BindingSourceKind.M347_THIRD_PARTY_OPERATION: _InvoiceSelector,
     BindingSourceKind.LEDGER_OSS_AGGREGATION: _OssIossLedgerSelector,
     BindingSourceKind.LEDGER_IVA_AGGREGATION: _IvaLedgerSelector,
     BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION: _RentaLedgerGastosEstimacionDirectaSelector,
@@ -1456,8 +1155,9 @@ _BINDING_SELECTOR_REGISTRY: dict[BindingSourceKind, type[BaseModel]] = {
     BindingSourceKind.DONATIVO_DONOR: _DonativoSelector,
     BindingSourceKind.GASTO193_CONTRIBUTOR: _Gasto193Selector,
     BindingSourceKind.WITHHOLDING296: _Withholding296Selector,
-    BindingSourceKind.INVENTORY: InventorySelector,
+    BindingSourceKind.INVENTORY: _InventorySelector,
     BindingSourceKind.MANUAL_INPUT: _ManualInputSelector,
+    BindingSourceKind.DESIGN_CONSTANT: DesignConstantSelector,
     BindingSourceKind.PROFILE: ProfileSelector,
 }
 
@@ -1540,6 +1240,7 @@ _BINDING_VALIDATOR_REGISTRY: dict[BindingSourceKind, _BindingFamilyValidator] = 
     BindingSourceKind.PURCHASE_INVOICE_EVIDENCE: validate_invoice_binding,
     BindingSourceKind.PAYABLE_INVOICE: validate_invoice_binding,
     BindingSourceKind.COLLECTIBLE_INVOICE: validate_invoice_binding,
+    BindingSourceKind.M347_THIRD_PARTY_OPERATION: validate_invoice_binding,
     BindingSourceKind.LEDGER_OSS_AGGREGATION: validate_ledger_oss_aggregation_binding,
     BindingSourceKind.LEDGER_IVA_AGGREGATION: validate_ledger_iva_aggregation_binding,
     BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION: (
@@ -1562,6 +1263,7 @@ _BINDING_VALIDATOR_REGISTRY: dict[BindingSourceKind, _BindingFamilyValidator] = 
     BindingSourceKind.WITHHOLDING: validate_withholding_binding_selector_shape,
     BindingSourceKind.INVENTORY: validate_inventory_binding,
     BindingSourceKind.MANUAL_INPUT: _validate_selector_only(_ManualInputSelector),
+    BindingSourceKind.DESIGN_CONSTANT: validate_design_constant_binding,
     BindingSourceKind.PROFILE: _validate_selector_only(ProfileSelector),
 }
 

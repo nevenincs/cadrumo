@@ -45,21 +45,22 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.ids import BindingId
-
 from ....core import Period, validated_casilla_id
+from ....core.bucket_pointer import resolve_active_bucket_id
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.ids import BindingId
 from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list
 from ....domain.user_profile.errors import ProfileSchemaValidationError
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.profile_capsule import (
     load_test_profile_record,
     open_test_profile_session,
-    set_active_test_profile_facts,
 )
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
+from ...aggregation import CallerOverrideDisposition, precedence_ladder_sources
 from ...user_profile.projections import record_to_path_values
+from ...user_profile.validation import reject_invalid_profile_facts
 from .._calculation_actions import calculate_modelo_revision_from_bucket_aggregation
 from .._work_lifecycle import create_work_unit
 
@@ -98,18 +99,17 @@ _ESTIMACION_DIRECTA_NORMAL: BindingId = f"renta-{_YEAR}-modelo-100-estimacion-di
 #: Sources the live mesh resolves from bucket state. Bindings owned by these are
 #: left to the mesh; everything else is zero-defaulted so the calculation reaches
 #: 0513 rather than failing on an unrelated unresolved slot.
+#: The bucket-locked half is DERIVED from the caller-override ladder rather
+#: than hand-listed: a literal copy is correct only until the next resolver is
+#: enrolled, and omitting `inventory` is what made the lock reject these
+#: calculations outright.
 _MESH_OWNED_SOURCES = frozenset(
     {
+        # Mesh-resolved rather than locked.
         "profile",
         "relation_prefill",
-        "ledger_renta_income_aggregation",
-        "ledger_renta_gastos_estimacion_directa_aggregation",
-        "ledger_iva_aggregation",
-        "ledger_oss_aggregation",
-        "collectible_invoice",
-        "payable_invoice",
     },
-)
+) | {kind.value for kind in precedence_ladder_sources(CallerOverrideDisposition.LOCK)}
 
 
 #: Profile-sourced bindings this profile leaves unresolved and that the M100
@@ -196,8 +196,22 @@ def _calculate_estatal_minimo() -> Decimal:
 
 
 def _store_sentinel_at_derived_path() -> None:
-    """Write the sentinel through the real single-field operator write door."""
-    set_active_test_profile_facts((UserProfileFact(path=_DERIVED_PATH, value=_SENTINEL),))
+    """Offer the sentinel to the judge every profile-fact write door delegates to.
+
+    ``set_active_test_profile_facts`` is a SEEDING helper -- the successor to a
+    retired plural fact command -- so it merges onto the record without judging
+    it. Routing the probe through it exercised no guard at all, which is why
+    this asserted a refusal that could not fire.
+
+    ``reject_invalid_profile_facts`` is what registration, the wizard's fact
+    patch and the cotejo censal each refuse through, so proving it rejects a
+    derived path binds every door rather than one surface.
+    """
+    reject_invalid_profile_facts(
+        resolve_active_bucket_id() or "",
+        (UserProfileFact(path=_DERIVED_PATH, value=_SENTINEL),),
+        require_complete=False,
+    )
 
 
 @pytest.mark.usefixtures("_active_profile")

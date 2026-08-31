@@ -89,20 +89,22 @@ from ...domain.calculations.registry.iva_wallet_relation_targets import (
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.modelos import (
-    CalculationRevision,
-    CalculationRevisionCatalogue,
     CalculationRevisionCatalogueRepositoryProtocol,
-    CalculationRevisionState,
-    CalculationSourceIssue,
-    CalculationSourceRef,
-    FilingInstanceEvidence,
     LedgerFilingSnapshot,
-    M303RegimenSimplificadoAnnualSummaryHandoff,
     Modelo210AgrupacionRentaRow,
     ModeloDetailRow,
     ModeloRecordCatalogueRepositoryProtocol,
     WorkUnit,
     upsert_calculation_revision,
+)
+from ...domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionCatalogue,
+    CalculationRevisionState,
+    CalculationSourceIssue,
+    CalculationSourceRef,
+    FilingInstanceEvidence,
+    M303RegimenSimplificadoAnnualSummaryHandoff,
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions import TransactionCatalogueRepositoryProtocol
@@ -138,7 +140,13 @@ from ._calculation_modelo_adjustments import (
     raise_if_m390_303_reconciliation_would_save_silent_zero as _raise_if_m390_303_reconciliation_would_save_silent_zero,
 )
 from ._calculation_modelo_adjustments import (
+    require_detail_rows_declared_for_their_owning_modelo as _require_detail_rows_declared_for_their_owning_modelo,
+)
+from ._calculation_modelo_adjustments import (
     suppress_m349_row_field_template_outputs as _suppress_m349_row_field_template_outputs,
+)
+from ._calculation_modelo_adjustments import (
+    union_detail_rows_by_identity as _union_detail_rows_by_identity,
 )
 from ._calculation_preparation import (
     prepare_calculation as _prepare_calculation,
@@ -165,6 +173,7 @@ from ._calculation_source_staging import (
 )
 from ._m210_agrupacion_renta import validate_m210_agrupacion_renta_rows_for_calculation
 from ._m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
+from ._m303_regimen_simplificado_scope import m303_regimen_simplificado_annual_summary_applies
 from ._m349_ledger_guard import (
     raise_if_m349_intracom_ledger_rows_need_operator_rows as _raise_if_m349_intracom_ledger_rows_need_operator_rows,
 )
@@ -177,8 +186,10 @@ from .calculation_route import CalculationRouteStage as _CalculationRouteStage
 from .calculation_route import require_calculation_route_resolver as _require_calculation_route_resolver
 
 if TYPE_CHECKING:
-    from cadrumo.domain.calculations.registry.detail_record_bindings import Modelo720RowObservation
+    from collections.abc import Callable
 
+    from ...adapters.persistence.storage import SecureObjectWrite
+    from ...domain.calculations.registry.detail_record_bindings import Modelo720RowObservation
     from ...domain.calculations.registry.schema import RegistrySnapshot
     from ..aggregation import (
         CalculationSourceDiagnostic,
@@ -244,7 +255,7 @@ def calculate_modelo_revision(
     binding_values: Mapping[BindingId, Decimal] | None = None,
     enum_binding_values: Mapping[BindingId, str] | None = None,
     backend_binding_values: Mapping[BindingId, Decimal] | None = None,
-    row_binding_values: Mapping[tuple[BindingId, int], Decimal | str] | None = None,
+    row_binding_values: Mapping[tuple[BindingId, int], Decimal | str | int | bool] | None = None,
     backend_casilla_inputs: Mapping[CasillaId, Decimal] | None = None,
     iva_compensation_decision: object | None = None,
     iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
@@ -382,10 +393,11 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
     actor: str = "system",
     casilla_inputs: Mapping[CasillaId, Decimal],
     text_casilla_inputs: Mapping[CasillaId, str] | None = None,
+    cleared_casilla_ids: tuple[CasillaId, ...] = (),
     binding_values: Mapping[BindingId, Decimal] | None = None,
     enum_binding_values: Mapping[BindingId, str] | None = None,
     backend_binding_values: Mapping[BindingId, Decimal] | None = None,
-    row_binding_values: Mapping[tuple[BindingId, int], Decimal | str] | None = None,
+    row_binding_values: Mapping[tuple[BindingId, int], Decimal | str | int | bool] | None = None,
     row_source_identities: Mapping[RowBindingKey, RowSourceIdentity] | None = None,
     row_casilla_values: Mapping[RowCasillaKey, Decimal] | None = None,
     row_casilla_provenance: Mapping[RowCasillaKey, DirectRowMaterializationProvenance] | None = None,
@@ -411,11 +423,18 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
     filing_instance_evidence: FilingInstanceEvidence | None = None,
     m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None = None,
     clock: datetime | None = None,
+    additional_secure_object_writes_for_revision: (
+        Callable[[str, str | None], tuple[SecureObjectWrite, ...]] | None
+    ) = None,
 ) -> CalculationRevision:
     """Calculate with source evidence produced by the in-module source mesh only.
 
     This is deliberately private: provenance and source issues are an authority
     boundary, not caller-controlled calculation inputs.
+
+    ``additional_secure_object_writes_for_revision`` passes straight through to
+    :func:`persist_calculation_revision`; see that function for why it is a
+    factory keyed by the resolved revision id rather than a plain tuple.
 
     ``ledger_preflight_transaction_repository`` is a :class:`TransactionCatalogueRepository`
     used for the ledger preflight check before calculation.
@@ -483,8 +502,10 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
     snapshot = prepared.snapshot
     _require_m303_regimen_simplificado_annual_summary_handoff(
         revision=snapshot.revision,
+        work_unit=work_unit,
         handoff=m303_regimen_simplificado_annual_summary_handoff,
     )
+    _require_detail_rows_declared_for_their_owning_modelo(work_unit=work_unit, detail_rows=detail_rows)
     _validate_m210_agrupacion_renta_detail_rows(work_unit, detail_rows, m210_official_tipo_renta_code)
     resolved_relations = dict(relation_values or {})
     backend_casilla_inputs = {
@@ -493,7 +514,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
             revision=snapshot.revision,
             binding_values=prepared.channels.bindings,
         ),
-        **dict(prepared.backend_casilla_inputs or {}),
+        **dict(prepared.backend_casilla_inputs or dict[CasillaId, Decimal]()),
     }
     channel_inputs = _resolve_calculation_inputs(
         revision=snapshot.revision,
@@ -580,6 +601,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         m210_gross_income_source_mode=_m210_gross_source_mode(work_unit, m210_gross_income_source_mode),
         borrador_snapshot_id=prepared.channels.borrador_snapshot_id,
         bindings_sourced_from_borrador=prepared.channels.bindings_sourced_from_borrador,
+        cleared_casilla_ids=cleared_casilla_ids,
         observations=typed_observations,
         unresolved_outcomes=engine_result.unresolved_outcomes,
         source_provenance=source_provenance,
@@ -593,6 +615,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         calculation_repository=cr_repo,
         work_unit_repository=wu_repo,
         bucket_event_repository=bv_repo,
+        additional_secure_object_writes_for_revision=additional_secure_object_writes_for_revision,
     )
 
 
@@ -813,6 +836,7 @@ def _resolve_bucket_source_mesh(
                     work_unit_repository=resolved_work_unit_repository,
                     calculation_repository=resolved_calculation_repository,
                     filing_repository=filing_repository,
+                    regimen_simplificado_applies=m303_regimen_simplificado_annual_summary_applies(work_unit),
                 ),
                 stage="conditional",
             ),
@@ -981,7 +1005,11 @@ def _source_provenance_refs(
     ``legal_refs`` / ``source_refs`` (carried by the revision's ``observations``)
     to avoid duplicating that grounding. ``dependency_treatment`` is NOT dropped:
     unlike the per-casilla refs, nothing else on the revision carries it, so it
-    survives onto the persisted ref unchanged.
+    survives onto the persisted ref unchanged. ``source_casilla_ids`` is also NOT
+    dropped: it is a subject identity, not grounding, and the anti-
+    duplication rationale for ``legal_refs``/``source_refs`` does not extend to
+    it -- nothing else on the revision recovers which casilla a general
+    (non-row-materialized) source object explains.
     """
     return tuple(
         CalculationSourceRef(
@@ -993,6 +1021,7 @@ def _source_provenance_refs(
             source_ref=provenance.source_ref,
             parent_source_ref=provenance.parent_source_ref,
             fingerprint=provenance.fingerprint,
+            source_casilla_ids=provenance.source_casilla_ids,
             dependency_treatment=provenance.dependency_treatment,
         )
         for provenance in source_resolution.provenance
@@ -1278,7 +1307,10 @@ def _bucket_aggregation_channels(
     detail_rows: tuple[ModeloDetailRow, ...],
 ) -> _BucketAggregationChannels:
     """Compose mesh, detail-row, and caller channels in their established order."""
-    all_detail_rows = (*source_resolution.detail_rows, *detail_rows)
+    all_detail_rows = _union_detail_rows_by_identity(
+        resolver_rows=source_resolution.detail_rows,
+        caller_rows=detail_rows,
+    )
     _raise_if_m349_intracom_ledger_rows_need_operator_rows(
         work_unit=preparation.work_unit,
         transaction_repository=transaction_repository,
@@ -1344,6 +1376,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     actor: str = "system",
     casilla_inputs: Mapping[CasillaId, Decimal] | None = None,
     text_casilla_inputs: Mapping[CasillaId, str] | None = None,
+    cleared_casilla_ids: tuple[CasillaId, ...] = (),
     m210_official_tipo_renta_code: str | None = None,
     m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None,
     binding_values: Mapping[BindingId, Decimal] | None = None,
@@ -1365,6 +1398,9 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     detail_rows: tuple[ModeloDetailRow, ...] = (),
     filing_instance_evidence: FilingInstanceEvidence | None = None,
     clock: datetime | None = None,
+    additional_secure_object_writes_for_revision: (
+        Callable[[str, str | None], tuple[SecureObjectWrite, ...]] | None
+    ) = None,
 ) -> BucketAggregationCalculationResult:
     """Calculate a modelo revision and return it alongside the source diagnostics.
 
@@ -1429,6 +1465,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         actor=actor,
         casilla_inputs=preparation.casilla_inputs,
         text_casilla_inputs=text_casilla_inputs,
+        cleared_casilla_ids=cleared_casilla_ids,
         m210_official_tipo_renta_code=m210_official_tipo_renta_code,
         m210_gross_income_source_mode=preparation.m210_gross_income_source_mode,
         binding_values=preparation.binding_values,
@@ -1463,6 +1500,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         borrador_snapshot_repository=borrador_snapshot_repository,
         detail_rows=channels.detail_rows,
         clock=clock,
+        additional_secure_object_writes_for_revision=additional_secure_object_writes_for_revision,
     )
     advisory_diagnostics = collect_bucket_aggregation_advisory_diagnostics(
         preparation.snapshot.revision,
@@ -1719,13 +1757,23 @@ def _without_iva_wallet_sources(
 def _require_m303_regimen_simplificado_annual_summary_handoff(
     *,
     revision: ModeloRevision,
+    work_unit: WorkUnit,
     handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None,
 ) -> None:
-    """Keep the 303/4T annual handoff on its one mesh-owned arrival path."""
+    """Keep the 303/4T annual handoff on its one mesh-owned arrival path.
+
+    The antecedent is declaration AND applicability, never declaration alone.
+    Boxes 74--83 ride on every Modelo 390 form, so every revision declares this
+    family; requiring the handoff on that basis alone routed a regimen general
+    filer through a regimen simplificado source it can never have. This still
+    refuses a missing or unexpected handoff wherever the regime does reach the
+    taxpayer, which is the arrival-path invariant it exists to hold.
+    """
     declares_handoff = any(
         binding.source is BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY for binding in revision.bindings
     )
-    if declares_handoff == (handoff is not None):
+    expects_handoff = declares_handoff and m303_regimen_simplificado_annual_summary_applies(work_unit)
+    if expects_handoff == (handoff is not None):
         return
     raise ModeloAggregationBindingError(
         translated_message="errors.error.error_modelo_aggregation_binding",
@@ -1733,6 +1781,7 @@ def _require_m303_regimen_simplificado_annual_summary_handoff(
             "reason": "m303_regimen_simplificado_annual_summary_handoff_required",
             "revision_id": revision.id,
             "declares_handoff": declares_handoff,
+            "expects_handoff": expects_handoff,
         },
     )
 

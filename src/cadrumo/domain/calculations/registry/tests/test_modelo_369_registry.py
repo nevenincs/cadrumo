@@ -12,6 +12,7 @@ import pytest
 from .....core import CasillaId, Period, validated_casilla_id
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
+from .._validate import RegistryValidator
 from ..authority import bundled_authority
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..ids import LegalRefId
@@ -21,7 +22,6 @@ from ..ledger_bindings import (
 )
 from ..record_design import extract_record_design
 from ..schema import ModeloDefinition, RegistryCatalogues
-from ..validate import RegistryValidator
 from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

@@ -29,10 +29,11 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from cadrumo.domain.calculations.registry.record_design import extract_record_design
-
 from .....core.resources import bundled_path
+from ..authority import ValidatedRegistryAuthority
+from ..record_design import extract_record_design
+from ..record_design_schema import RecordDesignSheet
+from ..schema import ModeloRevision, RegistryCatalogues
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -57,7 +58,7 @@ def _shipped(revision_id: str):
     return snapshot.revision
 
 
-def _design_pages(revision, catalogues) -> dict[str, object]:
+def _design_pages(revision: ModeloRevision, catalogues: RegistryCatalogues) -> dict[str, RecordDesignSheet]:
     """``page number -> design sheet``, keyed on the trailing numeral for EQUALITY."""
     design_ref = next(
         ref
@@ -75,7 +76,7 @@ def _design_pages(revision, catalogues) -> dict[str, object]:
         f"unparsed one: {[(sheet.name, sheet.reason) for sheet in extraction.skipped]}"
     )
 
-    pages: dict[str, object] = {}
+    pages: dict[str, RecordDesignSheet] = {}
     for sheet in extraction.sheets:
         number = sheet.name.split(".")[-1].strip()
         assert number not in pages, f"two design sheets claim page {number!r}"
@@ -98,7 +99,7 @@ def _written_positions(record) -> set[int]:
     return written
 
 
-def _reserved_positions(sheet) -> set[int]:
+def _reserved_positions(sheet: RecordDesignSheet) -> set[int]:
     reserved: set[int] = set()
     for field in sheet.fields:
         text = (field.description or field.content or "").upper()
@@ -107,7 +108,7 @@ def _reserved_positions(sheet) -> set[int]:
     return reserved
 
 
-def _design_reach(sheet) -> int:
+def _design_reach(sheet: RecordDesignSheet) -> int:
     return max(
         (field.offset + (field.length or 1) - 1 for field in sheet.fields if field.offset is not None),
         default=0,

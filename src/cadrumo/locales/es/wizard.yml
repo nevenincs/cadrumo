@@ -293,6 +293,9 @@ wizard:
       country-of-fiscal-residence:
         help: Código ISO 3166-1 alfa-2 del país de residencia fiscal (p.ej. GB, DE,
           FR). Obligatorio cuando fiscal-residency es non_resident_irnr.
+      declaration-roles:
+        help: Rol declarante del modelo 347; indique --declaration-roles una vez por
+          rol
       descendiente:
         help: 'Formato: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX]'
       does-intracomunitario:
@@ -834,6 +837,40 @@ wizard:
         prompt: Sexo del primer declarante
       title: Primer declarante
     taxpayer-type:
+      declaration-roles:
+        choices:
+          propiedad-horizontal-entity:
+            description: Entidad a la que resulta de aplicación la Ley 49/1960 sobre
+              propiedad horizontal.
+            label: Comunidad de propietarios
+          public-administration-entity:
+            description: Entidad integrada en las distintas Administraciones públicas,
+              sujeta además al deber de declarar las subvenciones, auxilios o ayudas
+              que conceda (art. 31.2, segundo párrafo, RD 1065/2007).
+            label: Entidad integrada en una Administración pública
+          social-character-entity:
+            description: Entidad o establecimiento privado de carácter social conforme
+              al artículo 20.tres de la Ley 37/1992 del IVA.
+            label: Entidad o establecimiento de carácter social
+          statutory-information-duty-entity:
+            description: Autoridad, organismo público, cámara o corporación, colegio
+              o asociación profesional, mutualidad de previsión social, partido político,
+              sindicato o asociación empresarial sujetos al deber de suministrar información
+              tributaria (art. 94.1 y 94.2 de la Ley 58/2003 General Tributaria).
+            label: Entidad sometida al deber general de informar
+          third-party-fee-collector:
+            description: Sociedad, asociación, colegio profesional u otra entidad
+              que cobra honorarios profesionales o derechos de propiedad intelectual,
+              industrial o de autor por cuenta de sus socios, asociados o colegiados
+              (art. 31.3 RD 1065/2007).
+            label: Cobro de honorarios por cuenta de terceros
+        help: 'Papeles institucionales que activan las claves C, D o E del Modelo
+          347: cobro de honorarios por cuenta de terceros (art. 31.3), comunidad de
+          propietarios (Ley 49/1960), entidad de carácter social (art. 20.tres LIVA),
+          entidad sometida al deber de informar (art. 94 LGT) o administración pública
+          integrada. Déjelo en blanco si no corresponde.'
+        prompt: ¿La entidad declarante desempeña alguno de estos papeles frente a
+          la declaración de operaciones con terceros (Modelo 347)?
       entity-type:
         choices:
           attribution-entity:

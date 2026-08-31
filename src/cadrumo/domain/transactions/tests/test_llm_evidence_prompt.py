@@ -56,7 +56,7 @@ def _transaction() -> Transaction:
 
 
 def test_evidence_text_is_injected_into_prompt() -> None:
-    prompt = prompt_spec_with_saturation_fields().render(_transaction(), evidence_text=_EVIDENCE)
+    prompt = prompt_spec_with_saturation_fields(year=2025).render(_transaction(), evidence_text=_EVIDENCE)
     assert _EVIDENCE in prompt
     assert "begin evidence" in prompt
     # The selection-only guard must travel with the evidence: never emit its numbers.
@@ -64,7 +64,7 @@ def test_evidence_text_is_injected_into_prompt() -> None:
 
 
 def test_prompt_without_evidence_has_no_evidence_section() -> None:
-    prompt = prompt_spec_with_saturation_fields().render(_transaction())
+    prompt = prompt_spec_with_saturation_fields(year=2025).render(_transaction())
     assert "begin evidence" not in prompt
     assert _EVIDENCE not in prompt
 
@@ -76,7 +76,7 @@ def test_multiple_components_asked_only_when_evidence_present() -> None:
     and its instruction must be absent; with evidence text or an attached image
     they must be present.
     """
-    spec = prompt_spec_with_saturation_fields()
+    spec = prompt_spec_with_saturation_fields(year=2025)
     bare = spec.render(_transaction())
     assert '"multiple_components"' not in bare
     assert "multiple_components true" not in bare
@@ -91,7 +91,7 @@ def test_multiple_components_asked_only_when_evidence_present() -> None:
 
 def test_multiple_components_survives_the_allow_list_parse() -> None:
     """A model-emitted multiplicity flag round-trips through the allow-list parse."""
-    spec = prompt_spec_with_saturation_fields()
+    spec = prompt_spec_with_saturation_fields(year=2025)
     flagged = parse_response(
         json.dumps(
             {

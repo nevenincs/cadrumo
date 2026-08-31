@@ -88,7 +88,7 @@ class LlmUsageCostProviderMetrics(BaseModel):
     output_tokens: int = Field(ge=0)
     total_tokens: int = Field(ge=0)
     cost_estimate_usd: Decimal | None
-    unpriced_calls: int = 0
+    unpriced_calls: int = Field(default=0, ge=0)
 
 
 class LlmConfidenceProviderMetrics(BaseModel):
@@ -136,7 +136,7 @@ class LlmDiagnosticsReport(BaseModel):
     total_input_tokens: int = Field(default=0, ge=0)
     total_output_tokens: int = Field(default=0, ge=0)
     total_cost_estimate_usd: Decimal | None = Decimal("0")
-    total_unpriced_calls: int = 0
+    total_unpriced_calls: int = Field(default=0, ge=0)
     confidence_providers: tuple[LlmConfidenceProviderMetrics, ...] = ()
     total_classified: int = Field(default=0, ge=0)
     total_low_confidence: int = Field(default=0, ge=0)

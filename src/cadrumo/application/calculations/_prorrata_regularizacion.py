@@ -44,8 +44,6 @@ from typing import ClassVar, Final
 
 from pydantic import BaseModel
 
-from cadrumo.domain.calculations.registry.ledger_bindings import IvaLedgerObservation
-
 from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core import (
     STRICT_FROZEN_CONFIG,
@@ -56,6 +54,7 @@ from ...core import (
     Period,
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
+    regime_apportions_deduction,
     validated_casilla_id,
 )
 from ...core.json_contract import Notice, NoticeSeverity
@@ -65,6 +64,7 @@ from ...domain.calculations.registry.ids import (
     LegalRefId,
     SourceRefId,
 )
+from ...domain.calculations.registry.ledger_bindings import IvaLedgerObservation
 from ...domain.calculations.registry.loader import load_registry_tree
 from ...domain.calculations.registry.schema import (
     ModeloRevision,
@@ -98,8 +98,8 @@ from ..aggregation import (
     CalculationSourceResolution,
     storage_degradation_resolution,
 )
-from ._observations_repository import CalculationObservationRepository
 from ._revision_carry_gate import revision_carry_outcome
+from .observations_repository import CalculationObservationRepository
 
 #: The Modelo 303 casilla the annual prorrata regularización feeds. Deducciones
 #: block, "Regularización prorrata por porcentaje definitivo - Cuota"
@@ -266,7 +266,7 @@ def derive_prorrata_applicability(
         raise ValueError("declared_volume_total and declared_volume_con_derecho must be supplied together")
 
     entries = tuple(register_entries)
-    register_active = any(entry.regime is not ProrrataRegisterRegime.NINGUNA for entry in entries)
+    register_active = any(regime_apportions_deduction(entry.regime) for entry in entries)
     declared_volume_sin_derecho = (
         Decimal("0")
         if declared_volume_total is None or declared_volume_con_derecho is None

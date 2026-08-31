@@ -23,10 +23,9 @@ from typing import Any
 
 import pytest
 
-from cadrumo.domain.calculations.registry.formula_runtime_ops import resolve_parameter
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.formula_runtime_ops import resolve_parameter
+from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.contribuyente import (
     DescendantInfo,
     MinimoDescendientesThresholds,

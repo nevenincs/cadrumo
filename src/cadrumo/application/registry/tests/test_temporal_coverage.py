@@ -7,12 +7,11 @@ from dataclasses import replace
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.temporal import coverage_assessment_horizon, revision_selection_coordinates
-
 from ....core import RegistryAuthorityGrade
-from .. import (
+from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.errors import RegistryValidationError
+from ....domain.calculations.registry.temporal import coverage_assessment_horizon, revision_selection_coordinates
+from ..temporal_coverage import (
     TemporalCoverageReport,
     TemporalRevisionCoverage,
     TemporalRevisionCoverageSummary,
@@ -107,8 +106,19 @@ def test_temporal_coverage_expands_open_selectors_through_the_supported_horizon(
 ) -> None:
     """A real long-span selector proves later years are not silently skipped."""
     modelo = registry_authority.modelo("341")
-    revision = next(iter(modelo.revisions.values()))
-    authority = _authority_with_single_model(registry_authority, composed_modelo=modelo)
+    # Select the OPEN revision by its defining property, never by position.
+    # Modelo 341 declares two -- 2005-2015 closed at year_to 2015, and
+    # 2016-y-siguientes open -- and dictionary order yields the CLOSED one
+    # first, so this test was exercising a bounded selector while its name and
+    # docstring both claim it proves an OPEN selector expands to the horizon.
+    revision = next(candidate for candidate in modelo.revisions.values() if candidate.period_selector.year_to is None)
+    # Compose the authority from the OPEN revision alone. The assertions below
+    # compare every report row against this one revision's coordinates, which
+    # is only meaningful when it is the only revision composed -- modelo 341's
+    # closed 2005-2015 sibling otherwise contributes rows such as (2014, "2T")
+    # that no open-selector expectation can or should account for.
+    open_only_modelo = modelo.model_copy(update={"revisions": {revision.id: revision}})
+    authority = _authority_with_single_model(registry_authority, composed_modelo=open_only_modelo)
     assessment_horizon = coverage_assessment_horizon(authority.catalogues)
 
     report = compose_temporal_coverage(authority=authority)

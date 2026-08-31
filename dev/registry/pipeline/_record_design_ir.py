@@ -25,6 +25,7 @@ from cadrumo.domain.calculations.registry.ids import SourceRefId
 from cadrumo.domain.calculations.registry.record_design import extract_record_design
 from cadrumo.domain.calculations.registry.record_design_schema import (
     AUXILIARY_ENVELOPE_HEADER_LENGTHS,
+    AUXILIARY_ENVELOPE_HEADER_OFFSETS,
     AUXILIARY_ENVELOPE_HEADER_ORDINALS,
     AUXILIARY_ENVELOPE_HEADER_ROWS,
     RecordDesignAuxiliaryEnvelopeHeader,
@@ -40,6 +41,7 @@ from cadrumo.domain.calculations.registry.static_inspection import GeneratedArti
 
 __all__ = [
     "RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION",
+    "AnchorKey",
     "RecordDesignIntermediate",
     "RecordDesignIntermediateAuxiliaryEnvelopeHeader",
     "RecordDesignIntermediateAuxiliaryEnvelopeHeaderField",
@@ -50,6 +52,9 @@ __all__ = [
     "RecordDesignIntermediateSource",
     "RecordDesignIntermediateVariableEnvelope",
     "RecordDesignWorkbookFormat",
+    "RecordKey",
+    "intermediate_anchor_key",
+    "intermediate_record_key",
     "load_record_design_intermediate",
 ]
 
@@ -133,7 +138,7 @@ class RecordDesignIntermediateAuxiliaryEnvelopeHeader(_StrictModel):
         if tuple(field.length for field in source_fields) != AUXILIARY_ENVELOPE_HEADER_LENGTHS:
             msg = "Modelo 390 auxiliary header field widths must retain official anchors"
             raise ValueError(msg)
-        if tuple(field.offset for field in source_fields) != (1, 3, 6, 7, 11, 13, 18, 23, 93, 97, 101, 110, 323):
+        if tuple(field.offset for field in source_fields) != AUXILIARY_ENVELOPE_HEADER_OFFSETS:
             msg = "Modelo 390 auxiliary header offsets must retain official anchors"
             raise ValueError(msg)
         if tuple(field.source_row for field in source_fields) != AUXILIARY_ENVELOPE_HEADER_ROWS:
@@ -521,3 +526,23 @@ def _intermediate_relative_suffix(
         validation=suffix.validation,
         content=suffix.content,
     )
+
+
+type AnchorKey = tuple[str, int, str | None, str | None, str]
+type RecordKey = tuple[str, str]
+
+
+def intermediate_anchor_key(field: RecordDesignIntermediateField) -> AnchorKey:
+    """Return the identity one parser field is matched by.
+
+    The correspondence this keys is the whole point of the join: a parser field
+    and a semantic anchor are THE SAME slot when these tuples are equal. The
+    semantic side computes its half with semantic_anchor_key, and the two must
+    be spelled identically or a matched pair reads as a missing anchor.
+    """
+    return field.sheet, field.source_row, field.source_cell, field.ordinal, field.record_identity
+
+
+def intermediate_record_key(sheet: RecordDesignIntermediateSheet) -> RecordKey:
+    """Return the identity one parser sheet is matched by."""
+    return sheet.sheet, sheet.record_identity

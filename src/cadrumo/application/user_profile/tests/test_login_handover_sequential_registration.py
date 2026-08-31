@@ -226,8 +226,10 @@ def test_a_genuinely_interrupted_handover_still_refuses_when_the_pointer_matches
             with pytest.raises(ActiveProfilePointerTransactionError) as refusal:
                 login_profile(name=second, passphrase_callback=lambda: _PASSWORD_SECOND)
 
-            assert refusal.value.context["owner"] == "profile-login-handover"
-            assert refusal.value.context["reason"] == "pointer no longer matches either witnessed handover state"
+            context = refusal.value.context
+            assert context is not None
+            assert context["owner"] == "profile-login-handover"
+            assert context["reason"] == "pointer no longer matches either witnessed handover state"
             # The refusal is fail-closed: the witness it could not classify is
             # left exactly where it was for an operator to inspect.
             assert _handover_journal_path(storage_root).is_file()

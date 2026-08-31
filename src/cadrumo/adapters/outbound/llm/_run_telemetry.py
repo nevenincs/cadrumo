@@ -53,7 +53,7 @@ from uuid import uuid4
 from pydantic import BaseModel, ConfigDict, Field
 
 from ....adapters.persistence.storage import LLM_RUN_TELEMETRY_NAMESPACE, secure_object_repository_for_active_bucket
-from ....adapters.persistence.storage.crypto import secure_object_key_digest
+from ....adapters.persistence.storage.crypto.encrypted_columns import secure_object_key_digest
 from ....core.config import load_settings
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import canonical_json_bytes

@@ -1,0 +1,1416 @@
+# Spending-category deductibility profiles for IRPF.
+#
+# THE FILE CARRIES NO YEAR. The proportionality rules -- kind, ratios, the
+# statutory multiplier, the caps -- are framework values that do not vary by
+# filing year, and versioning them by copying the whole file once cost 1013
+# duplicated lines to vary 82 lines of citation metadata. What genuinely enters
+# per year is the evidence, so the year lives on the evidence: every citation
+# declares the closed span it is asserted over, and the years this corpus can be
+# resolved for are DERIVED from those spans.
+#
+# A WINDOW IS A GROUNDING CLAIM. Widening one asserts that the cited document
+# supports the rule across the wider span. Do not widen a window to admit a
+# filing year; read that year's source and add its citation. A citation whose
+# reference or url names a year may not reach outside it, and a gate enforces
+# that -- it is the exact act that produced the retired 2024 mirror, whose 41
+# year-dated citations were rewritten by string substitution from this file and
+# are not carried forward.
+#
+# EVERY SPAN HERE IS 2025 BECAUSE 2025 IS WHAT WAS REVIEWED. The statutory
+# citations are almost certainly stable across neighbouring years, but these
+# citations carry free-text references rather than registry legal-reference ids,
+# so no gate can check a wider span and an author's confidence is not evidence.
+# Converting them to legal-reference ids is what would let the provision-window
+# gate widen them honestly.
+
+[[profiles]]
+category = "cuotas_colegiales"
+display_label = "categories.registry.cuotas_colegiales.label"
+iva_hint = "exempt_or_non_subject"
+
+[profiles.proportionality]
+kind = "full_deductible"
+notes = "categories.registry.cuotas_colegiales.notes"
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2025"
+locator = "Rendimientos de actividades económicas, gastos fiscalmente deducibles"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+quote = ""
+grounding = "source_not_bundled"
+grounding_reason = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus."
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[profiles.proportionality.citations]]
+# Cuota colegial obligatoria: gasto de la actividad por la remision del art. 28.1 a las normas del Impuesto sobre Sociedades. Clasificacion revisada por agente contra el corpus consolidado; el limite de 500 euros del art. 19.2.d es de rendimientos del TRABAJO y no alcanza a una actividad economica, que es por lo que esta categoria es full_deductible.
+source = "ley_irpf"
+reference = "Ley 35/2006"
+locator = "art. 28.1"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "El rendimiento neto de las actividades económicas se determinará según las normas del Impuesto sobre Sociedades"
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+[[profiles]]
+category = "cuotas_autonomos_ss"
+display_label = "categories.registry.cuotas_reta"
+iva_hint = "exempt_or_non_subject"
+
+[profiles.proportionality]
+kind = "full_deductible"
+notes = "categories.registry.cuotas_autonomos_ss.notes"
+
+[[profiles.proportionality.citations]]
+source = "aeat_help"
+reference = "AEAT ayuda Renta 2025"
+locator = "Cotizaciones al RETA"
+url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-ayuda-presentacion/irpf-2025/7-cumplimentacion-irpf/7_4-rendimientos-actividades-economicas/7_4_2-regimen-estimacion-directa/7_4_2_3-gastos-fiscalmente-deducibles/cotizaciones-reta.html"
+quote = ""
+grounding = "source_not_bundled"
+grounding_reason = "La ayuda del portal de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de ella ningún texto verbatim ni verificarse por contención contra el corpus."
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2025"
+locator = "Seguridad Social del titular"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+quote = ""
+grounding = "source_not_bundled"
+grounding_reason = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus."
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[profiles.proportionality.citations]]
+# Cotizaciones del titular al RETA: gasto de la actividad por la remision del art. 28.1 a las normas del Impuesto sobre Sociedades. Clasificacion revisada por agente contra el corpus consolidado.
+source = "ley_irpf"
+reference = "Ley 35/2006"
+locator = "art. 28.1"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "El rendimiento neto de las actividades económicas se determinará según las normas del Impuesto sobre Sociedades"
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+[[profiles]]
+category = "mutualidad_alternativa"
+display_label = "categories.registry.mutualidad_alternativa.label"
+iva_hint = "exempt_or_non_subject"
+
+[profiles.proportionality]
+kind = "statutory_cap"
+statutory_cap_period = "year_per_person"
+notes = "categories.registry.mutualidad_alternativa.notes"
+
+# LIRPF art. 30.2.1a caps this premium at "la cuota maxima por contingencias
+# comunes que este establecida, EN CADA EJERCICIO ECONOMICO, en el citado
+# regimen especial" -- the figure is re-fixed every year by the cotizacion
+# orden, so it cannot be one constant. The registry previously carried a flat
+# 15000, which is not the figure for ANY ejercicio; every year below is higher,
+# so that constant under-stated the allowance and cost the taxpayer deduction.
+#
+# 2022-2025 are the amounts AEAT PRINTS in the Manual practico Renta for each
+# ejercicio, together with their arithmetic. 2026 has no Manual yet (it is
+# published in 2027) and is derived from Orden PJC/297/2026 art. 18.1 and
+# 18.2.a using AEAT's own method, which reproduces all four published years to
+# the cent.
+[[profiles.proportionality.statutory_cap_schedule]]
+# Manual practico Renta 2022: "14.057,40 euros [0,283 x (4.139,40 x 12)]"
+value = "14057.40"
+valid_from = 2022-01-01
+valid_to = 2022-12-31
+
+[[profiles.proportionality.statutory_cap_schedule]]
+# Manual practico Renta 2023: "15.266,72 euros [0,283 x (4.495,50 x 12)]"
+value = "15266.72"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[profiles.proportionality.statutory_cap_schedule]]
+# Manual practico Renta 2024: "16.030,82 euros [0,283 x (4.720,50 x 12)]"
+value = "16030.82"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[profiles.proportionality.statutory_cap_schedule]]
+# Manual practico Renta 2025: 16.672,66; cross-checked against BOE Orden
+# PJC/178/2025 art. 18.1 (base 4.909,50) and art. 18.2.a (28,30 %).
+value = "16672.66"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[profiles.proportionality.statutory_cap_schedule]]
+# Derived from BOE Orden PJC/297/2026 art. 18.1 (base 5.101,20) and art. 18.2.a
+# (28,30 %): 0,283 x (5.101,20 x 12) = 17.323,68. Not yet Manual-published.
+value = "17323.68"
+valid_from = 2026-01-01
+valid_to = 2026-12-31
+
+[[profiles.proportionality.citations]]
+source = "aeat_help"
+reference = "AEAT ayuda Renta 2025"
+locator = "Cotizaciones al RETA"
+url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-ayuda-presentacion/irpf-2025/7-cumplimentacion-irpf/7_4-rendimientos-actividades-economicas/7_4_2-regimen-estimacion-directa/7_4_2_3-gastos-fiscalmente-deducibles/cotizaciones-reta.html"
+quote = ""
+grounding = "source_not_bundled"
+grounding_reason = "La ayuda del portal de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de ella ningún texto verbatim ni verificarse por contención contra el corpus."
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2025"
+locator = "Seguridad Social del titular"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+quote = ""
+grounding = "source_not_bundled"
+grounding_reason = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus."
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[profiles.proportionality.citations]]
+# Mutualidad alternativa al RETA: el art. 30.2.1.a es la provision que establece tanto la deducibilidad como su limite anual, y es la que obliga a que el limite se declare por ejercicio en statutory_cap_schedule en lugar de como una constante.
+source = "ley_irpf"
+reference = "Ley 35/2006"
+locator = "art. 30.2.1.a"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "tendrán la consideración de gasto deducible las cantidades abonadas en virtud de contratos de seguro, concertados con mutualidades de previsión social por profesionales no integrados en el régimen especial de la Seguridad Social"
+legal_ref = "ley-35-2006:art-30"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+[[profiles]]
+category = "arrendamiento_local"
+display_label = "categories.registry.arrendamiento_local.label"
+iva_hint = "general"
+
+[profiles.proportionality]
+kind = "full_deductible"
+notes = "categories.registry.arrendamiento_local.notes"
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2025"
+locator = "Arrendamientos y cánones"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+quote = ""
+grounding = "source_not_bundled"
+grounding_reason = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus."
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[profiles.proportionality.citations]]
+source = "ley_irpf"
+reference = "Ley 35/2006"
+locator = "art. 28.1"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "El rendimiento neto de las actividades económicas se determinará según las normas del Impuesto sobre Sociedades"
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+
+[[profiles]]
+category = "arrendamiento_vivienda_afecto"
+display_label = "categories.registry.arrendamiento_vivienda_afecta"
+iva_hint = "exempt_or_non_subject"
+
+# The renter's parallel to amortizacion_vivienda_afecto / ibi_vivienda_afecto /
+# comunidad_vivienda_afecto: the same partially-affected-dwelling cost, borne
+# as rent instead of ownership. Deducts at the raw affectation ratio like
+# those three siblings -- no statutory_multiplier -- grounded on the general
+# art. 29.2 partial-affectation doctrine plus art. 28.1, never art. 30.2.5.b
+# (regla 5.a b), which is the suministros-only carve-out and does not
+# enumerate rent.
+[profiles.proportionality]
+kind = "usage_ratio_home_area"
+notes = "categories.registry.arrendamiento_vivienda_afecto.notes"
+
+[[profiles.proportionality.citations]]
+source = "ley_irpf"
+reference = "Ley 35/2006"
+locator = "art. 29.2 y art. 28.1 (afectación parcial de la vivienda arrendada)"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "Cuando se trate de elementos patrimoniales que sirvan sólo parcialmente al objeto de la actividad económica, la afectación se entenderá limitada a aquella parte de los mismos que realmente se utilice en la actividad de que se trate."
+legal_ref = "ley-35-2006:art-29"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2025"
+locator = "Vivienda parcialmente afecta - arrendamiento"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+quote = ""
+grounding = "source_not_bundled"
+grounding_reason = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus."
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[profiles]]
+category = "ibi_local_afecto"
+display_label = "categories.registry.ibi_local_afecto.label"
+iva_hint = "exempt_or_non_subject"
+
+[profiles.proportionality]
+kind = "full_deductible"
+notes = "categories.registry.ibi_local_afecto.notes"
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2025"
+locator = "Tributos fiscalmente deducibles"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+quote = ""
+grounding = "source_not_bundled"
+grounding_reason = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus."
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[profiles.proportionality.citations]]
+source = "ley_irpf"
+reference = "Ley 35/2006"
+locator = "art. 14 LIS por remisión"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "El rendimiento neto de las actividades económicas se determinará según las normas del Impuesto sobre Sociedades"
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+
+[[profiles]]
+category = "suministros_local_afecto"
+display_label = "categories.registry.suministros_local_afecto.label"
+iva_hint = "general"
+
+# Full deductibility, and the grounding is deliberately NOT the home-office
+# rule. The immovable property where the activity is carried on is an elemento
+# patrimonial afecto under art. 29.1.a), so its supply costs are ordinary
+# deductible expense under art. 28.1. The art. 30.2.5.a b) 30 % rule is a
+# restrictive carve-out for a vivienda habitual only partly given over to the
+# activity, and carries no statutory_multiplier here because it does not govern
+# a local used for the activity.
+[profiles.proportionality]
+kind = "full_deductible"
+notes = "categories.registry.suministros_local_afecto.notes"
+
+[[profiles.proportionality.citations]]
+source = "ley_irpf"
+reference = "Ley 35/2006"
+locator = "art. 29.1.a"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "a) Los bienes inmuebles en los que se desarrolla la actividad del contribuyente."
+legal_ref = "ley-35-2006:art-29"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+
+[[profiles.proportionality.citations]]
+source = "ley_irpf"
+reference = "Ley 35/2006"
+locator = "art. 28.1"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "El rendimiento neto de las actividades económicas se determinará según las normas del Impuesto sobre Sociedades"
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+
+[[profiles]]
+category = "suministros_home_office_luz"
+display_label = "categories.registry.home_office_luz"
+iva_hint = "general"
+
+[profiles.proportionality]
+kind = "usage_ratio_home_area"
+statutory_multiplier = "0.30"
+notes = "categories.registry.suministros_home_office_luz.notes"
+
+[[profiles.proportionality.citations]]
+source = "ley_irpf"
+reference = "Ley 35/2006"
+locator = "art. 30.2.5.b"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "b) En los casos en que el contribuyente afecte parcialmente su vivienda habitual al desarrollo de la actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, en el porcentaje resultante de aplicar el 30 por ciento a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior."
+legal_ref = "ley-35-2006:art-30"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2025"
+locator = "Vivienda parcialmente afecta"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+quote = ""
+grounding = "source_not_bundled"
+grounding_reason = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus."
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[profiles]]
+category = "suministros_home_office_agua"
+display_label = "categories.registry.home_office_agua"
+iva_hint = "general"
+
+[profiles.proportionality]
+kind = "usage_ratio_home_area"
+statutory_multiplier = "0.30"
+notes = "categories.registry.suministros_home_office_agua.notes"
+
+[[profiles.proportionality.citations]]
+source = "ley_irpf"
+reference = "Ley 35/2006"
+locator = "art. 30.2.5.b"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "b) En los casos en que el contribuyente afecte parcialmente su vivienda habitual al desarrollo de la actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, en el porcentaje resultante de aplicar el 30 por ciento a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior."
+legal_ref = "ley-35-2006:art-30"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2025"
+locator = "Vivienda parcialmente afecta"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+quote = ""
+grounding = "source_not_bundled"
+grounding_reason = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus."
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[profiles]]
+category = "suministros_home_office_gas"
+display_label = "categories.registry.home_office_gas"
+iva_hint = "general"
+
+[profiles.proportionality]
+kind = "usage_ratio_home_area"
+statutory_multiplier = "0.30"
+notes = "categories.registry.suministros_home_office_gas.notes"
+
+[[profiles.proportionality.citations]]
+source = "ley_irpf"
+reference = "Ley 35/2006"
+locator = "art. 30.2.5.b"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "b) En los casos en que el contribuyente afecte parcialmente su vivienda habitual al desarrollo de la actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, en el porcentaje resultante de aplicar el 30 por ciento a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior."
+legal_ref = "ley-35-2006:art-30"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2025"
+locator = "Vivienda parcialmente afecta"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+quote = ""
+grounding = "source_not_bundled"
+grounding_reason = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus."
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[profiles]]
+category = "suministros_home_office_internet"
+display_label = "categories.registry.home_office_internet"
+iva_hint = "general"
+
+[profiles.proportionality]
+kind = "usage_ratio_home_area"
+statutory_multiplier = "0.30"
+notes = "categories.registry.suministros_home_office_internet.notes"
+
+[[profiles.proportionality.citations]]
+source = "ley_irpf"
+reference = "Ley 35/2006"
+locator = "art. 30.2.5.b"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "b) En los casos en que el contribuyente afecte parcialmente su vivienda habitual al desarrollo de la actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, en el porcentaje resultante de aplicar el 30 por ciento a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior."
+legal_ref = "ley-35-2006:art-30"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2025"
+locator = "Vivienda parcialmente afecta"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+quote = ""
+grounding = "source_not_bundled"
+grounding_reason = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus."
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[profiles]]
+category = "telefonia_movil"
+display_label = "categories.registry.telefonia_movil.label"
+iva_hint = "general"
+
+[profiles.proportionality]
+kind = "usage_ratio_personal"
+notes = "categories.registry.telefonia_movil.notes"
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2025"
+locator = "Afectación exclusiva del elemento patrimonial"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+quote = ""
+grounding = "source_not_bundled"
+grounding_reason = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus."
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[profiles.proportionality.citations]]
+source = "reglamento_irpf"
+reference = "Reglamento IRPF"
+locator = "art. 22"
+url = "https://www.boe.es/eli/es/rd/2007/03/30/439/con"
+quote = "Cuando se trate de elementos patrimoniales que sirvan sólo parcialmente al objeto de la actividad, la afectación se entenderá limitada a aquella parte de los mismos que realmente se utilice en la actividad de que se trate. En este sentido, sólo se considerarán afectadas aquellas partes de los elementos patrimoniales que sean susceptibles de un aprovechamiento separado e independiente del resto. En ningún caso serán susceptibles de afectación parcial elementos patrimoniales indivisibles."
+legal_ref = "rd-439-2007:art-22"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+
+[[profiles]]
+category = "telefonia_fija"
+display_label = "categories.registry.telefonia_fija.label"
+iva_hint = "general"
+
+# Regrounded on the same suministros rule as its statutory sibling
+# suministros_home_office_internet: LIRPF art. 30.2.5.b names "agua, gas,
+# electricidad, telefonía e Internet" together as the one enumerated
+# suministros list, so a fixed telephone line at the taxpayer's partially
+# affected vivienda habitual carries the SAME 30 % statutory_multiplier on
+# top of the home-area ratio -- never art. 28.1 alone, which is the general
+# deductibility article and does not itself establish the 30 % carve-out.
+[profiles.proportionality]
+kind = "usage_ratio_home_area"
+statutory_multiplier = "0.30"
+notes = "categories.registry.telefonia_fija.notes"
+
+[[profiles.proportionality.citations]]
+source = "ley_irpf"
+reference = "Ley 35/2006"
+locator = "art. 30.2.5.b"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "b) En los casos en que el contribuyente afecte parcialmente su vivienda habitual al desarrollo de la actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, en el porcentaje resultante de aplicar el 30 por ciento a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior."
+legal_ref = "ley-35-2006:art-30"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2025"
+locator = "Vivienda parcialmente afecta"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+quote = ""
+grounding = "source_not_bundled"
+grounding_reason = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus."
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[profiles]]
+category = "material_oficina"
+display_label = "categories.registry.material_oficina.label"
+iva_hint = "general"
+
+[profiles.proportionality]
+kind = "full_deductible"
+notes = "categories.registry.material_oficina.notes"
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2025"
+locator = "Rendimientos de actividades económicas, gastos fiscalmente deducibles"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+quote = ""
+grounding = "source_not_bundled"
+grounding_reason = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus."
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[profiles.proportionality.citations]]
+source = "ley_irpf"
+reference = "Ley 35/2006"
+locator = "art. 28.1"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "El rendimiento neto de las actividades económicas se determinará según las normas del Impuesto sobre Sociedades"
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+
+[[profiles]]
+category = "software_suscripcion"
+display_label = "categories.registry.software_suscripcion.label"
+iva_hint = "general"
+
+[profiles.proportionality]
+kind = "full_deductible"
+notes = "categories.registry.software_suscripcion.notes"
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2025"
+locator = "Rendimientos de actividades económicas, gastos fiscalmente deducibles"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+quote = ""
+grounding = "source_not_bundled"
+grounding_reason = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus."
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[profiles.proportionality.citations]]
+source = "ley_irpf"
+reference = "Ley 35/2006"
+locator = "art. 28.1"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "El rendimiento neto de las actividades económicas se determinará según las normas del Impuesto sobre Sociedades"
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+
+[[profiles]]
+category = "hardware_amortizable"
+display_label = "categories.registry.hardware_amortizable.label"
+iva_hint = "general"
+
+[profiles.proportionality]
+kind = "full_deductible"
+notes = "categories.registry.hardware_amortizable.notes"
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2025"
+locator = "Amortizaciones del inmovilizado"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+quote = ""
+grounding = "source_not_bundled"
+grounding_reason = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus."
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[profiles.proportionality.citations]]
+source = "ley_irpf"
+reference = "Ley 35/2006"
+locator = "art. 28.1"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "El rendimiento neto de las actividades económicas se determinará según las normas del Impuesto sobre Sociedades"
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+
+[[profiles]]
+category = "mobiliario_amortizable"
+display_label = "categories.registry.mobiliario_amortizable.label"
+iva_hint = "general"
+
+[profiles.proportionality]
+kind = "full_deductible"
+notes = "categories.registry.mobiliario_amortizable.notes"
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2025"
+locator = "Amortizaciones del inmovilizado"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+quote = ""
+grounding = "source_not_bundled"
+grounding_reason = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus."
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[profiles.proportionality.citations]]
+source = "ley_irpf"
+reference = "Ley 35/2006"
+locator = "art. 28.1"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "El rendimiento neto de las actividades económicas se determinará según las normas del Impuesto sobre Sociedades"
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+
+[[profiles]]
+category = "reparaciones_conservacion"
+display_label = "categories.registry.reparaciones_conservacion.label"
+iva_hint = "general"
+
+[profiles.proportionality]
+kind = "full_deductible"
+notes = "categories.registry.reparaciones_conservacion.notes"
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2025"
+locator = "Rendimientos de actividades económicas, gastos fiscalmente deducibles"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+quote = ""
+grounding = "source_not_bundled"
+grounding_reason = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus."
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[profiles.proportionality.citations]]
+source = "ley_irpf"
+reference = "Ley 35/2006"
+locator = "art. 28.1"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "El rendimiento neto de las actividades económicas se determinará según las normas del Impuesto sobre Sociedades"
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+
+[[profiles]]
+category = "vehiculo_combustible"
+display_label = "categories.registry.vehiculo_combustible.label"
+iva_hint = "general"
+
+[profiles.proportionality]
+kind = "usage_ratio_personal"
+notes = "categories.registry.vehiculo_combustible.notes"
+
+[[profiles.proportionality.citations]]
+source = "reglamento_irpf"
+reference = "Reglamento IRPF"
+locator = "art. 22"
+url = "https://www.boe.es/eli/es/rd/2007/03/30/439/con"
+quote = "Cuando se trate de elementos patrimoniales que sirvan sólo parcialmente al objeto de la actividad, la afectación se entenderá limitada a aquella parte de los mismos que realmente se utilice en la actividad de que se trate. En este sentido, sólo se considerarán afectadas aquellas partes de los elementos patrimoniales que sean susceptibles de un aprovechamiento separado e independiente del resto. En ningún caso serán susceptibles de afectación parcial elementos patrimoniales indivisibles."
+legal_ref = "rd-439-2007:art-22"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2025"
+locator = "Vehículos y afectación exclusiva"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+quote = ""
+grounding = "source_not_bundled"
+grounding_reason = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus."
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[profiles]]
+category = "vehiculo_mantenimiento"
+display_label = "categories.registry.vehiculo_mantenimiento.label"
+iva_hint = "general"
+
+[profiles.proportionality]
+kind = "usage_ratio_personal"
+notes = "categories.registry.vehiculo_mantenimiento.notes"
+
+[[profiles.proportionality.citations]]
+source = "reglamento_irpf"
+reference = "Reglamento IRPF"
+locator = "art. 22"
+url = "https://www.boe.es/eli/es/rd/2007/03/30/439/con"
+quote = "Cuando se trate de elementos patrimoniales que sirvan sólo parcialmente al objeto de la actividad, la afectación se entenderá limitada a aquella parte de los mismos que realmente se utilice en la actividad de que se trate. En este sentido, sólo se considerarán afectadas aquellas partes de los elementos patrimoniales que sean susceptibles de un aprovechamiento separado e independiente del resto. En ningún caso serán susceptibles de afectación parcial elementos patrimoniales indivisibles."
+legal_ref = "rd-439-2007:art-22"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2025"
+locator = "Vehículos y afectación exclusiva"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+quote = ""
+grounding = "source_not_bundled"
+grounding_reason = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus."
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[profiles]]
+category = "vehiculo_seguro"
+display_label = "categories.registry.vehiculo_seguro.label"
+iva_hint = "exempt_or_non_subject"
+
+[profiles.proportionality]
+kind = "usage_ratio_personal"
+notes = "categories.registry.vehiculo_seguro.notes"
+
+[[profiles.proportionality.citations]]
+source = "reglamento_irpf"
+reference = "Reglamento IRPF"
+locator = "art. 22"
+url = "https://www.boe.es/eli/es/rd/2007/03/30/439/con"
+quote = "Cuando se trate de elementos patrimoniales que sirvan sólo parcialmente al objeto de la actividad, la afectación se entenderá limitada a aquella parte de los mismos que realmente se utilice en la actividad de que se trate. En este sentido, sólo se considerarán afectadas aquellas partes de los elementos patrimoniales que sean susceptibles de un aprovechamiento separado e independiente del resto. En ningún caso serán susceptibles de afectación parcial elementos patrimoniales indivisibles."
+legal_ref = "rd-439-2007:art-22"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2025"
+locator = "Vehículos y afectación exclusiva"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+quote = ""
+grounding = "source_not_bundled"
+grounding_reason = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus."
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[profiles]]
+category = "vehiculo_peaje"
+display_label = "categories.registry.vehiculo_peaje.label"
+iva_hint = "general"
+
+[profiles.proportionality]
+kind = "usage_ratio_personal"
+notes = "categories.registry.vehiculo_peaje.notes"
+
+[[profiles.proportionality.citations]]
+source = "reglamento_irpf"
+reference = "Reglamento IRPF"
+locator = "art. 22"
+url = "https://www.boe.es/eli/es/rd/2007/03/30/439/con"
+quote = "Cuando se trate de elementos patrimoniales que sirvan sólo parcialmente al objeto de la actividad, la afectación se entenderá limitada a aquella parte de los mismos que realmente se utilice en la actividad de que se trate. En este sentido, sólo se considerarán afectadas aquellas partes de los elementos patrimoniales que sean susceptibles de un aprovechamiento separado e independiente del resto. En ningún caso serán susceptibles de afectación parcial elementos patrimoniales indivisibles."
+legal_ref = "rd-439-2007:art-22"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2025"
+locator = "Vehículos y afectación exclusiva"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+quote = ""
+grounding = "source_not_bundled"
+grounding_reason = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus."
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[profiles]]
+category = "vehiculo_parking"
+display_label = "categories.registry.vehiculo_parking.label"
+iva_hint = "general"
+
+[profiles.proportionality]
+kind = "usage_ratio_personal"
+notes = "categories.registry.vehiculo_parking.notes"
+
+[[profiles.proportionality.citations]]
+source = "reglamento_irpf"
+reference = "Reglamento IRPF"
+locator = "art. 22"
+url = "https://www.boe.es/eli/es/rd/2007/03/30/439/con"
+quote = "Cuando se trate de elementos patrimoniales que sirvan sólo parcialmente al objeto de la actividad, la afectación se entenderá limitada a aquella parte de los mismos que realmente se utilice en la actividad de que se trate. En este sentido, sólo se considerarán afectadas aquellas partes de los elementos patrimoniales que sean susceptibles de un aprovechamiento separado e independiente del resto. En ningún caso serán susceptibles de afectación parcial elementos patrimoniales indivisibles."
+legal_ref = "rd-439-2007:art-22"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2025"
+locator = "Vehículos y afectación exclusiva"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+quote = ""
+grounding = "source_not_bundled"
+grounding_reason = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus."
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[profiles]]
+category = "manutencion_dietas_nacional"
+display_label = "categories.registry.manutencion_nacional"
+iva_hint = "exempt_or_non_subject"
+
+[profiles.proportionality]
+kind = "statutory_cap"
+notes = "categories.registry.manutencion_dietas_nacional.notes"
+
+[[profiles.proportionality.statutory_cap_variants]]
+id = "sin-pernocta"
+label = "categories.registry.manutencion_dietas_nacional.statutory_cap_variants.sin-pernocta.label"
+statutory_cap_eur_per_day = "26.67"
+
+[[profiles.proportionality.statutory_cap_variants]]
+id = "con-pernocta"
+label = "categories.registry.manutencion_dietas_nacional.statutory_cap_variants.con-pernocta.label"
+statutory_cap_eur_per_day = "53.34"
+
+[[profiles.proportionality.citations]]
+source = "ley_irpf"
+reference = "Ley 6/2017 / Ley IRPF"
+locator = "art. 30.2.5.c"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "c) Los gastos de manutención del propio contribuyente incurridos en el desarrollo de la actividad económica, siempre que se produzcan en establecimientos de restauración y hostelería y se abonen utilizando cualquier medio electrónico de pago, con los límites cuantitativos establecidos reglamentariamente para las dietas y asignaciones para gastos normales de manutención de los trabajadores."
+legal_ref = "ley-35-2006:art-30"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+
+[[profiles.proportionality.citations]]
+source = "reglamento_irpf"
+reference = "Reglamento IRPF"
+locator = "art. 9.A.3.a"
+url = "https://www.boe.es/eli/es/rd/2007/03/30/439/con"
+quote = "Cuando no se haya pernoctado en municipio distinto del lugar de trabajo habitual y del que constituya la residencia del perceptor, las asignaciones para gastos de manutención que no excedan de 26,67 ó 48,08 euros diarios, según se trate de desplazamiento dentro del territorio español o al extranjero, respectivamente."
+legal_ref = "rd-439-2007:art-9"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+
+[[profiles]]
+category = "manutencion_dietas_extranjero"
+display_label = "categories.registry.manutencion_extranjero"
+iva_hint = "exempt_or_non_subject"
+
+[profiles.proportionality]
+kind = "statutory_cap"
+notes = "categories.registry.manutencion_dietas_extranjero.notes"
+
+[[profiles.proportionality.statutory_cap_variants]]
+id = "sin-pernocta"
+label = "categories.registry.manutencion_dietas_extranjero.statutory_cap_variants.sin-pernocta.label"
+statutory_cap_eur_per_day = "48.08"
+
+[[profiles.proportionality.statutory_cap_variants]]
+id = "con-pernocta"
+label = "categories.registry.manutencion_dietas_extranjero.statutory_cap_variants.con-pernocta.label"
+statutory_cap_eur_per_day = "91.35"
+
+[[profiles.proportionality.citations]]
+source = "ley_irpf"
+reference = "Ley 6/2017 / Ley IRPF"
+locator = "art. 30.2.5.c"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "c) Los gastos de manutención del propio contribuyente incurridos en el desarrollo de la actividad económica, siempre que se produzcan en establecimientos de restauración y hostelería y se abonen utilizando cualquier medio electrónico de pago, con los límites cuantitativos establecidos reglamentariamente para las dietas y asignaciones para gastos normales de manutención de los trabajadores."
+legal_ref = "ley-35-2006:art-30"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+
+[[profiles.proportionality.citations]]
+source = "reglamento_irpf"
+reference = "Reglamento IRPF"
+locator = "art. 9.A.3.a"
+url = "https://www.boe.es/eli/es/rd/2007/03/30/439/con"
+quote = "Cuando no se haya pernoctado en municipio distinto del lugar de trabajo habitual y del que constituya la residencia del perceptor, las asignaciones para gastos de manutención que no excedan de 26,67 ó 48,08 euros diarios, según se trate de desplazamiento dentro del territorio español o al extranjero, respectivamente."
+legal_ref = "rd-439-2007:art-9"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+
+[[profiles]]
+category = "asesoria_fiscal"
+display_label = "categories.registry.asesoria_fiscal.label"
+iva_hint = "general"
+
+[profiles.proportionality]
+kind = "full_deductible"
+notes = "categories.registry.asesoria_fiscal.notes"
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2025"
+locator = "Servicios de profesionales independientes"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+quote = ""
+grounding = "source_not_bundled"
+grounding_reason = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus."
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[profiles.proportionality.citations]]
+source = "ley_irpf"
+reference = "Ley 35/2006"
+locator = "art. 28.1"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "El rendimiento neto de las actividades económicas se determinará según las normas del Impuesto sobre Sociedades"
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+
+[[profiles]]
+category = "asesoria_juridica"
+display_label = "categories.registry.asesoria_juridica.label"
+iva_hint = "general"
+
+[profiles.proportionality]
+kind = "full_deductible"
+notes = "categories.registry.asesoria_juridica.notes"
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2025"
+locator = "Servicios de profesionales independientes"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+quote = ""
+grounding = "source_not_bundled"
+grounding_reason = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus."
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[profiles.proportionality.citations]]
+source = "ley_irpf"
+reference = "Ley 35/2006"
+locator = "art. 28.1"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "El rendimiento neto de las actividades económicas se determinará según las normas del Impuesto sobre Sociedades"
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+
+[[profiles]]
+category = "asesoria_contable"
+display_label = "categories.registry.asesoria_contable.label"
+iva_hint = "general"
+
+[profiles.proportionality]
+kind = "full_deductible"
+notes = "categories.registry.asesoria_contable.notes"
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2025"
+locator = "Servicios de profesionales independientes"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+quote = ""
+grounding = "source_not_bundled"
+grounding_reason = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus."
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[profiles.proportionality.citations]]
+source = "ley_irpf"
+reference = "Ley 35/2006"
+locator = "art. 28.1"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "El rendimiento neto de las actividades económicas se determinará según las normas del Impuesto sobre Sociedades"
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+
+[[profiles]]
+category = "publicidad_marketing"
+display_label = "categories.registry.publicidad_marketing.label"
+iva_hint = "general"
+
+[profiles.proportionality]
+kind = "full_deductible"
+notes = "categories.registry.publicidad_marketing.notes"
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2025"
+locator = "Otros servicios exteriores"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+quote = ""
+grounding = "source_not_bundled"
+grounding_reason = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus."
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[profiles.proportionality.citations]]
+source = "ley_irpf"
+reference = "Ley 35/2006"
+locator = "art. 28.1"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "El rendimiento neto de las actividades económicas se determinará según las normas del Impuesto sobre Sociedades"
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+
+[[profiles]]
+category = "formacion_profesional"
+display_label = "categories.registry.formacion_profesional.label"
+iva_hint = "general"
+
+[profiles.proportionality]
+kind = "full_deductible"
+notes = "categories.registry.formacion_profesional.notes"
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2025"
+locator = "Otros servicios exteriores"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+quote = ""
+grounding = "source_not_bundled"
+grounding_reason = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus."
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[profiles.proportionality.citations]]
+source = "ley_irpf"
+reference = "Ley 35/2006"
+locator = "art. 28.1"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "El rendimiento neto de las actividades económicas se determinará según las normas del Impuesto sobre Sociedades"
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+
+[[profiles]]
+category = "viajes_transporte"
+display_label = "categories.registry.viajes_transporte.label"
+iva_hint = "general"
+
+[profiles.proportionality]
+kind = "full_deductible"
+notes = "categories.registry.viajes_transporte.notes"
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2025"
+locator = "Otros servicios exteriores"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+quote = ""
+grounding = "source_not_bundled"
+grounding_reason = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus."
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[profiles.proportionality.citations]]
+source = "ley_irpf"
+reference = "Ley 35/2006"
+locator = "art. 28.1"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "El rendimiento neto de las actividades económicas se determinará según las normas del Impuesto sobre Sociedades"
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+
+[[profiles]]
+category = "viajes_alojamiento"
+display_label = "categories.registry.viajes_alojamiento.label"
+iva_hint = "general"
+
+[profiles.proportionality]
+kind = "full_deductible"
+notes = "categories.registry.viajes_alojamiento.notes"
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2025"
+locator = "Otros servicios exteriores"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+quote = ""
+grounding = "source_not_bundled"
+grounding_reason = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus."
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[profiles.proportionality.citations]]
+source = "ley_irpf"
+reference = "Ley 35/2006"
+locator = "art. 28.1"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "El rendimiento neto de las actividades económicas se determinará según las normas del Impuesto sobre Sociedades"
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+
+[[profiles]]
+category = "seguros_responsabilidad_civil"
+display_label = "categories.registry.seguros_rc"
+iva_hint = "exempt_or_non_subject"
+
+[profiles.proportionality]
+kind = "full_deductible"
+notes = "categories.registry.seguros_responsabilidad_civil.notes"
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2025"
+locator = "Rendimientos de actividades económicas, gastos fiscalmente deducibles"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+quote = ""
+grounding = "source_not_bundled"
+grounding_reason = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus."
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[profiles.proportionality.citations]]
+source = "ley_irpf"
+reference = "Ley 35/2006"
+locator = "art. 28.1"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "El rendimiento neto de las actividades económicas se determinará según las normas del Impuesto sobre Sociedades"
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+
+[[profiles]]
+category = "seguros_salud_autonomo"
+display_label = "categories.registry.seguros_salud"
+iva_hint = "exempt_or_non_subject"
+
+[profiles.proportionality]
+kind = "statutory_cap"
+statutory_cap_period = "year_per_person"
+notes = "categories.registry.seguros_salud_autonomo.notes"
+
+# LIRPF art. 30.2.5.a states TWO limits, not one: "El limite maximo de deduccion
+# sera de 500 euros por cada una de las personas senaladas anteriormente o de
+# 1.500 euros por cada una de ellas con discapacidad." Only the 500 shipped, so the
+# higher limb was unavailable to exactly the population it exists to protect, and
+# the direction of that error is over-payment: the filer deducts less than the law
+# allows, the return is valid, and nothing warns.
+#
+# Both figures are literals in the article and neither is year-referenced, so these
+# are variants rather than a dated schedule. RIRPF art. 72 fixes who qualifies:
+# "tendran la consideracion de persona con discapacidad aquellos contribuyentes con
+# un grado de minusvalia igual o superior al 33 por ciento".
+[[profiles.proportionality.statutory_cap_variants]]
+id = "general"
+label = "categories.registry.seguros_salud_autonomo.statutory_cap_variants.general.label"
+statutory_cap_eur = "500"
+
+[[profiles.proportionality.statutory_cap_variants]]
+id = "discapacidad"
+label = "categories.registry.seguros_salud_autonomo.statutory_cap_variants.discapacidad.label"
+statutory_cap_eur = "1500"
+
+[[profiles.proportionality.citations]]
+source = "ley_irpf"
+reference = "Ley 35/2006"
+locator = "art. 30.2.5.a"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "a) Las primas de seguro de enfermedad satisfechas por el contribuyente en la parte correspondiente a su propia cobertura y a la de su cónyuge e hijos menores de veinticinco años que convivan con él. El límite máximo de deducción será de 500 euros por cada una de las personas señaladas anteriormente o de 1.500 euros por cada una de ellas con discapacidad."
+legal_ref = "ley-35-2006:art-30"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2025"
+locator = "Primas de seguro de enfermedad"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+quote = ""
+grounding = "source_not_bundled"
+grounding_reason = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus."
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[profiles]]
+category = "gastos_bancarios"
+display_label = "categories.registry.gastos_bancarios.label"
+iva_hint = "exempt_or_non_subject"
+
+[profiles.proportionality]
+kind = "full_deductible"
+notes = "categories.registry.gastos_bancarios.notes"
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2025"
+locator = "Gastos financieros y bancarios"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+quote = ""
+grounding = "source_not_bundled"
+grounding_reason = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus."
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[profiles.proportionality.citations]]
+source = "ley_irpf"
+reference = "Ley 35/2006"
+locator = "art. 28.1"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "El rendimiento neto de las actividades económicas se determinará según las normas del Impuesto sobre Sociedades"
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+
+[[profiles]]
+category = "gastos_financieros"
+display_label = "categories.registry.gastos_financieros.label"
+iva_hint = "exempt_or_non_subject"
+
+[profiles.proportionality]
+kind = "full_deductible"
+notes = "categories.registry.gastos_financieros.notes"
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2025"
+locator = "Gastos financieros y bancarios"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+quote = ""
+grounding = "source_not_bundled"
+grounding_reason = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus."
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[profiles.proportionality.citations]]
+source = "ley_irpf"
+reference = "Ley 35/2006"
+locator = "art. 28.1"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "El rendimiento neto de las actividades económicas se determinará según las normas del Impuesto sobre Sociedades"
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+
+[[profiles]]
+category = "suministros_cliente_directos"
+display_label = "categories.registry.suministros_cliente_directos.label"
+iva_hint = "general"
+
+[profiles.proportionality]
+kind = "full_deductible"
+notes = "categories.registry.suministros_cliente_directos.notes"
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2025"
+locator = "Rendimientos de actividades económicas, gastos fiscalmente deducibles"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+quote = ""
+grounding = "source_not_bundled"
+grounding_reason = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus."
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[profiles.proportionality.citations]]
+source = "ley_irpf"
+reference = "Ley 35/2006"
+locator = "art. 28.1"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "El rendimiento neto de las actividades económicas se determinará según las normas del Impuesto sobre Sociedades"
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+
+[[profiles]]
+category = "subcontratacion"
+display_label = "categories.registry.subcontratacion.label"
+iva_hint = "general"
+
+[profiles.proportionality]
+kind = "full_deductible"
+notes = "categories.registry.subcontratacion.notes"
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2025"
+locator = "Servicios de profesionales independientes"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+quote = ""
+grounding = "source_not_bundled"
+grounding_reason = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus."
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[profiles.proportionality.citations]]
+source = "ley_irpf"
+reference = "Ley 35/2006"
+locator = "art. 28.1"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "El rendimiento neto de las actividades económicas se determinará según las normas del Impuesto sobre Sociedades"
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+
+[[profiles]]
+category = "tributos_fiscalmente_deducibles"
+display_label = "categories.registry.tributos_deducibles"
+iva_hint = "exempt_or_non_subject"
+
+[profiles.proportionality]
+kind = "full_deductible"
+notes = "categories.registry.tributos_fiscalmente_deducibles.notes"
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2025"
+locator = "Tributos fiscalmente deducibles"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+quote = ""
+grounding = "source_not_bundled"
+grounding_reason = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus."
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[profiles.proportionality.citations]]
+source = "ley_irpf"
+reference = "Ley 35/2006"
+locator = "art. 14 LIS por remisión"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "El rendimiento neto de las actividades económicas se determinará según las normas del Impuesto sobre Sociedades"
+legal_ref = "ley-35-2006:art-28"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+
+[[profiles]]
+category = "amortizacion_vivienda_afecto"
+display_label = "categories.registry.amortizacion_vivienda_afecto.label"
+iva_hint = "exempt_or_non_subject"
+
+[profiles.proportionality]
+kind = "usage_ratio_home_area"
+notes = "categories.registry.amortizacion_vivienda_afecto.notes"
+
+[[profiles.proportionality.citations]]
+source = "ley_irpf"
+reference = "Ley 35/2006"
+locator = "art. 29.2 y art. 28.1 (amortización de la vivienda parcialmente afecta)"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "Cuando se trate de elementos patrimoniales que sirvan sólo parcialmente al objeto de la actividad económica, la afectación se entenderá limitada a aquella parte de los mismos que realmente se utilice en la actividad de que se trate."
+legal_ref = "ley-35-2006:art-29"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2025"
+locator = "Vivienda parcialmente afecta - amortización"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+quote = ""
+grounding = "source_not_bundled"
+grounding_reason = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus."
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[profiles]]
+category = "ibi_vivienda_afecto"
+display_label = "categories.registry.ibi_vivienda_afecto.label"
+iva_hint = "exempt_or_non_subject"
+
+[profiles.proportionality]
+kind = "usage_ratio_home_area"
+notes = "categories.registry.ibi_vivienda_afecto.notes"
+
+[[profiles.proportionality.citations]]
+source = "ley_irpf"
+reference = "Ley 35/2006"
+locator = "art. 29.2 y art. 28.1 (tributos no estatales de la vivienda parcialmente afecta)"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "Cuando se trate de elementos patrimoniales que sirvan sólo parcialmente al objeto de la actividad económica, la afectación se entenderá limitada a aquella parte de los mismos que realmente se utilice en la actividad de que se trate."
+legal_ref = "ley-35-2006:art-29"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2025"
+locator = "Vivienda parcialmente afecta - IBI"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+quote = ""
+grounding = "source_not_bundled"
+grounding_reason = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus."
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[profiles]]
+category = "comunidad_vivienda_afecto"
+display_label = "categories.registry.comunidad_vivienda_afecto.label"
+iva_hint = "exempt_or_non_subject"
+
+[profiles.proportionality]
+kind = "usage_ratio_home_area"
+notes = "categories.registry.comunidad_vivienda_afecto.notes"
+
+[[profiles.proportionality.citations]]
+source = "ley_irpf"
+reference = "Ley 35/2006"
+locator = "art. 29.2 y art. 28.1 (gastos de titularidad de la vivienda parcialmente afecta)"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "Cuando se trate de elementos patrimoniales que sirvan sólo parcialmente al objeto de la actividad económica, la afectación se entenderá limitada a aquella parte de los mismos que realmente se utilice en la actividad de que se trate."
+legal_ref = "ley-35-2006:art-29"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2025"
+locator = "Vivienda parcialmente afecta - gastos de comunidad"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
+quote = ""
+grounding = "source_not_bundled"
+grounding_reason = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus."
+valid_from = 2025-01-01
+valid_to = 2025-12-31

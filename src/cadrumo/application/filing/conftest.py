@@ -90,7 +90,7 @@ def _reset_preserving_the_profile_record(repository: SecureObjectRepository) -> 
     per-test mutable state. A test that MUTATES the record still has to restore
     it, exactly as it would for those.
     """
-    engine = repository._engine
+    engine = repository.engine
     with engine.begin() as connection:
         connection.execute(
             sa_text("DELETE FROM secure_objects WHERE namespace != :keep"),

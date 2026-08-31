@@ -167,7 +167,7 @@ def test_register_outer_secure_schema_matches_the_v2_document(tmp_path: Path) ->
 
     from ....persistence.storage.sql.session import session_scope
     from ...storage import PROFILE_PRORRATA_REGISTER_NAMESPACE, SECURE_OBJECT_SCHEMA_VERSION_V2
-    from ...storage.crypto import decrypt_secure_object_payload, secure_object_payload_aad
+    from ...storage.crypto.encrypted_columns import decrypt_secure_object_payload, secure_object_payload_aad
     from ...storage.sql import SecureObjectRow
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="f9d6d231-3774-48bb-a542-0a4bb1d1f5a6") as profile:
@@ -198,7 +198,7 @@ def test_register_outer_v1_row_refuses_without_a_tolerant_read(tmp_path: Path) -
 
     from ....persistence.storage.sql.session import session_scope
     from ...storage import PROFILE_PRORRATA_REGISTER_NAMESPACE
-    from ...storage.crypto import (
+    from ...storage.crypto.encrypted_columns import (
         decrypt_secure_object_payload,
         encrypt_secure_object_payload,
         secure_object_payload_aad,

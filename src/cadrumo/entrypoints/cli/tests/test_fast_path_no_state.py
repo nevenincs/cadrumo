@@ -32,7 +32,7 @@ from ....core import PRODUCT_IDENTITY, StorageCategory, storage_location
 from ....core.bucket_pointer import pointer_path
 from ....core.directory_scan import iter_directory
 from ....tests.cli_runner import invoke_cached_cli
-from .sessionless_root_fixtures import _sessionless_root
+from ._sessionless_root_fixtures import _sessionless_root
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

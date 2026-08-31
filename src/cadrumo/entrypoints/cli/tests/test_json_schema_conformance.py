@@ -104,3 +104,36 @@ def test_no_result_schema_carries_a_bespoke_notice_field() -> None:
         + "; ".join(sorted(offenders))
         + ". Emit these on the envelope `notices` channel instead."
     )
+
+
+def test_every_parameter_annotation_is_a_deferred_target() -> None:
+    """A parameter's annotation is a deferred reference, never the type itself.
+
+    The JSON-type projection reads ``annotation.qualname``. A raw type has no
+    such attribute, so one spec written as ``ValueContract(int)`` did not
+    produce a wrong schema -- it raised AttributeError and took the whole
+    verb-input-schema build down with it. That build runs while projecting a
+    precondition refusal, so three ledger verbs authored this way turned every
+    refusal that reached the projection into an internal error.
+
+    Derived from the live graph rather than a list of the specs that were
+    wrong, so a spec added tomorrow is covered without anyone extending it.
+    """
+    from .._command_spec import DeferredTarget
+    from .._command_specs import COMMAND_GRAPH
+
+    specs = COMMAND_GRAPH.by_key()
+    assert len(specs) > 100, f"the command graph collapsed to {len(specs)} specs; this would pass vacuously"
+
+    offenders = [
+        f"{key}.{parameter.name}: {parameter.value.annotation!r}"
+        for key, spec in specs.items()
+        for parameter in getattr(spec, "parameters", ()) or ()
+        if getattr(parameter, "value", None) is not None
+        and parameter.value.annotation is not None
+        and not isinstance(parameter.value.annotation, DeferredTarget)
+    ]
+
+    assert offenders == [], "parameter annotations must be DeferredTarget references, not types: " + "; ".join(
+        sorted(offenders)
+    )

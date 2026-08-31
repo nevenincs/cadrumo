@@ -30,8 +30,14 @@ here, named and reasoned, rather than in a review note nobody re-reads:
   ``invoice_total_amount`` are drawn as the ``base_sum`` and
   ``invoice_total_sum`` facts. Not undrawn at all; drawn on the other axis.
 * SELECTOR FILTER KEYS -- ``iva_regime``, ``intracommunity_clave``,
-  ``is_rectification``, ``source_kind``. These choose WHICH rows a binding
-  consumes, on the selector, rather than being projected.
+  ``operation_clave``, ``is_rectification``, ``source_kind``. These choose
+  WHICH rows a binding consumes, on the selector, rather than being
+  projected. ``operation_clave`` carries M347's own clave de operacion (A-G,
+  disjoint from M349's ``intracommunity_clave`` vocabulary); the field exists
+  ahead of the row-producer binding family and grouping that will consume it
+  (a deferred build, see the tui-architecture modelo 347 contraparte binding
+  inventory reference), and is not yet projected as a row output under
+  either name.
 
 Everything else must be declared, or the modelo must have no export layout to
 lose it from.
@@ -44,28 +50,22 @@ from typing import Final, cast, get_args
 import pytest
 from pydantic import BaseModel
 
-from cadrumo.domain.calculations.registry.detail_record_bindings import (
+from .....core import Modelo
+from ..authority import bundled_authority
+from ..detail_record_bindings import (
     AtributionMemberObservation,
     Modelo720RowObservation,
     RefundOperationObservation,
     RelatedPartyOperationObservation,
-)
-from cadrumo.domain.calculations.registry.donativo_bindings import DonativoDonorObservation
-from cadrumo.domain.calculations.registry.invoice_bindings import InvoiceObservation
-from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
-
-from .....core import Modelo
-from ..authority import bundled_authority
-from ..detail_record_bindings import (
     _AtributionRowField,
     _ForeignAssetRowField,
     _RefundRowField,
     _RelatedPartyRowField,
 )
-from ..donativo_bindings import _DonativoRowField
+from ..donativo_bindings import DonativoDonorObservation, _DonativoRowField
 from ..errors import NoRevisionForPeriodError, RegistryValidationError
-from ..invoice_bindings import _InvoiceRowField
-from ..withholding_bindings import _WithholdingRowField
+from ..invoice_bindings import InvoiceObservation, _InvoiceRowField
+from ..withholding_bindings import WithholdingObservation, _WithholdingRowField
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -84,6 +84,7 @@ _NOT_A_DRAWABLE_COLUMN: Final[frozenset[str]] = frozenset(
         # selector filter keys
         "iva_regime",
         "intracommunity_clave",
+        "operation_clave",
         "is_rectification",
         "source_kind",
     },

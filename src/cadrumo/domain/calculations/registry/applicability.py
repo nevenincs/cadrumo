@@ -110,12 +110,6 @@ from ...deadlines import (
     TaxpayerProfile,
 )
 from ._applicability_labels import PAYER_FACT_INCOMPLETE_LABELS as _PAYER_FACT_INCOMPLETE_LABELS
-from .applicability_modelo202 import (
-    Modelo202Modality,
-    Modelo202ModalityVerdict,
-    derive_modelo_202_modality,
-    modelo_202_modality_from_inputs,
-)
 from .applicability_payer_facts import PayerFact, payer_fact_holds
 from .applicability_routes import TAX_ROUTE_FOR_ENTITY_TYPE as _TAX_ROUTE_FOR_ENTITY_TYPE
 from .applicability_routes import TaxRoute
@@ -319,7 +313,10 @@ class ModeloApplicabilityRule(BaseModel):
             if not profile.irpf_income_categories:
                 return _incomplete_applicability(
                     self.modelo,
-                    entity_type_declared=profile.entity_type is not None,
+                    # Reached only once the caller's own `profile.entity_type is
+                    # None` guard has already returned, so entity_type is
+                    # always declared by this point.
+                    entity_type_declared=True,
                 )
             if profile.irpf_income_categories.isdisjoint(self.required_income_categories):
                 return self._not_applicable()
@@ -398,8 +395,8 @@ class ModeloApplicabilityRule(BaseModel):
 def hydrate_applicability_rule(modelo: Modelo, fragment: ApplicabilityRuleDefinition) -> ModeloApplicabilityRule:
     """Hydrate a registry-authored applicability fragment into the runtime rule.
 
-    The loader boundary for the ``applicability`` schema family
-    (W01.P03.S08): every free-form TOML string on ``fragment`` is resolved
+    The loader boundary for the ``applicability`` schema family: every
+    free-form TOML string on ``fragment`` is resolved
     here to its ``domain.deadlines`` enum member (or :class:`PayerFact`),
     never left as a raw string for a downstream branch to compare against.
     An unknown token raises :class:`RegistryValidationError` naming the
@@ -923,7 +920,7 @@ def _resolve_registry_applicability_rule(
     resolution is not.
 
     No local cache sits in front of this call: :func:`~._authority.bundled_authority`
-    is itself fingerprint-bounded (W01.P02.S28), so calling it here costs one
+    is itself fingerprint-bounded, so calling it here costs one
     O(1) cache-key hash, not a re-parse, and a tree edit is seen on the very
     next call. Caching here would re-introduce the path-only registry cache
     the authority-flow rule forbids -- exactly the defect S28 removed.
@@ -1150,19 +1147,13 @@ def derive_not_applicable_source_modelos(profile: TaxpayerProfile, modelos: Iter
 
 __all__ = [
     "ApplicabilityVerdict",
-    "Modelo202Modality",
-    "Modelo202ModalityVerdict",
     "ModeloApplicability",
     "ModeloApplicabilityRule",
-    "PayerFact",
-    "TaxRoute",
-    "derive_modelo_202_modality",
     "derive_modelo_applicability",
     "derive_not_applicable_source_modelos",
     "derive_tax_route",
     "derive_taxpayer_files_economic_activity",
     "has_applicability_rule",
     "iter_modelo_applicability_rules",
-    "modelo_202_modality_from_inputs",
     "taxpayer_model_is_declared",
 ]

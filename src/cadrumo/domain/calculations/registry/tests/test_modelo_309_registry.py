@@ -7,14 +7,13 @@ from functools import cache
 
 import pytest
 
-from cadrumo.domain.calculations.registry.loader import _load_shared_catalogue_files, load_modelo_directory
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
-from cadrumo.domain.calculations.registry.snapshot import build_snapshot
-from cadrumo.domain.calculations.registry.validate import RegistryValidator
-
 from .....core import IvaDeductionFactKind
 from .....core.resources import bundled_path
 from ....iva import IvaLedgerObservationRole
+from .._validate import RegistryValidator
+from ..loader import _load_shared_catalogue_files, load_modelo_directory
+from ..schema import ModeloDefinition, RegistryCatalogues
+from ..snapshot import build_snapshot
 from ._ledger_iva_aggregation_support import _deduction_provenance
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -112,12 +111,8 @@ def test_modelo_309_declares_autorepercutido_and_recargo_soportado_bindings() ->
 def test_modelo_309_autorepercutido_binding_resolves_against_substrate() -> None:
     from decimal import Decimal
 
-    from cadrumo.domain.calculations.registry.ledger_bindings import (
-        IvaLedgerObservation,
-        resolve_ledger_iva_aggregation_binding_values,
-    )
-
     from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
+    from ..ledger_bindings import IvaLedgerObservation, resolve_ledger_iva_aggregation_binding_values
 
     modelo, _ = _load_modelo_309()
     revision = modelo.revisions["2023-y-siguientes"]

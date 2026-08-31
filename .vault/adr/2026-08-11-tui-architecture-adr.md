@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#tui-architecture'
 date: '2026-08-11'
-modified: '2026-08-25'
+modified: '2026-08-28'
 body_schema: 'body-v1'
-body_hash: 'sha256:6a55376ca86e816708a6a497a8047b9e5d9cb96488cd70a9a0a88e6eabb6a81a'
+body_hash: 'sha256:b742d0cf67a1eb36f93137fba30276ad524d5228a86286977095f9dd1d944fc7'
 related:
   - '[[2026-08-11-tui-architecture-research]]'
   - '[[2026-08-11-tui-interface-research]]'
@@ -22,6 +22,7 @@ related:
   - '[[2026-08-24-tui-operation-observation-adr]]'
   - '[[2026-07-09-compatibility-lifecycle-adr]]'
   - '[[2026-08-10-current-schema-only-purge-adr]]'
+  - '[[2026-08-26-tui-architecture-m184-socio-clave-subclave-research]]'
 ---
 # `tui-architecture` adr: `Application-owned operation envelope and supervisor API` | (**status:** `accepted`)
 
@@ -671,6 +672,35 @@ The exact refresh refusals are `unsupported_refresh_target_version`,
 process restart from durable safe terminal facts and live registry composition.
 A raw result/reference, repository DTO, route ID, TUI view model, exception, or
 adapter path never crosses the facade.
+
+An operation definition may additionally register a public result schema
+distinct from its private `result_type`, together with a side-effect-free
+`result_projector` binding the resolved private result and the safe terminal
+receipt to that public model -- symmetric with the `reviewed_operand_type`
+plus `review_projector` pair, but for the settled result instead of the
+mid-flight REVIEW proposal. Registration is a strict either/or on schema
+identity: a public result schema that binds the exact same model as
+`result_type` declares no projector, and a public result schema binding any
+other model requires exactly one. No operation may bind its own private
+`result_type` as its public schema AND separately declare a projector for it
+-- that would be a passthrough re-admitting the private type under cover of
+the public one, not a genuine projection.
+
+`OperationResultProjectionService` resolves this door: given an operation ID,
+its terminal revision, definition-contract digest, and declared result-schema
+identity, it reloads the authoritative terminal receipt, refuses unless a
+settled result reference is present (the accepted terminal-reference
+invariant permits one on `SUCCEEDED` and permits, but does not require, one on
+`FAILED`; it forbids one on `REFUSED`), resolves the encrypted private result
+behind the secure operand port, validates its registered private type,
+invokes the projector, and validates the exact public type and schema
+fingerprint before returning it. The private result type never crosses this
+boundary; only the projector's public output does. The exact refusal codes are
+`unsupported_result_projection_version`, `unknown_operation`,
+`operation_not_terminal`, `operation_not_successful`, `stale_operation_revision`,
+`definition_contract_mismatch`, `result_schema_mismatch`, and
+`result_projection_unavailable`. `OperationComposedServices` exposes this
+service alongside `review` and `refresh` as `result`.
 
 ### D7 - Surface projections
 
@@ -1375,3 +1405,65 @@ are grounded in `2026-08-24-tui-operation-observation-research`.
   path survives.
 - C0 and C3 remain independently gated by their exact dependency receipts;
   neither receipt authorizes a later Modelo or visual cohort by implication.
+
+## Amendment 2026-08-28: dependency receipts move from code to vault attestation
+
+**What this corrects.** D13 built C0 and financial-C3 readiness as code: a
+`TuiOperationObservationDependencyReceiptV1` / `TuiOperationFinancialOperandDependencyReceiptV1`
+pydantic schema, minted as a `.vault/reference/*.md` JSON artifact, parsed and
+cross-checked against `git show`, ADR `status:` frontmatter, and body hashes by
+a "sole live-tree validator" living in
+`src/cadrumo/application/operations/tests/`. That inverts the project's
+one-way reference direction -- vault documents cite code by locator, code never
+cites the vault -- and binds the product test suite to `.vault/` paths,
+document stems, and governance identifiers that are removable development
+scaffolding, not part of the shipped tree. It also answers two separable
+questions with one artifact: whether the source tree has the shape D13
+requires (an implementation fact, provable without reading any governing
+record) and whether the governing decisions authorizing that shape are
+accepted with their blocking audits resolved (a governance fact, answerable
+only from `.vault/`).
+
+**The decision.** The two questions split.
+
+Every implementation-shape assertion D13 lists for C0 and the financial-operand
+C3 prerequisite -- public-definition manifest and contract-set schema
+identities/digests; atomic observation fold; registered safe REVIEW resolution
+and its non-authority; the typed Workspace-refresh adapter; settlement,
+interaction, cancellation, effect, recovery, and production DI wiring; the
+`awaiting_submission -> bound -> delivery_started -> delivery_acknowledged ->
+released` transition and crash-injection matrix; the enrolled writer's
+compare-and-swap and effect-receipt co-commit; forbidden-import and
+sensitive-non-retention proof -- remains a real, currently-passing test under
+`src/cadrumo/application/operations/tests/`. Those tests assert source-tree
+shape and behavior only; none names a `.vault/` path, an ADR stem, a Step id,
+or reads a governance status or body hash.
+
+Whether C0, or the financial-operand C3 prerequisite, is actually OPEN -- the
+accompanying claim that the governing ADRs are `accepted` and their blocking
+audits resolved -- is recorded as a vaultspec-governed execution record,
+authored through the owning CLI verb at the moment the cohort opens. That
+record cites the implementing test module and the commit it was proven against
+by `path:line`; no production or test code parses it or asserts against it.
+`TuiOperationObservationDependencyReceiptV1`,
+`TuiOperationFinancialOperandDependencyReceiptV1`, the minted
+`.vault/reference/2026-08-24-tui-operation-observation-dependency-receipt.md`
+and
+`.vault/reference/2026-08-24-tui-operation-financial-operand-dependency-receipt.md`
+artifacts, and the A/B two-commit git-ancestry/digest-equality contract
+described above are retired outright -- not replaced by an equivalent
+code-resident mechanism under another name.
+
+**Consequence for D13.** No `.vault/` path, document stem, Step id, or
+campaign identifier may appear anywhere under `src/`, including in the two
+named test modules. "C0 is open" and "the financial-operand C3 prerequisite is
+open" are governance facts a human or agent states by authoring the execution
+record, evidenced by a green conformance suite and the commit it was proven
+against -- never a code-resident proof of governance state. This amendment does
+not relax any implementation-shape requirement D13 lists above: every one of
+them stays a real, falsifiable test; it corrects only where the accepted-status
+and cross-artifact provenance checks live. The Consequences section's closing
+claim that "C0 and C3 remain independently gated by their exact dependency
+receipts" is unchanged in substance and is read under this split: "dependency
+receipt" there now means the execution record described above, never the
+retired code-resident artifacts.

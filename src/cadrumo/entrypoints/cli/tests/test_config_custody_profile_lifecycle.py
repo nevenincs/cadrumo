@@ -192,14 +192,29 @@ def test_registered_profile_custody_survives_logout_and_reopens_on_login(tmp_pat
     assert logged_out.returncode == 0, _combined_output(logged_out)
     assert "logged_out_profile\tcustody" in logged_out.stdout
 
+    # Deliberately no passphrase channel: this is the os_keychain subject.
+    # The login must reopen the session by unwrapping its DEK under the
+    # keychain-custodied key, so handing it a passphrase here would prove
+    # only that a passphrase works and retire the resumption this covers.
     switched = _run_cadrumo(tmp_path, ("config", "login", "custody"))
     assert switched.returncode == 0, _combined_output(switched)
     assert "active_profile\tcustody" in switched.stdout
 
+    # Deletion refuses while the profile is active -- a contract with its own
+    # coverage in this module -- so the reopened session is closed again first.
+    closed_again = _run_cadrumo(tmp_path, ("config", "logout"))
+    assert closed_again.returncode == 0, _combined_output(closed_again)
+
     deleted = _run_cadrumo(tmp_path, ("config", "profile", "delete", "custody", "--yes"))
     assert deleted.returncode == 0, _combined_output(deleted)
-    assert "status\ttombstoned" in deleted.stdout
-    assert "active_profile\t<none>" in deleted.stdout
+    # ``deleted`` is the field that separates the confirmed run from the
+    # preflight posture the same schema serves, so it is what proves the
+    # capsule was destroyed rather than merely described.
+    assert "deleted\ttrue" in deleted.stdout
+
+    remaining = _run_cadrumo(tmp_path, ("--format", "json", "config", "profile", "list"))
+    assert remaining.returncode == 0, _combined_output(remaining)
+    assert json.loads(remaining.stdout)["result"]["profiles"] == []
 
     retired = _run_cadrumo(tmp_path, ("config", "init", "--help"))
     assert retired.returncode != 0
@@ -358,7 +373,7 @@ def test_profile_root_secret_authenticates_keychain_free_read_in_process(tmp_pat
 
     shown = _run_cadrumo(
         tmp_path,
-        ("--profile-secrets-stdin", "config", "profile", "show", "custody"),
+        ("--profile-secrets-stdin", "config", "profile", "view", "custody"),
         extra_env={"PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring"},
         stdin_payload=json.dumps({"profile_passphrase": passphrase}),
     )
@@ -490,7 +505,7 @@ def test_blank_explicit_profile_target_refuses_before_root_secret_read(tmp_path:
     _register_profile(tmp_path, "ambient")
     result = _run_cadrumo(
         tmp_path,
-        ("--profile-secrets-stdin", "config", "profile", "show", ""),
+        ("--profile-secrets-stdin", "config", "profile", "view", ""),
         stdin_payload="must-remain-unread",
     )
 
@@ -508,7 +523,13 @@ def test_self_authenticating_leaf_refuses_root_source_unread(tmp_path: Path) -> 
 
     output = _combined_output(result)
     assert result.returncode == 2, output
-    assert "inapplicable" in output.lower()
+    # The structured conditionality rather than the sentence: the prose that
+    # once carried the word "inapplicable" now says the same thing in other
+    # words, and it is localised, so pinning it pinned a translation.
+    assert '"not_applicable"' in output
+    # The subject of this case is that the payload is refused UNREAD, so the
+    # secret-shaped input must appear nowhere in what the command emitted.
+    assert "must-remain-unread" not in output
     assert "json" not in output.lower()
 
 
@@ -522,7 +543,7 @@ def test_valid_resumed_session_refuses_root_source_unread(tmp_path: Path) -> Non
         stdin_payload=json.dumps({"passphrase": passphrase}),
     )
     assert logged_in.returncode == 0, _combined_output(logged_in)
-    from ....adapters.persistence.storage.custody import profile_session_path
+    from ....adapters.persistence.storage.custody.acceleration_receipt import profile_session_path
 
     assert profile_session_path(storage_root=tmp_path, profile_id=UUID(bucket_id)).is_file(), (
         "the os_keychain lane requires a host backend that can persist the cross-process session"
@@ -530,7 +551,7 @@ def test_valid_resumed_session_refuses_root_source_unread(tmp_path: Path) -> Non
 
     refused = _run_cadrumo(
         tmp_path,
-        ("--profile-secrets-stdin", "config", "profile", "show", "custody"),
+        ("--profile-secrets-stdin", "config", "profile", "view", "custody"),
         stdin_payload="must-remain-unread",
     )
     output = _combined_output(refused)
@@ -632,7 +653,7 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
 
     # The registration door returns the minted identity, so the ids are known
     # without reading the retired plaintext bucket manifest.
-    # ``profile show`` does not render the manifest label across a process
+    # ``profile view`` does not render the manifest label across a process
     # boundary, so selection is observed through a per-profile FACT instead.
     # Alpha and Beta carry distinct ``identity.name`` values for exactly that
     # purpose, and the assertion is the same claim: which profile resolved.
@@ -657,21 +678,21 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
             stdin_payload=profile_secret_payload,
         )
 
-    pointer_default = _run_authenticated(("config", "profile", "show"))
+    pointer_default = _run_authenticated(("config", "profile", "view"))
     assert pointer_default.returncode == 0, _combined_output(pointer_default)
     assert "identity.name\tBeta Operator" in pointer_default.stdout
 
     # A set environment variable cannot displace the pointer: the pointer
     # still selects beta even while the shell names alpha.
     env_inert = _run_authenticated(
-        ("config", "profile", "show"),
+        ("config", "profile", "view"),
         extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id},
     )
     assert env_inert.returncode == 0, _combined_output(env_inert)
     assert "identity.name\tBeta Operator" in env_inert.stdout
 
     # The flag is the selection channel that does win over the pointer.
-    flag_default = _run_authenticated(("--profile", "alpha", "config", "profile", "show"))
+    flag_default = _run_authenticated(("--profile", "alpha", "config", "profile", "view"))
     assert flag_default.returncode == 0, _combined_output(flag_default)
     assert "identity.name\tAlpha Operator" in flag_default.stdout
 
@@ -680,7 +701,7 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
     # directly proves which selector won: beta, not the alpha requested by the
     # flag and environment. A precedence regression would render alpha.
     explicit_name = _run_authenticated(
-        ("--profile", "alpha", "config", "profile", "show", "beta"),
+        ("--profile", "alpha", "config", "profile", "view", "beta"),
         extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id},
     )
     resolved_explicit_name = _combined_output(explicit_name)
@@ -690,7 +711,7 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
     assert "display_name\talpha" not in resolved_explicit_name, resolved_explicit_name
 
     explicit_root = _run_authenticated(
-        ("--profile", "alpha", "config", "profile", "show"),
+        ("--profile", "alpha", "config", "profile", "view"),
         extra_env={
             "CADRUMO_ACTIVE_PROFILE": next(bucket_id for bucket_id, label in labels_by_id.items() if label == "beta"),
         },
@@ -699,7 +720,7 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
     assert "identity.name\tAlpha Operator" in explicit_root.stdout
 
     explicit_root_by_id = _run_authenticated(
-        ("--profile", alpha_id, "config", "profile", "show"),
+        ("--profile", alpha_id, "config", "profile", "view"),
         extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id},
     )
     assert explicit_root_by_id.returncode == 0, _combined_output(explicit_root_by_id)
@@ -805,31 +826,35 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
 def test_profile_lifecycle_storage_spans_are_application_owned() -> None:
     """CLI and wizard code delegate custody spans to application profile lifecycle operations."""
 
-    scanned = {
-        "src/cadrumo/entrypoints/cli/_config/__init__.py": (
-            "activate_master_key_provider",
-            "get_master_key_provider",
-            "_write_active_profile_pointer",
-            "_clear_active_profile_pointer",
-            "capture_active_profile_pointer",
-            "restore_active_profile_pointer",
-            "override_settings(cadrumo_active_profile",
-        ),
-        "src/cadrumo/application/wizard/_commands.py": (
-            "activate_master_key_provider",
-            "get_master_key_provider",
-            "_write_active_profile_pointer",
-            "_clear_active_profile_pointer",
-            "capture_active_profile_pointer",
-            "restore_active_profile_pointer",
-            "override_settings(cadrumo_active_profile",
-        ),
-    }
-    offenders: list[str] = []
-    for relative_path, forbidden_tokens in scanned.items():
-        text = (REPO_ROOT / relative_path).read_text(encoding="utf-8")
-        for token in forbidden_tokens:
-            if token in text:
-                offenders.append(f"{relative_path}: {token}")
+    forbidden_tokens = (
+        "activate_master_key_provider",
+        "get_master_key_provider",
+        "_write_active_profile_pointer",
+        "_clear_active_profile_pointer",
+        "capture_active_profile_pointer",
+        "restore_active_profile_pointer",
+        "override_settings(cadrumo_active_profile",
+    )
+    # Whole packages, not two named files. This gate used to pin one module in
+    # each; when the wizard's command module was promoted to a public name the
+    # pin pointed at a path that no longer existed, and a relocation that
+    # happened to land on another existing file would have made it pass while
+    # scanning the wrong thing. Deriving the set means a module moved, renamed
+    # or added is covered without anyone remembering to extend a list.
+    scanned = [
+        path
+        for package in ("entrypoints/cli/_config", "application/wizard")
+        for path in sorted((REPO_ROOT / "src" / "cadrumo" / package).rglob("*.py"))
+        if "tests" not in path.relative_to(REPO_ROOT).parts
+    ]
+
+    assert len(scanned) > 50, f"the custody-span scan collapsed to {len(scanned)} files; it would pass vacuously"
+
+    offenders = [
+        f"{path.relative_to(REPO_ROOT).as_posix()}: {token}"
+        for path in scanned
+        for token in forbidden_tokens
+        if token in path.read_text(encoding="utf-8")
+    ]
 
     assert offenders == []

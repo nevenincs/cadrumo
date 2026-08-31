@@ -33,8 +33,6 @@ from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.temporal import select_revision
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.modelos import (
-    CalculationRevision,
-    CalculationRevisionState,
     ExternalEvidenceKind,
     ModeloRecord,
     ModeloRecordStatus,
@@ -44,6 +42,7 @@ from ....domain.modelos import (
     WorkUnit,
     upsert_work_unit,
 )
+from ....domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
@@ -196,6 +195,10 @@ _READY_PROFILE_FACTS = (
     UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
     UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
     UserProfileFact(path="censo.activity_start_date", value=date(2000, 1, 1)),
+    # Modelo 111 refuses a defaulted colegio-concertado declaration: the fichero
+    # carries the row as filer data, so it must be stated rather than assumed.
+    # False is the truthful value for this natural-person filer.
+    UserProfileFact(path="withholding.colegio_concertado", value=False),
 )
 
 

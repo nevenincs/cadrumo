@@ -9,9 +9,6 @@ from typing import Any, cast, override
 
 import pytest
 
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-
 from ....adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
 from ....core import BindingSourceKind, Period
 from ....core.directory_scan import scan_directory
@@ -23,6 +20,8 @@ from ....domain.bienes_inversion import (
     BienInversionKind,
 )
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from ....domain.calculations.registry.schema import ModeloRevision
 from ....tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
 from ...aggregation import CalculationSourceContext
 from .._bienes_inversion_regularizacion import (
@@ -32,7 +31,7 @@ from .._bienes_inversion_regularizacion import (
     build_bienes_inversion_regularizacion_advisory,
     build_bienes_inversion_transmision_advisory,
 )
-from .._observations_repository import CalculationObservationRepository
+from ..observations_repository import CalculationObservationRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

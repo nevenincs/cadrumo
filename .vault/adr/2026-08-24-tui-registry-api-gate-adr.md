@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#tui-registry-api-gate'
 date: '2026-08-24'
-modified: '2026-08-25'
+modified: '2026-08-28'
 body_schema: 'body-v1'
-body_hash: 'sha256:5ec6a72523a8f9cfcb151e5237f28d06bd413cb46896b8d5abd9859af7199c45'
+body_hash: 'sha256:f30d0855abd43114c8c76b296706714fb3fa16539abc7693fa55d644bc2dc777'
 related:
   - '[[2026-08-24-tui-registry-api-gate-research]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
@@ -209,8 +209,9 @@ then discriminates:
 
 - `static_inspection` carries only the validated static registry projection and
   explicitly records that no snapshot was admitted;
-- `graded_snapshot` carries the requested, declared, and effective grade plus
-  the exact admitted snapshot scope; or
+- `graded_snapshot` carries the requested and declared grade plus the exact
+  admitted snapshot scope (a third "effective grade" was retired by S128 --
+  see the amendment below); or
 - `refused` carries the failed boundary without a partial snapshot disguised as
   success.
 
@@ -260,6 +261,117 @@ reference, fingerprint, and parent reference. The assembler may select and
 redact those records but cannot synthesize an alternate owner, edge, identity,
 or causal graph.
 
+**Amendment (S284): a schema record's `label` is either a real localization
+or an honest technical identifier, never a bare id presented as one.**
+`modelo_localization.py` derives locale keys for modelo, revision, construct,
+and casilla identities only; formula, binding, relation, and parameter
+identities have no key-derivation function and no locale-catalogue entry
+anywhere in the tree. Checked whether any of the four are ever
+operator-facing before ruling: every existing consumer (`work_review.py`'s
+findings, the discovery CLI's missing-binding diagnostics) already displays
+these identifiers as themselves -- registry names, never translated prose --
+so the absence of a locale convention is not an oversight to fill, it is the
+correct reflection of what these identities are.
+
+`ModeloWorkspaceSchemaRecordV1.label` is now the discriminated
+`ModeloWorkspaceRecordLabelV1 = ModeloWorkspaceLocalizedTextV1 |
+ModeloWorkspaceTechnicalLabelV1`. A CASILLA row's label is the existing
+`ModeloWorkspaceLocalizedTextV1` (`kind="localized"`), carrying a real
+resolved locale summary. A FORMULA, BINDING, RELATION, or PARAMETER row's
+label is `ModeloWorkspaceTechnicalLabelV1` (`kind="technical"`), carrying
+only its own `identifier` -- no locale summary, because none was resolved
+and claiming one would be false. This is the same shape of decision as
+S283's `None`-versus-`()`: a field whose type could not previously express
+"this row's name was never translated" now can, and a bare identifier can
+no longer silently masquerade as a localization that happened.
+
+**Amendment (S277): each schema-record join is the registry's own declared
+edge, never a name-matched inference.**
+
+- **`formula_operands` is the INPUT direction only.** `FormulaExpression` is a
+  self-recursive registry-declared tree (an operator node carries `args`; a
+  leaf carries exactly one populated identity field --
+  `casilla_id`/`binding`/`date_binding`/`parameter`/`relation`/`literal`/
+  `dispatch_table`); walking that tree and mapping each populated leaf 1:1 to
+  its matching `ModeloWorkspaceFormulaOperandReferenceV1` variant needs no
+  inference at all. A casilla row's `formula_operands` lists the entries
+  where that walk names `casilla_id` equal to the row's own id -- the
+  formulas that READ this casilla as an operand. The OUTPUT direction
+  (`FormulaDefinition.target_casilla_id`, which formula this casilla's value
+  comes from) is a provenance-facet concern, already covered above by "the
+  canonical calculation-source graph," and is never represented by
+  `formula_operands`, which is why the field is plural and multi-kind
+  discriminated: one casilla can be read as an input by many different
+  formulas, but is the output of at most one.
+- **`relation_endpoints` matches `RelationDefinition`'s own named fields
+  exactly.** `source_casilla_id: CasillaId` names the source side;
+  `target_binding: BindingId` names the target side. A casilla row's
+  `relation_endpoints` includes a `ModeloWorkspaceRelationSourceEndpointReferenceV1`
+  wherever `relation.source_casilla_id` equals that casilla; a binding row's
+  includes a `ModeloWorkspaceRelationTargetEndpointReferenceV1` wherever
+  `relation.target_binding` equals that binding. No other casilla or binding
+  may ever claim either endpoint of a relation it is not named on.
+- **`constraints` is self-owned; no cross-casilla join exists or is needed.**
+  `CasillaConstraints` is embedded directly on `CasillaDefinition.constraints`
+  (never a separate registered collection with its own id), so a casilla's
+  constraint entry is always its own -- there is no "which casilla owns a
+  multi-casilla constraint rule" question in the current registry shape,
+  because no constraint rule spans more than the one casilla that embeds it.
+- **`applicability` has no casilla-level registry edge and MUST stay empty on
+  every casilla, binding, formula, relation, or parameter row.**
+  `ApplicabilityRuleDefinition` is scoped to the REVISION
+  (`revision.applicability`, resolved as a single per-modelo rule via
+  `resolve_applicability_rule_from_authority`), never to a specific casilla;
+  no field anywhere in the registry schema points an `ApplicabilityRuleId`
+  reference at a casilla. Populating a per-casilla `applicability` field
+  from a revision-wide rule would misrepresent a fact about the WHOLE
+  MODELO's applicability as though it were specific to one casilla. The rule
+  itself is exposed only via its own `reference.kind == "applicability"`
+  schema record, never attached to another row.
+
+If a future registry revision introduces a genuine casilla-scoped
+applicability edge, that is a new registry field to add and re-ground this
+amendment against -- never a Workspace-side inference from the
+revision-scoped rule.
+
+**Amendment (S283): a STATIC_INSPECTION casilla row is bounded to identity
+alone; `legal_refs` and `constraints` are `None` for it, never `()`.**
+`RegistryRevisionInspection`'s own docstring states it retains "the source,
+casilla, binding, projection, and legal IDENTIFIERS to validate generated
+static artefacts" and "cannot calculate, render, or file anything" --
+identifiers, not definitions, is a deliberate boundary, not an oversight.
+Enrolling `CasillaDefinition` (or its `constraints`/`legal_refs` slices) onto
+the inspection would contradict that stated design: `CasillaConstraints`
+carries `min_value`, `max_value`, `enum` (`schema_surfaces.py:121-126`) --
+declared regulatory values, exactly the filing-adjacent content the boundary
+exists to exclude. A CASILLA row for STATIC_INSPECTION therefore carries no
+`CasillaDefinition`-sourced fields at all.
+
+The harder part is representing that absence honestly.
+`ModeloWorkspaceSchemaRecordV1.legal_refs` and `.constraints` are now typed
+`... | None`, defaulting to `()` for every existing (graded) caller: `None`
+means this admission's producer never carries the underlying data for this
+reference kind; `()` means it does, and none is declared. Collapsing both
+into a bare empty tuple would have been a silent under-declaration in a
+field whose whole purpose is legal grounding -- the same failure class as
+inferring a capability disposition, and the same rule applies: absence must
+be representable and distinguishable from a declared nothing. A STATIC_INSPECTION
+casilla row's `legal_refs` and `constraints` are always `None`.
+
+FORMULA, BINDING, RELATION and PARAMETER rows are unaffected by this
+boundary: `FormulaDefinition`, `DataBindingDefinition` and
+`RelationDefinition` each declare `legal_refs` directly, so those row kinds
+carry real tuples (possibly empty by genuine declaration) under
+STATIC_INSPECTION exactly as they would under a graded snapshot. Only the
+CASILLA row's `CasillaDefinition`-sourced fields are affected.
+
+Left open, deliberately out of this amendment's scope because the governing
+Step did not name it: `source_refs` has the identical shape of problem for a
+casilla row (`CasillaDefinition.source_refs` is equally absent from the
+inspection) but stays a plain empty-tuple-defaulting field for now. A future
+Step should decide whether `source_refs` gets the same `None` treatment
+rather than this amendment silently deciding it by omission.
+
 ### Generated field-classification denominator
 
 One generated manifest recursively derives the complete registry
@@ -276,6 +388,36 @@ unclassified, duplicate, stale, or missing field path. The manifest is
 conformance evidence, not runtime registry authority, and it never causes a
 backend-only field to enter the public payload.
 
+**Amendment (S278): STATIC_INSPECTION gets its own complete manifest over its
+own type universe, never a filtered view of the graded manifest.** The prior
+text described one generator without naming its root, and the only generator
+built walked `RegistrySnapshot` -- a type universe a static inspection never
+loads (`RegistryRevisionInspection` "cannot calculate, render, or file
+anything," and structurally carries neither materialization, verification,
+nor filing state). Reusing that manifest for static inspection, with
+per-entry availability layered on top, was considered and rejected: it is the
+same "one degraded result presented as a complete one" pattern this record
+already rejects for the REGISTRY projection itself ("Static revision
+inspection and a grade-admitted snapshot make different authority claims and
+cannot be represented as one degraded result"), and the identical reasoning
+applies to the manifest with no less force.
+
+`generate_modelo_workspace_field_manifest_for_inspection` roots a second walk
+at `RegistryRevisionInspection` itself, reusing the SAME classification
+function (`_classify_node`/`_projected_destination`) applied to a second root
+-- not a second, independently authored copy of the classification rules,
+since the underlying registry-compiler types (`FormulaDefinition`,
+`DataBindingDefinition`, `RelationDefinition`, and the identity kinds they
+carry) are the identical types both roots reach, just through different
+container shapes. The two admissions' manifests carry distinct digests over
+distinct traversal roots and are never compared against each other's
+coordinate. `RegistryRevisionInspection` carries no full `ModeloRevision`, so
+its manifest has no `derived.export_layout.*` root; the `selector.*` roots
+are shared unchanged, since selector models are a pure function of
+`BindingSourceKind`, independent of which admission is reading.
+`ModeloWorkspaceFieldManifestPortV1` accepts either admission's authority
+object and dispatches to the matching generator.
+
 ### Canonical capability and refusal facade
 
 Workspace V1 reports the closed read-only capability set for schema inspection,
@@ -283,6 +425,45 @@ calculation materialization, verification readiness, filing-draft readiness,
 and filing-export readiness. Each record is `available`, `not_applicable`,
 `refused`, or `unmeasured` and carries the exact target and revision coordinate,
 canonical producer identity, safe evidence references, and source disposition.
+
+**Amendment (S279): the capability-to-producer mapping is exact, not
+name-matched.** Static inspection captures exactly `registry`, `work`,
+`locale_catalogue`, and `field_manifest`; it does not read `bounded_review`,
+`calculation`, `readiness`, or `closure` (see "Locale and consistency
+boundary" above). That is four contributors excluded from static inspection
+against four non-schema capabilities, and the correspondence is fixed by each
+contributor's own stated role, not inferred from the capability's enum
+spelling:
+
+| Capability | Canonical producer contributor | Grounding |
+|---|---|---|
+| `schema_inspection` | `field_manifest` (`workspace_field_manifest`) | Schema inspection is reading the classified field denominator; `field_manifest` is its sole producer. `W03.P20.S278` resolved static inspection's own manifest root, so `field_manifest` is a real STATIC_INSPECTION contributor and `schema_inspection` is `available` for that admission -- the one capability static inspection answers `available` for. |
+| `calculation_materialization` | `calculation` (`calculation_materialization`) | Identical producer-identity string; no inference required. |
+| `verification_readiness` | `bounded_review` (`modelo_work_review`) | `ModeloWorkReview` is the accepted canonical bounded review projection tracking verification state, findings, and progress (`2026-08-10-casilla-schema-read-model-adr`) -- the review facet IS the verification-readiness fact. |
+| `filing_draft_readiness` | `readiness` (`modelo_readiness`) | `ProjectionModeloReadiness`'s axes (`profile_ready`, `registry_ready`, `binding_ready`, `ledger_ready`) are exactly the preflight gate checked before a filing draft can be produced, discussed immediately below this table in the existing "Modelo readiness is selected from..." paragraph. |
+| `filing_export_readiness` | `closure` (`registry_closure`) | The closure report's own limb is named `filing-export` in the existing "Registry completeness is selected from..." paragraph below -- an exact limb-name match. |
+
+**Amendment (S279): `not_applicable` is reserved for a coordinate-level fact
+about the FILING TARGET, never for a contributor an admission structurally
+never reads.** The single existing rule -- "absence of a producer or
+measurement is `unmeasured`, never available" -- governs both cases: a graded
+snapshot whose canonical producer declined to answer, AND a static inspection
+whose admission kind never invokes the contributor at all, are both
+"absence of a producer" for that read. Static inspection's four excluded
+capabilities (`calculation_materialization`, `verification_readiness`,
+`filing_draft_readiness`, `filing_export_readiness`) are therefore
+`unmeasured`, not `not_applicable` -- reversing the disposition this record
+previously accepted without this table, which had reasoned from
+`RegistryRevisionInspection`'s own docstring ("cannot calculate, render, or
+file anything") rather than from this rule. That docstring answers a
+different question -- whether the admission COULD ever produce the fact --
+not the question the disposition enum encodes, which is whether THIS read's
+canonical producer answered. `not_applicable` remains reserved for a graded
+snapshot that DID invoke the right producer and that producer declared the
+capability inapplicable to the specific target (for example, a source
+disposition of `not_required` for the filing target's regime) -- a
+target-level fact from a producer that ran, never an admission-level fact
+about a producer that never ran.
 
 Modelo readiness is selected from the canonical
 `ProjectionModeloReadiness` without collapsing its axes. The Workspace DTO
@@ -394,6 +575,27 @@ The contributor fixed point is exact:
 `ModeloWorkspaceProducerContractInventoryV1` inventories these eight
 application-owned S126 registrations, not contracts implemented by lower-layer
 owners. Each contract fingerprints the safe application projection schema.
+
+**Amendment (S274):** the fingerprint is derived from the projection's
+SERIALIZATION JSON schema alone, not from requiring the validation and
+serialization schemas to coincide. A port projects outward, so the
+serialization shape is the contract a consumer actually receives; the
+validation shape is an input-acceptance detail the fingerprint does not need
+to identify. The property this fingerprint must hold is a round trip --
+`model_validate_json(instance.model_dump_json())` reproduces the instance --
+not shape coincidence between the two schemas. A bare `Decimal` field
+validates as `anyOf[number, string]` but serializes as `string` alone; that
+string parses straight back to the same `Decimal`, so it round-trips cleanly
+and was never a broken contract, only an equality check with the wrong
+proxy. The original equality requirement was exercised only against a
+string-and-enum manifest and had never met a Decimal-bearing model before
+S167 tried to register the registry snapshot, the work review, and the
+calculation revision -- the three contributors that carry financial data by
+nature and were consequently unregisterable. Retyping their Decimal fields to
+satisfy the fingerprint was rejected: it would change how financial amounts
+serialize everywhere those models are used, far beyond Workspace, which
+inverts which of the two is load-bearing.
+
 One S126 capture calls its canonical owner's native capture exactly once,
 projects only that captured value, and returns the application projection,
 contract-derived stamp, and unchanged native generation. The second-pass read
@@ -730,3 +932,276 @@ choice supported by `2026-08-24-tui-registry-api-gate-research` and
   once its external interface decision and read receipts pass. Later cohorts
   cannot cite this ADR as mutation, operation, secret-custody, or editor
   authority.
+
+## Amendment 2026-08-26: `field_manifest_digest` is exclusively the S278 field-classification digest
+
+`ModeloWorkspaceSchemaIdentityV1.field_manifest_digest` names ONE concept: the
+S278 field-classification manifest digest this record's static-inspection and
+graded-snapshot generators produce (`ModeloWorkspaceFieldManifestPortV1`,
+`resolve_static_inspection_schema_identity`) — a deterministic walk over the
+public registry TYPE denominator for display rendering. It is never a
+digest of `CalculationCompletenessManifest` (the registry's required
+calculation-closure casilla set, a tax-semantic concept this ADR does not
+own) or any other manifest a future consumer might be tempted to store under
+the same field name because the shape happens to fit. `2026-08-24-modelo-edit-contract-adr`
+is amended in the same change: its baseline's schema identity is now its own
+type, `ModeloEditSchemaIdentityV1`, carrying `completeness_manifest_digest`
+rather than reusing this field. The Workspace producer's own construction-site
+docstring had already flagged the exact collision this amendment closes.
+
+## Amendment (S291): a period-level ledger-preflight issue is a distinct subject, never a fabricated transaction
+
+`LedgerPreflightIssue.transaction_id` (`application/ledger/preflight.py:120`)
+is `TransactionId | Literal["__period__"]`: exactly one issue kind
+(`_unsupported_period_issue`, fired when the period has no date span) is
+scoped to the whole period rather than one transaction. The prior
+`ModeloWorkspaceLedgerIssueV1.transaction_id: TransactionId` had no
+representable arm for that case. Dropping the issue would be a silent
+under-declaration on exactly the axis an operator consults before filing;
+pinning it to a fabricated transaction id would point the operator at a
+transaction that has nothing to do with the problem. Neither is acceptable.
+
+`ModeloWorkspaceLedgerIssueV1.transaction_id` is replaced with `subject:
+ModeloWorkspaceLedgerIssueSubjectV1`, a discriminated union of
+`ModeloWorkspaceLedgerTransactionSubjectV1` (`kind="transaction"`, carrying
+`transaction_id`) and `ModeloWorkspaceLedgerPeriodSubjectV1`
+(`kind="period"`, carrying nothing else). This is the same shape as S284's
+`ModeloWorkspaceRecordLabelV1`: a field whose type previously could not
+express a real closed-domain alternative now can, and neither silent drop
+nor fabricated identity is representable any longer.
+
+## Amendment (S290): a provenance record's subject is carried, not derived, and comes from a domain gap now closed
+
+`ModeloWorkspaceProvenanceRecordV1.subject` requires a casilla or binding
+identity a trace explains; `CalculationSourceRef` (the persisted domain
+lineage row) carried only resolver identity, resolved binding source,
+source-object reference and fingerprint, with no field naming the subject
+and no shared key to any other persisted structure to join on. Verified
+before ruling: `CasillaObservation.source_refs` is a different namespace
+(legal-catalogue `SourceRefId`s, not resolver-mesh source refs);
+`operand_refs`/`operand_casilla_refs` are formula-tree lineage, not
+resolver-mesh source lineage; `row_casilla_provenance` covers only
+row-materialized casillas. No recoverable join exists.
+
+That verification also surfaced that the omission is not the documented
+design choice it first appeared to be. `CalculationSourceRef`'s docstring
+states it deliberately drops `legal_refs`/`source_refs` to avoid duplicating
+per-casilla regulatory grounding already carried by `CasillaObservation` on
+the same revision. It says nothing about a subject identity, and the
+anti-duplication rationale does not extend to one: a subject identity is not
+grounding, and carrying it duplicates nothing already on the revision. The
+application-side `CalculationSourceProvenance` (the pre-persistence row) had
+already carried `source_casilla_ids` all along; the domain-side persisted
+projection simply never carried it across the boundary.
+
+`CalculationSourceRef` gains `source_casilla_ids: tuple[CasillaId, ...] = ()`,
+passed straight through at the `_source_provenance_refs`
+application-to-domain boundary (`application/modelo/_calculation_actions.py`)
+from the `CalculationSourceProvenance` row already holding it, and folded
+into the content-addressed revision id derivation
+(`_source_provenance_revision_id_payload`) so a save-drops-field regression
+on it is not invisible. An empty tuple is honest, not fabricated: it means
+the originating resolver call site did not associate this row with a
+casilla, which is common today (verified: `_modelo_bindings.py`'s ledger IVA
+aggregation provenance never populates the field). Backfilling every
+resolver call site to populate it is explicitly OUT of this amendment's
+scope; a resolver that never links a casilla produces no LINKED provenance
+record for that source until it does.
+
+`ModeloWorkspaceProvenanceRecordV1.subject` is `ModeloWorkspaceSchemaReferenceV1
+| None` (widened, not unchanged — the original landing left it required,
+a follow-on correction closed this before S290 checked): `None` is the same
+None-vs-() shaped distinction S283 gave a schema record's optional grounding
+fields, meaning "this producer never carries a linked subject for this row",
+never a silently dropped record. `graded_snapshot_provenance_facet` fans one
+`CalculationSourceRef` out into one record per casilla in its
+`source_casilla_ids`; a ref with an empty tuple still produces exactly ONE
+record, with `subject=None`, rather than vanishing from the facet or being
+given a fabricated or inferred subject. An audit reader sees every
+contributing source, attributed or not, and can distinguish "unattributed"
+from "record never surfaced" — the same distinction an under-declaration
+review depends on everywhere else in this codebase.
+
+## Amendment (S287): the capability verdict is a named field, not a property, ruled per capability
+
+The prior text required "a separately stamped, explicit verdict from the
+canonical producer" without naming which field on which producer satisfies
+it for any of the five capabilities, so the requirement could not be checked
+against code. Ruled per capability, each verified against the actual
+producer before ruling:
+
+- **`SCHEMA_INSPECTION`** — `AVAILABLE` unconditionally. It answers from a
+  deterministic generated denominator (the S278 field-classification
+  manifest), never from a producer verdict about a specific target; there is
+  nothing to stamp.
+- **`CALCULATION_MATERIALIZATION`** — `AVAILABLE` when a persisted
+  `CalculationRevision` exists for the target's EXACT coordinate
+  (`revision.work_unit_id == resolved_target.work_unit_id`, itself
+  content-addressed on bucket/modelo/filing_year/period/revision_id). The
+  revision's mere existence is the calculate producer's own stamp — reading
+  it is not a derivation, unlike inferring "materialized" from
+  `casilla_values` being non-empty.
+- **`VERIFICATION_READINESS`** — `AVAILABLE` when that same revision's
+  `state` is `VERIFICADO_COMPLETO`, a state `CalculationRevision`'s own
+  lifecycle-field validator (`_require_revision_fields`,
+  `domain/modelos/_calculation_revision.py`) only reaches with `verified_at`
+  and `verified_by` both required and present — a genuine, separately
+  stamped verdict from the canonical verify producer, not an aggregate
+  `ready` flag or an assessment count.
+- **`FILING_EXPORT_READINESS`** — the correct stamp is a `MODELO_EXPORTED`
+  bucket event (`BucketEventType.MODELO_EXPORTED`,
+  `application/modelo/_export.py`) whose `object_id` equals the exact
+  revision id — keyed on the revision, not merely the target, so a stale
+  export of a superseded revision does not read as available. **Not yet
+  wired**: none of the eight existing S126 contributor ports read bucket
+  event history, so this capability has no epoch-safe, ABA-proven capture
+  path to cite today the way the other four do. The disposition stays
+  `UNMEASURED` until a ninth contributor (a bucket-event-history port) is
+  built with the same capture/epoch discipline as the other eight; that is
+  future work, out of this amendment's scope, not a defect in it. The
+  registry closure report's own `filing_export` limb answers a different,
+  structural question — "can this modelo/revision be filed at all" — and
+  must not be substituted for "has THIS revision actually been exported".
+- **`FILING_DRAFT_READINESS`** — **permanently `UNMEASURED`, and this is a
+  finding, not merely a disposition.** `CalculationRevisionState.BORRADOR`
+  and a filing draft are distinct concepts that do not collapse: `BORRADOR`
+  is the calculation revision's own lifecycle state (calculated, not yet
+  verified); a filing draft is the export-shaped rendering
+  `build_draft` (`application/filing/__init__.py:272`) produces from a
+  registry snapshot plus inputs. A revision can sit in `BORRADOR` with no
+  filing draft ever attempted; collapsing the two would let the workspace
+  report a draft ready on the strength of a calculation existing, exactly
+  the cross-capability inference this record forbids. Traced `build_draft`
+  itself: it is pure and stateless, persists nothing, emits no event, stamps
+  no revision field. There is nothing to read a verdict FROM, and calling it
+  to see whether it raises would be both the forbidden derivation and
+  performing the work merely to report on it. **This is the fourth instance
+  this campaign has found of a contract declaring something nothing can
+  reach** (alongside an unreachable compatibility refusal, a row category
+  with no rows, and an override intent addressing a store no casilla has).
+  The `FILING_DRAFT_READINESS` member stays in
+  `ModeloWorkspaceCapabilityName` and always reports `UNMEASURED` by
+  construction; whoever owns the filing surface should decide whether
+  `build_draft` ought to stamp something durable, or whether this capability
+  member should not exist, and this record is the place that decision is
+  now visible rather than silently absorbed into a permanent `unmeasured`.
+
+`graded_snapshot_modelo_workspace_capabilities` implements the four
+answerable dispositions (`SCHEMA_INSPECTION`, `CALCULATION_MATERIALIZATION`,
+`VERIFICATION_READINESS` computed from a captured `CalculationRevision`;
+`FILING_DRAFT_READINESS` and `FILING_EXPORT_READINESS` both `UNMEASURED` for
+the reasons above), mirroring the existing STATIC_INSPECTION capability
+table's shape.
+
+**Two of the five capabilities are unmeasured for two DIFFERENT structural
+reasons, and an operator-facing surface must not let that read as one
+undifferentiated implementation gap.** `FILING_DRAFT_READINESS` has NO
+producer anywhere in this codebase — `build_draft` is pure and stateless, so
+there is nothing to build; this disposition is permanent until someone
+builds a producer or retires the capability. `FILING_EXPORT_READINESS` HAS
+an approved, named stamp (a `MODELO_EXPORTED` bucket event carrying the
+exact revision id) and a real producer that already writes it
+(`application/modelo/_export.py`) — the gap is that no S126 contributor port
+currently reads bucket event history, so the workspace cannot yet reach a
+stamp that exists. This is a wiring gap, not a stamp gap, and it closes the
+moment a ninth contributor port is built; `FILING_DRAFT_READINESS` does not
+close by building anything analogous, because there is nothing analogous to
+build against. Whoever reviews this record should read `FILING_EXPORT_READINESS`
+as "not yet reachable" and `FILING_DRAFT_READINESS` as "not yet possible",
+and treat only the first as a queued implementation task.
+
+## Amendment (S296): the graded schema_facet's constraint arm is presence-only, not value-bearing
+
+`graded_snapshot_casilla_schema_records` populates a CASILLA row's
+`constraints` arm with a single self-referential
+`ModeloWorkspaceConstraintReferenceV1(casilla_id=...)` when
+`CasillaDefinition.constraints is not None`, never `None` itself, per S283's
+`None`-vs-`()` distinction now applied on the admission that DOES carry the
+data. **This is a real limitation, not merely a type-shape note.**
+`ModeloWorkspaceConstraintReferenceV1` carries only `kind` and `casilla_id`
+-- it has no field for `CasillaConstraints.sign`, `min_value`, `max_value`,
+`pattern`, `min_length`, `max_length` or `enum`. The graded admission can
+therefore tell a consumer THAT a casilla declares constraints and never
+WHAT they are; `min_value`, `max_value` and `enum` remain unreachable
+through this surface even on the one admission that carries the underlying
+definitions. A future reader must not assume "populated" means "complete"
+here: S283's ruling that the graded arm is populated is correct as far as
+it goes, but "populated" currently means "presence flagged", not "value
+exposed". Widening `ModeloWorkspaceConstraintReferenceV1` to carry the real
+constraint values is a legitimate future Step; it is explicitly out of
+S296's scope.
+
+## Amendment (S128): `effective_grade` retired -- a distinction the system never makes
+
+`ModeloWorkspaceSnapshotScopeV1.effective_grade` is retired. `rg
+"effective_grade"` over tracked source found exactly one hit, the field
+declaration itself; `ModeloWorkspaceSnapshotScopeV1` was never constructed
+anywhere. `_check_snapshot_authority_grade` REFUSES a snapshot whose
+declared grade is below the requested one -- it never truncates and never
+returns a snapshot built at some lesser grade. Under every path that
+exists, an "effective" grade could therefore only ever equal
+`declared_grade`; a field that can only restate its neighbour asserts a
+narrowing step nothing performs, and a reader who trusts the model would
+believe such a step exists somewhere and go looking for code that has never
+existed. `required_grade` and `declared_grade` stay: one is what the
+caller asked for, the other what the revision's own
+`effective_authority_grade` declares (fail-closed default when undeclared),
+and that pair carries real information and a real refusal between them.
+
+Retired outright, not migrated: `COMPATIBILITY_REGIME` is `PRE_RELEASE`,
+nothing constructs the class, nothing persists it, and
+`no-legacy-compatibility` calls for deleting an unused surface rather than
+carrying a deprecation alias. Reintroduction condition, stated on the
+model's own docstring: if a future revision-selection path ever truncates
+instead of refusing -- admitting a snapshot at a grade below the one
+requested rather than raising -- an effective grade becomes a real, distinct
+fact and the field earns its place back with that defined meaning.
+
+## Amendment 2026-08-28: the C2 gate's dependency receipt is retired; conformance and attestation split
+
+**What this corrects.** The "C2 complex-read gate and external prerequisites"
+section required a minted
+`.vault/reference/2026-08-24-tui-registry-api-gate-c2-dependency-receipt.md`
+artifact, schema `ModeloWorkspaceC2DependencyReceiptV1`, parsed by
+`validate_modelo_workspace_c2_dependency_receipt`, which cross-checked an
+ordered `ModeloWorkspaceC2PredecessorTupleV1` naming other ADRs' `accepted`
+status, commits and body hashes, plus the C1 exit receipt from the companion
+`2026-08-24-tui-modelo-workspace-interface-adr`. The V1 conformance suite
+additionally names this validator as something the suite itself proves is
+"live." Both make code parse `.vault/` frontmatter and cross-artifact
+governance state, inverting the one-way vault-to-code reference direction and
+coupling the product test suite to removable development scaffolding.
+
+**The decision.** Item 7 of the numbered gate list -- "the complete V1
+conformance suite above is green" -- and everything that suite already proves
+(inspection-versus-snapshot separation, schema/manifest fixed points,
+readiness/closure parity, the S126 native-owner one-to-one fixed point,
+forbidden imports, sensitive non-retention, and the rest enumerated above)
+remains a real, currently-passing test under the owning package's `tests/`
+directory, asserting source-tree shape only. The suite's own self-check that
+its dependency-receipt validator is "live" is deleted along with the
+validator: a conformance test proves conformance, not the existence of a
+governance artifact.
+
+Item 8 (the `ModeloWorkspaceC2DependencyReceiptV1` artifact and its validator)
+is retired outright. Whether C2 is actually open -- this ADR and the companion
+interface ADR both accepted with the cited commits and body hashes, the
+authority-grade decision accepted or reconciled, and every native-owner/
+producer-contract fixed point green -- is a vaultspec-governed execution
+record, authored through the owning CLI verb at the moment C2 opens, citing
+the implementing conformance tests and the commit they were proven against by
+`path:line`. No code parses or asserts against that record, and no code
+reconstructs the predecessor tuple's provenance chase (accepted commit ->
+body hash -> producing commit -> artifact digest) at runtime or test time.
+
+**Consequence for the C2 gate.** Items 1-6 of the numbered list are otherwise
+unchanged: they remain real prerequisites (public export, the companion ADR's
+accepted status and its own now-amended C1 attestation, the authority-grade
+reconciliation, public readiness/closure parity, the field-classification
+manifest, and the native-owner fixed point), each evidenced the same way -- a
+real conformance test plus the execution record naming the governing decision
+it depends on. No `.vault/` path, document stem, Step id, or campaign
+identifier may appear under `src/`, including in the conformance suite. C2
+still authorizes only complex read-only Workspace consumers and still does not
+create `modelo.edit`, authorize a command, or open verify/file/export/
+amendment/lifecycle/secret/recovery interactions by implication.

@@ -13,16 +13,17 @@ from .....core.resources import bundled_path
 from .....tests import REPO_ROOT
 from .....tests.aeat_literal_fixtures import AEAT_HOST_SUFFIX_EXPECTED
 from ...export_field_kind import CasillaFieldKind
+from .._validate import RegistryValidator
 from ..authority import bundled_authority
 from ..corpus_catalogue import verify_source_file
 from ..export import derive_export_layouts_from_bindings, resolve_export_layout
 from ..export_parse import parse_export_payload
 from ..legal import verify_legal_catalogue
 from ..schema import RegistrySnapshot
+from ..schema_exports import ExportFieldDefinition
 from ..schema_input_kind import InputKind
 from ..snapshot import build_snapshot
 from ..temporal import select_revision
-from ..validate import RegistryValidator
 from ._modelo_349_registry_support import (
     _DECL_IMPORTE_OPERACIONES_CASILLA,
     _DECL_IMPORTE_RECTIFICACIONES_CASILLA,
@@ -541,13 +542,17 @@ def test_committed_modelo_349_export_records_match_fixed_width_contract() -> Non
         "rectificacion": "2",
     }
 
+    def _offset_key(field: ExportFieldDefinition) -> int:
+        assert field.offset is not None, "a derived fixed-width field must carry a concrete offset"
+        return field.offset
+
     for record in layout.records:
         record_type = record.record_type
         # Ordered by offset: derivation appends the binding-derived fields after
         # the inline ones, so tuple order is not wire order. Sorting reads the
         # record as it is actually emitted, and hides nothing -- an overlap or a
         # hole still breaks the cursor walk below.
-        fields = sorted(record.fields, key=lambda field: field.offset)
+        fields = sorted(record.fields, key=_offset_key)
         first_field = fields[0]
         assert first_field.offset == 1, record_type
         assert first_field.length == 1, record_type
@@ -629,6 +634,13 @@ def test_committed_modelo_349_record_design_round_trips_declarante_operador_rect
             (2, 4): "349",
             (5, 8): "2026",
             (9, 17): "B12345678",
+            # Razon social of the declarante. The layout declares this slot
+            # required, and the parse path re-renders every value_policy-free
+            # field to prove the payload is canonical, so a blank slot refuses
+            # on the render side rather than parsing as an absent optional. The
+            # NIF above is a persona juridica, so the slot carries a razon
+            # social rather than the design's surnames-first natural-person join.
+            (18, 57): "OPERADOR INTRACOMUNITARIO EJEMPLO SL".ljust(40),
             (136, 137): "1T",
             (138, 146): "2".zfill(9),
             (147, 161): "150050".zfill(15),

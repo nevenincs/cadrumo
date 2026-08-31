@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#bindings-architecture-unification'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-27'
+body_schema: 'body-v2'
 body_hash: 'sha256:77ea324ae5097ce3eacbce1e9cb10c16a1cd141ca26600d2af829857474bd8ec'
 related:
   - '[[2026-06-26-bindings-architecture-unification-adr]]'

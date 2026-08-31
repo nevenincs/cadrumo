@@ -68,7 +68,8 @@ def test_m100_build_on_renta_free_import_path_registers_the_gate() -> None:
         import sys
 
         from cadrumo.core.resources import resources
-        from cadrumo.domain.calculations.registry.validate_references import _CROSS_DOMAIN_SNAPSHOT_CHECKS
+        from cadrumo.domain.calculations.registry.authority import bundled_authority
+        from cadrumo.domain.calculations.registry._validate_references import _CROSS_DOMAIN_SNAPSHOT_CHECKS
 
         assert "cadrumo.domain.renta" not in sys.modules, (
             "renta must not be imported before the snapshot build on this path"
@@ -106,7 +107,8 @@ def test_m100_build_succeeds_when_renta_is_imported() -> None:
         import cadrumo.domain.renta  # noqa: F401  -- registration side effect
 
         from cadrumo.core.resources import resources
-        from cadrumo.domain.calculations.registry.validate_references import _CROSS_DOMAIN_SNAPSHOT_CHECKS
+        from cadrumo.domain.calculations.registry.authority import bundled_authority
+        from cadrumo.domain.calculations.registry._validate_references import _CROSS_DOMAIN_SNAPSHOT_CHECKS
 
         assert _CROSS_DOMAIN_SNAPSHOT_CHECKS, (
             "importing renta must register at least one cross-domain check"
@@ -137,7 +139,8 @@ def test_non_m100_build_on_renta_free_path_does_not_require_the_gate() -> None:
         import sys
 
         from cadrumo.core.resources import resources
-        from cadrumo.domain.calculations.registry.validate_references import _CROSS_DOMAIN_SNAPSHOT_CHECKS
+        from cadrumo.domain.calculations.registry.authority import bundled_authority
+        from cadrumo.domain.calculations.registry._validate_references import _CROSS_DOMAIN_SNAPSHOT_CHECKS
 
         assert "cadrumo.domain.renta" not in sys.modules, (
             "renta must not be imported on this path"

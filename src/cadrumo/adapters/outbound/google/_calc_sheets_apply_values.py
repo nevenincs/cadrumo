@@ -178,6 +178,7 @@ def _walk_payload_entries(data: Sequence[Mapping[str, Any]]) -> Iterator[tuple[s
                 yield address.qualified(), cell
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GSHEETS: untyped google-api sheets values.batchUpdate payload entries.
 def payload_written_addresses(data: Sequence[Mapping[str, Any]]) -> frozenset[str]:
     """Return every qualified A1 address a ``values.batchUpdate`` payload writes.
 
@@ -193,6 +194,7 @@ def payload_written_addresses(data: Sequence[Mapping[str, Any]]) -> frozenset[st
     return frozenset(address for address, _ in _walk_payload_entries(data))
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GSHEETS: untyped google-api sheets values.batchUpdate payload entries.
 def written_cell_values(data: Sequence[Mapping[str, Any]]) -> dict[str, object]:
     """Return every qualified address a payload writes, mapped to its target value.
 

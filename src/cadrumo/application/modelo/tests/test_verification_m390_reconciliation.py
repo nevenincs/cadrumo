@@ -8,10 +8,9 @@ from functools import lru_cache
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema_verification import VerificationPredicateDefinition
-
 from ....core import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from ....domain.modelos import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
@@ -97,8 +96,22 @@ _PREDICATE_CASES = (
 
 @lru_cache
 def _predicate(predicate_id: str, expression: str) -> VerificationPredicateDefinition:
-    revision = bundled_authority().validate_modelo("390").revisions["2010-y-siguientes"]
-    predicate = next(item for item in revision.verification_predicates if item.predicate_id == predicate_id)
+    # Selected as the modelo's CURRENT revision rather than by a literal id.
+    # The subscript this replaces named `2010-y-siguientes`, which Modelo 390
+    # does not ship (it carries 2021 through 2025), so every test through this
+    # helper died on a KeyError before evaluating a predicate. These cases
+    # assert the shipped definition and carry no ejercicio of their own, so the
+    # latest window is the honest target and a future revision moves it along.
+    modelo = bundled_authority().validate_modelo("390")
+    revision = max(modelo.revisions.values(), key=lambda item: item.valid_from)
+    predicate = next(
+        (item for item in revision.verification_predicates if item.predicate_id == predicate_id),
+        None,
+    )
+    assert predicate is not None, (
+        f"revision {revision.id} ships no predicate {predicate_id!r}; it declares "
+        f"{sorted(item.predicate_id for item in revision.verification_predicates)}"
+    )
     assert predicate.finding_kind == "BLOCKING_RULE"
     assert predicate.expression == expression
     return predicate

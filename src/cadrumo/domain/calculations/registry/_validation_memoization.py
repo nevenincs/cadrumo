@@ -12,14 +12,13 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition
-from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
-
 from ._source_evidence_fingerprint import SourceEvidenceFingerprint
+from .schema import ModeloDefinition
+from .schema_references import LegalReference, SourceReference
 
 _CatalogueCacheKey = tuple[int, int, str | None, SourceEvidenceFingerprint]
 _CatalogueCacheValue = tuple[Mapping[str, LegalReference], Mapping[str, SourceReference], tuple[str, ...]]
-_ModeloValidationCacheKey = tuple[int, int, int, str | None, str | None, SourceEvidenceFingerprint]
+_ModeloValidationCacheKey = tuple[int, int, int, tuple[int, ...], str | None, str | None, SourceEvidenceFingerprint]
 _ModeloValidationCacheValue = tuple[
     ModeloDefinition,
     Mapping[str, LegalReference],
@@ -30,6 +29,7 @@ _RegistryValidationCacheKey = tuple[
     tuple[int, ...],
     int,
     int,
+    tuple[int, ...],
     str | None,
     str | None,
     SourceEvidenceFingerprint,

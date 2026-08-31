@@ -30,10 +30,10 @@ import pytest
 
 from .....core import RegistryAuthorityGrade, RevisionReviewStatus, TaxDomain
 from .....core.resources import bundled_path
+from .._validate import RegistryValidator
 from ..errors import RegistryValidationError
 from ..snapshot import build_snapshot, build_validated_snapshot
 from ..support_matrix import revision_capability_probe
-from ..validate import RegistryValidator
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -123,7 +123,12 @@ def test_modelo_576_selects_the_2007_form_only_revision_before_the_2008_record_d
     assert len(design_era.revision.application_links) == 2
     assert layout.source_refs == ("aeat-dr-576-2008",)
     assert len(fields) == 60
-    assert max(field.offset + field.length - 1 for field in fields) == 1517
+    extents: list[int] = []
+    for field in fields:
+        assert field.offset is not None
+        assert field.length is not None
+        extents.append(field.offset + field.length - 1)
+    assert max(extents) == 1517
 
 
 def test_modelo_576_2007_filing_mutation_reaches_the_generic_no_layout_refusal() -> None:

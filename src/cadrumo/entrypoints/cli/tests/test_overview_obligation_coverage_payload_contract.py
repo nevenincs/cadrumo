@@ -21,7 +21,6 @@ from ....core.json_contract import Notice, NoticeSeverity, ResolvedNoticeAction
 from .._overview_payloads import (
     OverviewAgendaResult,
     OverviewBacklogResult,
-    OverviewCalendarPayload,
     OverviewCalendarProfilePayload,
     OverviewCalendarResult,
 )
@@ -65,18 +64,20 @@ def _calendar_payload(**overrides: object) -> dict[str, object]:
     return payload
 
 
-def test_calendar_coverage_refuses_omission_and_overlapping_dispositions() -> None:
-    """Coverage cannot vanish or name one modelo in multiple dispositions."""
+def test_calendar_coverage_cannot_vanish_from_the_envelope() -> None:
+    """Coverage is a required part of the calendar envelope, never omitted.
+
+    The companion invariant -- that one modelo cannot occupy two dispositions --
+    is enforced by the canonical
+    :class:`~application.overview.ObligationCoverageReport`, which refuses to
+    construct such a partition at all, so every consumer inherits it and not
+    only this JSON surface. It is pinned in that model's own test module; the
+    transport contract is the shape of a report that already satisfies it.
+    """
     without_coverage = _calendar_payload()
     without_coverage.pop("coverage")
     with pytest.raises(ValidationError):
-        OverviewCalendarPayload.model_validate(without_coverage)
-    with pytest.raises(ValidationError):
-        OverviewCalendarPayload.model_validate(
-            _calendar_payload(
-                coverage=_coverage_payload(advised=[{"modelo": "303", "reason": "applicable_window_missing"}])
-            ),
-        )
+        OverviewCalendarResult.model_validate(without_coverage)
 
 
 def test_single_calendar_and_derived_surfaces_require_coverage() -> None:

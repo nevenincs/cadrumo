@@ -42,15 +42,11 @@ from .schema_base import LegalRefs, RegistryModel, SourceRefs
 
 __all__ = [
     "DeclaracionIdiomaValue",
-    "ExportComputedKey",
-    "ExportDraftAttribute",
     "ExportFieldDataType",
     "ExportFieldDefinition",
     "ExportLayoutDefinition",
     "ExportLayoutFormatValue",
     "ExportRecordDefinition",
-    "ExportSemanticPayloadAxis",
-    "ExportValuePolicyValue",
     "FilingEnvelopeCloserDerivation",
     "FilingEnvelopeDefinition",
     "FilingEnvelopePrefixFieldDeclaration",
@@ -256,7 +252,7 @@ class FilingEnvelopeDefinition(RegistryModel):
 #: written as a bare default so the number has one home: a reader can find every
 #: site bound to this format, and a version bump cannot land on the model while a
 #: writer stamping the old number silently disagrees with it.
-AUXILIARY_ENVELOPE_HEADER_SCHEMA_VERSION: Final[int] = 1
+AUXILIARY_ENVELOPE_HEADER_SCHEMA_VERSION: Final[Literal[1]] = 1
 
 
 class AuxiliaryEnvelopeHeaderDefinition(RegistryModel):

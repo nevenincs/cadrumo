@@ -14,15 +14,17 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....core import Period, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import (
-    CalculationRevision,
-    CalculationRevisionAmendmentKind,
-    CalculationRevisionState,
     ExternalEvidenceKind,
     WorkUnit,
-    derive_calculation_revision_id,
     derive_work_unit_id,
     upsert_calculation_revision,
     upsert_work_unit,
+)
+from ....domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionAmendmentKind,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from .._action_errors import (

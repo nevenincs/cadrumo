@@ -38,8 +38,11 @@ from pathlib import Path
 from typing import Final
 
 import pytest
+from pydantic import TypeAdapter
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
+
+_JSON_OBJECT_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(dict[str, object])
 
 #: Run in a child interpreter. ``argv[1]`` is the evidence file.
 _CHILD: Final = """
@@ -86,9 +89,7 @@ def _run_child(tmp_path: Path, *, source: str) -> dict[str, object]:
     )
     assert completed.returncode == 0, f"child failed: {completed.stderr[-800:]}"
     assert evidence.is_file(), f"child left no observation; stderr: {completed.stderr[-800:]}"
-    payload = json.loads(evidence.read_text(encoding="utf-8"))
-    assert isinstance(payload, dict)
-    return payload
+    return _JSON_OBJECT_ADAPTER.validate_python(json.loads(evidence.read_text(encoding="utf-8")))
 
 
 def test_a_session_left_open_is_sealed_by_the_interpreter_exit_hook(tmp_path: Path) -> None:

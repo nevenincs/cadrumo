@@ -29,12 +29,17 @@ def test_bulk_classify_from_oracle_resolved_at_runtime(tmp_path: Path) -> None:
     lines = ["transaction_id,classification,category_id"]
     expected: dict[str, str] = {}
     for row in rows:
+        tx_id = row["transaction_id"]
+        assert isinstance(tx_id, str)
         rule = _match(row["description"], rules)
         if rule is None or rule["classification"] == "MIXED":
             continue
-        cat = rule.get("category_id") or ""
-        lines.append(f"{row['transaction_id']},{rule['classification']},{cat}")
-        expected[row["transaction_id"]] = rule["classification"]
+        classification = rule["classification"]
+        assert isinstance(classification, str)
+        cat_raw = rule.get("category_id")
+        cat = cat_raw if isinstance(cat_raw, str) else ""
+        lines.append(f"{tx_id},{classification},{cat}")
+        expected[tx_id] = classification
         if len(expected) >= 12:
             break
     assert len(expected) == 12

@@ -31,8 +31,10 @@ from pydantic import (
 )
 
 from ...core import STRICT_FROZEN_CONFIG
+from ...core.citation_grounding import CitationGrounding
 from ...core.errors import BaseSeverity
 from ...core.parsing import parse_iso8601_date
+from ...core.validity_window import ValidityWindow
 from .errors import IvaValidationError
 
 
@@ -647,27 +649,6 @@ class IvaRateRecord(_IvaStrictFrozen):
         return self
 
 
-class IvaCitationGrounding(StrEnum):
-    """Whether a citation's text was read against the corpus, or refused.
-
-    The distinction is the point. An unverified citation and one examined and
-    found unsupportable look identical when both simply lack text, and the
-    catalogue spent its whole life in that state: every quotation was a
-    translation key resolving to the literal word "Quoted text", so nothing
-    could tell a grounded citation from an ungrounded one.
-    """
-
-    VERIFIED = "verified"
-    """The quotation was read from the bundled corpus and supports the claim."""
-
-    UNRESOLVED = "unresolved"
-    """Examined and refused: the cited article does not support the category.
-
-    Not "not yet checked". A citation carrying this has been read against the
-    corpus and the reason it failed is recorded beside it.
-    """
-
-
 class IvaCitation(_IvaStrictFrozen):
     """A legal or regulatory citation backing a :class:`IvaRegulation`.
 
@@ -683,6 +664,14 @@ class IvaCitation(_IvaStrictFrozen):
         grounding: Whether the text was verified or the citation refused.
         unresolved_reason: Why the citation could not be grounded. Required
             when, and only when, :attr:`grounding` is ``UNRESOLVED``.
+        valid_from: First date this citation is asserted to support the rule.
+        valid_to: Last date, inclusive.
+
+    Both window bounds are required and closed. The span is a grounding claim,
+    not bookkeeping: it says the cited provision supports this rule across those
+    years, and a gate holds it inside the provision's own effective span in the
+    registry legal catalogue. A defaulted or open end would assert grounding
+    nobody typed and nothing could check.
     """
 
     legal_reference: _RegistryLegalRef = Field(
@@ -692,14 +681,30 @@ class IvaCitation(_IvaStrictFrozen):
         default="",
         description="Verbatim Spanish from the bundled corpus; empty only when grounding is unresolved.",
     )
-    grounding: IvaCitationGrounding = Field(
-        default=IvaCitationGrounding.VERIFIED,
+    grounding: CitationGrounding = Field(
+        default=CitationGrounding.VERIFIED,
         description="Whether the quotation was verified against the corpus, or examined and refused.",
     )
     unresolved_reason: str = Field(
         default="",
         description="Why the citation could not be grounded; required when grounding is unresolved.",
     )
+    valid_from: date = Field(
+        description="First date this citation is asserted to support the rule.",
+    )
+    valid_to: date = Field(
+        description="Last date, inclusive, this citation is asserted to support the rule.",
+    )
+
+    @property
+    def window(self) -> ValidityWindow:
+        """Return the closed span this citation is asserted over.
+
+        Returns:
+            The :class:`~core.validity_window.ValidityWindow` the declared
+            bounds describe.
+        """
+        return ValidityWindow(valid_from=self.valid_from, valid_to=self.valid_to)
 
     @model_validator(mode="after")
     def _validate(self) -> IvaCitation:
@@ -712,7 +717,11 @@ class IvaCitation(_IvaStrictFrozen):
         every citation in the catalogue.
         """
         where = f"IvaCitation[{self.legal_reference}]"
-        if self.grounding is IvaCitationGrounding.VERIFIED:
+        # Constructing the window is the validation: an inverted span covers no
+        # year at all, and must refuse where it was written rather than make the
+        # citation silently vanish from every filing year downstream.
+        _ = self.window
+        if self.grounding is CitationGrounding.VERIFIED:
             if not self.quoted_text.strip():
                 raise IvaValidationError(f"{where}: a verified citation must carry its verbatim quotation")
             if self.unresolved_reason.strip():

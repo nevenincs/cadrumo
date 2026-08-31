@@ -130,6 +130,7 @@ flows:
           ledger_transaction: Nyilvántartási tétel
           m303_regimen_simplificado_annual_summary: 303-as modelo egyszerűsített rendszer
             összesítő
+          m347_third_party_operation: Harmadik féllel folytatott ügylet
           manual_input: Kézi adatbevitel
           payable_invoice: Bejövő számla
           previous_filing: Előző bevallás
@@ -206,6 +207,30 @@ flows:
       verification_outcome: Ellenőrzés eredménye
       work_unit: Munkamegység
     title: Modelo {modelo} · {filing_year} · {period}
+  modelo_select:
+    column:
+      filing_year: Adóév
+      modelo: Modell
+      name: Név
+      period: Időszak
+      state: Állapot
+    empty: Ehhez a profilhoz még nincs regisztrált munkaegység.
+    title: Modell munkaegység kiválasztása
+  passphrase:
+    cancel_button: Mégse
+    change_button: Jelszó módosítása
+    confirm_label: Új jelszó megerősítése
+    current_label: Jelenlegi jelszó
+    intro: Ez lecseréli a profilját védő jelszót. Az általa védett adatok nem kerülnek
+      újratitkosításra, csak újracsomagolásra.
+    new_hint: Legalább 12 karakter, betűk, számok vagy szimbólumok keverékével.
+    new_label: Új jelszó
+    refusal:
+      change_failed: A jelszót nem sikerült módosítani.
+      confirmation_mismatch: A megerősítés nem egyezik az új jelszóval.
+      current_required: Adja meg a jelenlegi jelszavát.
+    section: Jelszó
+    title: Jelszó módosítása
   progress:
     current_answer: 'Jelenlegi válasz: {value}'
     current_answer_secret: 'Jelenlegi válasz: (rejtett)'
@@ -256,6 +281,7 @@ flows:
     header: Áttekintés - {answered} megválaszolt kérdés.
     header_tui: 'Áttekintés - {answered} megválaszolva, {remaining} kötelező még nyitva,
       beküldésre kész: {eligible}'
+    header_tui_stage_label: Áttekintés
     mode_create: létrehozási mód
     mode_modify: módosítási mód
     orphan_marker: (már nem kérdezzük)

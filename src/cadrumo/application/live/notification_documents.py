@@ -41,7 +41,7 @@ from collections.abc import Callable
 from datetime import datetime
 from typing import Final, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings
@@ -127,8 +127,9 @@ class NotificationDocumentRecord(BaseModel):
             document is another kind, or when the reader REFUSED — a refusal is
             recorded as an absent reading, never as a zeroed one, and the bytes
             are kept either way so an operator can read them themselves.
-        parse_refusal: Why the reading is absent, when it is. Carried so the
-            refusal survives in the record instead of being lost to a log line.
+        parse_refusal: Why the reading is absent, required exactly when it is.
+            Carried so the refusal survives in the record instead of being lost
+            to a log line.
         mode: Structural read-only marker.
     """
 
@@ -144,6 +145,33 @@ class NotificationDocumentRecord(BaseModel):
     sancion: SancionLiquidacion | None = None
     parse_refusal: str | None = Field(default=None, min_length=1, max_length=512)
     mode: Literal["read"] = "read"
+
+    @model_validator(mode="after")
+    def _a_reading_is_present_or_refused_never_both_nor_neither(self) -> NotificationDocumentRecord:
+        """Refuse a custody record that does not say what became of the reading.
+
+        The two fields are one answer expressed in two slots, so exactly one of
+        them is populated on every record. Neither populated is the dangerous
+        state: it reads as "the document held no figures" when the truth is
+        that nobody looked, and an operator who trusts it stops reading a
+        served act that may carry an amount. Both populated is the incoherent
+        one — a reading the reader simultaneously refused to vouch for.
+
+        Enforced here rather than at the surfaces that project the record,
+        because this is a statement about the custody data itself and holds for
+        every reader port, every stored row and every reload of one.
+        """
+        if self.sancion is not None and self.parse_refusal is not None:
+            raise ValueError(
+                "a notification document carries a sancion reading or the reason there is none, "
+                "and this record carries both a reading and a refusal",
+            )
+        if self.sancion is None and self.parse_refusal is None:
+            raise ValueError(
+                "a notification document carries a sancion reading or the reason there is none, "
+                "and this record carries neither a reading nor a refusal",
+            )
+        return self
 
     @property
     def snapshot_id(self) -> str:

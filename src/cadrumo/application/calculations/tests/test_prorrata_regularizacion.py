@@ -20,12 +20,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.casilla_membership import (
-    casilla_noncanonical_reference_targets,
-    declared_casilla_ids,
-)
-from cadrumo.domain.calculations.registry.ledger_bindings import IvaLedgerObservation
-
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -44,6 +38,11 @@ from ....core import (
     validated_casilla_id,
 )
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.casilla_membership import (
+    casilla_noncanonical_reference_targets,
+    declared_casilla_ids,
+)
+from ....domain.calculations.registry.ledger_bindings import IvaLedgerObservation
 from ....domain.iva import (
     IvaCategory,
     IvaDeductionClassificationProvenance,
@@ -53,15 +52,11 @@ from ....domain.iva import (
     IvaRateKind,
     RegularizacionProrrataDireccion,
 )
-from ....domain.modelos import (
+from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id, upsert_calculation_revision, upsert_work_unit
+from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    ModeloCode,
-    WorkUnit,
     derive_calculation_revision_id,
-    derive_work_unit_id,
-    upsert_calculation_revision,
-    upsert_work_unit,
 )
 from ....domain.prorrata_register import ProrrataProvisionalResolution
 from ....tests import general_m303_filing_evidence

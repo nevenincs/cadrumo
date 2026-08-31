@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#cadrumo-product-rename-s62-locale-normalization'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-27'
+body_schema: 'body-v2'
 body_hash: 'sha256:523bb0f230cb1259c9e4df9c250ad7b9ea5c50d93bac7a177450185f3b26e667'
 related:
   - '[[2026-07-13-cadrumo-product-rename-s62-locale-normalization-audit]]'

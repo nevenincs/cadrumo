@@ -7,7 +7,7 @@
 
 [[revisions."2025-y-siguientes".bindings]]
 id = "modelo-347-declarante-numero-personas-entidades"
-source = "collectible_invoice"
+source = "m347_third_party_operation"
 selector = { fact = "operator_count", record = "m347_declarante_summary", rectification_scope = "any" }
 aggregation = { op = "count_distinct" }
 legal_refs = [
@@ -29,7 +29,7 @@ required_text = ["operaciones con terceras personas"]
 
 [[revisions."2025-y-siguientes".bindings]]
 id = "modelo-347-declarante-importe-total-anual-operaciones"
-source = "collectible_invoice"
+source = "m347_third_party_operation"
 selector = { fact = "invoice_total_sum", record = "m347_declarante_summary", rectification_scope = "any" }
 aggregation = { op = "sum" }
 legal_refs = [

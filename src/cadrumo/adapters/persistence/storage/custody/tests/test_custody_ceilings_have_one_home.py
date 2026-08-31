@@ -93,7 +93,7 @@ def test_the_scan_finds_the_real_package() -> None:
     modules = sorted(path.name for path in _custody_modules())
 
     assert len(modules) > 10, f"the custody package scan found only {len(modules)} modules"
-    assert "_filesystem.py" in modules, "the scan is not seeing the module that owns these ceilings"
+    assert "filesystem.py" in modules, "the scan is not seeing the module that owns these ceilings"
 
 
 @pytest.mark.parametrize("ceiling", _SINGLE_HOME_CEILINGS)
@@ -162,8 +162,8 @@ def test_a_crypto_parameter_is_defined_only_in_the_crypto_package(parameter: str
     """
     homes = _defining_modules_under(_STORAGE_PACKAGE, parameter)
 
-    assert homes == ("crypto/_crypto.py",), (
-        f"{parameter} is defined in {list(homes)}. Its one home is crypto/_crypto.py, where it is "
+    assert homes == ("crypto/aead.py",), (
+        f"{parameter} is defined in {list(homes)}. Its one home is crypto/aead.py, where it is "
         "documented with the standard it comes from. Import it rather than restating the number."
     )
 
@@ -178,8 +178,8 @@ def test_the_storage_scan_reaches_the_crypto_module() -> None:
     """
     modules = {path.relative_to(_STORAGE_PACKAGE).as_posix() for path in _STORAGE_PACKAGE.rglob("*.py")}
 
-    assert "crypto/_crypto.py" in modules
-    assert "custody/_records.py" in modules
+    assert "crypto/aead.py" in modules
+    assert "custody/records.py" in modules
     assert "master_key/_bucket_session.py" in modules
 
 
@@ -209,7 +209,7 @@ def test_the_function_scan_finds_a_function_the_constant_scan_cannot() -> None:
     used it, an empty result would look like compliance. Both are asserted
     here so the distinction cannot quietly collapse back into one helper.
     """
-    assert _defining_function_modules("_read_regular_file") == ("_filesystem.py",)
+    assert _defining_function_modules("_read_regular_file") == ("filesystem.py",)
     assert _defining_modules("_read_regular_file") == ()
 
 
@@ -234,7 +234,7 @@ def test_the_anchored_reader_name_has_one_implementation() -> None:
     """
     homes = _defining_function_modules("_read_regular_file")
 
-    assert homes == ("_filesystem.py",), (
+    assert homes == ("filesystem.py",), (
         f"_read_regular_file is defined in {list(homes)}. A second reader under this name will be "
         "read as the anchored one by every caller that does not open it. Name a reader with "
         "different guarantees for the constraint it carries, as _read_external_regular_file does."

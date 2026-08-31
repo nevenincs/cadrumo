@@ -31,6 +31,7 @@ from .schema import DataBindingDefinition, ModeloRevision
 
 __all__ = [
     "Gasto193Observation",
+    "_Gasto193Selector",
     "resolve_gasto193_binding_row_values",
     "resolve_gasto193_binding_values",
     "validate_gasto193_binding_selector_shape",
@@ -85,6 +86,7 @@ def _gasto193_selector(binding: DataBindingDefinition) -> _Gasto193Selector:
 
 
 def validate_gasto193_binding_selector_shape(binding: DataBindingDefinition) -> list[str]:
+    """Validate a ``gasto193`` binding's selector shape and fact/aggregation invariants."""
     try:
         selector = _gasto193_selector(binding)
     except ValueError as exc:
@@ -112,6 +114,7 @@ def resolve_gasto193_binding_values(
     revision: ModeloRevision,
     observations: Iterable[Gasto193Observation],
 ) -> dict[str, Decimal]:
+    """Resolve every ``gasto193`` scalar-sum binding on the revision to its aggregated value."""
     available = tuple(observations)
     resolved: dict[str, Decimal] = {}
     for binding in revision.bindings:

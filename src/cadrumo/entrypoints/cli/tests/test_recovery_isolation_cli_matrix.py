@@ -17,6 +17,7 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
+from ....application.user_profile.login_session import login_profile
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -38,12 +39,27 @@ def _test_passphrase() -> str:
 
 def _archive_export(label: str, target: Path) -> Result:
     args = ["config", "profile", "archive", "export", label, "--output", str(target)]
-    return _invoke(args, input=f'{{"password": "{_test_passphrase()}"}}')
+    return _invoke(args, input=f'{{"passphrase": "{_test_passphrase()}"}}')
 
 
 def _restore_from(source: Path, *, label: str) -> Result:
-    args = ["config", "profile", "restore", label, "--file", str(source), "--secrets-stdin"]
-    return _invoke(args, input=f'{{"password": "{_test_passphrase()}"}}')
+    args = ["config", "profile", "archive", "import", label, "--file", str(source), "--secrets-stdin"]
+    return _invoke(args, input=f'{{"passphrase": "{_test_passphrase()}"}}')
+
+
+def _register_and_login(*, label: str, passphrase: str) -> None:
+    """Register a profile and unlock it, as every CLI-surface caller must.
+
+    Registration closes its own session, so a freshly registered profile is
+    LOCKED and the archive export door refuses it.  The export under test is
+    the operator's real backup path, which is only reachable logged in.
+    """
+    register_profile_with_credentials(
+        recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+        label=label,
+        passphrase=passphrase,
+    )
+    login_profile(name=label, passphrase_callback=lambda: passphrase)
 
 
 def test_a_foreign_archive_restores_its_own_profile_without_touching_the_active_one(
@@ -56,21 +72,13 @@ def test_a_foreign_archive_restores_its_own_profile_without_touching_the_active_
     selected profile and A's capsule lands beside it under A's own identity.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path / "a-root"):
-        register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
-            label="Isolation CLI A",
-            passphrase=_test_passphrase(),
-        )
+        _register_and_login(label="Isolation CLI A", passphrase=_test_passphrase())
         archive_path = tmp_path / "a.cadrumo-bucket.tar.gz"
         r_export = _archive_export("Isolation CLI A", archive_path)
         assert r_export.exit_code == 0, r_export.output
 
     with isolated_profile_storage_root(tmp_path=tmp_path / "b-root"):
-        register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
-            label="Isolation CLI B",
-            passphrase=_PASSPHRASE_B,
-        )
+        _register_and_login(label="Isolation CLI B", passphrase=_PASSPHRASE_B)
         r_restore = _restore_from(archive_path, label="Isolation CLI A restored")
         assert r_restore.exit_code == 0, r_restore.output
 
@@ -85,24 +93,16 @@ def test_the_active_profiles_passphrase_cannot_open_the_restored_profile(
 ) -> None:
     """B's passphrase refuses at A's login — the CLI door holds the boundary."""
     with isolated_profile_storage_root(tmp_path=tmp_path / "a-root"):
-        register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
-            label="Isolation CLI A",
-            passphrase=_test_passphrase(),
-        )
+        _register_and_login(label="Isolation CLI A", passphrase=_test_passphrase())
         archive_path = tmp_path / "a.cadrumo-bucket.tar.gz"
         assert _archive_export("Isolation CLI A", archive_path).exit_code == 0
 
     with isolated_profile_storage_root(tmp_path=tmp_path / "b-root"):
-        register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
-            label="Isolation CLI B",
-            passphrase=_PASSPHRASE_B,
-        )
+        _register_and_login(label="Isolation CLI B", passphrase=_PASSPHRASE_B)
         assert _restore_from(archive_path, label="Isolation CLI A restored").exit_code == 0
 
         refused = _invoke(
             ["config", "login", "Isolation CLI A restored", "--secrets-stdin"],
-            input=f'{{"password": "{_PASSPHRASE_B}"}}',
+            input=f'{{"passphrase": "{_PASSPHRASE_B}"}}',
         )
         assert refused.exit_code != 0, refused.output

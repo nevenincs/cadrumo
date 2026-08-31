@@ -11,8 +11,6 @@ from pathlib import Path
 import pytest
 from sqlalchemy import text
 
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
@@ -30,6 +28,7 @@ from ....core import (
 from ....core.classification import SensitivityClass
 from ....domain.bienes_inversion import BienesInversionIvaRegister
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.categories import SpendingCategory
 from ....domain.invoices import (
     Invoice,

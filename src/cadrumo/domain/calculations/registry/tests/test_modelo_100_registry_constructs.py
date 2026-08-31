@@ -17,9 +17,10 @@ from ....contribuyente import (
     RentaFamilyProfile,
     TaxResidenceProfile,
 )
+from .._validate import RegistryValidator
+from .._validate_constructs import _CONSTRUCT_MEMBER_ATTRS
 from ..binding_selector_utils import selector_as_dict
-from ..constructs import resolve_construct, resolve_revision_constructs
-from ..errors import RegistrySnapshotError, RegistryValidationError
+from ..errors import RegistryValidationError
 from ..export import resolve_export_layout
 from ..export_parse import parse_export_payload
 from ..remote_state_guard import (
@@ -31,14 +32,12 @@ from ..schema import DataBindingDefinition, RegistrySnapshot
 from ..schema_input_kind import InputKind
 from ..schema_surfaces import CasillaDefinition
 from ..snapshot import build_snapshot
-from ..validate import RegistryValidator
 from ._modelo_100_registry_support import (
     _DECLARATIONS_LISTING_URL,
     _MEMBER_GROUNDED_2025_CONSTRUCT_IDS,
     _PERSONAL_FAMILY_BINDINGS,
     _PERSONAL_FAMILY_CASILLAS,
     _SOURCE_FOUNDATION_APPLICATION_LINKS,
-    _UNKNOWN_CONSTRUCT_MEMBER_CASILLA,
     _assert_registry_validation_error,
     _binding_map_by_casilla,
     _loaded_registry,
@@ -97,6 +96,29 @@ def _snapshot_with_populated_identifier_map(field_name: str) -> tuple[RegistrySn
     values = cast(Mapping[str, object], getattr(snapshot, field_name))
     assert values, f"real Modelo 100 snapshot must populate {field_name}"
     return snapshot, values
+
+
+def _construct_members(construct: object) -> tuple[tuple[str, str], ...]:
+    """Return every (kind, member id) a construct declares.
+
+    Driven from the registry validator's own kind-to-field mapping, so a new
+    member kind reaches these assertions the moment production learns it.
+    """
+    members: list[tuple[str, str]] = []
+    for kind, attribute in _CONSTRUCT_MEMBER_ATTRS.items():
+        for member_id in getattr(construct, attribute, ()):
+            assert isinstance(member_id, str)
+            members.append((kind, member_id))
+    return tuple(members)
+
+
+def _members_of_kind(construct: object, kind: str) -> tuple[str, ...]:
+    """Return the member ids a construct declares for one kind."""
+    members: list[str] = []
+    for member_id in getattr(construct, _CONSTRUCT_MEMBER_ATTRS[kind], ()):
+        assert isinstance(member_id, str)
+        members.append(member_id)
+    return tuple(members)
 
 
 def test_real_registry_snapshots_accept_identifier_keyed_maps() -> None:
@@ -162,7 +184,7 @@ def test_modelo_100_dependent_modelos_construct_covers_dependency_members() -> N
 def test_modelo_100_2025_member_grounded_constructs_do_not_declare_extra_legal_refs() -> None:
     snapshot = _modelo_100_snapshot()
     revision = snapshot.revision
-    resolved_constructs = {construct.id: construct for construct in resolve_revision_constructs(revision)}
+    resolved_constructs = {construct.id: construct for construct in revision.constructs}
     member_indexes = {
         "casilla": {item.id: item for item in revision.casillas},
         "formula": {item.id: item for item in revision.formulas},
@@ -175,8 +197,9 @@ def test_modelo_100_2025_member_grounded_constructs_do_not_declare_extra_legal_r
     for construct_id in _MEMBER_GROUNDED_2025_CONSTRUCT_IDS:
         construct = resolved_constructs[construct_id]
         member_refs: set[str] = set()
-        for member in construct.members:
-            member_refs.update(getattr(member_indexes[member.kind][member.id], "legal_refs", ()))
+        for kind, member_id in _construct_members(construct):
+            if kind in member_indexes:
+                member_refs.update(getattr(member_indexes[kind][member_id], "legal_refs", ()))
         extra_refs = sorted(set(construct.legal_refs) - member_refs)
         if extra_refs:
             offenders[construct_id] = extra_refs
@@ -462,35 +485,30 @@ def test_modelo_100_application_links_route_current_workflows_through_snapshots(
     assert links_by_surface["workflow"].consumer == "cadrumo.application.workflow"
 
 
-def test_modelo_100_construct_reader_resolves_revision_member_objects() -> None:
+def test_modelo_100_constructs_declare_their_revision_members() -> None:
     modelos_by_id, _catalogues = _loaded_registry()
     revision = modelos_by_id["100"].revisions["2025"]
-    constructs = {construct.id: construct for construct in resolve_revision_constructs(revision)}
+    constructs = {construct.id: construct for construct in revision.constructs}
     dependencies = constructs["renta-dependent-modelos"]
     economic_activities = constructs["renta-economic-activities"]
     filed_dependency_binding_ids = {
         binding.id for binding in revision.bindings if binding.source in {"previous_filing", "relation_prefill"}
     }
 
-    assert {member.id for member in dependencies.members_of_kind("binding")} == filed_dependency_binding_ids
-    assert {member.id for member in dependencies.members_of_kind("relation")} == {
-        relation.id for relation in revision.relations
-    }
-    assert "renta-2025-modelo-100-estimacion-directa-es-normal" in {
-        member.id for member in economic_activities.members_of_kind("binding")
-    }
-    for member in dependencies.members:
-        assert cast(Any, member.value).id == member.id
+    assert set(_members_of_kind(dependencies, "binding")) == filed_dependency_binding_ids
+    assert set(_members_of_kind(dependencies, "relation")) == {relation.id for relation in revision.relations}
+    assert "renta-2025-modelo-100-estimacion-directa-es-normal" in _members_of_kind(economic_activities, "binding")
 
 
 def test_modelo_100_renta_section_constructs_classify_registered_relation_sources() -> None:
     modelos_by_id, _catalogues = _loaded_registry()
     revision = modelos_by_id["100"].revisions["2025"]
     relations_by_id = {relation.id: relation for relation in revision.relations}
-    constructs = {construct.id: construct for construct in resolve_revision_constructs(revision)}
+    constructs = {construct.id: construct for construct in revision.constructs}
     source_modelos_by_construct = {
         construct_id: {
-            relations_by_id[member.id].source_modelo for member in constructs[construct_id].members_of_kind("relation")
+            relations_by_id[member_id].source_modelo
+            for member_id in _members_of_kind(constructs[construct_id], "relation")
         }
         for construct_id in (
             "renta-work-income",
@@ -507,10 +525,8 @@ def test_modelo_100_renta_section_constructs_classify_registered_relation_source
         "renta-economic-activities": {"130", "131", "184"},
     }
     real_estate = constructs["renta-real-estate-capital"]
-    assert "0598" in {member.id for member in real_estate.members_of_kind("casilla")}
-    assert "renta-2025-retenciones-arrendamientos-urbanos" in {
-        member.id for member in real_estate.members_of_kind("formula")
-    }
+    assert "0598" in _members_of_kind(real_estate, "casilla")
+    assert "renta-2025-retenciones-arrendamientos-urbanos" in _members_of_kind(real_estate, "formula")
 
 
 def test_modelo_100_dependency_classifications_cover_registered_relation_sources() -> None:
@@ -721,60 +737,6 @@ def test_modelo_100_objective_estimation_record_design_paths_roundtrip_from_expo
         "1553": Decimal("315.00"),
         "1577": Decimal("128.00"),
     }
-
-
-def test_construct_reader_rejects_unknown_construct_id() -> None:
-    _modelo, revision = _modelo_100_revision_2025()
-
-    with pytest.raises(RegistrySnapshotError, match="has no construct"):
-        resolve_construct(revision, "missing-construct")
-
-
-def test_construct_reader_rejects_unknown_member_id_at_runtime() -> None:
-    """`resolve_construct` carries a defence-in-depth runtime check: if a
-    construct's member tuple references an id absent from the matching
-    revision index, it raises `RegistrySnapshotError` mentioning the
-    construct id, the member kind, and the unknown id. The pre-flight
-    validator should normally catch this, but the runtime gate must hold
-    independently — this test pins the message format and the runtime
-    branch."""
-    _modelo, revision = _modelo_100_revision_2025()
-    construct = next(item for item in revision.constructs if item.casilla_ids)
-    mutated_construct = construct.model_copy(
-        update={"casilla_ids": (*construct.casilla_ids, _UNKNOWN_CONSTRUCT_MEMBER_CASILLA)},
-    )
-    mutated_revision = revision.model_copy(
-        update={
-            "constructs": tuple(mutated_construct if item.id == construct.id else item for item in revision.constructs),
-        },
-    )
-
-    with pytest.raises(
-        RegistrySnapshotError,
-        match=rf"construct '{construct.id}' references unknown casilla '{_UNKNOWN_CONSTRUCT_MEMBER_CASILLA}'",
-    ):
-        resolve_construct(mutated_revision, construct.id)
-
-
-def test_construct_reader_rejects_blank_grounding_refs_at_projection_boundary() -> None:
-    _modelo, revision = _modelo_100_revision_2025()
-    construct = next(item for item in revision.constructs if item.legal_refs and item.source_refs)
-
-    for update in (
-        {"legal_refs": ("",)},
-        {"source_refs": ("",)},
-    ):
-        mutated_construct = construct.model_copy(update=update)
-        mutated_revision = revision.model_copy(
-            update={
-                "constructs": tuple(
-                    mutated_construct if item.id == construct.id else item for item in revision.constructs
-                ),
-            },
-        )
-
-        with pytest.raises(ValidationError, match=next(iter(update))):
-            resolve_construct(mutated_revision, construct.id)
 
 
 def test_validator_rejects_construct_sources_without_official_guidance() -> None:

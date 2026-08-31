@@ -21,18 +21,24 @@ from typing import Final, Literal
 from pydantic import BaseModel, Field, computed_field, model_validator
 
 from cadrumo.application.filing import FilingExportProofAuthority
-from cadrumo.application.registry import (
-    FilingExportCoverageReport,
+from cadrumo.application.registry.closure import (
     RegistryClosureLimb,
     RegistryClosureLimbName,
     RegistryClosureOwnerDisposition,
+)
+from cadrumo.application.registry.filing_export_coverage import (
+    FilingExportCoverageReport,
+    compose_filing_export_coverage,
+)
+from cadrumo.application.registry.source_connectivity import load_source_connectivity_census
+from cadrumo.application.registry.source_connectivity_coverage import (
     SourceConnectivityCoverageReport,
+    compose_source_connectivity_coverage,
+)
+from cadrumo.application.registry.temporal_coverage import (
     TemporalCoverageReport,
     TemporalRevisionCoverageSummary,
-    compose_filing_export_coverage,
-    compose_source_connectivity_coverage,
     compose_temporal_coverage,
-    load_source_connectivity_census,
 )
 from cadrumo.core import STRICT_FROZEN_CONFIG, RegistryAuthorityGrade, SourceConnectivityProofAuthority
 from cadrumo.domain.calculations.registry.authority import (

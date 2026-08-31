@@ -7,13 +7,12 @@ from urllib.parse import urlsplit
 
 import pytest
 
-from cadrumo.domain.calculations.registry.renta_web_open_oracle import (
+from ......core import CasillaId, validated_casilla_id
+from ......core.config import Settings
+from ......domain.calculations.registry.renta_web_open_oracle import (
     RentaWebOpenLivePayload,
     equivalent_renta_web_open_value,
 )
-
-from ......core import CasillaId, validated_casilla_id
-from ......core.config import Settings
 from ......tests.aeat_literal_fixtures import (
     AEAT_SUFFIX_LOOKALIKE_HOST_CANARY,
     CENSAL_WRITE_SURFACE_PATH_CANARIES,

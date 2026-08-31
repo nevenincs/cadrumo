@@ -98,7 +98,7 @@ def _run_in_fresh_profile[T](
 def _seed_parent(repository: TransactionCatalogueRepository) -> str:
     raw = RawTransaction(
         provider_transaction_id="row-review",
-        booked_date=date(2026, 5, 1),
+        booked_date=date(2025, 5, 1),
         value_date=date(2026, 5, 1),
         amount=Decimal("121.00"),
         currency="EUR",

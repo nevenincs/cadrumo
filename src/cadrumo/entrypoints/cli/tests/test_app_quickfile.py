@@ -29,13 +29,12 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
-from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
-
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.state_projection import ProjectionModeloReadiness
 from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind, Period
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva import (
     IvaDeductionClassificationProvenance,
@@ -44,7 +43,7 @@ from ....domain.iva import (
     RegimenSimplificadoFilingRows,
 )
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
-from ....domain.modelos import (
+from ....domain.modelos.calculation_revision import (
     FilingInstanceEvidence,
     M303Exonerado390FilingEvidence,
     M303FilingInstanceEvidence,
@@ -344,14 +343,21 @@ def _stage_status(payload: dict[str, object]) -> dict[str, str]:
     return result
 
 
-def test_quickfile_m115_reaches_granted_verify_before_withdrawn_export(
+def test_quickfile_runs_full_chain_to_exported_fichero(
     tmp_path: Path,
 ) -> None:
-    """A calculable M115 reaches verify, then refuses its unavailable layout.
+    """One command carries a calculable M115 from create to a written fichero.
 
     Modelo 115 1T 2026 with one seeded retención observation is calculable, so
-    the chain reaches granted verification. Because no complete export layout is
-    currently authored, export must refuse without writing a local artefact.
+    the chain reaches granted verification and then EXPORTS: the revision's
+    ``modelo-115-fichero-boe`` layout is a renderable fixed-width definition
+    carrying its records, so local declaration bytes are produced.
+
+    This assertion was inverted for a period when no complete export layout was
+    authored and the stage legitimately refused. The layout is authored again,
+    so the refusal it asserted no longer describes the product -- and asserting
+    a refusal that cannot happen is a test that passes by never running its
+    subject.
     """
 
     _create_profile()
@@ -368,11 +374,11 @@ def test_quickfile_m115_reaches_granted_verify_before_withdrawn_export(
         ],
     )  # fmt: skip
 
-    assert result.exit_code == 1, result.output
+    assert result.exit_code == 0, result.output
     assert "Traceback" not in result.output
     payload = _payload(result.output)
-    assert payload["completed"] is False, result.output
-    assert payload["stopped_at_stage"] == "export", json.dumps(payload, sort_keys=True)
+    assert payload["completed"] is True, result.output
+    assert payload["stopped_at_stage"] is None, json.dumps(payload, sort_keys=True)
     assert payload["granted_verificado_completo"] is True
     assert payload["work_unit_id"]
     assert payload["calculation_revision_id"]
@@ -381,14 +387,16 @@ def test_quickfile_m115_reaches_granted_verify_before_withdrawn_export(
     assert statuses["create"] == "ok"
     assert statuses["calculate"] == "ok"
     assert statuses["verify"] == "ok"
-    assert statuses["export"] == "refused"
+    assert statuses["export"] == "ok"
     # readiness is advisory and may be ok or warning; it must never refuse.
     assert statuses["readiness"] in {"ok", "warning"}
 
-    notice_text = json.dumps(_notices(result.output), sort_keys=True)
-    assert "no complete export_layouts definition" in notice_text
-    assert payload["export"] is None
-    assert not out.exists()
+    # The fichero is the point of the chain, so its BYTES are asserted rather
+    # than the stage status alone: an export reported ok that wrote nothing
+    # would satisfy every check above.
+    assert payload["export"] is not None
+    assert out.exists(), f"quickfile reported an ok export but wrote no file at {out}"
+    assert out.stat().st_size > 0, "the exported fichero is empty"
 
 
 def test_quickfile_m303_fully_taxable_ledger_reaches_granted_verify_before_withdrawn_export(

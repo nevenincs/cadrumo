@@ -106,12 +106,7 @@ def _reconcile_notices(outcome: ProfileBundleExportReconciliation) -> tuple[Noti
             Notice(
                 severity=NoticeSeverity.INFO,
                 code="config.profile.archive.reconcile.nothing_to_reconcile",
-                message=tr(
-                    "cli.config.profile.archive.reconcile_none_info",
-                    default=(
-                        "No interrupted profile-bundle export was found. Nothing was left behind by a previous run."
-                    ),
-                ),
+                message=tr("cli.config.profile.archive.reconcile_none_info"),
             ),
         )
     if outcome.reconciled:
@@ -121,12 +116,6 @@ def _reconcile_notices(outcome: ProfileBundleExportReconciliation) -> tuple[Noti
                 code="config.profile.archive.reconcile.cleared",
                 message=tr(
                     "cli.config.profile.archive.reconcile_cleared_info",
-                    default=(
-                        "Cleared {count} interrupted profile-bundle export(s). Any "
-                        "leftover unencrypted staged file was removed, and an export "
-                        "that had already been written to disk received its missing "
-                        "audit record."
-                    ),
                     count=str(len(outcome.reconciled)),
                 ),
                 context={"reconciled_count": str(len(outcome.reconciled))},
@@ -139,11 +128,6 @@ def _reconcile_notices(outcome: ProfileBundleExportReconciliation) -> tuple[Noti
                 code="config.profile.archive.reconcile.failures",
                 message=tr(
                     "cli.config.profile.archive.reconcile_failures_warning",
-                    default=(
-                        "{count} interrupted profile-bundle export(s) could not be "
-                        "cleared and were kept for a later attempt. An unencrypted "
-                        "staged file may remain on disk for each."
-                    ),
                     count=str(len(outcome.failures)),
                 ),
                 action=resolve_notice_action(action=ActionReference(action_id="operator.profile.archive.reconcile")),

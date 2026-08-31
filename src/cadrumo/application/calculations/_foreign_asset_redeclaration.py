@@ -27,10 +27,6 @@ from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from urllib.parse import quote
 
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
-from cadrumo.domain.calculations.registry.bindings_previous_filing import previous_filing_binding_source_casilla_ids
-from cadrumo.domain.calculations.registry.detail_record_bindings import foreign_asset_binding_row_field
-
 from ...core import (
     MODELO_720_FOREIGN_ASSET_CLASS_CODES,
     BindingSourceKind,
@@ -40,13 +36,16 @@ from ...core import (
     foreign_asset_obligation_group,
 )
 from ...core.aggregation import ForeignAssetClass
+from ...domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from ...domain.calculations.registry.bindings_previous_filing import previous_filing_binding_source_casilla_ids
+from ...domain.calculations.registry.detail_record_bindings import foreign_asset_binding_row_field
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.modelos import (
-    CalculationRevision,
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
+from ...domain.modelos.calculation_revision import CalculationRevision
 from .._foreign_asset_thresholds import foreign_asset_declaration_thresholds
 
 _M720_VALUATION_CASILLA_GROUPS: Mapping[CasillaId, ForeignAssetObligationGroup] = {

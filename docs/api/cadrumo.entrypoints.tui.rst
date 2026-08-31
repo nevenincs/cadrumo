@@ -17,6 +17,7 @@ Subpackages
    cadrumo.entrypoints.tui.devtools
    cadrumo.entrypoints.tui.flows
    cadrumo.entrypoints.tui.modelo
+   cadrumo.entrypoints.tui.operations
    cadrumo.entrypoints.tui.profile
    cadrumo.entrypoints.tui.secret
 
@@ -26,4 +27,6 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   cadrumo.entrypoints.tui.__main__
+   cadrumo.entrypoints.tui.app
    cadrumo.entrypoints.tui.launcher

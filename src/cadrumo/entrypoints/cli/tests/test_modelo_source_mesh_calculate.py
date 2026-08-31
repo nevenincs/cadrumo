@@ -9,17 +9,21 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.profile.usage_ratios import save_usage_ratios
-from ....core import STR_KEYED_MAPPING_ADAPTER, Period
+from ....core import (
+    STR_KEYED_MAPPING_ADAPTER,
+    IvaDeductionEvidenceAuthority,
+    IvaDeductionFactKind,
+    Period,
+)
 from ....core.errors import ERROR_REGISTRY
+from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.categories import SpendingCategory
 from ....domain.invoices import InvoiceCatalogue
-from ....domain.iva import EUMemberState, IvaCategory
+from ....domain.iva import EUMemberState, IvaCategory, IvaDeductionClassificationProvenance
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -38,25 +42,29 @@ from ....tests.profile_capsule import open_test_profile_session
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from ....tests.user_profile import register_cli_profile
+from ._m303_filing_evidence_support import write_m303_filing_evidence
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _IVA_WALLET_DECIDED_AT = datetime(2026, 5, 28, 16, 10, tzinfo=UTC)
 
 
-def _create_profile() -> None:
-    """Register the profile through the shared CLI registration door."""
-    register_cli_profile(
-        label="operator",
-        facts={
-            "identity.tax_id": "12345678Z",
-            "taxpayer_type.entity_type": "natural_person",
-            "identity.name": "Operator",
-            "identity.surnames": "Operator",
-            "activities.description": "design",
-            "taxpayer_type.irpf_income_categories": "actividad_economica",
-        },
-    )
+def _create_profile(**extra_facts: str) -> None:
+    """Register the profile through the shared CLI registration door.
+
+    ``extra_facts`` carries per-modelo attestations that readiness demands of
+    that modelo alone, so the shared profile stays minimal.
+    """
+    facts = {
+        "identity.tax_id": "12345678Z",
+        "taxpayer_type.entity_type": "natural_person",
+        "identity.name": "Operator",
+        "identity.surnames": "Operator",
+        "activities.description": "design",
+        "taxpayer_type.irpf_income_categories": "actividad_economica",
+    }
+    facts.update(extra_facts)
+    register_cli_profile(label="operator", facts=facts)
 
 
 def _create_work_unit(*, modelo: str, year: int, period: str) -> dict[str, str]:
@@ -151,6 +159,8 @@ def _transaction(
     # contract.)
     iva_rate: Decimal | None = Decimal("0.21"),
     iva_category: IvaCategory | None = None,
+    deduction_fact_kind: IvaDeductionFactKind | None = None,
+    deduction_locator: str | None = None,
     counterparty_country: str | None = None,
     counterparty_identification_state: EUMemberState | None = None,
 ) -> Transaction:
@@ -169,6 +179,16 @@ def _transaction(
     }
     if iva_category is not None:
         fields["iva_category"] = iva_category
+    if deduction_fact_kind is not None:
+        # LIVA art. 97: the factura confers the right to deduct, so an input
+        # row only reaches a soportado binding once it carries its
+        # invoice-evidence deduction authority.
+        fields["deduction_fact_kind"] = deduction_fact_kind
+        fields["deduction_provenance"] = IvaDeductionClassificationProvenance(
+            authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+            source_locator=deduction_locator or "invoice:test-purchase",
+            evidence_digest="a" * 64,
+        )
     if counterparty_country is not None:
         fields["counterparty_country"] = counterparty_country
     if counterparty_identification_state is not None:
@@ -533,7 +553,11 @@ def test_work_calculate_modelo_100_autonoma_visible_target_uses_registered_error
 def test_work_calculate_modelo_111_no_retenciones_quarter_names_profile_attestation_path() -> None:
     """A no-observation M111 quarter is not filed blank; the CLI names the attestation path."""
 
-    _create_profile()
+    # Modelo 111 readiness demands an explicit colegio-concertado attestation
+    # (preflight.py:280), and the export producer refuses without it
+    # (_producer_snapshot.py:1548). Declare it so the run reaches the
+    # no-retenciones attestation path this test is about.
+    _create_profile(**{"withholding.colegio_concertado": "false"})
     _create_111_work_unit()
 
     calculated = invoke_cached_cli(
@@ -561,10 +585,14 @@ def test_work_calculate_modelo_111_no_retenciones_quarter_names_profile_attestat
     assert envelope["error"]["context"]["modelo"] == "111"
     assert envelope["error"]["context"]["period"] == "2T"
     assert envelope["error"]["context"]["source_kind"] == "retenciones_aggregation"
-    suggestion = envelope["error"]["suggestion"]
-    assert "--retencion-observation" in suggestion
-    assert "do not file an all-blank Modelo 111" in suggestion
-    assert "--modelo-111-no-retenciones-periods 2025:2T" in suggestion
+    # The free-text ``suggestion`` field is gone -- ``suggestion`` is a reserved
+    # action-context key. The attestation steer now rides the localised message,
+    # following the Modelo 180 precedent, because the wizard setup command
+    # projects no inputs for the typed action channel to bind against.
+    message = envelope["error"]["message"]
+    assert "--retencion-observation" in message
+    assert "all-blank Modelo 111" in message
+    assert "--modelo-111-no-retenciones-periods 2025:2T" in message
 
     attested = invoke_cached_cli(
         [
@@ -578,7 +606,7 @@ def test_work_calculate_modelo_111_no_retenciones_quarter_names_profile_attestat
         ],
     )
     assert attested.exit_code == 0, attested.output
-    shown = invoke_cached_cli(("config", "profile", "show", "operator"))
+    shown = invoke_cached_cli(("config", "profile", "view", "operator"))
     assert shown.exit_code == 0, shown.output
     assert "withholding.modelo_111_no_retenciones_periods\t2025:2T,2025:3T,2025:4T" in shown.output
 
@@ -616,7 +644,16 @@ def test_work_calculate_modelo_115_classified_rent_row_requires_perceptor_eviden
     assert envelope["error"]["context"]["modelo"] == "115"
     assert envelope["error"]["context"]["period"] == "1T"
     assert envelope["error"]["context"]["source_kind"] == "retenciones_aggregation"
-    assert "--retencion-observation" in envelope["error"]["suggestion"]
+    # The free-text ``suggestion`` field is gone: ``suggestion`` is a reserved
+    # action-context key, and guidance now rides the typed action projection.
+    # Assert that projection rather than prose -- it names the failed condition
+    # exactly, and records that no mechanical recovery exists for it.
+    action = envelope["error"]["action"]
+    assert action["failed_condition_id"] == "aggregation.retenciones.observations.present"
+    assert action["no_recovery_outcome"] == "operator_decision"
+    assert action["action"] is None
+    assert "retention observations" in envelope["error"]["message"]
+    assert "115" in envelope["error"]["message"]
 
 
 def test_work_calculate_modelo_180_refuses_string_perceptor_casilla_with_detail_guidance() -> None:
@@ -647,11 +684,15 @@ def test_work_calculate_modelo_180_refuses_string_perceptor_casilla_with_detail_
     assert "--retencion-observation" in envelope["error"]["message"]
 
 
-def test_work_calculate_persists_ledger_source_mesh_observations() -> None:
+def test_work_calculate_persists_ledger_source_mesh_observations(tmp_path: Path) -> None:
     from ....core.bucket_pointer import resolve_active_bucket_id
 
     _create_profile()
     work_unit = _create_303_work_unit()
+    evidence_path = write_m303_filing_evidence(
+        tmp_path / "m303-filing-evidence.json",
+        Period.from_year_and_code(2026, "1T"),
+    )
     # The CLI JSON output redacts ``bucket_id`` to the literal placeholder
     # ``"<bucket-id>"``; that placeholder is not a valid filesystem path
     # segment on Windows (``<`` / ``>`` are reserved). Resolve the real
@@ -673,6 +714,8 @@ def test_work_calculate_persists_ledger_source_mesh_observations() -> None:
         amount=Decimal("60.50"),
         taxable_base=Decimal("50.00"),
         iva_amount=Decimal("10.50"),
+        deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_CURRENT,
+        deduction_locator="invoice:purchase-general-2026-1T",
     )
 
     # Seed ledger data and a zero-amount IVA wallet decision via a live
@@ -717,6 +760,8 @@ def test_work_calculate_persists_ledger_source_mesh_observations() -> None:
             "work",
             "calculate",
             str(work_unit["work_unit_id"]),
+            "--m303-filing-evidence",
+            str(evidence_path),
         ],
     )
     assert result.exit_code == 0, result.output
@@ -815,7 +860,7 @@ def _seed_zero_iva_wallet_decision(bucket_id: str) -> None:
         IvaWalletDecisionRepository().save_decision(decision)
 
 
-def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_supply() -> None:
+def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_supply(tmp_path: Path) -> None:
     """An INTRA_COMMUNITY_SUPPLY observation is cuota-less, so it raises NO advisory.
 
     Per the ``aeat-ledger-contract`` rule, an
@@ -831,6 +876,10 @@ def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_suppl
 
     _create_profile()
     work_unit = _create_303_work_unit()
+    evidence_path = write_m303_filing_evidence(
+        tmp_path / "m303-filing-evidence.json",
+        Period.from_year_and_code(2026, "1T"),
+    )
     resolved = resolve_active_bucket_id()
     assert resolved is not None, "profile create must install an active-profile pointer"
     bucket_id = resolved
@@ -881,6 +930,8 @@ def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_suppl
             "work",
             "calculate",
             str(work_unit["work_unit_id"]),
+            "--m303-filing-evidence",
+            str(evidence_path),
         ],
     )
     assert result.exit_code == 0, result.output
@@ -902,13 +953,15 @@ def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_suppl
             "work",
             "calculate",
             str(work_unit["work_unit_id"]),
+            "--m303-filing-evidence",
+            str(evidence_path),
         ],
     )
     assert text_result.exit_code == 0, text_result.output
     assert "ADVISORY:" not in text_result.output
 
 
-def test_work_calculate_emits_no_advisory_when_all_iva_consumed() -> None:
+def test_work_calculate_emits_no_advisory_when_all_iva_consumed(tmp_path: Path) -> None:
     """#64 converse: an all-consumed IVA observation set surfaces ZERO advisories.
 
     Anti-tautology guard for the advisory test above: only observations no
@@ -920,6 +973,10 @@ def test_work_calculate_emits_no_advisory_when_all_iva_consumed() -> None:
 
     _create_profile()
     work_unit = _create_303_work_unit()
+    evidence_path = write_m303_filing_evidence(
+        tmp_path / "m303-filing-evidence.json",
+        Period.from_year_and_code(2026, "1T"),
+    )
     resolved = resolve_active_bucket_id()
     assert resolved is not None, "profile create must install an active-profile pointer"
     bucket_id = resolved
@@ -946,6 +1003,8 @@ def test_work_calculate_emits_no_advisory_when_all_iva_consumed() -> None:
             "work",
             "calculate",
             str(work_unit["work_unit_id"]),
+            "--m303-filing-evidence",
+            str(evidence_path),
         ],
     )
     assert result.exit_code == 0, result.output
@@ -962,6 +1021,8 @@ def test_work_calculate_emits_no_advisory_when_all_iva_consumed() -> None:
             "work",
             "calculate",
             str(work_unit["work_unit_id"]),
+            "--m303-filing-evidence",
+            str(evidence_path),
         ],
     )
     assert text_result.exit_code == 0, text_result.output

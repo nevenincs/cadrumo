@@ -13,9 +13,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-
 from ....core import CasillaId
 from .bindings import binding_source_casilla_ids, binding_source_modelo
 from .casilla_membership import casillas_by_id
@@ -23,6 +20,8 @@ from .errors import RegistryValidationError
 from .ids import LegalRefId, RevisionId
 from .record_design_schema import RecordDesignSheet
 from .runtime_graph import expression_casilla_refs
+from .schema import DataBindingDefinition, ModeloRevision
+from .schema_surfaces import CasillaDefinition
 
 
 def _extract_record_design(path: Path) -> tuple[RecordDesignSheet, ...]:
@@ -494,7 +493,7 @@ def derive_calculation_completeness_casillas(
         # admits an exact name or that name followed by a space. It stays a
         # prefix-to-WORD-boundary comparison rather than a bare startswith, so
         # "714-1" cannot claim "714-10 Patrimonio".
-        matched = any(
+        matched = diseno_pairs is not None and any(
             number == pair_number and (segmento == sheet_name or sheet_name.startswith(f"{segmento} "))
             for sheet_name, pair_number in diseno_pairs
         )

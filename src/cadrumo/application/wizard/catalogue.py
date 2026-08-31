@@ -8,7 +8,7 @@ file reads or environment lookups during construction.
 
 from __future__ import annotations
 
-from ...core import RentaDeclaracionType
+from ...core import RentaDeclaracionType, ThirdPartyDeclarationRole
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES
 from ...core.i18n import Translatable as tr
 from ...core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH, SetupAnswers
@@ -184,6 +184,17 @@ _IRPF_INCOME_CATEGORY_CHOICES: tuple[WizardChoice, ...] = tuple(
         ),
     )
     for member in IrpfIncomeCategory
+)
+
+_THIRD_PARTY_DECLARATION_ROLE_CHOICES: tuple[WizardChoice, ...] = tuple(
+    WizardChoice(
+        value=member.value,
+        label=tr(f"wizard.setup.taxpayer-type.declaration-roles.choices.{member.value.replace('_', '-')}.label"),
+        description=tr(
+            f"wizard.setup.taxpayer-type.declaration-roles.choices.{member.value.replace('_', '-')}.description",
+        ),
+    )
+    for member in ThirdPartyDeclarationRole
 )
 
 _IRPF_ESTIMATION_REGIME_CHOICES: tuple[WizardChoice, ...] = tuple(
@@ -551,6 +562,16 @@ _ACTIVIDAD_SECTION = WizardSection(
             choices=_IRPF_INCOME_CATEGORY_CHOICES,
             required=False,
             visible_when=_NATURAL_PERSON,
+            answer_type=str,
+        ),
+        WizardQuestion(
+            id="declaration-roles",
+            profile_key="taxpayer_type.declaration_roles",
+            widget=WizardWidget.CHECKBOX,
+            prompt=tr("wizard.setup.taxpayer-type.declaration-roles.prompt"),
+            help=tr("wizard.setup.taxpayer-type.declaration-roles.help"),
+            choices=_THIRD_PARTY_DECLARATION_ROLE_CHOICES,
+            required=False,
             answer_type=str,
         ),
         WizardQuestion(

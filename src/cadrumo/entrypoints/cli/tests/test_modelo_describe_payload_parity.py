@@ -21,9 +21,8 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.query_reports import ModeloDescribeReport
-
 from ....core import Period
+from ....domain.calculations.registry.query_reports import ModeloDescribeReport
 from .._modelo_aux_payloads import ModeloDescribeResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -143,7 +142,7 @@ def test_cli_payload_refuses_out_of_range_values(field: str, value: int) -> None
     """The same bounds hold at the operator envelope, not only in the domain."""
     report = _report()
     fields = {
-        name: (list(value) if isinstance(value := getattr(report, name), tuple) else value)
+        name: (list(raw_value) if isinstance(raw_value := getattr(report, name), tuple) else raw_value)
         for name in ModeloDescribeReport.model_fields
     }
     fields[field] = value

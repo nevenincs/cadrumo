@@ -32,6 +32,7 @@ from __future__ import annotations
 import shutil
 import subprocess
 import tarfile
+import tomllib
 import zipfile
 from collections.abc import Callable
 from pathlib import Path
@@ -46,7 +47,43 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _WHEEL_PREFIX = "cadrumo"
 _WHEEL_DATA_PREFIX = "cadrumo/_data"
 _WHEEL_CORPUS_PREFIX = f"{_WHEEL_DATA_PREFIX}/corpus/"
-_FORBIDDEN_REPOSITORY_ROOTS = frozenset({".vault", ".vaultspec", "dev"})
+# Members the build backend places in an archive on its own behalf whatever the
+# project declares: its own generated metadata, and the version-control ignore
+# file hatchling ships so a rebuild from the archive reproduces. Both survive an
+# explicit exclude, so they are recognised rather than fought.
+_BUILD_BACKEND_MEMBERS = frozenset({"PKG-INFO", ".gitignore"})
+
+
+def _wheel_root(member: str) -> str:
+    """The wheel member's top-level name, with the backend's version stamp trimmed.
+
+    ``cadrumo/`` and ``cadrumo-<version>.dist-info/`` are both the product's own.
+    """
+    return Path(member).parts[0].partition("-")[0]
+
+
+def _sdist_root(member: str) -> str:
+    """The sdist member's top-level name, matched whole.
+
+    Not version-trimmed: an sdist's top-level members are real filenames, and
+    trimming would read ``PKG-INFO`` as ``PKG``.
+    """
+    return Path(member).parts[0]
+
+
+def _declared_sdist_roots() -> frozenset[str]:
+    """The top-level names the build configuration declares the sdist ships.
+
+    Derived from the declaration rather than restated here. A restated list is
+    the construct that falls behind what it describes: it would keep passing
+    over content the build configuration no longer ships, and would fail over
+    content it legitimately added. Reading the declaration makes the archive
+    answerable to the same authority that produced it.
+    """
+    config = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    declared = config["tool"]["hatch"]["build"]["targets"]["sdist"]["include"]
+    return frozenset(Path(entry).parts[0] for entry in declared)
+
 
 # Corpus source binaries the wheel-split excludes; they ship in the two
 # ``aeat-data-*`` companions, so zero of them may appear in this slim wheel.
@@ -135,17 +172,31 @@ def test_wheel_excludes_every_test_member(wheel_members: frozenset[str]) -> None
     )
 
 
-def test_distributions_exclude_repository_development_infrastructure(
+def test_distributions_ship_only_the_product_package(
     wheel_members: frozenset[str],
     sdist_members: frozenset[str],
 ) -> None:
-    """Neither product archive delivers Vault records or repository-only tooling."""
+    """Every archive member belongs to the product package or its own build metadata.
 
-    for archive_kind, members in (("wheel", wheel_members), ("sdist", sdist_members)):
-        offenders = sorted(
-            member for member in members if Path(member).parts and Path(member).parts[0] in _FORBIDDEN_REPOSITORY_ROOTS
+    Stated as a closed allowlist rather than a list of excluded repository
+    roots. An allowlist cannot fall behind the repository: a new top-level
+    directory is refused the moment it reaches an archive, whereas an
+    exclusion list only ever refuses the roots someone remembered to name.
+    """
+
+    # An installed wheel is the package and the backend's own dist-info; an
+    # sdist additionally carries the project files the build configuration
+    # declares. Each archive is judged against what IT may ship, never against
+    # a shared list that would have to be loosened to the union of both.
+    allowed_by_archive = (
+        ("wheel", wheel_members, frozenset({_WHEEL_PREFIX}), _wheel_root),
+        ("sdist", sdist_members, _declared_sdist_roots() | _BUILD_BACKEND_MEMBERS, _sdist_root),
+    )
+    for archive_kind, members, allowed_roots, root_of in allowed_by_archive:
+        offenders = sorted(member for member in members if Path(member).parts and root_of(member) not in allowed_roots)
+        assert not offenders, (
+            f"{archive_kind} delivers members the build configuration never declared: {offenders[:10]!r}"
         )
-        assert not offenders, f"{archive_kind} delivers development-only repository members: {offenders[:10]!r}"
 
 
 def test_wheel_keeps_required_data_roots(wheel_members: frozenset[str]) -> None:

@@ -22,7 +22,7 @@ from ....core import (
     SourceConnectivityOperatorReachabilityProof,
 )
 from ....core.identity import CalculationRevisionId
-from ....domain.modelos import (
+from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
     CalculationRevisionState,
@@ -39,7 +39,7 @@ from ...operator_surface import (
     SupportedModeloCalculationWorkflowCatalogue,
     build_supported_modelo_calculation_workflow_catalogue,
 )
-from .. import (
+from ..source_connectivity_authority import (
     CalculationRouteResolverSourceOwnership,
     CalculationRouteSourceOwnershipCatalogue,
     LiveSourceConnectivityProofAuthority,

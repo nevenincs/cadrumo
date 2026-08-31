@@ -22,7 +22,8 @@ from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.filing import ModeloBuilderError
 from ....domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
-from .. import _filing_period_date, build_draft, build_runtime_schema_provider
+from .. import build_draft, build_runtime_schema_provider
+from .._draft_construction import _filing_period_date
 from ..runtime import ModeloOperatorProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -182,11 +183,19 @@ def test_build_draft_rejects_noncanonical_casilla_reference_token(
     # The refusal renders through the locale catalogue, so the offending token
     # and the canonical casilla it should have named live in the TYPED context,
     # not in str(exc) -- which is only the message key.
+    assert exc_info.value.context is not None
     context = dict(exc_info.value.context)
-    assert input_key in context["input_keys"]
-    reference = next(ref for ref in context["noncanonical_references"] if ref["token"] == input_key)
-    assert casilla.id in reference["canonical_casilla_ids"]
-    assert expected_fragment in (casilla.id, *reference["canonical_casilla_ids"])
+    input_keys = context["input_keys"]
+    assert isinstance(input_keys, tuple)
+    assert input_key in input_keys
+    noncanonical_references = context["noncanonical_references"]
+    assert isinstance(noncanonical_references, tuple)
+    reference = next(ref for ref in noncanonical_references if isinstance(ref, dict) and ref["token"] == input_key)
+    assert isinstance(reference, dict)
+    canonical_casilla_ids = reference["canonical_casilla_ids"]
+    assert isinstance(canonical_casilla_ids, tuple)
+    assert casilla.id in canonical_casilla_ids
+    assert expected_fragment in (casilla.id, *canonical_casilla_ids)
 
 
 def test_build_draft_rejects_ambiguous_reused_printed_number() -> None:

@@ -378,25 +378,21 @@ def test_accepted_source_kinds_covers_all_four_members() -> None:
 
 
 def test_counterpart_canonical_source_kinds_are_enum_members() -> None:
-    """_counterpart._CANONICAL_SOURCE_KINDS must contain BindingSourceKind members."""
-    from .._counterpart import _CANONICAL_SOURCE_KINDS as counterpart_kinds
+    """The canonical counterpart source-kind set must contain BindingSourceKind members."""
+    from ....core.aggregation import COUNTERPART_SOURCE_KINDS as counterpart_kinds
 
     assert len(counterpart_kinds) == 4
     for kind in counterpart_kinds:
-        assert isinstance(kind, BindingSourceKind), (
-            f"_counterpart._CANONICAL_SOURCE_KINDS entry {kind!r} is {type(kind).__name__}"
-        )
+        assert isinstance(kind, BindingSourceKind), f"COUNTERPART_SOURCE_KINDS entry {kind!r} is {type(kind).__name__}"
 
 
 def test_retenciones_canonical_source_kinds_are_enum_members() -> None:
-    """_retenciones._CANONICAL_SOURCE_KINDS must contain BindingSourceKind members."""
-    from .._retenciones import _CANONICAL_SOURCE_KINDS as retenciones_kinds
+    """The canonical counterpart source-kind set must contain BindingSourceKind members."""
+    from ....core.aggregation import COUNTERPART_SOURCE_KINDS as retenciones_kinds
 
     assert len(retenciones_kinds) == 4
     for kind in retenciones_kinds:
-        assert isinstance(kind, BindingSourceKind), (
-            f"_retenciones._CANONICAL_SOURCE_KINDS entry {kind!r} is {type(kind).__name__}"
-        )
+        assert isinstance(kind, BindingSourceKind), f"COUNTERPART_SOURCE_KINDS entry {kind!r} is {type(kind).__name__}"
 
 
 def test_foreign_assets_canonical_source_kinds_are_enum_members() -> None:
@@ -412,7 +408,7 @@ def test_foreign_assets_canonical_source_kinds_are_enum_members() -> None:
 
 def test_operator_accepted_kind_map_uses_enum_keys_for_aggregation_source_kinds() -> None:
     """_operator._ACCEPTED_KIND_TO_INTERNAL must use BindingSourceKind for the four aggregation kinds."""
-    from ...review._operator import _ACCEPTED_KIND_TO_INTERNAL
+    from ...review.operator import _ACCEPTED_KIND_TO_INTERNAL
 
     aggregation_keys = {
         BindingSourceKind.LEDGER_TRANSACTION,

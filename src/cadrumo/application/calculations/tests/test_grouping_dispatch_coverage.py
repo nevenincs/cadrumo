@@ -21,10 +21,9 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
-
 from ....domain.calculations.registry.authority import bundled_authority
-from .._row_set_assembly import _GROUPING_DISPATCH
+from ....domain.calculations.registry.binding_selector_utils import selector_as_dict
+from ..row_set_assembly import _GROUPING_DISPATCH
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

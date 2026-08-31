@@ -8,7 +8,13 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-from . import validate_cross_revision as cross_revision_validation
+from . import _validate_cross_revision as cross_revision_validation
+from ._validate_cross_revision import (
+    cross_revision_casilla_consistency_failures as _validate_cross_revision_casilla_consistency,
+)
+from ._validate_cross_revision import (
+    strict_cross_revision_casilla_continuity_failures as _validate_strict_cross_revision_casilla_continuity,
+)
 from ._validate_label_artifacts import validate_no_label_artifacts
 from ._validate_previous_filing_year_coverage import validate_previous_filing_source_year_coverage
 from ._validate_relation_sources import (
@@ -27,12 +33,6 @@ from ._validate_semantic_roles import (
     semantic_role_typo_twin_failures as _validate_semantic_role_typo_twins,
 )
 from .schema import ModeloDefinition
-from .validate_cross_revision import (
-    cross_revision_casilla_consistency_failures as _validate_cross_revision_casilla_consistency,
-)
-from .validate_cross_revision import (
-    strict_cross_revision_casilla_continuity_failures as _validate_strict_cross_revision_casilla_continuity,
-)
 from .validate_revision_identity import duplicates as _duplicates
 
 

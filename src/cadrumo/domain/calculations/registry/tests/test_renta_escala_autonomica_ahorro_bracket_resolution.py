@@ -46,7 +46,7 @@ from functools import cache
 import pytest
 
 from ..errors import RegistryValidationError
-from ..formula_runtime import _resolve_bracket
+from ..formula_runtime_ops import resolve_bracket
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -93,7 +93,7 @@ def test_ahorro_escala_declares_art_76_legal_ref() -> None:
 def test_ahorro_escala_resolves_at_zero_base() -> None:
     for year in _ALL_YEARS:
         table = _ahorro_table(year)
-        cuota = _resolve_bracket(table, Decimal("0"), {"filing_period": date(year, 12, 31)})
+        cuota = resolve_bracket(table, Decimal("0"), {"filing_period": date(year, 12, 31)})
         assert cuota == Decimal("0"), year
 
 
@@ -106,7 +106,7 @@ def test_ahorro_escala_aeat_manual_2800_worked_example() -> None:
     """
     for year in _ALL_YEARS:
         table = _ahorro_table(year)
-        cuota = _resolve_bracket(table, Decimal("2800"), {"filing_period": date(year, 12, 31)})
+        cuota = resolve_bracket(table, Decimal("2800"), {"filing_period": date(year, 12, 31)})
         assert cuota == Decimal("266.000"), year
 
 
@@ -115,7 +115,7 @@ def test_ahorro_escala_at_6000_breakpoint_matches_published_incremento() -> None
     second bracket: 570 EUR (AEAT manual art.76 autonomica table)."""
     for year in _ALL_YEARS:
         table = _ahorro_table(year)
-        cuota = _resolve_bracket(table, Decimal("6000"), {"filing_period": date(year, 12, 31)})
+        cuota = resolve_bracket(table, Decimal("6000"), {"filing_period": date(year, 12, 31)})
         assert cuota == Decimal("570.000"), year
 
 
@@ -124,7 +124,7 @@ def test_ahorro_escala_at_50000_breakpoint_matches_published_incremento() -> Non
     third bracket: 5.190 EUR (AEAT manual art.76 autonomica table)."""
     for year in _ALL_YEARS:
         table = _ahorro_table(year)
-        cuota = _resolve_bracket(table, Decimal("50000"), {"filing_period": date(year, 12, 31)})
+        cuota = resolve_bracket(table, Decimal("50000"), {"filing_period": date(year, 12, 31)})
         assert cuota == Decimal("5190.000"), year
 
 
@@ -133,7 +133,7 @@ def test_ahorro_escala_at_200000_breakpoint_matches_published_incremento() -> No
     bracket added by Ley 11/2020 (effective 2021): 22.440 EUR."""
     for year in _YEARS_WITH_200K_BRACKET:
         table = _ahorro_table(year)
-        cuota = _resolve_bracket(table, Decimal("200000"), {"filing_period": date(year, 12, 31)})
+        cuota = resolve_bracket(table, Decimal("200000"), {"filing_period": date(year, 12, 31)})
         assert cuota == Decimal("22440.000"), year
 
 
@@ -142,7 +142,7 @@ def test_ahorro_escala_at_300000_breakpoint_matches_published_incremento() -> No
     top bracket added by Ley 31/2022 (effective 2023): 35.940 EUR."""
     for year in _YEARS_WITH_300K_BRACKET:
         table = _ahorro_table(year)
-        cuota = _resolve_bracket(table, Decimal("300000"), {"filing_period": date(year, 12, 31)})
+        cuota = resolve_bracket(table, Decimal("300000"), {"filing_period": date(year, 12, 31)})
         assert cuota == Decimal("35940.000"), year
 
 
@@ -251,4 +251,4 @@ def test_ahorro_escala_rejects_date_outside_year_window() -> None:
         table = _ahorro_table(year)
         other_year = year - 5
         with pytest.raises(RegistryValidationError, match="no bracket valid"):
-            _resolve_bracket(table, Decimal("2800"), {"filing_period": date(other_year, 6, 1)})
+            resolve_bracket(table, Decimal("2800"), {"filing_period": date(other_year, 6, 1)})

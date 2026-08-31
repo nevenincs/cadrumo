@@ -17,10 +17,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from ...core import Period
-from ._calculation_revision import CalculationRevisionCatalogue
 from ._filing_record import ModeloRecord, ModeloRecordCatalogue
 from ._participation_index import TransactionRevisionParticipationIndex
 from ._verification_report import VerificationReportCatalogue
+from .calculation_revision import CalculationRevisionCatalogue
 
 if TYPE_CHECKING:
     from collections.abc import Callable

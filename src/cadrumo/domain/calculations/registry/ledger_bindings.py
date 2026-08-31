@@ -31,7 +31,6 @@ from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_valida
 
 from ....core import STRICT_FROZEN_CONFIG, CasillaId, IvaDeductionFactKind, Modelo, validated_casilla_id
 from ....core.aggregation import (
-    LEDGER_BINDING_SOURCE_KINDS,
     BindingAggregationOp,
     BindingSourceKind,
     LedgerIncomeGrounding,
@@ -51,21 +50,21 @@ from ...iva import (
     IvaRateKind,
     OssIossRegime,
     TransactionKind,
+    is_deducible_flow,
     validate_iva_deduction_fact,
+)
+from ._ledger_binding_resolution import (
+    UnroutedLedgerQuantity,
+    resolve_ledger_family_binding_values,
+    unrouted_ledger_family_quantities,
+    unsupported_ledger_family_observations,
 )
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import invariant_diagnostics, selector_against_model
 from .binding_selector_utils import selector_as_dict as _selector_as_dict
 from .errors import RegistryValidationError
 from .ids import BindingId
-from .ledger_binding_resolution import (
-    UnroutedLedgerQuantity,
-    assert_quantity_readers_cover_independent_facts,
-    independent_quantity_facts,
-    resolve_ledger_family_binding_values,
-    unrouted_ledger_family_quantities,
-    unsupported_ledger_family_observations,
-)
+from .quantity_screen_enrolment import assert_quantity_readers_cover_independent_facts, independent_quantity_facts
 from .schema import DataBindingDefinition, ModeloRevision
 from .schema_base import coerce_decimal_tuple, coerce_enum_member, coerce_enum_tuple
 
@@ -80,7 +79,6 @@ from .schema_base import coerce_decimal_tuple, coerce_enum_member, coerce_enum_t
 # IRNR income projection). Cross-domain consumers route through this name so the
 # registry stays the single source of truth for ledger readiness.
 __all__ = [
-    "LEDGER_BINDING_SOURCE_KINDS",
     "IvaLedgerObservation",
     "IvaSelectorAxesProtocol",
     "OssIossLedgerObservation",
@@ -478,14 +476,7 @@ class IvaLedgerObservation(BaseModel):
                 "exemption_article is only valid when category is DOMESTIC_EXEMPT; "
                 f"got category {self.category.value!r}",
             )
-        if (
-            self.flow_direction
-            not in {
-                IvaFlowDirection.SOPORTADO,
-                IvaFlowDirection.INVERSION_SUJETO_PASIVO,
-            }
-            or self.category is IvaCategory.RECARGO_EQUIVALENCIA
-        ):
+        if not is_deducible_flow(self.flow_direction) or self.category is IvaCategory.RECARGO_EQUIVALENCIA:
             if self.deduction_fact_kind is not None or self.deduction_provenance is not None:
                 raise RegistryValidationError("output IVA facts cannot carry deduction authority")
             return self
@@ -924,7 +915,7 @@ def unsupported_ledger_iva_observations(
 # this family, not an unfilled placeholder, and
 # ``test_ledger_quantity_screen_partition`` asserts it so the claim is checked
 # rather than left as an absence a later author could fill in unnoticed.
-_IVA_ALTERNATIVE_MEASURE_FACTS: Mapping[str, str] = {}
+_IVA_ALTERNATIVE_MEASURE_FACTS: Mapping[str, str] = dict[str, str]()
 
 #: DERIVED as the complement, exactly as the renta side derives its own, so the
 #: two sets cannot drift apart.

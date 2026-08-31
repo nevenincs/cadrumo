@@ -6,16 +6,15 @@ from collections.abc import Callable
 
 import pytest
 
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.schedules import applicable_filing_schedules
-from cadrumo.domain.calculations.registry.validate import RegistryValidator
-
 from .....core.errors import BaseSeverity
 from .....core.resources import bundled_path
 from ....deadlines import IVARegime, ModeloEnrollment, TaxpayerProfile
 from ....user_profile.loader import load_user_profile_schema
 from ....user_profile.registry_contract import validate_user_profile_registry_contract
+from .._validate import RegistryValidator
 from ..authority import ValidatedRegistryAuthority
+from ..errors import RegistryValidationError
+from ..schedules import applicable_filing_schedules
 from ..schema import RegistrySnapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -93,8 +92,17 @@ def test_validator_rejects_filing_schedule_cadence_contradictions(
     contradictory_kind: str,
 ) -> None:
     modelo = registry_authority.modelo(modelo_id)
-    revision = next(iter(modelo.revisions.values()))
-    schedule = next(item for item in revision.filing_schedules if item.period_kind == declared_kind)
+    # Select the revision BY THE PROPERTY UNDER TEST, never by position. Modelo
+    # 184 declares six revisions and only the newest two carry a filing
+    # schedule at all, so taking the first one reached whichever revision the
+    # mapping happened to yield -- 2015, which declares none -- and the test
+    # died on an empty search instead of exercising the validator.
+    revision, schedule = next(
+        (candidate, item)
+        for candidate in modelo.revisions.values()
+        for item in candidate.filing_schedules
+        if item.period_kind == declared_kind
+    )
     contradictory = schedule.model_copy(update={"period_kind": contradictory_kind})
     mutated_revision = revision.model_copy(update={"filing_schedules": (contradictory,)})
     mutated_modelo = modelo.model_copy(update={"revisions": {revision.id: mutated_revision}})

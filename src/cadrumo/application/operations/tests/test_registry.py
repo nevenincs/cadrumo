@@ -10,6 +10,7 @@ import pytest
 from pydantic import (
     BaseModel,
     BeforeValidator,
+    ConfigDict,
     Field,
     GetCoreSchemaHandler,
     GetJsonSchemaHandler,
@@ -36,6 +37,7 @@ from ....core import (
     OperationEffect,
     OperationLifecycle,
 )
+from ....core.identity import ContentDigest, WorkUnitId
 from ....core.operations import OperationInteractionKind
 from ...operator_actions import ActionReference
 from ..capabilities import (
@@ -49,6 +51,7 @@ from ..capabilities import (
 )
 from ..interactions import OperationInteractionRequest
 from ..models import (
+    CredentialFreeOperationRequest,
     OperationIdentity,
     OperationRequest,
     OperationSnapshot,
@@ -65,6 +68,8 @@ from ..registry import (
     OperationRegistry,
     OperationSchemaBindingV1,
     OperationSchemaIdentityV1,
+    _strict_model_json_schema,
+    _validate_credential_free_schema,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -214,10 +219,23 @@ class ComputedPayload(BaseModel):
         return self.value
 
 
+#: Strict and frozen like the shared constant, but deliberately WITHOUT
+#: ``validate_default``. The witness below needs to hold a default its own field
+#: would reject; the shared constant now validates defaults, which makes that
+#: violation inexpressible and leaves the gate with nothing to refuse.
+_UNVALIDATED_DEFAULT_WITNESS_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+
 class InvalidDefaultPayload(BaseModel):
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = _UNVALIDATED_DEFAULT_WITNESS_CONFIG
 
     value: int = cast(int, "not-an-integer")  # intentional admission witness
+
+
+class ValidatedDefaultPayload(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+
+    value: int = 0
 
 
 class FieldSerializerPayload(BaseModel):
@@ -808,6 +826,72 @@ def test_public_schema_identity_refuses_secret_capable_schema_branches() -> None
         )
 
 
+class _DigestNamedContentDigestPayload(CredentialFreeOperationRequest):
+    """A digest-named field genuinely typed as ContentDigest - the admitted case."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    permitted_surface_digest: ContentDigest
+
+
+class _DigestNamedPlainStringPayload(CredentialFreeOperationRequest):
+    """A digest-named field with no Hex64 shape at all - stays refused."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    permitted_surface_digest: str
+
+
+class _KeyNamedContentDigestPayload(CredentialFreeOperationRequest):
+    """A Hex64-shaped field named for a DIFFERENT forbidden token - stays refused.
+
+    The tripwire against the exemption swallowing a hex-encoded 256-bit
+    secret that happens to share ``ContentDigest``'s 64-character shape.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    encryption_key: ContentDigest
+
+
+class _DigestNamedSiblingConceptPayload(CredentialFreeOperationRequest):
+    """A digest-named field typed as a Hex64-shaped SIBLING concept - admitted.
+
+    ``ContentDigest is WorkUnitId`` at runtime (both are ``= Hex64Str``), so
+    there is no type-identity test available; this pins the accepted
+    residual risk (a Hex64-shaped, digest-named field declared for a
+    sibling concept is also admitted) as a documented test outcome rather
+    than an undiscovered gap.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    work_unit_digest: WorkUnitId
+
+
+def test_credential_free_schema_admits_hex64_shaped_digest_named_field() -> None:
+    schema = _strict_model_json_schema(_DigestNamedContentDigestPayload)
+    _validate_credential_free_schema(schema)
+
+
+def test_credential_free_schema_refuses_plain_string_digest_named_field() -> None:
+    schema = _strict_model_json_schema(_DigestNamedPlainStringPayload)
+    with pytest.raises(ValueError, match="forbidden security meaning"):
+        _validate_credential_free_schema(schema)
+
+
+def test_credential_free_schema_refuses_hex64_shaped_field_named_for_another_forbidden_token() -> None:
+    schema = _strict_model_json_schema(_KeyNamedContentDigestPayload)
+    with pytest.raises(ValueError, match="forbidden security meaning"):
+        _validate_credential_free_schema(schema)
+
+
+def test_credential_free_schema_admits_hex64_shaped_sibling_concept_named_digest() -> None:
+    """Pins the accepted residual risk rather than leaving it undiscovered."""
+    schema = _strict_model_json_schema(_DigestNamedSiblingConceptPayload)
+    _validate_credential_free_schema(schema)
+
+
 def test_public_schema_identity_refuses_computed_fields_absent_from_validation_schema() -> None:
     with pytest.raises(ValueError, match="computed fields"):
         OperationSchemaIdentityV1.from_model(
@@ -818,12 +902,27 @@ def test_public_schema_identity_refuses_computed_fields_absent_from_validation_s
 
 
 def test_public_schema_identity_refuses_unvalidated_typed_defaults() -> None:
+    assert InvalidDefaultPayload.model_config.get("validate_default") is not True, (
+        "the witness must omit validate_default, or it cannot express the violation this gate hunts"
+    )
+
     with pytest.raises(ValueError, match="defaults must set validate_default=True"):
         OperationSchemaIdentityV1.from_model(
             schema_id="profile.sync.invalid-default",
             schema_version=1,
             model_type=InvalidDefaultPayload,
         )
+
+
+def test_public_schema_identity_admits_a_validated_typed_default() -> None:
+    """The refusal above must be about the missing validation, not about carrying a default at all."""
+    identity = OperationSchemaIdentityV1.from_model(
+        schema_id="profile.sync.validated-default",
+        schema_version=1,
+        model_type=ValidatedDefaultPayload,
+    )
+
+    assert identity.schema_id == "profile.sync.validated-default"
 
 
 @pytest.mark.parametrize("model_type", [FieldSerializerPayload, ModelSerializerPayload])
@@ -1051,3 +1150,75 @@ def test_registry_refuses_one_schema_identity_redeclared_for_different_models() 
             definitions=(first, second),
             public_registrations=(first_registration, second_registration),
         )
+
+
+def _result_projector(result: BaseModel, terminal_receipt: OperationTerminalReceipt) -> BaseModel:
+    del result, terminal_receipt
+    return RefreshTarget(subject_ref="profile:active")
+
+
+def _no_interaction_definition(definition_id: str = "profile.sync.settled") -> OperationDefinition:
+    return OperationDefinition(
+        definition_id=definition_id,
+        request_type=RequestPayload,
+        result_type=ResultPayload,
+        executor_factory=OperationExecutorFactory(
+            request_type=RequestPayload,
+            executor_type=Executor,
+            build=executor_factory,
+        ),
+        phase_codes=("profile.sync.settled.run",),
+        interaction_kinds=frozenset(),
+        capabilities=capabilities(),
+        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
+        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+    )
+
+
+def test_registry_requires_a_result_projector_only_when_the_public_schema_diverges() -> None:
+    """Symmetric with REVIEW: identical result schema needs no projector, a distinct one requires one."""
+    item = _no_interaction_definition()
+
+    identical_registration = OperationPublicDefinitionRegistrationV1.compose(
+        definition=item,
+        request_schema=OperationSchemaBindingV1.bind(
+            schema_id=f"{item.definition_id}.request", schema_version=1, model_type=RequestPayload
+        ),
+        result_schema=OperationSchemaBindingV1.bind(
+            schema_id=f"{item.definition_id}.result", schema_version=1, model_type=ResultPayload
+        ),
+    )
+    OperationRegistry(definitions=(item,), public_registrations=(identical_registration,))
+
+    identical_with_projector = identical_registration.model_copy(update={"result_projector": _result_projector})
+    with pytest.raises(ValidationError, match="must not declare one"):
+        OperationRegistry(definitions=(item,), public_registrations=(identical_with_projector,))
+
+    distinct_registration = OperationPublicDefinitionRegistrationV1.compose(
+        definition=item,
+        request_schema=OperationSchemaBindingV1.bind(
+            schema_id=f"{item.definition_id}.request", schema_version=1, model_type=RequestPayload
+        ),
+        result_schema=OperationSchemaBindingV1.bind(
+            schema_id=f"{item.definition_id}.public-result", schema_version=1, model_type=RefreshTarget
+        ),
+        result_projector=_result_projector,
+    )
+    OperationRegistry(definitions=(item,), public_registrations=(distinct_registration,))
+
+    distinct_without_projector = distinct_registration.model_copy(update={"result_projector": None})
+    with pytest.raises(ValidationError, match="requires one registered result projector"):
+        OperationRegistry(definitions=(item,), public_registrations=(distinct_without_projector,))
+
+
+def test_registry_refuses_a_result_less_definition_declaring_a_result_projector() -> None:
+    item = _no_interaction_definition().model_copy(update={"result_type": None})
+    registration = OperationPublicDefinitionRegistrationV1.compose(
+        definition=item,
+        request_schema=OperationSchemaBindingV1.bind(
+            schema_id=f"{item.definition_id}.request", schema_version=1, model_type=RequestPayload
+        ),
+        result_projector=_result_projector,
+    )
+    with pytest.raises(ValidationError, match="result-less operation definition cannot declare a result projector"):
+        OperationRegistry(definitions=(item,), public_registrations=(registration,))

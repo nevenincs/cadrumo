@@ -9,14 +9,13 @@ from typing import Any
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.config import Settings
 from ....core.errors import BaseSeverity
 from ....core.i18n import Translatable as tr
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.filing import (
     ModeloDraft,
     ModeloValidationFinding,
@@ -38,12 +37,8 @@ from ....domain.transactions import (
 )
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.user_profile import register_minimal_profile
-from .. import (
-    ReviewItemKind,
-    ReviewQueue,
-    ReviewSeverity,
-    ReviewState,
-)
+from .._aggregator import ReviewQueue
+from ..enums import ReviewItemKind, ReviewSeverity, ReviewState
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _REVIEW_FINDING_CASILLA: CasillaId = validated_casilla_id("03", surface="_REVIEW_FINDING_CASILLA")

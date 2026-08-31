@@ -26,8 +26,9 @@ from ....core.bucket_pointer import require_active_bucket_id
 from ....core.i18n import tr
 from ....tests.profile_capsule import load_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
+from ..components.host import ScreenHostApp
 from ..components.status import PinnedStatusBar
-from ..profile.overview import ProfileManagerApp
+from ..profile.overview import ProfileManagerScreen
 from .manager_pilot import wait_until_settled
 
 pytestmark = [
@@ -61,7 +62,7 @@ def _persist(path: str, value: str):
     return build_profile_overview(record, label="Manager Subject")
 
 
-def _notice(app: ProfileManagerApp) -> str:
+def _notice(app: ProfileManagerScreen) -> str:
     """Whatever the page's one diagnostic channel currently holds.
 
     Read only after :func:`wait_until_settled`, never polled for an expected wording.
@@ -72,7 +73,7 @@ def _notice(app: ProfileManagerApp) -> str:
     return app.query_one("#manager-status", PinnedStatusBar).message
 
 
-def _select_row(app: ProfileManagerApp, path: str) -> None:
+def _select_row(app: ProfileManagerScreen, path: str) -> None:
     """Select the row for ``path``, as the operator pressing enter on it does.
 
     Addressed by path rather than by ordinal because the row under any
@@ -88,7 +89,7 @@ def _select_row(app: ProfileManagerApp, path: str) -> None:
     raise AssertionError(message)
 
 
-def _rows(app: ProfileManagerApp) -> dict[str, list[str]]:
+def _rows(app: ProfileManagerScreen) -> dict[str, list[str]]:
     """Every rendered row across every section table, keyed by field path."""
     collected: dict[str, list[str]] = {}
     for table in app.query(DataTable):
@@ -115,15 +116,15 @@ async def test_the_page_shows_every_declared_field_including_the_empty_ones(tmp_
         )
         overview = _live_overview()
 
-        app = ProfileManagerApp(overview, persist=_persist)
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        app = ProfileManagerScreen(overview, persist=_persist)
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             rendered = _rows(app)
             assert len(rendered) == overview.total_count
             assert overview.total_count > overview.present_count, (
                 "the fixture must have blanks, or this test proves nothing"
             )
-            app.exit(None)
+            pilot.app.exit(None)
 
 
 @pytest.mark.asyncio
@@ -139,8 +140,8 @@ async def test_profile_context_names_missing_requirements_but_has_no_healthy_pla
         )
         overview = _live_overview()
 
-        app = ProfileManagerApp(overview, persist=_persist)
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        app = ProfileManagerScreen(overview, persist=_persist)
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             requirements = str(app.query_one("#manager-requirements", Static).content)
             assert requirements == tr(
@@ -155,7 +156,7 @@ async def test_profile_context_names_missing_requirements_but_has_no_healthy_pla
             await pilot.pause()
             with pytest.raises(NoMatches):
                 app.query_one("#manager-requirements")
-            app.exit(None)
+            pilot.app.exit(None)
 
 
 @pytest.mark.asyncio
@@ -181,8 +182,8 @@ async def test_profile_body_renders_the_envelopes_typed_advisories(tmp_path) -> 
             },
         )
 
-        app = ProfileManagerApp(overview, persist=_persist)
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        app = ProfileManagerScreen(overview, persist=_persist)
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             rendered = str(app.query_one("#manager-notice-band #notice-0", Static).content)
             assert "SCHEMA-ENVELOPE-ADVISORY" in rendered
@@ -193,7 +194,7 @@ async def test_profile_body_renders_the_envelopes_typed_advisories(tmp_path) -> 
             )
             assert app.query_one("#manager-context", Widget).region.y >= app.query_one("#manager-body", Widget).region.y
             assert not app.query_one("#manager-status", PinnedStatusBar).display
-            app.exit(None)
+            pilot.app.exit(None)
 
 
 @pytest.mark.asyncio
@@ -217,16 +218,16 @@ async def test_editing_a_row_writes_through_to_the_encrypted_record(tmp_path) ->
             passphrase=_PASSWORD,
         )
 
-        app = ProfileManagerApp(_live_overview(), persist=_persist)
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        app = ProfileManagerScreen(_live_overview(), persist=_persist)
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             field = app._field_by_key[_EDITED_PATH]
-            app.push_screen(_edit_screen(field), app._apply_edit_for(field))
+            pilot.app.push_screen(_edit_screen(field), app._apply_edit_for(field))
             await pilot.pause()
-            app.screen.query_one("#edit-input", Input).value = "Ada Lovelace"
+            app.app.screen.query_one("#edit-input", Input).value = "Ada Lovelace"
             await pilot.click("#btn-edit-save")
             await wait_until_settled(app, pilot)
-            app.exit(None)
+            pilot.app.exit(None)
 
         reloaded = load_test_profile_record(require_active_bucket_id())
         stored = {fact.path: fact.value for fact in reloaded.facts}
@@ -256,8 +257,8 @@ async def test_editing_one_field_repaints_that_row_without_rebuilding_the_tables
             passphrase=_PASSWORD,
         )
 
-        app = ProfileManagerApp(_live_overview(), persist=_persist)
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        app = ProfileManagerScreen(_live_overview(), persist=_persist)
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             before = _rows(app)
             assert before[_EDITED_PATH][2] == "", "the fixture must start blank, or the glyph cannot flip"
@@ -266,9 +267,9 @@ async def test_editing_one_field_repaints_that_row_without_rebuilding_the_tables
             untouched = {path: cells for path, cells in before.items() if path != _EDITED_PATH}
 
             field = app._field_by_key[_EDITED_PATH]
-            app.push_screen(_edit_screen(field), app._apply_edit_for(field))
+            pilot.app.push_screen(_edit_screen(field), app._apply_edit_for(field))
             await pilot.pause()
-            app.screen.query_one("#edit-input", Input).value = "Ada Lovelace"
+            app.app.screen.query_one("#edit-input", Input).value = "Ada Lovelace"
             await pilot.click("#btn-edit-save")
             # The write runs on a worker thread now, so the assertions wait
             # for storage to answer rather than for a repaint that has not
@@ -287,7 +288,7 @@ async def test_editing_one_field_repaints_that_row_without_rebuilding_the_tables
             assert str(app.query_one("#manager-requirements", Static).content) == required_context, (
                 "editing an optional field must not change the schema-required information"
             )
-            app.exit(None)
+            pilot.app.exit(None)
 
 
 @pytest.mark.asyncio
@@ -320,31 +321,31 @@ async def test_a_second_edit_is_refused_before_its_dialog_opens(tmp_path) -> Non
             release.wait(timeout=30)
             return _persist(path, value)
 
-        app = ProfileManagerApp(_live_overview(), persist=_gated)
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        app = ProfileManagerScreen(_live_overview(), persist=_gated)
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             field = app._field_by_key[_EDITED_PATH]
-            app.push_screen(_edit_screen(field), app._apply_edit_for(field))
+            pilot.app.push_screen(_edit_screen(field), app._apply_edit_for(field))
             await pilot.pause()
-            app.screen.query_one("#edit-input", Input).value = "Ada Lovelace"
+            app.app.screen.query_one("#edit-input", Input).value = "Ada Lovelace"
             await pilot.click("#btn-edit-save")
             await pilot.pause()
             assert app._pending_write is not None, "the first write must still be in flight to prove anything"
 
-            settled = len(app.screen_stack)
+            settled = len(app.app.screen_stack)
             table = next(candidate for candidate in app.query(DataTable) if candidate.row_count)
             row_key = next(iter(table.rows))
             app.on_data_table_row_selected(DataTable.RowSelected(table, 0, row_key))
             await pilot.pause()
 
-            assert len(app.screen_stack) == settled, (
+            assert len(app.app.screen_stack) == settled, (
                 "no edit box may open while a write is in flight; opening one is how typed input gets discarded"
             )
             assert _notice(app), "the operator must be told why the row did not open"
 
             release.set()
             await wait_until_settled(app, pilot)
-            app.exit(None)
+            pilot.app.exit(None)
 
         reloaded = load_test_profile_record(require_active_bucket_id())
         assert {fact.path: fact.value for fact in reloaded.facts}.get(_EDITED_PATH) == "Ada Lovelace", (
@@ -382,12 +383,12 @@ async def test_a_masked_field_opens_empty_rather_than_prefilled(tmp_path) -> Non
             label="Masked Subject",
             passphrase=_PASSWORD,
         )
-        app = ProfileManagerApp(_live_overview("Masked Subject"), persist=_persist)
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
-            app.push_screen(FieldEditScreen(masked))
+        app = ProfileManagerScreen(_live_overview("Masked Subject"), persist=_persist)
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
+            pilot.app.push_screen(FieldEditScreen(masked))
             await pilot.pause()
-            assert app.screen.query_one("#edit-input", Input).value == ""
-            app.exit(None)
+            assert app.app.screen.query_one("#edit-input", Input).value == ""
+            pilot.app.exit(None)
 
 
 # ── actions ─────────────────────────────────────────────────────────────
@@ -413,19 +414,19 @@ async def test_a_write_failing_wordlessly_is_named_rather_than_shown_blank(tmp_p
             label="Manager Subject",
             passphrase=_PASSWORD,
         )
-        app = ProfileManagerApp(_live_overview(), persist=_persist_wordlessly)
+        app = ProfileManagerScreen(_live_overview(), persist=_persist_wordlessly)
         expected = tr("flows.manager.edit.write_failed")
 
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             field = app._field_by_key[_EDITED_PATH]
-            app.push_screen(_edit_screen(field), app._apply_edit_for(field))
+            pilot.app.push_screen(_edit_screen(field), app._apply_edit_for(field))
             await pilot.pause()
-            app.screen.query_one("#edit-input", Input).value = "Ada Lovelace"
+            app.app.screen.query_one("#edit-input", Input).value = "Ada Lovelace"
             await pilot.click("#btn-edit-save")
             await wait_until_settled(app, pilot)
             reported = _notice(app)
-            app.exit(None)
+            pilot.app.exit(None)
 
         assert reported == expected, (
             f"a write failing with no text of its own showed {reported!r} rather than naming itself"
@@ -443,12 +444,12 @@ async def test_a_page_with_no_actions_renders_no_action_bar(tmp_path) -> None:
             label="Manager Subject",
             passphrase=_PASSWORD,
         )
-        app = ProfileManagerApp(_live_overview(), persist=_persist)
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        app = ProfileManagerScreen(_live_overview(), persist=_persist)
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             with pytest.raises(NoMatches):
                 app.query_one("#manager-actions")
-            app.exit(None)
+            pilot.app.exit(None)
 
 
 @pytest.mark.asyncio
@@ -482,8 +483,8 @@ async def test_a_long_field_label_never_pushes_the_value_off_screen(tmp_path) ->
         _live_overview()
         written = _persist(_long_label_field_path, "12345.67")
 
-        app = ProfileManagerApp(written, persist=_persist)
-        async with app.run_test(size=(80, 24)) as pilot:
+        app = ProfileManagerScreen(written, persist=_persist)
+        async with ScreenHostApp(app).run_test(size=(80, 24)) as pilot:
             await pilot.pause()
             # The IRPF section sits well below the fold on an 80x24
             # terminal; scroll the page (and, transitively, the section's
@@ -494,8 +495,8 @@ async def test_a_long_field_label_never_pushes_the_value_off_screen(tmp_path) ->
             table = app._table_by_section["irpf"]
             table.scroll_visible(animate=False)
             await pilot.pause()
-            rendered = app.export_screenshot()
+            rendered = pilot.app.export_screenshot()
             assert "12345.67" in rendered, (
                 "the long IRPF field-name label pushed the value column out of the 80-column viewport"
             )
-            app.exit(None)
+            pilot.app.exit(None)

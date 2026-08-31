@@ -4145,8 +4145,8 @@ notes = """\
 LIRPF disposición transitoria 12ª: régimen transitorio aplicable a prestaciones de planes de \
 pensiones, mutualidades de previsión social y planes de previsión asegurados, including the \
 reduction regime for pre-2007 contributions. Grounds the Modelo 100 DT12 reducción advisory. \
-Apartado 4 (added by Ley 26/2014 art. 1.86, BOE-A-2014-12327) restricts the régimen to prestaciones \
-percibidas within a time window measured from the contingencia year; the apartado-4 required_text \
+Apartado 3 (added by Ley 26/2014 art. 1.85, BOE-A-2014-12327) restricts the régimen to prestaciones \
+percibidas within a time window measured from the contingencia year; the apartado-3 required_text \
 phrases ground the calculate-shortcut window gate. Agent-prepared per aeat-calculation-grounding; \
 pending operator re-stamp."""
 required_text = [
@@ -6690,3 +6690,45 @@ applies_from = 2023-01-01
 applies_to = 2023-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_190_2023.pdf"
 review_status = "reviewed"
+
+[legal."rd-439-2007:art-9"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-439-2007.html#a9"
+document_id = "BOE-A-2007-6820"
+article = "9"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a9"
+published_at = 2007-03-31
+effective_from = 2008-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-27
+reviewed_by = "agent-authored from bundled rd-439-2007.html#a9; operator to re-stamp"
+notes = "RIRPF art 9: dietas y asignaciones para gastos normales de manutencion. Carries the four daily manutencion limits (53,34 y 91,35 con pernocta; 26,67 y 48,08 sin pernocta) that LIRPF art. 30.2.5.c adopts by reference as the cap on a self-employed taxpayer's own manutencion expense. effective_from is 2008-01-01 rather than the 2007-03-31 publication because apartado A.3, which carries these amounts, was given that effect by the disposicion final 3.1 of Real Decreto 1804/2008 (Ref. BOE-A-2008-18548); the later date is the conservative claim and both span every supported filing year."
+required_text = [
+    "Dietas y asignaciones para gastos de locomoción y gastos normales de manutención y estancia",
+    "Por gastos de manutención, 53,34 euros diarios",
+    "91,35 euros diarios",
+    "26,67 ó 48,08 euros diarios",
+]
+
+[legal."rd-439-2007:art-22"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-439-2007.html#a22"
+document_id = "BOE-A-2007-6820"
+article = "22"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a22"
+published_at = 2007-03-31
+effective_from = 2007-03-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-27
+reviewed_by = "agent-authored from bundled rd-439-2007.html#a22; operator to re-stamp"
+notes = "RIRPF art 22: elementos patrimoniales afectos a una actividad economica. This is the affectation rule the vehiculo and telefonia spending categories rest on: it admits only elements the contribuyente uses for the purposes of the activity and excludes those destined to the titular's private use, which is why those categories are usage-ratio rather than fully deductible. A sweep of the bundled consolidated text between this article and art. 23 found no amending note, so the text is the original 2007 wording."
+required_text = [
+    "Elementos patrimoniales afectos a una actividad",
+    "Los bienes inmuebles en los que se desarrolle la actividad",
+    "Cualesquiera otros elementos patrimoniales que sean necesarios para la obtención de los respectivos rendimientos",
+    "los destinados al uso particular del titular de la actividad",
+]

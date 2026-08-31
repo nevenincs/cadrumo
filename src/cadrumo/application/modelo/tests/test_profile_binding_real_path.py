@@ -35,17 +35,16 @@ from typing import Any
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.registry_contract import profile_binding_selectors
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests import REPO_ROOT
+from ...user_profile.projections import profile_fact_index
 from ..profile_binding import (
     inject_derived_autonomic_deduccion_facts,
     inject_derived_marriage_facts,
-    profile_fact_index,
     resolve_profile_binding_value,
     resolve_profile_sourced_bindings,
 )

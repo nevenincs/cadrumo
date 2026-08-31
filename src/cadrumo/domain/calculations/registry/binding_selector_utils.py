@@ -8,15 +8,17 @@ from typing import Literal, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ExportFieldDataType, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_exports import OneBasedExportOffset
-
 from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from .binding_aggregation import binding_aggregation_op
 from .errors import RegistryValidationError
+from .manual_input_selector import ManualInputSelector
+from .schema import DataBindingDefinition, ModeloRevision
+from .schema_exports import ExportFieldDataType, OneBasedExportOffset
 
 __all__ = [
+    "M347_OPERATION_CLAVES",
+    "M349_OPERATION_CLAVES",
     "BindingExportDataType",
     "BindingExportSelector",
     "BindingFixedExportSelector",
@@ -31,6 +33,7 @@ __all__ = [
     "intracommunity_clave_validator",
     "invariant_diagnostics",
     "manual_input_record_field_selector",
+    "operation_clave_validator",
     "selector_against_model",
     "selector_as_dict",
     "unique_tuple",
@@ -313,21 +316,17 @@ def boolean_binding_encoded_values(
 
     Raises:
         RegistryValidationError: When ``binding`` is a ``manual_input`` binding
-            whose selector does not validate against :class:`_ManualInputSelector`
+            whose selector does not validate against :class:`ManualInputSelector`
             -- a malformed selector must be a named failure, not a silently
             empty "not a boolean binding" result.
     """
     if binding.source is not BindingSourceKind.MANUAL_INPUT:
         return ()
-    # Deferred import: ``_bindings`` imports FROM this module (``selector_as_dict``,
-    # ``selector_against_model``), so a module-level import of ``_ManualInputSelector``
-    # here would cycle. Read through the declared model rather than raw dict keys:
-    # a renamed/misspelled ``true_value`` / ``false_value`` / ``data_type`` key must
-    # raise, not silently return "not a boolean binding".
-    from .bindings import _ManualInputSelector
-
+    # Read through the declared model rather than raw dict keys: a
+    # renamed/misspelled ``true_value`` / ``false_value`` / ``data_type`` key
+    # must raise, not silently return "not a boolean binding".
     try:
-        selector = _ManualInputSelector.model_validate(selector_as_dict(binding))
+        selector = ManualInputSelector.model_validate(selector_as_dict(binding))
     except ValueError as exc:
         raise RegistryValidationError(
             f"binding {binding.id!r} has malformed manual_input selector: {exc}",
@@ -347,7 +346,7 @@ def boolean_binding_encoded_values(
 class ManualInputRecordFieldSelector(BaseModel):
     """The record-field shape of a validated ``manual_input`` binding selector.
 
-    :class:`_ManualInputSelector` models both the casilla shape and the
+    :class:`ManualInputSelector` models both the casilla shape and the
     record-field shape on one class because the two are mutually exclusive
     and share ``data_type``; this narrower model is what a caller that only
     cares about the record-field shape (a fichero-BOE fixed-record
@@ -384,28 +383,24 @@ def manual_input_record_field_selector(
 
     Raises:
         RegistryValidationError: When ``binding`` is a ``manual_input`` binding
-            whose selector does not validate against ``_ManualInputSelector``
+            whose selector does not validate against ``ManualInputSelector``
             -- a malformed selector must be a named failure, not silently read
             as "not a record-field binding".
     """
     if binding.source is not BindingSourceKind.MANUAL_INPUT:
         return None
-    # Deferred import: ``_bindings`` imports FROM this module (``selector_as_dict``,
-    # ``selector_against_model``), so a module-level import of ``_ManualInputSelector``
-    # here would cycle. Read through the declared model rather than raw dict keys:
-    # a renamed/misspelled ``record`` / ``field`` key must raise, not silently read
-    # as "not a record-field binding".
-    from .bindings import _ManualInputSelector
-
+    # Read through the declared model rather than raw dict keys: a
+    # renamed/misspelled ``record`` / ``field`` key must raise, not silently
+    # read as "not a record-field binding".
     try:
-        selector = _ManualInputSelector.model_validate(selector_as_dict(binding))
+        selector = ManualInputSelector.model_validate(selector_as_dict(binding))
     except ValueError as exc:
         raise RegistryValidationError(
             f"binding {binding.id!r} has malformed manual_input selector: {exc}",
         ) from exc
     if selector.record is None:
         return None
-    # _ManualInputSelector._validate_manual_input_shape already proved that a
+    # ManualInputSelector._validate_manual_input_shape already proved that a
     # non-None record implies field/offset/length are all non-None too -- the
     # record-field shape's four keys are required together.
     assert selector.field is not None
@@ -619,7 +614,13 @@ def optional_uppercase_alpha_code(field_label: str) -> Callable[[type, str | Non
     return _validate
 
 
-_AEAT_OPERATION_CLAVES: frozenset[str] = frozenset({"E", "M", "H", "A", "T", "S", "I", "R", "D", "C"})
+M349_OPERATION_CLAVES: frozenset[str] = frozenset({"E", "M", "H", "A", "T", "S", "I", "R", "D", "C"})
+#: Modelo 347's OWN clave de operacion vocabulary (RD 1065/2007 arts. 31/33,
+#: RD 1619/2012 disposicion adicional cuarta), disjoint from M349's
+#: intracommunity clave set above -- the letter A means a different thing in
+#: each. Confirmed against every bundled M347 diseno de registro (2008-2009,
+#: 2010, 2011, 2025-y-siguientes): none declares an "H" or "I" clave.
+M347_OPERATION_CLAVES: frozenset[str] = frozenset({"A", "B", "C", "D", "E", "F", "G"})
 
 
 def intracommunity_clave_validator() -> Callable[[type, str | None], str | None]:
@@ -630,14 +631,29 @@ def intracommunity_clave_validator() -> Callable[[type, str | None], str | None]
     optional, must be uppercase, and must be one of the closed AEAT clave de
     operación set. The single factory replaces both copies.
     """
+    return operation_clave_validator(field_label="intracommunity_clave", claves=M349_OPERATION_CLAVES)
+
+
+def operation_clave_validator(
+    *,
+    field_label: str,
+    claves: frozenset[str],
+) -> Callable[[type, str | None], str | None]:
+    """Build an optional, uppercase, closed-set clave-de-operacion field validator.
+
+    Generalises :func:`intracommunity_clave_validator` to any closed clave
+    vocabulary -- a modelo's clave letters mean nothing outside their own
+    modelo's set, so the closed set is a parameter, never a hand-listed
+    literal at the call site.
+    """
 
     def _validate(cls: type, value: str | None) -> str | None:
         if value is None:
             return None
         if value != value.upper():
-            raise RegistryValidationError("intracommunity_clave must be uppercase")
-        if value not in _AEAT_OPERATION_CLAVES:
-            raise RegistryValidationError(f"intracommunity_clave {value!r} is not an AEAT clave de operacion")
+            raise RegistryValidationError(f"{field_label} must be uppercase")
+        if value not in claves:
+            raise RegistryValidationError(f"{field_label} {value!r} is not an AEAT clave de operacion")
         return value
 
     return _validate

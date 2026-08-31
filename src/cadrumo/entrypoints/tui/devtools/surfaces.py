@@ -50,9 +50,10 @@ class Surface:
 
 def _registration() -> App[Any]:
     from ....core.credentials import assess_profile_password
-    from ....entrypoints.tui.secret.app import RegistrationApp
+    from ....entrypoints.tui.components.host import ScreenHostApp
+    from ....entrypoints.tui.secret.registration import RegistrationScreen
 
-    return RegistrationApp(assess=assess_profile_password, register=registration_attempt)
+    return ScreenHostApp(RegistrationScreen(assess=assess_profile_password, register=registration_attempt))
 
 
 def _login() -> App[Any]:
@@ -61,12 +62,15 @@ def _login() -> App[Any]:
         preselected_profile_login_id,
         profile_login_choices,
     )
-    from ....entrypoints.tui.secret.app import LoginApp
+    from ....entrypoints.tui.components.host import ScreenHostApp
+    from ....entrypoints.tui.secret.login import LoginScreen
 
-    return LoginApp(
-        choices=profile_login_choices(),
-        authenticate=attempt_profile_login,
-        preselected=preselected_profile_login_id(None),
+    return ScreenHostApp(
+        LoginScreen(
+            choices=profile_login_choices(),
+            authenticate=attempt_profile_login,
+            preselected=preselected_profile_login_id(None),
+        )
     )
 
 
@@ -74,13 +78,21 @@ def _manager() -> App[Any]:
     from ....application.user_profile.fact_write import apply_manager_profile_field_mutation
     from ....application.user_profile.overview import build_profile_overview
     from ....application.user_profile.profile_record_repository import ProfileRecordRepository
-    from ....application.user_profile.profile_repository import CommittedProfileRepository
+    from ....application.user_profile.profile_summary import summary_inventory
     from ....core.bucket_pointer import require_active_bucket_id
-    from ....entrypoints.tui.profile.overview import ProfileManagerApp
+    from ....entrypoints.tui.components.host import ScreenHostApp
+    from ....entrypoints.tui.profile.overview import ProfileManagerScreen
 
     profile_id = require_active_bucket_id()
     profiles = ProfileRecordRepository.for_current_session(profile_id)
-    label = CommittedProfileRepository().load(profile_id).label
+    # The label comes from the summary projection, not the authenticated
+    # aggregate: `load` takes a per-profile custody lock and reads password
+    # material, the transaction journal and the label head to hand back a
+    # string this surface already has an unlocked session for.
+    label = next(
+        (item.label for item in summary_inventory().summaries if item.profile_id == profile_id),
+        "",
+    )
 
     def _overview():
         return build_profile_overview(profiles.load(profile_id), label=label)
@@ -89,22 +101,27 @@ def _manager() -> App[Any]:
         record = apply_manager_profile_field_mutation(profile_id=profile_id, path=path, value=value)
         return build_profile_overview(record, label=label)
 
-    return ProfileManagerApp(
-        _overview(),
-        persist=_persist,
+    return ScreenHostApp(
+        ProfileManagerScreen(
+            _overview(),
+            persist=_persist,
+        )
     )
 
 
 def _status() -> App[Any]:
     from ....application.user_profile.status_projection import build_status_page_data
-    from ....entrypoints.tui.profile.status import StatusApp
+    from ....entrypoints.tui.components.host import ScreenHostApp
+    from ....entrypoints.tui.profile.status import StatusScreen
 
-    return StatusApp(build_status_page_data())
+    return ScreenHostApp(StatusScreen(build_status_page_data()))
 
 
 def _modelo_work_wizard() -> App[Any]:
     """Render the canonical Modelo wizard definition over its live work unit."""
-    return build_modelo_work_wizard()
+    from ....entrypoints.tui.components.host import ScreenHostApp
+
+    return ScreenHostApp(build_modelo_work_wizard())
 
 
 def _form() -> App[Any]:

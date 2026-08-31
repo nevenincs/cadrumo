@@ -17,17 +17,16 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.bindings import _build_foreign_asset_rows
-from cadrumo.domain.calculations.registry.detail_record_bindings import (
+from .....core import M720AssetClassCode
+from ..detail_record_bindings import (
     AtributionMemberObservation,
     Modelo720RowObservation,
     RefundOperationObservation,
+    build_foreign_asset_rows,
     resolve_atribucion_binding_row_values,
     resolve_foreign_asset_binding_row_values,
     resolve_refund_binding_row_values,
 )
-
-from .....core import M720AssetClassCode
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -66,7 +65,7 @@ def test_build_foreign_asset_rows_sorts_by_country_class_identifier_date() -> No
         ),
     )
 
-    rows = _build_foreign_asset_rows(obs)
+    rows = build_foreign_asset_rows(obs)
 
     # Sort key: (country_code, asset_class_code, asset_identifier, acquisition_date)
     assert [row["country_code"] for row in rows] == ["CH", "CH", "DE"]
@@ -112,6 +111,7 @@ def test_resolve_atribucion_binding_row_values_sorts_members_by_country_then_nif
             transaction_date=date(2025, 1, 1),
             share_percentage=Decimal("60"),
             base_imponible_assigned=Decimal("6000"),
+            clave="D",
         ),
         AtributionMemberObservation(
             source_id="m1",
@@ -121,6 +121,7 @@ def test_resolve_atribucion_binding_row_values_sorts_members_by_country_then_nif
             transaction_date=date(2025, 1, 1),
             share_percentage=Decimal("40"),
             base_imponible_assigned=Decimal("4000"),
+            clave="D",
         ),
     )
 

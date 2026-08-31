@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ....core import NoRecoveryOutcome
-from ....domain.modelos import CalculationRevisionState
+from ....domain.modelos.calculation_revision import CalculationRevisionState
 from .._action_errors import CalculationRevisionNotFoundError
 from .._filing_actions import file_modelo_revision
 from .._verification_actions import verify_modelo_revision_with_preconditions

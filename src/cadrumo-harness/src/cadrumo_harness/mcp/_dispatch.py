@@ -30,6 +30,8 @@ TOOL_NAME_BUDGET = 64
 # the budget. Applied to the underscored key; each is unambiguous (no two keys
 # collapse to one name) and reversible through the forward-match resolver below.
 _SEGMENT_ABBREVIATIONS: tuple[tuple[str, str], ...] = (
+    ("profile_archive_reconcile", "prof_arch_recon"),
+    ("spreadsheet", "sheet"),
     ("bienes_inversion", "binv"),
     ("encrypt_for_recipient", "enc_rcpt"),
     ("encrypt_feedback", "enc_feedback"),

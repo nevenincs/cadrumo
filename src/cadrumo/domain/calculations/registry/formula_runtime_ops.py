@@ -28,15 +28,14 @@ from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from cadrumo.domain.calculations.registry.schema import DatedValue, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_formula import BracketEntry, ParameterDefinition
-
 from ....core import CasillaId, validated_casilla_id
 from ....core.money import round_to_cents as _round_to_cents
 from ._formula_operator_contracts import require_formula_operator_arity
 from .casilla_membership import undeclared_casilla_ids
 from .errors import RegistrySnapshotError, RegistryValidationError
 from .ids import RevisionId
+from .schema import ModeloRevision
+from .schema_formula import BracketEntry, DatedValue, ParameterDefinition
 from .schema_rounding import RegistryRoundingCode
 
 if TYPE_CHECKING:

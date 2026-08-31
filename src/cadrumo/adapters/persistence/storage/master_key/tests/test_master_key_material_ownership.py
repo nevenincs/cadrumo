@@ -31,7 +31,8 @@ from __future__ import annotations
 
 import pytest
 
-from ...custody import WipeTypeError, zeroise
+from ...custody.errors import WipeTypeError
+from ...custody.zeroise import zeroise
 from .._master_key import UnsecuredMasterKeyProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

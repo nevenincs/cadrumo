@@ -18,7 +18,13 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.application.user_profile.validation import (
+from ....core.errors import BaseSeverity
+from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
+from ....domain.user_profile.errors import ProfileSchemaValidationError
+from ....domain.user_profile.loader import load_user_profile_schema
+from ....domain.user_profile.schema import ProfileValueRefusalKind
+from ....domain.user_profile.values import UserProfileFact
+from ..validation import (
     _ISSUE_CODE_BY_REFUSAL_KIND,
     BOOLEAN_VALUE_ISSUE_CODE,
     DATE_VALUE_ISSUE_CODE,
@@ -27,13 +33,6 @@ from cadrumo.application.user_profile.validation import (
     NUMERIC_VALUE_ISSUE_CODE,
     ProfileValidationService,
 )
-
-from ....core.errors import BaseSeverity
-from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
-from ....domain.user_profile.errors import ProfileSchemaValidationError
-from ....domain.user_profile.loader import load_user_profile_schema
-from ....domain.user_profile.schema import ProfileValueRefusalKind
-from ....domain.user_profile.values import UserProfileFact
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

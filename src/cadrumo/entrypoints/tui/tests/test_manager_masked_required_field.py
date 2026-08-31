@@ -38,8 +38,9 @@ from ....core.classification import SensitivityClass
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....tests.profile_capsule import load_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
+from ..components.host import ScreenHostApp
 from ..components.status import PinnedStatusBar
-from ..profile.overview import FieldEditScreen, ProfileManagerApp
+from ..profile.overview import FieldEditScreen, ProfileManagerScreen
 from .manager_pilot import wait_until_settled
 
 pytestmark = [
@@ -93,7 +94,7 @@ def _stored() -> dict[str, object | None]:
     return {fact.path: fact.value for fact in reloaded.facts}
 
 
-def _notice(app: ProfileManagerApp) -> str:
+def _notice(app: ProfileManagerScreen) -> str:
     return app.query_one("#manager-status", PinnedStatusBar).message
 
 
@@ -116,12 +117,12 @@ def _view(*, required: bool, present: bool) -> ProfileFieldView:
 
 async def _save(app, pilot, field: ProfileFieldView, typed: str) -> None:
     """Drive one real edit: open the dialog, type, press save, let it settle."""
-    app.push_screen(FieldEditScreen(field), app._apply_edit_for(field))
+    app.app.push_screen(FieldEditScreen(field), app._apply_edit_for(field))
     await pilot.pause()
-    assert app.screen.query_one("#edit-input", Input).value == "", (
+    assert app.app.screen.query_one("#edit-input", Input).value == "", (
         "a masked dialog must open empty, or this is not the gesture under test"
     )
-    app.screen.query_one("#edit-input", Input).value = typed
+    app.app.screen.query_one("#edit-input", Input).value = typed
     await pilot.click("#btn-edit-save")
     await wait_until_settled(app, pilot)
 
@@ -172,12 +173,12 @@ async def test_a_required_masked_field_holding_a_value_keeps_it_on_a_blank_save(
         _persist(_MASKED_PATH, _MASKED_VALUE)
         assert _stored().get(_MASKED_PATH) == _MASKED_VALUE, "fixture must start with a value to lose"
 
-        app = ProfileManagerApp(_live_overview(), persist=_persist)
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        app = ProfileManagerScreen(_live_overview(), persist=_persist)
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             await _save(app, pilot, _view(required=True, present=True), "")
             assert not _notice(app), f"keeping the value is not a refusal, but reported {_notice(app)!r}"
-            app.exit(None)
+            pilot.app.exit(None)
 
         assert _stored().get(_MASKED_PATH) == _MASKED_VALUE
 
@@ -198,24 +199,24 @@ async def test_the_dialog_explains_the_no_change_reading_wherever_it_applies(tmp
         )
         _persist(_MASKED_PATH, _MASKED_VALUE)
 
-        app = ProfileManagerApp(_live_overview(), persist=_persist)
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        app = ProfileManagerScreen(_live_overview(), persist=_persist)
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
 
-            app.push_screen(FieldEditScreen(_view(required=True, present=True)))
+            pilot.app.push_screen(FieldEditScreen(_view(required=True, present=True)))
             await pilot.pause()
-            assert app.screen.query("#edit-masked-note"), (
+            assert app.app.screen.query("#edit-masked-note"), (
                 "a box concealing a value must say that leaving it empty keeps the value"
             )
-            app.screen.dismiss(None)
+            app.app.screen.dismiss(None)
             await pilot.pause()
 
-            app.push_screen(FieldEditScreen(_view(required=True, present=False)))
+            pilot.app.push_screen(FieldEditScreen(_view(required=True, present=False)))
             await pilot.pause()
-            assert not app.screen.query("#edit-masked-note"), (
+            assert not app.app.screen.query("#edit-masked-note"), (
                 "a box concealing nothing must not claim there is a value to keep"
             )
-            app.exit(None)
+            pilot.app.exit(None)
 
 
 @pytest.mark.asyncio
@@ -235,12 +236,12 @@ async def test_a_required_masked_field_holding_nothing_refuses_a_blank_save(tmp_
         )
         assert _MASKED_PATH not in _stored(), "the field must start empty for this to be the case under test"
 
-        app = ProfileManagerApp(_live_overview(), persist=_persist)
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        app = ProfileManagerScreen(_live_overview(), persist=_persist)
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             await _save(app, pilot, _view(required=True, present=False), "")
             assert _notice(app), "the operator must be told why saving an empty required field did nothing"
-            app.exit(None)
+            pilot.app.exit(None)
 
         assert _MASKED_PATH not in _stored()
 
@@ -253,12 +254,12 @@ async def test_whitespace_in_an_empty_required_masked_field_refuses_too(tmp_path
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
         )
 
-        app = ProfileManagerApp(_live_overview(), persist=_persist)
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        app = ProfileManagerScreen(_live_overview(), persist=_persist)
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             await _save(app, pilot, _view(required=True, present=False), "   ")
             assert _notice(app), "a whitespace-only submission must be refused like any other blank"
-            app.exit(None)
+            pilot.app.exit(None)
 
         assert _MASKED_PATH not in _stored()
 
@@ -276,11 +277,11 @@ async def test_a_typed_value_still_reaches_the_record(tmp_path) -> None:
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
         )
 
-        app = ProfileManagerApp(_live_overview(), persist=_persist)
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        app = ProfileManagerScreen(_live_overview(), persist=_persist)
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             await _save(app, pilot, _view(required=True, present=False), _MASKED_VALUE)
-            app.exit(None)
+            pilot.app.exit(None)
 
         assert _stored().get(_MASKED_PATH) == _MASKED_VALUE
 
@@ -305,8 +306,8 @@ async def test_an_empty_optional_masked_field_behaves_like_any_other_empty_field
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
         )
 
-        app = ProfileManagerApp(_live_overview(), persist=_persist)
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        app = ProfileManagerScreen(_live_overview(), persist=_persist)
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             await _save(app, pilot, _view(required=False, present=False), "")
             assert not _notice(app), f"an optional blank must draw no complaint, but reported {_notice(app)!r}"
@@ -315,12 +316,12 @@ async def test_an_empty_optional_masked_field_behaves_like_any_other_empty_field
             assert not plain.masked and not plain.required and not plain.present, (
                 f"{_PLAIN_PATH} must be an unmasked, optional, empty field for this comparison to mean anything"
             )
-            app.push_screen(FieldEditScreen(plain), app._apply_edit_for(plain))
+            pilot.app.push_screen(FieldEditScreen(plain), app._apply_edit_for(plain))
             await pilot.pause()
-            app.screen.query_one("#edit-input", Input).value = ""
+            app.app.screen.query_one("#edit-input", Input).value = ""
             await pilot.click("#btn-edit-save")
             await wait_until_settled(app, pilot)
-            app.exit(None)
+            pilot.app.exit(None)
 
         stored = _stored()
         assert stored.get(_MASKED_PATH) is None, "the field must still hold no value"
@@ -345,23 +346,23 @@ async def test_a_required_masked_field_is_never_offered_a_clear_button(tmp_path)
         )
         _persist(_MASKED_PATH, _MASKED_VALUE)
 
-        app = ProfileManagerApp(_live_overview(), persist=_persist)
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        app = ProfileManagerScreen(_live_overview(), persist=_persist)
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
-            app.push_screen(FieldEditScreen(_view(required=True, present=True)))
+            pilot.app.push_screen(FieldEditScreen(_view(required=True, present=True)))
             await pilot.pause()
-            assert not app.screen.query("#btn-edit-clear"), (
+            assert not app.app.screen.query("#btn-edit-clear"), (
                 "a required field's deletion is refused downstream, so no button may offer it"
             )
-            app.screen.dismiss(None)
+            app.app.screen.dismiss(None)
             await pilot.pause()
 
             # The same field made optional still offers it, so the
             # assertion above is about `required` rather than about a
             # button that never appears.
-            app.push_screen(FieldEditScreen(_view(required=False, present=True)))
+            pilot.app.push_screen(FieldEditScreen(_view(required=False, present=True)))
             await pilot.pause()
-            assert app.screen.query("#btn-edit-clear"), (
+            assert app.app.screen.query("#btn-edit-clear"), (
                 "an optional masked field holding a value must still be deletable"
             )
-            app.exit(None)
+            pilot.app.exit(None)

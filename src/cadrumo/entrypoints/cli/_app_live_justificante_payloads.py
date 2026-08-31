@@ -6,7 +6,7 @@ from datetime import datetime
 
 from pydantic import Field
 
-from ...application.calculations import ObservationSourceKind
+from ...application.calculations.observations_repository import ObservationSourceKind
 from ...application.live.snapshot_base import SnapshotLifecycleState
 from ...core import Modelo
 from ...core.identity import (

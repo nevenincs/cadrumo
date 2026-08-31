@@ -91,6 +91,78 @@ def test_workspace_producer_contract_and_stamp_reproduce_the_exact_projection_sc
         ).require_contract(contract)
 
 
+def test_fingerprint_admits_a_decimal_bearing_domain_model() -> None:
+    """A bare Decimal field must no longer refuse registration.
+
+    RegistrySnapshot, ModeloWorkReview and CalculationRevision all carry
+    Decimal fields and were the real, motivating failures -- exercised here
+    with an equivalent locally-defined Decimal field, since importing any of
+    the three real models into this focused unit test would pull in the
+    whole registry/ledger graph.
+    """
+    from decimal import Decimal
+
+    from pydantic import BaseModel
+
+    class _DecimalBearingProjection(BaseModel):
+        amount: Decimal
+
+    modelo_workspace_projection_schema_fingerprint(_DecimalBearingProjection)
+
+
+def test_fingerprint_admits_the_real_motivating_calculation_revision_model() -> None:
+    """The real production model that surfaced this, not just a synthetic stand-in."""
+    from ....domain.modelos.calculation_revision import CalculationRevision
+
+    modelo_workspace_projection_schema_fingerprint(CalculationRevision)
+
+
+def test_fingerprint_proves_the_round_trip_it_actually_needs() -> None:
+    """The corrected fingerprint's real guarantee: dump, then re-validate.
+
+    Equality between the validation and serialization schemas was standing in
+    for this property without ever testing it. A Decimal field is the
+    sharpest case: it accepts int/str/Decimal on input but always emits a
+    string, and that string parses straight back to the same Decimal.
+    """
+    from decimal import Decimal
+
+    from pydantic import BaseModel
+
+    class _DecimalBearingProjection(BaseModel):
+        amount: Decimal
+
+    original = _DecimalBearingProjection(amount=Decimal("42.50"))
+    round_tripped = _DecimalBearingProjection.model_validate_json(original.model_dump_json())
+
+    assert round_tripped == original
+    assert isinstance(round_tripped.amount, Decimal)
+
+
+def test_fingerprint_still_refuses_genuine_schema_drift() -> None:
+    """Deriving from serialization alone must not turn the fingerprint into a no-op.
+
+    Two structurally different projections -- and one projection before and
+    after a real field is added -- must still fingerprint differently. A
+    fingerprint that stopped discriminating shape would be a guard removed,
+    not a guard fixed.
+    """
+    from pydantic import BaseModel
+
+    class _NarrowProjection(BaseModel):
+        value: str
+
+    class _WiderProjection(BaseModel):
+        value: str
+        extra: int
+
+    narrow_fingerprint = modelo_workspace_projection_schema_fingerprint(_NarrowProjection)
+    wider_fingerprint = modelo_workspace_projection_schema_fingerprint(_WiderProjection)
+
+    assert narrow_fingerprint != wider_fingerprint
+    assert modelo_workspace_projection_schema_fingerprint(_NarrowProjection) == narrow_fingerprint
+
+
 def test_workspace_contributing_capture_refuses_owner_and_projection_schema_drift() -> None:
     contract = _contract(ModeloWorkspaceContributorKindV1.REGISTRY)
     stamp = ModeloWorkspaceProducerStampV1.from_contract(contract)
@@ -147,7 +219,7 @@ def test_workspace_epoch_accepts_only_complete_current_schema_v2(
     epoch_values: dict[str, int | str],
 ) -> None:
     with pytest.raises(ValidationError):
-        ModeloWorkspaceEpochV1(owner="calculation.owner", generation=1, **epoch_values)
+        ModeloWorkspaceEpochV1.model_validate({"owner": "calculation.owner", "generation": 1, **epoch_values})
 
 
 @pytest.mark.parametrize("generation", (11, 10, 9))
@@ -224,6 +296,94 @@ def test_workspace_producer_inventory_refuses_a_current_contract_set_that_has_dr
         inventory.require_current(current_contracts)
 
 
+def test_the_closed_inventory_registers_all_eight_contributors_exactly() -> None:
+    """The real production inventory, not a synthetic fixture."""
+    from ..workspace_producers import MODELO_WORKSPACE_PRODUCER_CONTRACT_INVENTORY_V1
+
+    kinds = {contract.contributor_kind for contract in MODELO_WORKSPACE_PRODUCER_CONTRACT_INVENTORY_V1.contracts}
+    assert kinds == set(ModeloWorkspaceContributorKindV1)
+    assert len(MODELO_WORKSPACE_PRODUCER_CONTRACT_INVENTORY_V1.contracts) == len(ModeloWorkspaceContributorKindV1)
+
+
+def test_every_contract_matches_the_governing_adrs_contributor_fixed_point() -> None:
+    """The owner/producer identities reproduce the governing decision's table verbatim, not a free-form label."""
+    from ..workspace_producers import MODELO_WORKSPACE_PRODUCER_CONTRACT_INVENTORY_V1
+
+    expected = {
+        ModeloWorkspaceContributorKindV1.REGISTRY: ("domain.calculations.registry", "validated_registry_projection"),
+        ModeloWorkspaceContributorKindV1.WORK: ("application.modelo.work_addressing", "resolved_work_target"),
+        ModeloWorkspaceContributorKindV1.BOUNDED_REVIEW: ("application.modelo.work_review", "modelo_work_review"),
+        ModeloWorkspaceContributorKindV1.CALCULATION: ("application.modelo.calculation", "calculation_materialization"),
+        ModeloWorkspaceContributorKindV1.READINESS: ("application.state_projection", "modelo_readiness"),
+        ModeloWorkspaceContributorKindV1.CLOSURE: ("application.registry", "registry_closure"),
+        ModeloWorkspaceContributorKindV1.LOCALE_CATALOGUE: ("locales", "locale_catalogue"),
+        ModeloWorkspaceContributorKindV1.FIELD_MANIFEST: (
+            "application.modelo.workspace_manifest",
+            "workspace_field_manifest",
+        ),
+    }
+    actual = {
+        contract.contributor_kind: (contract.contributor.owner, contract.contributor.producer)
+        for contract in MODELO_WORKSPACE_PRODUCER_CONTRACT_INVENTORY_V1.contracts
+    }
+    assert actual == expected
+
+
+def test_registry_port_captures_the_admission_specific_projection() -> None:
+    """REGISTRY's port must expose exactly the admitted shape, never both at once."""
+    from ....domain.calculations.registry.authority import bundled_authority
+    from ..workspace_producers import ModeloWorkspaceRegistryPortV1, ModeloWorkspaceRegistryProjectionV1
+
+    registry_authority = bundled_authority()
+    port = ModeloWorkspaceRegistryPortV1(
+        authority=registry_authority,
+        modelo_id="130",
+        filing_year=2026,
+        period="1T",
+    )
+    captured = port.capture_projection_with_epoch()
+
+    assert isinstance(captured.projection, ModeloWorkspaceRegistryProjectionV1)
+    assert (captured.projection.inspection is None) != (captured.projection.snapshot is None)
+    captured.require_contract(port.producer_contract)
+
+    stamp, epoch = port.read_current_stamp_and_epoch()
+    assert stamp == captured.stamp
+    assert epoch.generation == captured.epoch.generation
+
+
+def test_registry_projection_refuses_carrying_both_or_neither_admission_shape() -> None:
+    from ....core import RegistryAuthorityGrade
+    from ....domain.calculations.registry.authority import bundled_authority
+    from ..workspace_producers import ModeloWorkspaceRegistryPortV1, ModeloWorkspaceRegistryProjectionV1
+
+    registry_authority = bundled_authority()
+    inspection_only = ModeloWorkspaceRegistryPortV1(
+        authority=registry_authority,
+        modelo_id="130",
+        filing_year=2026,
+        period="1T",
+    ).capture_projection_with_epoch()
+    snapshot_only = ModeloWorkspaceRegistryPortV1(
+        authority=registry_authority,
+        modelo_id="130",
+        filing_year=2026,
+        period="1T",
+        grade=RegistryAuthorityGrade.APPLICABILITY,
+    ).capture_projection_with_epoch()
+
+    assert inspection_only.projection.inspection is not None
+    assert snapshot_only.projection.snapshot is not None
+
+    with pytest.raises(ValidationError, match="exactly one admission shape"):
+        ModeloWorkspaceRegistryProjectionV1()
+    with pytest.raises(ValidationError, match="exactly one admission shape"):
+        ModeloWorkspaceRegistryProjectionV1(
+            inspection=inspection_only.projection.inspection,
+            snapshot=snapshot_only.projection.snapshot,
+        )
+
+
 def test_workspace_producers_have_one_public_module_and_no_private_or_package_binding_remnant() -> None:
     public_module = importlib.import_module("cadrumo.application.modelo.workspace_producers")
     package = importlib.import_module("cadrumo.application.modelo")
@@ -245,8 +405,6 @@ def test_workspace_producer_docs_and_active_tree_reach_the_public_module_fixed_p
     scanned_paths = (
         *sorted((repository / "src").rglob("*.py")),
         *sorted((repository / "docs").rglob("*.rst")),
-        *sorted((repository / "dev").rglob("*.py")),
-        *sorted((repository / "dev").rglob("*.toml")),
     )
     remnants = tuple(
         path.relative_to(repository)

@@ -7,15 +7,13 @@ plus a credential, rather than three parsed custody records no CLI can obtain.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Self
 from uuid import UUID
 
 import pytest
 
-from ....adapters.persistence.storage.custody import (
-    load_committed_profile_password_material,
-    parse_profile_custody_recovery_envelope,
-)
+from ....adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
+from ....adapters.persistence.storage.custody.recovery import parse_profile_custody_recovery_envelope
 from ....tests.secure_sql import isolated_profile_storage_root
 from ..capsule_restore import (
     ProfileCapsuleSourceError,
@@ -180,3 +178,12 @@ class _ReplayedKey:
     @property
     def mnemonic(self) -> str:
         return self._mnemonic
+
+    def wipe(self) -> None:
+        """No-op: a replayed phrase is not wipeable key material."""
+
+    def __enter__(self) -> Self:
+        return self
+
+    def __exit__(self, *_exc_info: object) -> None:
+        return None

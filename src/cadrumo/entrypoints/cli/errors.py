@@ -1030,10 +1030,10 @@ def _project_cadrumo_error(error: Exception, callback: Callable[..., object]) ->
         verdict = _active_profile_pointer_error_verdict(error)
         if verdict is not None:
             return attach_cli_policy_verdict(error, verdict=verdict)
-    from cadrumo.domain.calculations.registry.errors import RegistryError
+    from ...domain.calculations.registry.errors import RegistryError
 
     if isinstance(error, RegistryError) and error.registry_failure is not None:
-        from ...application.calculations import calculation_registry_failure_verdict
+        from ...application.calculations.registry_preconditions import calculation_registry_failure_verdict
 
         return attach_cli_policy_verdict(error, verdict=calculation_registry_failure_verdict(error.registry_failure))
     storage_verdict = _storage_session_failure_verdict(error)

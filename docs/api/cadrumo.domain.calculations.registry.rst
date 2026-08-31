@@ -16,24 +16,36 @@ Submodules
    cadrumo.domain.calculations.registry._applicability_labels
    cadrumo.domain.calculations.registry._citation_blocklist
    cadrumo.domain.calculations.registry._compiled_cache
+   cadrumo.domain.calculations.registry._cross_revision_divergence
    cadrumo.domain.calculations.registry._formula_operator_contracts
    cadrumo.domain.calculations.registry._formula_runtime_irnr
    cadrumo.domain.calculations.registry._formula_runtime_m131
+   cadrumo.domain.calculations.registry._ledger_binding_resolution
+   cadrumo.domain.calculations.registry._loader_internals
    cadrumo.domain.calculations.registry._m303_orden_constants
    cadrumo.domain.calculations.registry._m303_orden_keys
    cadrumo.domain.calculations.registry._m303_orden_legal
+   cadrumo.domain.calculations.registry._m303_orden_projection_compiler
+   cadrumo.domain.calculations.registry._m303_orden_raw_models
+   cadrumo.domain.calculations.registry._m303_orden_source
    cadrumo.domain.calculations.registry._m347_threshold
+   cadrumo.domain.calculations.registry._relation_aggregation
    cadrumo.domain.calculations.registry._schema_export_exemption
    cadrumo.domain.calculations.registry._schema_family_coverage
    cadrumo.domain.calculations.registry._schema_governance
+   cadrumo.domain.calculations.registry._snapshot_internals
    cadrumo.domain.calculations.registry._source_evidence_fingerprint
+   cadrumo.domain.calculations.registry._source_file_text
    cadrumo.domain.calculations.registry._supplementary_orden
+   cadrumo.domain.calculations.registry._supported_filing_years
    cadrumo.domain.calculations.registry._toml_helpers
+   cadrumo.domain.calculations.registry._validate
    cadrumo.domain.calculations.registry._validate_applicability_section
    cadrumo.domain.calculations.registry._validate_application_links
    cadrumo.domain.calculations.registry._validate_authority_grade
    cadrumo.domain.calculations.registry._validate_completeness
    cadrumo.domain.calculations.registry._validate_constructs
+   cadrumo.domain.calculations.registry._validate_cross_revision
    cadrumo.domain.calculations.registry._validate_cross_revision_contiguity
    cadrumo.domain.calculations.registry._validate_cross_revision_evolution
    cadrumo.domain.calculations.registry._validate_dependency_sections
@@ -58,6 +70,7 @@ Submodules
    cadrumo.domain.calculations.registry._validate_record_sections
    cadrumo.domain.calculations.registry._validate_reference_checker
    cadrumo.domain.calculations.registry._validate_reference_sections
+   cadrumo.domain.calculations.registry._validate_references
    cadrumo.domain.calculations.registry._validate_relation_periods
    cadrumo.domain.calculations.registry._validate_relation_sources
    cadrumo.domain.calculations.registry._validate_revision_closure
@@ -74,6 +87,7 @@ Submodules
    cadrumo.domain.calculations.registry._validate_valid_from_ejercicio_convention
    cadrumo.domain.calculations.registry._validate_verification_predicates
    cadrumo.domain.calculations.registry._validation_memoization
+   cadrumo.domain.calculations.registry._verdict_cache
    cadrumo.domain.calculations.registry.aeat_nif_iva_oracle
    cadrumo.domain.calculations.registry.applicability
    cadrumo.domain.calculations.registry.applicability_modelo202
@@ -88,13 +102,12 @@ Submodules
    cadrumo.domain.calculations.registry.censo_modelos
    cadrumo.domain.calculations.registry.checker_oracle_flow
    cadrumo.domain.calculations.registry.classification_coherence
-   cadrumo.domain.calculations.registry.constructs
    cadrumo.domain.calculations.registry.convenio
    cadrumo.domain.calculations.registry.corpus_catalogue
    cadrumo.domain.calculations.registry.counterpart_bindings
    cadrumo.domain.calculations.registry.coverage
-   cadrumo.domain.calculations.registry.cross_revision_divergence
    cadrumo.domain.calculations.registry.deadline_coordinate
+   cadrumo.domain.calculations.registry.design_constant_bindings
    cadrumo.domain.calculations.registry.detail_record_bindings
    cadrumo.domain.calculations.registry.donativo_bindings
    cadrumo.domain.calculations.registry.errors
@@ -111,7 +124,6 @@ Submodules
    cadrumo.domain.calculations.registry.formula_text_inputs
    cadrumo.domain.calculations.registry.gasto193_bindings
    cadrumo.domain.calculations.registry.groi_oracle
-   cadrumo.domain.calculations.registry.handoff_paths
    cadrumo.domain.calculations.registry.handoffs
    cadrumo.domain.calculations.registry.identity
    cadrumo.domain.calculations.registry.ids
@@ -119,7 +131,6 @@ Submodules
    cadrumo.domain.calculations.registry.invoice_bindings
    cadrumo.domain.calculations.registry.irnr_ledger_bindings
    cadrumo.domain.calculations.registry.iva_wallet_relation_targets
-   cadrumo.domain.calculations.registry.ledger_binding_resolution
    cadrumo.domain.calculations.registry.ledger_bindings
    cadrumo.domain.calculations.registry.ledger_impatriado_bindings
    cadrumo.domain.calculations.registry.legal
@@ -131,18 +142,17 @@ Submodules
    cadrumo.domain.calculations.registry.m303_exonerado_390_projection
    cadrumo.domain.calculations.registry.m303_orden_census_artefact
    cadrumo.domain.calculations.registry.m303_orden_manifest
-   cadrumo.domain.calculations.registry.m303_orden_projection_compiler
    cadrumo.domain.calculations.registry.m303_orden_projection_models
-   cadrumo.domain.calculations.registry.m303_orden_raw_models
    cadrumo.domain.calculations.registry.m303_orden_resolution
-   cadrumo.domain.calculations.registry.m303_orden_source
    cadrumo.domain.calculations.registry.m303_prorrata_activity_projection
    cadrumo.domain.calculations.registry.m303_regimen_simplificado_projection
+   cadrumo.domain.calculations.registry.manual_input_selector
    cadrumo.domain.calculations.registry.modelo_localization
    cadrumo.domain.calculations.registry.observation_fold
    cadrumo.domain.calculations.registry.period_offset_math
    cadrumo.domain.calculations.registry.period_selector_match
    cadrumo.domain.calculations.registry.profile_grounding
+   cadrumo.domain.calculations.registry.quantity_screen_enrolment
    cadrumo.domain.calculations.registry.queries
    cadrumo.domain.calculations.registry.query_reports
    cadrumo.domain.calculations.registry.rate_box_partition
@@ -150,7 +160,6 @@ Submodules
    cadrumo.domain.calculations.registry.record_design_coverage
    cadrumo.domain.calculations.registry.record_design_schema
    cadrumo.domain.calculations.registry.record_spec
-   cadrumo.domain.calculations.registry.relation_aggregation
    cadrumo.domain.calculations.registry.relations
    cadrumo.domain.calculations.registry.remote_state_guard
    cadrumo.domain.calculations.registry.renta_web_open_oracle
@@ -172,16 +181,11 @@ Submodules
    cadrumo.domain.calculations.registry.snapshot_coordinate
    cadrumo.domain.calculations.registry.static_inspection
    cadrumo.domain.calculations.registry.support_matrix
-   cadrumo.domain.calculations.registry.supported_filing_years
    cadrumo.domain.calculations.registry.temporal
-   cadrumo.domain.calculations.registry.validate
    cadrumo.domain.calculations.registry.validate_cross_domain_snapshot
-   cadrumo.domain.calculations.registry.validate_cross_revision
-   cadrumo.domain.calculations.registry.validate_cross_revision_advisory
-   cadrumo.domain.calculations.registry.validate_references
    cadrumo.domain.calculations.registry.validate_registry_scope
    cadrumo.domain.calculations.registry.validate_revision_identity
-   cadrumo.domain.calculations.registry.verdict_cache
+   cadrumo.domain.calculations.registry.validate_temporal_coherence
    cadrumo.domain.calculations.registry.verification_tolerance
    cadrumo.domain.calculations.registry.withholding296_bindings
    cadrumo.domain.calculations.registry.withholding_bindings

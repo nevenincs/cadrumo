@@ -141,6 +141,12 @@ aggregation:
       invoice_retencion_collision: A(z) %{source_object_ids} számlá(k)hoz tartozó
         levonás-megfigyelés(eke)t kézzel is megadták és a --received-invoice-retencion
         is irányította; az összesítés előtt szüntesse meg a duplikációt.
+      m111_no_retenciones_attestation_missing: 'A 111-es modellhez nincs perceptoronkénti
+        levonási megfigyelés a következőre: %{filing_year} %{period}. Ne nyújts be
+        teljesen üres 111-es modellt: nyilatkozz a negyedévről mint levonásmentes
+        időszakról a `aeat config profile complete setup --modelo-111-no-retenciones-periods
+        %{attestation_period}` paranccsal, vagy rögzítsd a perceptor-sorokat az `aeat
+        app modelo aggregate --retencion-observation` paranccsal.'
       perceptor_nif_blank: A perceptor NIF nem lehet üres.
       perceptor_observations_missing: Nincsenek perceptoronkénti retención megfigyelések
         a(z) %{modelo} %{filing_year} %{period} modellhez; a(z) %{source_kind} forrás
@@ -366,6 +372,11 @@ categories:
     seguros_salud_autonomo:
       notes: 'Törvényi felső határig levonható: legfeljebb 500 EUR/év, adóalanyonként
         (Ley 35/2006 art. 30.2.5.c szabály 1.ª, betegségbiztosítási díjak).'
+      statutory_cap_variants:
+        discapacidad:
+          label: Felső határ fogyatékossággal élő biztosított személyenként
+        general:
+          label: Általános felső határ biztosított személyenként
     software_suscripcion:
       label: Szoftver-előfizetések
       notes: Teljes mértékben levonható költség (Ley 35/2006 art. 28.1).
@@ -440,6 +451,9 @@ categories:
       label: Utazási közlekedési költség
       notes: Teljes mértékben levonható költség (Ley 35/2006 art. 28.1, egyéb külső
         szolgáltatások).
+component:
+  log:
+    empty: Még nincs naplóbejegyzés.
 core:
   profile:
     errors:
@@ -694,6 +708,23 @@ mcp:
     warm_degraded: A(z) '{command}' az alfolyamat-átvitelen keresztül lett kiszolgálva,
       mert a meleg, folyamaton belüli futtatókörnyezet {reason} volt; az eredmény
       azonos, csak lassabb. A meleg kiszolgálás folytatódik, amint a lassú hívás befejeződik.
+operation:
+  modal:
+    action:
+      apply: Alkalmaz
+      cancel: Megszakit
+      close: Bezár
+      detach: Leválaszt
+      reject: Elutasit
+    detail:
+      cleanup_deadline: Lezárási határidő
+      diagnostic: Diagnosztika
+      execution_deadline: Végrehajtási határidő
+      phase: Fázis
+      receipt_refusal: Elutasítás
+      receipt_result: Eredmény
+    status:
+      running: Folyamatban
 overview:
   no_aeat_history: Ehhez a profilhoz nincs az AEAT által megerősített benyújtás.
   no_aeat_history_sociedades: Ehhez a profilhoz nincs az AEAT által megerősített benyújtás.
@@ -764,9 +795,11 @@ sheets:
       base_retenciones: Visszatartás alapja
       clave: Kulcs
       clave_codigo: Kódkulcs
+      clave_declarado: Az ingatlan tulajdonjogi kódja
       clave_mercado: Piackulcs
       codigo_cuenta: Értékpapírszámla / kölcsönügylet száma
       codigo_emisor: Kibocsátó kódja
+      codigo_provincia: Tartomány kódja
       compensaciones: Kompenzációk
       complemento_infancia_clave: Gyermeknevelési kiegészítés
       contract_relation_clave: Szerződés vagy jogviszony
@@ -789,7 +822,10 @@ sheets:
       descendants_rest_whole: Többi leszármazott (egészben)
       descendants_under_3_total: Leszármazottak 3 alatt (összes)
       descendants_under_3_whole: Leszármazottak 3 alatt (egészben)
+      dias_arrendamiento: Az ingatlan bérbeadási napjainak száma
+      dias_miembro: Tagsági napok száma
       disability_clave: Fogyatékosság
+      domicilio_fiscal: A tag adóügyi lakóhelye
       donor_legal_name: Adományozó neve
       donor_tax_id: Adományozó adóazonosítója
       emerging_stock_excess_clave: Startup részvényjuttatási többlet
@@ -819,8 +855,10 @@ sheets:
       member_legal_name: Tag neve
       member_state_code: Tagállam
       member_tax_id: Tag adóazonosítója
+      miembro_a_31_diciembre: Tag december 31-én
       naturaleza: Jelleg
       naturaleza_declarante: A bevalló jellege
+      naturaleza_inmueble: Az ingatlan jellege
       nif_pagador_anterior: Előző kifizető adóazonosítója
       numero_orden: Sorszám
       operation_date: Művelet dátuma
@@ -844,17 +882,24 @@ sheets:
       percibido_dinerario: Készpénzes bevétel
       percibido_especie: Természetbeni bevétel
       porcentaje_retencion: Visszatartás %
+      porcentaje_titularidad_inmueble: Ingatlantulajdoni hányad százaléka
       province_code: Tartomány
       rectified_base_previous: Korábbi alap (helyesbítés)
       rectified_period: Helyesbített időszak
       rectified_year: Helyesbített év
+      reduccion: A jövedelemre alkalmazandó csökkentés
       reducciones: Csökkentések
       reducciones_aplicables: Alkalmazott csökkentések
+      referencia_catastral: Ingatlan-nyilvántartási hivatkozás
       refund_amount: Visszatérítési összeg
+      rendimiento_neto_minorado_agricola_eo: Csökkentett nettó mezőgazdasági jövedelem
+        (objektív becslés)
+      rendimiento_neto_previo_eo: Előzetes nettó jövedelem (objektív becslés)
       representative_tax_id: Törvényes képviselő adóazonosítója
       retencion_practicada: Alkalmazott visszatartás
       second_child_compute: 2. gyermek beszámítása
       share_percentage: Részesedési arány
+      situacion_inmueble: Az ingatlan elhelyezkedési státusza
       spouse_or_unit_titular_tax_id: Házastárs vagy együttélési egység vezetőjének
         adóazonosítója
       startup_fund_rendimientos_clave: Alapkezelési jövedelem
@@ -950,3 +995,7 @@ transactions:
       el.'
     unreadable: Olvashatatlan fájl vagy nem támogatott formátum.
     verified: Az import sikeresen ellenőrizve.
+tui:
+  root:
+    no_areas: Ebben a munkamenetben még egyetlen terület sem érhető el.
+    title: Cadrumo terminálmunkamenet

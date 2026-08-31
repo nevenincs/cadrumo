@@ -141,7 +141,7 @@ class SchemaResolutionError(RuntimeError):
         super().__init__("; ".join(f"{item.subject_leaf_key}: {item.reason}" for item in failures))
 
 
-DECLARED_UNIMPLEMENTED_SURFACES: Final[Mapping[str, str]] = {}
+DECLARED_UNIMPLEMENTED_SURFACES: Final[Mapping[str, str]] = dict[str, str]()
 
 
 def _rows() -> dict[str, CommandRegistrationMetadata]:

@@ -42,9 +42,12 @@ def test_the_classify_path_reaches_the_local_text_reader() -> None:
     Before this wiring the same branch raised ``_TEXT_PATH_NEEDS_PROVIDER``,
     making a cloud provider mandatory for any text-layer document.
     """
-    import cadrumo.application.ledger.llm_classification as llm_classification
+    # Import the defining module directly rather than through the package
+    # namespace: ledger's `__init__` is inert, and a `from <pkg> import
+    # <module>` edge reads as a package facade import.
+    from ...application.ledger.llm_classification import classify_with_evidence
 
-    source = inspect.getsource(llm_classification.classify_with_evidence)
+    source = inspect.getsource(classify_with_evidence)
 
     assert "LocalTextLLMClassifier" in source, (
         "the classify path must reach the local text reader; without it a text-layer "
@@ -64,7 +67,7 @@ def test_the_local_text_reader_requests_the_local_provider_and_carries_no_images
     """
     from ...domain.transactions import prompt_spec_with_every_spending_category
 
-    reader = LocalTextLLMClassifier(spec=prompt_spec_with_every_spending_category())
+    reader = LocalTextLLMClassifier(spec=prompt_spec_with_every_spending_category(year=2025))
     request = reader._request("classify this")
 
     assert request.provider_override is LLMProvider.LOCAL
@@ -87,7 +90,7 @@ def test_the_provenance_stamp_names_the_local_text_transport() -> None:
     from ...domain.transactions import prompt_spec_with_every_spending_category
 
     reader = LocalTextLLMClassifier(
-        spec=prompt_spec_with_every_spending_category(),
+        spec=prompt_spec_with_every_spending_category(year=2025),
         model="qwen2.5:3b",
     )
 

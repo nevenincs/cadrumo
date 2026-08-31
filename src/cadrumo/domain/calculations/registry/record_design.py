@@ -41,21 +41,7 @@ from ....core.logging import get_logger
 from ....core.paths import path_stat_fingerprint
 from ....core.tabular import coerce_cell_text
 from .errors import RegistryValidationError
-from .record_design_coverage import (
-    DerivedDisenoCasilla,
-    DisenoCoverageReport,
-    build_diseno_coverage_report,
-    calculation_closure_casilla_ids,
-    calculation_closure_legal_refs,
-    calculation_closure_record_design_metadata,
-    derive_calculation_completeness_casillas,
-    derive_diseno_coverage_casillas,
-)
 from .record_design_schema import (
-    AUXILIARY_ENVELOPE_HEADER_CONTENT,
-    AUXILIARY_ENVELOPE_HEADER_LENGTHS,
-    AUXILIARY_ENVELOPE_HEADER_ORDINALS,
-    AUXILIARY_ENVELOPE_HEADER_ROWS,
     RecordDesignAuxiliaryEnvelopeHeader,
     RecordDesignAuxiliaryEnvelopeHeaderField,
     RecordDesignAuxiliaryEnvelopeHeaderRole,
@@ -66,6 +52,7 @@ from .record_design_schema import (
     RecordDesignFieldTypeCorrection,
     RecordDesignHeaderCellCorrection,
     RecordDesignNote,
+    RecordDesignRangeStartCorrection,
     RecordDesignRelativeSuffixMarker,
     RecordDesignSheet,
     RecordDesignSinglePositionCorrection,
@@ -73,7 +60,6 @@ from .record_design_schema import (
     RecordDesignVariableBodyMarker,
     RecordDesignVariableEnvelope,
     RecordDesignVariableTotalMarker,
-    validate_auxiliary_envelope_header_contents,
 )
 
 _log = get_logger(__name__)
@@ -121,9 +107,22 @@ class _WorkbookSheetRows:
 type _TypeCorrectionIndex = Mapping[tuple[str, int], RecordDesignFieldTypeCorrection]
 type _HeaderCorrectionIndex = Mapping[tuple[str, int, str], RecordDesignHeaderCellCorrection]
 type _SinglePositionCorrectionIndex = Mapping[tuple[str, int], RecordDesignSinglePositionCorrection]
+type _RangeStartCorrectionIndex = Mapping[tuple[str, int], RecordDesignRangeStartCorrection]
+
+_EMPTY_HEADER_CORRECTIONS: Final[_HeaderCorrectionIndex] = dict[
+    tuple[str, int, str], RecordDesignHeaderCellCorrection
+]()
 
 _CORRECTION_SUFFIX: Final[str] = ".record-design-correction.json"
 _CORRECTION_ADAPTER: Final[TypeAdapter[RecordDesignCorrection]] = TypeAdapter(RecordDesignCorrection)
+#: A parsed JSON object, typed at the boundary rather than left as the bare
+#: ``Any`` ``json.loads`` returns -- every sidecar loader below validates its
+#: top-level shape and each list entry through this one adapter.
+_JSON_OBJECT_ADAPTER: Final[TypeAdapter[dict[str, object]]] = TypeAdapter(dict[str, object])
+#: A parsed JSON array, typed the same way as :data:`_JSON_OBJECT_ADAPTER` for
+#: the same reason -- an ``isinstance(value, list)`` narrows a bare ``object``
+#: to a still-unparameterised ``list``, and this validates AND types it.
+_JSON_ARRAY_ADAPTER: Final[TypeAdapter[list[object]]] = TypeAdapter(list[object])
 
 
 @dataclass(frozen=True)
@@ -140,13 +139,21 @@ class _CorrectionIndex:
 
     type_corrections: _TypeCorrectionIndex
     header_corrections: _HeaderCorrectionIndex
-    single_position_corrections: _SinglePositionCorrectionIndex = field(default_factory=dict)
+    single_position_corrections: _SinglePositionCorrectionIndex = field(
+        default_factory=dict[tuple[str, int], RecordDesignSinglePositionCorrection],
+    )
+    #: Keys on ``(sheet, declared_start)`` -- the start AEAT printed, which is
+    #: what identifies the row being corrected.
+    range_start_corrections: _RangeStartCorrectionIndex = field(
+        default_factory=dict[tuple[str, int], RecordDesignRangeStartCorrection],
+    )
 
 
 _EMPTY_CORRECTIONS: Final[_CorrectionIndex] = _CorrectionIndex(
     type_corrections={},
     header_corrections={},
     single_position_corrections={},
+    range_start_corrections={},
 )
 
 
@@ -167,13 +174,22 @@ def _load_corrections(source_path: Path) -> _CorrectionIndex:
     sidecar_path = source_path.with_name(source_path.name + _CORRECTION_SUFFIX)
     if not sidecar_path.is_file():
         return _EMPTY_CORRECTIONS
-    payload = json.loads(sidecar_path.read_text(encoding=UTF_8_ENCODING))
-    entries = payload.get("corrections") if isinstance(payload, dict) else None
-    if not isinstance(entries, list):
-        raise RegistryValidationError(f"{sidecar_path}: correction sidecar must declare a 'corrections' list")
+    try:
+        payload = _JSON_OBJECT_ADAPTER.validate_python(json.loads(sidecar_path.read_text(encoding=UTF_8_ENCODING)))
+    except ValidationError as exc:
+        raise RegistryValidationError(
+            f"{sidecar_path}: correction sidecar must declare a 'corrections' list",
+        ) from exc
+    try:
+        entries = _JSON_ARRAY_ADAPTER.validate_python(payload.get("corrections"))
+    except ValidationError as exc:
+        raise RegistryValidationError(
+            f"{sidecar_path}: correction sidecar must declare a 'corrections' list",
+        ) from exc
     type_corrections: dict[tuple[str, int], RecordDesignFieldTypeCorrection] = {}
     header_corrections: dict[tuple[str, int, str], RecordDesignHeaderCellCorrection] = {}
     single_position_corrections: dict[tuple[str, int], RecordDesignSinglePositionCorrection] = {}
+    range_start_corrections: dict[tuple[str, int], RecordDesignRangeStartCorrection] = {}
     for entry in entries:
         # ``strict=False`` here only: JSON has no tuple literal, so the sidecar's
         # ``editions_read`` array arrives as a ``list`` and needs the ordinary
@@ -188,6 +204,14 @@ def _load_corrections(source_path: Path) -> _CorrectionIndex:
                     f"row {correction.source_row}",
                 )
             type_corrections[type_key] = correction
+        elif isinstance(correction, RecordDesignRangeStartCorrection):
+            range_key = (correction.sheet, correction.declared_start)
+            if range_key in range_start_corrections:
+                raise RegistryValidationError(
+                    f"{sidecar_path}: duplicate range-start correction for sheet "
+                    f"{correction.sheet!r} start {correction.declared_start}",
+                )
+            range_start_corrections[range_key] = correction
         elif isinstance(correction, RecordDesignSinglePositionCorrection):
             position_key = (correction.sheet, correction.position)
             if position_key in single_position_corrections:
@@ -208,10 +232,12 @@ def _load_corrections(source_path: Path) -> _CorrectionIndex:
         type_corrections=type_corrections,
         header_corrections=header_corrections,
         single_position_corrections=single_position_corrections,
+        range_start_corrections=range_start_corrections,
     )
 
 
 _DECLARED_NON_RECORD_SHEETS_FILENAME: Final[str] = "declared-non-record-sheets.json"
+_EMPTY_DECLARED_NON_RECORD_SHEET_REASONS: Final[Mapping[str, str]] = dict[str, str]()
 
 
 def _load_declared_non_record_sheet_reasons(source_path: Path) -> Mapping[str, str]:
@@ -230,28 +256,37 @@ def _load_declared_non_record_sheet_reasons(source_path: Path) -> Mapping[str, s
     modelo_root = source_path.parent.parent
     declaration_path = modelo_root / _DECLARED_NON_RECORD_SHEETS_FILENAME
     if not declaration_path.is_file():
-        return {}
-    payload = json.loads(declaration_path.read_text(encoding=UTF_8_ENCODING))
-    entries = payload.get("declared_non_record_sheets") if isinstance(payload, dict) else None
-    if not isinstance(entries, list):
+        return _EMPTY_DECLARED_NON_RECORD_SHEET_REASONS
+    try:
+        payload = _JSON_OBJECT_ADAPTER.validate_python(
+            json.loads(declaration_path.read_text(encoding=UTF_8_ENCODING)),
+        )
+    except ValidationError as exc:
         raise RegistryValidationError(
             f"{declaration_path}: must declare a 'declared_non_record_sheets' list",
-        )
+        ) from exc
+    try:
+        entries = _JSON_ARRAY_ADAPTER.validate_python(payload.get("declared_non_record_sheets"))
+    except ValidationError as exc:
+        raise RegistryValidationError(
+            f"{declaration_path}: must declare a 'declared_non_record_sheets' list",
+        ) from exc
     reasons: dict[str, str] = {}
     for entry in entries:
-        if (
-            not isinstance(entry, dict)
-            or not isinstance(entry.get("sheet"), str)
-            or not isinstance(
-                entry.get("reason"),
-                str,
-            )
-        ):
+        try:
+            entry_map = _JSON_OBJECT_ADAPTER.validate_python(entry)
+        except ValidationError as exc:
+            raise RegistryValidationError(
+                f"{declaration_path}: every entry needs a string 'sheet' and a string 'reason'",
+            ) from exc
+        sheet_value = entry_map.get("sheet")
+        reason_value = entry_map.get("reason")
+        if not isinstance(sheet_value, str) or not isinstance(reason_value, str):
             raise RegistryValidationError(
                 f"{declaration_path}: every entry needs a string 'sheet' and a string 'reason'",
             )
-        sheet = entry["sheet"].strip()
-        reason = entry["reason"].strip()
+        sheet = sheet_value.strip()
+        reason = reason_value.strip()
         if not sheet or not reason:
             raise RegistryValidationError(f"{declaration_path}: 'sheet' and 'reason' must be non-blank")
         if sheet in reasons:
@@ -1047,7 +1082,8 @@ def _repair_truncated_offset_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
         if pair is None:
             continue
         damaged = parsed[index - 1]
-        if damaged is None or damaged.ordinal != pair.group("ordinal"):
+        damaged_ordinal = damaged.ordinal if damaged is not None else None
+        if damaged is None or damaged_ordinal is None or damaged_ordinal != pair.group("ordinal"):
             continue
         anchor = None
         for candidate in range(index - 2, -1, -1):
@@ -1061,7 +1097,7 @@ def _repair_truncated_offset_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
         if stated != resumes or damaged.offset == resumes:
             continue
         rebuilt = re.sub(
-            rf"^(\s*{re.escape(damaged.ordinal)})\s+{damaged.offset}\s",
+            rf"^(\s*{re.escape(damaged_ordinal)})\s+{damaged.offset}\s",
             rf"\g<1> {stated} ",
             lines[index - 1],
             count=1,
@@ -1659,7 +1695,7 @@ def _unread_positions_over_lines(
     )
     for number, line in enumerate(lines, start=1):
         state.feed(line, number)
-    state._close_current_body()
+    state.close_current_body()
     total = 0
     for result in state.results:
         sheet = result.sheet
@@ -2071,7 +2107,7 @@ def _variable_body_marker(
     header: _WorkbookHeader,
     row_number: int,
     values: tuple[object, ...],
-    ordinal: int | None,
+    ordinal: int,
     offset: int,
 ) -> RecordDesignVariableBodyMarker:
     validation, content, description = _field_texts(sheet_name, header, row_number, values)
@@ -2519,7 +2555,7 @@ def _find_header(
             row_number,
             label=f"xlsx {worksheet.title}",
             sheet_name=sheet_name,
-            header_corrections=header_corrections or {},
+            header_corrections=header_corrections or _EMPTY_HEADER_CORRECTIONS,
         )
         if matched is not None:
             return matched
@@ -2531,7 +2567,7 @@ def _find_xls_header(
     header_corrections: _HeaderCorrectionIndex | None = None,
 ) -> tuple[_WorkbookHeader, RecordDesignHeaderCellCorrection | None]:
     sheet_name = worksheet.name.strip()
-    header_corrections = header_corrections or {}
+    header_corrections = header_corrections or _EMPTY_HEADER_CORRECTIONS
     for rowx in range(min(10, worksheet.nrows)):
         matched = _probe_header_row(
             tuple(worksheet.row_values(rowx)),
@@ -3451,7 +3487,9 @@ def _pdf_declared_constant(field: RecordDesignField) -> str | None:
             continue
         match = _PDF_PAGE_CONSTANT_RE.search(str(text))
         if match is not None:
-            return match.group("page")
+            page = match.group("page")
+            assert isinstance(page, str)
+            return page
     return None
 
 
@@ -3514,12 +3552,13 @@ class _PdfParseState:
         :meth:`RecordDesignExtraction.require_complete` -- the guard that exists
         precisely to catch an incomplete read -- can finally see them.
         """
-        self._close_current_body()
+        self.close_current_body()
         self._recover_unidentified_bodies()
         read = tuple(result.sheet for result in self.results if result.identified and result.sheet.fields)
         if not read:
             raise RegistryValidationError("record-design PDF did not contain parseable field rows")
         read = _recover_inline_constants(read)
+        read = _apply_range_start_corrections(read, self.corrections.range_start_corrections)
         # A sheet whose rows do not tile its own declared extent was not read as
         # published, so it is reported as SKIPPED rather than handed over as if
         # it were whole. See :func:`contiguity_failure`.
@@ -3660,7 +3699,7 @@ class _PdfParseState:
             return self.current.current
         return self.current.fields[-1] if self.current.fields else None
 
-    def _close_current_body(self) -> None:
+    def close_current_body(self) -> None:
         if self.current is None:
             return
         self.results.append(
@@ -3673,7 +3712,7 @@ class _PdfParseState:
         self.current = None
 
     def _open_body(self, name: str, *, identified: bool = True) -> None:
-        self._close_current_body()
+        self.close_current_body()
         self.current = _PdfSheetDraft(name, identified=identified)
         self.pending_record_name = None
 
@@ -3919,7 +3958,7 @@ def _recover_inline_constants(sheets: tuple[RecordDesignSheet, ...]) -> tuple[Re
         return sheets
     recovered: list[RecordDesignSheet] = []
     for sheet in sheets:
-        fields = []
+        fields: list[RecordDesignField] = []
         for design_field in sheet.fields:
             match = _INLINE_CONSTANT_RE.search(design_field.description or "")
             if match is None:
@@ -3928,6 +3967,70 @@ def _recover_inline_constants(sheets: tuple[RecordDesignSheet, ...]) -> tuple[Re
             fields.append(design_field.model_copy(update={"content": match.group(0)}))
         recovered.append(sheet.model_copy(update={"fields": tuple(fields)}))
     return tuple(recovered)
+
+
+def _apply_range_start_corrections(
+    sheets: tuple[RecordDesignSheet, ...],
+    corrections: Mapping[tuple[str, int], RecordDesignRangeStartCorrection],
+) -> tuple[RecordDesignSheet, ...]:
+    """Extend a declared filler run backwards over a span no field describes.
+
+    Applied to a row that WAS read, at a start AEAT mis-declared: Modelo 165's
+    2013 orden prints ``104-500 BLANCOS`` where both later editions of the same
+    orden print ``102-500``, leaving 102-103 described by nothing.
+
+    THE PRECONDITION IS ENFORCED HERE, not trusted from the declaration, and it
+    is the whole guard: every position the run would gain must currently be
+    described by NO field on the sheet. A correction that would swallow, split
+    or overlap a read field RAISES rather than applying, so this kind can only
+    ever reclaim a hole -- it can never invent a field, displace one, or quietly
+    absorb data AEAT actually declared. A declaration naming a start no row
+    begins at raises too, because a correction that matches nothing is a
+    mis-transcription and silently ignoring it would leave the hole it was
+    written to close.
+    """
+    if not corrections:
+        return sheets
+    corrected: list[RecordDesignSheet] = []
+    for sheet in sheets:
+        applicable = {start: correction for (name, start), correction in corrections.items() if name == sheet.name}
+        if not applicable:
+            corrected.append(sheet)
+            continue
+        described: set[int] = set()
+        for parsed in sheet.fields:
+            described.update(range(parsed.offset, parsed.offset + parsed.length))
+        fields = list(sheet.fields)
+        applied: list[RecordDesignRangeStartCorrection] = []
+        for start, correction in sorted(applicable.items()):
+            matches = [index for index, parsed in enumerate(fields) if parsed.offset == start]
+            if not matches:
+                raise RegistryValidationError(
+                    f"record-design sheet {sheet.name!r} declares a range-start correction at "
+                    f"{start} but no field begins there; the correction names nothing and the "
+                    "span it was written to close would stay open",
+                )
+            gained = set(range(correction.corrected_start, start))
+            if collides := sorted(gained & described):
+                raise RegistryValidationError(
+                    f"record-design sheet {sheet.name!r} range-start correction would extend a run "
+                    f"back over position(s) {collides} that a read field already describes; this "
+                    "correction kind reclaims a hole and must never displace declared data",
+                )
+            index = matches[0]
+            original = fields[index]
+            fields[index] = original.model_copy(
+                update={
+                    "offset": correction.corrected_start,
+                    "length": original.length + (start - correction.corrected_start),
+                },
+            )
+            described |= gained
+            applied.append(correction)
+        corrected.append(
+            sheet.model_copy(update={"fields": tuple(fields), "corrections": (*sheet.corrections, *applied)}),
+        )
+    return tuple(corrected)
 
 
 def contiguity_failure(sheet: RecordDesignSheet) -> str | None:
@@ -4002,6 +4105,16 @@ def _position_runs(positions: list[int]) -> str:
     return ", ".join(runs[:6]) + (" and more" if len(runs) > 6 else "")
 
 
+#: A naturaleza column holding only dash/underscore punctuation. AEAT uses it to
+#: mean "no data type", i.e. filler positions.
+_DASH_NATURALEZA_RE = re.compile(r"[-–_]+")
+
+#: The fillers a dash naturaleza may describe. Anchored and word-bounded so
+#: "BLANCOS." and "CEROS." match while a sentence merely opening with a similar
+#: word does not.
+_FILLER_DESCRIPTION_RE = re.compile(r"(?i)^(?:blancos?|ceros?)\b")
+
+
 def _parse_pdf_row(line: str, source_row: int) -> _PdfRow | None:
     compact = _COMPACT_PDF_ROW_RE.match(line)
     if compact is not None:
@@ -4030,6 +4143,33 @@ def _parse_pdf_row(line: str, source_row: int) -> _PdfRow | None:
         return None
 
     naturaleza = _naturaleza_or_none(narrative.group("type"))
+    if (
+        naturaleza is not None
+        and _DASH_NATURALEZA_RE.fullmatch(narrative.group("type") or "")
+        and not _FILLER_DESCRIPTION_RE.match(narrative.group("text").strip())
+    ):
+        # A BARE DASH in the naturaleza column means "no data type -- filler",
+        # so the row's own description says which filler: BLANCOS/BLANCO or
+        # CEROS. When it says anything else the dash is not a naturaleza at all
+        # but the punctuation of an ENUMERATED PROSE ITEM inside a field's
+        # description -- AEAT writes "1 - En el caso de que en el campo Clave
+        # Tipo de Identificacion se haya consignado una 'C'..." -- and reading
+        # that as a row invents a field at position 1.
+        #
+        # That invention is not a lost row, it is a lost RECORD: because the
+        # fabricated offset restarts at 1, the extractor concluded a new record
+        # body began mid-description and reported an unidentified record it
+        # could not name. Modelo 181 lost one that way in each of its three
+        # bundled editions.
+        #
+        # MEASURED before narrowing, across all 102 bundled design PDFs: 183
+        # rows carry a bare-dash naturaleza. Every legitimate one describes
+        # filler -- including eight that declare a SINGLE position rather than a
+        # range (BLANCOS at 58, 81 and 500 across modelos 185, 270, 296 and
+        # 347), which is why the absence of a range is NOT the discriminator and
+        # rejecting on it would have dropped eight real rows. The six that
+        # describe prose are exactly modelo 181's three editions, twice each.
+        return None
     if naturaleza is None:
         # The line has a leading number but the token after it names no
         # naturaleza AEAT uses, so this is prose, not a position row. AEAT
@@ -4251,13 +4391,17 @@ def _pdf_candidate_record_name(line: str) -> str | None:
     """
     tag = _PDF_RECORD_MODELO_PAGE_TAG_RE.match(line.strip())
     if tag is not None:
-        return tag.group("tag")
+        tag_value = tag.group("tag")
+        assert isinstance(tag_value, str)
+        return tag_value
     anexo = _PDF_RECORD_ANEXO_HEADING_RE.match(line.strip())
     if anexo is not None:
         return "Anexo - " + _normalise_pdf_sheet_name(anexo.group("title"))
     bare_anexo = _PDF_RECORD_BARE_ANEXO_RE.match(line.strip())
     if bare_anexo is not None:
-        return "Anexo " + bare_anexo.group("tag").upper()
+        bare_anexo_tag = bare_anexo.group("tag")
+        assert isinstance(bare_anexo_tag, str)
+        return "Anexo " + bare_anexo_tag.upper()
     match = _PDF_RECORD_HEADING_TYPE_LAST_RE.match(line)
     if match is None:
         return None
@@ -4628,33 +4772,10 @@ _REVERSED_VISUAL_CHART_TOKENS = {
 
 
 __all__ = [
-    "AUXILIARY_ENVELOPE_HEADER_CONTENT",
-    "AUXILIARY_ENVELOPE_HEADER_LENGTHS",
-    "AUXILIARY_ENVELOPE_HEADER_ORDINALS",
-    "AUXILIARY_ENVELOPE_HEADER_ROWS",
-    "DerivedDisenoCasilla",
-    "DisenoCoverageReport",
-    "RecordDesignCompositeRelativeClosing",
-    "RecordDesignCorrection",
-    "RecordDesignExtraction",
-    "RecordDesignField",
-    "RecordDesignFieldTypeCorrection",
-    "RecordDesignHeaderCellCorrection",
-    "RecordDesignRelativeSuffixMarker",
-    "RecordDesignSheet",
-    "RecordDesignSkippedSheet",
-    "RecordDesignVariableBodyMarker",
-    "RecordDesignVariableEnvelope",
-    "RecordDesignVariableTotalMarker",
-    "build_diseno_coverage_report",
-    "calculation_closure_casilla_ids",
-    "calculation_closure_legal_refs",
-    "calculation_closure_record_design_metadata",
-    "derive_calculation_completeness_casillas",
-    "derive_diseno_coverage_casillas",
+    "_VISUAL_CHART_TYPE_CODE",
+    "_naturaleza_or_none",
     "extract_record_design",
     "extract_record_design_pdf",
     "extract_record_design_pdf_bytes",
     "extract_record_design_workbook",
-    "validate_auxiliary_envelope_header_contents",
 ]

@@ -68,8 +68,8 @@ def _create_profile(name: str = "test-operator") -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_cadrumo_error_from_config_profile_show_unknown_name_emits_typed_envelope() -> None:
-    """config profile show with an unregistered name raises CliRefusedBoundaryError.
+def test_cadrumo_error_from_config_profile_view_unknown_name_emits_typed_envelope() -> None:
+    """config profile view with an unregistered name raises CliRefusedBoundaryError.
 
     The _resolve_profile_by_label helper raises CliRefusedBoundaryError
     (an CadrumoError subclass) when the name is not found. The
@@ -80,7 +80,7 @@ def test_cadrumo_error_from_config_profile_show_unknown_name_emits_typed_envelop
     boundary, locale resolver, and error-code lookup executes as it
     would in production.
     """
-    result = invoke_cached_cli(["config", "profile", "show", "does-not-exist"])
+    result = invoke_cached_cli(["config", "profile", "view", "does-not-exist"])
 
     assert result.exit_code != 0
     # CliRefusedBoundaryError has category REFUSED → exit code 1 or 2
@@ -102,7 +102,7 @@ def test_cadrumo_error_from_config_login_missing_profile_emits_typed_envelope() 
 
 def test_cadrumo_error_envelope_is_well_formed_in_json_mode() -> None:
     """In --format json mode, an CadrumoError refusal emits a parseable JSON error envelope."""
-    result = invoke_cached_cli(["--format", "json", "config", "profile", "show", "no-such-profile"])
+    result = invoke_cached_cli(["--format", "json", "config", "profile", "view", "no-such-profile"])
 
     assert result.exit_code != 0
     # The error envelope is written to stderr; result.output captures stdout.
@@ -147,7 +147,7 @@ def _corrupt_bucket_db(tmp_path: Path) -> None:
 def test_non_cadrumo_error_in_profile_show_read_wraps_to_config_boundary_error(tmp_path: Path) -> None:
     """A non-CadrumoError escaping _read_profile_record is wrapped as ConfigBoundaryError.
 
-    The config_profile_show handler (catch 3) splits the except arm:
+    The config_profile_view handler (catch 3) splits the except arm:
     CadrumoError propagates verbatim; any other exception is wrapped in
     ConfigBoundaryError before the custom "profile_record_unreadable" payload
     is emitted.
@@ -160,7 +160,7 @@ def test_non_cadrumo_error_in_profile_show_read_wraps_to_config_boundary_error(t
     _create_profile("boundary-probe")
     _corrupt_bucket_db(tmp_path)
 
-    result = invoke_cached_cli(["config", "profile", "show", "boundary-probe"])
+    result = invoke_cached_cli(["config", "profile", "view", "boundary-probe"])
 
     assert result.exit_code == 2, result.output
     output_text = result.output
@@ -180,7 +180,7 @@ def test_non_cadrumo_error_cause_chain_reaches_config_boundary_error(tmp_path: P
     _create_profile("chain-probe")
     _corrupt_bucket_db(tmp_path)
 
-    result = invoke_cached_cli(["config", "profile", "show", "chain-probe"])
+    result = invoke_cached_cli(["config", "profile", "view", "chain-probe"])
 
     assert result.exit_code == 2, result.output
     # CliRunner captures the exception that propagated out of the callback.
@@ -352,7 +352,7 @@ def test_error_envelope_carries_the_active_command_identifier() -> None:
     # A hyphenated CLI leaf maps to its underscored envelope id, and a deeper
     # path threads every segment (unknown-profile refusal on a nested command).
     bad_show = json.loads(
-        invoke_cached_cli(["--format", "json", "config", "profile", "show", "no-such-profile"]).stderr,
+        invoke_cached_cli(["--format", "json", "config", "profile", "view", "no-such-profile"]).stderr,
     )
     assert bad_show["command"] == "config.profile.show"
 
@@ -379,10 +379,9 @@ def test_pre_resolution_error_envelope_command_stays_null() -> None:
 
 def _record_divergence(profile_name: str) -> None:
     """Persist one open cotejo divergence on the named profile's record."""
-    from cadrumo.application.workflow.persistence import workflow_state_repository
-    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
-
     from .....application.user_profile.cotejo_apply import CensoDivergence, apply_cotejo
+    from .....application.workflow.persistence import workflow_state_repository
+    from .....application.workflow.profile_bucket_scan import read_profile_bucket
 
     pointer = read_profile_bucket(profile_name)
     assert pointer is not None
@@ -402,11 +401,11 @@ def _record_divergence(profile_name: str) -> None:
 
 
 def test_profile_show_surfaces_the_open_divergence_notice() -> None:
-    """A profile with an open cotejo divergence warns on `config profile show`."""
+    """A profile with an open cotejo divergence warns on `config profile view`."""
     _create_profile("divergence-probe")
     _record_divergence("divergence-probe")
 
-    result = invoke_cached_cli(["--format", "json", "config", "profile", "show", "divergence-probe"])
+    result = invoke_cached_cli(["--format", "json", "config", "profile", "view", "divergence-probe"])
 
     assert result.exit_code == 0, result.output
     document = json.loads(result.output)
@@ -422,7 +421,7 @@ def test_profile_show_carries_no_divergence_notice_when_clean() -> None:
     """A profile with no open divergence shows no censo warning."""
     _create_profile("clean-probe")
 
-    result = invoke_cached_cli(["--format", "json", "config", "profile", "show", "clean-probe"])
+    result = invoke_cached_cli(["--format", "json", "config", "profile", "view", "clean-probe"])
 
     assert result.exit_code == 0, result.output
     document = json.loads(result.output)

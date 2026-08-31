@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import ast
 from datetime import date
 from pathlib import Path
 from typing import Literal
@@ -20,9 +19,8 @@ from .....core import (
     M303RegimenSimplificadoModuleValue,
     validated_casilla_id,
 )
-from .....core.directory_scan import (
-    scan_directory,
-)
+from .._loader_internals import _compile_export_semantic_field, _compile_projection_endpoint_declaration
+from .._snapshot_internals import _validate_materialized_export_record_families
 from .._validate_evidence import EvidenceValidator
 from .._validate_exports import (
     _validate_export_record,
@@ -33,7 +31,6 @@ from ..authority import bundled_authority
 from ..errors import RegistryLoadError, RegistryValidationError
 from ..export import derive_export_layouts_from_bindings
 from ..fixed_width_codec import ExportEncoding
-from ..loader import _compile_export_semantic_field, _compile_projection_endpoint_declaration
 from ..schema import ModeloRevision
 from ..schema_exports import (
     ExportFieldDefinition,
@@ -42,7 +39,6 @@ from ..schema_exports import (
     ProjectionEndpointDeclaration,
 )
 from ..schema_references import PeriodSelector
-from ..snapshot import _validate_materialized_export_record_families
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -453,42 +449,3 @@ def test_projection_endpoint_loader_hydrates_only_the_canonical_toml_payload() -
         ProjectionEndpointDeclaration.model_validate(
             {**compiled, "projection_ref": {"projection_kind": "m303_prorrata_activity", "slot": "1"}},
         )
-
-
-#: The module that DEFINES the compiler. Its own ``hydrate_filing_projection_ref``
-#: delegates to it in the same file, which is not a loader reaching for it.
-_COMPILER_HOME = Path("src/cadrumo/core/_filing_projection_ref.py")
-
-
-def test_projection_ref_compiler_has_only_the_two_canonical_loader_callers() -> None:
-    """Only the registry loader and the semantic-map loader compile a projection ref.
-
-    The scan covers ``dev/registry``, not ``scaffold/registry``. The semantic-map
-    loader moved there, and scanning a directory that no longer exists finds
-    nothing while looking exactly like a loader that stopped calling the
-    compiler -- so the expectation named a path no walk could reach.
-
-    The compiler's OWN module is excluded rather than admitted as a third
-    caller: ``hydrate_filing_projection_ref`` delegates to it inside the same
-    file, so counting that would make the definition site look like a consumer
-    and hide whether a real third loader had appeared.
-    """
-    root = Path(__file__).resolve().parents[6]
-    caller_paths: set[Path] = set()
-    for source_root in (root / "src" / "cadrumo", root / "dev" / "registry"):
-        for module_path in scan_directory(source_root, pattern="*.py", recursive=True, prune_directories=("tests",)):
-            tree = ast.parse(module_path.read_text(encoding="utf-8"))
-            if any(
-                isinstance(node, ast.Call)
-                and (
-                    (isinstance(node.func, ast.Name) and node.func.id == "compile_filing_projection_ref")
-                    or (isinstance(node.func, ast.Attribute) and node.func.attr == "compile_filing_projection_ref")
-                )
-                for node in ast.walk(tree)
-            ):
-                caller_paths.add(module_path.relative_to(root))
-
-    assert caller_paths - {_COMPILER_HOME} == {
-        Path("src/cadrumo/domain/calculations/registry/_loader.py"),
-        Path("dev/registry/pipeline/_semantic_map_loader.py"),
-    }

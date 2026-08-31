@@ -29,11 +29,8 @@ from pathlib import Path
 
 import pytest
 
-from .. import (
-    ProfileCustodyRecordError,
-    read_optional_profile_custody_local_record,
-    write_profile_custody_local_record,
-)
+from ..errors import ProfileCustodyRecordError
+from ..filesystem import read_optional_profile_custody_local_record, write_profile_custody_local_record
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

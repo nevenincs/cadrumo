@@ -1,20 +1,54 @@
 # Scoop bucket
 
-This directory makes the repository its own Scoop bucket. Scoop resolves app
-manifests from a `bucket/` subdirectory when one is present, so no separate
-bucket repository exists or needs to be created.
+**This directory is not the bucket.** Cadrumo's Scoop manifest is published into the
+shared account distribution repository, `nevenincs/homebrew-tap`, alongside its
+Homebrew formula. Nothing is committed here, and `cadrumo.json` never appears here.
 
-Once a release has been published, install with:
+```powershell
+scoop bucket add nevenincs https://github.com/nevenincs/homebrew-tap
+scoop install nevenincs/cadrumo
+```
 
-    scoop bucket add cadrumo https://github.com/nevenincs/cadrumo
-    scoop install cadrumo
+```sh
+brew tap nevenincs/tap
+brew install nevenincs/tap/cadrumo
+```
 
-`cadrumo.json` is generated from the immutable release cohort and pushed here by
-the publish workflow at release time — it is never hand-authored, and it is
-absent until the first publication. Do not commit a placeholder manifest: a
-manifest names a version and pins a SHA-256, so a placeholder is a claim that a
-user could act on and fail against.
+## Why one shared repository, not one per product
 
-Every product published under this account repeats this same layout in its own
-repository. That is what keeps the count of distribution repositories at zero
-per product.
+Homebrew requires a tap repository to be named `homebrew-<name>` for the one-argument
+`brew tap nevenincs/tap` form to resolve. That repository therefore has to exist no
+matter what. Scoop imposes no name constraint and resolves manifests from a `bucket/`
+subdirectory, so the same repository carries the Scoop side at no extra cost.
+
+The result is that the account's distribution-repository count is **one at one product
+and one at a hundred**: a new product adds one formula file and one manifest file and
+creates nothing. The publish workflow's push steps are safe to share because each
+stages only its own product-scoped path, refuses a backward version bump, and retries a
+lost push race — three properties pinned by 41 conformance assertions in
+`dev/release/tests/test_publish_release_workflow.py`.
+
+## What this file used to say, and why that mattered
+
+This README previously stated that "this directory makes the repository its own Scoop
+bucket" and that "no separate bucket repository exists or needs to be created". Both
+were false. `nevenincs/homebrew-tap` exists, it is where `publish-release.yml` pushes,
+and the workflow refuses to publish at all when `HOMEBREW_TAP_REPO` and
+`HOMEBREW_TAP_TOKEN` are unset.
+
+The claim was not harmless. It described the opposite architecture from the one the
+code implements, in the one file a maintainer reads first when asking where the
+manifest goes — and it sat directly above a correct, carefully argued rationale for the
+shared repository in `publish-release.yml`. A reader trusting this file would have gone
+looking for an in-repo manifest that is never written.
+
+## Note for the vaultspec products
+
+vaultspec-core and vaultspec-rag currently ship their channels **in-repo**, each
+repository acting as its own bucket and tap. That works, but it costs the
+one-argument tap form: because those repositories are not named `homebrew-*`, they
+require `brew tap nevenincs/vaultspec-core https://github.com/nevenincs/vaultspec-core`
+rather than `brew tap nevenincs/tap`.
+
+The two models are both defensible and the choice between them is open. It is recorded
+here so the difference is a decision rather than a drift.

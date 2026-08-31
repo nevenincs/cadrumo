@@ -14,27 +14,23 @@ from typing import cast
 from ...core import ActionEvidenceProvenance
 from ...domain.iva import (
     EVIDENCE_EXEMPT_IVA_CATEGORIES,
-    InvoiceKind,
     IvaCategory,
     IvaFlowDirection,
     derive_flow_for_classification,
+    flow_direction_for_invoice_kind,
     is_deducible_flow,
 )
-from ...domain.modelos import CalculationRevision, LedgerEvidenceRow, ModeloError
+from ...domain.modelos import LedgerEvidenceRow
+from ...domain.modelos.calculation_revision import CalculationRevision
+from ...domain.modelos.errors import ModeloError
 from ...domain.transactions import (
+    BUSINESS_BEARING_STATES,
     BusinessClassification,
     TransactionDirection,
     TransactionLifecycleState,
 )
 from ..aggregation import invoice_kind_for_direction
 from ._preconditions import build_modelo_precondition_failure
-
-_EVIDENCE_EXPECTING_BUSINESS_STATES: frozenset[BusinessClassification] = frozenset(
-    {
-        BusinessClassification.BUSINESS,
-        BusinessClassification.MIXED,
-    },
-)
 
 
 def _enum_or_none[EnumT: StrEnum](enum_type: type[EnumT], value: str | None) -> EnumT | None:
@@ -107,7 +103,7 @@ def _row_flow(row: LedgerEvidenceRow) -> IvaFlowDirection | None:
         return None
     category = _enum_or_none(IvaCategory, row.iva_category)
     if category is None:
-        return IvaFlowDirection.REPERCUTIDO if invoice_kind is InvoiceKind.ISSUED else IvaFlowDirection.SOPORTADO
+        return flow_direction_for_invoice_kind(invoice_kind)
     if category in EVIDENCE_EXEMPT_IVA_CATEGORIES:
         return None
     return derive_flow_for_classification(
@@ -122,7 +118,7 @@ def ledger_evidence_row_missing_deductible_iva_evidence(row: LedgerEvidenceRow) 
     if lifecycle_state is not TransactionLifecycleState.ACTIVE:
         return False
     business_classification = _enum_or_none(BusinessClassification, row.business_classification)
-    if business_classification not in _EVIDENCE_EXPECTING_BUSINESS_STATES:
+    if business_classification not in BUSINESS_BEARING_STATES:
         return False
     if row.iva_amount is None or row.iva_amount <= Decimal("0"):
         return False

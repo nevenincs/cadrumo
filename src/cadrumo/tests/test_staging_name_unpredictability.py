@@ -83,7 +83,11 @@ def _is_predictable_staging_construction(node: ast.AST) -> bool:
 
 
 def _predictable_staging_constructions(tree: ast.AST) -> list[int]:
-    return [node.lineno for node in ast.walk(tree) if _is_predictable_staging_construction(node)]
+    found: list[int] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.BinOp | ast.JoinedStr) and _is_predictable_staging_construction(node):
+            found.append(node.lineno)
+    return found
 
 
 def test_no_production_module_builds_a_predictable_staging_name(

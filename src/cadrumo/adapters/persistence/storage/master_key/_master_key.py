@@ -40,9 +40,7 @@ if TYPE_CHECKING:
 from .....core import StorageCategory
 from .....core.bucket_pointer import resolve_active_bucket_id
 from .....core.logging import get_logger
-from ..crypto import (
-    KEY_SIZE,
-)
+from ..crypto.aead import KEY_SIZE
 from ..errors import (
     DecryptionError,
     MasterKeyMaterialMissingError,
@@ -65,14 +63,14 @@ class MasterKeyProvider(Protocol):
     session (idle-timeout guard, in-memory key cache) and exiting tears
     it down. Every concrete provider implements the protocol verbatim.
 
-    The ``_session`` / ``_activation_cm`` slots are the bookkeeping the
+    The ``session`` / ``_activation_cm`` slots are the bookkeeping the
     shared enter/exit machinery binds onto: entering stores the opened
     :class:`BucketSession` and its activation context manager, exiting
     tears both down. Every concrete provider declares them in
     ``__init__``.
     """
 
-    _session: BucketSession | None
+    session: BucketSession | None
     _activation_cm: AbstractContextManager[None] | None
 
     def get_master_key(self) -> bytes:
@@ -147,7 +145,7 @@ def refuse_unsecured_bucket_with_real_profile(session: BucketSession) -> None:
     from .....core import bucket_scoped_storage_path
     from .....core.config import load_settings
     from .._namespace_registry import USER_PROFILE_VALUE_NAMESPACE
-    from ..crypto import decrypt_encrypted_bytes_column
+    from ..crypto.encrypted_columns import decrypt_encrypted_bytes_column
 
     if session.bucket_id == "unsecured":
         return

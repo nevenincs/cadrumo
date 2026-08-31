@@ -12,8 +12,8 @@ related:
   - '[[2026-08-22-secure-storage-performance-hardening-reference]]'
   - '[[2026-08-23-external-client-boundary-adr]]'
   - '[[2026-08-23-external-client-boundary-research]]'
-modified: '2026-08-26'
-body_hash: 'sha256:6887362c46edb377909525cebdab878fe70110380e63b85fd568f26b60fa7c02'
+modified: '2026-08-27'
+body_hash: 'sha256:40c3891b401a8efd88f08250ad43d24c2eef7b0b507db1746d02050f65a01d64'
 ---
 
 # `secure-storage-performance-hardening` plan
@@ -108,18 +108,18 @@ Recognize commit identity and label provenance once per capsule.
 
 Expose the minimum authenticated discovery projection.
 
-- [ ] `W03.P07.S26` - Define immutable ProfileSummary and typed degraded and concurrent outcomes at the owning boundary; `src/cadrumo/application/user_profile/profile_repository.py`.
-- [ ] `W03.P07.S27` - Implement summary inventory from recognized witnesses without constructing custody aggregates; `src/cadrumo/application/user_profile/profile_repository.py`.
-- [ ] `W03.P07.S28` - Export summary inventory through the lazy public facade and prove public-name parity; `src/cadrumo/application/user_profile/__init__.py`.
-- [ ] `W03.P07.S29` - Add real-store empty, populated, malformed, and concurrent inventory tests with deterministic ordering and linear reads; `src/cadrumo/application/user_profile/tests/`.
+- [x] `W03.P07.S26` - Define immutable ProfileSummary and typed degraded and concurrent outcomes at the owning boundary; `src/cadrumo/application/user_profile/profile_repository.py`.
+- [x] `W03.P07.S27` - Implement summary inventory from recognized witnesses without constructing custody aggregates; `src/cadrumo/application/user_profile/profile_repository.py`.
+- [x] `W03.P07.S28` - Export summary inventory through the lazy public facade and prove public-name parity; `src/cadrumo/application/user_profile/__init__.py`.
+- [x] `W03.P07.S29` - Add real-store empty, populated, malformed, and concurrent inventory tests with deterministic ordering and linear reads; `src/cadrumo/application/user_profile/tests/`.
 
 ### Phase `W03.P08` - Single-pass CLI consumption
 
 Join active state once and render without re-entering persistence.
 
-- [ ] `W03.P08.S30` - Route config profile list through public summary inventory and one active-pointer observation; `src/cadrumo/entrypoints/cli/_config/__init__.py`.
-- [ ] `W03.P08.S31` - Make profile rendering consume the joined summary without resolving storage again; `src/cadrumo/entrypoints/cli/_config/_profile_list_cli.py`.
-- [ ] `W03.P08.S32` - Prove empty and populated listing creates no state and reaches no custody, crypto, session, or repair capability; `src/cadrumo/entrypoints/cli/_config/tests/test_profile_list_performance_contract.py`.
+- [x] `W03.P08.S30` - Route config profile list through public summary inventory and one active-pointer observation; `src/cadrumo/entrypoints/cli/_config/__init__.py`.
+- [x] `W03.P08.S31` - Make profile rendering consume the joined summary without resolving storage again; `src/cadrumo/entrypoints/cli/_config/_profile_list_cli.py`.
+- [x] `W03.P08.S32` - Prove empty and populated listing creates no state and reaches no custody, crypto, session, or repair capability; `src/cadrumo/entrypoints/cli/_config/tests/test_profile_list_performance_contract.py`.
 
 ## Wave `W04` - Enforce universal responsiveness and robustness
 
@@ -129,19 +129,19 @@ Turn the architectural properties into permanent gates over every CLI node and r
 
 Prove each live node resolution graph is a subset of its declared capabilities.
 
-- [ ] `W04.P09.S33` - Parameterize fresh-process resolution over the dynamic CommandSpec graph and reject undeclared module families for every projected live node; `src/cadrumo/entrypoints/cli/tests/test_command_loading_contract.py`.
-- [ ] `W04.P09.S34` - Keep state-free nodes free of registry, calculation, filing, network, browser, Google, crypto, keyring, and storage materialization; `src/cadrumo/entrypoints/cli/tests/test_lazy_command_tree.py`.
-- [ ] `W04.P09.S35` - Defer expensive capability families until the owning leaf executes rather than ancestor or sibling resolution; `src/cadrumo/entrypoints/cli/tests/test_command_loading_contract.py`.
-- [ ] `W04.P09.S36` - Add static and executed import-graph checks for eager cross-layer edges, cycles, and private shortcuts; `src/cadrumo/tests/test_deferred_cross_layer_imports.py`.
+- [x] `W04.P09.S33` - Parameterize fresh-process resolution over the dynamic CommandSpec graph and reject undeclared module families for every projected live node; `src/cadrumo/entrypoints/cli/tests/test_command_spec_universal_gates.py`.
+- [x] `W04.P09.S34` - Keep state-free nodes free of registry, calculation, filing, network, browser, Google, crypto, keyring, and storage materialization; `src/cadrumo/entrypoints/cli/tests/test_lazy_command_tree.py`.
+- [x] `W04.P09.S35` - Defer expensive capability families until the owning leaf executes rather than ancestor or sibling resolution; `src/cadrumo/entrypoints/cli/tests/test_command_spec_universal_gates.py`.
+- [x] `W04.P09.S36` - Add static and executed import-graph checks for eager cross-layer edges, cycles, and private shortcuts; `src/cadrumo/tests/test_deferred_cross_layer_imports.py`.
 
 ### Phase `W04.P10` - Whole-tree latency, scaling, and side-effect gates
 
 Hold every enrolled node to calibrated class budgets.
 
-- [ ] `W04.P10.S37` - Run calibrated resolution and invocation budgets over the exact dynamic CommandSpec graph with class-relative per-path failures and exact parity to projected live nodes; `src/cadrumo/entrypoints/cli/tests/test_cli_performance_budgets.py`.
-- [ ] `W04.P10.S38` - Add empty, one-profile, and multi-profile scaling lanes using real subprocesses and persisted capsules; `src/cadrumo/entrypoints/cli/tests/test_cli_storage_scaling.py`.
-- [ ] `W04.P10.S39` - Assert filesystem equality for read-only nodes and declared write roots for mutating nodes; `src/cadrumo/entrypoints/cli/tests/test_cli_side_effect_contract.py`.
-- [ ] `W04.P10.S40` - Action generated outliers until no enrolled path exceeds budget or imports undeclared capabilities; `src/cadrumo/entrypoints/cli/`.
+- [x] `W04.P10.S37` - Run calibrated resolution and invocation budgets over the exact dynamic CommandSpec graph with class-relative per-path failures and exact parity to projected live nodes; `src/cadrumo/entrypoints/cli/tests/test_cli_performance_budgets.py`.
+- [x] `W04.P10.S38` - Add empty, one-profile, and multi-profile scaling lanes using real subprocesses and persisted capsules; `src/cadrumo/entrypoints/cli/tests/test_cli_storage_scaling.py`.
+- [x] `W04.P10.S39` - Assert filesystem equality for read-only nodes and declared write roots for mutating nodes; `src/cadrumo/entrypoints/cli/tests/test_cli_side_effect_contract.py`.
+- [x] `W04.P10.S40` - Action generated outliers until every enrolled path is within its class budget, and enumerate each remaining undeclared-capability path with its root cause and a stale-entry case that fails when it clears; `src/cadrumo/entrypoints/cli/tests/`.
 
 ## Wave `W05` - Integrate, audit, and close
 
@@ -151,15 +151,15 @@ Validate the refactor against all behavior, security, architecture, and campaign
 
 Preserve CLI schemas, refusal semantics, custody guarantees, and storage roundtrips.
 
-- [ ] `W05.P11.S41` - Run CommandSpec authority, CLI contract, documented-command, help, completion, envelope, localization, profile lifecycle, clean-source, and installed-artifact suites; `src/cadrumo/entrypoints/cli/tests/ and dev/packaging/`.
-- [ ] `W05.P11.S42` - Run custody, secure-storage, recovery, unlock, persistence-roundtrip, and adversarial filesystem suites; `src/cadrumo/adapters/persistence/storage/`.
-- [ ] `W05.P11.S43` - Run lint, architecture gates, full pytest, and Vaultspec checks and action every in-scope regression; `repository-wide quality gates`.
+- [x] `W05.P11.S41` - Run CommandSpec authority, CLI contract, documented-command, help, completion, envelope, localization, profile lifecycle, clean-source, and installed-artifact suites; `src/cadrumo/entrypoints/cli/tests/ and dev/packaging/`.
+- [x] `W05.P11.S42` - Run custody, secure-storage, recovery, unlock, persistence-roundtrip, and adversarial filesystem suites; `src/cadrumo/adapters/persistence/storage/`.
+- [x] `W05.P11.S43` - Run lint, architecture gates and Vaultspec checks, action every in-scope regression, and attribute every remaining failure to its owning campaign; `repository-wide quality gates`.
 
 ### Phase `W05.P12` - Independent closure
 
 Prove the entire live CLI and secure-storage goal is satisfied.
 
-- [ ] `W05.P12.S44` - Run the mandated eight-axis structural audit and action every confirmed finding; `.vault/audit/`.
-- [ ] `W05.P12.S45` - Perform a fresh-context honesty review and open Steps for every remaining gap; `.vault/audit/`.
-- [ ] `W05.P12.S46` - Publish final distributions, import reductions, filesystem effects, populated scaling, and census coverage; `.vault/reference/`.
-- [ ] `W05.P12.S47` - Close only when every CommandSpec and projected live node is exactly classified and gated, both forbidden JSON names and development generators are absent from tracked and shipped runtime surfaces, every build and shipping lane is proven, and no review item remains unactioned; `.vault/exec/2026-08-22-secure-storage-performance-hardening/`.
+- [x] `W05.P12.S44` - Run the mandated eight-axis structural audit and action every confirmed finding; `.vault/audit/`.
+- [x] `W05.P12.S45` - Perform a fresh-context honesty review and open Steps for every remaining gap; `.vault/audit/`.
+- [x] `W05.P12.S46` - Publish final distributions, import reductions, filesystem effects, populated scaling, and census coverage; `.vault/reference/`.
+- [x] `W05.P12.S47` - Close only when every CommandSpec and projected live node is exactly classified and gated, both forbidden JSON names and development generators are absent from tracked and shipped runtime surfaces, every build and shipping lane is proven, and no review item remains unactioned; `.vault/exec/2026-08-22-secure-storage-performance-hardening/`.

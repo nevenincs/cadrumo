@@ -7,18 +7,12 @@ import re
 from functools import cache
 from pathlib import Path
 
-from cadrumo.domain.calculations.registry.loader import (
-    _REVISION_SECTION_FIELDS,
-    load_modelo_directory,
-    load_modelo_source,
-    load_registry_tree,
-)
-from cadrumo.domain.calculations.registry.loader_cache import ModeloSource, discover_modelo_sources
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition
-
 from .....core.directory_scan import scan_directory
 from .....core.resources import bundled_path
-from ..schema import ModeloRevision
+from .._loader_internals import _REVISION_SECTION_FIELDS
+from ..loader import load_modelo_directory, load_modelo_source, load_registry_tree
+from ..loader_cache import ModeloSource, discover_modelo_sources
+from ..schema import ModeloDefinition, ModeloRevision
 
 _REVISION_HEADER_RE = re.compile(r'^\[\[?revisions\.(?:"([^"]+)"|([A-Za-z0-9_-]+))(?=[.\]])')
 _REVISION_FIELD_RE = re.compile(r'^\[\[?revisions\.(?:"[^"]+"|[A-Za-z0-9_-]+)\.([A-Za-z0-9_]+)')
@@ -309,7 +303,11 @@ def _split_single_file_modelo_text(text: str) -> tuple[str, str, dict[str, str]]
             in_revision = True
             if match is None:
                 raise AssertionError(f"cannot determine revision id from TOML header {stripped!r}")
-            current_revision_id = match.group(1) or match.group(2)
+            group_1 = match.group(1)
+            group_2 = match.group(2)
+            assert group_1 is None or isinstance(group_1, str)
+            assert group_2 is None or isinstance(group_2, str)
+            current_revision_id = group_1 or group_2
             assert current_revision_id is not None
             revision_lines_by_id.setdefault(current_revision_id, [])
         if in_revision:

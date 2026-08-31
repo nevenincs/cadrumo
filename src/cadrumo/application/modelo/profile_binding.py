@@ -39,12 +39,8 @@ from dataclasses import dataclass
 from dataclasses import field as dataclass_field
 from datetime import date
 from decimal import Decimal
-from typing import TypeGuard
 
 from pydantic import BaseModel
-
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision, RegistrySnapshot
-from cadrumo.domain.calculations.registry.schema_formula import ParameterDefinition
 
 from ...core import BindingSourceKind, CalculationSourceLineageRole
 from ...core.decimal import coerce_decimal
@@ -59,6 +55,8 @@ from ...domain.calculations.registry.runtime_graph import (
     expression_binding_refs,
     expression_date_binding_refs,
 )
+from ...domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision, RegistrySnapshot
+from ...domain.calculations.registry.schema_formula import ParameterDefinition
 from ...domain.contribuyente import (
     CCAA,
     MinimoDescendientesThresholds,
@@ -69,17 +67,18 @@ from ...domain.contribuyente import (
     marriage_full_year,
     marriage_month_start,
 )
-from ...domain.modelos import ModeloError
+from ...domain.modelos.errors import ModeloError
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.loader import load_user_profile_schema
 from ...domain.user_profile.registry_contract import profile_binding_selectors
 from ...domain.user_profile.schema import ProfileSchemaDefinition, derived_selector_for_path
-from ...domain.user_profile.values import UserProfileFactValue, UserProfileRecord
+from ...domain.user_profile.values import UserProfileFactValue
 from ..aggregation import (
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,
     CalculationSourceResolution,
 )
+from ..user_profile.projections import profile_fact_index
 
 _PROFILE_RESOLVER_ID = "profile"
 _PROFILE_OWNED_SOURCES: tuple[BindingSourceKind, ...] = (BindingSourceKind.PROFILE,)
@@ -136,44 +135,6 @@ def _profile_record_fingerprint(profile_record: object | None) -> str | None:
     payload = profile_record.model_dump_json() if isinstance(profile_record, BaseModel) else repr(profile_record)
     digest = sha256_hex(payload.encode(UTF_8_ENCODING))
     return f"sha256:{digest}"
-
-
-def _is_user_profile_record(record: object) -> TypeGuard[UserProfileRecord]:
-    """Prove that an optional caller override is the canonical live record."""
-    return isinstance(record, UserProfileRecord)
-
-
-def profile_fact_index(record: object, schema: ProfileSchemaDefinition) -> dict[str, UserProfileFactValue]:
-    """Build a selector -> typed-value index covering both selector forms.
-
-    A profile binding's selector resolves either as the canonical
-    ``section.field`` fact path (``profile_key`` form) or as a schema
-    ``model_selector`` alias (``profile_model`` + ``field`` form). The
-    index exposes each non-null fact under its canonical path AND under
-    every ``model_selector`` the schema declares for it, so both
-    selector forms find the value.
-
-    Values are preserved as their original :data:`UserProfileFactValue` type
-    (``bool``, ``Decimal``, ``date``, ``str``, …) so that downstream
-    channel routing can branch on the concrete Python type rather than
-    re-parsing a ``str(value)`` rendering.
-    """
-    selector_index: dict[str, tuple[str, ...]] = {}
-    for section in schema.sections:
-        for field in section.fields:
-            selector_index[f"{section.key}.{field.key}"] = tuple(field.model_selectors)
-
-    if not _is_user_profile_record(record):
-        return {}
-
-    index: dict[str, UserProfileFactValue] = {}
-    for fact in record.facts:
-        if fact.value is None:
-            continue
-        index[fact.path] = fact.value
-        for selector in selector_index.get(fact.path, ()):
-            index[selector] = fact.value
-    return index
 
 
 def inject_derived_marriage_facts(
@@ -1593,7 +1554,6 @@ __all__ = [
     "is_indeterminate_unidad_familiar",
     "is_madrid_resident",
     "madrid_nacimiento_adopcion_candidate_weighted_count",
-    "profile_fact_index",
     "profile_resolved_binding_ids",
     "resolve_maternidad_meses",
     "resolve_profile_binding_value",

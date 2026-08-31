@@ -9,12 +9,6 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.calculations.registry.m303_orden_manifest import load_m303_annual_orden_authority
-from cadrumo.domain.calculations.registry.m303_orden_projection_models import M303RegimenSimplificadoSnapshot
-from cadrumo.domain.calculations.registry.m303_orden_resolution import m303_annual_orden_snapshot_from_projection
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -38,29 +32,36 @@ from ....core import (
     RefundElection,
     ResultDisposition,
 )
+from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.m303_orden_manifest import load_m303_annual_orden_authority
+from ....domain.calculations.registry.m303_orden_projection_models import M303RegimenSimplificadoSnapshot
+from ....domain.calculations.registry.m303_orden_resolution import m303_annual_orden_snapshot_from_projection
+from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from ....domain.justificante import Justificante
 from ....domain.modelos import (
     CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY,
-    CalculationRevision,
     CalculationRevisionAggregateContext,
-    CalculationRevisionAmendmentIdentity,
-    CalculationRevisionAmendmentKind,
-    CalculationRevisionCatalogue,
-    CalculationRevisionState,
     ExternalEvidence,
     ExternalEvidenceKind,
-    M303RectificativaMotive,
     ModeloRecord,
     ModeloRecordCatalogue,
     WorkUnit,
     WorkUnitCatalogue,
-    derive_calculation_revision_id,
     derive_filing_record_id,
     derive_work_unit_id,
     m303_rectificativa_motive_is_applicable,
     m303_rectificativa_record_design_from_snapshot,
+)
+from ....domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionAmendmentIdentity,
+    CalculationRevisionAmendmentKind,
+    CalculationRevisionCatalogue,
+    CalculationRevisionState,
+    M303RectificativaMotive,
+    derive_calculation_revision_id,
 )
 from ....tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
 from ....tests.cli_runner import invoke_cached_cli

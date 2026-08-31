@@ -6,9 +6,6 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-from cadrumo.domain.calculations.registry.ids import BindingId
-
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -18,23 +15,27 @@ from ....adapters.persistence.storage.runtime import inspect_bucket_storage_runt
 from ....core import Period
 from ....core.config import Settings
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.calculations.registry.ids import BindingId
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.iva_compensation import (
     IvaCompensationAuthoritySource,
     IvaCompensationReconciliationDecision,
 )
 from ....domain.modelos import (
-    CalculationRevision,
-    CalculationRevisionState,
     ExternalEvidence,
     ExternalEvidenceKind,
     ModeloRecord,
     ModeloRecordStatus,
-    derive_calculation_revision_id,
     derive_filing_record_id,
     upsert_calculation_revision,
     upsert_filing_record,
     upsert_work_unit,
+)
+from ....domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
 )
 from ....tests.env_scope import ready_clave_settings
 from ....tests.filing_evidence import general_m303_filing_evidence

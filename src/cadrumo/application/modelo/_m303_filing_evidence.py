@@ -11,7 +11,8 @@ from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.iva import is_last_filing_period_of_year, validate_regimen_simplificado_rows
-from ...domain.modelos import FilingInstanceEvidence, M303FilingInstanceEvidence, WorkUnit
+from ...domain.modelos import WorkUnit
+from ...domain.modelos.calculation_revision import FilingInstanceEvidence, M303FilingInstanceEvidence
 from ..calculations import calculate_m303_regimen_simplificado_result
 from ._action_errors import M303FilingEvidenceError
 from ._m303_regimen_simplificado_scope import (
@@ -124,7 +125,9 @@ def _validate_m303_simplified_filing_evidence(
                 {"scope_decision_matches_censo_profile": False},
             ),
         )
-    censo_iae_epigraphs: frozenset[str] = frozenset({profile.iae_epigraph}) if profile.iae_epigraph else frozenset()
+    censo_iae_epigraphs: frozenset[str] = (
+        frozenset({profile.iae_epigraph}) if profile.iae_epigraph else frozenset[str]()
+    )
     validate_regimen_simplificado_rows(
         regimen.rows,
         orden=regimen.regimen_snapshot.orden.activities,

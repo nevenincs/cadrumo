@@ -22,7 +22,7 @@ sibling of the per-clave :class:`~core.aggregation.ForeignAssetClass`.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from enum import StrEnum
 from types import MappingProxyType
 from typing import Final
@@ -62,6 +62,53 @@ class ForeignAssetObligationGroup(StrEnum):
     VALORES_DERECHOS_SEGUROS = "valores_derechos_seguros"
     INMUEBLES = "inmuebles"
     MONEDAS_VIRTUALES = "monedas_virtuales"
+
+
+FOREIGN_ASSET_OBLIGATION_GROUP_ESTABLISHING_ARTICLES: Final[Mapping[ForeignAssetObligationGroup, str]] = (
+    MappingProxyType(
+        {
+            ForeignAssetObligationGroup.CUENTAS: "rd-1065-2007:art-42-bis",
+            ForeignAssetObligationGroup.VALORES_DERECHOS_SEGUROS: "rd-1065-2007:art-42-ter",
+            ForeignAssetObligationGroup.INMUEBLES: "rd-1065-2007:art-54-bis",
+            ForeignAssetObligationGroup.MONEDAS_VIRTUALES: "rd-1065-2007:art-42-quater",
+        },
+    )
+)
+"""The RGAT provision that ESTABLISHES each bloque's information obligation.
+
+Complete by construction over the enum, and each entry is the article the
+member's own documentation already cites. This is a legal fact about the
+taxonomy, which is why it lives beside the enum rather than in a feature
+module: it says which provision creates a bloque, never which modelo declares
+one.
+
+That second question -- the SCOPE of a given revision's obligation -- is
+answered by :func:`obligation_groups_established_by_legal_refs` against the
+``legal_refs`` the registry revision actually ships on its foreign-asset
+threshold parameters. Scope is therefore registry-resident and travels with the
+grounding: a revision whose parameters cite art. 54 bis declares the inmuebles
+bloque because the citation says so, and a revision that drops the citation
+drops the bloque, with no edit here.
+"""
+
+
+def obligation_groups_established_by_legal_refs(
+    legal_refs: Iterable[str],
+) -> frozenset[ForeignAssetObligationGroup]:
+    """Return the bloques whose establishing provision appears in ``legal_refs``.
+
+    Args:
+        legal_refs: Legal references declared by a revision's foreign-asset
+            threshold parameters.
+
+    Returns:
+        Every :class:`ForeignAssetObligationGroup` whose establishing article is
+        cited.
+    """
+    cited = set(legal_refs)
+    return frozenset(
+        group for group, article in FOREIGN_ASSET_OBLIGATION_GROUP_ESTABLISHING_ARTICLES.items() if article in cited
+    )
 
 
 FOREIGN_ASSET_CLASS_OBLIGATION_GROUP: Final[Mapping[ForeignAssetClass, ForeignAssetObligationGroup]] = MappingProxyType(
@@ -136,8 +183,10 @@ def foreign_asset_obligation_group(asset_class: ForeignAssetClass) -> ForeignAss
 
 __all__ = [
     "FOREIGN_ASSET_CLASS_OBLIGATION_GROUP",
+    "FOREIGN_ASSET_OBLIGATION_GROUP_ESTABLISHING_ARTICLES",
     "MODELO_720_FOREIGN_ASSET_CLASS_CODES",
     "ForeignAssetObligationGroup",
     "M720AssetClassCode",
     "foreign_asset_obligation_group",
+    "obligation_groups_established_by_legal_refs",
 ]

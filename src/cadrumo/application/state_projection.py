@@ -83,11 +83,6 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, field_validator
 
-from cadrumo.application.workflow.profile_health import ActiveProfileHealth, assess_active_profile_health
-from cadrumo.application.workflow.state_models import WorkflowState
-from cadrumo.core.aggregation import LEDGER_BINDING_SOURCE_KINDS as _LEDGER_PREFLIGHT_BINDING_SOURCES
-from cadrumo.domain.calculations.registry.ids import RevisionId
-
 from ..adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from ..adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ..adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -96,6 +91,7 @@ from ..adapters.persistence.profile.transactions import TransactionCatalogueRepo
 from ..adapters.persistence.storage import inspect_bucket_storage_runtime
 from ..core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..core import AuthProviderKind, BindingSourceKind, OperatorActionAxis, Period
+from ..core.aggregation import LEDGER_BINDING_SOURCE_KINDS as _LEDGER_PREFLIGHT_BINDING_SOURCES
 from ..core.bucket_pointer import resolve_active_bucket_id
 from ..core.errors import CadrumoError
 from ..core.hashing import content_hash_hex
@@ -103,6 +99,7 @@ from ..core.identity import ProfileId
 from ..core.logging import get_logger
 from ..core.time import today_madrid
 from ..domain.calculations.registry.authority import bundled_authority
+from ..domain.calculations.registry.ids import RevisionId
 from ..domain.deadlines import (
     DeadlineEngine,
     ObligationStatus,
@@ -121,9 +118,11 @@ from .auth_credentials import ActiveCertificateCredentials
 from .ledger.preflight import LedgerPreflightIssue, LedgerPreflightIssueReason, preflight_ledger_tax_readiness
 from .operator_actions import PreconditionVerdict
 from .user_profile.commands import ProfilePreflightRequirement
+from .workflow.profile_health import ActiveProfileHealth, assess_active_profile_health
+from .workflow.state_models import WorkflowState
 
 if TYPE_CHECKING:
-    from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+    from ..domain.calculations.registry.schema import RegistrySnapshot
 
 _log = get_logger(__name__)
 
@@ -431,6 +430,7 @@ CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS: Mapping[
         BindingSourceKind.PREVIOUS_FILING: "cli.app.modelo.bindings.readiness.declaracion_previa",
         BindingSourceKind.RELATION_PREFILL: "cli.app.modelo.bindings.readiness.entrada_relacion",
         BindingSourceKind.MANUAL_INPUT: "cli.app.modelo.bindings.readiness.entrada_manual",
+        BindingSourceKind.DESIGN_CONSTANT: "cli.app.modelo.bindings.readiness.constante_diseno",
         BindingSourceKind.LEDGER_OSS_AGGREGATION: "cli.app.modelo.bindings.readiness.datos_libro",
         BindingSourceKind.LEDGER_IVA_AGGREGATION: "cli.app.modelo.bindings.readiness.datos_libro",
         BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION: (
@@ -458,6 +458,7 @@ CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS: Mapping[
         BindingSourceKind.IVA_WALLET_DECISION: "cli.app.modelo.bindings.readiness.decision_compensacion_iva",
         BindingSourceKind.PAYABLE_INVOICE: "cli.app.modelo.bindings.readiness.factura_recibida",
         BindingSourceKind.COLLECTIBLE_INVOICE: "cli.app.modelo.bindings.readiness.factura_emitida",
+        BindingSourceKind.M347_THIRD_PARTY_OPERATION: "cli.app.modelo.bindings.readiness.operacion_tercero",
         BindingSourceKind.LEDGER_TRANSACTION: "cli.app.modelo.bindings.readiness.datos_libro",
         BindingSourceKind.PURCHASE_INVOICE_EVIDENCE: "cli.app.modelo.bindings.readiness.evidencia_factura_compra",
         BindingSourceKind.WITHHOLDING: "cli.app.modelo.bindings.readiness.retencion",
@@ -482,6 +483,7 @@ OPERATOR_ACTION_BY_MODELO_READINESS_BINDING_SOURCE: Mapping[
         BindingSourceKind.PREVIOUS_FILING: OperatorActionAxis.FILE_PRIOR_PERIOD,
         BindingSourceKind.RELATION_PREFILL: OperatorActionAxis.FILE_PRIOR_PERIOD,
         BindingSourceKind.MANUAL_INPUT: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
+        BindingSourceKind.DESIGN_CONSTANT: OperatorActionAxis.REVIEW_ADVISORY,
         BindingSourceKind.LEDGER_OSS_AGGREGATION: OperatorActionAxis.IMPORT_LEDGER_DATA,
         BindingSourceKind.LEDGER_IVA_AGGREGATION: OperatorActionAxis.IMPORT_LEDGER_DATA,
         BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION: (OperatorActionAxis.IMPORT_LEDGER_DATA),
@@ -499,6 +501,7 @@ OPERATOR_ACTION_BY_MODELO_READINESS_BINDING_SOURCE: Mapping[
         BindingSourceKind.IVA_WALLET_DECISION: OperatorActionAxis.CAPTURE_EXTERNAL_EVIDENCE,
         BindingSourceKind.PAYABLE_INVOICE: OperatorActionAxis.IMPORT_LEDGER_DATA,
         BindingSourceKind.COLLECTIBLE_INVOICE: OperatorActionAxis.IMPORT_LEDGER_DATA,
+        BindingSourceKind.M347_THIRD_PARTY_OPERATION: OperatorActionAxis.IMPORT_LEDGER_DATA,
         BindingSourceKind.LEDGER_TRANSACTION: OperatorActionAxis.IMPORT_LEDGER_DATA,
         BindingSourceKind.PURCHASE_INVOICE_EVIDENCE: OperatorActionAxis.COMPLETE_DOCUMENT_EVIDENCE,
         BindingSourceKind.WITHHOLDING: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
@@ -535,6 +538,7 @@ OPERATOR_ACTION_BY_MODELO_READINESS_LEDGER_ISSUE: Mapping[
         LedgerPreflightIssueReason.UNSUPPORTED_CURRENCY: OperatorActionAxis.IMPORT_LEDGER_DATA,
         LedgerPreflightIssueReason.UNSUPPORTED_PERIOD: OperatorActionAxis.IMPORT_LEDGER_DATA,
         LedgerPreflightIssueReason.CENSO_RATIO_MISMATCH: OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE,
+        LedgerPreflightIssueReason.MISSING_HOME_OFFICE_AFECTACION: (OperatorActionAxis.COMPLETE_DOCUMENT_EVIDENCE),
         LedgerPreflightIssueReason.ANOMALY_NON_DECLARABLE_IVA_CATEGORY: OperatorActionAxis.REVIEW_ADVISORY,
         LedgerPreflightIssueReason.ANOMALY_NON_DECLARABLE_RECARGO_EQUIVALENCIA: (OperatorActionAxis.REVIEW_ADVISORY),
     },
@@ -679,8 +683,6 @@ def _build_modelo_readiness(
     if not requests or active_profile_id is None:
         return ()
 
-    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket_by_id
-
     from ..core.i18n import tr
     from ..domain.user_profile.values import ProfileSetupState
     from .modelo._profile_readiness_gate import (
@@ -689,6 +691,7 @@ def _build_modelo_readiness(
         pre_activity_period_refusal,
     )
     from .user_profile.profile_record_repository import ProfileRecordRepository
+    from .workflow.profile_bucket_scan import read_profile_bucket_by_id
 
     pointer = read_profile_bucket_by_id(active_profile_id)
     if pointer is None:
@@ -830,7 +833,7 @@ def _resolve_modelo_readiness_registry(
     callers can render ``registry_ready: false`` instead of losing the
     rest of the projection.
     """
-    from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
+    from ..domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 
     period_token = period.registry_token
     try:
@@ -917,8 +920,7 @@ def _missing_calculation_bindings_for_readiness(
     so the readiness missing set and the calculate refusal set agree by
     construction (``aeat-calculation-aggregation``).
     """
-    from cadrumo.domain.calculations.registry.runtime_graph import enum_consumed_binding_ids, revision_date_binding_ids
-
+    from ..domain.calculations.registry.runtime_graph import enum_consumed_binding_ids, revision_date_binding_ids
     from .calculations import relation_prefill_period_zero_default_binding_ids
     from .modelo.profile_binding import (
         ProfileBindingResolutionError,
@@ -1160,8 +1162,6 @@ def _ensure_profile_key_registry_registered() -> None:
     ensure_profile_keys_registered()
 
 
-
-
 _READINESS_CAPTURE_MAX_ATTEMPTS = 8
 _readiness_capture_process_pid = os.getpid()
 _readiness_capture_process_nonce = token_bytes(32)
@@ -1190,9 +1190,7 @@ class ProjectionModeloReadinessCapture:
     comparison_domain: str
     generation: int
 
-    def require_current(
-        self, current: ProjectionModeloReadinessCurrentCoordinate
-    ) -> ProjectionModeloReadinessCapture:
+    def require_current(self, current: ProjectionModeloReadinessCurrentCoordinate) -> ProjectionModeloReadinessCapture:
         """Refuse a currentness comparison outside this owner process domain."""
         _require_readiness_process_domain(self.comparison_domain)
         current.require_current(self)
@@ -1206,9 +1204,7 @@ class ProjectionModeloReadinessCurrentCoordinate:
     comparison_domain: str
     generation: int
 
-    def require_current(
-        self, captured: ProjectionModeloReadinessCapture
-    ) -> ProjectionModeloReadinessCurrentCoordinate:
+    def require_current(self, captured: ProjectionModeloReadinessCapture) -> ProjectionModeloReadinessCurrentCoordinate:
         """Require a capture from this exact owner scope and process incarnation."""
         _require_readiness_process_domain(self.comparison_domain)
         _require_readiness_process_domain(captured.comparison_domain)
@@ -1266,10 +1262,9 @@ def _readiness_comparison_domain(
 
 def _readiness_owner_observation(active_profile_id: str) -> tuple[str, ...]:
     """Read the pointer, profile record and registry authority limbs."""
-    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket_by_id
-
     from ..domain.calculations.registry.authority import bundled_authority
     from .user_profile.profile_record_repository import ProfileRecordRepository
+    from .workflow.profile_bucket_scan import read_profile_bucket_by_id
 
     pointer = read_profile_bucket_by_id(active_profile_id)
     if pointer is None:
@@ -1338,6 +1333,7 @@ def capture_modelo_readiness(
         translated_message="errors.refused.modelo_readiness_capture_not_current",
         context={"reason": "contended", "attempts": _READINESS_CAPTURE_MAX_ATTEMPTS},
     )
+
 
 __all__ = [
     "CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS",

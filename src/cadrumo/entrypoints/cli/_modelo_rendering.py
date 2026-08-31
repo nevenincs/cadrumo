@@ -21,27 +21,20 @@ from collections.abc import Mapping, Sequence
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from cadrumo.domain.calculations.registry.binding_selector_utils import BooleanBindingEncodedValue
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation
-
 from ...application.modelo._result_summary import calculation_result_summary
 from ...application.modelo._verification_preconditions import VerificationFindingPreconditionProjection
 from ...application.modelo._work_plazo import (
+    M210PlazoResolution,
     ModeloWorkDeadlinePosture,
     modelo_work_deadline_posture,
 )
 from ...core import CasillaId
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedPreconditionAction
-from ...domain.modelos import (
-    CalculationRevision,
-    CalculationRevisionState,
-    Modelo184MemberRow,
-    ModeloRecord,
-    ModeloVerificationFinding,
-    VerificationReport,
-    WorkUnit,
-)
+from ...domain.calculations.registry.binding_selector_utils import BooleanBindingEncodedValue
+from ...domain.calculations.registry.bindings import CasillaObservation
+from ...domain.modelos import Modelo184MemberRow, ModeloRecord, ModeloVerificationFinding, VerificationReport, WorkUnit
+from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ._action_rendering import resolved_precondition_action_json_cell
 from ._common import resolve_cli_precondition_action
 from ._modelo_payloads import (
@@ -75,6 +68,25 @@ _M184_SOCIO_HANDOFF_CODE = "modelo.work.m184_socio_handoff"
 # --binding override on 1577.
 _M184_ATRIBUCION_ACT_ECO_CASILLA = "1577"
 _M184_ATRIBUCION_LEGAL_REFS = "ley-35-2006:art-86, ley-35-2006:art-87, ley-35-2006:art-88, ley-35-2006:art-89"
+
+
+def m210_plazo_notice(resolution: M210PlazoResolution) -> Notice:
+    """Render the resolved Modelo 210 filing window as an operator notice.
+
+    The application layer resolves the window and hands back facts; the
+    prose is built here, which is the only layer allowed to localize. The
+    notice context is the resolution's own metadata, so the JSON envelope and
+    the text line cannot describe different windows.
+    """
+    return Notice(
+        severity=NoticeSeverity.INFO,
+        code="modelo.work.m210.plazo_resolved",
+        message=tr(
+            "cli.app.modelo.work.m210_plazo_resolved",
+            closes_on=resolution.closes_on,
+        ),
+        context=dict(resolution.context),
+    )
 
 
 def m184_socio_handoff_notices(revision: CalculationRevision) -> list[Notice]:
@@ -1011,7 +1023,7 @@ def verification_report_payload(
     return VerificationReportPayload(
         verification_report_id=report.verification_report_id,
         calculation_revision_id=report.calculation_revision_id,
-        completeness_status=report.completeness_status.value,
+        completeness_status=report.completeness_status,
         granted_verificado_completo=report.granted_verificado_completo,
         resolved_casilla_ids=list(report.resolved_casilla_ids),
         missing_required_casilla_ids=list(report.missing_required_casilla_ids),

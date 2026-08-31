@@ -22,23 +22,22 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.formula_runtime_ops import read_parameter
-from cadrumo.domain.calculations.registry.legal import verify_legal_catalogue
-
 from ....core.resources import bundled_path
 from ...calculations.registry.authority import bundled_authority
+from ...calculations.registry.errors import RegistryValidationError
+from ...calculations.registry.formula_runtime_ops import read_parameter
+from ...calculations.registry.legal import verify_legal_catalogue
 from .._enums import ReduccionTier
 from .._tier_resolver import (
     DEFAULT_EJERCICIO_AMENDMENT_YEAR,
     JOVEN_TENANT_AGE_MAX,
     JOVEN_TENANT_AGE_MIN,
-    REHAB_LOOKBACK_DAYS,
+    REHAB_LOOKBACK_YEARS,
     TierResolution,
     _resolve_ejercicio_amendment_year,
     _resolve_joven_tenant_age_range,
     _resolve_prior_rent_rebaja_threshold,
-    _resolve_rehab_lookback_days,
+    _resolve_rehab_lookback_years,
     _resolve_tier_reduccion_rate,
     _with_registry_rate,
 )
@@ -83,7 +82,9 @@ def test_rental_registry_parameters_registered_for_every_supported_ejercicio() -
     scalar_parameters = (
         ("rental-prior-rent-rebaja-threshold", Decimal("0.05")),
         ("rental-ejercicio-amendment-year", Decimal("2024")),
-        ("rental-rehab-lookback-days", Decimal("730")),
+        # Two CALENDAR years, not 730 days: art. 23.2.c counts de fecha a fecha and a
+        # day count is one short across any leap span.
+        ("rental-rehab-lookback-years", Decimal("2")),
         ("rental-joven-tenant-age-min", Decimal("18")),
         ("rental-joven-tenant-age-max", Decimal("35")),
     )
@@ -102,9 +103,9 @@ def test_resolver_helpers_return_registry_values_for_every_supported_ejercicio()
         assert amendment_year == 2024
         assert amendment_year == DEFAULT_EJERCICIO_AMENDMENT_YEAR
 
-        rehab_lookback_days = _resolve_rehab_lookback_days(year)
-        assert rehab_lookback_days == 730
-        assert rehab_lookback_days == REHAB_LOOKBACK_DAYS
+        rehab_lookback_years = _resolve_rehab_lookback_years(year)
+        assert rehab_lookback_years == 2
+        assert rehab_lookback_years == REHAB_LOOKBACK_YEARS
 
         age_min, age_max = _resolve_joven_tenant_age_range(year)
         assert (age_min, age_max) == (18, 35)
@@ -127,7 +128,7 @@ def test_resolver_amendment_year_helper_refuses_unregistered_year() -> None:
 
 def test_resolver_rehab_lookback_helper_refuses_unregistered_year() -> None:
     with pytest.raises(RegistryValidationError, match="has no revision '1999'"):
-        _resolve_rehab_lookback_days(1999)
+        _resolve_rehab_lookback_years(1999)
 
 
 def test_resolver_joven_age_range_helper_refuses_unregistered_year() -> None:

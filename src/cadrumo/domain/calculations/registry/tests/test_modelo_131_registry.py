@@ -7,14 +7,13 @@ from typing import Any
 
 import pytest
 
-from cadrumo.domain.calculations.registry.ids import LegalRefId
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
-from cadrumo.domain.calculations.registry.snapshot import build_snapshot
-from cadrumo.domain.calculations.registry.validate import RegistryValidator
-
 from .....core import normalise_corpus_text
 from .....core.resources import bundled_path
+from .._validate import RegistryValidator
 from ..authority import bundled_authority
+from ..ids import LegalRefId
+from ..schema import ModeloDefinition, RegistryCatalogues
+from ..snapshot import build_snapshot
 from ..temporal import select_revision
 from ._registry_schema_support import _committed_modelo
 

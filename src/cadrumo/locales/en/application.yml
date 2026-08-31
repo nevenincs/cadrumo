@@ -368,6 +368,9 @@ application:
         text_casilla_invalid: The casilla text value does not match its declared registry
           data type.
         text_casilla_not_string: The casilla text input must be a text value.
+        unsupported_filing_year: Filing year {filing_year} is not declared supported.
+          The registry declares {supported_filing_years}. Admit the year in {declaration}
+          after grounding its prerequisites.
     complementaria:
       errors:
         justificante_csv_absent: The complementaria requires the original filing's
@@ -1124,16 +1127,17 @@ application:
         %{casilla_value} EUR of attributed income that is not captured.
       attribution_received_unfolded: Attributed income for %{filing_year} totalling
         %{total_base} EUR is not folded into casilla %{casilla_id}.
-      cross_casilla_invariant_violated: A cross-casilla invariant declared by the
-        registry is violated in this revision.
+      cross_casilla_invariant_violated: The cross-casilla invariant %{predicate_id}
+        declared by the registry is violated in this revision.
       cross_period_activity_start_missing: Modelo %{target_modelo} %{target_filing_year}
         %{target_period} needs a declared activity start date.
       cross_period_dependency_unclean: 'Source modelo %{source_modelo} %{source_filing_year}
-        %{source_period} is not clean: %{blocker_codes}.'
+        %{source_period} is not clean for %{origin_ids}: %{blocker_codes}.'
       cross_period_first_year_fractional_suppression: 'Modelo %{source_modelo} %{source_filing_year}
         %{source_period} is scoped out: activity started %{activity_start_date}.'
       cross_period_m111_no_retenciones: Modelo %{source_modelo} %{source_filing_year}
-        %{source_period} declares no retenciones for %{target_modelo} %{target_filing_year}.
+        %{source_period} declares no retenciones for %{target_modelo} %{target_filing_year}
+        %{target_period}.
       cross_period_modelo_not_applicable:
         message: '%{source_modelo_count} source modelo(s) are not applicable to this
           taxpayer: %{source_modelos}.'
@@ -1141,9 +1145,11 @@ application:
         message: Modelo %{source_modelo} %{source_filing_year} %{source_period} rests
           on a local chain (%{origin_code}), not official AEAT evidence.
       cross_period_operator_declared_suppression: Modelo %{source_modelo} %{source_filing_year}
-        %{source_period} is suppressed by operator declaration (%{origin_code}).
+        %{source_period} is suppressed by operator declaration (%{origin_code}), with
+        declared activity start date %{activity_start_date}.
       cross_period_zero_value_previous_filing: Modelo %{source_modelo} %{source_filing_year}
-        %{source_period} carries a zero value into %{target_modelo} %{target_filing_year}.
+        %{source_period} carries a zero value into %{target_modelo} %{target_filing_year}
+        %{target_period}.
       cuota_less_ledger_row_base_missing: Transaction %{transaction_id} in IVA category
         %{iva_category_code} has no declarable base.
       dt12a_reduccion_antiquity_possible: Reduction %{reduccion_id} of %{reduccion_value}
@@ -1154,15 +1160,16 @@ application:
         asset %{position_key} in group %{group_code} rose from %{prior_value_eur}
         EUR to %{current_value_eur} EUR, an increase of %{delta_value_eur} EUR above
         the %{redeclaration_increase_threshold_eur} EUR redeclaration threshold.'
-      iva_wallet_precondition_failed: The IVA compensation wallet precondition failed
-        for this revision.
+      iva_wallet_precondition_failed: The IVA compensation wallet precondition %{condition_id}
+        failed for this revision (scenario %{scenario_id}).
       ledger_snapshot_drift: 'Modelo %{modelo} %{filing_year} %{period} drifted from
         its anchored ledger snapshot: %{changed_count} changed, %{removed_count} removed.'
       m210_agrupacion_renta_invalid: Modelo %{modelo_id} period %{period_code} has
         an invalid income grouping (%{error_type}).
       m210_convenio_lob_advisory: Country %{country_code} income type %{tipo_renta_code}
         may be subject to a limitation-on-benefits clause (%{document_id}).
-      m210_rate_unavailable: No Modelo 210 rate could be resolved (%{reason_code}).
+      m210_rate_unavailable: No Modelo 210 rate could be resolved for tipo de renta
+        %{tipo_renta_code} in %{filing_year} (%{reason_code}).
       m303_m349_intracom_reconciliation_mismatch: 'Modelo 303 and 349 disagree for
         %{period_code} %{filing_year}: %{m303_total} EUR against %{m349_total} EUR,
         a gap of %{gap} EUR.'
@@ -1177,32 +1184,32 @@ application:
         of %{threshold}.'
       oss_evidence_missing: This revision declares one-stop-shop activity but carries
         no persisted OSS evidence.
-      oss_source_unrouted: A one-stop-shop source is not routed to any declarable
-        casilla.
+      oss_source_unrouted: 'No aggregation binding consumes these one-stop-shop sources
+        (references: %{source_ref_ids}).'
       pulled_filing_casilla_mismatch: Casilla %{casilla_number} for %{period_code}
         %{filing_year} computed %{computed_value} against the filed %{filed_value}
         (%{mismatch_kind}).
-      registry_advisory_predicate_fired: A registry advisory predicate fired for this
-        revision.
-      registry_authority_grade_insufficient: This modelo's registry revision declares
-        %{declared_grade} authority and cannot back a filing, which requires %{requested_grade}
-        authority. The revision resolves correctly; it is not attested to the level
-        a filing needs, so this work target cannot be verified for filing yet.
-      registry_snapshot_unresolved: The registry snapshot for this work target could
-        not be resolved.
+      registry_advisory_predicate_fired: The registry advisory predicate %{predicate_id}
+        fired for this revision.
+      registry_authority_grade_insufficient: The registry revision for modelo %{modelo}
+        %{filing_year} %{period} declares %{declared_grade} authority, and filing
+        requires %{requested_grade} authority.
+      registry_snapshot_unresolved: The registry snapshot for modelo %{modelo} %{filing_year}
+        %{period} could not be resolved.
       suffered_retencion_capital_mobiliario_uncredited: This return declares rendimientos
-        del capital mobiliario del ahorro but credits no suffered retención. Enter
-        the amount from the payer's certificado de retenciones e ingresos a cuenta;
-        the taxpayer never filed the Modelo 123 that declares it, so this value cannot
-        be filled in automatically.
+        del capital mobiliario del ahorro but credits no suffered retención (%{predicate_id}).
+        Enter the amount from the payer's certificado de retenciones e ingresos a
+        cuenta; the taxpayer never filed the Modelo 123 that declares it, so this
+        value cannot be filled in automatically.
       suffered_retencion_trabajo_uncredited: This return declares rendimientos del
-        trabajo but credits no suffered retención. Enter the amount from the payer's
-        certificado de retenciones e ingresos a cuenta; the taxpayer never filed the
-        Modelo 111 that declares it, so this value cannot be filled in automatically.
+        trabajo but credits no suffered retención (%{predicate_id}). Enter the amount
+        from the payer's certificado de retenciones e ingresos a cuenta; the taxpayer
+        never filed the Modelo 111 that declares it, so this value cannot be filled
+        in automatically.
       transaction_evidence_missing_deductible: A deductible transaction has no supporting
-        evidence.
+        evidence (binding %{binding_id}, source %{source_kind_code}, reason %{diagnostic_reason_code}).
       transaction_evidence_missing_output: An output transaction has no supporting
-        evidence.
+        evidence (binding %{binding_id}, source %{source_kind_code}, reason %{diagnostic_reason_code}).
     iva_wallet:
       correct_no_record: No seeded compensation record exists for %{filing_year}/%{period}.
         Run 'aeat app modelo iva-wallet seed' first; correction overwrites an existing

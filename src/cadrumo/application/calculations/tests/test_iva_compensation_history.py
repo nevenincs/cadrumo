@@ -19,8 +19,8 @@ from ....domain.iva_compensation import (
     enforce_iva_compensation_four_year_window,
 )
 from ....tests.secure_sql import isolated_runtime_profile
-from .._iva_compensation_history import IvaCompensationHistoryRepository, iva_compensation_period_key
 from .._iva_wallet_reconciliation import reconcile_iva_compensation_wallet
+from ..iva_compensation_history import IvaCompensationHistoryRepository, iva_compensation_period_key
 from ._iva_compensation_history_support import _TAXPAYER_REF, _state, _wallet
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

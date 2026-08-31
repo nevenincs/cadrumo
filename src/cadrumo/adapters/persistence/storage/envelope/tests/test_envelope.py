@@ -234,7 +234,7 @@ class TestEncryptionMetadata:
     """``EncryptionMetadata`` round-trips and validates the algorithm name."""
 
     def test_round_trip_via_blob(self) -> None:
-        from ...crypto import encrypt_record
+        from ...crypto.aead import encrypt_record
 
         key = b"\x00" * 32
         blob = encrypt_record(b"hello", key=key)

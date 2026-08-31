@@ -21,8 +21,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.censo_modelos import CensoModeloEventKind
-
+from ....domain.calculations.registry.censo_modelos import CensoModeloEventKind
 from ....tests.secure_sql import isolated_runtime_profile
 from .._m036_lifecycle import (
     M036DeclarationCommand,

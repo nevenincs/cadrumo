@@ -28,8 +28,6 @@ See Also:
 
 from __future__ import annotations
 
-from .m145_communication_period import M145CommunicationPeriod
-
 import re
 from collections.abc import Mapping
 from datetime import datetime
@@ -38,10 +36,6 @@ from enum import StrEnum
 from typing import TYPE_CHECKING, Annotated
 
 from pydantic import BaseModel, Field, TypeAdapter, field_validator, model_validator
-
-from cadrumo.domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
-from cadrumo.domain.calculations.registry.schema_exports import ExportRecordDefinition
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.storage import M145_COMMUNICATION_RECORD_NAMESPACE
@@ -66,7 +60,10 @@ from ...domain.calculations.registry.casilla_membership import (
 )
 from ...domain.calculations.registry.export import resolve_export_layout
 from ...domain.calculations.registry.ids import RevisionId
-from ...domain.modelos import ModeloError, ModeloExportError
+from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
+from ...domain.calculations.registry.schema_exports import ExportRecordDefinition
+from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
+from ...domain.modelos.errors import ModeloError, ModeloExportError
 from ._m145_communication import (
     M145_COMMUNICATION_MODELO,
     M145_COMMUNICATION_SERVICE_OWNER,
@@ -75,6 +72,7 @@ from ._m145_communication import (
 from ._ports import FicheroBoeRecordRenderer
 from ._revision_persistence import build_modelo_bucket_event as _build_bucket_event
 from ._revision_persistence import emit_modelo_bucket_event as _emit_bucket_event
+from .m145_communication_period import M145CommunicationPeriod
 
 if TYPE_CHECKING:
     from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository

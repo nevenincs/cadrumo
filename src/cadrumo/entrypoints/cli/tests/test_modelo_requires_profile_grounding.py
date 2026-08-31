@@ -11,10 +11,9 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.profile_grounding import binding_profile_keys, build_profile_grounding_index
-
 from ....application.user_profile.preflight import format_profile_selector_requirements
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.profile_grounding import binding_profile_keys, build_profile_grounding_index
 from ....domain.user_profile.loader import load_user_profile_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

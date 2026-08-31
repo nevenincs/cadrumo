@@ -22,12 +22,10 @@ blanking a casilla on the live calculate path.
 
 from __future__ import annotations
 
+from datetime import date
 from typing import TypedDict
 
 import pytest
-
-from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 
 from .....application.aggregation import (
     BindingSourceDisposition,
@@ -43,10 +41,19 @@ from .....application.aggregation import (
 # under no longer exists, which stopped this module COLLECTING at all -- a
 # gate running zero assertions rather than failing loudly.
 from .....application.modelo.calculation_route import CALCULATION_ROUTE_ENROLLED_SOURCES
-from .....core import BindingSourceKind
+from .....core import BindingSourceKind, RegistryAuthorityGrade
 from ..authority import bundled_authority
+from ..errors import AmbiguousRevisionSelectionError
+from ..schema_input_kind import InputKind
+from ..schema_references import PeriodSelector
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+class _SnapshotKwargs(TypedDict):
+    filing_year: int
+    period: str
+    grade: RegistryAuthorityGrade
 
 
 class _ScanResult(TypedDict):
@@ -98,17 +105,40 @@ def _scan() -> _ScanResult:
             scope_year, scope_period = _representative_scope(
                 modelo.revisions[revision_id].period_selector,
             )
-            snapshot = authority.snapshot(
-                str(modelo.id),
-                filing_year=scope_year,
-                period=scope_period,
+            declared = modelo.revisions[revision_id]
+            snapshot_kwargs: _SnapshotKwargs = {
+                "filing_year": scope_year,
+                "period": scope_period,
                 # Ask for the rung the revision itself declares. The bindings
                 # architecture is asserted at every rung, so a breadth walk
                 # demanding FILING of an APPLICABILITY revision -- modelo 036's
                 # censal alta/modificacion/baja, filed on AEAT's sede -- refuses
                 # the build and takes the whole scan down with it, scanning
                 # nothing rather than scanning that revision's bindings.
-                grade=modelo.revisions[revision_id].effective_authority_grade,
+                "grade": declared.effective_authority_grade,
+            }
+            try:
+                snapshot = authority.snapshot(str(modelo.id), **snapshot_kwargs)
+            except AmbiguousRevisionSelectionError:
+                # A revision whose validity opens or closes INSIDE the filing
+                # year shares that year with its neighbour, and where both
+                # declare the same period token the undated question has two
+                # right answers. Modelo 308's January-to-June and July-to-December
+                # eras both declare AD-HOC, and refusing the undated 2011 request
+                # is adjudicated behaviour rather than a defect. This walk's
+                # question is narrower than the one it asked -- it wants THIS
+                # revision's bindings -- so it re-asks with a date the revision
+                # owns, the same remedy the coverage audit applies.
+                year_start, year_end = date(scope_year, 1, 1), date(scope_year, 12, 31)
+                if declared.valid_from <= year_start and (declared.valid_to is None or declared.valid_to >= year_end):
+                    raise
+                on = max(declared.valid_from, year_start)
+                if declared.valid_to is not None:
+                    on = min(on, declared.valid_to)
+                snapshot = authority.snapshot(str(modelo.id), on=on, **snapshot_kwargs)
+            assert snapshot.revision.id == revision_id, (
+                f"modelo {modelo.id} revision {revision_id} resolved to {snapshot.revision.id}; "
+                "the walk must scan the revision it is iterating"
             )
             revision = snapshot.revision
             revisions_scanned += 1

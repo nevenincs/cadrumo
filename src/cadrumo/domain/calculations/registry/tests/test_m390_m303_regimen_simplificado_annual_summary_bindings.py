@@ -7,7 +7,7 @@ from typing import get_args
 import pytest
 
 from .....core import BindingSourceKind, CasillaId, FilingProjectionRef
-from .....domain.modelos import M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS
+from .....domain.modelos.calculation_revision import M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS
 from ..authority import bundled_authority
 from ..bindings import (
     m303_regimen_simplificado_annual_summary_requirement,
@@ -48,7 +48,7 @@ def test_live_m390_revision_declares_one_exact_ten_endpoint_handoff() -> None:
         bindings_by_id[binding_id].source for binding_id in requirement.binding_ids_by_summary_casilla_id.values()
     } == {BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY}
 
-    # S85 adds future M390 repeated-row reference families.  They are not an
+    # Future M390 repeated-row reference families are not an
     # alternate owner for these existing scalar casillas: the ten boxes arrive
     # only through the typed M303/4T handoff above, so none of those reference
     # variants may carry a CasillaId payload capable of selecting 74--83.

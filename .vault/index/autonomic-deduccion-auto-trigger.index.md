@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#autonomic-deduccion-auto-trigger'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-27'
+body_schema: 'body-v2'
 body_hash: 'sha256:5063d49916fc1367a8876ef9e986e6f38843f5a27d9004af93c07d022056fe07'
 related:
   - '[[2026-07-01-autonomic-deduccion-auto-trigger-adr]]'

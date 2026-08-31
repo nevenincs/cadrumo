@@ -27,9 +27,8 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.user_profile.registration import ProfileRegistrationConflictError, ProfileRegistrationError
-
 from ....core.errors import get_registered_error_code
+from ..registration import ProfileRegistrationConflictError, ProfileRegistrationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -102,7 +101,7 @@ def test_the_permanent_case_is_caught_ahead_of_the_transient_one() -> None:
     """
     import ast
 
-    source = (Path(__file__).resolve().parents[1] / "_registration.py").read_text(encoding="utf-8")
+    source = (Path(__file__).resolve().parents[1] / "registration.py").read_text(encoding="utf-8")
     orders: list[tuple[int, int]] = []
     for node in ast.walk(ast.parse(source)):
         if not isinstance(node, ast.Try):

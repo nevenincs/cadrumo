@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import Final, cast
 from urllib.parse import urlsplit
 
+from cadrumo.core import is_link_like
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry.schema_references import LegalReference
@@ -956,14 +957,14 @@ def _validated_output_dir(docs_root: Path) -> Path:
     out_dir = docs_root / relative
     if out_dir.parent != generated_dir or out_dir.name != "legal":
         raise LegalReferenceError(f"unexpected legal output directory: {out_dir}")
-    if not docs_root.is_dir() or docs_root.is_symlink():
+    if not docs_root.is_dir() or is_link_like(docs_root):
         raise LegalReferenceError(f"docs root is not a real directory: {docs_root}")
-    if generated_dir.is_symlink() or not generated_dir.is_dir():
+    if is_link_like(generated_dir) or not generated_dir.is_dir():
         raise LegalReferenceError(f"generated docs directory is not a real directory: {generated_dir}")
-    if out_dir.is_symlink():
+    if is_link_like(out_dir):
         raise LegalReferenceError(f"legal output directory is not the exact real directory: {out_dir}")
     if out_dir.exists():
-        if out_dir.is_symlink() or not out_dir.is_dir() or out_dir.resolve() != out_dir:
+        if is_link_like(out_dir) or not out_dir.is_dir() or out_dir.resolve() != out_dir:
             raise LegalReferenceError(f"legal output directory is not the exact real directory: {out_dir}")
     else:
         out_dir.mkdir()

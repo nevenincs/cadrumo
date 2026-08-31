@@ -23,8 +23,6 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from typing import Final
 
-from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
-
 from ....core import CasillaId
 from ....core.decimal import format_decimal
 from ....core.errors import CadrumoError
@@ -33,6 +31,7 @@ from ....domain.calculations.registry.ids import (
     ParameterId,
     RelationId,
 )
+from ....domain.calculations.registry.schema_formula import FormulaExpression
 from ._layout import SheetLayout
 from .errors import CalcSheetsEngineError
 

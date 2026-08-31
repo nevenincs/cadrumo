@@ -13,15 +13,6 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.ledger_bindings import (
-    OssIossLedgerObservation,
-    resolve_ledger_oss_aggregation_binding_values,
-    unsupported_ledger_oss_observations,
-    validate_ledger_oss_aggregation_binding_definition,
-)
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
-
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from ....iva import (
     EUMemberState,
@@ -31,6 +22,14 @@ from ....iva import (
     TransactionKind,
 )
 from ..binding_selector_utils import selector_as_dict
+from ..errors import RegistryValidationError
+from ..ledger_bindings import (
+    OssIossLedgerObservation,
+    resolve_ledger_oss_aggregation_binding_values,
+    unsupported_ledger_oss_observations,
+    validate_ledger_oss_aggregation_binding_definition,
+)
+from ..schema import DataBindingDefinition, ModeloRevision
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

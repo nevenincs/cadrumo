@@ -88,6 +88,7 @@ from typing import cast
 
 import click
 import pytest
+from pydantic import TypeAdapter
 
 from ....core.directory_scan import scan_directory
 from ....tests import REPO_ROOT
@@ -532,6 +533,9 @@ _PLAIN_SHELL_FENCE_LANGS = frozenset({"bash", "sh", "pwsh", "shell", "console", 
 
 _AEAT_FENCE_BASELINE_PATH = REPO_ROOT / "src/cadrumo/entrypoints/cli/tests/aeat_plain_fence_baseline.json"
 
+#: Both ratchet baselines below are a committed ``{page: count}`` JSON object.
+_RATCHET_BASELINE_ADAPTER: TypeAdapter[dict[str, int]] = TypeAdapter(dict[str, int])
+
 
 def _user_doc_pages() -> list[Path]:
     """Return the user-docs pages the mandatory-display gate governs."""
@@ -654,6 +658,7 @@ def _strip_fenced_blocks(text: str) -> str:
     for line in text.split("\n"):
         match = _FENCE_LINE_RE.match(line)
         run = match.group(1) if match else ""
+        assert isinstance(run, str)
         if fence_char is None:
             if match:
                 fence_char = run[0]
@@ -1065,7 +1070,9 @@ def test_no_new_aeat_plain_fences_in_user_docs() -> None:
     baseline down as they land, and an empty baseline means the doctrine is fully
     applied.
     """
-    baseline: dict[str, int] = json.loads(_AEAT_FENCE_BASELINE_PATH.read_text(encoding="utf-8"))
+    baseline = _RATCHET_BASELINE_ADAPTER.validate_python(
+        json.loads(_AEAT_FENCE_BASELINE_PATH.read_text(encoding="utf-8"))
+    )
     current = _current_aeat_fence_counts()
     docs = REPO_ROOT / "docs"
     problems: list[str] = []
@@ -1100,7 +1107,9 @@ def test_no_new_inline_aeat_command_spans_in_user_docs() -> None:
     baseline, the same discipline as the fence gate, so it never reds the tree
     during the parallel conversion.
     """
-    baseline: dict[str, int] = json.loads(_INLINE_AEAT_SPAN_BASELINE_PATH.read_text(encoding="utf-8"))
+    baseline = _RATCHET_BASELINE_ADAPTER.validate_python(
+        json.loads(_INLINE_AEAT_SPAN_BASELINE_PATH.read_text(encoding="utf-8"))
+    )
     current = _current_inline_aeat_span_counts()
     docs = REPO_ROOT / "docs"
     problems: list[str] = []

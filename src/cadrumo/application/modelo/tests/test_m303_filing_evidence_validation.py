@@ -8,10 +8,9 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
-
 from ....core import M303RegimenSimplificadoFact, Modelo, Period
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.deadlines import M303RegimeComposition
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva import (
@@ -22,7 +21,8 @@ from ....domain.iva import (
     M303RegimenSimplificadoScopeDecision,
     RegimenSimplificadoFilingRows,
 )
-from ....domain.modelos import (
+from ....domain.modelos import WorkUnit, derive_work_unit_id
+from ....domain.modelos.calculation_revision import (
     FilingInstanceEvidence,
     M303Exonerado390ActivityRowEvidence,
     M303Exonerado390EndpointEvidence,
@@ -30,8 +30,6 @@ from ....domain.modelos import (
     M303FilingInstanceEvidence,
     M303RegimenSimplificadoActivityCalculationResult,
     M303RegimenSimplificadoCalculationResult,
-    WorkUnit,
-    derive_work_unit_id,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.filing_evidence import regimen_simplificado_filing_evidence

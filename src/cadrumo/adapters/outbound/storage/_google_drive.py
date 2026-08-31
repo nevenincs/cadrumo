@@ -264,7 +264,7 @@ def _service_factory(credentials: object) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE
     return build("drive", "v3", credentials=credentials, cache_discovery=False)
 
 
-def _is_owned_drive_match(entry: dict[str, Any], *, prefix: str, object_key_hmac: str) -> bool:
+def _is_owned_drive_match(entry: dict[str, object], *, prefix: str, object_key_hmac: str) -> bool:
     """Confirm a listed Drive entry is THIS object and is Cadrumo-owned.
 
     The 8-hex filename prefix is only a search key, so a listing can return
@@ -442,7 +442,7 @@ class GoogleDriveProvider:
                             provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
                         ),
                     )
-                self.verify_ownership_or_adopt(entry, kind=self._vault_folder_name)
+                self._verify_ownership_or_adopt(entry, kind=self._vault_folder_name)
                 self._vault_folder_id = str(entry["id"])
                 return self._vault_folder_id
             page_token = next_drive_page_token(
@@ -557,7 +557,7 @@ class GoogleDriveProvider:
             response = self._execute(service.files().list(**kwargs), action=action)
             files = response.get("files", []) if isinstance(response, dict) else []
             for entry in files:
-                self.verify_ownership_or_adopt(entry, kind=f"namespace:{namespace}")
+                self._verify_ownership_or_adopt(entry, kind=f"namespace:{namespace}")
                 folder_id = str(entry["id"])
                 self._namespace_folder_ids[namespace] = folder_id
                 return folder_id

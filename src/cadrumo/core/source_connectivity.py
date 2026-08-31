@@ -167,11 +167,21 @@ def _is_stable_token(value: str) -> bool:
 
 
 def _is_repository_locator(value: str) -> bool:
-    """Return whether ``value`` names a stable in-repository evidence location."""
+    """Return whether ``value`` names a stable in-repository evidence location.
+
+    Only distributed trees are admitted.  Census grounding must cite the
+    SUBJECT of a claim, and the subject of every connectivity claim is a
+    production surface; a locator into a development tree cites the INSTRUMENT
+    that produced the claim, which proves the scanner ran rather than that the
+    claim is true.  The narrower grammar is also what keeps this shipped
+    validator honest for an installed user, who receives ``_data/`` inside the
+    wheel and can resolve a ``src/`` or ``docs/`` locator but never one
+    pointing outside the distribution.
+    """
     path, separator, line = value.rpartition(":")
     candidate_path = path if separator and line.isdigit() else value
     return (
-        candidate_path.startswith(("src/", "dev/", "docs/"))
+        candidate_path.startswith(("src/", "docs/"))
         and "\\" not in candidate_path
         and "//" not in candidate_path
         and ".." not in candidate_path.split("/")
@@ -230,7 +240,10 @@ class SourceConnectivityProofFailureCause(StrEnum):
     @classmethod
     def from_validation_error_type(cls, error_type: str) -> SourceConnectivityProofFailureCause:
         """Translate Pydantic's stable error type without inspecting prose."""
-        return cls._value2member_map_.get(error_type, cls.LIVE_PROOF_VALIDATION_FAILED)
+        try:
+            return cls(error_type)
+        except ValueError:
+            return cls.LIVE_PROOF_VALIDATION_FAILED
 
 
 class SourceConnectivityExecutableEvidence(BaseModel):
@@ -456,7 +469,7 @@ class SourceConnectivityCensusRow(SourceConnectivityCandidateIdentity):
             authority = (info.context or {}).get("source_connectivity_proof_authority")
             if not isinstance(authority, SourceConnectivityProofAuthority):
                 raise ValueError("connected connectivity row requires live proof authority validation")
-            self.verify_connected_authority(authority)
+            self._verify_connected_authority(authority)
         elif self.connected_proof is not None:
             raise ValueError("only a connected connectivity row may carry connected_proof")
         if (

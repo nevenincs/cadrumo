@@ -32,10 +32,8 @@ from uuid import UUID
 
 import pytest
 
-from ....adapters.persistence.storage.custody import (
-    load_committed_profile_password_material,
-    unlock_profile_custody,
-)
+from ....adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
+from ....adapters.persistence.storage.custody.kdf_supervision import unlock_profile_custody
 from ....domain.user_profile.errors import ProfileSchemaValidationError
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
@@ -92,8 +90,12 @@ def test_complete_setup_refuses_a_record_missing_an_unconditional_required_field
             _promote(profile_id, storage_root)
 
         context = refusal.value.context or {}
-        assert REQUIRED_FIELD_MISSING_CODE in context["issue_codes"]
-        assert "tax_residence.jurisdiction_scope" in context["issue_paths"]
+        issue_codes = context["issue_codes"]
+        issue_paths = context["issue_paths"]
+        assert isinstance(issue_codes, tuple)
+        assert isinstance(issue_paths, tuple)
+        assert REQUIRED_FIELD_MISSING_CODE in issue_codes
+        assert "tax_residence.jurisdiction_scope" in issue_paths
 
         record = ProfileRecordRepository.for_current_session(profile_id, root=storage_root).load(profile_id)
         assert record.setup_state is ProfileSetupState.INCOMPLETE, (
@@ -120,7 +122,9 @@ def test_complete_setup_refuses_a_record_whose_conditional_block_is_unanswered(t
             _promote(profile_id, storage_root)
 
         context = refusal.value.context or {}
-        assert CONDITIONAL_REQUIRED_FIELD_MISSING_CODE in context["issue_codes"]
+        issue_codes = context["issue_codes"]
+        assert isinstance(issue_codes, tuple)
+        assert CONDITIONAL_REQUIRED_FIELD_MISSING_CODE in issue_codes
 
         record = ProfileRecordRepository.for_current_session(profile_id, root=storage_root).load(profile_id)
         assert record.setup_state is ProfileSetupState.INCOMPLETE

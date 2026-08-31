@@ -17,8 +17,12 @@ from typing import Final, cast
 
 import pytest
 
-import cadrumo.domain.calculations.registry.authority as authority_module
-from cadrumo.domain.calculations.registry.authority import (
+from .....core import RegistryAuthorityGrade
+from .....core.directory_scan import scan_directory
+from .....core.identity import ContentDigest
+from .....tests import REPO_ROOT
+from .. import authority as authority_module
+from ..authority import (
     RegistryAuthorityCapture,
     RegistryAuthorityCurrentCoordinate,
     RegistryAuthorityProjection,
@@ -26,14 +30,9 @@ from cadrumo.domain.calculations.registry.authority import (
     bundled_authority,
     reset_registry_caches,
 )
-from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
-
-from .....core import RegistryAuthorityGrade
-from .....core.directory_scan import scan_directory
-from .....core.identity import ContentDigest
-from .....tests import REPO_ROOT
+from ..errors import RegistrySnapshotError
+from ..schema import RegistrySnapshot
+from ..static_inspection import RegistryRevisionInspection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -146,7 +145,7 @@ _AUTHORITY_PROCESS_STATE_GLOBALS: Final = (
 )
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def restored_authority_process_state() -> Iterator[None]:
     """Confine an emulated after-fork rebuild to the test that performs it.
 
@@ -155,13 +154,31 @@ def restored_authority_process_state() -> Iterator[None]:
     standing hands every later test in the session an authority the
     creator-process guard refuses -- a failure that reads as a defect in
     whichever test happens to run next rather than as leakage from this one.
+
+    AUTOUSE because the rebuild is not the only writer of this state:
+    ``reset_registry_caches()`` re-keys the same eight globals, and several
+    tests here call it as the very behaviour under test. Applying the guard to
+    one test left the others free to poison their successors -- reproduced
+    directly by running the reset test and then any later capture test, where
+    the reset passes and the NEXT test fails with "belongs to another process
+    incarnation". Every test in this module now restores what it re-keyed, so a
+    failure here means the test's own subject, never its predecessor's leakage.
     """
     saved = {name: getattr(authority_module, name) for name in _AUTHORITY_PROCESS_STATE_GLOBALS}
+    # `_invalidate_authority_generations` CLEARS `_authority_load_states` IN
+    # PLACE rather than rebinding it, so the entry saved above is a reference to
+    # the very dict the reset empties -- restoring it hands back the emptied
+    # object and every later capture is refused by the `state is None` clause of
+    # `_require_current_capture_incarnation`, reported as an "observed registry
+    # identity transition". Snapshot the CONTENTS and repopulate.
+    saved_load_states = dict(authority_module._authority_load_states)  # pyright: ignore[reportPrivateUsage]
     try:
         yield
     finally:
         for name, value in saved.items():
             setattr(authority_module, name, value)
+        authority_module._authority_load_states.clear()  # pyright: ignore[reportPrivateUsage]
+        authority_module._authority_load_states.update(saved_load_states)  # pyright: ignore[reportPrivateUsage]
 
 
 def test_process_state_rebuild_refuses_preexisting_public_coordinates(
@@ -374,6 +391,8 @@ def test_fork_rebuilds_active_reader_state_and_refuses_every_inherited_coordinat
     registry_authority: ValidatedRegistryAuthority,
 ) -> None:
     """A child neither waits on inherited locks nor accepts parent authority values."""
+    if sys.platform == "win32":
+        pytest.skip("requires POSIX fork semantics")
     capture = registry_authority.capture_law_selected_projection(
         _MODEL0_ID,
         filing_year=_FILING_YEAR,

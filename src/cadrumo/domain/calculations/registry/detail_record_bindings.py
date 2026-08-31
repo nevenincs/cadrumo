@@ -424,11 +424,34 @@ _AtributionRowField = Literal[
     "country_code",
     "share_percentage",
     "base_imponible_assigned",
+    "clave",
+    "subclave",
+    "codigo_provincia",
+    "miembro_a_31_diciembre",
+    "dias_miembro",
+    "domicilio_fiscal",
+    "naturaleza_inmueble",
+    "situacion_inmueble",
+    "referencia_catastral",
+    "clave_declarado",
+    "porcentaje_titularidad_inmueble",
+    "dias_arrendamiento",
+    "reduccion",
+    "rendimiento_neto_previo_eo",
+    "rendimiento_neto_minorado_agricola_eo",
 ]
 
 
 class AtributionMemberObservation(BaseModel):
-    """One atribución member for modelo 184."""
+    """One (member, clave, subclave) atribución row for modelo 184.
+
+    Every field below ``base_imponible_assigned`` is the (member, clave,
+    subclave) row-shape ADR's clave/subclave-conditional fact set, and is
+    ``None`` whenever the declaring clave does not license it -- e.g.
+    ``naturaleza_inmueble`` is only ever populated for a clave-C row. A
+    ``None`` here is a legitimate "this field does not apply to this row",
+    never a missing value.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -450,6 +473,29 @@ class AtributionMemberObservation(BaseModel):
     transaction_date: date
     share_percentage: Decimal
     base_imponible_assigned: Decimal
+
+    clave: str = Field(min_length=1, max_length=1)
+    subclave: str | None = Field(default=None, min_length=2, max_length=2)
+    codigo_provincia: str | None = Field(default=None, min_length=2, max_length=2)
+    miembro_a_31_diciembre: str | None = Field(default=None, min_length=1, max_length=1)
+    """``"X"`` when the member remained one at 31 December, else ``None``.
+
+    A string flag rather than a bool: the diseño's own field (position 82)
+    is text, marked ``"X"`` or left blank -- never a boolean literal -- and
+    this is the shape the fixed-width renderer's ``data_type = "text"``
+    field expects.
+    """
+    dias_miembro: int | None = None
+    domicilio_fiscal: str | None = Field(default=None, max_length=40)
+    naturaleza_inmueble: str | None = Field(default=None, min_length=1, max_length=1)
+    situacion_inmueble: str | None = Field(default=None, min_length=1, max_length=1)
+    referencia_catastral: str | None = Field(default=None, max_length=20)
+    clave_declarado: str | None = Field(default=None, min_length=1, max_length=1)
+    porcentaje_titularidad_inmueble: Decimal | None = None
+    dias_arrendamiento: int | None = None
+    reduccion: Decimal | None = None
+    rendimiento_neto_previo_eo: Decimal | None = None
+    rendimiento_neto_minorado_agricola_eo: Decimal | None = None
 
     _country_code_uppercase = field_validator("country_code")(optional_uppercase_alpha_code("country_code"))
 
@@ -508,7 +554,7 @@ def validate_atribucion_binding(binding: DataBindingDefinition) -> list[str]:
 def resolve_atribucion_binding_row_values(
     revision: ModeloRevision,
     observations: Iterable[AtributionMemberObservation],
-) -> dict[tuple[BindingId, int], Decimal | str]:
+) -> dict[tuple[BindingId, int], Decimal | str | int | bool]:
     """Resolve row-producer atribucion bindings into per-row indexed values.
 
     Args:
@@ -531,18 +577,39 @@ def resolve_atribucion_binding_row_values(
             "country_code": obs.country_code,
             "share_percentage": obs.share_percentage,
             "base_imponible_assigned": obs.base_imponible_assigned,
+            "clave": obs.clave,
+            "subclave": obs.subclave,
+            "codigo_provincia": obs.codigo_provincia,
+            "miembro_a_31_diciembre": obs.miembro_a_31_diciembre,
+            "dias_miembro": obs.dias_miembro,
+            "domicilio_fiscal": obs.domicilio_fiscal,
+            "naturaleza_inmueble": obs.naturaleza_inmueble,
+            "situacion_inmueble": obs.situacion_inmueble,
+            "referencia_catastral": obs.referencia_catastral,
+            "clave_declarado": obs.clave_declarado,
+            "porcentaje_titularidad_inmueble": obs.porcentaje_titularidad_inmueble,
+            "dias_arrendamiento": obs.dias_arrendamiento,
+            "reduccion": obs.reduccion,
+            "rendimiento_neto_previo_eo": obs.rendimiento_neto_previo_eo,
+            "rendimiento_neto_minorado_agricola_eo": obs.rendimiento_neto_minorado_agricola_eo,
         }
         for obs in sorted(available, key=lambda o: (o.country_code, o.member_tax_id))
     )
-    resolved: dict[tuple[BindingId, int], Decimal | str] = {}
+    resolved: dict[tuple[BindingId, int], Decimal | str | int | bool] = {}
     for binding, selector in members:
         assert selector.row_field is not None
         for row_index, row in enumerate(rows, start=1):
-            value = row.get(selector.row_field)
-            if value is None:
+            if selector.row_field not in row:
                 raise RegistryValidationError(
                     f"binding {binding.id!r} row_field {selector.row_field!r} not produced for atribucion rows",
                 )
+            value = row[selector.row_field]
+            # A clave/subclave-conditional field is legitimately absent for a
+            # row whose declared clave does not license it (e.g.
+            # naturaleza_inmueble on a clave-D row) -- not a "not produced"
+            # authoring defect, so it is skipped rather than refused.
+            if value is None:
+                continue
             resolved[(binding.id, row_index)] = value
     return resolved
 

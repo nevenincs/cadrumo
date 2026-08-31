@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-25 11:19+0200\n"
+"POT-Creation-Date: 2026-08-26 12:42+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0000\n"
 "Last-Translator: Cadrumo translation team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -198,8 +198,8 @@ msgid ""
 msgstr ""
 "L'AEAT publica la teva situació censal actual a *Mis Datos Censales*. "
 "Incorpora-la al perfil actiu. El primer pas en mostra una vista prèvia; "
-"el segon fa una nova lectura autenticada i registra els fets "
-"admissibles d'aquella lectura:"
+"el segon fa una nova lectura autenticada i registra els fets admissibles "
+"d'aquella lectura:"
 
 #: ../../how-to/censo-update.md:86
 msgid "Nothing is written until you add `--apply`."
@@ -217,11 +217,11 @@ msgid ""
 msgstr ""
 "La CLI actual no converteix la vista prèvia de la primera ordre en una "
 "aprovació desada. L'ordre `--apply` torna a llegir l'AEAT i aplica "
-"aquesta nova observació. Revisa el resultat de `--apply` abans de "
-"basar-te en el perfil actualitzat. S'està treballant per exposar en "
-"aquesta ordre el cicle de revisió i aplicació de línia base exacta "
-"capturat per l'aplicació; fins que arribi, no tractis la vista prèvia "
-"anterior com l'operand que s'ha aplicat."
+"aquesta nova observació. Revisa el resultat de `--apply` abans de basar-"
+"te en el perfil actualitzat. S'està treballant per exposar en aquesta "
+"ordre el cicle de revisió i aplicació de línia base exacta capturat per "
+"l'aplicació; fins que arribi, no tractis la vista prèvia anterior com "
+"l'operand que s'ha aplicat."
 
 #: ../../how-to/censo-update.md:97
 msgid ""
@@ -356,6 +356,7 @@ msgstr ""
 "Afegeix `--apply` per registrar-les al perfil actiu."
 
 #: ../../how-to/censo-update.md:154
+#, fuzzy
 msgid ""
 "Facts recorded this way carry a *non-official evidence* marker: they came"
 " from a document you supplied, not from an AEAT-confirmed read, so "
@@ -370,9 +371,8 @@ msgstr ""
 "l'AEAT, per això les vistes del perfil mostren la procedència i continua "
 "aplicant-se l'avís `censo.enrolment_unverified` del calendari de "
 "presentacions. Si un valor del certificat no coincideix amb una resposta "
-"que vas donar durant la configuració, el perfil conserva un registre de "
-"la divergència i `aeat config profile show` t'avisa fins que la "
-"resolguis."
+"que vas donar durant la configuració, el perfil conserva un registre de la "
+"divergència i `aeat config profile show` t'avisa fins que la resolguis."
 
 #: ../../how-to/censo-update.md:162
 msgid ""
@@ -425,8 +425,8 @@ msgstr ""
 "directament:"
 
 #: ../../how-to/censo-update.md:190
-msgid "For modelo-specific readiness, use profile preflight:"
-msgstr "Per a la preparació específica d'un model, usa el preflight del perfil:"
+msgid "For modelo-specific readiness, use modelo readiness:"
+msgstr "Per a la preparació específica d'un model, usa la comprovació de preparació del model:"
 
 #: ../../how-to/censo-update.md:196
 msgid "Keep the facts current"

@@ -16,10 +16,7 @@ from typing import NamedTuple, Protocol, cast
 
 from sqlalchemy import Engine, bindparam, text
 
-from ..crypto import (
-    decrypt_secure_object_payload,
-    secure_object_payload_aad,
-)
+from ..crypto.encrypted_columns import decrypt_secure_object_payload, secure_object_payload_aad
 from ..errors import DecryptionError
 from . import _orm
 from ._secure_object_records import SecureObjectDecryptabilityRow, SecureObjectNamespaceIntegrity

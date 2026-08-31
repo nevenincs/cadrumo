@@ -26,9 +26,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
 
-from textual.app import App, ComposeResult
+from textual.app import ComposeResult
 from textual.binding import Binding, BindingsMap
 from textual.containers import Vertical
+from textual.screen import Screen
 from textual.widgets import Footer, Static
 
 from ....core.i18n import tr
@@ -37,6 +38,7 @@ from ....entrypoints.tui.components.theme import (
     NOTICE_BAND_CSS,
     install_cadrumo_themes,
     toggle_appearance,
+    tokenised,
 )
 from ....entrypoints.tui.components.widgets import ContentDataTable, ContentScroll, NoticeBand
 
@@ -52,16 +54,17 @@ _ACTIVE_MARKER = "●"
 """Glyph marking the active profile row — a marker, not prose."""
 
 
-class StatusApp(App[None]):
+class StatusScreen(Screen[None]):
     """Full-screen read-only projection of the operator's configuration state."""
 
-    CSS = (
+    SCOPED_CSS = False
+    DEFAULT_CSS = tokenised(
         BASE_CSS
         + NOTICE_BAND_CSS
         + """
     .status-panel DataTable { height: auto; width: 100%; background: $surface; }
     .status-empty { color: $text-muted; text-style: italic; }
-    .status-commands { color: $text-muted; margin: 0; }
+    .status-commands { color: $text-muted; margin: $cadrumo-space-0; }
     """
     )
 
@@ -91,7 +94,7 @@ class StatusApp(App[None]):
 
     def on_mount(self) -> None:
         """Install the presentation theme and mount the populated zones."""
-        install_cadrumo_themes(self)
+        install_cadrumo_themes(self.app)
         self._localize_bindings()
         self.query_one("#status-header", Static).update(tr("flows.status.title"))
         self._mount_notices_panel()
@@ -101,7 +104,7 @@ class StatusApp(App[None]):
 
     def action_toggle_appearance(self) -> None:
         """Flip between the light and dark appearance; the projection is read-only."""
-        toggle_appearance(self)
+        toggle_appearance(self.app)
 
     def _localize_bindings(self) -> None:
         self._bindings = BindingsMap(
@@ -209,4 +212,4 @@ class StatusApp(App[None]):
         panel.mount(Static("\n".join(lines), id="auth-lines"))
 
 
-__all__ = ["StatusApp"]
+__all__ = ["StatusScreen"]

@@ -19,6 +19,7 @@ from .....core import (
 from .....core.i18n import tr
 from .....core.resources import bundled_path
 from .....domain.prorrata_register import ProrrataActivityRow, ProrrataRegister, ProrrataRegisterEntry
+from .._validate import RegistryValidator
 from ..corpus_catalogue import resolve_record_design_binary
 from ..errors import RegistryValidationError
 from ..export import clasificar_casillas_oficiales
@@ -28,7 +29,6 @@ from ..m303_prorrata_activity_projection import project_m303_prorrata_activity_r
 from ..record_design import extract_record_design
 from ..schema_input_kind import InputKind
 from ..snapshot import build_snapshot
-from ..validate import RegistryValidator
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -57,10 +57,9 @@ _NUMBERED_PROJECTION_ENDPOINTS = _ENDPOINTS | frozenset(str(number) for number i
 #: `m303_regimen_simplificado_fact` is deliberately NOT here: it is the one kind
 #: that tracks the design epoch (38, 96, 100, 106 and 108 across the six
 #: revisions), because AEAT's simplified-regime fact rows change with the form.
-#: Its per-epoch count is pinned where it belongs -- the semantic-map census in
-#: `dev/registry/analysis/m303_semantic_census.py` states it for each epoch
-#: against that epoch's own map -- so repeating a single number here could only
-#: be wrong for five of the six.
+#: Its per-epoch count is pinned where it belongs -- the semantic-map census
+#: states it for each epoch against that epoch's own map -- so repeating a
+#: single number here could only be wrong for five of the six.
 _INVARIANT_PROJECTION_KIND_COUNTS = {
     "m303_prorrata_activity": 25,
     "m303_differentiated_deduction": 36,

@@ -4,11 +4,11 @@ from decimal import Decimal
 
 import typer
 
-from ...application.review import (
-    ReviewError,
+from ...application.review.enums import ReviewState
+from ...application.review.errors import ReviewError
+from ...application.review.operator import (
     ReviewQueueReport,
     ReviewQueueRow,
-    ReviewState,
     project_review_item,
     project_review_queue,
 )
@@ -115,7 +115,7 @@ def review_queue(
     )
 
 
-def review_show(
+def review_view(
     ctx: typer.Context,
     item_id: str,
     explain: bool = False,
@@ -173,4 +173,4 @@ def _queue_lines(report: ReviewQueueReport, *, explain: bool = False) -> list[st
     return lines
 
 
-__all__ = ["parse_review_state", "review_queue", "review_show"]
+__all__ = ["parse_review_state", "review_queue", "review_view"]

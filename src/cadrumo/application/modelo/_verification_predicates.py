@@ -25,12 +25,11 @@ from datetime import date as _date
 from decimal import Decimal
 from types import MappingProxyType
 
-from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
-from cadrumo.domain.calculations.registry.formula_runtime_ops import RegistryUnresolvedOutcomeReason
-
 from ...core import CasillaId, validated_casilla_id
 from ...core.money import CENT
 from ...core.parsing import parse_date
+from ...domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
+from ...domain.calculations.registry.formula_runtime_ops import RegistryUnresolvedOutcomeReason
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_verification import (
     KNOWN_PROFILE_FLAG_ADVISORY_FIELDS,
@@ -41,11 +40,11 @@ from ...domain.calculations.registry.schema_verification import (
 )
 from ...domain.deadlines import FiscalResidency, TaxpayerProfile
 from ...domain.modelos import (
-    ModeloError,
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
+from ...domain.modelos.errors import ModeloError
 from ._action_errors import ModeloApplicabilityFilterError
 from ._m210_rate import resolve_m210_rate as _resolve_m210_rate
 

@@ -20,7 +20,12 @@ from typing import TYPE_CHECKING, Final, Self, cast, override
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
-from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER, IntracomOperationType
+from ...core import (
+    OBJECT_TUPLE_ADAPTER,
+    STR_KEYED_MAPPING_ADAPTER,
+    IntracomOperationType,
+    TravelAgencyMediationType,
+)
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.decimal import coerce_decimal
 from ...core.errors import CoreValidationError
@@ -620,6 +625,40 @@ class Invoice(BaseModel):
     notes: str = ""
     iva_category: IvaCategory | None = None
     operation_type: IntracomOperationType | None = None
+    # RD 1619/2012 disposición adicional cuarta: set when this invoice
+    # documents a travel-agency mediation service (see
+    # :class:`~core.TravelAgencyMediationType`). Feeds Modelo 347 claves F/G
+    # -- never inferred from `iva_category`, which carries no mediation axis.
+    travel_agency_mediation: TravelAgencyMediationType | None = None
+    # RD 1065/2007 art. 34.g: when the filer collects this amount on behalf
+    # of a socio, asociado or colegiado (Modelo 347 clave C), the declared
+    # counterparty is the BENEFICIARY whose fees were collected, not
+    # necessarily whoever paid this invoice. `None` means this invoice is
+    # NOT a third-party collection -- the ordinary counterparty declares.
+    collected_on_behalf_of_tax_id: TaxIdIdentityToken | None = None
+    collected_on_behalf_of_name: str | None = Field(default=None, min_length=1)
+    # RD 1065/2007 art. 33.1: "las subvenciones, auxilios o ayudas no
+    # reintegrables que puedan otorgar o recibir" are declarable operations
+    # distinct from ordinary payments. Feeds Modelo 347 clave E, which is
+    # additionally exclusive to a PUBLIC_ADMINISTRATION_ENTITY filer
+    # (art. 31.2's second paragraph) -- this fact alone never classifies E.
+    # Tri-state on purpose: ``None`` is UNDECLARED, distinct from ``False``.
+    # A silent ``False`` default would under-declare clave E for every
+    # subvención nobody thought to flag; the resolver surfaces an advisory
+    # for a public-administration filer's invoice left ``None`` rather than
+    # picking a side.
+    is_subvencion_ayuda: bool | None = None
+    # RD 1065/2007 art. 31.1's last paragraph and art. 31.2: an acquisition
+    # made "al margen de las actividades empresariales o profesionales" by a
+    # filer carrying one of clave D's four roles. A mixed-activity filer (a
+    # public university with a cafeteria concession, say) has SOME
+    # acquisitions inside its own economic activity and some outside it, so
+    # this is a per-invoice fact, never inferable from the filer's role
+    # alone. Tri-state for the same reason as ``is_subvencion_ayuda``: a
+    # comunidad de propietarios earning rooftop-antenna income has genuine
+    # business-adjacent acquisitions too, so neither a blanket ``True`` nor
+    # ``False`` default is safe for its population either.
+    outside_economic_activity: bool | None = None
     oss_ioss_regime: OssIossRegime | None = None
     oss_transaction_kind: TransactionKind | None = None
     retention_rate: Decimal | None = None

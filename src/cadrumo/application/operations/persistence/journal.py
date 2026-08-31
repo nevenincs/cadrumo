@@ -15,6 +15,10 @@ from ....core import (
     OperationTerminalCondition,
 )
 from ....core.identity import ContentDigest
+from ....core.operations import (
+    LIFECYCLES_BEFORE_ANY_CANCELLATION_REQUEST,
+    LIFECYCLES_BEFORE_EXECUTOR_ENTRY,
+)
 from ....core.time import validate_utc_aware
 from ..capabilities import OperationRequestStoragePolicy
 from ..event_replay import OperationEventCursor
@@ -41,6 +45,7 @@ from .leases import (
     OperationOwnerLease,
 )
 from .replay import (
+    RESYNCHRONIZING_REPLAY_STATUSES,
     OperationReplayLimit,
     OperationReplayPage,
     OperationReplayStatus,
@@ -158,7 +163,7 @@ class OperationObservationMaterialization(BaseModel):
             raise ValueError("caught-up observation replay must reach its authoritative anchor")
         self._validate_event_set(self.replay.events, label="replay")
         self._validate_progress_fold()
-        if self.replay.status in {OperationReplayStatus.EXPIRED, OperationReplayStatus.COMPACTED}:
+        if self.replay.status in RESYNCHRONIZING_REPLAY_STATUSES:
             checkpoint = self.progress_fold.checkpoint
             if checkpoint is None or checkpoint.through_cursor != self.replay.restart_cursor:
                 raise ValueError("resynchronizing observation replay requires its exact progress checkpoint")
@@ -231,7 +236,7 @@ def _validate_secret_state(snapshot: OperationPersistedSnapshot) -> None:
         validate_utc_aware(entered_at)
         if entered_at < snapshot.started_at or entered_at > snapshot.updated_at:
             raise ValueError("executor entry must fall within the persisted operation timeline")
-        if snapshot.lifecycle in {OperationLifecycle.CREATED, OperationLifecycle.QUEUED}:
+        if snapshot.lifecycle in LIFECYCLES_BEFORE_EXECUTOR_ENTRY:
             raise ValueError("created or queued operation cannot record executor entry")
     if requirement is None:
         return
@@ -280,13 +285,7 @@ def _validate_deadline_and_cancellation_state(snapshot: OperationPersistedSnapsh
         raise ValueError("cancellation request must fall within the persisted operation timeline")
     if cleanup_deadline is None or cleanup_deadline <= requested_at:
         raise ValueError("cancellation request requires a later cleanup deadline")
-    if snapshot.lifecycle in {
-        OperationLifecycle.CREATED,
-        OperationLifecycle.QUEUED,
-        OperationLifecycle.RUNNING,
-        OperationLifecycle.WAITING_FOR_INTERACTION,
-        OperationLifecycle.WAITING_FOR_EXTERNAL,
-    }:
+    if snapshot.lifecycle in LIFECYCLES_BEFORE_ANY_CANCELLATION_REQUEST:
         raise ValueError("cancellation request requires a cancellation or settlement lifecycle")
     if acknowledged_at is not None:
         if acknowledged_at < requested_at or acknowledged_at > snapshot.updated_at:

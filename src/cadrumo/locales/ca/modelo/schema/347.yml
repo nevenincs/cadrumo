@@ -82,6 +82,9 @@ modelo:
               help: Casella contraparte.pais-codigo del model 347, exercici 2008.
               label: Codi de país de la contrapart (ISO 3166-1 alfa-2; buit per a
                 contraparts nacionals)
+            x-cdnmst3ic5o62sjkckn70sjfepkmsor9c4mm6rr4d5jmu:
+              help: Casella contraparte.provincia-codigo del model 347.
+              label: Codi de provincia de la contrapart (dos digits)
             x-cdnmst3ic5o62sjkckn74pbge9in6pbeehgmst355lm6apr1dgmmsqb6:
               help: Dada declarada al model 347, declaració anual d'operacions amb
                 terceres persones.
@@ -265,6 +268,9 @@ modelo:
               help: Casella contraparte.pais-codigo del model 347, exercici 2025.
               label: Codi de país de la contrapart (ISO 3166-1 alfa-2; buit per a
                 contraparts nacionals)
+            x-cdnmst3ic5o62sjkckn70sjfepkmsor9c4mm6rr4d5jmu:
+              help: Casella contraparte.provincia-codigo del model 347.
+              label: Codi de provincia de la contrapart (dos digits)
             x-cdnmst3ic5o62sjkckn74pbge9in6pbeehgmst355lm6apr1dgmmsqb6:
               help: Dada declarada al model 347, declaració anual d'operacions amb
                 terceres persones.

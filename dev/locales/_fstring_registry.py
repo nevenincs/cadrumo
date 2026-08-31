@@ -199,6 +199,15 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
             key_factory=lambda v: f"errors.prefix.{v}",
             values=tuple(c.value.lower() for c in ErrorCategory),
         ),
+        FStringKeyRegistration(
+            # Bounded enumeration, pinned to _COLUMN_KEYS in
+            # entrypoints/tui/modelo/view/work_select.py. Held as a literal
+            # rather than imported: that constant is module-private, and the
+            # registry should not deepen a private reach into a view module.
+            description="flows.modelo_select.column.* (work-select table columns)",
+            key_factory=lambda v: f"flows.modelo_select.column.{v}",
+            values=("modelo", "filing_year", "period", "name", "state"),
+        ),
         *_diagnostics_range_registrations(),
         *_custody_stdin_registrations(),
         *_modelo_work_help_registrations(),

@@ -71,8 +71,10 @@ from ._format_hints import attach_format_hints
 from .catalogue import SETUP_FLOW
 from .descendant_group import attach_descendant_group
 from .errors import (
+    WizardEditUnsupportedConsoleError,
     WizardMissingFlagError,
     WizardPreconditionCondition,
+    WizardUnsupportedConsoleError,
     WizardValidationError,
     wizard_no_action_verdict,
 )
@@ -191,6 +193,21 @@ def _taxpayer_type_choice_values() -> tuple[list[str], list[str], list[str], lis
     _IRPF_INCOME_CATEGORY_CHOICE_VALUES,
     _IRPF_ESTIMATION_REGIME_CHOICE_VALUES,
 ) = _taxpayer_type_choice_values()
+
+
+def _third_party_declaration_role_choice_values() -> list[str]:
+    """Return choice tokens for the Modelo 347 declaring-role enum.
+
+    Derived from :class:`ThirdPartyDeclarationRole` so the
+    ``--declaration-roles`` flag choices never drift from the
+    values the wizard catalogue and the profile schema validate against.
+    """
+    from ...core import ThirdPartyDeclarationRole
+
+    return [member.value for member in ThirdPartyDeclarationRole]
+
+
+_THIRD_PARTY_DECLARATION_ROLE_CHOICE_VALUES: list[str] = _third_party_declaration_role_choice_values()
 
 
 def _irpf_personal_choice_values() -> tuple[list[str], list[str]]:
@@ -502,6 +519,12 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
         click_type=_choice(_IRPF_INCOME_CATEGORY_CHOICE_VALUES),
         metavar=_choice_metavar(_IRPF_INCOME_CATEGORY_CHOICE_VALUES),
         help=tr("wizard.setup.flags.irpf-income-categories.help"),
+    ),
+    "declaration-roles": typer.Option(
+        "--declaration-roles",
+        click_type=_choice(_THIRD_PARTY_DECLARATION_ROLE_CHOICE_VALUES),
+        metavar=_choice_metavar(_THIRD_PARTY_DECLARATION_ROLE_CHOICE_VALUES),
+        help=tr("wizard.setup.flags.declaration-roles.help"),
     ),
     "incn-prior-12-months": typer.Option(
         "--incn-prior-12-months",
@@ -1178,8 +1201,6 @@ def _run_full_flow(
         # before this command ran, so reaching this branch means the host
         # cannot present a screen at all.  The terminal verdict records that
         # factual capability refusal without prescribing a replacement flow.
-        from . import WizardEditUnsupportedConsoleError, WizardUnsupportedConsoleError
-
         if mode == "edit":
             raise WizardEditUnsupportedConsoleError(
                 translated_message="wizard.errors.unsupported_console_edit",
@@ -1272,9 +1293,8 @@ def _resolve_profile_id_for_mode(flow: WizardFlow, mode: WizardPersistMode, prof
     itself the registration check: an unresolvable label falls through to the
     missing-flag refusal.
     """
-    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
-
     from ...domain.user_profile.values import new_profile_id
+    from ..workflow.profile_bucket_scan import read_profile_bucket
 
     if mode == "create":
         _require_profile_label_available(

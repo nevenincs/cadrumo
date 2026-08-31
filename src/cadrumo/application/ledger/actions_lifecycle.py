@@ -39,25 +39,25 @@ from ...domain.transactions import (
     TransactionValidationError,
 )
 from .actions_common import (
-    _bucket_event_repository,
-    _build_bucket_event,
-    _catalogue_modelo_source_ids,
-    _draft_revision_advisories,
-    _invoice_repository,
-    _normalise_timestamp,
-    _raise_finalized_modelo_blocked,
-    _remove_transaction,
-    _replace_transaction,
-    _require_actor,
-    _require_source_command,
-    _require_transaction,
-    _result,
-    _save_transaction_catalogue_and_events,
-    _save_transaction_catalogue_invoices_and_events,
-    _transaction_modelo_source_ids,
-    _transaction_repository,
     blocking_modelo_references,
+    build_ledger_bucket_event,
+    build_manual_ledger_result,
+    catalogue_modelo_source_ids,
+    draft_revision_advisories,
+    normalise_timestamp,
+    raise_finalized_modelo_blocked,
+    remove_transaction,
+    replace_transaction,
+    require_actor,
+    require_source_command,
+    require_transaction,
+    resolve_bucket_event_repository,
+    resolve_invoice_repository,
+    resolve_transaction_repository,
+    save_transaction_catalogue_and_events,
+    save_transaction_catalogue_invoices_and_events,
     transaction_catalogue_object_id,
+    transaction_modelo_source_ids,
 )
 from .models import (
     LedgerCatalogueResetReport,
@@ -172,8 +172,8 @@ def restore_manual_transaction(
             when a finalized-modelo reference blocks the restore.
         TransactionNotFoundError: when no transaction matches ``transaction_id``.
     """
-    repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
-    current = _require_transaction(repository.load(), transaction_id)
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    current = require_transaction(repository.load(), transaction_id)
     if current.lifecycle_state is TransactionLifecycleState.ACTIVE:
         raise TransactionValidationError(
             "ledger transaction is already active; restore applies only to a stashed or archived row",
@@ -245,13 +245,13 @@ def mark_transaction_reviewed_excluded(
             blocks the exclusion.
         TransactionNotFoundError: when no transaction matches ``transaction_id``.
     """
-    now = _normalise_timestamp(occurred_at)
-    trimmed_actor = _require_actor(actor, operation="ledger review exclusion")
-    trimmed_source_command = _require_source_command(source_command, operation="ledger review exclusion")
-    repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
-    event_repository = _bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
+    now = normalise_timestamp(occurred_at)
+    trimmed_actor = require_actor(actor, operation="ledger review exclusion")
+    trimmed_source_command = require_source_command(source_command, operation="ledger review exclusion")
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    event_repository = resolve_bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
     catalogue = repository.load()
-    current = _require_transaction(catalogue, transaction_id)
+    current = require_transaction(catalogue, transaction_id)
     if current.lifecycle_state is not TransactionLifecycleState.ACTIVE:
         raise TransactionValidationError(
             "only active ledger transactions can be reviewed-excluded; archived, stashed, "
@@ -269,17 +269,17 @@ def mark_transaction_reviewed_excluded(
         )
     blockers = blocking_modelo_references(
         bucket_id=bucket_id,
-        transaction_ids=_transaction_modelo_source_ids(current),
+        transaction_ids=transaction_modelo_source_ids(current),
         work_unit_repository=work_unit_repository,
         calculation_repository=calculation_repository,
     )
     if blockers:
-        _raise_finalized_modelo_blocked(
+        raise_finalized_modelo_blocked(
             operation="ledger transaction review exclusion",
-            transaction_ids=_transaction_modelo_source_ids(current),
+            transaction_ids=transaction_modelo_source_ids(current),
             blockers=blockers,
         )
-    event = _build_bucket_event(
+    event = build_ledger_bucket_event(
         bucket_id=bucket_id,
         event_type=BucketEventType.LEDGER_TRANSACTION_REVIEWED_EXCLUDED,
         occurred_at=now,
@@ -302,14 +302,14 @@ def mark_transaction_reviewed_excluded(
             "modified_at": now,
         },
     )
-    updated = _replace_transaction(catalogue, old_transaction_id=current.transaction_id, replacement=replacement)
-    _save_transaction_catalogue_and_events(
+    updated = replace_transaction(catalogue, old_transaction_id=current.transaction_id, replacement=replacement)
+    save_transaction_catalogue_and_events(
         transaction_repository=repository,
         event_repository=event_repository,
         catalogue=updated,
         events=(event,),
     )
-    return _result(bucket_id, replacement, (event.event_id,))
+    return build_manual_ledger_result(bucket_id, replacement, (event.event_id,))
 
 
 def remove_manual_transaction(
@@ -333,21 +333,21 @@ def remove_manual_transaction(
     indicating whether the transaction was removed or blocked by a
     finalized-modelo reference.
     """
-    now = _normalise_timestamp(occurred_at)
-    trimmed_actor = _require_actor(actor, operation="ledger removal")
-    trimmed_source_command = _require_source_command(source_command, operation="ledger removal")
-    repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
-    event_repository = _bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
+    now = normalise_timestamp(occurred_at)
+    trimmed_actor = require_actor(actor, operation="ledger removal")
+    trimmed_source_command = require_source_command(source_command, operation="ledger removal")
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    event_repository = resolve_bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
     catalogue = repository.load()
-    current = _require_transaction(catalogue, transaction_id)
-    guard_ids = _transaction_modelo_source_ids(current)
+    current = require_transaction(catalogue, transaction_id)
+    guard_ids = transaction_modelo_source_ids(current)
     blockers = blocking_modelo_references(
         bucket_id=bucket_id,
         transaction_ids=guard_ids,
         work_unit_repository=work_unit_repository,
         calculation_repository=calculation_repository,
     )
-    draft_advisories = _draft_revision_advisories(
+    draft_advisories = draft_revision_advisories(
         bucket_id=bucket_id,
         transaction_ids=guard_ids,
         work_unit_repository=work_unit_repository,
@@ -357,7 +357,7 @@ def remove_manual_transaction(
     purchase_evidence_ids: tuple[str, ...] = ()
     updated_invoice_catalogue: InvoiceCatalogue | None = None
     if invoice_repository is not None or current.purchase_invoice_evidence_id is not None:
-        invoices = _invoice_repository(bucket_id=bucket_id, repository=invoice_repository)
+        invoices = resolve_invoice_repository(bucket_id=bucket_id, repository=invoice_repository)
         purchase_evidence_ids, updated_invoice_catalogue = _detach_transaction_from_purchase_evidence(
             invoices.load(),
             bucket_id=bucket_id,
@@ -366,9 +366,9 @@ def remove_manual_transaction(
     attachment_ids = tuple(sorted(current.attachment_ids))
     if blockers:
         if not dry_run:
-            _raise_finalized_modelo_blocked(
+            raise_finalized_modelo_blocked(
                 operation="ledger transaction removal",
-                transaction_ids=_transaction_modelo_source_ids(current),
+                transaction_ids=transaction_modelo_source_ids(current),
                 blockers=blockers,
             )
         return LedgerTransactionRemovalReport(
@@ -404,16 +404,16 @@ def remove_manual_transaction(
         attachment_ids=attachment_ids,
         occurred_at=now,
     )
-    updated_transaction_catalogue = _remove_transaction(catalogue, transaction_id=current.transaction_id)
+    updated_transaction_catalogue = remove_transaction(catalogue, transaction_id=current.transaction_id)
     if invoices is None or updated_invoice_catalogue is None:
-        _save_transaction_catalogue_and_events(
+        save_transaction_catalogue_and_events(
             transaction_repository=repository,
             event_repository=event_repository,
             catalogue=updated_transaction_catalogue,
             events=events,
         )
     else:
-        _save_transaction_catalogue_invoices_and_events(
+        save_transaction_catalogue_invoices_and_events(
             transaction_repository=repository,
             invoice_repository=invoices,
             event_repository=event_repository,
@@ -452,21 +452,21 @@ def reset_ledger_catalogue(
 
     Returns a :class:`~cadrumo.application.ledger.models.LedgerCatalogueResetReport`.
     """
-    now = _normalise_timestamp(occurred_at)
-    trimmed_actor = _require_actor(actor, operation="ledger reset")
-    trimmed_source_command = _require_source_command(source_command, operation="ledger reset")
-    repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
-    event_repository = _bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
+    now = normalise_timestamp(occurred_at)
+    trimmed_actor = require_actor(actor, operation="ledger reset")
+    trimmed_source_command = require_source_command(source_command, operation="ledger reset")
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    event_repository = resolve_bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
     catalogue = repository.load()
     removed_ids = tuple(sorted(catalogue.transactions))
-    guard_ids = _catalogue_modelo_source_ids(catalogue)
+    guard_ids = catalogue_modelo_source_ids(catalogue)
     blockers = blocking_modelo_references(
         bucket_id=bucket_id,
         transaction_ids=guard_ids,
         work_unit_repository=work_unit_repository,
         calculation_repository=calculation_repository,
     )
-    draft_advisories = _draft_revision_advisories(
+    draft_advisories = draft_revision_advisories(
         bucket_id=bucket_id,
         transaction_ids=guard_ids,
         work_unit_repository=work_unit_repository,
@@ -479,7 +479,7 @@ def reset_ledger_catalogue(
     if invoice_repository is not None or any(
         transaction.purchase_invoice_evidence_id is not None for transaction in catalogue.values()
     ):
-        invoices = _invoice_repository(bucket_id=bucket_id, repository=invoice_repository)
+        invoices = resolve_invoice_repository(bucket_id=bucket_id, repository=invoice_repository)
         invoice_catalogue = invoices.load()
         purchase_evidence_ids, updated_invoice_catalogue = _detach_transactions_from_purchase_evidence(
             invoice_catalogue,
@@ -491,7 +491,7 @@ def reset_ledger_catalogue(
     )
     if blockers:
         if not dry_run:
-            _raise_finalized_modelo_blocked(
+            raise_finalized_modelo_blocked(
                 operation="ledger catalogue reset",
                 transaction_ids=guard_ids,
                 blockers=blockers,
@@ -536,7 +536,7 @@ def reset_ledger_catalogue(
             occurred_at=now,
         )
     )
-    reset_event = _build_bucket_event(
+    reset_event = build_ledger_bucket_event(
         bucket_id=bucket_id,
         event_type=BucketEventType.LEDGER_CATALOGUE_RESET,
         occurred_at=now,
@@ -550,14 +550,14 @@ def reset_ledger_catalogue(
         },
     )
     if invoices is None or updated_invoice_catalogue is None:
-        _save_transaction_catalogue_and_events(
+        save_transaction_catalogue_and_events(
             transaction_repository=repository,
             event_repository=event_repository,
             catalogue=TransactionCatalogue(),
             events=(*removal_events, reset_event),
         )
     else:
-        _save_transaction_catalogue_invoices_and_events(
+        save_transaction_catalogue_invoices_and_events(
             transaction_repository=repository,
             invoice_repository=invoices,
             event_repository=event_repository,
@@ -593,13 +593,13 @@ def _transition_manual_transaction_lifecycle(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None,
     occurred_at: datetime | None,
 ) -> ManualLedgerTransactionResult:
-    now = _normalise_timestamp(occurred_at)
-    trimmed_actor = _require_actor(actor, operation="ledger lifecycle")
-    trimmed_source_command = _require_source_command(source_command, operation="ledger lifecycle")
-    repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
-    event_repository = _bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
+    now = normalise_timestamp(occurred_at)
+    trimmed_actor = require_actor(actor, operation="ledger lifecycle")
+    trimmed_source_command = require_source_command(source_command, operation="ledger lifecycle")
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    event_repository = resolve_bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
     catalogue = repository.load()
-    current = _require_transaction(catalogue, transaction_id)
+    current = require_transaction(catalogue, transaction_id)
     if current.lifecycle_state is state:
         raise TransactionValidationError(
             f"ledger transaction is already {state.value.lower()}",
@@ -622,17 +622,17 @@ def _transition_manual_transaction_lifecycle(
         )
     blockers = blocking_modelo_references(
         bucket_id=bucket_id,
-        transaction_ids=_transaction_modelo_source_ids(current),
+        transaction_ids=transaction_modelo_source_ids(current),
         work_unit_repository=work_unit_repository,
         calculation_repository=calculation_repository,
     )
     if blockers:
-        _raise_finalized_modelo_blocked(
+        raise_finalized_modelo_blocked(
             operation="ledger transaction lifecycle transition",
-            transaction_ids=_transaction_modelo_source_ids(current),
+            transaction_ids=transaction_modelo_source_ids(current),
             blockers=blockers,
         )
-    event = _build_bucket_event(
+    event = build_ledger_bucket_event(
         bucket_id=bucket_id,
         event_type=event_type,
         occurred_at=now,
@@ -662,14 +662,14 @@ def _transition_manual_transaction_lifecycle(
             "modified_at": now,
         },
     )
-    updated = _replace_transaction(catalogue, old_transaction_id=current.transaction_id, replacement=replacement)
-    _save_transaction_catalogue_and_events(
+    updated = replace_transaction(catalogue, old_transaction_id=current.transaction_id, replacement=replacement)
+    save_transaction_catalogue_and_events(
         transaction_repository=repository,
         event_repository=event_repository,
         catalogue=updated,
         events=(event,),
     )
-    return _result(bucket_id, replacement, (event.event_id,))
+    return build_manual_ledger_result(bucket_id, replacement, (event.event_id,))
 
 
 def _detach_transaction_from_purchase_evidence(
@@ -717,7 +717,7 @@ def _removal_events(
     events: list[BucketEvent] = []
     for evidence_id in purchase_evidence_ids:
         events.append(
-            _build_bucket_event(
+            build_ledger_bucket_event(
                 bucket_id=bucket_id,
                 event_type=BucketEventType.PURCHASE_INVOICE_EVIDENCE_DETACHED,
                 occurred_at=occurred_at,
@@ -734,7 +734,7 @@ def _removal_events(
         )
     for attachment_id in attachment_ids:
         events.append(
-            _build_bucket_event(
+            build_ledger_bucket_event(
                 bucket_id=bucket_id,
                 event_type=BucketEventType.ATTACHMENT_REMOVED,
                 occurred_at=occurred_at,
@@ -750,7 +750,7 @@ def _removal_events(
             ),
         )
     events.append(
-        _build_bucket_event(
+        build_ledger_bucket_event(
             bucket_id=bucket_id,
             event_type=BucketEventType.LEDGER_TRANSACTION_REMOVED,
             occurred_at=occurred_at,

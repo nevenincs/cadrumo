@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import typer
 
-from cadrumo.domain.calculations.registry.ids import RevisionId
-
 from ...application.modelo._export import modelo_export_readiness_refusal
 from ...application.state_projection import (
     ModeloReadinessRequest,
@@ -14,6 +12,7 @@ from ...application.state_projection import (
 )
 from ...core import Period, PeriodError
 from ...core.json_contract import Notice, NoticeSeverity
+from ...domain.calculations.registry.ids import RevisionId
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ._common import _no_active_profile_refusal, emit_envelope, resolve_cli_precondition_action
 from ._modelo_cli_support import unsupported_local_work_period_refusal
@@ -92,7 +91,7 @@ def _resolve_readiness_revision_id(
         modelo=modelo,
         filing_year=filing_year,
         period=target_period,
-        requested_revision_id=RevisionId(revision_id) if revision_id else None,
+        requested_revision_id=revision_id or None,
     )
 
 

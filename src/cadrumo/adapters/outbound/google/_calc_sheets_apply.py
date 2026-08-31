@@ -29,7 +29,7 @@ One-way contract: this adapter is an export *mirror* only. Google
 Sheets is never an authority for tax data — the workbook is a
 human-readable projection of registry-grounded engine output, not
 an input of record. Operator edits made in the sheet are read back
-through :mod:`adapters.outbound.google._calc_sheets_pull`, which gates
+through :mod:`adapters.outbound.google.calc_sheets_pull`, which gates
 every pull on the Drive ownership marker and a registry-SHA metadata match
 before the caller may consume them; a workbook that fails either gate is
 refused, never silently trusted. No path in this package writes Sheets content
@@ -1215,6 +1215,7 @@ def _occupied_addresses(
     return frozenset(_current_cell_values(sheets=sheets, spreadsheet_id=spreadsheet_id, grid_by_tab=grid_by_tab))
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GSHEETS: untyped google-api sheets Resource (dynamic discovery build).
 def _current_cell_values(
     *,
     sheets: Any,
@@ -1258,6 +1259,7 @@ def _occupied_address_ranges(
     )
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GSHEETS: untyped google-api sheets Resource (dynamic discovery build).
 def _occupied_addresses_from_response(
     ranges: tuple[_OccupiedAddressRange, ...],
     response: Mapping[str, Any],
@@ -1266,6 +1268,7 @@ def _occupied_addresses_from_response(
     return frozenset(_current_cell_values_from_response(ranges, response))
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GSHEETS: untyped google-api sheets Resource (dynamic discovery build).
 def _current_cell_values_from_response(
     ranges: tuple[_OccupiedAddressRange, ...],
     response: Mapping[str, Any],
@@ -1283,11 +1286,13 @@ def _current_cell_values_from_response(
     return values
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GSHEETS: untyped google-api sheets Resource (dynamic discovery build).
 def _occupied_addresses_in_range(tab: TabName, value_range: Mapping[str, Any]) -> frozenset[str]:
     """Return non-empty cells from one A1-anchored managed-tab response block."""
     return frozenset(_current_cell_values_in_range(tab, value_range))
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GSHEETS: untyped google-api sheets Resource (dynamic discovery build).
 def _current_cell_values_in_range(tab: TabName, value_range: Mapping[str, Any]) -> dict[str, Any]:
     """Return one A1-anchored managed-tab response block's non-blank cells, keyed by address.
 
@@ -1321,6 +1326,7 @@ def _plan_value_payload(plan: SheetExportPlan) -> list[dict[str, Any]]:
     )
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GSHEETS: untyped google-api sheets Resource (dynamic discovery build).
 def _write_plan_values(
     *,
     sheets: Any,

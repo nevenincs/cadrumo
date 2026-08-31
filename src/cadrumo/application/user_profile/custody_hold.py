@@ -7,13 +7,15 @@ from pathlib import Path
 from typing import Final, Literal
 from uuid import UUID
 
-from cadrumo.application.user_profile.custody_hold_models import ProfileCustodyHoldAssessment
-
 from ...core import StorageCategory, storage_location
 from ...core.paths import effective_storage_root
 from ...core.time import validate_utc_aware
 from ..profile_deletion_hold_contract import ProfileDeletionHoldOwnerProjection
-from .custody_hold_models import ProfileCustodyHoldEvidence, evidence_from_owner_projection
+from .custody_hold_models import (
+    ProfileCustodyHoldAssessment,
+    ProfileCustodyHoldEvidence,
+    evidence_from_owner_projection,
+)
 from .custody_ports import ProfileCustodyLocalRecordStore, default_profile_custody_local_record_store
 from .custody_transactions import (
     ProfileCustodyTransactionCorruptError,
@@ -107,10 +109,12 @@ class ProfileCustodyHoldAuthority:
     """Join independently-owned legal and filing evidence for deletion preflight."""
 
     def __init__(self, *, root: Path | None = None) -> None:
+        """Bind the independently-owned legal and filing evidence owners."""
         self._legal = _ProfileCustodyHoldEvidenceOwner(root=root, owner="legal")
         self._filing = _ProfileCustodyHoldEvidenceOwner(root=root, owner="filing")
 
     def assess(self, profile_id: UUID, *, now: datetime) -> ProfileCustodyHoldAssessment:
+        """Return the joined deletion-preflight assessment for a profile at ``now``."""
         validate_utc_aware(now)
         return ProfileCustodyHoldAssessment.from_owner_evidence(
             legal=self._legal.refresh(profile_id, now=now),

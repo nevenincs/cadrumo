@@ -47,18 +47,17 @@ from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.modelos import WorkUnit
 from ._common import (
     _bad,
-    _canonical_period,
     _declared_tax_id,
     _load_drafts,
     _load_invoices,
     _no_active_profile_refusal,
-    _parse_iso_date,
     _profile_to_taxpayer,
     _state,
     _tx_repo,
     activate_subcommand_output_language,
     emit_envelope,
 )
+from ._date_parsing import _parse_iso_date
 from ._overview_evidence import (
     _live_censo_verified_profile_keys,
     _local_calendar_filing_evidence,
@@ -85,15 +84,15 @@ from ._overview_rendering import (
     overview_prepare_output,
     overview_status_output,
 )
+from ._period_parsing import _canonical_period
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
-    from cadrumo.application.workflow.profile_bucket_models import ProfileBucketPointer as _ProfileBucketPointer
-    from cadrumo.application.workflow.state_models import WorkflowState
-
     from ...application.overview import CalendarWarning
     from ...application.user_profile.profile_record_repository import ProfileRecordRepository
+    from ...application.workflow.profile_bucket_models import ProfileBucketPointer as _ProfileBucketPointer
+    from ...application.workflow.state_models import WorkflowState
     from ...domain.deadlines import TaxpayerProfile
     from .errors import CliRefusedBoundaryError
 
@@ -113,9 +112,8 @@ def _grounded_warning_summary(warnings: Sequence[CalendarWarning]) -> str:
     resolve to nothing and pass through verbatim, which is what this surface
     already showed for them.
     """
-    from cadrumo.domain.calculations.registry.profile_grounding import build_profile_grounding_index
-
     from ...application.user_profile.preflight import format_profile_selector_requirements
+    from ...domain.calculations.registry.profile_grounding import build_profile_grounding_index
     from ...domain.user_profile.loader import load_user_profile_schema
 
     return ", ".join(
@@ -178,13 +176,12 @@ def _undeclared_taxpayer_model_refusal(profile: TaxpayerProfile) -> CliRefusedBo
     an entity type but no income category is told about the income category,
     not sent back to a field they already filled in.
     """
-    from cadrumo.domain.calculations.registry.profile_grounding import build_profile_grounding_index
-
     from ...application.cli_exception_preconditions import (
         CliExceptionPrecondition,
         cli_exception_no_recovery_verdict,
     )
     from ...application.user_profile.preflight import format_profile_selector_requirements
+    from ...domain.calculations.registry.profile_grounding import build_profile_grounding_index
     from ...domain.deadlines import EntityType
     from ...domain.user_profile.loader import load_user_profile_schema
     from ._common import attach_cli_policy_verdict
@@ -306,7 +303,7 @@ def _overview_status_coverage(
         status_notices.append(notice)
         coverage_lines.append(f"coverage_advised\t{len(status_cal.coverage.advised)}\t{notice.message}")
 
-    from cadrumo.domain.calculations.registry.applicability import derive_tax_route
+    from ...domain.calculations.registry.applicability import derive_tax_route
 
     history_notice = overview_no_aeat_history_notice(
         tax_route=derive_tax_route(_profile_to_taxpayer(current)),
@@ -614,8 +611,7 @@ def _overview_calendar_all_profiles(
     :class:`OverviewCalendarResult` schema declared for
     ``overview.calendar``.
     """
-    from cadrumo.application.workflow.profile_bucket_scan import list_profile_buckets
-
+    from ...application.workflow.profile_bucket_scan import list_profile_buckets
     from ...core.bucket_pointer import resolve_active_bucket_id
 
     today = today_madrid()
@@ -781,13 +777,12 @@ def overview_prepare(
     the registry, loads the ledger/invoice/evidence/work-unit state, and
     renders the typed envelope plus per-step next-command notices.
     """
-    from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
-
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ...application.ledger.evidence import PurchaseInvoiceEvidenceService
     from ...application.ledger.preflight import preflight_ledger_tax_readiness
     from ...application.modelo.registry_discovery import registry_describe_modelo_for_scope
     from ...application.overview import build_data_prep_walkthrough
+    from ...domain.calculations.registry.errors import RegistrySnapshotError
 
     current = _state()
     bucket_id = current.active_profile_bucket_id()
@@ -853,7 +848,8 @@ def overview_pipeline(
     from ...application.modelo._filing_actions import list_verification_reports
     from ...application.modelo._work_lifecycle import list_work_units
     from ...application.overview import build_pipeline_health_report
-    from ...domain.modelos import CalculationRevision, VerificationReport
+    from ...domain.modelos import VerificationReport
+    from ...domain.modelos.calculation_revision import CalculationRevision
     from ._ledger_payloads import LedgerStatusResult
 
     current = _state()

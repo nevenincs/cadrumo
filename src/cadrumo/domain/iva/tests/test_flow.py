@@ -25,10 +25,9 @@ import tomllib
 
 import pytest
 
-from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
-
 from ....core.resources import bundled_path
 from ...calculations.registry.authority import bundled_authority
+from ...calculations.registry.binding_selector_utils import selector_as_dict
 from .. import (
     InvoiceKind,
     IvaCategory,

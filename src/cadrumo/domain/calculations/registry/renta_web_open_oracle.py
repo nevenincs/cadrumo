@@ -258,6 +258,7 @@ class RentaWebOpenOracle:
     """Open-simulator parity oracle for Modelo 100 Renta WEB Open."""
 
     def __init__(self, *, driver: RentaWebOpenDriver | None = None) -> None:
+        """Construct the oracle, optionally injecting a Renta WEB Open driver for replay."""
         self._driver = driver
 
     @property

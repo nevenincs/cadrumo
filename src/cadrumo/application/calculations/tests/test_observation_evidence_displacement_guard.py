@@ -21,12 +21,11 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
-
 from ....core import Period, validated_casilla_id
+from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ....tests.secure_sql import isolated_runtime_profile
-from .._observations_repository import CalculationObservationRepository
 from ..errors import ObservationEvidenceDisplacementError
+from ..observations_repository import CalculationObservationRepository
 
 if TYPE_CHECKING:
     from pathlib import Path

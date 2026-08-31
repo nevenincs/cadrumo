@@ -4,6 +4,7 @@ legal_refs = [
     "orden-eha-3012-2008:art-1",
     "orden-eha-3012-2008:art-10",
     "rd-1065-2007:art-31",
+    "rd-1065-2007:art-33",
     "ley-58-2003:art-93",
 ]
 source_refs = [
@@ -50,6 +51,7 @@ casilla_ids = [
     "contraparte.importe-Q3",
     "contraparte.importe-Q4",
     "contraparte.pais-codigo",
+    "contraparte.provincia-codigo",
     "inmueble.arrendatario-nif",
     "inmueble.representante-legal-nif",
     "inmueble.arrendatario-nombre",

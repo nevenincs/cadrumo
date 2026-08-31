@@ -25,7 +25,7 @@ from pathlib import Path
 from ...core import Period
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.ids import RevisionId
-from ...domain.modelos import ModeloError
+from ...domain.modelos.errors import ModeloError
 
 
 def registry_root() -> Path:

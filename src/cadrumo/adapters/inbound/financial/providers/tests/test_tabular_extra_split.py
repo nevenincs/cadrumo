@@ -140,7 +140,7 @@ def _probe_worker(
 def _run_case(case: Literal["known", "unknown"], *, extra_absent: bool, tmp_path: Path) -> _ProbeResult:
     """Run one probe in a fresh spawn interpreter and return its typed payload."""
     context = multiprocessing.get_context("spawn")
-    results: Queue[_ProbeMessage] = context.Queue()
+    results: Queue[_ProbeMessage] = Queue(ctx=context.get_context())
     process = context.Process(
         target=_probe_worker,
         kwargs={

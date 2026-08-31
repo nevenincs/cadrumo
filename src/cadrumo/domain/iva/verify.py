@@ -18,13 +18,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ...core.citation_grounding import CitationGrounding
 from ...core.errors import BaseSeverity
 from ...core.logging import get_logger
 from ._schema import (
     IvaCatalogue,
     IvaCategory,
     IvaCitation,
-    IvaCitationGrounding,
     IvaVerificationIssue,
     IvaVerificationReport,
 )
@@ -32,8 +32,8 @@ from ._schema import (
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from cadrumo.domain.calculations.registry.ids import LegalRefId
-    from cadrumo.domain.calculations.registry.schema_references import LegalReference
+    from ..calculations.registry.ids import LegalRefId
+    from ..calculations.registry.schema_references import LegalReference
 
 _logger = get_logger(__name__)
 
@@ -49,7 +49,7 @@ def verify_catalogue(catalogue: IvaCatalogue) -> IvaVerificationReport:
         finding.
     """
     # Keep this local: registry binding modules consume the IVA public facade.
-    from cadrumo.domain.calculations.registry.authority import bundled_authority
+    from ..calculations.registry.authority import bundled_authority
 
     issues: list[IvaVerificationIssue] = []
     legal = bundled_authority().catalogues.legal
@@ -98,16 +98,15 @@ def _citation_issues(
     caused solely by the first.
     """
     # Keep this local: registry binding modules consume the IVA public facade.
-    from cadrumo.domain.calculations.registry.legal import legal_reference_quotes_corpus, verify_legal_reference
-
     from ...core.resources import bundled_path
+    from ..calculations.registry.legal import legal_reference_quotes_corpus, verify_legal_reference
 
     issues: list[IvaVerificationIssue] = []
     # An UNRESOLVED citation is empty by design: it was read against
     # the corpus and refused, and its reason is recorded beside it.
     # Flagging it here would erase the distinction between a citation
     # nobody checked and one that failed the check.
-    if citation.grounding is IvaCitationGrounding.VERIFIED and not citation.quoted_text.strip():
+    if citation.grounding is CitationGrounding.VERIFIED and not citation.quoted_text.strip():
         issues.append(
             IvaVerificationIssue(
                 level=BaseSeverity.ERROR,
@@ -154,7 +153,7 @@ def _citation_issues(
     # A non-empty quotation is not yet grounding. This reads the stored
     # text back against the bundled corpus, which is the only check that
     # separates a transcription from an assertion about one.
-    if citation.grounding is not IvaCitationGrounding.VERIFIED:
+    if citation.grounding is not CitationGrounding.VERIFIED:
         return issues
     try:
         quoted = legal_reference_quotes_corpus(

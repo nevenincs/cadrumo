@@ -16,14 +16,6 @@ from typing import Literal, TypeGuard
 
 from pydantic import BaseModel, Field, model_validator
 
-from cadrumo.domain.calculations.registry.schema import (
-    DataBindingDefinition,
-    FormulaDefinition,
-    ModeloRevision,
-    RegistrySnapshot,
-)
-from cadrumo.domain.calculations.registry.schema_surfaces import RelationDefinition
-
 from ...core import (
     STRICT_FROZEN_CONFIG,
     BindingSourceKind,
@@ -60,10 +52,17 @@ from ...domain.calculations.registry.runtime_graph import (
     expression_casilla_refs,
     expression_relation_refs,
 )
+from ...domain.calculations.registry.schema import (
+    DataBindingDefinition,
+    FormulaDefinition,
+    ModeloRevision,
+    RegistrySnapshot,
+)
 from ...domain.calculations.registry.schema_input_kind import (
     InputKind,
     InputKindValue,
 )
+from ...domain.calculations.registry.schema_surfaces import RelationDefinition
 from ...domain.calculations.registry.temporal import select_revision
 from ..aggregation import BindingSourceDisposition
 from ..modelo.calculation_route import CALCULATION_ROUTE_SOURCE_DISPOSITIONS

@@ -29,11 +29,13 @@ from ....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWi
 from ....tests.modelo_work_review import build_real_modelo_work_review
 from ....tests.profile_capsule import load_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
+from ..components.host import ScreenHostApp
 from ..devtools.fixture import registration_attempt
-from ..flows.app import FlowTuiApp
+from ..flows.app import FlowScreen
 from ..modelo.view.work_review import ModeloWorkReviewApp
-from ..profile.overview import ProfileManagerApp
-from ..secret.app import LoginApp, RecoveryWordsScreen, RegistrationApp
+from ..profile.overview import ProfileManagerScreen
+from ..secret.login import LoginScreen
+from ..secret.registration import RecoveryWordsScreen, RegistrationScreen
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -42,12 +44,12 @@ _LABEL = "Relocation parity operator"
 _PASSPHRASE = "relocation-parity-operator-secret"  # noqa: S105 - synthetic test fixture
 
 _CANONICAL_DEFINITIONS = (
-    ("cadrumo.entrypoints.tui.profile.overview", "ProfileManagerApp"),
-    ("cadrumo.entrypoints.tui.profile.status", "StatusApp"),
-    ("cadrumo.entrypoints.tui.secret.app", "LoginApp"),
-    ("cadrumo.entrypoints.tui.secret.app", "RegistrationApp"),
-    ("cadrumo.entrypoints.tui.secret.app", "RecoveryWordsScreen"),
-    ("cadrumo.entrypoints.tui.flows.app", "FlowTuiApp"),
+    ("cadrumo.entrypoints.tui.profile.overview", "ProfileManagerScreen"),
+    ("cadrumo.entrypoints.tui.profile.status", "StatusScreen"),
+    ("cadrumo.entrypoints.tui.secret.login", "LoginScreen"),
+    ("cadrumo.entrypoints.tui.secret.registration", "RegistrationScreen"),
+    ("cadrumo.entrypoints.tui.secret.registration", "RecoveryWordsScreen"),
+    ("cadrumo.entrypoints.tui.flows.app", "FlowScreen"),
     ("cadrumo.entrypoints.tui.modelo.view.work_review", "ModeloWorkReviewApp"),
     ("cadrumo.entrypoints.tui.modelo.view.work_review", "ModeloWorkReviewScreen"),
 )
@@ -164,7 +166,7 @@ def _import_targets(path: Path) -> tuple[str, ...]:
             base = _relative_target(path, node) if node.level else node.module
             targets.append(base or "<relative>")
         elif isinstance(node, ast.Call):
-            targets.extend(_dynamic_import_targets(ast.Module(body=[node], type_ignores=[])))
+            targets.extend(_dynamic_import_targets(ast.Module(body=[ast.Expr(value=node)], type_ignores=[])))
     return tuple(targets)
 
 
@@ -172,7 +174,7 @@ def _constant_string(node: ast.AST) -> str | None:
     if isinstance(node, ast.Constant) and isinstance(node.value, str):
         return node.value
     if isinstance(node, ast.JoinedStr) and all(isinstance(value, ast.Constant) for value in node.values):
-        return "".join(str(value.value) for value in node.values)
+        return "".join(str(value.value) for value in node.values if isinstance(value, ast.Constant))
     if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
         left = _constant_string(node.left)
         right = _constant_string(node.right)
@@ -330,20 +332,20 @@ def test_manager_pilot_has_one_canonical_home_and_exactly_seven_direct_consumers
 async def test_profile_and_secret_apps_preserve_the_real_custody_path(tmp_path: Path) -> None:
     """Register, unlock, and render an actual encrypted profile through relocated apps."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        registration = RegistrationApp(assess=assess_profile_password, register=registration_attempt)
-        async with registration.run_test(size=_TERMINAL_SIZE) as pilot:
+        registration = RegistrationScreen(assess=assess_profile_password, register=registration_attempt)
+        async with ScreenHostApp(registration).run_test(size=_TERMINAL_SIZE) as pilot:
             registration.query_one("#field-username", Input).value = _LABEL
             registration.query_one("#field-password", Input).value = _PASSPHRASE
             registration.query_one("#field-confirm", Input).value = _PASSPHRASE
             await pilot.click("#btn-create")
             for _ in range(100):
-                if isinstance(registration.screen, RecoveryWordsScreen):
-                    candidate = registration.screen
+                if isinstance(pilot.app.screen, RecoveryWordsScreen):
+                    candidate = pilot.app.screen
                     if candidate.query("#words-value") and candidate.query("#btn-confirm-words"):
                         break
                 await pilot.pause(0.1)
-            assert isinstance(registration.screen, RecoveryWordsScreen)
-            recovery = registration.screen
+            assert isinstance(pilot.app.screen, RecoveryWordsScreen)
+            recovery = pilot.app.screen
             words = recovery.query_one("#words-value", Static)
             assert str(words.render())
             recovery.query_one("#field-recovery-verification", Input).value = str(words.render())
@@ -356,11 +358,11 @@ async def test_profile_and_secret_apps_preserve_the_real_custody_path(tmp_path: 
         profile_id = str(registration.outcome.profile_id)
         logout_active_profile()
 
-        login = LoginApp(choices=profile_login_choices(), authenticate=attempt_profile_login)
-        async with login.run_test(size=_TERMINAL_SIZE) as pilot:
+        login = LoginScreen(choices=profile_login_choices(), authenticate=attempt_profile_login)
+        async with ScreenHostApp(login).run_test(size=_TERMINAL_SIZE) as pilot:
             login.query_one("#field-passphrase", Input).value = _PASSPHRASE
             await pilot.click("#btn-unlock")
-            await login.workers.wait_for_complete()
+            await pilot.app.workers.wait_for_complete()
             await pilot.pause()
 
         assert login.outcome is not None
@@ -378,20 +380,21 @@ async def test_profile_and_secret_apps_preserve_the_real_custody_path(tmp_path: 
             applied = apply_manager_profile_field_mutation(profile_id=profile_id, path=path, value=value)
             return build_profile_overview(applied, label=_LABEL)
 
-        manager = ProfileManagerApp(overview, persist=persist)
-        async with manager.run_test(size=_TERMINAL_SIZE) as pilot:
+        manager = ProfileManagerScreen(overview, persist=persist)
+        async with ScreenHostApp(manager).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             rendered_rows = sum(table.row_count for table in manager.query(DataTable))
             assert rendered_rows == overview.total_count
             assert overview.total_count > overview.present_count
-            manager.exit(None)
+            pilot.app.exit(None)
 
 
 @pytest.mark.asyncio
 async def test_flow_and_modelo_review_project_real_application_contracts(tmp_path: Path) -> None:
     """The relocated flow and read-only review render authoritative application data."""
-    flow = FlowTuiApp(_flow_definition(), mode=FlowMode.MODIFY, registered_values={})
-    async with flow.run_test(size=_TERMINAL_SIZE) as pilot:
+    flow = FlowScreen(_flow_definition(), mode=FlowMode.MODIFY, registered_values={})
+    host = ScreenHostApp(flow)
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.press(*"Ada")
         await pilot.press("enter")
         await pilot.pause()

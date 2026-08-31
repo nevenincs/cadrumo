@@ -18,11 +18,10 @@ from urllib.parse import urlsplit
 import pytest
 from pydantic import AnyUrl, ValidationError
 
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.groi_oracle import GROI_ORACLE_ID
-from cadrumo.domain.calculations.registry.remote_state_guard import RemoteOperation, assert_remote_operation_allowed
-
 from ......core.config import Settings
+from ......domain.calculations.registry.errors import RegistryValidationError
+from ......domain.calculations.registry.groi_oracle import GROI_ORACLE_ID
+from ......domain.calculations.registry.remote_state_guard import RemoteOperation, assert_remote_operation_allowed
 from ......tests.aeat_literal_fixtures import (
     CENSAL_WRITE_SURFACE_PATH_CANARIES,
     PROCEDIMIENTOINI_PATH_PREFIX_FIXTURE,

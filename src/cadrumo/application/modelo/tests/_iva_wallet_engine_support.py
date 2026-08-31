@@ -9,10 +9,6 @@ from decimal import Decimal
 from functools import cache
 from pathlib import Path
 
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-from cadrumo.domain.calculations.registry.ids import BindingId
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-
 from ....adapters.outbound.aeat.sede import IVA_COMPENSATION_WALLET_URL, parse_iva_compensation_wallet_html
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -20,16 +16,17 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.calculations.registry.ids import BindingId
+from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
-from ....domain.modelos import (
+from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
+from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     FilingInstanceEvidence,
-    ModeloCode,
-    WorkUnit,
     derive_calculation_revision_id,
-    derive_work_unit_id,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests import general_m303_filing_evidence

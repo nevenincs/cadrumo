@@ -8,11 +8,12 @@ stable values used by ledger rows, invoice rows, usage-ratio overrides, Renta
 deductibility, and LLM classification hints; renaming an enum member is a
 breaking storage and calculation change.
 
-Year-specific profile data is loaded from committed TOML under
-``registry/aeat/categories/profiles`` through
-:func:`load_category_profile_registry`,
-:func:`resolve_category_profiles`, and
-:func:`load_category_profiles_from_manual`. Runtime Python owns validation and
+Profile data is loaded from one undated committed TOML file at
+``registry/aeat/categories/profiles.toml`` through
+:func:`load_category_profiles`; :func:`category_profile_years` derives the
+resolvable filing years from the citation windows, and
+:func:`resolve_category_profiles` and :func:`load_category_profiles_from_manual`
+project the corpus onto one of them. Runtime Python owns validation and
 resolution behaviour, not legal profile values.
 
 Each :class:`CategoryProfile` binds a category to
@@ -62,19 +63,23 @@ from ._proportionality import (
     parse_http_url,
 )
 from ._registry import (
-    load_category_profile_registry,
+    category_profile_years,
+    load_category_profiles,
     resolve_category_profiles,
 )
 from ._spending_category import (
     CATEGORY_FAMILY_MEMBERS,
+    HOME_OFFICE_FAMILIES,
     SpendingCategory,
     SpendingCategoryFamily,
     categories_for_family,
     family_for,
+    home_office_categories,
 )
 
 __all__ = [
     "CATEGORY_FAMILY_MEMBERS",
+    "HOME_OFFICE_FAMILIES",
     "CategoryCitation",
     "CategoryCitationSource",
     "CategoryProfile",
@@ -86,9 +91,11 @@ __all__ = [
     "StatutoryCapPeriod",
     "StatutoryCapVariant",
     "categories_for_family",
+    "category_profile_years",
     "effective_usage_ratio",
     "family_for",
-    "load_category_profile_registry",
+    "home_office_categories",
+    "load_category_profiles",
     "load_category_profiles_from_manual",
     "parse_http_url",
     "resolve_category_profiles",

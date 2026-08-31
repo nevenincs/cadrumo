@@ -18,13 +18,12 @@ from __future__ import annotations
 import pytest
 from pydantic import SecretStr
 
-from cadrumo.application.workflow.persistence import workflow_state_repository
-
 from ....core import AuthProviderKind
 from ....core.config import load_settings, override_settings
 from ....tests.profile_storage_root_fixture import bucket_session_storage_fixture
 from ....tests.user_profile import register_minimal_profile
 from ..._state_projection_auth import build_auth_readiness
+from ...workflow.persistence import workflow_state_repository
 from ..operator import _assert_login_precondition, build_live_auth_preflight_report, configure_operator_auth
 from ..operator_probes import (
     live_auth_identity_kind,

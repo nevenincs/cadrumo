@@ -10,15 +10,13 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.workflow.persistence import workflow_state_repository
-from cadrumo.domain.calculations.registry.ids import BindingId
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.identity import nif_check_letter
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.ids import BindingId
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.deadlines import (
     IVARegime,
     M303RegimeComposition,
@@ -26,22 +24,19 @@ from ....domain.deadlines import (
     ModeloIVAProfile,
     TaxpayerProfile,
 )
-from ....domain.modelos import (
+from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id, upsert_calculation_revision, upsert_work_unit
+from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     FilingInstanceEvidence,
-    ModeloCode,
-    WorkUnit,
     derive_calculation_revision_id,
-    derive_work_unit_id,
-    upsert_calculation_revision,
-    upsert_work_unit,
 )
 from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
+from ...workflow.persistence import workflow_state_repository
 
 _ACTIVE_STORAGE_STACK: ExitStack | None = None
 _PROFILE_SPAN_OPEN = False
@@ -158,8 +153,8 @@ def _seed_revision(
     casilla_values: dict[CasillaId, Decimal] | None = None,
     filing_instance_evidence: FilingInstanceEvidence | None = None,
 ) -> tuple[str, str]:
-    input_values_by_casilla_id = dict(input_values_by_casilla_id or {})
-    binding_overrides = dict(binding_overrides or {})
+    input_values_by_casilla_id = dict(input_values_by_casilla_id or dict[CasillaId, str]())
+    binding_overrides = dict(binding_overrides or dict[BindingId, str]())
     casilla_values = dict(casilla_values or {})
     typed_period = Period.from_year_and_code(filing_year, period)
     snapshot = bundled_authority().snapshot(

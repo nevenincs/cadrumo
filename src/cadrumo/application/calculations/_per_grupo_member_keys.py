@@ -8,7 +8,7 @@ binding-prefill gatherer
 (:mod:`~application.calculations._binding_prefill`, which must enumerate the
 members rather than load one observation by key) and the cross-period
 clean-state gate
-(:mod:`~application.calculations._cross_period_clean_state`, which must mark the
+(:mod:`~application.calculations.cross_period_clean_state`, which must mark the
 requirement ``requires_member_fan_in``) need the same key set, so it is derived
 once here.
 
@@ -19,9 +19,8 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from cadrumo.domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements
-
 from ...core import STR_KEYED_MAPPING_ADAPTER, BindingSourceKind
+from ...domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements
 from ...domain.calculations.registry.schema import ModeloRevision
 
 _PER_GRUPO_MEMBER: str = "per_grupo_member"

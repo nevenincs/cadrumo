@@ -34,7 +34,6 @@ from decimal import Decimal
 from typing import ClassVar
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ...adapters.persistence.profile.usage_ratios import load_usage_ratios
 from ...adapters.persistence.storage import (
     ClassificationError,
     DecryptionError,
@@ -115,6 +114,7 @@ from ...domain.transactions import (
     TransactionPersistenceError,
 )
 from ...domain.usage_ratios import UsageRatioPersistenceError
+from ..user_profile.usage_ratio_resolution import resolve_effective_usage_ratios
 from ._impatriado_income_ledger import aggregate_impatriado_income_ledger_from_repositories
 from ._invoice_devengo import (
     devengo_proxy_attribution_diagnostics,
@@ -503,7 +503,10 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                 transaction_repository=self._transaction_repository,
                 invoice_repository=self._invoice_repository,
                 profile_year=context.filing_year,
-                usage_ratios=load_usage_ratios(bucket_id=context.bucket_id).ratios,
+                usage_ratios=resolve_effective_usage_ratios(
+                    bucket_id=context.bucket_id,
+                    year=context.filing_year,
+                ),
                 modelo=context.modelo,
                 prorrata_register_repository=self._prorrata_register_repository,
             )
@@ -2679,14 +2682,30 @@ class RetencionesAggregationSourceResolver:
                 error=exc,
             )
         if not observations:
+            # Modelo 111 is the one retenciones modelo with a prescribed remedy:
+            # a quarter with no retenciones is ATTESTED, never filed blank. Name
+            # that path, following the Modelo 180 precedent of carrying the flag
+            # in the message. The typed action channel cannot express it -- the
+            # wizard setup command projects no inputs to bind against.
+            is_m111 = str(context.modelo) == Modelo.M111.value
+            message = t(
+                "aggregation.retenciones.errors.m111_no_retenciones_attestation_missing"
+                if is_m111
+                else "aggregation.retenciones.errors.perceptor_observations_missing",
+            )
+            # ``Translatable`` carries only the key; the renderer interpolates
+            # from this context, so the attestation period travels there.
+            refusal_context: dict[str, object] = {
+                "modelo": str(context.modelo),
+                "filing_year": str(context.filing_year),
+                "period": context.period.registry_token,
+                "source_kind": "retenciones_aggregation",
+            }
+            if is_m111:
+                refusal_context["attestation_period"] = f"{context.filing_year}:{context.period.registry_token}"
             raise AggregationValidationError(
-                t("aggregation.retenciones.errors.perceptor_observations_missing"),
-                context={
-                    "modelo": str(context.modelo),
-                    "filing_year": str(context.filing_year),
-                    "period": context.period.registry_token,
-                    "source_kind": "retenciones_aggregation",
-                },
+                message,
+                context=refusal_context,
                 precondition_verdict=aggregation_no_recovery_verdict(
                     AggregationPreconditionCondition.RETENCIONES_OBSERVATIONS_PRESENT,
                     facts={

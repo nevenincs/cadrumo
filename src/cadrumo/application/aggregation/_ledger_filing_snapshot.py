@@ -16,7 +16,7 @@ This application module holds the Transaction-aware halves:
 computing a contributor's content fingerprint from the live
 :class:`~domain.transactions.TransactionCatalogue`, building a
 :class:`~domain.modelos._ledger_filing_snapshot.LedgerFilingSnapshot` for a
-:class:`~domain.modelos._calculation_revision.CalculationRevision`'s ``source_transaction_ids``,
+:class:`~domain.modelos.calculation_revision.CalculationRevision`'s ``source_transaction_ids``,
 and evaluating drift between a filed snapshot and the current ledger state.
 
 The fingerprint covers exactly the transaction facts that can move a casilla --
@@ -43,29 +43,18 @@ from ...core import CasillaId
 from ...core.hashing import sha256_hex
 from ...domain.calculations.registry.ids import LegalRefId, SourceRefId
 from ...domain.modelos import (
-    CalculationRevision,
-    CalculationRevisionState,
     LedgerEvidenceRow,
     LedgerFilingEvidence,
     LedgerFilingSnapshot,
     LedgerFilingStalenessVerdict,
     LedgerRowFingerprint,
     ManualFactBasisEntry,
-    ModeloValidationError,
     diff_ledger_fingerprints,
     snapshot_fingerprint,
 )
+from ...domain.modelos.calculation_revision import SEALED_REVISION_STATES, CalculationRevision
+from ...domain.modelos.errors import ModeloValidationError
 from ...domain.transactions import Transaction, TransactionCatalogue
-
-# Finalized revision states whose ledger snapshot, once captured, must stay in
-# sync with the live ledger; drift in any of these is operator-actionable.
-_FINALIZED_STATES = frozenset(
-    {
-        CalculationRevisionState.VERIFICADO_COMPLETO,
-        CalculationRevisionState.PRESENTADO,
-        CalculationRevisionState.PRESENTADO_SUPERSEDIDO,
-    },
-)
 
 # Tax-relevant projection: (label, accessor). Order is fixed and canonical.
 _FINGERPRINT_FIELDS: tuple[tuple[str, str], ...] = (
@@ -382,7 +371,7 @@ def stale_filed_revisions(
     """
     findings: list[tuple[CalculationRevision, LedgerFilingStalenessVerdict]] = []
     for revision in revisions.values():
-        if revision.state not in _FINALIZED_STATES or revision.ledger_filing_snapshot is None:
+        if revision.state not in SEALED_REVISION_STATES or revision.ledger_filing_snapshot is None:
             continue
         verdict = evaluate_ledger_filing_staleness(revision.ledger_filing_snapshot, catalogue)
         if verdict.is_stale:

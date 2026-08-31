@@ -12,15 +12,13 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.loader_fingerprints import clear_fingerprint_cache
-from cadrumo.domain.calculations.registry.schema import filing_period_from_scope
-from cadrumo.domain.calculations.registry.schema_references import SourceReference
-
 from .....core import RECORD_DESIGN_EPOCH_RE
 from .....core.external_constants import PDF_EXTENSION, XLS_EXTENSION, XLSM_EXTENSION, XLSX_EXTENSION
 from .....core.resources import bundled_path
 from .....tests import REPO_ROOT
 from .....tests.aeat_literal_fixtures import RECORD_DESIGN_ROUTE_BASE_FIXTURE
+from .._snapshot_internals import check_snapshot_filing_review_tier
+from .._validate import RegistryValidator
 from ..authority import ValidatedRegistryAuthority, bundled_authority
 from ..corpus_catalogue import resolve_record_design_binary, verify_source_catalogue, verify_source_file
 from ..coverage import (
@@ -31,9 +29,11 @@ from ..coverage import (
 )
 from ..errors import NoRevisionForPeriodError, RegistryValidationError
 from ..legal import verify_legal_catalogue_grounding
-from ..snapshot import build_snapshot, check_snapshot_filing_review_tier
+from ..loader_fingerprints import clear_fingerprint_cache
+from ..schema import filing_period_from_scope
+from ..schema_references import SourceReference
+from ..snapshot import build_snapshot
 from ..temporal import coverage_assessment_horizon, revision_selection_coordinates, select_revision
-from ..validate import RegistryValidator
 from ._catalogue_verification_support import _catalogues, _registry_tree
 from ._loader_directory_mode_support import write_extracted_corpus_sidecar, write_fragmented_revision
 
@@ -814,7 +814,6 @@ def test_every_record_design_source_declares_a_unique_well_formed_epoch() -> Non
         # non-conflicting filing period relative to the actively selected
         # design. The source rows deliberately remain resolver-unreachable
         # until the temporal-design owner supplies that authority.
-        "aeat-dr-036-v42-provisional": "AEAT calls the 2025 edition provisional; no successor boundary is evidenced",
         "aeat-dr-036-v40": "AEAT's 2023 update to the 2021-y-siguientes design has no selection boundary",
         "aeat-dr-036-v35": "AEAT's 2021 update has no selection boundary against v40",
         "aeat-dr-202-2025-mar-update": "AEAT's March 2026 update has no selection boundary against the active 2025 design",
@@ -826,6 +825,33 @@ def test_every_record_design_source_declares_a_unique_well_formed_epoch() -> Non
         "aeat-dr-349-2002": "the historical order title does not establish a bounded filing window",
         "aeat-dr-604-atf-spanish": "the Spanish ATF appendix is a translated logical design, not an independently dated epoch",
         "aeat-dr-604-atf-english": "the English ATF appendix is a translated logical design, not an independently dated epoch",
+        # The modelo 184 ejercicio-2023 pair. Its revision cites BOTH the AEAT
+        # diseno de registro and the BOE publication of the orden that
+        # established it, so a bare "2023" would collide with the epoch
+        # aeat-dr-184-2023-2024 already holds. Which of the two is the
+        # selectable LAYOUT and which is merely the establishing instrument is
+        # the temporal-design owner's ruling, not a sub-year label: they are the
+        # same layout, not an AEAT mid-ejercicio re-lay.
+        "boe-dr-184-2023-2024": "same-ejercicio pair with aeat-dr-184-2023-2024, which already holds epoch 2023",
+        # The four older raw BOE ordenes for modelo 184. These carry NO epoch by
+        # adjudication, not by omission: test_modelo_184_registry's
+        # raw-BOE-design-eras regression asserts `record_design_epoch is None`
+        # for exactly these four, on the ruling that a raw BOE design is
+        # provenance and not a surrogate for a later AEAT map. Its parser
+        # refusal is deliberate and load-bearing. Declaring an epoch here to
+        # satisfy this gate contradicts that contract -- which is precisely what
+        # happened before this entry existed.
+        "boe-dr-184-2015": "raw BOE orden, adjudicated provenance rather than a mapped design",
+        "boe-dr-184-2016-2018": "raw BOE orden, adjudicated provenance rather than a mapped design",
+        "boe-dr-184-2019-2021": "raw BOE orden, adjudicated provenance rather than a mapped design",
+        "boe-dr-184-2022": "raw BOE orden, adjudicated provenance rather than a mapped design",
+        # Historical modelo 353 ordenes, registered so corpus and catalogue
+        # agree. Neither declares applies_from/applies_to, and no modelo 353
+        # revision cites either -- the modelo's revisions begin at 2021. There is
+        # therefore no filing period to derive an epoch from, and inventing one
+        # would assert a selection window nothing evidences.
+        "aeat-dr-353-2007-orden": "the historical orden declares no filing window and no revision cites it",
+        "aeat-dr-353-2008-orden": "the historical orden declares no filing window and no revision cites it",
     }
 
     modelos, catalogues = _registry_tree()

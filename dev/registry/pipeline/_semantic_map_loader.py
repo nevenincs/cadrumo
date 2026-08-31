@@ -15,7 +15,7 @@ from typing import Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError, model_validator
 
-from cadrumo.core import FilingProducerKey, compile_filing_projection_ref, freeze_toml, read_toml
+from cadrumo.core import FilingProducerKey, compile_filing_projection_ref, freeze_toml, is_link_like, read_toml
 from cadrumo.core.directory_scan import iter_directory
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_semantics import ExportComputedKey, ExportDraftAttribute
@@ -77,7 +77,7 @@ def load_semantic_map(fragment_directory: Path) -> SemanticMap:
 
 
 def _semantic_map_fragment_paths(fragment_directory: Path) -> tuple[Path, ...]:
-    if not fragment_directory.is_dir() or fragment_directory.is_symlink() or fragment_directory.is_junction():
+    if not fragment_directory.is_dir() or is_link_like(fragment_directory):
         raise RegistryValidationError(
             f"semantic-map path must be a real directory: {fragment_directory}",
         )
@@ -92,9 +92,7 @@ def _semantic_map_fragment_paths(fragment_directory: Path) -> tuple[Path, ...]:
             f"semantic-map directory contains no TOML fragments: {fragment_directory}",
         )
     invalid = tuple(
-        path.name
-        for path in paths
-        if path.suffix.casefold() != ".toml" or path.is_symlink() or path.is_junction() or not path.is_file()
+        path.name for path in paths if path.suffix.casefold() != ".toml" or is_link_like(path) or not path.is_file()
     )
     if invalid:
         raise RegistryValidationError(

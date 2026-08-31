@@ -266,6 +266,8 @@ errors:
       a számítás-revízió jelenlegi állapotával.
     error_modelo_casilla_provenance_missing: Egy motor-eredmény mezőnek nincs definíciója
       a nyilvántartásban.
+    error_modelo_detail_row_wrong_modelo: A(z) {row_type} típusú részletsor a(z) {owning_modelo}
+      modellhez tartozik, de ez a számítás a(z) {work_unit_modelo} modellre vonatkozik.
     error_modelo_external_filing_import: Az importált külső bevallás nem menthető.
       Ellenőrizze a mező értékeit és az igazolás hivatkozást.
     error_modelo_filing_record_not_found: A kért benyújtási rekord nem található.
@@ -683,6 +685,9 @@ errors:
       Futtassa az `aeat config login NÉV` parancsot, és próbálja újra.
     locked_storage_lock_acquisition: A kizárólagos fájlzárat nem sikerült beszerezni
       az időkorláton belül. Egy másik folyamat tartja; várjon, és próbálja újra.
+    locked_storage_profile_custody_capsule_generation: A profil letéti kapszulája
+      megváltozott olvasás közben. Egy másik folyamat éppen közzéteszi vagy törli.
+      Próbálja meg újra a műveletet.
   prefix:
     auth: Hitelesítés.
     error: Hiba.
@@ -704,6 +709,7 @@ errors:
       egy szükséges hitelesítő adat.
     ledger_preflight: A főkönyvi előzetes ellenőrzés elutasította a modellfuttatást,
       mert az még nem nyújtható be.
+    locale_catalogue_capture_not_current: Ez a nyelvi katalógus rögzítés már nem érvényes.
     m145_communication_record_ambiguous: A Modelo 145 kommunikációs rekord azonosítójának
       előtagja több rekorddal egyezik.
     m145_communication_record_export: A Modelo 145 helyi kommunikációs rekordot nem
@@ -746,6 +752,8 @@ errors:
       hiányosak.
     modelo_calculate_text_input: A megadott --casilla felülírási érték nem érvényes
       egy szöveges casillához.
+    modelo_calculation_capture_not_current: A szamitasi revizio mar nem aktualis.
+      Olvassa be ujra a reviziot, es probalja meg ismet.
     modelo_calculation_revision_selector_ambiguous: A számítási revízió választó több
       revízióra illeszkedik; pontosítsa a választót.
     modelo_calculation_revision_selector_state: A kiválasztott számítási revízió nincs
@@ -764,6 +772,8 @@ errors:
     modelo_revision_pick: A modellrevízió kiválasztása érvénytelen.
     modelo_work_capture_not_current: A munkakivalasztas mar nem aktualis. Olvassa
       be ujra a munkacelt, es probalja meg ismet.
+    modelo_work_discard_approval_stale: A munkaegység az elvetés jóváhagyása után
+      megváltozott; tekintse át és hagyja jóvá újra.
     modelo_work_period_token: Érvénytelen modell időszak.
     modelo_work_registry_year_mismatch: A kiválasztott nyilvántartási revízió nem
       fedi le a kért benyújtási évet.
@@ -776,6 +786,8 @@ errors:
       feloldása előtt.
     modelo_work_selector_revision_conflict: A kiválasztott modell munkaegység másik
       revízióhoz tartozik.
+    modelo_workspace_manifest_capture_not_current: A mezőjegyzék olvasás közben megváltozott;
+      rögzítse újra.
     profile_capsule_archive: A profil archívumát nem sikerült írni vagy olvasni
     profile_capsule_source: A megadott forrás nem olvasható profilkapszula
     profile_import_collision: Az importált profil azonosítója ütközik egy meglévővel.
@@ -1076,6 +1088,8 @@ errors:
       számítási revízióval. Futtassa a aeat app modelo work calculate parancsot egy
       friss revízió létrehozásához.
     refused_workflow_resume: A korábbi munkafolyamat-futás nem folytatható.
+    registry_closure_capture_not_current: A regisztrációs lezárás megváltozott olvasás
+      közben; rögzítse újra.
     submission_preflight_auth_describe_failed: A hitelesítési szolgáltató nem tudta
       leírni magát ({cause_type}).
     submission_preflight_auth_not_ready: A(z) {kind} hitelesítési szolgáltató nem

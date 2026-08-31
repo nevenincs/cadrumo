@@ -25,13 +25,6 @@ from urllib.parse import urlsplit
 
 from pydantic import AnyHttpUrl
 
-from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
-from cadrumo.domain.calculations.registry.bindings_previous_filing import resolve_previous_filing_binding_values
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-
 from .....core import CasillaId, CasillaValueKind, ExportLayoutFormat, Modelo, ObservedHeaderFact, Period
 from .....core.config import Settings
 from .....core.external_constants import JSON_MIME_TYPE as _JSON_MIME_TYPE
@@ -39,7 +32,10 @@ from .....core.hashing import canonical_json_bytes, sha256_hex
 from .....core.i18n import tr
 from .....core.resources import bundled_path
 from .....core.time import now
+from .....domain.calculations.export_field_kind import CasillaFieldKind
 from .....domain.calculations.registry.authority import bundled_authority
+from .....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from .....domain.calculations.registry.bindings_previous_filing import resolve_previous_filing_binding_values
 from .....domain.calculations.registry.casilla_membership import casillas_by_id
 from .....domain.calculations.registry.errors import (
     RegistrySnapshotError,
@@ -60,6 +56,9 @@ from .....domain.calculations.registry.remote_state_guard import (
     remote_state_policy_from_cross_reference,
 )
 from .....domain.calculations.registry.runtime_graph import expression_casilla_refs
+from .....domain.calculations.registry.schema import RegistrySnapshot
+from .....domain.calculations.registry.schema_exports import ExportFieldDefinition
+from .....domain.calculations.registry.schema_surfaces import CasillaDefinition
 from .....domain.iva_compensation import (
     M303_COMPENSATION_AVAILABLE_CASILLA,
     M303_COMPENSATION_GENERADA_CASILLA,
@@ -563,7 +562,7 @@ def non_numeric_observed_casillas(
     is not numeric, or a numeric casilla whose token will not parse.
 
     Caller-opt-in, in the shape of
-    :func:`~adapters.outbound.google._calc_sheets_pull.verify_pull_coverage`: this is a query, not
+    :func:`~adapters.outbound.google.calc_sheets_pull.verify_pull_coverage`: this is a query, not
     a step in enrolment. It performs no side effects and can be called before or
     after
     :func:`registry_observation_from_filed_declaration`, so a caller with an

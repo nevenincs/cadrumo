@@ -8,33 +8,36 @@ from datetime import datetime, timedelta
 
 from pydantic import BaseModel, TypeAdapter
 
-from cadrumo.application.operations.persistence.journal import (
+from .frontend_contracts import OperationResponseControlRequestV1, OperationSubmissionReceiptV1
+from .interactions import OperationActorReference
+from .models import OperationId, OperationRequest
+from .observation import OperationObservationService
+from .persistence.financial_operand_custody import OperationFinancialOperandCustodyRepository
+from .persistence.journal import (
     OperationEventStream,
     OperationJournal,
     OperationLeaseRepository,
     OperationObservationReader,
     OperationSecureReferenceStore,
 )
-
-from .frontend_contracts import OperationResponseControlRequestV1, OperationSubmissionReceiptV1
-from .interactions import OperationActorReference
-from .models import OperationId, OperationRequest
-from .observation import OperationObservationService
 from .projection_services import (
     OperationCancellationService,
     OperationDetachService,
     OperationResponseAuthorityBroker,
     OperationResponseCapability,
     OperationResponseControlService,
+    OperationResultProjectionService,
     OperationReviewProjectionService,
     OperationWorkspaceRefreshTargetService,
-    _read_snapshot,
-    _UnavailableOperationSecureResponseAuthority,
-    _UnavailableSnapshot,
+    UnavailableOperationSecureResponseAuthority,
+    UnavailableSnapshot,
+    read_snapshot,
 )
 from .registry import OperationRegistry
 from .secret_submission import OperationSecretRequirement
 from .supervisor import OperationSupervisor
+
+_ACTOR_REFERENCE_ADAPTER: TypeAdapter[OperationActorReference] = TypeAdapter(OperationActorReference)
 
 
 @dataclass(frozen=True, slots=True)
@@ -53,15 +56,15 @@ class OperationSubmissionService:
         self.supervisor = supervisor
         self._authority_broker = authority_broker
 
-    async def submit(
+    async def submit[RequestPayloadT: BaseModel](
         self,
-        request: OperationRequest[BaseModel],
+        request: OperationRequest[RequestPayloadT],
         *,
         actor_ref: str,
         operation_id: OperationId | None = None,
     ) -> OperationSubmission:
         """Durably submit one typed registered request without starting it."""
-        validated_actor = TypeAdapter(OperationActorReference).validate_python(actor_ref)
+        validated_actor = _ACTOR_REFERENCE_ADAPTER.validate_python(actor_ref)
         submitted_id = await self.supervisor.submit(request, operation_id=operation_id)
         snapshot = await self.supervisor.inspect(submitted_id)
         receipt = OperationSubmissionReceiptV1(
@@ -89,6 +92,7 @@ class OperationComposedServices:
     submission: OperationSubmissionService
     observation: OperationObservationService
     review: OperationReviewProjectionService
+    result: OperationResultProjectionService
     refresh: OperationWorkspaceRefreshTargetService
     cancellation: OperationCancellationService
     detach: OperationDetachService
@@ -125,8 +129,16 @@ def compose_operation_services(
     lease_duration: timedelta,
     execution_timeout: timedelta,
     cleanup_timeout: timedelta,
+    financial_operand_custody: OperationFinancialOperandCustodyRepository | None = None,
 ) -> OperationComposedServices:
-    """Bind one immutable registry to real runtime adapters and safe services."""
+    """Bind one immutable registry to real runtime adapters and safe services.
+
+    ``financial_operand_custody`` is optional because only a registry holding a
+    definition that declares transient financial operands needs it. The
+    supervisor refuses to construct when such a definition is present without
+    it, so omitting it stays a refusal rather than a silently operand-less
+    supervisor.
+    """
     authority_broker = OperationResponseAuthorityBroker()
     supervisor = OperationSupervisor(
         registry=registry,
@@ -141,6 +153,7 @@ def compose_operation_services(
         execution_timeout=execution_timeout,
         cleanup_timeout=cleanup_timeout,
         response_authority_issuer=authority_broker,
+        financial_operand_custody=financial_operand_custody,
     )
     observation = OperationObservationService(reader=reader, registry=registry)
 
@@ -148,12 +161,12 @@ def compose_operation_services(
         request: OperationResponseControlRequestV1,
         capability: OperationResponseCapability,
     ) -> OperationResponseControlService:
-        snapshot = await _read_snapshot(reader, request.operation_id)
+        snapshot = await read_snapshot(reader, request.operation_id)
         pending = (
-            None if snapshot is None or isinstance(snapshot, _UnavailableSnapshot) else snapshot.pending_interaction
+            None if snapshot is None or isinstance(snapshot, UnavailableSnapshot) else snapshot.pending_interaction
         )
         authority = (
-            _UnavailableOperationSecureResponseAuthority()
+            UnavailableOperationSecureResponseAuthority()
             if pending is None
             else authority_broker.bind(request, pending, capability, clock=clock)
         )
@@ -172,6 +185,7 @@ def compose_operation_services(
         submission=OperationSubmissionService(supervisor, authority_broker),
         observation=observation,
         review=OperationReviewProjectionService(reader=reader, registry=registry, operands=operands, clock=clock),
+        result=OperationResultProjectionService(reader=reader, registry=registry, operands=operands),
         refresh=OperationWorkspaceRefreshTargetService(reader=reader, registry=registry),
         cancellation=OperationCancellationService(reader=reader, registry=registry, supervisor=supervisor),
         detach=OperationDetachService(reader=reader, registry=registry, supervisor=supervisor),

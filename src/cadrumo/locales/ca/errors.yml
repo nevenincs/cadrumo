@@ -280,6 +280,8 @@ errors:
       és compatible amb l'estat actual de la revisió de càlcul.
     error_modelo_casilla_provenance_missing: Una casella del resultat del motor no
       té definició al registre.
+    error_modelo_detail_row_wrong_modelo: La fila de detall de tipus {row_type} pertany
+      al model {owning_modelo}, però aquest càlcul correspon al model {work_unit_modelo}.
     error_modelo_external_filing_import: No s'ha pogut desar la declaració externa
       importada. Comprova els valors de les caselles i la referència d'evidència.
     error_modelo_filing_record_not_found: No s'ha trobat la declaració registrada
@@ -735,6 +737,9 @@ errors:
     locked_storage_lock_acquisition: No s'ha pogut obtenir el bloqueig exclusiu de
       fitxer dins del temps d'espera. Un altre procés el reté; espera i torna-ho a
       provar.
+    locked_storage_profile_custody_capsule_generation: La càpsula de custòdia del
+      perfil ha canviat mentre es llegia. Un altre procés l'està publicant o eliminant.
+      Torneu a provar l'operació.
   prefix:
     auth: Autenticació.
     error: Error.
@@ -757,6 +762,8 @@ errors:
       una credencial que necessita.
     ledger_preflight: La comprovació prèvia del llibre ha rebutjat l'execució del
       model perquè encara no es pot presentar.
+    locale_catalogue_capture_not_current: Aquesta captura del catàleg d'idiomes ja
+      no és vigent.
     m145_communication_record_ambiguous: El prefix de l'id de registre de comunicació
       del Model 145 coincideix amb diversos registres.
     m145_communication_record_export: El registre local de comunicació del Model 145
@@ -799,6 +806,8 @@ errors:
       estan incompletes.
     modelo_calculate_text_input: El valor de sobreescriptura de --casilla indicat
       no és vàlid per a una casella de text.
+    modelo_calculation_capture_not_current: La revisio de calcul ja no es actual.
+      Torneu a llegir la revisio i proveu-ho de nou.
     modelo_calculation_revision_selector_ambiguous: El selector de revisió de càlcul
       coincideix amb més d'una revisió; refineu el selector.
     modelo_calculation_revision_selector_state: La revisió de càlcul seleccionada
@@ -815,6 +824,8 @@ errors:
     modelo_revision_pick: No s'ha pogut seleccionar la revisió de càlcul indicada.
     modelo_work_capture_not_current: La seleccio de treball ja no es actual. Torneu
       a llegir l'objectiu de treball i proveu-ho de nou.
+    modelo_work_discard_approval_stale: La unitat de treball ha canviat després d'aprovar-se
+      el descart; reviseu-la i aproveu-la de nou.
     modelo_work_period_token: Període de model no vàlid.
     modelo_work_registry_year_mismatch: La revisió de registre seleccionada no cobreix
       l'exercici fiscal sol·licitat.
@@ -828,6 +839,8 @@ errors:
       una unitat de treball de modelo.
     modelo_work_selector_revision_conflict: La unitat de treball de modelo seleccionada
       pertany a una altra revisió.
+    modelo_workspace_manifest_capture_not_current: El manifest de camps ha canviat
+      mentre es llegia; torneu a capturar-lo.
     profile_capsule_archive: No s'ha pogut escriure o llegir l'arxiu de còpia del
       perfil
     profile_capsule_source: L'origen indicat no és una càpsula de perfil llegible
@@ -1147,6 +1160,8 @@ errors:
       no coincideix amb la revisió de càlcul. Executa `aeat app modelo work calculate`
       per generar una revisió nova.
     refused_workflow_resume: L'execució del flux de treball anterior no es pot reprendre.
+    registry_closure_capture_not_current: El tancament del registre ha canviat mentre
+      es llegia; torneu a capturar-lo.
     submission_preflight_auth_describe_failed: El proveïdor d'autenticació no s'ha
       pogut descriure ({cause_type}).
     submission_preflight_auth_not_ready: El proveïdor d'autenticació {kind} no està

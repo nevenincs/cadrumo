@@ -1,0 +1,646 @@
+##
+## Adjudication ledger for modelo-conditional branches OUTSIDE the registry package.
+##
+## The SET is derived mechanically by
+## ``dev.registry.analysis.modelo_branch_classification`` from the core Modelo
+## enum; only the classification and its prose are authored here. A branch the
+## derivation yields and this ledger does not name is a reconciliation failure.
+##
+## classification = "orchestration_routing"
+##     The branch selects a collaborator, code path, payload shape or surface.
+##     It encodes no rule the law fixes. Moving it into the registry would put
+##     orchestration into a data tree.
+## classification = "regulatory_treatment"
+##     The branch encodes a rule the law fixes for that modelo -- a rate,
+##     threshold, eligibility condition, ejercicio boundary or obligation. It is
+##     a registry embed wearing an ``if``, and it belongs in the authoring tree.
+##
+[[branch]]
+key = "src/cadrumo/adapters/outbound/aeat/sede/_declarations_observations.py::_with_derived_303_compensation_available_observation::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `observation.modelo != Modelo.M303 or any((casilla.casilla_id == target_id for casilla in observation.casillas))`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/aggregation/_counterpart.py::_counterpart_readiness_for_modelo::M349"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `modelo != Modelo.M349.value`: it decides only whether this code path runs for M349 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/aggregation/_inventory.py::resolve::M100"
+classification = "regulatory_treatment"
+justification = "REGULATORY: the guard is not only 'is this my modelo' -- it also pins filing_year and period.filing_year to the literal 2025, so the resolver silently yields nothing for every other ejercicio. Which ejercicio a source applies to is registry data (the revision's own validity window), not a Python literal. Migrate the year bound to the revision and keep only the modelo guard here."
+
+[[branch]]
+key = "src/cadrumo/application/aggregation/_modelo_bindings.py::_m130_retenciones_backend_inputs::M130"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `str(context.modelo) != Modelo.M130.value`: it decides only whether this code path runs for M130 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/aggregation/_modelo_bindings.py::resolve::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `str(context.modelo) == Modelo.M303.value`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/aggregation/_service.py::_aggregate_counterpart::M347"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `modelo == Modelo.M347.value`: it decides only whether this code path runs for M347 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/calculations/_bienes_inversion_regularizacion.py::_target_inputs::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `modelo == Modelo.M303.value`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/calculations/_bienes_inversion_regularizacion.py::_target_inputs::M390"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `modelo == Modelo.M390.value`: it decides only whether this code path runs for M390 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/calculations/_bienes_inversion_regularizacion.py::resolve::M303,M390"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `context.modelo not in {Modelo.M303.value, Modelo.M390.value}`: it decides only whether this code path runs for M303, M390 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/calculations/_bienes_inversion_regularizacion.py::resolve::M390"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `modelo == Modelo.M390.value`: it decides only whether this code path runs for M390 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/calculations/_binding_prefill.py::_gather_single_key_observation::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `requirement_modelo == Modelo.M303.value and iva_history_repository is not None`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/calculations/_binding_prefill.py::extract_modelo_303_local_iva_compensation_recurrence::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `requirement_modelo == Modelo.M303.value and iva_history_repository is not None`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/calculations/_cross_period_clean_state.py::_qualifies_for_first_year_fractional_suppression::M202"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `requirement.source_modelo != Modelo.M202.value`: it decides only whether this code path runs for M202 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/calculations/_iva_compensation_history.py::iva_compensation_annual_summary_from_filed_observation::M390"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `observation.modelo != Modelo.M390.value`: it decides only whether this code path runs for M390 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/calculations/_iva_wallet_reconciliation.py::reconcile_modelo_303_iva_compensation::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `str(getattr(snapshot.modelo, 'id', snapshot.modelo)) != Modelo.M303.value`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/calculations/_iva_wallet_reconciliation.py::resolve::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `str(getattr(snapshot.modelo, 'id', snapshot.modelo)) != Modelo.M303.value`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/calculations/_m303_carry_ingress.py::normalize_m303_carry_observation_envelope::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `str(envelope.observation.modelo) != Modelo.M303.value`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/calculations/_m303_carry_ingress.py::validate_normalized_m303_carry_observation_envelope::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `str(envelope.observation.modelo) != Modelo.M303.value`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/calculations/_m303_regimen_simplificado_annual_summary.py::_require_target_matches_snapshot::M390"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `target.bucket_id != context.bucket_id or target.modelo != Modelo.M390.value or target.filing_year != context.filing_year or (target.period != Period.from_year_and_code(context.filing_year, '0A')) or (target.revision_id != context.revision.id) or (self._registry_snapshot.revision.id != context.revision.id)`: it decides only whether this code path runs for M390 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/calculations/_prorrata_regularizacion.py::_modelo_303_target_inputs::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `modelo != Modelo.M303.value`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/calculations/_relation_prefill.py::relation_prefill_period_zero_default_binding_ids::M202"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `modelo != Modelo.M202.value`: it decides only whether this code path runs for M202 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/calculations/_relation_prefill.py::resolve_relations_from_local_store::M202"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `modelo != Modelo.M202.value`: it decides only whether this code path runs for M202 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/filing/_export.py::_projection_plan_for_layout::M200"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `draft.modelo == Modelo.M200.value`: it decides only whether this code path runs for M200 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/filing/_export.py::_projection_plan_for_layout::M296"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `draft.modelo == Modelo.M296.value`: it decides only whether this code path runs for M296 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/filing/_export.py::_projection_plan_for_layout::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `draft.modelo == Modelo.M303.value and producer_snapshot.elections.prior_domiciliation is not prior_domiciliation_election`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/filing/_export.py::_render_layout::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `draft.modelo == Modelo.M303.value and producer_snapshot.elections.prior_domiciliation is not prior_domiciliation_election`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/filing/_export_xml_dictionary.py::_xml_dictionary_rendered_value::M100"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `draft.modelo == Modelo.M100`: it decides only whether this code path runs for M100 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/filing/_export_xml_dictionary.py::render_xml_dictionary_layout::M100"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `draft.modelo == Modelo.M100`: it decides only whether this code path runs for M100 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/filing/_m303_export_applicability.py::_require_m303_producer_snapshot::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `producer_snapshot.modelo is not Modelo.M303`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/filing/_m303_export_applicability.py::_validate_snapshot_selection::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `producer_snapshot.modelo is not Modelo.M303`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/filing/_producer_snapshot.py::_validate_snapshot_model_profile::M111"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `snapshot.modelo is Modelo.M111`: it decides only whether this code path runs for M111 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/filing/_producer_snapshot.py::_validate_snapshot_model_profile::M202"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `snapshot.modelo is Modelo.M202`: it decides only whether this code path runs for M202 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/filing/_producer_snapshot.py::_validate_snapshot_model_profile::M222"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `snapshot.modelo is Modelo.M222`: it decides only whether this code path runs for M222 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/filing/_producer_snapshot.py::_validate_snapshot_model_profile::M296"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `snapshot.modelo is Modelo.M296`: it decides only whether this code path runs for M296 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/filing/_producer_snapshot.py::_validate_snapshot_model_profile::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `snapshot.modelo is not Modelo.M303 and snapshot.m303_filing_facts is not None`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/filing/_producer_snapshot.py::_validate_snapshot_model_profile::M353"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `snapshot.modelo is Modelo.M353`: it decides only whether this code path runs for M353 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/filing/_producer_snapshot.py::_validate_snapshot_model_profile::M390"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `snapshot.modelo is not Modelo.M390 and snapshot.m390_filing_facts is not None`: it decides only whether this code path runs for M390 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/filing/_projection.py::_validate_m303_projection_request::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `producer_snapshot.modelo != Modelo.M303 or registry_snapshot.modelo.id != Modelo.M303 or facts is None`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/filing/_record_field_renderer.py::_draft_period_code::M369"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `draft.modelo != Modelo.M369 or not draft.period.registry_token.startswith('EXT-')`: it decides only whether this code path runs for M369 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/filing/_record_field_renderer.py::_m369_period_binding_value::M369"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `draft.modelo != Modelo.M369 or not draft.period.registry_token.startswith('EXT-')`: it decides only whether this code path runs for M369 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/invoices/_source_resolver.py::_invoice_observation::M347"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `context.modelo == Modelo.M347.value`: it decides only whether this code path runs for M347 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/invoices/_source_resolver.py::_invoice_observation::M349"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `context.modelo != Modelo.M349.value`: it decides only whether this code path runs for M349 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/invoices/_source_resolver.py::_m349_declarante_summary_union::M349"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `context.modelo != Modelo.M349.value`: it decides only whether this code path runs for M349 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/invoices/_source_resolver.py::_m349_incoherent_verdict::M349"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `context.modelo != Modelo.M349.value`: it decides only whether this code path runs for M349 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/invoices/_source_resolver.py::_m349_operador_rows_from_observations::M349"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `context.modelo != Modelo.M349.value`: it decides only whether this code path runs for M349 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/live/filed_observation_persistence.py::_filed_observation_history_period_sort_key::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `not justificante_csvs or not observation.casillas or observation.modelo == Modelo.M303 or any((casilla.value_kind.value != 'numeric' for casilla in observation.casillas))`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/live/filed_observation_persistence.py::import_complete_filed_observation_baseline::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `not justificante_csvs or not observation.casillas or observation.modelo == Modelo.M303 or any((casilla.value_kind.value != 'numeric' for casilla in observation.casillas))`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/live/filed_observation_persistence.py::persist_filed_calculation_observation::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `not justificante_csvs or not observation.casillas or observation.modelo == Modelo.M303 or any((casilla.value_kind.value != 'numeric' for casilla in observation.casillas))`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/live/filed_observation_persistence.py::persist_iva_compensation_history_observations_strict::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `not justificante_csvs or not observation.casillas or observation.modelo == Modelo.M303 or any((casilla.value_kind.value != 'numeric' for casilla in observation.casillas))`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_amendment_actions.py::_load_amendment_baseline::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `work_unit.modelo == Modelo.M303.value and baseline_revision.filing_instance_evidence is None`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_amendment_actions.py::_m303_rectificativa_motive_is_applicable::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `work_unit.modelo == Modelo.M303.value and baseline_revision.filing_instance_evidence is None`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_art109_activity_income.py::derive_art109_activity_income_coverage_for_work_unit::M130"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `str(work_unit.modelo) != Modelo.M130.value`: it decides only whether this code path runs for M130 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_attribution_received_advisory.py::_attribution_received_omission_advisory_findings::M100"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `str(getattr(work_unit.modelo, 'value', work_unit.modelo)) != Modelo.M100.value`: it decides only whether this code path runs for M100 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_bienes_inversion_advisory.py::collect_bienes_inversion_regularizacion_diagnostics::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `modelo != Modelo.M303.value`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_calculate_input.py::calculate_modelo_work_revision::M210"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `work_unit.modelo == Modelo.M210`: it decides only whether this code path runs for M210 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_calculate_input.py::modelo_202_modality_for_work_unit::M202"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `str(work_unit.modelo) != Modelo.M202`: it decides only whether this code path runs for M202 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_calculation_actions.py::_m210_gross_source_mode::M210"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `str(work_unit.modelo) == Modelo.M210.value`: it decides only whether this code path runs for M210 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_calculation_modelo_adjustments.py::_detail_row_binding_values_for_calculation::M349"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `str(work_unit.modelo) != Modelo.M349.value`: it decides only whether this code path runs for M349 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_calculation_modelo_adjustments.py::_m131_objective_estimation_data_base_inputs::M131"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `str(work_unit.modelo) != Modelo.M131.value`: it decides only whether this code path runs for M131 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_calculation_modelo_adjustments.py::_m390_303_reconciliation_targets::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `relation.source_modelo != Modelo.M303.value`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_calculation_modelo_adjustments.py::_raise_if_m390_303_reconciliation_would_save_silent_zero::M390"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `str(work_unit.modelo) != Modelo.M390.value or work_unit.period.registry_token != _M390_ANNUAL_PERIOD_CODE`: it decides only whether this code path runs for M390 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_calculation_modelo_adjustments.py::_suppress_m349_row_field_template_outputs::M349"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `str(work_unit.modelo) != Modelo.M349.value`: it decides only whether this code path runs for M349 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_calculation_preparation.py::_raise_if_m200_ledger_requires_accounting_result_input::M200"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `str(work_unit.modelo) != Modelo.M200.value`: it decides only whether this code path runs for M200 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_export.py::_resolve_export_model_profile::M111"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `modelo is Modelo.M111`: it decides only whether this code path runs for M111 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_export.py::_resolve_export_model_profile::M202"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `modelo is Modelo.M202`: it decides only whether this code path runs for M202 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_export.py::_resolve_export_model_profile::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `modelo is Modelo.M303`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_export_amendment_evidence.py::_evidence::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `identity.kind is not CalculationRevisionAmendmentKind.RECTIFICATIVA or work_unit.modelo != Modelo.M303.value`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_filed_revision_observation.py::require_filing_result_disposition::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `work_unit.modelo == Modelo.M303.value and result_disposition is None`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_iva_wallet_gate.py::apply_iva_compensation_decision_binding::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `modelo != Modelo.M303`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_iva_wallet_gate.py::lazily_reconcile_local_iva_compensation_for_work_unit::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `modelo != Modelo.M303`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_iva_wallet_gate.py::load_persisted_iva_compensation_decision_for_work_unit::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `modelo != Modelo.M303`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_iva_wallet_gate.py::require_persisted_iva_compensation_decision_for_work_unit::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `modelo != Modelo.M303`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_iva_wallet_gate.py::require_persisted_iva_compensation_decision_matches_revision::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `modelo != Modelo.M303`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_iva_wallet_seed.py::_sealed_modelo_303_blocker_for_period::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `work_unit.modelo != Modelo.M303.value`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_m210_agrupacion_renta.py::m210_agrupacion_renta_verification_findings::M210"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `str(work_unit.modelo) != str(Modelo.M210) or work_unit.period.standard_code is not StandardPeriodCode.ANNUAL`: it decides only whether this code path runs for M210 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_m303_filing_evidence.py::validate_m303_filing_instance_evidence_for_revision::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `work_unit.modelo != Modelo.M303`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_m303_m349_reconcile.py::m303_m349_intracom_reconcile_findings::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `modelo == Modelo.M303.value`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_m303_m349_reconcile.py::m303_m349_intracom_reconcile_findings::M349"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `modelo == Modelo.M349.value`: it decides only whether this code path runs for M349 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_m303_regimen_simplificado_scope.py::resolve_m303_regimen_simplificado_scope::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `work_unit.modelo != Modelo.M303`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_m349_ledger_guard.py::raise_if_m349_intracom_ledger_rows_need_operator_rows::M349"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `str(work_unit.modelo) != Modelo.M349.value`: it decides only whether this code path runs for M349 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_m720_redeclaration_gate.py::modelo_720_redeclaration_findings::M720"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `work_unit.modelo != Modelo.M720`: it decides only whether this code path runs for M720 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_minimo_descendientes_advisory.py::_guarderia_descendants::M100"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `modelo != Modelo.M100.value`: it decides only whether this code path runs for M100 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_minimo_descendientes_advisory.py::collect_descendientes_count_desync_diagnostics::M100"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `modelo != Modelo.M100.value`: it decides only whether this code path runs for M100 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_minimo_descendientes_advisory.py::collect_guarderia_spend_shape_diagnostics::M100"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `modelo != Modelo.M100.value`: it decides only whether this code path runs for M100 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_minimo_descendientes_advisory.py::collect_minimo_descendientes_dependencia_diagnostics::M100"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `modelo != Modelo.M100.value`: it decides only whether this code path runs for M100 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_minimo_descendientes_advisory.py::collect_minimo_descendientes_entry_date_missing_diagnostics::M100"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `modelo != Modelo.M100.value`: it decides only whether this code path runs for M100 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_minimo_descendientes_advisory.py::collect_minimo_descendientes_prorrata_inferred_diagnostics::M100"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `modelo != Modelo.M100.value`: it decides only whether this code path runs for M100 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_minimo_descendientes_advisory.py::collect_minimo_descendientes_rentas_undeclared_diagnostics::M100"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `modelo != Modelo.M100.value`: it decides only whether this code path runs for M100 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_minimo_descendientes_advisory.py::collect_minimo_descendientes_undeclared_diagnostics::M100"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `modelo != Modelo.M100.value`: it decides only whether this code path runs for M100 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_prior_domiciliation.py::_require_rectificativa_baseline_link::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `work_unit.modelo != Modelo.M303.value`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_prior_payment_advisory.py::collect_prior_payment_minoracion_not_captured_diagnostics::M130"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `modelo != Modelo.M130.value`: it decides only whether this code path runs for M130 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_prior_payment_advisory.py::collect_prior_payment_not_deducted_diagnostics::M130"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `modelo != Modelo.M130.value`: it decides only whether this code path runs for M130 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_profile_readiness_gate.py::_modelo_work_baseline_paths::M100"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `modelo.strip() != Modelo.M100.value or not income_categories or declares_economic_activity`: it decides only whether this code path runs for M100 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_prorrata_regularizacion_advisory.py::collect_prorrata_regularizacion_diagnostics::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `modelo != Modelo.M303.value`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_required_binding_gate.py::missing_modelo_required_binding_ids::M202"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `str(work_unit.modelo) != Modelo.M202.value`: it decides only whether this code path runs for M202 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_required_binding_gate.py::require_persisted_revision_required_bindings_resolved::M202"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `str(work_unit.modelo) != Modelo.M202.value`: it decides only whether this code path runs for M202 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_required_binding_gate.py::resolved_required_profile_binding_values::M202"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `str(work_unit.modelo) != Modelo.M202.value`: it decides only whether this code path runs for M202 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_result_disposition_resolution.py::_apply_modelo_303_refund_election::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `work_unit.modelo != Modelo.M303.value`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_result_disposition_resolution.py::_apply_payment_election::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `work_unit.modelo != Modelo.M303.value`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_revision_persistence.py::_prorrata_settlement_values::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `work_unit.modelo == Modelo.M303.value`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_revision_persistence.py::_require_filing_instance_evidence_for_work_unit::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `work_unit.modelo == Modelo.M303.value`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_revision_replay_inputs.py::_m232_detail_row_replay_inputs::M232"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `str(work_unit.modelo) != Modelo.M232.value`: it decides only whether this code path runs for M232 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_revision_replay_inputs.py::_m349_detail_row_replay_inputs::M349"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `str(work_unit.modelo) != Modelo.M349.value`: it decides only whether this code path runs for M349 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_verification_actions.py::_detail_row_template_casilla_is_satisfied::M349"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `str(work_unit.modelo) != Modelo.M349.value or not casilla.section`: it decides only whether this code path runs for M349 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_verification_actions.py::_m369_unresolved_oss_source_finding::M369"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `str(work_unit.modelo) != Modelo.M369.value`: it decides only whether this code path runs for M369 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_verification_cross_period.py::_iva_wallet_decision_covers_cross_period_dependency::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `verdict.target_modelo != Modelo.M303 or requirement.source_modelo != Modelo.M303 or (not set(requirement.origin_ids) & {'modelo-303-compensacion-pendiente-anteriores', 'modelo-303-rel-self-compensacion-anteriores'})`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_verification_cross_period.py::_modelo_202_incomplete_modality_finding::M202"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `str(work_unit.modelo) != Modelo.M202.value`: it decides only whether this code path runs for M202 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_work_create_policy.py::modelo_work_create_refusal_locale_key::M210"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `modelo_code == Modelo.M210 and load_settings().cadrumo_m210_engine_live`: it decides only whether this code path runs for M210 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/_work_plazo.py::calculated_m210_plazo_resolution::M210"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `work_unit.modelo != Modelo.M210`: it decides only whether this code path runs for M210 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/external_import_actions.py::import_external_filing_evidence::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `source.modelo == Modelo.M303.value`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/modelo/external_import_actions.py::import_external_filing_source::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `source.modelo == Modelo.M303.value`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/overview/_next_actions.py::_start_work_unit_step::M210"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `Modelo.M210.value in report.unsupported_work_create_modelos`: it decides only whether this code path runs for M210 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/registry/source_connectivity.py::_require_kind_payload::M036"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `isinstance(self.period, CensoModeloEventKind) and self.modelo_id != Modelo.M036`: it decides only whether this code path runs for M036 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/application/user_profile/preflight.py::report::M111"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `modelo.strip() == Modelo.M111.value`: it decides only whether this code path runs for M111 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/domain/deadlines/_plazo.py::resolve_filing_window::M210"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `tipo_renta_code is not None and (modelo != Modelo.M210 or tipo_renta_code not in M210_TIPO_RENTA_CODE_PROJECTION)`: it decides only whether this code path runs for M210 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/domain/filing/_validator.py::_required_casilla_satisfied_by_row_bindings::M349"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `str(draft.modelo) != Modelo.M349.value`: it decides only whether this code path runs for M349 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/domain/modelos/_calculation_revision_aggregate.py::_require_registry_snapshot::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `work_unit.modelo != Modelo.M303.value`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/domain/modelos/_calculation_revision_aggregate.py::validate_calculation_revision_aggregate::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `work_unit.modelo != Modelo.M303.value`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/domain/renta/_first_slice_routing_integrity.py::check_first_slice_routing::M100"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `modelo_id != Modelo.M100`: it decides only whether this code path runs for M100 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/domain/renta/_retenciones_routing_integrity.py::check_m130_retenciones_output_casilla::M130"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `modelo_id != Modelo.M130`: it decides only whether this code path runs for M130 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/entrypoints/cli/_m303_filing_evidence_input.py::m303_filing_instance_evidence_from_cli::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `modelo != Modelo.M303.value`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py::_clave_breakdown::M190"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `command.modelo == Modelo.M190.value`: it decides only whether this code path runs for M190 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py::_persist_cli_owned_observations::M190"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `command.modelo == Modelo.M190.value`: it decides only whether this code path runs for M190 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/entrypoints/cli/_modelo_amend_wizard_cli.py::_m303_motive_page::M303"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `modelo != Modelo.M303`: it decides only whether this code path runs for M303 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/entrypoints/cli/_modelo_cli_support.py::_validate_m349_detail_rows_for_work_unit::M349"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `str(unit.modelo) != Modelo.M349.value`: it decides only whether this code path runs for M349 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."
+
+[[branch]]
+key = "src/cadrumo/entrypoints/cli/_modelo_work_lifecycle_cli.py::_modelo_100_obligation_advisory_output::M100"
+classification = "orchestration_routing"
+justification = "Applicability/dispatch guard on `unit.modelo != Modelo.M100`: it decides only whether this code path runs for M100 and, when it does, which collaborator or payload shape is used. It carries no rate, threshold, ejercicio bound or eligibility condition the law fixes; the regulatory content it routes to is resolved from the registry revision."

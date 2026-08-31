@@ -48,7 +48,7 @@ class RegistryFailureClassification:
     facts: Mapping[str, str | int | bool]
 
 
-class RegistryError(TerminalPreconditionErrorMixin, CadrumoError, ValueError):
+class RegistryError(TerminalPreconditionErrorMixin[object], CadrumoError, ValueError):
     """Base error retaining domain facts for a higher-layer action projection."""
 
     def __init__(
@@ -378,6 +378,7 @@ class NoRevisionForPeriodError(RegistrySnapshotError):
         filing_year: int,
         period: str,
         revision_id: RevisionId | None,
+        available_revision_ids: Iterable[str],
     ) -> None:
         """Construct the no-revision-for-period error.
 
@@ -386,19 +387,33 @@ class NoRevisionForPeriodError(RegistrySnapshotError):
             filing_year: The AEAT filing year used to narrow revisions.
             period: The period token that found no covering revision.
             revision_id: The optional explicit revision-id filter, if any.
+            available_revision_ids: Every revision the modelo declares, stored
+                sorted on ``available_revision_ids``. REQUIRED rather than
+                defaulted: a refusal that cannot say what IS available reads as
+                a malfunction, and the operator's real question here is which
+                filing years exist at all. Both raisers hold the modelo's
+                revision collection already, so there is no case where it is
+                genuinely unknown -- and a default would let a future raiser
+                silently ship the uninformative form.
         """
+        available = tuple(sorted(available_revision_ids))
         self.modelo_id: str = modelo_id
         self.filing_year: int = filing_year
         self.period: str = period
         self.revision_id: RevisionId | None = revision_id
+        self.available_revision_ids: tuple[str, ...] = available
+        detail = f"modelo {modelo_id}: no revision for year={filing_year!r} period={period!r} revision={revision_id!r}"
+        if available:
+            detail = f"{detail}; modelo {modelo_id} declares: {', '.join(available)}"
         super().__init__(
-            f"modelo {modelo_id}: no revision for year={filing_year!r} period={period!r} revision={revision_id!r}",
+            detail,
             translated_message="errors.snapshot.no_revision_for_period",
             context={
                 "modelo_id": modelo_id,
                 "filing_year": filing_year,
                 "period": period,
                 "revision_id": revision_id if revision_id is not None else "",
+                "available_revision_ids": _csv(available),
             },
         )
 

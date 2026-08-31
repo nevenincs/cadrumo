@@ -13,15 +13,9 @@ from typing import TYPE_CHECKING
 
 from pydantic import TypeAdapter, ValidationError
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority as _bundled_authority
-from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
-from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
-
-from ...adapters.outbound.google import (
-    GoogleAuthError,
-    relation_edit_payload,
-    resolve_active_profile,
-)
+from ...adapters.outbound.google.active_profile import resolve_active_profile
+from ...adapters.outbound.google.calc_sheets_pull import relation_edit_payload
+from ...adapters.outbound.google.errors import GoogleAuthError
 from ...adapters.outbound.storage import (
     OutboundStorageError,
     build_google_credentials,
@@ -30,6 +24,9 @@ from ...adapters.outbound.storage import (
 from ...core import CasillaId, Period, validated_casilla_id
 from ...core.config import load_settings
 from ...core.decimal import coerce_decimal
+from ...domain.calculations.registry.authority import bundled_authority as _bundled_authority
+from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
+from ...domain.calculations.registry.ids import BindingId, RelationId
 from ._common import emit_envelope
 from ._config._google_errors import _google_refusal
 from ._modelo_spreadsheet_payloads import (
@@ -46,13 +43,9 @@ from .errors import CliRefusedBoundaryError
 if TYPE_CHECKING:
     import typer
 
-    from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-
-    from ...adapters.outbound.google import (
-        PullResult,
-        RowSetEdit,
-    )
-    from ...application.export import GoogleSheetsExportOperationResult
+    from ...adapters.outbound.google.calc_sheets_pull import PullResult, RowSetEdit
+    from ...application.export.google_operation import GoogleSheetsExportOperationResult
+    from ...domain.calculations.registry.schema import RegistrySnapshot
 
 
 def resolve_credentials_and_root(profile: str) -> tuple[object, str]:
@@ -111,7 +104,7 @@ def _pull_operator_edits_for_command(
     same :class:`GoogleAuthError` / :class:`OutboundStorageError` boundaries with
     identical translated messages, so the resolution is one implementation.
     """
-    from ...adapters.outbound.google import pull_operator_edits
+    from ...adapters.outbound.google.calc_sheets_pull import pull_operator_edits
 
     try:
         active = resolve_active_profile()
@@ -212,7 +205,7 @@ def execute_google_sheets_export(
     """Adapt CLI input to the public application export contract once."""
     from uuid import UUID
 
-    from ...application.export import (
+    from ...application.export.google_operation import (
         GoogleSheetsExportCapabilityDisabledError,
         GoogleSheetsExportOperationRequest,
         GoogleSheetsExportRootFolderRequiredError,
@@ -254,10 +247,7 @@ def modelo_spreadsheet_verify(
     """Run a three-way parity check across AEAT oracle, local Decimal runtime, and Sheets."""
     from decimal import Decimal
 
-    from ...application.storage.calc_sheets import (
-        OperatorInputScenario,
-        verify_modelo_parity,
-    )
+    from ...application.storage.calc_sheets.parity_harness import OperatorInputScenario, verify_modelo_parity
     from ...application.user_profile.capabilities import resolve_active_capability
     from ...core import ServiceCapability
 
@@ -506,7 +496,7 @@ def modelo_spreadsheet_calculate(
     spreadsheet_id: str,
 ) -> None:
     """Compute casilla values from a workbook's operator edits; persist nothing."""
-    from ...adapters.outbound.google import compute_from_pull
+    from ...adapters.outbound.google.calc_sheets_pull import compute_from_pull
 
     active, snapshot, result = _pull_operator_edits_for_command(
         modelo=modelo,
@@ -583,7 +573,7 @@ def _assemble_pull_observations(
     """Per-grouping assemble-observations fan-out for the pull command."""
     if not enabled:
         return [], 0
-    from ...application.calculations import assemble_observations_for_snapshot
+    from ...application.calculations.row_set_assembly import assemble_observations_for_snapshot
 
     groupings: list[dict[str, object]] = []
     total = 0

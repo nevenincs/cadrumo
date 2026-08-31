@@ -15,13 +15,12 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
-
 from ....adapters.outbound.google import RowSetCellEdit
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.errors import RegistryValidationError
+from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
 from .. import assemble_observations_for_snapshot
-from .._row_set_assembly import (
+from ..row_set_assembly import (
     assemble_atribucion_observations,
     assemble_donativo_observations,
     assemble_foreign_asset_observations,
@@ -313,7 +312,7 @@ def test_assemble_donativo_groups_two_donors_into_two_observations() -> None:
 
 
 def test_assemble_observations_for_grouping_dispatches_per_donativo_donor() -> None:
-    from cadrumo.domain.calculations.registry.donativo_bindings import DonativoDonorObservation
+    from ....domain.calculations.registry.donativo_bindings import DonativoDonorObservation
 
     revision = _modelo("182", "2025")
     cells = (
@@ -383,7 +382,7 @@ def test_assemble_returns_empty_for_empty_cells() -> None:
 
 
 def test_assemble_observations_for_grouping_dispatches_per_perceptor_clave() -> None:
-    from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
+    from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
 
     revision = _modelo("190", "2025-y-siguientes")
     cells = (

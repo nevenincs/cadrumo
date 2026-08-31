@@ -1,0 +1,15 @@
+{
+  "corrections": [
+    {
+      "kind": "range_start",
+      "sheet": "Tipo 2 - Registro De Socios O Partícipes",
+      "declared_start": 104,
+      "corrected_start": 102,
+      "reason": "The 2013 orden prints '104-500 BLANCOS', leaving 102-103 described by no field: the record runs 97-101 PORCENTAJE DE PARTICIPACION (subdivided 97-99 ENTERO, 100-101 DECIMAL) and then jumps to 104. Both later editions of the SAME orden print '102-500 BLANCOS', and the three editions are otherwise identical across the surrounding rows (95-96 DIA, 97-101, 97-99, 100-101, 108-120 NUMERO IDENTIFICATIVO). No edition describes a field at 102-103, so the span is filler in every reading and only the original mis-declares where filler begins.",
+      "editions_read": [
+        "01-165-diseno-de-registro-actualizado-en-2023.pdf",
+        "03-165-orden-hap-2455-2013-actualizado-por-orden-hfp-1822-2016.pdf"
+      ]
+    }
+  ]
+}

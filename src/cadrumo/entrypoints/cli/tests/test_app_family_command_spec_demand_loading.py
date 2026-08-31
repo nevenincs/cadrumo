@@ -14,7 +14,6 @@ _APP_FAMILIES = (
     "diagnostics",
     "ledger",
     "live",
-    "maintenance",
     "modelo",
     "overview",
     "quickfile",

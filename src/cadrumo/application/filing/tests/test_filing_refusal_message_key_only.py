@@ -76,6 +76,7 @@ _SWEPT_MODULES: tuple[str, ...] = (
     "__init__.py",
     "_calculate.py",
     "_complementaria.py",
+    "_draft_construction.py",
     "_export_parity.py",
     "_import.py",
     "_m303_exonerado_390.py",
@@ -119,7 +120,7 @@ _UNSWEPT_MODULES: tuple[str, ...] = tuple(_UNSWEPT_MODULE_RATIONALES)
 #: resolve to the one existing registered application terminal carrier; adding
 #: an undeclared exception type would bypass the registered error taxonomy.
 _OPERATOR_REACHABLE_REFUSAL_ALIASES: dict[str, str] = {
-    "__init__.py": "_ModeloBuilderError",
+    "_draft_construction.py": "_ModeloBuilderError",
     "_complementaria.py": "ModeloBuilderError",
     "_export_parity.py": "FilingExportError",
     "_import.py": "ModeloImportError",
@@ -326,7 +327,7 @@ def test_terminal_application_refusal_preserves_the_established_domain_catch_fam
 
 
 def test_decimal_input_refusal_renders_as_its_key_and_terminal_condition() -> None:
-    from .. import _decimal_input
+    from .._draft_construction import _decimal_input
 
     with pytest.raises(ModeloApplicationError) as excinfo:
         _decimal_input("iva.base", object())
@@ -337,7 +338,7 @@ def test_decimal_input_refusal_renders_as_its_key_and_terminal_condition() -> No
 
 
 def test_binding_row_key_refusal_renders_as_its_key() -> None:
-    from .. import _binding_row_index
+    from .._draft_construction import _binding_row_index
 
     with pytest.raises(ModeloApplicationError) as excinfo:
         _binding_row_index("iva.rows", 0)
@@ -347,7 +348,7 @@ def test_binding_row_key_refusal_renders_as_its_key() -> None:
 
 
 def test_boolean_input_refusal_renders_as_its_key() -> None:
-    from .. import _boolean_input
+    from .._draft_construction import _boolean_input
 
     with pytest.raises(ModeloApplicationError) as excinfo:
         _boolean_input("iva.flag", Decimal("1"))

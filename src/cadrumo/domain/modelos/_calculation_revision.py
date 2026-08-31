@@ -59,10 +59,6 @@ from pydantic import (
     model_validator,
 )
 
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation
-from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
-from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
-
 from ...core import (
     M210_TIPO_RENTA_CODE_PROJECTION,
     STRICT_FROZEN_CONFIG,
@@ -75,6 +71,9 @@ from ...core.hashing import content_hash_hex
 from ...core.identity import CalculationRevisionId, SnapshotId, WorkUnitId
 from ...core.time import validate_utc_aware
 from ..calculations import DirectRowMaterializationProvenance, RowBindingKey, RowCasillaKey, RowSourceIdentity
+from ..calculations.registry.bindings import CasillaObservation
+from ..calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
+from ..calculations.registry.ids import BindingId, RelationId
 from ..identifiers import canonical_decimal_string as _canonical_decimal
 from ._calculation_revision_amendment import (
     CalculationRevisionAmendmentIdentity,
@@ -120,6 +119,49 @@ class CalculationRevisionState(StrEnum):
     DESCARTADO = "descartado"
 
 
+SEALED_REVISION_STATES: frozenset[CalculationRevisionState] = frozenset(
+    {
+        CalculationRevisionState.VERIFICADO_COMPLETO,
+        CalculationRevisionState.PRESENTADO,
+        CalculationRevisionState.PRESENTADO_SUPERSEDIDO,
+    },
+)
+"""States in which a revision is no longer a mutable draft, because something
+was verified or filed. :attr:`CalculationRevisionState.BORRADOR` and
+:attr:`CalculationRevisionState.DESCARTADO` are excluded.
+:attr:`CalculationRevisionState.PRESENTADO_SUPERSEDIDO` IS included -- a
+superseded filing still occurred.
+
+This is NOT the same as the narrower "currently authoritative" set, which
+additionally excludes :attr:`CalculationRevisionState.PRESENTADO_SUPERSEDIDO`."""
+
+
+CURRENT_SEALED_REVISION_STATES: frozenset[CalculationRevisionState] = frozenset(
+    {
+        CalculationRevisionState.VERIFICADO_COMPLETO,
+        CalculationRevisionState.PRESENTADO,
+    },
+)
+"""A revision an operator-facing action may select as the CURRENT result --
+sealed AND not superseded.
+
+This is :data:`SEALED_REVISION_STATES` minus
+:attr:`CalculationRevisionState.PRESENTADO_SUPERSEDIDO`. The two must never be
+substituted for one another: this narrower set is for surfaces that hand a
+revision to an operator or a third party as the current state of a filing,
+while the broader :data:`SEALED_REVISION_STATES` remains correct for surfaces
+that need every sealed revision including superseded ones.
+
+The operations replay path (``application.modelo.operation_definitions``'s
+export operation) deliberately uses the broader :data:`SEALED_REVISION_STATES`
+instead of this set, because a journalled export replay must reproduce its
+own history even after the revision it names has been superseded. This
+narrower set exists for the operator-facing surfaces that must not do that --
+as one of them puts it, "a superseded revision is stale and must not be
+handed to an accountant as current" (see
+:mod:`application.modelo._review_package`)."""
+
+
 ModeloActorLabel = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=64),
@@ -160,6 +202,14 @@ def _canonical_detail_rows(rows: Sequence[ModeloDetailRow]) -> list[dict[str, ob
     Rows are sorted by (row_type, nif-like) so insertion order does not affect
     the revision id — operators can supply rows in any order. The nif-like field
     varies by row type: nif (M184/M232/M347) or nif_comunitario (M349).
+
+    Occurrence number established as presentation-only (S292): every
+    row-producer resolver these detail rows correspond to sorts by an
+    equivalent content key before assigning fichero occurrence numbers, so
+    two supply orders render identical bytes, not merely the same id here.
+    See :class:`~cadrumo.application.modelo._edit_models.
+    ModeloEditDetailRowIntentKind` for why ``MOVE_ROW`` has no addressable
+    effect for this row family.
     """
 
     def _row_payload(row: ModeloDetailRow) -> dict[str, object]:
@@ -220,6 +270,30 @@ def _canonical_row_binding_values(
         if rows:
             canonical[binding_id] = dict(sorted(rows.items(), key=lambda item: int(item[0])))
     return dict(sorted(canonical.items()))
+
+
+def _string_keyed_context(context: object) -> Mapping[str, object] | None:
+    """Narrow a pydantic ``ValidationInfo``/serializer ``context`` to a string-keyed mapping.
+
+    Every caller here reads the context by a literal string marker key
+    (``"secure_calculation_revision"``); a context that is not a mapping at
+    all carries none of those markers and is treated the same as absent.
+    """
+    if not isinstance(context, Mapping):
+        return None
+    return TypeAdapter(Mapping[str, object]).validate_python(context)
+
+
+def _empty_row_source_identities() -> dict[RowBindingKey, RowSourceIdentity]:
+    return {}
+
+
+def _empty_row_casilla_values() -> dict[RowCasillaKey, Decimal]:
+    return {}
+
+
+def _empty_row_casilla_provenance() -> dict[RowCasillaKey, DirectRowMaterializationProvenance]:
+    return {}
 
 
 def _canonical_row_source_identities(
@@ -289,6 +363,24 @@ def _base_revision_id_payload(
         "outputs": _outputs_for_hash_from_mapping(casilla_values),
         "source_transaction_ids": tuple(sorted(item.strip() for item in source_transaction_ids)),
     }
+
+
+def _cleared_casillas_revision_id_payload(
+    cleared_casilla_ids: Sequence[CasillaId],
+) -> dict[str, object]:
+    """Build the optional explicit-clear payload key.
+
+    An explicitly cleared casilla participates in identity as its own axis so
+    that clearing a previously declared value is structurally distinguishable
+    from a casilla that was simply never supplied: both are absent from
+    ``input_values_by_casilla_id``, but only the cleared one appears here.
+    """
+    canonical_cleared = tuple(
+        sorted(_validated_casilla_id(item, surface="cleared_casilla_ids") for item in cleared_casilla_ids)
+    )
+    if canonical_cleared:
+        return {"cleared_casilla_ids": canonical_cleared}
+    return {}
 
 
 def _m210_revision_id_payload(
@@ -365,6 +457,7 @@ def _source_provenance_revision_id_payload(
                 ref.source_ref,
                 ref.parent_source_ref or "",
                 ref.fingerprint or "",
+                tuple(sorted(ref.source_casilla_ids)),
                 ref.dependency_treatment,
             )
             for ref in source_provenance
@@ -414,6 +507,7 @@ class CalculationRevisionIdentityInputs(TypedDict):
     filing_instance_evidence: FilingInstanceEvidence | None
     m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None
     amendment_identity: CalculationRevisionAmendmentIdentity | None
+    cleared_casilla_ids: Sequence[CasillaId]
 
 
 def calculation_revision_identity_inputs(
@@ -438,6 +532,7 @@ def calculation_revision_identity_inputs(
     filing_instance_evidence: FilingInstanceEvidence | None,
     m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None = None,
     amendment_identity: CalculationRevisionAmendmentIdentity | None = None,
+    cleared_casilla_ids: Sequence[CasillaId] = (),
 ) -> CalculationRevisionIdentityInputs:
     """Build the one complete target-id-free calculation-revision identity input.
 
@@ -467,6 +562,7 @@ def calculation_revision_identity_inputs(
         "filing_instance_evidence": filing_instance_evidence,
         "m303_regimen_simplificado_annual_summary_handoff": (m303_regimen_simplificado_annual_summary_handoff),
         "amendment_identity": amendment_identity,
+        "cleared_casilla_ids": cleared_casilla_ids,
     }
 
 
@@ -492,6 +588,7 @@ def derive_calculation_revision_id(
     filing_instance_evidence: FilingInstanceEvidence | None,
     m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None = None,
     amendment_identity: CalculationRevisionAmendmentIdentity | None = None,
+    cleared_casilla_ids: Sequence[CasillaId] = (),
 ) -> str:
     """Return the deterministic SHA-256 id for a calculation attempt."""
     return _derive_calculation_revision_id_from_identity_inputs(
@@ -516,6 +613,7 @@ def derive_calculation_revision_id(
             filing_instance_evidence=filing_instance_evidence,
             m303_regimen_simplificado_annual_summary_handoff=(m303_regimen_simplificado_annual_summary_handoff),
             amendment_identity=amendment_identity,
+            cleared_casilla_ids=cleared_casilla_ids,
         ),
     )
 
@@ -568,6 +666,7 @@ def _derive_calculation_revision_id_from_identity_inputs(
         "m303_regimen_simplificado_annual_summary_handoff"
     ]
     amendment_identity = identity_inputs["amendment_identity"]
+    cleared_casilla_ids = identity_inputs["cleared_casilla_ids"]
     payload: dict[str, object] = _base_revision_id_payload(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id=input_values_by_casilla_id,
@@ -619,6 +718,7 @@ def _derive_calculation_revision_id_from_identity_inputs(
     )
     if amendment_identity is not None:
         payload["amendment_identity"] = amendment_identity.model_dump(mode="json")
+    payload.update(_cleared_casillas_revision_id_payload(cleared_casilla_ids))
     return content_hash_hex(payload)
 
 
@@ -684,6 +784,17 @@ class CalculationSourceRef(BaseModel):
     revision; duplicating them here would fragment the grounding across two
     surfaces.
 
+    S290: ``source_casilla_ids`` is NOT grounding and the rationale above does
+    not extend to it. It is a subject IDENTITY -- which casilla(s), if any,
+    this source object's resolution feeds -- and nothing else on the revision
+    carries it for the general (non-row-materialized) case; dropping it here
+    was an omission the application-side
+    :class:`~cadrumo.application.aggregation.CalculationSourceProvenance` did
+    not itself make (it already carries the field). An empty tuple is honest
+    when the originating resolver call site did not associate this row with a
+    casilla — it is not fabricated as a claim of "no subject", only carried as
+    "not linked at resolution time".
+
     Attributes:
         resolver_id: Exact canonical resolver identity that produced this row.
         resolved_binding_source: Canonical binding source owned by the resolver.
@@ -697,6 +808,10 @@ class CalculationSourceRef(BaseModel):
         fingerprint: Data-dependent digest of the contributing source object when
             the resolver produced one; ``None`` when the resolver emits a
             reference without a content digest.
+        source_casilla_ids: Casilla identities this source object's resolution
+            feeds, when the originating resolver associated one; empty when it
+            did not. Carried straight from
+            :attr:`~cadrumo.application.aggregation.CalculationSourceProvenance.source_casilla_ids`.
         dependency_treatment: The registry's declared dependency treatment for
             this carry, empty when the revision declares none. Unlike
             ``legal_refs`` / ``source_refs`` this carries no grounding duplicated
@@ -718,6 +833,7 @@ class CalculationSourceRef(BaseModel):
     source_ref: str = Field(min_length=1, max_length=256)
     parent_source_ref: str | None = Field(min_length=1, max_length=256)
     fingerprint: str | None = Field(default=None, min_length=1, max_length=256)
+    source_casilla_ids: tuple[CasillaId, ...] = ()
     dependency_treatment: str = ""
 
     @model_validator(mode="after")
@@ -979,6 +1095,10 @@ class CalculationRevision(BaseModel):
             It remains distinct from the conceptual ``tipo_renta`` token used
             by the formula rate path, so an audit can distinguish official
             codes that share one rate concept.
+        cleared_casilla_ids: Casillas the caller explicitly withdrew a
+            previously declared MANUAL value from. Structurally distinct
+            from a casilla that was simply never supplied, even though
+            both are absent from ``input_values_by_casilla_id``.
         casilla_values: Mapping of computed casilla values (decimal
             output). The values that would be exported to AEAT if
             this revision were filed.
@@ -1014,12 +1134,12 @@ class CalculationRevision(BaseModel):
     binding_overrides: Mapping[BindingId, str] = Field(default_factory=dict)
     row_binding_values: Mapping[BindingId, Mapping[str, str]] = Field(default_factory=dict)
     row_source_identities: Mapping[RowBindingKey, RowSourceIdentity] = Field(
-        default_factory=dict,
+        default_factory=_empty_row_source_identities,
         repr=False,
     )
-    row_casilla_values: Mapping[RowCasillaKey, Decimal] = Field(default_factory=dict, repr=False)
+    row_casilla_values: Mapping[RowCasillaKey, Decimal] = Field(default_factory=_empty_row_casilla_values, repr=False)
     row_casilla_provenance: Mapping[RowCasillaKey, DirectRowMaterializationProvenance] = Field(
-        default_factory=dict,
+        default_factory=_empty_row_casilla_provenance,
         repr=False,
     )
     relation_overrides: Mapping[RelationId, str] = Field(default_factory=dict)
@@ -1028,6 +1148,13 @@ class CalculationRevision(BaseModel):
     m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None
     borrador_snapshot_id: SnapshotId | None = None
     bindings_sourced_from_borrador: tuple[BindingId, ...] = Field(default_factory=tuple)
+    # Casillas the caller explicitly withdrew a previously declared MANUAL value
+    # from. Kept as its own identity axis, separate from
+    # ``input_values_by_casilla_id``, so an explicit clear is structurally
+    # distinguishable from a casilla that was simply never supplied: both are
+    # absent from ``input_values_by_casilla_id``, but only the cleared one
+    # appears here.
+    cleared_casilla_ids: tuple[CasillaId, ...] = Field(default_factory=tuple)
     casilla_values: Mapping[CasillaId, Decimal] = Field(default_factory=dict)
     # Typed envelope carrying formula provenance for every computed
     # casilla. Revisions with output values must populate this from the
@@ -1126,9 +1253,9 @@ class CalculationRevision(BaseModel):
 
     @model_validator(mode="after")
     def _enforce_invariants(self, info: ValidationInfo) -> CalculationRevision:
-        validation_context = info.context
+        validation_context = _string_keyed_context(info.context)
         if (
-            isinstance(validation_context, Mapping)
+            validation_context is not None
             and validation_context.get("secure_calculation_revision") is True
             and not {"row_source_identities", "row_casilla_values", "row_casilla_provenance"}.issubset(
                 self.model_fields_set
@@ -1261,9 +1388,10 @@ class CalculationRevision(BaseModel):
     ) -> Mapping[RowBindingKey, RowSourceIdentity]:
         # Secure persistence has one canonical, duplicate-detectable list form.
         # Ordinary in-process construction retains the ergonomic mapping form.
+        validation_context = _string_keyed_context(info.context)
         if (
-            isinstance(info.context, Mapping)
-            and info.context.get("secure_calculation_revision") is True
+            validation_context is not None
+            and validation_context.get("secure_calculation_revision") is True
             and not isinstance(value, list)
         ):
             raise ModeloValidationError("secure row source identities must use list wire form")
@@ -1282,7 +1410,7 @@ class CalculationRevision(BaseModel):
                         "row_set_grouping": raw.get("row_set_grouping"),
                     },
                 )
-                parsed_key = TypeAdapter(RowBindingKey).validate_python(key)
+                parsed_key = TypeAdapter(tuple[BindingId, int]).validate_python(key)
                 if parsed_key in typed:
                     raise ModeloValidationError("row source identities contain a duplicate coordinate")
                 typed[parsed_key] = identity
@@ -1295,18 +1423,20 @@ class CalculationRevision(BaseModel):
     @field_validator("row_casilla_values", mode="before")
     @classmethod
     def _normalise_row_casilla_values(cls, value: object, info: ValidationInfo) -> Mapping[RowCasillaKey, Decimal]:
+        validation_context = _string_keyed_context(info.context)
         if (
-            isinstance(info.context, Mapping)
-            and info.context.get("secure_calculation_revision") is True
+            validation_context is not None
+            and validation_context.get("secure_calculation_revision") is True
             and not isinstance(value, list)
         ):
             raise ModeloValidationError("secure row casilla values must use list wire form")
+        typed: dict[RowCasillaKey, Decimal]
         if isinstance(value, Mapping):
             typed = TypeAdapter(dict[RowCasillaKey, Decimal]).validate_python(value)
         elif isinstance(value, list):
             typed = {}
             for raw in TypeAdapter(tuple[dict[str, object], ...]).validate_python(value):
-                key = TypeAdapter(RowCasillaKey).validate_python((raw.get("casilla_id"), raw.get("row_index")))
+                key = TypeAdapter(tuple[CasillaId, int]).validate_python((raw.get("casilla_id"), raw.get("row_index")))
                 if key in typed:
                     raise ModeloValidationError("row casilla values contain a duplicate coordinate")
                 typed[key] = TypeAdapter(Decimal).validate_python(raw.get("value"))
@@ -1321,18 +1451,20 @@ class CalculationRevision(BaseModel):
     def _normalise_row_casilla_provenance(
         cls, value: object, info: ValidationInfo
     ) -> Mapping[RowCasillaKey, DirectRowMaterializationProvenance]:
+        validation_context = _string_keyed_context(info.context)
         if (
-            isinstance(info.context, Mapping)
-            and info.context.get("secure_calculation_revision") is True
+            validation_context is not None
+            and validation_context.get("secure_calculation_revision") is True
             and not isinstance(value, list)
         ):
             raise ModeloValidationError("secure row casilla provenance must use list wire form")
+        typed: dict[RowCasillaKey, DirectRowMaterializationProvenance]
         if isinstance(value, Mapping):
             typed = TypeAdapter(dict[RowCasillaKey, DirectRowMaterializationProvenance]).validate_python(value)
         elif isinstance(value, list):
             typed = {}
             for raw in TypeAdapter(tuple[dict[str, object], ...]).validate_python(value):
-                key = TypeAdapter(RowCasillaKey).validate_python((raw.get("casilla_id"), raw.get("row_index")))
+                key = TypeAdapter(tuple[CasillaId, int]).validate_python((raw.get("casilla_id"), raw.get("row_index")))
                 if key in typed:
                     raise ModeloValidationError("row casilla provenance contains a duplicate coordinate")
                 typed[key] = DirectRowMaterializationProvenance.model_validate(
@@ -1356,11 +1488,12 @@ class CalculationRevision(BaseModel):
         handler: SerializerFunctionWrapHandler,
         info: SerializationInfo,
     ) -> object:
-        payload = handler(self)
-        if not isinstance(payload, dict):
-            return payload
-        context = getattr(info, "context", None)
-        if not isinstance(context, Mapping) or context.get("secure_calculation_revision") is not True:
+        handled = handler(self)
+        if not isinstance(handled, dict):
+            return handled
+        payload = TypeAdapter(dict[str, object]).validate_python(handled)
+        context = _string_keyed_context(getattr(info, "context", None))
+        if context is None or context.get("secure_calculation_revision") is not True:
             payload.pop("row_source_identities", None)
             payload.pop("row_casilla_values", None)
             payload.pop("row_casilla_provenance", None)
@@ -1401,6 +1534,7 @@ def calculation_revision_identity_inputs_from_revision(
         filing_instance_evidence=revision.filing_instance_evidence,
         m303_regimen_simplificado_annual_summary_handoff=(revision.m303_regimen_simplificado_annual_summary_handoff),
         amendment_identity=revision.amendment_identity,
+        cleared_casilla_ids=revision.cleared_casilla_ids,
     )
 
 

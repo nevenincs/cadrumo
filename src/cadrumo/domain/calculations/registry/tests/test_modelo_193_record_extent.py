@@ -23,9 +23,8 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.record_design import extract_record_design
-
 from .....core.resources import bundled_path
+from ..record_design import extract_record_design
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -43,16 +42,20 @@ _SHEET_FOR_RECORD = {
 
 def _gap_runs(positions: list[int]) -> list[tuple[int, int]]:
     runs: list[tuple[int, int]] = []
-    start = previous = None
+    start: int | None = None
+    previous: int | None = None
     for position in positions:
         if start is None:
             start = previous = position
-        elif position == previous + 1:
+            continue
+        assert previous is not None
+        if position == previous + 1:
             previous = position
         else:
             runs.append((start, previous))
             start = previous = position
     if start is not None:
+        assert previous is not None
         runs.append((start, previous))
     return runs
 

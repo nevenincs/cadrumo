@@ -28,20 +28,19 @@ from typing import TYPE_CHECKING, Any
 import typer
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-
 from ...application.modelo._action_errors import (
     CalculationRegistryUnavailableError,
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
 )
-from ...application.modelo._borrador_binding import Modelo100BorradorBindingError
 from ...application.modelo._calculate_input import calculate_modelo_work_revision
 from ...application.modelo._iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
+from ...application.modelo.borrador_binding import Modelo100BorradorBindingError
 from ...core import M210GrossIncomeSourceMode, RescateType
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.json_contract import Notice
+from ...domain.calculations.registry.errors import RegistryValidationError
 from ._common import activate_subcommand_output_language, emit_envelope
 from ._m303_filing_evidence_input import m303_filing_instance_evidence_from_cli
 from ._modelo_behavior_support import require_active_profile, resolve_work_unit_for_cli
@@ -56,6 +55,7 @@ from ._modelo_rendering import (
     calculation_revision_lines,
     calculation_revision_payload,
     calculation_revision_state_label,
+    m210_plazo_notice,
     source_diagnostic_notice,
     source_diagnostic_notice_text,
     work_unit_deadline_output,
@@ -66,7 +66,8 @@ from .errors import CliOutboundPayloadBoundaryError
 if TYPE_CHECKING:
     from ...application.aggregation import CalculationSourceDiagnostic
     from ...application.modelo._calculate_input import ModeloWorkCalculationServiceResult
-    from ...domain.modelos import CalculationRevision, WorkUnit
+    from ...domain.modelos import WorkUnit
+    from ...domain.modelos.calculation_revision import CalculationRevision
 
 
 @dataclass(frozen=True, slots=True)
@@ -213,7 +214,7 @@ def _run_work_calculate(
         notices=[
             *authorization_notices,
             *source_advisory_notices,
-            *calculation_result.plazo_notices,
+            *(m210_plazo_notice(resolution) for resolution in calculation_result.plazo_resolutions),
             *deadline_notices,
         ],
     )

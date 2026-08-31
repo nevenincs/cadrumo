@@ -49,7 +49,7 @@ from ..attachment import (
     AttachmentStore,
     resolve_attachment_store,
 )
-from ..crypto import (
+from ..crypto.encrypted_columns import (
     decrypt_secure_object_payload,
     encrypt_secure_object_payload,
     secure_object_payload_aad,

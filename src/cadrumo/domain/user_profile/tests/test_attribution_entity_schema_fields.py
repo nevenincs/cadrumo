@@ -42,6 +42,24 @@ def test_attribution_entity_socios_section_uses_repeatable_profile_pattern(
         "participe_clave",
         "country_of_residence",
         "role",
+        # (member, clave, subclave) facts added per the governing M184 socio
+        # row-shape decision; see test_m184_socio_clave_subclave_schema_fields.py
+        # for their own dedicated coverage.
+        "clave",
+        "subclave",
+        "codigo_provincia",
+        "miembro_a_31_diciembre",
+        "dias_miembro",
+        "domicilio_fiscal",
+        "naturaleza_inmueble",
+        "situacion_inmueble",
+        "referencia_catastral",
+        "clave_declarado",
+        "porcentaje_titularidad_inmueble",
+        "dias_arrendamiento",
+        "reduccion",
+        "rendimiento_neto_previo_eo",
+        "rendimiento_neto_minorado_agricola_eo",
     }
     assert {
         "attribution_entity_socios.nif",

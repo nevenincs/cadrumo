@@ -19,7 +19,7 @@ def enforce_tui_request(ctx: typer.Context, *, spec: CommandSpec) -> bool:
     if spec.tui_capability is TuiCapability.NOT_IMPLEMENTED:
         from .errors import CliTuiNotImplementedError
 
-        identity = spec.result_schema.identity or ".".join(spec.path[1:]) or "root"
+        identity = spec.result_schema.identity or spec.key or "root"
         raise CliTuiNotImplementedError(command=identity)
     from ...application.flows.capability import detect_frontend_capability
     from ...application.flows.errors import FlowUnsupportedConsoleError

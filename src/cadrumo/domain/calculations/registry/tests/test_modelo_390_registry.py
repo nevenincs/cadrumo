@@ -12,6 +12,7 @@ from .....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
 from .....core.aggregation import BindingAggregationOp, BindingSourceKind
 from .....core.resources import bundled_path
 from ....iva import IvaLedgerObservationRole
+from .._validate import RegistryValidator
 from ..binding_aggregation import binding_aggregation_op
 from ..binding_selector_utils import selector_as_dict
 from ..bindings import binding_source_casilla_ids, binding_source_modelo
@@ -19,7 +20,6 @@ from ..errors import RegistryValidationError
 from ..runtime_graph import expression_casilla_refs
 from ..schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
 from ..schema_input_kind import InputKind
-from ..validate import RegistryValidator
 from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

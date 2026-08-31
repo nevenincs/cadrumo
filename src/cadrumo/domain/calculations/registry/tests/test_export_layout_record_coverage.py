@@ -32,15 +32,6 @@ import re
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
-from cadrumo.domain.calculations.registry.schema_exports import (
-    AuxiliaryEnvelopeHeaderDefinition,
-    ExportLayoutDefinition,
-    FilingEnvelopePrefixFieldDeclaration,
-    FilingEnvelopePrefixRole,
-)
-from cadrumo.domain.calculations.registry.schema_references import SourceReference
-
 from .....core import ExportLayoutFormat
 from .._validate_export_layout_coverage import (
     _administration_reserved,
@@ -64,6 +55,14 @@ from ..record_design_schema import (
     RecordDesignSheet,
     RecordDesignSkippedSheet,
 )
+from ..schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from ..schema_exports import (
+    AuxiliaryEnvelopeHeaderDefinition,
+    ExportLayoutDefinition,
+    FilingEnvelopePrefixFieldDeclaration,
+    FilingEnvelopePrefixRole,
+)
+from ..schema_references import SourceReference
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -704,7 +703,11 @@ def _every_declared_design_sheet(
     from .....core.resources import resolve_corpus_binary
 
     sheets: list[RecordDesignSheet] = []
-    for source in (source for source in catalogues.sources.values() if source.kind == "record_design"):
+    for source in (
+        source
+        for source in catalogues.sources.values()
+        if source.kind == "record_design" and source.design_authority == "authoritative"
+    ):
         path = resolve_corpus_binary(*source.corpus_path.split("/"))
         if path is None:
             continue

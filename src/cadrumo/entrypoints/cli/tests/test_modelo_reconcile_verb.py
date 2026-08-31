@@ -1,8 +1,8 @@
 """CLI surface tests for the `aeat app modelo reconcile` group.
 
-`reconcile file --file PATH` reconciles a local justificante (the default
+`reconcile import --file PATH` reconciles a local justificante (the default
 `--kind`) or a filed declaración (`--kind declaration`, casilla-level compare,
-enrolled modelos only); `reconcile history` lists past runs. `reconcile pull`
+enrolled modelos only); `reconcile list` lists past runs. `reconcile pull`
 fetches from AEAT (a live read) and is covered by the application-layer
 orchestrator + reconcile_capture tests, not here.
 """
@@ -14,20 +14,15 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.application.workflow.persistence import workflow_state_repository
-
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....application.workflow.persistence import workflow_state_repository
 from ....core import Period, validated_casilla_id
-from ....domain.modelos import (
+from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id, upsert_calculation_revision, upsert_work_unit
+from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    ModeloCode,
-    WorkUnit,
     derive_calculation_revision_id,
-    derive_work_unit_id,
-    upsert_calculation_revision,
-    upsert_work_unit,
 )
 from ....tests import FIXTURES_DIR
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
@@ -84,12 +79,12 @@ def _seed_work_unit(*, modelo: str, filing_year: int, period: str) -> str:
 
 
 def test_reconcile_file_happy_path() -> None:
-    """`reconcile file --file` matches when the work unit and the committed
+    """`reconcile import --file` matches when the work unit and the committed
     modelo_130 fixture align on modelo and ejercicio."""
     work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
 
     result = invoke_cached_cli(
-        ["app", "modelo", "reconcile", "file", work_unit_id, "--file", str(MODELO_130_FIXTURE)],
+        ["app", "modelo", "reconcile", "import", work_unit_id, "--file", str(MODELO_130_FIXTURE)],
     )
     assert result.exit_code == 0, result.output
     assert f"work_unit_id\t{work_unit_id}" in result.output
@@ -103,7 +98,7 @@ def test_reconcile_file_mismatch_renders_diff_rows() -> None:
     work_unit_id = _seed_work_unit(modelo="303", filing_year=2026, period="1T")
 
     result = invoke_cached_cli(
-        ["app", "modelo", "reconcile", "file", work_unit_id, "--file", str(MODELO_130_FIXTURE)],
+        ["app", "modelo", "reconcile", "import", work_unit_id, "--file", str(MODELO_130_FIXTURE)],
     )
     assert result.exit_code == 0, result.output
     assert "verdict\tmismatches" in result.output
@@ -111,16 +106,16 @@ def test_reconcile_file_mismatch_renders_diff_rows() -> None:
 
 
 def test_reconcile_file_requires_the_file_option() -> None:
-    """`reconcile file` without `--file` is a usage error, not a silent default."""
+    """`reconcile import` without `--file` is a usage error, not a silent default."""
     work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
-    result = invoke_cached_cli(["app", "modelo", "reconcile", "file", work_unit_id])
+    result = invoke_cached_cli(["app", "modelo", "reconcile", "import", work_unit_id])
     assert result.exit_code != 0, result.output
 
 
 def test_reconcile_file_refuses_unknown_work_unit() -> None:
     """A work unit id absent from the active bucket catalogue refuses at the exit code."""
     result = invoke_cached_cli(
-        ["app", "modelo", "reconcile", "file", "0" * 64, "--file", str(MODELO_130_FIXTURE)],
+        ["app", "modelo", "reconcile", "import", "0" * 64, "--file", str(MODELO_130_FIXTURE)],
     )
     assert result.exit_code != 0, result.output
 
@@ -136,7 +131,7 @@ def test_reconcile_file_by_flag_lands_in_modelo_reconciled_event() -> None:
             "app",
             "modelo",
             "reconcile",
-            "file",
+            "import",
             work_unit_id,
             "--file",
             str(MODELO_130_FIXTURE),
@@ -155,23 +150,23 @@ def test_reconcile_file_by_flag_lands_in_modelo_reconciled_event() -> None:
     assert matching[-1].actor == "auditor@team"
 
 
-def test_reconcile_history_empty_is_instructive() -> None:
-    """With no reconciliations recorded, `reconcile history` lists a clean empty."""
-    result = invoke_cached_cli(["app", "modelo", "reconcile", "history"])
+def test_reconcile_list_empty_is_instructive() -> None:
+    """With no reconciliations recorded, `reconcile list` lists a clean empty."""
+    result = invoke_cached_cli(["--language", "en", "app", "modelo", "reconcile", "list"])
     assert result.exit_code == 0, result.output
     assert "reconciliation_count\t0" in result.output
     assert "No reconciliations recorded yet" in result.output
 
 
-def test_reconcile_history_lists_recorded_reconciliation() -> None:
-    """After a reconcile, `reconcile history` lists the recorded verdict row."""
+def test_reconcile_list_lists_recorded_reconciliation() -> None:
+    """After a reconcile, `reconcile list` lists the recorded verdict row."""
     work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
     reconcile = invoke_cached_cli(
-        ["app", "modelo", "reconcile", "file", work_unit_id, "--file", str(MODELO_130_FIXTURE)],
+        ["app", "modelo", "reconcile", "import", work_unit_id, "--file", str(MODELO_130_FIXTURE)],
     )
     assert reconcile.exit_code == 0, reconcile.output
 
-    result = invoke_cached_cli(["app", "modelo", "reconcile", "history"])
+    result = invoke_cached_cli(["app", "modelo", "reconcile", "list"])
     assert result.exit_code == 0, result.output
     assert "reconciliation_count\t1" in result.output
 
@@ -323,7 +318,7 @@ def _seed_m303_work_unit_with_revision(*, casilla_values: dict[str, Decimal]) ->
 def test_reconcile_file_kind_declaration_matches_when_computed_agrees(
     _declaracion_fixture_profile: None,
 ) -> None:
-    """`reconcile file --file --kind declaration` reports a clean `matches` when
+    """`reconcile import --file --kind declaration` reports a clean `matches` when
     the persisted revision's computed casilla values agree with the filed
     declaración the fixture prints -- the calc-verify-roundtrip claim behind
     acceptance wall #326 (Modelo 303), proven end-to-end through the real CLI
@@ -336,7 +331,7 @@ def test_reconcile_file_kind_declaration_matches_when_computed_agrees(
             "app",
             "modelo",
             "reconcile",
-            "file",
+            "import",
             work_unit_id,
             "--file",
             str(MODELO_303_DECLARACION_FIXTURE),
@@ -367,7 +362,7 @@ def test_reconcile_file_kind_declaration_catches_casilla_divergence(
             "app",
             "modelo",
             "reconcile",
-            "file",
+            "import",
             work_unit_id,
             "--file",
             str(MODELO_303_DECLARACION_FIXTURE),
@@ -435,7 +430,7 @@ def test_reconcile_file_kind_declaration_m130_matches_when_computed_agrees(
             "app",
             "modelo",
             "reconcile",
-            "file",
+            "import",
             work_unit_id,
             "--file",
             str(MODELO_130_DECLARACION_FIXTURE),
@@ -464,7 +459,7 @@ def test_reconcile_file_kind_declaration_m130_catches_casilla_divergence(
             "app",
             "modelo",
             "reconcile",
-            "file",
+            "import",
             work_unit_id,
             "--file",
             str(MODELO_130_DECLARACION_FIXTURE),
@@ -538,7 +533,7 @@ def test_reconcile_file_kind_declaration_m111_matches_when_computed_agrees(
             "app",
             "modelo",
             "reconcile",
-            "file",
+            "import",
             work_unit_id,
             "--file",
             str(MODELO_111_DECLARACION_FIXTURE),
@@ -567,7 +562,7 @@ def test_reconcile_file_kind_declaration_m111_catches_casilla_divergence(
             "app",
             "modelo",
             "reconcile",
-            "file",
+            "import",
             work_unit_id,
             "--file",
             str(MODELO_111_DECLARACION_FIXTURE),
@@ -598,7 +593,11 @@ AEAT's Spanish and English presentador-NIF labels alike (the shared
 ``PRESENTADOR_NIF_LABEL`` fragment in ``adapters/inbound/pdf``), so the
 English-render `2021-0A.pdf` parses cleanly too."""
 
-_M390_2022_0A_REVISION_ID = "2010-y-siguientes"
+# Modelo 390 ships revisions 2021 through 2025; there is no
+# `2010-y-siguientes`. Same defect as the Modelo 190 constant below: a work
+# unit seeded with a revision the registry does not carry fails snapshot
+# resolution, and reconcile falls back to receipt identity alone.
+_M390_2022_0A_REVISION_ID = "2022"
 """Law-determined registry revision for M390 filing_year=2022, period=0A."""
 
 # `computed_casilla_ids` for this revision has 3 entries, all printed by the
@@ -634,7 +633,7 @@ def test_reconcile_file_kind_declaration_m390_matches_when_computed_agrees(
             "app",
             "modelo",
             "reconcile",
-            "file",
+            "import",
             work_unit_id,
             "--file",
             str(MODELO_390_DECLARACION_FIXTURE),
@@ -663,7 +662,7 @@ def test_reconcile_file_kind_declaration_m390_catches_casilla_divergence(
             "app",
             "modelo",
             "reconcile",
-            "file",
+            "import",
             work_unit_id,
             "--file",
             str(MODELO_390_DECLARACION_FIXTURE),
@@ -687,7 +686,12 @@ single ``1.000,00`` placeholder while this was a redacted real render, which
 meant the mismatch assertion below could have been reading either money box and
 would have passed either way."""
 
-_M190_2024_0A_REVISION_ID = "2024-y-siguientes"
+# Modelo 190 ships revisions `2024` and `2025-y-siguientes`; there is no
+# `2024-y-siguientes`. Seeding a work unit with a revision the registry does
+# not carry made snapshot resolution fail, and reconcile then degraded to
+# "receipt identity only" -- which reports a clean match without comparing a
+# single casilla, so the sibling matches-case passed vacuously.
+_M190_2024_0A_REVISION_ID = "2024"
 """Law-determined registry revision for M190 filing_year=2024, period=0A."""
 
 # `computed_casilla_ids` for this revision has 3 entries, all printed by the
@@ -723,7 +727,7 @@ def test_reconcile_file_kind_declaration_m190_matches_when_computed_agrees(
             "app",
             "modelo",
             "reconcile",
-            "file",
+            "import",
             work_unit_id,
             "--file",
             str(MODELO_190_DECLARACION_FIXTURE),
@@ -752,7 +756,7 @@ def test_reconcile_file_kind_declaration_m190_catches_casilla_divergence(
             "app",
             "modelo",
             "reconcile",
-            "file",
+            "import",
             work_unit_id,
             "--file",
             str(MODELO_190_DECLARACION_FIXTURE),
@@ -852,7 +856,7 @@ def test_reconcile_file_kind_declaration_m100_matches_when_computed_agrees(
             "app",
             "modelo",
             "reconcile",
-            "file",
+            "import",
             work_unit_id,
             "--file",
             str(MODELO_100_DECLARACION_FIXTURE),
@@ -884,7 +888,7 @@ def test_reconcile_file_kind_declaration_m100_catches_casilla_divergence(
             "app",
             "modelo",
             "reconcile",
-            "file",
+            "import",
             work_unit_id,
             "--file",
             str(MODELO_100_DECLARACION_FIXTURE),
@@ -916,7 +920,7 @@ def test_reconcile_file_kind_declaration_override_still_catches_wrong_modelo_pdf
             "app",
             "modelo",
             "reconcile",
-            "file",
+            "import",
             work_unit_id,
             "--file",
             str(MODELO_130_DECLARACION_FIXTURE),
@@ -951,7 +955,7 @@ def test_reconcile_file_kind_declaration_refuses_unenrolled_modelo(
             "app",
             "modelo",
             "reconcile",
-            "file",
+            "import",
             work_unit_id,
             "--file",
             str(FIXTURES_DIR / "justificantes" / "115" / "2024-1T.pdf"),
@@ -969,7 +973,7 @@ def test_reconcile_file_default_kind_is_justificante() -> None:
     work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
 
     result = invoke_cached_cli(
-        ["app", "modelo", "reconcile", "file", work_unit_id, "--file", str(MODELO_130_FIXTURE)],
+        ["app", "modelo", "reconcile", "import", work_unit_id, "--file", str(MODELO_130_FIXTURE)],
     )
     assert result.exit_code == 0, result.output
     assert "source_kind\tjustificante" in result.output

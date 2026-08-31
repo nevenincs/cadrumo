@@ -14,7 +14,7 @@ use typed profile facts directly and keep their Decimal-channel refusal in the
 profile resolver instead of reusing this helper.
 
 See Also:
-    :func:`cadrumo.application.modelo._borrador_binding.resolve_modelo_100_borrador_bindings`
+    :func:`cadrumo.application.modelo.borrador_binding.resolve_modelo_100_borrador_bindings`
         Consumes this helper after registry eligibility and caller-precedence
         checks decide that a borrador snapshot may supply the value.
     :func:`cadrumo.application.modelo.profile_binding.resolve_profile_sourced_bindings`
@@ -64,7 +64,7 @@ def decimal_from_string(
         Exception: Whatever ``error_factory`` produced.
 
     See Also:
-        :func:`cadrumo.application.modelo._borrador_binding.resolve_modelo_100_borrador_bindings`
+        :func:`cadrumo.application.modelo.borrador_binding.resolve_modelo_100_borrador_bindings`
             Resolver that validates the borrador snapshot and calls this helper
             for Decimal-channel snapshot values.
     """

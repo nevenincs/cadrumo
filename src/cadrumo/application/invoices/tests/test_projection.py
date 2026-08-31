@@ -8,8 +8,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.workflow.state_models import WorkflowState
-
 from ....core import Period
 from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
 from ....domain.iva import InvoiceKind
@@ -21,7 +19,9 @@ from ....domain.transactions import (
     TransactionCatalogue,
     TransactionDirection,
 )
-from ...review import InvoiceReviewFilterSpec, InvoiceReviewStatus, update_invoice_review
+from ...review.actions import update_invoice_review
+from ...review.filter import InvoiceReviewFilterSpec, InvoiceReviewStatus
+from ...workflow.state_models import WorkflowState
 from .. import (
     InvoiceMatchRow,
     apply_manual_invoice_match,
@@ -78,7 +78,7 @@ def test_invoice_review_status_pending_is_enum_member() -> None:
 
 def test_invoice_review_status_reviewed_is_enum_member() -> None:
     """invoice_review_status with non-empty review fields returns InvoiceReviewStatus.REVIEWED."""
-    from ...review import InvoiceReviewRecord
+    from ...review.models import InvoiceReviewRecord
 
     invoice = _invoice()
     review = InvoiceReviewRecord(invoice_id=invoice.invoice_id, fields={"base": "200"})
@@ -89,7 +89,7 @@ def test_invoice_review_status_reviewed_is_enum_member() -> None:
 
 def test_invoice_review_status_paid_is_enum_member() -> None:
     """invoice_review_status with payment.id set returns InvoiceReviewStatus.PAID."""
-    from ...review import InvoiceReviewRecord
+    from ...review.models import InvoiceReviewRecord
 
     invoice = _invoice()
     review = InvoiceReviewRecord(invoice_id=invoice.invoice_id, fields={"payment.id": "tx-001"})

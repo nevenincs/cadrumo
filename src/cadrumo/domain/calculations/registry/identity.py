@@ -5,8 +5,8 @@ in-process cache key, the loader's compiled-artefact key, the validation-verdict
 match, and the release build's stamper. A second derivation of the digest, the
 stamp filename, or the stamp location is what lets a build and a runtime
 disagree about which tree they are looking at, so there is exactly one of each
-and :func:`~domain.calculations.registry.tests.test_registry_identity_enrolment`
-proves no other exists across ``src/`` and ``dev/``.
+and the development test tree's registry-identity enrolment gate proves no
+other exists across the repository.
 
 Identity has two ORIGINS, and the distinction is the whole point:
 
@@ -43,16 +43,18 @@ from __future__ import annotations
 
 import hashlib
 import logging
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
+from typing import override
 
 from pydantic import BaseModel, ConfigDict
 
 from .... import __version__
 from ....core.atomic_write import atomic_write_best_effort_text
 from ....core.external_constants import UTF_8_ENCODING
+from ....core.hashing import blake2b_hex
 from .loader_cache import is_bundled_registry_root
 
 FingerprintTuples = tuple[tuple[str, int, int, str], ...]
@@ -112,9 +114,11 @@ class RegistryIdentity:
     origin: RegistryIdentityOrigin
     fingerprints: FingerprintTuples
 
+    @override
     def __hash__(self) -> int:
         return hash(self.digest)
 
+    @override
     def __eq__(self, other: object) -> bool:
         return isinstance(other, RegistryIdentity) and self.digest == other.digest
 
@@ -137,13 +141,19 @@ def registry_identity_stamp_location(registry_root: Path) -> Path:
     return registry_root.parent / REGISTRY_IDENTITY_STAMP_FILENAME
 
 
-def compute_walked_tree_digest(fingerprints: FingerprintTuples) -> str:
+def compute_walked_tree_digest(fingerprints: Iterable[Iterable[object]]) -> str:
     """Digest the complete fingerprint tuples into a walked-tree identity.
 
     Folds every field of every tuple, so any content, size, mtime or path change
     anywhere in the tree yields a different identity -- the complete-tree
     invariant the registry authority flow requires. Costs no filesystem calls:
     the caller has already paid for the walk that produced ``fingerprints``.
+
+    Typed as a bare iterable-of-iterables rather than :data:`FingerprintTuples`:
+    the fold below reads every field of every entry generically (``str(field)``)
+    with no positional or count assumption, so the wider, honest type is the one
+    this function actually relies on. Every real caller still passes
+    :data:`FingerprintTuples`, which satisfies this parameter.
 
     Returns:
         The hex SHA-256 identity of the walked tree.
@@ -171,7 +181,7 @@ def _file_content_digest(path: Path) -> str:
         The hex BLAKE2b digest of the file's bytes, or an ``unreadable:`` marker.
     """
     try:
-        return hashlib.blake2b(path.read_bytes(), digest_size=16).hexdigest()
+        return blake2b_hex(path.read_bytes())
     except OSError:
         _LOGGER.debug("Registry file %s could not be read while stamping identity", path, exc_info=True)
         return "unreadable"

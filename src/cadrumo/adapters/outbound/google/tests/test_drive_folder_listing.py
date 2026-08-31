@@ -21,8 +21,8 @@ from __future__ import annotations
 import pytest
 
 from .....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
-from ...storage import OutboundStoragePermissionError, OutboundStorageValidationError
-from .._document_link_resolver import list_drive_folder_documents
+from ...storage import OutboundStorageError, OutboundStoragePermissionError, OutboundStorageValidationError
+from ..document_link_resolver import list_drive_folder_documents
 from .drive_media_server import drive_files_list_endpoint
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -31,7 +31,7 @@ _FOLDER_ID = "1FoldEr12345678901234567890AB"
 
 
 def _assert_closed_outcome(
-    error: BaseException,
+    error: OutboundStorageError,
     *,
     condition_id: str,
     facts: dict[str, str | int | bool],

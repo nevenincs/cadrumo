@@ -63,6 +63,17 @@ _UTF_8: Final[str] = UTF_8
 _SOURCE_ROOTS: Final[tuple[str, ...]] = ("src", "dev", "packaging")
 _ROOT_CONFTEXT: Final[str] = "conftest.py"
 _EXCLUDED_PREFIX: Final[Path] = Path("src/cadrumo/_data")
+#: Directory names never walked when building the source universe.
+#:
+#: ``.baseline-source-snapshot`` is the CLI benchmark's captured copy of the
+#: tree. It is gitignored, it appears only on a machine where the capture has
+#: been run, and it duplicates most of ``src`` verbatim -- so every helper and
+#: fixture inside it reads as a second definition of a canonical one. Walking it
+#: makes these censuses answer differently depending on whether a developer
+#: happened to run a benchmark, which is the same reason `dev/identity`'s tree
+#: scan refuses scratch and local runtime state: a gate whose verdict varies per
+#: machine and per hour is not a gate.
+_PRUNED_DIRECTORIES: Final[tuple[str, ...]] = ("__pycache__", ".baseline-source-snapshot")
 _DEFAULT_SCOPE: Final[str] = "function"
 
 
@@ -451,7 +462,7 @@ def iter_source_files(repo_root: Path = REPO_ROOT) -> tuple[Path, ...]:
                 pattern="*.py",
                 recursive=True,
                 select=DirectoryEntryKind.FILES,
-                prune_directories=("__pycache__",),
+                prune_directories=_PRUNED_DIRECTORIES,
             )
         )
 

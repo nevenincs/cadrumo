@@ -9,12 +9,12 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from cadrumo.application.registry import LiveSourceConnectivityProofAuthority
 from cadrumo.application.registry.source_connectivity import (
     SourceConnectivityCensusManifest,
     load_source_connectivity_census,
     validate_census_destination_candidates,
 )
+from cadrumo.application.registry.source_connectivity_authority import LiveSourceConnectivityProofAuthority
 from cadrumo.core.source_connectivity import (
     SourceConnectivityDisposition,
     SourceConnectivityExpiryPosture,

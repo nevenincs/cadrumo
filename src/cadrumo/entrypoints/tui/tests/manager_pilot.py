@@ -1,8 +1,8 @@
 """Waiting for the profile manager to finish reacting, under the pilot.
 
-Pressing a button or saving a dialog on the manager page only *starts*
-the work: writes and actions run on worker threads, and the page repaints
-when their completion is delivered back to Textual's UI task. A test that
+Saving a dialog on the manager page only *starts* the work: a write runs
+on a worker thread, and the page repaints when its completion is
+delivered back to Textual's UI task. A test that
 read the page straight after the press would read it one beat early, so
 every pilot-driven manager test needs a wait — and four of them had grown
 their own, with semantics that disagreed.
@@ -27,7 +27,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ..profile.overview import ProfileManagerApp
+    from ..profile.overview import ProfileManagerScreen
 
 __all__ = ["wait_until_settled"]
 
@@ -43,17 +43,17 @@ than about the machine's speed.
 """
 
 
-async def wait_until_settled(app: ProfileManagerApp, pilot) -> None:
+async def wait_until_settled(app: ProfileManagerScreen, pilot) -> None:
     """Drain the page's messages until no background work is left in flight.
 
-    Waits on the page's own state — that it holds neither an unfinished
-    write nor an unfinished action — rather than on an expected wording.
-    That distinction is the point of this helper: the flags are cleared by
-    the settling handlers, which run on the UI task and repaint before
-    they return, so a cleared pair is evidence the outcome has reached the
-    page. A wait for particular text is evidence of nothing, because the
-    press writes a progress line synchronously and any poll for
-    "something is displayed" is satisfied by it.
+    Waits on the page's own state — that it holds no unfinished write —
+    rather than on an expected wording. That distinction is the point of
+    this helper: the flag is cleared by the settling handler, which runs
+    on the UI task and repaints before it returns, so a cleared flag is
+    evidence the outcome has reached the page. A wait for particular text
+    is evidence of nothing, because the press writes a progress line
+    synchronously and any poll for "something is displayed" is satisfied
+    by it.
 
     Nothing is returned, so the caller reads the page itself and asserts
     against what is really there. A page that never settles fails here
@@ -69,23 +69,18 @@ async def wait_until_settled(app: ProfileManagerApp, pilot) -> None:
     therefore see the tables the redraw has already replaced.
 
     Deliberately not a :meth:`textual.worker.WorkerManager.wait_for_complete`:
-    an action that has asked for a page blocks its thread until the
-    operator answers, and answering needs the pilot. Joining the worker
-    here would hold the UI task against a dismissal that can only come
-    from it. Callers waiting for a page to *appear* are asking a different
-    question and must not use this.
+    joining the write worker directly would hold the UI task against a
+    dismissal that can only come from the pilot. Callers waiting for a
+    page to *appear* are asking a different question and must not use
+    this.
     """
     for _ in range(_SETTLE_BARRIER_LIMIT):
         await pilot.pause()
-        write, action = app._pending_write, app._pending_action
-        if write is None and action is None:
+        write = app._pending_write
+        if write is None:
             await pilot.pause()
             return
-    # Named from the same reads the last check made, so the report cannot
-    # describe a page that has moved on since it was taken.
-    still_holding = [held for held, worker in (("a write", write), ("an action", action)) if worker is not None]
     message = (
-        f"the page never settled: {' and '.join(still_holding)} was still in flight "
-        f"after {_SETTLE_BARRIER_LIMIT} drained message queues"
+        f"the page never settled: a write was still in flight after {_SETTLE_BARRIER_LIMIT} drained message queues"
     )
     raise AssertionError(message)

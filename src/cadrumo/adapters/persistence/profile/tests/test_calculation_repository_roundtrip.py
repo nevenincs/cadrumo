@@ -28,23 +28,22 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation
-from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
-from cadrumo.domain.calculations.registry.formula_runtime_ops import RegistryUnresolvedOutcomeReason
-from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
-
 from .....core import CasillaId, Period, validated_casilla_id
 from .....domain.calculations.registry.authority import bundled_authority
+from .....domain.calculations.registry.bindings import CasillaObservation
+from .....domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
+from .....domain.calculations.registry.formula_runtime_ops import RegistryUnresolvedOutcomeReason
+from .....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from .....domain.filing_evidence import FilingEvidenceReference
 from .....domain.iva import (
     M303RegimenSimplificadoScope,
     M303RegimenSimplificadoScopeDecision,
     RegimenSimplificadoFilingRows,
 )
-from .....domain.modelos import (
+from .....domain.modelos import CalculationRevisionPersistenceError
+from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
-    CalculationRevisionPersistenceError,
     CalculationRevisionState,
     FilingInstanceEvidence,
     M303Exonerado390FilingEvidence,

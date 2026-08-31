@@ -7,8 +7,8 @@ from cadrumo.application.modelo.calculation_route import (
     CALCULATION_ROUTE_RESOLVER_OWNERSHIP,
     CALCULATION_ROUTE_SOURCE_DISPOSITIONS,
 )
-from cadrumo.application.registry import compose_source_connectivity_coverage
 from cadrumo.application.registry.source_connectivity import load_source_connectivity_census
+from cadrumo.application.registry.source_connectivity_coverage import compose_source_connectivity_coverage
 from cadrumo.core import BindingSourceKind
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind

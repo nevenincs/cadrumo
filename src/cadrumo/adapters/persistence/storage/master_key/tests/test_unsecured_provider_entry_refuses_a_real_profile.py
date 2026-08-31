@@ -27,11 +27,12 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 import pytest
+from sqlalchemy.engine.default import DefaultDialect
 
 from ......core import StorageCategory, bucket_scoped_storage_path
 from ......core.config import load_settings, override_settings
 from ..._namespace_registry import USER_PROFILE_VALUE_NAMESPACE
-from ...crypto import EncryptedBytes
+from ...crypto.encrypted_columns import EncryptedBytes
 from ...errors import UnsecuredModeRefusedError
 from .._active_session import activate_session, current_active_bucket_session
 from .._bucket_session import BucketSession
@@ -67,7 +68,7 @@ def _seed_profile_row(tax_id: str, root: Path) -> None:
     document = json.dumps({"payload": {"facts": [{"path": "identity.tax_id", "value": tax_id}]}})
     try:
         with activate_session(seeding):
-            wire = EncryptedBytes().process_bind_param(document.encode("utf-8"), None)
+            wire = EncryptedBytes().process_bind_param(document.encode("utf-8"), DefaultDialect())
     finally:
         seeding.close()
 

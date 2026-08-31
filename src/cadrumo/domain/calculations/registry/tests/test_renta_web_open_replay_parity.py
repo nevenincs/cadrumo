@@ -20,8 +20,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema_verification import LiveCrossReferenceDecision
-
 from .....core import CasillaId, validated_casilla_id
 from .....core.directory_scan import scan_directory
 from .....core.resources import bundled_path
@@ -31,6 +29,7 @@ from ..renta_web_open_oracle import (
     RentaWebOpenOracle,
     RentaWebOpenReplayDriver,
 )
+from ..schema_verification import LiveCrossReferenceDecision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

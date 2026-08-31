@@ -34,16 +34,18 @@ from ...domain.calculations.registry.ids import (
     SourceRefId,
 )
 from ...domain.modelos import (
-    CalculationRevision,
-    CalculationRevisionCatalogue,
     CalculationRevisionCatalogueRepositoryProtocol,
-    CalculationRevisionState,
     ModeloCode,
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
     WorkUnit,
     WorkUnitCatalogue,
+)
+from ...domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionCatalogue,
+    CalculationRevisionState,
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from .work_addressing import (

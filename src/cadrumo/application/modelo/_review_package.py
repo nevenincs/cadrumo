@@ -59,11 +59,8 @@ from ...core.errors import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.identity import BucketId, CalculationRevisionId, WorkUnitId
 from ...core.time import now as _utc_now
-from ...domain.modelos import (
-    CalculationRevision,
-    CalculationRevisionState,
-    WorkUnit,
-)
+from ...domain.modelos import WorkUnit
+from ...domain.modelos.calculation_revision import CURRENT_SEALED_REVISION_STATES, CalculationRevision
 
 #: Wire-format version of the review-package descriptor. Bumped when the
 #: package-info schema changes shape.
@@ -81,12 +78,6 @@ _DRAFT_MEMBER = "draft.fichero-boe"
 #: yet reached verified-complete has no filing-grade grounding to share; a
 #: superseded revision is stale and must not be handed to an accountant as
 #: current.
-_ELIGIBLE_REVISION_STATES = frozenset(
-    {
-        CalculationRevisionState.VERIFICADO_COMPLETO,
-        CalculationRevisionState.PRESENTADO,
-    },
-)
 
 
 class ReviewPackageError(CadrumoError):
@@ -97,7 +88,7 @@ class ReviewPackageRevisionStateError(ReviewPackageError):
     """Raised when the source revision is not eligible for a review package.
 
     Eligible states are ``VERIFICADO_COMPLETO`` and ``PRESENTADO`` (see
-    :data:`_ELIGIBLE_REVISION_STATES`): a review package shares a filing-grade
+    :data:`CURRENT_SEALED_REVISION_STATES`): a review package shares a filing-grade
     figure with an accountant, so a bare draft or a superseded revision is
     refused before any bytes are written.
     """
@@ -188,7 +179,7 @@ def build_review_package(
     """Assemble a shareable, checksum-verifiable review package ZIP.
 
     ``revision`` must be in a filing-grade state (``VERIFICADO_COMPLETO`` or
-    ``PRESENTADO``); see :data:`_ELIGIBLE_REVISION_STATES`. ``work_unit`` is
+    ``PRESENTADO``); see :data:`CURRENT_SEALED_REVISION_STATES`. ``work_unit`` is
     the revision's parent (carries ``bucket_id`` / ``modelo`` / ``filing_year``
     / ``period``, which :class:`CalculationRevision` itself does not store);
     the caller must confirm ``work_unit.work_unit_id == revision.work_unit_id``
@@ -228,7 +219,7 @@ def build_review_package(
 
     Raises:
         ReviewPackageRevisionStateError: If ``revision.state`` is not in
-            :data:`_ELIGIBLE_REVISION_STATES`.
+            :data:`CURRENT_SEALED_REVISION_STATES`.
         ReviewPackageError: If ``work_unit.work_unit_id`` does not match
             ``revision.work_unit_id``.
     """
@@ -240,13 +231,13 @@ def build_review_package(
                 "revision_work_unit_id": revision.work_unit_id,
             },
         )
-    if revision.state not in _ELIGIBLE_REVISION_STATES:
+    if revision.state not in CURRENT_SEALED_REVISION_STATES:
         raise ReviewPackageRevisionStateError(
             translated_message="application.modelo.errors.review_package_revision_state",
             context={
                 "calculation_revision_id": revision.calculation_revision_id,
                 "state": revision.state.value,
-                "eligible_states": ", ".join(sorted(s.value for s in _ELIGIBLE_REVISION_STATES)),
+                "eligible_states": ", ".join(sorted(s.value for s in CURRENT_SEALED_REVISION_STATES)),
             },
         )
 

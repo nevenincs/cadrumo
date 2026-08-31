@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#agent-rule-consolidation'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-27'
+body_schema: 'body-v2'
 body_hash: 'sha256:7522a3dccc68beed839404e143689f9546a31b7b5233a31ca55bf83f5e719b37'
 related:
   - '[[2026-06-01-agent-rule-consolidation-adr]]'

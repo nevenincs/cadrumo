@@ -67,6 +67,7 @@ def _m303_revision_scopes() -> list[tuple[str, int, str]]:
     for revision_id, revision in sorted(modelo.revisions.items()):
         selector = revision.period_selector
         year = selector.years[0] if selector.years else selector.year_from
+        assert year is not None
         scopes.append((revision_id, int(year), selector.periods[0]))
     return scopes
 

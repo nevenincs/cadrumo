@@ -31,14 +31,13 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from cadrumo.domain.calculations.registry.schema_exports import ExportRecordDefinition
-
 from .....core import CasillaId
 from .....domain.calculations.registry.fixed_width_codec import (
     FixedWidthRecordRenderError,
     render_fixed_width_export_record_body,
 )
-from .....domain.modelos import ModeloExportError
+from .....domain.calculations.registry.schema_exports import ExportRecordDefinition
+from .....domain.modelos.errors import ModeloExportError
 
 
 def _export_error(*, field_id: str | None, reason: str, **context: object) -> ModeloExportError:

@@ -120,7 +120,7 @@ def seeded_draft(tmp_path: Path) -> Iterator[None]:
 
 
 def _envelope() -> dict[str, object]:
-    result = _invoke(["--format", "json", "app", "ledger", "evidence", "review", "show", _REFERENCE])
+    result = _invoke(["--format", "json", "app", "ledger", "evidence", "review", "view", _REFERENCE])
     assert result.exit_code == 0, result.output
     return STR_KEYED_MAPPING_ADAPTER.validate_json(result.output)
 
@@ -135,7 +135,7 @@ def _attribution_notice(envelope: dict[str, object]) -> dict[str, object]:
 
 @pytest.mark.usefixtures("seeded_draft")
 def test_the_advisory_reaches_the_operator_on_the_review_envelope() -> None:
-    """`review show` carries the attribution advisory as a typed warning notice."""
+    """`review view` carries the attribution advisory as a typed warning notice."""
     envelope = _envelope()
 
     notice = _attribution_notice(envelope)
@@ -176,7 +176,7 @@ def test_the_advisory_names_the_fields_whose_attribution_is_unchecked() -> None:
 @pytest.mark.usefixtures("seeded_draft")
 def test_the_text_surface_carries_the_same_advisory_as_the_json_one() -> None:
     """A terminal operator is told what a JSON consumer is told."""
-    result = _invoke(["app", "ledger", "evidence", "review", "show", _REFERENCE])
+    result = _invoke(["app", "ledger", "evidence", "review", "view", _REFERENCE])
 
     assert result.exit_code == 0, result.output
     assert _NOTICE_CODE in result.output

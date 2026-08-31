@@ -19,10 +19,9 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.casilla_membership import casillas_by_id
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-from cadrumo.domain.calculations.registry.temporal import select_revision
-
+from ....domain.calculations.registry.casilla_membership import casillas_by_id
+from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
+from ....domain.calculations.registry.temporal import select_revision
 from ....tests.registry_tree import bundled_registry_tree
 from ....tests.secure_sql import isolated_runtime_profile
 from .._m145_communication_records import (

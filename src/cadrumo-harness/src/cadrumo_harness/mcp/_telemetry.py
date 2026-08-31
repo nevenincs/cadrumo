@@ -36,8 +36,8 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.config import load_settings
+from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import UTF_8_ENCODING as _UTF_8
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.paths import select_filesystem_retention_survivors
@@ -212,7 +212,7 @@ class SessionTelemetryWriter:
         directory: Path | None = None,
         retention: TelemetryRetention | None = None,
     ) -> None:
-        self.session_id = session_id
+        self._session_id = session_id
         self._directory = (directory if directory is not None else telemetry_dir()).resolve()
         self._path = _session_telemetry_path(self._directory, session_id=session_id)
         self._retention = retention if retention is not None else TelemetryRetention()
@@ -231,7 +231,7 @@ class SessionTelemetryWriter:
     @property
     def session_id(self) -> str:
         """The session identity every record of this writer carries."""
-        return self.session_id
+        return self._session_id
 
     @property
     def path(self) -> Path:

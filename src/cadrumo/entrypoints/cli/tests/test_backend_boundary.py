@@ -19,16 +19,15 @@ from typing import cast
 import click
 import pytest
 import typer
+from typer.core import TyperGroup
 
-from cadrumo.domain.calculations.registry.loader_cache import discover_modelo_sources
-
-from ....application.review import LedgerReviewFilterKey
+from ....application.review.filter import LedgerReviewFilterKey
 from ....core.directory_scan import scan_directory
 from ....core.resources import bundled_path
+from ....domain.calculations.registry.loader_cache import discover_modelo_sources
 from ....tests import REPO_ROOT
-from ....tests.cli_runner import invoke_cached_cli
+from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli
 from ....tests.user_profile import register_cli_profile
-from .. import _ledger
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -134,33 +133,44 @@ def _invoke_help(*args: str) -> str:
     return result.output
 
 
+def _ledger_command_group() -> TyperGroup:
+    """Resolve the live ``app ledger`` Click command group from the real CLI tree.
+
+    The ledger commands no longer live behind a per-module Typer ``app``
+    (``_ledger.py`` was decomposed into the declarative ``CommandSpec`` graph
+    the root ``app`` is built from), so the group is reached the same way
+    :mod:`test_cli_workflow_verification` reaches any other mounted subject:
+    walk down from the materialised root command by name.
+    """
+    root = cadrumo_click_command()
+    assert isinstance(root, TyperGroup)
+    app_group = root.get_command(typer.Context(root), "app")
+    assert isinstance(app_group, TyperGroup)
+    ledger_group = app_group.get_command(typer.Context(app_group), "ledger")
+    assert isinstance(ledger_group, TyperGroup)
+    return ledger_group
+
+
 def _registered_ledger_command_names() -> set[str]:
-    return {command.name for command in _ledger.app.registered_commands if command.name is not None}
+    group = _ledger_command_group()
+    return set(group.list_commands(typer.Context(group)))
 
 
 def _ledger_help_by_command() -> dict[str, str]:
-    group = typer.main.get_command(_ledger.app)
-    # Typer vendors its own Click fork: ``typer.main.get_command`` returns a
-    # ``typer.core.TyperGroup`` whose MRO is ``TyperGroup -> typer._click.core
-    # .Command -> ABC -> object`` and never descends from the upstream
-    # ``click.Group``, so a bare ``isinstance(group, click.Group)`` is False.
-    # Derive the vendored ``Command`` base from the TyperGroup MRO so the
-    # command-group hierarchy is recognised without a brittle private-module
-    # import (mirrors the production fix in ``cli/errors.py``, which derives the
-    # vendored ``ClickException`` from ``typer.BadParameter.__mro__``).
-    vendored_command = next(base for base in type(group).__mro__ if base.__name__ == "Command")
-    assert isinstance(group, vendored_command)
-    assert hasattr(group, "commands")
-    # The runtime asserts above prove ``group`` is the vendored TyperGroup
-    # (command-group shaped). It is structurally identical to upstream
-    # click.Group; the casts bridge the static vendored/upstream duality so the
-    # help-rendering helpers and ``.commands`` map type-check against click.
-    click_group = cast(click.Group, group)
-    parent = click_group.make_context("ledger", [], resilient_parsing=True)
-    help_by_command = {"ledger": _render_click_help(click_group, parent)}
-    for name, command in click_group.commands.items():
+    group = _ledger_command_group()
+    parent = group.make_context("ledger", [], resilient_parsing=True)
+    # Typer vendors its own Click fork (`typer._click.core`), a distinct class
+    # family from upstream `click`, so the vendored group/command/context
+    # objects above are not nominally `click.Command`/`click.Context`. They are
+    # structurally identical -- `get_help`/`make_context` behave the same --
+    # so the casts bridge the static vendored/upstream duality without an
+    # import of typer's own private `_click` module.
+    help_by_command = {"ledger": _render_click_help(cast(click.Command, group), cast(click.Context, parent))}
+    for name in group.list_commands(typer.Context(group)):
+        command = group.get_command(typer.Context(group), name)
+        assert command is not None
         ctx = command.make_context(name, ["--help"], parent=parent, resilient_parsing=True)
-        help_by_command[name] = _render_click_help(command, ctx)
+        help_by_command[name] = _render_click_help(cast(click.Command, command), cast(click.Context, ctx))
     return help_by_command
 
 
@@ -503,14 +513,18 @@ def test_censo_modelo_removed_shims_and_stubs_stay_removed() -> None:
     # "036, 037" and modelo_codes = ["036", "037"] as live AEAT catalogue data.
     registry_dir = REPO_ROOT / "src" / "cadrumo" / "domain" / "calculations" / "registry"
     registry_tests = registry_dir / "tests"
+    # The monolithic en/es/ca/hu.yml catalogues were retired for per-domain
+    # shards, so each language tree is walked rather than named as one file.
+    locales_root = REPO_ROOT / "src" / "cadrumo" / "locales"
+    locale_files = tuple(
+        sorted(path for language in ("en", "es", "ca", "hu") for path in (locales_root / language).rglob("*.yml"))
+    )
+    assert locale_files, "the locale scan resolved to nothing, so this gate would pass vacuously"
     scanned_files = (
         _CLI_ROOT / "_modelo.py",
-        REPO_ROOT / "src" / "cadrumo" / "locales" / "en.yml",
-        REPO_ROOT / "src" / "cadrumo" / "locales" / "es.yml",
-        REPO_ROOT / "src" / "cadrumo" / "locales" / "ca.yml",
-        REPO_ROOT / "src" / "cadrumo" / "locales" / "hu.yml",
-        registry_dir / "_censo_modelos.py",
-        registry_dir / "_queries.py",
+        *locale_files,
+        registry_dir / "censo_modelos.py",
+        registry_dir / "queries.py",
         registry_tests / "test_censo_modelo_foundation.py",
         registry_tests / "test_censo_modelo_registry_data.py",
         registry_tests / "test_queries.py",
@@ -542,12 +556,22 @@ def test_censo_modelo_removed_shims_and_stubs_stay_removed() -> None:
     # ``2025-alta.pdf`` in a grounding comment; that fixture name is a legitimate
     # test-data artefact, not a stub-language leak.
     extraction_profile_exempt_tokens = {"2025-alta"}
+    # "not implemented" marks an unfinished code path in a Python source, but a
+    # locale catalogue is operator prose, where the same words are a finished
+    # message stating a capability the product genuinely does not offer -- the
+    # ledger's undetachable purchase evidence, the TUI's per-command coverage.
+    # Reading them as stub language would push authors toward vaguer refusals.
+    # Every censo-semantic token still applies to the catalogues.
+    catalogue_exempt_tokens = {"not implemented"}
     offenders: list[str] = []
     for path in scanned_files:
         text = path.read_text(encoding="utf-8")
         is_extraction_profile = "extraction_profiles" in path.parts
+        is_catalogue = path.suffix == ".yml"
         for token in forbidden_tokens:
             if is_extraction_profile and token in extraction_profile_exempt_tokens:
+                continue
+            if is_catalogue and token in catalogue_exempt_tokens:
                 continue
             if token in text:
                 offenders.append(f"{path.relative_to(REPO_ROOT).as_posix()}: {token}")

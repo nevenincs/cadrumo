@@ -20,16 +20,9 @@ from __future__ import annotations
 
 from pydantic import Field
 
-from cadrumo.domain.calculations.registry.filed_state import RegistryFiledStateComparison
-from cadrumo.domain.calculations.registry.ids import (
-    ExportLayoutId,
-    LegalRefId,
-    RelationId,
-    SourceRefId,
-    WorkbookParityRefId,
-)
-
 from ...core.json_contract import OutputSchema
+from ...domain.calculations.registry.filed_state import RegistryFiledStateComparison
+from ...domain.calculations.registry.ids import ExportLayoutId, LegalRefId, RelationId, SourceRefId, WorkbookParityRefId
 
 
 class RegistryWorkbookParityDetailPayload(OutputSchema):
@@ -39,7 +32,7 @@ class RegistryWorkbookParityDetailPayload(OutputSchema):
     workbook_source: SourceRefId
     formula_coverage: str
     runner_required: bool
-    output_cell_count: int = Field(ge=0)
+    output_cell_count: int
 
 
 class RegistryRevisionDetailPayload(OutputSchema):
@@ -50,16 +43,16 @@ class RegistryRevisionDetailPayload(OutputSchema):
     legal_refs: list[LegalRefId] = []
     source_refs: list[SourceRefId] = []
     export_layout_ids: list[ExportLayoutId] = []
-    export_layout_count: int = Field(ge=0)
-    export_record_count: int = Field(ge=0)
-    export_field_count: int = Field(ge=0)
-    deadline_window_count: int = Field(ge=0)
+    export_layout_count: int
+    export_record_count: int
+    export_field_count: int
+    deadline_window_count: int
     deadline_periods: list[str] = []
     relation_ids: list[RelationId] = []
-    relation_count: int = Field(ge=0)
+    relation_count: int
     relation_dependency_roles: list[str] = []
     filing_schedule_ids: list[str] = []
-    filing_schedule_count: int = Field(ge=0)
+    filing_schedule_count: int
     portal_guard_policy_ids: list[str] = []
     workbook_parity: list[RegistryWorkbookParityDetailPayload] = []
 
@@ -73,9 +66,11 @@ class RegistryInspectResult(OutputSchema):
     referenced under both command paths (the pattern
     :class:`~cadrumo.entrypoints.cli._payloads_modelo_reconcile.ModeloReconcileResult`
     already established for ``modelo reconcile pull``/``file``). Carries the
-    registry/source roots, every inventory count (bounded non-negative -- a
-    count can never be negative, even though the canonical report does not
-    itself declare that bound), the typed :class:`RegistryRevisionDetailPayload`
+    registry/source roots, every inventory count (bounded non-negative by
+    :class:`~application.registry.RegistryTreeReport`, which declares that
+    bound because the counts are ``len()`` tallies; this schema is the wire
+    shape of a report that already satisfies it), the typed
+    :class:`RegistryRevisionDetailPayload`
     rows, and ``verified`` (only meaningful for ``verify``, which is the
     fail-fast registry/corpus validation branch; ``inspect`` always reports
     it ``True``, as :func:`inspect_registry_tree` does not validate). A
@@ -85,21 +80,21 @@ class RegistryInspectResult(OutputSchema):
 
     registry_root: str
     source_root: str | None = None
-    modelo_count: int = Field(ge=0)
-    revision_count: int = Field(ge=0)
-    legal_reference_count: int = Field(ge=0)
-    source_reference_count: int = Field(ge=0)
-    casilla_count: int = Field(ge=0)
-    formula_count: int = Field(ge=0)
-    extraction_profile_count: int = Field(ge=0)
-    cross_reference_count: int = Field(ge=0)
-    workbook_parity_ref_count: int = Field(ge=0)
-    verification_expectation_count: int = Field(ge=0)
-    application_link_count: int = Field(ge=0)
+    modelo_count: int
+    revision_count: int
+    legal_reference_count: int
+    source_reference_count: int
+    casilla_count: int
+    formula_count: int
+    extraction_profile_count: int
+    cross_reference_count: int
+    workbook_parity_ref_count: int
+    verification_expectation_count: int
+    application_link_count: int
     application_link_surfaces: list[str] = []
-    relation_count: int = Field(ge=0)
+    relation_count: int
     relation_dependency_roles: list[str] = []
-    filing_schedule_count: int = Field(ge=0)
+    filing_schedule_count: int
     modelos: list[str] = []
     revision_details: list[RegistryRevisionDetailPayload] = []
     verified: bool

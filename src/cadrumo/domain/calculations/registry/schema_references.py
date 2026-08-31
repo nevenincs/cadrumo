@@ -23,7 +23,15 @@ from ....core.external_constants import (
 from ....core.identity import ContentDigest
 from .errors import RegistryValidationError
 from .ids import LegalRefId, ModeloId, ParameterId, RevisionId, SourceRefId
-from .schema_base import DateAxis, EvidenceTier, LegalRefs, LegalReviewStatusField, RegistryModel, ReviewStatus
+from .schema_base import (
+    DateAxis,
+    DesignAuthority,
+    EvidenceTier,
+    LegalRefs,
+    LegalReviewStatusField,
+    RegistryModel,
+    ReviewStatus,
+)
 
 __all__ = [
     "LegalParameter",
@@ -327,6 +335,7 @@ class SourceReference(RegistryModel):
     for the source itself.
     """
     record_design_epoch: str | None = Field(default=None, min_length=1, max_length=128)
+    design_authority: DesignAuthority = "authoritative"
     source_url: RegistryExternalLink
     review_status: ReviewStatus
     period_selector: PeriodSelector | None = None
@@ -369,6 +378,19 @@ class SourceReference(RegistryModel):
     outside ``corpus/normatives/`` rather than silently accepting a claim the
     concept does not apply to.
     """
+
+    def applies_across(self, span_from: date, span_to: date | None) -> bool:
+        """Report whether this source's applicability window overlaps one date span.
+
+        The ONE definition of the overlap rule. Callers keep their own policy on
+        whether a missing bound is admissible -- a record-design binary must
+        declare ``applies_from``, an evidence-backed source cell must declare
+        both -- and apply it before asking this question. An open bound here
+        means the window is open in that direction, never that it is unknown.
+        """
+        if self.applies_to is not None and self.applies_to < span_from:
+            return False
+        return not (self.applies_from is not None and span_to is not None and self.applies_from > span_to)
 
     @model_validator(mode="after")
     def _validate_source_reference(self) -> SourceReference:

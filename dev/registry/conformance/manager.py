@@ -97,7 +97,7 @@ from typing import Final, Literal, cast
 from pydantic import BaseModel, Field, model_serializer, model_validator
 from pydantic_core.core_schema import SerializerFunctionWrapHandler
 
-from cadrumo.application.registry import (
+from cadrumo.application.registry.conformance import (
     AnnualCasillaPopulationComparison,
     CoverageAuthorityScope,
     RegistryConformanceProfile,

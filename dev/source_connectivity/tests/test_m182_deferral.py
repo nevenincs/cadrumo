@@ -8,8 +8,8 @@ from cadrumo.application.modelo.calculation_route import (
     CALCULATION_ROUTE_RESOLVER_OWNERSHIP,
     CALCULATION_ROUTE_SOURCE_DISPOSITIONS,
 )
-from cadrumo.application.registry import compose_source_connectivity_coverage
 from cadrumo.application.registry.source_connectivity import load_source_connectivity_census
+from cadrumo.application.registry.source_connectivity_coverage import compose_source_connectivity_coverage
 from cadrumo.core import BindingSourceKind, RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
@@ -59,7 +59,7 @@ def test_m182_remains_measurably_ingress_blocked_until_its_missing_authority_exi
 
     stale_entry = entry.model_copy(
         update={
-            "capability_locators": ("src/cadrumo/application/calculations/_row_set_assembly.py:176",),
+            "capability_locators": ("src/cadrumo/application/calculations/row_set_assembly.py:176",),
         },
     )
     stale_census = m182_census.model_copy(update={"entries": (stale_entry,)})

@@ -6,7 +6,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....tests.aeat_literal_fixtures import aeat_url
-from .. import (
+from ..closure import (
     RegistryClosureEvidence,
     RegistryClosureLimb,
     RegistryClosureLimbName,
@@ -204,3 +204,34 @@ def test_evidence_and_models_are_strict_and_immutable() -> None:
             outcome="satisfied",
             evidence=(evidence, evidence),
         )
+
+
+def test_closure_contract_is_owned_by_its_public_defining_module() -> None:
+    """Every closure symbol is defined once, publicly, and bound nowhere else."""
+    from ... import registry as registry_namespace
+    from ..closure import RegistryClosureFilingChannelRefusal
+
+    owned = (
+        RegistryClosureEvidence,
+        RegistryClosureFilingChannelRefusal,
+        RegistryClosureLimb,
+        RegistryClosureOwnerDisposition,
+        RegistryClosureRefusal,
+    )
+    for symbol in owned:
+        assert symbol.__module__ == "cadrumo.application.registry.closure"
+        assert not hasattr(registry_namespace, symbol.__name__)
+    for alias in ("RegistryClosureLimbName", "RegistryClosureLimbOutcome", "RegistryClosureRefusalReason"):
+        assert not hasattr(registry_namespace, alias)
+
+
+def test_the_retired_private_closure_module_is_gone() -> None:
+    """No private path, alias, or re-export survives the hard move."""
+    import importlib
+    from pathlib import Path
+
+    package = Path(importlib.import_module("cadrumo.application.registry").__file__).parent
+
+    assert not (package / "_closure.py").exists()
+    with pytest.raises(ModuleNotFoundError):
+        importlib.import_module("cadrumo.application.registry._closure")

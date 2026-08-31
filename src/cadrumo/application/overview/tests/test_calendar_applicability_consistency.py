@@ -27,8 +27,7 @@ from datetime import date
 
 import pytest
 
-from cadrumo.domain.calculations.registry.applicability import ApplicabilityVerdict
-
+from ....domain.calculations.registry.applicability import ApplicabilityVerdict
 from ....domain.deadlines import (
     EntityType,
     IrpfEstimationRegime,

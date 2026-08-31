@@ -152,6 +152,11 @@ aggregation:
       invoice_retencion_collision: La(es) observació(ons) de retenció de la(es) factura(es)
         %{source_object_ids} es van declarar manualment i també mitjançant --received-invoice-retencion;
         elimineu el duplicat abans d'agregar.
+      m111_no_retenciones_attestation_missing: 'No hi ha observacions de retenció
+        per perceptor per al model 111 %{filing_year} %{period}. No presentis un Model
+        111 en blanc: declara el trimestre com a període sense retencions amb `aeat
+        config profile complete setup --modelo-111-no-retenciones-periods %{attestation_period}`,
+        o registra les files de perceptor amb `aeat app modelo aggregate --retencion-observation`.'
       perceptor_nif_blank: El NIF del perceptor no pot estar buit.
       perceptor_observations_missing: No hi ha observacions de retencions per perceptor
         per al model %{modelo} %{filing_year} %{period}; la font %{source_kind} no
@@ -382,6 +387,11 @@ categories:
     seguros_salud_autonomo:
       notes: Deduïble fins a un límit legal de 500 EUR/any per contribuent (Ley 35/2006
         art. 30.2.5.c regla 1a, primes d'assegurança de malaltia).
+      statutory_cap_variants:
+        discapacidad:
+          label: Límit per persona assegurada amb discapacitat
+        general:
+          label: Límit general per persona assegurada
     software_suscripcion:
       label: Subscripcions de programari
       notes: Despesa íntegrament deduïble (Ley 35/2006 art. 28.1).
@@ -452,6 +462,9 @@ categories:
     viajes_transporte:
       label: Transport de viatge
       notes: Despesa íntegrament deduïble (Ley 35/2006 art. 28.1, altres serveis exteriors).
+component:
+  log:
+    empty: Encara no hi ha entrades de registre.
 core:
   profile:
     errors:
@@ -702,6 +715,23 @@ mcp:
     warm_degraded: '''{command}'' s''ha atès mitjançant el transport de subprocés
       perquè l''entorn d''execució en calent estava {reason}; el resultat és idèntic,
       només més lent. L''atenció en calent es reprèn quan acaba la crida lenta.'
+operation:
+  modal:
+    action:
+      apply: Aplica
+      cancel: Cancelar
+      close: Tanca
+      detach: Desvincula
+      reject: Rebutja
+    detail:
+      cleanup_deadline: Termini de tancament
+      diagnostic: Diagnòstic
+      execution_deadline: Termini d'execució
+      phase: Fase
+      receipt_refusal: Rebuig
+      receipt_result: Resultat
+    status:
+      running: En curs
 overview:
   no_aeat_history: Aquest perfil no té cap presentació confirmada per l'AEAT.
   no_aeat_history_sociedades: Aquest perfil no té cap presentació confirmada per l'AEAT.
@@ -772,9 +802,11 @@ sheets:
       base_retenciones: Base de retencions i ingressos a compte
       clave: Clau
       clave_codigo: Clau codi
+      clave_declarado: Clau de titularitat de l'immoble
       clave_mercado: Clau de mercat
       codigo_cuenta: Codi compte valors / n.º operació préstec
       codigo_emisor: Codi emissor
+      codigo_provincia: Codi de província
       compensaciones: Compensacions
       complemento_infancia_clave: Complement d'ajuda a la infància
       contract_relation_clave: Contracte o relació
@@ -797,7 +829,10 @@ sheets:
       descendants_rest_whole: Descendents restants (sencers)
       descendants_under_3_total: Descendents < 3 anys (total)
       descendants_under_3_whole: Descendents < 3 anys (sencers)
+      dias_arrendamiento: Dies d'arrendament de l'immoble
+      dias_miembro: Nombre de dies com a membre
       disability_clave: Discapacitat
+      domicilio_fiscal: Domicili fiscal del membre
       donor_legal_name: Nom o raó social del donant
       donor_tax_id: NIF del donant
       emerging_stock_excess_clave: Excessos de lliurament d'accions d'empreses emergents
@@ -829,8 +864,10 @@ sheets:
       member_legal_name: Raó social del membre
       member_state_code: Estat membre
       member_tax_id: NIF del membre
+      miembro_a_31_diciembre: Membre a 31 de desembre
       naturaleza: Naturalesa
       naturaleza_declarante: Naturalesa del declarant
+      naturaleza_inmueble: Naturalesa de l'immoble
       nif_pagador_anterior: NIF del pagador anterior
       numero_orden: Número d'ordre
       operation_date: Data de l'operació
@@ -854,17 +891,24 @@ sheets:
       percibido_dinerario: Percepcions dineràries
       percibido_especie: Percepcions en espècie
       porcentaje_retencion: '% Retenció'
+      porcentaje_titularidad_inmueble: Percentatge de titularitat de l'immoble
       province_code: Província
       rectified_base_previous: Base imposable anterior (rectificació)
       rectified_period: Període rectificat
       rectified_year: Exercici rectificat
+      reduccion: Reducció aplicable al rendiment
       reducciones: Reduccions
       reducciones_aplicables: Reduccions aplicables
+      referencia_catastral: Referència cadastral
       refund_amount: Import a retornar
+      rendimiento_neto_minorado_agricola_eo: Rendiment net minorat agrícola (estimació
+        objectiva)
+      rendimiento_neto_previo_eo: Rendiment net previ (estimació objectiva)
       representative_tax_id: NIF del representant legal
       retencion_practicada: Retenció practicada
       second_child_compute: Còmput del 2n fill
       share_percentage: Percentatge de participació
+      situacion_inmueble: Situació de l'immoble
       spouse_or_unit_titular_tax_id: NIF del cònjuge o del titular de la unitat de
         convivència
       startup_fund_rendimientos_clave: Rendiments per la gestió de fons vinculats
@@ -957,3 +1001,7 @@ transactions:
     message_829073: 'Possible buit: més de 35 dies entre transaccions.'
     unreadable: Arxiu il·legible o format no suportat
     verified: Importació verificada amb èxit
+tui:
+  root:
+    no_areas: Cap àrea no està disponible encara en aquesta sessió.
+    title: 'Cadrumo: sessió de terminal'

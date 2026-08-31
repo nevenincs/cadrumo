@@ -27,7 +27,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....application.aggregation import row_fingerprint
-from ....domain.modelos import CalculationRevisionState
+from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.transactions import (
     BucketTransactionRef,
     BusinessClassification,

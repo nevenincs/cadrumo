@@ -22,20 +22,40 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from typing import Literal
 
 from ...core import Modelo
-from ...core.i18n import tr
-from ...core.json_contract import Notice, NoticeSeverity
 from ...core.logging import get_logger
 from ...core.time import today_madrid
 from ...domain.deadlines import TaxpayerProfile
-from ...domain.modelos import CalculationRevision, WorkUnit
+from ...domain.modelos import WorkUnit
+from ...domain.modelos.calculation_revision import CalculationRevision
 
 _LOG = get_logger(__name__)
+
+
+@dataclass(frozen=True, slots=True)
+class M210PlazoResolution:
+    """The resolved Modelo 210 filing window, carried as facts.
+
+    Deliberately NOT a :class:`~core.json_contract.Notice`. A notice carries
+    localized operator-facing prose, and rendering it here would put
+    presentation inside the application layer; the frontends build the notice
+    from these facts instead, so the same resolution can be spoken in any
+    surface's own voice.
+
+    Attributes:
+        closes_on: ISO date the voluntary filing window closes.
+        context: Deterministic diagnostic metadata, already in the shape a
+            notice context takes -- window identity, legal and source refs.
+    """
+
+    closes_on: str
+    context: Mapping[str, str]
 
 
 @dataclass(frozen=True, slots=True)
@@ -201,13 +221,13 @@ def modelo_work_deadline_posture(
     )
 
 
-def calculated_m210_plazo_notice(
+def calculated_m210_plazo_resolution(
     *,
     work_unit: WorkUnit,
     revision: CalculationRevision,
     workflow_profile: TaxpayerProfile,
-) -> Notice | None:
-    """Return the grounded post-calculation Modelo 210 plazo notice, if known.
+) -> M210PlazoResolution | None:
+    """Return the grounded post-calculation Modelo 210 plazo facts, if known.
 
     Modelo 210 annual filing windows depend on the calculated declaration
     result and the operator's persisted official two-digit tipo-renta code.
@@ -260,22 +280,14 @@ def calculated_m210_plazo_notice(
     if window.payment_cutoff_on is not None:
         context["payment_cutoff_on"] = window.payment_cutoff_on.isoformat()
 
-    return Notice(
-        severity=NoticeSeverity.INFO,
-        code="modelo.work.m210.plazo_resolved",
-        message=tr(
-            "cli.app.modelo.work.m210_plazo_resolved",
-            default="Modelo 210 filing window resolved: voluntary filing closes on %{closes_on}.",
-            closes_on=window.closes_on.isoformat(),
-        ),
-        context=context,
-    )
+    return M210PlazoResolution(closes_on=window.closes_on.isoformat(), context=context)
 
 
 __all__ = [
+    "M210PlazoResolution",
     "ModeloWorkConditionalRecargoPreview",
     "ModeloWorkDeadlinePosture",
-    "calculated_m210_plazo_notice",
+    "calculated_m210_plazo_resolution",
     "modelo_work_deadline_posture",
     "validate_modelo_work_deadline_posture",
 ]

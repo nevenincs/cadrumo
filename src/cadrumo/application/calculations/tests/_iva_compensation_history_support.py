@@ -9,9 +9,6 @@ from typing import Literal
 
 from pydantic import AnyHttpUrl
 
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from cadrumo.domain.calculations.registry.snapshot import build_snapshot
-
 from ....adapters.outbound.aeat.sede import (
     IVA_COMPENSATION_WALLET_URL,
     FiledDeclaracionArtefact,
@@ -29,6 +26,8 @@ from ....core import (
     validated_casilla_id,
 )
 from ....core.resources import bundled_path
+from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.snapshot import build_snapshot
 from ....domain.iva_compensation import IvaCompensationPeriodState
 from ....tests.registry_tree import bundled_registry_tree
 
@@ -229,11 +228,11 @@ def _filed_390_observation(
 ) -> FiledDeclaracionObservation:
     return FiledDeclaracionObservation(
         modelo="390",
-        ejercicio=2026,
-        period=Period.from_year_and_code(2026, "0A"),
+        ejercicio=2025,
+        period=Period.from_year_and_code(2025, "0A"),
         expediente_id="200039000000001Z",
         status="filed",
-        presented_at=datetime(2027, 1, 30, 12, 0, tzinfo=UTC),
+        presented_at=datetime(2026, 1, 30, 12, 0, tzinfo=UTC),
         authenticated_identity=_TAXPAYER_REF,
         artefacts=(
             FiledDeclaracionArtefact(
@@ -242,7 +241,7 @@ def _filed_390_observation(
                 content_type="text/plain",
                 byte_count=0,
                 sha256="b" * 64,
-                captured_at=datetime(2027, 1, 30, 12, 0, tzinfo=UTC),
+                captured_at=datetime(2026, 1, 30, 12, 0, tzinfo=UTC),
             ),
         ),
         casillas=(

@@ -21,7 +21,7 @@ active profile. :class:`core.config.Settings` drives the choice:
 Composition order:
 
 1. Resolve the active profile via
-   :func:`adapters.outbound.google._active_profile.resolve_active_profile`.
+   :func:`adapters.outbound.google.active_profile.resolve_active_profile`.
 2. Read settings via :func:`~core.config.load_settings`.
 3. Dispatch on :class:`ProviderKind`. ``LOCAL_FILESYSTEM`` builds a
    :class:`adapters.outbound.storage._local.LocalFileSystemProvider`

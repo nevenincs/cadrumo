@@ -16,7 +16,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ...core.logging import get_logger
-from ._calculation_revision import CalculationRevision, CalculationRevisionCatalogue
+from .calculation_revision import CalculationRevision, CalculationRevisionCatalogue
 from .errors import ModeloError
 
 if TYPE_CHECKING:

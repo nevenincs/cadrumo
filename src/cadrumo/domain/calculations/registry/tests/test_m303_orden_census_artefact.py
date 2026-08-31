@@ -30,6 +30,7 @@ import pytest
 from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
 from .. import m303_orden_manifest
+from .._m303_orden_raw_models import M303AnnualOrdenSourceCensus
 from ..errors import RegistryLoadError
 from ..ids import SourceRefId
 from ..m303_orden_census_artefact import (
@@ -43,7 +44,6 @@ from ..m303_orden_manifest import (
     collect_m303_annual_orden_fingerprints,
     load_m303_annual_orden_authority,
 )
-from ..m303_orden_raw_models import M303AnnualOrdenSourceCensus
 from ..schema_references import SourceReference
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]

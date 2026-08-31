@@ -8,10 +8,9 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
-from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
-
 from ....core import Modelo
+from ....domain.calculations.export_field_kind import CasillaFieldKind
+from ....domain.calculations.registry.export_parse import parse_export_payload
 from ....domain.filing import FilingExportError
 from .. import GeneralFilingProfileFacts, build_filing_producer_snapshot
 from .._export import (
@@ -91,8 +90,24 @@ def test_post_write_tripwire_refuses_real_casilla_drift_and_preserves_the_artifa
     field = next(field for field in record.fields if field.id == casilla.field_id)
     assert field.offset is not None
     assert field.length is not None
-    assert record is layout.records[0]
-    start = field.offset - 1
+    # Assert the PROPERTY, not the position. The record is already resolved by
+    # id from the parsed casilla above, so pinning it to records[0] added
+    # nothing about correctness and broke the moment an envelope_header record
+    # was prepended to this layout: index 0 became the envelope while casilla 03
+    # still lives on the data page, which is what this tripwire is about.
+    assert record.record_type == "page_1"
+
+    # A field offset is RECORD-relative, so it must be rebased onto the record's
+    # own start in the payload. Slicing the file at field.offset - 1 silently
+    # assumed this record opens the file, which stopped being true the moment an
+    # envelope_header record was prepended: the slice then read the envelope's
+    # blanks instead of the casilla. Mirror the parser's own walk -- records in
+    # `order`, each consuming the extent its fields declare.
+    def _record_extent(candidate: object) -> int:
+        return max(item.offset - 1 + item.length for item in candidate.fields)
+
+    record_start = sum(_record_extent(earlier) for earlier in layout.records if earlier.order < record.order)
+    start = record_start + field.offset - 1
     end = start + field.length
     original = payload[start:end]
     assert original == casilla.raw.encode(record.encoding)
@@ -103,8 +118,15 @@ def test_post_write_tripwire_refuses_real_casilla_drift_and_preserves_the_artifa
     assert verification.verdict is DeclaracionVerifyVerdict.DRIFT
     assert verification.mismatched_casilla_ids == ("03",)
 
-    with pytest.raises(FilingExportError, match=r"post-write verification refused drift.*casillas=03"):
+    # Assert the refusal's STRUCTURED context, not its rendered prose. The
+    # message became a translation key when the export refusals were localised,
+    # so a regex over English text pinned a presentation detail while the
+    # contract -- that the refusal names the drifted casilla -- lives in the
+    # context and survives translation.
+    with pytest.raises(FilingExportError) as refusal:
         _verify_written_export(draft, file_path=output_path, schema_provider=provider)
+    assert refusal.value.translated_message == ("application.filing.export.errors.post_write_verification_refused")
+    assert refusal.value.context["mismatched_casilla_ids"] == ("03",)
 
     assert output_path.read_bytes() != payload
 

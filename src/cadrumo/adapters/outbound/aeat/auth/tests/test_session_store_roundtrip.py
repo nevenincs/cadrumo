@@ -23,8 +23,6 @@ from typing import cast
 import pytest
 from pydantic import ValidationError
 
-import cadrumo.adapters.outbound.aeat.auth.session_store as session_store
-
 from ......core.auth_session_keys import aeat_auth_session_storage_state_path
 from ......core.config import AEAT_CERTIFICATE_PROTECTED_URL
 from ......core.time import now
@@ -32,6 +30,7 @@ from ......tests.aeat_literal_fixtures import AEAT_HOST_SUFFIX_EXPECTED, aeat_ur
 from ......tests.secure_sql import isolated_runtime_profile
 from .....persistence.storage import AEAT_BROWSER_SESSION_NAMESPACE
 from .....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+from .. import session_store as session_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 _BUCKET_ID = "1f6b0000-0000-4000-8000-00000000f0f0"

@@ -33,7 +33,7 @@ jobs:
           WATCHDOG_JOB_NAME: Cadrumo / runner queue watchdog
           THRESHOLD_SECONDS: "90"
           MAX_WATCH_SECONDS: "600"
-        run: python3 dev/ci/runner_queue_watchdog.py
+        run: python3 -m dev.ci.runner_queue_watchdog
 
   offline-windows:
     name: Cadrumo probe / offline Windows lane

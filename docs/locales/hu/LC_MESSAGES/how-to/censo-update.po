@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-25 11:19+0200\n"
+"POT-Creation-Date: 2026-08-26 12:42+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization <docs@cadrumo>\n"
 "Language: hu\n"
@@ -220,12 +220,12 @@ msgid ""
 "applied."
 msgstr ""
 "A jelenlegi CLI nem alakítja az első parancs előnézetét mentett "
-"jóváhagyássá. A `--apply` parancs újra lekérdezi az AEAT-t, és ezt az "
-"új megfigyelést alkalmazza. Mielőtt a frissített profilra támaszkodnál, "
+"jóváhagyássá. A `--apply` parancs újra lekérdezi az AEAT-t, és ezt az új "
+"megfigyelést alkalmazza. Mielőtt a frissített profilra támaszkodnál, "
 "ellenőrizd magát a `--apply` eredményét. Folyamatban van, hogy ezen a "
 "parancson elérhetővé váljon az alkalmazás által rögzített, pontos "
-"alapvonalú felülvizsgálati és alkalmazási életciklus; amíg ez nem készül el, "
-"ne tekintsd a korábbi előnézetet alkalmazott operandusnak."
+"alapvonalú felülvizsgálati és alkalmazási életciklus; amíg ez nem készül "
+"el, ne tekintsd a korábbi előnézetet alkalmazott operandusnak."
 
 #: ../../how-to/censo-update.md:97
 msgid ""
@@ -360,6 +360,7 @@ msgstr ""
 "Add hozzá a `--apply` kapcsolót, hogy az aktív profilba rögzítsd őket."
 
 #: ../../how-to/censo-update.md:154
+#, fuzzy
 msgid ""
 "Facts recorded this way carry a *non-official evidence* marker: they came"
 " from a document you supplied, not from an AEAT-confirmed read, so "
@@ -372,10 +373,10 @@ msgstr ""
 "Az így rögzített adatok *nem hivatalos bizonyíték* jelölést kapnak: az "
 "általad átadott dokumentumból származnak, nem az AEAT által megerősített "
 "olvasásból. Ezért a profilnézetek mutatják a származást, és továbbra is "
-"érvényes a benyújtási naptár `censo.enrolment_unverified` "
-"figyelmeztetése. Ha az igazolás értéke eltér a beállításkor megadott "
-"válaszodtól, a profil megőrzi az eltérés rekordját, és a `aeat config "
-"profile show` figyelmeztet a rendezésig."
+"érvényes a benyújtási naptár `censo.enrolment_unverified` figyelmeztetése. "
+"Ha az igazolás értéke eltér a beállításkor megadott válaszodtól, a profil "
+"megőrzi az eltérés rekordját, és a `aeat config profile show` figyelmeztet "
+"a rendezésig."
 
 #: ../../how-to/censo-update.md:162
 msgid ""
@@ -427,8 +428,8 @@ msgstr ""
 "azokat a mezőket:"
 
 #: ../../how-to/censo-update.md:190
-msgid "For modelo-specific readiness, use profile preflight:"
-msgstr "A modelóspecifikus felkészültséghez használja a profil-előellenőrzést:"
+msgid "For modelo-specific readiness, use modelo readiness:"
+msgstr "A modelóspecifikus felkészültséghez használja a modell felkészültségi ellenőrzését:"
 
 #: ../../how-to/censo-update.md:196
 msgid "Keep the facts current"
@@ -508,3 +509,4 @@ msgstr ""
 
 #~ msgid "**Adopted**: the profile had no answer, so AEAT's value fills it."
 #~ msgstr "**Átvett**: a profilban nem volt érték, ezért az AEAT értéke tölti ki."
+

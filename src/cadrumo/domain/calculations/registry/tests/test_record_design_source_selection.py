@@ -7,13 +7,12 @@ import inspect
 
 import pytest
 
-import cadrumo.domain.calculations.registry.corpus_catalogue as _corpus_catalogue
-from cadrumo.domain.calculations.registry.schema_references import SourceReference
-
 from .....core.hashing import hash_file
 from .....core.resources import bundled_path
+from .. import corpus_catalogue as _corpus_catalogue
 from ..corpus_catalogue import resolve_record_design_binary
 from ..errors import RegistryValidationError
+from ..schema_references import SourceReference
 from ._catalogue_verification_support import _catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -257,8 +256,8 @@ def test_record_design_selection_cannot_consult_registry_export_layouts() -> Non
     )
     # ...and a floor, so an empty or mis-rooted parse cannot satisfy the above.
     assert {
-        (1, "_errors", "RegistryValidationError"),
-        (1, "_schema", "SourceReference"),
+        (1, "errors", "RegistryValidationError"),
+        (0, "cadrumo.domain.calculations.registry.schema_references", "SourceReference"),
         (4, "core.hashing", "hash_file"),
         (4, "core.resources", "resolve_companion_binary"),
     } <= top_level_imported_symbols

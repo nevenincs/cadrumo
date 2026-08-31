@@ -19,13 +19,12 @@ from ...tests import register_wizard_catalogue
 
 __all__ = ["register_wizard_catalogue"]
 
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
+from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.deadlines import (
     EntityType,
     IVARegime,
@@ -35,13 +34,11 @@ from ....domain.deadlines import (
     ModeloIVAProfile,
     TaxpayerProfile,
 )
-from ....domain.modelos import (
+from ....domain.modelos import ExternalEvidenceKind, WorkUnit, upsert_calculation_revision
+from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    ExternalEvidenceKind,
-    WorkUnit,
     derive_calculation_revision_id,
-    upsert_calculation_revision,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.env_scope import ready_clave_settings

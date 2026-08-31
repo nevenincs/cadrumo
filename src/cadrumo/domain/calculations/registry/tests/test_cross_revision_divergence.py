@@ -13,10 +13,9 @@ from datetime import date
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
-
-from ..cross_revision_divergence import revisions_overlap
+from .._cross_revision_divergence import revisions_overlap
+from ..schema import ModeloRevision
+from ..schema_references import PeriodSelector
 from ._referential_integrity_support import (
     REFERENCE_LEGAL_ID,
     REFERENCE_SOURCE_ID,

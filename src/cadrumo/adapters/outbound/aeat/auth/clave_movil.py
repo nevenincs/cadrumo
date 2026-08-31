@@ -45,8 +45,6 @@ from urllib.parse import quote, urlsplit
 
 from pydantic import ValidationError
 
-import cadrumo.adapters.outbound.aeat.auth.session_store as session_store
-
 from .....application.auth.protocols import (
     BrowserContextPort,
     BrowserPagePort,
@@ -71,6 +69,7 @@ from .....core.remote_authority import canonical_remote_hostname
 from .....core.time import now
 from .....domain.user_profile.errors import UserProfileError
 from .._playwright import PlaywrightTimeoutError
+from . import session_store as session_store
 from ._clave_movil_page_flow import _ClaveMovilPageFlowMixin
 from ._clave_movil_salvage import _ClaveMovilSessionSalvageMixin
 from ._clave_provider_common import (
@@ -626,11 +625,10 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
 
     def _active_profile_diagnostic_context(self, provider_identity: str) -> dict[str, object]:
         try:
-            from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket_by_id
-
             from .....adapters.persistence.storage import active_bucket_session_serves
             from .....application.user_profile.profile_record_repository import ProfileRecordRepository
             from .....application.user_profile.projections import record_to_path_values, record_to_values
+            from .....application.workflow.profile_bucket_scan import read_profile_bucket_by_id
             from .....core.bucket_pointer import resolve_active_bucket_id
             from .....domain.user_profile.errors import ProfileNotFoundError
 

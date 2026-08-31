@@ -7,10 +7,10 @@ architectural markers (``hex_application`` and friends) and no EXECUTION marker
 is selected by no lane at all. It is not skipped and not reported; it simply
 never runs, and a suite that never runs it is green forever.
 
-``dev/`` already has this gate: ``dev/tests/test_lane_reachability.py`` proves
-the union of the `dev/` recipes reaches every tracked ``dev/**/test_*.py``, and
-the Justfile calls itself the sole declaration site so a lane is declared there
-or nowhere. The same argument applies to ``src/``, where the check is simpler
+The development test tree already has this gate: its own lane-reachability test
+proves the union of its recipes reaches every tracked module there, and the
+Justfile calls itself the sole declaration site so a lane is declared there or
+nowhere. The same argument applies to ``src/``, where the check is simpler
 because no lane names a path -- only marker selection can fail.
 
 The execution markers below are the ones a lane actually selects on. They are
@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import ast
 from collections.abc import Callable
+from pathlib import Path
 
 import pytest
 
@@ -43,9 +44,9 @@ _EXECUTION_MARKERS = frozenset({"unit", "integration", "aeat_live"})
 #: also EXCLUDE markers, and a combination excluded by every one of them is
 #: reachable by nothing while still looking marked -- ``integration and serial
 #: and perf`` is refused by the parallel lane for being serial and by the
-#: serial lane for being perf. The `dev/` reachability gate evaluates its lane
-#: expressions for this reason; this one now does too, rather than checking
-#: only that some execution marker is present.
+#: serial lane for being perf. The development test tree's reachability gate
+#: evaluates its lane expressions for this reason; this one now does too,
+#: rather than checking only that some execution marker is present.
 _LANE_SELECTORS: tuple[tuple[str, Callable[[frozenset[str]], bool]], ...] = (
     (
         "just test-unit",
@@ -91,7 +92,7 @@ def _declared_markers(tree: ast.AST) -> set[str]:
     return found
 
 
-def _test_modules() -> list:
+def _test_modules() -> list[Path]:
     """Return every test module shipped under the package."""
     return [path for path in SRC_CADRUMO.rglob("test_*.py") if "tests" in path.parts]
 

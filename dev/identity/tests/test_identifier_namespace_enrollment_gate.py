@@ -105,12 +105,28 @@ from ..identifier_noun_census import annotation_text, is_bare_str
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-#: Production source root in the CURRENT worktree. The parent path calculation
-#: is anchored to this test file rather than the process cwd.
-_SOURCE_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
+#: Repository root in the CURRENT worktree, used to render stable anchors.
+#: Anchored to this test file rather than the process cwd. Named from the
+#: repository DOWN rather than derived from the source root upwards: this file
+#: was relocated out of `src/` into its dev family home, and an upward
+#: calculation that was right at the old depth silently pointed at `dev/`
+#: afterwards, so the gate scanned the tooling tree instead of the product.
+_REPOSITORY_ROOT: Final[Path] = Path(__file__).resolve().parents[3]
 
-#: Repository root in the CURRENT worktree, used only to render stable anchors.
-_REPOSITORY_ROOT: Final[Path] = _SOURCE_ROOT.parents[1]
+#: Production source root in the CURRENT worktree.
+_SOURCE_ROOT: Final[Path] = _REPOSITORY_ROOT / "src" / "cadrumo"
+
+
+@pytest.fixture(autouse=True)
+def _production_source_root_resolved() -> None:
+    """Fail this module's tests if the depth arithmetic retargeted.
+
+    Checked per test rather than at import. Collection must stay side-effect
+    free, and a guard that raises during collection reports a broken module
+    rather than a named gate that lost its root, which is harder to act on.
+    """
+    assert (_SOURCE_ROOT / "core").is_dir(), f"identifier gate lost the production source root: {_SOURCE_ROOT}"
+
 
 #: The root pydantic base every model in this tree ultimately derives from.
 _MODEL_ROOT: Final[str] = "BaseModel"
@@ -259,7 +275,7 @@ class _Adjudication:
 #: promoting it would refuse a value the site exists to handle.
 _ADJUDICATED: Final[tuple[_Adjudication, ...]] = (
     _Adjudication(
-        path="src/cadrumo/application/auth/_sessions.py",
+        path="src/cadrumo/application/auth/sessions.py",
         model="ClaveAuthFacts",
         field="tax_id",
         group="raw/prevalidation tax inputs",
@@ -270,7 +286,7 @@ _ADJUDICATED: Final[tuple[_Adjudication, ...]] = (
         ),
     ),
     _Adjudication(
-        path="src/cadrumo/application/auth/_sessions.py",
+        path="src/cadrumo/application/auth/sessions.py",
         model="ClaveCredentials",
         field="profile_tax_id",
         group="raw/prevalidation tax inputs",
@@ -385,7 +401,7 @@ _ADJUDICATED: Final[tuple[_Adjudication, ...]] = (
         ),
     ),
     _Adjudication(
-        path="src/cadrumo/application/auth/_diagnostics.py",
+        path="src/cadrumo/application/auth/diagnostics.py",
         model="AuthDiagnosticSummary",
         field="active_profile_id",
         group="redacted diagnostic projections",
@@ -395,7 +411,7 @@ _ADJUDICATED: Final[tuple[_Adjudication, ...]] = (
         ),
     ),
     _Adjudication(
-        path="src/cadrumo/application/auth/_diagnostics.py",
+        path="src/cadrumo/application/auth/diagnostics.py",
         model="AuthDiagnosticSummary",
         field="active_profile_label",
         group="redacted diagnostic projections",
@@ -425,7 +441,7 @@ _ADJUDICATED: Final[tuple[_Adjudication, ...]] = (
         ),
     ),
     _Adjudication(
-        path="src/cadrumo/application/modelo/_borrador_binding.py",
+        path="src/cadrumo/application/modelo/borrador_binding.py",
         model="Modelo100BorradorBindingCommand",
         field="borrador_snapshot_id",
         group="semantic tail collisions",
@@ -455,7 +471,7 @@ _ADJUDICATED: Final[tuple[_Adjudication, ...]] = (
         ),
     ),
     _Adjudication(
-        path="src/cadrumo/domain/calculations/registry/_invoice_bindings.py",
+        path="src/cadrumo/domain/calculations/registry/invoice_bindings.py",
         model="InvoiceObservation",
         field="invoice_id",
         group="open ledger-source references",

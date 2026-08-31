@@ -40,7 +40,24 @@ from .._smoke_common import (
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
 
-_REPO_ROOT = Path(__file__).resolve().parents[5]
+# dev/packaging/tests -> parents[3] is the repository root. Stated because
+# the depth silently retargets on a move: these files carried the depth they
+# had under src/, which resolved ABOVE the repository and built a wheel from
+# a directory with no pyproject.
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+
+
+@pytest.fixture(autouse=True)
+def _repository_root_resolved() -> None:
+    """Fail this module's tests if the depth arithmetic retargeted.
+
+    Checked per test rather than at import. Collection must stay side-effect
+    free, and a guard that raises during collection reports a broken module
+    rather than a named gate that lost its root, which is harder to act on.
+    """
+    assert (_REPO_ROOT / "pyproject.toml").is_file(), f"packaging gate lost the repository root: {_REPO_ROOT}"
+
+
 _PROVISIONING_MARKER = "S35_PROVISIONING_MATRIX:"
 
 

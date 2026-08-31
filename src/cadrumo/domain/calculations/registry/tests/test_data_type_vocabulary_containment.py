@@ -28,8 +28,8 @@ import pytest
 from pydantic import BaseModel
 
 from ..binding_selector_utils import BindingExportDataType
-from ..bindings import _ManualInputDataType
 from ..errors import RegistryValidationError
+from ..manual_input_selector import ManualInputDataType
 from ..schema_exports import ExportFieldDefinition
 from ..schema_formula import ParameterDefinition
 from ..schema_scalars import _REGISTRY_SCALAR_VALUE_TYPES, registry_scalar_value_type
@@ -40,14 +40,18 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 def _declared_members(model: type[BaseModel]) -> frozenset[str]:
     """Return the closed ``data_type`` vocabulary a model declares."""
-    return frozenset(typing.get_args(model.model_fields["data_type"].annotation))
+    members: set[str] = set()
+    for arg in typing.get_args(model.model_fields["data_type"].annotation):
+        assert isinstance(arg, str)
+        members.add(arg)
+    return frozenset(members)
 
 
 #: The narrowings, each expected to stay inside the casilla vocabulary.
 _SCALAR_NARROWINGS: dict[str, frozenset[str]] = {
     "ExportFieldDefinition.data_type": _declared_members(ExportFieldDefinition),
     "BindingExportDataType": frozenset(typing.get_args(BindingExportDataType)),
-    "_ManualInputDataType": frozenset(typing.get_args(_ManualInputDataType)),
+    "ManualInputDataType": frozenset(typing.get_args(ManualInputDataType)),
 }
 
 

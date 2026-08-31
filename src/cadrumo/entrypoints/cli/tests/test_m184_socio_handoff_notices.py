@@ -16,12 +16,10 @@ from decimal import Decimal
 import pytest
 
 from ....core.json_contract import NoticeSeverity
-from ....domain.modelos import (
+from ....domain.modelos import Modelo184MemberRow, Modelo349OperadorRow, ModeloDetailRow
+from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    Modelo184MemberRow,
-    Modelo349OperadorRow,
-    ModeloDetailRow,
     derive_calculation_revision_id,
 )
 from .._modelo_rendering import m184_socio_handoff_notices
@@ -60,10 +58,10 @@ def _revision(*detail_rows: ModeloDetailRow) -> CalculationRevision:
 def test_handoff_emits_one_info_notice_per_socio() -> None:
     revision = _revision(
         Modelo184MemberRow(
-            nif="12345678A", nombre="Ana Socia", porcentaje=Decimal("60.00"), importe=Decimal("58100.00")
+            nif="12345678A", nombre="Ana Socia", porcentaje=Decimal("60.00"), importe=Decimal("58100.00"), clave="D"
         ),
         Modelo184MemberRow(
-            nif="87654321B", nombre="Beto Comunero", porcentaje=Decimal("40.00"), importe=Decimal("38700.00")
+            nif="87654321B", nombre="Beto Comunero", porcentaje=Decimal("40.00"), importe=Decimal("38700.00"), clave="D"
         ),
     )
 

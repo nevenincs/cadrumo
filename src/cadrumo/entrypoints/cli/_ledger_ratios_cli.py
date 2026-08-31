@@ -14,9 +14,10 @@ from ...core.logging import get_logger
 from ...core.time import now
 from ...domain.buckets import BucketEventType
 from ...domain.categories import SpendingCategory
-from ._common import _bad, emit_envelope, parse_decimal_amount
+from ._common import _bad, emit_envelope
 from ._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from ._common import active_bucket_id_or_refuse as _ratios_bucket_id
+from ._decimal_parsing import parse_decimal_amount
 from ._ledger_support import _ledger_cli_no_recovery
 
 _log = get_logger(__name__)
@@ -90,8 +91,22 @@ def _emit_ratios_censo_override_warning(
     )
 
 
+def _resolved_ratio_year(year: int | None) -> int:
+    """Return the filing year whose category profiles govern this invocation.
+
+    Defaults to the calendar year the one clock authority reports rather than
+    a pinned literal: the statutory multipliers and default ratios these verbs
+    read are year-versioned, so a pinned year would apply one year's law to
+    every invocation. An operator replaying an earlier year passes ``--year``.
+    """
+    from ...core.time import today_madrid
+
+    return today_madrid().year if year is None else year
+
+
 def ratios_list(
     ctx: typer.Context,
+    year: int | None = None,
     output_language: OutputLanguage | None = None,
 ) -> None:
     """List every per-category proportional-deduction override stored on the active bucket."""
@@ -113,6 +128,7 @@ def ratios_list(
         profile = load_usage_ratios_with_censo_guard(
             bucket_id=bucket_id,
             raw_afectacion_ratio=raw_afectacion,
+            year=_resolved_ratio_year(year),
         )
     except CensoRatioMismatchError as exc:
         from ...application.cli_exception_preconditions import CliExceptionPrecondition
@@ -142,6 +158,7 @@ def ratios_set(
     ctx: typer.Context,
     category: SpendingCategory,
     ratio: str,
+    year: int | None = None,
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Set or replace one per-category usage-ratio override on the active bucket."""
@@ -168,6 +185,7 @@ def ratios_set(
                 category=category,
                 override_ratio=parsed,
                 raw_afectacion_ratio=raw_afectacion if raw_afectacion is not None else parsed,
+                year=_resolved_ratio_year(year),
             )
             if raw_afectacion is not None
             else None
@@ -221,6 +239,7 @@ def ratios_unset(
 
 def ratios_eligible(
     ctx: typer.Context,
+    year: int | None = None,
     output_language: OutputLanguage | None = None,
 ) -> None:
     """List every ``SpendingCategory`` that may carry a per-category proportional-deduction override."""
@@ -229,7 +248,7 @@ def ratios_eligible(
     from ._ledger_payloads import RatiosEligibleResult, RatiosEligibleRowPayload
 
     bucket_id = _ratios_bucket_id()
-    rows = list_eligible_ratios_for_bucket(bucket_id=bucket_id)
+    rows = list_eligible_ratios_for_bucket(bucket_id=bucket_id, year=_resolved_ratio_year(year))
     lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
     for row in rows:
         default = "" if row.default_ratio is None else str(row.default_ratio)

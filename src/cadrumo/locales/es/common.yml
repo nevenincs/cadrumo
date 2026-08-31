@@ -156,6 +156,11 @@ aggregation:
       invoice_retencion_collision: La(s) observación(es) de retención de la(s) factura(s)
         %{source_object_ids} se declararon manualmente y también mediante --received-invoice-retencion;
         elimine el duplicado antes de agregar.
+      m111_no_retenciones_attestation_missing: 'No existen observaciones de retención
+        por perceptor para el modelo 111 %{filing_year} %{period}. No presentes un
+        Modelo 111 en blanco: declara el trimestre como periodo sin retenciones con
+        `aeat config profile complete setup --modelo-111-no-retenciones-periods %{attestation_period}`,
+        o registra las filas de perceptor con `aeat app modelo aggregate --retencion-observation`.'
       perceptor_nif_blank: El NIF del perceptor no puede estar vacío.
       perceptor_observations_missing: No existen observaciones de retenciones por
         perceptor para el modelo %{modelo} %{filing_year} %{period}; la fuente %{source_kind}
@@ -389,6 +394,11 @@ categories:
     seguros_salud_autonomo:
       notes: Deducible hasta un límite legal de 500 EUR/año por contribuyente (Ley
         35/2006 art. 30.2.5.c, regla 1ª, primas de seguro de enfermedad).
+      statutory_cap_variants:
+        discapacidad:
+          label: Límite por persona asegurada con discapacidad
+        general:
+          label: Límite general por persona asegurada
     software_suscripcion:
       label: Suscripción de software
       notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1).
@@ -459,6 +469,9 @@ categories:
     viajes_transporte:
       label: Transporte en viajes
       notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1, otros servicios exteriores).
+component:
+  log:
+    empty: Sin entradas de registro todavía.
 core:
   profile:
     errors:
@@ -712,6 +725,23 @@ mcp:
       porque el entorno de ejecución en caliente estaba {reason}; el resultado es
       idéntico, solo más lento. La atención en caliente se reanuda cuando termina
       la llamada lenta.'
+operation:
+  modal:
+    action:
+      apply: Aplicar
+      cancel: Cancelar
+      close: Cerrar
+      detach: Desvincular
+      reject: Rechazar
+    detail:
+      cleanup_deadline: Plazo de cierre
+      diagnostic: Diagnóstico
+      execution_deadline: Plazo de ejecución
+      phase: Fase
+      receipt_refusal: Rechazo
+      receipt_result: Resultado
+    status:
+      running: En curso
 overview:
   no_aeat_history: Este perfil no tiene ninguna presentación confirmada por la AEAT.
   no_aeat_history_sociedades: Este perfil no tiene ninguna presentación confirmada
@@ -782,9 +812,11 @@ sheets:
       base_retenciones: Base de retenciones e ingresos a cuenta
       clave: Clave
       clave_codigo: Clave código
+      clave_declarado: Clave de titularidad del inmueble
       clave_mercado: Clave de mercado
       codigo_cuenta: Código cuenta valores / n.º operación préstamo
       codigo_emisor: Código emisor
+      codigo_provincia: Código de provincia
       compensaciones: Compensaciones
       complemento_infancia_clave: Complemento de ayuda a la infancia
       contract_relation_clave: Contrato o relación
@@ -807,7 +839,10 @@ sheets:
       descendants_rest_whole: Descendientes restantes (enteros)
       descendants_under_3_total: Descendientes < 3 años (total)
       descendants_under_3_whole: Descendientes < 3 años (enteros)
+      dias_arrendamiento: Días de arrendamiento del inmueble
+      dias_miembro: Número de días como miembro
       disability_clave: Discapacidad
+      domicilio_fiscal: Domicilio fiscal del miembro
       donor_legal_name: Nombre o razón social del donante
       donor_tax_id: NIF del donante
       emerging_stock_excess_clave: Excesos de entrega de acciones de empresas emergentes
@@ -839,8 +874,10 @@ sheets:
       member_legal_name: Razón social del miembro
       member_state_code: Estado miembro
       member_tax_id: NIF del miembro
+      miembro_a_31_diciembre: Miembro a 31 de diciembre
       naturaleza: Naturaleza
       naturaleza_declarante: Naturaleza del declarante
+      naturaleza_inmueble: Naturaleza del inmueble
       nif_pagador_anterior: NIF del pagador anterior
       numero_orden: Número de orden
       operation_date: Fecha de la operación
@@ -864,17 +901,24 @@ sheets:
       percibido_dinerario: Percepciones dinerarias
       percibido_especie: Percepciones en especie
       porcentaje_retencion: '% Retención'
+      porcentaje_titularidad_inmueble: Porcentaje de titularidad del inmueble
       province_code: Provincia
       rectified_base_previous: Base imponible anterior (rectificación)
       rectified_period: Periodo rectificado
       rectified_year: Ejercicio rectificado
+      reduccion: Reducción aplicable al rendimiento
       reducciones: Reducciones
       reducciones_aplicables: Reducciones aplicables
+      referencia_catastral: Referencia catastral
       refund_amount: Importe a devolver
+      rendimiento_neto_minorado_agricola_eo: Rendimiento neto minorado agrícola (estimación
+        objetiva)
+      rendimiento_neto_previo_eo: Rendimiento neto previo (estimación objetiva)
       representative_tax_id: NIF del representante legal
       retencion_practicada: Retención practicada
       second_child_compute: Cómputo del 2.º hijo
       share_percentage: Porcentaje de participación
+      situacion_inmueble: Situación del inmueble
       spouse_or_unit_titular_tax_id: NIF del cónyuge o del titular de la unidad de
         convivencia
       startup_fund_rendimientos_clave: Rendimientos por la gestión de fondos vinculados
@@ -967,3 +1011,7 @@ transactions:
     message_829073: 'Posible hueco en el historial: más de 35 días entre transacciones.'
     unreadable: Archivo ilegible o formato no soportado
     verified: Importación verificada con éxito
+tui:
+  root:
+    no_areas: Ninguna área está disponible todavía en esta sesión.
+    title: 'Cadrumo: sesión de terminal'

@@ -255,7 +255,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "c00c463e7fc667aac950c725ae60c56c47b817c7d722d2a44683c59f57c8e2c1"
+          "value": "5f25002a8798bdafc234315208f4f2ee444cb4d2aebf87677c101c351dc8d215"
         }
       ],
       "envelope": {
@@ -300,7 +300,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "c00c463e7fc667aac950c725ae60c56c47b817c7d722d2a44683c59f57c8e2c1",
+          "calculation_revision_id": "5f25002a8798bdafc234315208f4f2ee444cb4d2aebf87677c101c351dc8d215",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -3799,7 +3799,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision c00c463e7fc667aac950c725ae60c56c47b817c7d722d2a44683c59f57c8e2c1 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 303 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision c00c463e7fc667aac950c725ae60c56c47b817c7d722d2a44683c59f57c8e2c1`.",
+          "saved_confirmation": "Saved as draft calculation revision 5f25002a8798bdafc234315208f4f2ee444cb4d2aebf87677c101c351dc8d215 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 303 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision 5f25002a8798bdafc234315208f4f2ee444cb4d2aebf87677c101c351dc8d215`.",
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",
@@ -3825,7 +3825,7 @@
         "modelo",
         "work",
         "verify",
-        "c00c463e7fc667aac950c725ae60c56c47b817c7d722d2a44683c59f57c8e2c1"
+        "5f25002a8798bdafc234315208f4f2ee444cb4d2aebf87677c101c351dc8d215"
       ],
       "captures": [],
       "envelope": {
@@ -3883,7 +3883,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "c00c463e7fc667aac950c725ae60c56c47b817c7d722d2a44683c59f57c8e2c1",
+          "calculation_revision_id": "5f25002a8798bdafc234315208f4f2ee444cb4d2aebf87677c101c351dc8d215",
           "completeness_status": "complete",
           "findings": [
             {
@@ -3941,7 +3941,7 @@
           "operation": "modelo.work.verify",
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "a575bc9c279f26b88706a8d6bff90dc95e7bf394e28f46c64201daa856a536f8",
+          "verification_report_id": "d346c0de9853b442cc809e6f73a4e134482bda443011b27899b9e45c50d8e984",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -4013,7 +4013,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "c00c463e7fc667aac950c725ae60c56c47b817c7d722d2a44683c59f57c8e2c1",
+          "calculation_revision_id": "5f25002a8798bdafc234315208f4f2ee444cb4d2aebf87677c101c351dc8d215",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -7582,7 +7582,7 @@
           "category": "FAIL",
           "code": "FAIL_MODELO_EXPORT",
           "context": {
-            "calculation_revision_id": "c00c463e7fc667aac950c725ae60c56c47b817c7d722d2a44683c59f57c8e2c1"
+            "calculation_revision_id": "5f25002a8798bdafc234315208f4f2ee444cb4d2aebf87677c101c351dc8d215"
           },
           "message": "Modelo 303 export requires explicit product/software identity authority",
           "retryable": false,
@@ -7624,11 +7624,11 @@
           "aeat_accepted": false,
           "amends_filing_record_id": null,
           "bucket_id": "<bucket-id>",
-          "calculation_revision_id": "c00c463e7fc667aac950c725ae60c56c47b817c7d722d2a44683c59f57c8e2c1",
+          "calculation_revision_id": "5f25002a8798bdafc234315208f4f2ee444cb4d2aebf87677c101c351dc8d215",
           "external_evidence": null,
           "filed_at": "2026-04-01T09:00:00+00:00",
           "filed_by": "docs-sequence-sandbox",
-          "filing_record_id": "def3a61d405bb55ede7e0504fb33fec32fda454f49c55e150cb54d01eb688ac0",
+          "filing_record_id": "f94b20415dc6bec678d6485bebed3813711bfe1364636c0c66260b9cb023c025",
           "filing_year": 2026,
           "kind": "internal_filing",
           "live_submission": false,

@@ -1026,9 +1026,8 @@ def _active_taxpayer_profile_or_none() -> TaxpayerProfile | None:
     than refusing the verb. What it must NOT do is silently look like a complete
     answer, which is what the caveat notices exist to prevent.
     """
-    from cadrumo.application.workflow.persistence import workflow_state_repository
-
     from ...application.wizard.status import load_active_taxpayer_profile
+    from ...application.workflow.persistence import workflow_state_repository
 
     try:
         return load_active_taxpayer_profile(workflow_state_repository().load())

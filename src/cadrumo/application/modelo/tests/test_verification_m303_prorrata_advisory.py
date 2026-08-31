@@ -42,11 +42,10 @@ from functools import lru_cache
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.schema_verification import VerificationPredicateDefinition
-
 from ....core import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.schema import ModeloRevision
+from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from ....domain.modelos import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from .._verification_actions import evaluate_verification_predicates
 from ._verification_substance_support import _workflow_profile

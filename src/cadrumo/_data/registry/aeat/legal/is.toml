@@ -1962,6 +1962,86 @@ required_text = [
     "el arrendador sea una entidad de crédito o un establecimiento financiero de crédito",
 ]
 
+[legal."ley-27-2014:art-83"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014.html#a83"
+document_id = "BOE-A-2014-12328"
+article = "83"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a83"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared; anchor #a83 resolved to exactly one unit through the production resolver against the bundled consolidated LIS, and checked against this corpus's measured anchor-collision set so it is not one of the shadowed bis/ter provisions; required_text confirmed present in the resolved unit; pending operator re-stamp"
+reviewed_at = 2026-08-26
+notes = "LIS art. 83: limitacion en la deduccion de gastos financieros destinados a la adquisicion de participaciones en el capital o en los fondos propios de entidades. Opera a los efectos del art. 16, anadiendo un limite propio para la deuda destinada a adquirir participaciones cuando la entidad adquirida se incorpora al grupo fiscal o es objeto de una reestructuracion. Es la SEGUNDA MITAD del compuesto que nombra la seccion limite_art_16_5_y_o_83_lis del Modelo 200: esa seccion descansa sobre el art. 16.5 y sobre este articulo, de modo que fundarla solo en el art. 16 declararia una autoridad mas estrecha que la que la propia seccion invoca."
+required_text = [
+    "Limitación en la deducción de gastos financieros destinados a la adquisición de participaciones",
+    "A los efectos de lo previsto en el artículo 16 de esta Ley",
+    "gastos financieros derivados de deudas destinadas a la adquisición de participaciones en el capital o fondos propios",
+]
+
+[legal."ley-27-2014:art-15-bis"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014.html#a15bis"
+document_id = "BOE-A-2014-12328"
+article = "15-bis"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a15bis"
+published_at = 2014-11-28
+effective_from = 2021-01-01
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared; ANCHOR NOTE -- BOE's own anchor for this provision is #a1-2, which _canonical_anchor normalises to 'a12' and so collides with articulo 12; the resolver correctly REFUSES it. The compact form #a15bis reaches the provision through the resolver's structural-title fallback and resolves to exactly one unit, verified through the production resolver before this entry was written. required_text confirmed present in that resolved unit; pending operator re-stamp"
+reviewed_at = 2026-08-26
+notes = "LIS art. 15 bis: asimetrias hibridas. Niega la deducibilidad de gastos correspondientes a operaciones con personas o entidades vinculadas que, por una calificacion fiscal diferente en aquellas, no generen ingreso, generen un ingreso exento o sujeto a una reduccion del tipo, o den lugar a una deduccion sin inclusion. Transpone la ATAD II. Funda la seccion asimetrias_hibridas_art_15_bis_lis del Modelo 200, cuyo tag nombra este articulo con la salvedad que el propio tag recoge."
+required_text = [
+    "Asimetrías híbridas",
+    "No serán fiscalmente deducibles los gastos correspondientes a operaciones realizadas con personas o entidades vinculadas",
+    "no generen un ingreso, generen un ingreso exento o sujeto a una reducción del tipo impositivo",
+]
+
+[legal."ley-27-2014:da-18"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014.html#dadecimoctava"
+document_id = "BOE-A-2014-12328"
+article = "DA-18"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#dadecimoctava"
+published_at = 2014-11-28
+effective_from = 2023-01-01
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared; ANCHOR NOTE -- BOE anchors this disposicion as #da-3, which _canonical_anchor folds onto 'da3' and so collides with DA tercera; the compact ordinal form #dadecimoctava reaches it through the resolver's structural-title fallback and resolves to exactly one unit, verified through the production resolver before this entry was written. required_text confirmed present in that unit. The percentage and investment ceilings the disposicion states are described in notes but deliberately NOT asserted in required_text, pending a live-BOE numeric cross-check; pending operator re-stamp"
+reviewed_at = 2026-08-26
+notes = "LIS disposicion adicional decimoctava: libertad de amortizacion en determinados vehiculos y en nuevas infraestructuras de recarga. Permite amortizar libremente las inversiones en vehiculos electricos y en puntos de recarga afectos a actividades economicas y puestos a disposicion en los ejercicios que la propia disposicion acota. Funda la seccion libertad_de_amortizacion_de_determinados_vehiculos del Modelo 200, cuyo nombre reproduce el rubrico de la disposicion."
+required_text = [
+    "Libertad de amortización en determinados vehículos y en nuevas infraestructuras de recarga",
+    "Las inversiones en vehículos",
+    "del Reglamento General de Vehículos, aprobado por el Real Decreto 2822/1998",
+]
+
+[legal."ley-27-2014:art-102"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014.html#a102"
+document_id = "BOE-A-2014-12328"
+article = "102"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a102"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared; anchor #a102 resolved to exactly one unit through the production resolver and checked against this corpus's measured collision set; required_text confirmed present. Adjudicated as the ENTIDADES DE REDUCIDA DIMENSION regime rather than a general one: art. 102 sits in the incentives chapter whose ambito is fixed by art. 101, which the catalogue already carries, so it grounds the ERD libertad-de-amortizacion section and not the other varieties; pending operator re-stamp"
+reviewed_at = 2026-08-26
+notes = "LIS art. 102: libertad de amortizacion de las entidades de reducida dimension. Los elementos nuevos del inmovilizado material y de las inversiones inmobiliarias afectos a actividades economicas pueden amortizarse libremente siempre que, durante los periodos que la norma fija, la plantilla media total se incremente respecto de la de los doce meses anteriores y ese incremento se mantenga. Funda la seccion empresas_de_reducida_dimension_libertad_de_amortizacion del Modelo 200."
+required_text = [
+    "Libertad de amortización",
+    "Los elementos nuevos del inmovilizado material y de las inversiones inmobiliarias",
+    "la plantilla media total de la empresa se incremente respecto de la plantilla",
+]
+
 [legal."ley-49-2002:art-20"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -1979,6 +2059,7 @@ notes = "Ley 49/2002 art. 20: deduccion de la cuota del Impuesto sobre Sociedade
 required_text = [
     "Deducción de la cuota del Impuesto sobre Sociedades",
     "tendrán derecho a deducir de la cuota íntegra",
+    "las cantidades correspondientes al período impositivo no deducidas podrán aplicarse en las liquidaciones",
 ]
 
 [legal."ley-49-2002:art-22"]

@@ -4,15 +4,14 @@ from collections.abc import Iterable, Mapping
 
 import pytest
 
-from cadrumo.domain.calculations.registry.bindings_previous_filing import previous_filing_source_reference
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_surfaces import RelationDefinition
-
 from .._validate_relation_periods import (
     select_relation_source_revisions,
     validate_relation_source_coordinate_coverage,
 )
 from .._validate_relation_sources import _relation_is_prior_year_filing_carry
+from ..bindings_previous_filing import previous_filing_source_reference
+from ..schema import DataBindingDefinition, ModeloDefinition, ModeloRevision
+from ..schema_surfaces import RelationDefinition
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

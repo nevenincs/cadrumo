@@ -49,6 +49,7 @@ def test_classify_stamps_derived_business_pct_from_operator_declared_facts(runti
         active_profile=_BUCKET_ID,
         category_id=_SUMINISTROS,
         operator_supplied=None,
+        year=2025,
     )
     # raw afectación 20/100 = 0.20; suministros deduct at raw * 0.30 (LIRPF Art. 30.2 rule 5).
     assert resolved == Decimal("0.060")
@@ -61,6 +62,7 @@ def test_classify_leaves_operator_supplied_pct_untouched(runtime: TestRuntimePro
         active_profile=_BUCKET_ID,
         category_id=_SUMINISTROS,
         operator_supplied=Decimal("0.42"),
+        year=2025,
     )
     assert resolved == Decimal("0.42")
 
@@ -71,5 +73,6 @@ def test_classify_returns_none_when_no_vivienda_office_facts(runtime: TestRuntim
         active_profile=_BUCKET_ID,
         category_id=_SUMINISTROS,
         operator_supplied=None,
+        year=2025,
     )
     assert resolved is None

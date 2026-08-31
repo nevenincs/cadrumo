@@ -35,20 +35,18 @@ import pytest
 from pydantic import ValidationError
 from sqlalchemy import select
 
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation
-
 from .....core import CasillaId, Period, validated_casilla_id
 from .....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from .....domain.calculations import DirectRowMaterializationProvenance, RowSourceIdentity
-from .....domain.modelos import (
+from .....domain.calculations.registry.bindings import CasillaObservation
+from .....domain.modelos import CalculationRevisionPersistenceError, derive_work_unit_id
+from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
-    CalculationRevisionPersistenceError,
     CalculationRevisionState,
     CalculationSourceRef,
     derive_calculation_revision_id,
     derive_calculation_revision_id_from_revision,
-    derive_work_unit_id,
 )
 from .....tests.secure_objects_fixture import secure_objects
 from .....tests.secure_sql import mutate_encrypted_secure_object_json
@@ -84,7 +82,9 @@ def _source_provenance() -> tuple[CalculationSourceRef, ...]:
     and every :class:`CalculationSourceRef` field is exercised. The two rows
     carry distinct, non-default ``dependency_treatment`` values so a
     save-drops-field regression on either declared treatment is not masked by
-    both rows sharing the same value.
+    both rows sharing the same value. Likewise, each row carries a distinct
+    ``source_casilla_ids`` entry so a drop of that field is not masked
+    either.
     """
     return (
         CalculationSourceRef(
@@ -96,6 +96,7 @@ def _source_provenance() -> tuple[CalculationSourceRef, ...]:
             source_ref="collectible_invoice:inv-0001",
             parent_source_ref=None,
             fingerprint="sha256:1111111111111111111111111111111111111111111111111111111111111111",
+            source_casilla_ids=(_CASILLA,),
             dependency_treatment="direct_annual_settlement",
         ),
         CalculationSourceRef(
@@ -107,6 +108,7 @@ def _source_provenance() -> tuple[CalculationSourceRef, ...]:
             source_ref="payable_invoice:inv-0002",
             parent_source_ref=None,
             fingerprint="sha256:2222222222222222222222222222222222222222222222222222222222222222",
+            source_casilla_ids=(_ROW_CASILLA,),
             dependency_treatment="factual_evidence",
         ),
     )

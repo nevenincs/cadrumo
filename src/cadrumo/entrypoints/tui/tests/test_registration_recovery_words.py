@@ -5,11 +5,13 @@ creation, the 24 words render on the screen itself (the terminal-direct
 channel cannot render inside a full-screen app), and the wipeable
 container is zeroised at the operator's confirmation.
 
-No mocks. Real registration, real Argon2id, the real RegistrationApp
+No mocks. Real registration, real Argon2id, the real RegistrationScreen
 through Textual's headless Pilot, the real recovery enrollment.
 """
 
 from __future__ import annotations
+
+from time import monotonic
 
 import pytest
 from textual.widgets import Input
@@ -20,12 +22,13 @@ from ....application.user_profile.registration import ProfileRegistrationError, 
 from ....core.credentials import assess_profile_password
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....domain.user_profile.values import UserProfileFact
-from ....entrypoints.tui.secret.app import (
+from ....entrypoints.tui.components.host import ScreenHostApp
+from ....entrypoints.tui.secret.registration import (
     RecoveryHandoverCancelledError,
     RecoveryWordsScreen,
-    RegistrationApp,
     RegistrationAttempt,
     RegistrationRefusal,
+    RegistrationScreen,
 )
 from ....tests.secure_sql import isolated_profile_storage_root
 
@@ -34,6 +37,8 @@ pytestmark = [
     pytest.mark.hex_entrypoint,
 ]
 
+#: Deliberately past the 30s wall-clock bound this handoff no longer carries.
+_PAST_REMOVED_BOUND_SECONDS = 33.0
 _TERMINAL_SIZE = (140, 60)
 _TYPED_PASSWORD = "recovery-words-screen-operator-secret"  # noqa: S105 - synthetic test fixture
 
@@ -70,8 +75,8 @@ def _attempt_registration(
     return RegistrationAttempt(outcome=outcome)
 
 
-def _screen() -> RegistrationApp:
-    return RegistrationApp(
+def _screen() -> RegistrationScreen:
+    return RegistrationScreen(
         assess=assess_profile_password,
         register=_attempt_registration,
         suggested_name="",
@@ -79,9 +84,9 @@ def _screen() -> RegistrationApp:
 
 
 async def _fill(pilot, *, username: str, password: str, confirm: str) -> None:
-    pilot.app.query_one("#field-username", Input).value = username
-    pilot.app.query_one("#field-password", Input).value = password
-    pilot.app.query_one("#field-confirm", Input).value = confirm
+    pilot.app.screen.query_one("#field-username", Input).value = username
+    pilot.app.screen.query_one("#field-password", Input).value = password
+    pilot.app.screen.query_one("#field-confirm", Input).value = confirm
     await pilot.pause()
 
 
@@ -100,7 +105,7 @@ async def test_the_full_screen_door_shows_the_words_then_wipes_them(tmp_path) ->
     """Creation at the full-screen door enrols recovery and displays it once."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
         app = _screen()
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await _fill(
                 pilot,
                 username="Recovery Words Subject",
@@ -119,8 +124,11 @@ async def test_the_full_screen_door_shows_the_words_then_wipes_them(tmp_path) ->
             # Confirmation zeroises the container and releases the flow.
             words.query_one("#field-recovery-verification", Input).value = rendered
             await pilot.click("#btn-confirm-words")
-            await app.workers.wait_for_complete()
-            await pilot.pause()
+            await pilot.app.workers.wait_for_complete()
+            for _ in range(100):
+                if app.outcome is not None:
+                    break
+                await pilot.pause(0.05)
 
         assert app.outcome is not None
         assert app.outcome.label == "Recovery Words Subject"
@@ -131,7 +139,7 @@ async def test_cancelling_recovery_confirmation_publishes_no_capsule(tmp_path) -
     """A displayed phrase is not enrollment until the operator confirms it."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
         app = _screen()
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await _fill(
                 pilot,
                 username="Cancelled Recovery Subject",
@@ -142,7 +150,7 @@ async def test_cancelling_recovery_confirmation_publishes_no_capsule(tmp_path) -
             await _wait_for_recovery_screen(pilot)
 
             await pilot.click("#btn-cancel-words")
-            await app.workers.wait_for_complete()
+            await pilot.app.workers.wait_for_complete()
             await pilot.pause()
 
         assert app.outcome is None
@@ -154,7 +162,7 @@ async def test_wrong_recovery_reentry_publishes_no_capsule(tmp_path) -> None:
     """The masked control proves the exact ordered phrase, not button intent."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
         app = _screen()
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await _fill(
                 pilot,
                 username="Wrong Recovery Reentry",
@@ -165,7 +173,7 @@ async def test_wrong_recovery_reentry_publishes_no_capsule(tmp_path) -> None:
             words = await _wait_for_recovery_screen(pilot)
             words.query_one("#field-recovery-verification", Input).value = "not the displayed phrase"
             await pilot.click("#btn-confirm-words")
-            await app.workers.wait_for_complete()
+            await pilot.app.workers.wait_for_complete()
             await pilot.pause()
 
         assert app.outcome is None
@@ -173,11 +181,61 @@ async def test_wrong_recovery_reentry_publishes_no_capsule(tmp_path) -> None:
 
 
 @pytest.mark.asyncio
+async def test_a_confirmation_past_the_removed_wall_clock_bound_still_publishes(tmp_path) -> None:
+    """An operator copying down 24 words is not a failure, however long they take.
+
+    The handoff used to block on ``resolved.wait(timeout=30.0)`` and treat a
+    False return as cancellation, so a confirmation arriving after that bound
+    was refused and the capsule was never published. Under concurrent load the
+    bound was reachable without any operator hesitation at all, which is why
+    the parametrised cases failed non-deterministically while passing in
+    isolation.
+
+    The wait is now bounded by message-loop liveness rather than elapsed time,
+    so this deliberately waits PAST the removed bound before confirming. That
+    delay is the whole point of the test: a shorter one passes against the old
+    defect too and would prove nothing. Do not shorten it, and do not replace
+    the real wait with a patched clock -- the property under test is that no
+    wall-clock deadline governs this handoff at all.
+    """
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        app = _screen()
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
+            await _fill(
+                pilot,
+                username="Unhurried Recovery Subject",
+                password=_TYPED_PASSWORD,
+                confirm=_TYPED_PASSWORD,
+            )
+            await pilot.click("#btn-create")
+            words = await _wait_for_recovery_screen(pilot)
+            rendered = str(words.query_one("#words-value").render())
+
+            deadline = monotonic() + _PAST_REMOVED_BOUND_SECONDS
+            while monotonic() < deadline:
+                await pilot.pause(0.5)
+            assert not any(
+                view.label == "Unhurried Recovery Subject" for view in CommittedProfileRepository().list()
+            ), "nothing may publish while the operator has not yet confirmed"
+
+            words.query_one("#field-recovery-verification", Input).value = rendered
+            await pilot.click("#btn-confirm-words")
+            await pilot.app.workers.wait_for_complete()
+            for _ in range(100):
+                if app.outcome is not None:
+                    break
+                await pilot.pause(0.05)
+
+        assert app.outcome is not None, "a late but live confirmation must still publish"
+        assert app.outcome.label == "Unhurried Recovery Subject"
+
+
+@pytest.mark.asyncio
 async def test_app_shutdown_releases_pending_handoff_without_publication(tmp_path) -> None:
     """Stopping the message loop cannot strand the registration worker."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
         app = _screen()
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await _fill(
                 pilot,
                 username="Shutdown Recovery Subject",
@@ -186,7 +244,7 @@ async def test_app_shutdown_releases_pending_handoff_without_publication(tmp_pat
             )
             await pilot.click("#btn-create")
             await _wait_for_recovery_screen(pilot)
-            app.exit(None)
+            pilot.app.exit(None)
             with pytest.raises(WorkerCancelled):
-                await app.workers.wait_for_complete()
+                await pilot.app.workers.wait_for_complete()
         assert not any(view.label == "Shutdown Recovery Subject" for view in CommittedProfileRepository().list())

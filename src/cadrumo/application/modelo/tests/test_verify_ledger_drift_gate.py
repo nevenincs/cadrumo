@@ -30,12 +30,8 @@ from ....adapters.persistence.profile.modelos_verification_reports import Verifi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....application.aggregation import row_fingerprint
-from ....domain.modelos import (
-    CalculationRevisionState,
-    ModeloVerificationFindingSeverity,
-    VerificationCompletenessStatus,
-    VerificationReport,
-)
+from ....domain.modelos import ModeloVerificationFindingSeverity, VerificationCompletenessStatus, VerificationReport
+from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.transactions import BusinessClassification, Transaction
 from ....tests.env_scope import ready_clave_settings
 from ....tests.secure_sql import isolated_runtime_profile
@@ -292,7 +288,7 @@ def test_the_drift_anchor_does_not_move_any_revision_id() -> None:
     """
     import inspect
 
-    from ....domain.modelos import derive_calculation_revision_id
+    from ....domain.modelos.calculation_revision import derive_calculation_revision_id
 
     parameters = inspect.signature(derive_calculation_revision_id).parameters
     assert "ledger_filing_snapshot" not in parameters

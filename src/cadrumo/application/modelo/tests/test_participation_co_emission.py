@@ -17,23 +17,18 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation
-
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ....application.ledger.actions_common import blocking_modelo_references
 from ....core import CasillaId, Period, validated_casilla_id
-from ....domain.modelos import (
+from ....domain.calculations.registry.bindings import CasillaObservation
+from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id, upsert_calculation_revision, upsert_work_unit
+from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    ModeloCode,
-    WorkUnit,
     derive_calculation_revision_id,
-    derive_work_unit_id,
-    upsert_calculation_revision,
-    upsert_work_unit,
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from .._revision_persistence import persist_filed_revision
@@ -133,11 +128,13 @@ def test_verify_then_file_co_emits_participation_for_every_source_transaction(tm
 
         # --- VERIFY (co-emits VERIFICADO_COMPLETO participations) ---
         verified_at = _T0 + timedelta(hours=3)
+        revisions, revisions_revision_id = cr_repo.load_revisioned()
         _persist_verified_revision_evidence(
             target=revision,
             actor="aeat.cli.modelo.verify",
             now=verified_at,
-            revisions=cr_repo.load(),
+            revisions=revisions,
+            revisions_revision_id=revisions_revision_id,
             work_unit=work_unit,
             transaction_repository=None,
             calculation_repository=cr_repo,

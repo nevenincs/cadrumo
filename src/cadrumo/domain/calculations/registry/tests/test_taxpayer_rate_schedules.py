@@ -6,13 +6,12 @@ from collections.abc import Mapping
 
 import pytest
 
-from cadrumo.domain.calculations.registry.ids import ParameterId
-from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
-from cadrumo.domain.calculations.registry.snapshot import build_snapshot
-
 from .....core import RegistryAuthorityGrade
 from .....core.resources import bundled_path
 from ..binding_selector_utils import selector_as_dict
+from ..ids import ParameterId
+from ..schema_formula import FormulaExpression
+from ..snapshot import build_snapshot
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -88,9 +87,13 @@ def test_natural_person_route_has_irpf_tarifa_bracket_schedules() -> None:
 def test_legal_entity_route_has_is_rate_schedule_by_entity_form() -> None:
     """Modelo 200 carries the LIS Art. 29 rate schedule for legal entities."""
 
+    # The helper asks for filing year 2025, which the 2024/2025 split made a
+    # coordinate the 2024 revision no longer covers -- and a revision_id narrows
+    # the law-determined pick rather than selecting it, so naming the earlier
+    # era here refuses instead of quietly answering from the wrong year.
     revision = _modelo_revision(
         "200",
-        "2024",
+        "2025-y-siguientes",
         grade=RegistryAuthorityGrade.CALCULATION,
     )
     parameters = {parameter.id: parameter for parameter in revision.parameters}

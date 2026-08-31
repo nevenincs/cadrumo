@@ -52,7 +52,8 @@ from ...core import AuthProviderKind, Period
 from ...core.config import Settings, load_settings
 from ...domain.deadlines import DeadlineEngine, TaxpayerProfile, resolve_filing_window
 from ...domain.filing import ModeloInputs
-from ...domain.modelos import CalculationRevision, WorkUnit
+from ...domain.modelos import WorkUnit
+from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.submission import DeadlineWindowChecker, ModeloDraftStatus, SubmissionEngine
 from ...domain.transactions import TransactionCatalogue
 from ..filing import (

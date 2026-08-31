@@ -28,7 +28,7 @@ def test_pull_row_assembly_calls_the_public_snapshot_command_with_the_selected_s
     function = ast.parse(inspect.getsource(_assemble_pull_observations))
     imports = [node for node in ast.walk(function) if isinstance(node, ast.ImportFrom)]
     assert any(
-        node.level == 4
+        node.level == 3
         and node.module == "application.calculations"
         and [alias.name for alias in node.names] == ["assemble_observations_for_snapshot"]
         for node in imports

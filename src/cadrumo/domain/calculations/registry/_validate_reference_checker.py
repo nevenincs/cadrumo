@@ -15,7 +15,7 @@ from .ids import LegalRefId, SourceRefId
 from .schema import ModeloRevision
 
 if TYPE_CHECKING:
-    from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+    from .schema import RegistrySnapshot
 
 
 class _IdentifiedRecord(Protocol):
@@ -82,6 +82,7 @@ class IdReferenceChecker:
         "legal_ids",
         "parameter_ids",
         "prefix",
+        "provenance_only_source_ids",
         "relation_ids",
         "source_ids",
         "verification_expectation_ids",
@@ -112,6 +113,15 @@ class IdReferenceChecker:
         self.legal_ids = set(snapshot.legal)
         self.legal_evidence_tiers = {ref_id: ref.evidence_tier for ref_id, ref in snapshot.legal.items()}
         self.source_ids = set(snapshot.sources)
+        #: Sources the catalogue declares as corpus evidence rather than a
+        #: machine-readable authority. An export layout may never write against
+        #: one: the design it names is not a layout map, so a layout claiming it
+        #: would render against something the parser is required to refuse.
+        self.provenance_only_source_ids = {
+            source_id
+            for source_id, source in snapshot.sources.items()
+            if getattr(source, "design_authority", "authoritative") == "provenance_only"
+        }
 
     def chk(self, field_path: str, value: str, id_set: set[str]) -> None:
         if value not in id_set:

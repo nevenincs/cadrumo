@@ -37,11 +37,11 @@ from decimal import Decimal
 from ...core import CasillaId
 from ...core.external_constants import MODELO_100_ART_52_INDIVIDUAL_SUBLIMIT_EUR
 from ...domain.modelos import (
-    ModeloError,
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
+from ...domain.modelos.errors import ModeloError
 from ._semantic_role_resolution import (
     AmbiguousSemanticRoleCasillaError,
     casilla_id_for_unique_revision_semantic_role,

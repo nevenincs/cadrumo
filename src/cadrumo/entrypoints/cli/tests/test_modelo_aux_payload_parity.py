@@ -25,7 +25,7 @@ from ....core.aggregation import RetencionClave
 from ....domain.buckets import BucketEventObjectType, BucketEventType
 from .._modelo_aux_payloads import (
     EvidenceRecordRefPayload,
-    ModeloAuditShowResult,
+    ModeloAuditViewResult,
     WithholdingClaveBreakdownPayload,
     WorkUnitHistoryEventPayload,
 )
@@ -113,10 +113,10 @@ class TestEvidenceRecordRef:
             _record(object_id="")
 
 
-class TestModeloAuditShowResult:
+class TestModeloAuditViewResult:
     """Evidence bundle manifest envelope."""
 
-    def _bundle(self, **overrides: Any) -> ModeloAuditShowResult:
+    def _bundle(self, **overrides: Any) -> ModeloAuditViewResult:
         fields: dict[str, Any] = {
             "bundle_id": _HEX64,
             "manifest_version": 1,
@@ -128,7 +128,7 @@ class TestModeloAuditShowResult:
             "created_at": _WHEN,
         }
         fields.update(overrides)
-        return ModeloAuditShowResult.model_validate(fields)
+        return ModeloAuditViewResult.model_validate(fields)
 
     def test_well_formed_bundle_renders_wire_shape(self) -> None:
         wire = self._bundle().model_dump(mode="json")

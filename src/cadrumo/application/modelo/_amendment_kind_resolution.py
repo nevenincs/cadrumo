@@ -45,7 +45,7 @@ from ...core import (
     resolve_amendment_kind_regime,
     result_disposition_casilla_ids,
 )
-from ...domain.modelos import CalculationRevisionAmendmentKind
+from ...domain.modelos.calculation_revision import CalculationRevisionAmendmentKind
 from ._action_errors import AmendmentComplementariaLiabilityDecreaseError, AmendmentKindNotPermittedError
 
 __all__ = [

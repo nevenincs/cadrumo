@@ -12,6 +12,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+from cadrumo.core import is_link_like
 from cadrumo.core.directory_scan import iter_directory
 from cadrumo.domain.calculations.registry.errors import (
     RegistryError,
@@ -178,7 +179,7 @@ def _prepare_check_roots(context: GeneratedExportTreeCheckContext) -> tuple[Path
         root=candidate_registry_root,
         subject="generated check candidate revision root",
     )
-    if candidate_export_root.exists() or candidate_export_root.is_symlink() or candidate_export_root.is_junction():
+    if candidate_export_root.exists() or is_link_like(candidate_export_root):
         raise RegistryValidationError(
             f"generated check candidate export must be absent before fresh rendering: {candidate_export_root}",
         )
@@ -284,7 +285,7 @@ def _read_regular_tree_bytes(root: Path, *, subject: str) -> dict[str, bytes]:
         # comparison silently, so the tree would compare equal on content it never
         # read. Reading nothing is a broken tree here, never an empty one.
         for child in sorted(iter_directory(directory, require_root=True), key=lambda path: path.name):
-            if child.is_symlink() or child.is_junction():
+            if is_link_like(child):
                 raise RegistryValidationError(f"{subject} contains a linked member: {child}")
             relative = child.relative_to(root).as_posix()
             if child.is_dir():
@@ -344,7 +345,7 @@ def _require_existing_link_free_descendant(path: Path, *, root: Path, subject: s
 
 
 def _require_existing_non_link(path: Path, *, subject: str) -> None:
-    if path.is_symlink() or path.is_junction():
+    if is_link_like(path):
         raise RegistryValidationError(f"{subject} must not be a link: {path}")
     if not path.exists():
         raise RegistryValidationError(f"{subject} is missing: {path}")
@@ -352,7 +353,7 @@ def _require_existing_non_link(path: Path, *, subject: str) -> None:
 
 def _require_no_obsolete_sibling_manifest(revision_root: Path, *, subject: str) -> None:
     obsolete = revision_root / "export.provenance.json"
-    if obsolete.exists() or obsolete.is_symlink() or obsolete.is_junction():
+    if obsolete.exists() or is_link_like(obsolete):
         raise RegistryValidationError(f"{subject} refuses obsolete sibling provenance manifest: {obsolete}")
 
 
@@ -365,7 +366,7 @@ def _require_no_obsolete_direct_paths(
     direct_modelo = target_registry_root / "modelos" / f"{modelo_id}.toml"
     direct_revision = target_registry_root / "modelos" / modelo_id / "revisions" / f"{revision_id}.toml"
     for path in (direct_modelo, direct_revision):
-        if path.exists() or path.is_symlink() or path.is_junction():
+        if path.exists() or is_link_like(path):
             raise RegistryValidationError(f"generated check refuses obsolete direct registry path: {path}")
 
 

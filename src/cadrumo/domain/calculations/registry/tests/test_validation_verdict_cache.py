@@ -27,16 +27,16 @@ import pytest
 from .....core.config import override_settings
 from .....core.resources import bundled_path
 from .. import _validate_evidence as ve
-from ..authority import bundled_authority, reset_registry_caches
-from ..loader import load_registry_tree
-from ..validate import RegistryValidator
-from ..verdict_cache import (
+from .._validate import RegistryValidator
+from .._verdict_cache import (
     VERDICT_OUTCOME_GREEN,
     RegistryValidationVerdict,
     read_verdict,
     verdict_cache_path,
     write_verdict,
 )
+from ..authority import bundled_authority, reset_registry_caches
+from ..loader import load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

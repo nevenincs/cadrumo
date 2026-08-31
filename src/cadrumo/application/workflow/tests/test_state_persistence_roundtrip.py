@@ -12,11 +12,10 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.auth.models import AuthState
-
 from ....core import Period
 from ....tests.secure_sql import isolated_runtime_profile
-from ...review import (
+from ...auth.models import AuthState
+from ...review.models import (
     InvoiceReviewRecord,
     LedgerReviewRecord,
 )

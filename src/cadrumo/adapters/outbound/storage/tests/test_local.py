@@ -21,10 +21,11 @@ from typing import Any, TypedDict
 
 import pytest
 
+from .....application.operator_actions import PreconditionVerdict
 from .....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....core.atomic_write import atomic_write_text
 from .....core.directory_scan import iter_directory, scan_directory
-from .....core.errors import ERROR_REGISTRY, build_error_envelope, resolve_error_message
+from .....core.errors import ERROR_REGISTRY, TerminalPreconditionErrorMixin, build_error_envelope, resolve_error_message
 from .....core.i18n import tr
 from .....tests.path_obstruction import obstructed_path
 from .. import (
@@ -47,7 +48,7 @@ def _hash(payload: bytes) -> str:
 
 
 def _assert_local_verdict(
-    error: BaseException,
+    error: TerminalPreconditionErrorMixin[PreconditionVerdict],
     condition_id: str,
     outcome: NoRecoveryOutcome,
     expected_facts: Mapping[str, str | int | bool],

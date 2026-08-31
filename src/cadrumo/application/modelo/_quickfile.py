@@ -52,12 +52,8 @@ from ...core.identity import BucketId
 from ...core.logging import get_logger
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.deadlines import TaxpayerProfile
-from ...domain.modelos import (
-    CalculationRevision,
-    FilingInstanceEvidence,
-    VerificationReport,
-    WorkUnit,
-)
+from ...domain.modelos import VerificationReport, WorkUnit
+from ...domain.modelos.calculation_revision import CalculationRevision, FilingInstanceEvidence
 from ._calculate_input import WorkCalculateInputBundle, calculate_modelo_work_revision
 from ._export import ModeloExportCommand, ModeloExportResult, export_modelo_revision
 from ._verification_actions import verify_modelo_revision
@@ -286,7 +282,7 @@ def run_modelo_quickfile(
             modelo=command.modelo,
             filing_year=command.filing_year,
             period=command.period,
-            requested_revision_id=command.registry_revision_id,
+            registry_revision_id=registry_revision_id,
             actor=command.actor,
             catalogue=work_unit_catalogue_repository(bucket_id=command.bucket_id).load(),
         )

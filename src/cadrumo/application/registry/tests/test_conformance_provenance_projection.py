@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-
-from .. import RegistryConformanceProfile
+from ....domain.calculations.registry.authority import ValidatedRegistryAuthority
+from ..conformance import RegistryConformanceProfile
 from ._conformance_profile_fixtures import degraded_profile, validated_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

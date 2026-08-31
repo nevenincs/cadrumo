@@ -7,8 +7,6 @@ from decimal import Decimal
 from functools import cache
 from pathlib import Path
 
-from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
-
 from ....core import (
     CasillaId,
     Modelo,
@@ -19,7 +17,8 @@ from ....core import (
     ResultDisposition,
     validated_casilla_id,
 )
-from ....domain.modelos import CalculationRevisionAmendmentKind
+from ....domain.calculations.registry.schema_exports import ExportLayoutDefinition
+from ....domain.modelos.calculation_revision import CalculationRevisionAmendmentKind
 from ....domain.submission import ModeloDraftStatus
 from .. import (
     AmendmentEvidence,

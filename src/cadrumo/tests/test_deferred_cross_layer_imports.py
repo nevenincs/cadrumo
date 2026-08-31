@@ -59,6 +59,11 @@ class DeferredEdgeStatus(StrEnum):
     #: Inherited from the graph when this gate was written. NOT reviewed. Nobody has
     #: decided whether the deferral breaks a real cycle or hides one.
     UNADJUDICATED = "unadjudicated"
+    #: Deferred on purpose, by someone who said why, to keep an expensive graph off
+    #: a path that does not need it. Distinct from UNADJUDICATED: that status means
+    #: nobody has looked, and recording a considered deferral under it would make
+    #: the inventory claim less than it knows.
+    DELIBERATE_DEMAND_LOAD = "deliberate-demand-load"
 
 
 #: ``core/resources/_repos`` lazy loaders -- the one shape ``.importlinter`` documents.
@@ -81,6 +86,16 @@ _DOCUMENTED_LOADERS: frozenset[tuple[str, str]] = frozenset(
         ("core/resources/_repos/user_profile.py", "_load"),
     },
 )
+
+#: Deliberate deferrals, each with the reason it exists.
+#: Reviewed, unlike the inventory below.
+_DELIBERATE_DEMAND_LOADS: dict[tuple[str, str], str] = {
+    ("application/ledger/actions_common.py", "_default_calculation_repository"): (
+        "the concrete calculation catalogue is needed only where a caller injected no "
+        "repository; importing it at module scope put an application-to-adapter edge on "
+        "every consumer of the ledger action layer"
+    ),
+}
 
 #: Everything else the inventory found. Present and running; judged by nobody.
 _UNADJUDICATED: frozenset[tuple[str, str]] = frozenset(
@@ -138,7 +153,6 @@ _UNADJUDICATED: frozenset[tuple[str, str]] = frozenset(
         ("application/modelo/_m036_lifecycle.py", "_m036_declaration_repository"),
         ("application/modelo/_m145_communication_records.py", "_m145_communication_record_repository"),
         ("application/modelo/_taxation_comparison.py", "compare_taxation_for_work_unit"),
-        ("application/operator_output/_sandbox_notice.py", "sandbox_notice_for_active_bucket"),
         ("application/repair_integrity.py", "_active_bucket_repair_repository"),
         ("application/repair_integrity.py", "_repo"),
         ("application/repair_integrity.py", "active_bucket_repair_session"),
@@ -159,6 +173,7 @@ _UNADJUDICATED: frozenset[tuple[str, str]] = frozenset(
 _DECLARED: dict[tuple[str, str], DeferredEdgeStatus] = {
     **{pair: DeferredEdgeStatus.DOCUMENTED_LOADER for pair in _DOCUMENTED_LOADERS},
     **{pair: DeferredEdgeStatus.UNADJUDICATED for pair in _UNADJUDICATED},
+    **{pair: DeferredEdgeStatus.DELIBERATE_DEMAND_LOAD for pair in _DELIBERATE_DEMAND_LOADS},
 }
 
 

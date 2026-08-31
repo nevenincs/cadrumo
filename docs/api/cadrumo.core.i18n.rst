@@ -19,3 +19,4 @@ Submodules
    cadrumo.core.i18n._render
    cadrumo.core.i18n._routing
    cadrumo.core.i18n._translatable
+   cadrumo.core.i18n.locale_catalogue

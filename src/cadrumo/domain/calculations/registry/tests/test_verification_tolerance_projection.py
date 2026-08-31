@@ -6,9 +6,8 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.verification_tolerance import verification_tolerance_or_exact
-
 from ..authority import bundled_authority
+from ..verification_tolerance import verification_tolerance_or_exact
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

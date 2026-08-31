@@ -100,11 +100,11 @@ def process_is_live(pid: int) -> bool:
     The single home for the probe every abandoned-scratch reclaim in this
     repository asks: the per-process storage roots swept below, the pytest
     numbered directories reaped by :func:`reap_abandoned_numbered_dirs`, and
-    the operator-invoked temp reaper in ``dev/``. Public rather than private
-    because those consumers are real and the reasoning below must not be
-    re-derived per caller -- a second probe is a second chance to get the
-    Windows failure-mode handling wrong in the direction that deletes a live
-    session's store.
+    the operator-invoked temp reaper in the development tooling tree. Public
+    rather than private because those consumers are real and the reasoning
+    below must not be re-derived per caller -- a second probe is a second
+    chance to get the Windows failure-mode handling wrong in the direction
+    that deletes a live session's store.
 
     Fail-safe in one direction on purpose: every uncertain answer -- an
     unparseable identifier, a permission refusal, an unavailable platform

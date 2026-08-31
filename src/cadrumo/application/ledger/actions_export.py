@@ -14,6 +14,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from ...core.atomic_write import atomic_write_bytes
+from ...core.decimal import format_decimal
 from ...core.hashing import content_hash_hex
 
 if TYPE_CHECKING:
@@ -33,13 +34,12 @@ from ...domain.transactions import (
 )
 from ..export import serialize_tabular_rows
 from .actions_common import (
-    _bucket_event_repository,
-    _build_bucket_event,
-    _decimal_to_string,
-    _normalise_timestamp,
-    _optional_decimal,
-    _save_transaction_catalogue_and_events,
-    _transaction_repository,
+    build_ledger_bucket_event,
+    normalise_timestamp,
+    optional_decimal,
+    resolve_bucket_event_repository,
+    resolve_transaction_repository,
+    save_transaction_catalogue_and_events,
 )
 from .models import (
     LedgerExportCommand,
@@ -94,9 +94,9 @@ def export_ledger_transactions(
     Returns:
         :class:`~cadrumo.application.ledger.models.LedgerExportResult`: The export outcome.
     """
-    now = _normalise_timestamp(occurred_at)
-    repository = _transaction_repository(bucket_id=command.bucket_id, repository=transaction_repository)
-    event_repository = _bucket_event_repository(bucket_id=command.bucket_id, repository=bucket_event_repository)
+    now = normalise_timestamp(occurred_at)
+    repository = resolve_transaction_repository(bucket_id=command.bucket_id, repository=transaction_repository)
+    event_repository = resolve_bucket_event_repository(bucket_id=command.bucket_id, repository=bucket_event_repository)
     catalogue = repository.load()
     rows = _ledger_export_rows(
         catalogue,
@@ -117,7 +117,7 @@ def export_ledger_transactions(
         sha256=serialized.sha256,
         transaction_ids=tuple(row.transaction_id for row in rows),
     )
-    event = _build_bucket_event(
+    event = build_ledger_bucket_event(
         bucket_id=command.bucket_id,
         event_type=BucketEventType.LEDGER_TRANSACTION_EXPORTED,
         occurred_at=now,
@@ -137,7 +137,7 @@ def export_ledger_transactions(
             "last_transaction_id": rows[-1].transaction_id if rows else "",
         },
     )
-    _save_transaction_catalogue_and_events(
+    save_transaction_catalogue_and_events(
         transaction_repository=repository,
         event_repository=event_repository,
         catalogue=catalogue,
@@ -187,7 +187,7 @@ def _ledger_export_rows(
 def _optional_text(value: str | None) -> str:
     """Render an unset optional text field as an empty export cell.
 
-    The sibling of :func:`_optional_decimal` for the string columns: an export
+    The sibling of :func:`optional_decimal` for the string columns: an export
     row carries a blank cell, never the word ``None``.
     """
     return value or ""
@@ -203,18 +203,18 @@ def _ledger_export_row(*, bucket_id: str, transaction: Transaction) -> LedgerExp
         booked_date=raw.booked_date.isoformat(),
         value_date="" if raw.value_date is None else raw.value_date.isoformat(),
         effective_date=effective_date.isoformat(),
-        amount=_decimal_to_string(raw.amount),
+        amount=format_decimal(raw.amount),
         currency=raw.currency,
         direction=transaction.direction.value,
         counterparty=raw.display_counterparty,
         description=raw.description,
         source_jurisdiction=_optional_text(transaction.source_jurisdiction),
         business_classification=transaction.business_classification.value,
-        business_pct=_optional_decimal(transaction.business_pct),
+        business_pct=optional_decimal(transaction.business_pct),
         category_id=_optional_text(transaction.category_id),
-        taxable_base=_optional_decimal(transaction.taxable_base),
-        iva_rate=_optional_decimal(transaction.iva_rate),
-        iva_amount=_optional_decimal(transaction.iva_amount),
+        taxable_base=optional_decimal(transaction.taxable_base),
+        iva_rate=optional_decimal(transaction.iva_rate),
+        iva_amount=optional_decimal(transaction.iva_amount),
         iva_category=transaction.iva_category.value if transaction.iva_category is not None else "",
         counterparty_country=_optional_text(transaction.counterparty_country),
         counterparty_identification_state=(
@@ -230,8 +230,8 @@ def _ledger_export_row(*, bucket_id: str, transaction: Transaction) -> LedgerExp
         notes=transaction.notes,
         created_by=_optional_text(transaction.created_by),
         created_source_command=_optional_text(transaction.source_command),
-        value_in_eur=_optional_decimal(transaction.value_in_eur),
-        fx_rate=_optional_decimal(transaction.fx_rate),
+        value_in_eur=optional_decimal(transaction.value_in_eur),
+        fx_rate=optional_decimal(transaction.fx_rate),
     )
 
 

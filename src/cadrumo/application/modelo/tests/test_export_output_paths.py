@@ -12,8 +12,6 @@ from ._export_test_support import isolated_backend
 
 __all__ = ["isolated_backend"]
 
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....application.calculations import (
     CalculationObservationRepository,
@@ -31,6 +29,7 @@ from ....core.directory_scan import (
     iter_directory,
 )
 from ....domain.buckets import BucketEventType
+from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.deadlines import (
     ChargeAccount,
     IVARegime,
@@ -41,16 +40,18 @@ from ....domain.deadlines import (
     TaxpayerProfile,
 )
 from ....domain.modelos import (
-    CalculationRevisionAmendmentIdentity,
-    CalculationRevisionAmendmentKind,
     ExternalEvidence,
     ExternalEvidenceKind,
     ModeloRecord,
     ModeloRecordStatus,
-    derive_calculation_revision_id_from_revision,
     derive_filing_record_id,
     upsert_calculation_revision,
     upsert_filing_record,
+)
+from ....domain.modelos.calculation_revision import (
+    CalculationRevisionAmendmentIdentity,
+    CalculationRevisionAmendmentKind,
+    derive_calculation_revision_id_from_revision,
 )
 from .._action_errors import (
     ModeloChargeAccountMissingError,

@@ -32,7 +32,7 @@ from uuid import UUID
 import pytest
 
 from ....adapters.persistence.storage import custody
-from ....adapters.persistence.storage.custody import (
+from ....adapters.persistence.storage.custody.acceleration_receipt import (
     delete_profile_session,
     mint_profile_session,
     profile_session_path,
@@ -75,7 +75,7 @@ def _isolated_root(tmp_path: Path) -> Iterator[Path]:
 
 
 def _bucket_id_or_none(label: str = _LABEL) -> str | None:
-    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
+    from ....application.workflow.profile_bucket_scan import read_profile_bucket
 
     pointer = read_profile_bucket(label)
     return pointer.bucket_id if pointer is not None else None

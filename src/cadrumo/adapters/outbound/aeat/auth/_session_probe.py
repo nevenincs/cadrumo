@@ -106,9 +106,9 @@ async def run_authenticated_landing_probe(
         response = await page.goto(probe_url, timeout=navigation_timeout_ms)
         if response is not None:
             status_code = int(response.status)
-            landing_url = getattr(page, "url", None)
+            landing_url = page.url
             if on_landing is not None and landing_url and await on_landing(page, landing_url, target_path):
-                landing_url = getattr(page, "url", None)
+                landing_url = page.url
             session_cookie_present = _landing_is_authenticated_session(
                 status_code=status_code,
                 landing_url=landing_url,

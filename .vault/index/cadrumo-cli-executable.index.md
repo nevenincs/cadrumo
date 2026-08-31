@@ -4,8 +4,8 @@ tags:
   - '#index'
   - '#cadrumo-cli-executable'
 date: '2026-08-16'
-modified: '2026-08-16'
-body_schema: 'body-v1'
+modified: '2026-08-27'
+body_schema: 'body-v2'
 body_hash: 'sha256:37cf8981b73dc63ef8b5f5066eee8264ceb4e0e5dca91ad08235937c7e7366bd'
 related:
   - '[[2026-07-12-cadrumo-cli-executable-adr]]'

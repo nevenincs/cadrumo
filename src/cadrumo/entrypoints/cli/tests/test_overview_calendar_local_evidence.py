@@ -8,8 +8,6 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-
 from ....adapters.outbound.aeat.sede import (
     FiledDeclaracionArtefact,
     FiledDeclaracionObservation,
@@ -20,6 +18,7 @@ from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogu
 from ....application.calculations import CalculationObservationRepository
 from ....core import Period
 from ....core.config import load_settings
+from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.modelos import upsert_filing_record
 from ....tests import FIXTURES_DIR
 from ....tests.profile_capsule import open_test_profile_session
@@ -131,7 +130,7 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
                 expediente_id="12345678901234567892",
                 status="ALTA",
                 presented_at=datetime(2025, 10, 15, 9, 30, tzinfo=UTC),
-                authenticated_identity="Y7654321Z",
+                authenticated_identity="Y7654321G",
                 artefacts=(wrong_identity_artefact,),
             ),
         )

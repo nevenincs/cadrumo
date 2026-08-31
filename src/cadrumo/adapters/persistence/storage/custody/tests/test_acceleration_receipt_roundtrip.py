@@ -22,16 +22,23 @@ import pytest
 
 from ......core import ProfileSessionRefusalReason
 from ......core.errors import CoreValidationError
-from ...custody import (
+from ...custody.filesystem import (
     compare_and_replace_profile_custody_local_record,
     ensure_profile_custody_local_directory,
     profile_custody_root_lock,
 )
 from ...errors import DecryptionError, EncryptionError, KeyringUnavailableError, StorageValidationError
-from .. import (
+from ..acceleration_receipt import (
     PROFILE_SESSION_KEYCHAIN_SERVICE,
+    PROFILE_SESSION_RECORD_MAX_BYTES,
     PROFILE_SESSION_SCHEMA_VERSION,
+    AccelerationReceiptRevocationError,
     PersistedProfileSession,
+    _pending_retirement_bytes,
+    _profile_session_lock_path,
+    _profile_session_retirement_path,
+    _receipt_bytes,
+    _write_acceleration_receipt,
     advance_persisted_profile_session_idle_deadline,
     delete_profile_session,
     mint_profile_session,
@@ -39,15 +46,6 @@ from .. import (
     resume_profile_session,
     unwrap_profile_session_dek,
     wrap_profile_session_dek,
-)
-from .._acceleration_receipt import (
-    PROFILE_SESSION_RECORD_MAX_BYTES,
-    AccelerationReceiptRevocationError,
-    _pending_retirement_bytes,
-    _profile_session_lock_path,
-    _profile_session_retirement_path,
-    _receipt_bytes,
-    _write_acceleration_receipt,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -248,7 +246,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from uuid import UUID
 
-from cadrumo.adapters.persistence.storage.custody import (
+from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import (
     resume_profile_session,
 )
 
@@ -439,7 +437,7 @@ from datetime import datetime
 from pathlib import Path
 from uuid import UUID
 
-from cadrumo.adapters.persistence.storage.custody import resume_profile_session
+from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import resume_profile_session
 
 outcome, _ = resume_profile_session(
     storage_root=Path(__import__('sys').argv[1]),

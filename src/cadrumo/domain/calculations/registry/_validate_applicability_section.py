@@ -1,6 +1,6 @@
 """Applicability-rule fragment-family validation.
 
-Validates the ``applicability`` schema family (W01.P03.S08) declared on a
+Validates the ``applicability`` schema family declared on a
 :class:`~cadrumo.domain.calculations.registry.ModeloRevision`: its legal refs
 resolve to grounded legal authority, at most one rule is declared per
 revision, and the rule hydrates into the runtime
@@ -21,13 +21,12 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.schema_references import LegalReference
-
 from ....core import Modelo
 from ._validate_helpers import missing_refs
 from .applicability import hydrate_applicability_rule
 from .errors import RegistryValidationError
+from .schema import ModeloRevision
+from .schema_references import LegalReference
 
 
 def validate_applicability_section(

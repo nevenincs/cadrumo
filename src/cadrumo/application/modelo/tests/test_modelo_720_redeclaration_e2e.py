@@ -50,22 +50,21 @@ from ...tests import register_wizard_catalogue
 
 __all__ = ["register_wizard_catalogue"]
 
-from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition
-from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import BindingSourceKind, CasillaId, Modelo, Period, validated_casilla_id
+from ....domain.calculations.registry.binding_selector_utils import selector_as_dict
+from ....domain.calculations.registry.schema import DataBindingDefinition
+from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.deadlines import FiscalResidency, IVARegime, TaxpayerProfile
 from ....domain.modelos import (
-    CalculationRevision,
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
     VerificationReport,
 )
+from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_modelo_observation

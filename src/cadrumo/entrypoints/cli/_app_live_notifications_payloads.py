@@ -157,11 +157,18 @@ class NotificationDocumentPayload(OutputSchema):
     and digest so an operator can tie a reading back to the exact custody bytes
     without the document leaving secure storage.
 
-    ``sancion`` and ``parse_refusal`` are mutually exclusive by construction —
-    the reader either vouched for a reading or refused to — and the refusal is
-    reported as primary result data rather than smuggled into a bespoke
-    advisory field, with the operator-facing diagnostic riding the envelope's
-    ``notices`` channel.
+    ``sancion`` and ``parse_refusal`` are mutually exclusive — the reader
+    either vouched for a reading or refused to — and that is the RECORD's
+    invariant, enforced on
+    :class:`~application.live.notification_documents.NotificationDocumentRecord`
+    where the data lives rather than restated here. The refusal is reported as
+    primary result data rather than smuggled into a bespoke advisory field,
+    with the operator-facing diagnostic riding the envelope's ``notices``
+    channel.
+
+    ``sancion_parsed`` exists only on the wire. It is ``sancion is not None``
+    and carries nothing the reading itself does not, kept as a scalar so a JSON
+    client can branch without walking into a nested object.
     """
 
     bucket_id: BucketId
@@ -177,17 +184,17 @@ class NotificationDocumentPayload(OutputSchema):
     mode: Literal["read"] = "read"
 
     @model_validator(mode="after")
-    def _a_reading_is_present_or_refused_never_both_nor_neither(self) -> NotificationDocumentPayload:
-        """Keep the reading flag honest against the two fields it summarises.
+    def _the_reading_flag_agrees_with_the_reading(self) -> NotificationDocumentPayload:
+        """Keep a derived wire field honest against the field it is derived from.
 
-        A payload claiming ``sancion_parsed`` with no reading, or reporting
-        neither a reading nor a reason, would let an operator conclude the
-        document held no figures when the truth is that nobody looked.
+        This is a shape check on this schema's own projection, not a rule about
+        what a stored document may contain: ``sancion_parsed`` exists nowhere
+        but here, so nothing below the CLI can hold it to its definition. A
+        payload claiming a reading it does not carry would let a JSON client
+        branch into figures that are not there.
         """
         if self.sancion_parsed != (self.sancion is not None):
             raise ValueError("sancion_parsed must agree with the presence of a sancion reading")
-        if (self.sancion is None) == (self.parse_refusal is None):
-            raise ValueError("a stored document carries either a sancion reading or the reason there is none")
         return self
 
 

@@ -11,11 +11,10 @@ from typing import override
 
 import pytest
 
-from cadrumo.application.workflow.state_models import WorkflowState
-
 from ....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.errors import TerminalPreconditionErrorMixin
 from ...user_profile.registration import ProfileRegistrationError
+from ...workflow.state_models import WorkflowState
 from .. import commands as commands_module
 from .. import status as status_module
 from ..catalogue import SETUP_FLOW
@@ -64,55 +63,55 @@ def _contract(
 # command-boundary refusals. Compiler and widget-validation invariants remain
 # outside the census because they do not carry terminal operator outcomes.
 _WIZARD_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
-    "_status:load_active_taxpayer_profile:WizardStatusError:1": _contract(
+    "status:load_active_taxpayer_profile:WizardStatusError:1": _contract(
         WizardPreconditionCondition.ACTIVE_PROFILE_AVAILABLE,
         (("active_profile_record_available", "False"),),
         ActionEvidenceProvenance.APPLICATION_STATE,
         NoRecoveryOutcome.OPERATOR_DECISION,
     ),
-    "_status:_require_active_profile_tax_id:WizardStatusError:1": _contract(
+    "status:_require_active_profile_tax_id:WizardStatusError:1": _contract(
         WizardPreconditionCondition.ACTIVE_PROFILE_TAX_ID_DECLARED,
         (("active_profile_tax_id_declared", "False"),),
         ActionEvidenceProvenance.APPLICATION_STATE,
         NoRecoveryOutcome.OPERATOR_DECISION,
     ),
-    "_commands:_require_filing_baseline:WizardMissingFlagError:1": _contract(
+    "commands:_require_filing_baseline:WizardMissingFlagError:1": _contract(
         WizardPreconditionCondition.FILING_BASELINE_COMPLETE,
         (("filing_baseline_complete", "False"), ("missing_flag_count", "len(missing)")),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.OPERATOR_DECISION,
     ),
-    "_commands:_run_full_flow:WizardMissingFlagError:1": _contract(
+    "commands:_run_full_flow:WizardMissingFlagError:1": _contract(
         WizardPreconditionCondition.REQUIRED_FLAGS_SUPPLIED,
         (("required_flags_supplied", "False"), ("missing_flag_count", "len(missing)")),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.OPERATOR_DECISION,
     ),
-    "_commands:_run_full_flow:WizardEditUnsupportedConsoleError:1": _contract(
+    "commands:_run_full_flow:WizardEditUnsupportedConsoleError:1": _contract(
         WizardPreconditionCondition.INTERACTIVE_CONSOLE_AVAILABLE,
         (("interactive_console_available", "False"),),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.SAFETY,
     ),
-    "_commands:_run_full_flow:WizardUnsupportedConsoleError:1": _contract(
+    "commands:_run_full_flow:WizardUnsupportedConsoleError:1": _contract(
         WizardPreconditionCondition.INTERACTIVE_CONSOLE_AVAILABLE,
         (("interactive_console_available", "False"),),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.SAFETY,
     ),
-    "_commands:_require_profile_name:WizardMissingFlagError:1": _contract(
+    "commands:_require_profile_name:WizardMissingFlagError:1": _contract(
         WizardPreconditionCondition.PROFILE_NAME_SUPPLIED,
         (("profile_name_supplied", "False"),),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.OPERATOR_DECISION,
     ),
-    "_commands:_require_profile_label_available:WizardValidationError:1": _contract(
+    "commands:_require_profile_label_available:WizardValidationError:1": _contract(
         WizardPreconditionCondition.PROFILE_LABEL_AVAILABLE,
         (("profile_registration_available", "False"),),
         ActionEvidenceProvenance.APPLICATION_STATE,
         NoRecoveryOutcome.OPERATOR_DECISION,
     ),
-    "_commands:_resolve_profile_id_for_mode:WizardMissingFlagError:1": _contract(
+    "commands:_resolve_profile_id_for_mode:WizardMissingFlagError:1": _contract(
         WizardPreconditionCondition.PROFILE_NAME_SUPPLIED,
         (("profile_name_supplied", "False"),),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
@@ -312,7 +311,7 @@ def test_wizard_production_has_no_executable_profile_create_recommendation_or_sa
     }
     assert not executable_recommendations
 
-    commands_source = production_sources["_commands.py"]
+    commands_source = production_sources["commands.py"]
     assert "_emit_save_exit_notice" not in commands_source
     assert "_SAVE_EXIT_RESUME_CODE" not in commands_source
     assert "setup_saved_resume_later" not in commands_source

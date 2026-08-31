@@ -24,18 +24,11 @@ def test_google_specs_declare_the_complete_operator_subtree() -> None:
         "config_google_logout",
         "config_google_credential_source",
         "config_google_credential_source_set",
-        "config_google_credential_source_show",
+        "config_google_credential_source_view",
         "config_google_folder",
         "config_google_folder_set",
-        "config_google_folder_get",
-        "config_google_sync",
+        "config_google_folder_view",
         "config_google_probe",
-        "config_profile_archive_push",
-        "config_modelo_spreadsheet_cli",
-        "config_modelo_spreadsheet_cli_export",
-        "config_modelo_spreadsheet_cli_verify",
-        "config_modelo_spreadsheet_cli_pull",
-        "config_modelo_spreadsheet_cli_compute",
     }
     leaves = [spec for spec in GOOGLE_COMMAND_SPECS if spec.kind == "leaf"]
     assert all(spec.handler is not None and spec.handler.state is BindingState.TARGET for spec in leaves)
@@ -49,7 +42,6 @@ def test_google_handler_modules_hold_no_typer_structural_authority() -> None:
         "_google.py",
         "_google_credential_source_cli.py",
         "_google_folder.py",
-        "_modelo_spreadsheet_cli.py",
     )
 
     for module in modules:
@@ -83,12 +75,3 @@ def test_google_parameters_retain_aliases_flags_multiplicity_and_bounds() -> Non
     }
     assert probe["read_only"].declarations == ("--read-only/--no-read-only",)
     assert probe["read_only"].is_flag is True
-
-    export = {
-        parameter.name: parameter
-        for parameter in by_key["config_modelo_spreadsheet_cli_export"].parameters
-        if isinstance(parameter, OptionSpec)
-    }
-    assert export["year"].constraint.minimum == 2000
-    assert export["year"].constraint.maximum == 2099
-    assert export["prefill_relations"].declarations == ("--prefill-relations/--no-prefill-relations",)

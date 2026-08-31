@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#modelo-edit-contract'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-08-28'
 body_schema: 'body-v1'
-body_hash: 'sha256:d743e8879636be2062663a86127d41774eeedb66d6e57260d36d311589fa142e'
+body_hash: 'sha256:1bd28757f53b0e379a99e1ae0a15ceb047f3437a969560fbc53658c8cf06ead5'
 related:
   - "[[2026-08-24-tui-modelo-workspace-interface-research]]"
   - "[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]"
@@ -353,3 +353,290 @@ criteria identified by `2026-08-24-tui-modelo-workspace-interface-research` and
   repository, and real atomicity/non-retention conformance.
 - Later lifecycle actions may reuse the capability and receipt shapes, but each
   keeps its existing writer and must prove its own atomic effect boundary.
+
+## Amendment 2026-08-26: no registry binding is the D4 repeated-row group
+
+**What this corrects.** D4's `ADD_ROW`/`UPDATE_ROW`/`DELETE_ROW`/`MOVE_ROW`
+row intents, and the permitted-surface projection that admitted them, assumed
+`BindingSourceKind.MANUAL_INPUT` was the taxpayer-typed repeated-row axis
+(donativo, invoice, and withholding rows were the motivating examples). A
+registry-wide audit found no binding of that shape: every `manual_input`
+binding across every modelo declares `aggregation = {op = "copy"}` — a 1:1
+scalar copy — and none carries a row index. Modelo 131's ninety-seven, the
+fixture this contract's own tests exercise, are static fichero-BOE
+record-field positions (e.g. a fixed `actividad-2-epigrafe` slot at a
+preprinted offset); none is bound to any casilla either. Admitting
+`ADD_ROW`/`DELETE_ROW` against one would let an intent address a static form
+slot under a fabricated row semantic — the same class of category error as
+`REMOVE_OVERRIDE` addressing a store no addressable casilla has, and the
+unreachable compatibility refusal before it. All three errors share one root:
+the row and override language in D1/D4 described a registry shape that had
+not yet materialised, not the shape the registry actually declares today.
+
+**The decision.** `_writable_row_group_entries` (`_edit_services.py`) is
+corrected to return no entries, unconditionally, for every current registry
+revision — not a per-modelo carve-out, because no modelo's `manual_input`
+binding matches the row shape D4 assumed. `_validate_row_intent` therefore
+refuses every row intent as `DISALLOWED_INTENT` against every current
+baseline; this is a correct, evidence-grounded refusal, not a dormant or
+placeholder one. The `ModeloEditRowIntentKind`, `ModeloEditRowAddressV1`
+(`ModeloEditExistingRowAddressV1` / `ModeloEditNewRowCorrelationV1`), and
+`ModeloEditWritableRowGroupSurfaceEntryV1` / `ModeloEditNonWritableRowGroupSurfaceEntryV1`
+model vocabulary is retained rather than deleted: the `BindingId` + row-index
+shape is not inherently wrong, only unpopulated by current registry data, and
+remains the correct address shape IF a genuine binding-keyed row set is ever
+added to the registry.
+
+**What was NOT decided here.** The genuine repeatable, taxpayer-typed row
+mechanism this codebase already has is the per-modelo `ModeloDetailRow`
+discriminated union (M184 member, M232 vinculada, M349 operador/rectificación,
+M347 contraparte, M210 agrupación renta), already threaded through the
+calculate boundary's `detail_rows` and already content-addressed on the
+revision. It is NOT `BindingId`-keyed and does not fit `_writable_row_group_entries`'s
+shape; projecting it into a new permitted-surface entry kind is the
+recommended direction for a future Step, deferred because which detail-row
+kind a given modelo may accept is not yet a queryable registry authority — it
+is implicit today in which CLI subcommand the operator invokes for `--row`,
+not a fact this contract's admission path can read from `ModeloRevision`.
+Building that projection ahead of a real per-modelo eligibility authority
+would risk repeating exactly this amendment's mistake.
+
+**Consequence for D4.** D4's row-intent vocabulary (`ADD_ROW`/`UPDATE_ROW`/
+`DELETE_ROW`/`MOVE_ROW`, existing-row and new-row-correlation addressing) is
+otherwise unchanged and remains this contract's row-intent shape; only its
+motivating binding-source axis and current reachability are corrected. No
+frontend cohort may present row editing as available until a real
+permitted-surface entry for `ModeloDetailRow` (or another genuinely
+row-shaped registry axis) exists and is admitted.
+
+## Amendment 2026-08-26: the baseline's schema identity is its own type
+
+**What this corrects.** D2's `ModeloEditBaselineV1.schema_identity` field
+reused `ModeloWorkspaceSchemaIdentityV1` (defined for
+`2026-08-24-tui-registry-api-gate-adr`'s STATIC_INSPECTION and Workspace
+projections) rather than declaring its own type. The two producers filled the
+shared `field_manifest_digest` field with two structurally and semantically
+unrelated digests: this contract's producer (`_edit_services.py`) digested the
+registry's `CalculationCompletenessManifest` — the required calculation-closure
+casilla set, a TAX-SEMANTIC completeness declaration — while the Workspace
+producer (`workspace.py::resolve_static_inspection_schema_identity`) digests
+the S278 field-CLASSIFICATION manifest, a deterministic walk over the public
+registry TYPE denominator for display rendering. One field name, one shared
+record type, two meanings that silently compare unequal for the same
+revision. (The Workspace producer's own docstring already flagged the
+collision — "never the `CalculationCompletenessManifest` digest that a
+sibling module happens to also store under the same field name" — without
+the contract being corrected to stop doing so.)
+
+**The decision: rename, not converge.** These are legitimately different
+digests answering different questions (does the registry's declared
+completeness set for this revision still match what the baseline was admitted
+against, versus does the type-level field-classification manifest the
+Workspace read side renders from still match) and neither should be repointed
+at the other's source — a completeness-set change and a field-classification
+change are independent events, and collapsing them would make the edit
+baseline's compare-and-swap re-check insensitive to the axis it actually
+needs (registry completeness) or spuriously sensitive to one it does not
+(display-field classification). `ModeloEditBaselineV1.schema_identity` is now
+typed `ModeloEditSchemaIdentityV1` (`_edit_models.py`): `schema_id`,
+`schema_fingerprint`, and `completeness_manifest_digest` — a distinct field
+name, never `field_manifest_digest`. `ModeloWorkspaceSchemaIdentityV1` and its
+`field_manifest_digest` field are unchanged and remain exclusively the S278
+field-classification digest; `2026-08-24-tui-registry-api-gate-adr` is
+amended alongside this record to state that explicitly.
+
+**Proof.** A cross-producer test
+(`test_edit_models.py::test_edit_schema_identity_is_never_confused_with_the_workspace_field_manifest_digest`)
+constructs both types from data that changes one axis while holding the other
+fixed and asserts the two digests move independently, so a future re-merge of
+the two fields under one name would fail it rather than silently reintroducing
+this defect.
+
+## Amendment 2026-08-26: REMOVE_OVERRIDE is binding-addressed, not casilla-addressed
+
+**What this corrects.** D4's `REMOVE_OVERRIDE` scalar intent addressed
+`ModeloEditScalarAddressV1` (`casilla_id`-keyed), but the store it withdraws
+from, `CalculationRevision.binding_overrides`, is keyed by `BindingId`. No
+casilla-addressed intent can ever reach it: most eligible bindings -- a
+fichero-BOE record-field `manual_input` binding, most notably -- are not
+bound to any casilla at all. This is the same category error class as the
+row-group correction two Steps earlier in this same contract: an intent kind
+existed with an address shape that could never reach the store it named.
+
+**The decision: address by binding.** `REMOVE_OVERRIDE` is retired from
+`ModeloEditScalarIntentKind` (now `SET_TYPED_VALUE`/`CLEAR_DECLARED_VALUE`
+only, both casilla-addressed). A new `ModeloEditBindingAddressV1`
+(`binding_id`-keyed), `ModeloEditBindingIntentKind`
+(`SET_OVERRIDE_VALUE`/`REMOVE_OVERRIDE`), `ModeloBindingEditIntentV1`, and a
+new permitted-surface entry pair (`ModeloEditWritableBindingOverrideSurfaceEntryV1`
+/ `ModeloEditNonWritableBindingOverrideSurfaceEntryV1`) address the binding
+directly. `ModeloEditSubmissionV1` gains a `binding_intents` tuple alongside
+`scalar_intents` and `row_intents`, participating in the same
+duplicate-address uniqueness check.
+
+**Eligibility is derived from the real, already-tested CLI gate**, not
+invented: every declared binding whose source is NOT in
+`BUCKET_AGGREGATION_LOCK_SOURCES` (the same set
+`_reject_caller_overrides_of_source_bindings` in `_calculation_actions.py`
+uses to refuse a caller-supplied `--binding` override) is admitted as a
+writable binding-override entry; every locked binding surfaces as a
+non-writable entry naming the reason. A date-channel binding is excluded
+entirely, mirroring the real CLI's own `--binding` refusal for date-consumed
+bindings (routed through `--casilla` instead). This is why REMOVE_OVERRIDE's
+correction did NOT need the row category's "no registry data matches this
+shape" outcome: unlike the row axis, a real, live, tested `--binding`
+override mechanism already exists and already has a queryable eligibility
+authority to ground the new surface entry against -- modelo 131's ninety-seven
+`manual_input` bindings, wrongly surfaced as row groups before the prior
+amendment, now correctly surface here instead.
+
+**What was NOT decided here.** Guarded execution and persistence for a
+binding-override intent (threading a `--binding`-equivalent clear axis
+through the calculate boundary, mirroring `cleared_casilla_ids`) is deferred:
+every binding intent kind refuses today with a typed, enumerated
+`ModeloEditUnsupportedIntentReason` (`SET_OVERRIDE_VALUE_NOT_YET_WIRED` /
+`REMOVE_OVERRIDE_NOT_YET_WIRED`), matching the row-intent precedent. The
+permitted surface and admission are real and grounded; only execution is
+future work.
+
+## Amendment 2026-08-26: detail-row edits are whole-set replacement by natural key
+
+**What this corrects.** The premise that only M210's grouped-renta row
+carries a business key while the other four `ModeloDetailRow` kinds are
+identified by position alone is FALSE: every kind already carries a real,
+already-declared natural key in its own fields -- `nif` (M184 member, M232
+counterparty, M347 counterparty), `nif_comunitario` + `clave_operacion` (M349
+operador/rectificación, since one counterparty can carry more than one
+operation type), `source_id` (M210, already explicit). No `ModeloDetailRow`
+kind needed a new field or a minted identity.
+
+**The decision: whole-set replacement, addressed by natural key, no minted
+or positional identity.** `detail_rows` is memoryless -- resupplied whole on
+every calculate call, exactly like `casilla_inputs` and `binding_values` --
+so an edit submission does not need to track a delta against history. The
+established codebase precedent for exactly this shape is
+`RetencionObservationRepository.replace_observations` (Modelo 180/193
+per-perceptor rows): "SET-REPLACE, not additive upsert: clears any prior rows
+for the exact key-tuple, then writes the supplied set, both in ONE
+transaction," addressed by the row's own natural key, never a minted id or
+position. `ModeloEditDetailRowAddressV1` (`_edit_models.py`) follows the same
+convention: `detail_row_kind` (the `ModeloDetailRow.row_type` discriminator)
+plus `natural_key` (the row's own identity field, `|`-joined for a compound
+key).
+
+**A row absent from a resupplied set needs no distinguishing axis.** Unlike
+a scalar value -- where declared-zero, cleared, and never-declared collapse
+into one absence, which is exactly why `cleared_casilla_ids` had to exist --
+a detail row has only two states: present with real field values, or
+absent. There is no ambiguous middle state to disambiguate. The established
+precedent confirms this: `replace_observations`'s own read path records no
+trace of a dropped row, no deletion-count axis, nothing; removal is
+expressed purely by the row's absence from the resupplied set.
+
+**Correction: MOVE_ROW is retired, not retained.** An earlier draft of this
+amendment claimed row order "already participates in the revision's content
+address, so two orderings of the same substantive rows are legitimately
+distinct revisions." That claim was wrong, and the correction turns it into
+a finding. `_canonical_detail_rows` (`_calculation_revision.py:156`) states
+the opposite in its own docstring: rows are sorted by `(row_type, nif-like)`
+before hashing "so insertion order does not affect the revision id --
+operators can supply rows in any order." The revision id is deliberately
+order-BLIND.
+
+That conflicts with the export evidence, which still stands:
+`_record_renderer.py` renders a `repeat == "binding_rows"` record via
+`enumerate(..., 1)` over `detail_rows` tuple order (confirmed via
+`_revision_replay_inputs.py`'s M349 replay projection), so the emitted
+fichero's physical record numbering DOES depend on tuple order. Two
+different orderings of the same rows can therefore produce two different
+ficheros sharing ONE revision id.
+
+Checked whether anything downstream depends on WHICH occurrence number a
+row receives: nothing found. `Modelo349RectificacionRow` references a prior
+declaration by its own business fields (`nif_comunitario`,
+`ejercicio`/`periodo`, `base_anterior`), never by a record's occurrence
+number; the M296 projection's own docstring states "row identity is the
+render occurrence, not a slot on the reference" only in the sense that
+there is no separate persisted slot key, not that the occurrence NUMBER
+itself carries meaning across resubmissions; no fichero parity gate or
+reconciliation path checks a specific expected row order.
+
+More decisively: because the revision id is order-blind, a pure MOVE_ROW
+request would compute the SAME id as the existing revision, so the guarded
+compare-and-swap persistence layer's duplicate-result branch would silently
+absorb it and return the existing (unreordered) revision -- the requested
+reorder would never actually persist. Building MOVE_ROW against the current
+content-address shape would ship a control that appears to succeed
+(`ModeloEditExecutionUpdatedV1`) and does nothing. `MOVE_ROW` is retired
+from `ModeloEditDetailRowIntentKind`, the same way the binding-keyed
+row-group category was retired, and for the analogous reason: no registry
+or persistence-layer fact makes it a real, safe operation today.
+
+**The order-blind content address is flagged as its own, separate finding**,
+independent of this edit contract: on a filing-grade artefact whose purpose
+is to identify exactly what was calculated, an order-blind id that ignores a
+structurally significant export axis is either a defect (if AEAT-side
+record numbering ever carries meaning this codebase hasn't found yet) or a
+deliberate, undocumented decision that the physical record number carries
+none. This amendment does not resolve that question; it is reported
+separately rather than folded into the edit contract.
+
+The guarded executor (`_edit_execution.py::_reconstruct_detail_rows`) groups
+the current revision's `detail_rows` by kind and applies each submitted
+intent by natural key (ADD appends, UPDATE replaces in place, DELETE
+removes), then resupplies the reconstructed complete tuple to the calculate
+boundary -- no signature change to the calculate boundary's own
+`detail_rows` parameter was needed, since it already accepted a complete
+tuple.
+
+## Amendment 2026-08-28: D8's dependency receipt is retired; conformance and attestation split
+
+**What this corrects.** D8 built the C3 application prerequisite as a minted
+`.vault/reference/2026-08-24-modelo-edit-contract-c3-dependency-receipt.md`
+artifact, schema `ModeloEditContractC3DependencyReceiptV1`, parsed by
+`validate_modelo_edit_contract_c3_dependency_receipt`, which in turn
+cross-checked two further minted predecessor artifacts
+(`ModeloWorkspaceC2DependencyReceiptV1` and
+`TuiOperationFinancialOperandDependencyReceiptV1`) plus this ADR's own
+`accepted` status and body hash. That makes code -- the validator and its
+test caller -- parse `.vault/` paths, ADR frontmatter, and governance
+identifiers, inverting the project's one-way reference direction (vault
+documents cite code by locator, code never cites the vault) and binding the
+product test suite to removable development scaffolding. It also answers two
+separable questions with one artifact: whether `ModeloEditContractV1`'s
+implementation actually has the shape D8 lists (a source-tree fact), and
+whether the governing ADRs behind it are accepted with their blocking audits
+resolved (a governance fact only `.vault/` can answer).
+
+**The decision.** The two questions split. Every implementation-shape item D8
+lists -- public export and strict-schema digests; the compatibility tuple's
+manifest version, contract-set/definition digests, and
+observation/REVIEW/refresh-target/financial-operand axes and registered schema
+identities/fingerprints; schema and permitted-surface fingerprints; mutation
+capability and refusal inventories; real parse/preflight parity; real
+work/calculation/event/result-receipt atomicity and rollback under each stale
+coordinate; duplicate-result recovery; forbidden-import proof; and sensitive
+non-retention -- remains a real, currently-passing test under the owning
+package's `tests/` directory. These tests assert source-tree shape only; none
+names a `.vault/` path, an ADR stem, a Step id, or reads a governance status or
+body hash.
+
+Whether C3's application prerequisite is actually open -- this ADR accepted,
+its Workspace C2 and operation financial-operand predecessors each accepted
+and green -- is a vaultspec-governed execution record, authored through the
+owning CLI verb at the moment C3 opens, citing the implementing test modules
+and the commit they were proven against by `path:line`. No code parses or
+asserts against that record. `ModeloEditContractC3DependencyReceiptV1` and
+`validate_modelo_edit_contract_c3_dependency_receipt` are retired outright, not
+renamed or relocated.
+
+**Consequence for D8.** No `.vault/` path, document stem, Step id, or campaign
+identifier may appear under `src/`. Neither the operation-side prerequisite
+(amended in `2026-08-11-tui-architecture-adr`) nor this application-side one
+may be reintroduced as a code-resident cross-artifact proof: "both are green"
+is a fact the execution record states, evidenced by two green conformance
+suites and the commits each was proven against, never a fact code computes by
+reading another ADR's receipt. This does not relax any item in the list above,
+and the required-predecessor relationship itself -- C3 cannot be presented as
+open before its Workspace C2 and operation predecessors are each independently
+true -- is unchanged; only where that relationship is recorded moved.

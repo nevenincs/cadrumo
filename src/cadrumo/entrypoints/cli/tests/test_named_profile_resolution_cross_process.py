@@ -38,6 +38,7 @@ import json
 from typing import TYPE_CHECKING
 
 import pytest
+from pydantic import TypeAdapter
 
 from .test_cold_start_wizard_registration import _register_profile_for_cold_run, _run_cli_cold
 
@@ -56,17 +57,18 @@ _FACTS = {
 }
 
 
+_DOCUMENT_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(dict[str, object])
+
+
 def _envelope_result(stdout: str) -> dict[str, object]:
     """Return the success envelope's result payload from a cold-run stdout."""
-    document = json.loads(stdout)
-    result = document["result"]
-    assert isinstance(result, dict)
-    return result
+    document = _DOCUMENT_ADAPTER.validate_python(json.loads(stdout))
+    return _DOCUMENT_ADAPTER.validate_python(document["result"])
 
 
 @pytest.mark.os_keychain  # cross-process resumption needs a minted acceleration receipt
 def test_a_named_profile_resolves_in_a_process_that_did_not_write_it(tmp_path: Path) -> None:
-    """``config profile show NAME`` finds a record another process persisted.
+    """``config profile view NAME`` finds a record another process persisted.
 
     The failing observation this closes: the record is present on disk with
     its keys, and the named-profile path reported ``missing_profile_record``
@@ -74,7 +76,7 @@ def test_a_named_profile_resolves_in_a_process_that_did_not_write_it(tmp_path: P
     """
     _register_profile_for_cold_run(tmp_path, _LABEL, **_FACTS)
 
-    shown = _run_cli_cold(tmp_path, ["--format", "json", "config", "profile", "show", _LABEL])
+    shown = _run_cli_cold(tmp_path, ["--format", "json", "config", "profile", "view", _LABEL])
 
     assert shown.returncode == 0, f"named-profile show failed in a cold process: {shown.stdout}\n{shown.stderr}"
     result = _envelope_result(shown.stdout)
@@ -116,8 +118,8 @@ def test_the_named_and_active_paths_agree_about_the_same_record(tmp_path: Path) 
     """
     profile_id = _register_profile_for_cold_run(tmp_path, _LABEL, **_FACTS)
 
-    by_name = _run_cli_cold(tmp_path, ["--format", "json", "config", "profile", "show", _LABEL])
-    by_active = _run_cli_cold(tmp_path, ["--format", "json", "config", "profile", "show"])
+    by_name = _run_cli_cold(tmp_path, ["--format", "json", "config", "profile", "view", _LABEL])
+    by_active = _run_cli_cold(tmp_path, ["--format", "json", "config", "profile", "view"])
 
     assert by_name.returncode == 0, f"{by_name.stdout}\n{by_name.stderr}"
     assert by_active.returncode == 0, f"{by_active.stdout}\n{by_active.stderr}"

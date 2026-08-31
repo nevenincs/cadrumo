@@ -7,10 +7,12 @@ is mounted, and refuses only that.
 
 An `app` signal is `filing`, or `registry`, or `calculation` together with a
 write route. `calculation` alone is deliberately insufficient: `config profile
-status`, `validate` and `preflight` all declare it while computing facts about
-the profile, and `config repair integrity registry` declares it while reading
-bundled data. All four are read-only, and a criterion that evicted them would be
-wrong about the most canonical `config` verbs in the tree.
+status` and `validate` both declare it while computing facts about the profile,
+and `config repair integrity registry` declares it while reading bundled data.
+All three are read-only, and a criterion that evicted them would be wrong about
+the most canonical `config` verbs in the tree. (`config profile preflight` was a
+fourth such verb until it was retired into `app modelo readiness`; the argument
+never rested on it.)
 
 A `config` signal is a `bootstrap-root` write route, or `profile-custody` without
 `encrypted-facts` -- custody state that exists before any profile is unlocked.
@@ -20,7 +22,7 @@ top-level-family granularity the rule moves the whole `config google` family to
 `app`, because three of its fourteen leaves once carried `app` signals -- which
 would have dragged OAuth, folder and credential-source configuration along with
 the workbook verbs. At narrowest-subject granularity -- the deepest group that
-can move as one -- the same rule produced exactly the two moves this campaign
+can move as one -- the same rule produced exactly the two moves that were
 made and demanded no splits.
 
 **This is a refusal criterion, not a placement criterion, and the distinction is
@@ -35,6 +37,7 @@ from __future__ import annotations
 
 import pytest
 
+from .._command_spec import CommandSpecNode, ExecutionPolicySpec
 from .._command_specs import COMMAND_GRAPH
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -43,9 +46,9 @@ _APP = "app"
 _CONFIG = "config"
 
 
-def _subjects() -> dict[tuple[str, ...], list]:
+def _subjects() -> dict[tuple[str, ...], list[CommandSpecNode]]:
     """Group every leaf under its narrowest mountable subject."""
-    subjects: dict[tuple[str, ...], list] = {}
+    subjects: dict[tuple[str, ...], list[CommandSpecNode]] = {}
     for node in COMMAND_GRAPH.nodes():
         if node.spec.kind != "leaf":
             continue
@@ -53,14 +56,14 @@ def _subjects() -> dict[tuple[str, ...], list]:
     return subjects
 
 
-def _has_app_signal(policy: object) -> bool:
+def _has_app_signal(policy: ExecutionPolicySpec) -> bool:
     capabilities = policy.capabilities
     if "filing" in capabilities or "registry" in capabilities:
         return True
     return "calculation" in capabilities and policy.write_route != "none"
 
 
-def _has_config_signal(policy: object) -> bool:
+def _has_config_signal(policy: ExecutionPolicySpec) -> bool:
     capabilities = policy.capabilities
     if policy.write_route == "bootstrap-root":
         return True

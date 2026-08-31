@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 
-from cadrumo.domain.calculations.registry.errors import RegistryFailureClassification, RegistryFailureCondition
-
 from ....core import ActionConditionality, NoRecoveryOutcome
-from .._registry_preconditions import calculation_registry_failure_verdict
+from ....domain.calculations.registry.errors import RegistryFailureClassification, RegistryFailureCondition
+from ..registry_preconditions import calculation_registry_failure_verdict
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -87,9 +88,12 @@ def test_registry_failure_facts_resolve_through_existing_action_or_terminal_auth
 
 def test_registry_failure_resolution_rejects_an_undeclared_domain_condition() -> None:
     """Mutation proof: a new domain condition cannot silently receive a guessed action."""
+    base = RegistryFailureClassification(condition=RegistryFailureCondition.TREE_QUIESCENT, facts={})
+    # A real, dataclass-typed replacement rather than a type-checker escape: this
+    # exercises the same runtime path a genuinely undeclared enum member would
+    # reach (frozen dataclasses do not validate field types at construction), so
+    # the value must stay honestly outside RegistryFailureCondition rather than
+    # be waved past the checker with a cast or an ignore comment.
+    unclassified = replace(base, condition="registry.test.unclassified", facts={"observed": False})
     with pytest.raises(AssertionError, match="unclassified calculation-registry failure condition"):
-        calculation_registry_failure_verdict(
-            RegistryFailureClassification(  # type: ignore[arg-type]
-                condition="registry.test.unclassified", facts={"observed": False}
-            )
-        )
+        calculation_registry_failure_verdict(unclassified)

@@ -30,10 +30,11 @@ from ...domain.calculations.registry.ids import (
     SourceRefId,
 )
 from ...domain.filing import ModeloScalar
-from ...domain.modelos import CalculationSourceRef, ModeloCode, WorkUnitState
+from ...domain.modelos import ModeloCode, WorkUnitState
+from ...domain.modelos.calculation_revision import CalculationSourceRef
 from ..ledger.preflight import LedgerPreflightIssueReason
 from ..operator_actions import ActionReference
-from ..registry import RegistryClosureLimb
+from ..registry.closure import RegistryClosureLimb
 from .work_addressing import ModeloExactWorkUnitTarget, ModeloVisibleFilingTarget
 from .work_review import ModeloWorkReview
 
@@ -51,6 +52,13 @@ _MAX_SAFE_FACT_TEXT_LENGTH = 256
 
 type _BoundedText = Annotated[str, Field(min_length=1, max_length=256)]
 type _BoundedCode = Annotated[str, Field(min_length=1, max_length=128, pattern=r"^[a-z][a-z0-9_.-]*$")]
+type _BoundedLocaleKey = Annotated[str, Field(min_length=1, max_length=256, pattern=r"^[a-z][a-z0-9_.-]*$")]
+"""Locale keys embed a base32hex-encoded arbitrary identity segment
+(:func:`~cadrumo.domain.calculations.registry.modelo_localization.encode_modelo_locale_segment`)
+for any casilla/binding/relation/etc id containing characters outside the
+plain-segment pattern, so a real key can exceed ``_BoundedCode``'s 128-char
+bound; 256 covers the longest real casilla id observed in the bundled
+registry (143 chars) with headroom."""
 type _BoundedLocalizedText = Annotated[str, Field(min_length=1, max_length=512)]
 type _BoundedRefList[T] = Annotated[tuple[T, ...], Field(max_length=_MAX_SCHEMA_EVIDENCE_REFERENCES)]
 
@@ -123,11 +131,30 @@ class ModeloWorkspaceRefusalCode(StrEnum):
     """Stable domain-boundary refusals for an otherwise supported Workspace V1."""
 
     TARGET_NOT_FOUND = "target_not_found"
+    """The natural (modelo, filing_year, period) coordinate the target names
+    resolves cleanly, but no :class:`WorkUnit` exists there yet -- the WORK
+    selector's own ``ABSENT`` state (``resolution.work_unit is None``).
+    Distinct from ``CALCULATION_UNAVAILABLE``, whose work unit DOES exist and
+    merely carries no calculation revision: an absent work unit cannot be
+    "calculated"; it must be created first, a different operator remedy the
+    two codes must not share."""
     VISIBLE_TARGET_AMBIGUOUS = "visible_target_ambiguous"
     BUCKET_ASSERTION_MISMATCH = "bucket_assertion_mismatch"
     REVISION_ASSERTION_MISMATCH = "revision_assertion_mismatch"
     STATIC_INSPECTION_UNAVAILABLE = "static_inspection_unavailable"
     AUTHORITY_GRADE_UNAVAILABLE = "authority_grade_unavailable"
+    CALCULATION_UNAVAILABLE = "calculation_unavailable"
+    """The WORK axis resolved an EXISTING work unit for this target, but it
+    carries no calculation revision yet (``current_calculation_revision_id is
+    None``), so a GRADED_SNAPSHOT admission cannot produce the required
+    materialization/provenance facets. Distinct from
+    ``AUTHORITY_GRADE_UNAVAILABLE`` (a REGISTRY-axis fact): folding a missing
+    calculation into the grade code would send an operator to the wrong
+    remedy -- the registry, not "calculate this work unit first". Also
+    distinct from ``TARGET_NOT_FOUND`` (no work unit exists at all): this
+    code's own reconsideration text ("calculate this work unit") presumes a
+    work unit the operator can act on. Never raised for a STATIC_INSPECTION
+    admission, which has no calculation dependency."""
     SCHEMA_UNAVAILABLE = "schema_unavailable"
     LOCALE_UNAVAILABLE = "locale_unavailable"
     CONSISTENCY_UNAVAILABLE = "consistency_unavailable"
@@ -185,6 +212,25 @@ type ModeloWorkspaceTargetV1 = Annotated[
     ModeloWorkspaceVisibleFilingTargetV1 | ModeloWorkspaceExactWorkUnitTargetV1,
     Field(discriminator="kind"),
 ]
+
+
+class ModeloWorkspaceRefreshTargetV1(_WorkspaceModel):
+    """The exact workspace read one settled Modelo operation invalidates.
+
+    Names the resolved work-unit coordinates rather than wrapping a request
+    selector, so a frontend re-reads the affected unit without interpreting a
+    settled receipt it should not have to understand.
+
+    The coordinates are spelled as closed typed fields rather than reusing
+    :data:`ModeloWorkspaceTargetV1`: that union embeds a plain dataclass,
+    whose generated schema carries no closed-object marker, and a target
+    published through the operations public-schema registry must be closed
+    end to end.
+    """
+
+    contract_version: Literal[1] = 1
+    work_unit_id: WorkUnitId
+    bucket_id: BucketId | None = None
 
 
 class ModeloWorkspaceRequestV1(_WorkspaceModel):
@@ -260,9 +306,32 @@ class ModeloWorkspaceLocaleSummaryV1(_WorkspaceModel):
 class ModeloWorkspaceLocalizedTextV1(_WorkspaceModel):
     """One localized display string with its canonical resolution coordinates."""
 
-    locale_key: _BoundedCode
+    kind: Literal["localized"] = "localized"
+    locale_key: _BoundedLocaleKey
     value: _BoundedLocalizedText
     locale: ModeloWorkspaceLocaleSummaryV1
+
+
+class ModeloWorkspaceTechnicalLabelV1(_WorkspaceModel):
+    """A row's canonical registry identifier, presented honestly as never-translated.
+
+    S284: formula, binding, relation, and parameter identities have no
+    locale-catalogue entry anywhere in the tree and are never surfaced to a
+    taxpayer as operator-facing prose -- they are registry names, always
+    shown as themselves in every diagnostic and review surface that already
+    displays them. Wrapping a bare identifier in
+    :class:`ModeloWorkspaceLocalizedTextV1` would misrepresent it as a
+    translation that happened; this type says plainly that none did.
+    """
+
+    kind: Literal["technical"] = "technical"
+    identifier: _BoundedCode
+
+
+type ModeloWorkspaceRecordLabelV1 = Annotated[
+    ModeloWorkspaceLocalizedTextV1 | ModeloWorkspaceTechnicalLabelV1,
+    Field(discriminator="kind"),
+]
 
 
 class ModeloWorkspaceSchemaIdentityV1(_WorkspaceModel):
@@ -470,10 +539,15 @@ class ModeloWorkspaceSchemaRecordV1(_WorkspaceModel):
     reference: ModeloWorkspaceSchemaReferenceV1
     section_path: Annotated[tuple[_BoundedText, ...], Field(max_length=_MAX_SCHEMA_SECTION_DEPTH)]
     data_type: _BoundedCode
-    label: ModeloWorkspaceLocalizedTextV1
+    label: ModeloWorkspaceRecordLabelV1
     classification: ModeloWorkspaceSchemaClassification
     family_disposition: RegistrySchemaFamilyDisposition
-    legal_refs: _BoundedRefList[LegalRefId] = ()
+    legal_refs: _BoundedRefList[LegalRefId] | None = ()
+    """``None`` means this admission's producer never carries legal grounding
+    for this reference kind (S283); an empty tuple means it does, and none is
+    declared. The two must never collapse into one "nothing here" shape --
+    a bare empty tuple over legal grounding reads as "the law requires
+    nothing," while ``None`` honestly reads as "not measured"."""
     source_refs: _BoundedRefList[SourceRefId] = ()
     continuity: Annotated[
         tuple[ModeloWorkspaceContinuityReferenceV1, ...], Field(max_length=_MAX_SCHEMA_RELATIONSHIPS)
@@ -481,9 +555,14 @@ class ModeloWorkspaceSchemaRecordV1(_WorkspaceModel):
     applicability: Annotated[
         tuple[ModeloWorkspaceApplicabilityReferenceV1, ...], Field(max_length=_MAX_SCHEMA_RELATIONSHIPS)
     ] = ()
-    constraints: Annotated[
-        tuple[ModeloWorkspaceConstraintReferenceV1, ...], Field(max_length=_MAX_SCHEMA_RELATIONSHIPS)
-    ] = ()
+    constraints: (
+        Annotated[tuple[ModeloWorkspaceConstraintReferenceV1, ...], Field(max_length=_MAX_SCHEMA_RELATIONSHIPS)] | None
+    ) = ()
+    """``None`` means this admission's producer never carries constraint
+    declarations for this reference kind (S283, same distinction as
+    ``legal_refs``): a static inspection has no ``CasillaDefinition`` to
+    check, so it cannot honestly claim "no constraints declared" the way an
+    empty tuple would."""
     formula_operands: Annotated[
         tuple[ModeloWorkspaceFormulaOperandReferenceV1, ...], Field(max_length=_MAX_SCHEMA_RELATIONSHIPS)
     ] = ()
@@ -505,9 +584,21 @@ class ModeloWorkspaceFamilyDispositionV1(_WorkspaceModel):
 
 
 class ModeloWorkspaceProvenanceRecordV1(_WorkspaceModel):
-    """One selected canonical resolver lineage row for a workspace subject."""
+    """One selected canonical resolver lineage row, optionally for a workspace subject.
 
-    subject: ModeloWorkspaceSchemaReferenceV1
+    S290: ``subject`` is ``None`` when the underlying ``calculation_source``
+    (``CalculationSourceRef``) carries no linked casilla identity --
+    ``source_casilla_ids`` empty, which is the common case today since most
+    resolver call sites do not yet populate it. This is the same
+    None-vs-()-shaped distinction S283 gave a schema record's optional
+    grounding fields: ``None`` means "this producer never carries this data
+    for this row", never a silently dropped record. An unlinked ref still
+    produces exactly one record (never zero), so an audit reader sees every
+    contributing source and can distinguish "unattributed" from "record
+    never surfaced".
+    """
+
+    subject: ModeloWorkspaceSchemaReferenceV1 | None
     calculation_source: CalculationSourceRef
 
 
@@ -802,10 +893,39 @@ class ModeloWorkspaceBindingRequirementV1(_WorkspaceModel):
     input_channel: Annotated[str, Field(min_length=1, max_length=16)]
 
 
+class ModeloWorkspaceLedgerTransactionSubjectV1(_WorkspaceModel):
+    """A ledger-preflight issue attached to one identified transaction."""
+
+    kind: Literal["transaction"] = "transaction"
+    transaction_id: TransactionId
+
+
+class ModeloWorkspaceLedgerPeriodSubjectV1(_WorkspaceModel):
+    """A ledger-preflight issue that is not tied to any one transaction.
+
+    S291: :class:`~cadrumo.application.ledger.preflight.LedgerPreflightIssue`
+    carries ``transaction_id: TransactionId | Literal["__period__"]`` for a
+    condition scoped to the whole period rather than one row (an unsupported
+    period with no date span, per ``_unsupported_period_issue``). Collapsing
+    that case into a required ``TransactionId`` would either drop the issue
+    (silent under-declaration on exactly the axis a taxpayer consults before
+    filing) or pin it to a fabricated transaction that has nothing to do with
+    it; this type represents the period-level case as itself.
+    """
+
+    kind: Literal["period"] = "period"
+
+
+type ModeloWorkspaceLedgerIssueSubjectV1 = Annotated[
+    ModeloWorkspaceLedgerTransactionSubjectV1 | ModeloWorkspaceLedgerPeriodSubjectV1,
+    Field(discriminator="kind"),
+]
+
+
 class ModeloWorkspaceLedgerIssueV1(_WorkspaceModel):
     """One bounded ledger-preflight issue preserving its canonical typed axis."""
 
-    transaction_id: TransactionId
+    subject: ModeloWorkspaceLedgerIssueSubjectV1
     reason: LedgerPreflightIssueReason
     detail: _BoundedLocalizedText
 
@@ -841,11 +961,26 @@ class ModeloWorkspaceReadinessV1(_WorkspaceModel):
 
 
 class ModeloWorkspaceSnapshotScopeV1(_WorkspaceModel):
-    """The explicitly requested, declared, and effective grade for a snapshot admission."""
+    """The explicitly requested and declared grade for one snapshot admission.
+
+    S128: a third ``effective_grade`` field was retired here. The registry's
+    own grade check (``_check_snapshot_authority_grade``) REFUSES a snapshot
+    whose declared grade is below the requested one; it never truncates and
+    never returns a snapshot built at some lesser grade. Under every path
+    that exists, an "effective" grade could therefore only ever equal
+    ``declared_grade`` -- a field that can only restate its neighbour asserts
+    a narrowing step the system never performs, and nothing in the codebase
+    ever constructed or read it. Retired outright rather than migrated
+    (``COMPATIBILITY_REGIME`` is ``PRE_RELEASE``; nothing persists this
+    class). Reintroduction condition: if a future revision-selection path
+    ever TRUNCATES instead of refusing -- admitting a snapshot at a grade
+    below the one requested, rather than raising -- then an effective grade
+    becomes a real, distinct fact and the field earns its place back with
+    that defined meaning.
+    """
 
     required_grade: RegistryAuthorityGrade
     declared_grade: RegistryAuthorityGrade
-    effective_grade: RegistryAuthorityGrade
     snapshot_scope_digest: ContentDigest
 
 
@@ -1172,7 +1307,10 @@ __all__ = [
     "ModeloWorkspaceGradedSnapshotAdmissionV1",
     "ModeloWorkspaceGradedSnapshotResultV1",
     "ModeloWorkspaceGradedSnapshotScopeV1",
+    "ModeloWorkspaceLedgerIssueSubjectV1",
     "ModeloWorkspaceLedgerIssueV1",
+    "ModeloWorkspaceLedgerPeriodSubjectV1",
+    "ModeloWorkspaceLedgerTransactionSubjectV1",
     "ModeloWorkspaceLegalEvidenceReferenceV1",
     "ModeloWorkspaceLocaleDisposition",
     "ModeloWorkspaceLocaleSummaryV1",
@@ -1184,6 +1322,8 @@ __all__ = [
     "ModeloWorkspaceProjectionV1",
     "ModeloWorkspaceProvenanceRecordV1",
     "ModeloWorkspaceReadinessV1",
+    "ModeloWorkspaceRecordLabelV1",
+    "ModeloWorkspaceRefreshTargetV1",
     "ModeloWorkspaceRefusalCode",
     "ModeloWorkspaceRefusalV1",
     "ModeloWorkspaceRefusedResultV1",
@@ -1212,6 +1352,7 @@ __all__ = [
     "ModeloWorkspaceStaticInspectionResultV1",
     "ModeloWorkspaceStaticInspectionScopeV1",
     "ModeloWorkspaceTargetV1",
+    "ModeloWorkspaceTechnicalLabelV1",
     "ModeloWorkspaceTextFactValueV1",
     "ModeloWorkspaceVersionHeader",
     "ModeloWorkspaceVersionRefusalV1",

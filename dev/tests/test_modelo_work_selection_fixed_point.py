@@ -89,7 +89,8 @@ def test_canonical_module_has_no_fragmented_exact_or_operator_selector_helpers()
         ("from cadrumo.application import modelo\nmodelo.ModeloWorkResolution", "facade import/package access"),
         (
             "from cadrumo.application.modelo.work_addressing import select_modelo_work_resolution\n"
-            "def outer():\n def inner():\n  WorkUnitCatalogueRepository().load(); return select_modelo_work_resolution()",
+            "def outer():\n def inner():\n  WorkUnitCatalogueRepository().load(); "
+            "return select_modelo_work_resolution()",
             "repository-owning selector wrapper",
         ),
         (

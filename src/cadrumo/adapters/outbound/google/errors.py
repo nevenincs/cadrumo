@@ -14,7 +14,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from enum import StrEnum
 
-from ....application.operator_actions import no_action_precondition_verdict
+from ....application.operator_actions import PreconditionVerdict, no_action_precondition_verdict
 from ....core import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.errors import CadrumoError, TerminalPreconditionErrorMixin
 
@@ -60,7 +60,7 @@ def google_auth_no_action_verdict(
     )
 
 
-class GoogleAuthError(TerminalPreconditionErrorMixin, CadrumoError):
+class GoogleAuthError(TerminalPreconditionErrorMixin[PreconditionVerdict], CadrumoError):
     """Base class for every Google OAuth Desktop authentication failure.
 
     Catch this at CLI boundaries that need one Google-auth refusal arm while
@@ -131,7 +131,7 @@ class GoogleAuthKeychainLockedError(GoogleAuthError):
 class GoogleAuthProfileUnboundError(GoogleAuthError):
     """Raised when Google auth cannot resolve the active AEAT profile.
 
-    Emitted by :func:`adapters.outbound.google._active_profile.resolve_active_profile`
+    Emitted by :func:`adapters.outbound.google.active_profile.resolve_active_profile`
     and profile-loading guards in :mod:`adapters.outbound.google._oauth_flow`.
     """
 

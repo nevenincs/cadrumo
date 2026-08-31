@@ -191,11 +191,16 @@ def test_document_view_reports_an_unparsed_document_identically_in_json_and_text
 
 
 def test_a_document_payload_cannot_claim_a_reading_it_does_not_carry() -> None:
-    """The flag, the reading and the refusal must agree, or the payload refuses.
+    """The wire flag must agree with the reading it summarises, or the payload refuses.
 
-    A payload asserting a reading it does not carry, or reporting neither a
-    reading nor a reason for its absence, would let an operator conclude the
-    served act held no figures when the truth is that nobody read it.
+    ``sancion_parsed`` exists nowhere but on this schema, so this is the only
+    layer that can hold it to its definition, and a payload asserting a reading
+    it does not carry would send a JSON client after figures that are not
+    there.
+
+    That a document carries either a reading or the reason there is none is a
+    rule about the stored record, not about this projection, and it is enforced
+    on ``NotificationDocumentRecord`` rather than restated here.
     """
     from .._app_live_notifications_payloads import NotificationDocumentPullResult, NotificationDocumentViewResult
 
@@ -210,8 +215,6 @@ def test_a_document_payload_cannot_claim_a_reading_it_does_not_carry() -> None:
     }
     with pytest.raises(ValidationError):
         NotificationDocumentViewResult(**shared, sancion_parsed=True, sancion=None, parse_refusal="no text layer")
-    with pytest.raises(ValidationError):
-        NotificationDocumentViewResult(**shared, sancion_parsed=False, sancion=None, parse_refusal=None)
 
     refused = NotificationDocumentPullResult(
         **shared,

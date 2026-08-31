@@ -331,7 +331,7 @@ class EvidenceBundleService:
         explicitly.
         """
         if record_payloads is None:
-            record_payloads = {}
+            record_payloads = dict[tuple[str, str], bytes]()
         bundle = self.show(bucket_id=bucket_id, bundle_id=bundle_id)
         findings: list[EvidenceBundleCheckResult] = []
 
@@ -429,7 +429,7 @@ class EvidenceBundleService:
         it does not create or update encrypted bucket catalogue records.
         """
         if record_payloads is None:
-            record_payloads = {}
+            record_payloads = dict[tuple[str, str], bytes]()
         bundle = self.show(bucket_id=bucket_id, bundle_id=bundle_id)
         report = self.check(
             bucket_id=bucket_id,

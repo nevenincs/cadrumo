@@ -101,7 +101,7 @@ def test_census_observes_real_definition_producer_and_command_literal_sites(
     assert any(
         record.role == "command_literal"
         and record.action_identity == "aeat app modelo work create"
-        and record.path == "src/cadrumo/application/wizard/_commands.py"
+        and record.path == "src/cadrumo/application/wizard/commands.py"
         for record in records
     )
 

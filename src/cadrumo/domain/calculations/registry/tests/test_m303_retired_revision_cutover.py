@@ -93,6 +93,7 @@ def _is_m303_source_line(source: str, line_number: int) -> bool:
     for index, line in enumerate(lines, start=1):
         for match in _MODELO_MARKER.finditer(line):
             modelo = next(group for group in match.groups() if group)
+            assert isinstance(modelo, str)
             candidate = (abs(index - line_number), 0 if index <= line_number else 1, modelo)
             if nearest is None or candidate[:2] < nearest[:2]:
                 nearest = candidate

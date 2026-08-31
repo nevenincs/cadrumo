@@ -116,7 +116,7 @@ def _resolve_login_target_or_refuse(raw: str):
     `_profile_session_gate.normalize_ambient_profile`, and the root
     `--profile` override. This preflight is a FOURTH resolution site, introduced
     after that fix, and it did not carry the conversion, so the escape returned
-    on `config profile show <label>` and `config profile validate <label>`.
+    on `config profile view <label>` and `config profile validate <label>`.
     """
     from ...application.profile_preconditions import (
         ProfileSelectionFailure,
@@ -264,6 +264,24 @@ def preflight_parsed_leaf(
             command_path=node.path[1:],
             authenticate_root=authenticate,
         )
+    _materialize_storage_for(spec)
+
+
+def _materialize_storage_for(spec: CommandSpec) -> None:
+    """Materialize the storage tree only for a leaf that declares it writes.
+
+    The tree is twenty-odd directories.  Creating it unconditionally meant a
+    read-only command -- ``config profile list`` most visibly -- built the whole
+    topology just to report what already existed, which both contradicts its
+    declared ``side_effects`` of ``none`` and makes a first run appear to have
+    state it does not have.  The declaration is the same authority the census,
+    write routing and help surfaces read, so the gate cannot drift from it.
+    """
+    # The spec invariant already ties the two together: a non-"none" write
+    # route requires a "local-state" side effect, so a leaf declaring no side
+    # effect provably declares no write route either.
+    if spec.policy.side_effects == frozenset({"none"}):
+        return
     from ...core import ensure_storage_tree
 
     ensure_storage_tree()

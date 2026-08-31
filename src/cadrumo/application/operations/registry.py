@@ -39,6 +39,11 @@ from .capabilities import (
     OperationSensitiveInputPolicy,
 )
 from .events import OperationEventCode
+from .financial_operand import OperationTransientFinancialOperandDeclaration
+from .financial_operand_custody import (
+    OperationFinancialOperandCrashClassification,
+    OperationFinancialOperandCustodyCheckpoint,
+)
 from .interactions import OperationInteractionRequest
 from .models import (
     CredentialFreeOperationRequest,
@@ -288,6 +293,7 @@ class OperationDefinition(BaseModel):
     permitted_frontends: frozenset[OperationFrontendProjection] = Field(min_length=1)
     action_reference: ActionReference | None = None
     ephemeral_secret: OperationEphemeralSecretDeclaration | None = None
+    transient_financial_operands: tuple[OperationTransientFinancialOperandDeclaration, ...] = ()
 
     @field_validator("phase_codes")
     @classmethod
@@ -302,6 +308,7 @@ class OperationDefinition(BaseModel):
             raise ValueError("operation executor factory request type must match the definition request type")
         self._validate_request_storage()
         self._validate_ephemeral_secret()
+        self._validate_transient_financial_operands()
         if (
             self.capabilities.durability is not OperationDurability.EPHEMERAL
             and OperationEffect.UNKNOWN not in self.capabilities.permitted_effects
@@ -335,6 +342,91 @@ class OperationDefinition(BaseModel):
             raise ValueError("ephemeral secret operations cannot resume after owner loss")
         if OperationEffect.NONE not in self.capabilities.permitted_effects:
             raise ValueError("ephemeral secret operations must permit a pre-entry none effect")
+
+    def _validate_transient_financial_operands(self) -> None:
+        """Refuse an operand declaration the runtime could not honour.
+
+        An operand lives only in the memory of the process that received it, so
+        a definition that expects to resume after owner loss is declaring
+        something custody cannot deliver: the restart would have to invent the
+        amount or the acknowledgement.
+        """
+        if not self.transient_financial_operands:
+            return
+        kinds = [declaration.operand_kind for declaration in self.transient_financial_operands]
+        if len(set(kinds)) != len(kinds):
+            raise ValueError("operation definition cannot declare one financial operand kind twice")
+        if self.capabilities.durability is not OperationDurability.RECORDED:
+            raise ValueError("transient financial operand operations require recorded durability")
+        if self.reconciliation_policy is not OperationReconciliationPolicy.INTERRUPT:
+            raise ValueError("transient financial operand operations cannot resume after owner loss")
+        if OperationInteractionKind.INPUT not in self.interaction_kinds:
+            raise ValueError("transient financial operand operations must declare an input interaction")
+        if OperationEffect.UNKNOWN not in self.capabilities.permitted_effects:
+            raise ValueError("transient financial operand operations must permit an uncertain-delivery effect")
+
+
+class OperationEffectReceipt(BaseModel):
+    """What committed evidence lets an operation claim about its own effect.
+
+    A claim is narrowed, never widened. An executor that reports it changed
+    nothing is believed; one that reports a mutation is held to the evidence
+    the application actually committed, because an operation interrupted
+    mid-flight cannot know on its own whether its write landed.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    definition_id: OperationDefinitionId
+    effect: OperationEffect
+    interrupted: bool
+    narrowed_from: OperationEffect | None = None
+
+    @model_validator(mode="after")
+    def _validate_narrowing(self) -> OperationEffectReceipt:
+        if self.narrowed_from is not None and self.narrowed_from is self.effect:
+            raise ValueError("an effect receipt records a narrowing only when the claim actually changed")
+        return self
+
+
+def resolve_effect_receipt(
+    definition: OperationDefinition,
+    *,
+    claimed_effect: OperationEffect,
+    committed_evidence: bool,
+    custody: OperationFinancialOperandCustodyCheckpoint | None = None,
+) -> OperationEffectReceipt:
+    """Narrow one recorded effect claim against committed application evidence.
+
+    ``committed_evidence`` is whether the application durably recorded the
+    mutation this operation claims. Without it an ``UPDATED`` or ``PARTIAL``
+    claim narrows to ``UNKNOWN``: the operation may well have succeeded, and
+    saying so without evidence is exactly the over-claim that makes a later
+    reconciliation trust a write that never landed.
+
+    ``custody`` carries the operand wait, if the operation had one. Only its
+    crash classification is read - never any operand material, which the
+    checkpoint does not hold in the first place. A wait whose delivery is
+    uncertain cannot support a definite effect claim.
+    """
+    if claimed_effect not in definition.capabilities.permitted_effects:
+        raise ValueError(f"operation {definition.definition_id!r} may not claim effect {claimed_effect.value!r}")
+    interrupted = custody is not None and (
+        custody.crash_classification is OperationFinancialOperandCrashClassification.DELIVERY_UNCERTAIN
+    )
+    definite = claimed_effect in {OperationEffect.UPDATED, OperationEffect.PARTIAL}
+    if definite and (not committed_evidence or interrupted):
+        return OperationEffectReceipt(
+            definition_id=definition.definition_id,
+            effect=OperationEffect.UNKNOWN,
+            interrupted=interrupted,
+            narrowed_from=claimed_effect,
+        )
+    return OperationEffectReceipt(
+        definition_id=definition.definition_id,
+        effect=claimed_effect,
+        interrupted=interrupted,
+    )
 
 
 class _PublicDefinitionContractValues(TypedDict):
@@ -420,6 +512,23 @@ class OperationWorkspaceRefreshAdapter(Protocol):
         ...
 
 
+@runtime_checkable
+class OperationResultProjector(Protocol):
+    """Domain-owned, side-effect-free safe settled-result projection contract.
+
+    Symmetric with :class:`OperationReviewProjector`: the resolver reloads the
+    private settled result behind the secure application port and hands it,
+    plus the safe terminal receipt, to this projector -- never the reverse.
+    Registered only when the public result schema is a distinct projection of
+    the definition's private result type; a result schema identical to that
+    private type declares no projector.
+    """
+
+    def __call__(self, result: BaseModel, terminal_receipt: OperationTerminalReceipt, /) -> BaseModel:
+        """Project one resolved settled result and its safe terminal receipt."""
+        ...
+
+
 class OperationPublicDefinitionRegistrationV1(BaseModel):
     """Live models and adapters bound to one serializable public contract."""
 
@@ -430,6 +539,7 @@ class OperationPublicDefinitionRegistrationV1(BaseModel):
     reviewed_operand_type: type[BaseModel] | None = None
     review_projector: OperationReviewProjector | None = None
     workspace_refresh_adapter: OperationWorkspaceRefreshAdapter | None = None
+    result_projector: OperationResultProjector | None = None
 
     @field_validator("schema_bindings")
     @classmethod
@@ -485,6 +595,7 @@ class OperationPublicDefinitionRegistrationV1(BaseModel):
         reviewed_operand_type: type[BaseModel] | None = None,
         review_projector: OperationReviewProjector | None = None,
         workspace_refresh_adapter: OperationWorkspaceRefreshAdapter | None = None,
+        result_projector: OperationResultProjector | None = None,
     ) -> OperationPublicDefinitionRegistrationV1:
         """Compose a manifest and its runtime-only bindings from one definition."""
         bindings = tuple(
@@ -518,6 +629,7 @@ class OperationPublicDefinitionRegistrationV1(BaseModel):
             reviewed_operand_type=reviewed_operand_type,
             review_projector=review_projector,
             workspace_refresh_adapter=workspace_refresh_adapter,
+            result_projector=result_projector,
         )
 
 
@@ -592,11 +704,24 @@ class OperationRegistry(BaseModel):
         if definition.result_type is None:
             if contract.result_schema is not None:
                 raise ValueError("result-less operation definition cannot declare a public result schema")
-        elif (
-            contract.result_schema is not None
-            and bindings[_schema_identity_key(contract.result_schema)] is not definition.result_type
-        ):
-            raise ValueError("declared public operation result schema must bind the definition result type")
+            if registration.result_projector is not None:
+                raise ValueError("result-less operation definition cannot declare a result projector")
+        elif contract.result_schema is not None:
+            bound_result_type = bindings[_schema_identity_key(contract.result_schema)]
+            distinct_result_projection = bound_result_type is not definition.result_type
+            if distinct_result_projection != (registration.result_projector is not None):
+                raise ValueError(
+                    "a public result schema distinct from the definition result type requires one registered "
+                    "result projector, and one identical to it must not declare one"
+                )
+        elif registration.result_projector is not None:
+            raise ValueError("a result projector requires a declared public result schema")
+        if registration.result_projector is not None:
+            _require_positional_callable_signature(
+                registration.result_projector,
+                arity=2,
+                label="result projector",
+            )
         declares_review = OperationInteractionKind.REVIEW in definition.interaction_kinds
         if declares_review != (contract.review_projection_schema is not None):
             raise ValueError("REVIEW operation definitions require one public review schema")
@@ -705,8 +830,60 @@ class OperationRegistry(BaseModel):
         return definition.request_type.model_validate_json(raw)
 
 
+_HEX64_DIGEST_PATTERN = "^[0-9a-f]{64}$"
+
+
+def _is_hex64_shaped_schema(value: object) -> bool:
+    """Report whether one field's JSON-schema fragment matches the Hex64Str/ContentDigest shape.
+
+    ``ContentDigest`` is a bare assignment to ``Hex64Str`` (``ContentDigest
+    is Hex64Str``), not a distinct type, and ``Hex64Str`` is deliberately
+    shared by several unrelated concepts (``WorkUnitId``,
+    ``CalculationRevisionId``, ``SnapshotId``, ``TransactionId``). There is
+    therefore no runtime type-identity test for "declared as
+    ``ContentDigest`` specifically" - only a SHAPE test for "64 lowercase
+    hex characters", which every one of those sibling concepts also
+    satisfies. Recurses through ``anyOf`` (an ``X | None`` field) and
+    ``items`` (a ``tuple[X, ...]`` field) to reach the underlying string
+    schema.
+    """
+    if not isinstance(value, dict):
+        return False
+    mapping = cast(dict[str, object], value)
+    if (
+        mapping.get("type") == "string"
+        and mapping.get("pattern") == _HEX64_DIGEST_PATTERN
+        and mapping.get("minLength") == 64
+        and mapping.get("maxLength") == 64
+    ):
+        return True
+    any_of = mapping.get("anyOf")
+    if isinstance(any_of, list):
+        return any(
+            _is_hex64_shaped_schema(cast(dict[str, object], item))
+            for item in cast(list[object], any_of)
+            if isinstance(item, dict) and cast(dict[str, object], item).get("type") != "null"
+        )
+    items = mapping.get("items")
+    if isinstance(items, dict):
+        return _is_hex64_shaped_schema(cast(dict[str, object], items))
+    return False
+
+
 def _validate_credential_free_schema(schema: object) -> None:
-    """Reject request schemas capable of carrying credentials or opaque transports."""
+    """Reject request schemas capable of carrying credentials or opaque transports.
+
+    A field name matching ONLY the ``digest`` forbidden token (no other
+    forbidden token also matches) is admitted when its schema shape is
+    exactly Hex64 - a compare-and-swap content digest, never a bearer token
+    or passphrase by shape. A field matching any OTHER forbidden token is
+    refused regardless of shape, and regardless of whether it also matches
+    ``digest``; the exemption never widens any token but ``digest`` and
+    never overrides a second, independently-matched forbidden token on the
+    same field. The residual risk this accepts: a Hex64-shaped field
+    declared as one of ``ContentDigest``'s shape-sharing siblings, named
+    ``*_digest``, is also admitted by this rule.
+    """
     if isinstance(schema, list):
         for item in cast(list[object], schema):
             _validate_credential_free_schema(item)
@@ -719,12 +896,14 @@ def _validate_credential_free_schema(schema: object) -> None:
         raise ValueError("credential-free journal request schema contains a secret-capable format")
     properties = mapping.get("properties")
     if isinstance(properties, dict):
-        for field_name in cast(dict[str, object], properties):
+        for field_name, field_schema in cast(dict[str, object], properties).items():
             parts = set(field_name.lower().replace("-", "_").split("_"))
-            if parts & _FORBIDDEN_CREDENTIAL_FREE_FIELD_PARTS:
-                raise ValueError(
-                    f"credential-free journal request field {field_name!r} has a forbidden security meaning"
-                )
+            matched = parts & _FORBIDDEN_CREDENTIAL_FREE_FIELD_PARTS
+            if not matched:
+                continue
+            if matched == {"digest"} and _is_hex64_shaped_schema(field_schema):
+                continue
+            raise ValueError(f"credential-free journal request field {field_name!r} has a forbidden security meaning")
     for value in mapping.values():
         _validate_credential_free_schema(value)
 
@@ -957,6 +1136,7 @@ OperationPublicDefinitionContractV1.model_rebuild()
 
 __all__ = [
     "OperationDefinition",
+    "OperationEffectReceipt",
     "OperationExecutorFactory",
     "OperationFrontendProjection",
     "OperationPublicContractSetV1",
@@ -965,9 +1145,11 @@ __all__ = [
     "OperationPublicSchemaId",
     "OperationReconciliationPolicy",
     "OperationRegistry",
+    "OperationResultProjector",
     "OperationReviewProjector",
     "OperationSchemaBindingV1",
     "OperationSchemaIdentityV1",
     "OperationWorkspaceRefreshAdapter",
     "operation_public_schema_reference",
+    "resolve_effect_receipt",
 ]

@@ -39,18 +39,20 @@ from ....application.user_profile.status_projection import StatusFactRow, Status
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from ....core.presentation import FormField, FormPage
-from ....entrypoints.tui.profile.overview import ProfileManagerApp
-from ....entrypoints.tui.profile.status import StatusApp
-from ....entrypoints.tui.secret.app import LoginApp, RegistrationApp
+from ....entrypoints.tui.profile.overview import ProfileManagerScreen
+from ....entrypoints.tui.profile.status import StatusScreen
+from ....entrypoints.tui.secret.login import LoginScreen
+from ....entrypoints.tui.secret.registration import RegistrationScreen
 from ....tests.profile_capsule import load_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
 from ..components.form_screen import FormApp
+from ..components.host import ScreenHostApp
 from ..components.theme import (
     CADRUMO_DARK_THEME_NAME,
     CADRUMO_LIGHT_THEME_NAME,
 )
 from ..components.widgets import ContentScroll
-from ..flows.app import FlowTuiApp
+from ..flows.app import FlowScreen
 
 pytestmark = [
     pytest.mark.integration,
@@ -87,12 +89,12 @@ _THEMES = [CADRUMO_LIGHT_THEME_NAME, CADRUMO_DARK_THEME_NAME]
 
 
 @contextmanager
-def _registration(tmp_path: Path) -> Iterator[RegistrationApp]:
+def _registration(tmp_path: Path) -> Iterator[RegistrationScreen]:
     from ....core.credentials import assess_profile_password
     from ..devtools.fixture import registration_attempt
 
     del tmp_path  # unused: this surface writes nothing until a real submit, which no gate here does
-    yield RegistrationApp(assess=assess_profile_password, register=registration_attempt)
+    yield RegistrationScreen(assess=assess_profile_password, register=registration_attempt)
 
 
 @contextmanager
@@ -109,9 +111,9 @@ def _form(tmp_path: Path) -> Iterator[FormApp]:
 
 
 @contextmanager
-def _status(tmp_path: Path) -> Iterator[StatusApp]:
+def _status(tmp_path: Path) -> Iterator[StatusScreen]:
     del tmp_path  # unused: the projection is hand-built, matching this file's existing status fixture
-    yield StatusApp(
+    yield StatusScreen(
         StatusPageData(
             active_profile_label="Subject",
             facts=(StatusFactRow(label="Field", value="Value"),),
@@ -120,7 +122,7 @@ def _status(tmp_path: Path) -> Iterator[StatusApp]:
 
 
 @contextmanager
-def _manager(tmp_path: Path) -> Iterator[ProfileManagerApp]:
+def _manager(tmp_path: Path) -> Iterator[ProfileManagerScreen]:
     """The manager, composed the way ``present_profile_manager`` composes it.
 
     ``manager`` was absent from every gate in this module -- the geometry
@@ -155,14 +157,18 @@ def _manager(tmp_path: Path) -> Iterator[ProfileManagerApp]:
             applied = apply_manager_profile_field_mutation(profile_id=profile_id, path=path, value=value)
             return build_profile_overview(applied, label=_VISUAL_LABEL)
 
-        yield ProfileManagerApp(
+        async def launch_source(source: object) -> None:  # pragma: no cover - not exercised by this gate
+            del source
+
+        yield ProfileManagerScreen(
             build_profile_overview(record, label=_VISUAL_LABEL),
             persist=persist,
+            launch_source=launch_source,
         )
 
 
 @contextmanager
-def _login(tmp_path: Path) -> Iterator[LoginApp]:
+def _login(tmp_path: Path) -> Iterator[LoginScreen]:
     """The login screen, composed through the application interaction contract.
 
     Needs a real profile that exists but is LOCKED -- registration leaves it
@@ -189,7 +195,7 @@ def _login(tmp_path: Path) -> Iterator[LoginApp]:
             passphrase=_VISUAL_PASSWORD,
         )
         logout_active_profile()
-        yield LoginApp(
+        yield LoginScreen(
             choices=profile_login_choices(),
             authenticate=attempt_profile_login,
             preselected=preselected_profile_login_id(None),
@@ -197,7 +203,7 @@ def _login(tmp_path: Path) -> Iterator[LoginApp]:
 
 
 @contextmanager
-def _status_populated(tmp_path: Path) -> Iterator[StatusApp]:
+def _status_populated(tmp_path: Path) -> Iterator[StatusScreen]:
     """The status page with its NOTICES region genuinely populated.
 
     Built through the real production door, ``build_status_page_data()``,
@@ -223,11 +229,11 @@ def _status_populated(tmp_path: Path) -> Iterator[StatusApp]:
             label=_VISUAL_LABEL,
             passphrase=_VISUAL_PASSWORD,
         )
-        yield StatusApp(build_status_page_data())
+        yield StatusScreen(build_status_page_data())
 
 
 @contextmanager
-def _manager_populated(tmp_path: Path) -> Iterator[ProfileManagerApp]:
+def _manager_populated(tmp_path: Path) -> Iterator[ProfileManagerScreen]:
     """The manager with a REPEATABLE section's row count grown past one.
 
     ``manager`` (:func:`_manager`) always renders its full declared field
@@ -270,14 +276,18 @@ def _manager_populated(tmp_path: Path) -> Iterator[ProfileManagerApp]:
             applied = apply_manager_profile_field_mutation(profile_id=profile_id, path=path, value=value)
             return build_profile_overview(applied, label=_VISUAL_LABEL)
 
-        yield ProfileManagerApp(
+        async def launch_source(source: object) -> None:  # pragma: no cover - not exercised by this gate
+            del source
+
+        yield ProfileManagerScreen(
             build_profile_overview(record, label=_VISUAL_LABEL),
             persist=persist,
+            launch_source=launch_source,
         )
 
 
 @contextmanager
-def _question(tmp_path: Path) -> Iterator[FlowTuiApp]:
+def _question(tmp_path: Path) -> Iterator[FlowScreen]:
     """The wizard question screen, carrying more content than a short terminal holds.
 
     Enrolled here because it is the surface the operator sees on every page
@@ -288,7 +298,7 @@ def _question(tmp_path: Path) -> Iterator[FlowTuiApp]:
     as a dead stop — the exact two defects the gates below already pin on
     every other surface.
     """
-    del tmp_path  # unused: a bare FlowTuiApp holds no storage of its own
+    del tmp_path  # unused: a bare flow screen holds no storage of its own
     copy = CopyRef(kind=CopyRefKind.LOCALE_KEY, ref="wizard.setup.title")
     page = FlowPage(
         id="p0",
@@ -309,10 +319,10 @@ def _question(tmp_path: Path) -> Iterator[FlowTuiApp]:
             FlowMode.MODIFY: CheckpointAvailability.UNAVAILABLE,
         },
     )
-    yield FlowTuiApp(definition, mode=FlowMode.MODIFY, registered_values={})
+    yield FlowScreen(definition, mode=FlowMode.MODIFY, registered_values={})
 
 
-def _many_page_flow() -> FlowTuiApp:
+def _many_page_flow() -> FlowScreen:
     """A flow long enough that both the question page and the review table
     overflow their container at every size in ``_SIZES``.
 
@@ -348,7 +358,7 @@ def _many_page_flow() -> FlowTuiApp:
             FlowMode.MODIFY: CheckpointAvailability.UNAVAILABLE,
         },
     )
-    return FlowTuiApp(definition, mode=FlowMode.MODIFY, registered_values={})
+    return FlowScreen(definition, mode=FlowMode.MODIFY, registered_values={})
 
 
 _SURFACES = [
@@ -740,13 +750,14 @@ async def test_a_flow_surface_has_exactly_one_visible_vertical_scroll_owner(
     would pass with the defect present and prove nothing; the precondition
     is asserted below rather than assumed.
     """
-    app = _many_page_flow()
-    async with app.run_test(size=(width, height)) as pilot:
+    flow = _many_page_flow()
+    host = ScreenHostApp(flow)
+    async with host.run_test(size=(width, height)) as pilot:
         await pilot.pause()
         if review:
             await pilot.press("f2")
             await pilot.pause()
-        screen = app.screen
+        screen = host.screen
 
         # Positive control: the surface must actually have more content
         # than the viewport, or "the Screen does not scroll" is vacuous.
@@ -780,4 +791,4 @@ async def test_a_flow_surface_has_exactly_one_visible_vertical_scroll_owner(
             f"expected one visible vertical scroll owner at {width}x{height}, got "
             f"{[type(widget).__name__ for widget in visible_owners]}"
         )
-        app.exit(None)
+        host.exit(None)

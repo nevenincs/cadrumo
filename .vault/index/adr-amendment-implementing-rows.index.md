@@ -4,10 +4,11 @@ tags:
   - '#index'
   - '#adr-amendment-implementing-rows'
 date: '2026-08-16'
-modified: '2026-08-26'
-body_schema: 'body-v1'
-body_hash: 'sha256:ee0333070f0cff27b318d0b948aa2495bb153121283564778988efe54f41b674'
+modified: '2026-08-27'
+body_schema: 'body-v2'
+body_hash: 'sha256:0f8b04e717ffb97eb75274e1723be96e21dd51fd3c0561edb139c9e7b7611195'
 related:
+  - '[[2026-08-07-adr-amendment-implementing-rows-ledger]]'
   - '[[2026-08-07-adr-amendment-implementing-rows-plan]]'
   - '[[2026-08-09-adr-amendment-implementing-rows-adr]]'
   - '[[2026-08-09-adr-amendment-implementing-rows-roll-up-authorization-research]]'
@@ -34,10 +35,7 @@ Auto-generated index of all documents tagged with `#adr-amendment-implementing-r
 
 ### exec
 
-- `2026-08-07-adr-amendment-implementing-rows-S02` - Re-route Modelo 390's intra-community-acquisition categories from the inversion-del-sujeto-pasivo line to the dedicated AIC box ladders, per the 2026-08-06 amendment to modelo-iva-routing-carry-adr, and close its two cross-modelo residues (AIC base imponible reaching no official box on M390 or M303, and the AIC binding's rate_kinds omitting zero on both)
-- `2026-08-07-adr-amendment-implementing-rows-S03` - Test each of the four unmodelled M390 regimen blocks for a rate-blind total before applying the two-layer rate-box shape, per the rate-box-evidence-assertion-adr amendment's precondition
-- `2026-08-07-adr-amendment-implementing-rows-S04` - Land the recargo mismatch advisory comparing an operator-supplied recargo figure against the rate resolved for its applied rate and date
-- `2026-08-07-adr-amendment-implementing-rows-S05` - `adr-amendment-implementing-rows` execution: `S05`
+- `2026-08-07-adr-amendment-implementing-rows-ledger` - `adr-amendment-implementing-rows` ledger
 
 ### plan
 

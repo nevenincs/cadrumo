@@ -15,15 +15,14 @@ from datetime import date
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-
-from .._validate_semantic_roles import (
+from .._validate_semantic_role_required import (
     REQUIRED_ROLE_LABEL_PATTERNS,
     collect_casillas_by_semantic_role,
     required_role_declaration_failures,
 )
+from ..schema import ModeloDefinition, ModeloRevision
+from ..schema_references import PeriodSelector
+from ..schema_surfaces import CasillaDefinition
 from ._synthetic_locale_fixtures import _synthetic_locale_scope, _write_test_label
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

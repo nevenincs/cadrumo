@@ -13,9 +13,6 @@ from ._secure_objects_fixtures import SECURE_OBJECTS_BUCKET_ID, secure_objects
 
 __all__ = ["secure_objects"]
 
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
-
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
@@ -24,6 +21,8 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import CasillaId, Period, ProrrataProvisionalProvenance, ProrrataRegisterRegime, validated_casilla_id
 from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from ....core.i18n import Translatable as tr
+from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+from ....domain.calculations.registry.schema_references import PeriodSelector
 from ....domain.categories import (
     CategoryCitation,
     CategoryCitationSource,
@@ -1031,10 +1030,12 @@ def _region_override_profile(category: SpendingCategory) -> CategoryProfile:
             citations=(
                 CategoryCitation(
                     source=CategoryCitationSource.MANUAL_RENTA,
-                    reference="Regla de prueba territorial",
+                    reference="Manual práctico Renta 2025, regla de prueba territorial",
                     locator="test",
                     url=parse_http_url(RENTA_REGIMEN_CITATION_URL_FIXTURE),
                     quote=tr("Texto de prueba para override territorial."),
+                    valid_from=date(2025, 1, 1),
+                    valid_to=date(2025, 12, 31),
                 ),
             ),
             notes=tr("Override territorial de prueba."),

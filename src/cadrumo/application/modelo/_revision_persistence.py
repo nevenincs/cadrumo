@@ -37,7 +37,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
@@ -76,15 +76,8 @@ from ...domain.calculations.registry.ids import (
 )
 from ...domain.iva import is_m303_annual_settlement_period
 from ...domain.modelos import (
-    CalculationRevision,
-    CalculationRevisionCatalogue,
     CalculationRevisionCatalogueRepositoryProtocol,
-    CalculationRevisionState,
-    CalculationSourceIssue,
-    CalculationSourceRef,
-    FilingInstanceEvidence,
     LedgerFilingSnapshot,
-    M303RegimenSimplificadoAnnualSummaryHandoff,
     ModeloDetailRow,
     ModeloRecord,
     ModeloRecordCatalogue,
@@ -93,12 +86,21 @@ from ...domain.modelos import (
     TransactionRevisionParticipation,
     WorkUnit,
     WorkUnitCatalogue,
-    derive_calculation_revision_id,
     derive_filing_record_id,
     upsert_calculation_revision,
     upsert_filing_record,
     upsert_transaction_participation,
     upsert_work_unit,
+)
+from ...domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionCatalogue,
+    CalculationRevisionState,
+    CalculationSourceIssue,
+    CalculationSourceRef,
+    FilingInstanceEvidence,
+    M303RegimenSimplificadoAnnualSummaryHandoff,
+    derive_calculation_revision_id,
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.prorrata_register import (
@@ -239,6 +241,7 @@ def persist_calculation_revision(
     borrador_snapshot_id: str | None,
     bindings_sourced_from_borrador: tuple[BindingId, ...],
     observations: tuple[CasillaObservation, ...],
+    cleared_casilla_ids: tuple[CasillaId, ...] = (),
     unresolved_outcomes: tuple[RegistryCalculationUnresolvedOutcome, ...] = (),
     source_provenance: tuple[CalculationSourceRef, ...],
     source_issues: tuple[CalculationSourceIssue, ...] = (),
@@ -254,6 +257,9 @@ def persist_calculation_revision(
     ledger_filing_snapshot: LedgerFilingSnapshot | None = None,
     m210_official_tipo_renta_code: str | None = None,
     m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None,
+    additional_secure_object_writes_for_revision: (
+        Callable[[str, str | None], tuple[SecureObjectWrite, ...]] | None
+    ) = None,
 ) -> CalculationRevision:
     """Persist a freshly calculated draft revision and return the :class:`CalculationRevision`.
 
@@ -285,6 +291,28 @@ def persist_calculation_revision(
     pointer back to the persisted :class:`CalculationRevision`, and detect a
     source-connectivity change from the digest without decrypting the revision,
     instead of treating bucket history as the standalone provenance store.
+
+    The duplicate branch still advances or confirms the work-unit pointer under
+    the SAME ``work_units_revision_id`` compare-and-swap guard the new-revision
+    branch uses -- it never falls back to an unguarded pointer save, and it
+    still invokes ``additional_secure_object_writes_for_revision`` when
+    supplied, so a caller relying on a co-committed side effect (a guarded
+    edit's result receipt, for instance) gets it on the duplicate path exactly
+    as reliably as on the new-revision path.
+
+    ``additional_secure_object_writes_for_revision`` lets a caller land its own
+    atomic writes (an edit-contract mutation-result receipt, most notably) in
+    the SAME secure-object transaction as the revision, pointer, and bucket
+    event this function already commits, without this function knowing
+    anything about the caller's payload shape. It is a FACTORY rather than a
+    plain tuple because the content-addressed revision id (and, on the
+    new-revision path only, the fresh bucket-event id) are not known until
+    this function derives them -- a receipt needs the revision id, so the
+    caller cannot build its write before calling in. The factory receives the
+    resolved ``calculation_revision_id`` and the fresh bucket-event id, or
+    ``None`` for the latter on the duplicate-result path where no new event is
+    emitted, and returns the writes to co-commit. ``None`` by default, so
+    every existing caller's write set is unchanged.
     """
     _require_filing_instance_evidence_for_work_unit(
         work_unit=work_unit,
@@ -313,6 +341,7 @@ def persist_calculation_revision(
         source_provenance=source_provenance,
         filing_instance_evidence=filing_instance_evidence,
         m303_regimen_simplificado_annual_summary_handoff=m303_regimen_simplificado_annual_summary_handoff,
+        cleared_casilla_ids=cleared_casilla_ids,
     )
     stamped_annual_summary_handoff = (
         m303_regimen_simplificado_annual_summary_handoff.stamped_for_target_calculation_revision(revision_id)
@@ -329,16 +358,31 @@ def persist_calculation_revision(
             existing.state is CalculationRevisionState.BORRADOR
             and work_unit.current_calculation_revision_id != revision_id
         ):
-            work_unit_repository.save(
-                upsert_work_unit(
-                    work_units,
-                    work_unit.model_copy(
-                        update={
-                            "current_calculation_revision_id": revision_id,
-                            "updated_at": now,
-                        },
-                    ),
+            duplicate_work_units = upsert_work_unit(
+                work_units,
+                work_unit.model_copy(
+                    update={
+                        "current_calculation_revision_id": revision_id,
+                        "updated_at": now,
+                    },
                 ),
+            )
+        else:
+            duplicate_work_units = work_units
+        duplicate_writes = (
+            additional_secure_object_writes_for_revision(revision_id, None)
+            if additional_secure_object_writes_for_revision is not None
+            else ()
+        )
+        if duplicate_work_units is not work_units or duplicate_writes:
+            # Guarded, never a bare `.save`: an unguarded write here would
+            # silently discard a concurrent catalogue change this branch never
+            # observed, and it is the one place a co-committed receipt write
+            # could otherwise be dropped on the duplicate-result path.
+            work_unit_repository.save_with_secure_object_writes(
+                duplicate_work_units,
+                duplicate_writes,
+                expected_revision_id=work_units_revision_id,
             )
         return existing
 
@@ -358,6 +402,7 @@ def persist_calculation_revision(
         m210_gross_income_source_mode=m210_gross_income_source_mode,
         borrador_snapshot_id=borrador_snapshot_id,
         bindings_sourced_from_borrador=bindings_sourced_from_borrador,
+        cleared_casilla_ids=cleared_casilla_ids,
         casilla_values=casilla_values,
         observations=observations,
         unresolved_outcomes=unresolved_outcomes,
@@ -422,6 +467,11 @@ def persist_calculation_revision(
                 expected_revision_id=work_units_revision_id,
             ),
             bucket_event_history_write(bucket_event_repository, (created_event,)),
+            *(
+                additional_secure_object_writes_for_revision(revision_id, created_event.event_id)
+                if additional_secure_object_writes_for_revision is not None
+                else ()
+            ),
         ),
         expected_revision_id=revisions_revision_id,
     )

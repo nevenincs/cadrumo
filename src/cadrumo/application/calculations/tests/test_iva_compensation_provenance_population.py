@@ -69,13 +69,11 @@ from ....core import (
 from ....core.config import Settings
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.iva_compensation import IvaCompensationPeriodState
-from ....domain.modelos import (
+from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
+from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    ModeloCode,
-    WorkUnit,
     derive_calculation_revision_id,
-    derive_work_unit_id,
 )
 from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.registry_observations import registry_grounded_observations
@@ -90,13 +88,13 @@ from .._iva_compensation_annual_partition import (
     _period_state_from_303_envelope,
     resolve_iva_compensation_annual_partition_binding_values,
 )
-from .._iva_compensation_history import (
+from ..iva_compensation_history import (
     IvaCompensationHistoryRepository,
     correct_iva_compensation_period,
     seed_iva_compensation_period,
 )
-from .._iva_wallet_balance import query_iva_wallet_balance
-from .._observations_repository import CalculationObservationRepository
+from ..iva_wallet_balance import query_iva_wallet_balance
+from ..observations_repository import CalculationObservationRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -240,7 +238,7 @@ def _app_filed_revision(work_unit: WorkUnit) -> CalculationRevision:
             _RESULTADO_FINAL_CASILLA: _APP_FILING_RESULTADO,
         },
     )
-    casilla_values = {item.casilla_id: item.value for item in observations if item.value is not None}
+    casilla_values = {item.casilla_id: item.value for item in observations if isinstance(item.value, Decimal)}
     filing_instance_evidence = general_m303_filing_evidence(
         work_unit.period,
         reference="test:iva-compensation-provenance-population",
@@ -370,7 +368,7 @@ def _wallet_balance_census() -> _PathCensus:
     report = query_iva_wallet_balance(as_of_year=_AS_OF_YEAR)
     return _PathCensus(
         path="wallet-balance projection",
-        entry_point="src/cadrumo/application/calculations/_iva_wallet_balance.py:30",
+        entry_point="src/cadrumo/application/calculations/iva_wallet_balance.py:30",
         rows=rows,
         live_evidence=(
             f"query_iva_wallet_balance(as_of_year={_AS_OF_YEAR}) -> "
@@ -464,7 +462,7 @@ def _carry_ingress_census() -> _PathCensus:
         )
     return _PathCensus(
         path="M303 carry-ingress path",
-        entry_point="src/cadrumo/application/calculations/_iva_compensation_history.py:392",
+        entry_point="src/cadrumo/application/calculations/iva_compensation_history.py:392",
         rows=tuple(rows),
         live_evidence=tuple(evidence),
     )

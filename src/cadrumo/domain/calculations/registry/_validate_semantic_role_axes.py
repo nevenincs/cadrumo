@@ -90,9 +90,12 @@ def _split_modelo_prefix(role: str) -> tuple[str | None, str | None]:
     if match is None:
         return None, None
     modelo = match.group(1)
+    assert isinstance(modelo, str)
     if modelo not in _MODELO_VALUES:
         return None, None
-    return modelo, match.group(2)
+    stem = match.group(2)
+    assert isinstance(stem, str)
+    return modelo, stem
 
 
 def semantic_roles_are_month_axis_siblings(left: str, right: str) -> bool:

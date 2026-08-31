@@ -4,37 +4,42 @@ from __future__ import annotations
 
 import importlib
 from decimal import Decimal
+from typing import TypedDict
 
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation
-from cadrumo.domain.calculations.registry.runtime_graph import revision_date_binding_ids
-from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.domain.calculations.registry.temporal import select_revision
-
 from ....core import BindingSourceKind, ModeloWorkProgressState, Period
 from ....domain.calculations import RowSourceIdentity
+from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.bindings import CasillaObservation
+from ....domain.calculations.registry.runtime_graph import revision_date_binding_ids
+from ....domain.calculations.registry.schema_input_kind import InputKind
+from ....domain.calculations.registry.temporal import select_revision
 from ....domain.filing import ModeloValueKind
 from ....domain.modelos import (
-    CalculationRevision,
-    CalculationRevisionState,
+    CalculationRevisionCatalogueRepositoryProtocol,
     ModeloCode,
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
     VerificationCompletenessStatus,
     VerificationReport,
+    VerificationReportCatalogueRepositoryProtocol,
     WorkUnit,
-    derive_calculation_revision_id,
-    derive_calculation_revision_id_from_revision,
     derive_verification_report_id,
     derive_work_unit_id,
     upsert_calculation_revision,
     upsert_verification_report,
     upsert_work_unit,
 )
+from ....domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
+    derive_calculation_revision_id_from_revision,
+)
+from ....domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.profile_capsule import load_test_profile_record, replace_test_profile_record
 from .._calculation_actions import calculate_modelo_revision
@@ -559,7 +564,13 @@ def test_review_reads_persisted_date_bindings_without_decimal_reinterpretation(r
     assert review.calculation_revision_id == revision_id
 
 
-def _review_arguments(repos: Repos) -> dict[str, object]:
+class _ReviewArguments(TypedDict):
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol
+    verification_repository: VerificationReportCatalogueRepositoryProtocol
+
+
+def _review_arguments(repos: Repos) -> _ReviewArguments:
     work_repo, calculation_repo, _filing_repo, verification_repo, _events = repos
     return {
         "work_unit_repository": work_repo,

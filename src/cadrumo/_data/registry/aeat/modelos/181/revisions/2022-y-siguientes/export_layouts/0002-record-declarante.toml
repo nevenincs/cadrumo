@@ -1,0 +1,264 @@
+# Registro de tipo 1: registro de declarante. 500 bytes, 15 numbered campos plus the BLANCOS trailer.
+# 1+3+4+9+40+1+49+13+2+13+9+15+15+15+14+297 = 500.
+
+[[revisions."2022-y-siguientes".export_layouts]]
+id = "modelo-181-fichero-2022"
+
+[[revisions."2022-y-siguientes".export_layouts.records]]
+id = "modelo-181-declarante"
+record_type = "declarante"
+order = 0
+encoding = "latin-1"
+line_ending = "none"
+
+# Posicion 1. TIPO DE REGISTRO. Constante '1'.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t1-record-type"
+offset = 1
+length = 1
+kind = "literal"
+literal = "1"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Posiciones 2-4. MODELO DECLARACION. Constante '181'.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t1-modelo"
+offset = 2
+length = 3
+kind = "literal"
+literal = "181"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Posiciones 5-8. EJERCICIO -- the draft's own filing year.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t1-ejercicio"
+offset = 5
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Posiciones 9-17. N.I.F. DEL DECLARANTE. The declarante is the entidad obliged to
+# report, which is the taxpayer; a gestor presenting on its behalf is the
+# presenter and must not appear here.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t1-nif-declarante"
+offset = 9
+length = 9
+kind = "header"
+producer_key = "taxpayer.tax_id"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 5. Positions 18-57. RAZON SOCIAL DEL DECLARANTE.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t1-razon-social"
+offset = 18
+length = 40
+kind = "casilla"
+casilla_id = "declarante-razon-social"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Posicion 58. TIPO DE SOPORTE. The design admits 'C' (DVD) and 'T' (transmision
+# telematica). Cadrumo emits a file for telematic presentation and cannot produce
+# a DVD, so 'T' is the only clave this producer can correctly write.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t1-tipo-soporte"
+offset = 58
+length = 1
+kind = "literal"
+literal = "T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 7. Positions 59-107. PERSONA CON QUIEN RELACIONARSE; the design subdivides
+# it (59-67 TELEFONO, 68-107 APELLIDOS Y NOMBRE) but declares one campo of 49.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t1-persona-relacion"
+offset = 59
+length = 49
+kind = "casilla"
+casilla_id = "persona-relacion"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 8. Positions 108-120. NUMERO IDENTIFICATIVO DE LA DECLARACION.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t1-numero-identificativo"
+offset = 108
+length = 13
+kind = "casilla"
+casilla_id = "numero-identificativo-declaracion"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 9. Positions 121-122. DECLARACION COMPLEMENTARIA O SUSTITUTIVA.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t1-complementaria-sustitutiva"
+offset = 121
+length = 2
+kind = "casilla"
+casilla_id = "declaracion-complementaria-sustitutiva"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 10. Positions 123-135. NUMERO IDENTIFICATIVO DE LA DECLARACION ANTERIOR.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t1-numero-identificativo-anterior"
+offset = 123
+length = 13
+kind = "casilla"
+casilla_id = "numero-identificativo-anterior"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 11. Positions 136-144. NUMERO TOTAL DE REGISTROS DECLARADOS.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t1-numero-total-declarados"
+offset = 136
+length = 9
+kind = "casilla"
+casilla_id = "numero-total-declarados"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 12. Positions 145-159. IMPORTE TOTAL DEL CAPITAL AMORTIZADO -- the sum of
+# the tipo-2 campo at 127-139. "Sin signo y sin coma decimal", subdivided
+# 145-157 parte entera and 158-159 parte decimal.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t1-importe-total-capital-amortizado"
+offset = 145
+length = 15
+kind = "casilla"
+casilla_id = "importe-total-capital-amortizado"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 13. Positions 160-174. IMPORTE TOTAL DE LOS INTERESES ABONADOS EN EL
+# EJERCICIO -- the sum of the tipo-2 campo at 140-152. Subdivided 160-172 entera,
+# 173-174 decimal.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t1-importe-total-intereses"
+offset = 160
+length = 15
+kind = "casilla"
+casilla_id = "importe-total-intereses"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 14. Positions 175-189. IMPORTE TOTAL DE LOS GASTOS DERIVADOS DE LA
+# FINANCIACION AJENA -- the sum of the tipo-2 campo at 153-165. Subdivided
+# 175-187 entera, 188-189 decimal.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t1-importe-total-gastos-financiacion"
+offset = 175
+length = 15
+kind = "casilla"
+casilla_id = "importe-total-gastos-financiacion"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 15. Positions 190-203. IMPORTE TOTAL DE LOS SALDOS PENDIENTES A 31 DE
+# DICIEMBRE -- the sum of the tipo-2 campo at 208-219. Subdivided 190-201 entera,
+# 202-203 decimal.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t1-importe-total-saldos-pendientes"
+offset = 190
+length = 14
+kind = "casilla"
+casilla_id = "importe-total-saldos-pendientes"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Posiciones 204-500. BLANCOS.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t1-blancos"
+offset = 204
+length = 297
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]

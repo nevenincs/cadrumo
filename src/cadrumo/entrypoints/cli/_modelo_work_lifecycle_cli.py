@@ -7,9 +7,6 @@ from dataclasses import dataclass
 
 import typer
 
-from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
-from cadrumo.domain.calculations.registry.ids import RevisionId
-
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...application.modelo._action_errors import (
     WorkUnitAlreadyDiscardedError,
@@ -45,6 +42,8 @@ from ...core import Modelo, Period
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.json_contract import Notice
+from ...domain.calculations.registry.errors import RegistrySnapshotError
+from ...domain.calculations.registry.ids import RevisionId
 from ...domain.contribuyente import parse_tax_region
 from ...domain.modelos import WorkUnit
 from ._common import (

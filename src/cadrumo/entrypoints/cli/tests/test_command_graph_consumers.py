@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-import ast
 import json
 import subprocess
 import sys
-from pathlib import Path
 
 import pytest
 
@@ -102,11 +100,11 @@ def test_non_leaf_retirement_boolean_pairs_and_modelo_choices_are_truthful() -> 
 
 
 def test_retired_profile_transfer_leaves_do_not_resolve_or_register() -> None:
-    """The archive/export and restore doors replace the retired profile-root leaves."""
+    """The archive subject's export and import doors replace the retired profile-root leaves."""
     profile_path = ("aeat", "config", "profile")
     registrations = {row.cli_path: row.command for row in command_registration_metadata()}
 
-    for path in ((*profile_path, "archive", "export"), (*profile_path, "restore")):
+    for path in ((*profile_path, "archive", "export"), (*profile_path, "archive", "import")):
         spec = COMMAND_GRAPH.resolve_path(path)
         assert spec.result_schema.identity is not None
         assert registrations[path[1:]] == spec.result_schema.identity
@@ -130,39 +128,6 @@ def test_every_projected_target_matches_its_authored_spec() -> None:
         assert row.handler_owner == spec.handler.target.identity
 
 
-def test_legacy_registry_and_generated_cache_sources_are_physically_absent() -> None:
-    cli = Path(__file__).parents[1]
-    root = Path(__file__).parents[5]
-    absent = (
-        cli / "_app_lazy_registration.py",
-        cli / "_app_lazy_families.py",
-        cli / "app_lazy_manifest.v1.json",
-        cli / "command_registration_metadata.v1.json",
-        root / "dev/quality/generate_app_lazy_manifest.py",
-        root / "dev/quality/generate_command_registration_metadata.py",
-    )
-    assert all(not path.exists() for path in absent)
-    for path in (cli / "_command_schema.py", cli / "_verb_input_schema.py"):
-        source = path.read_text(encoding="utf-8")
-        ast.parse(source)
-        assert "importlib.resources" not in source
-        assert "typer._click" not in source
-        assert "schema_surface" not in source
-        assert ".v1.json" not in source
-    active_consumers = (cli / "_common.py", root / "dev/docs/cli_reference.py")
-    forbidden = (
-        "ROOT_LANDING_SCHEMA_KEYS",
-        "GROUP_CALLBACK_SCHEMA_KEYS",
-        "_LAZY_REGISTRY",
-        "SCHEMA_REGISTRY",
-        "_optional_extra_surface",
-    )
-    for path in active_consumers:
-        source = path.read_text(encoding="utf-8")
-        ast.parse(source)
-        assert all(token not in source for token in forbidden)
-    core_contract = root / "src/cadrumo/core/json_contract.py"
-    source = core_contract.read_text(encoding="utf-8")
-    ast.parse(source)
-    assert "SCHEMA_REGISTRY" not in source
-    assert "register_schema" not in source
+#: The retired-generator physical-absence proof lives in the development test
+#: tree's ``test_command_graph_legacy_sources_absent.py``, which names the two
+#: retired generator scripts and their one consumer directly.

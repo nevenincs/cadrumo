@@ -22,8 +22,12 @@ from .secure_sql import isolated_two_bucket_runtime
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
-_PRIMARY = "fixture-test-primary"
-_SECONDARY = "fixture-test-secondary"
+# Canonical UUIDv4 profile identities. ``publish_test_profile_capsule``
+# routes every test bucket through ``canonical_profile_bucket_id``, which
+# accepts only a version-4 UUID, so a readable label cannot address a
+# bucket. The structured digits keep the two fixtures tellable apart.
+_PRIMARY = "3b0c0000-0000-4000-8000-000000000001"
+_SECONDARY = "3b0c0000-0000-4000-8000-000000000002"
 
 
 def test_both_bucket_directories_exist_on_disk(tmp_path: Path) -> None:

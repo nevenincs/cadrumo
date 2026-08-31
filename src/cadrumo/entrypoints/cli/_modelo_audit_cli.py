@@ -15,16 +15,16 @@ def _evidence_bundle_service():
     return EvidenceBundleService()
 
 
-def audit_show(
+def audit_view(
     ctx: typer.Context,
     bundle_id: str,
 ) -> None:
     """Render an evidence bundle's manifest and referenced record list."""
     bucket_id = active_bucket_id_or_refuse()
     bundle = _evidence_bundle_service().show(bucket_id=bucket_id, bundle_id=bundle_id)
-    from ._modelo_payloads import EvidenceRecordRefPayload, ModeloAuditShowResult
+    from ._modelo_payloads import EvidenceRecordRefPayload, ModeloAuditViewResult
 
-    result = ModeloAuditShowResult(
+    result = ModeloAuditViewResult(
         bundle_id=bundle.bundle_id,
         manifest_version=bundle.manifest_version,
         bucket_id=bundle.bucket_id,
@@ -122,4 +122,4 @@ def audit_export(
     emit_envelope(ctx, command="modelo.audit.export", result=result, lines=lines)
 
 
-__all__ = ["audit_check", "audit_export", "audit_show"]
+__all__ = ["audit_check", "audit_export", "audit_view"]

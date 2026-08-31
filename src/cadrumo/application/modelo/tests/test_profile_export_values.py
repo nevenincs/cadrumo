@@ -13,16 +13,16 @@ second part is blank -- which a captured profile cannot.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import date
+from datetime import UTC, date, datetime
+from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition
-
 from ....core import BindingSourceKind, Modelo
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.schema import DataBindingDefinition
 from ....domain.user_profile.loader import load_user_profile_schema
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from .._profile_export_binding import compose_legal_full_name, resolve_profile_export_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -30,15 +30,30 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _BUCKET = "d24bdc40-1623-4255-a9c3-a4b5c34dd9bb"  # was 'bucket-under-test'
 
 
-@dataclass(frozen=True)
-class _Fact:
-    path: str
-    value: object
+_T0 = datetime(2026, 1, 1, tzinfo=UTC)
 
 
-@dataclass(frozen=True)
-class _Record:
-    facts: tuple[_Fact, ...]
+def _fact(path: str, value: object) -> UserProfileFact:
+    """Build a REAL profile fact.
+
+    These were hand-rolled dataclasses standing in for the domain models.
+    ``profile_fact_index`` guards on ``isinstance(record, UserProfileRecord)``
+    and returns an EMPTY index for anything else, so the stub record silently
+    resolved nothing and every assertion here died on a KeyError naming a
+    dictionary field that was never the problem.
+    """
+    return UserProfileFact(path=path, value=value)
+
+
+def _record(facts: tuple[UserProfileFact, ...]) -> UserProfileRecord:
+    """Build a real record so the production fact index actually reads it."""
+    return UserProfileRecord(
+        profile_id=_BUCKET,
+        setup_state=ProfileSetupState.COMPLETE,
+        facts=facts,
+        created_at=_T0,
+        updated_at=_T0,
+    )
 
 
 def _export_bindings() -> tuple[DataBindingDefinition, ...]:
@@ -56,26 +71,26 @@ def _export_bindings() -> tuple[DataBindingDefinition, ...]:
     )
 
 
-def _resolve(*facts: _Fact) -> dict[str, object]:
+def _resolve(*facts: UserProfileFact) -> dict[str, object]:
     return dict(
         resolve_profile_export_values(
             _export_bindings(),
             bucket_id=_BUCKET,
-            profile_record=_Record(facts=facts),
+            profile_record=_record(facts),
             schema=load_user_profile_schema(),
         ),
     )
 
 
 _DECLARANTE = (
-    _Fact("identity.surnames", "GARCIA LOPEZ"),
-    _Fact("identity.name", "MARIA"),
-    _Fact("identity.tax_id", "12345678Z"),
+    _fact("identity.surnames", "GARCIA LOPEZ"),
+    _fact("identity.name", "MARIA"),
+    _fact("identity.tax_id", "12345678Z"),
 )
 _SPOUSE = (
-    _Fact("renta_spouse.surnames", "PEREZ RUIZ"),
-    _Fact("renta_spouse.name", "JUAN"),
-    _Fact("renta_spouse.tax_id", "87654321X"),
+    _fact("renta_spouse.surnames", "PEREZ RUIZ"),
+    _fact("renta_spouse.name", "JUAN"),
+    _fact("renta_spouse.tax_id", "87654321X"),
 )
 
 
@@ -89,16 +104,26 @@ def test_a_declared_identity_slot_is_populated_from_the_profile() -> None:
     """
     values = _resolve(
         *_DECLARANTE,
-        _Fact("renta_taxpayer.sex", "M"),
-        _Fact("tax_residence.ccaa", "10"),
-        _Fact("renta_filing.declaration_type", "1"),
+        _fact("renta_taxpayer.sex", "M"),
+        # A REAL ccaa value. The schema declares this enum over community NAMES
+        # (`madrid`, `andalucia`, ...), never numeric codes, so the "10" this
+        # replaced was not a value the field can hold.
+        _fact("tax_residence.ccaa", "madrid"),
+        _fact("renta_filing.declaration_type", "1"),
     )
 
     assert values["DP_APENOM_D"] == "GARCIA LOPEZ MARIA"
     assert values["DPNIF_D"] == "12345678Z"
     assert values["SEXO_D"] == "M"
-    assert values["ZCCAD"] == "10"
-    assert values["TIPOTRIBUTACION"] == "1"
+    assert values["ZCCAD"] == "madrid"
+    # Decimal, not "1", and deliberately so. `UserProfileFact` runs
+    # `_coerce_profile_fact_value`, which restores the Decimal and date types
+    # JSON drops on persistence -- a stored "1" is indistinguishable from a
+    # round-tripped Decimal(1), and the model resolves that ambiguity towards
+    # Decimal. Values with an insignificant leading zero (postcodes) are
+    # carved out and stay str. The resolver then preserves the concrete type,
+    # because the renderer branches on it.
+    assert values["TIPOTRIBUTACION"] == Decimal("1")
 
 
 def test_an_individual_filing_writes_no_spouse_row() -> None:
@@ -113,8 +138,8 @@ def test_an_individual_filing_writes_no_spouse_row() -> None:
     values = _resolve(
         *_DECLARANTE,
         *_SPOUSE,
-        _Fact("renta_spouse.sex", "H"),
-        _Fact("renta_filing.declaration_type", "1"),
+        _fact("renta_spouse.sex", "H"),
+        _fact("renta_filing.declaration_type", "1"),
     )
 
     assert [field for field in values if field.endswith("_C")] == []
@@ -130,8 +155,8 @@ def test_a_conjunta_filing_writes_the_spouse_rows() -> None:
     values = _resolve(
         *_DECLARANTE,
         *_SPOUSE,
-        _Fact("renta_spouse.sex", "H"),
-        _Fact("renta_filing.declaration_type", "2"),
+        _fact("renta_spouse.sex", "H"),
+        _fact("renta_filing.declaration_type", "2"),
     )
 
     assert values["DP_APENOM_C"] == "PEREZ RUIZ JUAN"
@@ -167,7 +192,7 @@ def test_the_precondition_fact_is_never_used_as_the_value() -> None:
     values = _resolve(
         *_DECLARANTE,
         *_SPOUSE,
-        _Fact("renta_filing.declaration_type", "2"),
+        _fact("renta_filing.declaration_type", "2"),
     )
 
     assert "DPFNAC_C" not in values
@@ -181,7 +206,7 @@ def test_a_multi_part_name_is_composed_rather_than_truncated() -> None:
     two-key binding would file the surnames alone as the taxpayer's full legal
     name. The declared format is what says the keys compose.
     """
-    values = _resolve(*_DECLARANTE, _Fact("renta_filing.declaration_type", "1"))
+    values = _resolve(*_DECLARANTE, _fact("renta_filing.declaration_type", "1"))
 
     assert values["DP_APENOM_D"] == "GARCIA LOPEZ MARIA"
     assert values["DP_APENOM_D"] != "GARCIA LOPEZ"
@@ -202,8 +227,8 @@ def test_a_value_keeps_the_type_the_renderer_decides_from() -> None:
     """
     values = _resolve(
         *_DECLARANTE,
-        _Fact("renta_taxpayer.birth_date", date(1980, 5, 17)),
-        _Fact("renta_filing.declaration_type", "1"),
+        _fact("renta_taxpayer.birth_date", date(1980, 5, 17)),
+        _fact("renta_filing.declaration_type", "1"),
     )
 
     assert values["DPFNAC_D"] == date(1980, 5, 17)
@@ -232,8 +257,8 @@ def test_the_repeating_family_slots_are_a_known_structural_gap() -> None:
     }
     values = _resolve(
         *_DECLARANTE,
-        _Fact("renta_family.descendiente.0.birth_date", "2020-01-01"),
-        _Fact("renta_filing.declaration_type", "1"),
+        _fact("renta_family.descendiente.0.birth_date", "2020-01-01"),
+        _fact("renta_filing.declaration_type", "1"),
     )
 
     assert repeating, "the revision no longer declares repeating export bindings; revisit this pin"

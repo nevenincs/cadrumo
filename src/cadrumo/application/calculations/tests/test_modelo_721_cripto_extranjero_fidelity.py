@@ -49,7 +49,7 @@ See Also:
         Shared M720/M721 re-declaration advisory implementation exercised here.
     :func:`~application.calculations._foreign_asset_redeclaration.modelo_721_redeclaration_advisory_findings`
         Modelo 721 advisory entry point pinned by the grown/omitted BTC case.
-    :class:`~application.calculations._observations_repository.CalculationObservationRepository`
+    :class:`~application.calculations.observations_repository.CalculationObservationRepository`
         Real repository used for the two-year observation roundtrip.
     :class:`~domain.calculations.registry.RegistryModeloObservation`
         Registry-grounded modelo observation envelope persisted by the test.
@@ -67,21 +67,20 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
-
 from ....core import (
     CasillaId,
     ForeignAssetObligationGroup,
     RegistryAuthorityGrade,
     validated_casilla_id,
 )
+from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ....domain.modelos import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ....tests.registry_observations import registry_grounded_observation_rows
 from ....tests.secure_sql import isolated_runtime_profile
 from ..._foreign_asset_thresholds import foreign_asset_declaration_thresholds
 from .._foreign_asset_redeclaration import modelo_721_redeclaration_advisory_findings
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
-from .._observations_repository import CalculationObservationRepository
+from ..observations_repository import CalculationObservationRepository
 from ._multi_year_roundtrip_support import assert_two_ejercicio_round_trip
 from ._observation_lookup_support import find_observation
 

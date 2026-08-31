@@ -67,11 +67,11 @@ CONFIG_STORAGE_COMMAND_SPECS = (
         result_schema=_schema("ConfigStorageListResult", "config.storage.list"),
     ),
     CommandSpec(
-        key="config_storage_show",
+        key="config_storage_view",
         parent_key="config_storage",
-        token="show",  # noqa: S106 - CLI token, not a credential.
+        token="view",  # noqa: S106 - CLI token, not a credential.
         kind="leaf",
-        help_key=TranslationKey("cli.config.storage.show.area_help"),
+        help_key=TranslationKey("cli.config.storage.view.area_help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(
@@ -79,13 +79,13 @@ CONFIG_STORAGE_COMMAND_SPECS = (
                 name="area",
                 value=_AREA,
                 default=ParameterDefault.required(),
-                help_key=TranslationKey("cli.config.storage.show.area_argument_help"),
+                help_key=TranslationKey("cli.config.storage.view.area_argument_help"),
             ),
             _OUTPUT_LANGUAGE_OPTION,
         ),
         policy=PROFILE_READ,
-        handler=_handler("config_storage_show"),
-        result_schema=_schema("ConfigStorageShowResult", "config.storage.show"),
+        handler=_handler("config_storage_view"),
+        result_schema=_schema("ConfigStorageViewResult", "config.storage.view"),
     ),
     CommandSpec(
         key="config_storage_check",

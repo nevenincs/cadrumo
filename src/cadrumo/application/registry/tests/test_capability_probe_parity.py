@@ -22,10 +22,9 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.calculations.registry.support_matrix import build_support_matrix, revision_capability_probe
-
-from .. import audit_bundled_registry_conformance
+from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.support_matrix import build_support_matrix, revision_capability_probe
+from ..conformance import audit_bundled_registry_conformance
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

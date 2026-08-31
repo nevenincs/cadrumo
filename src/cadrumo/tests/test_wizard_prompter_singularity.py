@@ -206,17 +206,17 @@ def _module_level_runtime_imports(tree: ast.AST) -> list[ast.Import | ast.Import
     imports bind a name nothing outside the function can reach.
     """
     statements: list[ast.Import | ast.ImportFrom] = []
-    pending: list[ast.stmt] = list(tree.body) if isinstance(tree, ast.Module) else []
+    pending: list[ast.stmt] = list(tree.body) if isinstance(tree, ast.Module) else list[ast.stmt]()
     while pending:
         node = pending.pop(0)
         if isinstance(node, ast.Import | ast.ImportFrom):
             statements.append(node)
         elif isinstance(node, ast.If):
             guarded = node.test is not None and "TYPE_CHECKING" in ast.unparse(node.test)
-            branch = list(node.orelse) if guarded else [*node.body, *node.orelse]
+            branch: list[ast.stmt] = list(node.orelse) if guarded else [*node.body, *node.orelse]
             pending = branch + pending
         elif isinstance(node, ast.Try):
-            handled = [statement for handler in node.handlers for statement in handler.body]
+            handled: list[ast.stmt] = [statement for handler in node.handlers for statement in handler.body]
             pending = [*node.body, *handled, *node.orelse, *node.finalbody, *pending]
     return statements
 

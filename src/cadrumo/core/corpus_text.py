@@ -192,6 +192,17 @@ def extracted_unit_count(sidecar_path: Path) -> int:
     return len(_readable_units(sidecar_path))
 
 
+def _literal_anchor(value: str) -> str:
+    """Return an anchor comparison key that preserves internal punctuation.
+
+    Only case, surrounding whitespace and a leading ``#`` are normalised, so
+    ``#a3-3`` and ``#a33`` stay distinct.  This is deliberately weaker than
+    :func:`_canonical_anchor`: it exists to tell two real anchors apart, not to
+    reconcile spelling variants.
+    """
+    return value.strip().lstrip("#").strip().casefold()
+
+
 def resolve_anchored_extracted_unit(
     sidecar_path: Path,
     *,
@@ -215,6 +226,20 @@ def resolve_anchored_extracted_unit(
     units = _readable_units(sidecar_path)
     if not units:
         raise CorpusAnchorResolutionError(f"extracted sidecar {sidecar_path} has no readable units")
+
+    # Canonicalisation deletes non-alphanumerics, so a BOE positional anchor
+    # like "#a3-3" collapses onto the genuine "#a33" of Articulo 33 and both
+    # become undecidable -- 114 such collisions across 12 bundled sidecars,
+    # including LIRPF, LIVA and the IVA reglamento, each one a provision that
+    # cannot be cited at all.  A verbatim match is tried first because it can
+    # only ever NARROW the canonical candidate set: any literal match also
+    # canonicalises equal, so this disambiguates without letting a request
+    # select a unit canonicalisation would have rejected.
+    literal = [
+        (title, text) for unit_anchor, title, text in units if _literal_anchor(unit_anchor) == _literal_anchor(anchor)
+    ]
+    if len(literal) == 1:
+        return _render_unit(*literal[0], include_title=include_title)
 
     exact = [(title, text) for unit_anchor, title, text in units if _canonical_anchor(unit_anchor) == target]
     if len(exact) == 1:

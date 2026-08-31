@@ -18,10 +18,9 @@ profile rather than projected from an existing substrate.
 
 from __future__ import annotations
 
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
-
 from ...core import FilingProjectionRef
+from ...domain.calculations.registry.schema import RegistrySnapshot
+from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ._producer_snapshot import FilingProducerSnapshot, Modelo200ProfileFacts
 from ._projection import FilingProjectionPlan, FilingProjectionValue, FilingRecordRenderContext
 

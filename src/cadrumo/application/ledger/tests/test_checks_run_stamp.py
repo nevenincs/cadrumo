@@ -30,9 +30,11 @@ from __future__ import annotations
 
 import pytest
 
-import cadrumo.application.ledger.deterministic_findings as deterministic_findings_module
-
 from ....tests.attribute_scope import scoped_attribute
+
+# The MODULE object, not names from it: the tests below scope an attribute
+# on it. `from .. import <module>` is the relative form that yields one.
+from .. import deterministic_findings as deterministic_findings_module
 from ..deterministic_findings import (
     DETERMINISTIC_CHECKS,
     DeterministicCheck,

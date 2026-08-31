@@ -26,7 +26,6 @@ if TYPE_CHECKING:
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...adapters.persistence.profile.usage_ratios import load_usage_ratios
@@ -40,14 +39,11 @@ from ...domain.buckets import (
     BucketEventObjectType,
     BucketEventType,
     append_bucket_event,
-    derive_bucket_event_id,
-    emit_bucket_events,
+    build_bucket_event,
 )
 from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepositoryProtocol
-from ...domain.modelos import (
-    CalculationRevisionCatalogueRepositoryProtocol,
-    CalculationRevisionState,
-)
+from ...domain.modelos import CalculationRevisionCatalogueRepositoryProtocol
+from ...domain.modelos.calculation_revision import SEALED_REVISION_STATES, CalculationRevisionState
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions import (
     BucketTransactionRef,
@@ -77,14 +73,7 @@ from .models import (
 
 _BUCKET_EVENT_PAYLOAD_VERSION = 1
 
-_EventSpec = tuple[BucketEventType, BucketEventObjectType, str, dict[str, str]]
-_REMOVAL_BLOCKING_REVISION_STATES = frozenset(
-    {
-        CalculationRevisionState.VERIFICADO_COMPLETO,
-        CalculationRevisionState.PRESENTADO,
-        CalculationRevisionState.PRESENTADO_SUPERSEDIDO,
-    },
-)
+EventSpec = tuple[BucketEventType, BucketEventObjectType, str, dict[str, str]]
 # Draft revisions do not block removal (the operator may legitimately prune a row
 # before finalising), but a draft that still cites the removed row will assert an
 # income/expense no longer in the books on the next verify/file. Surfacing a
@@ -98,7 +87,7 @@ _REMOVAL_ADVISORY_REVISION_STATES = frozenset(
 )
 
 
-def _transaction_repository(
+def resolve_transaction_repository(
     *,
     bucket_id: str,
     repository: TransactionCatalogueRepository | TransactionCatalogueRepositoryProtocol | None,
@@ -114,7 +103,7 @@ def _transaction_repository(
     return repository
 
 
-def _invoice_repository(
+def resolve_invoice_repository(
     *,
     bucket_id: str,
     repository: InvoiceCatalogueRepositoryProtocol | None,
@@ -130,7 +119,7 @@ def _invoice_repository(
     return repository
 
 
-def _bucket_event_repository(
+def resolve_bucket_event_repository(
     *,
     bucket_id: str,
     repository: BucketEventHistoryRepositoryProtocol | None,
@@ -143,28 +132,28 @@ def _bucket_event_repository(
     return BucketEventHistoryRepository(objects=secure_object_repository_for_bucket(bucket_id))
 
 
-def _require_actor(value: str, *, operation: str) -> str:
+def require_actor(value: str, *, operation: str) -> str:
     trimmed = value.strip()
     if not trimmed:
         raise TransactionValidationError(f"{operation} actor must not be blank")
     return trimmed
 
 
-def _require_source_command(value: str, *, operation: str) -> str:
+def require_source_command(value: str, *, operation: str) -> str:
     trimmed = value.strip()
     if not trimmed:
         raise TransactionValidationError(f"{operation} source_command must not be blank")
     return trimmed
 
 
-def _normalise_attachment_patch_ids(attachment_ids: tuple[str, ...]) -> tuple[str, ...]:
+def normalise_attachment_patch_ids(attachment_ids: tuple[str, ...]) -> tuple[str, ...]:
     normalized = tuple(item.strip() for item in attachment_ids if item.strip())
     if len(set(normalized)) != len(normalized):
         raise TransactionValidationError("ledger evidence attachment ids must not contain duplicates")
     return normalized
 
 
-def _merge_identifier_tuple(existing: tuple[str, ...], incoming: tuple[str, ...]) -> tuple[str, ...]:
+def merge_identifier_tuple(existing: tuple[str, ...], incoming: tuple[str, ...]) -> tuple[str, ...]:
     merged: list[str] = list(existing)
     for item in incoming:
         if item not in merged:
@@ -172,7 +161,7 @@ def _merge_identifier_tuple(existing: tuple[str, ...], incoming: tuple[str, ...]
     return tuple(merged)
 
 
-def _required_patched[T](
+def required_patched[T](
     patch: ManualLedgerTransactionPatch,
     patch_fields: set[str],
     field: str,
@@ -194,7 +183,7 @@ def _required_patched[T](
     return _typed_patch_value(patch, field, value, fallback)
 
 
-def _optional_patched[T](
+def optional_patched[T](
     patch: ManualLedgerTransactionPatch,
     patch_fields: set[str],
     field: str,
@@ -202,7 +191,7 @@ def _optional_patched[T](
 ) -> T:
     """Return ``patch.<field>`` when in patch_fields (None allowed); otherwise the fallback.
 
-    Generic in ``T`` for the same reason as :func:`_required_patched`.
+    Generic in ``T`` for the same reason as :func:`required_patched`.
     """
     if field not in patch_fields:
         return fallback
@@ -213,6 +202,20 @@ def _typed_patch_value[T](patch: ManualLedgerTransactionPatch, field: str, value
     """Validate a dynamic patch field through its declared Pydantic type."""
     adapter: TypeAdapter[T] = TypeAdapter(ManualLedgerTransactionPatch.model_fields[field].annotation)
     return adapter.validate_python(value)
+
+
+def _default_calculation_repository() -> CalculationRevisionCatalogueRepositoryProtocol:
+    """Build the concrete catalogue only when the caller injected none.
+
+    The adapter module reaches the calculation registry, so importing it at
+    module scope made every consumer of this action layer pay for the registry
+    graph -- including CLI paths that resolve a ledger verb and never touch a
+    calculation. Only the protocol is needed to type the parameter, and the
+    concrete repository only when it is actually constructed.
+    """
+    from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+
+    return CalculationRevisionCatalogueRepository()
 
 
 def blocking_modelo_references(
@@ -227,10 +230,10 @@ def blocking_modelo_references(
         return ()
     wanted = set(transaction_ids)
     work_units = (work_unit_repository or WorkUnitCatalogueRepository()).load()
-    revisions = (calculation_repository or CalculationRevisionCatalogueRepository()).load()
+    revisions = (calculation_repository or _default_calculation_repository()).load()
     blockers: list[LedgerRemovalBlocker] = []
     for revision in revisions.values():
-        if revision.state not in _REMOVAL_BLOCKING_REVISION_STATES:
+        if revision.state not in SEALED_REVISION_STATES:
             continue
         if not wanted.intersection(revision.source_transaction_ids):
             continue
@@ -260,7 +263,7 @@ def blocking_modelo_references(
     )
 
 
-def _draft_revision_advisories(
+def draft_revision_advisories(
     *,
     bucket_id: str,
     transaction_ids: tuple[str, ...],
@@ -280,7 +283,7 @@ def _draft_revision_advisories(
         return ()
     wanted = set(transaction_ids)
     work_units = (work_unit_repository or WorkUnitCatalogueRepository()).load()
-    revisions = (calculation_repository or CalculationRevisionCatalogueRepository()).load()
+    revisions = (calculation_repository or _default_calculation_repository()).load()
     advisories: list[LedgerRemovalBlocker] = []
     for revision in revisions.values():
         if revision.state not in _REMOVAL_ADVISORY_REVISION_STATES:
@@ -313,7 +316,7 @@ def _draft_revision_advisories(
     )
 
 
-def _blockers_by_source_transaction_id(
+def blockers_by_source_transaction_id(
     *,
     bucket_id: str,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None,
@@ -326,10 +329,10 @@ def _blockers_by_source_transaction_id(
     (the load-once half of the ``bulk_classify_from_csv`` batching contract).
     """
     work_units = (work_unit_repository or WorkUnitCatalogueRepository()).load()
-    revisions = (calculation_repository or CalculationRevisionCatalogueRepository()).load()
+    revisions = (calculation_repository or _default_calculation_repository()).load()
     out: dict[str, list[LedgerRemovalBlocker]] = {}
     for revision in revisions.values():
-        if revision.state not in _REMOVAL_BLOCKING_REVISION_STATES:
+        if revision.state not in SEALED_REVISION_STATES:
             continue
         work_unit = work_units.get(revision.work_unit_id)
         if work_unit is None or work_unit.bucket_id != bucket_id:
@@ -347,19 +350,19 @@ def _blockers_by_source_transaction_id(
     return {txid: tuple(found) for txid, found in out.items()}
 
 
-def _transaction_modelo_source_ids(transaction: Transaction) -> tuple[str, ...]:
+def transaction_modelo_source_ids(transaction: Transaction) -> tuple[str, ...]:
     return tuple(
         sorted({transaction.transaction_id, *(entry.previous_transaction_id for entry in transaction.edit_lineage)}),
     )
 
 
-def _catalogue_modelo_source_ids(catalogue: TransactionCatalogue) -> tuple[str, ...]:
+def catalogue_modelo_source_ids(catalogue: TransactionCatalogue) -> tuple[str, ...]:
     return tuple(
         sorted(
             {
                 source_id
                 for transaction in catalogue.values()
-                for source_id in _transaction_modelo_source_ids(transaction)
+                for source_id in transaction_modelo_source_ids(transaction)
             },
         ),
     )
@@ -370,7 +373,7 @@ _EVIDENCE_MUTATION_FIELDS: frozenset[str] = frozenset(
 )
 
 
-def _is_evidence_only_command(command: ManualLedgerTransactionCommand, current: Transaction) -> bool:
+def is_evidence_only_command(command: ManualLedgerTransactionCommand, current: Transaction) -> bool:
     """Return whether ``command`` adds evidence provenance and changes nothing else.
 
     An evidence-only mutation is exempt from the finalized-modelo write guard,
@@ -403,7 +406,7 @@ def _is_evidence_only_command(command: ManualLedgerTransactionCommand, current: 
     return bool(differing) and differing <= _EVIDENCE_MUTATION_FIELDS
 
 
-def _raise_finalized_modelo_blocked(
+def raise_finalized_modelo_blocked(
     *,
     operation: str,
     transaction_ids: tuple[str, ...],
@@ -428,7 +431,7 @@ def transaction_catalogue_object_id(bucket_id: str) -> str:
     return f"transaction-catalogue:{bucket_id.strip()}"
 
 
-def _verify_evidence_references(
+def verify_evidence_references(
     command: ManualLedgerTransactionCommand,
     *,
     transaction_id: str,
@@ -495,7 +498,7 @@ def _verify_purchase_invoice_evidence(
         evidence_id,
         bucket_id=command.bucket_id,
         evidence_records=purchase_invoice_evidence_records(command.bucket_id),
-        invoices=_invoice_repository(bucket_id=command.bucket_id, repository=invoice_repository).load(),
+        invoices=resolve_invoice_repository(bucket_id=command.bucket_id, repository=invoice_repository).load(),
     )
     if reference.is_acceptable:
         return
@@ -575,7 +578,7 @@ def _verify_single_attachment(
         )
 
 
-def _verify_usage_ratio_reference(
+def verify_usage_ratio_reference(
     command: ManualLedgerTransactionCommand,
     *,
     usage_ratio_profile: UsageRatioProfile | None,
@@ -601,30 +604,26 @@ def _verify_usage_ratio_reference(
         ) from exc
 
 
-def _optional_decimal(value: Decimal | None) -> str:
-    return "" if value is None else _decimal_to_string(value)
+def optional_decimal(value: Decimal | None) -> str:
+    return "" if value is None else format_decimal(value)
 
 
-def _display_decimal(value: Decimal) -> str:
+def display_decimal(value: Decimal) -> str:
     return format_decimal(value, normalize=True)
 
 
-def _decimal_to_string(value: Decimal) -> str:
-    return format_decimal(value)
-
-
-def _normalise_timestamp(value: datetime | None) -> datetime:
+def normalise_timestamp(value: datetime | None) -> datetime:
     timestamp = value or now()
     return coerce_utc_aware(timestamp)
 
 
-def _upsert_transaction(catalogue: TransactionCatalogue, transaction: Transaction) -> TransactionCatalogue:
+def upsert_transaction(catalogue: TransactionCatalogue, transaction: Transaction) -> TransactionCatalogue:
     updated = dict(catalogue.transactions)
     updated[transaction.transaction_id] = transaction
     return TransactionCatalogue.model_validate({"transactions": updated})
 
 
-def _replace_transaction(
+def replace_transaction(
     catalogue: TransactionCatalogue,
     *,
     old_transaction_id: str,
@@ -636,13 +635,13 @@ def _replace_transaction(
     return TransactionCatalogue.model_validate({"transactions": updated})
 
 
-def _remove_transaction(catalogue: TransactionCatalogue, *, transaction_id: str) -> TransactionCatalogue:
+def remove_transaction(catalogue: TransactionCatalogue, *, transaction_id: str) -> TransactionCatalogue:
     updated = dict(catalogue.transactions)
     updated.pop(transaction_id, None)
     return TransactionCatalogue.model_validate({"transactions": updated})
 
 
-def _require_transaction(catalogue: TransactionCatalogue, transaction_id: str) -> Transaction:
+def require_transaction(catalogue: TransactionCatalogue, transaction_id: str) -> Transaction:
     transaction = catalogue.get(transaction_id)
     if transaction is None:
         raise TransactionNotFoundError(
@@ -652,7 +651,7 @@ def _require_transaction(catalogue: TransactionCatalogue, transaction_id: str) -
     return transaction
 
 
-def _mutation_signature(transaction: Transaction) -> tuple[object, ...]:
+def mutation_signature(transaction: Transaction) -> tuple[object, ...]:
     raw = transaction.raw
     return (
         raw.booked_date,
@@ -712,7 +711,7 @@ def _command_idempotency_fields(command: ManualLedgerTransactionCommand) -> dict
 
     The mapping is the single source for both consumers:
     :func:`_command_idempotency_projection` folds it to the positional tuple the
-    idempotency guard compares, and :func:`_is_evidence_only_command` reads it by
+    idempotency guard compares, and :func:`is_evidence_only_command` reads it by
     name to isolate which fields a command would actually change.
 
     Four command fields are deliberately excluded, because none of them is content a
@@ -824,7 +823,7 @@ def _transaction_idempotency_projection(current: Transaction) -> tuple[object, .
     return tuple(_transaction_idempotency_fields(current).values())
 
 
-def _command_matches_current(command: ManualLedgerTransactionCommand, current: Transaction) -> bool:
+def command_matches_current(command: ManualLedgerTransactionCommand, current: Transaction) -> bool:
     """Return True when a command would produce no observable change against the stored transaction.
 
     Used to detect re-affirmation patches (operator supplies the same ``business_classification``
@@ -834,7 +833,7 @@ def _command_matches_current(command: ManualLedgerTransactionCommand, current: T
     return _command_idempotency_projection(command) == _transaction_idempotency_projection(current)
 
 
-def _build_bucket_event(
+def build_ledger_bucket_event(
     *,
     bucket_id: str,
     event_type: BucketEventType,
@@ -844,43 +843,22 @@ def _build_bucket_event(
     payload: Mapping[str, str],
     object_type: BucketEventObjectType = BucketEventObjectType.LEDGER_TRANSACTION,
 ) -> BucketEvent:
-    event = BucketEvent(
-        event_id=derive_bucket_event_id(
-            bucket_id=bucket_id,
-            event_type=event_type,
-            occurred_at=occurred_at,
-            actor=actor,
-            object_type=object_type,
-            object_id=object_id,
-            payload=payload,
-        ),
+    """Derive one ledger :class:`BucketEvent` without persisting it.
+
+    Delegates to the domain builder rather than restating the envelope, so the
+    ledger cannot drift from the canonical event shape. Supplies the ledger's
+    :data:`_BUCKET_EVENT_PAYLOAD_VERSION` and its default object type.
+    """
+    return build_bucket_event(
         bucket_id=bucket_id,
         event_type=event_type,
         occurred_at=occurred_at,
         actor=actor,
         object_type=object_type,
         object_id=object_id,
+        payload=payload,
         payload_version=_BUCKET_EVENT_PAYLOAD_VERSION,
-        payload=dict(payload),
     )
-    return event
-
-
-def _append_bucket_event(*, repository: BucketEventHistoryRepositoryProtocol, event: BucketEvent) -> None:
-    """Append one event through the domain emitter rather than a local copy.
-
-    These two helpers used to load, append and save the catalogue here. That is
-    exactly what the domain emitters do, and the copies drifted the moment those
-    gained a revision guard: the history is a singleton row, so a local
-    load-append-save discards an event a concurrent caller wrote, and the
-    content-addressed survivors leave no gap to notice it happened.
-    """
-    emit_bucket_events(repository=repository, events=(event,))
-
-
-def _append_bucket_events(*, repository: BucketEventHistoryRepositoryProtocol, events: tuple[BucketEvent, ...]) -> None:
-    """Append a batch through the domain emitter, for the reason above."""
-    emit_bucket_events(repository=repository, events=events)
 
 
 def _commit_with_guarded_events(
@@ -940,7 +918,7 @@ def _commit_with_guarded_events(
     raise AssertionError("guarded event co-commit exhausted without a conflict")
 
 
-def _save_transaction_catalogue_and_events(
+def save_transaction_catalogue_and_events(
     *,
     transaction_repository: TransactionCatalogueRepository,
     # rationale: calls to_secure_object_write(), an adapter-only escape
@@ -959,7 +937,7 @@ def _save_transaction_catalogue_and_events(
     )
 
 
-def _save_transaction_catalogue_invoices_and_events(
+def save_transaction_catalogue_invoices_and_events(
     *,
     transaction_repository: TransactionCatalogueRepository,
     invoice_repository: InvoiceCatalogueRepository,
@@ -983,14 +961,14 @@ def _save_transaction_catalogue_invoices_and_events(
     )
 
 
-def _primary_lineage_event_id(events: tuple[BucketEvent, ...]) -> str:
+def primary_lineage_event_id(events: tuple[BucketEvent, ...]) -> str:
     for event in events:
         if event.object_type is BucketEventObjectType.LEDGER_TRANSACTION:
             return event.event_id
     return events[0].event_id
 
 
-def _evidence_event_ids(events: tuple[BucketEvent, ...]) -> dict[tuple[str, str], str]:
+def derive_evidence_event_ids(events: tuple[BucketEvent, ...]) -> dict[tuple[str, str], str]:
     mapping: dict[tuple[str, str], str] = {}
     for event in events:
         if event.event_type in {
@@ -1003,7 +981,7 @@ def _evidence_event_ids(events: tuple[BucketEvent, ...]) -> dict[tuple[str, str]
     return mapping
 
 
-def _result(
+def build_manual_ledger_result(
     bucket_id: str,
     transaction: Transaction,
     bucket_event_ids: tuple[str, ...],

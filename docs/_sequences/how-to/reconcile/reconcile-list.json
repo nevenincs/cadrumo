@@ -1,0 +1,37 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "reconcile",
+        "list"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.reconcile.list",
+        "notices": [],
+        "result": {
+          "bucket_id": "<bucket-id>",
+          "operation": "modelo.reconcile.list",
+          "reconciliation_count": 0,
+          "reconciliations": [],
+          "work_unit_id": null
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "reconcile-list"
+}

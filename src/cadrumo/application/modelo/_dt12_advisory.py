@@ -22,11 +22,11 @@ from decimal import Decimal
 
 from ...core import CasillaId
 from ...domain.modelos import (
-    ModeloError,
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
+from ...domain.modelos.errors import ModeloError
 from ._semantic_role_resolution import (
     AmbiguousSemanticRoleCasillaError,
     casilla_id_for_unique_revision_semantic_role,

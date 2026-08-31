@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:5c23bb497494a5b8e6be4f662019c2b01eddbea54dc43c8e2b92ab4112217310'
+body_hash: 'sha256:bd772c5342cd9d09390e1cd3e97523438c314b0487b1dc7a821c95f7682d821d'
 step_id: 'S161'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Hard-move the bounded ModeloWorkReview contract, its sole build_modelo_work_review semantic join, and its native atomic capture/current-coordinate pair with owner generation and neutral opaque comparison domain into the sole public application/modelo/work_review.py defining module, atomically migrate every production, S126-registration, test, dynamic, and tooling consumer to direct imports and delete work_review_projection.py plus every package binding, while proving exact complete-review parity without reconstructing any field, retaining a parallel assembler, or introducing a shim, alias, fallback, bridge, or re-export
 

@@ -18,7 +18,7 @@ from typing import Literal, Protocol
 
 from pydantic import Field, model_validator
 
-from ....core import CasillaId
+from ....core import CasillaId, RevisionReviewStatus
 from .casilla_membership import casillas_by_id
 from .ids import BindingId, LegalRefId, ModeloId, RevisionId, SourceRefId
 from .schema import (
@@ -26,6 +26,7 @@ from .schema import (
     FormulaDefinition,
     ModeloDefinition,
     ModeloRevision,
+    SchemaFamilyDispositionDeclaration,
 )
 from .schema_base import RegistryModel
 from .schema_exports import ProjectionEndpointDeclaration
@@ -67,6 +68,14 @@ class GeneratedArtifactSource(Protocol):
     applies_to: date | None
     record_design_epoch: str | None
     corpus_tier: _GeneratedArtifactCorpusTier | None
+
+    def applies_across(self, span_from: date, span_to: date | None) -> bool:
+        """Report whether this source's applicability window overlaps one date span.
+
+        See :meth:`SourceReference.applies_across` for the one definition of
+        the overlap rule this Protocol member declares.
+        """
+        ...
 
 
 class GeneratedArtifactInspection(Protocol):
@@ -159,6 +168,14 @@ class RegistryRevisionInspection(RegistryModel):
 
     modelo_id: ModeloId
     revision_id: RevisionId
+    review_status: RevisionReviewStatus
+    """The revision's own governance stamp -- not filing-grade content, so it
+    stays in scope for a static inspection whose job is validating generated
+    static artefacts against a revision it may or may not trust yet."""
+    family_dispositions: Mapping[str, SchemaFamilyDispositionDeclaration]
+    """The revision's declared not-applicable schema families and their
+    grounding reason/legal_refs/source_refs -- classification metadata, not
+    filing-grade content, so it stays in scope for a static inspection."""
     source_root: Path
     revision_source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
     sources: Mapping[SourceRefId, SourceReference]
@@ -201,7 +218,7 @@ class RegistryRevisionInspection(RegistryModel):
         # target is legible to a reader and to static analysis alike: the
         # deferral is what breaks the cycle, and naming the module through an
         # f-string bought nothing while hiding where the call actually lands.
-        from .snapshot import collect_snapshot_ref_ids
+        from ._snapshot_internals import collect_snapshot_ref_ids
 
         selected_legal_ids, selected_source_ids = collect_snapshot_ref_ids(modelo, revision)
         missing_legal_refs = selected_legal_ids.difference(legal_ref_ids)
@@ -216,6 +233,8 @@ class RegistryRevisionInspection(RegistryModel):
         return cls(
             modelo_id=modelo.id,
             revision_id=revision.id,
+            review_status=revision.review_status,
+            family_dispositions=revision.family_dispositions,
             source_root=source_root,
             revision_source_refs=revision.source_refs,
             sources=selected_sources,

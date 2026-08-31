@@ -2,11 +2,18 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
-from contextlib import ExitStack, contextmanager
+import asyncio
+from collections.abc import AsyncGenerator, Generator
+from contextlib import ExitStack, asynccontextmanager, contextmanager
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from ...domain.modelos import WorkUnitCatalogue
+
+if TYPE_CHECKING:
+    from textual.app import AutopilotCallbackType
+
+    from ...application.operations.composition import OperationComposedServices
 
 
 def load_modelo_work_unit_catalogue(bucket_id: str) -> WorkUnitCatalogue:
@@ -25,37 +32,9 @@ def profile_storage_scope(root: Path) -> Generator[Path]:
     scope has bound them; neither needs to know which concrete adapter serves
     the session.
     """
-    from ...adapters.outbound.aeat.auth.provider_selection import select_provider as select_outbound_auth_provider
-    from ...adapters.outbound.aeat.auth.session_store import build_session_store
-    from ...adapters.persistence.profile.buckets import build_bucket_event_history_repository
-    from ...adapters.persistence.profile.confirmation_records import ConfirmationRecordRepository
-    from ...adapters.persistence.profile.extracted_document_cache import ExtractedDocumentCacheRepository
-    from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
-    from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-    from ...adapters.persistence.profile.usage_ratios import (
-        load_usage_ratios,
-        load_usage_ratios_with_censo_guard,
-        save_usage_ratios,
-    )
-    from ...adapters.persistence.storage import build_profile_custody_port, build_profile_login_session_port
-    from ...adapters.persistence.workflow import build_workflow_persistence_port
-    from ...application.auth.protocols import bind_session_store
-    from ...application.auth.providers import bind_auth_provider_selector
-    from ...application.bucket_event_repository import bind_bucket_event_history_repository_factory
-    from ...application.ledger.confirmation_record import bind_confirmation_record_repository_factory
-    from ...application.ledger.extracted_document_cache import bind_extracted_document_cache_repository_factory
-    from ...application.ledger.participation_read import bind_transaction_participation_index_repository_factory
-    from ...application.ledger.transaction_repository import bind_transaction_catalogue_repository_factory
-    from ...application.ledger.usage_ratio_repository import (
-        bind_usage_ratio_censo_guard_loader,
-        bind_usage_ratio_profile_persistence,
-    )
-    from ...application.user_profile.custody_ports import bind_profile_custody_port
-    from ...application.user_profile.language_resolver import register_language_resolver
-    from ...application.user_profile.login_session_port import bind_profile_login_session_port
-    from ...application.workflow.persistence import bind_workflow_persistence_port
     from ...core import STORAGE_TAXONOMY, StorageCategory, storage_location
     from ...core.config import SecretStoreBackend, load_settings, override_settings
+    from ..adapter_composition import profile_adapter_composition
 
     storage_root = root / "cadrumo-storage"
     secret_field = STORAGE_TAXONOMY[StorageCategory.SECRETS].settings_field
@@ -74,24 +53,56 @@ def profile_storage_scope(root: Path) -> Generator[Path]:
                 **{secret_field: secret_path},
             )
         )
-        composition.enter_context(bind_profile_custody_port(build_profile_custody_port()))
-        composition.enter_context(bind_profile_login_session_port(build_profile_login_session_port()))
-        composition.enter_context(bind_workflow_persistence_port(build_workflow_persistence_port()))
-        composition.enter_context(bind_bucket_event_history_repository_factory(build_bucket_event_history_repository))
-        composition.enter_context(bind_confirmation_record_repository_factory(ConfirmationRecordRepository))
-        composition.enter_context(bind_extracted_document_cache_repository_factory(ExtractedDocumentCacheRepository))
-        composition.enter_context(
-            bind_transaction_participation_index_repository_factory(TransactionParticipationIndexRepository)
-        )
-        composition.enter_context(bind_transaction_catalogue_repository_factory(TransactionCatalogueRepository))
-        composition.enter_context(
-            bind_usage_ratio_profile_persistence(loader=load_usage_ratios, saver=save_usage_ratios)
-        )
-        composition.enter_context(bind_usage_ratio_censo_guard_loader(load_usage_ratios_with_censo_guard))
-        composition.enter_context(bind_auth_provider_selector(select_outbound_auth_provider))
-        composition.enter_context(bind_session_store(build_session_store()))
-        register_language_resolver()
+        composition.enter_context(profile_adapter_composition())
         yield storage_root
 
 
-__all__ = ["load_modelo_work_unit_catalogue", "profile_storage_scope"]
+@asynccontextmanager
+async def operation_services_scope() -> AsyncGenerator[OperationComposedServices]:
+    """Compose the operation platform for one TUI run and settle it after.
+
+    This is the sole TUI composition seam permitted to build the operation
+    registry, journal, leases and supervisor. Screens and controllers receive
+    the composed services; none of them constructs the graph, so a TUI session
+    has exactly one place where that inventory comes into being.
+
+    The factory itself lives one level up, shared with the CLI. Moving it into
+    this package would oblige every other frontend to import the TUI to reach
+    it, which is the dependency the TUI boundary exists to forbid.
+    """
+    from .._operation_composition import compose_operation_dependencies
+
+    services = compose_operation_dependencies()
+    try:
+        yield services
+    finally:
+        await services.shutdown()
+
+
+async def _run_root_session(*, headless: bool, auto_pilot: AutopilotCallbackType | None) -> None:
+    """Compose one session's services, run the root application, settle them.
+
+    The services are composed OUTSIDE the application and handed to it, so
+    the root never constructs its own graph and the scope still settles if
+    the application raises on the way up or down.
+    """
+    from .app import CadrumoTuiApp
+
+    async with operation_services_scope() as services:
+        await CadrumoTuiApp(services=services).run_async(headless=headless, auto_pilot=auto_pilot)
+
+
+def main(*, headless: bool = False, auto_pilot: AutopilotCallbackType | None = None) -> int:
+    """Start one dedicated TUI session and report its process exit status.
+
+    This is the sole entry point for module execution and for the installed
+    console script; neither reaches past it into the composition seams, and
+    neither imports the CLI. ``headless`` and ``auto_pilot`` are Textual's
+    own run parameters, carried so a caller can drive a real session to
+    completion without a terminal rather than assert against an import.
+    """
+    asyncio.run(_run_root_session(headless=headless, auto_pilot=auto_pilot))
+    return 0
+
+
+__all__ = ["load_modelo_work_unit_catalogue", "main", "operation_services_scope", "profile_storage_scope"]

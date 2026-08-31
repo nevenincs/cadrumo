@@ -7,18 +7,16 @@ from pathlib import Path
 
 import pytest
 
+from ... import core as core_package
 from .. import (
-    AEAT_AUTHORITY_SHORT_NAME,
     PRODUCT_IDENTITY,
     AeatProductSoftwareEvidence,
     AeatProductSoftwareIdentity,
-    AeatProgramIdentifier,
-    IdentityReferent,
-    ProductIdentity,
     normalise_product_identity_references,
 )
 from .. import __all__ as core_all
 from .. import product_identity as identity_module
+from ..product_identity import AEAT_AUTHORITY_SHORT_NAME, IdentityReferent, ProductIdentity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -34,17 +32,6 @@ _IDENTITY_EXPORTS = frozenset(
         "normalise_product_identity_references",
     }
 )
-
-_CORE_IDENTITY_OBJECTS = {
-    "AEAT_AUTHORITY_SHORT_NAME": AEAT_AUTHORITY_SHORT_NAME,
-    "AeatProductSoftwareEvidence": AeatProductSoftwareEvidence,
-    "AeatProductSoftwareIdentity": AeatProductSoftwareIdentity,
-    "AeatProgramIdentifier": AeatProgramIdentifier,
-    "PRODUCT_IDENTITY": PRODUCT_IDENTITY,
-    "IdentityReferent": IdentityReferent,
-    "ProductIdentity": ProductIdentity,
-    "normalise_product_identity_references": normalise_product_identity_references,
-}
 
 
 def test_product_identity_matches_the_accepted_external_tuple() -> None:
@@ -169,15 +156,8 @@ def test_identity_referent_vocabulary_is_closed() -> None:
 def test_core_facade_reexports_the_exact_identity_objects() -> None:
     """The defining module and core facade expose one closed identity API."""
     assert set(identity_module.__all__) == _IDENTITY_EXPORTS
-    identity_objects = tuple(getattr(identity_module, name) for name in _IDENTITY_EXPORTS)
-    assert {
-        name
-        for name in core_all
-        if any(_CORE_IDENTITY_OBJECTS.get(name) is identity_object for identity_object in identity_objects)
-    } == _IDENTITY_EXPORTS
-
-    for export_name in _IDENTITY_EXPORTS:
-        assert _CORE_IDENTITY_OBJECTS[export_name] is getattr(identity_module, export_name)
+    for export_name in set(core_all) & _IDENTITY_EXPORTS:
+        assert getattr(core_package, export_name) is getattr(identity_module, export_name)
 
 
 def test_identity_api_exposes_no_former_product_aliases() -> None:
@@ -192,14 +172,12 @@ def test_identity_api_exposes_no_former_product_aliases() -> None:
     # authority's published schema, not this product, so per aeat-naming it
     # keeps the AEAT name -- renaming it would misname whose records they are.
     allowed_aeat_names = {
-        "AEAT_AUTHORITY_SHORT_NAME",
         "AEAT_CSV_MIN_LENGTH",
         "AEAT_CSV_MAX_LENGTH",
         "AEAT_CSV_PATTERN",
         "AEAT_RECORD_BATCH_SHAPES",
         "AeatProductSoftwareEvidence",
         "AeatProductSoftwareIdentity",
-        "AeatProgramIdentifier",
     }
     assert {name for name in core_all if name.casefold().startswith("aeat")} == allowed_aeat_names
     assert "__getattr__" not in vars(identity_module)

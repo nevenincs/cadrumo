@@ -300,7 +300,7 @@ class TestRepoRelativePathNormalisationCoverage:
     _PATH_FIELD_SUFFIXES: tuple[str, ...] = ("_dir", "_path", "_root")
     """Suffixes that mark a settings field as a repo-relative path."""
 
-    _EXEMPT_PATH_FIELDS: frozenset[str] = frozenset()
+    _EXEMPT_PATH_FIELDS: frozenset[str] = frozenset[str]()
     """Path-typed `_dir`/`_path`/`_root` fields legitimately exempt from normalisation.
 
     Empty today — every such field must be normalised. Adding a new

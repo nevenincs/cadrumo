@@ -34,13 +34,15 @@ from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.loader import load_registry_tree
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.temporal import select_revision
-from ...domain.modelos import CalculationRevision, WorkUnit
+from ...domain.modelos import WorkUnit
+from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.loader import load_user_profile_schema
 from ..user_profile.profile_record_repository import ProfileRecordRepository
+from ..user_profile.projections import profile_fact_index
 from ._action_errors import ModeloRequiredBindingsMissingError
 from ._preconditions import build_modelo_precondition_failure
-from .profile_binding import profile_fact_index, resolve_profile_binding_value
+from .profile_binding import resolve_profile_binding_value
 
 
 def require_modelo_required_bindings_resolved(

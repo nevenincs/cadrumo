@@ -2,7 +2,7 @@ from datetime import date
 
 import pytest
 
-from .. import _notifications as notifications
+from .. import notifications
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

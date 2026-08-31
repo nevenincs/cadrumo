@@ -54,6 +54,7 @@ from ._deduction_facts import IvaDeductionClassificationProvenance
 from ._flow import (
     IvaFlowDirection,
     IvaSettlementSide,
+    flow_direction_for_invoice_kind,
     is_deducible_flow,
     is_devengada_flow,
     settlement_sides_for_flow,
@@ -61,8 +62,7 @@ from ._flow import (
 from ._schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 
 if TYPE_CHECKING:
-    from cadrumo.domain.calculations.registry.ledger_bindings import IvaLedgerObservation
-
+    from ..calculations.registry.ledger_bindings import IvaLedgerObservation
     from ..invoices import IvaRate
 else:
     IvaRate = object
@@ -198,7 +198,7 @@ def classify_invoice_line_for_iva(
     # and was exactly this composition, so it could drift without any symbol
     # search relating the two.
     category = domestic_categories_by_rate_kind()[rate_kind]
-    flow_direction = IvaFlowDirection.REPERCUTIDO if invoice_kind is InvoiceKind.ISSUED else IvaFlowDirection.SOPORTADO
+    flow_direction = flow_direction_for_invoice_kind(invoice_kind)
     return IvaInvoiceClassification(
         category=category,
         rate_kind=rate_kind,
@@ -276,8 +276,7 @@ def invoice_line_to_iva_observation(
             statute did not offer that day, so it is refused rather than
             recorded at whatever the tier happened to mean.
     """
-    from cadrumo.domain.calculations.registry.ledger_bindings import IvaLedgerObservation
-
+    from ..calculations.registry.ledger_bindings import IvaLedgerObservation
     from ..invoices import iva_rate_percentage
 
     classification = classify_invoice_line_for_iva(iva_rate=iva_rate, invoice_kind=invoice_kind)

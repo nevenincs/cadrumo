@@ -24,14 +24,13 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation
-from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult
-from cadrumo.domain.calculations.registry.runtime_graph import expression_casilla_refs
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-
 from ....core import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.modelos import (
+from ....domain.calculations.registry.bindings import CasillaObservation
+from ....domain.calculations.registry.formula_runtime import RegistryCalculationResult
+from ....domain.calculations.registry.runtime_graph import expression_casilla_refs
+from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,

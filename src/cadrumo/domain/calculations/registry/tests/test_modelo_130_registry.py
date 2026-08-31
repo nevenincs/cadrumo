@@ -10,16 +10,16 @@ import pytest
 from .....core import CasillaId, normalise_corpus_text, validated_casilla_id
 from .....core.resources import bundled_path
 from .....tests.registry_observations import registry_grounded_modelo_observation
+from .._validate import RegistryValidator
 from ..authority import bundled_authority
 from ..binding_selector_utils import selector_as_dict
-from ..bindings import RegistryModeloObservation
+from ..bindings import CasillaObservation, RegistryModeloObservation
 from ..bindings_previous_filing import resolve_previous_filing_binding_values
 from ..errors import RegistryValidationError
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema import ModeloDefinition, RegistryCatalogues
 from ..schema_input_kind import InputKind
 from ..temporal import select_revision
-from ..validate import RegistryValidator
 from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -114,6 +114,13 @@ def modelo_130_registry():
 
 def _snapshot_130(_modelo_130_registry: _ModeloFixture, *, period: str = "1T", filing_year: int = 2026):
     return _committed_snapshot("130", filing_year, period)
+
+
+def _decimal_value(observation: CasillaObservation) -> Decimal:
+    """Return a numeric casilla observation's value, narrowed from its text/numeric union."""
+    value = observation.value
+    assert isinstance(value, Decimal)
+    return value
 
 
 def test_modelo_130_supported_year_deadline_census_dates_sources_and_ownership(
@@ -644,7 +651,7 @@ def test_modelo_130_second_period_carry_forward_picks_up_first_period_saldo(
     casilla_14 = next(obs for obs in result.observations if obs.casilla_id == _M130_DIFERENCIA_PREVIA_CASILLA)
     casilla_16 = next(obs for obs in result.observations if obs.casilla_id == _M130_HOME_DEDUCTION_CASILLA)
     casilla_17 = next(obs for obs in result.observations if obs.casilla_id == _M130_DIFERENCIA_CASILLA)
-    assert casilla_17.value == casilla_14.value - saldo_seed - casilla_16.value
+    assert _decimal_value(casilla_17) == _decimal_value(casilla_14) - saldo_seed - _decimal_value(casilla_16)
 
 
 # Note: the "silently_ignored" test that previously lived here
@@ -691,7 +698,7 @@ def test_modelo_130_high_casilla_06_amount_does_not_zero_casilla_17(
     casilla_15 = next(obs for obs in result.observations if obs.casilla_id == _M130_CARRY_FORWARD_CASILLA)
     casilla_16 = next(obs for obs in result.observations if obs.casilla_id == _M130_HOME_DEDUCTION_CASILLA)
 
-    expected = casilla_14.value - casilla_15.value - casilla_16.value
+    expected = _decimal_value(casilla_14) - _decimal_value(casilla_15) - _decimal_value(casilla_16)
     assert expected != Decimal("0")
     assert casilla_17.value == expected
 
@@ -735,7 +742,7 @@ def test_modelo_130_casilla_17_uses_standard_subtraction_for_low_retention_amoun
     casilla_16 = next(obs for obs in result.observations if obs.casilla_id == _M130_HOME_DEDUCTION_CASILLA)
 
     # The standard subtraction formula: (c14 - c15) - c16
-    expected = casilla_14.value - casilla_15.value - casilla_16.value
+    expected = _decimal_value(casilla_14) - _decimal_value(casilla_15) - _decimal_value(casilla_16)
     assert casilla_17.value == expected, (
         f"Below-threshold case: casilla 17 must equal (c14-c15)-c16 = {expected}; got {casilla_17.value}"
     )

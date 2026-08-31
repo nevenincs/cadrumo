@@ -603,6 +603,31 @@ convention = "google"
 # process already imported. The command is built from `sys.executable` plus
 # repo-relative paths this module discovered itself, never operator input.
 "src/cadrumo/tests/test_every_test_module_is_collectable.py" = ["S603"]
+# Proves the profile-summary boundary imports none of the authenticated
+# aggregate. That is a property of a FRESH interpreter: this process has
+# already imported the aggregate via sibling tests, so an in-process check
+# would pass regardless. argv is `sys.executable` plus a literal probe
+# source defined in the module; no operator input reaches it.
+"src/cadrumo/application/user_profile/tests/test_profile_summary_inventory.py" = ["S603"]
+# Resolves live CLI nodes in FRESH interpreters: what a process imports is a
+# property of a cold start, and this session has already imported every
+# capability family, so an in-process scan would read other tests' imports.
+# argv is `sys.executable` plus a literal probe source and JSON built from
+# the command graph this repository ships; no operator input reaches it.
+"src/cadrumo/entrypoints/cli/tests/test_state_free_capability_isolation.py" = ["S603"]
+# Invokes live CLI leaves in FRESH interpreters against throwaway storage
+# roots: what a command writes is a property of a cold start against an
+# empty root. argv is `sys.executable` plus a literal probe source and JSON
+# built from the shipped command graph; no operator input reaches it.
+"src/cadrumo/entrypoints/cli/tests/test_cli_side_effect_contract.py" = ["S603"]
+# Resolves live CLI nodes in FRESH interpreters, one per capability declaration:
+# what a process imports is a property of a cold start. argv is `sys.executable`
+# plus a literal probe source and JSON built from the shipped command graph.
+"src/cadrumo/entrypoints/cli/tests/test_capability_family_isolation.py" = ["S603"]
+# Resolves each live CLI node in a FRESH interpreter to count its imports:
+# module cost is a property of a cold start. argv is `sys.executable` plus a
+# literal probe source and JSON built from the shipped command graph.
+"src/cadrumo/entrypoints/cli/tests/test_cli_resolution_cost_budget.py" = ["S603"]
 "dev/docs/build.py" = ["S603"]
 "dev/docs/i18n.py" = ["S603"]
 "dev/docs/serve.py" = ["S603"]
@@ -673,7 +698,7 @@ convention = "google"
 "src/cadrumo/adapters/outbound/aeat/auth/clave_permanente.py" = ["S105"]
 "src/cadrumo/adapters/outbound/aeat/auth/clave_permanente_support.py" = ["S105"]
 # Registry applicability enum + legal-text rationale strings are not passwords.
-"src/cadrumo/domain/calculations/registry/_applicability.py" = ["S105"]
+"src/cadrumo/domain/calculations/registry/applicability.py" = ["S105"]
 # Modelo 720 fichero-BOE roundtrip fixture pins fixed-width AEAT envelope rows
 # (key + 18-char numeric value) that exceed 120 columns and cannot be split.
 "src/cadrumo/application/calculations/tests/test_modelo_720_fichero_boe_roundtrip.py" = ["E501"]
@@ -770,6 +795,11 @@ convention = "google"
 # domain model preserves the canonical AEAT casing so the registry-binding mapping
 # stays 1:1 with the published source. N815's mixedCase heuristic mis-flags these.
 "src/cadrumo/domain/modelos/_row_models.py" = ["N815"]
+# The wire mirrors of those same row models carry the field names verbatim so the
+# mirror stays 1:1 with the type it mirrors; renaming them here would put a casing
+# translation between the wire and the domain row for no gain. Same AEAT casing,
+# same mis-flag, same reason as the domain module above.
+"src/cadrumo/application/modelo/operation_definitions.py" = ["N815"]
 # Tests alias the canonical private constant into a per-scenario local name; N811's
 # constant-aliased-as-non-constant heuristic mis-flags the rebinding.
 "src/cadrumo/application/aggregation/tests/test_service.py" = ["N811"]

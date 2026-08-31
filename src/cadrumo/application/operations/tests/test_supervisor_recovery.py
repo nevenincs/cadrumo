@@ -25,7 +25,6 @@ from ..capabilities import (
 from ..interactions import OperationRejectResponse
 from ..models import (
     OperationReconciliationOutcome,
-    OperationTerminalReceipt,
 )
 from ..persistence.events import OperationReconciliationEvent
 from ..persistence.journal import OperationPersistedSnapshot
@@ -294,18 +293,11 @@ def test_detached_cancellation_race_persists_acknowledgement_before_terminal_set
             detached = await supervisor.detach(operation_id)
             cancellation_task = asyncio.create_task(supervisor.request_cancel(operation_id))
             requested = await cancellation_task
-            settling = await start_task
+            # Starting an operation whose executor acknowledged a cooperative
+            # stop settles it: the terminal fact comes back from the start door
+            # rather than from a second settlement the caller drives.
+            terminal = await start_task
             reloaded = await reloaded_journal.load(operation_id)
-            terminal = await supervisor.settle(
-                operation_id,
-                OperationTerminalReceipt(
-                    identity=settling.identity,
-                    revision=settling.revision + 1,
-                    condition=OperationTerminalCondition.CANCELLED,
-                    effect=OperationEffect.NONE,
-                    settled_at=_NOW,
-                ),
-            )
             return detached, requested, reloaded, terminal
 
         detached, requested, reloaded, terminal = asyncio.run(run_detached_cancellation_race())
@@ -321,7 +313,10 @@ def test_detached_cancellation_race_persists_acknowledgement_before_terminal_set
     assert detached.lifecycle is OperationLifecycle.RUNNING
     assert requested.lifecycle is OperationLifecycle.CANCELLATION_REQUESTED
     assert requested.cancellation_requested_at is not None
-    assert reloaded.lifecycle is OperationLifecycle.SETTLING
+    # The durable record the detached observer reloads carries the executor's
+    # acknowledgement alongside the terminal fact, which is what stops a
+    # terminal claim from outrunning the cooperative stop that justified it.
+    assert reloaded.lifecycle is OperationLifecycle.TERMINAL
     assert reloaded.cancellation_requested_at == requested.cancellation_requested_at
     assert reloaded.cancellation_acknowledged_at is not None
     assert terminal.terminal_condition is OperationTerminalCondition.CANCELLED
@@ -369,18 +364,11 @@ def test_detached_deadline_race_persists_cooperative_stop_before_terminal_settle
             start_task = asyncio.create_task(supervisor.start(operation_id))
             await executor.started.wait()
             detached = await supervisor.detach(operation_id)
-            settling = await start_task
+            # The start door settles an executor that acknowledged the
+            # deadline's cooperative stop, so the terminal fact arrives from it
+            # rather than from a second settlement the caller drives.
+            terminal = await start_task
             reloaded = await reloaded_journal.load(operation_id)
-            terminal = await supervisor.settle(
-                operation_id,
-                OperationTerminalReceipt(
-                    identity=settling.identity,
-                    revision=settling.revision + 1,
-                    condition=OperationTerminalCondition.CANCELLED,
-                    effect=OperationEffect.NONE,
-                    settled_at=datetime.now(UTC),
-                ),
-            )
             return detached, reloaded, terminal
 
         detached, reloaded, terminal = asyncio.run(run_detached_deadline_race())
@@ -394,12 +382,15 @@ def test_detached_deadline_race_persists_cooperative_stop_before_terminal_settle
         )
 
     assert detached.lifecycle is OperationLifecycle.RUNNING
-    assert reloaded.lifecycle is OperationLifecycle.SETTLING
+    assert reloaded.lifecycle is OperationLifecycle.TERMINAL
     assert reloaded.execution_deadline is not None
     assert reloaded.cancellation_requested_at is not None
     assert reloaded.cancellation_acknowledged_at is not None
     assert reloaded.cleanup_deadline is not None
-    assert terminal.terminal_condition is OperationTerminalCondition.CANCELLED
+    # The deadline, not an operator request, is what stopped this run, so the
+    # derived terminal fact is a timeout. The previous shape asserted
+    # CANCELLED only because the test hand-built the receipt it checked.
+    assert terminal.terminal_condition is OperationTerminalCondition.TIMED_OUT
     assert persisted_terminal == terminal
     assert released_lease.disposition is OperationLeaseObservationDisposition.ABSENT
     assert released_lease.current is None

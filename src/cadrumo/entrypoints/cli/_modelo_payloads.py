@@ -25,23 +25,14 @@ from typing import TYPE_CHECKING, Literal
 
 from pydantic import ConfigDict, Field, field_validator, model_validator
 
-from cadrumo.domain.calculations.registry.ids import (
-    BindingId,
-    FormulaId,
-    LegalRefId,
-    ParameterId,
-    RelationId,
-    RevisionId,
-    SourceRefId,
-    VerificationExpectationId,
-)
-from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingClaveBreakdown
-
 from ...application.aggregation import (
     PerModeloAggregationContributor,
     PerModeloAggregationResult,
 )
-from ...application.calculations import ObservationSourceKind, PriorDomiciliationElectionProjection
+from ...application.calculations.observations_repository import (
+    ObservationSourceKind,
+    PriorDomiciliationElectionProjection,
+)
 from ...application.modelo._work_plazo import validate_modelo_work_deadline_posture
 from ...application.modelo.work_review import (
     BlockerRef,
@@ -72,10 +63,19 @@ from ...domain.buckets import (
     BucketEventObjectType,
     BucketEventType,
 )
+from ...domain.calculations.registry.ids import (
+    BindingId,
+    FormulaId,
+    LegalRefId,
+    ParameterId,
+    RelationId,
+    RevisionId,
+    SourceRefId,
+    VerificationExpectationId,
+)
+from ...domain.calculations.registry.withholding_bindings import WithholdingClaveBreakdown
 from ...domain.modelos import (
-    CalculationRevisionState,
     ExternalEvidenceKind,
-    M303RectificativaMotive,
     ModeloCode,
     ModeloRecordStatus,
     ModeloVerificationFinding,
@@ -83,13 +83,14 @@ from ...domain.modelos import (
     ModeloVerificationFindingSeverity,
     VerificationCompletenessStatus,
 )
+from ...domain.modelos.calculation_revision import CalculationRevisionState, M303RectificativaMotive
 from ._decimal_wire import DecimalWireText
 from ._modelo_aux_payloads import (
     EvidenceBundleCheckFindingPayload,
     EvidenceRecordRefPayload,
     ModeloAuditCheckResult,
     ModeloAuditExportResult,
-    ModeloAuditShowResult,
+    ModeloAuditViewResult,
     ModeloDescribeResult,
     ModeloListResult,
     ModeloRowPayload,
@@ -277,14 +278,37 @@ class FindingPayload(OutputSchema):
 
 
 class CrossPeriodDependencyRequirementPayload(OutputSchema):
-    """One upstream filing dependency declared by the registry."""
+    """One upstream filing dependency declared by the registry.
+
+    Mirrors :class:`~application.calculations.cross_period_models.CrossPeriodDependencyRequirement`.
+    ``legal_refs`` and ``source_refs`` are carried unbounded (no
+    ``min_length=1`` restated) because the sole construction site,
+    ``_dependency_inventory_item_payload`` in
+    :mod:`~cadrumo.entrypoints.cli._modelo_work_verification_cli`, builds this
+    payload field-by-field from an already-validated
+    ``CrossPeriodDependencyRequirement`` instance, whose own ``Field(min_length=1)``
+    on both fields already guarantees non-emptiness; no path builds this payload
+    from raw JSON, a dict, or a partial reconstruction, so restating the bound
+    here would be redundant rather than protective.
+
+    ``required_source_casilla_ids`` and ``source_presence_groups`` are carried for
+    the same reason ``legal_refs``/``source_refs`` are: an operator reading
+    ``source_casilla_ids`` alone cannot tell a dependency requiring every listed
+    casilla from one where only a mandatory subset is required and the rest are
+    OR-alternatives grouped in ``source_presence_groups`` — omitting them
+    overstates the dependency's rigidity.
+    """
 
     source_modelo: str
     filing_year: int
     period: Period
     source_casilla_ids: tuple[CasillaId, ...]
+    required_source_casilla_ids: tuple[CasillaId, ...] | None = None
+    source_presence_groups: tuple[tuple[CasillaId, ...], ...] = ()
     origin: str
     origin_ids: tuple[str, ...]
+    legal_refs: tuple[LegalRefId, ...]
+    source_refs: tuple[SourceRefId, ...]
     requires_member_fan_in: bool
 
 
@@ -338,11 +362,20 @@ class VerificationReportPayload(OutputSchema):
     explain whether the selected
     :class:`CalculationRevision` earned the
     verified-complete transition.
+
+    The report's own invariants — the content-addressed id derivation, the
+    bidirectional ``granted_verificado_completo`` rule, and the aware-instant
+    check on ``run_at`` — are enforced on
+    :class:`VerificationReport` and are not
+    restated here. They cannot be: this projection renders each finding into
+    localised prose, and the derivation hashes the locale-neutral finding
+    identity that rendering replaces, so a payload could not recompute the id
+    it carries even if it tried.
     """
 
     verification_report_id: VerificationReportId
     calculation_revision_id: CalculationRevisionId
-    completeness_status: str
+    completeness_status: VerificationCompletenessStatus
     granted_verificado_completo: bool
     resolved_casilla_ids: list[CasillaId]
     missing_required_casilla_ids: list[CasillaId]
@@ -471,6 +504,23 @@ class WorkListResult(OutputSchema):
     include_discarded: bool
     work_unit_count: int
     work_units: list[WorkUnitPayload]
+
+
+class WorkSelectResult(OutputSchema):
+    """Work-unit picker result returned by ``aeat app modelo work select``.
+
+    Carries the same listing as :class:`WorkListResult` plus the work unit the
+    operator chose in an interactive TUI session. ``selected_work_unit_id`` is
+    ``None`` in every scripted (non-``--tui``) invocation and in an
+    interactive session where the operator quit the picker without choosing.
+    """
+
+    operation: str = "modelo.work.select"
+    bucket_id_filter: str | None = None
+    include_discarded: bool
+    work_unit_count: int
+    work_units: list[WorkUnitPayload]
+    selected_work_unit_id: str | None = None
 
 
 class WorkStatusResult(OutputSchema):
@@ -637,7 +687,7 @@ class WorkVerifyResult(OutputSchema):
     operation: str = "modelo.work.verify"
     verification_report_id: VerificationReportId
     calculation_revision_id: CalculationRevisionId
-    completeness_status: str
+    completeness_status: VerificationCompletenessStatus
     granted_verificado_completo: bool
     resolved_casilla_ids: list[CasillaId]
     missing_required_casilla_ids: list[CasillaId]
@@ -796,7 +846,7 @@ class VerificationReportShowResult(OutputSchema):
     operation: str = "modelo.verification_report.show"
     verification_report_id: VerificationReportId
     calculation_revision_id: CalculationRevisionId
-    completeness_status: str
+    completeness_status: VerificationCompletenessStatus
     granted_verificado_completo: bool
     resolved_casilla_ids: list[CasillaId]
     missing_required_casilla_ids: list[CasillaId]
@@ -934,13 +984,20 @@ class DataInventoryCasillaPayload(OutputSchema):
     and ``binding_source`` are populated only for ``ledger_derivable`` and
     ``profile_derivable`` rows; required and optional manual entries carry no
     binding (they are hand-entered).
+
+    The grounding invariant — ``legal_refs`` and ``source_refs`` non-empty —
+    belongs to the canonical
+    :class:`~application.modelo.DataInventoryCasilla`, which refuses to build an
+    ungrounded entry, so every consumer of the checklist inherits it rather than
+    only the JSON surface. This schema is the wire shape of an entry that
+    already satisfies it.
     """
 
     casilla_id: CasillaId
     number: str
     label: str
-    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
-    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
+    legal_refs: tuple[LegalRefId, ...]
+    source_refs: tuple[SourceRefId, ...]
     binding_id: BindingId | None = None
     binding_source: str | None = None
 
@@ -1432,7 +1489,7 @@ __all__ = [
     "ModeloAggregateResult",
     "ModeloAuditCheckResult",
     "ModeloAuditExportResult",
-    "ModeloAuditShowResult",
+    "ModeloAuditViewResult",
     "ModeloBindingsListResult",
     "ModeloBindingsPreviewResult",
     "ModeloCasillaResult",

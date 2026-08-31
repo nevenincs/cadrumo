@@ -18,10 +18,9 @@ from datetime import UTC, datetime
 
 import pytest
 
-from cadrumo.application.workflow.state_models import WorkflowState
-
 from ....tests.secure_sql import isolated_profile_storage
 from ...state_projection import build_auth_readiness
+from ...workflow.state_models import WorkflowState
 from ..status import build_wizard_status
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

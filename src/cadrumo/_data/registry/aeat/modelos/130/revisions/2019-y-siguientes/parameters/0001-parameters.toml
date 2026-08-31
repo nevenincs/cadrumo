@@ -30,6 +30,22 @@ value = "2"
 date_axis = "filing_period"
 valid_from = 2019-01-01
 
+[[revisions."2019-y-siguientes".parameters]]
+id = "irpf.art_109_retained_income_exemption_ratio"
+data_type = "ratio"
+unit = "ratio"
+legal_refs = ["rd-439-2007:art-109"]
+source_refs = ["aeat-modelo-130-instructions"]
+
+[[revisions."2019-y-siguientes".parameters.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["70 por 100 de los ingresos"]
+
+[[revisions."2019-y-siguientes".parameters.values]]
+value = "0.70"
+date_axis = "filing_period"
+valid_from = 2019-01-01
+
 # Casilla IDs in this modelo are the same as the printed form numbers.
 # form_number is not declared individually because id == form_number for all casillas.
 

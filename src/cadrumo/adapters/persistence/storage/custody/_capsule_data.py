@@ -9,7 +9,8 @@ from pathlib import Path, PurePosixPath, PureWindowsPath
 from uuid import uuid4
 
 from .....core.hashing import prefixed_digest
-from ._filesystem import (
+from .errors import ProfileCustodyRecordError
+from .filesystem import (
     PROFILE_CUSTODY_DATA_FILE_MAX_BYTES,
     PROFILE_CUSTODY_DATA_MAX_ENTRIES,
     ProfileCustodyPasswordReadOperation,
@@ -22,10 +23,9 @@ from ._filesystem import (
     write_exclusive_fsynced,
     write_exclusive_fsynced_fd,
 )
-from ._records import ProfileCustodyEnvelope
-from ._sentinel import PROFILE_CUSTODY_SENTINEL_FILENAME, PROFILE_CUSTODY_SENTINEL_MAX_BYTES
-from ._sentinel_contract import ProfileCustodySentinelRecord, parse_profile_custody_sentinel_record
-from .errors import ProfileCustodyRecordError
+from .records import ProfileCustodyEnvelope
+from .sentinel import PROFILE_CUSTODY_SENTINEL_FILENAME, PROFILE_CUSTODY_SENTINEL_MAX_BYTES
+from .sentinel_contract import ProfileCustodySentinelRecord, parse_profile_custody_sentinel_record
 
 
 def write_data_files(data_root: Path, data_files: Mapping[str, bytes]) -> None:
@@ -94,7 +94,7 @@ def read_password_envelope(
     *,
     trace: list[ProfileCustodyPasswordReadOperation],
 ) -> ProfileCustodyEnvelope:
-    from ._records import PROFILE_CUSTODY_ENVELOPE_MAX_BYTES, parse_profile_custody_envelope
+    from .records import PROFILE_CUSTODY_ENVELOPE_MAX_BYTES, parse_profile_custody_envelope
 
     return parse_profile_custody_envelope(
         read_regular_file(path, maximum_bytes=PROFILE_CUSTODY_ENVELOPE_MAX_BYTES, trace=trace)
@@ -107,7 +107,7 @@ def read_password_envelope_fd(
     display_path: Path,
     trace: list[ProfileCustodyPasswordReadOperation],
 ) -> ProfileCustodyEnvelope:
-    from ._records import PROFILE_CUSTODY_ENVELOPE_MAX_BYTES, parse_profile_custody_envelope
+    from .records import PROFILE_CUSTODY_ENVELOPE_MAX_BYTES, parse_profile_custody_envelope
 
     return parse_profile_custody_envelope(
         read_regular_file_fd(

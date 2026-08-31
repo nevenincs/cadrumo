@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import inspect
+from pathlib import Path
 
 import pytest
 from openpyxl import load_workbook
@@ -73,7 +74,7 @@ def test_intermediate_is_a_complete_total_preserving_projection_of_the_verified_
     assert intermediate.source.source_ref == resolved.source.id
     assert intermediate.source.source_sha256 == resolved.source.sha256
     assert intermediate.source.design_epoch == resolved.source.record_design_epoch
-    assert intermediate.source.workbook_format is RecordDesignWorkbookFormat.XLSX
+    assert intermediate.source.workbook_format is RecordDesignWorkbookFormat.XLS
     fixed_parser_sheets = tuple(sheet for sheet in parsed_sheets if sheet.variable_envelope is None)
     assert tuple(sheet.sheet for sheet in intermediate.sheets) == tuple(sheet.name for sheet in fixed_parser_sheets)
     assert tuple(envelope.sheet for envelope in intermediate.variable_envelopes) == tuple(
@@ -238,6 +239,52 @@ def test_intermediate_is_a_complete_total_preserving_projection_of_the_verified_
     ) == ("A16", "total", "Variable")
 
 
+def _official_totals(path: Path) -> dict[str, int]:
+    """Read every sheet's official ``Total:`` cell straight from the real binary.
+
+    The reader is chosen by the CATALOGUE path's suffix. AEAT publishes many
+    disenos in the pre-OOXML format, and taking the format from the AEAT
+    filename would be wrong: this design's name embeds "xls" mid-string
+    (``01-200-ejercicio-2025-10-9-mb-xls.xls``) and other designs carry the same
+    token while being genuine .xlsx. openpyxl refuses a legacy .xls outright, so
+    that branch reads through xlrd, which the record-design parser already uses
+    for these binaries.
+    """
+    if path.suffix.casefold() == ".xls":
+        import xlrd
+
+        book = xlrd.open_workbook(str(path), on_demand=True)
+        try:
+            totals: dict[str, int] = {}
+            for name in book.sheet_names():
+                sheet = book.sheet_by_name(name)
+                for row in range(sheet.nrows):
+                    if sheet.ncols < 3:
+                        continue
+                    label = sheet.cell_value(row, 0)
+                    value = sheet.cell_value(row, 2)
+                    if not isinstance(label, str) or label.strip().casefold() != "total:":
+                        continue
+                    # xlrd surfaces every number as float; only a whole number is
+                    # a declared total, matching the openpyxl branch's int check.
+                    if isinstance(value, float) and value.is_integer():
+                        totals[name.strip()] = int(value)
+            return totals
+        finally:
+            book.release_resources()
+
+    workbook = load_workbook(path, read_only=True, data_only=True)
+    try:
+        return {
+            worksheet.title.strip(): value
+            for worksheet in workbook.worksheets
+            for label, _unused, value in worksheet.iter_rows(min_col=1, max_col=3, values_only=True)
+            if isinstance(label, str) and label.strip().casefold() == "total:" and isinstance(value, int)
+        }
+    finally:
+        workbook.close()
+
+
 def test_intermediate_recovers_every_official_total_colon_without_fixing_the_variable_envelope() -> None:
     """The real workbook's ``Total:`` cells govern fixed totals; DP200000 stays variable."""
     source_root = bundled_path()
@@ -256,16 +303,7 @@ def test_intermediate_recovers_every_official_total_colon_without_fixing_the_var
         filing_year=2025,
         design_epoch="2025",
     )
-    workbook = load_workbook(resolved.path, read_only=True, data_only=True)
-    try:
-        official_totals = {
-            worksheet.title.strip(): value
-            for worksheet in workbook.worksheets
-            for label, _unused, value in worksheet.iter_rows(min_col=1, max_col=3, values_only=True)
-            if isinstance(label, str) and label.strip().casefold() == "total:" and isinstance(value, int)
-        }
-    finally:
-        workbook.close()
+    official_totals = _official_totals(resolved.path)
 
     assert official_totals
     assert {sheet.sheet for sheet in intermediate.sheets} == set(official_totals)

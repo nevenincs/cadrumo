@@ -171,19 +171,21 @@ def _seed_legal_entity_profile(
 # Modelo 200 — Impuesto sobre Sociedades (micro-empresa pyme rate 2024)
 # ---------------------------------------------------------------------------
 #
-# Oracle: AEAT Manual Práctico de Sociedades 2024, Chapter III,
-# "Tipo de gravamen reducido para empresas de reducida dimensión",
-# Section "Entidades de reducida dimensión - Artículo 29 LIS".
+# Oracle: LIS disposición transitoria 44ª, added by Ley 7/2024
+# (BOE-A-2024-26694), over LIS Art. 29.1 (BOE-A-2014-12328).
 #
-# Authority: Ley 27/2014 Art. 29 as in force for ejercicios iniciados
-# en 2024 (BOE-A-2014-12328):
-#   - INCN < 1.000.000 EUR: micro-empresa, tipo único 23 %
+# Authority for ejercicios iniciados en 2025, the period this case covers:
+#   - INCN < 1.000.000 EUR: micro-empresa, two-tranche transitional scale
+#   - 21 % on the first 50.000 EUR, 22 % on the remainder
 #   - Base imponible: 100.000,00 EUR
-#   - Cuota íntegra: 100.000,00 x 23 % = 23.000,00 EUR
+#   - Cuota íntegra: 10.500,00 + 50.000,00 x 22 % = 21.500,00 EUR
 #
-# The two-tranche micro-empresa scale (17 % / 20 %) was introduced for
-# ejercicios iniciados en 2025 (Ley 7/2024 Art. 2).  The 2024 filing
-# covered here uses the pre-2025 flat 23 % rate exclusively.
+# The scale is transitional and moves per ejercicio: 21 %/22 % for periods
+# initiated in 2025, 19 %/21 % for 2026, reaching the final Art. 29.1
+# 17 %/20 % scale afterwards. 17 %/20 % is therefore NOT the 2025 window,
+# and periods initiated in 2024 carry the pre-2025 flat 23 % rate instead.
+# The registry encodes exactly this as the `is.modelo-200.tipo-gravamen-pyme`
+# bracket table, keyed on `filing_period`.
 
 
 def test_modelo_200_micro_empresa_pyme_cuota_2024(
@@ -211,7 +213,12 @@ def test_modelo_200_micro_empresa_pyme_cuota_2024(
         modelo="200",
         filing_year=2025,
         period="0A",
-        revision="2024",
+        # Filing year 2025 resolves to the `2025-y-siguientes` revision; the
+        # registry's `2024` revision closes at 2024-12-31. A creation-time
+        # revision may only NAME the law-determined one, never select a
+        # different one, so pinning `2024` here was refused rather than
+        # silently computing ejercicio 2025 under the 2024 flat rate.
+        revision="2025-y-siguientes",
     )
 
     result = invoke_cached_cli(
@@ -559,7 +566,12 @@ def test_modelo_130_malformed_numeric_binding_refuses_not_reclassified(
     assert "--binding" in message
     assert "irpf.previous_year_economic_activity_net_income" in message
     assert "12abc" in message
-    assert "is not a decimal" in message
+    # The rendered sentence is localized -- this envelope comes back in Spanish
+    # ("no es decimal") -- so the prose this replaced only held while the CLI
+    # happened to answer in English. The interpolated flag, key and value above
+    # are locale-independent, and the refusal's own code names the shape error
+    # without depending on any catalogue's wording.
+    assert error["code"] == "REFUSED_MODELO_CALCULATE_DECIMAL_INPUT", error
 
 
 def test_modelo_200_enum_binding_accepts_non_numeric_value(

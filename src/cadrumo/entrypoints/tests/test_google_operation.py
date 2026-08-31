@@ -151,7 +151,7 @@ def test_production_composition_registers_the_facade_owned_definition_and_real_t
 
 def test_google_export_owner_and_composition_keep_one_hexagonal_apply_plus_provenance_route() -> None:
     """The application owner has no adapter dependency; the outer port always calls the provenance service."""
-    owner_source = (Path(__file__).parents[2] / "application" / "export" / "_google_operation.py").read_text(
+    owner_source = (Path(__file__).parents[2] / "application" / "export" / "google_operation.py").read_text(
         encoding="utf-8"
     )
     owner_tree = ast.parse(owner_source)

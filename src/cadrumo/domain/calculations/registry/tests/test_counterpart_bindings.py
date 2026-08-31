@@ -14,15 +14,14 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.counterpart_bindings import (
+from .....core.aggregation import BindingAggregation, BindingAggregationOp
+from ..binding_selector_utils import selector_as_dict
+from ..counterpart_bindings import (
     CounterpartAggregationObservation,
     counterpart_binding_requirements,
     resolve_counterpart_binding_row_values,
     resolve_counterpart_binding_values,
 )
-
-from .....core.aggregation import BindingAggregation, BindingAggregationOp
-from ..binding_selector_utils import selector_as_dict
 from ..errors import RegistryValidationError
 from ..schema import DataBindingDefinition, ModeloRevision
 from ._registry_schema_support import _committed_modelo

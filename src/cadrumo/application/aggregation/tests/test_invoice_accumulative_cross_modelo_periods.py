@@ -51,9 +51,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-from cadrumo.domain.calculations.registry.ids import BindingId
-
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -61,10 +58,12 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.calculations.registry.ids import BindingId
 from ....domain.invoices import InvoiceCatalogue
 from ....domain.iva import InvoiceKind, IvaCategory
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
-from ....domain.modelos import CalculationRevision
+from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -82,6 +81,8 @@ from ...calculations import CalculationObservationRepository, IvaWalletDecisionR
 from ...invoices import build_catalogue_invoice, link_invoice_transaction_catalogues
 from ...modelo._calculation_actions import calculate_modelo_revision_from_bucket_aggregation
 from ...modelo._filed_revision_observation import persist_filed_revision_observation
+from ...modelo._m303_regimen_simplificado_scope import active_taxpayer_profile
+from ...modelo._result_disposition_resolution import resolve_modelo_result_disposition
 from ...modelo._work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -163,8 +164,12 @@ _M130_MANUAL_INPUTS: dict[CasillaId, Decimal] = {
 # ``casilla_values``, not defaulted); mirrors the shared M303 export fixture's
 # ``_MODELO_303_MANUAL_RESULTADO_CASILLA_ZEROS`` without a cross-package import
 # into a sibling test package's private support module.
+# Casilla 18 is NOT listed: the recargo de equivalencia super-reducido cuota
+# is bound to the ledger IVA aggregation, which owns it on this path. A
+# caller zero would override a source-derived liability, so the bucket
+# aggregation refuses it. The scenario declares no recargo supply, so the
+# resolver supplies the same zero from the ledger.
 _M303_MANUAL_RESULTADO_CASILLA_ZEROS: dict[str, Decimal] = {
-    "18": Decimal("0.00"),
     "58": Decimal("0.00"),
     "68": Decimal("0.00"),
     "70": Decimal("0.00"),
@@ -379,11 +384,21 @@ def _calculate_and_file_m303_quarter(secure_objects: SecureObjectRepository, *, 
             work_unit.period, reference="test:invoice-accumulative-cross-modelo"
         ),
     )
+    # A Modelo 303 filing carries a resolved result disposition. Resolve it
+    # through the production boundary against the seeded profile rather than
+    # asserting one here: the disposition is a regulated determination and a
+    # second derivation in a test would be a second authority on it.
     persist_filed_revision_observation(
         revision=revision,
         work_unit=work_unit,
         repository=CalculationObservationRepository(objects=secure_objects),
         captured_at=_FILE_AT,
+        result_disposition=resolve_modelo_result_disposition(
+            work_unit=work_unit,
+            revision=revision,
+            workflow_profile=active_taxpayer_profile(work_unit),
+            period=work_unit.period,
+        ),
     )
     return revision
 

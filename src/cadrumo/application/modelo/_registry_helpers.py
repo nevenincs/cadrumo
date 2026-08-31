@@ -28,9 +28,6 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal
 
-from cadrumo.domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-
 from ...core import CasillaId, Period, validated_casilla_id
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.casilla_membership import (
@@ -43,12 +40,11 @@ from ...domain.calculations.registry.errors import (
     RegistrySnapshotError,
     RegistryValidationError,
 )
+from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from ...domain.calculations.registry.schema_input_kind import InputKind
+from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.calculations.registry.schema_verification import VerificationPredicateDefinition
-from ...domain.modelos import (
-    CalculationRevision,
-    derive_calculation_revision_id_from_revision,
-)
+from ...domain.modelos.calculation_revision import CalculationRevision, derive_calculation_revision_id_from_revision
 from ._action_errors import (
     AmendmentOverrideCasillaError,
     AmendmentVerificationRefusedError,
@@ -64,7 +60,7 @@ from ._registry_resources import (
 # Casilla data types the engine represents on the numeric Decimal channel. This
 # is the one canonical declaration in this package; ``_local_observation_actions.py``
 # imports it rather than re-declaring its own copy.
-_NUMERIC_CASILLA_DATA_TYPES: frozenset[str] = frozenset({"decimal", "money", "integer", "ratio"})
+NUMERIC_CASILLA_DATA_TYPES: frozenset[str] = frozenset({"decimal", "money", "integer", "ratio"})
 
 # A boolean casilla answers on this same Decimal channel, encoded 0 / 1. That is
 # the engine's own representation rather than a convenience: the Modelo 100
@@ -280,7 +276,7 @@ def _reject_non_numeric_casilla_inputs(
     decimal_inputs: Mapping[CasillaId, Decimal],
 ) -> None:
     """Keep the numeric/boolean input-kind policy at this application boundary."""
-    accepted_data_types = _NUMERIC_CASILLA_DATA_TYPES | _BOOLEAN_CASILLA_DATA_TYPES
+    accepted_data_types = NUMERIC_CASILLA_DATA_TYPES | _BOOLEAN_CASILLA_DATA_TYPES
     non_numeric = sorted(
         casilla_id
         for casilla_id in decimal_inputs
@@ -589,6 +585,7 @@ def assert_revision_content_integrity(revision: CalculationRevision) -> None:
 
 
 __all__ = [
+    "NUMERIC_CASILLA_DATA_TYPES",
     "assert_revision_content_integrity",
     "registry_root",
     "reject_incomplete_amendment_casillas",

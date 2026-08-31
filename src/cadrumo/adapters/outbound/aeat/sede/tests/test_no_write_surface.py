@@ -118,7 +118,7 @@ class TestReadPostCanary:
 
         assert len(post_sites) == 1, f"unexpected raw POST call sites: {post_sites}"
         source, _ = post_sites[0]
-        assert source.name == "_notifications.py"
+        assert source.name == "notifications.py"
 
         content = sources[source]
         function_start = content.index("async def fetch_notification_document")

@@ -4,19 +4,16 @@ from __future__ import annotations
 
 import pytest
 
-from ... import core
 from .. import (
-    OPERATOR_ACTION_BY_CONFIRMATION_BLOCK_REASON,
     ConfirmationBlockReason,
     OperatorActionAxis,
 )
-from .. import _confirmation_gate as owner
+from .._confirmation_gate import OPERATOR_ACTION_BY_CONFIRMATION_BLOCK_REASON
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def test_confirmation_action_projection_is_total_and_owned_beside_the_reason() -> None:
-    assert core.OPERATOR_ACTION_BY_CONFIRMATION_BLOCK_REASON is owner.OPERATOR_ACTION_BY_CONFIRMATION_BLOCK_REASON
     assert set(OPERATOR_ACTION_BY_CONFIRMATION_BLOCK_REASON) == set(ConfirmationBlockReason)
     assert set(OPERATOR_ACTION_BY_CONFIRMATION_BLOCK_REASON.values()) <= set(OperatorActionAxis)
     assert (

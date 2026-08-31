@@ -15,63 +15,20 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PACKAGE_ROOT = Path(__file__).parents[1]
 _REPOSITORY_ROOT = _PACKAGE_ROOT.parents[3]
-_SOURCE_SCAN_ROOTS = (_REPOSITORY_ROOT / "src", _REPOSITORY_ROOT / "dev")
-_PUBLIC_MODULE_NAMES = (
-    "actions_classification",
-    "actions_common",
-    "actions_export",
-    "actions_import",
-    "actions_lifecycle",
-    "actions_manual",
-    "actions_split_merge",
-    "aeat_record_projection",
-    "attachment_review",
-    "batch_ingest",
-    "classification_assembly",
-    "classifier_inputs",
-    "closure_findings",
-    "confirm_establishment",
-    "confirmation_gate",
-    "confirmation_record",
-    "consent_withdrawal",
-    "counterparty_establishment",
-    "country_vocabulary_advisory",
-    "deterministic_findings",
-    "document_direction",
-    "document_transcription",
-    "establishment_ladder",
-    "evidence",
-    "evidence_advisory",
-    "evidence_draft",
-    "evidence_input",
-    "evidence_reference",
-    "evidence_split",
-    "evidence_textlayer",
-    "extracted_document_cache",
-    "extraction_draft_store",
-    "filer_establishment",
-    "grounded_reading",
-    "grounding_anchor",
-    "id_resolution",
-    "identity_roles",
-    "invoice_extraction_authority",
-    "llm_classification",
-    "llm_diagnostics",
-    "llm_review_workflow",
-    "models",
-    "participation_read",
-    "party_attribution",
-    "party_colocation",
-    "postal_shape_finding",
-    "preconditions",
-    "preflight",
-    "protocols",
-    "ratios",
-    "regime_contradiction",
-    "review_advisories",
-    "review_projection",
-    "rule_repository",
+_SOURCE_SCAN_ROOTS = (_REPOSITORY_ROOT / "src",)
+_PUBLIC_MODULE_NAMES: tuple[str, ...] = tuple(
+    sorted(path.stem for path in _PACKAGE_ROOT.glob("*.py") if not path.stem.startswith("_"))
 )
+"""Every public defining module in the ledger package, DERIVED not hand-listed.
+
+A hand-maintained tuple went stale the moment a relocation published a module
+without also editing this file: ``transaction_repository`` and
+``usage_ratio_repository`` were published and then read as retired remnants by
+the sibling-import check, because absence from the list is indistinguishable
+from "not public". Deriving the set from the package makes it complete by
+construction, which is the same reasoning the binding-source taxonomy applies to
+its per-family collections.
+"""
 _RETIRED_MODULE_NAMES = tuple(f"_{name}" for name in _PUBLIC_MODULE_NAMES)
 _PACKAGE_FACADE_IMPORT = re.compile(
     r"(?m)^\s*from\s+(?:cadrumo\.application\.ledger|(?:\.+)?application\.ledger|\.+ledger)\s+import\b"

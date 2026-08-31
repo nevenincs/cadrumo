@@ -14,6 +14,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PACKAGE_ROOT = Path(__file__).parents[1]
 _PUBLIC_MODULE_NAMES = (
+    "acquisition_sources",
     "aggregate",
     "authentication",
     "bundle",
@@ -56,6 +57,7 @@ _PUBLIC_MODULE_NAMES = (
     "profile_pointer_ports",
     "profile_record_repository",
     "profile_repository",
+    "profile_summary",
     "projections",
     "prospective_password",
     "recovery_contracts",
@@ -64,6 +66,7 @@ _PUBLIC_MODULE_NAMES = (
     "repository",
     "section_rows",
     "status_projection",
+    "usage_ratio_resolution",
     "validation",
 )
 _PUBLIC_DEFINING_MODULES: tuple[ModuleType, ...] = tuple(

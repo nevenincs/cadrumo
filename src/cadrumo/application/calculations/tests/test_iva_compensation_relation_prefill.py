@@ -10,11 +10,10 @@ from typing import Literal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.relations import materialize_relation_binding_values
-
 from ....core import BindingSourceKind, CasillaId, ObservedHeaderFact, Period, ResultDisposition
+from ....domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.calculations.registry.errors import RegistryValidationError
+from ....domain.calculations.registry.relations import materialize_relation_binding_values
 from ....tests.registry_observations import registry_grounded_modelo_observation, registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext
@@ -23,8 +22,8 @@ from .._iva_compensation_annual_partition import (
     resolve_iva_compensation_annual_partition_binding_values,
 )
 from .._m303_carry_ingress import M303CarryIngressError
-from .._observations_repository import CalculationObservationRepository, ResultDispositionProjection
 from .._relation_prefill import resolve_relations_from_local_store
+from ..observations_repository import CalculationObservationRepository, ResultDispositionProjection
 from ._iva_compensation_history_support import (
     _BOX_97_BINDING,
     _BOX_662_BINDING,

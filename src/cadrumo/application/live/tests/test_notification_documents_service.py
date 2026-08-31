@@ -31,16 +31,19 @@ from __future__ import annotations
 
 import os
 from collections.abc import Iterator
+from datetime import UTC, datetime
 from pathlib import Path, PurePath
 from typing import Union, get_args, get_origin, override
 
 import pytest
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
+from ....adapters.inbound.notificacion import NotificationDocumentReader
 from ....adapters.persistence.storage import AttachmentStore
-from ....adapters.persistence.storage.crypto import encrypt_secure_object_payload
+from ....adapters.persistence.storage.crypto.encrypted_columns import encrypt_secure_object_payload
 from ....core.i18n import tr
 from ....domain.attachments import Attachment, AttachmentKind
+from ....domain.notifications import SancionLiquidacion
 from ....tests.aeat_literal_fixtures import NOTIFICATION_DETALLE_SEDE_URL_FIXTURE
 from ....tests.secure_sql import isolated_runtime_profile
 from ..errors import LiveApplicationInputError
@@ -227,6 +230,66 @@ def test_every_persisted_field_is_classified_by_the_re_store_match() -> None:
     assert not _CALLER_SUPPLIED_FIELDS & _NON_IDENTITY_FIELDS
     assert not _BYTE_DERIVED_FIELDS & _NON_IDENTITY_FIELDS
     assert "fetched_at" in _NON_IDENTITY_FIELDS
+
+
+def _record_fields() -> dict[str, object]:
+    """Return every field of a valid record except the two under test."""
+    return {
+        "certificado_id": CERT_READ,
+        "bucket_id": BUCKET_ID,
+        "attachment_id": "a" * 64,
+        "document_sha256": "a" * 64,
+        "byte_size": 12,
+        "source_url": DETAIL_URL,
+        "fetched_at": datetime(2026, 2, 13, tzinfo=UTC),
+    }
+
+
+def _a_real_reading() -> SancionLiquidacion:
+    """Parse a real sanción out of real bytes with the real reader.
+
+    The reading is genuine rather than hand-built so the both-populated case
+    below is refused for carrying a reading AND a refusal, never for carrying
+    something that was never a valid reading in the first place.
+    """
+    sancion, refusal = NotificationDocumentReader().read(served_document(data=sancion_pdf_bytes()))
+    assert refusal is None, refusal
+    assert sancion is not None
+    return sancion
+
+
+def test_a_record_carrying_both_a_reading_and_a_refusal_is_refused() -> None:
+    """A reading the reader simultaneously declined to vouch for is incoherent.
+
+    Whichever of the two a later consumer believed, the other says it is
+    wrong, and nothing in the record decides between them.
+    """
+    with pytest.raises(ValidationError, match="both a reading and a refusal"):
+        NotificationDocumentRecord(
+            **_record_fields(),
+            sancion=_a_real_reading(),
+            parse_refusal="SancionParseError: no text layer",
+        )
+
+
+def test_a_record_carrying_neither_a_reading_nor_a_refusal_is_refused() -> None:
+    """The dangerous state: it reads as "no figures" when nobody looked.
+
+    An operator meeting a document with no reading and no stated reason has
+    nothing telling them to go read the served act themselves, and a sanción
+    they never read is one they never answer.
+    """
+    with pytest.raises(ValidationError, match="neither a reading nor a refusal"):
+        NotificationDocumentRecord(**_record_fields(), sancion=None, parse_refusal=None)
+
+
+def test_a_record_carrying_exactly_one_of_the_two_is_accepted() -> None:
+    """Anti-vacuity: the validator refuses the two states, not the field pair."""
+    reading = NotificationDocumentRecord(**_record_fields(), sancion=_a_real_reading())
+    refused = NotificationDocumentRecord(**_record_fields(), parse_refusal="SancionParseError: no text layer")
+
+    assert reading.parse_refusal is None
+    assert refused.sancion is None
 
 
 # ── Delegation to the single-writer primitive ──────────────────────────────

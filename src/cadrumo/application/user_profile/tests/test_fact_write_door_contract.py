@@ -23,9 +23,8 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.user_profile.fact_write import ProfileFactWriteDoor
-
 from ....core.directory_scan import scan_directory
+from ..fact_write import ProfileFactWriteDoor
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -42,8 +41,8 @@ _PRODUCTION_ROOTS: tuple[Path, ...] = (
 
 _ENROLLED_DOOR_MODULES: frozenset[str] = frozenset(
     {
-        "application/wizard/_persistence.py",
-        "application/wizard/_commands.py",
+        "application/wizard/persistence.py",
+        "application/wizard/commands.py",
         "application/wizard/descendant_door.py",
         "application/user_profile/fact_write.py",
         "application/user_profile/section_rows.py",

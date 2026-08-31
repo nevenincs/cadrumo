@@ -84,11 +84,11 @@ class InventoryStockLayerPayload(OutputSchema):
 class InventoryAcquisitionCostSummaryPayload(OutputSchema):
     """Operator-safe acquisition summary without evidence identities."""
 
-    consideration_excluding_iva: _NonNegativeAmount  # type: ignore[valid-type]
-    directly_attributable_cost_total: _NonNegativeAmount  # type: ignore[valid-type]
-    nonrecoverable_iva_included: _NonNegativeAmount  # type: ignore[valid-type]
-    recoverable_iva_excluded: _NonNegativeAmount  # type: ignore[valid-type]
-    total_acquisition_cost: _NonNegativeAmount  # type: ignore[valid-type]
+    consideration_excluding_iva: _NonNegativeAmount  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
+    directly_attributable_cost_total: _NonNegativeAmount  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
+    nonrecoverable_iva_included: _NonNegativeAmount  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
+    recoverable_iva_excluded: _NonNegativeAmount  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
+    total_acquisition_cost: _NonNegativeAmount  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
     component_count: int = Field(ge=0)
     evidence_count: int = Field(ge=1)
     complete: bool
@@ -705,7 +705,7 @@ class EvidenceReviewListResult(OutputSchema):
     rows: list[EvidenceReviewRowPayload] = []
 
 
-class EvidenceReviewShowResult(OutputSchema):
+class EvidenceReviewViewResult(OutputSchema):
     """JSON envelope for ``aeat app ledger evidence review show``.
 
     Everything the review gate requires a person to have in front of them for

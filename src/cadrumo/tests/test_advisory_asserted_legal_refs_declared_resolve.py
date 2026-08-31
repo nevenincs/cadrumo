@@ -42,16 +42,15 @@ from typing import TYPE_CHECKING, NamedTuple
 
 import pytest
 
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.legal import assert_legal_ref_ids_resolve
-
 from ..domain.calculations.registry.authority import bundled_authority
+from ..domain.calculations.registry.errors import RegistryValidationError
+from ..domain.calculations.registry.legal import assert_legal_ref_ids_resolve
 from ._inventory import production_ast_items, repo_relative
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping
 
-    from cadrumo.domain.calculations.registry.schema_references import LegalReference
+    from ..domain.calculations.registry.schema_references import LegalReference
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -64,7 +63,7 @@ _DECLARATION_KEYWORD = "asserted_legal_refs"
 #: which drifts on any edit above it. Each entry states its reason. Empty by
 #: construction: no production site declares the field yet, and the first one to
 #: do so should declare literals rather than earn an exemption.
-_UNRESOLVABLE_DECLARATION_EXEMPTIONS: Mapping[tuple[str, str], str] = {}
+_UNRESOLVABLE_DECLARATION_EXEMPTIONS: Mapping[tuple[str, str], str] = dict[tuple[str, str], str]()
 
 
 def _display_path(path: Path) -> str:

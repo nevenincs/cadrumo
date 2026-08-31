@@ -12,7 +12,7 @@ from ...core import (
     IvaDeductionFactKind,
 )
 from ...core.identity import ContentDigest
-from ._flow import IvaFlowDirection
+from ._flow import IvaFlowDirection, is_deducible_flow
 from ._schema import IvaCategory, IvaRateKind
 from .errors import IvaValidationError
 
@@ -157,10 +157,7 @@ def _validate_non_rectification_category(
 
 
 def _validate_domestic_deduction_category(category: IvaCategory, flow_direction: IvaFlowDirection) -> None:
-    if category not in _DOMESTIC_DEDUCTION_CATEGORIES or flow_direction not in {
-        IvaFlowDirection.SOPORTADO,
-        IvaFlowDirection.INVERSION_SUJETO_PASIVO,
-    }:
+    if category not in _DOMESTIC_DEDUCTION_CATEGORIES or not is_deducible_flow(flow_direction):
         raise IvaValidationError(
             "domestic deduction kind requires a domestic input or recipient reverse-charge fact",
         )

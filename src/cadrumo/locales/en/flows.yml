@@ -129,6 +129,7 @@ flows:
           ledger_renta_income_aggregation: Income ledger totals
           ledger_transaction: Ledger transaction
           m303_regimen_simplificado_annual_summary: Modelo 303 simplified-regime summary
+          m347_third_party_operation: Third-party operation
           manual_input: Manual input
           payable_invoice: Supplier invoice
           previous_filing: Previous filing
@@ -205,6 +206,30 @@ flows:
       verification_outcome: Verification outcome
       work_unit: Work unit
     title: Modelo {modelo} · {filing_year} · {period}
+  modelo_select:
+    column:
+      filing_year: Filing year
+      modelo: Modelo
+      name: Name
+      period: Period
+      state: State
+    empty: No work units are registered on this profile yet.
+    title: Select a modelo work unit
+  passphrase:
+    cancel_button: Cancel
+    change_button: Change password
+    confirm_label: Confirm new password
+    current_label: Current password
+    intro: This replaces the password protecting your profile. The data it protects
+      is not re-encrypted, only re-wrapped.
+    new_hint: At least 12 characters, mixing letters, numbers or symbols.
+    new_label: New password
+    refusal:
+      change_failed: The password could not be changed.
+      confirmation_mismatch: The confirmation does not match the new password.
+      current_required: Enter your current password.
+    section: Password
+    title: Change your password
   progress:
     current_answer: 'Current answer: {value}'
     current_answer_secret: 'Current answer: (hidden)'
@@ -254,6 +279,7 @@ flows:
     header: Review - {answered} questions answered.
     header_tui: 'Review - {answered} answered, {remaining} required still open, ready
       to submit: {eligible}'
+    header_tui_stage_label: Review
     mode_create: profile creation
     mode_modify: profile editing
     orphan_marker: (no longer asked)

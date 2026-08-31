@@ -1,6 +1,4 @@
 [revisions."2025"]
-# Applicability grade: the Plan de Ahorro a Largo Plazo declaration is filed by the bank
-# or insurer managing the plan, never by the saver.
 authority_grade = "applicability"
 valid_from = 2025-01-01
 period_selector = { years = [2025], periods = ["0A"] }

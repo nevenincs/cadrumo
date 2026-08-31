@@ -15,7 +15,7 @@ import pytest
 
 from ....core import AuthProviderDescription, Period
 from ....core.errors import BaseSeverity
-from .. import ModeloDraftStatus, ModeloFinding, Preflight, SubmissionPreflightError
+from .. import ModeloDraftStatus, ModeloFinding, ModeloFindingLike, Preflight, SubmissionPreflightError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -41,7 +41,7 @@ class _UnusedAuthProvider:
 class _DraftWithFindings:
     """A ``ModeloDraftLike`` conformer carrying an arbitrary findings tuple."""
 
-    def __init__(self, findings: tuple[object, ...]) -> None:
+    def __init__(self, findings: tuple[ModeloFindingLike, ...]) -> None:
         self._findings = findings
 
     @property
@@ -69,7 +69,7 @@ class _DraftWithFindings:
         return ()
 
     @property
-    def findings(self) -> tuple[object, ...]:
+    def findings(self) -> tuple[ModeloFindingLike, ...]:
         return self._findings
 
 

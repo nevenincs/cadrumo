@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:c008a8fbfc1cc38a9d7207fa782c1303860d833ed89419f7d04ab50b4c90a86a'
+body_hash: 'sha256:08ae1f2beb123a43f0af46e80a68eec8c5105a1bb0ecd64faff2872b4df0dcfd'
 related: []
 ---
 
@@ -333,9 +333,83 @@ spelling to copy and no gate to catch a bad guess.
 ### two-local-inbound-verbs-in-one-modelo-family | medium | `filing-record import` and `filing-record observe-local` both ingest a local file into the same family.
 
 `aeat app modelo filing-record import --file` and `aeat app modelo filing-record
-observe-local --file` both take a local file into the filing-record family. The
-first declares `filing` capability, the second does not, so they are not simple
-duplicates — but nothing in the surface tells an operator which local file goes
-to which verb, and `observe-local` is not a transport token under any grammar.
-Whether this is one verb with two modes or two genuinely different ingests is
-undetermined and must be settled before either is renamed.
+observe-local --file` both take a local file into the filing-record family.
+
+**Settled 2026-08-26; the finding is withdrawn as a conflation.** The two verbs
+sit on opposite sides of the official-AEAT-evidence boundary, which
+`no-silent-under-declaration` makes the single most load-bearing distinction in
+the persistence layer. `import` takes `--evidence-kind` from
+`{aeat_justificante_pdf, aeat_csv_register, aeat_live_capture}` — every one of
+which `is_official_aeat` returns true for — and persists an externally filed
+return as a baseline filing record. `observe-local` persists what its own help
+calls a "cert-free reconstruction of a past filing": a non-official operator
+observation for calculation prefill, carrying an explicit
+`--replace-official-evidence` flag precisely because it is not official by
+default.
+
+Merging them, or renaming either toward the other, would put an official and a
+non-official intake behind one verb. That is the exact conflation the rule exists
+to prevent, and it would be a safety regression rather than a tidying. Both stay.
+
+What survives is not a defect: the verb names already carry the distinction that
+matters, and `--file` on each is correctly that verb's primary local input under
+the D3 role axis.
+
+### single-subject-read-verb-is-split-between-view-and-show | medium | Seventeen leaves read one subject with `view` and eight with `show`, and the help text uses the two words interchangeably.
+
+`list` names the many-subject read on thirty-three leaves and is uncontested.
+The single-subject read is not: seventeen leaves use `view` and eight use
+`show`, with no semantic line between them.
+
+The help text proves they are the same operation. `aeat app modelo
+filing-record view` is documented as "Show one filing record by id"; `aeat
+config auth diagnostics show` as "Show one redacted encrypted auth diagnostic";
+`aeat app modelo m036 view` as "View one recorded M036 declaration by id". The
+verb and its own description disagree on which word names the act.
+
+The eight `show` leaves are `app ledger counterparty`, `app ledger evidence
+review`, `app modelo audit`, `config auth diagnostics`, `config google
+credential-source`, `config profile capabilities`, `config profile`, and
+`config storage`. Four of their families pair `show` with `list`, which is
+exactly the `list`/`view` pair the other seventeen use under a different name.
+
+This is the same transferability defect the transport findings describe, in the
+read half of the surface: an operator who learns `list` then `view` on one
+family guesses wrong on the next. It is NOT covered by
+`2026-08-26-cli-root-verb-homes-adr`, whose D2 grammar governs data movement
+only, so it needs its own ruling before any rename.
+
+### verb-vocabulary-sweep-beyond-the-read-verb | resolved | Three further synonym groups were examined against the tree; all three are principled, and only the read verb needed standardising.
+
+The `view`/`show` split was a genuine conflation and is fixed. The same sweep
+examined every other semantic group and found no second one.
+
+**`remove` (7) versus `delete` (1) is a real distinction, not a split.** Every
+`remove` leaf takes a member out of a set — evidence, invoice, ledger row,
+certificate source, certificate secret, collab recipient, descendiente. The one
+`delete` leaf, `config profile delete`, destroys a whole entity and its local
+state. All eight declare `destructive = True`, so `delete` is not carrying a
+severity signal that `remove` lacks; it is carrying an entity-versus-membership
+signal, which is the ordinary CLI reading. Left alone.
+
+**`status` (9) versus `check` (6) is a real distinction.** `status` reports
+current state offline; `check` validates against an authority. The two families
+that carry both prove the line rather than blur it: `config auth apoderado
+status` is documented "Show active apoderado configuration" and `apoderado
+check` as "Verify against AEAT ... Use 'status' for the offline read". The help
+cross-references the sibling, which is what a distinction looks like when it is
+deliberate. Left alone.
+
+**`config auth apoderado check` can never succeed, and that is deliberate.**
+Its handler calls `ApoderadoService.check` solely to reach a registered refusal:
+the live AEAT read at that boundary is sealed by
+`sensitive-financial-data-secure-storage-only`, and the code comment states it
+refuses rather than silently re-reading stored configuration and presenting it
+as a live result. The verb exists so an operator who reaches for live
+verification gets an explanation and a pointer to the offline read, instead of
+an unrecognised-command error. Recorded as examined, not as dead surface.
+
+The `add`/`create`/`register` and `set`/`configure`/`update` groups were
+inspected and split by subject rather than by synonym — `add` to a collection,
+`create` an entity, `register` a credential — matching the CREATING-verb
+category the transport grammar gained on 2026-08-26.

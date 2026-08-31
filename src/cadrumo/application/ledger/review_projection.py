@@ -18,8 +18,8 @@ from ...domain.transactions import (
     TransactionCatalogue,
 )
 from ..bucket_event_repository import bucket_event_history_repository
-from ..review import LedgerReviewStatus
-from .actions_common import _display_decimal, _require_transaction
+from ..review.filter import LedgerReviewStatus
+from .actions_common import display_decimal, require_transaction
 from .models import LedgerReviewQuery, LedgerReviewQueryResult, LedgerReviewRow, LedgerTransactionPayload
 
 
@@ -118,7 +118,7 @@ def _filter_ledger_review_rows(
         )
         rows = tuple(transaction for transaction in rows if transaction.transaction_id in matching_ids)
     if query.transaction_id is not None:
-        _require_transaction(catalogue, query.transaction_id)
+        require_transaction(catalogue, query.transaction_id)
         rows = tuple(transaction for transaction in rows if transaction.transaction_id == query.transaction_id)
     return rows
 
@@ -153,7 +153,7 @@ def _ledger_review_row(
     row: dict[str, object] = {
         "id": transaction.transaction_id,
         "date": effective_date,
-        "amount": _display_decimal(transaction.raw.amount),
+        "amount": display_decimal(transaction.raw.amount),
         "description": transaction.raw.description,
         "status": ledger_transaction_review_status(transaction),
     }
@@ -169,7 +169,7 @@ def _transaction_ids_for_review_event_filters(
     issue: str | None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None,
 ) -> frozenset[str]:
-    event_repository = _bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
+    event_repository = resolve_bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
     events = event_repository.load().for_bucket(
         bucket_id,
         event_types=(
@@ -189,7 +189,7 @@ def _transaction_ids_for_review_event_filters(
     return frozenset(matching)
 
 
-def _bucket_event_repository(
+def resolve_bucket_event_repository(
     *,
     bucket_id: str,
     repository: BucketEventHistoryRepositoryProtocol | None,

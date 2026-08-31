@@ -820,8 +820,21 @@ def test_record_design_pdf_corpus_is_discovered_and_parseable() -> None:
     # rename/removal trips this gate rather than silently shrinking the corpus.
     assert discovered >= _NON_FIELD_ROW_CORPUS_PDFS
 
+    # A design the catalogue declares `provenance_only` is corpus evidence, not a
+    # machine-readable authority, so it is discovered above but never parsed here.
+    # Read from the declaration rather than from a parse failure: a failure cannot
+    # tell provenance from a broken design.
+    _, catalogues = _committed_registry_tree()
+    provenance_only = {
+        Path(*source.corpus_path.split("/")[3:])
+        for source in catalogues.sources.values()
+        if source.kind == "record_design" and source.design_authority == "provenance_only"
+    }
     field_row_pdfs = tuple(
-        path for path in pdfs if path.relative_to(_RECORD_DESIGN_ROOT) not in _NON_FIELD_ROW_CORPUS_PDFS
+        path
+        for path in pdfs
+        if path.relative_to(_RECORD_DESIGN_ROOT) not in _NON_FIELD_ROW_CORPUS_PDFS
+        and path.relative_to(_RECORD_DESIGN_ROOT) not in provenance_only
     )
     parsed = {
         path.relative_to(_RECORD_DESIGN_ROOT): sheets
@@ -846,12 +859,49 @@ def test_record_design_pdf_corpus_is_discovered_and_parseable() -> None:
     assert sum(len(sheet.fields) for sheets in parsed.values() for sheet in sheets) > len(field_row_pdfs)
 
 
+def test_every_provenance_only_design_still_refuses_to_parse() -> None:
+    """The declaration's teeth: a provenance stamp must stay earned.
+
+    ``design_authority = "provenance_only"`` takes a design out of the
+    parseability sweeps, so on its own it is an exemption anyone could hand out.
+    This is the cross-check against physical evidence that keeps it honest: every
+    stamped design must ACTUALLY still refuse to parse. The day one parses
+    cleanly, this gate reds and forces the promotion reconsideration the modelo
+    184 regression already asks for -- "reconsider promotion only when strict
+    parsing produces complete records starting at position 1".
+
+    Mis-stamping a genuinely authoritative design would otherwise drop it from
+    parse coverage in silence, which is the one way this field can do harm.
+    """
+    _, catalogues = _committed_registry_tree()
+    stamped = sorted(
+        (source.id, bundled_path() / source.corpus_path)
+        for source in catalogues.sources.values()
+        if source.kind == "record_design" and source.design_authority == "provenance_only"
+    )
+
+    assert stamped, "no design is stamped provenance_only; this gate would pass vacuously"
+
+    parsed_anyway = []
+    for source_id, path in stamped:
+        try:
+            extract_record_design(path)
+        except RegistryValidationError:
+            continue
+        parsed_anyway.append(source_id)
+
+    assert not parsed_anyway, (
+        "these designs are stamped provenance_only but parse cleanly, so the stamp is no longer "
+        f"earned -- promote them or correct the stamp: {parsed_anyway}"
+    )
+
+
 def test_registered_record_design_sources_are_discovered_and_parseable() -> None:
     _, catalogues = _committed_registry_tree()
     sources = {
         source_id: bundled_path() / source.corpus_path
         for source_id, source in catalogues.sources.items()
-        if source.kind == "record_design"
+        if source.kind == "record_design" and source.design_authority == "authoritative"
     }
 
     source_items = tuple(sorted(sources.items()))
@@ -1243,6 +1293,7 @@ def test_a_declared_end_of_record_terminator_is_separated_and_kept() -> None:
     envelopes = [sheet.variable_envelope for sheet in extract_record_design(design).accept_partial()]
     envelope = next(item for item in envelopes if item is not None)
 
+    assert isinstance(envelope.closing, RecordDesignRelativeSuffixMarker)
     assert envelope.closing.length == 18, "the closing identifier must remain the closing identifier"
     assert envelope.terminator is not None, (
         "the end-of-record row was consumed instead of kept; its two bytes are part of the record"
@@ -1341,6 +1392,7 @@ def test_a_design_declaring_no_terminator_does_not_acquire_one() -> None:
         "a design that declares no end-of-record row acquired one; peeling must be conditional "
         "on the row being present, never inferred from the closing's shape"
     )
+    assert isinstance(envelope.closing, RecordDesignRelativeSuffixMarker)
     assert envelope.closing.length == 18
 
 
@@ -1851,4 +1903,8 @@ class TestSinglePositionCorrection:
         declarante = next(sheet for sheet in extraction.sheets if sheet.name.startswith("Tipo 1"))
         corrected = next(field for field in declarante.fields if field.offset == 58)
         assert (corrected.length, corrected.type_code) == (1, "Alfabético")
-        assert [correction.position for correction in declarante.corrections] == [58]
+        positions = []
+        for correction in declarante.corrections:
+            assert isinstance(correction, RecordDesignSinglePositionCorrection)
+            positions.append(correction.position)
+        assert positions == [58]

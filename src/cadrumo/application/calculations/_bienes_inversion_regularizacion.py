@@ -47,8 +47,8 @@ from ..aggregation import (
     storage_degradation_resolution,
 )
 from ..bienes_inversion import BienesInversionIvaRegisterRepository
-from ._observations_repository import CalculationObservationRepository
 from ._revision_carry_gate import revision_carry_outcome
+from .observations_repository import CalculationObservationRepository
 
 #: The Modelo 303 casilla the register feeds. Deducciones block, "Regularización
 #: de bienes de inversión" (LIVA arts. 107-110).

@@ -10,14 +10,7 @@ from secrets import compare_digest
 from threading import RLock
 from typing import Protocol, cast, runtime_checkable
 
-from pydantic import BaseModel
-
-from cadrumo.application.operations.persistence.journal import (
-    OperationObservationReader,
-    OperationObservationUnknownOperationError,
-    OperationPersistedSnapshot,
-    OperationSecureReferenceStore,
-)
+from pydantic import BaseModel, TypeAdapter, ValidationError
 
 from ...core import (
     OperationCancellation,
@@ -52,6 +45,12 @@ from .frontend_contracts import (
     OperationResponseMutationResultV1,
     OperationResponseMutationSuccessV1,
     OperationResponseRejectRequestV1,
+    OperationResultProjectionRefusalCode,
+    OperationResultProjectionRefusalV1,
+    OperationResultProjectionRequestV1,
+    OperationResultProjectionResultV1,
+    OperationResultProjectionSuccessV1,
+    OperationResultProjectionVersionHeader,
     OperationReviewProjectionRefusalCode,
     OperationReviewProjectionRefusalV1,
     OperationReviewProjectionRequestV1,
@@ -76,11 +75,18 @@ from .interactions import (
     OperationResponseToken,
 )
 from .models import OperationId
+from .persistence.journal import (
+    OperationObservationReader,
+    OperationObservationUnknownOperationError,
+    OperationPersistedSnapshot,
+    OperationSecureReferenceStore,
+)
 from .registry import OperationRegistry, operation_public_schema_reference
 from .secret_submission import zeroize_secret_buffer
 
 _SUPPORTED_VERSION = 1
 _READ_LIMIT = 1
+_CONTENT_DIGEST_ADAPTER: TypeAdapter[ContentDigest] = TypeAdapter(ContentDigest)
 
 
 @runtime_checkable
@@ -234,7 +240,7 @@ class BoundOperationSecureResponseAuthority:
         object.__setattr__(self, "_closed", True)
 
 
-class _UnavailableOperationSecureResponseAuthority:
+class UnavailableOperationSecureResponseAuthority:
     async def permitted_intents(
         self,
         request: OperationResponseControlRequestV1,
@@ -281,7 +287,7 @@ class OperationResponseCapability:
         self.__handle = handle
         self.__closed = False
 
-    def _matches(
+    def matches(
         self,
         operation_id: OperationId,
         actor_ref: OperationActorReference,
@@ -354,10 +360,10 @@ class OperationResponseAuthorityBroker:
         with self._lock:
             entry = self._entries.get(request.operation_id)
             if entry is None:
-                return _UnavailableOperationSecureResponseAuthority()
+                return UnavailableOperationSecureResponseAuthority()
             actor_ref, capability_digest, issued_pending, issued_token = entry
             valid = (
-                capability._matches(request.operation_id, actor_ref, capability_digest)
+                capability.matches(request.operation_id, actor_ref, capability_digest)
                 and request.actor_ref == actor_ref
                 and issued_pending == pending
                 and issued_token is not None
@@ -366,12 +372,12 @@ class OperationResponseAuthorityBroker:
                 and pending.request.revision == request.revision
             )
             if not valid:
-                return _UnavailableOperationSecureResponseAuthority()
+                return UnavailableOperationSecureResponseAuthority()
             self._entries.pop(request.operation_id)
             token = issued_token
         capability.close()
+        assert token is not None
         try:
-            assert token is not None
             return BoundOperationSecureResponseAuthority.bind(
                 operation_id=request.operation_id,
                 interaction_id=request.interaction_id,
@@ -421,10 +427,10 @@ class OperationReviewProjectionService:
                 requested_version=_SUPPORTED_VERSION,
             )
         reference = request.reference
-        snapshot = await _read_snapshot(self.reader, reference.operation_id)
+        snapshot = await read_snapshot(self.reader, reference.operation_id)
         if snapshot is None:
             return _review_refusal(OperationReviewProjectionRefusalCode.UNKNOWN_OPERATION, requested_version=1)
-        if isinstance(snapshot, _UnavailableSnapshot):
+        if isinstance(snapshot, UnavailableSnapshot):
             return _review_refusal(
                 OperationReviewProjectionRefusalCode.REVIEW_PROJECTION_UNAVAILABLE,
                 requested_version=1,
@@ -518,10 +524,10 @@ class OperationWorkspaceRefreshTargetService:
                 OperationWorkspaceRefreshTargetRefusalCode.UNSAFE_REFRESH_TARGET,
                 requested_version=1,
             )
-        snapshot = await _read_snapshot(self.reader, request.operation_id)
+        snapshot = await read_snapshot(self.reader, request.operation_id)
         if snapshot is None:
             return _refresh_refusal(OperationWorkspaceRefreshTargetRefusalCode.UNKNOWN_OPERATION, requested_version=1)
-        if isinstance(snapshot, _UnavailableSnapshot):
+        if isinstance(snapshot, UnavailableSnapshot):
             return _refresh_refusal(
                 OperationWorkspaceRefreshTargetRefusalCode.UNSAFE_REFRESH_TARGET,
                 requested_version=1,
@@ -586,6 +592,124 @@ class OperationWorkspaceRefreshTargetService:
 
 
 @dataclass(frozen=True, slots=True)
+class OperationResultProjectionService:
+    """Resolve safe public settled-result projections after terminal success.
+
+    Symmetric with :class:`OperationReviewProjectionService`: the private
+    settled result is resolved behind the secure operand port and handed,
+    with the safe terminal receipt, to the registered domain projector. The
+    private result type never crosses this boundary; only the projector's
+    typed public output does.
+    """
+
+    reader: OperationObservationReader
+    registry: OperationRegistry
+    operands: OperationSecureReferenceStore
+
+    async def resolve[ResultProjectionT: BaseModel](
+        self,
+        request: OperationResultProjectionVersionHeader | OperationResultProjectionRequestV1,
+    ) -> OperationResultProjectionResultV1[ResultProjectionT]:
+        """Resolve the exact registered public result projection or a refusal."""
+        if request.result_projection_version != _SUPPORTED_VERSION:
+            return _result_projection_refusal(
+                OperationResultProjectionRefusalCode.UNSUPPORTED_VERSION,
+                requested_version=request.result_projection_version,
+            )
+        if not isinstance(request, OperationResultProjectionRequestV1):
+            return _result_projection_refusal(
+                OperationResultProjectionRefusalCode.RESULT_PROJECTION_UNAVAILABLE,
+                requested_version=1,
+            )
+        snapshot = await read_snapshot(self.reader, request.operation_id)
+        if snapshot is None:
+            return _result_projection_refusal(
+                OperationResultProjectionRefusalCode.UNKNOWN_OPERATION,
+                requested_version=1,
+            )
+        if isinstance(snapshot, UnavailableSnapshot):
+            return _result_projection_refusal(
+                OperationResultProjectionRefusalCode.RESULT_PROJECTION_UNAVAILABLE,
+                requested_version=1,
+            )
+        if snapshot.lifecycle is not OperationLifecycle.TERMINAL or snapshot.terminal_receipt is None:
+            return _result_projection_refusal(
+                OperationResultProjectionRefusalCode.OPERATION_NOT_TERMINAL,
+                requested_version=1,
+            )
+        if snapshot.revision != request.terminal_revision:
+            return _result_projection_refusal(
+                OperationResultProjectionRefusalCode.STALE_OPERATION_REVISION,
+                requested_version=1,
+            )
+        receipt = snapshot.terminal_receipt
+        # A settled result is resolvable whenever the receipt carries one,
+        # not only on OperationTerminalCondition.SUCCEEDED: the accepted
+        # terminal-reference invariant (validate_terminal_reference_meaning)
+        # forbids result_ref only for REFUSED, so a FAILED settlement that
+        # still committed partial evidence remains genuinely resolvable here.
+        if receipt.result_ref is None:
+            return _result_projection_refusal(
+                OperationResultProjectionRefusalCode.OPERATION_NOT_SUCCESSFUL,
+                requested_version=1,
+            )
+        try:
+            registration = self.registry.lookup_public_registration(snapshot.identity.definition_id)
+        except Exception:
+            return _result_projection_refusal(
+                OperationResultProjectionRefusalCode.DEFINITION_CONTRACT_MISMATCH,
+                requested_version=1,
+            )
+        contract = registration.contract
+        if (
+            snapshot.definition_contract_digest != contract.definition_contract_digest
+            or request.definition_contract_digest != contract.definition_contract_digest
+        ):
+            return _result_projection_refusal(
+                OperationResultProjectionRefusalCode.DEFINITION_CONTRACT_MISMATCH,
+                requested_version=1,
+            )
+        if contract.result_schema is None or registration.result_projector is None:
+            return _result_projection_refusal(
+                OperationResultProjectionRefusalCode.RESULT_PROJECTION_UNAVAILABLE,
+                requested_version=1,
+            )
+        if request.result_schema != contract.result_schema:
+            return _result_projection_refusal(
+                OperationResultProjectionRefusalCode.RESULT_SCHEMA_MISMATCH,
+                requested_version=1,
+            )
+        try:
+            digest = _CONTENT_DIGEST_ADAPTER.validate_python(receipt.result_ref)
+        except ValidationError:
+            return _result_projection_refusal(
+                OperationResultProjectionRefusalCode.RESULT_PROJECTION_UNAVAILABLE,
+                requested_version=1,
+            )
+        try:
+            binding = self.registry.lookup_public_schema_binding(request.result_schema)
+            definition = self.registry.lookup(snapshot.identity.definition_id)
+            if definition.result_type is None:
+                raise TypeError("result-less operation definition cannot resolve a settled result")
+            resolved = await self.operands.resolve(digest, definition.result_type)
+            projected = registration.result_projector(resolved, receipt)
+            del resolved
+            if type(projected) is not binding.model_type:
+                raise TypeError("result projector returned an unregistered model")
+            validated = binding.model_type.model_validate(projected.model_dump(mode="python"))
+            return OperationResultProjectionSuccessV1[ResultProjectionT](
+                result_schema=binding.identity,
+                definition_contract_digest=contract.definition_contract_digest,
+                projection=cast(ResultProjectionT, validated),
+            )
+        except Exception:
+            return _result_projection_refusal(
+                OperationResultProjectionRefusalCode.RESULT_PROJECTION_UNAVAILABLE,
+                requested_version=1,
+            )
+
+
+@dataclass(frozen=True, slots=True)
 class OperationResponseControlService:
     """Inspect and execute safe REVIEW response control at the public boundary."""
 
@@ -609,10 +733,10 @@ class OperationResponseControlService:
                 OperationResponseControlRefusalCode.RESPONSE_AUTHORITY_UNAVAILABLE,
                 requested_version=1,
             )
-        snapshot = await _read_snapshot(self.reader, request.operation_id)
+        snapshot = await read_snapshot(self.reader, request.operation_id)
         if snapshot is None:
             return _response_refusal(OperationResponseControlRefusalCode.UNKNOWN_OPERATION, requested_version=1)
-        if isinstance(snapshot, _UnavailableSnapshot):
+        if isinstance(snapshot, UnavailableSnapshot):
             return _response_refusal(
                 OperationResponseControlRefusalCode.RESPONSE_AUTHORITY_UNAVAILABLE,
                 requested_version=1,
@@ -681,10 +805,10 @@ class OperationResponseControlService:
                 OperationResponseControlRefusalCode.RESPONSE_AUTHORITY_UNAVAILABLE,
                 requested_version=1,
             )
-        snapshot = await _read_snapshot(self.reader, request.operation_id)
+        snapshot = await read_snapshot(self.reader, request.operation_id)
         if snapshot is None:
             return _response_refusal(OperationResponseControlRefusalCode.UNKNOWN_OPERATION, requested_version=1)
-        if isinstance(snapshot, _UnavailableSnapshot) or snapshot.pending_interaction is None:
+        if isinstance(snapshot, UnavailableSnapshot) or snapshot.pending_interaction is None:
             return _response_refusal(
                 OperationResponseControlRefusalCode.RESPONSE_NOT_PENDING,
                 requested_version=1,
@@ -761,10 +885,10 @@ class OperationCancellationService:
                 OperationCancellationRefusalCode.CANCELLATION_UNAVAILABLE,
                 requested_version=1,
             )
-        snapshot = await _read_snapshot(self.reader, request.operation_id)
+        snapshot = await read_snapshot(self.reader, request.operation_id)
         if snapshot is None:
             return _cancellation_refusal(OperationCancellationRefusalCode.UNKNOWN_OPERATION, requested_version=1)
-        if isinstance(snapshot, _UnavailableSnapshot):
+        if isinstance(snapshot, UnavailableSnapshot):
             return _cancellation_refusal(
                 OperationCancellationRefusalCode.CANCELLATION_UNAVAILABLE,
                 requested_version=1,
@@ -817,7 +941,7 @@ class OperationCancellationService:
                 cancellation_acknowledged=successor.cancellation_acknowledged_at is not None,
             )
         except Exception:
-            latest = await _read_snapshot(self.reader, request.operation_id)
+            latest = await read_snapshot(self.reader, request.operation_id)
             if isinstance(latest, OperationPersistedSnapshot) and latest.revision != request.expected_revision:
                 return _cancellation_refusal(
                     OperationCancellationRefusalCode.STALE_OPERATION_REVISION,
@@ -849,10 +973,10 @@ class OperationDetachService:
             )
         if not isinstance(request, OperationDetachRequestV1):
             return _detach_refusal(OperationDetachRefusalCode.DETACH_NOT_ALLOWED, requested_version=1)
-        snapshot = await _read_snapshot(self.reader, request.operation_id)
+        snapshot = await read_snapshot(self.reader, request.operation_id)
         if snapshot is None:
             return _detach_refusal(OperationDetachRefusalCode.UNKNOWN_OPERATION, requested_version=1)
-        if isinstance(snapshot, _UnavailableSnapshot):
+        if isinstance(snapshot, UnavailableSnapshot):
             return _detach_refusal(OperationDetachRefusalCode.DETACH_NOT_ALLOWED, requested_version=1)
         if snapshot.revision != request.expected_revision:
             return _detach_refusal(OperationDetachRefusalCode.STALE_OPERATION_REVISION, requested_version=1)
@@ -873,21 +997,21 @@ class OperationDetachService:
             return _detach_refusal(OperationDetachRefusalCode.DETACH_NOT_ALLOWED, requested_version=1)
 
 
-class _UnavailableSnapshot:
+class UnavailableSnapshot:
     pass
 
 
-async def _read_snapshot(
+async def read_snapshot(
     reader: OperationObservationReader,
     operation_id: OperationId,
-) -> OperationPersistedSnapshot | _UnavailableSnapshot | None:
+) -> OperationPersistedSnapshot | UnavailableSnapshot | None:
     try:
         materialization = await reader.read_observation(operation_id, 0, limit=_READ_LIMIT)
         return materialization.snapshot
     except OperationObservationUnknownOperationError:
         return None
     except Exception:
-        return _UnavailableSnapshot()
+        return UnavailableSnapshot()
 
 
 def _review_refusal(
@@ -904,6 +1028,14 @@ def _refresh_refusal(
     requested_version: int | None,
 ) -> OperationWorkspaceRefreshTargetRefusalV1:
     return OperationWorkspaceRefreshTargetRefusalV1(code=code, requested_version=requested_version, diagnostic_ref=None)
+
+
+def _result_projection_refusal(
+    code: OperationResultProjectionRefusalCode,
+    *,
+    requested_version: int | None,
+) -> OperationResultProjectionRefusalV1:
+    return OperationResultProjectionRefusalV1(code=code, requested_version=requested_version, diagnostic_ref=None)
 
 
 def _response_refusal(
@@ -936,6 +1068,7 @@ __all__ = [
     "OperationControlSupervisor",
     "OperationDetachService",
     "OperationResponseControlService",
+    "OperationResultProjectionService",
     "OperationReviewProjectionService",
     "OperationSecureResponseAuthority",
     "OperationWorkspaceRefreshTargetService",

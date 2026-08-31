@@ -8,7 +8,12 @@ from datetime import date
 from decimal import Decimal
 from types import MappingProxyType
 
-from ..core import ForeignAssetObligationGroup, Modelo, RevisionReviewStatus
+from ..core import (
+    ForeignAssetObligationGroup,
+    Modelo,
+    RevisionReviewStatus,
+    obligation_groups_established_by_legal_refs,
+)
 from ..core.resources import bundled_path
 from ..domain.calculations.registry.errors import RegistryValidationError
 from ..domain.calculations.registry.formula_runtime_ops import resolve_parameter
@@ -25,14 +30,6 @@ _INITIAL_PARAMETER_IDS = {
 _REDECLARATION_PARAMETER_IDS = {
     Modelo.M720: "modelo-720-redeclaration-increment-threshold-eur",
     Modelo.M721: "modelo-721-redeclaration-increment-threshold-eur",
-}
-_GROUPS_BY_MODELO = {
-    Modelo.M720: (
-        ForeignAssetObligationGroup.CUENTAS,
-        ForeignAssetObligationGroup.VALORES_DERECHOS_SEGUROS,
-        ForeignAssetObligationGroup.INMUEBLES,
-    ),
-    Modelo.M721: (ForeignAssetObligationGroup.MONEDAS_VIRTUALES,),
 }
 
 
@@ -151,12 +148,10 @@ def foreign_asset_declaration_thresholds_for_parameters(
         modelo_member = Modelo(modelo)
     except ValueError as exc:
         raise RegistryValidationError(f"modelo {modelo!r} has no foreign-asset threshold parameter contract") from exc
-    groups = _GROUPS_BY_MODELO.get(modelo_member)
     initial_parameter_id = _INITIAL_PARAMETER_IDS.get(modelo_member)
     redeclaration_parameter_id = _REDECLARATION_PARAMETER_IDS.get(modelo_member)
-    if groups is None or initial_parameter_id is None or redeclaration_parameter_id is None:
+    if initial_parameter_id is None or redeclaration_parameter_id is None:
         raise RegistryValidationError(f"modelo {modelo!r} has no foreign-asset threshold parameter contract")
-
     by_id = {parameter.id: parameter for parameter in parameters}
     initial = _required_parameter(by_id, initial_parameter_id, modelo)
     redeclaration = _required_parameter(by_id, redeclaration_parameter_id, modelo)
@@ -165,6 +160,13 @@ def foreign_asset_declaration_thresholds_for_parameters(
     redeclaration_value = resolve_parameter(redeclaration, date_context)
     legal_refs = tuple(sorted(set(initial.legal_refs) | set(redeclaration.legal_refs)))
     source_refs = tuple(sorted(set(initial.source_refs) | set(redeclaration.source_refs)))
+    groups = tuple(sorted(obligation_groups_established_by_legal_refs(legal_refs), key=lambda group: group.value))
+    if not groups:
+        raise RegistryValidationError(
+            f"modelo {modelo} revision cites no RGAT provision establishing a foreign-asset bloque, "
+            "so its thresholds have no scope to apply to; the obligation's scope is read from the "
+            "establishing articles the threshold parameters declare in legal_refs",
+        )
     thresholds = {
         group: ForeignAssetDeclarationThreshold(
             group=group,

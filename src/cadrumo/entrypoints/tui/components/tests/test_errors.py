@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import override
+
 import pytest
 from textual.app import App, ComposeResult
 from textual.widgets import Static
@@ -36,6 +38,7 @@ def test_error_record_uses_only_safe_envelope_facts_and_visibly_bounds_message()
 @pytest.mark.asyncio
 async def test_error_panel_never_mounts_envelope_context_or_trace_identifiers() -> None:
     class _Harness(App[None]):
+        @override
         def compose(self) -> ComposeResult:
             yield ErrorPanel(_record(), id="error")
 

@@ -434,8 +434,8 @@ def test_operation_observation_is_one_locked_record_under_a_real_interleaved_tra
     context = multiprocessing.get_context("spawn")
     commit_attempting = context.Event()
     observe_lock_entered = context.Event()
-    commit_results: Queue[str] = context.Queue()
-    observe_results: Queue[str] = context.Queue()
+    commit_results: Queue[str] = Queue(ctx=context.get_context())
+    observe_results: Queue[str] = Queue(ctx=context.get_context())
     committer = context.Process(
         target=_commit_in_process,
         args=(

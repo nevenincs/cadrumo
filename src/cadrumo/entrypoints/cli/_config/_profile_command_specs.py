@@ -167,7 +167,10 @@ _PAYLOADS = "cadrumo.entrypoints.cli._config_payloads"
 _PAYLOADS_ARCHIVE_RECONCILE = "cadrumo.entrypoints.cli._config._archive_reconcile_payloads"
 _PAYLOADS_ARCHIVE_PUSH = "cadrumo.entrypoints.cli._config._archive_push_payloads"
 _CONFIG = "cadrumo.entrypoints.cli._config"
-_WIZARD = "cadrumo.application.wizard"
+#: Both wizard result schemas are defined in this module. The package
+#: namespace above it is inert and re-exports nothing, so naming the package
+#: leaves the spec pointing at an attribute that does not exist.
+_WIZARD = "cadrumo.application.wizard.results"
 
 _WIZARD_CONFIRM_FIELDS = frozenset(
     """new-entity-first-two-profit-periods ley-49-2002-option-declared
@@ -431,14 +434,14 @@ PROFILE_COMMAND_SPECS = (
         ),
     ),
     _leaf(
-        "config_profile_capabilities_show",
+        "config_profile_capabilities_view",
         "config_profile_capabilities",
-        "show",
-        "cli.config.profile.capabilities.show_help",
+        "view",
+        "cli.config.profile.capabilities.view_help",
         "_capabilities_cli",
-        "capabilities_show",
+        "capabilities_view",
         f"{_CONFIG}._capabilities_payloads",
-        "CapabilitiesShowResult",
+        "CapabilitiesViewResult",
         ENCRYPTED_READ,
     ),
     _leaf(
@@ -654,26 +657,6 @@ PROFILE_COMMAND_SPECS = (
         profile_target_parameter="profile",
     ),
     _leaf(
-        "config_profile_preflight",
-        "config_profile",
-        "preflight",
-        "cli.config.profile.preflight_help",
-        "_profile_inspect",
-        "config_profile_preflight",
-        _PAYLOADS,
-        "ConfigProfilePreflightResult",
-        CALCULATION_READ,
-        (
-            _option("modelo", ("--modelo",), _STR, "cli.config.profile.preflight_modelo_help", required=True),
-            _option(
-                "filing_year", ("--filing-year",), _INT, "cli.config.profile.preflight_filing_year_help", required=True
-            ),
-            _option("period", ("--period",), _STR, "cli.config.profile.preflight_period_help", required=True),
-            _option("revision_id", ("--revision-id",), _STR, "cli.config.profile.preflight_revision_id_help"),
-            _LANGUAGE,
-        ),
-    ),
-    _leaf(
         "config_profile_archive_import",
         "config_profile_archive",
         "import",
@@ -742,14 +725,14 @@ PROFILE_COMMAND_SPECS = (
         ),
     ),
     _leaf(
-        "config_profile_show",
+        "config_profile_view",
         "config_profile",
-        "show",
-        "cli.config.profile.show_help",
+        "view",
+        "cli.config.profile.view_help",
         "_profile_inspect",
-        "config_profile_show",
+        "config_profile_view",
         _PAYLOADS,
-        "ConfigProfileShowResult",
+        "ConfigProfileViewResult",
         ENCRYPTED_READ,
         (_argument("name", _STR, "cli.config.profile.show_name_help", required=False), _LANGUAGE),
         profile_target_parameter="name",

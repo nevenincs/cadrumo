@@ -747,7 +747,7 @@ def test_passphrase_change_succeeds_through_each_leaf_channel(tmp_path: Path, ch
 def _restore_material(tmp_path: Path) -> tuple[Path, Path, str]:
     source = tmp_path / "restore-source"
     outcome, enrollments, phrases = _register(source, recovery=True)
-    from ....adapters.persistence.storage.custody import load_committed_profile_password_material
+    from ....adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 
     material = load_committed_profile_password_material(UUID(outcome.profile_id), root=source)
     artifact = tmp_path / "recovery.artifact.json"
@@ -768,7 +768,17 @@ def _restore_material(tmp_path: Path) -> tuple[Path, Path, str]:
 def test_both_restore_doors_succeed_through_each_leaf_channel(tmp_path: Path, channel: str, door: str) -> None:
     capsule, artifact, phrase = _restore_material(tmp_path / f"material-{channel}-{door}")
     root = tmp_path / f"restore-{channel}-{door}"
-    args = ["--format", "json", "config", "profile", "restore", f"restored-{channel}-{door}", "--file", str(capsule)]
+    args = [
+        "--format",
+        "json",
+        "config",
+        "profile",
+        "archive",
+        "import",
+        f"restored-{channel}-{door}",
+        "--file",
+        str(capsule),
+    ]
     if door == "recovery":
         args.extend(("--artifact", str(artifact)))
         payload = json.dumps({"recovery_secret": phrase})
@@ -1221,7 +1231,7 @@ _FIVE_LEAF_CONFLICT_COMMANDS = (
     ("config", "login", "unread-target"),
     ("config", "profile", "create", "unread-created", "--quiet"),
     ("config", "passphrase", "change"),
-    ("config", "profile", "restore", "unread-restored", "--file", "unread-capsule"),
+    ("config", "profile", "archive", "import", "unread-restored", "--file", "unread-capsule"),
     ("config", "auth", "certificate", "secret", "set", "--name", "unread-certificate"),
 )
 
@@ -1496,7 +1506,8 @@ def test_retired_restore_password_field_is_refused_without_publication(tmp_path:
             "json",
             "config",
             "profile",
-            "restore",
+            "archive",
+            "import",
             "legacy-restore",
             "--file",
             str(capsule),

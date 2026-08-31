@@ -34,5 +34,6 @@ Submodules
    cadrumo.domain.modelos._verification_report
    cadrumo.domain.modelos._verification_repository
    cadrumo.domain.modelos._work_unit
+   cadrumo.domain.modelos.calculation_revision
    cadrumo.domain.modelos.errors
    cadrumo.domain.modelos.work_unit_repository

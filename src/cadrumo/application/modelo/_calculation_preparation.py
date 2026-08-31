@@ -42,7 +42,7 @@ from ...domain.modelos import (
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.period import calculation_filing_date
 from ...domain.transactions import (
-    BusinessClassification,
+    BUSINESS_BEARING_STATES,
     TransactionCatalogueRepositoryProtocol,
     TransactionDirection,
     TransactionLifecycleState,
@@ -284,12 +284,6 @@ _IVA_ONLY_PREFLIGHT_REASONS = frozenset(
 )
 _IVA_LEDGER_EXEMPT_REGIMES = frozenset({IVARegime.SIMPLIFICADO})
 _M200_ACCOUNTING_RESULT_CASILLA: CasillaId = "00501"
-_M200_ACCOUNTING_LEDGER_CLASSIFICATIONS = frozenset(
-    {
-        BusinessClassification.BUSINESS,
-        BusinessClassification.MIXED,
-    },
-)
 _M200_ACCOUNTING_LEDGER_DIRECTIONS = frozenset(
     {
         TransactionDirection.INCOMING,
@@ -439,7 +433,7 @@ def _m200_accounting_ledger_transaction_count(
             continue
         if transaction.direction not in _M200_ACCOUNTING_LEDGER_DIRECTIONS:
             continue
-        if transaction.business_classification not in _M200_ACCOUNTING_LEDGER_CLASSIFICATIONS:
+        if transaction.business_classification not in BUSINESS_BEARING_STATES:
             continue
         effective_date = transaction.raw.value_date or transaction.raw.booked_date
         if period.contains(effective_date):

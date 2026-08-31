@@ -7,7 +7,7 @@ tests drive the real chain — a real credential registration followed by the
 canonical authenticated login door, the real in-process
 :class:`~cadrumo.adapters.persistence.storage.master_key.BucketSession`, the real
 :func:`~cadrumo.application.user_profile.status_projection.build_status_page_data`
-builder, and the real :class:`~cadrumo.entrypoints.tui.profile.status.StatusApp`
+builder, and the real :class:`~cadrumo.entrypoints.tui.profile.status.StatusScreen`
 surface. No mock, stub, or hand-built session record.
 """
 
@@ -20,7 +20,8 @@ from ....application.user_profile.login_session import close_profile_session_art
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....application.user_profile.status_projection import build_status_page_data
 from ....tests.secure_sql import isolated_profile_storage_root
-from ..profile.status import StatusApp
+from ..components.host import ScreenHostApp
+from ..profile.status import StatusScreen
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -76,8 +77,8 @@ async def test_the_real_deadlines_paint_on_the_running_status_surface(tmp_path) 
             expected_idle = data.auth.idle_deadline.isoformat(timespec="minutes")
             expected_absolute = data.auth.absolute_deadline.isoformat(timespec="minutes")
 
-            app = StatusApp(data)
-            async with app.run_test(size=_TERMINAL_SIZE):
+            app = StatusScreen(data)
+            async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE):
                 rendered = str(app.query_one("#auth-lines", Static).content)
                 assert expected_idle in rendered
                 assert expected_absolute in rendered

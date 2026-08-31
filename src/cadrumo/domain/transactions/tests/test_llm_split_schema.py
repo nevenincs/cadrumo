@@ -120,7 +120,7 @@ def test_invalid_split_schema_payloads_are_rejected() -> None:
 
 def test_parse_split_extracts_nested_json_amid_prose() -> None:
     noisy = "Here is the split:\n" + _VALID_SPLIT_JSON + "\nHope that helps!"
-    response = parse_split_response(noisy, spec=prompt_spec_with_saturation_fields())
+    response = parse_split_response(noisy, spec=prompt_spec_with_saturation_fields(year=2025))
     assert len(response.children) == 2
     assert response.children[0].iva_category is IvaCategory.DOMESTIC_GENERAL
 
@@ -128,7 +128,7 @@ def test_parse_split_extracts_nested_json_amid_prose() -> None:
 def test_parse_split_rejects_invalid_outputs() -> None:
     rejection_cases = (
         ("disallowed-iva-category", lambda: parse_split_response(_VALID_SPLIT_JSON)),
-        ("no-json", lambda: parse_split_response("no json here", spec=prompt_spec_with_saturation_fields())),
+        ("no-json", lambda: parse_split_response("no json here", spec=prompt_spec_with_saturation_fields(year=2025))),
     )
     for case_id, parse in rejection_cases:
         try:
@@ -160,7 +160,9 @@ def test_build_split_prompt_includes_evidence_and_no_numbers_guard() -> None:
     txn = Transaction.model_validate(
         {"raw": raw, "direction": TransactionDirection.OUTGOING, "group_label": None, "source_jurisdiction": "ES"},
     )
-    prompt = build_split_prompt(txn, spec=prompt_spec_with_saturation_fields(), evidence_text="line 1 ... line 2 ...")
+    prompt = build_split_prompt(
+        txn, spec=prompt_spec_with_saturation_fields(year=2025), evidence_text="line 1 ... line 2 ..."
+    )
     assert "begin evidence" in prompt
     assert "EXACTLY ONE child with proportion 1.0" in prompt
     assert "one child per line" in prompt

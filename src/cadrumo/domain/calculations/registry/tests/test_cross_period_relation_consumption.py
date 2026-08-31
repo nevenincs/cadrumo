@@ -25,11 +25,10 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.handoffs import relation_consumption_index, relation_is_consumed
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-
 from .....core import Modelo
 from ..authority import bundled_authority
+from ..handoffs import relation_consumption_index, relation_is_consumed
+from ..schema_surfaces import CasillaDefinition
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

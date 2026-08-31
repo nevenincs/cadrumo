@@ -9,11 +9,6 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from cadrumo.application.operations.persistence.replay import (
-    OperationReplayLimit,
-    OperationReplayStatus,
-)
-
 from ...core import (
     OperationCancellation,
     OperationClosePolicy,
@@ -24,6 +19,7 @@ from ...core import (
     OperationTerminalCondition,
 )
 from ...core.identity import ContentDigest
+from ...core.operations import LIFECYCLES_BEFORE_ANY_CANCELLATION_REQUEST
 from ...core.time import validate_utc_aware
 from .event_replay import OperationEventCursor
 from .events import OperationEventCode, OperationEventSequence, OperationLogSeverity
@@ -36,6 +32,12 @@ from .models import (
     OperationReference,
     OperationRevision,
     validate_terminal_reference_meaning,
+)
+from .persistence.replay import (
+    RESYNCHRONIZING_REPLAY_STATUSES,
+    OperationReplayLimit,
+    OperationReplayStatus,
+    PublicReplayStatus,
 )
 from .registry import (
     OperationPublicDefinitionContractV1,
@@ -68,6 +70,19 @@ class OperationReviewProjectionRefusalCode(StrEnum):
     DEFINITION_CONTRACT_MISMATCH = "definition_contract_mismatch"
     REVIEW_SCHEMA_MISMATCH = "review_schema_mismatch"
     REVIEW_PROJECTION_UNAVAILABLE = "review_projection_unavailable"
+
+
+class OperationResultProjectionRefusalCode(StrEnum):
+    """Stable refusal codes for settled-result projection requests."""
+
+    UNSUPPORTED_VERSION = "unsupported_result_projection_version"
+    UNKNOWN_OPERATION = "unknown_operation"
+    OPERATION_NOT_TERMINAL = "operation_not_terminal"
+    OPERATION_NOT_SUCCESSFUL = "operation_not_successful"
+    STALE_OPERATION_REVISION = "stale_operation_revision"
+    DEFINITION_CONTRACT_MISMATCH = "definition_contract_mismatch"
+    RESULT_SCHEMA_MISMATCH = "result_schema_mismatch"
+    RESULT_PROJECTION_UNAVAILABLE = "result_projection_unavailable"
 
 
 class OperationWorkspaceRefreshTargetRefusalCode(StrEnum):
@@ -153,6 +168,13 @@ class OperationWorkspaceRefreshTargetVersionHeader(BaseModel):
 
     model_config = _PUBLIC_CONFIG
     refresh_target_version: Annotated[int, Field(ge=1)]
+
+
+class OperationResultProjectionVersionHeader(BaseModel):
+    """Minimal header parsed before exact settled-result projection dispatch."""
+
+    model_config = _PUBLIC_CONFIG
+    result_projection_version: Annotated[int, Field(ge=1)]
 
 
 class OperationObservationRequestV1(BaseModel):
@@ -381,13 +403,7 @@ class OperationPublicProjectionV1(BaseModel):
             raise ValueError("public cleanup deadline and cancellation request must be declared together")
         if self.lifecycle is OperationLifecycle.CANCELLATION_REQUESTED and not self.cancellation_requested:
             raise ValueError("cancellation-requested lifecycle requires its declared request fact")
-        if self.cancellation_requested and self.lifecycle in {
-            OperationLifecycle.CREATED,
-            OperationLifecycle.QUEUED,
-            OperationLifecycle.RUNNING,
-            OperationLifecycle.WAITING_FOR_INTERACTION,
-            OperationLifecycle.WAITING_FOR_EXTERNAL,
-        }:
+        if self.cancellation_requested and self.lifecycle in LIFECYCLES_BEFORE_ANY_CANCELLATION_REQUEST:
             raise ValueError("public cancellation request disagrees with the current lifecycle")
         if self.cancellation_acknowledged and not self.cancellation_requested:
             raise ValueError("cancellation acknowledgement requires a cancellation request")
@@ -523,12 +539,7 @@ class OperationPublicEventPageV1(BaseModel):
     operation_id: OperationId
     anchor_cursor: OperationEventCursor
     requested_cursor: OperationEventCursor
-    status: Literal[
-        OperationReplayStatus.PAGE,
-        OperationReplayStatus.CAUGHT_UP,
-        OperationReplayStatus.EXPIRED,
-        OperationReplayStatus.COMPACTED,
-    ]
+    status: PublicReplayStatus
     events: tuple[OperationPublicEventV1, ...]
     next_cursor: OperationEventCursor
     restart_cursor: OperationEventCursor | None
@@ -555,7 +566,7 @@ class OperationPublicEventPageV1(BaseModel):
                 or self.restart_cursor is not None
             ):
                 raise ValueError("caught-up public event page must equal its observation anchor cursor")
-        else:
+        elif self.status in RESYNCHRONIZING_REPLAY_STATUSES:
             if self.events or self.restart_cursor is None or self.next_cursor != self.restart_cursor:
                 raise ValueError("resynchronizing public event page requires one restart cursor and no rows")
             if self.restart_cursor <= self.requested_cursor:
@@ -880,6 +891,55 @@ type OperationWorkspaceRefreshTargetResultV1[RefreshTargetT: BaseModel] = Annota
 ]
 
 
+class OperationResultProjectionRequestV1(BaseModel):
+    """Resolve a settled operation's safe public result without a raw reference.
+
+    Symmetric with :class:`OperationWorkspaceRefreshTargetRequestV1`: the
+    caller never supplies the private ``result_ref`` itself, only the
+    operation identity, the terminal revision it expects, the definition
+    contract it trusts, and the registered result schema it wants back.
+    """
+
+    model_config = _PUBLIC_CONFIG
+
+    result_projection_version: Literal[1] = 1
+    operation_id: OperationId
+    terminal_revision: OperationRevision
+    definition_contract_digest: ContentDigest
+    result_schema: OperationSchemaIdentityV1
+
+
+class OperationResultProjectionSuccessV1[ResultProjectionT: BaseModel](BaseModel):
+    """Successful typed settled-result projection."""
+
+    model_config = _PUBLIC_CONFIG
+
+    outcome: Literal["success"] = "success"
+    result_projection_version: Literal[1] = 1
+    result_schema: OperationSchemaIdentityV1
+    definition_contract_digest: ContentDigest
+    projection: ResultProjectionT
+
+
+class OperationResultProjectionRefusalV1(BaseModel):
+    """Renderer-neutral refusal for a settled-result projection request."""
+
+    model_config = _PUBLIC_CONFIG
+
+    outcome: Literal["refused"] = "refused"
+    result_projection_version: Literal[1] = 1
+    code: OperationResultProjectionRefusalCode
+    requested_version: Annotated[int, Field(ge=1)] | None
+    supported_version: Literal[1] = 1
+    diagnostic_ref: OperationDiagnosticReference | None
+
+
+type OperationResultProjectionResultV1[ResultProjectionT: BaseModel] = Annotated[
+    OperationResultProjectionSuccessV1[ResultProjectionT] | OperationResultProjectionRefusalV1,
+    Field(discriminator="outcome"),
+]
+
+
 __all__ = [
     "OperationCancellationRefusalCode",
     "OperationCancellationRefusalV1",
@@ -925,6 +985,12 @@ __all__ = [
     "OperationResponseMutationResultV1",
     "OperationResponseMutationSuccessV1",
     "OperationResponseRejectRequestV1",
+    "OperationResultProjectionRefusalCode",
+    "OperationResultProjectionRefusalV1",
+    "OperationResultProjectionRequestV1",
+    "OperationResultProjectionResultV1",
+    "OperationResultProjectionSuccessV1",
+    "OperationResultProjectionVersionHeader",
     "OperationReviewAvailableInteractionV1",
     "OperationReviewProjectionReferenceV1",
     "OperationReviewProjectionRefusalCode",

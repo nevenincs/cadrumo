@@ -146,6 +146,7 @@ class ProfileValidationService:
     """
 
     def __init__(self, *, schema: ProfileSchemaDefinition) -> None:
+        """Bind the validator to a loaded schema and index its section fields."""
         self._schema = schema
         self._field_index: dict[str, tuple[ProfileSectionDefinition, ProfileFieldDefinition]] = {}
         for section in schema.sections:
@@ -154,6 +155,7 @@ class ProfileValidationService:
 
     @property
     def schema(self) -> ProfileSchemaDefinition:
+        """Return the loaded schema this validator was constructed with."""
         return self._schema
 
     def validate_record(self, record: UserProfileRecord) -> ProfileValidationReport:

@@ -30,13 +30,6 @@ from datetime import date
 import pytest
 from pydantic import BaseModel, Field, ValidationError
 
-from cadrumo.domain.calculations.registry.schema import (
-    DependencyClassificationDefinition,
-    ModeloDefinition,
-    ModeloRevision,
-)
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-
 from .....core import TaxDomain
 from .....tests.registry_tree import bundled_registry_tree
 from ..classification_coherence import (
@@ -50,9 +43,11 @@ from ..classification_coherence import (
     audit_bundled_classification_coherence,
     build_classification_coherence_audit,
 )
+from ..schema import DependencyClassificationDefinition, ModeloDefinition, ModeloRevision
 from ..schema_base import CalculationClass
 from ..schema_input_kind import InputKind
 from ..schema_references import PeriodSelector
+from ..schema_surfaces import CasillaDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

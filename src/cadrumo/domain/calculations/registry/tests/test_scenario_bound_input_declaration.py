@@ -49,14 +49,13 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.snapshot import build_snapshot
-
 from .....core import CasillaId, validated_casilla_id
 from .....core.directory_scan import scan_directory
 from .....tests.registry_tree import bundled_registry_tree
 from ..errors import RegistryValidationError
+from ..schema import ModeloRevision
 from ..schema_input_kind import InputKind
+from ..snapshot import build_snapshot
 from ._registry_schema_support import _committed_modelo
 from ._scenarios import bound_casilla_ids, run_registry_calculation_scenario
 from .test_m100_2024_estimacion_directa_manual_worked_example import (

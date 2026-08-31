@@ -21,12 +21,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.withholding_bindings import (
-    WithholdingObservation,
-    WithholdingObservationRequirement,
-)
-
 from .....core.aggregation import RetencionClave
+from ..withholding_bindings import WithholdingObservation, WithholdingObservationRequirement
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

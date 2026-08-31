@@ -59,7 +59,10 @@ from ....domain.iva import (
     M303RegimenSimplificadoScopeDecision,
     RegimenSimplificadoFilingRows,
 )
-from ....domain.modelos import M303Exonerado390FilingEvidence, M303RegimenSimplificadoFilingEvidence
+from ....domain.modelos.calculation_revision import (
+    M303Exonerado390FilingEvidence,
+    M303RegimenSimplificadoFilingEvidence,
+)
 from ....domain.prorrata_register import ProrrataRegister
 from ....domain.submission import ModeloDraftStatus
 from ...aggregation import M303ProrrataTransitionArrival, M303SupplierRegimeArrival
@@ -879,7 +882,7 @@ def test_m303_account_bearing_dispositions_refuse_without_their_selected_account
 
 
 def test_production_m303_generated_authority_is_visible_at_the_filing_boundary() -> None:
-    """The filing boundary now receives the S20-generated 2026 layout.
+    """The filing boundary now receives the generated 2026 layout.
 
     This replaces the retired absence assertion.  The complete layout remains
     owned by the hash-pinned generated tree; this consumer only proves that the

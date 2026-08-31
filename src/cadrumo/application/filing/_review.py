@@ -217,7 +217,9 @@ def compute_current_approval_basis(
         if profile_activity_fingerprint is not None
         else _load_profile_activity_fingerprint(bucket_id)
     )
-    profiles = category_profiles if category_profiles is not None else resolve_category_profiles(2025)
+    profiles = (
+        category_profiles if category_profiles is not None else resolve_category_profiles(draft.period.filing_year)
+    )
     return ModeloApprovalBasis(
         draft_payload_fingerprint=draft.draft_id,
         draft_review_fingerprint=_draft_review_fingerprint(draft),

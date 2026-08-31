@@ -326,15 +326,24 @@ forbidden_modules =
 
 [importlinter:contract:tui-feature-independence]
 name = TUI feature implementations share components rather than each other
-# Feature implementations may meet only in app.py.  Wildcard expressions keep
-# this pre-migration gate valid while the feature packages do not yet exist;
-# once implementation modules land, dependency chains in either direction fail.
+# Feature implementations may meet only in app.py.
+#
+# Named as packages, NOT as `.**` expressions. A `**` expression expands to every
+# descendant, so a package with a test subpackage yields both `<pkg>.tests` and
+# `<pkg>.tests.test_x` -- an ancestor and its own descendant inside ONE listed
+# expression. Import Linter rejects that with "Modules have shared descendants."
+# and aborts the WHOLE suite before evaluating any contract, so every other
+# contract in this file silently stopped enforcing. The package form covers
+# descendants already, which is what this contract wants.
+#
+# The wildcards were written while these feature packages did not yet exist.
+# They exist now, so the pre-migration form is retired.
 type = independence
 modules =
-    cadrumo.entrypoints.tui.operations.**
-    cadrumo.entrypoints.tui.profile.**
-    cadrumo.entrypoints.tui.secret.**
-    cadrumo.entrypoints.tui.flows.**
+    cadrumo.entrypoints.tui.operations
+    cadrumo.entrypoints.tui.profile
+    cadrumo.entrypoints.tui.secret
+    cadrumo.entrypoints.tui.flows
 
 [importlinter:contract:layered]
 name = AEAT layered architecture
@@ -462,9 +471,9 @@ ignore_imports =
     cadrumo.application.bienes_inversion -> cadrumo.adapters.persistence.**
     cadrumo.application.bucket_maintenance._deletion_paths -> cadrumo.adapters.persistence.**
     cadrumo.application.calculations._iva_compensation_annual_partition -> cadrumo.adapters.persistence.**
-    cadrumo.application.calculations._iva_compensation_history -> cadrumo.adapters.persistence.**
+    cadrumo.application.calculations.iva_compensation_history -> cadrumo.adapters.persistence.**
     cadrumo.application.calculations._multi_year -> cadrumo.adapters.persistence.**
-    cadrumo.application.calculations._observations_repository -> cadrumo.adapters.persistence.**
+    cadrumo.application.calculations.observations_repository -> cadrumo.adapters.persistence.**
     cadrumo.application.calculations._relation_prefill -> cadrumo.adapters.persistence.**
     cadrumo.application.diagnostics -> cadrumo.adapters.outbound.aeat.browser
     cadrumo.application.diagnostics -> cadrumo.adapters.persistence.**
@@ -604,7 +613,7 @@ ignore_imports =
     # ── arch-remediation-ports-inversion: justificante repository relocated to
     #    adapters.persistence.profile.justificante (no domain port; no domain
     #    caller); application/entrypoint callers import the adapter directly ──
-    cadrumo.application.calculations._cross_period_clean_state -> cadrumo.adapters.persistence.profile.justificante
+    cadrumo.application.calculations.cross_period_clean_state -> cadrumo.adapters.persistence.profile.justificante
     # ── application/live, registry and diagnostics narrowed from `adapters.**`
     #    to what each module reaches. This package DRIVES the AEAT Sede and its
     #    authentication: an outbound edge here is the package's purpose, not an
@@ -652,7 +661,7 @@ ignore_imports =
     cadrumo.application.live.notifications -> cadrumo.adapters.outbound.aeat.sede
     cadrumo.application.live.notifications -> cadrumo.adapters.persistence.**
     cadrumo.application.live.verify -> cadrumo.adapters.persistence.**
-    cadrumo.application.modelo._borrador_binding -> cadrumo.adapters.persistence.**
+    cadrumo.application.modelo.borrador_binding -> cadrumo.adapters.persistence.**
     cadrumo.application.modelo._m036_lifecycle -> cadrumo.adapters.persistence.**
     # Reconciliation compares a filed declaracion and its justificante against
     # the local calculation. Both arrive as externally-authored documents an
@@ -665,7 +674,7 @@ ignore_imports =
     cadrumo.application.state_projection -> cadrumo.adapters.persistence.**
     # The Sheets parity harness drives the outbound Google client; the export
     # mirror is one-way, so this reaches no persistence at all.
-    cadrumo.application.storage.calc_sheets._parity_harness -> cadrumo.adapters.outbound.google
+    cadrumo.application.storage.calc_sheets.parity_harness -> cadrumo.adapters.outbound.google
     # Reaches NO persistence: the second pin in this sweep whose storage-shaped
     # The workflow run-contract surface reports whether a browser session can be
     # established, so it names the outbound browser adapter alongside its

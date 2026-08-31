@@ -30,14 +30,11 @@ from typing import Literal, Self
 
 from pydantic import Field, model_validator
 
-from cadrumo.domain.calculations.registry.ids import RevisionId
-
 from ...application.operator_actions import ActionReference
 from ...application.overview import DataPrepStepId, DataPrepStepState, ModeloReadinessState
 from ...core.identity import AeatCsv, CalculationRevisionId, FilingRecordId, ProfileId, SnapshotId, WorkUnitId
 from ...core.json_contract import OutputSchema, ResolvedActionArgument, ResolvedNoticeAction
 from ...core.parsing import require_iso8601_date
-from ._decimal_wire import NonNegativeDecimalWireText
 from ._ledger_payloads import LedgerStatusResult
 
 # ---------------------------------------------------------------------------
@@ -59,85 +56,10 @@ class OverviewDraftPayload(OutputSchema):
     status: str
 
 
-class OverviewRecargoBandPayload(OutputSchema):
-    """JSON projection of the resolved :class:`RecargoBand`.
-
-    Mirrors the canonical band field for field, including the ``legal_ref``
-    that grounds the surcharge in Ley 58/2003 art-27. ``surcharge_pct`` rides
-    as a canonical decimal string so the percentage cannot lose precision to a
-    JSON float on the way to the operator.
-    """
-
-    id: str = Field(min_length=1, max_length=64)
-    min_completed_months: int = Field(ge=0)
-    max_completed_months: int | None = None
-    surcharge_pct: NonNegativeDecimalWireText
-    interest_applies: bool = False
-    legal_ref: str = Field(min_length=1, max_length=128)
-
-    @model_validator(mode="after")
-    def _validate_window(self) -> Self:
-        """Reject an inverted completed-months window, as the canonical band does."""
-        if self.max_completed_months is not None and self.max_completed_months < self.min_completed_months:
-            raise ValueError(
-                f"recargo band {self.id}: max_completed_months ({self.max_completed_months}) "
-                f"is below min_completed_months ({self.min_completed_months})",
-            )
-        return self
-
-
-class OverviewRecoveryPayload(OutputSchema):
-    """JSON projection of the canonical :class:`Recovery` payload.
-
-    An OVERDUE entry's recovery carries legal obligations -- the resolved
-    recargo band with its legal reference -- plus an action resolved at this
-    CLI boundary from the application's typed declaration. Exposing it as a
-    bare ``dict[str, object]`` let an empty mapping serialize as a valid
-    recovery, so an overdue row could reach the operator with its legal
-    grounding and its remedial action silently absent.
-    """
-
-    still_filable: bool = True
-    recargo_band: OverviewRecargoBandPayload
-    next_action: ResolvedNoticeAction
-
-
-class OverviewCalendarEntryPayload(OutputSchema):
-    """One :class:`OverviewCalendarEntry` row.
-
-    The nested :class:`OverviewCalendarFilingEvidencePayload` keeps filing
-    evidence beside the legal deadline row rather than flattening it into the
-    command result. Deadline fields remain the legal schedule from
-    :class:`ModeloDeadline`; local and observed filing state are carried
-    separately on the evidence payload.
-    """
-
-    modelo: str
-    period: str
-    opens_on: str
-    closes_on: str
-    adjusted_closes_on: str
-    shift_reason: str | None = None
-    holiday_refs: list[str] = []
-    jurisdictions: list[str] = []
-    payment_cutoff_on: str | None = None
-    status: str
-    user_state: Literal["due", "late", "filed", "unknown"]
-    recovery: OverviewRecoveryPayload | None = None
-    filing_year: int | None = None
-    censo_enrolment_state: Literal["not_checked", "not_required", "unverified", "verified"]
-    filing_evidence: OverviewCalendarFilingEvidencePayload
-    source: str = "registry_deadline"
-    local_work_unit_id: WorkUnitId | None = None
-    local_work_unit_name: str | None = None
-    local_work_unit_revision_id: RevisionId | None = None
-
-
 class OverviewCalendarFilingEvidencePayload(OutputSchema):
     """Filing evidence nested in an overview calendar entry payload.
 
-    Nested in :class:`OverviewCalendarEntryPayload`. Mirrors
-    :class:`OverviewCalendarFilingEvidence` and keeps local filing state,
+    Mirrors :class:`OverviewCalendarFilingEvidence` and keeps local filing state,
     observed AEAT submission state, and justificante verification as separate
     JSON fields. That distinction preserves the application rule that a local
     filed record is not an AEAT submission and an observed submission is not a
@@ -177,9 +99,8 @@ class OverviewCalendarEventPayload(OutputSchema):
 
     Events are additive observations beside the legal calendar, such as filed
     declarations or notifications loaded from persisted live snapshots. Optional
-    filing fields mirror the application event model without upgrading the
-    corresponding :class:`OverviewCalendarEntryPayload` evidence row by
-    themselves.
+    filing fields mirror the application event model without upgrading a
+    calendar entry's own evidence row by themselves.
     """
 
     event_type: Literal["filing", "message"]
@@ -361,51 +282,17 @@ class OverviewAdvisedObligationPayload(OutputSchema):
 class OverviewObligationCoveragePayload(OutputSchema):
     """JSON projection of the canonical total obligation-coverage partition.
 
-    Each modelo must occur in exactly one disposition.  The application service
-    establishes completeness against its authoritative obligation universe;
-    this transport contract preserves the non-overlap invariant so malformed
-    JSON cannot make an obligation appear both surfaced and advised.
+    Each modelo occurs in exactly one disposition. That invariant belongs to the
+    canonical :class:`~application.overview.ObligationCoverageReport`, which
+    refuses to construct a self-contradicting partition, so every consumer of
+    the application layer inherits it rather than only the JSON surface. This
+    schema is the transport shape of a report that already satisfies it.
     """
 
     surfaced: list[str] = []
     confidently_excluded: list[str] = []
     advised: list[OverviewAdvisedObligationPayload] = []
     out_of_scope: list[str] = []
-
-    @model_validator(mode="after")
-    def _require_disjoint_dispositions(self) -> Self:
-        bucket_modelos = (
-            self.surfaced,
-            self.confidently_excluded,
-            [item.modelo for item in self.advised],
-            self.out_of_scope,
-        )
-        total_items = sum(len(modelos) for modelos in bucket_modelos)
-        distinct_modelos = {modelo for modelos in bucket_modelos for modelo in modelos}
-        if total_items != len(distinct_modelos):
-            raise ValueError("obligation coverage dispositions must form a disjoint partition")
-        return self
-
-
-class OverviewCalendarPayload(OutputSchema):
-    """Typed :class:`OverviewCalendar` JSON fragment.
-
-    Used by ``overview calendar --all-profiles`` profile blocks and by typed
-    conformance checks. The payload keeps legal entries, additive events,
-    completeness, warnings, and suppressed rows in the same compartments as the
-    application read model.
-    """
-
-    range: OverviewCalendarRangePayload
-    entries: list[OverviewCalendarEntryPayload] = []
-    generated_at: str
-    warnings: list[OverviewCalendarWarningPayload] = []
-    completeness: OverviewCalendarCompletenessPayload
-    taxpayer_model_declared: bool
-    incomplete_reason: str | None = None
-    suppressed_entries: list[OverviewSuppressedCalendarEntryPayload] = []
-    events: list[OverviewCalendarEventPayload] = []
-    coverage: OverviewObligationCoveragePayload
 
 
 class OverviewCalendarProfilePayload(OutputSchema):

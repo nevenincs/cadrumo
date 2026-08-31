@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import csv
 import hashlib
+from collections.abc import Mapping
 from io import BytesIO, StringIO
 from typing import cast
 
@@ -176,7 +177,11 @@ def test_export_error_locale_keys_present_in_catalogue(locale_key: str, locale_c
     """
     dotted = f"errors.refused.{locale_key}"
     payload = shard_payload(locale_code, dotted)
-    value = payload.get("errors", {}).get("refused", {}).get(locale_key)
+    errors_section = payload.get("errors", {})
+    assert isinstance(errors_section, Mapping)
+    refused_section = errors_section.get("refused", {})
+    assert isinstance(refused_section, Mapping)
+    value = refused_section.get(locale_key)
     assert value, (
         f"locale {locale_code!r}: {dotted!r} is missing or empty in {catalogue_shard_path(locale_code, dotted)}"
     )
@@ -253,7 +258,7 @@ def test_model_validator_raises_export_field_error_on_blank_fieldname() -> None:
     """Site: TabularExportResult._validate_fieldnames — blank field in model."""
     from pydantic import ValidationError
 
-    from .._tabular import TabularExportResult
+    from ..tabular import TabularExportResult
 
     payload = b"transaction_id,amount\r\n"
     with pytest.raises((ExportFieldError, ValidationError)) as exc_info:
@@ -276,7 +281,7 @@ def test_model_validator_raises_export_field_error_on_duplicate_fieldname() -> N
     """Site: TabularExportResult._validate_fieldnames — duplicate field in model."""
     from pydantic import ValidationError
 
-    from .._tabular import TabularExportResult
+    from ..tabular import TabularExportResult
 
     payload = b"amount,amount\r\n"
     with pytest.raises((ExportFieldError, ValidationError)) as exc_info:
@@ -300,7 +305,7 @@ def test_model_validator_raises_export_field_error_on_invalid_sha256() -> None:
 
     from pydantic import ValidationError
 
-    from .._tabular import TabularExportResult
+    from ..tabular import TabularExportResult
 
     payload = b"transaction_id,amount\n"
     with pytest.raises(ValidationError) as exc_info:

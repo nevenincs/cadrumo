@@ -89,7 +89,7 @@ def main(argv: list[str] | None = None) -> int:
     p_click = sub.add_parser("click", help="click a selector")
     p_click.add_argument("selector")
 
-    sub.add_parser("show", help="reprint the current frame, changing nothing")
+    sub.add_parser("view", help="reprint the current frame, changing nothing")
     sub.add_parser("undo", help="drop the last gesture and reprint")
     sub.add_parser("journal", help="print the walk so far")
     sub.add_parser("surfaces", help="list the drivable surfaces")
@@ -162,7 +162,7 @@ def main(argv: list[str] | None = None) -> int:
         case "locale":
             session.locale = None if args.locale == "auto" else args.locale
             return _attempt(session, refusal_note="the locale change was not recorded")
-        case "show":
+        case "view":
             _show(session)
         case "journal":
             _emit(

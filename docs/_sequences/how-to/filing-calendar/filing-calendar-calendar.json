@@ -1764,399 +1764,585 @@
               "adjusted_closes_on": "2026-01-30",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
-              "justificante_required": true,
+              "detail_action": {
+                "action": {
+                  "action_id": "operator.overview.explain",
+                  "cli_path": [
+                    "app",
+                    "overview",
+                    "explain"
+                  ],
+                  "target_command_key": "overview.explain"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "130"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2025
+                  }
+                ]
+              },
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
-              "local_work_unit_id": null,
-              "local_work_unit_name": null,
-              "local_work_unit_revision_id": null,
               "modelo": "130",
-              "payment_cutoff_on": "2026-01-27",
               "period": "2025 4T",
-              "recovery": {
-                "next_action": {
-                  "action": {
-                    "action_id": "operator.modelo.work.create",
-                    "cli_path": [
-                      "app",
-                      "modelo",
-                      "work",
-                      "create"
-                    ],
-                    "target_command_key": "modelo.work.create"
-                  },
-                  "argument_bindings": [
-                    {
-                      "argument_name": "modelo",
-                      "source": "operator_action.verdict_context",
-                      "source_evidence_id": null,
-                      "source_key": "modelo",
-                      "status": "resolved",
-                      "value": "130"
-                    },
-                    {
-                      "argument_name": "period",
-                      "source": "operator_action.verdict_context",
-                      "source_evidence_id": null,
-                      "source_key": "period",
-                      "status": "resolved",
-                      "value": "4T"
-                    },
-                    {
-                      "argument_name": "year",
-                      "source": "operator_action.verdict_context",
-                      "source_evidence_id": null,
-                      "source_key": "year",
-                      "status": "resolved",
-                      "value": 2025
-                    }
-                  ]
-                },
-                "recargo_band": {
-                  "id": "completed_months_2",
-                  "interest_applies": false,
-                  "legal_ref": "ley-58-2003:art-27.2",
-                  "max_completed_months": 2,
-                  "min_completed_months": 2,
-                  "surcharge_pct": "3.00"
-                },
-                "still_filable": true
-              },
-              "status": "OVERDUE",
               "user_state": "late"
             },
             {
               "adjusted_closes_on": "2026-01-30",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
-              "justificante_required": true,
+              "detail_action": {
+                "action": {
+                  "action_id": "operator.overview.explain",
+                  "cli_path": [
+                    "app",
+                    "overview",
+                    "explain"
+                  ],
+                  "target_command_key": "overview.explain"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "303"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2025
+                  }
+                ]
+              },
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
-              "local_work_unit_id": null,
-              "local_work_unit_name": null,
-              "local_work_unit_revision_id": null,
               "modelo": "303",
-              "payment_cutoff_on": "2026-01-27",
               "period": "2025 4T",
-              "recovery": {
-                "next_action": {
-                  "action": {
-                    "action_id": "operator.modelo.work.create",
-                    "cli_path": [
-                      "app",
-                      "modelo",
-                      "work",
-                      "create"
-                    ],
-                    "target_command_key": "modelo.work.create"
-                  },
-                  "argument_bindings": [
-                    {
-                      "argument_name": "modelo",
-                      "source": "operator_action.verdict_context",
-                      "source_evidence_id": null,
-                      "source_key": "modelo",
-                      "status": "resolved",
-                      "value": "303"
-                    },
-                    {
-                      "argument_name": "period",
-                      "source": "operator_action.verdict_context",
-                      "source_evidence_id": null,
-                      "source_key": "period",
-                      "status": "resolved",
-                      "value": "4T"
-                    },
-                    {
-                      "argument_name": "year",
-                      "source": "operator_action.verdict_context",
-                      "source_evidence_id": null,
-                      "source_key": "year",
-                      "status": "resolved",
-                      "value": 2025
-                    }
-                  ]
-                },
-                "recargo_band": {
-                  "id": "completed_months_2",
-                  "interest_applies": false,
-                  "legal_ref": "ley-58-2003:art-27.2",
-                  "max_completed_months": 2,
-                  "min_completed_months": 2,
-                  "surcharge_pct": "3.00"
-                },
-                "still_filable": true
-              },
-              "status": "OVERDUE",
               "user_state": "late"
             },
             {
               "adjusted_closes_on": "2026-01-30",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
-              "justificante_required": true,
+              "detail_action": {
+                "action": {
+                  "action_id": "operator.overview.explain",
+                  "cli_path": [
+                    "app",
+                    "overview",
+                    "explain"
+                  ],
+                  "target_command_key": "overview.explain"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "390"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2025
+                  }
+                ]
+              },
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
-              "local_work_unit_id": null,
-              "local_work_unit_name": null,
-              "local_work_unit_revision_id": null,
               "modelo": "390",
-              "payment_cutoff_on": null,
               "period": "2025 0A",
-              "recovery": {
-                "next_action": {
-                  "action": {
-                    "action_id": "operator.modelo.work.create",
-                    "cli_path": [
-                      "app",
-                      "modelo",
-                      "work",
-                      "create"
-                    ],
-                    "target_command_key": "modelo.work.create"
-                  },
-                  "argument_bindings": [
-                    {
-                      "argument_name": "modelo",
-                      "source": "operator_action.verdict_context",
-                      "source_evidence_id": null,
-                      "source_key": "modelo",
-                      "status": "resolved",
-                      "value": "390"
-                    },
-                    {
-                      "argument_name": "period",
-                      "source": "operator_action.verdict_context",
-                      "source_evidence_id": null,
-                      "source_key": "period",
-                      "status": "resolved",
-                      "value": "0A"
-                    },
-                    {
-                      "argument_name": "year",
-                      "source": "operator_action.verdict_context",
-                      "source_evidence_id": null,
-                      "source_key": "year",
-                      "status": "resolved",
-                      "value": 2025
-                    }
-                  ]
-                },
-                "recargo_band": {
-                  "id": "completed_months_2",
-                  "interest_applies": false,
-                  "legal_ref": "ley-58-2003:art-27.2",
-                  "max_completed_months": 2,
-                  "min_completed_months": 2,
-                  "surcharge_pct": "3.00"
-                },
-                "still_filable": true
-              },
-              "status": "OVERDUE",
               "user_state": "late"
             },
             {
               "adjusted_closes_on": "2026-04-20",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
-              "justificante_required": true,
+              "detail_action": {
+                "action": {
+                  "action_id": "operator.overview.explain",
+                  "cli_path": [
+                    "app",
+                    "overview",
+                    "explain"
+                  ],
+                  "target_command_key": "overview.explain"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "130"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2026
+                  }
+                ]
+              },
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
-              "local_work_unit_id": null,
-              "local_work_unit_name": null,
-              "local_work_unit_revision_id": null,
               "modelo": "130",
-              "payment_cutoff_on": "2026-04-15",
               "period": "2026 1T",
-              "recovery": null,
-              "status": "UPCOMING",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-04-20",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
-              "justificante_required": true,
+              "detail_action": {
+                "action": {
+                  "action_id": "operator.overview.explain",
+                  "cli_path": [
+                    "app",
+                    "overview",
+                    "explain"
+                  ],
+                  "target_command_key": "overview.explain"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "136"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2026
+                  }
+                ]
+              },
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
-              "local_work_unit_id": null,
-              "local_work_unit_name": null,
-              "local_work_unit_revision_id": null,
               "modelo": "136",
-              "payment_cutoff_on": null,
               "period": "2026 1T",
-              "recovery": null,
-              "status": "UPCOMING",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-04-20",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
-              "justificante_required": true,
+              "detail_action": {
+                "action": {
+                  "action_id": "operator.overview.explain",
+                  "cli_path": [
+                    "app",
+                    "overview",
+                    "explain"
+                  ],
+                  "target_command_key": "overview.explain"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "303"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2026
+                  }
+                ]
+              },
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
-              "local_work_unit_id": null,
-              "local_work_unit_name": null,
-              "local_work_unit_revision_id": null,
               "modelo": "303",
-              "payment_cutoff_on": null,
               "period": "2026 1T",
-              "recovery": null,
-              "status": "UPCOMING",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-06-30",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
-              "justificante_required": true,
+              "detail_action": {
+                "action": {
+                  "action_id": "operator.overview.explain",
+                  "cli_path": [
+                    "app",
+                    "overview",
+                    "explain"
+                  ],
+                  "target_command_key": "overview.explain"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "100"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2025
+                  }
+                ]
+              },
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
-              "local_work_unit_id": null,
-              "local_work_unit_name": null,
-              "local_work_unit_revision_id": null,
               "modelo": "100",
-              "payment_cutoff_on": "2026-06-25",
               "period": "2025 0A",
-              "recovery": null,
-              "status": "UPCOMING",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-06-30",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
-              "justificante_required": true,
+              "detail_action": {
+                "action": {
+                  "action_id": "operator.overview.explain",
+                  "cli_path": [
+                    "app",
+                    "overview",
+                    "explain"
+                  ],
+                  "target_command_key": "overview.explain"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "714"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2025
+                  }
+                ]
+              },
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
-              "local_work_unit_id": null,
-              "local_work_unit_name": null,
-              "local_work_unit_revision_id": null,
               "modelo": "714",
-              "payment_cutoff_on": null,
               "period": "2025 0A",
-              "recovery": null,
-              "status": "UPCOMING",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-07-20",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
-              "justificante_required": true,
+              "detail_action": {
+                "action": {
+                  "action_id": "operator.overview.explain",
+                  "cli_path": [
+                    "app",
+                    "overview",
+                    "explain"
+                  ],
+                  "target_command_key": "overview.explain"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "130"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2026
+                  }
+                ]
+              },
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
-              "local_work_unit_id": null,
-              "local_work_unit_name": null,
-              "local_work_unit_revision_id": null,
               "modelo": "130",
-              "payment_cutoff_on": "2026-07-15",
               "period": "2026 2T",
-              "recovery": null,
-              "status": "UPCOMING",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-07-20",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
-              "justificante_required": true,
+              "detail_action": {
+                "action": {
+                  "action_id": "operator.overview.explain",
+                  "cli_path": [
+                    "app",
+                    "overview",
+                    "explain"
+                  ],
+                  "target_command_key": "overview.explain"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "136"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2026
+                  }
+                ]
+              },
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
-              "local_work_unit_id": null,
-              "local_work_unit_name": null,
-              "local_work_unit_revision_id": null,
               "modelo": "136",
-              "payment_cutoff_on": null,
               "period": "2026 2T",
-              "recovery": null,
-              "status": "UPCOMING",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-07-20",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
-              "justificante_required": true,
+              "detail_action": {
+                "action": {
+                  "action_id": "operator.overview.explain",
+                  "cli_path": [
+                    "app",
+                    "overview",
+                    "explain"
+                  ],
+                  "target_command_key": "overview.explain"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "303"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2026
+                  }
+                ]
+              },
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
-              "local_work_unit_id": null,
-              "local_work_unit_name": null,
-              "local_work_unit_revision_id": null,
               "modelo": "303",
-              "payment_cutoff_on": null,
               "period": "2026 2T",
-              "recovery": null,
-              "status": "UPCOMING",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-09-30",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
-              "justificante_required": true,
+              "detail_action": {
+                "action": {
+                  "action_id": "operator.overview.explain",
+                  "cli_path": [
+                    "app",
+                    "overview",
+                    "explain"
+                  ],
+                  "target_command_key": "overview.explain"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "360"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2025
+                  }
+                ]
+              },
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
-              "local_work_unit_id": null,
-              "local_work_unit_name": null,
-              "local_work_unit_revision_id": null,
               "modelo": "360",
-              "payment_cutoff_on": null,
               "period": "2025 AD-HOC",
-              "recovery": null,
-              "status": "UPCOMING",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-10-20",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
-              "justificante_required": true,
+              "detail_action": {
+                "action": {
+                  "action_id": "operator.overview.explain",
+                  "cli_path": [
+                    "app",
+                    "overview",
+                    "explain"
+                  ],
+                  "target_command_key": "overview.explain"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "130"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2026
+                  }
+                ]
+              },
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
-              "local_work_unit_id": null,
-              "local_work_unit_name": null,
-              "local_work_unit_revision_id": null,
               "modelo": "130",
-              "payment_cutoff_on": "2026-10-15",
               "period": "2026 3T",
-              "recovery": null,
-              "status": "UPCOMING",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-10-20",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
-              "justificante_required": true,
+              "detail_action": {
+                "action": {
+                  "action_id": "operator.overview.explain",
+                  "cli_path": [
+                    "app",
+                    "overview",
+                    "explain"
+                  ],
+                  "target_command_key": "overview.explain"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "136"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2026
+                  }
+                ]
+              },
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
-              "local_work_unit_id": null,
-              "local_work_unit_name": null,
-              "local_work_unit_revision_id": null,
               "modelo": "136",
-              "payment_cutoff_on": null,
               "period": "2026 3T",
-              "recovery": null,
-              "status": "UPCOMING",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-10-20",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
-              "justificante_required": true,
+              "detail_action": {
+                "action": {
+                  "action_id": "operator.overview.explain",
+                  "cli_path": [
+                    "app",
+                    "overview",
+                    "explain"
+                  ],
+                  "target_command_key": "overview.explain"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "303"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2026
+                  }
+                ]
+              },
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
-              "local_work_unit_id": null,
-              "local_work_unit_name": null,
-              "local_work_unit_revision_id": null,
               "modelo": "303",
-              "payment_cutoff_on": null,
               "period": "2026 3T",
-              "recovery": null,
-              "status": "UPCOMING",
               "user_state": "due"
             }
           ],
@@ -2178,6 +2364,21 @@
                 "130"
               ],
               "code": "art109_activity_income_withholding_ge_70pct",
+              "fix_action": {
+                "action": {
+                  "action": {
+                    "action_id": "operator.profile.edit"
+                  },
+                  "arguments": null,
+                  "cli_path": [
+                    "config",
+                    "profile",
+                    "edit"
+                  ],
+                  "target_command_key": "config.profile.edit"
+                },
+                "argument_bindings": []
+              },
               "message": "cli.overview.warning.art109_activity_income_withholding_ge_70pct_unset"
             },
             {
@@ -2185,6 +2386,21 @@
                 "349"
               ],
               "code": "does_intracomunitario",
+              "fix_action": {
+                "action": {
+                  "action": {
+                    "action_id": "operator.profile.edit"
+                  },
+                  "arguments": null,
+                  "cli_path": [
+                    "config",
+                    "profile",
+                    "edit"
+                  ],
+                  "target_command_key": "config.profile.edit"
+                },
+                "argument_bindings": []
+              },
               "message": "cli.overview.warning.intracomunitario_unset"
             },
             {
@@ -2195,6 +2411,21 @@
                 "296"
               ],
               "code": "has_employees",
+              "fix_action": {
+                "action": {
+                  "action": {
+                    "action_id": "operator.profile.edit"
+                  },
+                  "arguments": null,
+                  "cli_path": [
+                    "config",
+                    "profile",
+                    "edit"
+                  ],
+                  "target_command_key": "config.profile.edit"
+                },
+                "argument_bindings": []
+              },
               "message": "cli.overview.warning.has_employees_unset"
             },
             {
@@ -2202,6 +2433,21 @@
                 "131"
               ],
               "code": "irpf.estimation_regime",
+              "fix_action": {
+                "action": {
+                  "action": {
+                    "action_id": "operator.profile.edit"
+                  },
+                  "arguments": null,
+                  "cli_path": [
+                    "config",
+                    "profile",
+                    "edit"
+                  ],
+                  "target_command_key": "config.profile.edit"
+                },
+                "argument_bindings": []
+              },
               "message": "cli.overview.warning.estimacion_objetiva_unset"
             },
             {
@@ -2210,6 +2456,21 @@
                 "193"
               ],
               "code": "pays_capital_income_with_retencion",
+              "fix_action": {
+                "action": {
+                  "action": {
+                    "action_id": "operator.profile.edit"
+                  },
+                  "arguments": null,
+                  "cli_path": [
+                    "config",
+                    "profile",
+                    "edit"
+                  ],
+                  "target_command_key": "config.profile.edit"
+                },
+                "argument_bindings": []
+              },
               "message": "cli.overview.warning.retencion_capital_unset"
             },
             {
@@ -2220,6 +2481,21 @@
                 "296"
               ],
               "code": "pays_professionals_with_retencion",
+              "fix_action": {
+                "action": {
+                  "action": {
+                    "action_id": "operator.profile.edit"
+                  },
+                  "arguments": null,
+                  "cli_path": [
+                    "config",
+                    "profile",
+                    "edit"
+                  ],
+                  "target_command_key": "config.profile.edit"
+                },
+                "argument_bindings": []
+              },
               "message": "cli.overview.warning.retencion_profesionales_unset"
             },
             {
@@ -2228,6 +2504,21 @@
                 "180"
               ],
               "code": "pays_rent_with_retencion",
+              "fix_action": {
+                "action": {
+                  "action": {
+                    "action_id": "operator.profile.edit"
+                  },
+                  "arguments": null,
+                  "cli_path": [
+                    "config",
+                    "profile",
+                    "edit"
+                  ],
+                  "target_command_key": "config.profile.edit"
+                },
+                "argument_bindings": []
+              },
               "message": "cli.overview.warning.retencion_arrendamientos_unset"
             },
             {
@@ -2235,6 +2526,21 @@
                 "347"
               ],
               "code": "third_party_transactions_above_347_threshold",
+              "fix_action": {
+                "action": {
+                  "action": {
+                    "action_id": "operator.profile.edit"
+                  },
+                  "arguments": null,
+                  "cli_path": [
+                    "config",
+                    "profile",
+                    "edit"
+                  ],
+                  "target_command_key": "config.profile.edit"
+                },
+                "argument_bindings": []
+              },
               "message": "cli.overview.warning.terceros_threshold_unset"
             },
             {
@@ -2248,6 +2554,21 @@
                 "714"
               ],
               "code": "censo.enrolment_unverified",
+              "fix_action": {
+                "action": {
+                  "action": {
+                    "action_id": "operator.profile.edit"
+                  },
+                  "arguments": null,
+                  "cli_path": [
+                    "config",
+                    "profile",
+                    "edit"
+                  ],
+                  "target_command_key": "config.profile.edit"
+                },
+                "argument_bindings": []
+              },
               "message": "cli.overview.warning.censo_enrolment_unverified"
             }
           ]
@@ -5522,399 +5843,585 @@
               "adjusted_closes_on": "2026-01-30",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
-              "justificante_required": true,
+              "detail_action": {
+                "action": {
+                  "action_id": "operator.overview.explain",
+                  "cli_path": [
+                    "app",
+                    "overview",
+                    "explain"
+                  ],
+                  "target_command_key": "overview.explain"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "130"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2025
+                  }
+                ]
+              },
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
-              "local_work_unit_id": null,
-              "local_work_unit_name": null,
-              "local_work_unit_revision_id": null,
               "modelo": "130",
-              "payment_cutoff_on": "2026-01-27",
               "period": "2025 4T",
-              "recovery": {
-                "next_action": {
-                  "action": {
-                    "action_id": "operator.modelo.work.create",
-                    "cli_path": [
-                      "app",
-                      "modelo",
-                      "work",
-                      "create"
-                    ],
-                    "target_command_key": "modelo.work.create"
-                  },
-                  "argument_bindings": [
-                    {
-                      "argument_name": "modelo",
-                      "source": "operator_action.verdict_context",
-                      "source_evidence_id": null,
-                      "source_key": "modelo",
-                      "status": "resolved",
-                      "value": "130"
-                    },
-                    {
-                      "argument_name": "period",
-                      "source": "operator_action.verdict_context",
-                      "source_evidence_id": null,
-                      "source_key": "period",
-                      "status": "resolved",
-                      "value": "4T"
-                    },
-                    {
-                      "argument_name": "year",
-                      "source": "operator_action.verdict_context",
-                      "source_evidence_id": null,
-                      "source_key": "year",
-                      "status": "resolved",
-                      "value": 2025
-                    }
-                  ]
-                },
-                "recargo_band": {
-                  "id": "completed_months_2",
-                  "interest_applies": false,
-                  "legal_ref": "ley-58-2003:art-27.2",
-                  "max_completed_months": 2,
-                  "min_completed_months": 2,
-                  "surcharge_pct": "3.00"
-                },
-                "still_filable": true
-              },
-              "status": "OVERDUE",
               "user_state": "late"
             },
             {
               "adjusted_closes_on": "2026-01-30",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
-              "justificante_required": true,
+              "detail_action": {
+                "action": {
+                  "action_id": "operator.overview.explain",
+                  "cli_path": [
+                    "app",
+                    "overview",
+                    "explain"
+                  ],
+                  "target_command_key": "overview.explain"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "303"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2025
+                  }
+                ]
+              },
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
-              "local_work_unit_id": null,
-              "local_work_unit_name": null,
-              "local_work_unit_revision_id": null,
               "modelo": "303",
-              "payment_cutoff_on": "2026-01-27",
               "period": "2025 4T",
-              "recovery": {
-                "next_action": {
-                  "action": {
-                    "action_id": "operator.modelo.work.create",
-                    "cli_path": [
-                      "app",
-                      "modelo",
-                      "work",
-                      "create"
-                    ],
-                    "target_command_key": "modelo.work.create"
-                  },
-                  "argument_bindings": [
-                    {
-                      "argument_name": "modelo",
-                      "source": "operator_action.verdict_context",
-                      "source_evidence_id": null,
-                      "source_key": "modelo",
-                      "status": "resolved",
-                      "value": "303"
-                    },
-                    {
-                      "argument_name": "period",
-                      "source": "operator_action.verdict_context",
-                      "source_evidence_id": null,
-                      "source_key": "period",
-                      "status": "resolved",
-                      "value": "4T"
-                    },
-                    {
-                      "argument_name": "year",
-                      "source": "operator_action.verdict_context",
-                      "source_evidence_id": null,
-                      "source_key": "year",
-                      "status": "resolved",
-                      "value": 2025
-                    }
-                  ]
-                },
-                "recargo_band": {
-                  "id": "completed_months_2",
-                  "interest_applies": false,
-                  "legal_ref": "ley-58-2003:art-27.2",
-                  "max_completed_months": 2,
-                  "min_completed_months": 2,
-                  "surcharge_pct": "3.00"
-                },
-                "still_filable": true
-              },
-              "status": "OVERDUE",
               "user_state": "late"
             },
             {
               "adjusted_closes_on": "2026-01-30",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
-              "justificante_required": true,
+              "detail_action": {
+                "action": {
+                  "action_id": "operator.overview.explain",
+                  "cli_path": [
+                    "app",
+                    "overview",
+                    "explain"
+                  ],
+                  "target_command_key": "overview.explain"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "390"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2025
+                  }
+                ]
+              },
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
-              "local_work_unit_id": null,
-              "local_work_unit_name": null,
-              "local_work_unit_revision_id": null,
               "modelo": "390",
-              "payment_cutoff_on": null,
               "period": "2025 0A",
-              "recovery": {
-                "next_action": {
-                  "action": {
-                    "action_id": "operator.modelo.work.create",
-                    "cli_path": [
-                      "app",
-                      "modelo",
-                      "work",
-                      "create"
-                    ],
-                    "target_command_key": "modelo.work.create"
-                  },
-                  "argument_bindings": [
-                    {
-                      "argument_name": "modelo",
-                      "source": "operator_action.verdict_context",
-                      "source_evidence_id": null,
-                      "source_key": "modelo",
-                      "status": "resolved",
-                      "value": "390"
-                    },
-                    {
-                      "argument_name": "period",
-                      "source": "operator_action.verdict_context",
-                      "source_evidence_id": null,
-                      "source_key": "period",
-                      "status": "resolved",
-                      "value": "0A"
-                    },
-                    {
-                      "argument_name": "year",
-                      "source": "operator_action.verdict_context",
-                      "source_evidence_id": null,
-                      "source_key": "year",
-                      "status": "resolved",
-                      "value": 2025
-                    }
-                  ]
-                },
-                "recargo_band": {
-                  "id": "completed_months_2",
-                  "interest_applies": false,
-                  "legal_ref": "ley-58-2003:art-27.2",
-                  "max_completed_months": 2,
-                  "min_completed_months": 2,
-                  "surcharge_pct": "3.00"
-                },
-                "still_filable": true
-              },
-              "status": "OVERDUE",
               "user_state": "late"
             },
             {
               "adjusted_closes_on": "2026-04-20",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
-              "justificante_required": true,
+              "detail_action": {
+                "action": {
+                  "action_id": "operator.overview.explain",
+                  "cli_path": [
+                    "app",
+                    "overview",
+                    "explain"
+                  ],
+                  "target_command_key": "overview.explain"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "130"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2026
+                  }
+                ]
+              },
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
-              "local_work_unit_id": null,
-              "local_work_unit_name": null,
-              "local_work_unit_revision_id": null,
               "modelo": "130",
-              "payment_cutoff_on": "2026-04-15",
               "period": "2026 1T",
-              "recovery": null,
-              "status": "UPCOMING",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-04-20",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
-              "justificante_required": true,
+              "detail_action": {
+                "action": {
+                  "action_id": "operator.overview.explain",
+                  "cli_path": [
+                    "app",
+                    "overview",
+                    "explain"
+                  ],
+                  "target_command_key": "overview.explain"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "136"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2026
+                  }
+                ]
+              },
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
-              "local_work_unit_id": null,
-              "local_work_unit_name": null,
-              "local_work_unit_revision_id": null,
               "modelo": "136",
-              "payment_cutoff_on": null,
               "period": "2026 1T",
-              "recovery": null,
-              "status": "UPCOMING",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-04-20",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
-              "justificante_required": true,
+              "detail_action": {
+                "action": {
+                  "action_id": "operator.overview.explain",
+                  "cli_path": [
+                    "app",
+                    "overview",
+                    "explain"
+                  ],
+                  "target_command_key": "overview.explain"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "303"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2026
+                  }
+                ]
+              },
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
-              "local_work_unit_id": null,
-              "local_work_unit_name": null,
-              "local_work_unit_revision_id": null,
               "modelo": "303",
-              "payment_cutoff_on": null,
               "period": "2026 1T",
-              "recovery": null,
-              "status": "UPCOMING",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-06-30",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
-              "justificante_required": true,
+              "detail_action": {
+                "action": {
+                  "action_id": "operator.overview.explain",
+                  "cli_path": [
+                    "app",
+                    "overview",
+                    "explain"
+                  ],
+                  "target_command_key": "overview.explain"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "100"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2025
+                  }
+                ]
+              },
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
-              "local_work_unit_id": null,
-              "local_work_unit_name": null,
-              "local_work_unit_revision_id": null,
               "modelo": "100",
-              "payment_cutoff_on": "2026-06-25",
               "period": "2025 0A",
-              "recovery": null,
-              "status": "UPCOMING",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-06-30",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
-              "justificante_required": true,
+              "detail_action": {
+                "action": {
+                  "action_id": "operator.overview.explain",
+                  "cli_path": [
+                    "app",
+                    "overview",
+                    "explain"
+                  ],
+                  "target_command_key": "overview.explain"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "714"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2025
+                  }
+                ]
+              },
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
-              "local_work_unit_id": null,
-              "local_work_unit_name": null,
-              "local_work_unit_revision_id": null,
               "modelo": "714",
-              "payment_cutoff_on": null,
               "period": "2025 0A",
-              "recovery": null,
-              "status": "UPCOMING",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-07-20",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
-              "justificante_required": true,
+              "detail_action": {
+                "action": {
+                  "action_id": "operator.overview.explain",
+                  "cli_path": [
+                    "app",
+                    "overview",
+                    "explain"
+                  ],
+                  "target_command_key": "overview.explain"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "130"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2026
+                  }
+                ]
+              },
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
-              "local_work_unit_id": null,
-              "local_work_unit_name": null,
-              "local_work_unit_revision_id": null,
               "modelo": "130",
-              "payment_cutoff_on": "2026-07-15",
               "period": "2026 2T",
-              "recovery": null,
-              "status": "UPCOMING",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-07-20",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
-              "justificante_required": true,
+              "detail_action": {
+                "action": {
+                  "action_id": "operator.overview.explain",
+                  "cli_path": [
+                    "app",
+                    "overview",
+                    "explain"
+                  ],
+                  "target_command_key": "overview.explain"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "136"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2026
+                  }
+                ]
+              },
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
-              "local_work_unit_id": null,
-              "local_work_unit_name": null,
-              "local_work_unit_revision_id": null,
               "modelo": "136",
-              "payment_cutoff_on": null,
               "period": "2026 2T",
-              "recovery": null,
-              "status": "UPCOMING",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-07-20",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
-              "justificante_required": true,
+              "detail_action": {
+                "action": {
+                  "action_id": "operator.overview.explain",
+                  "cli_path": [
+                    "app",
+                    "overview",
+                    "explain"
+                  ],
+                  "target_command_key": "overview.explain"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "303"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2026
+                  }
+                ]
+              },
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
-              "local_work_unit_id": null,
-              "local_work_unit_name": null,
-              "local_work_unit_revision_id": null,
               "modelo": "303",
-              "payment_cutoff_on": null,
               "period": "2026 2T",
-              "recovery": null,
-              "status": "UPCOMING",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-09-30",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
-              "justificante_required": true,
+              "detail_action": {
+                "action": {
+                  "action_id": "operator.overview.explain",
+                  "cli_path": [
+                    "app",
+                    "overview",
+                    "explain"
+                  ],
+                  "target_command_key": "overview.explain"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "360"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2025
+                  }
+                ]
+              },
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
-              "local_work_unit_id": null,
-              "local_work_unit_name": null,
-              "local_work_unit_revision_id": null,
               "modelo": "360",
-              "payment_cutoff_on": null,
               "period": "2025 AD-HOC",
-              "recovery": null,
-              "status": "UPCOMING",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-10-20",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
-              "justificante_required": true,
+              "detail_action": {
+                "action": {
+                  "action_id": "operator.overview.explain",
+                  "cli_path": [
+                    "app",
+                    "overview",
+                    "explain"
+                  ],
+                  "target_command_key": "overview.explain"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "130"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2026
+                  }
+                ]
+              },
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
-              "local_work_unit_id": null,
-              "local_work_unit_name": null,
-              "local_work_unit_revision_id": null,
               "modelo": "130",
-              "payment_cutoff_on": "2026-10-15",
               "period": "2026 3T",
-              "recovery": null,
-              "status": "UPCOMING",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-10-20",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
-              "justificante_required": true,
+              "detail_action": {
+                "action": {
+                  "action_id": "operator.overview.explain",
+                  "cli_path": [
+                    "app",
+                    "overview",
+                    "explain"
+                  ],
+                  "target_command_key": "overview.explain"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "136"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2026
+                  }
+                ]
+              },
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
-              "local_work_unit_id": null,
-              "local_work_unit_name": null,
-              "local_work_unit_revision_id": null,
               "modelo": "136",
-              "payment_cutoff_on": null,
               "period": "2026 3T",
-              "recovery": null,
-              "status": "UPCOMING",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-10-20",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
-              "justificante_required": true,
+              "detail_action": {
+                "action": {
+                  "action_id": "operator.overview.explain",
+                  "cli_path": [
+                    "app",
+                    "overview",
+                    "explain"
+                  ],
+                  "target_command_key": "overview.explain"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "303"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2026
+                  }
+                ]
+              },
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
-              "local_work_unit_id": null,
-              "local_work_unit_name": null,
-              "local_work_unit_revision_id": null,
               "modelo": "303",
-              "payment_cutoff_on": null,
               "period": "2026 3T",
-              "recovery": null,
-              "status": "UPCOMING",
               "user_state": "due"
             }
           ],
@@ -6097,12 +6604,6 @@
               "verdict": "incomplete"
             },
             {
-              "modelo": "194",
-              "period": "2025 0A",
-              "reason": "No se puede determinar la aplicabilidad de este modelo desde el modelo de contribuyente declarado: depende de un hecho que el perfil no expresa con certeza. El modelo solo se afirma aplicable cuando ese hecho se declara positivamente; en otro caso no se conjetura una obligación. Hecho requerido para este modelo: paga rendimientos del capital mobiliario sujetos a retención.",
-              "verdict": "incomplete"
-            },
-            {
               "modelo": "200",
               "period": "2025 0A",
               "reason": "Modelo 200 no aplica: la autoliquidación del Impuesto sobre Sociedades local corresponde a entidades jurídicas contribuyentes del IS en la ruta residente. Un perfil NON_RESIDENT_IRNR sin eje modelado de establecimiento permanente en España no puede tratarse como listo para Modelo 200; use la ruta IRNR/Modelo 210 por AEAT Sede cuando actúe sin establecimiento permanente.",
@@ -6161,12 +6662,6 @@
               "period": "2025 0A",
               "reason": "Modelo 232 no aplica: la obligacion informativa solo alcanza al contribuyente del Impuesto sobre Sociedades con operaciones vinculadas por encima de los umbrales del articulo 13.4 del RIS o con operaciones y situaciones relacionadas con paraisos fiscales.",
               "verdict": "not_applicable"
-            },
-            {
-              "modelo": "270",
-              "period": "2025 0A",
-              "reason": "No se puede determinar la aplicabilidad de este modelo: todavía no se ha derivado una regla de aplicabilidad para él. La cobertura de reglas es deliberadamente reducida (el conjunto inicial de personas) y la expansión por entidad y régimen está pendiente. No es una afirmación sobre su perfil: su tipo de contribuyente puede estar correctamente declarado.",
-              "verdict": "incomplete"
             },
             {
               "modelo": "280",
@@ -6296,12 +6791,6 @@
             },
             {
               "modelo": "353",
-              "period": "2026 01",
-              "reason": "No se puede determinar la aplicabilidad de este modelo desde el modelo de contribuyente declarado: depende de un hecho que el perfil no expresa con certeza. El modelo solo se afirma aplicable cuando ese hecho se declara positivamente; en otro caso no se conjetura una obligación. Hecho requerido para este modelo: esta inscrito como entidad dominante de un grupo de IVA.",
-              "verdict": "incomplete"
-            },
-            {
-              "modelo": "353",
               "period": "2026 02",
               "reason": "No se puede determinar la aplicabilidad de este modelo desde el modelo de contribuyente declarado: depende de un hecho que el perfil no expresa con certeza. El modelo solo se afirma aplicable cuando ese hecho se declara positivamente; en otro caso no se conjetura una obligación. Hecho requerido para este modelo: esta inscrito como entidad dominante de un grupo de IVA.",
               "verdict": "incomplete"
@@ -6397,12 +6886,6 @@
               "verdict": "incomplete"
             },
             {
-              "modelo": "721",
-              "period": "2025 0A",
-              "reason": "No se puede determinar la aplicabilidad de este modelo desde el modelo de contribuyente declarado: depende de un hecho que el perfil no expresa con certeza. El modelo solo se afirma aplicable cuando ese hecho se declara positivamente; en otro caso no se conjetura una obligación. Hecho requerido para este modelo: posee monedas virtuales situadas en el extranjero por encima del umbral.",
-              "verdict": "incomplete"
-            },
-            {
               "modelo": "763",
               "period": "2025 4T",
               "reason": "No se puede determinar la aplicabilidad de este modelo: todavía no se ha derivado una regla de aplicabilidad para él. La cobertura de reglas es deliberadamente reducida (el conjunto inicial de personas) y la expansión por entidad y régimen está pendiente. No es una afirmación sobre su perfil: su tipo de contribuyente puede estar correctamente declarado.",
@@ -6435,6 +6918,21 @@
                 "130"
               ],
               "code": "art109_activity_income_withholding_ge_70pct",
+              "fix_action": {
+                "action": {
+                  "action": {
+                    "action_id": "operator.profile.edit"
+                  },
+                  "arguments": null,
+                  "cli_path": [
+                    "config",
+                    "profile",
+                    "edit"
+                  ],
+                  "target_command_key": "config.profile.edit"
+                },
+                "argument_bindings": []
+              },
               "message": "cli.overview.warning.art109_activity_income_withholding_ge_70pct_unset"
             },
             {
@@ -6442,6 +6940,21 @@
                 "349"
               ],
               "code": "does_intracomunitario",
+              "fix_action": {
+                "action": {
+                  "action": {
+                    "action_id": "operator.profile.edit"
+                  },
+                  "arguments": null,
+                  "cli_path": [
+                    "config",
+                    "profile",
+                    "edit"
+                  ],
+                  "target_command_key": "config.profile.edit"
+                },
+                "argument_bindings": []
+              },
               "message": "cli.overview.warning.intracomunitario_unset"
             },
             {
@@ -6452,6 +6965,21 @@
                 "296"
               ],
               "code": "has_employees",
+              "fix_action": {
+                "action": {
+                  "action": {
+                    "action_id": "operator.profile.edit"
+                  },
+                  "arguments": null,
+                  "cli_path": [
+                    "config",
+                    "profile",
+                    "edit"
+                  ],
+                  "target_command_key": "config.profile.edit"
+                },
+                "argument_bindings": []
+              },
               "message": "cli.overview.warning.has_employees_unset"
             },
             {
@@ -6459,6 +6987,21 @@
                 "131"
               ],
               "code": "irpf.estimation_regime",
+              "fix_action": {
+                "action": {
+                  "action": {
+                    "action_id": "operator.profile.edit"
+                  },
+                  "arguments": null,
+                  "cli_path": [
+                    "config",
+                    "profile",
+                    "edit"
+                  ],
+                  "target_command_key": "config.profile.edit"
+                },
+                "argument_bindings": []
+              },
               "message": "cli.overview.warning.estimacion_objetiva_unset"
             },
             {
@@ -6467,6 +7010,21 @@
                 "193"
               ],
               "code": "pays_capital_income_with_retencion",
+              "fix_action": {
+                "action": {
+                  "action": {
+                    "action_id": "operator.profile.edit"
+                  },
+                  "arguments": null,
+                  "cli_path": [
+                    "config",
+                    "profile",
+                    "edit"
+                  ],
+                  "target_command_key": "config.profile.edit"
+                },
+                "argument_bindings": []
+              },
               "message": "cli.overview.warning.retencion_capital_unset"
             },
             {
@@ -6477,6 +7035,21 @@
                 "296"
               ],
               "code": "pays_professionals_with_retencion",
+              "fix_action": {
+                "action": {
+                  "action": {
+                    "action_id": "operator.profile.edit"
+                  },
+                  "arguments": null,
+                  "cli_path": [
+                    "config",
+                    "profile",
+                    "edit"
+                  ],
+                  "target_command_key": "config.profile.edit"
+                },
+                "argument_bindings": []
+              },
               "message": "cli.overview.warning.retencion_profesionales_unset"
             },
             {
@@ -6485,6 +7058,21 @@
                 "180"
               ],
               "code": "pays_rent_with_retencion",
+              "fix_action": {
+                "action": {
+                  "action": {
+                    "action_id": "operator.profile.edit"
+                  },
+                  "arguments": null,
+                  "cli_path": [
+                    "config",
+                    "profile",
+                    "edit"
+                  ],
+                  "target_command_key": "config.profile.edit"
+                },
+                "argument_bindings": []
+              },
               "message": "cli.overview.warning.retencion_arrendamientos_unset"
             },
             {
@@ -6492,6 +7080,21 @@
                 "347"
               ],
               "code": "third_party_transactions_above_347_threshold",
+              "fix_action": {
+                "action": {
+                  "action": {
+                    "action_id": "operator.profile.edit"
+                  },
+                  "arguments": null,
+                  "cli_path": [
+                    "config",
+                    "profile",
+                    "edit"
+                  ],
+                  "target_command_key": "config.profile.edit"
+                },
+                "argument_bindings": []
+              },
               "message": "cli.overview.warning.terceros_threshold_unset"
             },
             {
@@ -6505,6 +7108,21 @@
                 "714"
               ],
               "code": "censo.enrolment_unverified",
+              "fix_action": {
+                "action": {
+                  "action": {
+                    "action_id": "operator.profile.edit"
+                  },
+                  "arguments": null,
+                  "cli_path": [
+                    "config",
+                    "profile",
+                    "edit"
+                  ],
+                  "target_command_key": "config.profile.edit"
+                },
+                "argument_bindings": []
+              },
               "message": "cli.overview.warning.censo_enrolment_unverified"
             }
           ]

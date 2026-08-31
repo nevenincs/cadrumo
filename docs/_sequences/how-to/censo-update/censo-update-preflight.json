@@ -5,12 +5,12 @@
         "aeat",
         "--format",
         "json",
-        "config",
-        "profile",
-        "preflight",
+        "app",
+        "modelo",
+        "readiness",
         "--modelo",
         "303",
-        "--filing-year",
+        "--year",
         "2026",
         "--period",
         "1T"
@@ -18,37 +18,83 @@
       "captures": [],
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
-        "command": "config.profile.preflight",
+        "command": "modelo.readiness",
         "notices": [
           {
             "action": null,
-            "code": "config.profile.preflight.per_operation_axis_not_assessed",
+            "code": "modelo.readiness.per_operation_axis_not_assessed",
             "context": {
               "modelo": "303",
-              "ready": "True"
+              "profile_ready": "True"
             },
-            "message": "No schema-required profile field is declared for Modelo 303; readiness covers identity and conditional checks only, not a complete per-modelo assessment.",
+            "message": "No schema-required profile field is currently declared for Modelo 303, so profile_ready reflects only the export-identity and conditional checks, not a per-modelo assessment. Do not read profile_ready as a complete check for this modelo.",
             "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.readiness.ledger_preflight_scope",
+            "context": {
+              "binding_ready": "false",
+              "ledger_ready": "true",
+              "missing_bindings": "4"
+            },
+            "message": "ledger_ready only means the period ledger rows passed transaction preflight; missing_bindings/source_binding_ready still decide source completeness.",
+            "severity": "info"
           }
         ],
         "result": {
+          "binding_ready": false,
           "filing_year": 2026,
+          "ledger_checked_transaction_count": 0,
+          "ledger_issues": [],
+          "ledger_period": {
+            "code": "1T",
+            "filing_year": 2026
+          },
+          "ledger_preflight_required": true,
+          "ledger_ready": true,
           "missing": [],
+          "missing_bindings": [
+            {
+              "binding_id": "modelo-303-autoconsumo-promotor-base",
+              "input_channel": "decimal",
+              "source": "profile"
+            },
+            {
+              "binding_id": "modelo-303-bienes-inversion-regularizacion-casilla-43",
+              "input_channel": "decimal",
+              "source": "bienes_inversion_regularizacion"
+            },
+            {
+              "binding_id": "modelo-303-compensacion-pendiente-anteriores",
+              "input_channel": "decimal",
+              "source": "previous_filing"
+            },
+            {
+              "binding_id": "modelo-303-prorrata-regularizacion-casilla-44",
+              "input_channel": "decimal",
+              "source": "prorrata_regularizacion"
+            }
+          ],
           "modelo": "303",
-          "per_operation_requirements_assessed": false,
+          "operation": "modelo.readiness",
           "period": {
             "code": "1T",
             "filing_year": 2026
           },
           "profile_id": "<profile-id>",
-          "ready": true,
+          "profile_ready": true,
+          "profile_refusal": "",
+          "ready": false,
+          "registry_ready": true,
+          "registry_refusal": "",
           "revision_id": "2026-y-siguientes"
         },
         "schema_version": "2",
         "status": "warning"
       },
       "envelope_source": "stdout",
-      "exit_code": 0,
+      "exit_code": 2,
       "kind": "result",
       "stderr_text": null,
       "text": null

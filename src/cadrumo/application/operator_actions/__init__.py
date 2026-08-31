@@ -20,6 +20,7 @@ from ._models import (
 )
 from ._preconditions import (
     active_profile_pointer_repair_verdict,
+    conditionality_for_binding,
     corrupt_active_profile_pointer_verdict,
     no_action_precondition_verdict,
 )
@@ -36,6 +37,7 @@ __all__ = [
     "PreconditionVerdict",
     "active_profile_pointer_repair_verdict",
     "build_action_catalogue",
+    "conditionality_for_binding",
     "corrupt_active_profile_pointer_verdict",
     "lookup_action",
     "next_action",

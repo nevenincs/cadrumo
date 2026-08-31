@@ -61,27 +61,29 @@ from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.justificante import JustificanteRepositoryProtocol
 from ...domain.modelos import (
     CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY,
-    CalculationRevision,
     CalculationRevisionAggregateContext,
-    CalculationRevisionAmendmentIdentity,
-    CalculationRevisionAmendmentKind,
-    CalculationRevisionCatalogue,
     CalculationRevisionCatalogueRepositoryProtocol,
-    CalculationRevisionState,
-    FilingInstanceEvidence,
-    M303RectificativaMotive,
     ModeloRecord,
     ModeloRecordCatalogue,
     ModeloRecordCatalogueRepositoryProtocol,
     ModeloRecordStatus,
     WorkUnit,
     WorkUnitCatalogue,
-    derive_calculation_revision_id,
     derive_filing_record_id,
     m303_rectificativa_motive_is_applicable,
     upsert_calculation_revision,
     upsert_filing_record,
     upsert_work_unit,
+)
+from ...domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionAmendmentIdentity,
+    CalculationRevisionAmendmentKind,
+    CalculationRevisionCatalogue,
+    CalculationRevisionState,
+    FilingInstanceEvidence,
+    M303RectificativaMotive,
+    derive_calculation_revision_id,
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ._action_errors import (

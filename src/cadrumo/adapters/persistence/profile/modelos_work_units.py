@@ -40,11 +40,8 @@ from typing import TYPE_CHECKING
 
 from ....core.bucket_pointer import resolve_repository_bucket_id
 from ....core.logging import get_logger
-from ....domain.modelos import (
-    WorkUnitCatalogue,
-    WorkUnitPersistenceError,
-    raise_catalogue_integrity_error,
-)
+from ....domain.modelos import WorkUnitCatalogue, WorkUnitPersistenceError
+from ....domain.modelos.errors import raise_catalogue_integrity_error
 from ..storage import MODELO_WORK_UNIT_CATALOGUE_NAMESPACE, secure_object_repository_for_bucket
 from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
 
@@ -186,7 +183,7 @@ class WorkUnitCatalogueRepository:
         try:
             catalogue, revision_id = self._storage.load_revisioned()
         except (ClassificationError, EnvelopeVersionError) as exc:
-            context = dict(exc.context)
+            context = dict(exc.context) if exc.context is not None else {}
             if context.get("reason") in {"classification_mismatch", "unsupported_envelope_version"}:
                 message = (
                     "work-unit catalogue classification mismatch"

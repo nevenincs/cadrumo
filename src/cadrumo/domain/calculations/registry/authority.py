@@ -29,9 +29,19 @@ from ....core.access_gate import (
 from ....core.hashing import content_hash_hex
 from ....core.identity import ContentDigest
 from ....core.resources import bundled_path as _bundled_path
+from ._snapshot_internals import _build_validated_snapshot
 from ._source_evidence_fingerprint import collect_source_evidence_fingerprints
 from ._supplementary_orden import collect_supplementary_orden_fingerprints, compile_supplementary_ordenes
+from ._supported_filing_years import SupportedFilingYearGap, audit_supported_filing_years
+from ._validate import RegistryValidator
 from ._validate_evidence import flush_corpus_text_cache
+from ._verdict_cache import (
+    certify_registry_validation,
+    compute_verdict_key,
+    registry_validation_is_certified,
+    shipped_verdict_location,
+    stamp_bundled_verdict,
+)
 from .convenio import collect_convenio_fingerprints, load_convenio_authority, validate_convenio_legal_refs
 from .errors import RegistrySnapshotError, RegistryValidationError
 from .identity import (
@@ -49,20 +59,8 @@ from .schema import (
     RegistryCatalogues,
     RegistrySnapshot,
 )
-from .snapshot import (
-    _build_validated_snapshot,  # pyright: ignore[reportPrivateUsage]  # the registry authority owns snapshot admission
-)
 from .static_inspection import RegistryRevisionInspection, StaticGeneratedArtifactInspection
-from .supported_filing_years import SupportedFilingYearGap, audit_supported_filing_years
 from .temporal import coverage_assessment_horizon, revision_selection_coordinates, select_revision
-from .validate import RegistryValidator
-from .verdict_cache import (
-    certify_registry_validation,
-    compute_verdict_key,
-    registry_validation_is_certified,
-    shipped_verdict_location,
-    stamp_bundled_verdict,
-)
 
 
 def collect_registry_identity_fingerprints(resolved_root: Path) -> FingerprintTuples:
@@ -751,6 +749,46 @@ class ValidatedRegistryAuthority:
     def supported_filing_year_gaps(self) -> tuple[SupportedFilingYearGap, ...]:
         """Return the complete advisory gap projection for declared years."""
         return self._supported_filing_year_gaps
+
+    def filing_bound_advisories_for_cell(
+        self,
+        modelo_id: str,
+        *,
+        filing_year: int,
+        period: str,
+    ) -> tuple[str, ...]:
+        """Return advisory lines for the exact cell being resolved, if it is bounded.
+
+        The whole-corpus projection carries every gapped cell, which is far too
+        many to surface on a resolution: an operator filing one period does not
+        need the other several hundred. This narrows it to the cell asked for,
+        so a caller can attach an advisory only when THIS filing is the one the
+        corpus cannot fully back.
+
+        Advisory, never a refusal. A bounded cell can still be calculated and
+        inspected; what the operator loses is the assurance that a bundled AEAT
+        or BOE artefact backs it, that its revision declares filing grade, or
+        that a revision resolves for it at all. Refusing here would take away
+        the surface that reports the problem.
+
+        Args:
+            modelo_id: The modelo being resolved.
+            filing_year: The filing year being resolved.
+            period: The registry period token being resolved.
+
+        Returns:
+            One line per missing prerequisite for this cell, sorted. Empty when
+            the cell carries every prerequisite declared support requires.
+        """
+        matching = sorted(
+            gap.missing_prerequisite
+            for gap in self._supported_filing_year_gaps
+            if gap.modelo == modelo_id and gap.filing_year == filing_year and str(gap.period) == period
+        )
+        return tuple(
+            f"modelo {modelo_id} {filing_year} {period}: declared support is not fully backed -- missing {prerequisite}"
+            for prerequisite in matching
+        )
 
     def modelo_has_engine(self, modelo_id: str) -> bool:
         """Return whether ``modelo_id`` declares a calculation surface.

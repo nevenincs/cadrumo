@@ -45,8 +45,6 @@ from typing import TYPE_CHECKING, Protocol, TypedDict
 
 from pydantic import BaseModel, Field, field_validator
 
-from cadrumo.application.operations.events import OperationLogSeverity
-
 from ...adapters.outbound.aeat.sede import (
     Declaracion,
     DeclaracionesRegisterSession,
@@ -78,6 +76,7 @@ from ...domain.calculations.registry.schema import (
 )
 from ...domain.calculations.registry.temporal import select_revision
 from ...domain.calculations.registry.verification_tolerance import verification_tolerance_or_exact
+from ..operations.events import OperationLogSeverity
 from ..operations.owner import OperationEventEmitter
 from ..storage.sync_runs import (
     SyncRunRecordReference,
@@ -2144,7 +2143,7 @@ async def _capture_filed_history_notifications(
 ) -> _FiledHistoryNotificationsStage:
     """Capture notifications without allowing an independent failure to erase filed history."""
     try:
-        from .live.notifications import capture_notifications
+        from .notifications import capture_notifications
 
         snapshot = await capture_notifications(bucket_id=require_active_bucket_id())
     except Exception as exc:
@@ -2156,7 +2155,7 @@ async def _capture_filed_history_notifications(
         )
     return _FiledHistoryNotificationsStage(
         status="captured",
-        row_count=getattr(snapshot, "row_count", 0) or 0,
+        row_count=len(snapshot.rows),
     )
 
 

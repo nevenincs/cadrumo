@@ -28,29 +28,26 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
-from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.ids import RelationId
-from cadrumo.domain.calculations.registry.relations import materialize_relation_binding_values
-from cadrumo.domain.calculations.registry.temporal import select_revision
-
 from ....core import CasillaId, Period, ResultDisposition, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.modelos import (
+from ....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
+from ....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
+from ....domain.calculations.registry.ids import RelationId
+from ....domain.calculations.registry.relations import materialize_relation_binding_values
+from ....domain.calculations.registry.temporal import select_revision
+from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
+from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    ModeloCode,
-    WorkUnit,
     derive_calculation_revision_id,
-    derive_work_unit_id,
 )
 from ....tests import general_m303_filing_evidence
 from ....tests.registry_tree import bundled_registry_tree
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo._filed_revision_observation import persist_filed_revision_observation
-from .._iva_compensation_history import IvaCompensationHistoryRepository
-from .._observations_repository import CalculationObservationRepository
 from .._relation_prefill import resolve_relations_from_local_store
+from ..iva_compensation_history import IvaCompensationHistoryRepository
+from ..observations_repository import CalculationObservationRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

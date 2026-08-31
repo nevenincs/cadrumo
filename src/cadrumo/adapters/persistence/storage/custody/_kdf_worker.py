@@ -14,7 +14,7 @@ from argon2.exceptions import Argon2Error
 from argon2.low_level import Type, hash_secret_raw
 
 from .....core.external_constants import UTF_8_ENCODING
-from ..crypto import GCM_TAG_SIZE, KEY_SIZE, EncryptedBlob, decrypt_record, encrypt_record
+from ..crypto.aead import GCM_TAG_SIZE, KEY_SIZE, EncryptedBlob, decrypt_record, encrypt_record
 from ..errors import DecryptionError, EncryptionError
 from ._kdf_attestation import kdf_worker_ready_attestation
 from ._kdf_codec import (
@@ -28,12 +28,12 @@ from ._kdf_worker_supervision import (
     KDF_CALIBRATED_FRAME,
     KDF_FAILED_FRAME,
 )
-from ._records import (
+from ._recovery_secret_codec import decode_recovery_secret
+from .records import (
     ProfileCustodyKdfParameters,
     ProfileCustodyWrappedDek,
     _decode_profile_password,
 )
-from ._recovery_secret_codec import decode_recovery_secret
 
 _CALIBRATION_PASSWORD = b"cadrumo-profile-kdf-calibration-v1"
 

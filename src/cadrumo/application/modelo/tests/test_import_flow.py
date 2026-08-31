@@ -20,12 +20,8 @@ from ....domain.buckets import (
     BucketEventObjectType,
     BucketEventType,
 )
-from ....domain.modelos import (
-    CalculationRevisionAmendmentKind,
-    CalculationRevisionState,
-    ExternalEvidenceKind,
-    ModeloRecordStatus,
-)
+from ....domain.modelos import ExternalEvidenceKind, ModeloRecordStatus
+from ....domain.modelos.calculation_revision import CalculationRevisionAmendmentKind, CalculationRevisionState
 from .._amendment_actions import amend_modelo_revision
 from .._calculation_actions import get_calculation_revision
 from .._filing_actions import get_filing_record

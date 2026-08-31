@@ -13,7 +13,7 @@ from ....adapters.outbound.google import (
 )
 from .._common import emit_envelope
 from ._google_errors import _google_refusal
-from ._google_folder_payloads import GoogleFolderGetResult, GoogleFolderSetResult
+from ._google_folder_payloads import GoogleFolderSetResult, GoogleFolderViewResult
 
 if TYPE_CHECKING:
     import typer
@@ -40,24 +40,24 @@ def google_folder_set(ctx: typer.Context, folder_id: str) -> None:
     )
 
 
-def google_folder_get(ctx: typer.Context) -> None:
+def google_folder_view(ctx: typer.Context) -> None:
     """Show the persisted Drive root folder id for the active profile."""
     try:
         active = resolve_active_profile()
     except GoogleAuthError as exc:
         raise _google_refusal(exc) from exc
     config = load_drive_config(active)
-    result = GoogleFolderGetResult(
+    result = GoogleFolderViewResult(
         profile=active,
         configured=config is not None,
         root_folder_id=config.root_folder_id if config is not None else None,
     )
     emit_envelope(
         ctx,
-        command="config.google.folder.get",
+        command="config.google.folder.view",
         result=result,
         lines=(
-            "operation\tconfig.google.folder.get",
+            "operation\tconfig.google.folder.view",
             f"profile\t{active}",
             f"configured\t{config is not None}",
             f"root_folder_id\t{config.root_folder_id if config is not None else '<unset>'}",
@@ -65,4 +65,4 @@ def google_folder_get(ctx: typer.Context) -> None:
     )
 
 
-__all__ = ["google_folder_get", "google_folder_set"]
+__all__ = ["google_folder_set", "google_folder_view"]

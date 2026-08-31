@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib
+import subprocess
 import sys
 from pathlib import Path
 
@@ -17,8 +18,8 @@ from ....core import (
     RegistrySchemaFamilyDisposition,
     RevisionReviewStatus,
 )
-from ....domain.modelos import CalculationSourceRef
-from ...registry import RegistryClosureLimb, RegistryClosureOwnerDisposition, RegistryClosureRefusal
+from ....domain.modelos.calculation_revision import CalculationSourceRef
+from ...registry.closure import RegistryClosureLimb, RegistryClosureOwnerDisposition, RegistryClosureRefusal
 from ..work_addressing import ModeloVisibleFilingTarget
 from ..workspace_models import (
     ModeloWorkspaceBaselineV1,
@@ -36,6 +37,7 @@ from ..workspace_models import (
     ModeloWorkspaceFlagFactValueV1,
     ModeloWorkspaceLocaleDisposition,
     ModeloWorkspaceLocaleSummaryV1,
+    ModeloWorkspaceLocalizedTextV1,
     ModeloWorkspaceMaterializationRecordV1,
     ModeloWorkspaceProjectionV1,
     ModeloWorkspaceProvenanceRecordV1,
@@ -55,6 +57,7 @@ from ..workspace_models import (
     ModeloWorkspaceSchemaRecordV1,
     ModeloWorkspaceSchemaReferenceV1,
     ModeloWorkspaceStaticInspectionScopeV1,
+    ModeloWorkspaceTechnicalLabelV1,
     ModeloWorkspaceTextFactValueV1,
     ModeloWorkspaceVersionRefusalV1,
     ModeloWorkspaceVisibleFilingTargetV1,
@@ -402,6 +405,7 @@ def test_workspace_schema_record_has_typed_destinations_for_every_explanatory_re
             "section_path": ("filing", "income"),
             "data_type": "decimal",
             "label": {
+                "kind": "localized",
                 "locale_key": "casilla.0001.label",
                 "value": "Base imponible",
                 "locale": {
@@ -428,6 +432,7 @@ def test_workspace_schema_record_has_typed_destinations_for_every_explanatory_re
 
     assert record.continuity[0].continuidad_id == "income-base"
     assert record.applicability[0].applicability_rule_id == "income-only"
+    assert record.constraints is not None
     assert record.constraints[0].casilla_id == "0001"
     assert record.formula_operands[0].kind == "formula_operand_binding"
     assert record.relation_endpoints[0].kind == "relation_target_binding"
@@ -539,14 +544,18 @@ def test_workspace_revision_assertion_axes_are_required_independent_and_current_
 
     assert ModeloWorkspaceResolvedTargetV1.model_validate_json(target.model_dump_json()) == target
     with pytest.raises(ValidationError, match="asserted_revision_id"):
-        ModeloWorkspaceRevisionAssertionV1(
-            source=ModeloWorkspaceRevisionAssertionSource.REQUESTED,
-            disposition=ModeloWorkspaceRevisionAssertionDisposition.MATCHED,
+        ModeloWorkspaceRevisionAssertionV1.model_validate(
+            {
+                "source": ModeloWorkspaceRevisionAssertionSource.REQUESTED,
+                "disposition": ModeloWorkspaceRevisionAssertionDisposition.MATCHED,
+            }
         )
     with pytest.raises(ValidationError, match="asserted_revision_id"):
-        ModeloWorkspaceRevisionAssertionV1(
-            source=ModeloWorkspaceRevisionAssertionSource.STORED,
-            disposition=ModeloWorkspaceRevisionAssertionDisposition.NOT_PRESENT,
+        ModeloWorkspaceRevisionAssertionV1.model_validate(
+            {
+                "source": ModeloWorkspaceRevisionAssertionSource.STORED,
+                "disposition": ModeloWorkspaceRevisionAssertionDisposition.NOT_PRESENT,
+            }
         )
     with pytest.raises(ValidationError, match="requested source"):
         ModeloWorkspaceResolvedTargetV1.model_validate(
@@ -682,8 +691,8 @@ def test_workspace_cursor_coordinate_mutations_are_refused_by_the_bounded_facet(
         if getattr(altered_cursor, field) != getattr(cursor, field)
     } == {coordinate}
     with pytest.raises(ValidationError, match=error):
-        ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1](
-            **{
+        ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1].model_validate(
+            {
                 **available.model_dump(),
                 "next_cursor": altered_cursor,
             }
@@ -748,11 +757,24 @@ def test_workspace_model_docs_and_active_tree_reach_the_public_module_fixed_poin
     repository = Path(__file__).resolve().parents[5]
     private_module = "_workspace" + "_models"
     public_module = "workspace_models"
-    scanned_paths = (
-        *sorted((repository / "src").rglob("*.py")),
-        *sorted((repository / "docs").rglob("*.rst")),
-        *sorted((repository / "dev").rglob("*.py")),
-        *sorted((repository / "dev").rglob("*.toml")),
+    tracked = subprocess.run(
+        ("git", "ls-files", "-z", "--", "src", "docs"),  # noqa: S607
+        capture_output=True,
+        check=True,
+        cwd=repository,
+        text=True,
+    ).stdout.split(chr(0))
+    scanned_paths = tuple(
+        sorted(
+            path
+            for entry in tracked
+            if entry.endswith((".py", ".rst", ".toml"))
+            # A path git still tracks can be absent from the working tree while
+            # a peer's deletion is in flight.  It carries no content to scan,
+            # and reading it would fail the gate on someone else's staging
+            # state rather than on a remnant.
+            if (path := repository / entry).is_file()
+        ),
     )
     remnants = tuple(
         path.relative_to(repository)
@@ -763,3 +785,143 @@ def test_workspace_model_docs_and_active_tree_reach_the_public_module_fixed_poin
     assert not remnants
     assert (repository / "docs" / "api" / f"cadrumo.application.modelo.{public_module}.rst").is_file()
     assert public_module in (repository / "docs" / "api" / "cadrumo.application.modelo.rst").read_text(encoding="utf-8")
+
+
+def test_workspace_schema_record_distinguishes_unmeasured_legal_grounding_from_declared_empty() -> None:
+    """None means the producer never carries the grounding; () means it does and declares none."""
+    base_payload = {
+        "reference": {"kind": "casilla", "casilla_id": "0001"},
+        "section_path": ("filing", "income"),
+        "data_type": "decimal",
+        "label": {
+            "kind": "localized",
+            "locale_key": "casilla.0001.label",
+            "value": "Base imponible",
+            "locale": {
+                "requested_language": OutputLanguage.ES,
+                "resolved_language": OutputLanguage.ES,
+                "disposition": ModeloWorkspaceLocaleDisposition.EXACT,
+                "catalogue_digest": _DIGEST,
+            },
+        },
+        "classification": ModeloWorkspaceSchemaClassification.PROJECTED,
+        "family_disposition": RegistrySchemaFamilyDisposition.POPULATED,
+    }
+
+    unmeasured = ModeloWorkspaceSchemaRecordV1.model_validate({**base_payload, "legal_refs": None, "constraints": None})
+    declared_empty = ModeloWorkspaceSchemaRecordV1.model_validate({**base_payload, "legal_refs": (), "constraints": ()})
+
+    assert unmeasured.legal_refs is None
+    assert unmeasured.constraints is None
+    assert declared_empty.legal_refs == ()
+    assert declared_empty.constraints == ()
+    assert unmeasured != declared_empty
+
+    # Round-trip through JSON must preserve the distinction, not collapse it.
+    reloaded = ModeloWorkspaceSchemaRecordV1.model_validate_json(unmeasured.model_dump_json())
+    assert reloaded.legal_refs is None
+    assert reloaded.constraints is None
+
+    # The default stays () for every caller that does not opt into the None-vs-empty distinction.
+    defaulted = ModeloWorkspaceSchemaRecordV1.model_validate(base_payload)
+    assert defaulted.legal_refs == ()
+    assert defaulted.constraints == ()
+
+
+def test_workspace_schema_record_label_distinguishes_localized_from_technical() -> None:
+    """A formula/binding/relation/parameter row's label is honest about never being translated."""
+    base_payload = {
+        "reference": {"kind": "formula", "formula_id": "modelo-130-rendimiento-neto"},
+        "section_path": ("formulas",),
+        "data_type": "formula_id",
+        "classification": ModeloWorkspaceSchemaClassification.PROJECTED,
+        "family_disposition": RegistrySchemaFamilyDisposition.POPULATED,
+    }
+
+    technical = ModeloWorkspaceSchemaRecordV1.model_validate(
+        {**base_payload, "label": {"kind": "technical", "identifier": "modelo-130-rendimiento-neto"}}
+    )
+    assert isinstance(technical.label, ModeloWorkspaceTechnicalLabelV1)
+    assert technical.label.identifier == "modelo-130-rendimiento-neto"
+
+    localized = ModeloWorkspaceSchemaRecordV1.model_validate(
+        {
+            **base_payload,
+            "reference": {"kind": "casilla", "casilla_id": "0001"},
+            "label": {
+                "kind": "localized",
+                "locale_key": "casilla.0001.label",
+                "value": "Base imponible",
+                "locale": {
+                    "requested_language": OutputLanguage.ES,
+                    "resolved_language": OutputLanguage.ES,
+                    "disposition": ModeloWorkspaceLocaleDisposition.EXACT,
+                    "catalogue_digest": _DIGEST,
+                },
+            },
+        }
+    )
+    assert isinstance(localized.label, ModeloWorkspaceLocalizedTextV1)
+    assert localized.label.value == "Base imponible"
+
+    # The default constructor path (no explicit "kind") still yields "localized",
+    # so every existing caller of ModeloWorkspaceLocalizedTextV1 is unaffected.
+    default_kind = ModeloWorkspaceLocalizedTextV1(
+        locale_key="k",
+        value="v",
+        locale=ModeloWorkspaceLocaleSummaryV1(
+            requested_language=OutputLanguage.ES,
+            resolved_language=OutputLanguage.ES,
+            disposition=ModeloWorkspaceLocaleDisposition.EXACT,
+            catalogue_digest=_DIGEST,
+        ),
+    )
+    assert default_kind.kind == "localized"
+
+    # Round-trip through JSON must preserve the discriminant.
+    reloaded_technical = ModeloWorkspaceSchemaRecordV1.model_validate_json(technical.model_dump_json())
+    assert isinstance(reloaded_technical.label, ModeloWorkspaceTechnicalLabelV1)
+
+
+def test_workspace_ledger_issue_subject_distinguishes_transaction_from_period() -> None:
+    """A period-level ledger-preflight issue is represented as itself.
+
+    ``LedgerPreflightIssue.transaction_id`` is ``TransactionId | Literal["__period__"]``
+    for exactly one non-transaction case (an unsupported period with no date span).
+    Collapsing both arms into one required ``TransactionId`` field would either
+    drop the period-level issue or pin it to a fabricated transaction id; the
+    discriminated ``ModeloWorkspaceLedgerIssueSubjectV1`` union represents each
+    case honestly.
+    """
+    from ...ledger.preflight import LedgerPreflightIssueReason
+    from ..workspace_models import (
+        ModeloWorkspaceLedgerIssueV1,
+        ModeloWorkspaceLedgerPeriodSubjectV1,
+        ModeloWorkspaceLedgerTransactionSubjectV1,
+    )
+
+    transaction_issue = ModeloWorkspaceLedgerIssueV1.model_validate(
+        {
+            "subject": {"kind": "transaction", "transaction_id": "e" * 64},
+            "reason": LedgerPreflightIssueReason.MISSING_CATEGORY,
+            "detail": "missing IVA category",
+        }
+    )
+    assert isinstance(transaction_issue.subject, ModeloWorkspaceLedgerTransactionSubjectV1)
+    assert transaction_issue.subject.transaction_id == "e" * 64
+
+    period_issue = ModeloWorkspaceLedgerIssueV1.model_validate(
+        {
+            "subject": {"kind": "period"},
+            "reason": LedgerPreflightIssueReason.UNSUPPORTED_PERIOD,
+            "detail": "period has no date span",
+        }
+    )
+    assert isinstance(period_issue.subject, ModeloWorkspaceLedgerPeriodSubjectV1)
+    assert transaction_issue.subject != period_issue.subject
+
+    # Round-trip through JSON must preserve the discriminant in both directions.
+    reloaded_transaction = ModeloWorkspaceLedgerIssueV1.model_validate_json(transaction_issue.model_dump_json())
+    assert isinstance(reloaded_transaction.subject, ModeloWorkspaceLedgerTransactionSubjectV1)
+    reloaded_period = ModeloWorkspaceLedgerIssueV1.model_validate_json(period_issue.model_dump_json())
+    assert isinstance(reloaded_period.subject, ModeloWorkspaceLedgerPeriodSubjectV1)

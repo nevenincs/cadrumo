@@ -20,10 +20,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from pathlib import Path
 
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, FormulaDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-
 from ....core import CasillaId
 from ._validate_evidence import EvidenceValidator
 from ._validate_extraction_profiles import (
@@ -38,13 +34,15 @@ from ._validate_helpers import missing_refs
 from ._validate_revision_rules import validate_dated_values
 from .binding_selector_utils import selector_as_dict
 from .bindings import (
-    is_layout_binding_selector,
     validate_binding_selector_shape,
     validate_m303_regimen_simplificado_annual_summary_revision,
 )
 from .ids import BindingId
-
-_CASILLA_METADATA_SOURCE_TIERS = ("official_source_guidance", "layout_authority")
+from .manual_input_selector import is_layout_binding_selector
+from .schema import DataBindingDefinition, FormulaDefinition, ModeloRevision
+from .schema_base import REGISTRY_SOURCE_GROUNDING_TIERS
+from .schema_references import LegalReference, SourceReference
+from .schema_surfaces import CasillaDefinition
 
 
 def _validate_casilla_grounding(
@@ -60,7 +58,7 @@ def _validate_casilla_grounding(
     failures.extend(missing_refs(prefix, owner, casilla.legal_refs, legal_refs, "legal"))
     failures.extend(missing_refs(prefix, owner, casilla.source_refs, source_refs, "source"))
     failures.extend(
-        evidence.require_any_source_tier(prefix, owner, casilla.source_refs, _CASILLA_METADATA_SOURCE_TIERS)
+        evidence.require_any_source_tier(prefix, owner, casilla.source_refs, REGISTRY_SOURCE_GROUNDING_TIERS)
     )
     if casilla.constraints is not None:
         constraint_owner = f"casilla {casilla.id} constraints"
@@ -71,7 +69,7 @@ def _validate_casilla_grounding(
                 prefix,
                 constraint_owner,
                 casilla.constraints.source_refs,
-                _CASILLA_METADATA_SOURCE_TIERS,
+                REGISTRY_SOURCE_GROUNDING_TIERS,
             ),
         )
     for alias in casilla.aliases:
@@ -79,7 +77,7 @@ def _validate_casilla_grounding(
         failures.extend(missing_refs(prefix, alias_owner, alias.legal_refs, legal_refs, "legal"))
         failures.extend(missing_refs(prefix, alias_owner, alias.source_refs, source_refs, "source"))
         failures.extend(
-            evidence.require_any_source_tier(prefix, alias_owner, alias.source_refs, _CASILLA_METADATA_SOURCE_TIERS),
+            evidence.require_any_source_tier(prefix, alias_owner, alias.source_refs, REGISTRY_SOURCE_GROUNDING_TIERS),
         )
 
 

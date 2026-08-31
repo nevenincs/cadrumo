@@ -18,12 +18,13 @@ on the returned :class:`RetentionFloorAssessment`.
 from __future__ import annotations
 
 from collections.abc import Iterable
-from datetime import date, datetime
+from datetime import datetime
 from typing import Final, Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG
+from ...core.calendar_shift import shift_by_calendar_years
 from ...core.identity import FilingRecordId
 
 #: Legal retention floor (in whole years) for a filed tax record before it may
@@ -117,34 +118,6 @@ class RetentionFloorAssessment(BaseModel):
         return max(record.earliest_safe_erase_date for record in self.retained)
 
 
-def add_prescription_years[CalendarMoment: date](moment: CalendarMoment, years: int) -> CalendarMoment:
-    """Add whole calendar years to a legal prescription boundary.
-
-    A leap-day boundary whose target year is not a leap year clamps to 28
-    February. This keeps every legal period well-defined without each consumer
-    redeclaring date arithmetic.
-    """
-    try:
-        return moment.replace(year=moment.year + years)
-    except ValueError:
-        return moment.replace(year=moment.year + years, month=2, day=28)
-
-
-def earliest_safe_erase_date(
-    filed_at: datetime,
-    *,
-    floor_years: int = TAX_RECORD_RETENTION_FLOOR_YEARS,
-) -> datetime:
-    """Return the earliest instant a record filed at ``filed_at`` may be erased.
-
-    The floor is anchored on ``filed_at`` rather than the voluntary-deadline end
-    (LGT art. 67) because the filing instant is the durable evidence the record
-    carries; anchoring on it is conservative for the common case (filing occurs
-    at or near the deadline) and errs toward keeping late-filed records longer.
-    """
-    return add_prescription_years(filed_at, floor_years)
-
-
 def assess_retention_floor(
     records: Iterable[RetainableFilingRecord],
     *,
@@ -153,16 +126,21 @@ def assess_retention_floor(
 ) -> RetentionFloorAssessment:
     """Assess ``records`` against the legal retention floor as of ``as_of``.
 
-    A record is retained (blocking) when ``as_of`` precedes its
-    :func:`earliest_safe_erase_date`. A record whose window has elapsed is safe
-    to erase and is excluded from the assessment's ``retained`` set.
+    A record is retained (blocking) when ``as_of`` precedes its safe-erase
+    instant, which is ``filed_at`` shifted forward by ``floor_years`` whole
+    calendar years. The floor is anchored on ``filed_at`` rather than the
+    voluntary-deadline end (LGT art. 67) because the filing instant is the
+    durable evidence the record carries; anchoring on it is conservative for
+    the common case (filing occurs at or near the deadline) and errs toward
+    keeping late-filed records longer. A record whose window has elapsed is
+    safe to erase and is excluded from the assessment's ``retained`` set.
 
     Returns:
         The :class:`RetentionFloorAssessment` for ``records``.
     """
     retained: list[RetentionBlockingRecord] = []
     for record in records:
-        safe_at = earliest_safe_erase_date(record.filed_at, floor_years=floor_years)
+        safe_at = shift_by_calendar_years(record.filed_at, floor_years)
         if as_of < safe_at:
             retained.append(
                 RetentionBlockingRecord(

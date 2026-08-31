@@ -17,8 +17,8 @@ HOW THE ORDER IS OBSERVED, WITHOUT PATCHING ANYTHING. An earlier version of
 this module wrapped the lock primitive to record each path. That wrapper
 delegated to the real implementation and faked nothing, but it was still
 monkeypatch machinery in a deterministic test, which this project forbids
-outright -- and the ratchet that says so lives in `dev/tests`, which no
-per-push lane runs, so it went unreported.
+outright -- and the ratchet that says so lives in the development test tree,
+which no per-push lane runs, so it went unreported.
 
 Real contention answers the same question without touching the code under
 test. A sibling PROCESS holds the ROOT lock; a thread here then enters the
@@ -45,11 +45,10 @@ from uuid import UUID
 
 import pytest
 
-from cadrumo.application.user_profile.custody_repository import profile_custody_transaction_lock
-
 from ....adapters.persistence.storage import custody
 from ....core import StorageCategory, storage_location
 from ....core.paths import effective_storage_root
+from ..custody_repository import profile_custody_transaction_lock
 
 if TYPE_CHECKING:
     from pathlib import Path

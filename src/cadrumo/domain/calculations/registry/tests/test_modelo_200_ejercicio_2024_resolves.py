@@ -37,9 +37,8 @@ import tomllib
 
 import pytest
 
-from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
-
 from .....core.resources import bundled_path
+from ..errors import NoRevisionForPeriodError
 from ..temporal import select_revision
 from ._registry_schema_support import _committed_modelo
 

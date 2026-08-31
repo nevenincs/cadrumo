@@ -38,7 +38,7 @@ import re
 from collections.abc import Sequence
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, Literal
+from typing import Annotated, Literal, get_args
 
 from pydantic import BaseModel, BeforeValidator, Field, StringConstraints, field_validator, model_validator
 
@@ -73,8 +73,21 @@ _M210OfficialTipoRentaCode = Annotated[str, StringConstraints(strip_whitespace=T
 # ---------------------------------------------------------------------------
 
 
+type M184Clave = Literal["A", "C", "D", "E", "F", "G", "I", "J", "K"]
+type M184Subclave = Literal["01", "02", "03", "04", "05", "06"]
+type M184NaturalezaInmueble = Literal["1", "2"]
+type M184SituacionInmueble = Literal["1", "2", "3", "4", "5"]
+type M184ClaveDeclarado = Literal["N", "T", "U", "O"]
+
+
 class Modelo184MemberRow(BaseModel):
-    """One atribución member row for Modelo 184.
+    """One (member, clave, subclave) atribución row for Modelo 184.
+
+    The socio record's own diseño repeats per clave or subclave with an
+    importe declared, not per member alone (see the accepted row-shape ADR),
+    so this row's identity is ``(nif, clave, subclave)`` rather than ``nif``
+    alone -- the same shape 349's ``operador`` row already carries via its
+    ``clave_operacion`` axis.
 
     Fields mirror the per-record Tipo-2 layout declared in the M184
     ``bindings/0001-bindings.toml`` atribucion_member source block.
@@ -85,6 +98,16 @@ class Modelo184MemberRow(BaseModel):
     * ``porcentaje`` → ``share_percentage`` (binding: modelo-184-member-row-share)
     * ``importe`` → ``base_imponible_assigned`` (binding: modelo-184-member-row-base-assigned)
     * ``pais`` → ``country_code`` (required; never inferred)
+    * ``clave`` → ``clave`` (binding: modelo-184-member-row-clave)
+    * ``subclave`` → ``subclave`` (binding: modelo-184-member-row-subclave)
+    * every clave/subclave-conditional field below mirrors its own
+      ``modelo-184-member-row-<field>`` binding.
+
+    Deliberately excluded (see the accepted row-shape ADR): the clave-A
+    reducción (its governing article is unresolved), provisiones-gastos-
+    dificil-justificacion (computed from the entity's own régimen fact, not
+    an operator-declared value), and any clave-E eligibility fact (a tracked
+    gap, no representation in this tree yet).
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -108,9 +131,45 @@ class Modelo184MemberRow(BaseModel):
     porcentaje: Decimal = Field(description="Share percentage in the entity [0, 100]")
     importe: Decimal = Field(description="Attributed income/base imponible in EUR")
 
+    # (member, clave, subclave) repetition axis. clave is required -- the
+    # socio record's own diseño has no row without one; subclave is optional
+    # because claves C and E carry no subclave table at all.
+    clave: M184Clave
+    subclave: M184Subclave | None = None
+
+    # Always-present-per-row facts, independent of clave.
+    codigo_provincia: Annotated[str, StringConstraints(strip_whitespace=True, max_length=2)] | None = None
+    miembro_a_31_diciembre: bool | None = None
+    dias_miembro: int | None = Field(default=None, ge=0, le=366)
+    domicilio_fiscal: Annotated[str, StringConstraints(strip_whitespace=True, max_length=40)] | None = None
+
+    # Clave-C inmueble sub-block.
+    naturaleza_inmueble: M184NaturalezaInmueble | None = None
+    situacion_inmueble: M184SituacionInmueble | None = None
+    referencia_catastral: Annotated[str, StringConstraints(strip_whitespace=True, max_length=20)] | None = None
+    clave_declarado: M184ClaveDeclarado | None = None
+    porcentaje_titularidad_inmueble: Decimal | None = None
+    dias_arrendamiento: int | None = Field(default=None, ge=0, le=366)
+
+    # Shared clave-C/clave-D reducción field (diseño positions 109-119); the
+    # clave-A branch of this same physical field is deliberately excluded.
+    reduccion: Decimal | None = None
+
+    # Clave-D subclave 03/04 rendimiento-neto fields (estimación objetiva).
+    rendimiento_neto_previo_eo: Decimal | None = None
+    rendimiento_neto_minorado_agricola_eo: Decimal | None = None
+
     @field_validator("pais")
     @classmethod
-    def _pais_uppercase_alpha(cls, value: str) -> str:
+    def _pais_uppercase_alpha(cls, value: str | None) -> str | None:
+        # ``pais`` is optional on THIS row for the reason recorded on the field
+        # above: the profile-driven producer has no country to supply, so a
+        # missing one is a declared state rather than a malformed value. The
+        # shape check therefore applies to a present value only -- calling
+        # ``.upper()`` on the absent case raised AttributeError instead of
+        # validating anything, which is a crash rather than a refusal.
+        if value is None:
+            return value
         if value != value.upper() or not value.replace(" ", "").isalpha():
             raise ValueError("pais must be an uppercase two-letter ISO 3166-1 country code (e.g. ES, DE, FR)")
         return value
@@ -122,12 +181,46 @@ class Modelo184MemberRow(BaseModel):
             raise ValueError(f"porcentaje must be within [0, 100]; got {value}")
         return value
 
+    @field_validator("porcentaje_titularidad_inmueble")
+    @classmethod
+    def _porcentaje_titularidad_within_bounds(cls, value: Decimal | None) -> Decimal | None:
+        if value is not None and (value < Decimal("0") or value > Decimal("100")):
+            raise ValueError(f"porcentaje_titularidad_inmueble must be within [0, 100]; got {value}")
+        return value
+
     @field_validator("nif")
     @classmethod
     def _nif_not_blank(cls, value: str) -> str:
         if not value.strip():
             raise ValueError("nif cannot be blank")
         return value.upper()
+
+    @model_validator(mode="after")
+    def _subclave_only_where_the_diseno_declares_one(self) -> Modelo184MemberRow:
+        if self.subclave is not None and self.clave not in {"A", "D", "F", "G", "I", "J", "K"}:
+            raise ValueError(f"clave {self.clave!r} carries no subclave table; leave subclave unset")
+        return self
+
+    @model_validator(mode="after")
+    def _clave_a_reduccion_stays_blocked(self) -> Modelo184MemberRow:
+        """Refuse a populated reducción on a clave-A row.
+
+        The shared diseño field (positions 109-119) also serves claves C and
+        D, whose reductions are grounded (LIRPF arts. 23 and 32.1). The
+        clave-A branch is explicitly BLOCKED by the accepted row-shape ADR:
+        the diseño's own citation (LIRPF art. 24.2) does not exist as such,
+        and art. 26.2 is only a strong, unconfirmed candidate. Modelling
+        reducción as one field (matching the diseño's own physical layout)
+        makes it reachable under clave A unless refused here explicitly, so
+        the block lives on the row rather than only in prose.
+        """
+        if self.clave == "A" and self.reduccion is not None:
+            raise ValueError(
+                "clave A reducción is blocked pending confirmation of its governing provision "
+                "(the diseño's own LIRPF art. 24.2 citation does not exist; see the accepted "
+                "row-shape ADR) -- leave reduccion unset for a clave-A row",
+            )
+        return self
 
 
 # ---------------------------------------------------------------------------
@@ -196,19 +289,19 @@ class Modelo232VinculadaRow(BaseModel):
     # against what the counterparty itself declared.
     pais: _IsoCountryCode
     tipo_vinculacion: Annotated[
-        TipoVinculacion,
+        TipoVinculacion | str,
         BeforeValidator(
             lambda v: _hydrate_m232_codigo(field_name="tipo_vinculacion", value=v, code_set=TipoVinculacion),
         ),
     ] = TipoVinculacion.NO_DECLARADO
     tipo_operacion: Annotated[
-        TipoOperacionVinculada,
+        TipoOperacionVinculada | str,
         BeforeValidator(
             lambda v: _hydrate_m232_codigo(field_name="tipo_operacion", value=v, code_set=TipoOperacionVinculada),
         ),
     ] = TipoOperacionVinculada.NO_DECLARADO
     metodo: Annotated[
-        MetodoValoracion,
+        MetodoValoracion | str,
         BeforeValidator(lambda v: _hydrate_m232_codigo(field_name="metodo", value=v, code_set=MetodoValoracion)),
     ] = MetodoValoracion.NO_DECLARADO
     importe: Decimal
@@ -395,7 +488,7 @@ class Modelo349RectificacionRow(BaseModel):
     razon_social: _RequiredNameStr
     clave_operacion: _M349_CLAVE_OPERACION
     ejercicio: Annotated[str, StringConstraints(strip_whitespace=True, min_length=4, max_length=4)]
-    periodo: _M349_RECTIFICACION_PERIODO
+    periodo: _M349_RECTIFICACION_PERIODO | str
     base_rectificada: Decimal = Field(description="Base imponible o importe rectificado en EUR")
     base_anterior: Decimal = Field(description="Base imponible declarada anteriormente en EUR")
 
@@ -413,7 +506,11 @@ class Modelo349RectificacionRow(BaseModel):
     @classmethod
     def _periodo_uppercase(cls, value: object) -> object:
         if isinstance(value, str):
-            return value.strip().upper()
+            normalised = value.strip().upper()
+            if normalised not in get_args(_M349_RECTIFICACION_PERIODO):
+                accepted = ", ".join(repr(member) for member in get_args(_M349_RECTIFICACION_PERIODO))
+                raise ValueError(f"periodo must be one of {accepted}; got {value!r}")
+            return normalised
         return value
 
     @field_validator("ejercicio")
@@ -592,7 +689,7 @@ def m349_nif_number_for_export(nif: str, pais: str) -> str:
 # ---------------------------------------------------------------------------
 
 # Valid clave de operacion codes per M347 form / Orden EHA/3012/2008.
-_M347_CLAVE_OPERACION = Literal["A", "B", "C", "D", "E", "F", "G", "H", "I"]
+_M347_CLAVE_OPERACION = Literal["A", "B", "C", "D", "E", "F", "G"]
 
 
 class Modelo347ContraparteRow(BaseModel):
@@ -907,6 +1004,11 @@ def validate_m184_member_share_sum(rows: Sequence[Modelo184MemberRow]) -> None:
 
 
 __all__ = [
+    "M184Clave",
+    "M184ClaveDeclarado",
+    "M184NaturalezaInmueble",
+    "M184SituacionInmueble",
+    "M184Subclave",
     "Modelo184MemberRow",
     "Modelo184ShareSumError",
     "Modelo210AgrupacionRentaRow",

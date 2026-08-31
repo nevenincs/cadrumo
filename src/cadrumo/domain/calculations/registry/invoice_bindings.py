@@ -9,15 +9,18 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ....core import STRICT_FROZEN_CONFIG, BindingSourceKind
+from ....core import STRICT_FROZEN_CONFIG, BindingSourceKind, Period
 from ....core.aggregation import INVOICE_BINDING_SOURCE_KINDS, BindingAggregationOp
 from ....core.identity import TaxIdIdentityToken
-from ._m347_threshold import m347_declarable_party_ids
+from ._m347_threshold import m347_clave_c_declarable_party_ids, m347_declarable_party_ids
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import (
+    M347_OPERATION_CLAVES,
+    M349_OPERATION_CLAVES,
     BindingExportDataType,
     intracommunity_clave_validator,
     invariant_diagnostics,
+    operation_clave_validator,
     selector_against_model,
     unique_tuple,
     uppercase_alpha_code,
@@ -26,17 +29,22 @@ from .binding_selector_utils import (
 from .binding_selector_utils import selector_as_dict as _selector_as_dict
 from .errors import RegistryValidationError
 from .ids import BindingId
-from .ledger_binding_resolution import independent_quantity_facts
+from .quantity_screen_enrolment import independent_quantity_facts
 from .schema import DataBindingDefinition, ModeloRevision
 
 _RectificationScope = Literal["only_rectifications", "exclude_rectifications", "any"]
-_InvoiceGrouping = Literal["operator_clave", "operator_clave_period"]
+_InvoiceGrouping = Literal["operator_clave", "operator_clave_period", "contraparte_clave"]
 _InvoiceRowField = Literal[
     "party_tax_id",
     "country_code",
     "party_legal_name",
     "clave",
     "base_imponible",
+    "importe_total",
+    "importe_q1",
+    "importe_q2",
+    "importe_q3",
+    "importe_q4",
     "rectified_year",
     "rectified_period",
     "rectified_base_previous",
@@ -48,7 +56,6 @@ _InvoiceRowField = Literal[
 # taxonomy) rather than hand-listing strings. Every consumer that needs "is
 # this binding an invoice binding?" routes through this name.
 __all__ = [
-    "INVOICE_BINDING_SOURCE_KINDS",
     "InvoiceObservation",
     "InvoiceObservationRequirement",
     "Modelo349OperadorClaveTotal",
@@ -56,6 +63,7 @@ __all__ = [
     "compute_modelo_349_operador_totals_parity",
     "invoice_binding_requirements",
     "is_m347_declarante_summary_invoice_binding",
+    "m347_operation_clave",
     "resolve_invoice_binding_row_values",
     "resolve_invoice_binding_values",
     "resolve_invoice_family_row_values",
@@ -80,7 +88,10 @@ class InvoiceObservation(BaseModel):
     transaction. ``base_amount`` carries the taxable base; ``invoice_total_amount``
     carries the gross invoice total for modelos such as M347 whose declaration
     floor is not the taxable-base amount. ``intracommunity_clave`` follows the
-    AEAT clave-de-operacion enum (E, M, H, A, T, S, I, R, D, C).
+    AEAT clave-de-operacion enum (E, M, H, A, T, S, I, R, D, C) for M349.
+    ``operation_clave`` carries M347's OWN, unrelated clave-de-operacion
+    vocabulary (A-G; see :func:`m347_operation_clave`) -- the two claves share
+    no values in common and a row must never mix them.
     ``iva_regime`` is open-ended so domestic-IVA modelos can carry their regime
     classification alongside.
     """
@@ -96,6 +107,7 @@ class InvoiceObservation(BaseModel):
     invoice_total_amount: Decimal | None = None
     iva_regime: str | None = Field(default=None, max_length=64)
     intracommunity_clave: str | None = Field(default=None, max_length=2)
+    operation_clave: str | None = Field(default=None, max_length=1)
     is_rectification: bool = False
     rectified_year: int | None = Field(default=None, ge=2000, le=2099)
     rectified_period: str | None = Field(default=None, max_length=8)
@@ -104,6 +116,9 @@ class InvoiceObservation(BaseModel):
 
     _country_code_uppercase = field_validator("country_code")(uppercase_alpha_code("country_code"))
     _clave_uppercase = field_validator("intracommunity_clave")(intracommunity_clave_validator())
+    _operation_clave_valid = field_validator("operation_clave")(
+        operation_clave_validator(field_label="operation_clave", claves=M347_OPERATION_CLAVES),
+    )
 
     @field_validator("source_kind", mode="before")
     @classmethod
@@ -183,9 +198,25 @@ class _InvoiceSelector(BaseModel):
         for clave in value:
             if clave != clave.upper():
                 raise RegistryValidationError("invoice selector clave must be uppercase")
-            if clave not in {"E", "M", "H", "A", "T", "S", "I", "R", "D", "C"}:
-                raise RegistryValidationError(f"invoice selector clave {clave!r} is not an AEAT clave de operacion")
         return value
+
+    @model_validator(mode="after")
+    def _claves_within_grouping_vocabulary(self) -> _InvoiceSelector:
+        """Check ``claves`` against the vocabulary its OWN grouping declares.
+
+        A field validator cannot see ``grouping`` (declared after ``claves``
+        in this model), so the closed-set membership check -- as opposed to
+        the shape checks above -- runs here, once both fields are available.
+        M347's ``contraparte_clave`` grouping and M349's two groupings share
+        the ``claves`` field but never its vocabulary; validating every
+        selector against M349's set alone would refuse every legitimate M347
+        binding.
+        """
+        claves_vocabulary = M347_OPERATION_CLAVES if self.grouping == "contraparte_clave" else M349_OPERATION_CLAVES
+        for clave in self.claves:
+            if clave not in claves_vocabulary:
+                raise RegistryValidationError(f"invoice selector clave {clave!r} is not an AEAT clave de operacion")
+        return self
 
 
 def _invoice_selector(binding: DataBindingDefinition) -> _InvoiceSelector:
@@ -213,6 +244,44 @@ def is_m347_declarante_summary_invoice_binding(binding: DataBindingDefinition) -
     if binding.source not in INVOICE_BINDING_SOURCE_KINDS:
         return False
     return _invoice_selector(binding).record == _M347_DECLARANTE_SUMMARY_RECORD
+
+
+def m347_operation_clave(source_kind: BindingSourceKind | str) -> str | None:
+    """Return the M347 clave de operacion determinable from ``source_kind`` alone.
+
+    Grounded against RD 1065/2007 art. 33.1. Only two of the seven claves are
+    determinable from the invoice direction alone:
+
+    * ``PAYABLE_INVOICE`` (an invoice the taxpayer must pay -- a purchase) is
+      clave ``A``, adquisiciones de bienes y servicios superiores a
+      3.005,06 EUR.
+    * ``COLLECTIBLE_INVOICE`` (an invoice the taxpayer will collect -- a
+      sale) is clave ``B``, entregas de bienes y prestaciones de servicios
+      superiores a 3.005,06 EUR.
+
+    Claves F/G (mediación de agencia de viajes under RD 1619/2012 disposición
+    adicional cuarta) are classified by the resolver caller from a fact this
+    function's single ``source_kind`` argument cannot carry -- the invoice's
+    own travel-agency mediation flag, not its direction. The remaining three
+    claves each still need a fact neither this function nor the resolver
+    caller has: ``C`` (cobros por cuenta de terceros) needs a
+    professional-fees-collection classification distinct from ordinary
+    purchase/sale direction; ``D``/``E`` key on the FILER's own type (entidad
+    pública, partido, sindicato, ...) rather than on any transaction
+    classification. Returns ``None`` for those and for any non-invoice source
+    kind, rather than guessing -- a caller distinguishing them needs a fact
+    this function does not have, not a default.
+
+    ``source_kind`` also accepts a bare ``str`` value-equal to a member: the
+    registry's own TOML-to-enum hydration boundary can still hold the raw
+    value when this is consulted, and comparison below is by equality, never
+    identity, so a value-equal string classifies exactly like its member.
+    """
+    if source_kind == BindingSourceKind.PAYABLE_INVOICE:
+        return "A"
+    if source_kind == BindingSourceKind.COLLECTIBLE_INVOICE:
+        return "B"
+    return None
 
 
 def invoice_binding_requirements(
@@ -322,7 +391,7 @@ _OPERATOR_CLAVE_PERIOD_ONLY_FIELDS: frozenset[str] = frozenset(
 # rows require it, and a missing legal_name in an observation is a
 # real-data defect that must surface loudly at row-build time rather
 # than be filtered out by a binding-validation guard.
-_OPTIONAL_ONLY_INVOICE_ROW_FIELDS: frozenset[str] = frozenset()
+_OPTIONAL_ONLY_INVOICE_ROW_FIELDS: frozenset[str] = frozenset[str]()
 
 
 def validate_invoice_binding_definition(binding: DataBindingDefinition) -> None:
@@ -502,6 +571,18 @@ def resolve_invoice_family_row_values(
     bindings on the same row. The counterpart family adds ``binding.source`` to
     the cohort key (``cohort_by_source = True``) so a different counterpart
     source kind does not share rows; the invoice family does not.
+
+    M347's ``contraparte_clave`` grouping needs every clave to share ONE row
+    sequence, because the diseño de registro's Tipo-2 declarado record is one
+    shared physical sequence regardless of clave (grounded in the
+    tui-architecture modelo 347 contraparte binding inventory reference).
+    That now falls out of ``cohort_by_source`` directly rather than needing a
+    grouping-keyed exception: every ``contraparte_clave`` binding declares the
+    combined-direction :attr:`~core.BindingSourceKind.M347_THIRD_PARTY_OPERATION`
+    source (see that member's docstring), so ``binding.source`` is already
+    identical across claves and the cohort key naturally coincides. M349's own
+    two groupings, which still declare distinct ``payable_invoice`` /
+    ``collectible_invoice`` sources per binding, are unaffected.
     """
     resolved: dict[tuple[BindingId, int], Decimal | str] = {}
     cohorts: dict[
@@ -603,6 +684,20 @@ def _observations_for_binding_source(
     observations: tuple[InvoiceObservation, ...],
     binding: DataBindingDefinition,
 ) -> tuple[InvoiceObservation, ...]:
+    if binding.source == BindingSourceKind.M347_THIRD_PARTY_OPERATION:
+        # A binding declaring the combined-direction source reads BOTH
+        # underlying invoice directions: each InvoiceObservation still
+        # carries its own true PAYABLE_INVOICE/COLLECTIBLE_INVOICE direction
+        # as its own source_kind (see M347_THIRD_PARTY_OPERATION's
+        # docstring), so this union is the resolver honouring what the
+        # binding's own declared source now truthfully claims to consume --
+        # the M347 declarante-summary totals and the per-counterparty
+        # contraparte_clave row family both declare this source.
+        return tuple(
+            observation
+            for observation in observations
+            if observation.source_kind in (BindingSourceKind.PAYABLE_INVOICE, BindingSourceKind.COLLECTIBLE_INVOICE)
+        )
     return tuple(observation for observation in observations if observation.source_kind == binding.source)
 
 
@@ -645,6 +740,40 @@ def _m347_declarable_party_ids(observations: tuple[InvoiceObservation, ...]) -> 
             observation,
         )
     return m347_declarable_party_ids(totals)
+
+
+def _m347_row_family_threshold_filter(
+    observations: tuple[InvoiceObservation, ...],
+) -> tuple[InvoiceObservation, ...]:
+    """Filter the per-row family's observations, clave C judged on its own floor.
+
+    Clave C carries its OWN, lower 300,51 EUR floor (RD 1065/2007 arts. 32.c,
+    33.4), applied ALONGSIDE -- never instead of -- the general 3.005,06 EUR
+    floor every other clave shares: the same party can carry both ordinary
+    operations and a clave-C collection in the same year, and each must be
+    judged against its own figure.
+
+    Filters observation-by-observation on a (party, clave-bucket) pair
+    rather than returning a flat party-id set: a beneficiary who clears the
+    LOWER clave-C floor but not the general floor must still lose their
+    below-floor ORDINARY rows, and a flat "party is declarable" set would
+    let those through once the party cleared either floor at all.
+    """
+    clave_c_totals: dict[str, Decimal] = {}
+    general_totals: dict[str, Decimal] = {}
+    for observation in observations:
+        totals = clave_c_totals if observation.operation_clave == "C" else general_totals
+        totals[observation.party_tax_id] = totals.get(observation.party_tax_id, Decimal("0")) + _invoice_total_amount(
+            observation,
+        )
+    clave_c_declarable = m347_clave_c_declarable_party_ids(clave_c_totals)
+    general_declarable = m347_declarable_party_ids(general_totals)
+    return tuple(
+        observation
+        for observation in observations
+        if (observation.operation_clave == "C" and observation.party_tax_id in clave_c_declarable)
+        or (observation.operation_clave != "C" and observation.party_tax_id in general_declarable)
+    )
 
 
 def _invoice_total_amount(observation: InvoiceObservation) -> Decimal:
@@ -906,6 +1035,8 @@ def _build_invoice_rows(
         return _build_operator_clave_rows(observations)
     if grouping == "operator_clave_period":
         return _build_operator_clave_period_rows(observations)
+    if grouping == "contraparte_clave":
+        return _build_contraparte_clave_rows(observations)
     raise RegistryValidationError(f"unsupported invoice row grouping {grouping!r}")
 
 
@@ -942,6 +1073,141 @@ def _build_operator_clave_rows(
             "party_tax_id": bucket.party_tax_id,
             "clave": bucket.clave,
             "base_imponible": bucket.base_total,
+        }
+        if bucket.party_legal_name is not None:
+            row["party_legal_name"] = bucket.party_legal_name
+        rows.append(row)
+    return tuple(rows)
+
+
+_M347_QUARTER_TOKENS: tuple[Literal["1T", "2T", "3T", "4T"], ...] = ("1T", "2T", "3T", "4T")
+_M347_QUARTER_ROW_FIELDS: Mapping[Literal["1T", "2T", "3T", "4T"], str] = {
+    "1T": "importe_q1",
+    "2T": "importe_q2",
+    "3T": "importe_q3",
+    "4T": "importe_q4",
+}
+
+
+def _m347_quarter_of(value: date) -> Literal["1T", "2T", "3T", "4T"]:
+    """Return the calendar quarter token ``value`` falls in.
+
+    Routed through :meth:`~core.Period.contains`, the one canonical period
+    boundary authority (``aeat-registry-authority-flow``'s period-boundary
+    rule) -- no locally re-derived month-range arithmetic. Uses ``value``'s
+    OWN calendar year, not a filing-year argument this row-producer has no
+    access to: the diseño's Q1-Q4 fields are the ordinary calendar quarter an
+    operation falls in, independent of which filing year's declaration
+    reports it.
+    """
+    for token in _M347_QUARTER_TOKENS:
+        if Period.from_year_and_code(value.year, token).contains(value):
+            return token
+    msg = f"date {value!r} does not fall in any calendar quarter"  # pragma: no cover - contains() is exhaustive
+    raise RegistryValidationError(msg)
+
+
+class _ContraparteClaveAccumulator(BaseModel):
+    """Mutable accumulator for contraparte_clave row aggregation (modelo 347)."""
+
+    model_config = ConfigDict(strict=True, extra="forbid")
+
+    country_code: str
+    party_tax_id: TaxIdIdentityToken
+    clave: str
+    party_legal_name: str | None
+    importe_total: Decimal
+    importe_q1: Decimal
+    importe_q2: Decimal
+    importe_q3: Decimal
+    importe_q4: Decimal
+
+
+def _build_contraparte_clave_rows(
+    observations: tuple[InvoiceObservation, ...],
+) -> tuple[Mapping[str, Decimal | str], ...]:
+    """Group invoice observations into modelo 347 contraparte rows.
+
+    Mirrors :func:`_build_operator_clave_rows`'s (country, counterparty,
+    clave) grouping shape exactly, keyed on ``operation_clave`` -- M347's own
+    clave vocabulary -- rather than M349's ``intracommunity_clave``. The two
+    fields are disjoint by construction (:class:`InvoiceObservation`'s
+    validators enforce each against its own closed set), so an observation
+    can only ever be grouped by the one this function reads.
+
+    Aggregates ``invoice_total_amount`` rather than ``base_amount``: RD
+    1065/2007 art. 34.2.a) requires the declared IMPORTE ANUAL to be the
+    total contraprestacion including cuotas and recargos, not the taxable
+    base alone (recorded in the tui-architecture modelo 347 contraparte
+    binding inventory reference).
+
+    Also buckets that same amount into the calendar quarter of
+    ``transaction_date`` -- the diseño's mandatory, unconditional "IMPORTE DE
+    LAS OPERACIONES [Nth] TRIMESTRE" fields (RD 1065/2007 art. 33.1's "se
+    suministrará desglosada trimestralmente"), ungated by any "Sólo..."
+    exception the way ``importe-metalico`` / ``operacion-seguro`` /
+    ``arrendamiento-local-negocio`` / the transmisiones-inmuebles pair are.
+    The quarterly buckets accumulate in the SAME loop that sums
+    ``importe_total``, so the annual total is the sum of the four quarters by
+    construction, not by a separate reconciling step.
+
+    Applies the RD 1065/2007 art. 31 declaration floor to *this* family
+    before grouping, routed through :func:`_m347_row_family_threshold_filter`,
+    which itself delegates to the same canonical comparison
+    (:func:`~._m347_threshold.m347_declarable_party_ids` /
+    ``m347_clave_c_declarable_party_ids``) rather than a new one written out
+    here. A party's TOTAL across every NON-clave-C clave decides general
+    declarability (the floor is strictly exceeded, ``>``, never merely
+    reached); a beneficiary's clave-C total is judged separately against its
+    OWN, lower 300,51 EUR floor (arts. 32.c, 33.4), alongside rather than
+    instead of the general one.
+    """
+    observations = _m347_row_family_threshold_filter(observations)
+    grouped: dict[tuple[str, str, str], _ContraparteClaveAccumulator] = {}
+    for observation in observations:
+        if observation.operation_clave is None:
+            continue
+        if observation.invoice_total_amount is None:
+            raise RegistryValidationError(
+                f"invoice observation {observation.invoice_id!r} declares operation_clave "
+                f"{observation.operation_clave!r} but no invoice_total_amount",
+            )
+        key = (
+            observation.country_code,
+            observation.party_tax_id,
+            observation.operation_clave,
+        )
+        bucket = grouped.setdefault(
+            key,
+            _ContraparteClaveAccumulator(
+                country_code=observation.country_code,
+                party_tax_id=observation.party_tax_id,
+                clave=observation.operation_clave,
+                party_legal_name=observation.party_legal_name,
+                importe_total=Decimal("0"),
+                importe_q1=Decimal("0"),
+                importe_q2=Decimal("0"),
+                importe_q3=Decimal("0"),
+                importe_q4=Decimal("0"),
+            ),
+        )
+        bucket.importe_total += observation.invoice_total_amount
+        quarter_field = _M347_QUARTER_ROW_FIELDS[_m347_quarter_of(observation.transaction_date)]
+        setattr(bucket, quarter_field, getattr(bucket, quarter_field) + observation.invoice_total_amount)
+        if bucket.party_legal_name is None and observation.party_legal_name is not None:
+            bucket.party_legal_name = observation.party_legal_name
+    rows: list[Mapping[str, Decimal | str]] = []
+    for key in sorted(grouped):
+        bucket = grouped[key]
+        row: dict[str, Decimal | str] = {
+            "country_code": bucket.country_code,
+            "party_tax_id": bucket.party_tax_id,
+            "clave": bucket.clave,
+            "importe_total": bucket.importe_total,
+            "importe_q1": bucket.importe_q1,
+            "importe_q2": bucket.importe_q2,
+            "importe_q3": bucket.importe_q3,
+            "importe_q4": bucket.importe_q4,
         }
         if bucket.party_legal_name is not None:
             row["party_legal_name"] = bucket.party_legal_name
@@ -1048,12 +1314,17 @@ def _filter_invoice_observations(
     selector: _InvoiceSelector,
 ) -> Iterable[InvoiceObservation]:
     clave_filter = set(selector.claves)
+    # M347's contraparte_clave grouping filters on operation_clave -- its OWN,
+    # disjoint clave vocabulary -- never on M349's intracommunity_clave. Every
+    # other grouping (including no grouping declared, e.g. scalar selectors)
+    # keeps the established intracommunity_clave filter.
+    clave_field = "operation_clave" if selector.grouping == "contraparte_clave" else "intracommunity_clave"
     for observation in observations:
         if selector.rectification_scope == "only_rectifications" and not observation.is_rectification:
             continue
         if selector.rectification_scope == "exclude_rectifications" and observation.is_rectification:
             continue
-        if clave_filter and observation.intracommunity_clave not in clave_filter:
+        if clave_filter and getattr(observation, clave_field) not in clave_filter:
             continue
         if selector.iva_regime is not None and observation.iva_regime != selector.iva_regime:
             continue

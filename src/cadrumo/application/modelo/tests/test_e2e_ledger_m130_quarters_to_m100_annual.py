@@ -45,14 +45,12 @@ the *wiring*, leaving the rate's legal currency to the registry grounding gate.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
-
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-from cadrumo.domain.calculations.registry.ids import BindingId
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -64,11 +62,14 @@ from ....adapters.persistence.profile.usage_ratios import save_usage_ratios
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.calculations.registry.ids import BindingId
 from ....domain.categories import SpendingCategory
 from ....domain.deadlines import EntityType, IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
 from ....domain.filing import FilingExportError
 from ....domain.invoices import InvoiceCatalogue
-from ....domain.modelos import CalculationRevision, ExternalEvidenceKind
+from ....domain.modelos import ExternalEvidenceKind
+from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -84,6 +85,7 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, U
 from ....tests.env_scope import ready_clave_settings
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
+from ...aggregation import CallerOverrideDisposition, precedence_ladder_sources
 from ...calculations import CalculationObservationRepository
 from .._action_errors import ModeloAggregationBindingError
 from .._calculation_actions import calculate_modelo_revision_from_bucket_aggregation
@@ -109,6 +111,18 @@ _FILE_AT = datetime(2024, 4, 6, 12, 0, tzinfo=UTC)
 _M130_REVISION = "2019-y-siguientes"
 _M100_ANNUAL_PERIOD = "0A"
 _RELATION_PREFILL_SOURCE = "relation_prefill"
+
+#: Sources the caller must not supply. The bucket-locked half is DERIVED from the
+#: caller-override ladder rather than hand-listed: a literal copy is correct only
+#: until the next resolver is enrolled, and omitting `inventory` is what made the
+#: lock reject this calculation outright.
+_MESH_RESOLVED_OR_LOCKED_SOURCES = frozenset(
+    {
+        # Mesh-resolved rather than locked.
+        "profile",
+        _RELATION_PREFILL_SOURCE,
+    },
+) | {kind.value for kind in precedence_ladder_sources(CallerOverrideDisposition.LOCK)}
 _M100_ESTIMACION_DIRECTA_NORMAL_BINDING: BindingId = "renta-2024-modelo-100-estimacion-directa-es-normal"
 _M100_SALARY_CERT_RETENCIONES_BINDING: BindingId = "renta-2024-certificado-trabajo-retenciones"
 
@@ -369,7 +383,11 @@ def _import_official_m130_result_observation(
         clock=_FILE_AT,
     )
     casilla_values = {_M130_RESULTADO_FINAL_CASILLA: c19_value}
-    evidence_reference_id = f"JUST-130-{_YEAR}-{period}-AUTONOMA-C19"
+    # The reference id IS the justificante CSV, and a codigo seguro de
+    # verificacion is uppercase alphanumeric: the model pins
+    # ``^[A-Z0-9]{8,32}$``. The readable hyphenated spelling this replaced
+    # was not a shape AEAT ever issues, so it could not survive the pattern.
+    evidence_reference_id = f"JUST130{_YEAR}{period}AUTONOMAC19"
     persist_justificante_metadata(
         evidence_reference_id,
         modelo="130",
@@ -520,17 +538,7 @@ def _m100_non_relation_zero_bindings() -> dict[BindingId, Decimal]:
         binding.id: Decimal("0")
         for binding in snapshot.revision.bindings
         if binding.id != _M100_SALARY_CERT_RETENCIONES_BINDING
-        if binding.source
-        not in (
-            "profile",
-            _RELATION_PREFILL_SOURCE,
-            "ledger_renta_income_aggregation",
-            "ledger_renta_gastos_estimacion_directa_aggregation",
-            "ledger_iva_aggregation",
-            "ledger_oss_aggregation",
-            "collectible_invoice",
-            "payable_invoice",
-        )
+        if binding.source not in _MESH_RESOLVED_OR_LOCKED_SOURCES
     }
     values[_M100_ESTIMACION_DIRECTA_NORMAL_BINDING] = Decimal("1")
     return values
@@ -728,7 +736,17 @@ def test_autonoma_m100_salary_certificate_retenciones_export_replays_verified_to
     # cause is what names the undeclared field. Reading it here also proves the
     # wrapper preserves that cause rather than flattening it to a write failure.
     assert isinstance(refusal.value.__cause__, FilingExportError)
-    assert "aux_version" in str(refusal.value.__cause__)
+    # The cause is localized too, so its rendered text no longer spells the
+    # field. Read the structured context it carries instead -- that is where the
+    # refusal names which aux fields were undeclared, and asserting it is
+    # stronger than the substring match this replaced.
+    cause_context = refusal.value.__cause__.context or {}
+    assert refusal.value.__cause__.translated_message == (
+        "application.filing.export_parity.errors.aux_block_undeclared"
+    )
+    undeclared_fields = cause_context.get("undeclared_fields", ())
+    assert isinstance(undeclared_fields, Sequence)
+    assert "aux_version" in undeclared_fields
     assert not output.exists()
 
 

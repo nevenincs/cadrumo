@@ -35,9 +35,8 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-
 from ..loader import load_registry_tree
+from ..schema import ModeloRevision
 from ._gate_support import fragment_declaring
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

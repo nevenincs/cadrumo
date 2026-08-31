@@ -405,6 +405,9 @@ application:
           de dato declarado en el registro.
         text_casilla_not_string: La entrada de texto de la casilla debe ser un valor
           de texto.
+        unsupported_filing_year: El ejercicio {filing_year} no está declarado como
+          soportado. El registro declara {supported_filing_years}. Admita el ejercicio
+          en {declaration} tras fundamentar sus requisitos.
     complementaria:
       errors:
         justificante_csv_absent: La complementaria requiere el CSV del justificante
@@ -1237,17 +1240,18 @@ application:
         contiene %{casilla_value} EUR de renta atribuida sin registrar.
       attribution_received_unfolded: La renta atribuida de %{filing_year} por %{total_base}
         EUR no se integra en la casilla %{casilla_id}.
-      cross_casilla_invariant_violated: Se incumple un invariante entre casillas declarado
-        por el registro en esta revisión.
+      cross_casilla_invariant_violated: Se incumple el invariante entre casillas %{predicate_id}
+        declarado por el registro en esta revisión.
       cross_period_activity_start_missing: El modelo %{target_modelo} %{target_filing_year}
         %{target_period} necesita una fecha de inicio de actividad declarada.
-      cross_period_dependency_unclean: 'El modelo origen %{source_modelo} %{source_filing_year}
-        %{source_period} no está limpio: %{blocker_codes}.'
+      cross_period_dependency_unclean: 'El modelo de origen %{source_modelo} %{source_filing_year}
+        %{source_period} no está limpio para %{origin_ids}: %{blocker_codes}.'
       cross_period_first_year_fractional_suppression: 'El modelo %{source_modelo}
         %{source_filing_year} %{source_period} queda fuera de alcance: la actividad
         comenzó el %{activity_start_date}.'
       cross_period_m111_no_retenciones: El modelo %{source_modelo} %{source_filing_year}
-        %{source_period} no declara retenciones para %{target_modelo} %{target_filing_year}.
+        %{source_period} no declara retenciones para %{target_modelo} %{target_filing_year}
+        %{target_period}.
       cross_period_modelo_not_applicable:
         message: '%{source_modelo_count} modelo(s) origen no son aplicables a este
           contribuyente: %{source_modelos}.'
@@ -1256,9 +1260,11 @@ application:
           se apoya en una cadena local (%{origin_code}), no en evidencia oficial de
           la AEAT.
       cross_period_operator_declared_suppression: El modelo %{source_modelo} %{source_filing_year}
-        %{source_period} queda suprimido por declaración del operador (%{origin_code}).
+        %{source_period} se suprime por declaración del contribuyente (%{origin_code}),
+        con fecha de inicio de actividad %{activity_start_date}.
       cross_period_zero_value_previous_filing: El modelo %{source_modelo} %{source_filing_year}
-        %{source_period} traslada un valor cero a %{target_modelo} %{target_filing_year}.
+        %{source_period} aporta un valor cero a %{target_modelo} %{target_filing_year}
+        %{target_period}.
       cuota_less_ledger_row_base_missing: La transacción %{transaction_id} de la categoría
         de IVA %{iva_category_code} no tiene base declarable.
       dt12a_reduccion_antiquity_possible: La reducción %{reduccion_id} de %{reduccion_value}
@@ -1271,8 +1277,8 @@ application:
         EUR a %{current_value_eur} EUR, un incremento de %{delta_value_eur} EUR por
         encima del umbral de redeclaración de %{redeclaration_increase_threshold_eur}
         EUR.'
-      iva_wallet_precondition_failed: No se cumple la condición previa de la cartera
-        de compensación de IVA para esta revisión.
+      iva_wallet_precondition_failed: No se cumple la condición previa %{condition_id}
+        de la cartera de compensación de IVA para esta revisión (escenario %{scenario_id}).
       ledger_snapshot_drift: 'El modelo %{modelo} %{filing_year} %{period} se ha desviado
         de su instantánea de libro anclada: %{changed_count} modificadas, %{removed_count}
         eliminadas.'
@@ -1280,7 +1286,8 @@ application:
         tiene una agrupación de rentas no válida (%{error_type}).
       m210_convenio_lob_advisory: El país %{country_code} y el tipo de renta %{tipo_renta_code}
         pueden estar sujetos a una cláusula de limitación de beneficios (%{document_id}).
-      m210_rate_unavailable: No se ha podido resolver ningún tipo del modelo 210 (%{reason_code}).
+      m210_rate_unavailable: No se ha podido resolver el tipo del modelo 210 para
+        el tipo de renta %{tipo_renta_code} del ejercicio %{filing_year} (%{reason_code}).
       m303_m349_intracom_reconciliation_mismatch: 'Los modelos 303 y 349 discrepan
         en %{period_code} %{filing_year}: %{m303_total} EUR frente a %{m349_total}
         EUR, una diferencia de %{gap} EUR.'
@@ -1295,34 +1302,33 @@ application:
         de %{threshold}.'
       oss_evidence_missing: Esta revisión declara actividad de ventanilla única pero
         no conserva evidencia de la OSS.
-      oss_source_unrouted: Una fuente de ventanilla única no está enrutada a ninguna
-        casilla declarable.
+      oss_source_unrouted: 'Ninguna vinculación de agregación consume estas fuentes
+        de ventanilla única (referencias: %{source_ref_ids}).'
       pulled_filing_casilla_mismatch: La casilla %{casilla_number} de %{period_code}
         %{filing_year} calculó %{computed_value} frente a lo declarado %{filed_value}
         (%{mismatch_kind}).
-      registry_advisory_predicate_fired: Se ha activado un predicado consultivo del
-        registro para esta revisión.
-      registry_authority_grade_insufficient: La revision del registro de este modelo
-        declara autoridad %{declared_grade} y no puede respaldar una presentacion,
-        que exige autoridad %{requested_grade}. La revision se resuelve correctamente;
-        no esta acreditada al nivel que exige una presentacion, por lo que este objetivo
-        de trabajo aun no puede verificarse para presentar.
+      registry_advisory_predicate_fired: Se ha activado el predicado consultivo del
+        registro %{predicate_id} para esta revisión.
+      registry_authority_grade_insufficient: La revisión del registro para el modelo
+        %{modelo} %{filing_year} %{period} declara autoridad %{declared_grade} y la
+        presentación exige autoridad %{requested_grade}.
       registry_snapshot_unresolved: No se ha podido resolver la instantánea del registro
-        para este objetivo de trabajo.
+        para el modelo %{modelo} %{filing_year} %{period}.
       suffered_retencion_capital_mobiliario_uncredited: Esta declaración consigna
         rendimientos del capital mobiliario del ahorro pero no acredita ninguna retención
-        soportada. Introduzca el importe del certificado de retenciones e ingresos
-        a cuenta del pagador; el contribuyente nunca presentó el Modelo 123 que lo
-        declara, por lo que este valor no puede rellenarse automáticamente.
+        soportada (%{predicate_id}). Introduzca el importe del certificado de retenciones
+        e ingresos a cuenta del pagador; el contribuyente nunca presentó el Modelo
+        123 que lo declara, por lo que este valor no puede rellenarse automáticamente.
       suffered_retencion_trabajo_uncredited: Esta declaración consigna rendimientos
-        del trabajo pero no acredita ninguna retención soportada. Introduzca el importe
-        del certificado de retenciones e ingresos a cuenta del pagador; el contribuyente
-        nunca presentó el Modelo 111 que lo declara, por lo que este valor no puede
-        rellenarse automáticamente.
+        del trabajo pero no acredita ninguna retención soportada (%{predicate_id}).
+        Introduzca el importe del certificado de retenciones e ingresos a cuenta del
+        pagador; el contribuyente nunca presentó el Modelo 111 que lo declara, por
+        lo que este valor no puede rellenarse automáticamente.
       transaction_evidence_missing_deductible: Una transacción deducible no tiene
-        evidencia justificativa.
+        evidencia justificativa (vínculo %{binding_id}, origen %{source_kind_code},
+        motivo %{diagnostic_reason_code}).
       transaction_evidence_missing_output: Una transacción repercutida no tiene evidencia
-        justificativa.
+        justificativa (vínculo %{binding_id}, origen %{source_kind_code}, motivo %{diagnostic_reason_code}).
     iva_wallet:
       correct_no_record: No existe ningún registro de compensación sembrado para %{filing_year}/%{period}.
         Ejecuta primero 'aeat app modelo iva-wallet seed'; la corrección sobrescribe

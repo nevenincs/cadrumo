@@ -41,20 +41,18 @@ from pydantic import BaseModel, Field, StringConstraints, field_validator
 from ...core import STRICT_FROZEN_CONFIG, ActionEvidenceProvenance, Period
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.hashing import content_hash_hex
-from ...core.identity import CalculationRevisionId, FilingRecordId, WorkUnitId
+from ...core.identity import BucketId, CalculationRevisionId, FilingRecordId, WorkUnitId
 from ...domain.calculations.registry.authority import RegistryAuthorityCapture, bundled_authority
 from ...domain.calculations.registry.ids import RevisionId
+from ...domain.calculations.registry.static_inspection import RegistryRevisionInspection
 from ...domain.contribuyente import CCAA
-from ...domain.modelos import (
+from ...domain.modelos import ModeloCode, WorkUnit, WorkUnitCatalogue, WorkUnitState
+from ...domain.modelos.calculation_revision import (
+    CURRENT_SEALED_REVISION_STATES,
     CalculationRevision,
     CalculationRevisionState,
-    ModeloCode,
-    ModeloError,
-    ModeloValidationError,
-    WorkUnit,
-    WorkUnitCatalogue,
-    WorkUnitState,
 )
+from ...domain.modelos.errors import ModeloError, ModeloValidationError
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ._action_errors import (
     CalculationRevisionNotFoundError,
@@ -77,7 +75,6 @@ from ._selectors import (
 from ._work_lifecycle import RevisionParentOperation, create_work_unit, rename_work_unit, require_revision_parent_active
 from .registry_discovery import declared_modelo_period_tokens
 
-_BucketId = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=128)]
 _RevisionId = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=128)]
 _OperatorWorkUnitLookupId = Annotated[
     str,
@@ -128,7 +125,7 @@ class ModeloWorkUnitCandidate(BaseModel):
 
     work_unit_id: WorkUnitId
     short_work_unit_id: str
-    bucket_id: _BucketId
+    bucket_id: BucketId
     modelo: ModeloCode
     filing_year: Annotated[int, Field(ge=2000, le=2099)]
     period: Period
@@ -194,7 +191,7 @@ class ModeloWorkSelectorRequest(BaseModel):
     filing_year: Annotated[int, Field(ge=2000, le=2099)] | None = None
     period: Period | None = None
     revision_id: _RevisionId | None = None
-    bucket_id: _BucketId | None = None
+    bucket_id: BucketId | None = None
     work_unit_id: WorkUnitId | None = None
     operator_work_unit_id: _OperatorWorkUnitLookupId | None = None
 
@@ -229,7 +226,7 @@ class ModeloWorkResolution(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     state: ModeloWorkSelectorState
-    bucket_id: _BucketId
+    bucket_id: BucketId
     modelo: ModeloCode | None = None
     filing_year: Annotated[int, Field(ge=2000, le=2099)] | None = None
     period: Period | None = None
@@ -1120,7 +1117,10 @@ def assert_work_target_revision(
         ModeloWorkRegistryYearMismatchError: An supplied axis diverges from the
             law-determined revision.
     """
-    law_revision_id = capture.projection.revision_id
+    projection = capture.projection
+    law_revision_id = (
+        projection.revision_id if isinstance(projection, RegistryRevisionInspection) else projection.revision.id
+    )
     for axis, candidate in (
         ("requested", requested_revision_id),
         ("stored", stored_revision_id),
@@ -1296,7 +1296,12 @@ def _work_capture_observation(
         catalogue, revision_id = catalogue_repository.load_revisioned()
         if implicit and _work_pointer_limb() != limb_before:
             continue
-        observation = (limb_before, revision_id) if implicit else (revision_id,)
+        observation: tuple[str, ...]
+        if implicit:
+            assert limb_before is not None
+            observation = (limb_before, revision_id)
+        else:
+            observation = (revision_id,)
         return bucket_id, catalogue, observation, implicit
     raise ModeloWorkCaptureError(
         translated_message="errors.refused.modelo_work_capture_not_current",
@@ -1705,10 +1710,9 @@ def resolve_exportable_modelo_calculation_revision_address(
     )
     return _require_revision_state(
         revision,
-        allowed=(
-            CalculationRevisionState.VERIFICADO_COMPLETO,
-            CalculationRevisionState.PRESENTADO,
-        ),
+        # Sorted, not `tuple(frozenset)`: `allowed` is joined into the operator-facing
+        # refusal, and a frozenset's iteration order would vary the message run to run.
+        allowed=tuple(sorted(CURRENT_SEALED_REVISION_STATES, key=lambda state: state.value)),
         purpose="export",
     )
 

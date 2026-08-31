@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.runtime_graph import expression_casilla_refs
-
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.runtime_graph import expression_casilla_refs
 from ....domain.filing import ModeloBuilderError
 from ..runtime import build_runtime_schema_provider
 
@@ -49,8 +48,13 @@ def test_runtime_schema_provider_reads_modelo_130_registry_schema() -> None:
 def test_runtime_schema_provider_rejects_unknown_modelo() -> None:
     provider = build_runtime_schema_provider()
 
-    with pytest.raises(ModeloBuilderError, match="not present in the calculation registry"):
+    # Assert the translated key rather than English prose: these refusals are
+    # localized, so matching the rendered sentence tracks the catalogue's wording
+    # instead of the contract and drifts the moment a message is reworded.
+    with pytest.raises(ModeloBuilderError) as collection_error:
         provider.get_collection("999")
+    assert collection_error.value.translated_message == "application.filing.runtime.errors.modelo_not_in_registry"
 
-    with pytest.raises(ModeloBuilderError, match="not present in the calculation registry"):
+    with pytest.raises(ModeloBuilderError) as subview_error:
         provider.get_subview("999")
+    assert subview_error.value.translated_message == "application.filing.runtime.errors.modelo_not_in_registry"

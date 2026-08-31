@@ -43,7 +43,9 @@ from typing import TypeIs
 
 import pytest
 
-import cadrumo.application.ledger.evidence_draft as evidence_draft_module
+# The MODULE object, not names from it: the tests below scope an attribute
+# on it. `from .. import <module>` is the relative form that yields one.
+from .. import evidence_draft as evidence_draft_module
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -130,7 +132,7 @@ def test_the_deleted_primitive_is_gone_from_its_defining_module() -> None:
     assert "extract_invoice_fields" not in vars(evidence_draft_module)
 
     with pytest.raises(AttributeError):
-        _ = evidence_draft_module.extract_invoice_fields  # type: ignore[attr-defined]
+        _ = getattr(evidence_draft_module, "extract_invoice_fields")  # noqa: B009 -- probing for absence, not access
 
 
 @pytest.mark.parametrize("parser_path", _AEAT_LAYOUT_PARSERS, ids=lambda path: path.parent.name)

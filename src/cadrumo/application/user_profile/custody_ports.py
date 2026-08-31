@@ -82,6 +82,30 @@ class ProfileCustodyCapsuleLabelPort(Protocol):
         ...
 
 
+class ProfileCustodyCapsuleSummaryWitnessPort(Protocol):
+    """One coherent, non-authenticating observation of a committed capsule.
+
+    The commit and the label were read under a single filesystem anchor and
+    proved to name the same UUID, so a consumer may join them without
+    re-opening either record and without entering custody at all.
+    """
+
+    @property
+    def profile_id(self) -> UUID:
+        """The UUID proven independently by both observed records."""
+        ...
+
+    @property
+    def commit(self) -> ProfileCustodyCommitPort:
+        """The recognized current publication marker."""
+        ...
+
+    @property
+    def label(self) -> ProfileCustodyCapsuleLabelPort:
+        """The UUID-bound label provenance observed under the same anchor."""
+        ...
+
+
 class ProfileCustodyLabelHeadPort(Protocol):
     """Authenticated head of one committed profile-label lineage."""
 
@@ -458,6 +482,15 @@ class ProfileRecordCryptoError(CoreError, RuntimeError):
 
 class ProfileCustodyRecordIntegrityError(CoreError, ValueError):
     """The persistence provider refused a malformed or altered custody record."""
+
+
+class ProfileCustodyConcurrentChangeError(ProfileCustodyRecordIntegrityError):
+    """A capsule changed generation between two reads of one observation.
+
+    Narrower than its parent on purpose: the store is not damaged, the caller
+    simply lost a race with a publication or a deletion.  A listing that
+    reports this is telling the operator to look again, not to repair.
+    """
 
 
 class ProfileRecordEncryptedBlob(BaseModel):
@@ -973,6 +1006,20 @@ class ProfileCustodyPort(Protocol):
 
     def list_committed_profile_ids(self, *, root: Path) -> tuple[UUID, ...]:
         """List recognized current-format capsule identities."""
+        ...
+
+    def list_committed_capsule_summaries(
+        self,
+        *,
+        root: Path,
+    ) -> tuple[ProfileCustodyCapsuleSummaryWitnessPort, ...]:
+        """Observe every current capsule's commit and UUID-bound label once.
+
+        This is the pure listing route.  It opens no envelope, derives no key,
+        touches no session or keyring state, and never publishes or repairs a
+        label head; a caller needing any of those must go through the owning
+        custody operation instead.
+        """
         ...
 
     def load_committed_capsule_label(self, profile_id: UUID, *, root: Path) -> ProfileCustodyCapsuleLabelPort:

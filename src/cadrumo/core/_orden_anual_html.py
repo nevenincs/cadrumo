@@ -14,6 +14,8 @@ from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING, ClassVar, Final, Literal
 
+from pydantic import TypeAdapter
+
 from .text_fold import fold_diacritics
 
 if TYPE_CHECKING:
@@ -492,6 +494,7 @@ _ANNEX_HEADING_CLASSES: Final[frozenset[str]] = frozenset({"anexo_num", "anexo"}
 #: are freed together, so an id can never be reused while the map still claims
 #: it. An index held anywhere else would not have that guarantee.
 _ANNEX_INDEX_ATTRIBUTE: Final[str] = "_cadrumo_annex_heading_index"
+_ANNEX_INDEX_ADAPTER: TypeAdapter[dict[int, str]] = TypeAdapter(dict[int, str])
 
 
 def _is_annex_heading(tag: Tag) -> bool:
@@ -515,9 +518,9 @@ def _annex_heading_index(root: Tag) -> dict[int, str]:
     # reason this module defers it.
     from bs4 import Tag as _Tag
 
-    cached: dict[int, str] | None = getattr(root, _ANNEX_INDEX_ATTRIBUTE, None)
-    if cached is not None:
-        return cached
+    cached_raw = getattr(root, _ANNEX_INDEX_ATTRIBUTE, None)
+    if cached_raw is not None:
+        return _ANNEX_INDEX_ADAPTER.validate_python(cached_raw)
     index: dict[int, str] = {}
     current = ""
     for element in root.descendants:

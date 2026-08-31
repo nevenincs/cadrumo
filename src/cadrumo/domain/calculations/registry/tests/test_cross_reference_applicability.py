@@ -12,22 +12,18 @@ from typing import Literal
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.schedules import applicable_filing_schedules
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_verification import (
-    LiveCrossReferenceDecision,
-    ProfilePredicateDefinition,
-)
-from cadrumo.domain.calculations.registry.validate import RegistryValidator
-
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
+from .._validate import RegistryValidator
+from ..errors import RegistryValidationError
 from ..live_parity import (
     CrossReferenceApplicability,
     evaluate_cross_reference_applicability,
 )
 from ..remote_state_guard import AEAT_WRITE_FORBIDDEN_ACTIONS
+from ..schedules import applicable_filing_schedules
+from ..schema import ModeloDefinition, ModeloRevision
+from ..schema_verification import LiveCrossReferenceDecision, ProfilePredicateDefinition
 from ._registry_schema_support import _committed_modelo, _with_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

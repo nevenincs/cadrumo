@@ -50,16 +50,69 @@ __all__ = [
 
 _CHILD_FLAG = "--cadrumo-cli-performance-child"
 _STORAGE_MODULE_PREFIX = "cadrumo.adapters.persistence.storage"
-_IMPORT_FAMILY_PREFIXES: dict[str, tuple[str, ...]] = {
+IMPORT_FAMILY_PREFIXES: dict[str, tuple[str, ...]] = {
     "registry": (
         "cadrumo.application.registry",
         "cadrumo.domain.calculations.registry",
     ),
-    "crypto": ("cryptography", "argon2", "cadrumo.core.crypto"),
+    "crypto": ("cryptography", "argon2"),
     "custody": (f"{_STORAGE_MODULE_PREFIX}.custody",),
     "keyring": ("keyring", "cadrumo.adapters.persistence.storage.secret_store"),
     "storage": ("cadrumo.adapters.persistence", "sqlalchemy", "sqlite3"),
 }
+"""Module prefixes that identify each expensive capability family.
+
+Public because the capability gates read the SAME table: a private copy in a
+consumer drifts silently, and a family whose prefixes match nothing reports a
+clean tree forever rather than failing. ``cadrumo.core.crypto`` was carried
+here and matched no module in the tree; the family is covered by the two
+third-party prefixes it also names.
+"""
+
+
+DIAGNOSTIC_ONLY_PATHS: frozenset[str] = frozenset({"logs", "logs/cadrumo.log"})
+"""Root-relative paths the process-wide diagnostic log channel creates.
+
+Opened by ``get_logger`` at module import, before any command is selected, so
+it is a property of running the executable at all rather than of any one leaf
+-- and it is plaintext diagnostics, never profile storage.
+"""
+
+
+def is_non_authoritative_artifact(path: str) -> bool:
+    """Whether ``path`` is derived or coordination state rather than authority.
+
+    A command declaring no side effects may still leave three kinds of file
+    behind, and none of them is the profile-storage topology that the
+    side-effect declaration is about:
+
+    * the diagnostic log channel, opened before any command is chosen;
+    * the ``cache`` tree -- registry verdicts and corpus text -- which is
+      derived, rebuildable, and a byproduct of doing the work that was asked
+      for; and
+    * a ``.lock`` file, which is coordination rather than content, and which
+      lock implementations deliberately do not unlink because deleting a lock
+      races the next acquirer.
+
+    Everything else under the root is authoritative state. ``blobs``,
+    ``financial``, ``secrets``, ``submissions``, ``drafts`` and the encrypted
+    database are NOT excused here, which is what keeps the side-effect gate
+    able to fail on the defect it was written for.
+
+    The side-effect taxonomy has no member meaning "writes a derived cache":
+    ``local-state`` is bound to profile-scoped write ROUTING by the spec
+    invariant, so declaring it on a command that writes a process-wide cache
+    would assert something false about where its writes go. That gap is a real
+    one and is recorded in the campaign audit rather than papered over by
+    widening a declaration.
+    """
+    if path in DIAGNOSTIC_ONLY_PATHS:
+        return True
+    if path == "cache" or path.startswith("cache/"):
+        return True
+    return path.endswith(".lock")
+
+
 _ENV_PREFIXES = ("AEAT_", "PYTEST_", "CADRUMO_")
 _QUIET_CONTROL_PATH: tuple[str, ...] = ()
 _QUIET_CONTROL_INVOCATION_ARGS = ("--version",)
@@ -511,7 +564,7 @@ def _failed_observation(
         child_pid=-1,
         wall_seconds=wall_seconds,
         imported_modules=(),
-        import_families={family: () for family in _IMPORT_FAMILY_PREFIXES},
+        import_families={family: () for family in IMPORT_FAMILY_PREFIXES},
         pydantic_model_constructions=0,
         filesystem_created=(),
         filesystem_modified=(),
@@ -672,7 +725,7 @@ def _child_main(payload: Mapping[str, Any]) -> int:
         created, modified, deleted = _filesystem_delta(before_files, after_files)
         families = {
             family: tuple(name for name in imported_modules if name.startswith(prefixes))
-            for family, prefixes in _IMPORT_FAMILY_PREFIXES.items()
+            for family, prefixes in IMPORT_FAMILY_PREFIXES.items()
         }
         observation = {
             "phase": phase,

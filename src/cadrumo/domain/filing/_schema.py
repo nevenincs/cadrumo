@@ -17,13 +17,11 @@ from pydantic import (
     Field,
     SerializationInfo,
     SerializerFunctionWrapHandler,
+    TypeAdapter,
     field_validator,
     model_serializer,
     model_validator,
 )
-
-from cadrumo.domain.calculations.registry.ids import BindingId, FormulaId, LegalRefId, RevisionId, SourceRefId
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 
 from ...core import (
     STRICT_FROZEN_CONFIG,
@@ -39,6 +37,8 @@ from ...core.i18n import Translatable as tr
 from ...core.identity import ContentDigest, SubjectTaxId
 from ...core.time import UtcInstant
 from ..calculations import RowSourceIdentity
+from ..calculations.registry.ids import BindingId, FormulaId, LegalRefId, RevisionId, SourceRefId
+from ..calculations.registry.schema_references import RegistrySnapshotRef
 from ..submission import ModeloDraftStatus
 from .errors import FilingValidationError
 
@@ -182,11 +182,15 @@ class ModeloBindingValue(BaseModel):
         handler: SerializerFunctionWrapHandler,
         info: SerializationInfo,
     ) -> object:
-        payload = handler(self)
-        if not isinstance(payload, dict):
-            return payload
-        context = getattr(info, "context", None)
-        if not isinstance(context, Mapping) or context.get("secure_modelo_binding_value") is not True:
+        handled = handler(self)
+        if not isinstance(handled, dict):
+            return handled
+        payload = TypeAdapter(dict[str, object]).validate_python(handled)
+        raw_context = getattr(info, "context", None)
+        context = (
+            TypeAdapter(Mapping[str, object]).validate_python(raw_context) if isinstance(raw_context, Mapping) else None
+        )
+        if context is None or context.get("secure_modelo_binding_value") is not True:
             payload.pop("row_source_identity", None)
             return payload
         identity = self.row_source_identity

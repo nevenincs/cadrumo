@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import ClassVar, Literal, cast
+from typing import ClassVar, cast
 
 from ...core import OperationCancellation, OperationInteractionKind, OperationLifecycle
 from .frontend_contracts import (
@@ -43,7 +43,6 @@ from .persistence.events import (
     OperationPhaseEvent,
     OperationProgressEvent,
     OperationReconciliationEvent,
-    OperationTerminalEvent,
 )
 from .persistence.journal import (
     OperationObservationCursorAheadError,
@@ -52,7 +51,7 @@ from .persistence.journal import (
     OperationObservationUnknownOperationError,
     OperationProgressFoldInput,
 )
-from .persistence.replay import OperationReplayStatus
+from .persistence.replay import PublicReplayStatus
 from .registry import (
     OperationPublicDefinitionContractV1,
     OperationRegistry,
@@ -61,12 +60,6 @@ from .registry import (
 
 _SUPPORTED_OBSERVATION_VERSION = 1
 _UNSUPPORTED_INTERACTION_CODE = "operation.interaction.unsupported"
-_PublicReplayStatus = Literal[
-    OperationReplayStatus.PAGE,
-    OperationReplayStatus.CAUGHT_UP,
-    OperationReplayStatus.EXPIRED,
-    OperationReplayStatus.COMPACTED,
-]
 _CANCELLABLE_LIFECYCLES = frozenset(
     {
         OperationLifecycle.CREATED,
@@ -171,7 +164,7 @@ class OperationObservationService:
             diagnostic_ref=None if receipt is None else receipt.diagnostic_ref,
         )
         replay = materialization.replay
-        replay_status = cast(_PublicReplayStatus, replay.status)
+        replay_status = cast(PublicReplayStatus, replay.status)
         event_page = OperationPublicEventPageV1(
             operation_id=snapshot.operation_id,
             anchor_cursor=materialization.anchor_cursor,
@@ -264,9 +257,10 @@ def _project_pending_interaction(
             expires_at=request.expires_at,
             review_reference=reference,
         )
-    if request.kind in {OperationInteractionKind.INPUT, OperationInteractionKind.CHOICE}:
+    kind = request.kind
+    if kind is OperationInteractionKind.INPUT or kind is OperationInteractionKind.CHOICE:
         return OperationUnsupportedInteractionV1(
-            interaction_kind=request.kind,
+            interaction_kind=kind,
             interaction_id=request.interaction_id,
             revision=request.revision,
             presentation_code=request.presentation_code,
@@ -344,20 +338,18 @@ def _project_event(event: OperationEvent) -> OperationPublicEventV1:
             code=event.code,
             interaction_id=event.interaction_id,
         )
-    if isinstance(event, OperationTerminalEvent):
-        receipt = event.receipt
-        return OperationPublicTerminalEventV1(
-            revision=event.revision,
-            sequence=event.sequence,
-            timestamp=event.timestamp,
-            code=event.code,
-            condition=receipt.condition,
-            effect=receipt.effect,
-            result_ref=receipt.result_ref,
-            refusal_ref=receipt.refusal_ref,
-            diagnostic_ref=receipt.diagnostic_ref,
-        )
-    raise TypeError("unknown operation event variant")
+    receipt = event.receipt
+    return OperationPublicTerminalEventV1(
+        revision=event.revision,
+        sequence=event.sequence,
+        timestamp=event.timestamp,
+        code=event.code,
+        condition=receipt.condition,
+        effect=receipt.effect,
+        result_ref=receipt.result_ref,
+        refusal_ref=receipt.refusal_ref,
+        diagnostic_ref=receipt.diagnostic_ref,
+    )
 
 
 __all__ = ["OperationObservationService"]

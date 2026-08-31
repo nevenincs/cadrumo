@@ -22,16 +22,16 @@ from uuid import UUID
 import pytest
 
 from ......core.hashing import canonical_json_bytes
-from .._capsule_records import (
+from ..capsule_records import (
     PROFILE_CUSTODY_LABEL_MAX_BYTES,
     ProfileCustodyCapsuleLabel,
     parse_profile_custody_capsule_label,
 )
-from .._filesystem import (
+from ..errors import ProfileCustodyRecordError
+from ..filesystem import (
     read_profile_custody_local_record,
     write_profile_custody_local_record,
 )
-from ..errors import ProfileCustodyRecordError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

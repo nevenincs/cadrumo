@@ -39,7 +39,7 @@ from ...domain.transactions import (
     TransactionValidationError,
 )
 from ..export import ExportSerializationFormat, verify_export_metadata
-from ..review import LedgerReviewStatus
+from ..review.filter import LedgerReviewStatus
 
 _TRANSFER_ALLOWED_STATES = frozenset(
     {

@@ -15,7 +15,7 @@ choices and validation all arrive from the caller, so the same screen
 serves any bounded field set without growing a branch per door.
 
 The screen owns no application logic — it is the same injected-door
-arrangement :class:`~cadrumo.entrypoints.tui.profile.overview.ProfileManagerApp` uses,
+arrangement :class:`~cadrumo.entrypoints.tui.profile.overview.ProfileManagerScreen` uses,
 for the same reason: an adapter renders and reports intent, and the entry
 point composes.
 """
@@ -45,6 +45,7 @@ from .theme import (
     BASE_CSS,
     install_cadrumo_themes,
     toggle_appearance,
+    tokenised,
 )
 from .widgets import ContentDataTable, ContentScroll
 
@@ -126,12 +127,12 @@ class FormScreen(Screen["Mapping[str, str] | None"]):
     drift apart the first time either one changed.
     """
 
-    DEFAULT_CSS = """
+    DEFAULT_CSS = tokenised("""
     #form-table { height: auto; width: 100%; background: $surface; }
-    #form-refusal { color: $error; margin: 0; }
-    #form-actions { height: auto; align-horizontal: right; margin: 0; }
-    #form-actions Button { margin: 0 0 0 1; }
-    """
+    #form-refusal { color: $error; margin: $cadrumo-space-0; }
+    #form-actions { height: auto; align-horizontal: right; margin: $cadrumo-space-0; }
+    #form-actions Button { margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0 $cadrumo-control-gap; }
+    """)
 
     BINDINGS: ClassVar = [Binding("escape", "abandon", "", show=False)]
 
@@ -191,7 +192,7 @@ class FormScreen(Screen["Mapping[str, str] | None"]):
         application, which has no such method — and precisely the kind of
         collision that only appears once the page becomes a screen.
         """
-        table: DataTable[str] = self.query_one("#form-table", DataTable)
+        table = self.query_one("#form-table", DataTable)
         rows = tuple(
             (
                 form_field.key,

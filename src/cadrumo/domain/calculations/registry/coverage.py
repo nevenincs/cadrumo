@@ -45,6 +45,7 @@ consumed BY that validation. Housing both here inverted the dependency.
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
+from datetime import date
 from typing import Literal
 
 from pydantic import Field, PrivateAttr, computed_field, model_validator
@@ -53,8 +54,9 @@ from ....core import RegistryAuthorityGrade, RegistrySelectorPeriodCode, Revisio
 from ._schema_family_coverage import (
     CoverageModel,
 )
+from ._snapshot_internals import check_snapshot_filing_review_tier
 from .authority import ValidatedRegistryAuthority
-from .errors import RegistryValidationError
+from .errors import AmbiguousRevisionSelectionError, RegistryValidationError
 from .ids import BindingId, CrossReferenceId, LegalRefId, SourceRefId, WorkbookParityRefId
 from .schema import (
     DataBindingDefinition,
@@ -68,7 +70,6 @@ from .schema_formula import ParameterDefinition
 from .schema_references import SourceReference
 from .schema_surfaces import RelationDefinition
 from .schema_verification import LiveCrossReferenceDecision, WorkbookParityReference
-from .snapshot import check_snapshot_filing_review_tier
 from .static_inspection import RegistryRevisionInspection
 from .temporal import coverage_assessment_horizon, revision_selection_coordinates
 
@@ -404,6 +405,48 @@ def audit_registry_model_law_coverage(
     )
 
 
+def _inspect_declared_revision(
+    authority: ValidatedRegistryAuthority,
+    *,
+    modelo: ModeloDefinition,
+    revision: ModeloRevision,
+    filing_year: int,
+    period: RegistrySelectorPeriodCode,
+) -> RegistryRevisionInspection:
+    """Inspect the revision an audit is iterating, dating the ask where a year is shared.
+
+    A revision whose validity starts or ends INSIDE a filing year shares that
+    year with its neighbour, and where both declare the same period token the
+    undated question genuinely has two right answers. Modelo 308 is the live
+    case: its January-to-June and July-to-December eras both declare AD-HOC, and
+    refusing an undated 2011 request is the ADJUDICATED behaviour, asserted by
+    that modelo's own selector regression -- not a defect for an audit to report.
+
+    An audit's real question is narrower than the one it asks, being "does THIS
+    revision cover this coordinate", so it re-asks with a date the revision
+    itself owns. A revision spanning the whole filing year has no such
+    neighbour and the ambiguity stays a hard failure.
+    """
+    try:
+        return authority.inspect_revision(modelo.id, filing_year=filing_year, period=period)
+    except AmbiguousRevisionSelectionError:
+        year_start, year_end = date(filing_year, 1, 1), date(filing_year, 12, 31)
+        spans_whole_year = revision.valid_from <= year_start and (
+            revision.valid_to is None or revision.valid_to >= year_end
+        )
+        if spans_whole_year:
+            raise
+        on = max(revision.valid_from, year_start)
+        if revision.valid_to is not None:
+            on = min(on, revision.valid_to)
+        return authority.inspect_revision(
+            modelo.id,
+            filing_year=filing_year,
+            period=period,
+            on=on,
+        )
+
+
 def _model_law_coverage_for_coordinate(
     *,
     authority: ValidatedRegistryAuthority,
@@ -413,7 +456,13 @@ def _model_law_coverage_for_coordinate(
     period: RegistrySelectorPeriodCode,
 ) -> ModelLawCoverageLedger:
     """Build one cell from the law-selected inspection or filing snapshot."""
-    inspection = authority.inspect_revision(modelo.id, filing_year=filing_year, period=period)
+    inspection = _inspect_declared_revision(
+        authority,
+        modelo=modelo,
+        revision=revision,
+        filing_year=filing_year,
+        period=period,
+    )
     if inspection.revision_id != revision.id:
         raise RegistryValidationError(
             f"coverage coordinate {modelo.id}/{filing_year}/{period} selected revision "
@@ -481,7 +530,13 @@ def audit_registry_construct_evidence(
         for revision in sorted(modelo.revisions.values(), key=lambda item: item.id):
             coordinates = revision_selection_coordinates(revision, assessment_horizon=assessment_horizon)
             inspections = tuple(
-                authority.inspect_revision(modelo.id, filing_year=filing_year, period=period)
+                _inspect_declared_revision(
+                    authority,
+                    modelo=modelo,
+                    revision=revision,
+                    filing_year=filing_year,
+                    period=period,
+                )
                 for filing_year, period in coordinates
             )
             for (filing_year, period), inspection in zip(coordinates, inspections, strict=True):

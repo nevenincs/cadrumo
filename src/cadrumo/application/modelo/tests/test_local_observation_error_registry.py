@@ -9,7 +9,7 @@ import pytest
 from ....core import CasillaId, validated_casilla_id
 from ....core.errors import ERROR_REGISTRY, CadrumoError, ErrorCategory, build_error_envelope, get_registered_error_code
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.modelos import ModeloError
+from ....domain.modelos.errors import ModeloError
 from .._action_errors import ModeloLocalObservationError
 from .._local_observation_actions import _canonical_casilla_values
 

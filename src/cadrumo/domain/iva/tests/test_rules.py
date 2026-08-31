@@ -7,7 +7,8 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from .. import IvaCategory, IvaCitation, IvaCitationGrounding, cite, resolve_catalogue
+from ....core.citation_grounding import CitationGrounding
+from .. import IvaCategory, IvaCitation, cite, resolve_catalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -36,7 +37,7 @@ def test_every_citation_states_its_grounding_and_carries_the_evidence_for_it() -
     """
     for regulation in _CATALOGUE:
         for citation in regulation.citations:
-            if citation.grounding is IvaCitationGrounding.VERIFIED:
+            if citation.grounding is CitationGrounding.VERIFIED:
                 assert citation.quoted_text.strip(), (
                     f"{regulation.category.value}/{citation.legal_reference} claims verified grounding "
                     "but carries no quotation"
@@ -55,6 +56,8 @@ def test_iva_citation_rejects_a_verified_claim_with_no_quotation() -> None:
             {
                 "legal_reference": "ley-37-1992:art-90",
                 "quoted_text": "   ",
+                "valid_from": date(2022, 1, 1),
+                "valid_to": date(2026, 12, 31),
             },
         )
 
@@ -66,8 +69,10 @@ def test_iva_citation_rejects_an_unresolved_claim_with_no_reason() -> None:
             {
                 "legal_reference": "ley-37-1992:art-90",
                 "quoted_text": "",
-                "grounding": IvaCitationGrounding.UNRESOLVED,
+                "grounding": CitationGrounding.UNRESOLVED,
                 "unresolved_reason": "   ",
+                "valid_from": date(2022, 1, 1),
+                "valid_to": date(2026, 12, 31),
             },
         )
 
@@ -84,8 +89,10 @@ def test_iva_citation_rejects_an_unresolved_claim_that_carries_a_quotation() -> 
             {
                 "legal_reference": "ley-37-1992:art-90",
                 "quoted_text": "El tipo impositivo sera el 21 por ciento",
-                "grounding": IvaCitationGrounding.UNRESOLVED,
+                "grounding": CitationGrounding.UNRESOLVED,
                 "unresolved_reason": "candidate text that did not match the bundled corpus",
+                "valid_from": date(2022, 1, 1),
+                "valid_to": date(2026, 12, 31),
             },
         )
 

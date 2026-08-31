@@ -13,6 +13,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   cadrumo.application.user_profile.acquisition_sources
    cadrumo.application.user_profile.aggregate
    cadrumo.application.user_profile.authentication
    cadrumo.application.user_profile.bundle
@@ -55,6 +56,7 @@ Submodules
    cadrumo.application.user_profile.profile_pointer_ports
    cadrumo.application.user_profile.profile_record_repository
    cadrumo.application.user_profile.profile_repository
+   cadrumo.application.user_profile.profile_summary
    cadrumo.application.user_profile.projections
    cadrumo.application.user_profile.prospective_password
    cadrumo.application.user_profile.recovery_contracts
@@ -63,4 +65,5 @@ Submodules
    cadrumo.application.user_profile.repository
    cadrumo.application.user_profile.section_rows
    cadrumo.application.user_profile.status_projection
+   cadrumo.application.user_profile.usage_ratio_resolution
    cadrumo.application.user_profile.validation

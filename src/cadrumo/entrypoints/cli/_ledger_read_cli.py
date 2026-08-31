@@ -12,7 +12,7 @@ and :class:`~cadrumo.entrypoints.cli._ledger_payloads.LedgerTrackResult`.
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
@@ -22,7 +22,7 @@ import typer
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...application.export import ExportSerializationFormat
+from ...application.export.tabular import ExportSerializationFormat
 from ...application.ledger.actions_export import export_ledger_transactions
 from ...application.ledger.actions_manual import (
     get_manual_transaction,
@@ -34,7 +34,8 @@ from ...application.ledger.actions_manual import (
 from ...application.ledger.models import LedgerExportCommand
 from ...application.ledger.review_projection import ledger_transaction_review_status
 from ...application.operator_actions import ActionReference
-from ...application.review import FilterParseError, LedgerReviewFilterSpec
+from ...application.review.errors import FilterParseError
+from ...application.review.filter import LedgerReviewFilterSpec
 from ...core import ActionArgumentSource, ActionArgumentStatus, LedgerSortField, LedgerSortOrder, Period
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.decimal import coerce_decimal_strict
@@ -52,23 +53,15 @@ from ...domain.categories import (
     SpendingCategoryFamily,
 )
 from ...domain.invoices import LinkInconsistency
-from ...domain.transactions import Transaction, ledger_irpf_category_catalogue
-from ._common import (
-    _bad,
-    _canonical_period,
-    _optional_canonical_period,
-    _state,
-    _tx_repo,
-    active_profile_label,
-    emit_envelope,
-    optional_decimal_text,
-    resolve_notice_action,
-)
+from ...domain.transactions import Transaction, TransactionCatalogue, ledger_irpf_category_catalogue
+from ._common import _bad, _state, _tx_repo, active_profile_label, emit_envelope, resolve_notice_action
+from ._decimal_parsing import optional_decimal_text
 from ._ledger_list import (
     LLM_DECISION_EVENT_TYPES,
     project_ledger_list,
 )
 from ._ledger_support import _ledger_cli_no_recovery
+from ._period_parsing import _canonical_period, _optional_canonical_period
 
 if TYPE_CHECKING:
     from ...application.ledger.llm_diagnostics import (
@@ -76,7 +69,7 @@ if TYPE_CHECKING:
         LlmDiagnosticsReport,
         LlmUsageCostProviderMetrics,
     )
-    from ...application.ledger.preflight import LedgerPreflightReport
+    from ...application.ledger.preflight import LedgerPreflightIssue, LedgerPreflightReport
     from ._ledger_payloads import LedgerLinkInconsistencyPayload
     from ._ledger_rule_payloads import LedgerLlmDiagnosticsResult
 
@@ -240,7 +233,7 @@ def _llm_diagnostics_lines_and_notices(report: LlmDiagnosticsReport) -> tuple[li
 def _parse_iso_date(value: str | None, option: str) -> date | None:
     if value is None:
         return None
-    from ._common import _parse_iso_date as _parse_required_iso_date
+    from ._date_parsing import _parse_iso_date as _parse_required_iso_date
 
     return _parse_required_iso_date(
         value,
@@ -445,7 +438,7 @@ def _emit_ledger_check_period(
     *,
     bucket_id: str,
     period: Period,
-    catalogue: Any,
+    catalogue: TransactionCatalogue,
     link_rows: list[LedgerLinkInconsistencyPayload],
     link_lines: list[str],
     link_notices: list[Notice],
@@ -529,7 +522,7 @@ def _emit_ledger_check_all_periods(
     *,
     bucket_id: str,
     years: list[int],
-    catalogue: Any,
+    catalogue: TransactionCatalogue,
     link_rows: list[LedgerLinkInconsistencyPayload],
     link_lines: list[str],
     link_notices: list[Notice],
@@ -537,7 +530,7 @@ def _emit_ledger_check_all_periods(
     from ...application.ledger.preflight import preflight_transaction_catalogue
     from ._ledger_payloads import LedgerCheckResult
 
-    aggregated_issues: list[Any] = []
+    aggregated_issues: list[LedgerPreflightIssue] = []
     aggregated_payload_issues: list[dict[str, object]] = []
     checked_total = 0
     for year in years:
@@ -582,7 +575,7 @@ def _ledger_check_issue_lines(report: LedgerPreflightReport) -> list[str]:
     return _ledger_check_issue_lines_from_items(report.issues)
 
 
-def _ledger_check_issue_lines_from_items(issues: Any) -> list[str]:
+def _ledger_check_issue_lines_from_items(issues: Sequence[LedgerPreflightIssue]) -> list[str]:
     return [f"issue\t{issue.transaction_id}\t{issue.reason.value}\t{issue.detail}" for issue in issues]
 
 

@@ -23,12 +23,10 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from ....adapters.persistence.storage import generate_recovery_key
-from ....adapters.persistence.storage.custody import (
-    ProfileCustodyEnvelope,
-    ProfileCustodyRecordError,
-    create_profile_custody_sentinel,
-)
+from ....adapters.persistence.storage import RecoveryKey, generate_recovery_key
+from ....adapters.persistence.storage.custody.errors import ProfileCustodyRecordError
+from ....adapters.persistence.storage.custody.records import ProfileCustodyEnvelope
+from ....adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
 from ....core.config import override_settings
 from ....core.errors import build_error_envelope, render_error_text
 from ....core.i18n import tr
@@ -197,7 +195,9 @@ def test_export_writes_no_trace_of_the_recovery_secret_to_disk(
     target = tmp_path / "exports" / "recovery.json"
     enrolled.export(target)
     words = enrolled.enrollment.recovery_key.mnemonic.encode("utf-8")
-    entropy = bytes(enrolled.enrollment.recovery_key.raw)
+    recovery_key = enrolled.enrollment.recovery_key
+    assert isinstance(recovery_key, RecoveryKey)
+    entropy = bytes(recovery_key.raw)
 
     searched = 0
     for directory in (tmp_path / "exports", enrolled.root):

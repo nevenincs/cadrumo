@@ -11,13 +11,12 @@ from urllib.parse import urlsplit
 import pytest
 from pydantic import AnyUrl
 
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.remote_state_guard import RemoteOperation, assert_remote_operation_allowed
-
 from ......core import Period
 from ......core.config import Settings
 from ......core.decimal import AEAT_THOUSANDS_SEPARATORS
 from ......core.external_constants import UTF_8_ENCODING
+from ......domain.calculations.registry.errors import RegistryValidationError
+from ......domain.calculations.registry.remote_state_guard import RemoteOperation, assert_remote_operation_allowed
 from ......tests.aeat_literal_fixtures import (
     AEAT_NON_HOST_AUTHORITY_CANARIES,
     AEAT_SUFFIX_LOOKALIKE_HOST_CANARY,

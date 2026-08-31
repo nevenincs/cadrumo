@@ -31,11 +31,10 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.ids import BindingId
-from cadrumo.domain.calculations.registry.ledger_bindings import resolve_ledger_iva_aggregation_binding_values
-
 from ....core import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.ids import BindingId
+from ....domain.calculations.registry.ledger_bindings import resolve_ledger_iva_aggregation_binding_values
 from ....domain.iva import EUMemberState, IvaCategory
 from ....domain.transactions import (
     BusinessClassification,

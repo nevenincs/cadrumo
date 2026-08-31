@@ -45,6 +45,8 @@ CONTENT_DIGEST_PREFIX: Final[str] = "sha256:"
 
 _PREFIXED_DIGEST_LENGTH: Final[int] = len(CONTENT_DIGEST_PREFIX) + 64
 _HEX_ALPHABET: Final[frozenset[str]] = frozenset("0123456789abcdef")
+#: BLAKE2b digest width for content discriminators, in bytes.
+_BLAKE2B_DISCRIMINATOR_BYTES: Final[int] = 16
 
 
 def sha256_hex(data: bytes) -> str:
@@ -56,6 +58,18 @@ def sha256_hex(data: bytes) -> str:
     :func:`sha256_file` or :func:`hash_file`.
     """
     return hashlib.sha256(data).hexdigest()
+
+
+def blake2b_hex(data: bytes) -> str:
+    """Return the lowercase hex BLAKE2b digest of ``data`` at discriminator width.
+
+    A content DISCRIMINATOR, not a proof: these digests answer "did these bytes
+    change since the last look", so they are deliberately compact rather than
+    collision-proof against an adversary. Use :func:`sha256_hex` wherever a
+    digest is evidence. The width is fixed here because two discriminators are
+    only comparable when both were computed at the same size.
+    """
+    return hashlib.blake2b(data, digest_size=_BLAKE2B_DISCRIMINATOR_BYTES).hexdigest()
 
 
 def canonical_json_bytes(payload: object) -> bytes:

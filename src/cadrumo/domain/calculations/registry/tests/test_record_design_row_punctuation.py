@@ -26,9 +26,7 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.record_design import extract_record_design
-
-from ..record_design import _collapse_stuttered_row_prefix, _parse_pdf_row
+from ..record_design import _collapse_stuttered_row_prefix, _parse_pdf_row, extract_record_design
 from .test_every_bundled_design_is_read_or_reported import _bundled_designs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

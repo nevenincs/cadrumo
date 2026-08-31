@@ -30,9 +30,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-
 from ...core import CasillaId, Period
 from ...core.aggregation import LEDGER_BINDING_SOURCE_KINDS, BindingSourceKind
 from ...core.i18n import output_language
@@ -51,7 +48,9 @@ from ...domain.calculations.registry.profile_grounding import (
     binding_profile_keys,
     build_profile_grounding_index,
 )
+from ...domain.calculations.registry.schema import DataBindingDefinition
 from ...domain.calculations.registry.schema_input_kind import InputKind
+from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.calculations.registry.temporal import select_revision
 from ._binding_readiness import profile_resolvable_binding_ids
 
@@ -67,6 +66,7 @@ _LIVE_OBSERVATION_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
         BindingSourceKind.COLLECTIBLE_INVOICE,
         BindingSourceKind.FOREIGN_ASSET,
         BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION,
+        BindingSourceKind.M347_THIRD_PARTY_OPERATION,
         BindingSourceKind.PAYABLE_INVOICE,
         BindingSourceKind.PRORRATA_REGULARIZACION,
         BindingSourceKind.RETENCIONES_AGGREGATION,
@@ -80,15 +80,35 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True, slots=True)
 class DataInventoryCasilla:
-    """One casilla entry on a data-inventory checklist."""
+    """One casilla entry on a data-inventory checklist.
+
+    ``legal_refs`` and ``source_refs`` are mandatory and non-empty: regulatory
+    grounding travels with a casilla all the way to the operator, so an entry
+    that cannot say which provision establishes it has nothing to show and must
+    not be built. The refs are copied from the registry
+    :class:`~domain.calculations.registry.schema_surfaces.CasillaDefinition`,
+    which already refuses an ungrounded casilla at registry build; enforcing it
+    here too means the checklist type states the guarantee itself rather than
+    inheriting it from wherever its fields happened to come from.
+    """
 
     casilla_id: CasillaId
     number: str
     label: str
-    legal_refs: tuple[LegalRefId, ...] = ()
-    source_refs: tuple[SourceRefId, ...] = ()
+    legal_refs: tuple[LegalRefId, ...]
+    source_refs: tuple[SourceRefId, ...]
     binding_id: BindingId | None = None
     binding_source: str | None = None
+
+    def __post_init__(self) -> None:
+        """Refuse an entry whose regulatory grounding is missing."""
+        missing = [
+            name for name, refs in (("legal_refs", self.legal_refs), ("source_refs", self.source_refs)) if not refs
+        ]
+        if missing:
+            raise ValueError(
+                f"data-inventory casilla {self.casilla_id} must carry non-empty {' and '.join(missing)}",
+            )
 
 
 @dataclass(frozen=True, slots=True)

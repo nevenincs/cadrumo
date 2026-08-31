@@ -36,7 +36,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 
 from ...domain.transactions import Transaction, TransactionCatalogue, TransactionIdPrefixError
-from .actions_common import _transaction_modelo_source_ids
+from .actions_common import transaction_modelo_source_ids
 
 MINIMUM_DISPLAY_ID_WIDTH = 8
 _FULL_ID_LENGTH = 64
@@ -117,13 +117,13 @@ def _lineage_handles(transaction: Transaction) -> tuple[str, ...]:
     """Return every id that addresses ``transaction`` across its edit lineage.
 
     Reuses the finalized-modelo guard's lineage walker
-    (:func:`cadrumo.application.ledger.actions_common._transaction_modelo_source_ids`)
+    (:func:`cadrumo.application.ledger.actions_common.transaction_modelo_source_ids`)
     so the read-side handle set and the write-side guard set are computed
     by one authority: the transaction's own current id plus every
     ``previous_transaction_id`` recorded in its
     :class:`cadrumo.domain.transactions.TransactionEditLineageEntry` chain.
     """
-    return _transaction_modelo_source_ids(transaction)
+    return transaction_modelo_source_ids(transaction)
 
 
 def resolve_lineage_transaction_id(prefix: str, catalogue: TransactionCatalogue) -> str:

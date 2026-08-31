@@ -30,21 +30,18 @@ import pytest
 
 from ......core.config import Settings
 from ......core.hashing import prefixed_digest
-from .. import (
-    ProfileCustodyKdfParameters,
-    ProfileCustodyPasswordError,
-    ProfileCustodyRecordError,
-    create_profile_custody_password_envelope,
-    create_profile_custody_recovery_envelope,
-    create_profile_custody_sentinel,
+from ..capsule import (
     load_committed_profile_password_material,
     publish_profile_custody_capsule,
     recognize_current_profile_capsule,
     replace_committed_profile_custody_envelope,
-    unlock_profile_custody,
-    unlock_profile_custody_recovery,
 )
-from .._records import PROFILE_CUSTODY_ENVELOPE_FILENAME
+from ..envelope import create_profile_custody_password_envelope
+from ..errors import ProfileCustodyPasswordError, ProfileCustodyRecordError
+from ..kdf_supervision import unlock_profile_custody
+from ..records import PROFILE_CUSTODY_ENVELOPE_FILENAME, ProfileCustodyKdfParameters
+from ..recovery import create_profile_custody_recovery_envelope, unlock_profile_custody_recovery
+from ..sentinel import create_profile_custody_sentinel
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

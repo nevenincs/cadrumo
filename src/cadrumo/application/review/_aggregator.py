@@ -17,8 +17,8 @@ from ._adapters import (
     transactions_low_confidence,
     transactions_pending,
 )
-from ._enums import ReviewItemKind, ReviewState, severity_rank
-from ._models import ReviewItem
+from .enums import ReviewItemKind, ReviewState, severity_rank
+from .models import ReviewItem
 
 _logger = get_logger(__name__)
 

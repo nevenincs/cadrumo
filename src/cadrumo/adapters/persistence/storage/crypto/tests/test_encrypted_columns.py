@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Iterator
-from typing import cast
+from typing import Annotated, cast
 
 import pytest
 from sqlalchemy import Engine, create_engine, select
@@ -19,9 +19,16 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
 
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ...errors import DecryptionError, StorageValidationError
-from .. import EncryptedBytes, EncryptedJSON, EncryptedPayload, EncryptedString, HashedLookup
-from .._crypto import encrypt_record
-from .._encrypted_columns import _AAD_JSON, _AAD_STRING
+from ..aead import encrypt_record
+from ..encrypted_columns import (
+    _AAD_JSON,
+    _AAD_STRING,
+    EncryptedBytes,
+    EncryptedJSON,
+    EncryptedPayload,
+    EncryptedString,
+    HashedLookup,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -45,16 +52,23 @@ class _TestBase(DeclarativeBase):
     """Declarative base local to this test module — never touches the live schema."""
 
 
+_intpk = Annotated[int, mapped_column(primary_key=True, autoincrement=True)]
+_secret_text = Annotated[str | None, mapped_column(EncryptedString, nullable=True)]
+_secret_bytes = Annotated[bytes | None, mapped_column(EncryptedBytes, nullable=True)]
+_secret_json = Annotated[object | None, mapped_column(EncryptedJSON, nullable=True)]
+_lookup_key = Annotated[bytes | None, mapped_column(HashedLookup, nullable=True, index=True)]
+
+
 class _CryptoRow(_TestBase):
     """One mapper class exercising every encrypted column type."""
 
     __tablename__ = "encrypted_column_smoke"
 
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    secret_text: Mapped[str | None] = mapped_column(EncryptedString, nullable=True)
-    secret_bytes: Mapped[bytes | None] = mapped_column(EncryptedBytes, nullable=True)
-    secret_json: Mapped[object | None] = mapped_column(EncryptedJSON, nullable=True)
-    lookup_key: Mapped[bytes | None] = mapped_column(HashedLookup, nullable=True, index=True)
+    id: Mapped[_intpk]
+    secret_text: Mapped[_secret_text]
+    secret_bytes: Mapped[_secret_bytes]
+    secret_json: Mapped[_secret_json]
+    lookup_key: Mapped[_lookup_key]
 
 
 @pytest.fixture(autouse=True)

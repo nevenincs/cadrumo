@@ -10,12 +10,7 @@ from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.deadlines import TaxpayerProfile
 from ...domain.justificante import Justificante, JustificanteRepositoryProtocol
 from ...domain.modelos import (
-    CalculationRevision,
     CalculationRevisionAggregateContext,
-    CalculationRevisionAmendmentIdentity,
-    CalculationRevisionAmendmentKind,
-    M303RectificativaMotive,
-    ModeloExportError,
     ModeloRecord,
     ModeloRecordCatalogue,
     ModeloRecordCatalogueRepositoryProtocol,
@@ -23,6 +18,13 @@ from ...domain.modelos import (
     is_justificante_backed_external_evidence,
     validate_calculation_revision_aggregate,
 )
+from ...domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionAmendmentIdentity,
+    CalculationRevisionAmendmentKind,
+    M303RectificativaMotive,
+)
+from ...domain.modelos.errors import ModeloExportError
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 
 

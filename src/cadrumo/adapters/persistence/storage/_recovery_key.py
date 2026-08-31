@@ -43,7 +43,7 @@ from pathlib import Path
 from typing import Final, Self
 
 from ....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
-from .custody import zeroise as _zeroise
+from .custody.zeroise import zeroise as _zeroise
 from .errors import storage_validation_error as _storage_validation_error
 
 _RECOVERY_KEY_SIZE: Final[int] = 32

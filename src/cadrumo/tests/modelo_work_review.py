@@ -10,18 +10,15 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation
-from cadrumo.domain.calculations.registry.temporal import select_revision
-
 from ..adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ..adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ..application.modelo.work_review import ModeloWorkReview, build_modelo_work_review
 from ..core import Period
+from ..domain.calculations.registry.authority import bundled_authority
+from ..domain.calculations.registry.bindings import CasillaObservation
+from ..domain.calculations.registry.temporal import select_revision
 from ..domain.modelos import (
-    CalculationRevision,
-    CalculationRevisionState,
     ModeloCode,
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -29,12 +26,16 @@ from ..domain.modelos import (
     VerificationCompletenessStatus,
     VerificationReport,
     WorkUnit,
-    derive_calculation_revision_id,
     derive_verification_report_id,
     derive_work_unit_id,
     upsert_calculation_revision,
     upsert_verification_report,
     upsert_work_unit,
+)
+from ..domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
 )
 from .secure_sql import isolated_runtime_profile
 

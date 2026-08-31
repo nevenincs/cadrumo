@@ -21,11 +21,16 @@ from __future__ import annotations
 
 import ast
 import importlib
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.ledger_bindings import (
+from .....core.directory_scan import scan_directory
+from .....tests import REPO_ROOT
+from .._cross_revision_divergence import CrossRevisionCasillaDivergence
+from ..formula_runtime_ops import resolve_keyed_bracket, resolve_parameter
+from ..ledger_bindings import (
     IvaLedgerObservation,
     OssIossLedgerObservation,
     resolve_ledger_iva_aggregation_binding_values,
@@ -33,16 +38,6 @@ from cadrumo.domain.calculations.registry.ledger_bindings import (
     validate_ledger_iva_aggregation_binding_definition,
     validate_ledger_oss_aggregation_binding_definition,
 )
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaContinuidadEvolutionDefinition
-from cadrumo.domain.calculations.registry.validate_cross_revision_advisory import (
-    CrossRevisionCasillaDriftSummary,
-    summarize_non_overlapping_cross_revision_casilla_drift,
-)
-
-from .....core.directory_scan import scan_directory
-from .....tests import REPO_ROOT
-from ..cross_revision_divergence import CrossRevisionCasillaDivergence
-from ..formula_runtime_ops import resolve_keyed_bracket, resolve_parameter
 from ..runtime_graph import (
     expression_binding_refs,
     expression_casilla_refs,
@@ -50,6 +45,7 @@ from ..runtime_graph import (
     expression_parameter_refs,
     expression_relation_refs,
 )
+from ..schema_surfaces import CasillaContinuidadEvolutionDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -68,8 +64,6 @@ _LEDGER_BINDING_PUBLIC_NAMES = (
 _CASILLA_CONTINUITY_PUBLIC_NAMES = (
     "CasillaContinuidadEvolutionDefinition",
     "CrossRevisionCasillaDivergence",
-    "CrossRevisionCasillaDriftSummary",
-    "summarize_non_overlapping_cross_revision_casilla_drift",
 )
 _MODELO_REGISTRY_PRIVATE_MODULES = ("_bindings", "_errors", "_record_design", "_schema")
 
@@ -92,15 +86,12 @@ def test_registry_casilla_continuity_reports_live_in_their_defining_modules() ->
     contracts = (
         CasillaContinuidadEvolutionDefinition,
         CrossRevisionCasillaDivergence,
-        CrossRevisionCasillaDriftSummary,
-        summarize_non_overlapping_cross_revision_casilla_drift,
     )
 
     assert tuple(contract.__name__ for contract in contracts) == _CASILLA_CONTINUITY_PUBLIC_NAMES
     assert {contract.__module__ for contract in contracts} == {
         "cadrumo.domain.calculations.registry.schema_surfaces",
-        "cadrumo.domain.calculations.registry.cross_revision_divergence",
-        "cadrumo.domain.calculations.registry.validate_cross_revision_advisory",
+        "cadrumo.domain.calculations.registry._cross_revision_divergence",
     }
 
 
@@ -149,16 +140,46 @@ def test_source_tree_does_not_use_absolute_registry_private_imports() -> None:
     assert offenders == []
 
 
+#: Paths this gate does not read, and why. The benchmark baseline is a frozen
+#: copy of an earlier tree kept for comparison; it is not a consumer of today's
+#: package and rewriting it would destroy the baseline it exists to be.
+_FROZEN_BENCHMARK_SNAPSHOT = REPO_ROOT / "dev" / "benchmarks" / "cli" / ".baseline-source-snapshot"
+
+#: The one module allowed to bind the package namespace, keyed by path with its
+#: reason. Asserting a namespace exports nothing requires binding it, so the
+#: module that PROVES the inertness cannot be read as consuming it.
+_FACADE_BINDING_EXEMPTIONS: Mapping[str, str] = {
+    "src/cadrumo/domain/calculations/registry/tests/test_remote_authority_canonicalisation.py": (
+        "Binds the package solely to assert __all__ == [] -- the inertness this "
+        "gate exists to protect. There is no way to check that property without "
+        "importing the namespace it is a property of."
+    ),
+}
+
+
 def test_project_consumers_do_not_import_the_inert_registry_package_facade() -> None:
     """Every project consumer must name a defining registry module directly."""
     offenders = sorted(
         f"{path.relative_to(REPO_ROOT)} imports the registry package facade"
         for root in _PROJECT_PYTHON_ROOTS
         for path in scan_directory(root, pattern="*.py", recursive=True)
-        if _imports_registry_package_facade(path)
+        if not path.is_relative_to(_FROZEN_BENCHMARK_SNAPSHOT)
+        and path.relative_to(REPO_ROOT).as_posix() not in _FACADE_BINDING_EXEMPTIONS
+        and _imports_registry_package_facade(path)
     )
 
     assert offenders == []
+
+
+def test_every_facade_binding_exemption_still_binds_the_facade() -> None:
+    """An exemption that no longer describes a real binding is slack, not permission."""
+    stale = sorted(
+        relative
+        for relative in _FACADE_BINDING_EXEMPTIONS
+        if not _imports_registry_package_facade(REPO_ROOT / relative)
+    )
+
+    assert stale == [], f"exemption(s) no longer bind the package facade; remove them: {stale}"
 
 
 def test_modelo_registry_tests_use_public_registry_api_boundaries() -> None:
@@ -217,3 +238,57 @@ def _relative_private_imports(path: Path) -> tuple[str, ...]:
             and node.module.startswith("_")
         )
     )
+
+
+def _locally_bound_names(tree: ast.Module) -> set[str]:
+    """Every name a module binds itself, imports excluded.
+
+    ``ast.TypeAlias`` carries PEP 695 ``type X = ...`` statements. Omitting it
+    reports a locally defined alias as borrowed, which manufactures findings.
+    """
+    bound: set[str] = set()
+    for node in tree.body:
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
+            bound.add(node.name)
+        elif isinstance(node, ast.Assign):
+            bound.update(target.id for target in node.targets if isinstance(target, ast.Name))
+        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+            bound.add(node.target.id)
+        elif isinstance(node, ast.TypeAlias) and isinstance(node.name, ast.Name):
+            bound.add(node.name.id)
+    return bound
+
+
+def _declared_exports(tree: ast.Module) -> list[str] | None:
+    for node in ast.walk(tree):
+        if (
+            isinstance(node, ast.Assign)
+            and any(getattr(t, "id", "") == "__all__" for t in node.targets)
+            and isinstance(node.value, ast.List | ast.Tuple)
+        ):
+            return [e.value for e in node.value.elts if isinstance(e, ast.Constant) and isinstance(e.value, str)]
+    return None
+
+
+def test_no_registry_module_exports_a_symbol_it_does_not_define() -> None:
+    """A module's public surface is its own contract, never a borrowed one.
+
+    Re-exporting another module's symbol makes two import paths for one name,
+    so a consumer can bind to a module that merely forwards it. The owner is
+    then free to move while the forwarder still resolves, and the boundary the
+    export list appears to describe is not the one imports actually cross.
+    """
+    modules = sorted(p for p in _REGISTRY_TEST_ROOT.glob("*.py") if p.name != "__init__.py")
+    assert len(modules) > 50, f"registry module sweep collapsed to {len(modules)} files"
+
+    borrowed: dict[str, list[str]] = {}
+    for path in modules:
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        exports = _declared_exports(tree)
+        if exports is None:
+            continue
+        bound = _locally_bound_names(tree)
+        if outside := sorted(name for name in exports if name not in bound):
+            borrowed[path.name] = outside
+
+    assert borrowed == {}, f"registry modules exporting borrowed symbols: {borrowed}"

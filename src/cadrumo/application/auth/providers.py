@@ -93,15 +93,12 @@ def select_provider(
     credentials = certificate_credentials
     if kind is AuthProviderKind.CERTIFICATE and credentials is None:
         credentials = resolve_active_certificate_credentials(settings=settings)
-    provider = _auth_provider_selector()(
+    return _auth_provider_selector()(
         kind,
         settings=settings,
         browser_session_factory=browser_session_factory,
         certificate_credentials=credentials,
     )
-    if not isinstance(provider, AuthProvider):
-        raise TypeError("outbound auth factory returned an object outside the AuthProvider contract")
-    return provider
 
 
 __all__ = ["AuthProvider", "AuthProviderSelector", "bind_auth_provider_selector", "select_provider"]

@@ -17,7 +17,7 @@ class ProviderSessionOwner(Protocol):
     """Provider state required by :func:`exit_provider_session`."""
 
     _activation_cm: AbstractContextManager[None] | None
-    _session: BucketSession | None
+    session: BucketSession | None
 
 
 def exit_provider_session(

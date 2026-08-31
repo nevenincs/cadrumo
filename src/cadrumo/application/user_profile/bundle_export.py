@@ -34,7 +34,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from ...core import fsync_parent_dir
+from ...core import fsync_parent_dir, is_link_like
 from ...core.atomic_write import atomic_write_hardened_bytes
 from ...core.directory_scan import scan_directory
 from ...core.external_constants import UTF_8_ENCODING
@@ -65,9 +65,8 @@ from .bundle_export_operation import (
 from .custody_ports import default_profile_bucket_event_history_repository
 
 if TYPE_CHECKING:
-    from cadrumo.application.workflow.profile_bucket_models import ProfileBucketPointer
-
     from ...domain.user_profile.portable_export import UserProfilePortableExport
+    from ..workflow.profile_bucket_models import ProfileBucketPointer
 
 # The hardened writer stages through its own inner sibling before the rename;
 # see :func:`_orphan_staged_paths` for why recovery must reach it too.
@@ -461,9 +460,8 @@ def _reload_operation(
 
 
 def _resolve_export_profile(profile_name: str | None) -> ProfileBucketPointer:
-    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket, read_profile_bucket_by_id
-
     from ...core.bucket_pointer import resolve_active_bucket_id
+    from ..workflow.profile_bucket_scan import read_profile_bucket, read_profile_bucket_by_id
 
     if profile_name is not None:
         pointer = read_profile_bucket(profile_name)
@@ -591,7 +589,7 @@ def _orphan_staged_paths(operation: ProfileBundleExportOperation) -> tuple[Path,
             for entry in scan_directory(parent)
             if entry.name.startswith(inner_prefix) and entry.name.endswith(_HARDENED_INNER_TEMP_SUFFIX)
         )
-    return tuple(path for path in candidates if not path.is_symlink())
+    return tuple(path for path in candidates if not is_link_like(path))
 
 
 def _remove_orphan_staged_temp(operation: ProfileBundleExportOperation) -> None:

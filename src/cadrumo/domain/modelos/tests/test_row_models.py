@@ -14,11 +14,11 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from .._calculation_revision import derive_calculation_revision_id
 from .._row_models import (
     Modelo184MemberRow,
     Modelo232VinculadaRow,
 )
+from ..calculation_revision import derive_calculation_revision_id
 from ._row_model_support import (
     _assert_validation_error,
     _BaseRevisionIdKwargs,
@@ -31,20 +31,22 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _M184_INVALID_CASES = (
     _ValidationErrorCase(
         "porcentaje-above-100",
-        lambda: Modelo184MemberRow(nif="33333333C", porcentaje=Decimal("101"), importe=Decimal("0")),
+        lambda: Modelo184MemberRow(nif="33333333C", porcentaje=Decimal("101"), importe=Decimal("0"), clave="D"),
         "100",
     ),
     _ValidationErrorCase(
         "porcentaje-negative",
-        lambda: Modelo184MemberRow(nif="33333333C", porcentaje=Decimal("-1"), importe=Decimal("0")),
+        lambda: Modelo184MemberRow(nif="33333333C", porcentaje=Decimal("-1"), importe=Decimal("0"), clave="D"),
     ),
     _ValidationErrorCase(
         "pais-lowercase",
-        lambda: Modelo184MemberRow(nif="44444444D", pais="de", porcentaje=Decimal("50"), importe=Decimal("0")),
+        lambda: Modelo184MemberRow(
+            nif="44444444D", pais="de", porcentaje=Decimal("50"), importe=Decimal("0"), clave="D"
+        ),
     ),
     _ValidationErrorCase(
         "blank-nif",
-        lambda: Modelo184MemberRow(nif="   ", porcentaje=Decimal("50"), importe=Decimal("0")),
+        lambda: Modelo184MemberRow(nif="   ", porcentaje=Decimal("50"), importe=Decimal("0"), clave="D"),
     ),
 )
 
@@ -133,6 +135,7 @@ class TestModelo184MemberRow:
             pais="ES",
             porcentaje=Decimal("40"),
             importe=Decimal("15000"),
+            clave="D",
         )
         assert row.nif == "12345678A"
         assert row.nombre == "Núria García Pla"
@@ -145,7 +148,7 @@ class TestModelo184MemberRow:
         """Scalar normalization, defaults, and documented bounds use the real model."""
         cases = (
             (
-                Modelo184MemberRow(nif="12345678a", porcentaje=Decimal("50"), importe=Decimal("1")),
+                Modelo184MemberRow(nif="12345678a", porcentaje=Decimal("50"), importe=Decimal("1"), clave="D"),
                 "nif",
                 "12345678A",
             ),
@@ -154,22 +157,22 @@ class TestModelo184MemberRow:
                 # field defaulted to "ES", so a foreign member whose country
                 # nobody supplied was declared domestic -- and this case
                 # asserted that default, which made the defect the contract.
-                Modelo184MemberRow(nif="12345678A", porcentaje=Decimal("30"), importe=Decimal("0")),
+                Modelo184MemberRow(nif="12345678A", porcentaje=Decimal("30"), importe=Decimal("0"), clave="D"),
                 "pais",
                 None,
             ),
             (
-                Modelo184MemberRow(nif="12345678A", porcentaje=Decimal("30"), importe=Decimal("0")),
+                Modelo184MemberRow(nif="12345678A", porcentaje=Decimal("30"), importe=Decimal("0"), clave="D"),
                 "nombre",
                 "",
             ),
             (
-                Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("0"), importe=Decimal("0")),
+                Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("0"), importe=Decimal("0"), clave="D"),
                 "porcentaje",
                 Decimal("0"),
             ),
             (
-                Modelo184MemberRow(nif="22222222B", porcentaje=Decimal("100"), importe=Decimal("50000")),
+                Modelo184MemberRow(nif="22222222B", porcentaje=Decimal("100"), importe=Decimal("50000"), clave="D"),
                 "porcentaje",
                 Decimal("100"),
             ),
@@ -188,9 +191,15 @@ class TestModelo184MemberRow:
     def test_three_members_round_trip(self) -> None:
         """3-member scenario matching Núria round-17 fixture (40/35/25 split)."""
         rows = [
-            Modelo184MemberRow(nif="11111111A", nombre="Sòcia 1", porcentaje=Decimal("40"), importe=Decimal("12000")),
-            Modelo184MemberRow(nif="22222222B", nombre="Sòcia 2", porcentaje=Decimal("35"), importe=Decimal("10500")),
-            Modelo184MemberRow(nif="33333333C", nombre="Sòcia 3", porcentaje=Decimal("25"), importe=Decimal("7500")),
+            Modelo184MemberRow(
+                nif="11111111A", nombre="Sòcia 1", porcentaje=Decimal("40"), importe=Decimal("12000"), clave="D"
+            ),
+            Modelo184MemberRow(
+                nif="22222222B", nombre="Sòcia 2", porcentaje=Decimal("35"), importe=Decimal("10500"), clave="D"
+            ),
+            Modelo184MemberRow(
+                nif="33333333C", nombre="Sòcia 3", porcentaje=Decimal("25"), importe=Decimal("7500"), clave="D"
+            ),
         ]
         total = sum(r.porcentaje for r in rows)
         assert total == Decimal("100"), "Shares must sum to 100%"
@@ -201,6 +210,7 @@ class TestModelo184MemberRow:
             nombre="Sòcia 1",
             porcentaje=Decimal("40"),
             importe=Decimal("13000"),
+            clave="D",
         )
         assert modified.importe != rows[0].importe
         assert rows[1].importe == Decimal("10500")
@@ -283,7 +293,7 @@ class TestModelo232VinculadaRow:
 def test_row_models_are_frozen() -> None:
     """Row models are immutable once validated."""
     cases = (
-        (Modelo184MemberRow(nif="55555555E", porcentaje=Decimal("50"), importe=Decimal("0")), "99999999Z"),
+        (Modelo184MemberRow(nif="55555555E", porcentaje=Decimal("50"), importe=Decimal("0"), clave="D"), "99999999Z"),
         (Modelo232VinculadaRow(pais="ES", nif="A12345678", importe=Decimal("1")), "Z99999999"),
     )
     for row, replacement_nif in cases:
@@ -309,15 +319,17 @@ class TestRevisionIdWithDetailRows:
         id_no_rows = derive_calculation_revision_id(**base_kwargs, filing_instance_evidence=None, source_provenance=())
         id_one_row = derive_calculation_revision_id(
             **base_kwargs,
-            detail_rows=(Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("100"), importe=Decimal("10000")),),
+            detail_rows=(
+                Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("100"), importe=Decimal("10000"), clave="D"),
+            ),
             filing_instance_evidence=None,
             source_provenance=(),
         )
         id_two_rows = derive_calculation_revision_id(
             **base_kwargs,
             detail_rows=(
-                Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("60"), importe=Decimal("6000")),
-                Modelo184MemberRow(nif="22222222B", porcentaje=Decimal("40"), importe=Decimal("4000")),
+                Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("60"), importe=Decimal("6000"), clave="D"),
+                Modelo184MemberRow(nif="22222222B", porcentaje=Decimal("40"), importe=Decimal("4000"), clave="D"),
             ),
             filing_instance_evidence=None,
             source_provenance=(),
@@ -330,8 +342,8 @@ class TestRevisionIdWithDetailRows:
     def test_revision_id_stable_when_rows_identical(self) -> None:
         """Same rows → same id regardless of call order."""
         rows = (
-            Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("40"), importe=Decimal("4000")),
-            Modelo184MemberRow(nif="22222222B", porcentaje=Decimal("60"), importe=Decimal("6000")),
+            Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("40"), importe=Decimal("4000"), clave="D"),
+            Modelo184MemberRow(nif="22222222B", porcentaje=Decimal("60"), importe=Decimal("6000"), clave="D"),
         )
         first = derive_calculation_revision_id(
             work_unit_id="b" * 64,
@@ -355,8 +367,8 @@ class TestRevisionIdWithDetailRows:
 
     def test_row_order_canonical_same_id(self) -> None:
         """Row insertion order must NOT affect the id (rows are sorted by nif)."""
-        row_a = Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("40"), importe=Decimal("4000"))
-        row_b = Modelo184MemberRow(nif="22222222B", porcentaje=Decimal("60"), importe=Decimal("6000"))
+        row_a = Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("40"), importe=Decimal("4000"), clave="D")
+        row_b = Modelo184MemberRow(nif="22222222B", porcentaje=Decimal("60"), importe=Decimal("6000"), clave="D")
         id_ab = derive_calculation_revision_id(
             work_unit_id="c" * 64,
             input_values_by_casilla_id={},
@@ -387,8 +399,12 @@ class TestRevisionIdWithDetailRows:
                 binding_overrides={},
                 casilla_values={},
                 detail_rows=(
-                    Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("60"), importe=Decimal(importe_1)),
-                    Modelo184MemberRow(nif="22222222B", porcentaje=Decimal("40"), importe=Decimal(importe_2)),
+                    Modelo184MemberRow(
+                        nif="11111111A", porcentaje=Decimal("60"), importe=Decimal(importe_1), clave="D"
+                    ),
+                    Modelo184MemberRow(
+                        nif="22222222B", porcentaje=Decimal("40"), importe=Decimal(importe_2), clave="D"
+                    ),
                 ),
                 filing_instance_evidence=None,
                 source_provenance=(),

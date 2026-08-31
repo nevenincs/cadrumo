@@ -17,9 +17,8 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
-from cadrumo.application.workflow.persistence import workflow_state_repository
-
 from ....application.evidence import EvidenceBundleService
+from ....application.workflow.persistence import workflow_state_repository
 from ....core.config import override_settings
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
@@ -71,9 +70,9 @@ def _seed_bundle() -> str:
     return bundle.bundle_id
 
 
-def test_audit_show_renders_bundle_manifest() -> None:
+def test_audit_view_renders_bundle_manifest() -> None:
     bundle_id = _seed_bundle()
-    result = _invoke(["app", "modelo", "audit", "show", bundle_id])
+    result = _invoke(["app", "modelo", "audit", "view", bundle_id])
     assert result.exit_code == 0, result.output
     assert f"bundle_id\t{bundle_id}" in result.output
     assert f"work_unit_id\t{_WORK_UNIT_ID}" in result.output
@@ -81,9 +80,9 @@ def test_audit_show_renders_bundle_manifest() -> None:
     assert "records\t2" in result.output
 
 
-def test_audit_show_refuses_unknown_bundle() -> None:
+def test_audit_view_refuses_unknown_bundle() -> None:
     _seed_bundle()
-    result = _invoke(["app", "modelo", "audit", "show", "0" * 64])
+    result = _invoke(["app", "modelo", "audit", "view", "0" * 64])
     assert result.exit_code != 0, result.output
 
 
@@ -168,7 +167,7 @@ def test_audit_workflow_end_to_end_show_check_export(tmp_path: Path) -> None:
     bundle_id = _seed_bundle()
     output = tmp_path / "bundle-e2e.zip"
 
-    show = _invoke(["app", "modelo", "audit", "show", bundle_id])
+    show = _invoke(["app", "modelo", "audit", "view", bundle_id])
     assert show.exit_code == 0, show.output
 
     check = _invoke(["app", "modelo", "audit", "check", bundle_id])
@@ -202,7 +201,7 @@ def test_audit_help_text_uses_accepted_vocabulary() -> None:
     forbidden_es = ("enviar a aeat", "subir a aeat", "presentar telemáticamente")
 
     accepted_per_verb = {
-        "show": (("evidence", "evidencia"), ("bundle", "paquete"), ("manifest", "manifiesto", "manifest")),
+        "view": (("evidence", "evidencia"), ("bundle", "paquete"), ("manifest", "manifiesto", "manifest")),
         "check": (("verify", "verificar", "reverificar"), ("bundle", "paquete")),
         "export": (("bundle", "paquete"), ("manifest", "manifiesto")),
     }
@@ -237,6 +236,6 @@ def test_audit_verbs_refuse_without_active_profile() -> None:
 
     workflow_state_repository().reset_workflow_state()
 
-    for verb in ("show", "check"):
+    for verb in ("view", "check"):
         result = _invoke(["app", "modelo", "audit", verb, "0" * 64])
         assert result.exit_code != 0, (verb, result.output)

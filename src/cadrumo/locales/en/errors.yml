@@ -258,6 +258,8 @@ errors:
       compatible with the calculation revision's current state.
     error_modelo_casilla_provenance_missing: An engine-result casilla has no definition
       in the registry.
+    error_modelo_detail_row_wrong_modelo: Detail row type {row_type} belongs to modelo
+      {owning_modelo}, but this calculation is for modelo {work_unit_modelo}.
     error_modelo_external_filing_import: The imported external filing could not be
       persisted. Check the casilla values and the evidence reference.
     error_modelo_filing_record_not_found: The requested filing record was not found.
@@ -668,6 +670,9 @@ errors:
       Run `aeat config login NAME` and try again.
     locked_storage_lock_acquisition: The exclusive file lock could not be acquired
       within the timeout. Another process holds it; wait and try again.
+    locked_storage_profile_custody_capsule_generation: The profile custody capsule
+      changed while it was being read. Another process is publishing or deleting it.
+      Retry the operation.
   prefix:
     auth: Auth.
     error: Error.
@@ -690,6 +695,8 @@ errors:
       a credential it needs.
     ledger_preflight: Ledger preflight rejected the modelo run because it is not yet
       fileable.
+    locale_catalogue_capture_not_current: This locale catalogue capture is no longer
+      current.
     m145_communication_record_ambiguous: The Modelo 145 communication record id prefix
       matches multiple records.
     m145_communication_record_export: The Modelo 145 local communication record could
@@ -731,6 +738,8 @@ errors:
     modelo_calculate_shortcut_input: The grouped calculation shortcut inputs are incomplete.
     modelo_calculate_text_input: The supplied --casilla override value is not valid
       for a text casilla.
+    modelo_calculation_capture_not_current: The calculation revision is no longer
+      current. Re-read the revision and retry.
     modelo_calculation_revision_selector_ambiguous: The calculation revision selector
       matched more than one revision; refine the selector.
     modelo_calculation_revision_selector_state: The selected calculation revision
@@ -747,6 +756,8 @@ errors:
     modelo_revision_pick: Could not select the requested calculation revision.
     modelo_work_capture_not_current: The work selection is no longer current. Re-read
       the work target and retry.
+    modelo_work_discard_approval_stale: The work unit changed after the discard was
+      approved; review it and approve again.
     modelo_work_period_token: Invalid modelo period token.
     modelo_work_registry_year_mismatch: The selected registry revision does not cover
       the requested filing year.
@@ -759,6 +770,8 @@ errors:
       a modelo work unit.
     modelo_work_selector_revision_conflict: The selected modelo work unit belongs
       to a different revision.
+    modelo_workspace_manifest_capture_not_current: The field manifest changed while
+      it was being read; capture it again.
     profile_capsule_archive: The profile archive could not be written or read
     profile_capsule_source: The given source is not a readable profile capsule
     profile_import_collision: The imported profile identifier collides with an existing
@@ -1055,6 +1068,8 @@ errors:
       calculation revision. Run aeat app modelo work calculate to produce a fresh
       revision.
     refused_workflow_resume: The prior workflow run cannot be resumed.
+    registry_closure_capture_not_current: The registry closure changed while it was
+      being read; capture it again.
     submission_preflight_auth_describe_failed: Auth provider failed to describe itself
       ({cause_type}).
     submission_preflight_auth_not_ready: Auth provider {kind} is not ready (configured={configured}

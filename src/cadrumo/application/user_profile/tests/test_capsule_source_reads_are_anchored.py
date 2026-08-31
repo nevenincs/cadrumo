@@ -1,6 +1,6 @@
 """A restore source is read through the anchored primitive, not by name.
 
-``config profile restore`` accepts a capsule DIRECTORY, and that directory is
+``config profile archive import`` accepts a capsule DIRECTORY, and that directory is
 the least trusted input this domain takes: a published capsule sits inside the
 product's own storage root, while a restore source is a path an operator points
 at -- copied from a backup, handed over by someone else, or reconstructed by
@@ -33,9 +33,9 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from cadrumo.application.user_profile.capsule_restore import ProfileCapsuleSourceError, read_profile_capsule_source
-
-from ....adapters.persistence.storage.custody import PROFILE_CUSTODY_ENVELOPE_MAX_BYTES, ProfileCustodyRecordError
+from ....adapters.persistence.storage.custody.errors import ProfileCustodyRecordError
+from ....adapters.persistence.storage.custody.records import PROFILE_CUSTODY_ENVELOPE_MAX_BYTES
+from ..capsule_restore import ProfileCapsuleSourceError, read_profile_capsule_source
 
 if TYPE_CHECKING:
     from pathlib import Path

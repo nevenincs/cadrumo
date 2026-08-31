@@ -60,10 +60,11 @@ from ...domain.calculations.registry.ids import (
     SourceRefId,
 )
 from ...domain.calculations.registry.schema import ModeloRevision
-from ...domain.modelos import M303RegimenSimplificadoAnnualSummaryHandoff, ModeloDetailRow
+from ...domain.modelos import ModeloDetailRow
+from ...domain.modelos.calculation_revision import M303RegimenSimplificadoAnnualSummaryHandoff
 from .errors import AggregationValidationError, t
 
-RowBindingValue = str | Decimal
+RowBindingValue = str | Decimal | int | bool
 
 _ROW_BINDING_VALUES = TypeAdapter(dict[RowBindingKey, RowBindingValue])
 
@@ -194,6 +195,15 @@ CalculationSourceDiagnosticReason = Literal[
     # from `unrouted_observation` because the remedy is different: that one
     # needs a binding, this one needs a conversion rate on the record.
     "unconverted_foreign_currency",
+    # A Modelo 347 filer carries a declaring role (art. 31's claves C/D/E
+    # population) whose clave depends on a transaction-level fact this
+    # invoice leaves UNDECLARED (tri-state ``None``, not ``False``): whether
+    # an acquisition is al margen de la actividad empresarial (clave D), or
+    # whether a payment is a subvención/auxilio/ayuda (clave E). Neither a
+    # silent ``False`` (under-declares the population the role exists to
+    # cover) nor a silent ``True`` (over-declares) is acceptable, so an
+    # undeclared fact surfaces here instead of picking a side.
+    "unclassified_declarant_role_fact",
     # An invoice whose declared IVA treatment and whose counterparty contradict
     # each other: an intra-community supply to a third country, or an export to
     # a member state. Routing on the category alone would declare volume the
@@ -379,6 +389,7 @@ CALLER_OVERRIDE_PRECEDENCE_LADDER: tuple[CallerOverridePrecedenceTier, ...] = (
                 BindingSourceKind.LEDGER_OSS_AGGREGATION,
                 BindingSourceKind.COLLECTIBLE_INVOICE,
                 BindingSourceKind.PAYABLE_INVOICE,
+                BindingSourceKind.M347_THIRD_PARTY_OPERATION,
                 BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY,
                 BindingSourceKind.INVENTORY,
             },

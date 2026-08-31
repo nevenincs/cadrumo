@@ -45,11 +45,10 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.queries import RegistryQueryService
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition
-
 from ....core import BindingSourceKind
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.queries import RegistryQueryService
+from ....domain.calculations.registry.schema import DataBindingDefinition
 from ...aggregation import (
     BindingSourceDisposition,
     build_binding_source_dispositions,

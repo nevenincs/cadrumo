@@ -14,10 +14,9 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-
 from ....core import Modelo, Period
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.modelos import (
     ModeloCode,
     ModeloVerificationFinding,

@@ -23,17 +23,19 @@ from ...domain.calculations.registry.temporal import select_revision
 from ...domain.filing_evidence import FilingEvidenceReference
 from ...domain.iva import ActividadAgricolaSimplificado
 from ...domain.modelos import (
+    CalculationRevisionCatalogueRepositoryProtocol,
+    ModeloRecordCatalogueRepositoryProtocol,
+    ModeloRecordStatus,
+    WorkUnit,
+)
+from ...domain.modelos.calculation_revision import (
     M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS,
     CalculationRevision,
-    CalculationRevisionCatalogueRepositoryProtocol,
     CalculationRevisionState,
     M303FilingInstanceEvidence,
     M303RegimenSimplificadoActivityCalculationResult,
     M303RegimenSimplificadoAnnualSummaryHandoff,
     M303RegimenSimplificadoCalculationResult,
-    ModeloRecordCatalogueRepositoryProtocol,
-    ModeloRecordStatus,
-    WorkUnit,
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..aggregation import CalculationSourceContext, CalculationSourceProvenance, CalculationSourceResolution
@@ -67,16 +69,29 @@ class M303RegimenSimplificadoAnnualSummarySourceResolver:
         work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
         calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
         filing_repository: ModeloRecordCatalogueRepositoryProtocol,
+        regimen_simplificado_applies: bool,
     ) -> None:
         self._registry_snapshot = registry_snapshot
         self._work_unit_repository = work_unit_repository
         self._calculation_repository = calculation_repository
         self._filing_repository = filing_repository
+        #: Whether regimen simplificado reaches this taxpayer at all. Supplied
+        #: rather than derived: the closed scope vocabulary is single-homed in
+        #: the modelo package, and this layer already receives its scope
+        #: decision instead of reaching across the package boundary for one.
+        self._regimen_simplificado_applies = regimen_simplificado_applies
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         """Assemble exact 74--83 inputs or refuse before target persistence."""
         requirement = m303_regimen_simplificado_annual_summary_requirement(context.revision)
-        if requirement is None:
+        if requirement is None or not self._regimen_simplificado_applies:
+            # Boxes 74--83 exist on every Modelo 390 form, so the revision
+            # declaring this family says what the FORM carries, never that the
+            # regime reaches this taxpayer. LIVA art. 122 Uno applies regimen
+            # simplificado only to sujetos pasivos meeting its three stated
+            # requirements; a regimen general filer meets none, and the 303/4T
+            # boxes 51--58 this family reads carry nothing for them. Demanding
+            # the source anyway would refuse an ordinary annual resumen.
             return CalculationSourceResolution(resolver_id=self.resolver_id, owned_sources=self.owned_sources)
         target = self._target_work_unit(context)
         self._require_target_matches_snapshot(target, context)
@@ -149,7 +164,10 @@ class M303RegimenSimplificadoAnnualSummarySourceResolver:
         """
         requirement = m303_regimen_simplificado_annual_summary_requirement(self._registry_snapshot.revision)
         persisted = target_revision.m303_regimen_simplificado_annual_summary_handoff
-        if requirement is None:
+        # An inapplicable family is indistinguishable from an undeclared one
+        # here: neither can produce a handoff, so a persisted one is equally
+        # anomalous and an absent one equally correct.
+        if requirement is None or not self._regimen_simplificado_applies:
             if persisted is not None:
                 raise M303RegimenSimplificadoAnnualSummaryHandoffError(
                     "M303 annual-summary handoff is present on a target revision without its registry requirement",
@@ -420,6 +438,7 @@ def validate_m303_regimen_simplificado_annual_summary_target_revision(
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     filing_repository: ModeloRecordCatalogueRepositoryProtocol,
+    regimen_simplificado_applies: bool,
 ) -> None:
     """Fail closed when a persisted M390 handoff no longer re-resolves exactly."""
     # The calculation rung, not the filing rung. This precondition asks the
@@ -440,6 +459,7 @@ def validate_m303_regimen_simplificado_annual_summary_target_revision(
         work_unit_repository=work_unit_repository,
         calculation_repository=calculation_repository,
         filing_repository=filing_repository,
+        regimen_simplificado_applies=regimen_simplificado_applies,
     ).validate_persisted_target_revision(
         target_work_unit=target_work_unit,
         target_revision=target_revision,

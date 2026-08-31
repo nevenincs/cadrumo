@@ -543,6 +543,18 @@ SUPPORTED_OUTPUT_LANGUAGES: Final[tuple[str, ...]] = tuple(lang.value for lang i
 #: Counterparties whose annual operations total at most this amount are NOT declarable.
 M347_THRESHOLD_EUR: Final[Decimal] = Decimal("3005.06")
 
+#: Modelo 347 clave C declaration floor per beneficiary. Binding provisions:
+#: RD 1065/2007 art. 32.c ("300,51 euros durante el mismo periodo, cuando...
+#: realicen la función de cobro por cuenta de terceros de honorarios
+#: profesionales o de derechos derivados de la propiedad intelectual,
+#: industrial o de autor") and art. 33.4 (same figure, framed as the
+#: declaration threshold rather than the exclusion floor). Applies ONLY to
+#: :attr:`~core.ThirdPartyDeclarationRole.THIRD_PARTY_FEE_COLLECTOR` rows,
+#: alongside -- never instead of -- ``M347_THRESHOLD_EUR``: the same
+#: counterparty can carry both ordinary and clave-C operations in the same
+#: year, and each is judged against its own floor.
+M347_CLAVE_C_THRESHOLD_EUR: Final[Decimal] = Decimal("300.51")
+
 #: IVA regularización de deducciones por bienes de inversión — regulatory constants
 #: (LIVA arts. 107-109, Ley 37/1992, BOE-A-1992-28740), re-read verbatim from the
 #: bundled consolidated corpus ``corpus/normatives/html/ley-37-1992-art-107.html``
@@ -796,6 +808,32 @@ NACIMIENTO_ADOPCION_APPLICABILITY_FOLLOWING_PERIODS: Final[int] = 2
 #: 40 % reducción on the part of a plan-de-pensiones capital rescate attributable to
 #: contributions made on or before 31-12-2006.
 DT12_RESCATE_REDUCCION_RATE: Final[Decimal] = Decimal("0.40")
+
+#: LIRPF DT 12ª apartado 3 (added by Ley 26/2014 art. 1.85, BOE-A-2014-12327)
+#: time-window boundaries, each quoted from the bundled consolidated LIRPF at
+#: ``corpus/normatives/html/ley-35-2006.html#dtduodecima``. The régimen
+#: transitorio -- and so the 40 % reducción above -- reaches only prestaciones
+#: percibidas inside a window measured from the contingencia year.
+#:
+#: These are boundaries fixed once by the 2014 amendment, not figures the law
+#: re-sets per filing year, so they are leaf constants rather than registry
+#: parameters: year-versioning an invariant value would duplicate it across
+#: every revision to vary nothing.
+#:
+#: General rule, contingencia 2015 onwards: percibida "en el ejercicio en el que
+#: acaezca la contingencia correspondiente, o en los dos ejercicios siguientes".
+DT12_GENERAL_WINDOW_FOLLOWING_YEARS: Final[int] = 2
+
+#: Contingencia "acaecidas en los ejercicios 2011 a 2014": percibida "hasta la
+#: finalización del octavo ejercicio siguiente a aquel en el que acaeció la
+#: contingencia correspondiente".
+DT12_TRANSITIONAL_CONTINGENCIA_FIRST_YEAR: Final[int] = 2011
+DT12_TRANSITIONAL_CONTINGENCIA_LAST_YEAR: Final[int] = 2014
+DT12_TRANSITIONAL_WINDOW_FOLLOWING_YEARS: Final[int] = 8
+
+#: Contingencia "acaecidas en los ejercicios 2010 o anteriores": percibida
+#: "hasta el 31 de diciembre de 2018".
+DT12_CLIFF_LAST_YEAR: Final[int] = 2018
 
 #: Ley 44/2015 art. 14.1 (BOE-A-2015-11071) SAL/SLL reserva especial dotación rate:
 #: 10 % of net profit endowed each year ("se dotará con el diez por ciento del

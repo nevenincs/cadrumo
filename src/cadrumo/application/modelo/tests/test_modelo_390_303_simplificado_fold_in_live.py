@@ -17,10 +17,6 @@ import pytest
 from pydantic import ValidationError
 from sqlalchemy import select
 
-from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
-from cadrumo.domain.calculations.registry.bindings import m303_regimen_simplificado_annual_summary_requirement
-from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
-
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -31,6 +27,9 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository, SecureO
 from ....application.calculations import M303RegimenSimplificadoAnnualSummaryHandoffError
 from ....core import BindingSourceKind, CasillaId, M303RegimenSimplificadoFact, Period
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.binding_selector_utils import selector_as_dict
+from ....domain.calculations.registry.bindings import m303_regimen_simplificado_annual_summary_requirement
+from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva import (
@@ -43,17 +42,19 @@ from ....domain.iva import (
     RegimenSimplificadoFilingRows,
 )
 from ....domain.modelos import (
+    ModeloRecord,
+    ModeloRecordCatalogue,
+    ModeloRecordStatus,
+    derive_filing_record_id,
+    upsert_calculation_revision,
+    upsert_work_unit,
+)
+from ....domain.modelos.calculation_revision import (
     M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS,
     CalculationRevision,
     CalculationRevisionState,
     FilingInstanceEvidence,
-    ModeloRecord,
-    ModeloRecordCatalogue,
-    ModeloRecordStatus,
     derive_calculation_revision_id,
-    derive_filing_record_id,
-    upsert_calculation_revision,
-    upsert_work_unit,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.filing_evidence import general_m303_filing_evidence, regimen_simplificado_filing_evidence
@@ -791,7 +792,7 @@ def test_handoff_digest_and_post_identity_stamp_refuse_tampering() -> None:
     evidence = _non_agricultural_source_evidence()
     values = _source_values(evidence)
     source_result = evidence.m303.regimen_simplificado.calculation_result
-    from ....domain.modelos import M303RegimenSimplificadoAnnualSummaryHandoff
+    from ....domain.modelos.calculation_revision import M303RegimenSimplificadoAnnualSummaryHandoff
 
     handoff = M303RegimenSimplificadoAnnualSummaryHandoff.assembled(
         source_bucket_id=_BUCKET_ID,

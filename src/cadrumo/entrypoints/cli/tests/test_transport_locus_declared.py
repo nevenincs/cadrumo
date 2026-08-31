@@ -2,8 +2,8 @@
 
 The spelling convention for local-path options is only checkable if something
 says which parameters carry local paths. Nothing else in the graph can answer
-that. Type cannot: ``app ledger classify --file`` and ``app ledger pull-folder
---folder`` are both ``str``, and one is a file on the operator's disk while the
+that. Type cannot: ``app ledger classify --file`` and ``app ledger evidence
+pull-all --folder`` are both ``str``, and one is a file on the operator's disk while the
 other is a Drive identifier. Spelling cannot either, because a gate that reads
 the option's name to decide whether the option's name is correct proves nothing.
 
@@ -29,20 +29,20 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.transport_locus import TransportLocus, TransportRole
+from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
+from .._command_spec import CommandSpecNode, ParameterSpec
 from .._command_specs import COMMAND_GRAPH
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
-def _leaves() -> tuple:
+def _leaves() -> tuple[CommandSpecNode, ...]:
     return tuple(node for node in COMMAND_GRAPH.nodes() if node.spec.kind == "leaf")
 
 
-def _is_path_typed(parameter: object) -> bool:
-    value = getattr(parameter, "value", None)
-    annotation = getattr(value, "annotation", None)
-    return getattr(annotation, "module", None) == "pathlib" and getattr(annotation, "qualname", None) == "Path"
+def _is_path_typed(parameter: ParameterSpec) -> bool:
+    annotation = parameter.value.annotation
+    return annotation.module == "pathlib" and annotation.qualname == "Path"
 
 
 def test_every_path_typed_parameter_declares_a_transport_locus() -> None:
@@ -81,7 +81,7 @@ def test_each_verb_declares_at_most_one_primary_per_locus_and_shape(locus: Trans
     """
     offenders = []
     for node in _leaves():
-        by_shape: dict[object, list[str]] = {}
+        by_shape: dict[TransportShape, list[str]] = {}
         for parameter in node.spec.parameters:
             if parameter.transport_locus is not locus or parameter.transport_role is not TransportRole.PRIMARY:
                 continue
@@ -89,7 +89,9 @@ def test_each_verb_declares_at_most_one_primary_per_locus_and_shape(locus: Trans
         for shape, names in by_shape.items():
             if len(names) > 1:
                 offenders.append(f"{' '.join(node.path)} :: {shape.value} :: {', '.join(sorted(names))}")
-    assert not offenders, f"verbs declaring more than one {locus.value} primary per shape: " + "; ".join(sorted(offenders))
+    assert not offenders, f"verbs declaring more than one {locus.value} primary per shape: " + "; ".join(
+        sorted(offenders)
+    )
 
 
 def test_a_remote_handle_declares_neither_shape_nor_role() -> None:

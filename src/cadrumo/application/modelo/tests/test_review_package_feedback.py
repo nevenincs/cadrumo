@@ -50,19 +50,15 @@ import pytest
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation
-
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....core import Period, validated_casilla_id
 from ....domain.buckets import BucketEventObjectType, BucketEventType
-from ....domain.modelos import (
+from ....domain.calculations.registry.bindings import CasillaObservation
+from ....domain.modelos import ModeloCode, WorkUnit, WorkUnitState, derive_work_unit_id
+from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    ModeloCode,
-    WorkUnit,
-    WorkUnitState,
     derive_calculation_revision_id,
-    derive_work_unit_id,
 )
 from ....tests.secure_sql import isolated_two_bucket_runtime
 from .._review_package_collab_audit import emit_collab_feedback_countersign_attached_event

@@ -60,7 +60,7 @@ _DISPLAY_LAYER = _PACKAGE_ROOT / "entrypoints" / "cli"
 _MINIMUM_MODULES_SCANNED = 200
 
 #: The defining module is the sole publisher; a package-facade re-export is a
-#: duplicate authority after S170's inert-namespace convergence.
+#: duplicate authority now that package namespaces are inert.
 _EXPECTED_REEXPORTERS = 1
 
 

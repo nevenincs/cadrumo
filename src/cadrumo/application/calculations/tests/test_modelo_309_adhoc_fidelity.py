@@ -48,17 +48,16 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.bindings import (
+from ....core import CasillaId, validated_casilla_id
+from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.bindings import (
     RegistryModeloObservation,
     resolve_available_bound_inputs_by_casilla_id,
 )
-from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
-
-from ....core import CasillaId, validated_casilla_id
-from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ....tests.secure_sql import isolated_runtime_profile
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
-from .._observations_repository import CalculationObservationRepository
+from ..observations_repository import CalculationObservationRepository
 from ._observation_lookup_support import find_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

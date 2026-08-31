@@ -24,7 +24,7 @@ _FLOAT = ValueContract(DeferredTarget("builtins", "float"))
 _BOOL = ValueContract(DeferredTarget("builtins", "bool"))
 _LANG = ValueContract(DeferredTarget("cadrumo.core", "OutputLanguage"))
 _STATE = ValueContract(
-    DeferredTarget("cadrumo.application.review", "ReviewState"),
+    DeferredTarget("cadrumo.application.review.enums", "ReviewState"),
     parser=DeferredTarget("cadrumo.entrypoints.cli._review", "parse_review_state"),
 )
 
@@ -119,7 +119,7 @@ REVIEW_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         _READ,
-        LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._review", "review_show")),
+        LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._review", "review_view")),
         ResultSchemaSpec(
             SchemaState.TARGET,
             DeferredTarget("cadrumo.entrypoints.cli._review_payloads", "ReviewViewResult"),

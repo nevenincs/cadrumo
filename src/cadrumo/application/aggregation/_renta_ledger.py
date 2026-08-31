@@ -26,14 +26,21 @@ from collections.abc import Mapping, Sequence
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, overload
+from typing import Annotated, Final, overload
 
 from pydantic import BaseModel, Field
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import CasillaId, ElidedProse, Modelo, Period, PeriodKind, ProrrataRegisterRegime
+from ...core import (
+    CasillaId,
+    ElidedProse,
+    Modelo,
+    Period,
+    PeriodKind,
+    regime_apportions_deduction,
+)
 from ...core.identity import TransactionId
 from ...core.resources import resources
 from ...domain.categories import CategoryProfile, SpendingCategory
@@ -42,6 +49,9 @@ from ...domain.contribuyente import (
     ForalRegimeError,
     TaxResidenceProfileError,
     parse_tax_region,
+)
+from ...domain.contribuyente.seguro_enfermedad_insured import (
+    seguro_enfermedad_insured_counts_from_facts,
 )
 from ...domain.deadlines import IVARegime
 from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepositoryProtocol
@@ -69,9 +79,10 @@ from ...domain.transactions import (
     TransactionLifecycleState,
 )
 from ...domain.user_profile.errors import ProfileNotFoundError
+from ...domain.user_profile.loader import load_user_profile_schema
 from ...domain.user_profile.values import UserProfileRecord
 from ..user_profile.profile_record_repository import ProfileRecordRepository
-from ..user_profile.projections import fact_value
+from ..user_profile.projections import fact_value, profile_fact_index
 from . import _shared_issue_reasons
 from ._currency_predicates import (
     effective_eur_amount,
@@ -191,6 +202,46 @@ class RentaLedgerExpenseAggregation(
         return self.casilla_aggregation.casilla_values
 
 
+#: The Art. 30.2.5.a cap variant ids the spending-category corpus declares. The
+#: resolver keys its per-population counts by variant id, and a parity test asserts
+#: the shipped rule still declares exactly these two, so a rename in the corpus reds
+#: rather than silently zeroing a population.
+_SEGURO_GENERAL_VARIANT: Final[str] = "general"
+_SEGURO_DISCAPACIDAD_VARIANT: Final[str] = "discapacidad"
+
+
+def _seguro_enfermedad_person_counts(
+    *,
+    bucket_id: str,
+    profile_record: UserProfileRecord | None,
+    filing_year: int,
+) -> dict[str, int]:
+    """Count the Art. 30.2.5.a insured persons for the statutory-cap resolver.
+
+    Returns an EMPTY mapping when no profile is reachable, which the resolver reads
+    as "nothing counted" and answers with the ordinary limb over the persons it does
+    know about. A bucket without a profile therefore stays exactly where it was
+    before the higher limb existed rather than losing its cap altogether.
+
+    The counting itself is domain work and lives there: both this package and
+    application.modelo need it, and neither may import the other.
+    """
+    record = profile_record
+    if record is None:
+        try:
+            record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
+        except ProfileNotFoundError:
+            return {}
+    counts = seguro_enfermedad_insured_counts_from_facts(
+        profile_fact_index(record, load_user_profile_schema()),
+        filing_year=filing_year,
+    )
+    return {
+        _SEGURO_GENERAL_VARIANT: counts.general,
+        _SEGURO_DISCAPACIDAD_VARIANT: counts.discapacidad,
+    }
+
+
 def _resolve_residence_ccaa(
     *,
     bucket_id: str,
@@ -289,7 +340,7 @@ def _resolve_iva_deduction_ratio(
 
     register = prorrata_register_repository.load()
     entry = register.entry_for(ejercicio, sector_id=None)
-    if entry is None or entry.regime not in (ProrrataRegisterRegime.GENERAL, ProrrataRegisterRegime.ESPECIAL):
+    if entry is None or not regime_apportions_deduction(entry.regime):
         return None
     resolution = register.resolve_provisional(ejercicio, sector_id=None)
     if resolution.percentage is None:
@@ -378,6 +429,7 @@ def aggregate_renta_ledger_expenses_from_repositories(
         residence_ccaa=residence_ccaa,
         region_category_overrides=region_category_overrides,
         iva_deduction_ratio=iva_deduction_ratio,
+        profile_record=profile_record,
     )
 
 
@@ -394,6 +446,7 @@ def aggregate_renta_ledger_expenses(
     residence_ccaa: CCAA | None = None,
     region_category_overrides: Mapping[CCAA, Mapping[SpendingCategory, CategoryProfile]] | None = None,
     iva_deduction_ratio: Decimal | None = None,
+    profile_record: UserProfileRecord | None = None,
 ) -> RentaLedgerExpenseAggregation:
     """Aggregate classified ledger transactions into Renta expense observations.
 
@@ -421,6 +474,10 @@ def aggregate_renta_ledger_expenses(
             so the non-recoverable share of a fact's input IVA joins its
             IRPF-deductible cost basis. ``None`` (the default) preserves the
             historic base-only behaviour.
+        profile_record: Optional :class:`UserProfileRecord` override; when ``None``
+            the record is loaded from the bucket. Supplies the LIRPF art. 30.2.5.a
+            insured-person counts that split the seguro de enfermedad cap across
+            its 500 and 1.500 euro limbs.
 
     Returns a :class:`RentaLedgerExpenseAggregation` containing the accepted
     observations, exclusion issues, and binding-ready casilla totals.
@@ -438,6 +495,11 @@ def aggregate_renta_ledger_expenses(
         usage_ratios=dict(usage_ratios or {}),
         residence_ccaa=residence_ccaa,
         iva_deduction_ratio=iva_deduction_ratio,
+        statutory_cap_variant_person_counts=_seguro_enfermedad_person_counts(
+            bucket_id=bucket_id,
+            profile_record=profile_record,
+            filing_year=resolved_profile_year,
+        ),
     )
     observations: list[RentaDeductibleExpenseObservation] = []
     issues: list[RentaLedgerAggregationIssue] = []

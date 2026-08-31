@@ -22,11 +22,10 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
-from cadrumo.domain.calculations.registry.loader import load_registry_tree
-from cadrumo.domain.calculations.registry.schema_exports import ExportRecordDefinition
-
 from ....core.resources import bundled_path
+from ....domain.calculations.registry.export import derive_export_layouts_from_bindings
+from ....domain.calculations.registry.loader import load_registry_tree
+from ....domain.calculations.registry.schema_exports import ExportRecordDefinition
 from .._record_renderer import _record_render_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -36,7 +36,7 @@ from .....core.logging import get_logger
 from .....core.time import now
 from .._path_safety import safe_repository_id
 from .._schema_lineage import inner_envelope_classification_is_expected
-from ..crypto import secure_object_key_digest
+from ..crypto.encrypted_columns import secure_object_key_digest
 from ..errors import (
     ClassificationError,
     EnvelopeVersionError,

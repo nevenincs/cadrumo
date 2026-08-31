@@ -121,7 +121,7 @@ def _create_profile(storage_root: Path) -> str:
 
 def _session_record(storage_root: Path, bucket_id: str) -> Path:
     """Return the on-disk persisted-session path for ``bucket_id``."""
-    from ....adapters.persistence.storage.custody import profile_session_path
+    from ....adapters.persistence.storage.custody.acceleration_receipt import profile_session_path
 
     return profile_session_path(storage_root=storage_root, profile_id=UUID(bucket_id))
 
@@ -171,7 +171,7 @@ class TestSessionLifecycle:
         assert record.is_file() is persisted, f"session_persisted={persisted} disagrees with on-disk record at {record}"
 
         # 3. The follow-on process must behave the way that claim implies.
-        follow_on = _run(storage_root, ("config", "profile", "show"))
+        follow_on = _run(storage_root, ("config", "profile", "view"))
         if persisted:
             # Resumed silently: no prompt, no re-authentication.
             assert follow_on.returncode == 0, _output(follow_on)

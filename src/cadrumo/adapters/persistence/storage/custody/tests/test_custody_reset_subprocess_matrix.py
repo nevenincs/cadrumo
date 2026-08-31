@@ -25,10 +25,7 @@ import pytest
 from ......application.user_profile.custody_transactions import ProfileCustodyTransactionRefusalError
 from ......application.user_profile.lifecycle import ProfileCapsuleLifecycle
 from ......tests.secure_sql import isolated_profile_storage_root
-from .. import (
-    ProfileCustodyRecoveryGuidance,
-    ProfileCustodyRefusal,
-)
+from ..errors import ProfileCustodyRecoveryGuidance, ProfileCustodyRefusal
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -80,7 +77,7 @@ _LEGACY_REFUSAL_CHILD = (
 import sys
 from pathlib import Path
 
-from cadrumo.adapters.persistence.storage.custody import ProfileCustodyRefusedError
+from cadrumo.adapters.persistence.storage.custody.errors import ProfileCustodyRefusedError
 from cadrumo.application.config_reset import start_config_reset
 
 root = Path(sys.argv[1])

@@ -40,7 +40,7 @@ def operator_text(diagnostic: CalculationSourceDiagnostic) -> str:
 
 @pytest.fixture(autouse=True)
 def _bucket(tmp_path: Path, bucket_id: str) -> Iterator[None]:  # noqa: F811 - pytest injects the imported fixture
-    from ...wizard import compiler as _wizard
+    from ...wizard import catalogue as _wizard
 
     assert _wizard.WIZARD_FLOWS
     with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(bucket_id):

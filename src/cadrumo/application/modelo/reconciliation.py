@@ -39,7 +39,7 @@ bound :class:`ModeloReconciliationPersistencePort`, and a slim ``MODELO_RECONCIL
 count. The detail lives in the record because a bucket-event payload value is
 capped at 500 characters and one grounded Modelo 100 casilla diff already
 encodes to a median 303 — two divergences were unpersistable for 99.6% of that
-modelo's casillas, and 175 overflowed on the first. ``reconcile history``
+modelo's casillas, and 175 overflowed on the first. ``reconcile list``
 reports which fields diverged by reading the record store.
 """
 
@@ -95,11 +95,11 @@ _MAX_PAYLOAD_VALUE_LENGTH = 500
 _REFERENCE_ELISION = "..."
 
 if TYPE_CHECKING:
-    from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-
     from ...core import Period
+    from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
     from ...domain.justificante import Justificante
-    from ...domain.modelos import CalculationRevision, WorkUnit, WorkUnitCatalogue
+    from ...domain.modelos import WorkUnit, WorkUnitCatalogue
+    from ...domain.modelos.calculation_revision import CalculationRevision
 
 _DECLARATION_CASILLA_RECONCILE_MODELOS: frozenset[Modelo] = frozenset(
     {Modelo.M100, Modelo.M111, Modelo.M130, Modelo.M190, Modelo.M303, Modelo.M390}
@@ -147,7 +147,7 @@ Tier-R and is tracked separately, blocked on #332-337.
 
 def _active_reconciliation_catalogue() -> tuple[WorkUnitCatalogue, str]:
     """Capture the active profile's work catalogue at the reconciliation boundary."""
-    from cadrumo.application.workflow.persistence import workflow_state_repository
+    from ..workflow.persistence import workflow_state_repository
 
     bucket_id = workflow_state_repository().load().active_profile_bucket_id()
     if bucket_id is None:
@@ -1099,7 +1099,7 @@ def _select_filed_revision(revisions: tuple[CalculationRevision, ...]) -> Calcul
     by ``updated_at``; falls back to the most recent revision of any state so a
     receipt can still be value-reconciled before the filing is recorded in-app.
     """
-    from ...domain.modelos import CalculationRevisionState
+    from ...domain.modelos.calculation_revision import CalculationRevisionState
 
     if not revisions:
         return None

@@ -50,6 +50,7 @@ from ..adapters.persistence.storage import (
 from ..adapters.persistence.storage import (
     STORAGE_NAMESPACE_REGISTRY,
     SYNC_RUN_RECORDS_NAMESPACE,
+    USER_PROFILE_VALUE_NAMESPACE,
     WORKFLOW_STATE_NAMESPACE,
     SecureObjectNamespaceDefinition,
     SecureObjectNamespaceIntegrity,
@@ -840,11 +841,138 @@ def build_repair_policy_command_surface_catalog() -> tuple[RepairPolicyCommandSu
             owner_domains=("modelo_filing",),
             namespace_policies=(_MODEL_FILING_POLICY,),
         ),
+        # `censo file` and `profile restore` were renamed to `censo import` and
+        # `archive import`, which ends both paths in a token the coverage
+        # predicate selects. They write, so they need governing rows.
         _surface(
-            "config google sync calc export",
+            "config profile censo import",
+            command_family="recovery",
+            owner_domains=("profile_lifecycle",),
+            namespace_policies=(_secure_object_policy(USER_PROFILE_VALUE_NAMESPACE),),
+        ),
+        _surface(
+            "config profile archive import",
+            command_family="recovery",
+            owner_domains=("profile_lifecycle",),
+            namespace_policies=(_PROFILE_BUNDLE_POLICY,),
+        ),
+        _surface(
+            "config profile archive export",
+            command_family="recovery",
+            owner_domains=("profile_lifecycle",),
+            namespace_policies=(_PROFILE_BUNDLE_POLICY,),
+        ),
+        _surface(
+            "app modelo reconcile import",
+            command_family="recovery",
+            owner_domains=("modelo_filing",),
+            namespace_policies=(_MODEL_FILING_POLICY,),
+        ),
+        # D2 renamed remote transport to `push`/`pull`. These leaves move data
+        # across a remote boundary and persist what they move, so they are
+        # governed on the same reasoning as their local `import`/`export`
+        # siblings. `app modelo spreadsheet push` in particular was governed
+        # under its pre-D2 name and must not lose that.
+        _surface(
+            "app live expedientes pull",
+            command_family="recovery",
+            owner_domains=("modelo_filing",),
+            namespace_policies=(_MODEL_FILING_POLICY,),
+        ),
+        _surface(
+            "app live filed pull",
+            command_family="recovery",
+            owner_domains=("modelo_filing",),
+            namespace_policies=(_MODEL_FILING_POLICY,),
+        ),
+        _surface(
+            "app live filed pull-all",
+            command_family="recovery",
+            owner_domains=("modelo_filing",),
+            namespace_policies=(_MODEL_FILING_POLICY,),
+        ),
+        _surface(
+            "app live iva-wallet pull",
+            command_family="recovery",
+            owner_domains=("modelo_filing",),
+            namespace_policies=(_MODEL_FILING_POLICY,),
+        ),
+        _surface(
+            "app live justificante pull",
+            command_family="recovery",
+            owner_domains=("modelo_filing",),
+            namespace_policies=(_MODEL_FILING_POLICY,),
+        ),
+        _surface(
+            "app live notifications document pull",
+            command_family="recovery",
+            owner_domains=("modelo_filing",),
+            namespace_policies=(_MODEL_FILING_POLICY,),
+        ),
+        _surface(
+            "app live notifications pull",
+            command_family="recovery",
+            owner_domains=("modelo_filing",),
+            namespace_policies=(_MODEL_FILING_POLICY,),
+        ),
+        _surface(
+            "app modelo reconcile pull",
+            command_family="recovery",
+            owner_domains=("modelo_filing",),
+            namespace_policies=(_MODEL_FILING_POLICY,),
+        ),
+        _surface(
+            "app ledger evidence pull",
+            command_family="recovery",
+            owner_domains=("ledger",),
+            namespace_policies=(_LEDGER_POLICY,),
+        ),
+        _surface(
+            "app ledger evidence pull-all",
+            command_family="recovery",
+            owner_domains=("ledger",),
+            namespace_policies=(_LEDGER_POLICY,),
+        ),
+        _surface(
+            "app modelo spreadsheet pull",
             command_family="recovery",
             owner_domains=("google_sync",),
             namespace_policies=(_secure_object_policy(SYNC_RUN_RECORDS_NAMESPACE),),
+        ),
+        _surface(
+            "app modelo spreadsheet push",
+            command_family="recovery",
+            owner_domains=("google_sync",),
+            namespace_policies=(_secure_object_policy(SYNC_RUN_RECORDS_NAMESPACE),),
+        ),
+        _surface(
+            "config profile archive push",
+            command_family="recovery",
+            owner_domains=("profile_lifecycle",),
+            namespace_policies=(_PROFILE_BUNDLE_POLICY,),
+        ),
+        _surface(
+            "config profile censo pull",
+            command_family="recovery",
+            owner_domains=("profile_lifecycle",),
+            namespace_policies=(_secure_object_policy(USER_PROFILE_VALUE_NAMESPACE),),
+        ),
+        # A model acquisition writes a local model artefact, not a registered
+        # secure-object namespace, so this row declares its family and owner
+        # without over-claiming a namespace policy.
+        _surface(
+            "config provision pull",
+            command_family="recovery",
+            owner_domains=("local_inference",),
+        ),
+        # The custody carve-out reactivated: `config passphrase` is registered
+        # again, and a passphrase change re-wraps the profile's encrypted
+        # payload.
+        _surface(
+            "config passphrase change",
+            command_family="repair",
+            owner_domains=("profile_lifecycle",),
+            namespace_policies=(_PROFILE_BUNDLE_POLICY,),
         ),
     )
 

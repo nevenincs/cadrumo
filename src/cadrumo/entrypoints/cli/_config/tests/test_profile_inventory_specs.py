@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from ..._command_spec import OptionSpec
 from .._profile_inventory_specs import PROFILE_INVENTORY_COMMAND_SPECS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -23,6 +24,7 @@ def test_profile_inventory_specs_preserve_paths_handlers_and_language_option() -
         assert spec.invocation.context_parameter == "ctx"
         assert len(spec.parameters) == 1
         option = spec.parameters[0]
+        assert isinstance(option, OptionSpec)
         assert option.name == "output_language"
         assert option.declarations == ("--output-language", "--language")
 

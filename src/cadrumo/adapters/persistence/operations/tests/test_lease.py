@@ -360,7 +360,7 @@ def test_concurrent_acquire_has_one_durable_winner(tmp_path: Path) -> None:
     """Two real processes contend through one operation-journal repository lock."""
     context = multiprocessing.get_context("spawn")
     start = context.Event()
-    results: Queue[str] = context.Queue()
+    results: Queue[str] = Queue(ctx=context.get_context())
     observed_at = _STARTED.isoformat()
     candidates = (
         _lease(owner_id="b" * 64, token="c" * 64),
@@ -405,7 +405,7 @@ def test_journal_commit_holds_the_exact_operation_journal_lock(tmp_path: Path) -
 
     context = multiprocessing.get_context("spawn")
     attempting = context.Event()
-    results: Queue[str] = context.Queue()
+    results: Queue[str] = Queue(ctx=context.get_context())
     process = context.Process(
         target=_commit_in_process,
         args=(str(tmp_path), _snapshot(revision=1).model_dump_json(), lease.model_dump_json(), attempting, results),

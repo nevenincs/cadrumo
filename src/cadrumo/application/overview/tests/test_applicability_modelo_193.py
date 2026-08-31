@@ -4,8 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
-
+from ....domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
 from ....domain.deadlines import (
     EntityType,
     IVARegime,

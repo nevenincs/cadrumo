@@ -128,16 +128,25 @@ def test_eligible_categories_are_exactly_the_usage_ratio_rows() -> None:
     assert len(ELIGIBLE_USAGE_RATIO_CATEGORIES) == 15
 
 
-def test_consumer_fallback_pattern_documentation() -> None:
+def test_an_undeclared_usage_ratio_has_no_registry_fallback() -> None:
     """Reference example of the deductibility-compute consumer pattern.
 
-    This is a documentation test, not a regression guard for shipped code.
-    It pins the pattern the deductibility-compute service in
-    :mod:`cadrumo.domain.deductibility` is expected to use: prefer
-    :func:`resolve_user_ratio` and fall back to the statutory
-    :attr:`cadrumo.domain.categories.ProportionalityRule.default_ratio` when the
-    profile carries no override. When that service ships, its own tests
-    become authoritative and this one can be retired.
+    This test previously pinned the OPPOSITE pattern -- prefer the operator's
+    ratio and "fall back to the statutory ``default_ratio``" -- and called that
+    value statutory. It is not. LIRPF art. 30.2.5.b fixes the deductible share of
+    a suministro as the statutory 30 per cent applied to "la proporción existente
+    entre los metros cuadrados de la vivienda destinados a la actividad respecto a
+    su superficie total". The article supplies the first factor and nothing
+    supplies the second: it is a measurement of one dwelling, which is why the
+    sentence ends inviting proof of a different figure rather than naming a
+    fallback.
+
+    Five categories carried ``default_ratio = "0.30"`` in the same slot the
+    evaluator reads a STORED ratio from, and stored ratios are already effective,
+    so the fallback asserted an effective thirty per cent -- reachable only at a
+    raw afectación of 1.00, the whole dwelling as office. The correct pattern is
+    that an undeclared proportion resolves to nothing and the deduction is
+    ineligible until the operator declares one.
     """
     profile = UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.21")})
 
@@ -148,7 +157,7 @@ def test_consumer_fallback_pattern_documentation() -> None:
         return resolve_category_profiles(2025)[category].proportionality.default_ratio
 
     assert resolve_for_compute(SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ) == Decimal("0.21")
-    assert resolve_for_compute(SpendingCategory.SUMINISTROS_HOME_OFFICE_AGUA) == Decimal("0.30")
+    assert resolve_for_compute(SpendingCategory.SUMINISTROS_HOME_OFFICE_AGUA) is None
     assert resolve_for_compute(SpendingCategory.TELEFONIA_MOVIL) is None
 
 

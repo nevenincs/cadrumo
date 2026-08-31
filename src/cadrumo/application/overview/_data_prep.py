@@ -41,7 +41,7 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
-from ...domain.modelos import WorkUnitCatalogue
+from ...domain.modelos import ModeloCode, WorkUnitCatalogue
 from ...domain.transactions import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ..modelo.work_addressing import (
     ModeloWorkSelectionMode,
@@ -347,7 +347,7 @@ def _work_unit_step(
     resolution = select_modelo_work_resolution(
         ModeloWorkSelectorRequest(
             bucket_id=bucket_id,
-            modelo=modelo,
+            modelo=ModeloCode(modelo),
             filing_year=filing_year,
             period=period,
         ),

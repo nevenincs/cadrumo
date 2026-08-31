@@ -16,8 +16,7 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-
+from ......domain.calculations.registry.errors import RegistryValidationError
 from .._nif_iva_check import _split_vies_nif
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

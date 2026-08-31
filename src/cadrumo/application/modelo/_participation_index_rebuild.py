@@ -35,7 +35,6 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.identity import CalculationRevisionId
 from ...domain.modelos import (
     CalculationRevisionCatalogueRepositoryProtocol,
-    CalculationRevisionState,
     ExternalEvidence,
     ModeloRecord,
     ModeloRecordCatalogue,
@@ -44,15 +43,8 @@ from ...domain.modelos import (
     TransactionRevisionParticipationIndex,
     upsert_transaction_participation,
 )
+from ...domain.modelos.calculation_revision import SEALED_REVISION_STATES, CalculationRevisionState
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-
-_FINALIZED_REVISION_STATES = frozenset(
-    {
-        CalculationRevisionState.VERIFICADO_COMPLETO,
-        CalculationRevisionState.PRESENTADO,
-        CalculationRevisionState.PRESENTADO_SUPERSEDIDO,
-    },
-)
 
 
 class ParticipationRebuildStats(BaseModel):
@@ -134,7 +126,7 @@ def rebuild_participation_index(
     revision_count = 0
 
     for revision in revisions.values():
-        if revision.state not in _FINALIZED_REVISION_STATES:
+        if revision.state not in SEALED_REVISION_STATES:
             continue
         work_unit = work_units.get(revision.work_unit_id)
         if work_unit is None:

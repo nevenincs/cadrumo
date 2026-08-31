@@ -3,7 +3,7 @@
 ``application/modelo/_calculation_modelo_adjustments.py`` (M131 datos-base
 projection) used to read a ``manual_input`` binding's record-field shape via
 ``selector = selector_as_dict(binding); record = selector.get("record")``.
-``_ManualInputSelector`` already enforces both shapes at registry build time,
+``ManualInputSelector`` already enforces both shapes at registry build time,
 so in production the ``None`` default meant "this is a casilla-shape
 manual_input binding" -- correct and legitimate. But the raw ``.get()`` cannot
 tell that apart from a genuinely malformed/renamed selector, so if the field
@@ -12,7 +12,7 @@ projecting with no error at all -- indistinguishable from "there are no
 record-field bindings this revision".
 
 :func:`manual_input_record_field_selector` closes that: it validates through
-the same :class:`_ManualInputSelector` the registry build gate already uses,
+the same :class:`ManualInputSelector` the registry build gate already uses,
 so a genuinely malformed selector raises, and ``None`` means only "not
 applicable" (non-manual_input, or the casilla shape), never "couldn't read
 it".
@@ -118,11 +118,11 @@ def test_a_renamed_record_field_key_is_refused_not_silently_read_as_casilla_shap
     """The bite proof: a selector shape the model rejects must raise, not vanish.
 
     ``DataBindingDefinition.model_validate`` already dispatches through
-    ``_ManualInputSelector`` at construction time, so a genuinely malformed
+    ``ManualInputSelector`` at construction time, so a genuinely malformed
     selector cannot reach this function via the normal constructor -- proven
     by the companion assertion below. The residual risk this closes is DRIFT:
     a raw ``dict.get("record")`` reads a string literal with no tie to the
-    model's own field name, so if ``_ManualInputSelector`` ever renamed
+    model's own field name, so if ``ManualInputSelector`` ever renamed
     ``record``, construction-time validation would keep passing (it would
     just validate the NEW name) while a raw-dict reader silently, permanently
     read every record-field binding as "casilla shape, not applicable" --
@@ -131,7 +131,7 @@ def test_a_renamed_record_field_key_is_refused_not_silently_read_as_casilla_shap
     for that drifted-schema selector so the fixed function's OWN validation
     (not the constructor's) is what is under test.
     """
-    with pytest.raises(ValidationError, match="violates _ManualInputSelector") as excinfo:
+    with pytest.raises(ValidationError, match="violates ManualInputSelector") as excinfo:
         DataBindingDefinition.model_validate(
             {
                 "id": "modelo-131-2025.page1.109-109.discapacidad-33",
@@ -147,7 +147,7 @@ def test_a_renamed_record_field_key_is_refused_not_silently_read_as_casilla_shap
                 "source_refs": ("aeat-dr-131-2025",),
             },
         )
-    assert "_ManualInputSelector" in str(excinfo.value), (
+    assert "ManualInputSelector" in str(excinfo.value), (
         "construction-time gate must be the one refusing the typo -- confirms the "
         "residual risk this fix closes is drift, not malformed-data construction"
     )
@@ -156,7 +156,7 @@ def test_a_renamed_record_field_key_is_refused_not_silently_read_as_casilla_shap
         id="modelo-131-2025.page1.109-109.discapacidad-33",
         source=BindingSourceKind.MANUAL_INPUT,
         selector={
-            "recrd": "page_1",  # the field _ManualInputSelector no longer names "record"
+            "recrd": "page_1",  # the field ManualInputSelector no longer names "record"
             "field": "discapacidad-33",
             "offset": 109,
             "length": 1,

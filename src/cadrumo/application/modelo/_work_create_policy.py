@@ -145,13 +145,10 @@ def modelo_work_create_applicability_refusal(
     if allow_not_applicable:
         return None
 
-    from cadrumo.application.workflow.persistence import workflow_state_repository
-
     from ...application.user_profile.projections import projection_for_taxpayer
-    from ...domain.calculations.registry.applicability import (
-        ApplicabilityVerdict,
-        derive_modelo_applicability,
-    )
+    from ...domain.calculations.registry.applicability import derive_modelo_applicability
+    from ..workflow.persistence import workflow_state_repository
+    from ._profile_readiness_gate import BLOCKING_APPLICABILITY_VERDICTS
 
     state = workflow_state_repository().load()
     record = state.active_profile_record()
@@ -160,11 +157,7 @@ def modelo_work_create_applicability_refusal(
     except ValidationError:
         return None
     applicability = derive_modelo_applicability(profile, modelo.strip())
-    blocking = {
-        ApplicabilityVerdict.NOT_APPLICABLE,
-        ApplicabilityVerdict.ATTRIBUTION_PASS_THROUGH,
-    }
-    if applicability.verdict not in blocking:
+    if applicability.verdict not in BLOCKING_APPLICABILITY_VERDICTS:
         return None
     return ModeloWorkCreateApplicabilityRefusal(modelo=modelo.strip(), reason=applicability.reason)
 
@@ -177,10 +170,9 @@ def guard_active_profile_foral_ccaa() -> None:
     values pass through; foral values raise the domain refusal before work-unit
     creation reaches the generic unsupported-modelo checks.
     """
-    from cadrumo.application.workflow.persistence import workflow_state_repository
-
     from ...application.user_profile.projections import fact_value
     from ...domain.contribuyente import parse_tax_region
+    from ..workflow.persistence import workflow_state_repository
 
     state = workflow_state_repository().load()
     record = state.active_profile_record()

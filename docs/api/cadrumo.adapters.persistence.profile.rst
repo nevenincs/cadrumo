@@ -32,6 +32,7 @@ Submodules
    cadrumo.adapters.persistence.profile.ledger_classification_rules
    cadrumo.adapters.persistence.profile.modelo_reconciliation
    cadrumo.adapters.persistence.profile.modelos_calculation
+   cadrumo.adapters.persistence.profile.modelos_edit_receipts
    cadrumo.adapters.persistence.profile.modelos_filing
    cadrumo.adapters.persistence.profile.modelos_verification_reports
    cadrumo.adapters.persistence.profile.modelos_work_units

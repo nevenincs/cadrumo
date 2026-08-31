@@ -32,7 +32,8 @@ from ....core.i18n import tr
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....tests.profile_capsule import load_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
-from ..profile.overview import ProfileManagerApp
+from ..components.host import ScreenHostApp
+from ..profile.overview import ProfileManagerScreen
 from .manager_pilot import wait_until_settled
 
 pytestmark = [
@@ -102,7 +103,7 @@ def _ensure_logged_in() -> None:
     login_profile(name=_LABEL, passphrase_callback=lambda: _PASSWORD)
 
 
-def _manager() -> ProfileManagerApp:
+def _manager() -> ProfileManagerScreen:
     _ensure_logged_in()
     record = load_test_profile_record(require_active_bucket_id())
 
@@ -114,10 +115,10 @@ def _manager() -> ProfileManagerApp:
         )
         return build_profile_overview(applied, label=_LABEL)
 
-    return ProfileManagerApp(build_profile_overview(record, label=_LABEL), persist=persist)
+    return ProfileManagerScreen(build_profile_overview(record, label=_LABEL), persist=persist)
 
 
-def _footer_entries(app: ProfileManagerApp) -> dict[str, str]:
+def _footer_entries(app: ProfileManagerScreen) -> dict[str, str]:
     """Every key the footer names, with the words it names it by.
 
     Read off the rendered footer rather than the binding table, because a
@@ -135,12 +136,12 @@ def _language_key(footer_entries: dict[str, str], *, locale: str) -> str:
     return matches[0]
 
 
-def _column_headings(app: ProfileManagerApp) -> list[str]:
+def _column_headings(app: ProfileManagerScreen) -> list[str]:
     """Every table's column headings, in the words currently on screen."""
     return [str(column.label) for table in app.query(DataTable) for column in table.columns.values()]
 
 
-async def _drained_footer(app: ProfileManagerApp, pilot) -> dict[str, str]:
+async def _drained_footer(app: ProfileManagerScreen, pilot) -> dict[str, str]:
     """Drain the page's pending messages until the footer settles, then report it.
 
     ``pilot.pause()`` is a barrier, not a sleep: it posts a callback to the
@@ -196,7 +197,7 @@ async def test_the_language_is_named_in_the_footer_not_hidden_in_the_table(tmp_p
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _register_in(_STARTING_LANGUAGE)
         app = _manager()
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
 
             settled = await _drained_footer(app, pilot)
@@ -208,7 +209,7 @@ async def test_the_language_is_named_in_the_footer_not_hidden_in_the_table(tmp_p
             await pilot.press(language_key)
             await pilot.pause()
 
-            options = app.screen.query_one("#edit-options", OptionList)
+            options = app.app.screen.query_one("#edit-options", OptionList)
             rendered = [str(options.get_option_at_index(index).prompt) for index in range(options.option_count)]
             tokens = _language_tokens(app)
             assert len(tokens) > 1, "a profile offering one language cannot prove a chooser"
@@ -219,7 +220,7 @@ async def test_the_language_is_named_in_the_footer_not_hidden_in_the_table(tmp_p
                 tr(f"wizard.setup.profile.output-language.choices.{token}.label", locale=_STARTING_LANGUAGE)
                 for token in tokens
             ], f"each row must name its own language, in the page's language, but showed {rendered}"
-            app.exit(None)
+            app.app.exit(None)
 
 
 @pytest.mark.asyncio
@@ -238,7 +239,7 @@ async def test_choosing_a_language_rewords_the_page_through_the_ordinary_door(tm
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _register_in(_STARTING_LANGUAGE)
         app = _manager()
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
 
             started_in = tr(_COLUMN_KEYS[0], locale=_STARTING_LANGUAGE)
@@ -252,7 +253,7 @@ async def test_choosing_a_language_rewords_the_page_through_the_ordinary_door(tm
             language_key = _language_key(await _drained_footer(app, pilot), locale=_STARTING_LANGUAGE)
             await pilot.press(language_key)
             await pilot.pause()
-            options = app.screen.query_one("#edit-options", OptionList)
+            options = app.app.screen.query_one("#edit-options", OptionList)
             options.highlighted = _language_tokens(app).index(_TARGET_LANGUAGE)
             await pilot.click("#btn-edit-save")
             await wait_until_settled(app, pilot)
@@ -266,7 +267,7 @@ async def test_choosing_a_language_rewords_the_page_through_the_ordinary_door(tm
             assert settled.get(language_key) == tr(_LANGUAGE_LABEL_KEY, locale=_TARGET_LANGUAGE), (
                 f"the footer must be rewritten too, but showed {settled}"
             )
-            app.exit(None)
+            app.app.exit(None)
 
         _ensure_logged_in()
 
@@ -277,7 +278,7 @@ async def test_choosing_a_language_rewords_the_page_through_the_ordinary_door(tm
         )
 
 
-def _language_tokens(app: ProfileManagerApp) -> tuple[str, ...]:
+def _language_tokens(app: ProfileManagerScreen) -> tuple[str, ...]:
     """The stored tokens behind the chooser's rows, in the order shown."""
     for section in app.overview.sections:
         for field in section.fields:

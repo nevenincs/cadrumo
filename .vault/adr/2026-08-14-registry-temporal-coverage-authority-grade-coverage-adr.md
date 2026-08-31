@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#registry-temporal-coverage'
 date: '2026-08-14'
-modified: '2026-08-14'
+modified: '2026-08-27'
 body_schema: 'body-v1'
-body_hash: 'sha256:3666f618da30aafb06da7946bf7707a1b7fe0933028b18182c927ada1b54e030'
+body_hash: 'sha256:967e426d26ff367a59a20f86c8356aa64da96d6b5486ebac391f380a6cbf61e6'
 related:
   - "[[2026-08-14-registry-temporal-coverage-research]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -202,10 +202,30 @@ happens to the ungoverned coverage ledger.
 - Enforcement placement follows the measured regimes. Data-shape invariants
   (grade ladder, disposition derivation, window coherence) live in registry
   validation and are legitimately certified by the verdict cache, because the
-  verdict is keyed on the complete tree fingerprint and the data cannot change
-  without changing it — contingent on verifying the open question that the
-  fingerprint and TTL caches actually honour the complete-tree rule, which the
-  plan must close before the flip. Consumption-time refusals (unsupported
+  verdict is keyed on the complete tree fingerprint. **Amended 2026-08-27:**
+  the open question this bullet made the flip contingent on is now closed by
+  measurement, and it closed against the original premise. The data CAN change
+  without changing the verdict key, for the bundled tree, for the duration of
+  its fingerprint TTL — `BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS`, currently
+  10 seconds, in
+  `src/cadrumo/domain/calculations/registry/loader_cache.py`. The window covers
+  layout changes as well as content changes, because the fingerprint walk is
+  itself what would observe a layout change. The guarantee is therefore
+  restated: a verdict certifies the tree **as observed no staler than the
+  bundled TTL window**, not the tree as it is at the instant of the read. This
+  is a deliberate policy, not a defect. Under an editable install — the routine
+  development mode — "bundled" resolves to the live in-tree source directory,
+  so a TTL that never re-checked would serve stale TOML to a long-running
+  process indefinitely; a bounded window folds the several fingerprint
+  recomputations a single calculate call triggers into one directory walk while
+  still picking up a concurrent edit well within one operator interaction, and
+  a genuinely read-only installed wheel is unaffected because the re-walk
+  merely repeats the same answer. Mutable authoring roots are exempt: they are
+  fingerprinted afresh on every load and carry no TTL. Enforcement placement is
+  unchanged by this amendment — data-shape invariants remain legitimately
+  certified by the verdict cache under the restated guarantee, because a
+  ten-second observation lag cannot admit a data shape that validation would
+  have refused; it can only delay noticing one. Consumption-time refusals (unsupported
   cell, ungraded or under-graded revision reached from a filing surface) live
   at the authority/snapshot resolution boundary, which executes on every load
   and every snapshot request in both regimes. Every gate lands with a proof

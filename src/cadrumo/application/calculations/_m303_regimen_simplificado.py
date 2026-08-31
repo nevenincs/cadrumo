@@ -5,13 +5,12 @@ from __future__ import annotations
 from collections.abc import Iterable
 from decimal import Decimal, InvalidOperation
 
-from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
-from cadrumo.domain.calculations.registry.schema_references import LegalParameter
-
 from ...core import Period
 from ...core.errors import CoreValidationError
 from ...core.money import round_to_cents
 from ...domain.calculations.registry.m303_orden_projection_models import M303RegimenSimplificadoSnapshot
+from ...domain.calculations.registry.schema import RegistryCatalogues
+from ...domain.calculations.registry.schema_references import LegalParameter
 from ...domain.iva import (
     ActividadNoAgricolaSimplificado,
     ActividadOrdenAnual,
@@ -20,7 +19,7 @@ from ...domain.iva import (
     is_last_filing_period_of_year,
     validate_regimen_simplificado_rows,
 )
-from ...domain.modelos import (
+from ...domain.modelos.calculation_revision import (
     M303DANA2024EligibilityEvidence,
     M303DANA2024ReductionResult,
     M303RegimenSimplificadoActivityCalculationResult,

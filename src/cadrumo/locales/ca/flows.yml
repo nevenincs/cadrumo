@@ -130,6 +130,7 @@ flows:
           ledger_transaction: Moviment del llibre
           m303_regimen_simplificado_annual_summary: Resum règim simplificat (model
             303)
+          m347_third_party_operation: Operació amb tercers
           manual_input: Entrada manual
           payable_invoice: Factura rebuda
           previous_filing: Declaració anterior
@@ -206,6 +207,30 @@ flows:
       verification_outcome: Resultat de la verificació
       work_unit: Unitat de treball
     title: Modelo {modelo} · {filing_year} · {period}
+  modelo_select:
+    column:
+      filing_year: Exercici
+      modelo: Model
+      name: Nom
+      period: Període
+      state: Estat
+    empty: Encara no hi ha cap unitat de treball registrada en aquest perfil.
+    title: Seleccionar una unitat de treball de model
+  passphrase:
+    cancel_button: Cancel·la
+    change_button: Canvia la contrasenya
+    confirm_label: Confirma la contrasenya nova
+    current_label: Contrasenya actual
+    intro: Això substitueix la contrasenya que protegeix el teu perfil. Les dades
+      que protegeix no es tornen a xifrar, només es reembolcallen.
+    new_hint: Almenys 12 caràcters, combinant lletres, números o símbols.
+    new_label: Contrasenya nova
+    refusal:
+      change_failed: No s'ha pogut canviar la contrasenya.
+      confirmation_mismatch: La confirmació no coincideix amb la contrasenya nova.
+      current_required: Introdueix la teva contrasenya actual.
+    section: Contrasenya
+    title: Canvia la teva contrasenya
   progress:
     current_answer: 'Resposta actual: {value}'
     current_answer_secret: 'Resposta actual: (oculta)'
@@ -255,6 +280,7 @@ flows:
     header: Revisió - {answered} preguntes respostes.
     header_tui: 'Revisió - {answered} respostes, {remaining} obligatòries pendents,
       a punt per enviar: {eligible}'
+    header_tui_stage_label: Revisió
     mode_create: mode de creació
     mode_modify: mode de modificació
     orphan_marker: (ja no es pregunta)

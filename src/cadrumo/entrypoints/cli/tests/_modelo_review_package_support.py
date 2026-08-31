@@ -18,21 +18,16 @@ from pathlib import Path
 
 from click.testing import Result
 
-from cadrumo.application.workflow.persistence import workflow_state_repository
-
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....application.modelo.work_addressing import law_selected_revision_for_work_target
+from ....application.workflow.persistence import workflow_state_repository
 from ....core import CasillaId, Period
-from ....domain.modelos import (
+from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id, upsert_calculation_revision, upsert_work_unit
+from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    ModeloCode,
-    WorkUnit,
     derive_calculation_revision_id,
-    derive_work_unit_id,
-    upsert_calculation_revision,
-    upsert_work_unit,
 )
 
 
@@ -52,7 +47,7 @@ def seed_exportable_modelo_revision(
         modelo=modelo,
         filing_year=filing_year,
         period=filing_period,
-        registry_revision_id=None,
+        requested_revision_id=None,
     )
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,

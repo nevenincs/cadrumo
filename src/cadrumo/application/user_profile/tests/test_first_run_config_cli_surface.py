@@ -7,12 +7,11 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.user_profile.registration import register_profile_with_credentials
-
 from ....core.config import SecretStoreBackend
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import dev_test_database_password, isolated_profile_storage_root
 from ....tests.user_profile import register_cli_profile
+from ..registration import register_profile_with_credentials
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -45,7 +44,7 @@ def test_setup_profile_help_exposes_review_and_validation(tmp_path: Path) -> Non
     result = invoke_cached_cli(["config", "profile", "--help"], env=_env(tmp_path))
 
     assert result.exit_code == 0, result.output
-    for command in ("create", "edit", "show", "delete", "status", "list"):
+    for command in ("create", "edit", "view", "delete", "status", "list"):
         assert command in result.output
     assert "profile set" not in result.output
     assert "profile get" not in result.output

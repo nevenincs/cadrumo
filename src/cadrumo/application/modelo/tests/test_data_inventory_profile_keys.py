@@ -10,10 +10,9 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.profile_grounding import binding_profile_keys
-
 from ....core import BindingSourceKind
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.profile_grounding import binding_profile_keys
 from ...aggregation import AtribucionMemberSourceResolver
 from .._data_inventory import _LIVE_OBSERVATION_SOURCE_KINDS, _profile_keys_for_bindings
 

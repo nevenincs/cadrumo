@@ -13,8 +13,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.export import ExportSerializationFormat
-
 from ....adapters.inbound.financial.providers import ParsedLedgerRow
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -46,15 +44,12 @@ from ....domain.buckets import BucketEvent, BucketEventObjectType, BucketEventTy
 from ....domain.categories import SpendingCategory
 from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
 from ....domain.iva import InvoiceKind
-from ....domain.modelos import (
+from ....domain.modelos import ModeloCode, WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
     CalculationRevisionState,
-    ModeloCode,
-    WorkUnit,
-    WorkUnitCatalogue,
     derive_calculation_revision_id,
-    derive_work_unit_id,
 )
 from ....domain.transactions import (
     BusinessClassification,
@@ -75,6 +70,7 @@ from ....tests.secure_sql import (
     isolated_runtime_profile,
     reset_secure_object_store,
 )
+from ...export import ExportSerializationFormat
 from ..actions_manual import create_manual_transaction
 from ..models import ManualLedgerTransactionCommand, ManualLedgerTransactionResult
 

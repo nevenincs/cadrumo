@@ -28,6 +28,7 @@ import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal
+from typing import get_args
 
 from ...core import ActionEvidenceProvenance, CasillaId, Modelo
 from ...core.aggregation import BindingSourceKind
@@ -48,12 +49,17 @@ from ...domain.calculations.registry.schema import (
     RegistrySnapshot,
 )
 from ...domain.modelos import (
+    Modelo184MemberRow,
+    Modelo210AgrupacionRentaRow,
+    Modelo232VinculadaRow,
+    Modelo347ContraparteRow,
     Modelo349OperadorRow,
     Modelo349RectificacionRow,
     ModeloDetailRow,
     WorkUnit,
 )
-from ._action_errors import ModeloCrossPeriodCleanStateError
+from ...domain.modelos.errors import ModeloError
+from ._action_errors import ModeloAggregationBindingError, ModeloCrossPeriodCleanStateError
 from ._preconditions import build_modelo_precondition_failure
 
 _M349_NUMERO_OPERADORES_BINDING: BindingId = "iva-349-declarante-numero-operadores"
@@ -73,6 +79,157 @@ _M390_303_RECONCILIATION_ANNUAL_CASILLA_BY_SOURCE: Mapping[CasillaId, CasillaId]
     "iva.cuota-deducible-total": "iva.anual.cuota-deducible-total",
     "iva.resultado-regimen-general": "iva.anual.resultado-regimen-general",
 }
+
+DETAIL_ROW_OWNING_MODELO: Mapping[type[ModeloDetailRow], str] = {
+    Modelo184MemberRow: "184",
+    Modelo232VinculadaRow: "232",
+    Modelo349OperadorRow: "349",
+    Modelo349RectificacionRow: "349",
+    Modelo347ContraparteRow: "347",
+    Modelo210AgrupacionRentaRow: "210",
+}
+
+
+def require_detail_rows_declared_for_their_owning_modelo(
+    *,
+    work_unit: WorkUnit,
+    detail_rows: tuple[ModeloDetailRow, ...],
+) -> None:
+    """Refuse any detail row whose typed kind belongs to a different modelo.
+
+    Each ``ModeloDetailRow`` subtype is a bespoke per-modelo shape (M184
+    member, M232 vinculada, M349 operador/rectificación, M347 contraparte,
+    M210 agrupación renta) that is never legitimately declared against a
+    different modelo's work unit. Before this check existed, a mismatched
+    row was silently PERSISTED into that revision's ``detail_rows`` while
+    contributing to no figure -- a taxpayer-declared row that appeared to
+    exist yet affected nothing, with no advisory anywhere. Every kind now
+    refuses through one convention rather than five ad hoc call sites.
+
+    This runs at the calculate boundary's single funnel
+    (:func:`~._calculation_actions._calculate_modelo_revision_with_trusted_mesh_sources`),
+    so both the direct and bucket-aggregation calculate entry points are
+    covered.
+    """
+    for row in detail_rows:
+        owning_modelo = DETAIL_ROW_OWNING_MODELO.get(type(row))
+        if owning_modelo is None or str(work_unit.modelo) == owning_modelo:
+            continue
+        raise ModeloError(
+            translated_message="errors.error.error_modelo_detail_row_wrong_modelo",
+            context={
+                "row_type": type(row).__name__,
+                "owning_modelo": owning_modelo,
+                "work_unit_modelo": str(work_unit.modelo),
+            },
+        )
+
+
+#: Each detail-row kind's own natural real-world identity -- the field tuple
+#: that names WHICH counterparty/operation/member a row is about, as distinct
+#: from the declarable figures (amounts, percentages) that describe it. Two
+#: rows sharing this key from different supply paths (a resolver and a
+#: caller) name the SAME real-world thing and must union rather than
+#: double-count; two rows sharing it that disagree on a declarable figure are
+#: a genuine conflict, not a duplicate.
+_ROW_IDENTITY_FIELDS: Mapping[type[ModeloDetailRow], tuple[str, ...]] = {
+    Modelo184MemberRow: ("nif", "clave", "subclave"),
+    Modelo232VinculadaRow: ("nif", "tipo_operacion"),
+    Modelo347ContraparteRow: ("nif", "clave_operacion"),
+    Modelo349OperadorRow: ("nif_comunitario", "clave_operacion"),
+    Modelo349RectificacionRow: ("nif_comunitario", "clave_operacion", "ejercicio", "periodo"),
+    Modelo210AgrupacionRentaRow: ("source_id",),
+}
+
+
+def _uncovered_row_kinds(covered: Mapping[type[ModeloDetailRow], tuple[str, ...]]) -> frozenset[type]:
+    """Pure comparison: every ``ModeloDetailRow`` union member absent from ``covered``."""
+    kinds: set[type] = set()
+    for member in get_args(ModeloDetailRow):
+        assert isinstance(member, type)
+        kinds.add(member)
+    return frozenset(kinds) - frozenset(covered)
+
+
+def uncovered_detail_row_kinds() -> frozenset[type]:
+    """Return every concrete ``ModeloDetailRow`` member absent from the identity table.
+
+    Discovered from ``ModeloDetailRow`` itself -- the discriminated union's
+    own member list -- rather than a hand-listed set, so a new row kind
+    added to the union without a matching :data:`_ROW_IDENTITY_FIELDS` entry
+    is caught by construction. Absence from the table is a silent regression
+    of the fix: :func:`_row_identity` falls back to an identity-unique
+    key for an uncovered kind, which never wrongly merges two distinct rows
+    (the safe direction) but also never unions a genuine cross-path
+    duplicate for that kind (the fix's whole purpose, silently un-done).
+    """
+    return _uncovered_row_kinds(_ROW_IDENTITY_FIELDS)
+
+
+def _row_identity(row: ModeloDetailRow) -> tuple[object, ...]:
+    fields = _ROW_IDENTITY_FIELDS.get(type(row))
+    if fields is None:
+        # An undeclared row kind has no known identity to union by; treat it
+        # as identity-unique so it never collides (owning-modelo validation
+        # elsewhere refuses genuinely unknown kinds).
+        return (id(row),)
+    return tuple(getattr(row, field) for field in fields)
+
+
+def union_detail_rows_by_identity(
+    *,
+    resolver_rows: tuple[ModeloDetailRow, ...],
+    caller_rows: tuple[ModeloDetailRow, ...],
+) -> tuple[ModeloDetailRow, ...]:
+    """Union resolver-produced and caller-supplied detail rows by identity.
+
+    Naive concatenation double-counts a row two supply paths both name --
+    an invoice-derived M349 operador row the operator also enters manually,
+    for instance -- inflating every downstream count and sum derived from
+    the row set. Rows are grouped by (row type, natural identity); a group
+    fed by only one path passes through unchanged. A group fed by BOTH
+    paths unions to the resolver's row when every remaining field (the
+    declarable figures) agrees, and REFUSES, naming the identity and the
+    divergent fields, when they disagree -- an unstated precedence pick
+    between two supply paths on a filing-grade value is not this function's
+    call to make.
+
+    Two same-path rows sharing an identity (two caller rows, or two
+    resolver rows) are left as duplicates for the caller to see: this
+    function's contract is cross-path union, not intra-path deduplication,
+    which is a different defect with a different owner.
+    """
+    if not resolver_rows or not caller_rows:
+        return (*resolver_rows, *caller_rows)
+    resolver_by_identity: dict[tuple[str, tuple[object, ...]], ModeloDetailRow] = {
+        (row.row_type, _row_identity(row)): row for row in resolver_rows
+    }
+    unioned: list[ModeloDetailRow] = list(resolver_rows)
+    for caller_row in caller_rows:
+        key = (caller_row.row_type, _row_identity(caller_row))
+        resolver_row = resolver_by_identity.get(key)
+        if resolver_row is None:
+            unioned.append(caller_row)
+            continue
+        if resolver_row == caller_row:
+            continue
+        divergent_fields = tuple(
+            sorted(
+                field
+                for field in type(resolver_row).model_fields
+                if getattr(resolver_row, field) != getattr(caller_row, field)
+            ),
+        )
+        raise ModeloAggregationBindingError(
+            translated_message="errors.error.error_modelo_aggregation_binding",
+            context={
+                "reason": "detail_row_identity_conflict",
+                "row_type": caller_row.row_type,
+                "identity": [str(component) for component in _row_identity(caller_row)],
+                "divergent_fields": list(divergent_fields),
+            },
+        )
+    return tuple(unioned)
 
 
 @dataclass(frozen=True, slots=True)

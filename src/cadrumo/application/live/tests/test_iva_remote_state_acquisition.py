@@ -23,6 +23,12 @@ from ....core import AuthProviderKind, Period
 from ....core.config import Settings
 from ....core.identity import nif_check_letter
 from ....tests.secure_sql import isolated_runtime_profile, isolated_sessionless_storage_root, read_db_at_rest_bytes
+from ...auth.session_types import (
+    AeatLoginAssertion,
+    AeatSession,
+    ClaveMovilLoginAssertionDetail,
+    ClaveMovilSessionDetail,
+)
 from ...auth.sessions import AuthenticatedAeatSessionResult
 from ..errors import (
     LiveIvaAcquisitionFailureMode,
@@ -60,11 +66,35 @@ _TARGET_2T = Period.from_year_and_code(2026, "2T")
 _BUCKET_ID = "62626262-6262-4262-8262-626262626262"
 
 
+def _clave_movil_session(identity_nif: str = "12345678Z") -> AeatSession:
+    """Minimal real session, opaque to these tests beyond its provider kind."""
+    return AeatSession(
+        authenticated_at=_CAPTURED_AT,
+        idle_deadline=_CAPTURED_AT,
+        storage_state_path=None,
+        identity_nif=identity_nif,
+        provider_detail=ClaveMovilSessionDetail(dni_nie=identity_nif),
+    )
+
+
+def _clave_movil_assertion(identity_nif: str = "12345678Z") -> AeatLoginAssertion:
+    """Minimal real login assertion, opaque to these tests beyond its provider kind."""
+    return AeatLoginAssertion(
+        target_url="https://sede.agenciatributaria.gob.es/",
+        is_valid=True,
+        identity_nif=identity_nif,
+        status_code=200,
+        elapsed_ms=1,
+        attempted_at=_CAPTURED_AT,
+        assertion_detail=ClaveMovilLoginAssertionDetail(),
+    )
+
+
 def test_combined_acquisition_records_authenticated_success_outcome(tmp_path: Path) -> None:
     auth_result = AuthenticatedAeatSessionResult(
         provider_kind=AuthProviderKind.CLAVE_MOVIL,
-        session=object(),
-        assertion=object(),
+        session=_clave_movil_session(),
+        assertion=_clave_movil_assertion(),
         reused_persisted_session=True,
         fresh=False,
     )
@@ -105,8 +135,8 @@ def test_combined_acquisition_records_authenticated_success_outcome(tmp_path: Pa
 def test_combined_acquisition_marks_partial_filed_history_as_failed(tmp_path: Path) -> None:
     auth_result = AuthenticatedAeatSessionResult(
         provider_kind=AuthProviderKind.CLAVE_MOVIL,
-        session=object(),
-        assertion=object(),
+        session=_clave_movil_session(),
+        assertion=_clave_movil_assertion(),
         reused_persisted_session=True,
         fresh=False,
     )

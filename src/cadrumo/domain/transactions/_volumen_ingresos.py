@@ -14,9 +14,13 @@ See Also:
 
 from __future__ import annotations
 
-from ...core import INGRESO_CONCEPTS_OUTSIDE_THE_VOLUME_BASE, ConceptoIngreso
+from ...core import (
+    INGRESO_CONCEPTS_OUTSIDE_THE_ART_109_BASE,
+    INGRESO_CONCEPTS_OUTSIDE_THE_VOLUME_BASE,
+    ConceptoIngreso,
+)
 
-__all__ = ["counts_toward_volumen_de_ingresos"]
+__all__ = ["counts_toward_art_109_activity_income", "counts_toward_volumen_de_ingresos"]
 
 
 def counts_toward_volumen_de_ingresos(concepto: ConceptoIngreso | None) -> bool:
@@ -44,3 +48,29 @@ def counts_toward_volumen_de_ingresos(concepto: ConceptoIngreso | None) -> bool:
     if concepto is None:
         return True
     return concepto not in INGRESO_CONCEPTS_OUTSIDE_THE_VOLUME_BASE
+
+
+def counts_toward_art_109_activity_income(concepto: ConceptoIngreso | None) -> bool:
+    """Return whether a receipt belongs in the Art. 109 retention-coverage base.
+
+    Grounded in RD 439/2007 art. 109.3 and 109.4 -- *al menos el 70 por ciento de
+    los ingresos procedentes de la explotación, con excepción de las subvenciones
+    corrientes y de capital y de las indemnizaciones, fueron objeto de retención o
+    ingreso a cuenta*.
+
+    Distinct from :func:`counts_toward_volumen_de_ingresos` on purpose. That
+    predicate serves art. 110.1.c), which keeps subvenciones corrientes IN the
+    base; this one takes them out. The two provisions genuinely disagree, so they
+    get two predicates rather than one with a flag -- a flag would put the choice
+    at the call site, which is where it would eventually be got wrong.
+
+    Args:
+        concepto: The declared concept, or ``None`` when the operator declared none.
+
+    Returns:
+        ``True`` for ordinary income and for an undeclared concept; ``False`` for a
+        subvención of either kind and for an indemnización.
+    """
+    if concepto is None:
+        return True
+    return concepto not in INGRESO_CONCEPTS_OUTSIDE_THE_ART_109_BASE

@@ -9,7 +9,7 @@ Sede adapter. Concrete records such as
 ports structurally while remaining adapter-owned evidence records.
 
 See Also:
-    :mod:`application.calculations._iva_compensation_history`:
+    :mod:`application.calculations.iva_compensation_history`:
         Consumes :class:`FiledDeclaracionObservationProtocol` for Modelo 303
         period states and Modelo 390 annual cross-checks.
     :mod:`application.live`:
@@ -97,9 +97,9 @@ class FiledDeclaracionObservationProtocol(Protocol):
     :class:`~adapters.outbound.aeat.sede.FiledDeclaracionObservation`
     model, eliminating the application-to-adapter import edge. The surface is
     intentionally limited to the fields consumed by
-    :func:`~application.calculations._iva_compensation_history.iva_compensation_state_from_observation_envelope`
+    :func:`~application.calculations.iva_compensation_history.iva_compensation_state_from_observation_envelope`
     and
-    :func:`~application.calculations._iva_compensation_history.iva_compensation_annual_summary_from_filed_observation`.
+    :func:`~application.calculations.iva_compensation_history.iva_compensation_annual_summary_from_filed_observation`.
     """
 
     @property

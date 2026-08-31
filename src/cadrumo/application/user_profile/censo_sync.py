@@ -447,11 +447,34 @@ def _raw_afectacion_ratio(censo_facts: Mapping[str, str]) -> Decimal | None:
     return office / total
 
 
+def bound_raw_afectacion_ratio_for_bucket(bucket_id: str) -> Decimal | None:
+    """Return the bucket's own censo-declared ``office_m2 / total_m2``, if any.
+
+    The bucket IS the profile for this question, so the two identifiers the
+    service takes separately collapse to one. Two call sites had each spelled
+    that collapse out, which is one place too many for a rule about which id
+    means what.
+
+    The CLI listing deliberately does NOT use this: it resolves a profile_id
+    that can differ from the bucket, and folding it in here would quietly answer
+    a different question than it asked.
+
+    Args:
+        bucket_id: The bucket whose profile facts are read.
+
+    Returns:
+        The raw afectación proportion, or ``None`` when the profile is absent or
+        declares no usable m².
+    """
+    return CensoSyncService(bucket_id=bucket_id).bound_raw_afectacion_ratio(profile_id=bucket_id)
+
+
 __all__ = [
     "CENSAL_ADOPTABLE_PATHS",
     "CENSO_SOURCE_TAG",
     "CensalReconciliation",
     "CensoSyncService",
+    "bound_raw_afectacion_ratio_for_bucket",
     "censal_facts_from_read",
     "reconcile_censal_read",
 ]

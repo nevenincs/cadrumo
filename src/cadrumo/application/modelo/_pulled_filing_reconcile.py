@@ -74,11 +74,11 @@ from ._reconcile_casilla import detect_casilla_divergences
 from ._reconcile_population import resolve_casilla_population_scope
 
 if TYPE_CHECKING:
-    from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-    from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-
     from ...core import CasillaId
-    from ...domain.modelos import CalculationRevision, WorkUnit
+    from ...domain.calculations.registry.schema import RegistrySnapshot
+    from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
+    from ...domain.modelos import WorkUnit
+    from ...domain.modelos.calculation_revision import CalculationRevision
     from ..calculations import CalculationObservationRepository
 
 

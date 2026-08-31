@@ -16,8 +16,9 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import StrEnum
+from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from ...core import IvaCompensationStateProvenance, Period
 from ...core.identity import AeatExpedienteId, BucketId
@@ -25,6 +26,23 @@ from ...core.json_contract import Notice
 from ...domain.iva_compensation import IvaCompensationDecisionReason
 from ..storage.sync_runs import SyncRunRecordReference
 from .errors import LiveIvaAcquisitionFailureMode
+
+LiveIvaDiagnosticRef = Annotated[str, Field(pattern=r"^sha256:[0-9a-f]{12}$")]
+"""A live-IVA diagnostic reference: the truncated digest printed for a redacted value.
+
+Every value on this axis comes from ``evidence_ref`` in
+:mod:`cadrumo.application.live.remote_state_outcomes`, which emits
+``sha256:`` followed by the first twelve hex characters of the digest and
+nothing else. The width is the whole point of that helper — two references are
+comparable only if every producer truncates identically — so declaring the
+shape here keeps a field that carries one from silently admitting a value no
+producer emits, including an untruncated digest.
+
+Deliberately narrower than
+:data:`cadrumo.application.operations.OperationDiagnosticReference`, which
+admits the twelve- and sixty-four-character forms because the operations
+supervisor emits both. Nothing on this axis emits the long form.
+"""
 
 
 class FiledCaptureEvidenceTally(BaseModel):
@@ -288,7 +306,7 @@ class StoredIvaRemoteStateAcquisitionRow(BaseModel):
     auth_outcome_mode: str
     auth_failure_mode: str | None = None
     auth_failure_type: str | None = None
-    auth_diagnostic_ref: str | None = None
+    auth_diagnostic_ref: LiveIvaDiagnosticRef | None = None
     auth_provider_kind: str | None = None
     auth_reused_persisted_session: bool | None = None
     year_from: int
@@ -370,7 +388,7 @@ class LiveIvaAuthOutcome(BaseModel):
     outcome_mode: LiveIvaAcquisitionFailureMode
     failure_mode: LiveIvaAcquisitionFailureMode | None = None
     failure_type: str | None = None
-    diagnostic_ref: str | None = None
+    diagnostic_ref: LiveIvaDiagnosticRef | None = None
     provider_kind: str | None = None
     reused_persisted_session: bool | None = None
     fresh: bool | None = None

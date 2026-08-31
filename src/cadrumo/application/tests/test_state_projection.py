@@ -30,11 +30,9 @@ from uuid import UUID
 import pytest
 from pydantic import SecretStr
 
-from cadrumo.application.workflow.persistence import workflow_state_repository
-from cadrumo.application.workflow.state_models import WorkflowState
-
 from ...adapters.persistence.storage import master_key
-from ...adapters.persistence.storage.custody import load_committed_profile_password_material, unlock_profile_custody
+from ...adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
+from ...adapters.persistence.storage.custody.kdf_supervision import unlock_profile_custody
 from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...core import Period
 from ...core.config import SecretStoreBackend, Settings, override_settings
@@ -69,6 +67,8 @@ from ..user_profile.login_session_port import profile_bind_bucket_session
 from ..user_profile.profile_record_repository import close_active_profile_record_session
 from ..user_profile.registration import register_profile_with_credentials
 from ..wizard.catalogue import WIZARD_FLOWS
+from ..workflow.persistence import workflow_state_repository
+from ..workflow.state_models import WorkflowState
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -783,6 +783,7 @@ def test_readiness_capture_exposes_no_inferred_capability_beyond_its_reports() -
 
     captured = capture_modelo_readiness(_readiness_requests(), active_profile_id=bucket_id)
 
+    assert captured.reports == _build_modelo_readiness(_readiness_requests(), active_profile_id=bucket_id)
     assert {field.name for field in fields(ProjectionModeloReadinessCapture)} == {
         "reports",
         "comparison_domain",

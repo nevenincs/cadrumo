@@ -51,15 +51,15 @@ from ...domain.transactions import (
     is_classified,
 )
 from .actions_common import (
-    _blockers_by_source_transaction_id,
-    _bucket_event_repository,
-    _normalise_timestamp,
-    _raise_finalized_modelo_blocked,
-    _replace_transaction,
-    _require_transaction,
-    _save_transaction_catalogue_and_events,
-    _transaction_modelo_source_ids,
-    _transaction_repository,
+    blockers_by_source_transaction_id,
+    normalise_timestamp,
+    raise_finalized_modelo_blocked,
+    replace_transaction,
+    require_transaction,
+    resolve_bucket_event_repository,
+    resolve_transaction_repository,
+    save_transaction_catalogue_and_events,
+    transaction_modelo_source_ids,
 )
 from .actions_manual import (
     command_from_patch as _command_from_patch,
@@ -220,7 +220,7 @@ def _apply_one_bulk_classify_row(
     patch = ManualLedgerTransactionPatch.model_validate(patch_values)
     try:
         resolved_transaction_id = resolve_transaction_id(row.transaction_id, working.transactions.keys())
-        current = _require_transaction(working, resolved_transaction_id)
+        current = require_transaction(working, resolved_transaction_id)
         if current.lifecycle_state is not TransactionLifecycleState.ACTIVE:
             raise TransactionValidationError(
                 "only active ledger transactions can be edited; archived, stashed, and split-parent rows are immutable",
@@ -229,10 +229,10 @@ def _apply_one_bulk_classify_row(
                     "lifecycle_state": current.lifecycle_state.value,
                 },
             )
-        source_ids = _transaction_modelo_source_ids(current)
+        source_ids = transaction_modelo_source_ids(current)
         blockers = tuple(b for txid in source_ids for b in blockers_by_txid.get(txid, ()))
         if blockers:
-            _raise_finalized_modelo_blocked(
+            raise_finalized_modelo_blocked(
                 operation="ledger transaction update",
                 transaction_ids=source_ids,
                 blockers=blockers,
@@ -254,7 +254,7 @@ def _apply_one_bulk_classify_row(
             # field-for-field identical â€” classification already applied.
             return _BulkRowOutcome(working, (), applied=False, skipped=True, failure=None)
         replacement, events = prepared
-        updated = _replace_transaction(working, old_transaction_id=resolved_transaction_id, replacement=replacement)
+        updated = replace_transaction(working, old_transaction_id=resolved_transaction_id, replacement=replacement)
         return _BulkRowOutcome(updated, tuple(events), applied=True, skipped=False, failure=None)
     except (CadrumoError, ValidationError, ValueError) as exc:
         reason = resolve_error_message(exc) if isinstance(exc, CadrumoError) else str(exc)
@@ -272,11 +272,11 @@ def _apply_bulk_classify_rows(
     actor: str,
     source_command: str,
     # concrete, not Protocol: the accumulated end-of-batch save below calls
-    # ``_save_transaction_catalogue_and_events``, which needs the adapter-only
+    # ``save_transaction_catalogue_and_events``, which needs the adapter-only
     # ``save_with_secure_object_writes`` / ``to_secure_object_write`` methods
     # absent from the Protocol. The sole caller always passes already-narrowed
-    # concrete repositories (see ``_transaction_repository`` /
-    # ``_bucket_event_repository`` at the call site).
+    # concrete repositories (see ``resolve_transaction_repository`` /
+    # ``resolve_bucket_event_repository`` at the call site).
     repository: TransactionCatalogueRepository,
     event_repo: BucketEventHistoryRepository,
     parsed_rows: list[_ParsedBulkClassifyRow],
@@ -293,10 +293,10 @@ def _apply_bulk_classify_rows(
     # re-encryption. Load the catalogue and the finalized-modelo blocker map
     # once, mutate an in-memory working catalogue, accumulate events, and
     # persist a single atomic write at the end.
-    now = _normalise_timestamp(None)
+    now = normalise_timestamp(None)
     working = repository.load()
     all_events: list[BucketEvent] = []
-    blockers_by_txid = _blockers_by_source_transaction_id(
+    blockers_by_txid = blockers_by_source_transaction_id(
         bucket_id=bucket_id,
         work_unit_repository=work_unit_repository,
         calculation_repository=calculation_repository,
@@ -323,7 +323,7 @@ def _apply_bulk_classify_rows(
             applied += 1
 
     if all_events:
-        _save_transaction_catalogue_and_events(
+        save_transaction_catalogue_and_events(
             transaction_repository=repository,
             event_repository=event_repo,
             catalogue=working,
@@ -365,8 +365,8 @@ def bulk_classify_from_csv(
 
     Returns a :class:`~application.ledger.models.BulkClassifyResult`.
     """
-    repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
-    event_repo = _bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    event_repo = resolve_bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
     parsed_rows, parse_failures = _parse_bulk_classify_rows(csv_text)
     if not parsed_rows and not parse_failures:
         return BulkClassifyResult(total=0, applied=0, skipped=0)
@@ -456,8 +456,8 @@ def apply_classification_rules(
     """
     from .rule_repository import ledger_classification_rule_repository
 
-    tx_repo = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
-    event_repo = _bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
+    tx_repo = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    event_repo = resolve_bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
     rule_repo = (
         rule_repository if rule_repository is not None else ledger_classification_rule_repository(bucket_id=bucket_id)
     )

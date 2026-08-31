@@ -77,6 +77,7 @@ from typing import TYPE_CHECKING
 from ._classification_rule import LedgerClassificationRule
 from ._dates import transaction_eligible_date_span, transaction_filing_date
 from ._enums import (
+    BUSINESS_BEARING_STATES,
     CLASSIFIED_STATES,
     BusinessClassification,
     SplitRole,
@@ -171,7 +172,10 @@ from ._tipo_actividad_partitions import (
     load_tipo_actividad_selectors,
     tipo_actividad_code_set,
 )
-from ._volumen_ingresos import counts_toward_volumen_de_ingresos
+from ._volumen_ingresos import (
+    counts_toward_art_109_activity_income,
+    counts_toward_volumen_de_ingresos,
+)
 from .errors import (
     LedgerNoActiveBucketError,
     LedgerStorageError,
@@ -218,6 +222,7 @@ def __getattr__(name: str):
 
 
 __all__ = [
+    "BUSINESS_BEARING_STATES",
     "CLASSIFIED_STATES",
     "IRPF_CATEGORY_ACTIVIDAD_ECONOMICA",
     "IRPF_CATEGORY_TRABAJO",
@@ -279,6 +284,7 @@ __all__ = [
     "administrador_retencion_legal_refs",
     "build_split_prompt",
     "catalogue",
+    "counts_toward_art_109_activity_income",
     "counts_toward_volumen_de_ingresos",
     "default_classification_choices",
     "default_iva_category_choices",

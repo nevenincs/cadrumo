@@ -12,16 +12,12 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Modelo, NoRecoveryOutcome, Period
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.modelos import (
+from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id, upsert_calculation_revision, upsert_work_unit
+from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     FilingInstanceEvidence,
-    ModeloCode,
-    WorkUnit,
     derive_calculation_revision_id,
-    derive_work_unit_id,
-    upsert_calculation_revision,
-    upsert_work_unit,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.filing_evidence import general_m303_filing_evidence
@@ -500,7 +496,7 @@ def test_grounding_index_lookup_stays_bounded_across_repeated_readiness_checks(t
     """
     import time
 
-    from cadrumo.domain.calculations.registry.profile_grounding import build_profile_grounding_index
+    from ....domain.calculations.registry.profile_grounding import build_profile_grounding_index
 
     authority = bundled_authority()
 

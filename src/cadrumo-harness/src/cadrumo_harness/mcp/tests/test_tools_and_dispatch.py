@@ -356,13 +356,13 @@ def test_invoice_operation_type_renders_as_a_json_enum_on_every_writing_verb() -
         (
             "modelo.filing_record.import",
             "evidence_kind",
-            "domain.modelos:ExternalEvidenceKind",
+            "domain.modelos._filing_record:ExternalEvidenceKind",
         ),
         ("app.review.queue", "state", "application.review:ReviewState"),
         (
             "app.live.borrador.100.list",
             "state",
-            "application.live:SnapshotStateFilter",
+            "application.live.snapshot_base:SnapshotStateFilter",
         ),
     ],
 )

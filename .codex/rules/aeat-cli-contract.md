@@ -16,9 +16,16 @@ submission is prohibited.
 `capture`, `refresh`, `fetch`, `download`, `upload`, `sync`, `send`, `get`,
 `mirror`, `probe` and `file` MUST NOT name a verb whose primary purpose is
 moving data. `file` retains only its domain meaning, the act of filing a
-declaration, and that meaning is exclusive. A verb whose primary purpose is
-COMPUTATION names the computation; transport it performs as a means is
-incidental and is declared on its parameters.
+declaration, and that meaning is exclusive.
+
+There are three verb categories, not two. A TRANSPORT verb moves data and takes
+one of the four tokens. A COMPUTATION verb names the computation. A CREATING verb
+names the record it creates. In the latter two the local path or remote handle is
+declared on the parameters and never claims the verb: `app ledger evidence add`
+registers evidence from a PDF, `config auth certificate register` enrols a
+certificate from a file, `app modelo spreadsheet calculate` computes from a
+workbook it reads. Renaming any of them to `import` would name the mechanism and
+hide the outcome.
 
 A command reconciling from either transport MUST be a subgroup of `pull` and
 `import --file`, never one verb multiplexed by `--from-*` flags.
@@ -126,7 +133,7 @@ verb hands the agent a dead instruction it cannot recover from.
 
 ## How
 
-- **Good:** `aeat app live justificante pull`, `pull-all`, `pull-sources`;
+- **Good:** `aeat app live filed pull`, `pull-all`, `pull-sources`;
   `aeat app ledger import --file STATEMENT.csv`; a dual-transport reconcile as
   `reconcile pull` + `reconcile import --file PATH`. `aeat config profile censo`
   is the worked example: `censo import --file` and `censo pull`, both reconciling
@@ -152,10 +159,12 @@ Gates in this repository: `test_documented_command_conformance.py` and
 `ResultSchemaSpec` kernel after the `SCHEMA_REGISTRY` it originally walked was
 retired; it walks every spec declaring a result-schema target and refuses a
 bespoke `next` / `suggestion` / `*_advisory` field beside the envelope's one
-diagnostic channel. `test_rule_surface_conformance.py` is deliberately NOT named
-here any more: it shipped inside the cadrumo-harness client and left with it when
-that client was rehomed out of this repository, so naming it here pointed every
-reader at a file this tree does not contain. Source:
+diagnostic channel. `test_rule_surface_conformance.py`, in the harness's own
+test package, enforces the harness-citation clause above: it resolves every verb
+cited in an operator rule, persona or skill against the live manifest. The
+harness client was rehomed out of this repository and later restored, so check
+the tree before concluding a harness gate is gone -- and expect the restored
+client to lag the product surfaces it couples to. Source:
 ADRs `2026-06-10-cli-pull-file-standard-adr`,
 `2026-06-10-cli-envelope-notice-standardisation-adr`,
 `2026-06-10-ledger-interface-contract-adr`,

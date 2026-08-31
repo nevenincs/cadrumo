@@ -48,7 +48,7 @@ from functools import cache
 from pathlib import Path
 from typing import Final, NamedTuple, TypeGuard
 
-from pydantic import BaseModel
+from pydantic import BaseModel, TypeAdapter
 
 from ....core.aggregation import BindingSourceKind
 from ....core.atomic_write import atomic_write_best_effort_bytes
@@ -512,6 +512,10 @@ def _is_compiled_registry_payload(payload: object) -> TypeGuard[CompiledRegistry
     return _has_current_pydantic_shape((*modelos_raw, catalogues_raw))
 
 
+_OBJECT_LIST_ADAPTER: TypeAdapter[list[object]] = TypeAdapter(list[object])
+_OBJECT_DICT_ADAPTER: TypeAdapter[dict[object, object]] = TypeAdapter(dict[object, object])
+
+
 def _has_current_pydantic_shape(values: Iterable[object]) -> bool:
     """Whether every nested Pydantic object carries every field in today's schema.
 
@@ -535,10 +539,11 @@ def _has_current_pydantic_shape(values: Iterable[object]) -> bool:
                 return False
             pending.extend(value.__dict__.values())
         elif isinstance(value, dict):
-            pending.extend(value.keys())
-            pending.extend(value.values())
+            typed_dict = _OBJECT_DICT_ADAPTER.validate_python(value)
+            pending.extend(typed_dict.keys())
+            pending.extend(typed_dict.values())
         elif isinstance(value, (tuple, list, set, frozenset)):
-            pending.extend(value)
+            pending.extend(_OBJECT_LIST_ADAPTER.validate_python(value))
     return True
 
 

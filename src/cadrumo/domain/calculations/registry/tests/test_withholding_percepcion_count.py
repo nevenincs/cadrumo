@@ -17,10 +17,9 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
-
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind, RetencionClave
+from ..schema import DataBindingDefinition, ModeloRevision
+from ..schema_references import PeriodSelector
 from ..withholding_bindings import WithholdingObservation, resolve_withholding_binding_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

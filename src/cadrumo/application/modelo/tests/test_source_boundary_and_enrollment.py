@@ -28,8 +28,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -38,6 +36,7 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import BindingSourceKind, Period
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.modelos import Modelo184MemberRow
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -79,6 +78,10 @@ _READY_PROFILE_FACTS = (
     UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
     UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
     UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+    # Modelo 111 refuses a defaulted colegio-concertado declaration: the fichero
+    # carries the row as filer data, so it must be stated rather than assumed.
+    # False is the truthful value for this natural-person filer.
+    UserProfileFact(path="withholding.colegio_concertado", value=False),
 )
 _ATTRIBUTION_PROFILE_FACTS = (
     UserProfileFact(path="identity.tax_id", value="E12345674"),
@@ -100,13 +103,23 @@ _ATTRIBUTION_PROFILE_FACTS = (
     UserProfileFact(path="attribution_entity_socios.0.base_imponible_assigned", value=Decimal("4000")),
     UserProfileFact(path="attribution_entity_socios.0.participe_clave", value="1"),
     UserProfileFact(path="attribution_entity_socios.0.role", value="comunero"),
+    # Clave del rendimiento is a REQUIRED schema field (Orden HAP/2250/2015
+    # art. 3, LIRPF arts. 86-87), so the readiness gate refuses M184 work
+    # without it. "D" is actividades economicas, which is what this fixture
+    # declares: a comunidad de bienes with an activity and IVA regimen general.
+    UserProfileFact(path="attribution_entity_socios.0.clave", value="D"),
     UserProfileFact(path="attribution_entity_socios.1.nif", value="11111111A"),
     UserProfileFact(path="attribution_entity_socios.1.name", value="Member One"),
     UserProfileFact(path="attribution_entity_socios.1.share_pct", value=Decimal("60")),
     UserProfileFact(path="attribution_entity_socios.1.base_imponible_assigned", value=Decimal("6000")),
     UserProfileFact(path="attribution_entity_socios.1.participe_clave", value="1"),
     UserProfileFact(path="attribution_entity_socios.1.role", value="comunero"),
+    UserProfileFact(path="attribution_entity_socios.1.clave", value="D"),
     UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+    # Modelo 111 refuses a defaulted colegio-concertado declaration: the fichero
+    # carries the row as filer data, so it must be stated rather than assumed.
+    # False is the truthful value for this natural-person filer.
+    UserProfileFact(path="withholding.colegio_concertado", value=False),
 )
 
 
@@ -201,7 +214,7 @@ def test_s26_assert_no_novel_source_kinds_rejects_synthetic_novel_source() -> No
     # Fabricate a revision with a synthetic unknown source by wrapping the real one.
     # model_construct bypasses Literal validation so we can inject a source value that
     # is not in the accepted set — exactly what the gate should detect and reject.
-    from cadrumo.domain.calculations.registry.schema import DataBindingDefinition
+    from ....domain.calculations.registry.schema import DataBindingDefinition
 
     revision = bundled_authority().snapshot("303", filing_year=2026, period="1T").revision
     # Build a synthetic binding with a novel source kind via model_construct (no validators).

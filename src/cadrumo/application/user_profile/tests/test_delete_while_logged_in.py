@@ -25,7 +25,7 @@ from uuid import UUID
 import pytest
 
 from ....adapters.persistence.storage import master_key
-from ....adapters.persistence.storage.custody import (
+from ....adapters.persistence.storage.custody.capsule import (
     inventory_committed_profile_custody_capsule,
     recognize_current_profile_capsule,
 )
@@ -210,12 +210,12 @@ def test_the_marker_still_bites_after_the_deletion_revokes_its_own_session(tmp_p
             assert not (capsule / "db/cadrumo.db-wal").exists(), (
                 "the revocation must have checkpointed the sidecars away, or the guard is not under test"
             )
-            service.verify_source_delete_marker(journal)
+            service._verify_source_delete_marker(journal)
 
             label_record = capsule / _LABEL_RECORD_RELATIVE_PATH
             label_record.write_bytes(label_record.read_bytes().replace(b"1", b"2", 1))
 
             with pytest.raises(ProfileCustodyTransactionConflictError):
-                service.verify_source_delete_marker(journal)
+                service._verify_source_delete_marker(journal)
         finally:
             _close_live_login()

@@ -17,7 +17,7 @@ from typing import Final, cast
 from pydantic import ValidationError
 
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
-from ..crypto import KEY_SIZE
+from ..crypto.aead import KEY_SIZE
 from ._kdf_attestation import (
     parse_ready_attestation as _parse_ready_attestation,
 )
@@ -49,7 +49,7 @@ from ._kdf_process import (
 )
 from ._kdf_windows_job import _WindowsJob
 from ._kdf_worker_identity import verify_ready_worker as _verify_ready_worker
-from ._records import ProfileCustodyKdfParameters, ProfileCustodyWrappedDek
+from .records import ProfileCustodyKdfParameters, ProfileCustodyWrappedDek
 
 KDF_CALIBRATED_FRAME: Final = b"cadrumo-profile-kdf-calibrated-v1"
 KDF_FAILED_FRAME: Final = b"cadrumo-profile-kdf-failed-v1"

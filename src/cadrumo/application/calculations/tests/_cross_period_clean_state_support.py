@@ -10,10 +10,6 @@ from functools import cache
 
 from pydantic import AnyHttpUrl, TypeAdapter
 
-from cadrumo.domain.calculations.registry.applicability_modelo202 import Modelo202Modality
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from cadrumo.domain.calculations.registry.snapshot import build_snapshot
-
 from ....adapters.inbound.pdf import source_pdf_reference_path
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -21,12 +17,12 @@ from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogu
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....core import CasillaId, Period, RegistryAuthorityGrade
 from ....core.resources import bundled_path
+from ....domain.calculations.registry.applicability_modelo202 import Modelo202Modality
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.snapshot import build_snapshot
 from ....domain.justificante import Justificante
 from ....domain.modelos import (
-    CalculationRevision,
-    CalculationRevisionCatalogue,
-    CalculationRevisionState,
     ExternalEvidence,
     ExternalEvidenceKind,
     ModeloCode,
@@ -34,11 +30,17 @@ from ....domain.modelos import (
     ModeloRecordCatalogue,
     ModeloRecordStatus,
     WorkUnit,
-    derive_calculation_revision_id,
     derive_filing_record_id,
+)
+from ....domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionCatalogue,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
+from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_modelo_observation, registry_grounded_observations
 from ....tests.registry_tree import bundled_registry_tree
@@ -55,6 +57,7 @@ from .. import (
     evaluate_cross_period_clean_state,
     filing_external_evidence_blockers,
 )
+from ..observations_repository import ObservationSourceKind
 
 _PROFILE_ID = "39039039-0390-4390-8390-390390390390"
 _BUCKET_ID = _PROFILE_ID
@@ -447,6 +450,13 @@ def _seed_official_303_source_filings(
                 evidence_reference_id=evidence_reference_id,
                 actor="aeat-import-test",
                 expected_tax_id="X1234567L",
+                # The M303 source quarters carry operator-selected filing facts
+                # the import path cannot infer from casilla values, so they are
+                # supplied explicitly rather than defaulted.
+                filing_instance_evidence=general_m303_filing_evidence(
+                    work_unit.period,
+                    reference=evidence_reference_id,
+                ),
                 clock=_CLOCK,
             )
         default_source_metadata = {
@@ -464,11 +474,43 @@ def _seed_official_303_source_filings(
             and period not in omit_justificante_metadata_periods
         ):
             default_source_metadata["aeat_justificante_csv"] = evidence_reference_id
+        # A csv-register import persists its OWN observation carrying the
+        # register identity: source kind, the evidence reference, and the id of
+        # the filing record it just created. The save below replaces that
+        # observation on the same key, so unless it reproduces that identity
+        # the clean-state check compares the filing against an observation
+        # claiming to be a justificante and reports a mismatch against the very
+        # import that produced it. Only the DEFAULTS are filled here; an
+        # explicit per-period source kind or metadata still wins.
+        default_source_kind = source_kind_by_period.get(period, "aeat_sede_justificante")
+        if (
+            evidence_kind is ExternalEvidenceKind.AEAT_CSV_REGISTER
+            and period not in omit_justificante_metadata_periods
+            and period not in source_kind_by_period
+        ):
+            default_source_kind = ObservationSourceKind.AEAT_CSV_REGISTER.value
+            default_source_metadata["external_evidence_reference_id"] = evidence_reference_id
+            # VIGENTE only: a work unit can own several records because an
+            # amended filing supersedes rather than replaces, and superseded
+            # records are retained for audit. The checker compares against the
+            # record it resolved as current, so an unfiltered first-match would
+            # disagree with it intermittently, by dictionary order -- the worst
+            # shape, because it reads as flake and invites a retry.
+            imported_record = next(
+                (
+                    record
+                    for record in ModeloRecordCatalogueRepository().load().records.values()
+                    if record.work_unit_id == work_unit.work_unit_id and record.status is ModeloRecordStatus.VIGENTE
+                ),
+                None,
+            )
+            if imported_record is not None:
+                default_source_metadata["filing_record_id"] = imported_record.filing_record_id
         _save_source_observation(
             observation_repository,
             period=period,
             source_values=values,
-            source_kind=source_kind_by_period.get(period, "aeat_sede_justificante"),
+            source_kind=default_source_kind,
             source_metadata=source_metadata_by_period.get(period, default_source_metadata),
         )
 

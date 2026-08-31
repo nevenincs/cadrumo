@@ -47,7 +47,9 @@ from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogue
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.identity import BucketId, WorkUnitId
 from ...domain.buckets import (
+    BucketActorLabel,
     BucketEventHistoryRepositoryProtocol,
+    BucketEventId,
     BucketEventObjectType,
     BucketEventType,
     bucket_event_order_key,
@@ -69,16 +71,30 @@ from .work_addressing import (
 
 
 class WorkUnitHistoryEvent(BaseModel):
-    """One projected :class:`cadrumo.domain.buckets.BucketEvent` row in a work-unit history stream."""
+    """One projected :class:`cadrumo.domain.buckets.BucketEvent` row in a work-unit history stream.
+
+    Every field is copied straight off a validated
+    :class:`cadrumo.domain.buckets.BucketEvent`, so this projection carries the
+    identity aliases that event already declares rather than re-opening them as
+    free strings. A projection cannot honestly admit a value its own source
+    refuses: an ``event_id`` that is not a content address, or an actor the
+    event log has no way to record, describes a row that cannot exist.
+
+    ``actor`` is required for that reason and not by policy. Every emitter
+    supplies a label — a CLI command path or an automated-agent slug — because
+    :class:`cadrumo.domain.buckets.BucketEvent` types it as
+    :data:`cadrumo.domain.buckets.BucketActorLabel`, so there is no actorless
+    event to represent here.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
-    event_id: str = Field(min_length=1)
+    event_id: BucketEventId
     occurred_at: datetime
     event_type: BucketEventType
     object_type: BucketEventObjectType
-    object_id: str = Field(min_length=1)
-    actor: str = Field(default="")
+    object_id: str = Field(min_length=1, max_length=128)
+    actor: BucketActorLabel
     payload: dict[str, str] = Field(default_factory=dict)
 
 

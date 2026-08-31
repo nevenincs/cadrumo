@@ -20,7 +20,7 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
-from ....application.review import ReviewSeverity, ReviewState
+from ....application.review.enums import ReviewSeverity, ReviewState
 from ....core import Period
 from .._review_payloads import (
     ReviewQueueResult,

@@ -10,25 +10,40 @@ from typing import Any
 
 import pytest
 
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.loader import load_modelo_directory
-from cadrumo.domain.calculations.registry.temporal import select_revision
-
 from ....adapters.outbound.fx import ECB_RATE_SOURCE_ID
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage import StorageValidationError
 from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
-from ....core import M347_THRESHOLD_EUR, BindingSourceKind, IntracomOperationType, Period
+from ....core import (
+    M347_THRESHOLD_EUR,
+    BindingSourceKind,
+    IntracomOperationType,
+    Period,
+    ThirdPartyDeclarationRole,
+    TravelAgencyMediationType,
+)
 from ....core.errors import CadrumoError, get_registered_error_code, resolve_error_message
 from ....core.resources import bundled_path
+from ....domain.calculations.registry.errors import RegistryValidationError
+from ....domain.calculations.registry.loader import load_modelo_directory
+from ....domain.calculations.registry.temporal import select_revision
 from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
 from ....domain.iva import InvoiceKind, IvaCategory
 from ....domain.modelos import Modelo349CountryPrefixContextError
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_tree import bundled_registry_tree
 from ....tests.secure_sql import TestRuntimeProfile, isolated_two_bucket_runtime
 from ...aggregation import CalculationSourceContext
 from .. import InvoiceCatalogueSourceResolver, invoice_direction_to_source_kind
-from .._source_resolver import _OWNED_SOURCES, M349_CLAVE_INFERRED_REASON, _intracommunity_clave
+from .._source_resolver import (
+    _OWNED_SOURCES,
+    M349_CLAVE_INFERRED_REASON,
+    _intracommunity_clave,
+    _m347_filer_declaration_roles,
+    _m347_invoice_observation,
+    _m347_role_fact_advisories,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -230,7 +245,11 @@ def test_invoice_catalogue_source_resolver_emits_scalar_values_and_provenance(
         ),
     )
 
-    assert resolution.owned_sources == (BindingSourceKind.COLLECTIBLE_INVOICE, BindingSourceKind.PAYABLE_INVOICE)
+    assert resolution.owned_sources == (
+        BindingSourceKind.COLLECTIBLE_INVOICE,
+        BindingSourceKind.M347_THIRD_PARTY_OPERATION,
+        BindingSourceKind.PAYABLE_INVOICE,
+    )
     assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal("1")
     assert resolution.binding_values["iva-349-declarante-importe-operaciones"] == Decimal("1000.00")
     assert resolution.source_transaction_ids == ("1" * 64,)
@@ -676,6 +695,7 @@ _DECLARABLE_FACTS: frozenset[str] = frozenset(
         "base_amount",
         "invoice_total_amount",
         "intracommunity_clave",
+        "operation_clave",
         "party_legal_name",
     },
 )
@@ -701,7 +721,7 @@ def test_declarable_fact_contract_covers_every_observation_fact_the_stores_contr
     name, which forces a newly-added declarable field to fail here rather than
     slip past the coverage proofs unnoticed.
     """
-    from cadrumo.domain.calculations.registry.invoice_bindings import InvoiceObservation
+    from ....domain.calculations.registry.invoice_bindings import InvoiceObservation
 
     non_declarable = {
         "invoice_id",
@@ -754,6 +774,7 @@ def test_m349_declarable_facts_are_reachable_on_the_canonical_path(
         "base_amount": Decimal("3000.00"),
         "invoice_total_amount": Decimal("3000.00"),
         "intracommunity_clave": "I",
+        "operation_clave": None,
         "party_legal_name": "Servizi SRL",
     }
 
@@ -833,6 +854,9 @@ def test_m347_declarable_facts_are_reachable_on_the_canonical_path(
     # Pinned for the same reason as the M349 proof above: these are the facts
     # the retired slim store declared, every one of them read off the fixture.
     # ``intracommunity_clave`` is None because M347 is the domestic informativa.
+    # ``operation_clave`` is "B" (entregas): this is an ISSUED invoice with no
+    # travel-agency mediation fact, so it falls through to the ordinary
+    # invoice-direction classification.
     declared_facts = {
         "party_tax_id": "B12345674",
         "country_code": "ES",
@@ -840,6 +864,7 @@ def test_m347_declarable_facts_are_reachable_on_the_canonical_path(
         "base_amount": Decimal("1500.00"),
         "invoice_total_amount": Decimal("1815.00"),
         "intracommunity_clave": None,
+        "operation_clave": "B",
         "party_legal_name": "Cliente M347 SL",
     }
 
@@ -1075,15 +1100,20 @@ def test_capability_parity_m349_declares_every_intracommunity_capability(
     assert len(rows) == 2
 
 
-def test_capability_parity_m347_declares_only_the_domestic_party(
+def test_capability_parity_m347_excludes_the_intracommunity_operations(
     secure_profile: TestRuntimeProfile,
 ) -> None:
-    """M347 counts the domestic party and excludes the intra-community ones.
+    """M347 excludes the intra-community operations, by CLASSIFICATION not country.
 
     The same bucket as the M349 proof, asserted from the other modelo, because
     the two projections share one resolver and a filter error would move a
     record between them rather than losing it -- a shape that a single-modelo
-    proof reads as correct.
+    proof reads as correct. The DE/IT invoices this fixture excludes from
+    M347 carry a genuine intra-community `IvaCategory`
+    (RD 1065/2007 art. 33.2.i), not merely a non-ES country; see
+    `test_m347_declares_an_ordinary_operation_with_a_nonresident_counterparty`
+    for the discrimination this test alone cannot prove -- a non-resident
+    counterparty under an ORDINARY operation still reaches the declaration.
     """
     repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
     repository.save(InvoiceCatalogue.from_invoices(_capability_bucket_invoices(_BUCKET_ID)))
@@ -1100,6 +1130,558 @@ def test_capability_parity_m347_declares_only_the_domestic_party(
 
     assert resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("1")
     assert resolution.binding_values["modelo-347-declarante-importe-total-anual-operaciones"] == Decimal("4000.00")
+
+
+def test_m347_declares_an_ordinary_operation_with_a_nonresident_counterparty(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """A non-resident counterparty under an ordinary operation REACHES M347.
+
+    RD 1065/2007 art. 33.2 is a closed exclusion list whose only
+    residency-adjacent items are the filer's own foreign permanent
+    establishment and operations reported through a coincident informativa --
+    neither covers a genuinely non-resident, non-recapitulativa counterparty.
+    A US customer under an ordinary export sale (zero-rated, not intra-EU) is
+    exactly that case: it must count toward the M347 declarante summary, not
+    vanish silently.
+    """
+    export_sale = _invoice(
+        bucket_id=secure_profile.bucket_id,
+        kind=InvoiceKind.ISSUED,
+        invoice_number="M347-US-2026-001",
+        issued_at=date(2026, 4, 1),
+        counterparty_tax_id="US000000001",
+        counterparty_name="Acme Imports Inc",
+        counterparty_country="US",
+        base_total=Decimal("4000.00"),
+        iva_category=IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+    )
+    repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
+    repository.save(InvoiceCatalogue.from_invoices((export_sale,)))
+
+    resolution = InvoiceCatalogueSourceResolver(invoice_repository=repository).resolve(
+        CalculationSourceContext(
+            bucket_id=secure_profile.bucket_id,
+            modelo="347",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "0A"),
+            revision=_modelo_revision("347", "2011-2024"),
+        ),
+    )
+
+    assert resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("1")
+    assert resolution.binding_values["modelo-347-declarante-importe-total-anual-operaciones"] == Decimal("4000.00")
+
+
+def test_m347_clave_f_declares_a_mediated_sale_ordinary_sale_of_the_same_amount_does_not(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """The discrimination this test exists to prove, not just the classification.
+
+    A travel agency's ISSUED invoice under RD 1619/2012 disposición adicional
+    cuarta declares clave F. An ORDINARY issued invoice of the identical
+    amount, direction and counterparty -- carrying no mediation fact -- must
+    NOT declare F: it falls through to the ordinary clave B. Varying only the
+    mediation fact, nothing else, is what proves the classifier reads the
+    fact rather than the amount or direction.
+    """
+    context = CalculationSourceContext(
+        bucket_id=secure_profile.bucket_id,
+        modelo="347",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "0A"),
+        revision=_modelo_revision("347", "2025-y-siguientes"),
+    )
+    mediated_sale = _invoice(
+        bucket_id=None,
+        kind=InvoiceKind.ISSUED,
+        invoice_number="M347-AGENCY-2026-001",
+        issued_at=date(2026, 5, 1),
+        counterparty_tax_id="B12345674",
+        counterparty_name="Cliente Agencia SL",
+        counterparty_country="ES",
+        base_total=Decimal("3500.00"),
+        iva_category=IvaCategory.DOMESTIC_GENERAL,
+    )
+    mediated_sale = mediated_sale.model_copy(
+        update={"travel_agency_mediation": TravelAgencyMediationType.MEDIATED_SERVICE},
+    )
+    ordinary_sale = _invoice(
+        bucket_id=None,
+        kind=InvoiceKind.ISSUED,
+        invoice_number="M347-ORDINARY-2026-001",
+        issued_at=date(2026, 5, 1),
+        counterparty_tax_id="B12345674",
+        counterparty_name="Cliente Agencia SL",
+        counterparty_country="ES",
+        base_total=Decimal("3500.00"),
+        iva_category=IvaCategory.DOMESTIC_GENERAL,
+    )
+    assert ordinary_sale.travel_agency_mediation is None
+
+    mediated_observation = _m347_invoice_observation(mediated_sale, context=context)
+    ordinary_observation = _m347_invoice_observation(ordinary_sale, context=context)
+
+    assert mediated_observation is not None
+    assert mediated_observation.operation_clave == "F"
+    assert ordinary_observation is not None
+    assert ordinary_observation.operation_clave == "B"
+
+
+def test_m347_clave_g_declares_only_air_transport_purchases_not_other_mediated_purchases(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """Clave G is narrower than F: only air passenger transport, RECEIVED direction.
+
+    A RECEIVED invoice for a mediated but NON-air service (e.g. hostelería)
+    is neither F nor G by the diseño's own text, and must fall through to the
+    ordinary clave A rather than being fabricated into G.
+    """
+    context = CalculationSourceContext(
+        bucket_id=secure_profile.bucket_id,
+        modelo="347",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "0A"),
+        revision=_modelo_revision("347", "2025-y-siguientes"),
+    )
+    air_transport_purchase = _invoice(
+        bucket_id=None,
+        kind=InvoiceKind.RECEIVED,
+        invoice_number="M347-AIR-2026-001",
+        issued_at=date(2026, 5, 2),
+        counterparty_tax_id="B11223344",
+        counterparty_name="Agencia de Viajes SA",
+        counterparty_country="ES",
+        base_total=Decimal("1200.00"),
+        iva_category=IvaCategory.DOMESTIC_GENERAL,
+    )
+    air_transport_purchase = air_transport_purchase.model_copy(
+        update={"travel_agency_mediation": TravelAgencyMediationType.AIR_PASSENGER_TRANSPORT},
+    )
+    non_air_mediated_purchase = _invoice(
+        bucket_id=None,
+        kind=InvoiceKind.RECEIVED,
+        invoice_number="M347-HOTEL-2026-001",
+        issued_at=date(2026, 5, 2),
+        counterparty_tax_id="B11223344",
+        counterparty_name="Agencia de Viajes SA",
+        counterparty_country="ES",
+        base_total=Decimal("1200.00"),
+        iva_category=IvaCategory.DOMESTIC_GENERAL,
+    )
+    non_air_mediated_purchase = non_air_mediated_purchase.model_copy(
+        update={"travel_agency_mediation": TravelAgencyMediationType.MEDIATED_SERVICE},
+    )
+
+    air_observation = _m347_invoice_observation(air_transport_purchase, context=context)
+    non_air_observation = _m347_invoice_observation(non_air_mediated_purchase, context=context)
+
+    assert air_observation is not None
+    assert air_observation.operation_clave == "G"
+    assert non_air_observation is not None
+    assert non_air_observation.operation_clave == "A"
+
+
+def test_m347_filer_declaration_roles_fails_closed_to_empty_for_a_profile_absent_bucket(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """No `UserProfileRecord` was ever seeded for this bucket -- a real absent profile.
+
+    Exercises the real repository's `ProfileNotFoundError` path, not a mock:
+    the loader must fail closed to an empty role set rather than raising, so
+    an M347 filer whose profile is otherwise incomplete or unset still
+    reaches claves A, B, F and G, and simply carries no C/D/E eligibility.
+    """
+    assert _m347_filer_declaration_roles(secure_profile.bucket_id) == frozenset()
+
+
+def test_m347_filer_declaration_roles_reaches_a_role_set_by_the_real_operator_path(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """The role set must be reachable from a REAL persisted profile, not only a test object.
+
+    The role axis arrived with a fail-closed loader but left `declaration_roles`
+    with no operator-input path -- `taxpayer_profile_from_mapping` never read
+    or wrote it, so no real persisted profile could ever carry a non-empty
+    value. This seeds a real `UserProfileRecord` (the wizard-facts shape) and
+    proves the SAME loader the M347 resolver calls resolves a non-empty role
+    set through the real projection, not a directly-constructed
+    `TaxpayerProfile`.
+    """
+    facts = (
+        UserProfileFact(path="identity.tax_id", value="B12345674"),
+        UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+        UserProfileFact(path="iva.regime", value="GENERAL"),
+        UserProfileFact(path="iva.m303_regime_composition", value="general"),
+        UserProfileFact(path="iva.redeme_enrolled", value=False),
+        UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+        UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+        UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+        UserProfileFact(
+            path="taxpayer_type.declaration_roles",
+            value=ThirdPartyDeclarationRole.THIRD_PARTY_FEE_COLLECTOR.value,
+        ),
+    )
+    seed_test_profile_record(
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
+            profile_id=secure_profile.bucket_id,
+            facts=facts,
+        ),
+    )
+
+    roles = _m347_filer_declaration_roles(secure_profile.bucket_id)
+
+    assert roles == frozenset({ThirdPartyDeclarationRole.THIRD_PARTY_FEE_COLLECTOR})
+
+
+def _third_party_fee_collector_profile_facts() -> tuple[UserProfileFact, ...]:
+    return (
+        UserProfileFact(path="identity.tax_id", value="B12345674"),
+        UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+        UserProfileFact(path="iva.regime", value="GENERAL"),
+        UserProfileFact(path="iva.m303_regime_composition", value="general"),
+        UserProfileFact(path="iva.redeme_enrolled", value=False),
+        UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+        UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+        UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+        UserProfileFact(
+            path="taxpayer_type.declaration_roles",
+            value=ThirdPartyDeclarationRole.THIRD_PARTY_FEE_COLLECTOR.value,
+        ),
+    )
+
+
+def test_m347_clave_c_declares_the_beneficiary_not_the_payer_through_the_real_resolver(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """Clave C production reachability: a real filer, a real profile, the real resolver.
+
+    A colegio profesional that collects fees on behalf of its colegiados
+    (RD 1065/2007 art. 31.3) receives a payment from a CLIENT, but the M347
+    row it declares must name the COLEGIADO on whose behalf the fee was
+    collected (art. 34.g), not the client who paid. An ORDINARY invoice from
+    the SAME collecting-entity filer, carrying no beneficiary fact, must NOT
+    become clave C -- the role alone is not sufficient, proving the
+    classifier reads both facts together, not either one.
+    """
+    seed_test_profile_record(
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
+            profile_id=secure_profile.bucket_id,
+            facts=_third_party_fee_collector_profile_facts(),
+        ),
+    )
+    context = CalculationSourceContext(
+        bucket_id=secure_profile.bucket_id,
+        modelo="347",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "0A"),
+        revision=_modelo_revision("347", "2025-y-siguientes"),
+    )
+
+    collection_invoice = _invoice(
+        bucket_id=None,
+        kind=InvoiceKind.ISSUED,
+        invoice_number="M347-COBRO-2026-001",
+        issued_at=date(2026, 5, 1),
+        counterparty_tax_id="C3333333G",
+        counterparty_name="Cliente Pagador SL",
+        counterparty_country="ES",
+        base_total=Decimal("3500.00"),
+        iva_category=IvaCategory.DOMESTIC_GENERAL,
+    )
+    collection_invoice = collection_invoice.model_copy(
+        update={
+            "collected_on_behalf_of_tax_id": "A87654321",
+            "collected_on_behalf_of_name": "Colegiado Beneficiario SL",
+        },
+    )
+    ordinary_invoice = _invoice(
+        bucket_id=None,
+        kind=InvoiceKind.ISSUED,
+        invoice_number="M347-ORDINARIA-2026-001",
+        issued_at=date(2026, 5, 1),
+        counterparty_tax_id="C3333333G",
+        counterparty_name="Cliente Pagador SL",
+        counterparty_country="ES",
+        base_total=Decimal("3500.00"),
+        iva_category=IvaCategory.DOMESTIC_GENERAL,
+    )
+    assert ordinary_invoice.collected_on_behalf_of_tax_id is None
+
+    collection_observation = _m347_invoice_observation(collection_invoice, context=context)
+    ordinary_observation = _m347_invoice_observation(ordinary_invoice, context=context)
+
+    assert collection_observation is not None
+    assert collection_observation.operation_clave == "C"
+    assert collection_observation.party_tax_id == "A87654321"
+    assert collection_observation.party_legal_name == "Colegiado Beneficiario SL"
+    assert ordinary_observation is not None
+    assert ordinary_observation.operation_clave == "B"
+    assert ordinary_observation.party_tax_id == "C3333333G"
+
+
+def test_m347_clave_c_requires_the_filer_role_a_beneficiary_fact_alone_is_not_enough(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """The other half of the AND: a beneficiary fact without the filer's own role does not declare C.
+
+    Guards against a fact injected on an invoice from reclassifying a row
+    for a filer who never declared the collecting-entity role -- the role
+    must be attested on the PROFILE, not merely implied by the invoice.
+    """
+    context = CalculationSourceContext(
+        bucket_id=secure_profile.bucket_id,
+        modelo="347",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "0A"),
+        revision=_modelo_revision("347", "2025-y-siguientes"),
+    )
+    collection_shaped_invoice = _invoice(
+        bucket_id=None,
+        kind=InvoiceKind.ISSUED,
+        invoice_number="M347-COBRO-2026-002",
+        issued_at=date(2026, 5, 1),
+        counterparty_tax_id="C3333333G",
+        counterparty_name="Cliente Pagador SL",
+        counterparty_country="ES",
+        base_total=Decimal("3500.00"),
+        iva_category=IvaCategory.DOMESTIC_GENERAL,
+    )
+    collection_shaped_invoice = collection_shaped_invoice.model_copy(
+        update={
+            "collected_on_behalf_of_tax_id": "A87654321",
+            "collected_on_behalf_of_name": "Colegiado Beneficiario SL",
+        },
+    )
+
+    observation = _m347_invoice_observation(collection_shaped_invoice, context=context)
+
+    assert observation is not None
+    assert observation.operation_clave == "B"
+    assert observation.party_tax_id == "C3333333G"
+
+
+def _public_administration_profile_facts() -> tuple[UserProfileFact, ...]:
+    return (
+        UserProfileFact(path="identity.tax_id", value="Q1234567D"),
+        UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+        UserProfileFact(path="iva.regime", value="GENERAL"),
+        UserProfileFact(path="iva.m303_regime_composition", value="general"),
+        UserProfileFact(path="iva.redeme_enrolled", value=False),
+        UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+        UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+        UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+        UserProfileFact(
+            path="taxpayer_type.declaration_roles",
+            value=ThirdPartyDeclarationRole.PUBLIC_ADMINISTRATION_ENTITY.value,
+        ),
+    )
+
+
+def test_m347_clave_e_declares_a_subvencion_from_a_public_administration_ordinary_payment_does_not(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """Clave E production reachability, proven in both directions.
+
+    A PUBLIC_ADMINISTRATION_ENTITY filer's subvención/ayuda declares clave E
+    (RD 1065/2007 art. 31.2's second paragraph). An ORDINARY payment from the
+    SAME filer of the identical amount, carrying no subvención fact, must
+    NOT become clave E -- it falls through to the ordinary clave A/B
+    classification, proving the role alone is not sufficient.
+    """
+    seed_test_profile_record(
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
+            profile_id=secure_profile.bucket_id,
+            facts=_public_administration_profile_facts(),
+        ),
+    )
+    context = CalculationSourceContext(
+        bucket_id=secure_profile.bucket_id,
+        modelo="347",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "0A"),
+        revision=_modelo_revision("347", "2025-y-siguientes"),
+    )
+
+    subvencion_invoice = _invoice(
+        bucket_id=None,
+        kind=InvoiceKind.ISSUED,
+        invoice_number="M347-SUBVENCION-2026-001",
+        issued_at=date(2026, 5, 1),
+        counterparty_tax_id="C3333333G",
+        counterparty_name="Beneficiario Subvencion SL",
+        counterparty_country="ES",
+        base_total=Decimal("3500.00"),
+        iva_category=IvaCategory.DOMESTIC_GENERAL,
+    )
+    subvencion_invoice = subvencion_invoice.model_copy(update={"is_subvencion_ayuda": True})
+    ordinary_invoice = _invoice(
+        bucket_id=None,
+        kind=InvoiceKind.ISSUED,
+        invoice_number="M347-PAGO-ORDINARIO-2026-001",
+        issued_at=date(2026, 5, 1),
+        counterparty_tax_id="C3333333G",
+        counterparty_name="Beneficiario Subvencion SL",
+        counterparty_country="ES",
+        base_total=Decimal("3500.00"),
+        iva_category=IvaCategory.DOMESTIC_GENERAL,
+    )
+    ordinary_invoice = ordinary_invoice.model_copy(update={"is_subvencion_ayuda": False})
+    assert ordinary_invoice.is_subvencion_ayuda is False
+
+    subvencion_observation = _m347_invoice_observation(subvencion_invoice, context=context)
+    ordinary_observation = _m347_invoice_observation(ordinary_invoice, context=context)
+
+    assert subvencion_observation is not None
+    assert subvencion_observation.operation_clave == "E"
+    assert subvencion_observation.party_tax_id == "C3333333G"
+    assert ordinary_observation is not None
+    assert ordinary_observation.operation_clave == "B"
+
+
+def test_m347_clave_e_requires_the_public_administration_role_a_subvencion_fact_alone_is_not_enough(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """The other half of the AND: a subvención fact without the public-administration role does not declare E."""
+    context = CalculationSourceContext(
+        bucket_id=secure_profile.bucket_id,
+        modelo="347",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "0A"),
+        revision=_modelo_revision("347", "2025-y-siguientes"),
+    )
+    subvencion_shaped_invoice = _invoice(
+        bucket_id=None,
+        kind=InvoiceKind.ISSUED,
+        invoice_number="M347-SUBVENCION-2026-002",
+        issued_at=date(2026, 5, 1),
+        counterparty_tax_id="C3333333G",
+        counterparty_name="Beneficiario Subvencion SL",
+        counterparty_country="ES",
+        base_total=Decimal("3500.00"),
+        iva_category=IvaCategory.DOMESTIC_GENERAL,
+    )
+    subvencion_shaped_invoice = subvencion_shaped_invoice.model_copy(update={"is_subvencion_ayuda": True})
+
+    observation = _m347_invoice_observation(subvencion_shaped_invoice, context=context)
+
+    assert observation is not None
+    assert observation.operation_clave == "B"
+    assert observation.party_tax_id == "C3333333G"
+
+
+def _statutory_information_duty_profile_facts() -> tuple[UserProfileFact, ...]:
+    return (
+        UserProfileFact(path="identity.tax_id", value="B12345674"),
+        UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+        UserProfileFact(path="iva.regime", value="GENERAL"),
+        UserProfileFact(path="iva.m303_regime_composition", value="general"),
+        UserProfileFact(path="iva.redeme_enrolled", value=False),
+        UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+        UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+        UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+        UserProfileFact(
+            path="taxpayer_type.declaration_roles",
+            value=ThirdPartyDeclarationRole.STATUTORY_INFORMATION_DUTY_ENTITY.value,
+        ),
+    )
+
+
+def test_m347_clave_d_declares_an_acquisition_outside_activity_the_same_activity_purchase_does_not(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """Clave D production reachability: a mixed-activity filer, proven in both directions.
+
+    A statutory-information-duty filer (e.g. a public body running a genuine
+    side business) makes two acquisitions of the SAME amount: one al margen
+    de su actividad empresarial (clave D), one WITHIN it (ordinary clave A).
+    Only the transaction-level fact distinguishes them -- the role alone
+    would misclassify the second as D too.
+    """
+    seed_test_profile_record(
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
+            profile_id=secure_profile.bucket_id,
+            facts=_statutory_information_duty_profile_facts(),
+        ),
+    )
+    context = CalculationSourceContext(
+        bucket_id=secure_profile.bucket_id,
+        modelo="347",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "0A"),
+        revision=_modelo_revision("347", "2025-y-siguientes"),
+    )
+
+    outside_activity_purchase = _invoice(
+        bucket_id=None,
+        kind=InvoiceKind.RECEIVED,
+        invoice_number="M347-AL-MARGEN-2026-001",
+        issued_at=date(2026, 5, 1),
+        counterparty_tax_id="C3333333G",
+        counterparty_name="Proveedor Al Margen SL",
+        counterparty_country="ES",
+        base_total=Decimal("3500.00"),
+        iva_category=IvaCategory.DOMESTIC_GENERAL,
+    )
+    outside_activity_purchase = outside_activity_purchase.model_copy(update={"outside_economic_activity": True})
+    within_activity_purchase = _invoice(
+        bucket_id=None,
+        kind=InvoiceKind.RECEIVED,
+        invoice_number="M347-DENTRO-ACTIVIDAD-2026-001",
+        issued_at=date(2026, 5, 1),
+        counterparty_tax_id="C3333333G",
+        counterparty_name="Proveedor Al Margen SL",
+        counterparty_country="ES",
+        base_total=Decimal("3500.00"),
+        iva_category=IvaCategory.DOMESTIC_GENERAL,
+    )
+    within_activity_purchase = within_activity_purchase.model_copy(update={"outside_economic_activity": False})
+
+    outside_observation = _m347_invoice_observation(outside_activity_purchase, context=context)
+    within_observation = _m347_invoice_observation(within_activity_purchase, context=context)
+
+    assert outside_observation is not None
+    assert outside_observation.operation_clave == "D"
+    assert outside_observation.party_tax_id == "C3333333G"
+    assert within_observation is not None
+    assert within_observation.operation_clave == "A"
+
+
+def test_m347_clave_d_requires_the_filer_role_the_fact_alone_is_not_enough(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """The other half of the AND: the al-margen fact without any of D's four roles does not declare D."""
+    context = CalculationSourceContext(
+        bucket_id=secure_profile.bucket_id,
+        modelo="347",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "0A"),
+        revision=_modelo_revision("347", "2025-y-siguientes"),
+    )
+    outside_activity_shaped_purchase = _invoice(
+        bucket_id=None,
+        kind=InvoiceKind.RECEIVED,
+        invoice_number="M347-AL-MARGEN-2026-002",
+        issued_at=date(2026, 5, 1),
+        counterparty_tax_id="C3333333G",
+        counterparty_name="Proveedor Al Margen SL",
+        counterparty_country="ES",
+        base_total=Decimal("3500.00"),
+        iva_category=IvaCategory.DOMESTIC_GENERAL,
+    )
+    outside_activity_shaped_purchase = outside_activity_shaped_purchase.model_copy(
+        update={"outside_economic_activity": True},
+    )
+
+    observation = _m347_invoice_observation(outside_activity_shaped_purchase, context=context)
+
+    assert observation is not None
+    assert observation.operation_clave == "A"
+    assert observation.party_tax_id == "C3333333G"
 
 
 @pytest.mark.parametrize(("modelo_id", "period"), [("303", "1T"), ("390", "0A")])
@@ -1506,3 +2088,80 @@ def test_an_unconverted_foreign_invoice_is_excluded_but_reported(
     # The advisory has to say what to DO about it. An operator who cannot act on
     # the message is no better off than one who never saw it.
     assert reported[0].remedy, "the advisory names the problem but not the remedy"
+
+
+def test_m347_role_fact_advisories_fires_only_for_a_role_carrying_filer_with_the_fact_unset(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """The advisory is proportionate: it never fires for a filer with no clave D/E role."""
+    context = CalculationSourceContext(
+        bucket_id=secure_profile.bucket_id,
+        modelo="347",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "0A"),
+        revision=_modelo_revision("347", "2025-y-siguientes"),
+    )
+    unrelated_purchase = _invoice(
+        bucket_id=None,
+        kind=InvoiceKind.RECEIVED,
+        invoice_number="M347-SIN-ROL-2026-001",
+        issued_at=date(2026, 5, 1),
+        counterparty_tax_id="C3333333G",
+        counterparty_name="Proveedor SL",
+        counterparty_country="ES",
+        base_total=Decimal("3500.00"),
+        iva_category=IvaCategory.DOMESTIC_GENERAL,
+    )
+
+    diagnostics = _m347_role_fact_advisories((unrelated_purchase,), context=context, resolver_id="invoice_catalogue")
+
+    assert diagnostics == ()
+
+
+def test_m347_role_fact_advisories_fires_for_an_unset_clave_d_fact_and_not_once_declared(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """A D-role filer's RECEIVED invoice with the fact undeclared surfaces an advisory; declaring it clears it."""
+    seed_test_profile_record(
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
+            profile_id=secure_profile.bucket_id,
+            facts=_statutory_information_duty_profile_facts(),
+        ),
+    )
+    context = CalculationSourceContext(
+        bucket_id=secure_profile.bucket_id,
+        modelo="347",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "0A"),
+        revision=_modelo_revision("347", "2025-y-siguientes"),
+    )
+    undeclared_purchase = _invoice(
+        bucket_id=None,
+        kind=InvoiceKind.RECEIVED,
+        invoice_number="M347-SIN-DECLARAR-2026-001",
+        issued_at=date(2026, 5, 1),
+        counterparty_tax_id="C3333333G",
+        counterparty_name="Proveedor SL",
+        counterparty_country="ES",
+        base_total=Decimal("3500.00"),
+        iva_category=IvaCategory.DOMESTIC_GENERAL,
+    )
+    declared_purchase = undeclared_purchase.model_copy(update={"outside_economic_activity": False})
+
+    undeclared_diagnostics = _m347_role_fact_advisories(
+        (undeclared_purchase,),
+        context=context,
+        resolver_id="invoice_catalogue",
+    )
+    declared_diagnostics = _m347_role_fact_advisories(
+        (declared_purchase,),
+        context=context,
+        resolver_id="invoice_catalogue",
+    )
+
+    assert len(undeclared_diagnostics) == 1
+    assert undeclared_diagnostics[0].reason == "unclassified_declarant_role_fact"
+    assert undeclared_diagnostics[0].source_ref == f"invoice:{undeclared_purchase.invoice_id}"
+    assert undeclared_diagnostics[0].remedy
+    assert declared_diagnostics == ()

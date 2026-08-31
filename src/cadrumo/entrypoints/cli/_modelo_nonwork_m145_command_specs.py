@@ -48,7 +48,9 @@ MODELO_NONWORK_M145_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="period",
                 declarations=("--period",),
-                value=ValueContract(DeferredTarget("cadrumo.application.modelo.m145_communication_period", "M145CommunicationPeriod")),
+                value=ValueContract(
+                    DeferredTarget("cadrumo.application.modelo.m145_communication_period", "M145CommunicationPeriod")
+                ),
                 default=ParameterDefault.value("comunicacion"),
                 help_key=TranslationKey("cli.app.modelo.m145.period_help"),
                 multiple=False,

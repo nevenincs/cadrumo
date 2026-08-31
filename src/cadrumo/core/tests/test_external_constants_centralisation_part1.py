@@ -226,17 +226,21 @@ def test_default_currency_consumers_alias_core_constant() -> None:
 
 
 def test_classified_by_manual_consumers_alias_core_constant() -> None:
-    """Application/domain consumers import or re-export ``CLASSIFIED_BY_MANUAL`` from core.
+    """Application/domain consumers bind ``CLASSIFIED_BY_MANUAL`` from core.
 
-    The application layer must not define a local copy; it must import the
-    canonical constant from ``cadrumo.core.external_constants`` and expose it
-    through the package ``__init__``.
+    The application layer must not define a local copy; every consuming module
+    must import the canonical constant from ``cadrumo.core.external_constants``
+    so the identity check below cannot pass against a shadow.
+
+    The owning package ``__init__`` is deliberately NOT asserted: package
+    namespaces are inert and may not re-export project symbols, so a namespace
+    assertion here would demand exactly what the import-centralization boundary
+    forbids. Consumers are enrolled by their defining module instead.
     """
 
     from ..external_constants import CLASSIFIED_BY_MANUAL
 
     for module_name, message in (
-        ("cadrumo.application.ledger", "cadrumo.application.ledger must expose CLASSIFIED_BY_MANUAL"),
         ("cadrumo.application.ledger.models", "_models must import CLASSIFIED_BY_MANUAL from core"),
         (
             "cadrumo.domain.transactions._service",
@@ -312,22 +316,22 @@ def test_export_mime_consumers_alias_core_constants() -> None:
             "_declarations must import JSON_MIME_TYPE under the alias _JSON_MIME_TYPE",
         ),
         (
-            "cadrumo.application.export._tabular",
+            "cadrumo.application.export.tabular",
             "_CSV_MIME_TYPE",
             "CSV_MIME_TYPE",
-            "_tabular must import CSV_MIME_TYPE under the alias _CSV_MIME_TYPE",
+            "tabular must import CSV_MIME_TYPE under the alias _CSV_MIME_TYPE",
         ),
         (
-            "cadrumo.application.export._tabular",
+            "cadrumo.application.export.tabular",
             "_JSONL_MIME_TYPE",
             "JSONL_MIME_TYPE",
-            "_tabular must import JSONL_MIME_TYPE under the alias _JSONL_MIME_TYPE",
+            "tabular must import JSONL_MIME_TYPE under the alias _JSONL_MIME_TYPE",
         ),
         (
-            "cadrumo.application.export._tabular",
+            "cadrumo.application.export.tabular",
             "_XLSX_MIME_TYPE",
             "XLSX_MIME_TYPE",
-            "_tabular must import XLSX_MIME_TYPE under the alias _XLSX_MIME_TYPE",
+            "tabular must import XLSX_MIME_TYPE under the alias _XLSX_MIME_TYPE",
         ),
     ):
         _assert_module_constant_identity(
@@ -338,7 +342,7 @@ def test_export_mime_consumers_alias_core_constants() -> None:
         )
 
     declarations = importlib.import_module("cadrumo.adapters.outbound.aeat.sede._declarations")
-    tabular = importlib.import_module("cadrumo.application.export._tabular")
+    tabular = importlib.import_module("cadrumo.application.export.tabular")
     assert declarations._JSON_MIME_TYPE == "application/json"
     assert tabular._CSV_MIME_TYPE == "text/csv"
 
@@ -353,7 +357,7 @@ def test_no_bare_json_or_csv_mime_literals_in_exporters(source_tree_ast: Mapping
     offenders: list[str] = []
     for relative_path, literal, replacement in (
         ("src/cadrumo/adapters/outbound/aeat/sede/_declarations.py", "application/json", "_JSON_MIME_TYPE"),
-        ("src/cadrumo/application/export/_tabular.py", "text/csv", "_CSV_MIME_TYPE"),
+        ("src/cadrumo/application/export/tabular.py", "text/csv", "_CSV_MIME_TYPE"),
     ):
         offenders.extend(
             _string_literal_offenders(

@@ -345,7 +345,7 @@ def _text_classifier_transport() -> str:
     from ...domain.transactions import prompt_spec_with_every_spending_category
     from ...llm import LocalTextLLMClassifier
 
-    spec = prompt_spec_with_every_spending_category()
+    spec = prompt_spec_with_every_spending_category(year=2025)
     return _transport_of(LocalTextLLMClassifier(spec=spec, model="qwen2.5:3b").decided_by)
 
 
@@ -353,7 +353,7 @@ def _vision_classifier_transport() -> str:
     from ...domain.transactions import prompt_spec_with_every_spending_category
     from ...llm import LocalVisionLLMClassifier
 
-    spec = prompt_spec_with_every_spending_category()
+    spec = prompt_spec_with_every_spending_category(year=2025)
     return _transport_of(LocalVisionLLMClassifier(spec=spec, model="qwen2.5vl:3b").decided_by)
 
 

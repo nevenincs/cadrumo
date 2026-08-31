@@ -11,6 +11,42 @@ profile:
       el vostre territori.
     not_configured: No hi ha cap perfil de residència fiscal configurat per a RENTA.
       Executeu `aeat config profile edit NAME --tax-residence-ccaa <ccaa>` per configurar-lo.
+  journey:
+    action:
+      next: Següent
+      previous: Anterior
+    get_data:
+      placeholder: Les accions d'origen encara no estan disponibles en aquest recorregut.
+    ready:
+      blocked: 'No està llest: bloquejat pels camps indicats a Obligatori.'
+      summary: Preparació per presentar
+    required:
+      none_missing: No falta cap dada obligatòria.
+      show_not_applicable: Mostra els no aplicables
+      show_optional: Mostra els opcionals
+    review:
+      placeholder: La revisió de procedència i conflictes encara no està disponible
+        en aquest recorregut.
+    source:
+      censal_review:
+        action: Revisa el cens
+        description: Llegeix el registre censal del contribuent i revisa els canvis
+          proposats abans d'adoptar-los.
+        title: Cens de l'AEAT
+      credential_requirement:
+        held: Credencial de l'AEAT registrada
+        missing: Requereix autenticació amb l'AEAT (no configurada)
+      filed_history:
+        action: Obtenir historial
+        description: Obtén l'historial de declaracions del contribuent a l'AEAT per
+          traslladar les dades ja declarades.
+        title: Declaracions anteriors
+    stage:
+      get_data: Obtenir dades
+      overview: Resum
+      ready: Llest
+      required: Obligatori
+      review: Revisió
   keys:
     description: Claus de configuració del perfil i les seves descripcions
     tax:
@@ -30,18 +66,48 @@ profile:
       attribution_entity_socios:
         base_imponible_assigned:
           label: Base imposable atribuïda al soci
+        clave:
+          label: Clau del rendiment (Model 184)
+        clave_declarado:
+          label: Clau de titularitat de l'immoble
+        codigo_provincia:
+          label: Codi de província
         country_of_residence:
           label: País de residència (només no resident sense establiment permanent)
+        dias_arrendamiento:
+          label: Dies d'arrendament de l'immoble
+        dias_miembro:
+          label: Nombre de dies com a membre
+        domicilio_fiscal:
+          label: Domicili fiscal del membre
+        miembro_a_31_diciembre:
+          label: Membre a 31 de desembre
         name:
           label: Nom del soci
+        naturaleza_inmueble:
+          label: Naturalesa de l'immoble
         nif:
           label: NIF del soci
         participe_clave:
           label: Clau tipus de partícip
+        porcentaje_titularidad_inmueble:
+          label: Percentatge de titularitat de l'immoble
+        reduccion:
+          label: Reducció aplicable al rendiment
+        referencia_catastral:
+          label: Referència cadastral
+        rendimiento_neto_minorado_agricola_eo:
+          label: Rendiment net minorat agrícola (estimació objectiva)
+        rendimiento_neto_previo_eo:
+          label: Rendiment net previ (estimació objectiva)
         role:
           label: Paper del membre
         share_pct:
           label: Percentatge de participació
+        situacion_inmueble:
+          label: Situació de l'immoble
+        subclave:
+          label: Subclau del rendiment (Model 184)
       attribution_received:
         base_imponible_attributed:
           label: Base imposable atribuïda al membre
@@ -299,6 +365,8 @@ profile:
       taxpayer_type:
         country_of_fiscal_residence:
           label: País de residència fiscal
+        declaration_roles:
+          label: Rols declarants de tercers (model 347)
         entity_type:
           label: Tipus de contribuent
         fiscal_residency:

@@ -50,11 +50,13 @@ from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.modelos import (
     CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY,
     CalculationRevisionAggregateContext,
-    CalculationRevisionCatalogue,
     CalculationRevisionPersistenceError,
-    assert_revision_snapshot_evidence_coverage,
-    raise_catalogue_integrity_error,
 )
+from ....domain.modelos.calculation_revision import (
+    CalculationRevisionCatalogue,
+    assert_revision_snapshot_evidence_coverage,
+)
+from ....domain.modelos.errors import raise_catalogue_integrity_error
 from ..storage import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE, secure_object_repository_for_bucket
 from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
 

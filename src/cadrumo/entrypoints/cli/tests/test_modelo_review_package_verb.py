@@ -11,20 +11,15 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
-from cadrumo.application.workflow.persistence import workflow_state_repository
-
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....application.workflow.persistence import workflow_state_repository
 from ....core import CasillaId, Period, validated_casilla_id
-from ....domain.modelos import (
+from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id, upsert_calculation_revision, upsert_work_unit
+from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    ModeloCode,
-    WorkUnit,
     derive_calculation_revision_id,
-    derive_work_unit_id,
-    upsert_calculation_revision,
-    upsert_work_unit,
 )
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload

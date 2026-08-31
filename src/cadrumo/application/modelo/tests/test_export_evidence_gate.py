@@ -8,18 +8,15 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation
-
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....core import CasillaId, Period, validated_casilla_id
+from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.modelos import (
+from ....domain.modelos import LedgerFilingSnapshot, derive_work_unit_id, upsert_calculation_revision
+from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    LedgerFilingSnapshot,
     derive_calculation_revision_id,
-    derive_work_unit_id,
-    upsert_calculation_revision,
 )
 from ....tests import general_m303_filing_evidence
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture

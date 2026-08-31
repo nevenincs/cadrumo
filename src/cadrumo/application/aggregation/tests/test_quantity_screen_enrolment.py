@@ -26,9 +26,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.ledger_binding_resolution import screened_quantity_families
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.tests.runtime_profile_fixture import (
@@ -37,6 +34,8 @@ from ....adapters.persistence.tests.runtime_profile_fixture import (
 from ....core import Period
 from ....domain.bienes_inversion import BienesInversionIvaRegister
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.quantity_screen_enrolment import screened_quantity_families
+from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.iva import IvaCategory
 from ....domain.transactions import (
     BusinessClassification,

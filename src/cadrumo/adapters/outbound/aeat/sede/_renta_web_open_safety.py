@@ -101,7 +101,7 @@ FORBIDDEN_URL_FRAGMENTS: frozenset[str] = frozenset(
 # match. If a future safe button trips the denylist, audit it FIRST and
 # add an explicit allow entry here only after verifying the action is
 # read-only / ephemeral.
-ALLOWED_CLICK_OVERRIDES: frozenset[str] = frozenset()
+ALLOWED_CLICK_OVERRIDES: frozenset[str] = frozenset[str]()
 
 
 def _normalise(text: str) -> str:

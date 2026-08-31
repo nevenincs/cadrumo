@@ -12,12 +12,12 @@ from uuid import UUID
 import pytest
 
 from ....adapters.persistence.storage import master_key
-from ....adapters.persistence.storage.custody import (
+from ....adapters.persistence.storage.custody.records import (
     ProfileCustodyEnvelope,
     ProfileCustodyKdfParameters,
     ProfileCustodyWrappedDek,
-    create_profile_custody_sentinel,
 )
+from ....adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
 from ....application.state_projection import _build_active_profile
 from ....application.user_profile.capsule_record import ProfileRecordSession
 from ....application.user_profile.lifecycle import ProfileCapsuleLifecycle
@@ -171,7 +171,11 @@ def test_pointer_to_malformed_current_marker_is_reported_as_capsule_integrity_no
 
     assert before.status == "capsule_unreadable"
     assert before.repairable_by_clearing_pointer is True
-    assert "ProfileCustodyRecordError" in before.profile_record_error
+    # The application-owned integrity error, not the adapter's own
+    # ``ProfileCustodyRecordError``. Discovery reaches this module through the
+    # custody PORT, which translates the persistence failure at the boundary
+    # rather than letting an adapter type surface in an application report.
+    assert "ProfileCustodyRecordIntegrityError" in before.profile_record_error
     assert repaired.cleared_pointer is True
     assert repaired.after is not None
     assert repaired.after.status == "capsule_unreadable"

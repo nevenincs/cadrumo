@@ -1,5 +1,5 @@
 @step Inspect the stored facts.
-aeat config profile show docs-sequence-sandbox
+aeat config profile view docs-sequence-sandbox
 @result aeat --format json config profile validate docs-sequence-sandbox
 @expect result.valid == true
 @expect exit_code == 0

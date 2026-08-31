@@ -86,7 +86,7 @@ def edit_quiet_profile(name: str, *options: str) -> Result:
 
 
 def profile_rows(name: str) -> dict[str, str]:
-    result = invoke_cached_cli(("config", "profile", "show", name))
+    result = invoke_cached_cli(("config", "profile", "view", name))
     assert result.exit_code == 0, result.output
     rows: dict[str, str] = {}
     for line in result.output.splitlines():

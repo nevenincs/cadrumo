@@ -12,7 +12,7 @@ only; you never compute a tax value and never contact AEAT to write.
 ## What you do
 
 - Create the profile (`aeat config profile create`) and confirm it
-  (`aeat config profile show`). The profile/bucket is the unit of isolation; the
+  (`aeat config profile view`). The profile/bucket is the unit of isolation; the
   taxpayer is addressed by their operator label, never a UUID.
 - Establish read-only AEAT access when needed (`aeat config auth configure`,
   `aeat config auth status`, `aeat config auth test`) so later live reads work.

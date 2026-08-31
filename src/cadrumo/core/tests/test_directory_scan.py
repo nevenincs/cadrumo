@@ -393,8 +393,12 @@ def test_the_primitive_is_owned_by_its_public_defining_module() -> None:
     """The inert core namespace cannot become a second scan authority."""
     core = importlib.import_module("cadrumo.core")
 
-    assert inspect.getmodule(scan_directory).__name__ == "cadrumo.core.directory_scan"
-    assert inspect.getmodule(iter_directory).__name__ == "cadrumo.core.directory_scan"
+    scan_directory_module = inspect.getmodule(scan_directory)
+    iter_directory_module = inspect.getmodule(iter_directory)
+    assert scan_directory_module is not None
+    assert iter_directory_module is not None
+    assert scan_directory_module.__name__ == "cadrumo.core.directory_scan"
+    assert iter_directory_module.__name__ == "cadrumo.core.directory_scan"
     assert DirectoryEntryKind.__module__ == "cadrumo.core.directory_scan"
     assert not {"scan_directory", "iter_directory", "DirectoryEntryKind"} & set(core.__all__)
     for name in ("scan_directory", "iter_directory", "DirectoryEntryKind"):

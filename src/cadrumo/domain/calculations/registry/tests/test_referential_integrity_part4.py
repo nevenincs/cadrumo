@@ -8,6 +8,7 @@ import pytest
 
 from .....core import CasillaId, Period, validated_casilla_id
 from ...export_field_kind import CasillaFieldKind
+from .._validate import RegistryValidator
 from ..errors import RegistryValidationError
 from ..schema import (
     ApplicationLinkDefinition,
@@ -28,7 +29,6 @@ from ..schema_exports import (
 from ..schema_formula import FormulaExpression
 from ..schema_input_kind import InputKind
 from ..schema_surfaces import RelationDefinition
-from ..validate import RegistryValidator
 from ._referential_integrity_support import (
     REFERENCE_LEGAL_ID,
     REFERENCE_SOURCE_ID,

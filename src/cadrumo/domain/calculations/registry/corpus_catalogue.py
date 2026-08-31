@@ -21,12 +21,11 @@ from datetime import date
 from pathlib import Path
 from typing import Final
 
-from cadrumo.domain.calculations.registry.schema_references import SourceReference
-
 from ....core.hashing import hash_file
 from ....core.resources import resolve_companion_binary
 from .errors import RegistryValidationError
 from .legal import _PROVISION_SUFFIXED_FILENAME
+from .schema_references import SourceReference
 from .static_inspection import GeneratedArtifactSource
 
 #: The one corpus tree carrying the excerpt/full-text duality
@@ -171,9 +170,7 @@ def resolve_record_design_binary(
     if source.applies_from is None:
         raise RegistryValidationError(f"record-design source {source_ref!r} does not declare applies_from")
 
-    year_start = date(filing_year, 1, 1)
-    year_end = date(filing_year, 12, 31)
-    if source.applies_from > year_end or (source.applies_to is not None and source.applies_to < year_start):
+    if not source.applies_across(date(filing_year, 1, 1), date(filing_year, 12, 31)):
         raise RegistryValidationError(
             f"record-design source {source_ref!r} does not apply to filing year {filing_year}",
         )

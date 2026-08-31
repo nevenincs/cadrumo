@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import ast
 import json
+import subprocess
 from collections import defaultdict
 from pathlib import Path
 from typing import Final
@@ -29,13 +30,36 @@ CATEGORIES: Final = (
 OUTPUT_PATH: Final = ROOT / "dev/quality/registry_authority_consumer_census.v1.json"
 
 
+def _tracked_paths() -> frozenset[str]:
+    """Return the repository-tracked paths the census may count.
+
+    A census of repository content must read what the repository carries.
+    A gitignored mirror of the source tree, left behind by an interrupted
+    benchmark run, once contributed 4,478 phantom consumer paths to the
+    committed artifact -- entries no reviewer could act on and no other
+    checkout could reproduce.  Untracked peer scratch moving a shared
+    census number is the same defect in a quieter form.
+    """
+    listed = subprocess.run(  # fixed read-only git subcommand assembled only by this module
+        ("git", "ls-files", "-z", "--", "src", "dev", "docs"),  # noqa: S607  # repository tool is fixed
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout
+    return frozenset(entry for entry in listed.split(chr(0)) if entry)
+
+
 def _files() -> tuple[Path, ...]:
+    tracked = _tracked_paths()
     paths: list[Path] = []
     for root_name in ("src", "dev", "docs"):
         paths.extend(
             path
             for path in (ROOT / root_name).rglob("*")
-            if path.is_file() and path.suffix in {".py", ".pyi", ".md", ".rst"}
+            if path.is_file()
+            and path.suffix in {".py", ".pyi", ".md", ".rst"}
+            and path.relative_to(ROOT).as_posix() in tracked
         )
     return tuple(sorted(paths))
 

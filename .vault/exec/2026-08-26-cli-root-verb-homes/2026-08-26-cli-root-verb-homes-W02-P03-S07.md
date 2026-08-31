@@ -1,0 +1,169 @@
+---
+tags:
+  - '#exec'
+  - '#cli-root-verb-homes'
+date: '2026-08-28'
+modified: '2026-08-28'
+body_schema: 'body-v2'
+body_hash: 'sha256:4bab221df91d672125a13ae2a9eb0b712f908d4eb7c93596054926fdbfaa0cba'
+step_id: 'S07'
+related:
+  - "[[2026-08-26-cli-root-verb-homes-plan]]"
+---
+
+# Replace facade imports with canonical defining-module imports in the moved handlers
+
+## Scope
+
+- `src/cadrumo/entrypoints/cli/`
+
+## Changes
+
+- `R` `src/cadrumo/adapters/outbound/google/_active_profile.py` -> `src/cadrumo/adapters/outbound/google/active_profile.py`
+- `R` `src/cadrumo/adapters/outbound/google/_calc_sheets_pull.py` -> `src/cadrumo/adapters/outbound/google/calc_sheets_pull.py`
+- `R` `src/cadrumo/adapters/outbound/google/_document_link_resolver.py` -> `src/cadrumo/adapters/outbound/google/document_link_resolver.py`
+- `R` `src/cadrumo/application/calculations/_cross_period_clean_state.py` -> `src/cadrumo/application/calculations/cross_period_clean_state.py`
+- `R` `src/cadrumo/application/calculations/_cross_period_models.py` -> `src/cadrumo/application/calculations/cross_period_models.py`
+- `R` `src/cadrumo/application/calculations/_iva_compensation_history.py` -> `src/cadrumo/application/calculations/iva_compensation_history.py`
+- `R` `src/cadrumo/application/calculations/_iva_wallet_balance.py` -> `src/cadrumo/application/calculations/iva_wallet_balance.py`
+- `R` `src/cadrumo/application/calculations/_m111_no_retenciones.py` -> `src/cadrumo/application/calculations/m111_no_retenciones.py`
+- `R` `src/cadrumo/application/calculations/_observations_repository.py` -> `src/cadrumo/application/calculations/observations_repository.py`
+- `R` `src/cadrumo/application/calculations/_registry_preconditions.py` -> `src/cadrumo/application/calculations/registry_preconditions.py`
+- `R` `src/cadrumo/application/calculations/_row_set_assembly.py` -> `src/cadrumo/application/calculations/row_set_assembly.py`
+- `R` `src/cadrumo/application/export/_google_operation.py` -> `src/cadrumo/application/export/google_operation.py`
+- `R` `src/cadrumo/application/export/_tabular.py` -> `src/cadrumo/application/export/tabular.py`
+- `R` `src/cadrumo/application/storage/calc_sheets/_parity_harness.py` -> `src/cadrumo/application/storage/calc_sheets/parity_harness.py`
+- `M` `dev/audit/vulture_whitelist.py`
+- `M` `dev/source_connectivity/tests/test_discovery.py`
+- `M` `dev/source_connectivity/tests/test_m182_deferral.py`
+- `M` `dev/source_connectivity/tests/test_m232_deferral.py`
+- `M` `src/cadrumo/adapters/outbound/aeat/sede/_declarations_observations.py`
+- `M` `src/cadrumo/adapters/outbound/google/__init__.py`
+- `M` `src/cadrumo/adapters/outbound/google/_api.py`
+- `M` `src/cadrumo/adapters/outbound/google/_calc_sheets_apply.py`
+- `M` `src/cadrumo/adapters/outbound/google/errors.py`
+- `M` `src/cadrumo/adapters/outbound/google/tests/drive_media_server.py`
+- `M` `src/cadrumo/adapters/outbound/google/tests/test_active_profile.py`
+- `M` `src/cadrumo/adapters/outbound/google/tests/test_auth_preconditions.py`
+- `M` `src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_pull_typing.py`
+- `M` `src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_typed_outcomes.py`
+- `M` `src/cadrumo/adapters/outbound/google/tests/test_compute_from_pull.py`
+- `M` `src/cadrumo/adapters/outbound/google/tests/test_document_link_resolve_roundtrip.py`
+- `M` `src/cadrumo/adapters/outbound/google/tests/test_document_link_resolver.py`
+- `M` `src/cadrumo/adapters/outbound/google/tests/test_drive_folder_bulk_fetch_roundtrip.py`
+- `M` `src/cadrumo/adapters/outbound/google/tests/test_drive_folder_listing.py`
+- `M` `src/cadrumo/adapters/outbound/google/tests/test_package_module_allowlist.py`
+- `M` `src/cadrumo/adapters/outbound/google/tests/test_pull_adapter_helpers.py`
+- `M` `src/cadrumo/adapters/outbound/google/tests/test_pull_result_roundtrip.py`
+- `M` `src/cadrumo/adapters/outbound/google/tests/test_verify_pull_coverage.py`
+- `M` `src/cadrumo/adapters/outbound/google/tests/test_worksheet_export_pull_roundtrip.py`
+- `M` `src/cadrumo/adapters/outbound/storage/_factory.py`
+- `M` `src/cadrumo/adapters/persistence/profile/tests/test_every_composing_write_is_declared.py`
+- `M` `src/cadrumo/application/calculations/__init__.py`
+- `M` `src/cadrumo/application/calculations/_bienes_inversion_regularizacion.py`
+- `M` `src/cadrumo/application/calculations/_binding_prefill.py`
+- `M` `src/cadrumo/application/calculations/_iva_compensation_annual_partition.py`
+- `M` `src/cadrumo/application/calculations/_iva_wallet_reconciliation.py`
+- `M` `src/cadrumo/application/calculations/_m303_carry_ingress.py`
+- `M` `src/cadrumo/application/calculations/_multi_year.py`
+- `M` `src/cadrumo/application/calculations/_per_grupo_member_keys.py`
+- `M` `src/cadrumo/application/calculations/_ports.py`
+- `M` `src/cadrumo/application/calculations/_prorrata_regularizacion.py`
+- `M` `src/cadrumo/application/calculations/_relation_prefill.py`
+- `M` `src/cadrumo/application/calculations/_revision_carry_gate.py`
+- `M` `src/cadrumo/application/calculations/errors.py`
+- `M` `src/cadrumo/application/calculations/tests/_multi_year_roundtrip_support.py`
+- `M` `src/cadrumo/application/calculations/tests/_observation_lookup_support.py`
+- `M` `src/cadrumo/application/calculations/tests/test_bienes_inversion_regularizacion.py`
+- `M` `src/cadrumo/application/calculations/tests/test_binding_prefill.py`
+- `M` `src/cadrumo/application/calculations/tests/test_calculation_refusal_message_key_only.py`
+- `M` `src/cadrumo/application/calculations/tests/test_cross_period_evidence_identity_contract.py`
+- `M` `src/cadrumo/application/calculations/tests/test_cross_period_first_year_fractional.py`
+- `M` `src/cadrumo/application/calculations/tests/test_decision_b_adversarial.py`
+- `M` `src/cadrumo/application/calculations/tests/test_detail_record_round_trip.py`
+- `M` `src/cadrumo/application/calculations/tests/test_grouping_dispatch_coverage.py`
+- `M` `src/cadrumo/application/calculations/tests/test_iva_compensation_annual_summary.py`
+- `M` `src/cadrumo/application/calculations/tests/test_iva_compensation_artefact_digest.py`
+- `M` `src/cadrumo/application/calculations/tests/test_iva_compensation_filed_observations.py`
+- `M` `src/cadrumo/application/calculations/tests/test_iva_compensation_history.py`
+- `M` `src/cadrumo/application/calculations/tests/test_iva_compensation_provenance_population.py`
+- `M` `src/cadrumo/application/calculations/tests/test_iva_compensation_provenance_roundtrip.py`
+- `M` `src/cadrumo/application/calculations/tests/test_iva_compensation_relation_prefill.py`
+- `M` `src/cadrumo/application/calculations/tests/test_iva_wallet_reconciliation.py`
+- `M` `src/cadrumo/application/calculations/tests/test_m303_carry_ingress.py`
+- `M` `src/cadrumo/application/calculations/tests/test_modelo_036_censal_continuity.py`
+- `M` `src/cadrumo/application/calculations/tests/test_modelo_100_base_negativa_general_compensation.py`
+- `M` `src/cadrumo/application/calculations/tests/test_modelo_100_multiyear_renta_enrollment.py`
+- `M` `src/cadrumo/application/calculations/tests/test_modelo_130_carry_forward_continuity.py`
+- `M` `src/cadrumo/application/calculations/tests/test_modelo_130_casilla_05_carry.py`
+- `M` `src/cadrumo/application/calculations/tests/test_modelo_130_multiyear_renta_enrollment.py`
+- `M` `src/cadrumo/application/calculations/tests/test_modelo_131_carry_forward_continuity.py`
+- `M` `src/cadrumo/application/calculations/tests/test_modelo_180_115_reconciliation_continuity.py`
+- `M` `src/cadrumo/application/calculations/tests/test_modelo_184_informativa_fidelity.py`
+- `M` `src/cadrumo/application/calculations/tests/test_modelo_190_111_reconciliation_continuity.py`
+- `M` `src/cadrumo/application/calculations/tests/test_modelo_193_123_reconciliation_continuity.py`
+- `M` `src/cadrumo/application/calculations/tests/test_modelo_200_202_pagos_fraccionados_fold.py`
+- `M` `src/cadrumo/application/calculations/tests/test_modelo_200_bin_carry_forward_continuity.py`
+- `M` `src/cadrumo/application/calculations/tests/test_modelo_200_dotaciones_deterioro_carry_continuity.py`
+- `M` `src/cadrumo/application/calculations/tests/test_modelo_202_cuota_base_ejercicio_anterior_continuity.py`
+- `M` `src/cadrumo/application/calculations/tests/test_modelo_232_operaciones_vinculadas_fidelity.py`
+- `M` `src/cadrumo/application/calculations/tests/test_modelo_303_compensacion_carry_anti_regression.py`
+- `M` `src/cadrumo/application/calculations/tests/test_modelo_303_compensacion_carry_forward_continuity.py`
+- `M` `src/cadrumo/application/calculations/tests/test_modelo_303_refunded_period_carry.py`
+- `M` `src/cadrumo/application/calculations/tests/test_modelo_308_adhoc_fidelity.py`
+- `M` `src/cadrumo/application/calculations/tests/test_modelo_309_adhoc_fidelity.py`
+- `M` `src/cadrumo/application/calculations/tests/test_modelo_347_informativa_fidelity.py`
+- `M` `src/cadrumo/application/calculations/tests/test_modelo_349_intracomunitario_fidelity.py`
+- `M` `src/cadrumo/application/calculations/tests/test_modelo_353_grupo_aggregation_continuity.py`
+- `M` `src/cadrumo/application/calculations/tests/test_modelo_360_adhoc_fidelity.py`
+- `M` `src/cadrumo/application/calculations/tests/test_modelo_369_oss_fidelity.py`
+- `M` `src/cadrumo/application/calculations/tests/test_modelo_390_303_reconciliation_continuity.py`
+- `M` `src/cadrumo/application/calculations/tests/test_modelo_714_patrimonio_baseline_fidelity.py`
+- `M` `src/cadrumo/application/calculations/tests/test_modelo_714_patrimonio_joint_limit_calculation.py`
+- `M` `src/cadrumo/application/calculations/tests/test_modelo_720_foreign_asset_producer_join.py`
+- `M` `src/cadrumo/application/calculations/tests/test_modelo_720_prior_year_baseline_fidelity.py`
+- `M` `src/cadrumo/application/calculations/tests/test_modelo_721_cripto_extranjero_fidelity.py`
+- `M` `src/cadrumo/application/calculations/tests/test_modelo_840_iae_continuity.py`
+- `M` `src/cadrumo/application/calculations/tests/test_observation_evidence_displacement_guard.py`
+- `M` `src/cadrumo/application/calculations/tests/test_observation_header_facts_roundtrip.py`
+- `M` `src/cadrumo/application/calculations/tests/test_observation_scan_key_identity.py`
+- `M` `src/cadrumo/application/calculations/tests/test_observations_repository.py`
+- `M` `src/cadrumo/application/calculations/tests/test_observations_repository_roundtrip.py`
+- `M` `src/cadrumo/application/calculations/tests/test_previous_filing_absence_versus_malformed.py`
+- `M` `src/cadrumo/application/calculations/tests/test_previous_filing_unsatisfied_diagnostic.py`
+- `M` `src/cadrumo/application/calculations/tests/test_prorrata_regularizacion_source_resolver.py`
+- `M` `src/cadrumo/application/calculations/tests/test_pull_path_calculate_path_casilla_parity.py`
+- `M` `src/cadrumo/application/calculations/tests/test_pulled_history_reaches_calculate.py`
+- `M` `src/cadrumo/application/calculations/tests/test_registry_failure_preconditions.py`
+- `M` `src/cadrumo/application/calculations/tests/test_relation_prefill_source_mesh.py`
+- `M` `src/cadrumo/application/calculations/tests/test_revision_stamp_roundtrip.py`
+- `M` `src/cadrumo/application/calculations/tests/test_row_producer_default_op_detection.py`
+- `M` `src/cadrumo/application/calculations/tests/test_row_set_assembly.py`
+- `M` `src/cadrumo/application/calculations/tests/test_row_set_assembly_coercion.py`
+- `M` `src/cadrumo/application/calculations/tests/test_terminal_preconditions.py`
+- `M` `src/cadrumo/application/export/__init__.py`
+- `M` `src/cadrumo/application/export/errors.py`
+- `M` `src/cadrumo/application/export/tests/test_tabular.py`
+- `M` `src/cadrumo/application/export/tests/test_tabular_metadata_tamper.py`
+- `M` `src/cadrumo/application/modelo/_filed_revision_observation.py`
+- `M` `src/cadrumo/application/modelo/_iva_wallet_seed.py`
+- `M` `src/cadrumo/application/modelo/_local_observation_actions.py`
+- `M` `src/cadrumo/application/storage/calc_sheets/__init__.py`
+- `M` `src/cadrumo/application/storage/calc_sheets/tests/test_parity_harness_hardening.py`
+- `M` `src/cadrumo/application/storage/calc_sheets/tests/test_row_set_calculation_roundtrip.py`
+- `M` `src/cadrumo/core/tests/test_external_constants_centralisation_part1.py`
+- `M` `src/cadrumo/entrypoints/cli/_app_live_justificante_payloads.py`
+- `M` `src/cadrumo/entrypoints/cli/_ledger_lifecycle_cli.py`
+- `M` `src/cadrumo/entrypoints/cli/_ledger_read_cli.py`
+- `M` `src/cadrumo/entrypoints/cli/_modelo_iva_wallet_cli.py`
+- `M` `src/cadrumo/entrypoints/cli/_modelo_payloads.py`
+- `M` `src/cadrumo/entrypoints/cli/_modelo_spreadsheet_cli.py`
+- `M` `src/cadrumo/entrypoints/cli/_modelo_work_verification_cli.py`
+- `M` `src/cadrumo/entrypoints/cli/_overview_evidence.py`
+- `M` `src/cadrumo/entrypoints/cli/errors.py`
+- `M` `src/cadrumo/entrypoints/cli/tests/test_google_payloads.py`
+- `M` `src/cadrumo/entrypoints/tests/test_google_operation.py`
+- `M` `src/cadrumo/tests/test_importlinter_ledger.py`
+- `verify:` `pytest src/cadrumo/entrypoints/cli/tests/test_transport_verb_grammar.py src/cadrumo/entrypoints/cli/tests/test_local_path_spelling.py src/cadrumo/entrypoints/cli/tests/test_transport_locus_declared.py src/cadrumo/entrypoints/cli/tests/test_root_placement_criterion.py` -> `pass`
+- `verify:` `pytest --collect-only -q src/cadrumo` -> `pass`
+- `verify:` `ruff check <changed files>` -> `pass`

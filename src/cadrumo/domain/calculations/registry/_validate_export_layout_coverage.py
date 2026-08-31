@@ -121,23 +121,29 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Final
 
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.schema_exports import (
+from ....core import ExportLayoutFormat
+from ....core.aggregation import BindingSourceKind
+from ....core.resources import resolve_corpus_binary
+from ..export_field_kind import CasillaFieldKind
+from .binding_selector_utils import selector_as_dict
+from .errors import RegistryValidationError
+from .export import derive_export_layouts_from_bindings
+from .record_design import _naturaleza_or_none, extract_record_design
+from .record_design_schema import RecordDesignField, RecordDesignSheet
+from .schema import ModeloRevision
+from .schema_exports import (
     AuxiliaryEnvelopeHeaderDefinition,
     ExportFieldDefinition,
     ExportLayoutDefinition,
     ExportRecordDefinition,
     FilingEnvelopeDefinition,
 )
-from cadrumo.domain.calculations.registry.schema_references import SourceReference
+from .schema_references import SourceReference
 
-from ....core import ExportLayoutFormat
-from ....core.resources import resolve_corpus_binary
-from ..export_field_kind import CasillaFieldKind
-from .errors import RegistryValidationError
-from .export import derive_export_layouts_from_bindings
-from .record_design import _naturaleza_or_none, extract_record_design
-from .record_design_schema import RecordDesignField, RecordDesignSheet
+#: AEAT's own filler words for a byte run, matched at the start of a field's
+#: naturaleza or description. Anchored and word-bounded so 'RECTIFICACIONES'
+#: is never mistaken for a filler run.
+_FILLER_RUN_RE = re.compile(r"(?i)^(?:blancos?|ceros?)\b")
 
 #: AEAT's own obligatoriness marking, read from the column its designs head
 #: ``Oblig.`` (which the parser lands in ``RecordDesignField.validation``).
@@ -569,8 +575,44 @@ def _sheet_constants(sheet: RecordDesignSheet) -> dict[tuple[int, int], str]:
     return constants
 
 
-def _record_literals(record: ExportRecordDefinition) -> dict[tuple[int, int], str]:
-    return {
+def _design_constant_values(revision: ModeloRevision) -> Mapping[str, str]:
+    """Return each ``design_constant`` binding's declared value, keyed by binding id.
+
+    A design constant is a DECLARED constant that simply does not live on an
+    inline literal field. Modelo 720 states its record-type marker and modelo
+    number as constants in the diseño, but that layout represents every casilla
+    through a binding and forbids inline literals, so the value rides on the
+    binding selector instead.
+
+    Reading it here is not a widening of what counts as a constant: the
+    declaration already exists and is validated at registry build. Without this
+    the join sees a record with no constants at all and cannot tell two
+    otherwise-identical records apart, which is how a fully-declared layout ends
+    up on the weaker any-record fallback.
+    """
+    values: dict[str, str] = {}
+    for binding in revision.bindings:
+        if binding.source is not BindingSourceKind.DESIGN_CONSTANT:
+            continue
+        selector = selector_as_dict(binding)
+        value = selector.get("value")
+        if isinstance(value, str):
+            values[str(binding.id)] = value
+    return values
+
+
+def _record_literals(
+    record: ExportRecordDefinition,
+    constants_by_binding: Mapping[str, str] | None = None,
+) -> dict[tuple[int, int], str]:
+    """Return every constant this record declares, from either declared channel.
+
+    An inline ``LITERAL`` field is one channel; a field bound to a
+    ``design_constant`` binding is the other. Both are declarations validated at
+    registry build, and a record that uses the second is no less identified than
+    one that uses the first.
+    """
+    literals = {
         (field.offset, field.length): field.literal
         for field in record.fields
         if field.kind is CasillaFieldKind.LITERAL
@@ -578,12 +620,15 @@ def _record_literals(record: ExportRecordDefinition) -> dict[tuple[int, int], st
         and field.offset is not None
         and field.length is not None
     }
-
-
-def _record_written_positions(record: ExportRecordDefinition) -> set[tuple[int, int]]:
-    return {
-        (field.offset, field.length) for field in record.fields if field.offset is not None and field.length is not None
-    }
+    if not constants_by_binding:
+        return literals
+    for field in record.fields:
+        if field.offset is None or field.length is None or field.binding is None:
+            continue
+        value = constants_by_binding.get(str(field.binding))
+        if value is not None:
+            literals.setdefault((field.offset, field.length), value)
+    return literals
 
 
 def _written_bytes(fields: Iterable[ExportFieldDefinition], *, data_only: bool) -> set[int]:
@@ -710,7 +755,11 @@ def _covers(position: _RequiredPosition, data_bytes: set[int], fill_bytes: set[i
     return all(byte in countable for byte in range(position.offset, position.offset + position.length))
 
 
-def _belongs_to_layout(sheet: RecordDesignSheet, records: Sequence[ExportRecordDefinition]) -> bool:
+def _belongs_to_layout(
+    sheet: RecordDesignSheet,
+    records: Sequence[ExportRecordDefinition],
+    constants_by_binding: Mapping[str, str] | None = None,
+) -> bool:
     """Whether this design sheet is one THIS layout is supposed to render at all.
 
     One bundled workbook can describe several independent filing schemas. Modelo
@@ -740,7 +789,7 @@ def _belongs_to_layout(sheet: RecordDesignSheet, records: Sequence[ExportRecordD
     not shrink a denominator, which is the one direction this gate must never
     fail in.
     """
-    literals_by_record = [_record_literals(record) for record in records]
+    literals_by_record = [_record_literals(record, constants_by_binding) for record in records]
     for coordinate, value in _sheet_constants(sheet).items():
         declaring = [literals[coordinate] for literals in literals_by_record if coordinate in literals]
         if declaring and all(declared != value for declared in declaring):
@@ -748,9 +797,86 @@ def _belongs_to_layout(sheet: RecordDesignSheet, records: Sequence[ExportRecordD
     return True
 
 
+def _sheet_run_is_filler(sheet: RecordDesignSheet, offset: int, length: int) -> bool | None:
+    """Whether the design describes ``offset``..``offset+length-1`` as filler.
+
+    Asks whether the design describes the WHOLE span as filler, because that is
+    the question a discriminator asks -- "are these bytes blank in this record?"
+    -- and a span may be described by several fields. Modelo 349's two sheets
+    happen to describe theirs with one field each at an identical coordinate;
+    Modelo 193's do not, declaring a 293-byte BLANCOS run against a 1-byte
+    NATURALEZA DEL DECLARANTE at the same start. An exact-coordinate test
+    answers the first and is simply blind to the second.
+
+    Returns ``None`` when any byte of the span is described by nothing: silence
+    over part of a run is silence over the run, and must never be read as
+    blankness.
+
+    "Filler" is AEAT's own word, read from the field's naturaleza or its
+    description -- ``Blancos`` on Modelo 349's operador sheet against
+    ``RECTIFICACIONES`` on its rectificaciones sheet, the latter subdivided into
+    two real importe fields. The same vocabulary the row parser already treats
+    as authoritative for a filler run, rather than a second reading of the same
+    idea.
+    """
+    span = range(offset, offset + length)
+    covering = [
+        item
+        for item in sheet.fields
+        if item.offset is not None
+        and item.length is not None
+        and item.offset < offset + length
+        and offset < item.offset + item.length
+    ]
+    if not covering:
+        return None
+    described = {position for item in covering for position in range(item.offset, item.offset + item.length)}
+    if not set(span) <= described:
+        # Part of the span is described by nothing, so the design does not say
+        # whether it is blank. Silence over any byte of the run is silence over
+        # the run.
+        return None
+    return all(_field_is_filler(item) for item in covering)
+
+
+def _field_is_filler(field: RecordDesignField) -> bool:
+    """Whether AEAT describes one field as a filler run."""
+    return any(
+        text is not None and _FILLER_RUN_RE.match(str(text).strip()) is not None
+        for text in (field.type_code, field.description, field.content)
+    )
+
+
+def _discriminator_prefers(
+    sheet: RecordDesignSheet,
+    record: ExportRecordDefinition,
+) -> bool | None:
+    """Whether ``record``'s declared discriminator agrees with ``sheet`` at its coordinate.
+
+    ``RecordDiscriminator`` exists for precisely the ambiguity this join hits:
+    its own docstring says a literal-prefix matcher "cannot tell two records
+    apart when they share their leading literal fields", which is the Tipo-2
+    sub-shape case exactly. The parser already consults it while reading binding
+    rows; the coverage join did not, so two records with identical prefixes tied
+    and fell to the weaker layout-wide question even though the registry
+    declared how to tell them apart.
+
+    Returns ``None`` when the record declares no discriminator or the sheet says
+    nothing at that coordinate -- silence is never taken as agreement.
+    """
+    discriminator = record.discriminator
+    if discriminator is None:
+        return None
+    is_filler = _sheet_run_is_filler(sheet, discriminator.offset, discriminator.length)
+    if is_filler is None:
+        return None
+    return is_filler if discriminator.requires == "blank" else not is_filler
+
+
 def _join_record(
     sheet: RecordDesignSheet,
     records: Sequence[ExportRecordDefinition],
+    constants_by_binding: Mapping[str, str] | None = None,
 ) -> ExportRecordDefinition | None:
     """Return the one authored record whose declared constants identify this sheet.
 
@@ -769,7 +895,7 @@ def _join_record(
         return None
     scored: list[tuple[int, ExportRecordDefinition]] = []
     for record in records:
-        literals = _record_literals(record)
+        literals = _record_literals(record, constants_by_binding)
         shared = constants.keys() & literals.keys()
         if not shared:
             continue
@@ -780,7 +906,15 @@ def _join_record(
         return None
     best = max(score for score, _ in scored)
     winners = [record for score, record in scored if score == best]
-    return winners[0] if len(winners) == 1 else None
+    if len(winners) == 1:
+        return winners[0]
+    # ONLY a tie-breaker, never an override: reached solely when the declared
+    # constants leave more than one record at the same agreement score, so it
+    # can turn "no join" into a join and can never change one the constants
+    # already decided. Where the discriminator is silent too, the sheet stays
+    # unjoined rather than taking an arbitrary winner.
+    preferred = [record for record in winners if _discriminator_prefers(sheet, record) is True]
+    return preferred[0] if len(preferred) == 1 else None
 
 
 def _design_sources(
@@ -820,20 +954,10 @@ def _read_design_sheets(source: SourceReference) -> tuple[RecordDesignSheet, ...
         )
 
 
-def _envelope_written_positions(envelope: FilingEnvelopeDefinition) -> set[tuple[int, int]]:
-    written: set[tuple[int, int]] = set()
-    offset = 1
-    for field in envelope.prefix_fields:
-        written.add((offset, field.length))
-        offset += field.length
-    return written
-
-
 def _envelope_written_bytes(envelope: FilingEnvelopeDefinition) -> set[int]:
     """Return every byte the filing envelope's prefix fields write.
 
-    The byte-extent counterpart of :func:`_envelope_written_positions`. Every
-    prefix field carries a real declared value, so none is filler and the
+    Every prefix field carries a real declared value, so none is filler and the
     data-only distinction :func:`_written_bytes` draws does not arise here.
     """
     written: set[int] = set()
@@ -850,6 +974,7 @@ def _missing_report(
     *,
     envelope: FilingEnvelopeDefinition | None = None,
     auxiliary_header: AuxiliaryEnvelopeHeaderDefinition | None = None,
+    constants_by_binding: Mapping[str, str] | None = None,
 ) -> tuple[int, int, list[str]]:
     """Return ``(required, missing, per-sheet lines)`` for one design against one layout."""
     layout_written: set[int] = set()
@@ -894,7 +1019,7 @@ def _missing_report(
         # edition, which has exactly one body record, showed that. The envelope
         # is emitted by the envelope contract and is never an authored record, so
         # its coverage question has one correct answer regardless of the join.
-        joined = None if is_envelope_sheet else _join_record(sheet, records)
+        joined = None if is_envelope_sheet else _join_record(sheet, records, constants_by_binding)
         if is_envelope_sheet:
             assert envelope is not None
             consulted = ()
@@ -927,8 +1052,8 @@ def _missing_report(
                 written = set(range(1, auxiliary_header.prefix_extent + 1))
                 emitted = written
             else:
-                written = set()
-                emitted = set()
+                written: set[int] = set()
+                emitted: set[int] = set()
         else:
             consulted = tuple(field for record in records for field in record.fields)
             written = layout_written
@@ -982,6 +1107,7 @@ def _layout_failure(
     prefix: str,
     layout: ExportLayoutDefinition,
     source_refs: Mapping[str, SourceReference],
+    constants_by_binding: Mapping[str, str] | None = None,
 ) -> str | None:
     design_sources = _design_sources(layout, source_refs)
     if not design_sources:
@@ -1002,6 +1128,7 @@ def _layout_failure(
         layout.records,
         envelope=layout.filing_envelope,
         auxiliary_header=layout.auxiliary_envelope_header,
+        constants_by_binding=constants_by_binding,
     )
     if not missing:
         return None
@@ -1056,10 +1183,16 @@ def validate_export_layout_record_coverage(
         every position its official design requires.
     """
     failures: list[str] = []
+    constants_by_binding = _design_constant_values(revision)
     for layout in derive_export_layouts_from_bindings(revision):
         if layout.format is not ExportLayoutFormat.FIXED_WIDTH:
             continue
-        failure = _layout_failure(prefix=prefix, layout=layout, source_refs=source_refs)
+        failure = _layout_failure(
+            prefix=prefix,
+            layout=layout,
+            source_refs=source_refs,
+            constants_by_binding=constants_by_binding,
+        )
         if failure is not None:
             failures.append(failure)
     return failures

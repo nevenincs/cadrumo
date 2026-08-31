@@ -12,11 +12,10 @@ from datetime import UTC, date, datetime
 
 import pytest
 
+from ....core.calendar_shift import shift_by_calendar_years
 from ...retention import (
     RetentionFloorAssessment,
-    add_prescription_years,
     assess_retention_floor,
-    earliest_safe_erase_date,
 )
 from ...retention._floor import RetainableFilingRecord
 
@@ -50,23 +49,35 @@ def test_record_satisfies_protocol() -> None:
     assert isinstance(record, RetainableFilingRecord)
 
 
-def test_earliest_safe_erase_date_adds_four_year_floor() -> None:
-    filed_at = _dt(2021, 6, 30)
-    assert earliest_safe_erase_date(filed_at) == _dt(2025, 6, 30)
+def _safe_erase_date(filed_at: datetime, *, floor_years: int | None = None) -> datetime:
+    """Read one record's safe-erase instant back off the real assessment.
+
+    The assessment is the production surface that applies the floor, so the
+    instant is observed where a caller observes it rather than through a
+    second entry point that only restates the calendar shift.
+    """
+    record = _FiledRecord(_FILING_ID_1, "303", filed_at.year - 1, filed_at)
+    kwargs = {} if floor_years is None else {"floor_years": floor_years}
+    assessment = assess_retention_floor((record,), as_of=filed_at, **kwargs)
+    return assessment.retained[0].earliest_safe_erase_date
+
+
+def test_safe_erase_date_adds_four_year_floor() -> None:
+    assert _safe_erase_date(_dt(2021, 6, 30)) == _dt(2025, 6, 30)
 
 
 def test_leap_day_filed_at_clamps_to_28_february() -> None:
     # 2024-02-29 + 4 years lands in 2028 (also a leap year), so no clamp.
-    assert earliest_safe_erase_date(_dt(2024, 2, 29)) == _dt(2028, 2, 29)
+    assert _safe_erase_date(_dt(2024, 2, 29)) == _dt(2028, 2, 29)
     # 2020-02-29 + 4 years would be 2024-02-29 (leap) — still valid.
-    assert earliest_safe_erase_date(_dt(2020, 2, 29)) == _dt(2024, 2, 29)
+    assert _safe_erase_date(_dt(2020, 2, 29)) == _dt(2024, 2, 29)
     # A one-year floor from a leap day into a non-leap year clamps to 28 Feb.
-    assert earliest_safe_erase_date(_dt(2020, 2, 29), floor_years=1) == _dt(2021, 2, 28)
+    assert _safe_erase_date(_dt(2020, 2, 29), floor_years=1) == _dt(2021, 2, 28)
 
 
 def test_prescription_year_addition_preserves_date_or_datetime_kind() -> None:
-    assert add_prescription_years(date(2020, 2, 29), 1) == date(2021, 2, 28)
-    assert add_prescription_years(_dt(2020, 2, 29), 1) == _dt(2021, 2, 28)
+    assert shift_by_calendar_years(date(2020, 2, 29), 1) == date(2021, 2, 28)
+    assert shift_by_calendar_years(_dt(2020, 2, 29), 1) == _dt(2021, 2, 28)
 
 
 def test_record_inside_window_blocks_erase() -> None:
@@ -96,7 +107,7 @@ def test_record_past_floor_is_erasable() -> None:
 def test_boundary_exactly_at_floor_is_erasable() -> None:
     filed_at = _dt(2021, 6, 15)
     record = _FiledRecord(_FILING_ID_1, "303", 2020, filed_at)
-    # as_of == earliest_safe_erase_date: the window has elapsed (strict <).
+    # as_of == the safe-erase instant: the window has elapsed (strict <).
     assessment = assess_retention_floor((record,), as_of=_dt(2025, 6, 15))
     assert assessment.blocks_erase is False
 

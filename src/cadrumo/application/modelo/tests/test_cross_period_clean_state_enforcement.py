@@ -14,11 +14,10 @@ from ...tests import register_wizard_catalogue
 
 __all__ = ["register_wizard_catalogue"]
 
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....core import CasillaId, Period, validated_casilla_id
+from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.deadlines import (
     CrossPeriodGroupMemberRoster,
     EntityType,
@@ -30,17 +29,19 @@ from ....domain.deadlines import (
     TaxpayerProfile,
 )
 from ....domain.modelos import (
-    CalculationRevision,
-    CalculationRevisionState,
     ExternalEvidence,
     ExternalEvidenceKind,
     ModeloRecord,
     ModeloRecordStatus,
     ModeloVerificationFindingKind,
-    derive_calculation_revision_id,
     derive_filing_record_id,
     upsert_calculation_revision,
     upsert_filing_record,
+)
+from ....domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.env_scope import ready_clave_settings

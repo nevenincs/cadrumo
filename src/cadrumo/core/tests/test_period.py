@@ -18,9 +18,9 @@ from .. import (
     accepted_filing_period_codes,
     accepted_filing_period_patterns,
     accepted_period_codes,
-    accepted_period_patterns,
     aggregation,
 )
+from .._period import accepted_period_patterns
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -265,7 +265,7 @@ class TestPeriodTypeBoundarySplit:
     @pytest.mark.parametrize("token", (*ADMINISTRATIVE_TOKENS, SYMBOLIC_EVENT_SELECTOR))
     def test_registry_coordinate_still_admits_the_administrative_vocabulary(self, token: str) -> None:
         """The other direction: the registry must keep loading."""
-        from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+        from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 
         assert _validate_test_model(token) == token
         ref = RegistrySnapshotRef(
@@ -286,7 +286,7 @@ class TestPeriodTypeBoundarySplit:
     )
     def test_declared_period_selectors_still_validate(self, declared: tuple[str, ...]) -> None:
         """The shipped declarations that made the widening necessary in the first place."""
-        from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
+        from ...domain.calculations.registry.schema_references import PeriodSelector
 
         selector = PeriodSelector(year_from=2012, periods=declared)
 

@@ -18,6 +18,16 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.calculation.ModeloCalculationCaptureError",
+        ErrorCode(
+            code="REFUSED_MODELO_CALCULATION_CAPTURE_NOT_CURRENT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_calculation_capture_not_current",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.work_review.ModeloWorkReviewCaptureError",
         ErrorCode(
             code="REFUSED_MODELO_WORK_REVIEW_CAPTURE_NOT_CURRENT",
@@ -644,6 +654,16 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.user_profile.custody_ports.ProfileCustodyConcurrentChangeError",
+        ErrorCode(
+            code="LOCKED_PROFILE_CUSTODY_PORT_CAPSULE_GENERATION",
+            category=ErrorCategory.LOCKED,
+            message_key="errors.locked.locked_storage_profile_custody_capsule_generation",
+            retryable=True,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.user_profile.capsule_record.ProfileRecordConflictError",
         ErrorCode(
             code="FAIL_PROFILE_RECORD_CONFLICT",
@@ -1199,6 +1219,36 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="INTERNAL_OPERATION_DECLARATION_BREACH",
             category=ErrorCategory.INTERNAL,
             message_key="errors.internal.internal_operation_declaration_breach",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.workspace_manifest.ModeloWorkspaceManifestCaptureError",
+        ErrorCode(
+            code="REFUSED_MODELO_WORKSPACE_MANIFEST_CAPTURE_NOT_CURRENT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_workspace_manifest_capture_not_current",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.registry.closure_capture.RegistryClosureCaptureError",
+        ErrorCode(
+            code="REFUSED_REGISTRY_CLOSURE_CAPTURE_NOT_CURRENT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.registry_closure_capture_not_current",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.operation_definitions.ModeloWorkDiscardApprovalStaleError",
+        ErrorCode(
+            code="REFUSED_MODELO_WORK_DISCARD_APPROVAL_STALE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_work_discard_approval_stale",
             retryable=False,
             runbook_id=None,
         ),

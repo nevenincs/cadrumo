@@ -25,7 +25,7 @@ from pydantic import ValidationError
 
 from ....core import IvaCompensationStateProvenance, Period
 from ....domain.iva_compensation import IvaCompensationPeriodState
-from .._iva_compensation_history import IvaCompensationAnnualSummary
+from ..iva_compensation_history import IvaCompensationAnnualSummary
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

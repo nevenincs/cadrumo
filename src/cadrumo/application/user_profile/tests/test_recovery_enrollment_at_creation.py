@@ -16,11 +16,11 @@ from uuid import UUID
 
 import pytest
 
-from ....adapters.persistence.storage import generate_recovery_key
-from ....adapters.persistence.storage.custody import (
+from ....adapters.persistence.storage import RecoveryKey, generate_recovery_key
+from ....adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
+from ....adapters.persistence.storage.custody.errors import ProfileCustodyRecoverySecretError
+from ....adapters.persistence.storage.custody.recovery import (
     PROFILE_CUSTODY_RECOVERY_FILENAME,
-    ProfileCustodyRecoverySecretError,
-    load_committed_profile_password_material,
     parse_profile_custody_recovery_envelope,
     unlock_profile_custody_recovery,
 )
@@ -150,8 +150,10 @@ def test_the_handed_over_key_is_wiped_by_the_time_registration_returns(tmp_path:
         )
 
     assert len(retained) == 1
-    assert set(retained[0].recovery_key.raw) == {0}
-    assert set(retained[0].recovery_key.mnemonic.encode("utf-8")) == {0}
+    recovery_key = retained[0].recovery_key
+    assert isinstance(recovery_key, RecoveryKey)
+    assert set(recovery_key.raw) == {0}
+    assert set(recovery_key.mnemonic.encode("utf-8")) == {0}
 
 
 def test_an_inexact_possession_proof_creates_no_profile(tmp_path: Path) -> None:
@@ -196,7 +198,9 @@ def test_a_channel_that_cannot_deliver_the_words_creates_no_profile(tmp_path: Pa
             )
 
         assert len(retained) == 1
-        assert set(retained[0].recovery_key.raw) == {0}
+        recovery_key = retained[0].recovery_key
+        assert isinstance(recovery_key, RecoveryKey)
+        assert set(recovery_key.raw) == {0}
         # No capsule was published, so the profile the refused enrollment was
         # minted for does not exist and cannot be listed.
         assert not any(view.label == _LABEL for view in CommittedProfileRepository().list())

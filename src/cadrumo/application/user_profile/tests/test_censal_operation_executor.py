@@ -14,10 +14,8 @@ import pytest
 from ....adapters.persistence.operations.journal import OperationJournalRepository
 from ....adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ....adapters.persistence.operations.secure_references import operation_secure_reference_repository
-from ....adapters.persistence.storage.custody import (
-    load_committed_profile_password_material,
-    unlock_profile_custody,
-)
+from ....adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
+from ....adapters.persistence.storage.custody.kdf_supervision import unlock_profile_custody
 from ....core import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from ....core.config import override_settings
 from ....domain.user_profile.values import UserProfileFact
@@ -134,7 +132,9 @@ def _supervisor(
     token: str,
     now: datetime = _NOW,
 ) -> OperationSupervisor:
-    operands = operation_secure_reference_repository(objects=objects)  # type: ignore[arg-type]
+    operands = operation_secure_reference_repository(
+        objects=objects,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # reason: the profile-custody port narrows the same concrete SecureObjectRepository this call needs
+    )
     definition = CENSAL_OPERATION_DEFINITION.model_copy(
         update={
             "executor_factory": OperationExecutorFactory(
@@ -228,6 +228,8 @@ def test_censal_executor_acquires_once_recovers_review_and_applies_exact_operand
             assert acquisitions == 1
             recovered_pending = recovered.pending_interaction
             assert recovered_pending is not None
+            assert recovered_pending.baseline_digest is not None
+            assert recovered_pending.proposed_effect_digest is not None
 
             await recovery.respond(
                 OperationApplyResponse(

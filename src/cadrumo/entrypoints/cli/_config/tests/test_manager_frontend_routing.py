@@ -10,6 +10,7 @@ from __future__ import annotations
 import ast
 import inspect
 from pathlib import Path
+from typing import Literal
 
 import pytest
 import typer
@@ -48,8 +49,8 @@ def test_profile_names_remain_transport_metadata() -> None:
 
 
 @pytest.mark.parametrize("mode", ["create", "edit"])
-def test_profile_name_is_optional_at_the_line_mode_door(mode: str) -> None:
-    command = build_wizard_command(get_setup_flow(), mode=mode)  # type: ignore[arg-type]
+def test_profile_name_is_optional_at_the_line_mode_door(mode: Literal["create", "edit"]) -> None:
+    command = build_wizard_command(get_setup_flow(), mode=mode)
     assert inspect.signature(command).parameters["profile_name"].default is None
 
 

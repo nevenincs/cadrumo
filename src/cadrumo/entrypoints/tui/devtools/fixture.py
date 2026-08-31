@@ -87,7 +87,7 @@ def ensure_profile() -> str:
     again before returning so the login surface meets the locked machine
     it exists for. Caller must already be inside :func:`harness_storage`.
     """
-    from cadrumo.application.workflow.profile_bucket_scan import list_profile_buckets
+    from ....application.workflow.profile_bucket_scan import list_profile_buckets
 
     existing = list_profile_buckets()
     if existing:
@@ -115,7 +115,7 @@ def registration_attempt(
     """Adapt public profile registration into the TUI screen's result contract."""
     from ....application.user_profile.registration import ProfileRegistrationError, register_profile_with_credentials
     from ....domain.user_profile.values import UserProfileFact
-    from ....entrypoints.tui.secret.app import (
+    from ....entrypoints.tui.secret.registration import (
         RecoveryHandoverCancelledError,
         RegistrationAttempt,
         RegistrationRefusal,

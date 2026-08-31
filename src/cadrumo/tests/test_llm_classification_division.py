@@ -161,16 +161,27 @@ def test_the_review_workflow_does_not_import_across_the_boundary_inward() -> Non
 
     from . import SRC_CADRUMO, ast_for_path, repo_relative
 
-    workflow = SRC_CADRUMO / "application" / "ledger" / "_llm_review_workflow.py"
+    workflow = SRC_CADRUMO / "application" / "ledger" / "llm_review_workflow.py"
     tree = ast_for_path(workflow)
     assert tree is not None, f"{repo_relative(workflow)} must be parseable"
 
-    from_llm: list[str] = [
-        alias.name
-        for node in ast.walk(tree)
-        if isinstance(node, ast.ImportFrom) and node.module and node.module.endswith("llm")
-        for alias in node.names
-    ]
+    # Relative imports are resolved before matching, because the interesting
+    # names arrive as ``from ...llm.suggestions import`` -- a submodule, so a
+    # suffix test on the written module misses them -- while the ledger's own
+    # ``from .llm_classification import`` would match such a test on spelling
+    # alone despite belonging to this package, not the inference one.
+    workflow_package = ("cadrumo", "application", "ledger")
+    from_llm: list[str] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.ImportFrom):
+            continue
+        if node.level:
+            base = workflow_package[: len(workflow_package) - (node.level - 1)]
+            resolved = ".".join([*base, node.module]) if node.module else ".".join(base)
+        else:
+            resolved = node.module or ""
+        if resolved == "cadrumo.llm" or resolved.startswith("cadrumo.llm."):
+            from_llm.extend(alias.name for alias in node.names)
 
     assert from_llm, "the workflow does consume the interchange DTOs; this assertion must not pass vacuously"
     # Every name it takes from the package is a DTO. A reader, a client or a

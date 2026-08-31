@@ -30,9 +30,8 @@ from .operator_results import (
 )
 
 if TYPE_CHECKING:
-    from cadrumo.application.workflow.state_models import WorkflowState
-
     from ...adapters.persistence.storage.master_key import BucketSession
+    from ..workflow.state_models import WorkflowState
 
 _AUTH_OPERATOR_SETTINGS_SCOPE_FIELDS = (
     "cadrumo_local_storage_root",

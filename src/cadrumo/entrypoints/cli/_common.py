@@ -24,12 +24,9 @@ as ``aeat --version``.
 from __future__ import annotations
 
 import re
-from collections.abc import Callable, Generator, Iterable, Mapping, Sequence
+from collections.abc import Callable, Generator, Iterable, Sequence
 from contextlib import contextmanager
 from contextvars import ContextVar
-from dataclasses import dataclass
-from datetime import date as _date
-from decimal import Decimal
 from enum import StrEnum
 from functools import cache, partial
 from pathlib import Path
@@ -42,13 +39,12 @@ from pydantic import BaseModel, Field, field_validator
 
 from ...core import NON_REGISTRY_MODELOS, STRICT_FROZEN_CONFIG, Modelo
 from ...core.cli_metadata import is_metadata_invocation
-from ...core.decimal import try_parse_canonical_decimal
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedActionArgument, ResolvedPreconditionAction
 from ...core.output_rendering import OutputFormat, render_command_output
-from ...domain.calculations.registry.authority import bundled_authority
 from ._command_suggestions import INVOCATION_REMAINDER_META_KEY
+from ._operator_surface_reconciliation import current_operator_surface_reconciliation
 
 # The accepted-code set for every ``--modelo`` option and argument. It is derived
 # from the closed core identifier taxonomy rather than the registry authority:
@@ -139,19 +135,7 @@ if TYPE_CHECKING:
         ActionReference,
         PreconditionVerdict,
     )
-    from ...application.operator_surface import (
-        CommandSchemaRef,
-        ExplicitExclusionInventoryRow,
-        InputSchemaInventoryRow,
-        LiveLeafInventoryRow,
-        MountedFamilyInventoryRow,
-        OperatorSurfaceReconciliation,
-        ProfilePolicyInventoryRow,
-        ResultSchemaInventoryRow,
-        SurfaceExposureInventoryRow,
-    )
     from ...application.workflow.state_models import WorkflowState
-    from ...core import Period
     from ...core.json_contract import ResolvedActionReference, ResolvedNoticeAction
     from ...domain.deadlines import TaxpayerProfile
     from ...domain.filing import ModeloDraft
@@ -169,8 +153,6 @@ __all__ = [
     "format_of",
     "no_active_profile_refusal",
     "notice_lines",
-    "parse_decimal_amount",
-    "parse_optional_decimal_amount",
     "resolve_lifecycle_continuation_notice",
     "resolve_notice_action",
 ]
@@ -845,268 +827,6 @@ def resolve_lifecycle_continuation_notice(continuation: ModeloWorkLifecycleConti
     )
 
 
-@dataclass(frozen=True, slots=True)
-class _CurrentOperatorSurfaceSchemaInventory:
-    """Protocol-neutral projections collected from the live CLI command surface."""
-
-    command_keys: tuple[str, ...]
-    live_leaves: tuple[LiveLeafInventoryRow, ...]
-    result_schemas: tuple[ResultSchemaInventoryRow, ...]
-    input_rows: tuple[InputSchemaInventoryRow, ...]
-    mounted_families: tuple[MountedFamilyInventoryRow, ...]
-    profile_policies: tuple[ProfilePolicyInventoryRow, ...]
-
-
-def _current_operator_surface_input_schemas() -> tuple[
-    tuple[CommandSchemaRef, ...],
-    tuple[str, ...],
-    Mapping[str, VerbInputSchema],
-]:
-    """Collect the live result-schema and S05 input-schema projections.
-
-    A key in :data:`~._verb_input_schema.DECLARED_UNIMPLEMENTED_SURFACES` carries
-    a graph-declared result schema while its verb is knowingly absent, so the live
-    tree walk resolves no leaf for it and it takes part in no live
-    reconciliation row. Those keys are dropped from BOTH projections here rather
-    than half-dropped downstream; every OTHER divergence between the graph
-    and the walk is drift and still raises.
-    """
-    from ._command_schema import command_schema_refs
-    from ._verb_input_schema import DECLARED_UNIMPLEMENTED_SURFACES, build_verb_input_schemas
-
-    graph_references = command_schema_refs()
-    graph_keys = tuple(reference.command for reference in graph_references)
-    if len(set(graph_keys)) != len(graph_keys):
-        raise ValueError("current CommandSpec graph has duplicate command identities")
-    schema_references = tuple(
-        reference for reference in graph_references if reference.command not in DECLARED_UNIMPLEMENTED_SURFACES
-    )
-    command_keys = tuple(reference.command for reference in schema_references)
-    input_schemas = build_verb_input_schemas(tuple(sorted(command_keys)))
-    if set(input_schemas) != set(command_keys):
-        raise ValueError("current input-schema projection does not exactly match the CommandSpec graph")
-    return schema_references, command_keys, input_schemas
-
-
-def _current_operator_surface_callback_aliases() -> dict[str, set[tuple[str, ...]]]:
-    """Return aliases derived from duplicate graph result identities."""
-    from ._command_specs import COMMAND_GRAPH
-
-    paths: dict[str, list[tuple[str, ...]]] = {}
-    for node in COMMAND_GRAPH.nodes():
-        identity = node.spec.result_schema.identity
-        if identity is not None:
-            paths.setdefault(identity, []).append(node.path[1:])
-    return {identity: set(rows[1:]) for identity, rows in paths.items() if len(rows) > 1}
-
-
-def _current_operator_surface_primary_paths(
-    input_schemas: Mapping[str, VerbInputSchema],
-) -> dict[str, tuple[str, ...]]:
-    """Require each S05 schema to retain its result-schema command identity."""
-    primary_paths: dict[str, tuple[str, ...]] = {}
-    for command_key, schema in input_schemas.items():
-        resolved_leaf = schema.resolved_leaf
-        if resolved_leaf.subject_leaf_key != command_key:
-            raise ValueError(
-                f"input-schema projection changed command identity: {command_key} -> {resolved_leaf.subject_leaf_key}",
-            )
-        primary_paths[command_key] = resolved_leaf.cli_path
-    return primary_paths
-
-
-def _current_operator_surface_schema_rows(
-    *,
-    schema_references: tuple[CommandSchemaRef, ...],
-    command_keys: tuple[str, ...],
-    input_schemas: Mapping[str, VerbInputSchema],
-    callback_aliases_by_key: Mapping[str, set[tuple[str, ...]]],
-    primary_paths: Mapping[str, tuple[str, ...]],
-) -> _CurrentOperatorSurfaceSchemaInventory:
-    """Build application-owned reconciliation rows from the verified live sources."""
-    from ...application.operator_surface import (
-        InputSchemaInventoryRow,
-        LiveLeafInventoryRow,
-        MountedFamilyInventoryRow,
-        ProfilePolicyInventoryRow,
-        ResultSchemaInventoryRow,
-        get_operator_surface_contract,
-    )
-    from ._command_schema import command_registration_policy
-    from ._command_specs import COMMAND_GRAPH
-
-    root_landing_schema_keys = frozenset(
-        identity
-        for identity, spec in COMMAND_GRAPH.by_schema_identity().items()
-        if spec.kind in {"root", "group"} and identity.startswith("root.")
-    )
-
-    return _CurrentOperatorSurfaceSchemaInventory(
-        command_keys=command_keys,
-        live_leaves=tuple(
-            LiveLeafInventoryRow(
-                subject_leaf_key=command_key,
-                canonical_cli_path=primary_paths[command_key],
-                alias_cli_paths=tuple(sorted(callback_aliases_by_key.get(command_key, set()))),
-                provenance="CommandSpecGraph input-schema resolution",
-            )
-            for command_key in sorted(command_keys)
-        ),
-        result_schemas=tuple(
-            ResultSchemaInventoryRow(
-                subject_leaf_key=reference.command,
-                schema_name=reference.schema_name,
-                provenance="CommandSpecGraph through command_schema_refs",
-            )
-            for reference in schema_references
-        ),
-        input_rows=tuple(
-            InputSchemaInventoryRow(
-                subject_leaf_key=command_key,
-                required_input_names=tuple(parameter.name for parameter in schema.required_inputs),
-                provenance="S05 VerbInputSchema.required_inputs",
-            )
-            for command_key, schema in sorted(input_schemas.items())
-        ),
-        mounted_families=tuple(
-            MountedFamilyInventoryRow(
-                root=family.root.value,
-                child=family.child,
-                provenance="OperatorSurfaceContract.command_families",
-                unimplemented_reason=family.unimplemented_reason,
-            )
-            for family in get_operator_surface_contract().command_families
-        ),
-        profile_policies=tuple(
-            ProfilePolicyInventoryRow(
-                subject_leaf_key=command_key,
-                classification=(
-                    "non_profile_bound"
-                    if command_key in root_landing_schema_keys
-                    else (
-                        "profile_bound_write"
-                        if command_registration_policy(command_key).write_route == "profile-bound"
-                        else "non_profile_bound"
-                    )
-                ),
-                should_expose_externally=command_key not in root_landing_schema_keys,
-                provenance="CommandSpec policy plus root landing graph classification",
-            )
-            for command_key in sorted(command_keys)
-        ),
-    )
-
-
-def _current_operator_surface_schema_inventory() -> _CurrentOperatorSurfaceSchemaInventory:
-    """Collect the schema, Click, family, and policy projections without inference."""
-    schema_references, command_keys, input_schemas = _current_operator_surface_input_schemas()
-    callback_aliases_by_key = _current_operator_surface_callback_aliases()
-    primary_paths = _current_operator_surface_primary_paths(input_schemas)
-    return _current_operator_surface_schema_rows(
-        schema_references=schema_references,
-        command_keys=command_keys,
-        input_schemas=input_schemas,
-        callback_aliases_by_key=callback_aliases_by_key,
-        primary_paths=primary_paths,
-    )
-
-
-def _current_operator_surface_exposures(
-    command_keys: tuple[str, ...],
-) -> tuple[SurfaceExposureInventoryRow, ...]:
-    """Project which registry command keys an operator surface may expose."""
-    from ...application.operator_surface import SurfaceExposureInventoryRow
-    from ._verb_input_schema import is_exposable_command
-
-    return tuple(
-        SurfaceExposureInventoryRow(
-            subject_leaf_key=command_key,
-            exposed=is_exposable_command(command_key),
-            provenance="is_exposable_command",
-        )
-        for command_key in sorted(command_keys)
-    )
-
-
-def _current_operator_surface_exclusions() -> tuple[ExplicitExclusionInventoryRow, ...]:
-    """Project the declared root-landing omissions into reconciliation evidence."""
-    from ...application.operator_surface import ExplicitExclusionInventoryRow, ReconciliationSurface
-    from ._command_specs import COMMAND_GRAPH
-
-    root_landing_schema_keys = frozenset(
-        identity
-        for identity, spec in COMMAND_GRAPH.by_schema_identity().items()
-        if spec.kind in {"root", "group"} and identity.startswith("root.")
-    )
-
-    return tuple(
-        exclusion
-        for command_key in sorted(root_landing_schema_keys)
-        for exclusion in (
-            ExplicitExclusionInventoryRow(
-                subject_leaf_key=command_key,
-                surface=ReconciliationSurface.MOUNTED_FAMILY,
-                reason="root landing callback has no mounted command family",
-                authority="COMMAND_GRAPH",
-                provenance="CommandSpec root/group result identity",
-            ),
-            ExplicitExclusionInventoryRow(
-                subject_leaf_key=command_key,
-                surface=ReconciliationSurface.SURFACE_EXPOSURE,
-                reason="root landing callback is excluded from external command surfaces",
-                authority="COMMAND_GRAPH",
-                provenance="CommandSpec root/group result identity",
-            ),
-        )
-    )
-
-
-def current_operator_surface_reconciliation() -> OperatorSurfaceReconciliation:
-    """Return one complete live-surface reconciliation per CLI invocation.
-
-    Click and Typer share their context ``meta`` mapping across every nested
-    context in one invocation and create a new mapping for the next root
-    invocation. Keeping the frozen reconciliation there lets every notice
-    action in an overview batch consume the same descriptor-backed inventory
-    without giving it a process-global lifetime or weakening any canonical
-    resolver gate.
-
-    Direct callers outside an active Click invocation still receive a freshly
-    constructed reconciliation, preserving the live inspection semantics used
-    by standalone verification code.
-    """
-    from ...application.operator_surface import OperatorSurfaceReconciliation, reconcile_operator_surface_inventory
-
-    ctx = click.get_current_context(silent=True)
-    if ctx is None:
-        # Typer vendors Click and therefore owns a distinct context stack. The
-        # real ``aeat`` dispatch runs on that stack; upstream Click remains the
-        # first probe for plain-Click embedders of this boundary.
-        from typer._click.globals import get_current_context as get_current_typer_context
-
-        ctx = get_current_typer_context(silent=True)
-    if ctx is not None:
-        cached = ctx.meta.get(_OPERATOR_SURFACE_RECONCILIATION_META_KEY)
-        if cached is not None:
-            if not isinstance(cached, OperatorSurfaceReconciliation):
-                raise TypeError("operator-surface reconciliation context contains an invalid value")
-            return cached
-
-    inventory = _current_operator_surface_schema_inventory()
-    reconciliation = reconcile_operator_surface_inventory(
-        live_leaves=inventory.live_leaves,
-        result_schemas=inventory.result_schemas,
-        input_schemas=inventory.input_rows,
-        mounted_families=inventory.mounted_families,
-        profile_policies=inventory.profile_policies,
-        surface_exposures=_current_operator_surface_exposures(inventory.command_keys),
-        exclusions=_current_operator_surface_exclusions(),
-    )
-    if ctx is not None:
-        ctx.meta[_OPERATOR_SURFACE_RECONCILIATION_META_KEY] = reconciliation
-    return reconciliation
-
-
 def active_profile_label() -> str | None:
     """Return the active taxpayer profile's display label, or ``None``.
 
@@ -1216,298 +936,6 @@ def _translate(translatable: str) -> str:
     return tr(translatable)
 
 
-# ---------------------------------------------------------------------
-# Period normaliser
-# ---------------------------------------------------------------------
-#
-# The ledger ``--period`` surface speaks ONE strict operator grammar — the
-# canonical AEAT modelo tokens (``0A`` annual, ``1T``-``4T`` quarters,
-# ``01``-``12`` months) the modelo surfaces already teach (one strict period
-# grammar everywhere, AEAT tokens only). Those tokens carry no year of their
-# own, so every ledger ``--period`` command also takes ``--year`` to supply
-# the year context — exactly the modelo ``--year``/``--period`` composition,
-# so ``--period 1T --year 2024`` reads identically across ledger and modelo.
-# A filing period is ALWAYS carried as a ``(year, bare-token)`` pair — never a
-# combined calendar string. The internal value the ledger filters by is a
-# :class:`Period` date span built directly from that pair; there is no calendar
-# shape, no year-qualified hybrid, and no conversion layer. A calendar shape
-# (``2024Q1`` / ``2024-03`` / ``2024``) is refused with a message naming the
-# AEAT tokens and the ``--year`` argument.
-
-
-def _ledger_aeat_token(token: str) -> str | None:
-    """Return the normalised ledger-meaningful registry token, or ``None``.
-
-    Validates ``token`` against the registry period union and accepts it only
-    when it is a span-shaped :class:`StandardPeriodCode` member the
-    ledger can filter by (quarters, months, annual). Extended-union members the ledger
-    does not filter by (``EXT-*``, ``AD-HOC``, ``EVENT-N``) and instalment
-    claves (``1P``-``4P``) return ``None``.
-    """
-    from ...core import StandardPeriodCode
-
-    try:
-        registry_period = StandardPeriodCode(token.strip().upper()).value
-    except ValueError:
-        return None
-    if registry_period not in frozenset(StandardPeriodCode):
-        return None
-    return registry_period
-
-
-#: Year used only to probe whether a token maps to a calendar date span. The
-#: span shape depends on the token's cadence, not the year, so any supported
-#: year answers identically; it never leaks into an operator-supplied period.
-_ACCEPTED_PERIOD_PROBE_YEAR = 2024
-
-
-def _ledger_period_accepted_tokens() -> tuple[str, ...]:
-    """Return the span-shaped registry tokens the ledger ``--period`` accepts.
-
-    Derived from the same rule :func:`_canonical_period` applies: a
-    :class:`StandardPeriodCode` member the ledger normalises
-    (:func:`_ledger_aeat_token`) AND whose ``(year, token)`` :class:`Period`
-    carries a calendar date span. The instalment claves (``1P``-``4P``) and the
-    extended-union members resolve to no span and are excluded, so the advertised
-    accepted set is computed from the acceptance rule and can never drift from
-    what the boundary actually admits — a new span-shaped enum member is
-    advertised automatically.
-    """
-    from ...core import Period, PeriodError, StandardPeriodCode
-
-    accepted: list[str] = []
-    for member in StandardPeriodCode:
-        normalised = _ledger_aeat_token(member.value)
-        if normalised is None:
-            continue
-        try:
-            resolved = Period.from_year_and_code(_ACCEPTED_PERIOD_PROBE_YEAR, normalised)
-        except PeriodError:
-            continue
-        if resolved.has_date_span():
-            accepted.append(normalised)
-    return tuple(accepted)
-
-
-class _LedgerPeriodRefusal(typer.BadParameter):
-    """A ``--period`` refusal that carries the accepted token set as structured data.
-
-    Subclasses :class:`typer.BadParameter` so the boundary behaviour is unchanged
-    — an instructive usage refusal with the usage exit code — while exposing the
-    machine-readable accepted-token set on :attr:`accepted_period_tokens`. The
-    terminal JSON handler threads that set into the error envelope's structured
-    ``context``, so automation reads the accepted grammar as data rather than
-    scraping the rendered range notation, and a wording pass on the message
-    cannot change the advertised set.
-
-    Takes the locale key via the keyword ``translated_message`` (with its
-    substitution ``context``) rather than an already-resolved string, matching
-    the project-wide structured-error contract: the key and its context ride on
-    the exception, resolved once here for the click-parse-time rendering, but
-    available unflattened for any later structured consumer.
-    """
-
-    def __init__(
-        self,
-        *,
-        translated_message: str,
-        context: Mapping[str, object] | None = None,
-        accepted_period_tokens: tuple[str, ...],
-    ) -> None:
-        resolved_context = dict(context) if context is not None else {}
-        super().__init__(tr(translated_message, **resolved_context))
-        self.translated_message: str = translated_message
-        self.context: dict[str, object] = resolved_context
-        self.accepted_period_tokens: tuple[str, ...] = accepted_period_tokens
-
-
-def _canonical_period(period: str, *, year: int) -> Period:
-    """Resolve a strict AEAT ``--period`` token plus ``--year`` to a :class:`Period`.
-
-    The ledger ``--period`` surface accepts only the canonical AEAT modelo
-    tokens (``0A`` annual, ``1T``-``4T`` quarters, ``01``-``12`` months),
-    validated through the registry period union at :mod:`core`,
-    and composes them with ``--year`` exactly as the modelo surface does. A
-    calendar shape (``2026Q1`` / ``2026-03`` / ``2026``) or any other notation
-    is refused with a message naming the AEAT tokens and the ``--year``
-    argument. The ``(year, token)`` pair builds the
-    :class:`Period` date span the ledger filters by — there is no
-    intermediate calendar string.
-    """
-    from ...core import Period, PeriodError
-
-    stripped = period.strip()
-    if not stripped:
-        raise _bad(tr("cli.common.errors.period_empty"))
-
-    registry_period = _ledger_aeat_token(stripped)
-    if registry_period is not None:
-        try:
-            resolved = Period.from_year_and_code(year, registry_period)
-        except PeriodError:
-            pass
-        else:
-            if resolved.has_date_span():
-                return resolved
-            # A registry-valid token the ledger cannot filter by (an instalment
-            # clave such as ``1P``): refuse with the AEAT-token guidance below.
-
-    raise _LedgerPeriodRefusal(
-        translated_message="cli.common.errors.period_unrecognised",
-        context={"raw": period},
-        accepted_period_tokens=_ledger_period_accepted_tokens(),
-    )
-
-
-def _filter_canonical_period(token: str, *, year: int) -> Period:
-    """Resolve a ``--filter period=`` bare token plus ``--filter year=`` to :class:`Period`.
-
-    The ledger ``--filter`` grammar carries the filing year as a separate
-    ``year=`` clause, so ``period=`` is the same bare AEAT token the
-    ``--period`` option accepts (``1T`` / ``0A`` / ``03``). A calendar shape or
-    a year-qualified hybrid (``2026Q1`` / ``2026-1T``) is refused with a message
-    naming the AEAT tokens. Reuses the same ``(year, token)→Period`` mapping the
-    ``--period`` / ``--year`` commands use.
-    """
-    return _canonical_period(token, year=year)
-
-
-def _optional_canonical_period(period: str | None, *, year: int | None) -> Period | None:
-    """Resolve an optional ``--period`` / ``--year`` pair to :class:`Period` or ``None``.
-
-    Returns ``None`` when no ``--period`` is supplied (the command scopes the
-    whole ledger). When ``--period`` is supplied it requires ``--year`` (the
-    AEAT token carries no year of its own) and converts the pair through
-    :func:`_canonical_period`; a ``--period``
-    with no ``--year`` refuses with an instructive message naming the
-    ``--year`` argument.
-    """
-    if period is None:
-        return None
-    if year is None:
-        raise _bad(tr("cli.common.errors.period_missing_year", token=period.strip()))
-    return _canonical_period(period, year=year)
-
-
-def _parse_iso_date(
-    raw: str,
-    *,
-    label: str,
-    translation_key: str = "cli.common.errors.invalid_iso_date",
-    default: str | None = None,
-) -> _date:
-    from ...core.parsing import parse_iso8601_date
-
-    message = tr(
-        translation_key,
-        label=label,
-        raw=raw,
-        option=label,
-        value=raw,
-        default=default or f"{label} must be an ISO date (YYYY-MM-DD); got {raw!r}.",
-    )
-    try:
-        parsed = parse_iso8601_date(raw.strip())
-    except ValueError as exc:
-        raise _bad(message) from exc
-    if parsed is None:
-        # ``parse_iso8601_date`` treats a blank/empty string as "absent" and
-        # returns ``None`` rather than raising; this gate requires a value,
-        # so blank input refuses with the same message as a malformed one.
-        raise _bad(message)
-    return parsed
-
-
-def _parse_iso_date_str(raw: str, *, label: str) -> str:
-    """Validate ``raw`` as an ISO-8601 date and return its canonical string.
-
-    The shared ISO gate (:func:`_parse_iso_date`)
-    refuses every non-ISO ordering by construction (``15/01/2026``,
-    ``01-15-2026``, ``2026/01/15``); this wrapper returns the canonical
-    ``YYYY-MM-DD`` form for the several service contracts that persist the date
-    as a 10-character string rather than a :class:`~datetime.date`. The
-    DD/MM-vs-MM/DD ambiguity never arises because only the ISO ordering parses.
-    """
-    return _parse_iso_date(raw, label=label).isoformat()
-
-
-def _parse_optional_iso_date_str(raw: str | None, *, label: str) -> str | None:
-    """Validate an optional ISO-8601 date, returning its canonical string or ``None``.
-
-    Returns ``None`` when ``raw`` is ``None`` (the date was not supplied);
-    otherwise delegates to
-    :func:`_parse_iso_date_str`, so a supplied
-    non-ISO date refuses at the CLI boundary.
-    """
-    if raw is None:
-        return None
-    return _parse_iso_date_str(raw, label=label)
-
-
-# ---------------------------------------------------------------------
-# Canonical decimal-amount validator
-# ---------------------------------------------------------------------
-#
-# One accepted grammar for every manual-entry numeric input: a dot decimal
-# separator, an optional one- or two-digit (euro-cent) fractional part, no
-# thousands grouping, no scientific notation, no ``NaN``/``Infinity``. The
-# two-digit fractional cap is what makes the Spanish thousands-grouping shape
-# ``1.000`` (a dot followed by three digits) refuse rather than silently become
-# ``1.0``. ``1234.56`` and a bare ``1000`` / ``0`` accept; ``1.000``,
-# ``1.234,56``, ``1e3``, ``NaN``, ``Infinity`` all refuse.
-#
-# The grammar itself lives in
-# :func:`~cadrumo.core.decimal.try_parse_canonical_decimal`, in ``core`` rather
-# than here, because the application-layer calculate-input boundary needs the
-# same shape and cannot import from ``entrypoints``. What stays here is the
-# thing that is genuinely CLI-owned: the localised, instructive refusal. One
-# grammar, one refusal per boundary.
-
-
-def parse_decimal_amount(raw: str, *, label: str, signed: bool = True) -> Decimal:
-    """Parse a required canonical-grammar decimal at the CLI boundary.
-
-    Validates ``raw`` against the canonical decimal regex (dot separator, no
-    thousands grouping, no scientific notation, no ``NaN``/``Infinity``) before
-    constructing :class:`~decimal.Decimal`, then asserts :meth:`~decimal.Decimal.is_finite`
-    as defence-in-depth. Refuses ``1.000``, ``1.234,56``, ``1e3``, ``NaN``,
-    ``Infinity``, and ``-Infinity`` with the localised
-    ``cli.ledger.errors.invalid_decimal`` refusal that names the field, echoes
-    the raw value, and states the accepted form.
-
-    Args:
-        raw: The operator-supplied raw string.
-        label: The field label echoed in the refusal message.
-        signed: When ``True`` (default) a leading ``-`` is accepted; when
-            ``False`` the non-negative variant is used and a negative input
-            refuses.
-    """
-    parsed = try_parse_canonical_decimal(raw, signed=signed, max_fraction_digits=2)
-    if parsed is None:
-        raise _bad(tr("cli.ledger.errors.invalid_decimal", label=label, raw=raw))
-    return parsed
-
-
-def parse_optional_decimal_amount(raw: str | None, *, label: str, signed: bool = True) -> Decimal | None:
-    """Parse an optional canonical-grammar decimal, or ``None`` when unset.
-
-    Returns ``None`` when ``raw`` is ``None`` (the field was not supplied);
-    otherwise delegates to
-    :func:`parse_decimal_amount`, so the same
-    canonical grammar and :meth:`~decimal.Decimal.is_finite` guard apply.
-    """
-    if raw is None:
-        return None
-    return parse_decimal_amount(raw, label=label, signed=signed)
-
-
-def optional_decimal_text(value: Decimal | None) -> str | None:
-    """Render an optional decimal without scientific notation."""
-    if value is None:
-        return None
-    return format(value, "f")
-
-
 def resolve_optional_root(value: Path | None, default: Callable[[], Path]) -> Path:
     """Resolve an optional ``--*-root`` Typer option to its declared default.
 
@@ -1586,14 +1014,19 @@ def _filing_taxpayer_or_refuse(state: WorkflowState) -> TaxpayerProfile:
     writes or packages a declaration routes through here, so absence refuses
     once rather than at each call site.
     """
-    from cadrumo.domain.calculations.registry.profile_grounding import build_profile_grounding_index
-
     from ...application.profile_preconditions import inspect_filing_taxpayer_identity_precondition
     from ...application.user_profile.preflight import format_profile_selector_requirements
+    from ...domain.calculations.registry.profile_grounding import build_profile_grounding_index
     from ...domain.user_profile.loader import load_user_profile_schema
     from .errors import CliRefusedBoundaryError
 
     record = state.active_profile_record()
+    # The registry authority is reached only on this refusal path, so it is
+    # imported here rather than at module scope: `_common` is loaded by the
+    # CLI bootstrap, and a module-level edge made every command -- including
+    # every state-free one -- pay for the whole calculation registry.
+    from ...domain.calculations.registry.authority import bundled_authority as _bundled_authority
+
     verdict = inspect_filing_taxpayer_identity_precondition(
         declared_tax_id=_declared_tax_id(record),
         profile_name=record.profile_id if record is not None else None,
@@ -1607,7 +1040,7 @@ def _filing_taxpayer_or_refuse(state: WorkflowState) -> TaxpayerProfile:
                         format_profile_selector_requirements(
                             [_TAX_ID_SELECTOR],
                             schema=load_user_profile_schema(),
-                            grounding_index=build_profile_grounding_index(bundled_authority()),
+                            grounding_index=build_profile_grounding_index(_bundled_authority()),
                         ),
                     ),
                 },

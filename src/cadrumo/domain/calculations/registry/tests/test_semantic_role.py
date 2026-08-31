@@ -22,11 +22,6 @@ from typing import Any, Literal, TypedDict
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.loader import load_modelo_path
-from cadrumo.domain.calculations.registry.schema import CasillaAlias, ModeloDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaConstraints, CasillaDefinition
-
 from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
 from .._validate_semantic_role_axes import semantic_roles_are_axis_siblings
@@ -41,6 +36,10 @@ from .._validate_semantic_roles import (
     _validate_semantic_role_consistency,
     _validate_semantic_role_typo_twins,
 )
+from ..loader import load_modelo_path
+from ..schema import ModeloDefinition, ModeloRevision
+from ..schema_references import PeriodSelector
+from ..schema_surfaces import CasillaAlias, CasillaConstraints, CasillaDefinition
 from ..validate_registry_scope import validate_registry_scope
 from ._synthetic_locale_fixtures import _synthetic_locale_scope, _write_test_label
 

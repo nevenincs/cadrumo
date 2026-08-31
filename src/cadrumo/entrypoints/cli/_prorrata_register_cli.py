@@ -40,8 +40,9 @@ from ...domain.prorrata_register import (
     ProrrataRegisterValidationError,
     SectorDefinition,
 )
-from ._common import _bad, emit_envelope, parse_decimal_amount
+from ._common import _bad, emit_envelope
 from ._common import active_bucket_id_or_refuse as _register_bucket_id
+from ._decimal_parsing import parse_decimal_amount
 from ._prorrata_register_payloads import (
     ProrrataDeclareSectorResult,
     ProrrataElectEspecialResult,

@@ -20,14 +20,13 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.ids import BindingId
-
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.ids import BindingId
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests import general_m303_filing_evidence

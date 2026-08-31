@@ -27,6 +27,7 @@ from enum import StrEnum
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ...core import BindingSourceKind, NoRecoveryOutcome
+from ...core.aggregation import COUNTERPART_SOURCE_KIND_ORDER
 from ...core.logging import LogExtra
 from ..operator_actions import ActionReference
 
@@ -328,13 +329,7 @@ class OperatorSurfaceContract(BaseModel):
     @field_validator("source_kinds")
     @classmethod
     def _source_kinds_are_exact(cls, value: tuple[BindingSourceKind, ...]) -> tuple[BindingSourceKind, ...]:
-        expected = (
-            BindingSourceKind.LEDGER_TRANSACTION,
-            BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
-            BindingSourceKind.PAYABLE_INVOICE,
-            BindingSourceKind.COLLECTIBLE_INVOICE,
-        )
-        if value != expected:
+        if value != COUNTERPART_SOURCE_KIND_ORDER:
             raise ValueError("source kinds must match the accepted four-kind taxonomy")
         return value
 

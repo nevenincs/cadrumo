@@ -59,9 +59,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
-
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -73,6 +70,8 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import AggregationCaptureKind, BindingSourceKind, CasillaId, Period, validated_casilla_id
 from ....core.aggregation import RetencionClave
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.env_scope import ready_clave_settings
@@ -161,6 +160,10 @@ def _seed_ready_profile() -> None:
                 UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
                 UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
                 UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+                # Modelo 111 refuses a defaulted colegio-concertado declaration: the fichero
+                # carries the row as filer data, so it must be stated rather than assumed.
+                # False is the truthful value for this natural-person filer.
+                UserProfileFact(path="withholding.colegio_concertado", value=False),
             ),
             created_at=_T0,
             updated_at=_T0,

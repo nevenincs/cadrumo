@@ -10,6 +10,8 @@ import sys
 from pathlib import Path
 from typing import Final
 
+from cadrumo.core import is_link_like
+
 from .._paths import REPO_ROOT, UTF_8
 
 _UTF_8: Final[str] = UTF_8
@@ -25,7 +27,7 @@ def _reset_demo_root() -> None:
     resolved_repo = REPO_ROOT.resolve(strict=True)
     resolved_var = VAR_ROOT.resolve(strict=False)
     resolved_demo = DEMO_ROOT.resolve(strict=False)
-    if VAR_ROOT.is_symlink():
+    if is_link_like(VAR_ROOT):
         raise RuntimeError(f"refusing to use symlinked var root: {VAR_ROOT}")
     try:
         resolved_var.relative_to(resolved_repo)
@@ -37,7 +39,7 @@ def _reset_demo_root() -> None:
         raise RuntimeError(f"refusing cleanup outside {resolved_var}") from exc
     if relative_demo == Path("."):
         raise RuntimeError("refusing to clean the var root itself")
-    if DEMO_ROOT.is_symlink():
+    if is_link_like(DEMO_ROOT):
         raise RuntimeError(f"refusing to clean symlinked demo root: {DEMO_ROOT}")
     if DEMO_ROOT.exists():
         shutil.rmtree(resolved_demo)

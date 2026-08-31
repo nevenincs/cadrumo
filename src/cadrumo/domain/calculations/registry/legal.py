@@ -2,13 +2,10 @@
 
 from __future__ import annotations
 
-import hashlib
 import re
 from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import Final
-
-from cadrumo.domain.calculations.registry.schema_references import LegalReference
 
 from ....core import (
     REVIEWED_LEGAL_STATUSES,
@@ -18,8 +15,23 @@ from ....core import (
     normalise_corpus_text,
     resolve_anchored_extracted_unit,
 )
+from ....core.hashing import blake2b_hex
 from ._citation_blocklist import CitationSource, find_known_bad
 from .errors import RegistryValidationError
+from .schema_references import LegalReference
+
+#: ``corpus_catalogue.py``'s own corpus-tier declaration check reuses the same
+#: provision-suffix filename convention this module checks its own excerpt
+#: claims against, so the compiled pattern is listed here rather than
+#: duplicated.
+__all__ = [
+    "_PROVISION_SUFFIXED_FILENAME",
+    "assert_legal_ref_ids_resolve",
+    "verify_legal_catalogue",
+    "verify_legal_catalogue_grounding",
+    "verify_legal_reference",
+    "verify_legal_reference_grounding",
+]
 
 _SOURCE_BY_KIND: dict[str, CitationSource] = {
     "ley": "ley",
@@ -424,7 +436,7 @@ def _sidecar_content_digest(sidecar: Path, reference: LegalReference) -> str:
         raise RegistryValidationError(
             f"legal reference {reference.id!r} extracted corpus sidecar could not be fingerprinted: {exc}",
         ) from exc
-    return hashlib.blake2b(data, digest_size=16).hexdigest()
+    return blake2b_hex(data)
 
 
 def _assert_redactions_are_not_fused(

@@ -24,16 +24,12 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.withholding_bindings import (
-    WithholdingObservation,
-    aggregate_withholding_by_clave,
-)
-
 from ....adapters.persistence.storage import PathContainmentError, SecureObjectRowIdentityError
-from ....adapters.persistence.storage.crypto import secure_object_key_digest
+from ....adapters.persistence.storage.crypto.encrypted_columns import secure_object_key_digest
 from ....core import AggregationCaptureKind, Period
 from ....core.aggregation import RetencionClave
 from ....core.external_constants import UTF_8_ENCODING
+from ....domain.calculations.registry.withholding_bindings import WithholdingObservation, aggregate_withholding_by_clave
 from ....tests.secure_sql import isolated_runtime_profile
 from .._percepciones_observations_repository import (
     PercepcionObservationRepository,

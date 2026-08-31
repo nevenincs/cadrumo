@@ -16,7 +16,7 @@ import pytest
 
 from .....core.config import override_settings
 from .....tests import assert_path_matches_grammar
-from ..verdict_cache import (
+from .._verdict_cache import (
     VERDICT_OUTCOME_GREEN,
     RegistryValidationVerdict,
     verdict_cache_path,

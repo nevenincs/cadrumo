@@ -8,15 +8,6 @@ from typing import TypedDict
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.applicability import (
-    ApplicabilityVerdict,
-    ModeloApplicability,
-    ModeloApplicabilityRule,
-    derive_modelo_applicability,
-    iter_modelo_applicability_rules,
-)
-from cadrumo.domain.calculations.registry.applicability_modelo202 import Modelo202Modality, Modelo202ModalityVerdict
-
 from ....deadlines import (
     EntityType,
     FiscalResidency,
@@ -27,7 +18,15 @@ from ....deadlines import (
     LegalEntityForm,
     TaxpayerProfile,
 )
-from ..applicability import MODELO_APPLICABILITY_RULES
+from ..applicability import (
+    MODELO_APPLICABILITY_RULES,
+    ApplicabilityVerdict,
+    ModeloApplicability,
+    ModeloApplicabilityRule,
+    derive_modelo_applicability,
+    iter_modelo_applicability_rules,
+)
+from ..applicability_modelo202 import Modelo202Modality, Modelo202ModalityVerdict
 from ..authority import bundled_authority
 from ._registry_schema_support import _committed_registry_tree
 
@@ -542,3 +541,27 @@ def test_non_impatriado_profile_does_not_route_to_modelo_151() -> None:
         assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE, special_regime
         assert result.applicable is False, special_regime
         assert "Art. 93" in result.reason
+
+
+def test_applicability_advertises_only_symbols_it_defines() -> None:
+    """The public contract surface is local; borrowed owners are imported, never re-exported."""
+    from ... import registry as registry_namespace
+    from .. import applicability as applicability_module
+
+    assert applicability_module.__all__
+    for name in applicability_module.__all__:
+        owned = getattr(applicability_module, name)
+        owner = getattr(owned, "__module__", None)
+        if owner is not None:
+            assert owner == "cadrumo.domain.calculations.registry.applicability", name
+        assert not hasattr(registry_namespace, name), name
+
+
+def test_the_modelo_202_modality_family_is_reached_through_its_own_owner() -> None:
+    """The modality family answers only from the module that defines it."""
+    from .. import applicability as applicability_module
+    from ..applicability_modelo202 import Modelo202Modality
+
+    assert Modelo202Modality.__module__ == "cadrumo.domain.calculations.registry.applicability_modelo202"
+    for name in ("Modelo202Modality", "Modelo202ModalityVerdict", "derive_modelo_202_modality"):
+        assert not hasattr(applicability_module, name), name

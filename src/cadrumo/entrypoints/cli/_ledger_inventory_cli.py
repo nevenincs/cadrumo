@@ -11,7 +11,7 @@ import json
 from pathlib import Path
 
 import typer
-from pydantic import ValidationError
+from pydantic import TypeAdapter, ValidationError
 
 from ...application.inventory import InventoryMovementCommand, InventoryService
 from ...core.external_constants import UTF_8_ENCODING
@@ -23,14 +23,11 @@ from ...domain.contribuyente.inventory import (
     MovementKind,
 )
 from ._common import (
-    _parse_iso_date,
-    emit_envelope,
-    parse_decimal_amount,
-    parse_optional_decimal_amount,
-)
-from ._common import (
     active_bucket_id_or_refuse as _inventory_bucket_id,
 )
+from ._common import emit_envelope
+from ._date_parsing import _parse_iso_date
+from ._decimal_parsing import parse_decimal_amount, parse_optional_decimal_amount
 from ._ledger_payloads import (
     InventoryClosingAuthorityRecordResult,
     InventoryCreateResult,
@@ -44,9 +41,12 @@ def _inventory_service() -> InventoryService:
     return InventoryService()
 
 
+_JSON_OBJECT_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(dict[str, object])
+
+
 def _safe_inventory_ledger_payload(ledger: InventoryLedger) -> dict[str, object]:
     """Project a ledger without evidence references or content digests."""
-    payload: dict[str, object] = json.loads(ledger.model_dump_json())
+    payload = _JSON_OBJECT_ADAPTER.validate_python(json.loads(ledger.model_dump_json()))
     authority = payload.pop("closing_authority_record", None)
     if isinstance(authority, dict) and ledger.closing_authority_record is not None:
         record = ledger.closing_authority_record

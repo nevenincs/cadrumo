@@ -24,10 +24,10 @@ import pytest
 from .....core import CasillaId, validated_casilla_id
 from .....core.hashing import hash_file
 from .....core.resources import bundled_path
+from .._validate import RegistryValidator
 from ..corpus_catalogue import resolve_record_design_binary
 from ..errors import NoRevisionForPeriodError, RegistryValidationError
 from ..temporal import select_revision
-from ..validate import RegistryValidator
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -103,6 +103,7 @@ def test_modelo_187_selects_only_the_2022_design_era() -> None:
     modelo, catalogues = _committed_modelo("187")
     revision = modelo.revisions["2022-y-siguientes"]
 
+    assert revision.authority_grade is not None
     assert revision.authority_grade.value == "applicability"
     assert revision.valid_from == date(2022, 1, 1)
     assert revision.period_selector.year_from == 2022
@@ -122,6 +123,7 @@ def test_modelo_188_selects_only_the_2023_design_era() -> None:
     modelo, catalogues = _committed_modelo("188")
     revision = modelo.revisions["2023-y-siguientes"]
 
+    assert revision.authority_grade is not None
     assert revision.authority_grade.value == "applicability"
     assert revision.valid_from == date(2023, 1, 1)
     assert revision.period_selector.year_from == 2023
@@ -142,6 +144,7 @@ def test_modelo_194_selects_only_its_three_hash_pinned_design_eras() -> None:
         revision = modelo.revisions[str(filing_year)]
         source = catalogues.sources[source_ref]
 
+        assert revision.authority_grade is not None
         assert revision.authority_grade.value == "applicability"
         assert revision.valid_from == date(filing_year, 1, 1)
         assert revision.valid_to == date(filing_year, 12, 31)

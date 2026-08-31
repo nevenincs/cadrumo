@@ -125,7 +125,7 @@ _INTENTIONAL_RECORD_LEVEL_FINDING_OWNERS = {
 }
 
 _ACTIVE_GROUPS = {
-    ("_borrador_binding.py", "resolve_modelo_100_borrador_bindings"),
+    ("borrador_binding.py", "resolve_modelo_100_borrador_bindings"),
     ("_calculation_actions.py", "_reject_caller_overrides_of_source_bindings"),
     ("_calculation_actions.py", "_refuse_direct_cross_period_verification"),
     (

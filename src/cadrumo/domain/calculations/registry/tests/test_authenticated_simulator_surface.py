@@ -12,11 +12,10 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.schema_verification import LiveCrossReferenceDecision
-
 from .....tests.aeat_literal_fixtures import aeat_host
 from ..live_parity import _COMPATIBLE_SURFACE_PAIRS
 from ..remote_state_guard import AEAT_WRITE_FORBIDDEN_ACTIONS
+from ..schema_verification import LiveCrossReferenceDecision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

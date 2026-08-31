@@ -77,6 +77,9 @@ modelo:
               help: A 347-es modelo contraparte.pais-codigo. rovata, 2008. adóév.
               label: A partner országkódja (ISO 3166-1 alfa-2; belföldi partnereknél
                 üres)
+            x-cdnmst3ic5o62sjkckn70sjfepkmsor9c4mm6rr4d5jmu:
+              help: A 347-es modelo contraparte.provincia-codigo. rovata.
+              label: A partner tartomanykodja (ket szamjegy)
             x-cdnmst3ic5o62sjkckn74pbge9in6pbeehgmst355lm6apr1dgmmsqb6:
               help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
                 bevallásán bevallott adat.
@@ -255,6 +258,9 @@ modelo:
               help: A 347-es modelo contraparte.pais-codigo. rovata, 2025. adóév.
               label: A partner országkódja (ISO 3166-1 alfa-2; belföldi partnereknél
                 üres)
+            x-cdnmst3ic5o62sjkckn70sjfepkmsor9c4mm6rr4d5jmu:
+              help: A 347-es modelo contraparte.provincia-codigo. rovata.
+              label: A partner tartomanykodja (ket szamjegy)
             x-cdnmst3ic5o62sjkckn74pbge9in6pbeehgmst355lm6apr1dgmmsqb6:
               help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
                 bevallásán bevallott adat.

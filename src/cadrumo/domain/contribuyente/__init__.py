@@ -20,7 +20,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from ...core import fold_diacritics as _fold_diacritics
 from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
 from ._ccaa import CCAA
-from ._constants import ProfileName
+from ._constants import SUPPORTED_PROFILE_SCHEMA_VERSION, ProfileName, ProfileSchemaVersion
 from ._deduccion_maternidad import compute_deduccion_maternidad_0611
 from ._descendant import DescendantInfo
 from ._descendant_facts import (
@@ -139,17 +139,10 @@ class TaxResidenceProfile(BaseModel, frozen=True, strict=True):
 
     model_config = ConfigDict(extra="forbid", validate_assignment=True)
 
-    schema_version: str = Field(default="1")
+    schema_version: ProfileSchemaVersion = Field(default=SUPPORTED_PROFILE_SCHEMA_VERSION)
     ccaa: CCAA
     tax_residence_since: date | None = None
     tax_residence_change_history: tuple[ResidenceChange, ...] = ()
-
-    @field_validator("schema_version")
-    @classmethod
-    def _schema_version_is_supported(cls, value: str) -> str:
-        if value != "1":
-            raise ProfileValidationError("schema_version must be '1'")
-        return value
 
     @field_validator("ccaa", mode="before")
     @classmethod

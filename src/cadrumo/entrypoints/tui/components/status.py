@@ -6,7 +6,9 @@ from typing import Final, Literal, override
 
 from textual.app import ComposeResult
 from textual.containers import Vertical
-from textual.widgets import Static
+from textual.widgets import LoadingIndicator, Static
+
+from ..components.theme import tokenised
 
 StatusTone = Literal["idle", "progress", "success", "warning", "error"]
 """Closed presentation states supported by :class:`PinnedStatusBar`."""
@@ -25,14 +27,14 @@ _GLYPH: Final[dict[StatusTone, str]] = {
 class PinnedStatusBar(Vertical):
     """Render supplied summary and status text in a pinned screen channel."""
 
-    DEFAULT_CSS = """
+    DEFAULT_CSS = tokenised("""
     PinnedStatusBar {
         dock: top;
         width: 100%;
         height: auto;
-        padding: 0 2;
+        padding: $cadrumo-space-0 $cadrumo-gutter;
         background: $surface;
-        border-bottom: solid $primary;
+        border-bottom: $cadrumo-rule $primary;
     }
 
     PinnedStatusBar.empty { display: none; }
@@ -54,12 +56,15 @@ class PinnedStatusBar(Vertical):
         text-style: bold;
     }
 
+    PinnedStatusBar > .status-spinner { height: $cadrumo-band-height; display: none; }
+    PinnedStatusBar.tone-progress > .status-spinner { display: block; }
+
     PinnedStatusBar.tone-idle > .status-message { color: $text-muted; }
     PinnedStatusBar.tone-progress > .status-message { color: $accent; }
     PinnedStatusBar.tone-success > .status-message { color: $success; }
     PinnedStatusBar.tone-warning > .status-message { color: $warning; }
     PinnedStatusBar.tone-error > .status-message { color: $error; text-style: bold; }
-    """
+    """)
 
     def __init__(self, *, summary: str = "", id: str | None = None, classes: str | None = None) -> None:
         """Initialize the pinned channel with an optional supplied summary."""
@@ -93,6 +98,7 @@ class PinnedStatusBar(Vertical):
     @override
     def compose(self) -> ComposeResult:
         yield Static(self._summary, markup=False, classes="status-summary")
+        yield LoadingIndicator(classes="status-spinner")
         yield Static("", markup=False, classes="status-message")
 
     def set_summary(self, summary: str) -> None:

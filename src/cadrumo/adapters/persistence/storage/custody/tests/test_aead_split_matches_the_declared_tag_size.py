@@ -28,13 +28,11 @@ from uuid import UUID
 import pytest
 
 from ......core.config import Settings
-from ...crypto import GCM_TAG_SIZE, NONCE_SIZE
-from .. import (
-    ProfileCustodyKdfParameters,
-    ProfileCustodySentinelRecord,
-    create_profile_custody_password_envelope,
-    create_profile_custody_sentinel,
-)
+from ...crypto.aead import GCM_TAG_SIZE, NONCE_SIZE
+from ..envelope import create_profile_custody_password_envelope
+from ..records import ProfileCustodyKdfParameters
+from ..sentinel import create_profile_custody_sentinel
+from ..sentinel_contract import ProfileCustodySentinelRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

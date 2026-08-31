@@ -38,7 +38,7 @@ from .....domain.attachments import (
 )
 from .....tests.secure_sql import isolated_runtime_profile
 from ...storage import OutboundStoragePermissionError
-from .._document_link_resolver import resolve_document_link
+from ..document_link_resolver import resolve_document_link
 from .drive_media_server import drive_media_endpoint
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -110,7 +110,7 @@ def test_blob_mutation_after_store_surfaces_on_reverify(tmp_path: Path) -> None:
 
     from .....adapters.persistence.storage.sql.engine import get_engine
     from .....adapters.persistence.storage.sql.session import session_scope
-    from ....persistence.storage.crypto import (
+    from ....persistence.storage.crypto.encrypted_columns import (
         decrypt_secure_object_payload,
         encrypt_secure_object_payload,
         secure_object_payload_aad,

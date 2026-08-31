@@ -18,17 +18,17 @@ from __future__ import annotations
 
 from ...core import Modelo, StandardPeriodCode
 from ...domain.modelos import (
-    CalculationRevision,
     Modelo210AgrupacionRentaRow,
     Modelo210AgrupacionRentaRowsError,
     ModeloDetailRow,
-    ModeloError,
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
     WorkUnit,
     validate_m210_agrupacion_renta_rows,
 )
+from ...domain.modelos.calculation_revision import CalculationRevision
+from ...domain.modelos.errors import ModeloError
 
 _M210_AGRUPACION_LEGAL_REF = "orden-eha-3316-2010:art-2"
 _M210_AGRUPACION_SOURCE_REF = "boe-modelo-210-2024-form-layout"

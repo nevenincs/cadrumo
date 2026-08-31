@@ -26,8 +26,6 @@ import re
 
 import pytest
 
-from cadrumo.domain.calculations.registry.record_design import extract_record_design
-
 from .....core.resources import bundled_path
 from ..record_design import (
     _clean_pdf_line,
@@ -36,6 +34,7 @@ from ..record_design import (
     _join_wrapped_row_descriptions,
     _pdf_page_name,
     _reattach_stranded_casilla_tags,
+    extract_record_design,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

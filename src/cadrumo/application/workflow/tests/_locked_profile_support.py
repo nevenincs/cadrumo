@@ -17,12 +17,12 @@ from base64 import b64encode
 from pathlib import Path
 from uuid import UUID
 
-from ....adapters.persistence.storage.custody import (
+from ....adapters.persistence.storage.custody.records import (
     ProfileCustodyEnvelope,
     ProfileCustodyKdfParameters,
     ProfileCustodyWrappedDek,
-    create_profile_custody_sentinel,
 )
+from ....adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
 from ....core.bucket_pointer import BucketPointer, write_pointer
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import mint_test_profile_recovery_envelope

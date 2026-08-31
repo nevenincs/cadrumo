@@ -18,8 +18,8 @@ from pathlib import Path
 from ...core.identity import canonical_bucket_id
 from ...core.logging import get_logger
 from ..categories import (
+    HOME_OFFICE_FAMILIES,
     SpendingCategory,
-    SpendingCategoryFamily,
     categories_for_family,
     effective_usage_ratio,
     resolve_category_profiles,
@@ -136,12 +136,6 @@ def usage_ratio_bucket_lock(bucket_id: str) -> Generator[None]:
         yield
 
 
-_HOME_OFFICE_FAMILIES = (
-    SpendingCategoryFamily.HOME_OFFICE_SUMINISTROS,
-    SpendingCategoryFamily.HOME_OFFICE_OWNERSHIP,
-)
-
-
 def derive_home_office_ratios_from_censo(
     raw_afectacion_ratio: Decimal,
     *,
@@ -180,7 +174,7 @@ def derive_home_office_ratios_from_censo(
         )
     registry = resolve_category_profiles(year)
     derived: dict[SpendingCategory, Decimal] = {}
-    for family in _HOME_OFFICE_FAMILIES:
+    for family in HOME_OFFICE_FAMILIES:
         for category in categories_for_family(family):
             profile = registry[category]
             derived[category] = effective_usage_ratio(profile.proportionality, raw_afectacion_ratio)

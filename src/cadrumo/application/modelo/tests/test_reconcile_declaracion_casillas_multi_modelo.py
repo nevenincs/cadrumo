@@ -33,9 +33,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.workflow.persistence import workflow_state_repository
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-
 from ....adapters.inbound.declaracion import InboundDeclaracionObservation, TemplateRevision
 from ....adapters.inbound.pdf import ExtractedCasilla
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -43,18 +40,16 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....core import Period, validated_casilla_id
 from ....core.time import now
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.modelos import (
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id, upsert_calculation_revision, upsert_work_unit
+from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    ModeloCode,
-    WorkUnit,
     derive_calculation_revision_id,
-    derive_work_unit_id,
-    upsert_calculation_revision,
-    upsert_work_unit,
 )
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.registry_observations import registry_grounded_observations
+from ...workflow.persistence import workflow_state_repository
 from ..reconciliation import (
     _reconcile_parsed_declaracion,
 )

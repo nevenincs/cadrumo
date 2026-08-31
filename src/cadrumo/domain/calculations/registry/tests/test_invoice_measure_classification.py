@@ -22,20 +22,19 @@ from collections import defaultdict
 import pytest
 from pydantic import BaseModel
 
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-
+from ..errors import RegistryValidationError
 from ..invoice_bindings import (
     _INVOICE_ALTERNATIVE_MEASURE_FACTS,
     _INVOICE_FACTS,
     _INVOICE_INDEPENDENT_QUANTITY_FACTS,
     _INVOICE_SCALAR_MEASURE_FACTS,
 )
-from ..ledger_binding_resolution import independent_quantity_facts
+from ..quantity_screen_enrolment import independent_quantity_facts
 from ._record_design_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_INVOICE_SOURCES = {"payable_invoice", "collectible_invoice"}
+_INVOICE_SOURCES = {"payable_invoice", "collectible_invoice", "m347_third_party_operation"}
 
 
 def _invoice_facts_by_modelo() -> dict[str, set[str]]:

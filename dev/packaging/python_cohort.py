@@ -66,8 +66,8 @@ def cohort_stamped_wheel_data_paths() -> frozenset[str]:
     Returns:
         The wheel-relative paths of every stamped member.
     """
+    from cadrumo.domain.calculations.registry._verdict_cache import shipped_verdict_location
     from cadrumo.domain.calculations.registry.identity import registry_identity_stamp_location
-    from cadrumo.domain.calculations.registry.verdict_cache import shipped_verdict_location
 
     root = PurePosixPath(_WHEEL_REGISTRY_ROOT)
     return frozenset(

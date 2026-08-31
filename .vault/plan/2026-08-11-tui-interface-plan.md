@@ -17,8 +17,8 @@ related:
   - '[[2026-08-24-modelo-edit-contract-adr]]'
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-modelo-workspace-interface-research]]'
-modified: '2026-08-24'
-body_hash: 'sha256:d45a1fdbd11d8de5d0ad403449634200924bd0c435abbdc43afecd1aa5e04edb'
+modified: '2026-08-26'
+body_hash: 'sha256:4d825e7f12bbdf0768edae5e6368200a7f3c3395a645bfd41b253b55a242622f'
 ---
 
 <!-- RETIRED: P09, S26, S35 -->
@@ -43,19 +43,20 @@ Establish exact current-HEAD receipt and generated action-denominator gates befo
 
 Create one exact receipt vocabulary and generated action denominator, then record the accepted bounded-review and migration-lane facts that alone admit C1.
 
-- [ ] `W01.P01.S01` - Record the C1 entrance receipt with the accepted companion stem, accepting commit and body hash, canonical Casilla review evidence, and architecture migration-lane commit ancestry; `.vault/reference/2026-08-11-tui-interface-dependency-receipt.md`.
-- [ ] `W01.P01.S02` - Implement only the strict current-HEAD Modelo Workspace C1-C5 interface exit receipt schemas and validators with exact predecessor digests, discriminated proofs, distinct compatibility axes, and delegated validation of architecture-owned incoming receipts; `dev/quality/modelo_workspace_receipts.py`.
-- [ ] `W01.P01.S03` - Prove every receipt validator rejects reordered or drifting predecessors, non-accepted authorities, unsupported compatibility axes, unclassified actions, and availability before its owning exit is green; `dev/tests/test_modelo_workspace_receipts.py`.
-- [ ] `W01.P01.S36` - Build ModeloWorkspaceActionDenominatorV1 from the canonical action catalogue, operation definitions, complete command graph and TuiCapability values, direct effect sites, routes, action views, dispatch rows, and typed exclusions; `dev/quality/modelo_workspace_action_denominator.py`.
-- [ ] `W01.P01.S37` - Generate the current-HEAD action-denominator artifact with every C1 direct query classified, modelo.work.create DEFERRED under work-lifecycle ownership, modelo.work.amend a distinct future C4 mutation, and modelo.work.amend_wizard FLOW_OWNED pending C4 disposition; `.vault/reference/2026-08-24-tui-modelo-workspace-action-denominator.md`.
+- [x] `W01.P01.S01` - Record the C1 entrance receipt with the accepted companion stem, accepting commit and body hash, canonical Casilla review evidence, and architecture migration-lane commit ancestry; `.vault/reference/2026-08-11-tui-interface-dependency-receipt.md`.
+- [x] `W01.P01.S02` - Implement only the strict current-HEAD Modelo Workspace C1-C5 interface exit receipt schemas and validators with exact predecessor digests, discriminated proofs, distinct compatibility axes, and delegated validation of architecture-owned incoming receipts; `dev/quality/modelo_workspace_receipts.py`.
+- [x] `W01.P01.S03` - Prove every receipt validator rejects reordered or drifting predecessors, non-accepted authorities, unsupported compatibility axes, unclassified actions, and availability before its owning exit is green; `dev/tests/test_modelo_workspace_receipts.py`.
+- [x] `W01.P01.S36` - Build ModeloWorkspaceActionDenominatorV1 from the canonical action catalogue, operation definitions, complete command graph and TuiCapability values, direct effect sites, routes, action views, dispatch rows, and typed exclusions; `dev/quality/modelo_workspace_action_denominator.py`.
+- [x] `W01.P01.S37` - Generate the current-HEAD action-denominator artifact with every C1 direct query classified, modelo.work.create DEFERRED under work-lifecycle ownership, modelo.work.amend a distinct future C4 mutation, and modelo.work.amend_wizard FLOW_OWNED pending C4 disposition; `.vault/reference/2026-08-24-tui-modelo-workspace-action-denominator.md`.
 
 ### Phase `W01.P02` - Profile presentation contract
 
 Freeze the application-owned profile projection required for requirement class, applicability, source, provenance, conflict, and readiness rendering.
 
-- [ ] `W01.P02.S04` - Define typed profile presentation states for static requiredness conditional applicability filing preflight readiness relevance source provenance conflicts and explicit unknowns; `src/cadrumo/application/user_profile/_overview.py`.
-- [ ] `W01.P02.S05` - Publish the settled profile presentation contract through the application facade; `src/cadrumo/application/user_profile/__init__.py`.
-- [ ] `W01.P02.S06` - Prove the profile projection from real schema conditional-completeness filing-preflight selector and stored-fact inputs without presentation inference; `src/cadrumo/application/user_profile/tests/test_overview.py`.
+- [x] `W01.P02.S04` - Define typed profile presentation states for static requiredness conditional applicability filing preflight readiness relevance source provenance conflicts and explicit unknowns; `src/cadrumo/application/user_profile/presentation.py`.
+- [x] `W01.P02.S05` - Publish the settled profile presentation contract through the application facade; `src/cadrumo/application/user_profile/presentation.py public defining module`.
+- [x] `W01.P02.S06` - Prove the profile projection from real schema conditional-completeness filing-preflight selector and stored-fact inputs without presentation inference; `src/cadrumo/application/user_profile/tests/test_presentation.py`.
+- [x] `W01.P02.S94` - Complete conditional-applicability assessment in the profile presentation contract for the cases W01.P02.S04 left classified as OPTIONAL rather than assessed: the multi-field IVA-regime trigger resolved through modelo_iva_profile_required_paths, and every repeatable section, so a field is reported not_applicable or applicable_required_missing on its real trigger instead of defaulting to optional; `src/cadrumo/application/user_profile/presentation.py and src/cadrumo/application/user_profile/tests/test_presentation.py`.
 
 ## Wave `W02` - Reusable information-architecture components
 
@@ -65,15 +66,15 @@ Add presentation-only primitives and consistent status, error, and log behavior 
 
 Provide reusable stage navigation, progressive disclosure, grouping, badges, and source-action presentation components.
 
-- [ ] `W02.P03.S07` - Extend settled widgets with linear stage navigation disclosure groups requirement badges and source-action cards; `src/cadrumo/entrypoints/tui/components/widgets.py`.
-- [ ] `W02.P03.S08` - Prove reusable navigation disclosure grouping focus and narrow-terminal behavior; `src/cadrumo/entrypoints/tui/components/tests/test_widgets.py`.
+- [x] `W02.P03.S07` - Extend settled widgets with linear stage navigation disclosure groups requirement badges and source-action cards; `src/cadrumo/entrypoints/tui/components/widgets.py`.
+- [x] `W02.P03.S08` - Prove reusable navigation disclosure grouping focus and narrow-terminal behavior; `src/cadrumo/entrypoints/tui/components/tests/test_widgets.py`.
 
 ### Phase `W02.P04` - Status, error, and log presentation
 
 Render already-classified status, safe errors, and bounded redacted logs without owning operation semantics.
 
-- [ ] `W02.P04.S09` - Extend settled status error and log renderers for distinct advisories safe failures bounded history spinner and final outcomes; `src/cadrumo/entrypoints/tui/components`.
-- [ ] `W02.P04.S10` - Prove render-only status error log and operation-feedback components consume public safe projections; `src/cadrumo/entrypoints/tui/components/tests/test_feedback.py`.
+- [x] `W02.P04.S09` - Extend settled status error and log renderers for distinct advisories safe failures bounded history spinner and final outcomes; `src/cadrumo/entrypoints/tui/components`.
+- [x] `W02.P04.S10` - Prove render-only status error log and operation-feedback components consume public safe projections; `src/cadrumo/entrypoints/tui/components/tests/test_feedback.py`.
 
 ## Wave `W03` - Task-led profile experience
 
@@ -83,17 +84,18 @@ Build the five-stage profile journey on settled application projections, with ex
 
 Compose Overview, Get data, Required, Review, and Ready as a linear journey whose inactive bodies are hidden.
 
-- [ ] `W03.P05.S11` - Compose the five-stage profile journey with only the active stage body expanded; `src/cadrumo/entrypoints/tui/profile/app.py`.
-- [ ] `W03.P05.S12` - Render overview required optional not-applicable and readiness summaries from the application projection; `src/cadrumo/entrypoints/tui/profile/status.py`.
-- [ ] `W03.P05.S13` - Prove linear navigation progressive disclosure and stage completion without duplicating requirement policy; `src/cadrumo/entrypoints/tui/profile/tests/test_profile_journey.py`.
+- [x] `W03.P05.S11` - Compose the five-stage profile journey with only the active stage body expanded; `src/cadrumo/entrypoints/tui/profile/app.py`.
+- [x] `W03.P05.S12` - Render overview required optional not-applicable and readiness summaries from the application projection; `src/cadrumo/entrypoints/tui/profile/journey_status.py`.
+- [x] `W03.P05.S13` - Prove linear navigation progressive disclosure and stage completion without duplicating requirement policy; `src/cadrumo/entrypoints/tui/profile/tests/test_profile_journey.py`.
 
 ### Phase `W03.P06` - Profile acquisition and reconciliation views
 
 Expose explicit source actions, provenance, conflicts, and exact apply or reject decisions through public application contracts.
 
-- [ ] `W03.P06.S14` - Render explicit automatic-source capabilities scope authentication needs and operation launch actions; `src/cadrumo/entrypoints/tui/profile/overview.py`.
-- [ ] `W03.P06.S15` - Render provenance current and proposed values conflicts and exact apply or reject reconciliation decisions; `src/cadrumo/entrypoints/tui/profile/sync_review.py`.
-- [ ] `W03.P06.S16` - Prove acquisition is never implicit and reconciliation persists only accepted decisions through public contracts; `src/cadrumo/entrypoints/tui/profile/tests/test_sync_review.py`.
+- [x] `W03.P06.S14` - Render explicit automatic-source capabilities scope authentication needs and operation launch actions; `src/cadrumo/entrypoints/tui/profile/overview.py`.
+- [x] `W03.P06.S15` - Render provenance current and proposed values conflicts and exact apply or reject reconciliation decisions; `src/cadrumo/entrypoints/tui/profile/sync_review.py`.
+- [x] `W03.P06.S16` - Prove acquisition is never implicit and reconciliation persists only accepted decisions through public contracts; `src/cadrumo/entrypoints/tui/profile/tests/test_sync_review.py`.
+- [x] `W03.P06.S95` - Declare the acquisition-source capability, scope and authentication contract that W03.P06.S14 renders but no public surface currently supplies, so an operator sees which scopes and credentials a source requires and whether they are held, deriving each fact from the owning authority rather than a presentation-local policy, then render those facts on the source-action panel; `the public acquisition-source capability contract, src/cadrumo/application/user_profile/acquisition_sources.py, src/cadrumo/entrypoints/tui/profile/overview.py, and focused capability and scope rendering tests`.
 
 ## Wave `W04` - Secret surfaces and generic flows
 
@@ -103,18 +105,18 @@ Complete the reusable login, registration, profile-picker, passphrase, and gener
 
 Deliver profile selection, login, registration, password entry, profile-secret creation, and passphrase change as consumers of the receipt-named `EphemeralSecretSubmission` facade while preserving upstream secret custody.
 
-- [ ] `W04.P07.S17` - Complete reusable masked credential and password-entry presentation over the receipt-named public EphemeralSecretSubmission facade; `src/cadrumo/entrypoints/tui/secret/credentials.py`.
-- [ ] `W04.P07.S18` - Complete login and profile-picker presentation without moving authentication policy into the TUI; `src/cadrumo/entrypoints/tui/secret/login.py`.
-- [ ] `W04.P07.S19` - Complete profile-secret creation and registration presentation through public application contracts; `src/cadrumo/entrypoints/tui/secret/registration.py`.
-- [ ] `W04.P07.S20` - Complete passphrase-change presentation with confirmation outcome and cancellation states; `src/cadrumo/entrypoints/tui/secret/passphrase.py`.
-- [ ] `W04.P07.S21` - Prove exact operation binding expiry single use mismatch refusal cancellation cleanup and canary non-retention through real secret journeys; `src/cadrumo/entrypoints/tui/secret/tests/test_secret_journeys.py`.
+- [x] `W04.P07.S17` - Complete reusable masked credential and password-entry presentation over the receipt-named public EphemeralSecretSubmission facade; `src/cadrumo/entrypoints/tui/secret/credentials.py`.
+- [x] `W04.P07.S18` - Complete login and profile-picker presentation without moving authentication policy into the TUI; `src/cadrumo/entrypoints/tui/secret/login.py`.
+- [x] `W04.P07.S19` - Complete profile-secret creation and registration presentation through public application contracts; `src/cadrumo/entrypoints/tui/secret/registration.py`.
+- [x] `W04.P07.S20` - Complete passphrase-change presentation with confirmation outcome and cancellation states; `src/cadrumo/entrypoints/tui/secret/passphrase.py`.
+- [x] `W04.P07.S21` - Prove exact operation binding expiry single use mismatch refusal cancellation cleanup and canary non-retention through real secret journeys; `src/cadrumo/entrypoints/tui/secret/tests/test_secret_journeys.py`.
 
 ### Phase `W04.P08` - Generic guided flows
 
 Rebuild reusable guided-flow presentation from settled application flow contracts without moving flow rules into the TUI.
 
-- [ ] `W04.P08.S22` - Extend the settled guided-flow shell with reusable stage navigation validation summaries and cancellation; `src/cadrumo/entrypoints/tui/flows/app.py`.
-- [ ] `W04.P08.S23` - Prove guided flows consume application-owned questions and decisions without embedding flow semantics; `src/cadrumo/entrypoints/tui/flows/tests/test_guided_flows.py`.
+- [x] `W04.P08.S22` - Extend the settled guided-flow shell with reusable stage navigation validation summaries and cancellation; `src/cadrumo/entrypoints/tui/flows/app.py`.
+- [x] `W04.P08.S23` - Prove guided flows consume application-owned questions and decisions without embedding flow semantics; `src/cadrumo/entrypoints/tui/flows/tests/test_guided_flows.py`.
 
 ## Wave `W05` - Modelo C1-C2 read cohorts
 
@@ -124,9 +126,9 @@ Open the bounded review and complex read workspace sequentially: C1 consumes the
 
 Register the one bounded review destination over the relocated canonical ModeloWorkReview renderer and close C1 only after its accessibility and current-HEAD receipt proofs pass.
 
-- [ ] `W05.P10.S24` - Register modelo.work.select and the sole C1 modelo.work.review destination over the architecture-relocated view, consuming the exact public ModeloWorkReview without a second producer or legacy route; `src/cadrumo/entrypoints/tui/modelo/view`.
-- [ ] `W05.P10.S25` - Prove C1 review outliers, stable keyboard order, non-colour status, and all four locales, three geometries, and two themes before its route can become callable; `src/cadrumo/entrypoints/tui/modelo/tests/test_c1_bounded_review.py`.
-- [ ] `W05.P10.S38` - Emit and validate ModeloWorkspaceC1ExitReceiptV1 with the accepted-companion prefix, migration evidence, denominator digest, C1 accessibility matrix, production route, and availability fence; `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c1-exit-receipt.md`.
+- [x] `W05.P10.S24` - Register modelo.work.select and the sole C1 modelo.work.review destination over the architecture-relocated view, consuming the exact public ModeloWorkReview without a second producer or legacy route; `src/cadrumo/entrypoints/tui/modelo/view`.
+- [x] `W05.P10.S25` - Prove C1 review outliers, stable keyboard order, non-colour status, and all four locales, three geometries, and two themes before its route can become callable; `src/cadrumo/entrypoints/tui/modelo/tests/test_c1_bounded_review.py`.
+- [x] `W05.P10.S38` - Emit and validate ModeloWorkspaceC1ExitReceiptV1 with the accepted-companion prefix, migration evidence, denominator digest, C1 accessibility matrix, production route, and availability fence; `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c1-exit-receipt.md`.
 
 ### Phase `W05.P10a` - Workspace C2 dependency handoff
 

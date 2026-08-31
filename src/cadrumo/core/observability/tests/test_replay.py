@@ -272,7 +272,7 @@ class TestArgvReconstruction:
                 "true-bool-bare",
                 "aeat workflow show",
                 (ArgumentRecord(name="json", value="True", source=ArgumentSource.FLAG),),
-                ("workflow", "show", "--json"),
+                ("workflow", "view", "--json"),
             ),
             (
                 "leading-dash-value",
@@ -291,7 +291,7 @@ class TestArgvReconstruction:
                     ArgumentRecord(name="cadrumo_runs_dir", value="var/runs", source=ArgumentSource.ENV),
                     ArgumentRecord(name="mode", value="quiet", source=ArgumentSource.DEFAULT),
                 ),
-                ("run", "show", "abc"),
+                ("run", "view", "abc"),
             ),
         )
 
@@ -316,7 +316,7 @@ class TestArgvReconstruction:
             ),
         )
         argv = _argv_from_arguments("aeat workflow show", args)
-        assert argv == ["workflow", "show", "--json"]
+        assert argv == ["workflow", "view", "--json"]
         # Also exercises the False path with override.
         args_false = (
             ArgumentRecord(
@@ -328,7 +328,7 @@ class TestArgvReconstruction:
         )
         argv_false = _argv_from_arguments("aeat workflow show", args_false)
         # False-bool override still gets skipped, not re-emitted.
-        assert argv_false == ["workflow", "show"]
+        assert argv_false == ["workflow", "view"]
 
 
 class TestReplayActiveEnvVarCanonicity:

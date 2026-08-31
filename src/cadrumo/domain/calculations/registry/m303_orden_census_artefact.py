@@ -36,17 +36,17 @@ See Also:
 from __future__ import annotations
 
 import logging
+from collections.abc import Mapping
 from pathlib import Path
 
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.schema import RegistryModel
-from cadrumo.domain.calculations.registry.schema_references import SourceReference
-
 from ....core.external_constants import UTF_8_ENCODING
 from ._m303_orden_constants import EXTRACTOR_VERSION
+from ._m303_orden_raw_models import M303AnnualOrdenSourceCensus
 from .ids import SourceRefId
-from .m303_orden_raw_models import M303AnnualOrdenSourceCensus
+from .schema_base import RegistryModel
+from .schema_references import SourceReference
 
 M303_ORDEN_CENSUS_ARTEFACT_FILENAME = "censuses.json"
 """The sole filename of the generated census artefact. Never spelled elsewhere."""
@@ -109,7 +109,7 @@ def render_m303_annual_orden_censuses(censuses: tuple[M303AnnualOrdenSourceCensu
 def load_m303_annual_orden_censuses(
     root: Path,
     *,
-    sources: dict[SourceRefId, SourceReference] | None = None,
+    sources: Mapping[SourceRefId, SourceReference] | None = None,
 ) -> dict[SourceRefId, M303AnnualOrdenSourceCensus] | None:
     """Load the shipped censuses for ``root``, or ``None`` to extract instead.
 
@@ -152,7 +152,7 @@ def load_m303_annual_orden_censuses(
 
 def _censuses_match_pinned_sources(
     censuses: dict[SourceRefId, M303AnnualOrdenSourceCensus],
-    sources: dict[SourceRefId, SourceReference],
+    sources: Mapping[SourceRefId, SourceReference],
 ) -> bool:
     """Whether every shipped census describes the source the registry pins."""
     for source_ref, census in censuses.items():

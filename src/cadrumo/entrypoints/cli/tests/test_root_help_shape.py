@@ -178,8 +178,11 @@ def test_config_and_app_help_use_curated_subtree_shape() -> None:
     assert "aeat config profile create NAME" in config.output
     assert "CADRUMO_LOCAL_STORAGE_ROOT" in config.output
     assert "CADRUMO_SECRET_STORE_DIR" in config.output
-    assert "aeat config profile show [NAME]" in config.output
-    assert ("aeat config profile " + "view [NAME]") not in config.output
+    assert "aeat config profile view [NAME]" in config.output
+    # The retired spelling, asserted absent so a rename cannot reinstate it.
+    # It is built by concatenation for the same reason the retired root verb
+    # below is: the literal must not appear whole in this file.
+    assert ("aeat config profile " + "show [NAME]") not in config.output
     assert retired_init not in config.output
     assert "Run aeat --help for the full overview." in config.output
     config_envelope = json.loads(config_json.output)
@@ -520,11 +523,14 @@ def test_installed_console_profile_create_fails_fast_without_prompt_host(tmp_pat
 
     combined_output = f"{result.stdout}\n{result.stderr}"
     assert result.returncode != 0, combined_output
-    # The no-console refusal names both recovery paths a first-timer can
-    # act on: re-run from an interactive terminal, or supply the
-    # required details as flags in one step.
-    assert "aeat config profile create NAME" in combined_output
-    assert "--quiet --tax-id NIF/CIF/DNI/NIE" in combined_output
+    # The no-console refusal names the paths a first-timer can act on for the
+    # blocker they actually hit: re-run from an interactive terminal, or hand
+    # the secret over one of the bounded channels. It previously asserted a
+    # `create NAME --quiet --tax-id ...` hint, which no message emits and which
+    # would not clear this blocker anyway -- the missing thing is a passphrase
+    # channel, not a fact.
+    assert "--secrets-stdin" in combined_output
+    assert "--secrets-fd" in combined_output
     # The refusal must not push corruption-recovery commands at an
     # operator whose only problem is the absence of an interactive
     # terminal; that wording wrongly implies the profile state is bad.
@@ -551,8 +557,12 @@ class TestBareInvocationWithActiveProfile:
         missing = _invoke([])
         with open_test_profile_session("11111111-1111-4111-8111-111111111111"):
             register_minimal_profile(profile_id="11111111-1111-4111-8111-111111111111", display_name="operator")
+            # `overview status` reads profile-bound storage, so it needs the
+            # open session. The landing below deliberately does not: naming the
+            # selected profile is a pointer read, and that is the distinction
+            # this case exists to hold.
+            overview = _invoke(["app", "overview", "status"])
         active = _invoke([])
-        overview = _invoke(["app", "overview", "status"])
 
         assert missing.exit_code == 0, missing.output
         assert "aeat config profile create NAME" in missing.output
@@ -561,7 +571,17 @@ class TestBareInvocationWithActiveProfile:
         assert "aeat app ledger import" in missing.output
 
         assert active.exit_code == 0, active.output
-        assert "Active profile: `operator`." in active.output
+        # Rendered from the key the landing itself uses, not the sentence it
+        # produced when this was written: the message is localised, and it has
+        # since been reworded, which a prose pin reads as a broken landing.
+        assert (
+            tr(
+                "cli.operator_surface.landing.active_profile_message",
+                locale=OutputLanguage.EN,
+                profile="operator",
+            )
+            in active.output
+        )
         assert CLI_PROFILE_ID_PLACEHOLDER not in active.output
         assert overview.exit_code == 0, overview.output
         assert active.output != overview.output

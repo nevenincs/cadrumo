@@ -35,28 +35,20 @@ from decimal import Decimal
 
 from ...domain.iva import (
     EVIDENCE_EXEMPT_IVA_CATEGORIES,
-    InvoiceKind,
     IvaCategory,
     IvaFlowDirection,
     derive_flow_for_classification,
+    flow_direction_for_invoice_kind,
     is_deducible_flow,
     is_devengada_flow,
 )
 from ...domain.transactions import (
-    BusinessClassification,
+    BUSINESS_BEARING_STATES,
     Transaction,
     TransactionLifecycleState,
 )
 from ._invoice_kind import invoice_kind_for_direction
 from ._source_mesh import CalculationSourceDiagnostic
-
-#: Business classifications that carry a deductible / declarable economic role.
-_EVIDENCE_EXPECTING_BUSINESS_STATES: frozenset[BusinessClassification] = frozenset(
-    {
-        BusinessClassification.BUSINESS,
-        BusinessClassification.MIXED,
-    },
-)
 
 #: Diagnostic ``source_kind`` for missing supplier evidence on positive
 #: deductible input IVA. Verification treats this as filing-grade blocking.
@@ -137,7 +129,7 @@ def _flow_for_transaction(transaction: Transaction) -> IvaFlowDirection | None:
     if invoice_kind is None:
         return None
     if transaction.iva_category is None:
-        return IvaFlowDirection.REPERCUTIDO if invoice_kind is InvoiceKind.ISSUED else IvaFlowDirection.SOPORTADO
+        return flow_direction_for_invoice_kind(invoice_kind)
     if not _is_cuota_bearing_iva_category(transaction.iva_category):
         return None
     return derive_flow_for_classification(
@@ -159,7 +151,7 @@ def _transaction_missing_evidence_flow(transaction: Transaction) -> IvaFlowDirec
     """
     if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
         return None
-    if transaction.business_classification not in _EVIDENCE_EXPECTING_BUSINESS_STATES:
+    if transaction.business_classification not in BUSINESS_BEARING_STATES:
         return None
     if not _positive_iva_quota(transaction):
         return None

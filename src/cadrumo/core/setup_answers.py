@@ -233,6 +233,7 @@ SETUP_ANSWER_FIELDS: Mapping[str, SetupFieldSpec] = {
     ),
     "bienes_extranjero_above_threshold": SetupFieldSpec("obligations.bienes_extranjero_above_threshold", bool, "false"),
     "country_of_fiscal_residence": SetupFieldSpec("taxpayer_type.country_of_fiscal_residence", str),
+    "declaration_roles": SetupFieldSpec("taxpayer_type.declaration_roles", str),
     "does_intracomunitario": SetupFieldSpec("iva.does_intracomunitario", bool, "false"),
     "enrollment_large_company": SetupFieldSpec("censo.large_company", bool, "false"),
     "enrollment_public_administration_budget_gt_6000000": SetupFieldSpec(
@@ -511,6 +512,8 @@ class SetupAnswers(BaseModel):
     """ISO-8601 date declared for the Ley 49/2002 Title II renunciation."""
     irpf_income_categories: str = ""
     """Comma-separated set of IrpfIncomeCategory tokens."""
+    declaration_roles: str = ""
+    """Comma-separated set of ThirdPartyDeclarationRole tokens."""
 
     # ── taxpayer biographic ──────────────────────────────────────────────
     taxpayer_sex: Any = ""
@@ -801,6 +804,20 @@ class SetupAnswers(BaseModel):
         tokens = [token.strip() for token in value.split(",") if token.strip()]
         for token in tokens:
             irpf_income_category_cls(token)
+        return ",".join(tokens)
+
+    @field_validator("declaration_roles")
+    @classmethod
+    def _validate_declaration_roles(cls, value: str) -> str:
+        # ThirdPartyDeclarationRole is defined in this same core package
+        # (core.aggregation), unlike the deadline-domain taxonomy types the
+        # other validators in this module resolve lazily through ``_m()`` --
+        # a direct same-package import carries no circular-import risk here.
+        from .aggregation import ThirdPartyDeclarationRole
+
+        tokens = [token.strip() for token in value.split(",") if token.strip()]
+        for token in tokens:
+            ThirdPartyDeclarationRole(token)
         return ",".join(tokens)
 
     @field_validator("taxation_type", mode="before")

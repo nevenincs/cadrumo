@@ -37,12 +37,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-from cadrumo.domain.calculations.registry.iva_wallet_relation_targets import (
-    MODELO_303_IVA_COMPENSATION_BINDING_ID,
-    iva_wallet_owned_binding_ids_for_revision,
-)
-
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -50,6 +44,11 @@ from ....adapters.persistence.profile.modelos_verification_reports import Verifi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import BindingSourceKind, CalculationSourceLineageRole, CasillaId, Period, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.calculations.registry.iva_wallet_relation_targets import (
+    MODELO_303_IVA_COMPENSATION_BINDING_ID,
+    iva_wallet_owned_binding_ids_for_revision,
+)
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
@@ -389,10 +388,8 @@ def test_same_year_locally_filed_upstream_admitted_with_advisory(repos: _Repos) 
     """
     from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
-    from ....domain.modelos import (
-        CalculationRevisionState,
-        upsert_calculation_revision,
-    )
+    from ....domain.modelos import upsert_calculation_revision
+    from ....domain.modelos.calculation_revision import CalculationRevisionState
     from ...calculations import CrossPeriodCleanStateBlocker
     from .._verification_actions import _cross_period_clean_state_verdict_for_work_unit
 
@@ -592,6 +589,7 @@ def test_source_mesh_excludes_303_iva_compensation_relation_binding(repos: _Repo
         transaction_repository=None,
         invoice_repository=None,
         foreign_asset_observations=(),
+        foreign_asset_row_observations=(),
     )
 
     assert MODELO_303_IVA_COMPENSATION_BINDING_ID not in resolution.binding_values

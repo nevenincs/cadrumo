@@ -88,6 +88,12 @@ straight failure with no allowlist escape hatch.
 
 from __future__ import annotations
 
+import ast
+import importlib
+import os
+import pkgutil
+import shutil
+import subprocess
 from collections import Counter
 from dataclasses import dataclass, field
 from functools import cache
@@ -107,6 +113,7 @@ from ..quality.import_hygiene_scan import (
     PKG_ROOT,
     REGISTRY_LOADER_PACKAGE,
     ImportSite,
+    TuiBoundaryViolation,
     TuiBoundaryViolationKind,
     discover_facades,
     find_delegate_wrapper_shims,
@@ -361,6 +368,97 @@ def test_production_family1_baseline_is_hard_zero() -> None:
         "the application.review <-> application.workflow cycle-break has been structurally "
         "removed; do not re-populate it to tolerate that specific exception again."
     )
+
+
+def _site(*, importer_mod: str, target_mod: str, names: list[str]) -> ImportSite:
+    """Build one resolved import site for the private-reach scanner to judge."""
+    return ImportSite(
+        importer_mod=importer_mod,
+        importer_path=REPO_ROOT / "src" / (importer_mod.replace(".", "/") + ".py"),
+        lineno=1,
+        target_mod=target_mod,
+        imported_names=names,
+        is_test=False,
+        in_type_checking=False,
+    )
+
+
+def test_a_private_name_reached_through_a_public_module_is_a_violation() -> None:
+    """The reach that a module rename would otherwise have hidden is caught.
+
+    A private symbol imported across a package boundary is the same coupling
+    whether the module holding it is named privately or not. Judging only the
+    module path meant promoting that module to a public name cleared the reach
+    from this scanner without a single import changing.
+    """
+    site = _site(
+        importer_mod="cadrumo.application.flows.tests.test_widgets_reach",
+        target_mod="cadrumo.application.wizard.widgets",
+        names=["_redact_validation_context"],
+    )
+
+    violations = find_private_import_violations([site])
+
+    assert len(violations) == 1
+    assert violations[0].target_mod == "cadrumo.application.wizard.widgets"
+    assert violations[0].imported_names == ["_redact_validation_context"]
+    assert violations[0].owning_package == "cadrumo.application.wizard"
+
+
+def test_a_public_name_reached_through_a_public_module_stays_clean() -> None:
+    """The widening must not swallow an ordinary cross-package import.
+
+    Without this the rule above could be satisfied by flagging every import,
+    which would make the scanner useless rather than sharper.
+    """
+    site = _site(
+        importer_mod="cadrumo.application.flows.tests.test_widgets_reach",
+        target_mod="cadrumo.application.wizard.widgets",
+        names=["redact_validation_context"],
+    )
+
+    assert find_private_import_violations([site]) == []
+
+
+def test_a_private_name_reached_inside_its_own_package_stays_clean() -> None:
+    """A private symbol is private to its package, not to its module.
+
+    Siblings inside the owning package are the population the name is private
+    FOR, so exempting them is the same judgement the private-module rule
+    already makes for its own owning package.
+    """
+    site = _site(
+        importer_mod="cadrumo.application.wizard.tests.test_widgets",
+        target_mod="cadrumo.application.wizard.widgets",
+        names=["_redact_validation_context"],
+    )
+
+    assert find_private_import_violations([site]) == []
+
+
+def test_only_the_private_names_of_a_mixed_import_are_reported() -> None:
+    """A mixed import is reported for what is actually private in it."""
+    site = _site(
+        importer_mod="cadrumo.application.flows.tests.test_widgets_reach",
+        target_mod="cadrumo.application.wizard.widgets",
+        names=["redact_validation_context", "_MASK_KEYWORDS"],
+    )
+
+    violations = find_private_import_violations([site])
+
+    assert len(violations) == 1
+    assert violations[0].imported_names == ["_MASK_KEYWORDS"]
+
+
+def test_a_dunder_name_is_not_treated_as_private() -> None:
+    """Structural introspection of a submodule's own exports is not a reach."""
+    site = _site(
+        importer_mod="cadrumo.application.flows.tests.test_widgets_reach",
+        target_mod="cadrumo.application.wizard.widgets",
+        names=["__all__"],
+    )
+
+    assert find_private_import_violations([site]) == []
 
 
 def test_production_family1_violations_do_not_exceed_baseline_count() -> None:
@@ -1210,3 +1308,144 @@ def test_tui_boundary_rejects_each_ast_bypass(
     violations = _scan_planted_tui_boundary(tmp_path, dotted_rel, body)
 
     assert [violation.kind for violation in violations] == [expected_kind]
+
+
+_TUI_LAUNCH_SEAMS: Final[dict[tuple[str, str], str]] = {
+    (
+        "cadrumo/entrypoints/cli/_modelo_work_review_cli.py",
+        "_run_review_destination",
+    ): "the CLI is the launcher for the bounded-review host; the import is function-local to that seam",
+    (
+        "cadrumo/entrypoints/cli/_modelo_work_select_cli.py",
+        "_run_select_destination",
+    ): "the CLI is the launcher for the work picker; the import is function-local to that seam",
+    (
+        "cadrumo/entrypoints/cli/_modelo_work_select_cli.py",
+        "_run_review_destination_for_selected_unit",
+    ): "the picker hands off to the review host; the import is function-local to that seam",
+}
+
+
+def _enclosing_function(path: Path, lineno: int) -> str:
+    """Return the function a line sits inside, or an empty string at module level.
+
+    Exemptions are keyed by enclosing function rather than line number, so an
+    edit above the import cannot silently move the exemption onto a different
+    site.
+    """
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    enclosing = ""
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+            end = node.end_lineno or node.lineno
+            if node.lineno <= lineno <= end:
+                enclosing = node.name
+    return enclosing
+
+
+@cache
+def _tracked_pkg_py_files() -> tuple[Path, ...]:
+    """Return every TRACKED ``.py`` file in the shipped package.
+
+    A filesystem walk also picks up untracked and mid-relocation files, which
+    are by definition not shipped, so a peer's uncommitted work would otherwise
+    contribute to whether a gate over this set passes. ``git ls-files`` is the
+    shipped set.
+    """
+    executable = shutil.which("git")
+    assert executable is not None, "git is required to enumerate the shipped source set"
+    completed = subprocess.run(  # noqa: S603 - git resolved from PATH like every other dev gate
+        [executable, "ls-files", "-z", "--", PKG_ROOT.relative_to(REPO_ROOT).as_posix()],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        check=True,
+        text=True,
+    )
+    entries = completed.stdout.split("\x00")
+    return tuple(sorted(REPO_ROOT / entry for entry in entries if entry.endswith(".py")))
+
+
+def _live_tui_boundary_violations() -> list[TuiBoundaryViolation]:
+    """Scan every tracked source file in the shipped package, not merely the components subtree."""
+    return find_tui_boundary_violations(_tracked_pkg_py_files(), src_root=REPO_ROOT / "src")
+
+
+def test_no_production_module_reaches_the_tui_outside_a_declared_launch_seam() -> None:
+    """The whole shipped tree is swept, so a new importer anywhere is caught."""
+    violations = _live_tui_boundary_violations()
+    unexempt = [
+        violation
+        for violation in violations
+        if (violation.importer_path, _enclosing_function(REPO_ROOT / "src" / violation.importer_path, violation.lineno))
+        not in _TUI_LAUNCH_SEAMS
+    ]
+
+    assert unexempt == [], f"undeclared TUI reach: {[(v.importer_path, v.lineno, v.target) for v in unexempt]}"
+
+
+def test_the_boundary_gate_judges_tracked_files_and_ignores_untracked_ones() -> None:
+    """An untracked file is not shipped, so a peer's uncommitted work cannot decide this gate.
+
+    The denominator was a filesystem walk, which admitted untracked and
+    mid-relocation files while the docstring claimed it scanned shipped source.
+    Both halves are asserted: the probe genuinely violates the boundary when
+    handed to the scanner directly, and it is still absent from the live set.
+    """
+    # Warm the sibling filesystem walk BEFORE the probe exists, so its memo
+    # cannot capture the probe and leak it into another gate in this worker.
+    _scanned_py_files()
+
+    # Unique per process: two concurrent pytest runs share this worktree.
+    probe = PKG_ROOT / f"_untracked_tui_boundary_probe_{os.getpid()}.py"
+    assert not probe.exists(), f"{probe} already exists; refusing to overwrite another writer's file"
+
+    probe.write_text("import textual\n", encoding="utf-8")
+    try:
+        direct = find_tui_boundary_violations([probe], src_root=REPO_ROOT / "src")
+        assert direct, "the probe must violate the boundary, or the exclusion below proves nothing"
+
+        _tracked_pkg_py_files.cache_clear()
+        assert probe not in _tracked_pkg_py_files(), "an untracked file reached the shipped denominator"
+        leaked = [v for v in _live_tui_boundary_violations() if v.importer_path.endswith(probe.name)]
+        assert leaked == [], "an untracked file contributed a violation to the gate verdict"
+    finally:
+        probe.unlink(missing_ok=True)
+        _tracked_pkg_py_files.cache_clear()
+
+    assert PKG_ROOT / "core" / "config.py" in _tracked_pkg_py_files()
+
+
+def test_every_declared_launch_seam_still_names_a_real_import() -> None:
+    """A seam whose import moved away must fail rather than sit here forever."""
+    live = {
+        (violation.importer_path, _enclosing_function(REPO_ROOT / "src" / violation.importer_path, violation.lineno))
+        for violation in _live_tui_boundary_violations()
+    }
+    stale = sorted(seam for seam in _TUI_LAUNCH_SEAMS if seam not in live)
+
+    assert stale == [], f"declared launch seams no longer reach the TUI: {stale}"
+    assert all(_TUI_LAUNCH_SEAMS.values()), "every launch seam states why it is permitted"
+
+
+def test_textual_is_confined_to_the_canonical_tui_package() -> None:
+    """No exemption exists for the toolkit: it belongs to the TUI root alone."""
+    outside = [
+        violation
+        for violation in _live_tui_boundary_violations()
+        if violation.kind is TuiBoundaryViolationKind.TEXTUAL_LOCATION
+    ]
+
+    assert outside == [], f"textual imported outside the TUI root: {outside}"
+
+
+def test_the_canonical_tui_package_is_fully_importable() -> None:
+    """Every module imports, so a swept dependency cannot leave the package broken."""
+    package = importlib.import_module(CANONICAL_TUI_PACKAGE)
+    failures: list[tuple[str, str]] = []
+    for module in pkgutil.walk_packages(package.__path__, package.__name__ + "."):
+        try:
+            importlib.import_module(module.name)
+        except Exception as error:
+            failures.append((module.name, f"{type(error).__name__}: {error}"))
+
+    assert failures == [], f"canonical TUI package is not fully importable: {failures}"

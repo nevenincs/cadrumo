@@ -19,16 +19,14 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation
-from cadrumo.domain.calculations.registry.ids import RelationId
-
 from ....core import BindingSourceKind, CalculationSourceLineageRole, CasillaId, validated_casilla_id
-from ....domain.modelos import (
+from ....domain.calculations.registry.bindings import CasillaObservation
+from ....domain.calculations.registry.ids import RelationId
+from ....domain.modelos import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
+from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     CalculationSourceRef,
-    ModeloVerificationFindingKind,
-    ModeloVerificationFindingSeverity,
     derive_calculation_revision_id,
 )
 from .._modelo_payloads import (
@@ -540,8 +538,13 @@ def test_calculation_revision_projection_carries_dependency_treatment_without_di
 def test_source_provenance_payload_dependency_treatment_defaults_to_undeclared() -> None:
     """A provenance row whose revision declared no treatment must not acquire one by default."""
     row = SourceProvenancePayload(
-        source_kind="ledger_iva_aggregation",
+        resolver_id="ledger_iva_aggregation",
+        resolved_binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
+        contributor_source_kind="ledger_iva_aggregation",
+        contributor_binding_source=None,
+        lineage_role=CalculationSourceLineageRole.PRIMARY,
         source_ref="transaction:tx-1",
+        parent_source_ref=None,
     )
 
     assert row.dependency_treatment == ""

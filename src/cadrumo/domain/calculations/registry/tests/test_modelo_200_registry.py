@@ -10,11 +10,6 @@ from typing import get_args
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.domain.calculations.registry.snapshot import build_snapshot
-from cadrumo.domain.calculations.registry.validate import RegistryValidator
-
 from .....core import (
     CasillaId,
     FilingProjectionRef,
@@ -24,9 +19,13 @@ from .....core import (
     validated_casilla_id,
 )
 from .....core.resources import bundled_path
+from .._validate import RegistryValidator
 from ..errors import RegistryValidationError
+from ..formula_runtime import calculate_registry_snapshot
 from ..legal import verify_legal_catalogue
 from ..runtime_graph import expression_casilla_refs
+from ..schema_input_kind import InputKind
+from ..snapshot import build_snapshot
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -222,7 +221,7 @@ def test_modelo_200_projection_endpoints_keep_design_derived_slot_caps_and_no_ca
     assert {type(reference) for reference in m200_references} == core_m200_types
     for model_type in core_m200_types:
         references = tuple(reference for reference in m200_references if type(reference) is model_type)
-        declared_slots = {reference.slot for reference in references}
+        declared_slots = {getattr(reference, "slot") for reference in references}  # noqa: B009
         slot_cap = max(declared_slots)
         upper_bound = {metadata.le for metadata in model_type.model_fields["slot"].metadata if hasattr(metadata, "le")}
 

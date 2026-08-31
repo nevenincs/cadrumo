@@ -13,6 +13,42 @@ profile:
     not_configured: Nincs RENTA-hoz konfigurált adóilletékességi profil. Futtassa
       a(z) `aeat config profile edit NAME --tax-residence-ccaa <ccaa>` parancsot a
       beállításához.
+  journey:
+    action:
+      next: Következő
+      previous: Előző
+    get_data:
+      placeholder: Ebben a folyamatban a forrásműveletek még nem érhetők el.
+    ready:
+      blocked: 'Nem kész: a Kötelező szakaszban felsorolt mezők blokkolják.'
+      summary: Bevallásra való felkészültség
+    required:
+      none_missing: Nem hiányzik kötelező adat.
+      show_not_applicable: Nem alkalmazhatók megjelenítése
+      show_optional: Nem kötelezők megjelenítése
+    review:
+      placeholder: Ebben a folyamatban a származási és ütközési áttekintés még nem
+        érhető el.
+    source:
+      censal_review:
+        action: Nyilvántartás áttekintése
+        description: Olvassa be az adózó saját nyilvántartási adatait, és tekintse
+          át a javasolt módosításokat elfogadás előtt.
+        title: AEAT nyilvántartás
+      credential_requirement:
+        held: AEAT hitelesítő adat rögzítve
+        missing: AEAT hitelesítés szükséges (nincs beállítva)
+      filed_history:
+        action: Előzmények lekérése
+        description: Kérje le az adózó korábbi bevallási előzményeit az AEAT-tól a
+          már bevallott adatok átviteléhez.
+        title: Korábbi bevallások
+    stage:
+      get_data: Adatok lekérése
+      overview: Áttekintés
+      ready: Kész
+      required: Kötelező
+      review: Áttekintés és jóváhagyás
   keys:
     description: Profilkonfigurációs kulcsok és leírásaik
     tax:
@@ -32,19 +68,49 @@ profile:
       attribution_entity_socios:
         base_imponible_assigned:
           label: Tagra jutó adóalap
+        clave:
+          label: A jövedelemtétel kódja (184-es nyomtatvány)
+        clave_declarado:
+          label: Az ingatlan tulajdonjogi kódja
+        codigo_provincia:
+          label: Tartomány kódja
         country_of_residence:
           label: Illetőség szerinti ország (csak állandó telephely nélküli külföldi
             illetőségű esetén)
+        dias_arrendamiento:
+          label: Az ingatlan bérbeadási napjainak száma
+        dias_miembro:
+          label: Tagsági napok száma
+        domicilio_fiscal:
+          label: A tag adóügyi lakóhelye
+        miembro_a_31_diciembre:
+          label: Tag december 31-én
         name:
           label: Tag neve
+        naturaleza_inmueble:
+          label: Az ingatlan jellege
         nif:
           label: Tag NIF-je
         participe_clave:
           label: Tagsági típus kódja
+        porcentaje_titularidad_inmueble:
+          label: Ingatlantulajdoni hányad százaléka
+        reduccion:
+          label: A jövedelemre alkalmazandó csökkentés
+        referencia_catastral:
+          label: Ingatlan-nyilvántartási hivatkozás
+        rendimiento_neto_minorado_agricola_eo:
+          label: Csökkentett nettó mezőgazdasági jövedelem (objektív becslés)
+        rendimiento_neto_previo_eo:
+          label: Előzetes nettó jövedelem (objektív becslés)
         role:
           label: Tagi szerepkör
         share_pct:
           label: Részesedés aránya
+        situacion_inmueble:
+          label: Az ingatlan elhelyezkedési státusza
+        subclave:
+          label: A jövedelemtétel alkódja (184-es nyomtatvány)
       attribution_received:
         base_imponible_attributed:
           label: Tagra jutó hozzárendelt adóalap
@@ -301,6 +367,8 @@ profile:
       taxpayer_type:
         country_of_fiscal_residence:
           label: Adóügyi illetőség országa
+        declaration_roles:
+          label: Harmadik feles bevallói szerepkörök (347-es modell)
         entity_type:
           label: Adózó típusa
         fiscal_residency:

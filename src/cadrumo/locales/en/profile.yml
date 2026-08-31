@@ -11,6 +11,41 @@ profile:
       on your territory.
     not_configured: No tax-residence profile is configured for RENTA. Run `aeat config
       profile edit NAME --tax-residence-ccaa <ccaa>` to configure it.
+  journey:
+    action:
+      next: Next
+      previous: Previous
+    get_data:
+      placeholder: Source actions are not yet available on this journey.
+    ready:
+      blocked: 'Not ready: blocked by the fields listed in Required.'
+      summary: Filing readiness
+    required:
+      none_missing: Nothing required is missing.
+      show_not_applicable: Show not applicable
+      show_optional: Show optional
+    review:
+      placeholder: Provenance and conflict review is not yet available on this journey.
+    source:
+      censal_review:
+        action: Review census
+        description: Read the taxpayer's own censal record and review any proposed
+          changes before adopting them.
+        title: AEAT census
+      credential_requirement:
+        held: AEAT credential on file
+        missing: Requires AEAT authentication (not configured)
+      filed_history:
+        action: Pull filed history
+        description: Pull the taxpayer's filed-history record from AEAT to carry forward
+          previously declared facts.
+        title: Previous filings
+    stage:
+      get_data: Get data
+      overview: Overview
+      ready: Ready
+      required: Required
+      review: Review
   keys:
     description: Profile configuration keys and their descriptions
     tax:
@@ -30,19 +65,49 @@ profile:
       attribution_entity_socios:
         base_imponible_assigned:
           label: Assigned taxable base
+        clave:
+          label: Income line clave (Modelo 184)
+        clave_declarado:
+          label: Property ownership key
+        codigo_provincia:
+          label: Province code
         country_of_residence:
           label: Country of residence (non-resident without permanent establishment
             only)
+        dias_arrendamiento:
+          label: Days the property was leased
+        dias_miembro:
+          label: Number of days as member
+        domicilio_fiscal:
+          label: Member's tax domicile
+        miembro_a_31_diciembre:
+          label: Member at 31 December
         name:
           label: Member name
+        naturaleza_inmueble:
+          label: Property nature
         nif:
           label: Member NIF
         participe_clave:
           label: Type of member (Modelo 184 clave)
+        porcentaje_titularidad_inmueble:
+          label: Property ownership percentage
+        reduccion:
+          label: Reduction applicable to the income
+        referencia_catastral:
+          label: Cadastral reference
+        rendimiento_neto_minorado_agricola_eo:
+          label: Reduced agricultural net yield (estimación objetiva)
+        rendimiento_neto_previo_eo:
+          label: Prior net yield (estimación objetiva)
         role:
           label: Member role
         share_pct:
           label: Participation percentage
+        situacion_inmueble:
+          label: Property location status
+        subclave:
+          label: Subcode of the income line (Modelo 184)
       attribution_received:
         base_imponible_attributed:
           label: Attributed taxable base
@@ -299,6 +364,8 @@ profile:
       taxpayer_type:
         country_of_fiscal_residence:
           label: Country of fiscal residence
+        declaration_roles:
+          label: Third-party declaring roles (Modelo 347)
         entity_type:
           label: Entity type
         fiscal_residency:

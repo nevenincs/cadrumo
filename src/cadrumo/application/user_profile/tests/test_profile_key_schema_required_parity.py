@@ -69,6 +69,7 @@ _KNOWN_DIVERGENCES: dict[str, tuple[_Cause, str]] = {
         "One column of a declared socio row.",
     ),
     "attribution_entity_socios.participe_clave": (_Cause.REPEATABLE_ROW, "One column of a declared socio row."),
+    "attribution_entity_socios.clave": (_Cause.REPEATABLE_ROW, "One column of a declared socio row."),
     "attribution_received.entity_nif": (_Cause.REPEATABLE_ROW, "One column of a received-attribution row."),
     "attribution_received.entity_name": (_Cause.REPEATABLE_ROW, "One column of a received-attribution row."),
     "attribution_received.share_pct": (_Cause.REPEATABLE_ROW, "One column of a received-attribution row."),

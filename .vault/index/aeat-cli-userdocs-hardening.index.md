@@ -4,13 +4,14 @@ tags:
   - '#index'
   - '#aeat-cli-userdocs-hardening'
 date: '2026-08-16'
-modified: '2026-08-26'
-body_schema: 'body-v1'
-body_hash: 'sha256:ec67712ca03616994b4e165a1a7b7b3d2a3f3d0527f1edfbd2f07fdfb45d1f4e'
+modified: '2026-08-27'
+body_schema: 'body-v2'
+body_hash: 'sha256:460682f5c7927608345dfeb31ca80910e2fa251d2b1edb5ba15aa20ee5d779a7'
 related:
   - '[[2026-06-04-aeat-cli-userdocs-hardening-W01-P01-summary]]'
   - '[[2026-06-04-aeat-cli-userdocs-hardening-W01-P02-summary]]'
   - '[[2026-06-04-aeat-cli-userdocs-hardening-code-review-audit]]'
+  - '[[2026-06-04-aeat-cli-userdocs-hardening-ledger]]'
   - '[[2026-06-04-aeat-cli-userdocs-hardening-plan]]'
   - '[[2026-06-04-aeat-cli-userdocs-hardening-reader-review-audit]]'
   - '[[2026-06-04-aeat-cli-userdocs-hardening-research]]'
@@ -41,19 +42,9 @@ Auto-generated index of all documents tagged with `#aeat-cli-userdocs-hardening`
 
 ### exec
 
-- `2026-06-04-aeat-cli-userdocs-hardening-W01-P01-S01` - `aeat-cli-userdocs-hardening` `W01.P01.S01` execution
-- `2026-06-04-aeat-cli-userdocs-hardening-W01-P01-S02` - `aeat-cli-userdocs-hardening` `W01.P01.S02` execution
-- `2026-06-04-aeat-cli-userdocs-hardening-W01-P01-S03` - `aeat-cli-userdocs-hardening` `W01.P01.S03` execution
-- `2026-06-04-aeat-cli-userdocs-hardening-W01-P01-S04` - `aeat-cli-userdocs-hardening` `W01.P01.S04` execution
 - `2026-06-04-aeat-cli-userdocs-hardening-W01-P01-summary` - `aeat-cli-userdocs-hardening` `W01.P01` summary
-- `2026-06-04-aeat-cli-userdocs-hardening-W01-P02-S05` - `aeat-cli-userdocs-hardening` `W01.P02.S05` execution
-- `2026-06-04-aeat-cli-userdocs-hardening-W01-P02-S06` - `aeat-cli-userdocs-hardening` `W01.P02.S06` execution
-- `2026-06-04-aeat-cli-userdocs-hardening-W01-P02-S07` - `aeat-cli-userdocs-hardening` `W01.P02.S07` execution
 - `2026-06-04-aeat-cli-userdocs-hardening-W01-P02-summary` - `aeat-cli-userdocs-hardening` `W01.P02` summary
-- `2026-06-04-aeat-cli-userdocs-hardening-W02-P03-S08` - `aeat-cli-userdocs-hardening` `W02.P03.S08` execution
-- `2026-06-04-aeat-cli-userdocs-hardening-W02-P03-S09` - `aeat-cli-userdocs-hardening` `W02.P03.S09` execution
-- `2026-06-04-aeat-cli-userdocs-hardening-W02-P04-S12` - `aeat-cli-userdocs-hardening` `W02.P04.S12` execution
-- `2026-06-04-aeat-cli-userdocs-hardening-W07-P14-S48` - W07.P14.S48 single-page canonical docs build
+- `2026-06-04-aeat-cli-userdocs-hardening-ledger` - `aeat-cli-userdocs-hardening` ledger
 - `2026-06-04-aeat-cli-userdocs-hardening-w01-summary-exec` - `aeat-cli-userdocs-hardening` `W01` summary
 
 ### plan

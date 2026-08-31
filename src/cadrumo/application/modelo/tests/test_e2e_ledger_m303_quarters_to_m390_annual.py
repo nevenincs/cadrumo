@@ -73,12 +73,8 @@ from ....domain.iva import (
     IvaDeductionClassificationProvenance,
 )
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
-from ....domain.modelos import (
-    CalculationRevision,
-    VerificationCompletenessStatus,
-    VerificationReport,
-    WorkUnit,
-)
+from ....domain.modelos import VerificationCompletenessStatus, VerificationReport, WorkUnit
+from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,

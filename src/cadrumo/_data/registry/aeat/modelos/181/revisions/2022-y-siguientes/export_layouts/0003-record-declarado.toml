@@ -1,0 +1,545 @@
+# Registro de tipo 2: registro del declarado. 500 bytes, 34 numbered campos running to the last byte -- this record has no BLANCOS trailer.
+# 1+3+4+9+9+9+40+2+1+4+20+8+3+13+13+13+13+6+1+1+1+1+20+12+12+193+1+35+9+5+10+9+9+10 = 500.
+
+[[revisions."2022-y-siguientes".export_layouts]]
+id = "modelo-181-fichero-2022"
+
+[[revisions."2022-y-siguientes".export_layouts.records]]
+id = "modelo-181-declarado"
+record_type = "declarado"
+order = 1
+encoding = "latin-1"
+line_ending = "none"
+
+# Posicion 1. TIPO DE REGISTRO. Constante '2'.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t2-record-type"
+offset = 1
+length = 1
+kind = "literal"
+literal = "2"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Posiciones 2-4. MODELO DECLARACION. Constante '181'.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t2-modelo"
+offset = 2
+length = 3
+kind = "literal"
+literal = "181"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Posiciones 5-8. EJERCICIO. Same draft attribute as the tipo 1 record.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t2-ejercicio"
+offset = 5
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Posiciones 9-17. N.I.F. DEL DECLARANTE. Same producer key as the tipo 1 record.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t2-nif-declarante"
+offset = 9
+length = 9
+kind = "header"
+producer_key = "taxpayer.tax_id"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 5. Positions 18-26. N.I.F. DEL DECLARADO.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t2-declarado-nif"
+offset = 18
+length = 9
+kind = "casilla"
+casilla_id = "declarado-nif"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 6. Positions 27-35. N.I.F. DEL REPRESENTANTE LEGAL.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t2-representante-legal-nif"
+offset = 27
+length = 9
+kind = "casilla"
+casilla_id = "representante-legal-nif"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 7. Positions 36-75. APELLIDOS Y NOMBRE O RAZON SOCIAL DEL DECLARADO.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t2-declarado-nombre"
+offset = 36
+length = 40
+kind = "casilla"
+casilla_id = "declarado-nombre"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 8. Positions 76-77. CODIGO PROVINCIA.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t2-codigo-provincia"
+offset = 76
+length = 2
+kind = "casilla"
+casilla_id = "codigo-provincia"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 9. Position 78. CLAVE TIPO DE IDENTIFICACION.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t2-clave-tipo-identificacion"
+offset = 78
+length = 1
+kind = "casilla"
+casilla_id = "clave-tipo-identificacion"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 10. Positions 79-82. PREFIJO CODIGO IBAN.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t2-prefijo-codigo-iban"
+offset = 79
+length = 4
+kind = "casilla"
+casilla_id = "prefijo-codigo-iban"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 11. Positions 83-102. IDENTIFICACION DEL PRESTAMO, CREDITO U OTRA
+# OPERACION FINANCIERA.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t2-identificacion-operacion"
+offset = 83
+length = 20
+kind = "casilla"
+casilla_id = "identificacion-operacion"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 12. Positions 103-110. FECHA DE LA OPERACION (103-106 ano, 107-108 mes,
+# 109-110 dia).
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t2-fecha-operacion"
+offset = 103
+length = 8
+kind = "casilla"
+casilla_id = "fecha-operacion"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 13. Positions 111-113. DURACION DE LA OPERACION, "expresada en meses".
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t2-duracion-operacion"
+offset = 111
+length = 3
+kind = "casilla"
+casilla_id = "duracion-operacion"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 14. Positions 114-126. IMPORTE DEL PRESTAMO, CREDITO U OTRA OPERACION
+# FINANCIERA. "Sin signo y sin coma decimal", 114-124 entera, 125-126 decimal.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t2-importe-operacion"
+offset = 114
+length = 13
+kind = "casilla"
+casilla_id = "importe-operacion"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 15. Positions 127-139. IMPORTE ABONADO EN EL EJERCICIO EN CONCEPTO DE
+# AMORTIZACION DE CAPITAL. 127-137 entera, 138-139 decimal.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t2-importe-amortizacion-capital"
+offset = 127
+length = 13
+kind = "casilla"
+casilla_id = "importe-amortizacion-capital"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 16. Positions 140-152. IMPORTE ABONADO EN EL EJERCICIO EN CONCEPTO DE
+# INTERESES. 140-150 entera, 151-152 decimal.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t2-importe-intereses"
+offset = 140
+length = 13
+kind = "casilla"
+casilla_id = "importe-intereses"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 17. Positions 153-165. IMPORTE ABONADO EN EL EJERCICIO EN CONCEPTO DE
+# GASTOS DERIVADOS DE LA FINANCIACION AJENA. 153-163 entera, 164-165 decimal.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t2-importe-gastos-financiacion"
+offset = 153
+length = 13
+kind = "casilla"
+casilla_id = "importe-gastos-financiacion"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 18. Positions 166-171. PORCENTAJE DE PARTICIPACION. Subdivided 166-168
+# parte entera and 169-171 parte decimal -- three decimal digits, not two.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t2-porcentaje-participacion"
+offset = 166
+length = 6
+kind = "casilla"
+casilla_id = "porcentaje-participacion"
+data_type = "decimal"
+decimals = 3
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 19. Position 172. ORIGEN DE LA OPERACION.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t2-origen-operacion"
+offset = 172
+length = 1
+kind = "casilla"
+casilla_id = "origen-operacion"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 20. Position 173. TIPO DE OPERACION.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t2-tipo-operacion"
+offset = 173
+length = 1
+kind = "casilla"
+casilla_id = "tipo-operacion"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 21. Position 174. SUBCLAVE OPERACION.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t2-subclave-operacion"
+offset = 174
+length = 1
+kind = "casilla"
+casilla_id = "subclave-operacion"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 22. Position 175. SITUACION DEL INMUEBLE.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t2-situacion-inmueble"
+offset = 175
+length = 1
+kind = "casilla"
+casilla_id = "situacion-inmueble"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 23. Positions 176-195. REFERENCIA CATASTRAL.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t2-referencia-catastral"
+offset = 176
+length = 20
+kind = "casilla"
+casilla_id = "referencia-catastral"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 24. Positions 196-207. VALOR DE TASACION DEL INMUEBLE OBJETO DE GARANTIA.
+# "Sin signo y sin coma decimal", two implied decimals.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t2-valor-tasacion-inmueble"
+offset = 196
+length = 12
+kind = "casilla"
+casilla_id = "valor-tasacion-inmueble"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 25. Positions 208-219. SALDO PENDIENTE A 31 DE DICIEMBRE. "Este saldo NO
+# se prorrateara en el caso de que la operacion corresponda a varios declarados."
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t2-saldo-pendiente"
+offset = 208
+length = 12
+kind = "casilla"
+casilla_id = "saldo-pendiente"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 26. Positions 220-412. DIRECCION DEL INMUEBLE. AEAT declares ONE
+# alfanumerico campo of 193 bytes and subdivides it into seventeen named parts
+# (220-224 tipo de via, 225-274 nombre via publica, 275-277 tipo de numeracion,
+# 278-282 numero de casa, 283-285 calificador, 286-288 bloque, 289-291 portal,
+# 292-294 escalera, 295-297 planta o piso, 298-300 puerta, 301-340 complemento,
+# 341-370 localidad, 371-400 municipio, 401-405 codigo de municipio, 406-407
+# codigo provincia, 408-412 codigo postal). The campo declared here is AEAT's
+# own 193-byte span.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t2-direccion-inmueble"
+offset = 220
+length = 193
+kind = "casilla"
+casilla_id = "direccion-inmueble"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 27. Position 413. CLAVE DE INTERVENCION EN LA OPERACION.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t2-clave-intervencion"
+offset = 413
+length = 1
+kind = "casilla"
+casilla_id = "clave-intervencion"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 28. Positions 414-448. APELLIDOS Y NOMBRE O RAZON SOCIAL DEL PRESTAMISTA.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t2-prestamista-nombre"
+offset = 414
+length = 35
+kind = "casilla"
+casilla_id = "prestamista-nombre"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 29. Positions 449-457. N.I.F. DEL PRESTAMISTA.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t2-prestamista-nif"
+offset = 449
+length = 9
+kind = "casilla"
+casilla_id = "prestamista-nif"
+data_type = "text"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 30. Positions 458-462. PORCENTAJE DE LA FINANCIACION DESTINADO A LA
+# VIVIENDA HABITUAL, only when subclave de operacion is 1. Subdivided 458-460
+# parte entera and 461-462 parte decimal.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t2-porcentaje-financiacion-vivienda"
+offset = 458
+length = 5
+kind = "casilla"
+casilla_id = "porcentaje-financiacion-vivienda-habitual"
+data_type = "decimal"
+decimals = 2
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 31. Positions 463-472. IMPORTE DEVENGADO EN EL EJERCICIO EN CONCEPTO DE
+# REINTEGRO DE INTERESES. "Sin signo y sin coma decimal".
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t2-importe-reintegro-intereses"
+offset = 463
+length = 10
+kind = "casilla"
+casilla_id = "importe-reintegro-intereses"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 32. Positions 473-481. INTERESES INDEMNIZATORIOS. Subdivided 473-479
+# entera, 480-481 decimal.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t2-intereses-indemnizatorios"
+offset = 473
+length = 9
+kind = "casilla"
+casilla_id = "intereses-indemnizatorios"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 33. Positions 482-490. OTRAS CANTIDADES INDEMNIZATORIAS.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t2-otras-cantidades-indemnizatorias"
+offset = 482
+length = 9
+kind = "casilla"
+casilla_id = "otras-cantidades-indemnizatorias"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]
+
+# Campo 34. Positions 491-500. CANTIDADES DESTINADAS POR LA ENTIDAD FINANCIERA A
+# MINORAR EL PRINCIPAL DEL PRESTAMO.
+[[revisions."2022-y-siguientes".export_layouts.records.fields]]
+id = "modelo-181-t2-cantidades-minorar-principal"
+offset = 491
+length = 10
+kind = "casilla"
+casilla_id = "cantidades-minorar-principal"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]

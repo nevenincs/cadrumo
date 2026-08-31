@@ -5,6 +5,7 @@ from __future__ import annotations
 import ast
 import asyncio
 import importlib
+import inspect
 import subprocess
 import sys
 import textwrap
@@ -35,7 +36,12 @@ from ....core import (
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....tests.offline_aeat_register import aeat_sede_fixture, open_routed_declarations_register
 from ....tests.secure_sql import isolated_runtime_profile
+from ...operations.frontend_contracts import (
+    OperationResultProjectionRequestV1,
+    OperationResultProjectionSuccessV1,
+)
 from ...operations.models import OperationRequest
+from ...operations.projection_services import OperationResultProjectionService
 from ...operations.registry import OperationRegistry
 from ...operations.supervisor import OperationSupervisor
 from ..filed_data_capture import (
@@ -430,9 +436,18 @@ def test_supervisor_records_a_dry_run_with_no_effect(tmp_path: Path) -> None:
 
 
 def test_supervisor_receipt_joins_the_exact_encrypted_child_after_settlement(tmp_path: Path) -> None:
-    """Successful settlement preserves the writer-owned child identity end to end."""
+    """Successful settlement preserves the writer-owned child identity end to end.
+
+    The top-level ``result_ref`` is now always the stored-operand reference
+    for the full settled run (never substituted with the encrypted child's
+    own key), so one typed public door can resolve it regardless of whether
+    a sync-run child exists. Child provenance travels as the run's own
+    ``sync_run_ref`` field and is independently loadable through the
+    sync-run repository.
+    """
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         repository = SyncRunRecordRepository()
+        operands = operation_secure_reference_repository(objects=profile.repository)
 
         definition = build_filed_history_operation_definition(
             sync_run_repository_factory=lambda: repository,
@@ -446,7 +461,7 @@ def test_supervisor_receipt_joins_the_exact_encrypted_child_after_settlement(tmp
             journal=journal,
             event_stream=journal,
             leases=leases,
-            operands=operation_secure_reference_repository(objects=profile.repository),
+            operands=operands,
             owner_id="5" * 64,
             lease_token_factory=lambda: "6" * 64,
             clock=lambda: _NOW,
@@ -466,18 +481,22 @@ def test_supervisor_receipt_joins_the_exact_encrypted_child_after_settlement(tmp
             terminal = await supervisor.start(operation_id)
             reloaded = await journal.load(operation_id)
             replay = await journal.read_after(operation_id, 0, limit=100)
-            return terminal, reloaded, replay.events
+            assert terminal.terminal_receipt is not None
+            assert terminal.terminal_receipt.result_ref is not None
+            settled_run = await operands.resolve(terminal.terminal_receipt.result_ref, FiledHistoryOnboardingRun)
+            return terminal, reloaded, replay.events, settled_run
 
-        terminal, reloaded, events = asyncio.run(run())
+        terminal, reloaded, events, settled_run = asyncio.run(run())
 
         receipt = terminal.terminal_receipt
         assert receipt is not None
         reference = receipt.result_ref
         assert reference is not None
-        stored = repository.load(reference)
+        assert settled_run.sync_run_ref is not None
+        stored = repository.load(settled_run.sync_run_ref)
         assert stored is not None
         assert repository.secure_object_repository.namespace_payload_hashes(repository.namespace)
-        assert repository.extract_identifier(stored) == reference
+        assert repository.extract_identifier(stored) == settled_run.sync_run_ref
         assert stored.bucket_id == profile.bucket_id
         assert terminal.lifecycle is OperationLifecycle.TERMINAL
         assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
@@ -489,6 +508,82 @@ def test_supervisor_receipt_joins_the_exact_encrypted_child_after_settlement(tmp
         terminal_event = next(event for event in events if event.kind is OperationEventKind.TERMINAL)
         assert cleanup.sequence < settlement.sequence < terminal_event.sequence
         assert terminal_event.receipt.result_ref == reference
+
+
+def test_frontend_projects_the_public_result_without_the_private_type(tmp_path: Path) -> None:
+    """A frontend resolves evidence, IVA wallet, notificaciones and provenance
+    through the public result-projection door alone.
+
+    This function's own body never names the private
+    ``FiledHistoryOnboardingRun`` type -- checked below by AST inspection of
+    this very function -- yet still recovers every fact
+    ``FiledHistoryPublicResultV1`` declares, resolved purely through
+    ``OperationResultProjectionService`` and the operation's public schema
+    identity.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        repository = SyncRunRecordRepository()
+        operands = operation_secure_reference_repository(objects=profile.repository)
+        definition = build_filed_history_operation_definition(
+            sync_run_repository_factory=lambda: repository,
+            pull=_routed_pull(_DeterministicFiledHistoryDiscovery(modelo="100", ejercicio=2025)),
+        )
+        registry = _registered_filed_history_definition(definition)
+        durable_root = tmp_path / "result-projection-operations"
+        journal = OperationJournalRepository(storage_root=durable_root)
+        leases = OperationLeaseFilesystemRepository(storage_root=durable_root)
+        supervisor = OperationSupervisor(
+            registry=registry,
+            journal=journal,
+            event_stream=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="8" * 64,
+            lease_token_factory=lambda: "9" * 64,
+            clock=lambda: _NOW,
+            lease_duration=timedelta(minutes=5),
+        )
+        request = OperationRequest(
+            definition_id=definition.definition_id,
+            subject_ref=profile.bucket_id,
+            payload=FiledHistoryOperationRequest(
+                output_root=tmp_path / "result-projection-filed", today=date(2026, 3, 15)
+            ),
+        )
+        result_service = OperationResultProjectionService(reader=journal, registry=registry, operands=operands)
+
+        async def run():
+            operation_id = await supervisor.submit(request, operation_id="a" * 64)
+            terminal = await supervisor.start(operation_id)
+            contract = registry.lookup_public_contract(definition.definition_id)
+            assert contract.result_schema is not None
+            resolved = await result_service.resolve(
+                OperationResultProjectionRequestV1(
+                    operation_id=operation_id,
+                    terminal_revision=terminal.revision,
+                    definition_contract_digest=contract.definition_contract_digest,
+                    result_schema=contract.result_schema,
+                )
+            )
+            return resolved
+
+        resolved = asyncio.run(run())
+
+        assert isinstance(resolved, OperationResultProjectionSuccessV1)
+        projection = resolved.projection
+        assert projection.iva_wallet_status
+        assert projection.notificaciones_status
+        assert projection.sync_run_ref is not None
+        assert isinstance(projection.evidence_notices, tuple)
+        assert isinstance(projection.pairs, tuple) and projection.pairs
+        assert projection.pairs[0].refused is True
+        assert projection.pairs[0].failure_type
+        assert isinstance(projection.selection_rows, tuple)
+
+    source = textwrap.dedent(inspect.getsource(test_frontend_projects_the_public_result_without_the_private_type))
+    tree = ast.parse(source)
+    names = {node.id for node in ast.walk(tree) if isinstance(node, ast.Name)}
+    assert "FiledHistoryOnboardingRun" not in names
 
 
 @pytest.mark.parametrize(

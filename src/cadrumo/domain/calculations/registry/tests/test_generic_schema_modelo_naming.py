@@ -54,7 +54,12 @@ _NAME_CODE = re.compile(r"(?:^|_)(?:modelo_?|m_?)(\d{3})(?=$|_|[a-z])", re.IGNOR
 def _modelo_codes_in_name(name: str) -> frozenset[str]:
     """Return the canonical modelo codes a snake_case or CamelCase name carries."""
     spaced = re.sub(r"(?<=[a-z])(?=[A-Z])", "_", name)
-    return frozenset(match.group(1) for match in _NAME_CODE.finditer(spaced)) & _CODES
+    codes: set[str] = set()
+    for match in _NAME_CODE.finditer(spaced):
+        code = match.group(1)
+        assert isinstance(code, str)
+        codes.add(code)
+    return frozenset(codes) & _CODES
 
 
 def _registry_items() -> tuple[tuple[Path, ast.AST], ...]:
@@ -164,7 +169,14 @@ def test_the_branch_detector_sees_a_planted_modelo_branch() -> None:
     """Prove the branch scan bites, and only inside generic construction."""
     planted = ast.parse("def _construct_authority():\n    return modelo.id == Modelo.M303\n")
     generic = SRC_CADRUMO / _REGISTRY_PACKAGE / "authority.py"
-    per_modelo = SRC_CADRUMO / _REGISTRY_PACKAGE / "_m303_orden_resolution.py"
+    per_modelo = SRC_CADRUMO / _REGISTRY_PACKAGE / "m303_orden_resolution.py"
+
+    # The exclusion half is only worth asserting about a module that exists.
+    # Scoping is by membership of the generic set, so ANY name outside it --
+    # including one that names nothing at all -- satisfies the second assertion
+    # vacuously. Pinning the file keeps this a statement about the real
+    # per-modelo module rather than about a spelling that outlived it.
+    assert per_modelo.is_file()
 
     assert _modelo_branches_in_generic_construction(((generic, planted),))
     assert _modelo_branches_in_generic_construction(((per_modelo, planted),)) == {}

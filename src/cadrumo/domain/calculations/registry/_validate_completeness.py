@@ -9,12 +9,11 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.schema_surfaces import CalculationCompletenessCasilla, CasillaDefinition
-
 from ....core import CasillaId
 from .casilla_membership import casillas_by_id
 from .record_design_coverage import calculation_closure_casilla_ids
+from .schema import ModeloRevision
+from .schema_surfaces import CalculationCompletenessCasilla, CasillaDefinition
 
 
 def _identity_label(segmento: str | None, number: str) -> str:

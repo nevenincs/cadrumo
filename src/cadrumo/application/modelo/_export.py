@@ -46,11 +46,6 @@ from typing import Annotated, NamedTuple
 
 from pydantic import BaseModel, Field
 
-from cadrumo.domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
-from cadrumo.domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition
-from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
-
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -80,21 +75,23 @@ from ...domain.bienes_inversion import (
     compute_registro_regularizacion,
 )
 from ...domain.buckets import BucketEvent, BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
+from ...domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
+from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
 from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.schema import DataBindingDefinition
+from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ...domain.deadlines import ModeloIVAProfile, TaxpayerProfile
 from ...domain.filing import ModeloDraft
 from ...domain.iva_compensation import IvaCompensationReconciliationDecision
 from ...domain.justificante import JustificanteRepositoryProtocol
 from ...domain.modelos import (
-    CalculationRevision,
     CalculationRevisionCatalogueRepositoryProtocol,
-    CalculationRevisionState,
-    ModeloError,
-    ModeloExportError,
     ModeloRecordCatalogueRepositoryProtocol,
     VerificationReportCatalogueRepositoryProtocol,
     WorkUnit,
 )
+from ...domain.modelos.calculation_revision import SEALED_REVISION_STATES, CalculationRevision
+from ...domain.modelos.errors import ModeloError, ModeloExportError
 from ...domain.prorrata_register import ProrrataRegister
 from ..aggregation import (
     IvaDifferentiatedDeductionContribution,
@@ -520,11 +517,7 @@ def _raise_if_ledger_export_evidence_missing(revision: CalculationRevision) -> N
 
 
 def _require_exportable_revision_state(revision: CalculationRevision) -> None:
-    if revision.state not in {
-        CalculationRevisionState.VERIFICADO_COMPLETO,
-        CalculationRevisionState.PRESENTADO,
-        CalculationRevisionState.PRESENTADO_SUPERSEDIDO,
-    }:
+    if revision.state not in SEALED_REVISION_STATES:
         raise CalculationRevisionStateError(
             translated_message="application.modelo.errors.export_revision_state_refused",
             context={

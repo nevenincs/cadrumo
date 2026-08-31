@@ -23,11 +23,10 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-
 from ....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from ....core import CasillaId, Period, StorageCategory, storage_path, validated_casilla_id
 from ....tests.secure_sql import isolated_runtime_profile
+from ...calculations.registry.schema_references import RegistrySnapshotRef
 from .._schema import (
     ModeloApprovalBasis,
     ModeloCasillaProvenance,
@@ -234,10 +233,9 @@ def test_calculation_revision_observations_survive_encrypted_storage(
     drop them silently.
     """
 
-    from cadrumo.domain.calculations.registry.bindings import CasillaObservation
-
     from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-    from ...modelos import (
+    from ...calculations.registry.bindings import CasillaObservation
+    from ...modelos.calculation_revision import (
         CalculationRevision,
         CalculationRevisionCatalogue,
         CalculationRevisionState,

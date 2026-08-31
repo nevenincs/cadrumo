@@ -129,6 +129,7 @@ flows:
           ledger_transaction: Movimiento del libro
           m303_regimen_simplificado_annual_summary: Resumen régimen simplificado (modelo
             303)
+          m347_third_party_operation: Operación con terceros
           manual_input: Entrada manual
           payable_invoice: Factura recibida
           previous_filing: Declaración anterior
@@ -205,6 +206,30 @@ flows:
       verification_outcome: Resultado de la verificación
       work_unit: Unidad de trabajo
     title: Modelo {modelo} · {filing_year} · {period}
+  modelo_select:
+    column:
+      filing_year: Ejercicio
+      modelo: Modelo
+      name: Nombre
+      period: Periodo
+      state: Estado
+    empty: Todavía no hay unidades de trabajo registradas en este perfil.
+    title: Seleccionar una unidad de trabajo de modelo
+  passphrase:
+    cancel_button: Cancelar
+    change_button: Cambiar contraseña
+    confirm_label: Confirma la contraseña nueva
+    current_label: Contraseña actual
+    intro: Esto sustituye la contraseña que protege tu perfil. Los datos que protege
+      no se vuelven a cifrar, solo se reenvuelven.
+    new_hint: Al menos 12 caracteres, combinando letras, números o símbolos.
+    new_label: Contraseña nueva
+    refusal:
+      change_failed: No se pudo cambiar la contraseña.
+      confirmation_mismatch: La confirmación no coincide con la contraseña nueva.
+      current_required: Introduce tu contraseña actual.
+    section: Contraseña
+    title: Cambiar tu contraseña
   progress:
     current_answer: 'Respuesta actual: {value}'
     current_answer_secret: 'Respuesta actual: (oculta)'
@@ -254,6 +279,7 @@ flows:
     header: Revisión - {answered} preguntas respondidas.
     header_tui: 'Revisión - {answered} respondidas, {remaining} obligatorias pendientes,
       listo para enviar: {eligible}'
+    header_tui_stage_label: Revisión
     mode_create: creación del perfil
     mode_modify: edición del perfil
     orphan_marker: (ya no se pregunta)

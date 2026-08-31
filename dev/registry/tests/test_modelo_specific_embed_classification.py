@@ -42,7 +42,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 #: Modelo 100 filing-year binding is still Python-resident pending its own
 #: registry/application migration, so losing this evidence would hide real
 #: unowned regulatory data rather than merely move campaign-owned M303 detail.
-ANCHOR_EMBED = "src/cadrumo/domain/calculations/registry/inventory_bindings.py"
+ANCHOR_EMBED = "src/cadrumo/domain/calculations/registry/applicability_modelo202.py"
 
 _MODELO_SPECIFIC_BODIES: dict[str, str] = {
     "module_name": '"""A modelo-named module."""\n\nVALUE = 1\n',
@@ -157,11 +157,26 @@ def test_an_embed_may_not_misdeclare_the_ownership_of_its_destination_tree() -> 
 
 
 def test_the_detector_still_finds_the_anchor_embed() -> None:
-    """The known regulatory literals stay detected and adjudicated as an embed."""
+    """The known regulatory literals stay detected and adjudicated as an embed.
+
+    Re-anchored from ``inventory_bindings.py``, which stopped being an embed once
+    its ``filing_year`` pin was retired in favour of the bindings the Modelo 100
+    revision declares. The anchor's job is unchanged: pin the detector to a module
+    that genuinely carries regulatory content, so the enrolment gate above cannot
+    pass by finding nothing anywhere.
+
+    Modelo 202's modality rule is the replacement because it is unambiguous --
+    the four reason constants are operator-facing Spanish sentences citing LIS
+    art. 40.2 and 40.3, which is regulatory prose by any reading, and the module
+    exists only to state that one modelo's rule.
+    """
     anchor = next(record for record in derived() if record.path == ANCHOR_EMBED)
     by_symbol = {(item.symbol, item.kind) for item in anchor.evidence}
 
-    assert ("filing_year", EvidenceKind.FILING_YEAR_LITERAL) in by_symbol
+    assert (
+        "_MODELO_202_ART_40_3_MANDATORY_REASON",
+        EvidenceKind.REGULATORY_PROSE_LITERAL,
+    ) in by_symbol
 
     entry = next(item for item in adjudicated() if item.path == ANCHOR_EMBED)
     assert entry.classification is Classification.REGULATORY_DATA_EMBED

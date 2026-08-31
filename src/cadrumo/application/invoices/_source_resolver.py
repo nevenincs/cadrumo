@@ -6,8 +6,9 @@
 :class:`~adapters.persistence.profile.invoices.InvoiceCatalogueRepository`. It projects those records
 into the calculation mesh as
 :class:`~application.aggregation.CalculationSourceResolution` values for
-:attr:`~core.BindingSourceKind.COLLECTIBLE_INVOICE` and
-:attr:`~core.BindingSourceKind.PAYABLE_INVOICE`.
+:attr:`~core.BindingSourceKind.COLLECTIBLE_INVOICE`,
+:attr:`~core.BindingSourceKind.PAYABLE_INVOICE`, and the combined-direction
+:attr:`~core.BindingSourceKind.M347_THIRD_PARTY_OPERATION`.
 
 The :class:`~domain.invoices.Invoice` aggregate is the sole invoice record and
 the reconciliation and link authority. Records reach the mesh only once they can
@@ -24,24 +25,33 @@ from datetime import date
 from decimal import Decimal
 from typing import ClassVar
 
-from cadrumo.domain.calculations.registry.invoice_bindings import (
-    InvoiceObservation,
-    is_m347_declarante_summary_invoice_binding,
-    resolve_invoice_binding_row_values,
-    resolve_invoice_binding_values,
-)
-
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.storage import (
     ClassificationError,
     DecryptionError,
     EnvelopeVersionError,
 )
-from ...core import BindingSourceKind, CalculationSourceLineageRole, IntracomOperationType, Modelo, Period
+from ...core import (
+    BindingSourceKind,
+    CalculationSourceLineageRole,
+    IntracomOperationType,
+    Modelo,
+    Period,
+    ThirdPartyDeclarationRole,
+    TravelAgencyMediationType,
+)
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import sha256_hex
+from ...core.identity import BucketId
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.ids import BindingId
+from ...domain.calculations.registry.invoice_bindings import (
+    InvoiceObservation,
+    is_m347_declarante_summary_invoice_binding,
+    m347_operation_clave,
+    resolve_invoice_binding_row_values,
+    resolve_invoice_binding_values,
+)
 from ...domain.invoices import (
     Invoice,
     InvoiceCatalogueRepositoryProtocol,
@@ -59,9 +69,22 @@ from ..aggregation import (
     storage_degradation_resolution,
 )
 
+#: Modelo 347 clave D's four disjoint filer-role populations (RD 1065/2007
+#: art. 31.1's last paragraph and art. 31.2). Any ONE of them, combined with
+#: the transaction-level ``outside_economic_activity`` fact, classifies D.
+_M347_CLAVE_D_ROLES: frozenset[ThirdPartyDeclarationRole] = frozenset(
+    {
+        ThirdPartyDeclarationRole.PROPIEDAD_HORIZONTAL_ENTITY,
+        ThirdPartyDeclarationRole.SOCIAL_CHARACTER_ENTITY,
+        ThirdPartyDeclarationRole.STATUTORY_INFORMATION_DUTY_ENTITY,
+        ThirdPartyDeclarationRole.PUBLIC_ADMINISTRATION_ENTITY,
+    },
+)
+
 _OWNED_SOURCES: tuple[BindingSourceKind, ...] = (
     BindingSourceKind.COLLECTIBLE_INVOICE,
     BindingSourceKind.PAYABLE_INVOICE,
+    BindingSourceKind.M347_THIRD_PARTY_OPERATION,
 )
 _STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 _M349_PAYABLE_SUMMARY_BINDING_MIRRORS: dict[str, str] = {
@@ -240,7 +263,8 @@ class InvoiceCatalogueSourceResolver:
                 )
                 if context.modelo == Modelo.M349.value
                 else ()
-            ),
+            )
+            + _m347_role_fact_advisories(source_invoices, context=context, resolver_id=self.resolver_id),
             provenance=tuple(_invoice_provenance(invoice, observation) for invoice, observation in catalogue_observed),
         )
 
@@ -491,6 +515,64 @@ def _unconverted_foreign_diagnostics(
     )
 
 
+def _m347_role_fact_advisories(
+    invoices: Sequence[Invoice],
+    *,
+    context: CalculationSourceContext,
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Advise on a Modelo 347 clave D/E fact left UNDECLARED, rather than silently deciding it.
+
+    Fires only for a filer who actually carries a clave D or E role -- an
+    empty role set (the overwhelming majority of filers) never triggers
+    this, so the advisory is proportionate to the population the roles
+    exist to cover, not every invoice everywhere. Scoped to RECEIVED
+    invoices for clave D, matching the article's own "adquisiciones" text;
+    clave E carries no direction restriction in the article, so every
+    invoice from a public-administration filer is in scope.
+    """
+    if context.modelo != Modelo.M347.value:
+        return ()
+    declaration_roles = _m347_filer_declaration_roles(context.bucket_id)
+    if not declaration_roles:
+        return ()
+    clave_d_eligible = bool(declaration_roles & _M347_CLAVE_D_ROLES)
+    clave_e_eligible = ThirdPartyDeclarationRole.PUBLIC_ADMINISTRATION_ENTITY in declaration_roles
+    diagnostics: list[CalculationSourceDiagnostic] = []
+    for invoice in invoices:
+        if clave_d_eligible and invoice.kind is InvoiceKind.RECEIVED and invoice.outside_economic_activity is None:
+            diagnostics.append(
+                CalculationSourceDiagnostic(
+                    reason="unclassified_declarant_role_fact",
+                    source_kind=str(_invoice_source_kind(invoice)),
+                    resolver_id=resolver_id,
+                    source_ref=f"invoice:{invoice.invoice_id}",
+                    message=(
+                        f"invoice {invoice.invoice_number!r} is an acquisition from a filer carrying a "
+                        "Modelo 347 clave D role, but whether it is al margen de la actividad "
+                        "empresarial is undeclared, so it is NOT classified as clave D"
+                    ),
+                    remedy="Declare outside_economic_activity on this invoice, then recalculate",
+                ),
+            )
+        if clave_e_eligible and invoice.is_subvencion_ayuda is None:
+            diagnostics.append(
+                CalculationSourceDiagnostic(
+                    reason="unclassified_declarant_role_fact",
+                    source_kind=str(_invoice_source_kind(invoice)),
+                    resolver_id=resolver_id,
+                    source_ref=f"invoice:{invoice.invoice_id}",
+                    message=(
+                        f"invoice {invoice.invoice_number!r} is from a filer carrying the Modelo 347 "
+                        "public-administration role, but whether it is a subvención, auxilio or ayuda "
+                        "is undeclared, so it is NOT classified as clave E"
+                    ),
+                    remedy="Declare is_subvencion_ayuda on this invoice, then recalculate",
+                ),
+            )
+    return tuple(diagnostics)
+
+
 def _invoice_sources_for_revision(context: CalculationSourceContext) -> frozenset[BindingSourceKind]:
     declared_sources = frozenset(
         binding.source for binding in context.revision.bindings if binding.source in _OWNED_SOURCES
@@ -570,7 +652,7 @@ def _invoice_observation(invoice: Invoice, *, context: CalculationSourceContext)
         # it has nothing these informativas can declare rather than a defect.
         return None
     if context.modelo == Modelo.M347.value:
-        return _m347_invoice_observation(invoice)
+        return _m347_invoice_observation(invoice, context=context)
     clave = _intracommunity_clave(invoice)
     if clave is None:
         return None
@@ -594,8 +676,55 @@ def _invoice_observation(invoice: Invoice, *, context: CalculationSourceContext)
     )
 
 
-def _m347_invoice_observation(invoice: Invoice) -> InvoiceObservation | None:
-    if invoice.counterparty_country != "ES":
+def _m347_filer_declaration_roles(bucket_id: BucketId) -> frozenset[ThirdPartyDeclarationRole]:
+    """Load the filer's :class:`ThirdPartyDeclarationRole` memberships for *bucket_id*.
+
+    Mirrors the established bucket-scoped profile-fact loading pattern (see
+    e.g. ``m111_no_retenciones_periods_for_bucket``): a missing or unset
+    profile fails closed to an empty role set rather than raising, because
+    the overwhelming majority of filers legitimately carry none. An empty
+    set means claves C, D and E simply do not classify for this filer --
+    never that A, B, F or G are affected, since those read no profile fact.
+    """
+    from ...domain.user_profile.errors import ProfileNotFoundError
+    from ..user_profile.profile_record_repository import ProfileRecordRepository
+    from ..user_profile.projections import projection_for_taxpayer
+
+    try:
+        record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
+    except ProfileNotFoundError:
+        return frozenset[ThirdPartyDeclarationRole]()
+    return projection_for_taxpayer(record).declaration_roles
+
+
+def _m347_invoice_observation(invoice: Invoice, *, context: CalculationSourceContext) -> InvoiceObservation | None:
+    """Build the M347 observation for one invoice, or ``None`` if excluded.
+
+    Declares a counterparty regardless of residency: RD 1065/2007 art. 33.2 is
+    a CLOSED exclusion list, and a counterparty's non-residency is not one of
+    its nine enumerated items. The diseño de registro's own `pais-codigo`
+    field (a "XX" alphabetic slot for a non-established non-resident
+    declarado) is direct evidence AEAT expects some M347 counterparties to be
+    non-resident.
+
+    The one residency-shaped exclusion the article DOES state is art.
+    33.2.i): an operation already reported through a coincident periodic
+    informativa. For an invoice, that informativa is Modelo 349's
+    intracommunity recapitulativa, so an operation `_intracommunity_clave`
+    classifies as intracommunity is excluded here and routes to M349 instead
+    -- the same classification M349's own branch of this resolver uses, never
+    a bare country comparison.
+
+    Clave C additionally needs the filer's own
+    :class:`ThirdPartyDeclarationRole` membership, loaded here via
+    ``context.bucket_id``. When the invoice IS a clave-C collection
+    (``collected_on_behalf_of_tax_id`` set AND the filer carries
+    ``THIRD_PARTY_FEE_COLLECTOR``), the declared counterparty is the
+    BENEFICIARY whose fees were collected (RD 1065/2007 art. 34.g), not
+    whoever actually paid this invoice -- so ``party_tax_id`` and
+    ``party_legal_name`` are substituted, not merely the clave.
+    """
+    if _intracommunity_clave(invoice) is not None:
         return None
     if invoice.counterparty_tax_id is None:
         # Same reason as the general builder above: M347 declares a third party
@@ -603,17 +732,72 @@ def _m347_invoice_observation(invoice: Invoice) -> InvoiceObservation | None:
         # (RD 1619/2012 art. 6.1.d). Without this the row reached the observation
         # constructor with None and raised there instead of being skipped.
         return None
+    source_kind = BindingSourceKind(_invoice_source_kind(invoice))
+    declaration_roles = _m347_filer_declaration_roles(context.bucket_id)
+    clave = _m347_operation_clave(invoice, source_kind=source_kind, declaration_roles=declaration_roles)
+    is_third_party_collection = clave == "C"
+    party_tax_id = invoice.collected_on_behalf_of_tax_id if is_third_party_collection else invoice.counterparty_tax_id
+    party_legal_name = invoice.collected_on_behalf_of_name if is_third_party_collection else invoice.counterparty_name
+    assert party_tax_id is not None  # clave "C" only returns when collected_on_behalf_of_tax_id is set
     return InvoiceObservation(
         invoice_id=invoice.invoice_id,
-        source_kind=BindingSourceKind(_invoice_source_kind(invoice)),
-        party_tax_id=invoice.counterparty_tax_id,
+        source_kind=source_kind,
+        party_tax_id=party_tax_id,
         country_code=invoice.counterparty_country,
         transaction_date=invoice.issued_at,
         base_amount=_eur(invoice.base_total_eur, invoice),
         invoice_total_amount=_eur(invoice.grand_total_eur, invoice),
         intracommunity_clave=None,
-        party_legal_name=invoice.counterparty_name,
+        operation_clave=clave,
+        party_legal_name=party_legal_name,
     )
+
+
+def _m347_operation_clave(
+    invoice: Invoice,
+    *,
+    source_kind: BindingSourceKind,
+    declaration_roles: frozenset[ThirdPartyDeclarationRole] = frozenset(),
+) -> str | None:
+    """Classify the M347 clave de operacion for one invoice, or ``None``.
+
+    Checks clave C first (RD 1065/2007 art. 31.3: the filer collects this
+    amount on behalf of a socio, asociado or colegiado), then clave D (arts.
+    31.1's last paragraph / 31.2: an acquisition al margen de la actividad
+    empresarial by one of four disjoint filer roles), then clave E (art.
+    31.2's second paragraph: a subvención/ayuda from a public-administration
+    filer), then the RD 1619/2012 disposición adicional cuarta travel-agency
+    mediation fact (claves F/G), then falls back to
+    :func:`m347_operation_clave`'s invoice-direction classification (claves
+    A/B).
+
+    Claves C, D and E all require the SAME conjunction shape: a filer-level
+    role membership AND a transaction-level fact, NEITHER alone sufficient.
+    A collecting entity's ordinary sale is not clave C; a D-role filer's
+    acquisition WITHIN its own economic activity is not clave D; an ordinary
+    payment from a public administration is not clave E. Every fact is
+    checked with ``is True`` rather than truthiness, so an undeclared
+    tri-state ``None`` never silently classifies either way -- it falls
+    through here and is surfaced as an advisory by the caller instead.
+    """
+    if (
+        invoice.collected_on_behalf_of_tax_id is not None
+        and ThirdPartyDeclarationRole.THIRD_PARTY_FEE_COLLECTOR in declaration_roles
+    ):
+        return "C"
+    if invoice.outside_economic_activity is True and declaration_roles & _M347_CLAVE_D_ROLES:
+        return "D"
+    if (
+        invoice.is_subvencion_ayuda is True
+        and ThirdPartyDeclarationRole.PUBLIC_ADMINISTRATION_ENTITY in declaration_roles
+    ):
+        return "E"
+    mediation = invoice.travel_agency_mediation
+    if mediation is not None and invoice.kind is InvoiceKind.ISSUED:
+        return "F"
+    if mediation is TravelAgencyMediationType.AIR_PASSENGER_TRANSPORT and invoice.kind is InvoiceKind.RECEIVED:
+        return "G"
+    return m347_operation_clave(source_kind)
 
 
 def _intracommunity_clave(invoice: Invoice) -> str | None:

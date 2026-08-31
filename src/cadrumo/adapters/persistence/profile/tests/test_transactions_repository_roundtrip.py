@@ -113,7 +113,7 @@ def _transaction_secure_row(
     bucket_id: str,
     transaction_id: str,
 ) -> SecureObjectRawRow:
-    from ...storage.crypto import secure_object_key_digest
+    from ...storage.crypto.encrypted_columns import secure_object_key_digest
     from ..transactions import TX_BUCKET_NAMESPACE, transaction_object_key
 
     object_digest = secure_object_key_digest(transaction_object_key(bucket_id, transaction_id))

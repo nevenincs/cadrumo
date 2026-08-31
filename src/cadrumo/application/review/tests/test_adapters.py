@@ -13,8 +13,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-
 from ....adapters.persistence.profile.invoices import (
     _INVOICE_CATALOGUE_VERSION,
     _INVOICE_NAMESPACE,
@@ -28,6 +26,7 @@ from ....core.classification import SensitivityClass
 from ....core.config import Settings
 from ....core.errors import BaseSeverity
 from ....core.i18n import Translatable as tr
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.filing import (
     ModeloDraft,
     ModeloValidationFinding,
@@ -50,16 +49,10 @@ from ....domain.transactions import (
 )
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.user_profile import register_minimal_profile
-from .. import (
-    FindingReviewItem,
-    InvoiceReviewItem,
-    ReviewSeverity,
-    ReviewSourceLoadError,
-    TransactionReviewItem,
-    drafts_pending,
-    invoices_pending,
-    transactions_pending,
-)
+from .._adapters import drafts_pending, invoices_pending, transactions_pending
+from ..enums import ReviewSeverity
+from ..errors import ReviewSourceLoadError
+from ..models import FindingReviewItem, InvoiceReviewItem, TransactionReviewItem
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

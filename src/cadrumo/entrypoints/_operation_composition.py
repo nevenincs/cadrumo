@@ -7,6 +7,9 @@ from datetime import timedelta
 
 from ..adapters.outbound.google import apply_export_plan, preview_export_plan
 from ..adapters.outbound.storage import build_google_credentials, resolve_drive_root_folder_id
+from ..adapters.persistence.operations.financial_operand_custody import (
+    OperationFinancialOperandCustodyFilesystemRepository,
+)
 from ..adapters.persistence.operations.journal import OperationJournalRepository
 from ..adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ..adapters.persistence.operations.secure_references import operation_secure_reference_repository
@@ -26,6 +29,10 @@ from ..application.export import (
 from ..application.live.filed_history_operation import (
     build_filed_history_operation_definition,
     build_filed_history_operation_registration,
+)
+from ..application.modelo.operation_definitions import (
+    build_modelo_lifecycle_operation_definitions,
+    build_modelo_lifecycle_operation_registrations,
 )
 from ..application.operations.composition import (
     OperationComposedServices,
@@ -121,6 +128,7 @@ def build_production_operation_registry(
     resolved_settings = settings or load_settings()
     resolved_auth_definitions = auth_definitions if auth_definitions is not None else build_auth_operation_definitions()
     profile_definitions = build_user_profile_operation_definitions()
+    modelo_definitions = build_modelo_lifecycle_operation_definitions()
     resolved_google_export_definition = (
         google_export_definition
         if google_export_definition is not None
@@ -136,6 +144,7 @@ def build_production_operation_registry(
             (
                 *resolved_auth_definitions,
                 *profile_definitions,
+                *modelo_definitions,
                 CENSAL_OPERATION_DEFINITION if censal_definition is None else censal_definition,
                 filed_history_definition,
                 resolved_google_export_definition,
@@ -148,6 +157,7 @@ def build_production_operation_registry(
             (
                 *build_auth_operation_registrations(resolved_auth_definitions),
                 *build_user_profile_operation_registrations(profile_definitions),
+                *build_modelo_lifecycle_operation_registrations(modelo_definitions),
                 build_censal_operation_registration(
                     CENSAL_OPERATION_DEFINITION if censal_definition is None else censal_definition
                 ),
@@ -190,6 +200,7 @@ def compose_operation_dependencies(
         lease_duration=_LEASE_DURATION,
         execution_timeout=_EXECUTION_TIMEOUT,
         cleanup_timeout=_CLEANUP_TIMEOUT,
+        financial_operand_custody=OperationFinancialOperandCustodyFilesystemRepository(settings=resolved_settings),
     )
 
 

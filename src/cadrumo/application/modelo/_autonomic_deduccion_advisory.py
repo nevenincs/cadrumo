@@ -47,16 +47,17 @@ from decimal import Decimal
 from ...core import CasillaId
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.modelos import (
-    ModeloError,
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
     WorkUnit,
 )
+from ...domain.modelos.errors import ModeloError
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.loader import load_user_profile_schema
 from ...domain.user_profile.values import UserProfileFactValue
 from ..user_profile.profile_record_repository import ProfileRecordRepository
+from ..user_profile.projections import profile_fact_index
 from ._semantic_role_resolution import (
     AmbiguousSemanticRoleCasillaError,
     casilla_id_for_unique_semantic_role,
@@ -66,7 +67,6 @@ from .profile_binding import (
     is_indeterminate_unidad_familiar,
     is_madrid_resident,
     madrid_nacimiento_adopcion_candidate_weighted_count,
-    profile_fact_index,
 )
 
 _MADRID_NACIMIENTO_ADOPCION_SEMANTIC_ROLE = "irpf_deduccion_madrid_nacimiento_adopcion"

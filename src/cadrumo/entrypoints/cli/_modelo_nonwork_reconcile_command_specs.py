@@ -216,7 +216,11 @@ MODELO_NONWORK_RECONCILE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="kind",
                 declarations=("--kind",),
-                value=ValueContract(DeferredTarget("cadrumo.application.modelo.reconciliation_records", "ModeloReconciliationEvidenceKind")),
+                value=ValueContract(
+                    DeferredTarget(
+                        "cadrumo.application.modelo.reconciliation_records", "ModeloReconciliationEvidenceKind"
+                    )
+                ),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.app.modelo.reconcile.file_kind_help"),
                 multiple=False,
@@ -236,11 +240,11 @@ MODELO_NONWORK_RECONCILE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        key="app_modelo_reconcile_history",
+        key="app_modelo_reconcile_list",
         parent_key="app_modelo_reconcile",
-        token="history",
+        token="list",
         kind="leaf",
-        help_key=TranslationKey("cli.app.modelo.reconcile.history_help"),
+        help_key=TranslationKey("cli.app.modelo.reconcile.list_help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(
@@ -249,7 +253,7 @@ MODELO_NONWORK_RECONCILE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 declarations=("--work-unit-id",),
                 value=ValueContract(DeferredTarget("builtins", "str")),
                 default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.app.modelo.reconcile.history_work_unit_id_help"),
+                help_key=TranslationKey("cli.app.modelo.reconcile.list_work_unit_id_help"),
                 multiple=False,
                 is_flag=False,
                 flag_value=None,
@@ -258,12 +262,12 @@ MODELO_NONWORK_RECONCILE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         policy=_MODEL_READ,
         handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._modelo_reconcile_cli", "reconcile_history_verb")
+            DeferredTarget("cadrumo.entrypoints.cli._modelo_reconcile_cli", "reconcile_list_verb")
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             DeferredTarget("cadrumo.entrypoints.cli._modelo_payloads_m036", "ModeloReconciliationHistoryResult"),
-            identity="modelo.reconcile.history",
+            identity="modelo.reconcile.list",
         ),
     ),
 )

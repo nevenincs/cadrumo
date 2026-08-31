@@ -5,23 +5,24 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.domain.calculations.registry.temporal import select_revision
-
 from ....application.filing import ModeloOperatorProfile, build_draft, build_runtime_schema_provider
 from ....core import CasillaId, Period, validated_casilla_id
+from ....domain.calculations.registry.schema_input_kind import InputKind
+from ....domain.calculations.registry.temporal import select_revision
 from ....domain.deadlines import EntityType, IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
 from ....domain.modelos import (
-    CalculationRevision,
-    CalculationRevisionState,
     Modelo232VinculadaRow,
     Modelo349OperadorRow,
     Modelo349RectificacionRow,
     ModeloCode,
     ModeloDetailRow,
     WorkUnit,
-    derive_calculation_revision_id,
     derive_work_unit_id,
+)
+from ....domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
 )
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.registry_tree import bundled_registry_tree

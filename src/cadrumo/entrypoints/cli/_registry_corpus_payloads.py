@@ -19,7 +19,7 @@ that enters :class:`SchemaEnvelope` through :func:`emit_envelope`.
 
 from __future__ import annotations
 
-from ...application.registry import (
+from ...application.registry.corpus import (
     RegistryCitationArticleProjection,
     RegistryCitationReferenceProjection,
     RegistryCorpusIssueProjection,

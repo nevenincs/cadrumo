@@ -8,7 +8,7 @@ from ....core import Period
 from ....domain.iva import InvoiceKind
 from ....domain.transactions import BusinessClassification, TransactionDirection
 from ...transactions import LedgerImportDiagnosticKind
-from .._filter import (
+from ..filter import (
     DeclaracionReviewFilterSpec,
     DeclaracionReviewStatus,
     FilterClause,

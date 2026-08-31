@@ -30,6 +30,8 @@ from cadrumo.domain.calculations.registry.ids import (
 from cadrumo.domain.calculations.registry.schema_base import LegalRefs, SourceRefs
 from cadrumo.domain.calculations.registry.schema_exports import FilingEnvelopePrefixRole
 
+from ._record_design_ir import AnchorKey, RecordKey
+
 __all__ = [
     "EnvelopePrefixField",
     "EnvelopeTotalAnchor",
@@ -39,6 +41,8 @@ __all__ = [
     "SemanticMapEntry",
     "SemanticMapRecord",
     "VariableEnvelopeSemantic",
+    "semantic_anchor_key",
+    "semantic_record_key",
 ]
 
 
@@ -54,8 +58,8 @@ def _coerce_ordinal(value: object) -> object:
     Committed semantic-map authoring data predates the parser's widened
     ``str | None`` ordinal and still writes bare integers (``ordinal = 14``).
     Coercing here lets that authored data hydrate unchanged while the anchor's
-    stored value matches the parser type exactly, so ``_semantic_anchor_key``
-    and ``_parser_anchor_key`` compare like-for-like without re-keying
+    stored value matches the parser type exactly, so ``semantic_anchor_key``
+    and ``intermediate_anchor_key`` compare like-for-like without re-keying
     committed TOML/JSON.
     """
     if value is None or isinstance(value, str):
@@ -337,3 +341,20 @@ class SemanticMap(_StrictModel):
         if duplicate_envelopes:
             raise ValueError(f"semantic map contains duplicate variable-envelope identities: {duplicate_envelopes!r}")
         return self
+
+
+def semantic_anchor_key(anchor: SemanticMapAnchor) -> AnchorKey:
+    """Return the identity one anchor is matched and de-duplicated by.
+
+    The join and the validation both key anchors, and they must key them the
+    SAME way: the join looks an entry up by this tuple while the validation
+    decides whether two anchors collide. Two spellings that drift make a pair
+    the validation calls distinct unreachable to the join, which then reports
+    a missing anchor rather than the collision that caused it.
+    """
+    return anchor.sheet, anchor.source_row, anchor.source_cell, anchor.ordinal, anchor.record_identity
+
+
+def semantic_record_key(record: SemanticMapRecord) -> RecordKey:
+    """Return the identity one record is matched and de-duplicated by."""
+    return record.sheet, record.record_identity

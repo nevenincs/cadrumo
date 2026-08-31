@@ -278,6 +278,8 @@ errors:
       es compatible con el estado actual de la revisión de cálculo.
     error_modelo_casilla_provenance_missing: Una casilla del resultado del motor no
       tiene definición en el registro.
+    error_modelo_detail_row_wrong_modelo: La fila de detalle de tipo {row_type} pertenece
+      al modelo {owning_modelo}, pero este cálculo corresponde al modelo {work_unit_modelo}.
     error_modelo_external_filing_import: No se pudo guardar la declaración externa
       importada. Comprueba los valores de las casillas y la referencia de evidencia.
     error_modelo_filing_record_not_found: No se encontró la declaración registrada
@@ -726,6 +728,9 @@ errors:
       desbloqueado. Ejecuta `aeat config login NAME` y vuelve a intentarlo.
     locked_storage_lock_acquisition: No se pudo obtener el bloqueo exclusivo de archivo
       dentro del tiempo de espera. Otro proceso lo retiene; espera y vuelve a intentarlo.
+    locked_storage_profile_custody_capsule_generation: La cápsula de custodia del
+      perfil cambió mientras se leía. Otro proceso la está publicando o eliminando.
+      Reintente la operación.
   prefix:
     auth: Autenticación.
     error: Error.
@@ -749,6 +754,8 @@ errors:
       una credencial que necesita.
     ledger_preflight: La comprobación previa del libro rechazó la ejecución del modelo
       porque aún no se puede presentar.
+    locale_catalogue_capture_not_current: Esta captura del catálogo de idiomas ya
+      no está vigente.
     m145_communication_record_ambiguous: El prefijo del id de registro de comunicación
       del Modelo 145 coincide con varios registros.
     m145_communication_record_export: El registro local de comunicación del Modelo
@@ -791,6 +798,8 @@ errors:
       incompletas.
     modelo_calculate_text_input: El valor de sobrescritura de --casilla indicado no
       es válido para una casilla de texto.
+    modelo_calculation_capture_not_current: La revision de calculo ya no es actual.
+      Vuelva a leer la revision e intentelo de nuevo.
     modelo_calculation_revision_selector_ambiguous: El selector de revisión de cálculo
       coincide con más de una revisión; refine el selector.
     modelo_calculation_revision_selector_state: La revisión de cálculo seleccionada
@@ -808,6 +817,8 @@ errors:
     modelo_revision_pick: No se pudo seleccionar la revisión de cálculo indicada.
     modelo_work_capture_not_current: La seleccion de trabajo ya no es actual. Vuelva
       a leer el objetivo de trabajo e intentelo de nuevo.
+    modelo_work_discard_approval_stale: La unidad de trabajo cambió después de aprobarse
+      el descarte; revísela y apruebe de nuevo.
     modelo_work_period_token: Periodo de modelo no válido.
     modelo_work_registry_year_mismatch: La revisión de registro seleccionada no cubre
       el ejercicio fiscal solicitado.
@@ -821,6 +832,8 @@ errors:
       una unidad de trabajo de modelo.
     modelo_work_selector_revision_conflict: La unidad de trabajo de modelo seleccionada
       pertenece a otra revisión.
+    modelo_workspace_manifest_capture_not_current: El manifiesto de campos cambió
+      durante la lectura; vuelva a capturarlo.
     profile_capsule_archive: No se ha podido escribir o leer el archivo de copia del
       perfil
     profile_capsule_source: El origen indicado no es una cápsula de perfil legible
@@ -1142,6 +1155,8 @@ errors:
       para generar una revisión nueva.
     refused_workflow_resume: La ejecución del flujo de trabajo anterior no se puede
       reanudar.
+    registry_closure_capture_not_current: El cierre del registro cambió durante la
+      lectura; vuelva a capturarlo.
     submission_preflight_auth_describe_failed: El proveedor de autenticación no pudo
       describirse ({cause_type}).
     submission_preflight_auth_not_ready: El proveedor de autenticación {kind} no está

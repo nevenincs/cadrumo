@@ -41,8 +41,6 @@ cli:
         note_help: En qué se basa la respuesta, con sus propias palabras. Se registra,
           nunca se consulta.
         scope_help: El territorio a efectos de IVA en el que está establecida la contraparte.
-        show_help: Muestra el establecimiento confirmado para una contraparte, si
-          lo hay.
         tax_identifier_help: El identificador fiscal de la contraparte tal y como
           aparece impreso en el documento.
         withdraw_help: Retira lo confirmado sobre una contraparte, declarando que
@@ -285,8 +283,6 @@ cli:
           resolve_action: Accion de resolucion desconocida.
           resolve_shape: Cada --resolve es <finding-id>=<choose|supply|attest>:<valor-o-motivo>.
             Un choose indica la lectura por su valor o por el resumen que mostró review.
-          show_help: Muestre un borrador pendiente campo por campo, con sus hallazgos
-            y bloqueos.
           unknown_reference: No hay ningun borrador pendiente para esa referencia.
         source_path_help: Ruta al PDF o imagen de la factura
         supplier_help: Nombre del proveedor
@@ -438,6 +434,8 @@ cli:
         unset_category_help: Id de categoría cuya proporción quieres limpiar
         unset_help: Elimina la proporción específica de una categoría
         validate_help: Valida las proporciones contra categorías admitidas y límites
+        year_help: Ejercicio cuyos perfiles de categoría aportan los ratios legales.
+          Por defecto, el año en curso.
       rule:
         actor_help: Identificador del operador registrado en la procedencia de la
           regla.
@@ -687,8 +685,6 @@ cli:
           el paquete como incompleto.
         group_help: Verbos de auditoría del paquete de evidencia (show/check/export).
         output_help: Ruta de salida para el ZIP del paquete.
-        show_help: Mostrar el manifiesto y los registros referenciados de un paquete
-          de evidencia
       bindings:
         app_help: Inspeccionar y previsualizar los bindings de un modelo tributario
         as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
@@ -707,6 +703,7 @@ cli:
           activo_extranjero: activo extranjero
           borrador_aeat: borrador de la AEAT
           compensacion_iva_anual: compensación anual del IVA
+          constante_diseno: Constante del diseño de registro
           dato_perfil: dato del perfil
           datos_libro: datos del libro
           decision_compensacion_iva: decisión de compensación de IVA
@@ -721,6 +718,7 @@ cli:
           inventario: inventario de existencias
           miembro_atribucion: miembro de atribución de rentas
           operacion_reembolso: operación de reembolso
+          operacion_tercero: operación con terceras personas
           operacion_vinculada: operación vinculada
           registro_retenciones: registro de retenciones
           regularizacion_bienes_inversion: regularización de bienes de inversión
@@ -1017,10 +1015,6 @@ cli:
           a nivel de casilla, solo modelos habilitados). Por defecto justificante.'
         file_path_help: Ruta al PDF local de justificante o declaración con el que
           conciliar.
-        history_empty: Aun no hay conciliaciones registradas.
-        history_help: Lista las conciliaciones registradas para el perfil activo.
-        history_work_unit_id_help: Id de unidad de trabajo opcional para acotar el
-          historial a una unidad.
         import_help: Concilia una unidad de trabajo contra un PDF de justificante
           o declaración local. Solo local; nunca contacta con AEAT.
         pull_help: Descarga de AEAT el justificante de una unidad de trabajo y concilia
@@ -1618,6 +1612,8 @@ cli:
         sal_reserva_not_decimal: 'Los valores --sal-* deben ser importes decimales;
           se recibió: {value}. Use el punto como separador decimal y sin separador
           de miles, p. ej. 1234.56.'
+        select_help: Lista las unidades de trabajo registradas y, con --tui, permite
+          elegir una para abrir su revisión.
         selector_ambiguous: 'Más de una unidad de trabajo activa coincide con este
           modelo, año y periodo.
 
@@ -2096,7 +2092,7 @@ cli:
         export_name_help: Perfil a respaldar; por defecto el activo.
         export_out_help: Ruta de destino del archivo.
         help: Copia de seguridad de un perfil en un archivo sellado y cifrado AEAD,
-          o inspeccion de uno; restauralo con 'aeat config profile restore'.
+          o inspeccion de uno; restauralo con 'aeat config profile archive import'.
         import_artifact_help: Archivo de artefacto de recuperacion; uselo cuando se
           haya perdido la contrasena del perfil.
         import_file_help: Ruta al directorio de la capsula sin publicar que se va
@@ -2373,6 +2369,10 @@ cli:
         en un terminal interactivo para que se te pregunte.
       import_uuid_collision: El UUID del paquete entra en conflicto con un perfil
         existente.
+      list:
+        incoherent_observation_advisory: 'No se pudo obtener un listado fiable de
+          perfiles (estado: {outcome}). Vuelva a ejecutar el comando; si persiste,
+          revise el almacenamiento de perfiles.'
       manager_closed: Los cambios en '{profile}' están guardados.
       manager_closed_created: Perfil '{profile}' creado. Declara que la configuración
         está completa con `aeat config profile complete-setup` antes de trabajar con
@@ -3382,7 +3382,6 @@ cli:
           declaración.
         modelo_audit_export: Exporta la auditoría de evidencias de una revisión de
           declaración.
-        modelo_audit_show: Muestra la auditoría de evidencias de una revisión de declaración.
         modelo_bindings: Gestionar las vinculaciones de un modelo fiscal.
         modelo_describe: Describir la estructura de un modelo fiscal.
         modelo_list: Listar los modelos fiscales disponibles.
@@ -3433,7 +3432,6 @@ cli:
         profile_list: Listar los perfiles de contribuyente disponibles.
         profile_login: Inicia sesión en un perfil y lo convierte en el activo.
         profile_logout: Cierra la sesión del perfil activo.
-        profile_show: Mostrar los datos del perfil activo.
         profile_status: Mostrar el estado del perfil activo.
         reset_resume: Continúa una operación de reinicio incompleta.
         reset_start: Inicia un nuevo reinicio irreversible de todos los perfiles locales.
@@ -3451,7 +3449,6 @@ cli:
         storage_list: Consulta dónde se guarda cada tipo de dato local
         storage_reclaim: Libera espacio eliminando un área que la aplicación puede
           reconstruir
-        storage_show: Consulta un área de almacenamiento en detalle
       root:
         diagnostics_logs: Muestra la ruta del log y sus últimas líneas.
         diagnostics_overview_verbose: Muestra el estado general con más detalle.

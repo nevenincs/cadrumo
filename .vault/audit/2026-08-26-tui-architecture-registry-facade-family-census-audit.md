@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:e1aab146fdc362f1fe52b9684bdeca2be899baf23404dd242c96023a892cede8'
+body_hash: 'sha256:4801f9a91feab404eba8c5ff2b1b79e93c18eb33441ce416a666847106068136'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
@@ -46,3 +46,7 @@ Integrated-main follow-up found the reported `_schema_verification.py` drift in 
 ## Recommendations
 
 Execute exactly one canonical plan Step for each matrix row. Preserve the row-specific terminal state and direct-import evidence; do not fold several registry families into one Step. Run the final inert-package fixed-point Step only after all 78 individual dispositions close. Do not use this audit or its matrix as evidence that a hard move, privatization, or deletion has already completed.
+
+### registry-facade-census-evidence-root | corrected | the census reads the current worktree
+
+The paragraphs above describe the reviewed census as derived from immutable Git object `aef1e903cebe8e463c5ac1c3192b30f2b4f3e8c8` with dirty-worktree immunity. The generator that shipped does not bind to that object: it reads `RELOCATION_COMMIT` through Git for the rename delta only, and every row anchors `census_root: current_worktree`. Consequently the reviewed matrix is a current-tree fixed point and drifts whenever a peer edits a file the census covers; `--refresh-reviewed` re-derives it while preserving every reviewed adjudication field. The generator also excluded its own generated artifact from the evidence scan, without which no generation could reach a fixed point at all. The independent-review outcome recorded above stands; only its evidence-root wording is corrected here.

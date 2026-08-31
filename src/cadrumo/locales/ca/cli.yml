@@ -41,7 +41,6 @@ cli:
         note_help: En què es basa la resposta, amb les vostres paraules. Es registra,
           mai no es consulta.
         scope_help: El territori a efectes d'IVA on està establerta la contrapart.
-        show_help: Mostra l'establiment confirmat per a una contrapart, si n'hi ha.
         tax_identifier_help: L'identificador fiscal de la contrapart tal com apareix
           imprès al document.
         withdraw_help: Retira el que es va confirmar sobre una contrapart, declarant
@@ -283,8 +282,6 @@ cli:
           resolve_action: Accio de resolucio desconeguda.
           resolve_shape: Cada --resolve és <finding-id>=<choose|supply|attest>:<valor-o-motiu>.
             Un choose indica la lectura pel seu valor o pel resum que va mostrar review.
-          show_help: Mostreu un esborrany pendent camp per camp, amb les seves troballes
-            i blocatges.
           unknown_reference: No hi ha cap esborrany pendent per a aquesta referencia.
         source_path_help: Ruta al PDF o imatge de la factura
         supplier_help: Nom del proveïdor
@@ -436,6 +433,8 @@ cli:
         unset_category_help: Id de categoria la proporció de la qual vols netejar
         unset_help: Elimina la proporció específica d'una categoria
         validate_help: Valida les proporcions contra categories admeses i límits
+        year_help: Exercici els perfils de categoria del qual aporten les ràtios legals.
+          Per defecte, l'any en curs.
       rule:
         actor_help: Identificador de l'operador registrat en la procedència de la
           regla.
@@ -677,7 +676,6 @@ cli:
           el paquet és incomplet.
         group_help: Verbs d'auditoria del paquet d'evidència (show/check/export).
         output_help: Ruta de sortida per al ZIP del paquet.
-        show_help: Mostrar el manifest i els registres referenciats d'un paquet d'evidència
       bindings:
         app_help: Inspeccionar i previsualitzar els bindings d'un model tributari
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)
@@ -695,6 +693,7 @@ cli:
           activo_extranjero: actiu estranger
           borrador_aeat: esborrany de l’AEAT
           compensacion_iva_anual: compensació anual de l'IVA
+          constante_diseno: Constant del disseny de registre
           dato_perfil: dada del perfil
           datos_libro: dades del llibre
           decision_compensacion_iva: decisió de compensació d’IVA
@@ -709,6 +708,7 @@ cli:
           inventario: inventari d’existències
           miembro_atribucion: membre d'atribució de rendes
           operacion_reembolso: operació de reemborsament
+          operacion_tercero: operació amb tercers
           operacion_vinculada: operació vinculada
           registro_retenciones: registre de retencions
           regularizacion_bienes_inversion: regularització de béns d’inversió
@@ -1001,10 +1001,6 @@ cli:
           a nivell de casella, només models habilitats). Per defecte justificante.'
         file_path_help: Camí al PDF local de justificant o declaració amb el qual
           conciliar.
-        history_empty: Encara no hi ha conciliacions registrades.
-        history_help: Llista les conciliacions registrades per al perfil actiu.
-        history_work_unit_id_help: Id d'unitat de treball opcional per acotar l'historial
-          a una unitat.
         import_help: Concilia una unitat de treball contra un PDF de justificant o
           declaració local. Només local; mai contacta amb AEAT.
         pull_help: Descàrrega d'AEAT el justificant d'una unitat de treball i concilia-hi.
@@ -1603,6 +1599,8 @@ cli:
         sal_reserva_not_decimal: 'Els valors --sal-* han de ser imports decimals;
           s''ha rebut: {value}. Utilitzeu el punt com a separador decimal i sense
           separador de milers, p. ex. 1234.56.'
+        select_help: Llista les unitats de treball registrades i, amb --tui, permet
+          triar-ne una per obrir-ne la revisió.
         selector_ambiguous: 'Més d''una unitat de treball activa coincideix amb aquest
           modelo, any i període.
 
@@ -2073,8 +2071,8 @@ cli:
           --to; el fitxer es xifra amb la contrasenya del perfil i no inclou l'etiqueta.
         export_name_help: Perfil a copiar; per defecte l'actiu.
         export_out_help: Camí de destinació de l'arxiu.
-        help: Copia de seguretat d'un perfil en un fitxer segellat i xifrat AEAD,
-          o inspeccio d'un; restaura'l amb 'aeat config profile restore'.
+        help: Copia de seguretat d'un perfil en un arxiu segellat i xifrat AEAD, o
+          inspeccio d'un; restaura'l amb 'aeat config profile archive import'.
         import_artifact_help: Fitxer d'artefacte de recuperacio; utilitza'l quan s'hagi
           perdut la contrasenya del perfil.
         import_file_help: Cami al directori de la capsula sense publicar que es restaurara.
@@ -2346,6 +2344,10 @@ cli:
       import_requires_path: Indica l'argument RUTA del paquet, o executa l'ordre en
         un terminal interactiu perquè se't pregunti.
       import_uuid_collision: El UUID del paquet entra en conflicte amb un perfil existent.
+      list:
+        incoherent_observation_advisory: 'No s''ha pogut obtenir un llistat fiable
+          de perfils (estat: {outcome}). Torneu a executar l''ordre; si persisteix,
+          reviseu l''emmagatzematge de perfils.'
       manager_closed: Els canvis a '{profile}' estan desats.
       manager_closed_created: Perfil '{profile}' creat. Declara que la configuració
         està completa amb `aeat config profile complete-setup` abans de treballar
@@ -3350,7 +3352,6 @@ cli:
           una sola passada.
         modelo_audit_check: Comprova les evidències incloses d'una revisió de declaració.
         modelo_audit_export: Exporta l'auditoria d'evidències d'una revisió de declaració.
-        modelo_audit_show: Mostra l'auditoria d'evidències d'una revisió de declaració.
         modelo_bindings: Gestionar les vinculacions d'un model fiscal.
         modelo_describe: Descriure l'estructura d'un model fiscal.
         modelo_list: Llistar els models fiscals disponibles.
@@ -3399,7 +3400,6 @@ cli:
         profile_list: Llistar els perfils de contribuent disponibles.
         profile_login: Inicia la sessió en un perfil i el converteix en l'actiu.
         profile_logout: Tanca la sessió del perfil actiu.
-        profile_show: Mostrar les dades del perfil actiu.
         profile_status: Mostrar l'estat del perfil actiu.
         reset_resume: Reprèn una operació de reinici incompleta.
         reset_start: Inicia un reinici irreversible de tots els perfils desats localment.
@@ -3415,7 +3415,6 @@ cli:
         storage_init: Crea qualsevol directori d'emmagatzematge que falti
         storage_list: Consulta on es desa cada tipus de dada local
         storage_reclaim: Allibera espai eliminant una àrea que l'aplicació pot reconstruir
-        storage_show: Consulta una àrea d'emmagatzematge en detall
       root:
         diagnostics_logs: Mostra la ruta del registre i les últimes línies.
         diagnostics_overview_verbose: Mostra l'estat general amb més detall.

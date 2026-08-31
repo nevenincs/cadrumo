@@ -35,7 +35,24 @@ from .._smoke_common import (
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_outbound_adapter, pytest.mark.serial]
 
-_REPO_ROOT = Path(__file__).resolve().parents[4]
+# dev/packaging/tests -> parents[3] is the repository root. Stated because
+# the depth silently retargets on a move: these files carried the depth they
+# had under src/, which resolved ABOVE the repository and built a wheel from
+# a directory with no pyproject.
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+
+
+@pytest.fixture(autouse=True)
+def _repository_root_resolved() -> None:
+    """Fail this module's tests if the depth arithmetic retargeted.
+
+    Checked per test rather than at import. Collection must stay side-effect
+    free, and a guard that raises during collection reports a broken module
+    rather than a named gate that lost its root, which is harder to act on.
+    """
+    assert (_REPO_ROOT / "pyproject.toml").is_file(), f"packaging gate lost the repository root: {_REPO_ROOT}"
+
+
 _MARKER = "SURFACE_OUTCOMES:"
 
 # Every operator-reachable guarded entry point is driven with core-only typed
@@ -50,6 +67,7 @@ _GUARDED_SURFACES: tuple[tuple[str, str], ...] = (
     ("LocalTextLLMClassifier", "LocalTextLLMClassifier(spec=None)"),
     ("LocalVisionLLMClassifier", "LocalVisionLLMClassifier(spec=None)"),
     ("SemanticColumnRoleMapper", "SemanticColumnRoleMapper()"),
+    ("SupplyNatureProposer", "SupplyNatureProposer()"),
 )
 
 
@@ -74,7 +92,15 @@ def installed_core_environment(tmp_path_factory: pytest.TempPathFactory) -> tupl
 
 def _guarded_definition_names() -> frozenset[str]:
     """Derive exported definitions that call the real LLM extra guard."""
-    package = Path(__file__).resolve().parents[1]
+    # Derived from the imported package, never from this file's own depth. The
+    # depth was right while this test lived inside the llm package; after the
+    # move to dev/packaging/tests the same arithmetic scanned the packaging
+    # tooling, where no guard exists, so the derivation was empty and the
+    # inventory below compared nothing against nothing.
+    if llm.__file__ is None:  # pragma: no cover - namespace package guard
+        message = "the llm package has no file location to scan"
+        raise RuntimeError(message)
+    package = Path(llm.__file__).resolve().parent
     exported = frozenset(llm.__all__)
     derived: set[str] = set()
     for path in scan_directory(package, pattern="*.py", recursive=True):
@@ -105,6 +131,15 @@ def _isolated_environment(work_dir: Path) -> dict[str, str]:
 def _drive_surfaces(work_dir: Path, python: Path) -> dict[str, object]:
     """Drive actual production entry points inside the core-only installed cohort."""
     surfaces = json.dumps([{"name": name, "call": call} for name, call in _GUARDED_SURFACES])
+    # Derived from the surface table rather than restated: a hand-written import
+    # list drifts the moment a surface is enrolled, and the probe then reports
+    # NameError -- which reads as "this surface did not refuse properly" when
+    # the truth is that the probe never reached it. `MultimodalImageInput` is a
+    # helper the calls construct, not a guarded surface, so it stays explicit.
+    llm_imports = "\n".join(
+        f"            {name},"
+        for name in sorted({name for name, _call in _GUARDED_SURFACES} | {"MultimodalImageInput"})
+    )
     code = textwrap.dedent(
         f"""
         import json
@@ -121,15 +156,7 @@ def _drive_surfaces(work_dir: Path, python: Path) -> dict[str, object]:
             optional_extra_available,
         )
         from cadrumo.llm import (
-            LocalTextLLMClassifier,
-            LocalVisionDocumentTranscriber,
-            LocalVisionLLMClassifier,
-            MultimodalImageInput,
-            SemanticColumnRoleMapper,
-            TextInvoiceFieldExtractor,
-            extract_invoice_fields_from_text,
-            rasterise_pdf_pages_to_base64_png,
-            transcribe_document_images,
+{llm_imports}
         )
 
         _PAGES = (MultimodalImageInput.from_base64("aGk=", ImageMediaType.PNG),)

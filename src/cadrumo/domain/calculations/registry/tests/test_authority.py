@@ -10,14 +10,13 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
-from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.loader import _collect_registry_tree_fingerprints
-from cadrumo.domain.calculations.registry.loader_fingerprints import clear_fingerprint_cache
-
 from .....core import CasillaId, Period, validated_casilla_id
+from .._loader_internals import _collect_registry_tree_fingerprints
+from ..authority import ValidatedRegistryAuthority
+from ..errors import RegistrySnapshotError, RegistryValidationError
+from ..formula_runtime import calculate_registry_snapshot
 from ..loader_cache import registry_disk_cache_dir
+from ..loader_fingerprints import clear_fingerprint_cache
 from ._loader_directory_mode_support import write_extracted_corpus_sidecar, write_fragmented_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -469,3 +468,26 @@ source_refs = ["test-source-001"]
 
     with pytest.raises(RegistryValidationError, match=r"ambiguous bare casilla ids \['01'\]"):
         ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path)
+
+
+def test_the_authority_module_keeps_a_public_locally_defined_surface() -> None:
+    """Every public authority symbol is defined here, and the package binds none."""
+    import inspect
+
+    from ... import registry as registry_namespace
+    from .. import authority as authority_module
+
+    defined = [
+        name
+        for name, value in vars(authority_module).items()
+        if not name.startswith("_")
+        and (inspect.isclass(value) or inspect.isfunction(value))
+        and getattr(value, "__module__", None) == "cadrumo.domain.calculations.registry.authority"
+    ]
+
+    assert defined
+    for name in defined:
+        assert not hasattr(registry_namespace, name), name
+    assert not hasattr(authority_module, "__all__"), (
+        "authority declares no __all__, so it re-exports nothing; adding one would advertise borrowed symbols"
+    )

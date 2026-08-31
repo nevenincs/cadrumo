@@ -11,10 +11,6 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -23,7 +19,10 @@ from ....core import BindingSourceKind, CasillaId, Period, validated_casilla_id
 from ....core.errors import ErrorCategory, get_registered_error_code
 from ....domain.buckets import BucketEventType
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.modelos import derive_calculation_revision_id
+from ....domain.calculations.registry.errors import RegistryValidationError
+from ....domain.calculations.registry.ids import BindingId, RelationId
+from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.modelos.calculation_revision import derive_calculation_revision_id
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ....tests.profile_capsule import seed_test_profile_record
@@ -31,16 +30,16 @@ from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext
 from ...live.borrador_100 import Borrador100Snapshot, Borrador100SnapshotRepository
 from ...live.snapshot_base import SnapshotLifecycleState
-from .._borrador_binding import (
+from .._calculation_actions import calculate_modelo_revision
+from .._registry_helpers import validate_casilla_input_ids
+from .._work_lifecycle import create_work_unit
+from ..borrador_binding import (
     Modelo100BorradorBindingCommand,
     Modelo100BorradorBindingError,
     Modelo100BorradorSourceResolver,
     _decimal_value,
     resolve_modelo_100_borrador_bindings,
 )
-from .._calculation_actions import calculate_modelo_revision
-from .._registry_helpers import validate_casilla_input_ids
-from .._work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
