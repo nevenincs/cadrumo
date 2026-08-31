@@ -5,7 +5,7 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:96a9d05afe593a32ee350dfa04d396f1cdc7b01ad2683149dc12cbccc4e0e21e'
+body_hash: 'sha256:3158a67d4642ae7982cc675add0036146411ff1951577f982edc9b8ae6f84b1e'
 step_id: 'S142'
 related:
   - "[[2026-08-28-semantic-consolidation-plan]]"
@@ -36,10 +36,26 @@ CalendarCCAA field types" carried STRICT_FROZEN_CONFIG -- and strict mode refuse
 to turn the authored string "ES-MD" into a CalendarCCAA. The model that exists to
 coerce was refusing to.
 
-It failed closed and then failed quiet: the one caller catches
-DeadlineValidationError, falls back to the unshifted date with reason
-"calendar_unavailable", and logs at DEBUG. The rule was inert for every shipped
-year and nothing said so.
+It failed closed, and then degraded in a way that was recorded but not
+alarming. The one caller catches DeadlineValidationError, falls back to the
+unshifted date with reason "calendar_unavailable", and logs the exception at
+DEBUG.
+
+Corrected after first writing this record: "nothing said so" was too strong.
+That reason is carried on every calendar entry and the CLI renders it, so an
+operator reading the calendar saw `shift=Calendar unavailable` on every row --
+a real signal, with a locale key, that had been there all along. What it was
+not is an alert. An identical label on every entry reads as a column heading
+rather than a fault, and the dates beside it had silently reverted to the
+unshifted legal-text values. The rule was inert for every shipped year, and the
+one thing that said so said it uniformly enough to disappear.
+
+Worth separating the two failure shapes, because the fix differs. A swallow that
+substitutes a value and surfaces NOTHING is a defect in the handler. This one
+surfaced a structural signal that no surface treated as a problem -- closer to
+`state_projection.py`'s registry-snapshot handler, which returns a refusal the
+caller renders as `registry_ready: false`, except that this one's signal had no
+consumer that could act on it.
 
 The three TOML ROW models now carry a frozen, closed, non-strict config -- the
 hydration boundary the project rule prescribes, registry TOML free-form and the

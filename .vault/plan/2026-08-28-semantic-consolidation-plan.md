@@ -9,7 +9,7 @@ related:
   - '[[2026-08-28-semantic-consolidation-cli-payload-projection-adr]]'
 modified: '2026-08-31'
 body_schema: body-v2
-body_hash: 'sha256:e8bb9ee191758340c51319792c078cc640d319acf84e76df50a52db0f482e4a2'
+body_hash: 'sha256:acdcd82fa5e4ec5bc1e42c25146d80dc17217ea6dbf180e0246098421d38bb74'
 ---
 
 # `semantic-consolidation` plan
@@ -88,16 +88,15 @@ Eleven repository classes declare the identical namespace, payload_type, schema_
 - [x] `P03.S140` - State the minimo-descendientes relacion ambiguity once, and correct the reasoning both copies had let go stale when the relacion axis gained a member; `src/cadrumo/domain/contribuyente/descendant_maternity.py, src/cadrumo/application/modelo/_calculate_input.py, src/cadrumo/entrypoints/cli/_config/_descendiente.py`.
 - [x] `P03.S141` - Give the RETMAR mandatory-filing determination its own function and answer it from the original facts, so the renderer stops repairing a value the incomplete-profile rerun clears; `src/cadrumo/application/calculations/_maritime_exemption_service.py, src/cadrumo/application/modelo/_maritime_preview.py, src/cadrumo/entrypoints/cli/_modelo_maritime_cli.py`.
 - [x] `P03.S142` - Restore the festivos TOML hydration boundary so the AEAT business-day deadline shift can load a calendar at all, and record the engine's unshifted close date for an operator ruling; `src/cadrumo/domain/deadlines/festivos.py`.
+- [x] `P03.S143` - Gate every shipped holiday calendar on actually loading, discovering the years from disk rather than naming them, and prove it by restoring the defect that shipped; `src/cadrumo/core/resources/_repos/tests/test_every_shipped_resource_loads.py`.
 
 ### Phase `P04` - Close the confirmed single-function duplicates
 
 Behaviour-fingerprint matches that are small, self-contained and mechanically rehomable once a canonical home is ruled: the uppercase-alphanumeric code validator across domain auth and the CLI payloads, the passphrase strength renderer across two TUI screens, the projection row selector across M200 and M296, the snapshot lister across borrador and justificante, and three identical secure-persistence constructors.
 
-
 ### Phase `P05` - Adjudicate the enum-subset rebuilt groupings
 
 Fifty-two enum-subset clusters at two to six sites, each a candidate partition of a closed axis stated more than once. Every one needs the substitutability pre-filter before collapse, because two modules naming the same members for genuinely different rules must stay apart. The home-office family grouping closed earlier is the worked precedent for both the fix and the gate.
-
 
 ### Phase `P06` - Collapse the filing-year axis onto one declared bound
 

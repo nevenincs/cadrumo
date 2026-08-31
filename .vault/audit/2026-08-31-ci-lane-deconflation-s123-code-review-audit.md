@@ -38,4 +38,3 @@ Record-only commit `924b08e4f117f7f9bb777bb3bd8b5c4c3460ba82` replaces both plac
 
 - For `stale-record-doc-targets`, update the eight record links to the canonical `calc_sheets_pull_records` module and rerun the affected documentation reference gate when S53 performs its sweep.
 - For `non-reproducible-original-lint-evidence`, replace both placeholder lint commands with the exact original S123 source/test path list, rerun that command set, and record its actual exit result.
-
