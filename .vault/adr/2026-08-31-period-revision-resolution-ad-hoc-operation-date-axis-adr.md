@@ -8,16 +8,14 @@ body_schema: 'body-v2'
 body_hash: 'sha256:fbae7524ecd0f722714a23c3944439783a594844734a0dc79e8685df2270ede2'
 related:
   - "[[2026-06-10-period-revision-resolution-adr]]"
+  - '[[2026-06-10-period-revision-resolution-research]]'
 ---
-
-# `period-revision-resolution` ADR: an AD-HOC work target must carry its operation date
-
-## Status
-
-Proposed. Blocks the modelo 308 filing-year-2011 resolution gap; no registry datum
-changes under this decision.
+# `period-revision-resolution` ADR: an AD-HOC work target must carry its operation date | (**status:** `proposed`)
 
 ## Context
+
+This blocks the modelo 308 filing-year-2011 resolution gap. No registry datum
+changes under this decision.
 
 `aeat-registry-authority-flow` requires every production calculation, verification,
 filing, export and projection path to resolve its revision from
