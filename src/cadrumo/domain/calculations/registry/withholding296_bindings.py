@@ -15,10 +15,10 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.aggregation import BindingAggregationOp
 from ....core.country_code import CountryCodeAlpha2
 from ....core.identity import TaxIdIdentityToken
+from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.percentage import PERCENTAGE_MIN, Percentage
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import (
@@ -86,7 +86,7 @@ class Withholding296Observation(BaseModel):
 
     source_id: str = Field(min_length=1, max_length=128)
     perceptor_tax_id: TaxIdIdentityToken = Field(min_length=1, max_length=64)
-    representative_tax_id: str | None = Field(default=None, min_length=9, max_length=9)
+    representative_tax_id: TaxIdIdentityToken | None = Field(default=None, min_length=9, max_length=9)
     persona_juridica_flag: str | None = Field(default=None, max_length=1)
     perceptor_legal_name: str = Field(default="", max_length=200)
     codigo_bic: str | None = Field(default=None, max_length=6)
@@ -115,11 +115,17 @@ class Withholding296Observation(BaseModel):
     otros_importes: Decimal = Decimal("0")
     direccion_perceptor: str | None = Field(default=None, max_length=162)
     ingreso_a_cuenta_repercutido: Decimal = Decimal("0")
-    nif_pagador_anterior: str | None = Field(default=None, min_length=9, max_length=9)
+    nif_pagador_anterior: TaxIdIdentityToken | None = Field(default=None, min_length=9, max_length=9)
     procedimiento_especial_flag: str | None = Field(default=None, max_length=1)
     clave_mercado: str | None = Field(default=None, pattern=r"^[A-D]$")
     codigo_lei: str | None = Field(default=None, max_length=20)
-    nif_pais_residencia: str | None = Field(default=None, max_length=20)
+    # The perceptor's identifier in their OWN country, so it takes the
+    # normalising token and never the checksum-validating alias: Modelo 296 is
+    # IRNR withholding and this field exists precisely for a non-resident, whose
+    # identifier no Spanish control character can validate. Normalising it still
+    # matters -- the token is what grouping keys and stored rows compare on, and
+    # an unfolded value makes two canonically-equal identifiers into two rollups.
+    nif_pais_residencia: TaxIdIdentityToken | None = Field(default=None, max_length=20)
     fecha_nacimiento: str | None = Field(default=None, pattern=r"^\d{8}$")
     ciudad_nacimiento: str | None = Field(default=None, max_length=35)
     codigo_pais: CountryCodeAlpha2 | None = None

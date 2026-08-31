@@ -13,10 +13,10 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError, field_validator
 
-from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind, RetencionClave
 from ....core.country_code import CountryCodeAlpha2
 from ....core.identity import TaxIdIdentityToken
+from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.percentage import PERCENTAGE_MIN, Percentage
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import (
@@ -218,10 +218,10 @@ class WithholdingObservation(BaseModel):
     perceptor_situacion_familiar: int | None = Field(default=None, ge=1, le=3)
     """Perceptor family-situation clave (1-3) per the design's own relation, only
     declared for claves A, B (subclaves 01, 03, 04, 99) and C."""
-    representative_tax_id: str | None = Field(default=None, min_length=9, max_length=9)
+    representative_tax_id: TaxIdIdentityToken | None = Field(default=None, min_length=9, max_length=9)
     """NIF of the perceptor's legal representative, declared by the design only when
     the perceptor is under 14; every other row writes the design's own spaces."""
-    spouse_or_unit_titular_tax_id: str | None = Field(default=None, min_length=9, max_length=9)
+    spouse_or_unit_titular_tax_id: TaxIdIdentityToken | None = Field(default=None, min_length=9, max_length=9)
     """NIF of the perceptor's spouse (situacion familiar 2, claves A/B/C) or of the
     unidad de convivencia's titular (clave L.29 with titular clave 2); spaces elsewhere."""
     disability_clave: int | None = Field(default=None, ge=0, le=3)
@@ -430,7 +430,7 @@ class WithholdingObservation(BaseModel):
     garantias: Decimal = Decimal("0")
     """Modelo 193 garantias (positions 237-248), declared only for prestamo de
     valores rows; the design's own zeros when none."""
-    nif_pagador_anterior: str | None = Field(default=None, min_length=9, max_length=9)
+    nif_pagador_anterior: TaxIdIdentityToken | None = Field(default=None, min_length=9, max_length=9)
     """Modelo 193 NIF of the immediately previous payer in the payment chain
     (positions 322-330), obligatory when pago is 2-5 except where the previous
     payer is foreign without a Spanish NIF -- recorded-when-applicable."""
