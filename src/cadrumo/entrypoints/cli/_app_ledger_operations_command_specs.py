@@ -321,7 +321,7 @@ LEDGER_OPERATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="export_kind",
                 declarations=("--export-format",),
-                value=ValueContract(DeferredTarget("cadrumo.application.export", "ExportSerializationFormat")),
+                value=ValueContract(DeferredTarget("cadrumo.application.export.tabular", "ExportSerializationFormat")),
                 default=ParameterDefault.value("csv"),
                 help_key=TranslationKey("cli.ledger.export.format_help"),
                 metavar=None,
