@@ -32,12 +32,12 @@ from ._source_mesh import (
     CalculationSourceContext,
     CalculationSourceProvenance,
     CalculationSourceResolution,
-    storage_degradation_resolution,
-)
-from ._source_mesh import (
-    source_provenance_for as _provenance_for,
 )
 from .errors import AggregationValidationError, t
+from .source_resolution_operations import (
+    source_provenance_for as _provenance_for,
+)
+from .source_resolution_operations import storage_degradation_resolution
 
 _RETENCIONES_AGGREGATORS = {
     Modelo.M111.value: aggregate_retenciones_111,

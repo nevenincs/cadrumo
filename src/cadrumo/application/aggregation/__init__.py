@@ -13,10 +13,7 @@ consumed by the modelo calculate path.
 
 :func:`aggregate_per_modelo` remains the provider-grouped service for
 per-modelo rollup workflows. It is not the resolved-source envelope used by
-calculation; mesh helpers such as :func:`merge_source_resolutions`,
-:func:`merge_source_resolutions_by_precedence`,
-:func:`collect_unhandled_source_diagnostics`, and
-:func:`build_binding_source_dispositions` enforce exclusive ownership, declared
+calculation; :func:`build_binding_source_dispositions` enforces exclusive ownership, declared
 precedence, no-silent-blank diagnostics, and the enrolled / deferred / reserved
 :class:`BindingSourceDisposition` registry.
 
@@ -242,11 +239,7 @@ from ._source_mesh import (
     SourceMeshError,
     build_binding_source_dispositions,
     casilla_registry_legal_refs,
-    collect_unhandled_source_diagnostics,
-    merge_source_resolutions,
-    merge_source_resolutions_by_precedence,
     precedence_ladder_sources,
-    storage_degradation_resolution,
 )
 from ._source_profile import ProfileSourceResolver
 from ._undeclared_activity_advisory import (
@@ -383,7 +376,6 @@ __all__ = [
     "build_binding_source_dispositions",
     "business_proportion",
     "casilla_registry_legal_refs",
-    "collect_unhandled_source_diagnostics",
     "compute_annual_deducible_totals_by_regime",
     "compute_ledger_filing_evidence",
     "compute_ledger_filing_snapshot",
@@ -399,8 +391,6 @@ __all__ = [
     "invoice_kind_for_direction",
     "iva_ledger_missing_fact_reasons",
     "merge_manual_and_routed_retencion_observations",
-    "merge_source_resolutions",
-    "merge_source_resolutions_by_precedence",
     "missing_evidence_advisory_observations",
     "oss_ioss_candidates_from_repositories",
     "percepcion_observation_key",
@@ -418,7 +408,6 @@ __all__ = [
     "route_invoice_retenciones",
     "row_fingerprint",
     "stale_filed_revisions",
-    "storage_degradation_resolution",
     "undeclared_activity_income_advisory_observations",
     "validate_iva_ledger_counterparty_category",
     "validate_iva_ledger_observation",
