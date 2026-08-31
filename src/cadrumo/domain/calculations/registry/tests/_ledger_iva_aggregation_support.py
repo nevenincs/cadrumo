@@ -37,7 +37,7 @@ from ..bindings import (
 )
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ..ids import BindingId
-from ..ledger_bindings import (
+from ..ledger_iva_bindings import (
     IvaLedgerObservation,
     resolve_ledger_iva_aggregation_binding_values,
 )

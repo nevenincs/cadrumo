@@ -87,33 +87,41 @@ from .irnr_ledger_bindings import (
     _IrnrLedgerIncomeSelector,
     validate_ledger_irnr_income_aggregation_binding,
 )
-from .ledger_bindings import (
-    IvaLedgerSelector as _IvaLedgerSelector,
-)
-from .ledger_bindings import (
-    OssIossLedgerSelector as _OssIossLedgerSelector,
-)
-from .ledger_bindings import (
-    RentaLedgerGastosEstimacionDirectaSelector as _RentaLedgerGastosEstimacionDirectaSelector,
-)
-from .ledger_bindings import (
-    RentaLedgerGastosPagoFraccionadoSelector as _RentaLedgerGastosPagoFraccionadoSelector,
-)
-from .ledger_bindings import (
-    RentaLedgerIncomeSelector as _RentaLedgerIncomeSelector,
-)
-from .ledger_bindings import (
-    validate_ledger_iva_aggregation_binding,
-    validate_ledger_oss_aggregation_binding,
-    validate_ledger_renta_gastos_estimacion_directa_aggregation_binding,
-    validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding,
-    validate_ledger_renta_income_aggregation_binding,
-)
 from .ledger_impatriado_bindings import (
     ImpatriadoLedgerIncomeSelector as _ImpatriadoLedgerIncomeSelector,
 )
 from .ledger_impatriado_bindings import (
     validate_ledger_impatriado_income_aggregation_binding,
+)
+from .ledger_iva_bindings import (
+    IvaLedgerSelector as _IvaLedgerSelector,
+)
+from .ledger_iva_bindings import (
+    validate_ledger_iva_aggregation_binding,
+)
+from .ledger_oss_bindings import (
+    OssIossLedgerSelector as _OssIossLedgerSelector,
+)
+from .ledger_oss_bindings import (
+    validate_ledger_oss_aggregation_binding,
+)
+from .ledger_renta_gastos_estimacion_directa_bindings import (
+    RentaLedgerGastosEstimacionDirectaSelector as _RentaLedgerGastosEstimacionDirectaSelector,
+)
+from .ledger_renta_gastos_estimacion_directa_bindings import (
+    validate_ledger_renta_gastos_estimacion_directa_aggregation_binding,
+)
+from .ledger_renta_gastos_pago_fraccionado_bindings import (
+    RentaLedgerGastosPagoFraccionadoSelector as _RentaLedgerGastosPagoFraccionadoSelector,
+)
+from .ledger_renta_gastos_pago_fraccionado_bindings import (
+    validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding,
+)
+from .ledger_renta_income_bindings import (
+    RentaLedgerIncomeSelector as _RentaLedgerIncomeSelector,
+)
+from .ledger_renta_income_bindings import (
+    validate_ledger_renta_income_aggregation_binding,
 )
 from .m303_regimen_simplificado_annual_summary_bindings import (
     M303RegimenSimplificadoAnnualSummarySelector as _M303RegimenSimplificadoAnnualSummarySelector,
