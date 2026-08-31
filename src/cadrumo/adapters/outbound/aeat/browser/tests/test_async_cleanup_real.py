@@ -11,7 +11,7 @@ from ......core.async_cleanup import AsyncResourceCleanupError, close_async_reso
 from ......core.config import Settings
 from ...tests._process_support import wait_for_process_exit
 from .. import Profile
-from .._factory import DefaultBrowserSession, create_browser_session
+from ..factory import DefaultBrowserSession, create_browser_session
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

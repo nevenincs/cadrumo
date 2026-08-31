@@ -10,7 +10,7 @@ from playwright.async_api import Playwright
 
 from ......core.config import Settings
 from ......domain.calculations.registry.errors import RegistryValidationError
-from ...browser._factory import DefaultBrowserSession
+from ...browser.factory import DefaultBrowserSession
 from ...browser.tests.real_http_boundary import (
     open_real_browser_session,
     opened_http_boundary,

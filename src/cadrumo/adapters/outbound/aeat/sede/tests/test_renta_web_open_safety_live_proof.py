@@ -28,7 +28,7 @@ import pytest
 from ......core.config import Settings
 from ......domain.calculations.registry.renta_web_open_oracle import RentaWebOpenLivePayload
 from ......tests.live_gate import requires_live_enabled
-from ...browser._factory import default_browser_session_factory
+from ...browser.factory import default_browser_session_factory
 from .._renta_web_open_safety import install_page_safety_net
 from ..errors import SedeNavigationError
 

@@ -30,7 +30,7 @@ from .....core.logging import get_logger
 from .....core.time.clock import now
 from .....domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy
 from .._playwright import PlaywrightError
-from ..browser._factory import default_browser_session_factory
+from ..browser.factory import default_browser_session_factory
 from ._adapter_utils import assert_pdf_response as _assert_pdf_response
 from ._adapter_utils import assert_read_http_for, assert_read_landing, landed_origin
 from ._auth_state import storage_state_for_session

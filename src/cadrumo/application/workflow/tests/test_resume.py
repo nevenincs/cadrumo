@@ -9,7 +9,11 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.outbound.aeat.browser._site_health import SiteHealthEvidence, SiteHealthStatus, parse_site_health_url
+from ....adapters.outbound.aeat.browser.site_health_records import (
+    SiteHealthEvidence,
+    SiteHealthStatus,
+    parse_site_health_url,
+)
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core.casilla_id import CasillaId, validated_casilla_id
@@ -31,8 +35,8 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, U
 from ....tests.aeat_literal_fixtures import aeat_url
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
-from ...modelo._selectors import ModeloCalculationRevisionSelector
 from ...modelo._workflow_gate import workflow_period_for_work_unit
+from ...modelo.selectors import ModeloCalculationRevisionSelector
 from ...modelo.work_addressing import ModeloExactWorkUnitTarget, ModeloVisibleFilingTarget
 from ...modelo.work_lifecycle import create_work_unit
 from ...operator_actions.models import ConditionEvidence, PreconditionVerdict

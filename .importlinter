@@ -503,7 +503,7 @@ ignore_imports =
     cadrumo.application.auth.operator_probes -> cadrumo.adapters.outbound.aeat.auth.certificate
     cadrumo.application.auth.operator_probes -> cadrumo.adapters.persistence.**
     cadrumo.application.auth.operator_scope -> cadrumo.adapters.persistence.**
-    cadrumo.application.auth.sessions -> cadrumo.adapters.outbound.aeat.browser._factory
+    cadrumo.application.auth.sessions -> cadrumo.adapters.outbound.aeat.browser.factory
     cadrumo.application.auth.sessions -> cadrumo.adapters.persistence.**
     cadrumo.application.bucket_maintenance._deletion_paths -> cadrumo.adapters.persistence.**
     cadrumo.application.calculations._iva_compensation_annual_partition -> cadrumo.adapters.persistence.**

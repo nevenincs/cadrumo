@@ -48,7 +48,7 @@ from .....core.time.clock import now
 from .....domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy
 from .._html import parse_html
 from .._playwright import PlaywrightError
-from ..browser._factory import default_browser_session_factory
+from ..browser.factory import default_browser_session_factory
 from ._adapter_utils import assert_pdf_response, assert_read_http_for, assert_read_landing, cell_text
 from ._auth_state import storage_state_for_session
 from ._browser_constants import PLAYWRIGHT_WAIT_DOMCONTENTLOADED

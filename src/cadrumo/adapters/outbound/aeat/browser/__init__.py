@@ -33,17 +33,6 @@ See Also:
 
 from __future__ import annotations
 
-from ._factory import (
-    DefaultBrowserSession,
-    create_browser_session,
-    default_browser_session_factory,
-    opened_browser_page,
-    shared_playwright_runtime,
-)
-from ._site_health import (
-    SiteHealthEvidence,
-    SiteHealthStatus,
-)
 from ._site_health_parsers import (
     evaluate_response,
     parse_mantenimiento_banner,
@@ -52,9 +41,20 @@ from ._site_health_parsers import (
 )
 from .errors import BrowserError, BrowserFailureMode, BrowserValidationError
 from .evasion import BrowserEvasionError, EvasionStrategy, PlaywrightStealthEvasion
+from .factory import (
+    DefaultBrowserSession,
+    create_browser_session,
+    default_browser_session_factory,
+    opened_browser_page,
+    shared_playwright_runtime,
+)
 from .health import run_health_check
 from .profile import Profile
 from .session import BrowserSession
+from .site_health_records import (
+    SiteHealthEvidence,
+    SiteHealthStatus,
+)
 
 __all__ = [
     "BrowserError",

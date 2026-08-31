@@ -108,7 +108,7 @@ from .operator_actions.models import PreconditionVerdict
 # Importing them lazily inside the functions that actually run keeps the
 # version surface off the heavy import graph.
 if TYPE_CHECKING:
-    from ..adapters.outbound.aeat.browser._site_health import SiteHealthStatus
+    from ..adapters.outbound.aeat.browser.site_health_records import SiteHealthStatus
     from .wizard.status import WizardStatusReport
     from .workflow.profile_health import ActiveProfileHealth
     from .workflow.state_models import WorkflowState
@@ -337,7 +337,7 @@ def render_browser_connectivity_text(status: SiteHealthStatus) -> str:
 
 
 async def _probe_browser_connectivity(settings: Settings) -> SiteHealthStatus:
-    from ..adapters.outbound.aeat.browser._factory import default_browser_session_factory
+    from ..adapters.outbound.aeat.browser.factory import default_browser_session_factory
 
     url = settings.site_health_probe_url
     session = await default_browser_session_factory(settings)
@@ -348,7 +348,7 @@ async def _probe_browser_connectivity(settings: Settings) -> SiteHealthStatus:
         try:
             await session.navigate(page, url)
         except SiteHealthError as exc:
-            from ..adapters.outbound.aeat.browser._site_health import SiteHealthStatus
+            from ..adapters.outbound.aeat.browser.site_health_records import SiteHealthStatus
 
             status = exc.status
             if not isinstance(status, SiteHealthStatus):
@@ -364,7 +364,7 @@ async def _probe_browser_connectivity(settings: Settings) -> SiteHealthStatus:
 
 
 def _ok_site_health_status(url: str) -> SiteHealthStatus:
-    from ..adapters.outbound.aeat.browser._site_health import SiteHealthEvidence, SiteHealthStatus
+    from ..adapters.outbound.aeat.browser.site_health_records import SiteHealthEvidence, SiteHealthStatus
 
     return SiteHealthStatus(
         state=SiteHealthState.OK,

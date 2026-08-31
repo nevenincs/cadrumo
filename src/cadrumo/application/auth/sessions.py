@@ -357,7 +357,7 @@ async def require_verified_aeat_session(
             translated_message="application.auth.sessions.errors.state_missing",
         )
 
-    from ...adapters.outbound.aeat.browser._factory import default_browser_session_factory
+    from ...adapters.outbound.aeat.browser.factory import default_browser_session_factory
 
     provider = select_provider(
         persisted.provider_kind,
@@ -1101,7 +1101,7 @@ def _build_provider(
     certificate_credentials: ActiveCertificateCredentials | None,
 ) -> AuthProvider:
     if browser_session_factory is None:
-        from ...adapters.outbound.aeat.browser._factory import default_browser_session_factory
+        from ...adapters.outbound.aeat.browser.factory import default_browser_session_factory
 
         browser_session_factory = default_browser_session_factory
     return select_provider(

@@ -43,7 +43,7 @@ class SiteHealthEvidenceLike(Protocol):
     Declared in :mod:`core.errors` so :class:`SiteHealthError` can
     type its payload without importing the adapter layer that produces
     it. The concrete record is
-    :class:`adapters.outbound.aeat.browser._site_health.SiteHealthEvidence`.
+    :class:`adapters.outbound.aeat.browser.site_health_records.SiteHealthEvidence`.
 
     Members are read-only properties so the protocol matches
     covariantly: a concrete record may carry narrower member types
@@ -74,7 +74,7 @@ class SiteHealthStatusLike(Protocol):
     Declared in :mod:`core.errors` so :class:`SiteHealthError` can
     accept the status without a runtime or type-checking import of the
     adapter layer. The concrete record is
-    :class:`adapters.outbound.aeat.browser._site_health.SiteHealthStatus`.
+    :class:`adapters.outbound.aeat.browser.site_health_records.SiteHealthStatus`.
 
     Members are read-only properties so the protocol matches
     covariantly: the concrete ``SiteHealthStatus`` carries a concrete

@@ -6,7 +6,7 @@ import pytest
 from pydantic import AnyHttpUrl, ValidationError
 
 from ......tests.aeat_literal_fixtures import aeat_url
-from .._site_health import SiteHealthEvidence
+from ..site_health_records import SiteHealthEvidence
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

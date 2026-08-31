@@ -163,7 +163,7 @@ async def _build_default_browser_session() -> VerifyBrowserSessionLike:
     a session the caller is responsible for closing.
     """
     from .....core.config import load_settings
-    from ..browser._factory import default_browser_session_factory
+    from ..browser.factory import default_browser_session_factory
 
     settings = load_settings()
     session = await default_browser_session_factory(settings)

@@ -23,7 +23,7 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel, Field
 
-from ....adapters.outbound.aeat.browser._factory import DefaultBrowserSession
+from ....adapters.outbound.aeat.browser.factory import DefaultBrowserSession
 from ....adapters.outbound.aeat.browser.tests.real_http_boundary import (
     LocalHttpBoundary,
     opened_http_boundary,
