@@ -9,7 +9,7 @@ related:
   - '[[2026-08-28-semantic-consolidation-cli-payload-projection-adr]]'
 modified: '2026-08-31'
 body_schema: body-v2
-body_hash: 'sha256:07c630b96a4226549e0a47915f6819587741389ee40d0d0cbcfee91d4bbd9c5d'
+body_hash: 'sha256:0e182bb7152a5115cf04a0d8feb4bf49163a31425eb152a02a6fde49b33b39f6'
 ---
 
 # `semantic-consolidation` plan
@@ -22,7 +22,7 @@ body_hash: 'sha256:07c630b96a4226549e0a47915f6819587741389ee40d0d0cbcfee91d4bbd9
 
 Six package namespaces carry a PEP 562 __getattr__ resolver, four of them byte-identical in behaviour. This is duplication and an independent rules breach: package namespaces must be inert and export maps are prohibited. Closed first because it removes code rather than reconciling it, and because every later phase reads imports that these resolvers currently obscure.
 
-- [ ] `P01.S06` - Retire the domain/modelos lazy export map, repointing every consumer at the owning defining module; `src/cadrumo/domain/modelos/__init__.py`.
+- [x] `P01.S06` - Retire the domain/modelos lazy export map, repointing every consumer at the owning defining module; `src/cadrumo/domain/modelos/__init__.py`.
 - [ ] `P01.S07` - Retire the storage lazy export map last of its subtree, repointing its core, custody and crypto facing entries; `src/cadrumo/adapters/persistence/storage/__init__.py`.
 - [ ] `P01.S08` - Retire the core lazy export map in full, the largest slice, on the measured finding that the facade saves a real consumer nothing; `src/cadrumo/core/__init__.py`.
 - [ ] `P01.S09` - Census and rule on the second population of namespace export maps the mechanism-name search missed, under different identifiers; `src/cadrumo/`.
@@ -37,7 +37,7 @@ Six package namespaces carry a PEP 562 __getattr__ resolver, four of them byte-i
 - [x] `P02.S01` - Gate the CLI payload boundary: refuse a payload declaring a constraint or validator its canonical model does not own, per module, property-based, six arms mutation-proved; `src/cadrumo/entrypoints/cli/tests/test_cli_payload_constraint_authority.py`.
 - [x] `P02.S02` - Promote the canonical evidence-reference and amendment-reason aliases to public defining modules and dedupe the twice-declared discard-reason alias; `src/cadrumo/domain/modelos/`.
 - [ ] `P02.S03` - Reconcile the modelo payload modules onto canonical aliases and move the imported-evidence match invariant to the filing-record model; `src/cadrumo/entrypoints/cli/_modelo_payloads.py`.
-- [ ] `P02.S04` - Reconcile the ledger payload modules onto canonical transaction, invoice, counterparty and rule aliases; `src/cadrumo/entrypoints/cli/`.
+- [x] `P02.S04` - Reconcile the ledger payload modules onto canonical transaction, invoice, counterparty and rule aliases; `src/cadrumo/entrypoints/cli/`.
 - [ ] `P02.S05` - Reconcile the config, diagnostics, overview and registry payload modules onto their canonical aliases; `src/cadrumo/entrypoints/cli/`.
 - [x] `P02.S18` - Source the business-pct bound from the domain constraint the CLI helper restates, keeping only the operator-facing percent formatting in the CLI; `src/cadrumo/entrypoints/cli/_ledger_support.py`.
 - [x] `P02.S43` - Judge a payload validator by its body rather than its presence, so the two sanctioned shapes stop reading as violations, and teach the detector that a threshold literal is usually wrapped in a constructor call; `src/cadrumo/entrypoints/cli/tests/test_cli_payload_constraint_authority.py`.
@@ -99,6 +99,7 @@ Eleven repository classes declare the identical namespace, payload_type, schema_
 - [x] `P03.S141` - Give the RETMAR mandatory-filing determination its own function and answer it from the original facts, so the renderer stops repairing a value the incomplete-profile rerun clears; `src/cadrumo/application/calculations/_maritime_exemption_service.py, src/cadrumo/application/modelo/_maritime_preview.py, src/cadrumo/entrypoints/cli/_modelo_maritime_cli.py`.
 - [x] `P03.S142` - Restore the festivos TOML hydration boundary so the AEAT business-day deadline shift can load a calendar at all, and record the engine's unshifted close date for an operator ruling; `src/cadrumo/domain/deadlines/festivos.py`.
 - [x] `P03.S143` - Gate every shipped holiday calendar on actually loading, discovering the years from disk rather than naming them, and prove it by restoring the defect that shipped; `src/cadrumo/core/resources/_repos/tests/test_every_shipped_resource_loads.py`.
+- [x] `P03.S154` - Trace the fixed-width export rows that feed filed bytes, establish the codec refuses rather than truncates, and record the three bound shapes an annotation scan cannot see; `src/cadrumo/application/filing/, src/cadrumo/domain/calculations/registry/fixed_width_codec.py, .vault/audit/2026-08-31-semantic-consolidation-invisible-bounds-audit.md`.
 
 ### Phase `P04` - Close the confirmed single-function duplicates
 
