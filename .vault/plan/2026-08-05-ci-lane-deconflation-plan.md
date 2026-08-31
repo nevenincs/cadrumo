@@ -10,7 +10,7 @@ related:
   - '[[2026-06-01-registry-period-code-union-cli-boundary-adr]]'
   - '[[2026-08-05-ci-lane-deconflation-step-check-attribution-audit]]'
 modified: '2026-08-31'
-body_hash: 'sha256:8c90d4f80f72c070a23e9d64922c66507ac1afbd2dab16ce8aeaf73cdd175c32'
+body_hash: 'sha256:0af72d1cc9a8c43026c1f7c4f7311839c145a774d504cfd6c220c95cc3421524'
 ---
 
 <!-- RETIRED: S01, S10, S181, S184, S186, S189, S191, S193, S194, S197, S199, S201, S203, S205, S207, S209, S211, S213, S215, S217, S219, S221 -->
@@ -179,7 +179,7 @@ Work this campaign found and cannot close, recorded so it is not silently droppe
 Decompose every live size-budget subject by its owning source file, then regenerate only stale pins after the live subjects are compliant; S51 performs the terminal full-gate verification.
 
 - [x] `P05.S121` - Refactor the size-budget subjects in declarations.py into cohesive siblings without raising any threshold.; `src/cadrumo/adapters/outbound/aeat/sede/declarations.py`.
-- [ ] `P05.S122` - Refactor the size-budget subjects in calc_sheets_apply.py into cohesive siblings without raising any threshold.; `src/cadrumo/adapters/outbound/google/calc_sheets_apply.py`.
+- [x] `P05.S122` - Refactor the size-budget subjects in calc_sheets_apply.py into cohesive siblings without raising any threshold.; `src/cadrumo/adapters/outbound/google/calc_sheets_apply.py`.
 - [ ] `P05.S123` - Refactor the size-budget subjects in calc_sheets_pull.py into cohesive siblings without raising any threshold.; `src/cadrumo/adapters/outbound/google/calc_sheets_pull.py`.
 - [ ] `P05.S124` - Refactor the size-budget subjects in _google_drive.py into cohesive siblings without raising any threshold.; `src/cadrumo/adapters/outbound/storage/_google_drive.py`.
 - [ ] `P05.S125` - Refactor the size-budget subjects in _namespace_registry.py into cohesive siblings without raising any threshold.; `src/cadrumo/adapters/persistence/storage/_namespace_registry.py`.

@@ -30,14 +30,16 @@ from .....application.storage.calc_sheets import (
     guide_stamps,
     serialize_offline_workbook,
 )
-from .....core.period import Period
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from ..calc_sheets_apply import (
+from .....core.period import Period
+from .._calc_sheets_apply_formatting import (
     _build_emphasis_format_requests,
+    _build_number_format_requests,
+)
+from .._calc_sheets_apply_values import (
     _build_evidence_value_data,
     _build_formula_data,
     _build_guide_value_data,
-    _build_number_format_requests,
     _build_value_data,
 )
 
