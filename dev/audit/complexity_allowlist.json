@@ -14,12 +14,12 @@
         "reason": "flat guard/dispatch chain, max nesting depth 2; long but linear, never regressed from baseline",
         "score": 11
       },
-      "src/cadrumo/adapters/inbound/einvoice/_parsers.py::_parse_cii": {
-        "reason": "flat guard/dispatch chain, max nesting depth 3; long but linear, never regressed from baseline",
-        "score": 13
-      },
       "src/cadrumo/adapters/inbound/einvoice/_parsers.py::_iva_id": {
         "reason": "flat guard/dispatch chain, max nesting depth 2; long but linear, never regressed from baseline",
+        "score": 13
+      },
+      "src/cadrumo/adapters/inbound/einvoice/_parsers.py::_parse_cii": {
+        "reason": "flat guard/dispatch chain, max nesting depth 3; long but linear, never regressed from baseline",
         "score": 13
       },
       "src/cadrumo/adapters/inbound/einvoice/_record_batch.py::parse_aeat_record_batch": {
@@ -42,7 +42,7 @@
         "reason": "flat guard/dispatch chain, max nesting depth 2; long but linear, never regressed from baseline",
         "score": 11
       },
-      "src/cadrumo/adapters/outbound/google/_records.py::_validate_google_oauth_endpoint": {
+      "src/cadrumo/adapters/outbound/google/records.py::_validate_google_oauth_endpoint": {
         "reason": "flat guard/dispatch chain, max nesting depth 1; long but linear, never regressed from baseline",
         "score": 11
       },
@@ -62,11 +62,11 @@
         "reason": "flat guard/dispatch chain, max nesting depth 2; long but linear, never regressed from baseline",
         "score": 11
       },
-      "src/cadrumo/adapters/persistence/storage/bucket/_sealed_archive_writer.py::write_sealed_archive": {
+      "src/cadrumo/adapters/persistence/storage/bucket/sealed_archive_writer.py::write_sealed_archive": {
         "reason": "flat guard/dispatch chain, max nesting depth 3; long but linear, never regressed from baseline",
         "score": 14
       },
-      "src/cadrumo/adapters/persistence/storage/secret_store/_secret_store.py::SecretStore._put_locked": {
+      "src/cadrumo/adapters/persistence/storage/secret_store/store.py::SecretStore._put_locked": {
         "reason": "flat guard/dispatch chain, max nesting depth 2; long but linear, never regressed from baseline",
         "score": 12
       },
@@ -122,7 +122,7 @@
         "reason": "flat guard/dispatch chain, max nesting depth 2; long but linear, never regressed from baseline",
         "score": 16
       },
-      "src/cadrumo/application/filing/_review.py::describe_stale_reason": {
+      "src/cadrumo/application/filing/draft_review.py::describe_stale_reason": {
         "reason": "flat guard/dispatch chain, max nesting depth 0; long but linear, never regressed from baseline",
         "score": 11
       },
@@ -130,11 +130,11 @@
         "reason": "flat guard/dispatch chain, max nesting depth 1; long but linear, never regressed from baseline",
         "score": 13
       },
-      "src/cadrumo/application/invoices/_bulk_import.py::_parse_bulk_invoice_row": {
+      "src/cadrumo/application/invoices/bulk_import.py::_parse_bulk_invoice_row": {
         "reason": "flat guard/dispatch chain, max nesting depth 1; long but linear, never regressed from baseline",
         "score": 13
       },
-      "src/cadrumo/application/invoices/_bulk_import.py::_read_workbook_source": {
+      "src/cadrumo/application/invoices/bulk_import.py::_read_workbook_source": {
         "reason": "flat guard/dispatch chain, max nesting depth 3; long but linear, never regressed from baseline",
         "score": 11
       },
@@ -146,21 +146,21 @@
         "reason": "flat guard/dispatch chain, max nesting depth 2; long but linear, never regressed from baseline",
         "score": 16
       },
-      "src/cadrumo/application/ledger/counterparty_establishment.py::record_confirmed_counterparty_facts": {
-        "reason": "flat guard/dispatch chain, max nesting depth 2; long but linear, never regressed from baseline",
-        "score": 12
-      },
       "src/cadrumo/application/ledger/confirmed_field_resolution.py::_confirmed_lines_from_the_document": {
         "reason": "flat guard/dispatch chain, max nesting depth 2; long but linear, never regressed from baseline",
         "score": 11
       },
-      "src/cadrumo/application/ledger/invoice_draft_extraction.py::extract_invoice_draft_from_evidence": {
+      "src/cadrumo/application/ledger/counterparty_establishment.py::record_confirmed_counterparty_facts": {
         "reason": "flat guard/dispatch chain, max nesting depth 2; long but linear, never regressed from baseline",
         "score": 12
       },
       "src/cadrumo/application/ledger/identity_roles.py::resolve_counterparty_identity": {
         "reason": "flat guard/dispatch chain, max nesting depth 2; long but linear, never regressed from baseline",
         "score": 15
+      },
+      "src/cadrumo/application/ledger/invoice_draft_extraction.py::extract_invoice_draft_from_evidence": {
+        "reason": "flat guard/dispatch chain, max nesting depth 2; long but linear, never regressed from baseline",
+        "score": 12
       },
       "src/cadrumo/application/ledger/llm_diagnostics.py::build_llm_diagnostics_report": {
         "reason": "flat guard/dispatch chain, max nesting depth 0; long but linear, never regressed from baseline",
@@ -186,21 +186,9 @@
         "reason": "flat guard/dispatch chain, max nesting depth 1; long but linear, never regressed from baseline",
         "score": 12
       },
-      "src/cadrumo/application/modelo/profile_binding.py::_resolve_maternidad_meses_from_fact_index": {
-        "reason": "flat guard/dispatch chain, max nesting depth 1; long but linear, never regressed from baseline",
-        "score": 11
-      },
-      "src/cadrumo/application/modelo/profile_binding.py::resolve_profile_binding_value": {
-        "reason": "flat guard/dispatch chain, max nesting depth 2; long but linear, never regressed from baseline",
-        "score": 12
-      },
       "src/cadrumo/application/modelo/_profile_readiness_gate.py::require_profile_ready_for_modelo_work": {
         "reason": "flat guard/dispatch chain, max nesting depth 2; long but linear, never regressed from baseline",
         "score": 11
-      },
-      "src/cadrumo/application/modelo/reconciliation.py::_reconcile_declaracion_casillas": {
-        "reason": "flat guard/dispatch chain, max nesting depth 1; long but linear, never regressed from baseline",
-        "score": 12
       },
       "src/cadrumo/application/modelo/_revision_persistence.py::persist_filed_revision": {
         "reason": "flat guard/dispatch chain, max nesting depth 1; long but linear, never regressed from baseline",
@@ -209,6 +197,18 @@
       "src/cadrumo/application/modelo/_selectors.py::resolve_modelo_work_unit": {
         "reason": "flat guard/dispatch chain, max nesting depth 2; long but linear, never regressed from baseline",
         "score": 16
+      },
+      "src/cadrumo/application/modelo/profile_binding.py::_resolve_maternidad_meses_from_fact_index": {
+        "reason": "flat guard/dispatch chain, max nesting depth 1; long but linear, never regressed from baseline",
+        "score": 11
+      },
+      "src/cadrumo/application/modelo/profile_binding.py::resolve_profile_binding_value": {
+        "reason": "flat guard/dispatch chain, max nesting depth 2; long but linear, never regressed from baseline",
+        "score": 12
+      },
+      "src/cadrumo/application/modelo/reconciliation.py::_reconcile_declaracion_casillas": {
+        "reason": "flat guard/dispatch chain, max nesting depth 1; long but linear, never regressed from baseline",
+        "score": 12
       },
       "src/cadrumo/application/operator_surface/manifest.py::_index_reconciled_leaves": {
         "reason": "flat guard/dispatch chain, max nesting depth 3; long but linear, never regressed from baseline",
@@ -266,10 +266,6 @@
         "reason": "flat guard/dispatch chain, max nesting depth 0; long but linear, never regressed from baseline",
         "score": 15
       },
-      "src/cadrumo/core/_model_catalogue.py::_validate_catalogue": {
-        "reason": "flat guard/dispatch chain, max nesting depth 3; long but linear, never regressed from baseline",
-        "score": 15
-      },
       "src/cadrumo/core/corpus_text.py::resolve_anchored_extracted_unit": {
         "reason": "flat guard/dispatch chain, max nesting depth 2; long but linear, never regressed from baseline",
         "score": 19
@@ -282,7 +278,11 @@
         "reason": "flat guard/dispatch chain, max nesting depth 2; long but linear, never regressed from baseline",
         "score": 11
       },
-      "src/cadrumo/core/observability/_store.py::iter_runs": {
+      "src/cadrumo/core/model_catalogue.py::_validate_catalogue": {
+        "reason": "flat guard/dispatch chain, max nesting depth 3; long but linear, never regressed from baseline",
+        "score": 15
+      },
+      "src/cadrumo/core/observability/store.py::iter_runs": {
         "reason": "flat guard/dispatch chain, max nesting depth 2; long but linear, never regressed from baseline",
         "score": 11
       },
@@ -293,6 +293,22 @@
       "src/cadrumo/core/tabular.py::normalize_tabular_text": {
         "reason": "flat guard/dispatch chain, max nesting depth 2; long but linear, never regressed from baseline",
         "score": 14
+      },
+      "src/cadrumo/domain/calculations/registry/_ledger_binding_resolution.py::unrouted_ledger_family_quantities": {
+        "reason": "flat guard/dispatch chain, max nesting depth 2; long but linear, never regressed from baseline",
+        "score": 11
+      },
+      "src/cadrumo/domain/calculations/registry/_validate_cross_revision_contiguity.py::_validate_strict_continuity_chain_contiguity": {
+        "reason": "flat guard/dispatch chain, max nesting depth 3; long but linear, never regressed from baseline",
+        "score": 11
+      },
+      "src/cadrumo/domain/calculations/registry/_validate_export_exemption.py::_consumption_edges": {
+        "reason": "flat guard/dispatch chain, max nesting depth 3; long but linear, never regressed from baseline",
+        "score": 14
+      },
+      "src/cadrumo/domain/calculations/registry/_validate_export_exemption.py::validate_export_exemption_declarations": {
+        "reason": "flat guard/dispatch chain, max nesting depth 3; long but linear, never regressed from baseline",
+        "score": 17
       },
       "src/cadrumo/domain/calculations/registry/classification_coherence.py::_census_declared_axes": {
         "reason": "flat guard/dispatch chain, max nesting depth 0; long but linear, never regressed from baseline",
@@ -310,13 +326,9 @@
         "reason": "flat guard/dispatch chain, max nesting depth 1; long but linear, never regressed from baseline",
         "score": 11
       },
-      "src/cadrumo/domain/calculations/registry/_handoff_paths.py::audit_registry_handoff_paths": {
+      "src/cadrumo/domain/calculations/registry/handoffs.py::audit_registry_handoff_paths": {
         "reason": "flat guard/dispatch chain, max nesting depth 3; long but linear, never regressed from baseline",
         "score": 12
-      },
-      "src/cadrumo/domain/calculations/registry/_ledger_binding_resolution.py::unrouted_ledger_family_quantities": {
-        "reason": "flat guard/dispatch chain, max nesting depth 2; long but linear, never regressed from baseline",
-        "score": 11
       },
       "src/cadrumo/domain/calculations/registry/ledger_bindings.py::structurally_unroutable_iva_base_categories": {
         "reason": "flat guard/dispatch chain, max nesting depth 3; long but linear, never regressed from baseline",
@@ -346,75 +358,63 @@
         "reason": "flat guard/dispatch chain, max nesting depth 2; long but linear, never regressed from baseline",
         "score": 12
       },
-      "src/cadrumo/domain/calculations/registry/_validate_cross_revision_contiguity.py::_validate_strict_continuity_chain_contiguity": {
-        "reason": "flat guard/dispatch chain, max nesting depth 3; long but linear, never regressed from baseline",
-        "score": 11
-      },
-      "src/cadrumo/domain/calculations/registry/_validate_export_exemption.py::_consumption_edges": {
-        "reason": "flat guard/dispatch chain, max nesting depth 3; long but linear, never regressed from baseline",
-        "score": 14
-      },
-      "src/cadrumo/domain/calculations/registry/_validate_export_exemption.py::validate_export_exemption_declarations": {
-        "reason": "flat guard/dispatch chain, max nesting depth 3; long but linear, never regressed from baseline",
-        "score": 17
-      },
       "src/cadrumo/domain/calculations/registry/tests/_scenarios.py::RegistryCalculationScenario._validate_scenario": {
         "reason": "flat guard/dispatch chain, max nesting depth 2; long but linear, never regressed from baseline",
         "score": 14
       },
-      "src/cadrumo/domain/contribuyente/family.py::RentaFamilyProfile.minimo_descendientes_estatal": {
+      "src/cadrumo/domain/contribuyente/family_profile.py::RentaFamilyProfile.minimo_descendientes_estatal": {
         "reason": "flat guard/dispatch chain, max nesting depth 2; long but linear, never regressed from baseline",
         "score": 11
       },
-      "src/cadrumo/domain/filing/_schema.py::ModeloDraft._enforce_collection_coordinate_uniqueness": {
+      "src/cadrumo/domain/filing/schema.py::ModeloDraft._enforce_collection_coordinate_uniqueness": {
         "reason": "flat guard/dispatch chain, max nesting depth 1; long but linear, never regressed from baseline",
         "score": 11
       },
-      "src/cadrumo/domain/fincas/_aggregates.py::_aggregate_finca": {
+      "src/cadrumo/domain/fincas/aggregates.py::_aggregate_finca": {
         "reason": "flat guard/dispatch chain, max nesting depth 2; long but linear, never regressed from baseline",
         "score": 11
       },
-      "src/cadrumo/domain/invoices/_models.py::Invoice._validate_invoice_class_consistency": {
+      "src/cadrumo/domain/invoices/models.py::Invoice._validate_invoice_class_consistency": {
         "reason": "flat guard/dispatch chain, max nesting depth 2; long but linear, never regressed from baseline",
         "score": 12
       },
-      "src/cadrumo/domain/invoices/_models.py::Invoice._validate_retencion_consistency": {
+      "src/cadrumo/domain/invoices/models.py::Invoice._validate_retencion_consistency": {
         "reason": "flat guard/dispatch chain, max nesting depth 2; long but linear, never regressed from baseline",
         "score": 12
       },
-      "src/cadrumo/domain/invoices/_models.py::Invoice._validate_totals_and_exempt_invariants": {
+      "src/cadrumo/domain/invoices/models.py::Invoice._validate_totals_and_exempt_invariants": {
         "reason": "flat guard/dispatch chain, max nesting depth 2; long but linear, never regressed from baseline",
         "score": 13
       },
-      "src/cadrumo/domain/invoices/_models.py::_derive_invoice_id_when_complete": {
+      "src/cadrumo/domain/invoices/models.py::_derive_invoice_id_when_complete": {
         "reason": "flat guard/dispatch chain, max nesting depth 1; long but linear, never regressed from baseline",
         "score": 11
       },
-      "src/cadrumo/domain/iva/_components.py::IvaCategoryComponents._validate_row": {
+      "src/cadrumo/domain/iva/components.py::IvaCategoryComponents._validate_row": {
         "reason": "flat guard/dispatch chain, max nesting depth 2; long but linear, never regressed from baseline",
         "score": 14
       },
-      "src/cadrumo/domain/iva/_establishment.py::_carve_out_disposition": {
+      "src/cadrumo/domain/iva/establishment.py::_carve_out_disposition": {
         "reason": "flat guard/dispatch chain, max nesting depth 2; long but linear, never regressed from baseline",
         "score": 11
       },
-      "src/cadrumo/domain/iva/_establishment.py::_index_country_alpha3": {
+      "src/cadrumo/domain/iva/establishment.py::_index_country_alpha3": {
         "reason": "flat guard/dispatch chain, max nesting depth 2; long but linear, never regressed from baseline",
         "score": 14
       },
-      "src/cadrumo/domain/iva/_establishment.py::_index_country_names": {
+      "src/cadrumo/domain/iva/establishment.py::_index_country_names": {
         "reason": "flat guard/dispatch chain, max nesting depth 3; long but linear, never regressed from baseline",
         "score": 14
       },
-      "src/cadrumo/domain/iva/_establishment.py::territorial_scope_for_country": {
+      "src/cadrumo/domain/iva/establishment.py::territorial_scope_for_country": {
         "reason": "flat guard/dispatch chain, max nesting depth 2; long but linear, never regressed from baseline",
         "score": 11
       },
-      "src/cadrumo/domain/iva/_place_of_supply.py::_load_cached": {
+      "src/cadrumo/domain/iva/place_of_supply.py::_load_cached": {
         "reason": "flat guard/dispatch chain, max nesting depth 3; long but linear, never regressed from baseline",
         "score": 15
       },
-      "src/cadrumo/domain/iva/_schema.py::IvaRateRecord._validate_window": {
+      "src/cadrumo/domain/iva/schema.py::IvaRateRecord._validate_window": {
         "reason": "flat guard/dispatch chain, max nesting depth 1; long but linear, never regressed from baseline",
         "score": 11
       },
