@@ -48,7 +48,7 @@ from pydantic import BaseModel, ValidationError
 
 from ...application.cli_exception_preconditions import CliExceptionPrecondition
 from ...application.operator_actions import PreconditionVerdict
-from ...core import FormerProductStateError
+from ...core.config_state_root import FormerProductStateError
 from ...core.click_context import argv_requests_json, json_output_requested
 from ...core.errors.error_codes import get_error_exit_code, get_registered_error_code, render_error_json, render_error_text
 from ...core.errors.hierarchy import ActiveProfilePointerError, CadrumoError

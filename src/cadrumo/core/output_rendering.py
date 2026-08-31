@@ -134,7 +134,7 @@ def reveal_cli_identifiers_opt_in() -> bool:
     identities, URLs, tokens, and secure-object keys remain redacted by the
     CLI redaction profile.
     """
-    from ._config_state_root import FormerProductStateError
+    from .config_state_root import FormerProductStateError
     from .config import load_settings
 
     try:

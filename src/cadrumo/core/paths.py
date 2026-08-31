@@ -37,7 +37,7 @@ from pathlib import Path, PurePosixPath
 from stat import S_ISREG
 from typing import TYPE_CHECKING, Any, Literal, Protocol
 
-from ._config_state_root import (
+from .config_state_root import (
     StateRootInputs,
     live_state_root_inputs,
     platform_user_data_root,
@@ -53,8 +53,8 @@ def _relative_path_anchor(state_root_inputs: StateRootInputs | None = None) -> P
     """Return the base a relative operator path resolves against.
 
     Always the platform user-data directory
-    (:func:`cadrumo.core._config_state_root.platform_user_data_root`), the
-    same root :func:`~cadrumo.core._config_state_root.resolve_state_root`
+    (:func:`cadrumo.core.config_state_root.platform_user_data_root`), the
+    same root :func:`~cadrumo.core.config_state_root.resolve_state_root`
     hands the storage default. A relative override of a ``var/``-style
     operator setting (storage root, cache dir, log dir, financial catalogue
     dir, ...) therefore lands beside the state it belongs with, and can
@@ -69,12 +69,12 @@ def _relative_path_anchor(state_root_inputs: StateRootInputs | None = None) -> P
 
     Args:
         state_root_inputs: Injectable
-            :class:`~cadrumo.core._config_state_root.StateRootInputs` seam.
+            :class:`~cadrumo.core.config_state_root.StateRootInputs` seam.
             ``None`` (the live default) captures the running process's
             inputs via
-            :func:`~cadrumo.core._config_state_root.live_state_root_inputs`
+            :func:`~cadrumo.core.config_state_root.live_state_root_inputs`
             — the same seam
-            :func:`~cadrumo.core._config_state_root.default_storage_root`
+            :func:`~cadrumo.core.config_state_root.default_storage_root`
             reads, so a relative override and the unset default resolve
             consistently.
     """
@@ -238,7 +238,7 @@ def resolve_project_path(value: str | Path, *, state_root_inputs: StateRootInput
         value: An absolute or relative path; user-style ``~`` references
             are expanded.
         state_root_inputs: Optional injectable
-            :class:`~cadrumo.core._config_state_root.StateRootInputs` seam
+            :class:`~cadrumo.core.config_state_root.StateRootInputs` seam
             forwarded to :func:`_relative_path_anchor`. ``None`` (the
             default) captures the live process's inputs.
 
@@ -312,7 +312,7 @@ def normalize_project_relative_path(
     Args:
         value: Optional configured path, or ``None``.
         state_root_inputs: Optional injectable
-            :class:`~cadrumo.core._config_state_root.StateRootInputs` seam
+            :class:`~cadrumo.core.config_state_root.StateRootInputs` seam
             forwarded to :func:`resolve_project_path`. ``None`` (the
             default) captures the live process's inputs.
 
@@ -369,7 +369,7 @@ def effective_storage_root(
             instance need not trigger a second :func:`~cadrumo.core.config.load_settings`.
             ``None`` (the default) loads the live settings.
         state_root_inputs: Optional injectable
-            :class:`~cadrumo.core._config_state_root.StateRootInputs` seam
+            :class:`~cadrumo.core.config_state_root.StateRootInputs` seam
             forwarded to :func:`resolve_project_path` when ``root`` is
             supplied. ``None`` (the default) captures the live process's
             inputs.

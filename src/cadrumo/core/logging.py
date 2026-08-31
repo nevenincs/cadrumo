@@ -626,7 +626,7 @@ def configure_logging() -> None:
     if _CONFIGURED or _is_cli_metadata_invocation():
         return
 
-    from ._config_state_root import FormerProductStateError
+    from .config_state_root import FormerProductStateError
     from .config import load_settings
 
     try:

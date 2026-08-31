@@ -51,7 +51,7 @@ from ....application.invoices import (
     build_catalogue_invoice,
     create_catalogue_invoice,
 )
-from ....core import STRUCTURED_DOCUMENT_SHAPES
+from ....core.document_shape import STRUCTURED_DOCUMENT_SHAPES
 from ....core.period import Period
 from ....core.aggregation import BindingSourceKind
 from ....core.aggregation import INVOICE_BINDING_SOURCE_KINDS

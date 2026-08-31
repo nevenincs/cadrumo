@@ -33,19 +33,19 @@ from pydantic_settings import (
     SettingsConfigDict,
 )
 
-from . import _config_live_tests as _live_test_config
+from . import config_live_tests as _live_test_config
 from .auth_provider import AuthProviderKind as _AuthProviderKind
-from ._config_integration_fields import (
+from .config_integration_fields import (
     FORMER_PRODUCT_GOOGLE_DRIVE_VAULT_FOLDER_NAME,  # noqa: F401 - public re-export for storage adapters
 )
-from ._config_llm_fields import CadrumoLlmSettings
-from ._config_state_root import (
+from .config_llm_fields import CadrumoLlmSettings
+from .config_state_root import (
     FORMER_PRODUCT_DATABASE_FILENAME,  # noqa: F401 - public re-export for storage adapters
     default_storage_root,
     refuse_former_product_database,
 )
-from ._config_storage_route import classify_storage_route_for_settings, settings_for_bucket_route
-from ._config_support import (
+from .config_storage_route import classify_storage_route_for_settings, settings_for_bucket_route
+from .config_support import (
     AEAT_CERTIFICATE_PROTECTED_ORIGIN,  # noqa: F401 - public certificate route authority
     AEAT_CERTIFICATE_PROTECTED_PATH,  # noqa: F401 - public certificate route authority
     AEAT_CERTIFICATE_PROTECTED_URL,  # noqa: F401 - public certificate route authority
@@ -59,15 +59,15 @@ from ._config_support import (
     coerce_output_language_setting,
     unwrap_optional_secret,  # noqa: F401 - public re-export from cadrumo.core.config
 )
-from ._config_support import default_aeat_sede_origin as _default_aeat_sede_origin
-from ._config_support import default_aeat_sede_origin_with_slash as _default_aeat_sede_origin_with_slash
-from ._config_support import (
+from .config_support import default_aeat_sede_origin as _default_aeat_sede_origin
+from .config_support import default_aeat_sede_origin_with_slash as _default_aeat_sede_origin_with_slash
+from .config_support import (
     default_clave_permanente_sede_access_url_template as _default_clave_permanente_sede_access_url_template,
 )
-from ._config_support import default_clave_sede_access_url_template as _default_clave_sede_access_url_template
-from ._config_support import default_sede_expedientes_path as _default_sede_expedientes_path
-from ._config_support import default_status_detail_url_template as _default_status_detail_url_template
-from ._config_support import default_status_notificaciones_path as _default_status_notificaciones_path
+from .config_support import default_clave_sede_access_url_template as _default_clave_sede_access_url_template
+from .config_support import default_sede_expedientes_path as _default_sede_expedientes_path
+from .config_support import default_status_detail_url_template as _default_status_detail_url_template
+from .config_support import default_status_notificaciones_path as _default_status_notificaciones_path
 from .errors.hierarchy import ActiveProfilePointerError, CoreValidationError
 from .external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from .paths import normalize_project_relative_path

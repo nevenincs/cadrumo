@@ -27,7 +27,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import ClassifierInputSource
+from ....core.classifier_input_source import ClassifierInputSource
 from ....domain.iva.classification import InvoiceKind, IvaTerritorialScope
 from ....domain.iva.schema import IvaCategory
 from ....domain.iva.supply_nature import SupplyNature, supply_nature_implied_by_category

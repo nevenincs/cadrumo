@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import pytest
 
-from ......core import is_aeat_csv
+from ......core.aeat_csv import is_aeat_csv
 from ......tests.live_gate import requires_live_enabled
 from ..declarations import Declaracion, capture_declaration, walk_declarations_register
 from ..errors import SedeError

@@ -93,7 +93,7 @@ class FilingProducerKey(StrEnum):
     #: Modelo 360's solicitante: an empresario not established in the territory
     #: of application of the tax, asking to recover Spanish input VAT. Its address
     #: components are named from the ONE canonical vocabulary in
-    #: `core._address_components`, which is what stops a second spelling of an
+    #: `core.address_components`, which is what stops a second spelling of an
     #: AEAT component appearing beside the IRNR one.
     #:
     #: Deliberately NOT merged with `irnr.representante.domicilio.*`. AEAT asks

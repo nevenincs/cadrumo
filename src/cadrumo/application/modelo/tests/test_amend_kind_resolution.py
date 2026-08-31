@@ -3,7 +3,7 @@
 These tests exercise the real :func:`~application.modelo.amend_modelo_revision`
 composition path (no mocks) against seeded Modelo 303 baselines that straddle the
 diseño-grounded rectificativa boundary (filing_year 2024, period 09/3T onward — see
-:mod:`~core._amendment_kind_regime`). They prove:
+:mod:`~core.amendment_kind_regime`). They prove:
 
 * an illegal ``--kind`` for the resolved period is refused, naming the accepted
   kind set;

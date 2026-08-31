@@ -72,7 +72,7 @@ from ...adapters.persistence.storage import (
     secure_object_repository_for_bucket,
 )
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import normalise_aeat_csv
+from ...core.aeat_csv import normalise_aeat_csv
 from ...core.modelo import Modelo
 from ...core.period import Period
 from ...core.external_constants import UTF_8_ENCODING

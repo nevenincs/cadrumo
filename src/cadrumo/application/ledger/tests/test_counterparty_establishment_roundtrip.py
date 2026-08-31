@@ -32,7 +32,7 @@ from ....adapters.persistence.storage import (
     SensitivityClass,
 )
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import ClassifierInputSource
+from ....core.classifier_input_source import ClassifierInputSource
 from ....domain.iva.classification import IvaTerritorialScope
 from ....domain.iva.schema import EUMemberState
 from ..counterparty_establishment import (

@@ -1,7 +1,7 @@
 """Period-aware amendment-kind resolution and the liability-increase guard.
 
 AEAT's amendment mechanism for a self-assessment changed over time (see
-:mod:`~core._amendment_kind_regime` for the full grounding). Before the
+:mod:`~core.amendment_kind_regime` for the full grounding). Before the
 ``autoliquidación rectificativa`` unification, a correction that raised the
 tax due filed as a ``complementaria`` (LGT art. 122.2) while a correction
 that lowered it required the separate ``solicitud de rectificación``
@@ -37,7 +37,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
-from ...core import (
+from ...core.amendment_kind_regime import (
     AmendmentLiabilityDirection,
     classify_amendment_liability_direction,
     resolve_amendment_kind_regime,

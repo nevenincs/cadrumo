@@ -43,7 +43,7 @@ from ...application.calculations import (
     observation_key,
     persist_observation_envelope_and_iva_history,
 )
-from ...core import normalise_aeat_csv
+from ...core.aeat_csv import normalise_aeat_csv
 from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ...core.modelo import Modelo
 from ...core.period import Period, PeriodKind

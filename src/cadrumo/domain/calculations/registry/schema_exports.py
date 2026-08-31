@@ -12,7 +12,8 @@ from typing import Annotated, Final, Literal
 
 from pydantic import BeforeValidator, Field, field_validator, model_validator
 
-from ....core import DeclaracionIdioma, ExportLayoutFormat
+from ....core import ExportLayoutFormat
+from ....core.declaracion_idioma import DeclaracionIdioma
 from ....core.filing_producer_key import FilingProducerKey
 from ....core.filing_projection_ref import (
     FilingProjectionRef,

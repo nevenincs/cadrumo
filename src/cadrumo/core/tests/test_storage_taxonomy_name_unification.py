@@ -28,7 +28,7 @@ from typing import Final
 
 import pytest
 
-from .._config_state_root import (
+from ..config_state_root import (
     BUCKET_DB_DIRNAME,
     BUCKETS_DIRNAME,
     PRODUCT_DATABASE_FILENAME,
@@ -37,7 +37,7 @@ from .._config_state_root import (
     refuse_former_product_database,
     resolve_state_root,
 )
-from .._config_storage_route import classify_storage_route_for_settings
+from ..config_storage_route import classify_storage_route_for_settings
 from ..storage_taxonomy import StorageCategory, storage_location
 from ..config import Settings, StorageRouteKind
 

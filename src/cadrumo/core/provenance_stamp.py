@@ -27,7 +27,7 @@ See Also:
 
 from __future__ import annotations
 
-from ._config_support import LLMProvider
+from .config_support import LLMProvider
 
 __all__ = [
     "LOCAL_TRANSPORT_LABEL",

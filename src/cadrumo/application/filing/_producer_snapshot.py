@@ -706,7 +706,7 @@ class Modelo210ProfileFacts(BaseModel):
     blank on a filed return.
 
     Each scope declares its own FLAT members rather than sharing one address or account
-    model. That is the decision recorded in :mod:`cadrumo.core._address_components`:
+    model. That is the decision recorded in :mod:`cadrumo.core.address_components`:
     AEAT reuses one address GRAMMAR but not one address SHAPE -- modelo 210 identifies the
     municipio by INE code where modelo 360 writes its name -- so a shared type would assert
     two shapes are interchangeable when they are not. The vocabulary fixes what the leaves

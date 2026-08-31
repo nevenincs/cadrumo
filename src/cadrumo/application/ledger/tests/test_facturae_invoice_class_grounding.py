@@ -9,7 +9,7 @@ from pydantic import ValidationError
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import FindingResolutionAction
+from ....core.confirmation_gate import FindingResolutionAction
 from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.config import Settings
 from ....domain.invoices.enums import InvoiceClass

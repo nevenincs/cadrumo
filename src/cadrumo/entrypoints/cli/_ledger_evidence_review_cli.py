@@ -29,7 +29,7 @@ from ...application.ledger.extraction_draft_store import (
 from ...application.ledger.party_attribution import PartyAttributionAdvisory, party_attribution_advisory
 from ...application.ledger.review_advisories import review_advisory_kinds
 from ...application.operator_actions import ActionReference
-from ...core import ConfirmationBlockReason, FindingResolutionAction, ReviewAdvisoryKind
+from ...core.confirmation_gate import ConfirmationBlockReason, FindingResolutionAction, ReviewAdvisoryKind
 from ...core.draft_discrepancy import DraftDiscrepancyKind
 from ...core.config import load_settings
 from ...core.i18n import tr

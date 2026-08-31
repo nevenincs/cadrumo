@@ -17,7 +17,7 @@ from urllib.parse import parse_qs, urlsplit
 
 from pydantic import AnyUrl
 
-from .....core import is_aeat_csv
+from .....core.aeat_csv import is_aeat_csv
 from .....core.identity import AeatCsv
 from .....domain.calculations.registry.remote_state_guard import (
     RemoteOperation,

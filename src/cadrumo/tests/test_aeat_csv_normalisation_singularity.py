@@ -1,6 +1,6 @@
 """AEAT CSV normalisation singularity: one function owns the comparison form.
 
-``normalise_aeat_csv`` (:mod:`cadrumo.core._aeat_csv`) is the single production
+``normalise_aeat_csv`` (:mod:`cadrumo.core.aeat_csv`) is the single production
 answer to "what is the canonical form of this Código Seguro de Verificación?".
 No other production module may restate the transform.
 

@@ -122,7 +122,7 @@ def _normalize_root_active_profile(ctx: typer.Context) -> None:
             FormerProductDetectionScope,
             former_product_state_verdict,
         )
-        from ...core import FormerProductStateError
+        from ...core.config_state_root import FormerProductStateError
         from .errors import CliRefusedBoundaryError
 
         try:

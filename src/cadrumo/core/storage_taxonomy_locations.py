@@ -39,7 +39,7 @@ _PRODUCT_DATABASE_FILENAME: Final[str] = f"{PRODUCT_IDENTITY.python_package}.db"
 """SQLite filename shared by the root-fallback and per-bucket database members.
 
 Computed from the one product-identity authority rather than hardcoded a
-second time, so :data:`~core._config_state_root.PRODUCT_DATABASE_FILENAME` --
+second time, so :data:`~core.config_state_root.PRODUCT_DATABASE_FILENAME` --
 which reads
 this value back off the taxonomy -- can never drift from what these two
 members actually resolve.

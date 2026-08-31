@@ -36,8 +36,8 @@ from urllib.parse import parse_qs, urlencode, urlsplit
 
 from pydantic import AnyUrl
 
-from .....core import is_aeat_csv as _is_aeat_csv
-from .....core import normalise_aeat_csv as _normalise_aeat_csv
+from .....core.aeat_csv import is_aeat_csv as _is_aeat_csv
+from .....core.aeat_csv import normalise_aeat_csv as _normalise_aeat_csv
 from .....core.async_cleanup import close_async_resources as _close_async_resources
 from .....core.config import Settings as _Settings
 from .....core.errors.hierarchy import CadrumoError as _CadrumoError

@@ -37,7 +37,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core import ClassifierInputSource, CounterpartyTaxablePersonStatus
+from ...core.classifier_input_source import ClassifierInputSource, CounterpartyTaxablePersonStatus
 from ...core.models import STRICT_FROZEN_CONFIG
 
 # Runtime imports: both are pydantic field types on the models below, so a

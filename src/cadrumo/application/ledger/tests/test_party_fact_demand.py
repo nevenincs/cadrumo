@@ -27,7 +27,7 @@ from datetime import date
 
 import pytest
 
-from ....core import ClassifierInputSource, CounterpartyTaxablePersonStatus
+from ....core.classifier_input_source import ClassifierInputSource, CounterpartyTaxablePersonStatus
 from ....domain.iva.classification import CustomerTaxStatus, InvoiceKind, IvaInvoiceClassificationCriteria, IvaTerritorialScope, PartyFact, TransactionKind, classify_iva
 from ....domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind
 from ....domain.iva.supply_nature import SupplyNature

@@ -513,7 +513,7 @@ def _filed_130_observation_for_tests():
     from pydantic import AnyHttpUrl
 
     from ....adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue
-    from ....core import CasillaValueKind
+    from ....core.casilla_value_kind import CasillaValueKind
     from ....core.config import Settings
 
     body = b"130-2026-1T-submitted-file"

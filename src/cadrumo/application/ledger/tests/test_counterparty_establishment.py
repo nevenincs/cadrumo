@@ -28,7 +28,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from ....core import ClassifierInputSource
+from ....core.classifier_input_source import ClassifierInputSource
 from ....domain.iva.classification import IvaTerritorialScope, classify_iva
 from ..classification_assembly import (
     DeclaredFact,

@@ -14,7 +14,7 @@ from __future__ import annotations
 import pytest
 
 from ..filing_producer_key import FilingProducerKey
-from .._address_components import (
+from ..address_components import (
     FOREIGN_ADDRESS_COMPONENTS,
     FOREIGN_ADDRESS_INFIX,
     SPANISH_ADDRESS_COMPONENTS,
@@ -47,7 +47,7 @@ def test_every_address_scoped_key_names_a_canonical_component() -> None:
     )
     assert offending == [], (
         "address-scoped producer key(s) name a component outside the canonical vocabulary in "
-        "core._address_components. Add the component there if AEAT really prints it, rather than "
+        "core.address_components. Add the component there if AEAT really prints it, rather than "
         "spelling an existing one a second way:\n  " + "\n  ".join(offending)
     )
 

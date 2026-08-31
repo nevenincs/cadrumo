@@ -17,7 +17,7 @@ from pydantic import ValidationError
 
 from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import PDF_CONTAINER_SHAPES, DocumentShape
+from ....core.document_shape import DocumentShape, PDF_CONTAINER_SHAPES
 from ....core.config import Settings
 from ....domain.attachments.enums import AttachmentKind, AttachmentSource
 from ....domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment

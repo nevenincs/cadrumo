@@ -165,7 +165,7 @@ class AmendmentKindNotPermittedError(ModeloError):
     rectificativa (LGT art. 120.4, RD 117/2024) replaced the dual
     complementaria/solicitud-de-rectificación regime (LGT art. 122.2 /
     art. 120.3) only from the period each modelo's own orden establishes (see
-    :mod:`cadrumo.core._amendment_kind_regime`). Requesting ``rectificativa`` for
+    :mod:`cadrumo.core.amendment_kind_regime`). Requesting ``rectificativa`` for
     a pre-adoption period, or ``complementaria`` for a modelo/period where
     rectificativa has replaced it as the ordinary correction mechanism, is
     refused rather than silently accepted or silently downgraded — the accepted

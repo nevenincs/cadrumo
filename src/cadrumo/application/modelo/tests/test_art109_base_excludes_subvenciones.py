@@ -26,7 +26,8 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import ConceptoIngreso, TipoActividad
+from ....core import TipoActividad
+from ....core.concepto_ingreso import ConceptoIngreso
 from ....core.period import Period
 from ....core.resources import bundled_path
 from ....domain.calculations.registry.loader import load_legal_parameters_only
@@ -150,7 +151,7 @@ def test_each_concept_lands_where_its_provision_puts_it(
 
 def test_the_registry_declares_the_set_the_predicate_applies() -> None:
     """Parity anchor: the exclusion is registry data, not a list living only in Python."""
-    from ....core import INGRESO_CONCEPTS_OUTSIDE_THE_ART_109_BASE
+    from ....core.concepto_ingreso import INGRESO_CONCEPTS_OUTSIDE_THE_ART_109_BASE
 
     assert _declared_concepts(_ART_109_CONCEPTS) == INGRESO_CONCEPTS_OUTSIDE_THE_ART_109_BASE
 

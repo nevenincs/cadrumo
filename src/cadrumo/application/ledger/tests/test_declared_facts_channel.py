@@ -34,7 +34,7 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from ....core import ClassifierInputSource
+from ....core.classifier_input_source import ClassifierInputSource
 from ....domain.iva.classification import CustomerTaxStatus, InvoiceKind, IvaTerritorialScope
 from ....domain.iva.schema import IvaRateKind
 from ....domain.iva.supply_nature import SupplyNature

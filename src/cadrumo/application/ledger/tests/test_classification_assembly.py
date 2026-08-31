@@ -13,7 +13,7 @@ from datetime import date
 
 import pytest
 
-from ....core import ClassifierInputSource
+from ....core.classifier_input_source import ClassifierInputSource
 from ....domain.iva.classification import CustomerTaxStatus, InvoiceKind, IvaTerritorialScope, TransactionKind, domestic_rate_tier_is_required
 from ....domain.iva.schema import IvaCategory, IvaRateKind
 from ....domain.iva.supply_nature import SupplyNature
@@ -127,7 +127,7 @@ def test_the_registered_status_is_never_derived_from_the_envelope() -> None:
     value that triggers the art. 25 exemption. Asserted over the emitted facts
     rather than over one call, so a future producer adding the bridge reds here.
     """
-    from ....core import CounterpartyTaxablePersonStatus
+    from ....core.classifier_input_source import CounterpartyTaxablePersonStatus
 
     emitted = {fact.value for fact in _inputs().facts}
     assert CustomerTaxStatus.B2B_IVA_REGISTERED.value not in emitted

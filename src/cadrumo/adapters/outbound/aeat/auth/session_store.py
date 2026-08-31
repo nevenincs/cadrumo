@@ -49,7 +49,7 @@ _JSON_OBJECT_ADAPTER: TypeAdapter[JsonObject] = TypeAdapter(JsonObject)
 class FormerProductAuthSessionStateError(AuthError):
     """Raised when Cadrumo detects retired product session custody.
 
-    Unlike :class:`core._config_state_root.FormerProductStateError`, this
+    Unlike :class:`core.config_state_root.FormerProductStateError`, this
     refusal is raised at the adapter/storage boundary, not during
     ``Settings``/pydantic bootstrap, so no bootstrap-cycle constraint bars it
     from the registry-bound hierarchy: it derives from the same

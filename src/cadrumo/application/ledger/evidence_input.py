@@ -20,7 +20,7 @@ from typing import Never, Self, SupportsIndex, override
 
 from pydantic import BaseModel, Field, model_serializer, model_validator
 
-from ...core import DocumentShape
+from ...core.document_shape import DocumentShape
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.hashing import sha256_hex
 from ...core.identity import ContentDigest

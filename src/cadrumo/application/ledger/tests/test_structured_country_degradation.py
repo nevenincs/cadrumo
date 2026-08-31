@@ -71,7 +71,8 @@ from typing import Final
 import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import ClassifierInputSource, IvaCategoryOutcome
+from ....core import IvaCategoryOutcome
+from ....core.classifier_input_source import ClassifierInputSource
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from ....core.config import Settings

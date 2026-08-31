@@ -41,7 +41,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Final
 
-from ...core import ConfirmationBlockReason, IvaCategoryOutcome
+from ...core import IvaCategoryOutcome
+from ...core.confirmation_gate import ConfirmationBlockReason
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 

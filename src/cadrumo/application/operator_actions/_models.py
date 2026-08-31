@@ -5,12 +5,8 @@ from __future__ import annotations
 from pydantic import BaseModel, field_validator
 
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import (
-    ActionArgumentResolution,
-    PreconditionActionIdentity,
-    PreconditionEvidence,
-    PreconditionOutcomeInvariant,
-)
+from ...core import PreconditionActionIdentity, PreconditionEvidence, PreconditionOutcomeInvariant
+from ...core.action_argument_resolution import ActionArgumentResolution
 from ...core.operator_action_enums import ActionArgumentStatus
 
 

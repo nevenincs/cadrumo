@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pydantic import Field
 
-from ._config_timeouts import CadrumoTimeoutSettings
+from .config_timeouts import CadrumoTimeoutSettings
 from .model_catalogue import ModelRole, ModelRuntime, default_model_runtime_id
 
 

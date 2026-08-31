@@ -8,7 +8,7 @@ import pytest
 
 from ...tests import REPO_ROOT
 from ...tests.env_scope import isolated_aeat_env, settings_without_env_file
-from .._config_state_root import (
+from ..config_state_root import (
     FormerProductStateError,
     StateRootInputs,
     live_state_root_inputs,

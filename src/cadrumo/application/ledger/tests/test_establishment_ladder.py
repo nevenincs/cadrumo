@@ -46,7 +46,7 @@ import cadrumo.application.ledger.establishment_ladder as ladder_module
 
 from ....adapters.inbound.einvoice import ParsedEInvoice, parse_einvoice_document
 from ....adapters.persistence.storage import SecureObjectRowIdentityError
-from ....core import ClassifierInputSource
+from ....core.classifier_input_source import ClassifierInputSource
 from ....domain.iva.classification import InvoiceKind, IvaTerritorialScope
 from ....domain.iva.errors import IvaCatalogueError
 from ....domain.iva.establishment import country_code_for_printed_tax_identifier, territorial_scope_for_country, territorial_scope_for_spanish_postal_code

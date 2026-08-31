@@ -19,7 +19,7 @@ from urllib.parse import urlparse
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter, ValidationError
 
-from .....core import is_aeat_csv
+from .....core.aeat_csv import is_aeat_csv
 from .....core.period import Period
 from .....core.directory_scan import scan_directory
 from .....domain.justificante import (

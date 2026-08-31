@@ -84,7 +84,7 @@ from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel
 
-from ...core import DocumentShape
+from ...core.document_shape import DocumentShape
 from ...core.field_grounding import FieldGroundingOutcome
 from ...core.field_origin import FieldOrigin
 from ...core.models import STRICT_FROZEN_CONFIG

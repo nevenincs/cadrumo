@@ -135,7 +135,7 @@ def _verify_capability_defaults_off(symbol: str) -> None:
     defaulting on would satisfy a mere membership check while removing the bar
     it names.
     """
-    from .. import ServiceCapability
+    from ..capabilities import ServiceCapability
 
     capability = ServiceCapability[symbol]
     assert capability.default_enabled is False

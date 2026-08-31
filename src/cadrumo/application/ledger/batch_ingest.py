@@ -368,7 +368,7 @@ def _reads_without_a_model(data: bytes) -> bool:
     cost is a refusal the operator sees rather than a model load nobody admitted.
     """
     from ...adapters.inbound.einvoice import probe_document_shape
-    from ...core import STRUCTURED_DOCUMENT_SHAPES
+    from ...core.document_shape import STRUCTURED_DOCUMENT_SHAPES
 
     return probe_document_shape(data) in STRUCTURED_DOCUMENT_SHAPES
 

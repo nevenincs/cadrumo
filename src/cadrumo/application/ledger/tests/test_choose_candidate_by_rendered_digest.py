@@ -26,7 +26,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import ConfirmationBlockReason, FindingResolutionAction
+from ....core.confirmation_gate import ConfirmationBlockReason, FindingResolutionAction
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from ....core.redaction import redact_for_cli_output

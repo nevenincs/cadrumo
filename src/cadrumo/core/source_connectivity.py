@@ -25,7 +25,7 @@ from urllib.parse import urlsplit
 from pydantic import BaseModel, Field, StringConstraints, ValidationInfo, model_validator
 from pydantic_core import PydanticCustomError
 
-from ._calculation_route import ModeloCalculationRouteId
+from .calculation_route import ModeloCalculationRouteId
 from .models import STRICT_FROZEN_CONFIG
 from .aggregation import BindingSourceKind
 from .identity import CalculationRevisionId, ContentDigest

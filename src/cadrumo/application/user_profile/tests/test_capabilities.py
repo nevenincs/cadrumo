@@ -12,7 +12,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from ....core import ServiceCapability
+from ....core.capabilities import ServiceCapability
 from ....core.config import load_settings
 from ....core.parsing import parse_bool
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord

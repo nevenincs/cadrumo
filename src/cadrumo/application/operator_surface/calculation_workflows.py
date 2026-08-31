@@ -6,7 +6,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ...core import ModeloCalculationRouteId
+from ...core.calculation_route import ModeloCalculationRouteId
 from .errors import OperatorSurfaceContractError
 from .manifest import OperatorSurfaceReconciliation
 

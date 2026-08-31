@@ -48,7 +48,8 @@ from uuid import uuid4
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.storage import AttachmentStore, secure_object_repository_for_bucket
-from ...core import PDF_CONTAINER_SHAPES, ImageMediaType, detect_image_media_type
+from ...core import ImageMediaType, detect_image_media_type
+from ...core.document_shape import PDF_CONTAINER_SHAPES
 from ...core.provenance_stamp import provenance_stamp_transport
 from ...core.config import Settings, load_settings
 from ...core.logging import get_logger
@@ -281,7 +282,7 @@ def _resolve_evidence(
     # The on-host vision read is the only path that reaches here. Gate it on the
     # profile's llm_vision capability — opting out disables scanned/image reading
     # entirely (a typed refusal, never a silent skip).
-    from ...core import ServiceCapability
+    from ...core.capabilities import ServiceCapability
     from ..user_profile.capabilities import resolve_active_capability
 
     if not resolve_active_capability(ServiceCapability.LLM_VISION, settings=settings).enabled:

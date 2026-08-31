@@ -58,7 +58,8 @@ from ...adapters.outbound.aeat.sede.declarations_capture import (
 from ...adapters.outbound.aeat.sede.declarations_schema import Declaracion
 from ...adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
 from ...adapters.outbound.aeat.sede.schema import FiledDeclaracionObservation, FiledDeclarationAvailabilityReport
-from ...core import CasillaValueKind, FiledHistoryDiscoverySignal, RegisterScopingSignal, SyncSurface
+from ...core import FiledHistoryDiscoverySignal, RegisterScopingSignal, SyncSurface
+from ...core.casilla_value_kind import CasillaValueKind
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.casilla_id import CasillaId
 from ...core.config import load_settings

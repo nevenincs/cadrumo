@@ -11,7 +11,8 @@ from enum import StrEnum
 
 import pytest
 
-from .. import AmendmentLiabilityDirection, DeudaDireccion
+from ..deuda_direccion import DeudaDireccion
+from ..amendment_kind_regime import AmendmentLiabilityDirection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

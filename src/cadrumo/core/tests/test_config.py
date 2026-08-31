@@ -29,7 +29,7 @@ from ...adapters.persistence.storage.bucket import bucket_paths
 from ...tests import REPO_ROOT
 from ...tests.env_scope import isolated_aeat_env as _isolated_aeat_env
 from ...tests.env_scope import scoped_env_var, settings_without_env_file
-from .. import StateRootInputs, platform_user_data_root
+from ..config_state_root import StateRootInputs, platform_user_data_root
 from ..auth_provider import AuthProviderKind
 from ..storage_taxonomy_locations import storage_location
 from ..storage_taxonomy import StorageCategory

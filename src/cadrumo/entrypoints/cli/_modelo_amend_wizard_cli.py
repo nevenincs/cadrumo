@@ -73,7 +73,7 @@ from ...application.modelo._amendment_actions import amend_modelo_revision
 from ...application.modelo._calculation_actions import get_calculation_revision
 from ...application.modelo._filing_actions import get_filing_record
 from ...application.modelo.registry_discovery import registry_casillas_for_registry_scope
-from ...core import permitted_amendment_kind_values
+from ...core.amendment_kind_regime import permitted_amendment_kind_values
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period

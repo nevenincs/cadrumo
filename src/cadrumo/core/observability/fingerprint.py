@@ -12,7 +12,7 @@ a recorded command against a moved-on environment.
 — the single canonical application data root every persisted category
 (encrypted state, caches, durable generated outputs) derives from, per
 :class:`~cadrumo.core.config.Settings` and
-:mod:`cadrumo.core._config_state_root`. This is deliberate: on an
+:mod:`cadrumo.core.config_state_root`. This is deliberate: on an
 installed distribution the historical ``REPO_ROOT / "var"`` location
 resolves inside the virtualenv or the packaging tool's ephemeral cache
 and typically does not exist, which previously made ``db_sha256``

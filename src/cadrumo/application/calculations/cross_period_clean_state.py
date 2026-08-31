@@ -20,7 +20,7 @@ from datetime import date
 from typing import Final, NamedTuple, cast
 
 from ...adapters.persistence.profile.justificante import JustificanteRepository
-from ...core import normalise_aeat_csv
+from ...core.aeat_csv import normalise_aeat_csv
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.modelo import Modelo
 from ...core.period import Period

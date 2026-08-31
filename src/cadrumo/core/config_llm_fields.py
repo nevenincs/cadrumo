@@ -22,8 +22,8 @@ from pathlib import Path
 
 from pydantic import Field, SecretStr
 
-from ._config_integration_fields import CadrumoIntegrationSettings
-from ._config_support import LLMProvider
+from .config_integration_fields import CadrumoIntegrationSettings
+from .config_support import LLMProvider
 from .model_catalogue import ModelRole, ModelRuntime, default_model_runtime_id
 
 

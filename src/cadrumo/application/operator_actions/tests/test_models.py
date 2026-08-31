@@ -9,12 +9,8 @@ from types import MappingProxyType
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from ....core import (
-    ActionArgumentResolution,
-    PreconditionActionIdentity,
-    PreconditionEvidence,
-    PreconditionOutcomeInvariant,
-)
+from ....core import PreconditionActionIdentity, PreconditionEvidence, PreconditionOutcomeInvariant
+from ....core.action_argument_resolution import ActionArgumentResolution
 from ....core.operator_action_enums import (
     ActionArgumentSource,
     ActionArgumentStatus,

@@ -81,15 +81,15 @@ from types import ModuleType
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ._action_argument_resolution import ActionArgumentResolution
-    from ._aeat_csv import (
+    from .action_argument_resolution import ActionArgumentResolution
+    from .aeat_csv import (
         AEAT_CSV_MAX_LENGTH,
         AEAT_CSV_MIN_LENGTH,
         AEAT_CSV_PATTERN,
         is_aeat_csv,
         normalise_aeat_csv,
     )
-    from ._amendment_kind_regime import (
+    from .amendment_kind_regime import (
         AmendmentLiabilityDirection,
         classify_amendment_liability_direction,
         permitted_amendment_kind_values,
@@ -97,38 +97,38 @@ if TYPE_CHECKING:
     )
     from .auth_provider import AuthProviderDescription, AuthProviderKind, ClaveMovilRoute
     from .authority_grade import UNDECLARED_REGISTRY_AUTHORITY_GRADE, RegistryAuthorityGrade
-    from ._calculation_route import ModeloCalculationRouteId
-    from ._capabilities import ServiceCapability
+    from .calculation_route import ModeloCalculationRouteId
+    from .capabilities import ServiceCapability
     from .casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
-    from ._casilla_value_kind import CasillaValueKind
-    from ._classifier_input_source import ClassifierInputSource, CounterpartyTaxablePersonStatus
+    from .casilla_value_kind import CasillaValueKind
+    from .classifier_input_source import ClassifierInputSource, CounterpartyTaxablePersonStatus
     from .concept_lifecycle import ConceptLifecycle
-    from ._concepto_ingreso import (
+    from .concepto_ingreso import (
         INGRESO_CONCEPTS_OUTSIDE_THE_ART_109_BASE,
         INGRESO_CONCEPTS_OUTSIDE_THE_VOLUME_BASE,
         ConceptoIngreso,
     )
-    from ._config_state_root import (
+    from .config_state_root import (
         FormerProductStateError,
         StateRootInputs,
         live_state_root_inputs,
         platform_user_data_root,
     )
-    from ._config_support import LLMProvider
-    from ._confirmation_gate import (
+    from .config_support import LLMProvider
+    from .confirmation_gate import (
         ConfirmationBlockReason,
         FindingResolutionAction,
         ReviewAdvisoryKind,
     )
-    from ._corpus_sidecar import render_corpus_sidecar_text
-    from ._declaracion_idioma import DeclaracionIdioma
+    from .corpus_sidecar import render_corpus_sidecar_text
+    from .declaracion_idioma import DeclaracionIdioma
     from .descendant_relacion import (
         ART_58_2_ENTITLING_RELACIONES,
         ART_81_1_MATERNIDAD_RELACIONES,
         DescendantRelacion,
     )
-    from ._deuda_direccion import DeudaDireccion
-    from ._document_shape import (
+    from .deuda_direccion import DeudaDireccion
+    from .document_shape import (
         AEAT_RECORD_BATCH_SHAPES,
         PDF_CONTAINER_SHAPES,
         STRUCTURED_DOCUMENT_SHAPES,
@@ -853,16 +853,16 @@ __all__: list[str] = [
 _LAZY_EXPORTS: dict[str, str] = {
     "ABSENT_SECURE_OBJECT_REVISION_ID": ".secure_object_write",
     "ACTIONABLE_POST_FILING_EVENT_KINDS": "._post_filing_event",
-    "AEAT_CSV_MAX_LENGTH": "._aeat_csv",
-    "AEAT_CSV_MIN_LENGTH": "._aeat_csv",
-    "AEAT_CSV_PATTERN": "._aeat_csv",
-    "AEAT_RECORD_BATCH_SHAPES": "._document_shape",
+    "AEAT_CSV_MAX_LENGTH": ".aeat_csv",
+    "AEAT_CSV_MIN_LENGTH": ".aeat_csv",
+    "AEAT_CSV_PATTERN": ".aeat_csv",
+    "AEAT_RECORD_BATCH_SHAPES": ".document_shape",
     "ANTHROPIC_EXTRA": ".optional_extras",
     "ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS": "._prorrata_exclusions",
     "ART_58_2_ENTITLING_RELACIONES": ".descendant_relacion",
     "ART_81_1_MATERNIDAD_RELACIONES": ".descendant_relacion",
     "AcceleratorKind": "._hardware",
-    "ActionArgumentResolution": "._action_argument_resolution",
+    "ActionArgumentResolution": ".action_argument_resolution",
     "ActionArgumentSource": ".operator_action_enums",
     "ActionArgumentStatus": ".operator_action_enums",
     "ActionConditionality": ".operator_action_enums",
@@ -870,7 +870,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "AeatProductSoftwareEvidence": ".product_identity",
     "AeatProductSoftwareIdentity": ".product_identity",
     "AggregationCaptureKind": ".aggregation",
-    "AmendmentLiabilityDirection": "._amendment_kind_regime",
+    "AmendmentLiabilityDirection": ".amendment_kind_regime",
     "Art104TresExclusion": "._prorrata_exclusions",
     "AuthProviderDescription": ".auth_provider",
     "AuthProviderKind": ".auth_provider",
@@ -880,23 +880,23 @@ _LAZY_EXPORTS: dict[str, str] = {
     "CalculationSourceLineageRole": ".aggregation",
     "COMPATIBILITY_REGIME": ".compatibility_lifecycle",
     "CasillaId": ".casilla_id",
-    "CasillaValueKind": "._casilla_value_kind",
-    "ClassifierInputSource": "._classifier_input_source",
+    "CasillaValueKind": ".casilla_value_kind",
+    "ClassifierInputSource": ".classifier_input_source",
     "ClaveMovilRoute": ".auth_provider",
     "ConceptLifecycle": ".concept_lifecycle",
-    "ConceptoIngreso": "._concepto_ingreso",
-    "ConfirmationBlockReason": "._confirmation_gate",
+    "ConceptoIngreso": ".concepto_ingreso",
+    "ConfirmationBlockReason": ".confirmation_gate",
     "ContentionCause": "._hardware",
     "ConvenioOverrideKind": ".irnr",
     "CorpusAnchorResolutionError": ".corpus_text",
-    "CounterpartyTaxablePersonStatus": "._classifier_input_source",
+    "CounterpartyTaxablePersonStatus": ".classifier_input_source",
     "DEFAULT_MODEL_BY_RUNTIME_AND_ROLE": ".model_catalogue",
     "DEFAULT_WRITE_PROVENANCE": ".secure_object_write",
-    "DeclaracionIdioma": "._declaracion_idioma",
+    "DeclaracionIdioma": ".declaracion_idioma",
     "DeploymentLicencePosture": ".model_catalogue",
     "DescendantRelacion": ".descendant_relacion",
-    "DeudaDireccion": "._deuda_direccion",
-    "DocumentShape": "._document_shape",
+    "DeudaDireccion": ".deuda_direccion",
+    "DocumentShape": ".document_shape",
     "DraftDiscrepancyKind": ".draft_discrepancy",
     "EXTERNAL_PATH_SETTINGS_FIELDS": ".storage_taxonomy",
     "ElidedProse": ".prose_elision",
@@ -914,10 +914,10 @@ _LAZY_EXPORTS: dict[str, str] = {
     "FilingPeriodCode": ".period",
     "FilingProducerKey": ".filing_producer_key",
     "FilingProjectionRef": ".filing_projection_ref",
-    "FindingResolutionAction": "._confirmation_gate",
+    "FindingResolutionAction": ".confirmation_gate",
     "FingerprintParticipation": ".storage_taxonomy",
     "ForeignAssetObligationGroup": "._foreign_asset_obligation",
-    "FormerProductStateError": "._config_state_root",
+    "FormerProductStateError": ".config_state_root",
     "GOOGLE_EXTRA": ".optional_extras",
     "GoogleCredentialSourceKind": "._google_credential_source",
     "HEX_PATTERN_128": ".hex",
@@ -928,8 +928,8 @@ _LAZY_EXPORTS: dict[str, str] = {
     "Hex64Str": ".hex",
     "IAE_SUBJECT_TIPOS_ACTIVIDAD": "._tipos_actividad",
     "IBAN_SHAPE_RE": "._iban",
-    "INGRESO_CONCEPTS_OUTSIDE_THE_ART_109_BASE": "._concepto_ingreso",
-    "INGRESO_CONCEPTS_OUTSIDE_THE_VOLUME_BASE": "._concepto_ingreso",
+    "INGRESO_CONCEPTS_OUTSIDE_THE_ART_109_BASE": ".concepto_ingreso",
+    "INGRESO_CONCEPTS_OUTSIDE_THE_VOLUME_BASE": ".concepto_ingreso",
     "ImageMediaType": "._image_media_type",
     "IntracomOperationType": ".aggregation",
     "IvaCategoryOutcome": "._iva_category_resolution",
@@ -937,7 +937,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "IvaDeductionEvidenceAuthority": ".iva_deduction_fact",
     "IvaDeductionFactKind": ".iva_deduction_fact",
     "LLM_EXTRA": ".optional_extras",
-    "LLMProvider": "._config_support",
+    "LLMProvider": ".config_support",
     "LOCAL_TRANSPORT_LABEL": ".provenance_stamp",
     "LOCKFILE_UNLINK_RETRY_SECONDS": "._lockfile_unlink",
     "LedgerSortField": "._ledger_sort",
@@ -999,7 +999,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "ModelRuntime": ".model_catalogue",
     "ModelSelectionAdvisory": ".model_catalogue",
     "Modelo": ".modelo",
-    "ModeloCalculationRouteId": "._calculation_route",
+    "ModeloCalculationRouteId": ".calculation_route",
     "ModeloWorkProgressState": "._modelo_work_progress_state",
     "NON_IAE_SUBJECT_TIPOS_ACTIVIDAD": "._tipos_actividad",
     "NON_REGISTRY_MODELOS": ".modelo",
@@ -1036,7 +1036,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "OrdenAnualIvaLorca2022Reduction": "._orden_anual_html",
     "OrdenAnualIvaModule": "._orden_anual_html",
     "OrdenAnualIvaSeasonalIndex": "._orden_anual_html",
-    "PDF_CONTAINER_SHAPES": "._document_shape",
+    "PDF_CONTAINER_SHAPES": ".document_shape",
     "PERSISTED_FORMATS": ".compatibility_lifecycle",
     "PRODUCT_IDENTITY": ".product_identity",
     "PROSE_ELISION_MARKER": ".prose_elision",
@@ -1072,7 +1072,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "RentaDeclaracionType": "._renta_declaracion_type",
     "RescateType": "._rescate_type",
     "ResultDisposition": ".result_disposition",
-    "ReviewAdvisoryKind": "._confirmation_gate",
+    "ReviewAdvisoryKind": ".confirmation_gate",
     "RevisionReviewStatus": ".revision_review",
     "STORAGE_FIELD_CATEGORIES": ".storage_taxonomy",
     "STORAGE_ROOT_MODE": ".storage_materialization",
@@ -1080,11 +1080,11 @@ _LAZY_EXPORTS: dict[str, str] = {
     "STORAGE_TAXONOMY": ".storage_taxonomy",
     "STRICT_FROZEN_CONFIG": ".models",
     "STRICT_FROZEN_HIDDEN_INPUT_CONFIG": ".models",
-    "STRUCTURED_DOCUMENT_SHAPES": "._document_shape",
+    "STRUCTURED_DOCUMENT_SHAPES": ".document_shape",
     "STR_KEYED_MAPPING_ADAPTER": ".type_adapters",
     "SectorDiferenciadoLetra": ".prorrata_register",
     "SecureObjectWrite": ".secure_object_write",
-    "ServiceCapability": "._capabilities",
+    "ServiceCapability": ".capabilities",
     "SourceConnectivityCandidateId": ".source_connectivity",
     "SourceConnectivityCandidateIdentity": ".source_connectivity",
     "SourceConnectivityCensusRow": ".source_connectivity",
@@ -1104,7 +1104,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "SourceConnectivityResolverOwnershipProof": ".source_connectivity",
     "SpanishStemmer": "._spanish_stemming",
     "StandardPeriodCode": ".period",
-    "StateRootInputs": "._config_state_root",
+    "StateRootInputs": ".config_state_root",
     "StorageArea": ".storage_taxonomy",
     "StorageCategory": ".storage_taxonomy",
     "StorageCustodyProfile": ".storage_taxonomy",
@@ -1133,7 +1133,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "bucket_scoped_storage_path": ".storage_taxonomy",
     "build_provenance_stamp": ".provenance_stamp",
     "candidates_for_role": ".model_catalogue",
-    "classify_amendment_liability_direction": "._amendment_kind_regime",
+    "classify_amendment_liability_direction": ".amendment_kind_regime",
     "classify_post_filing_event_kind": "._post_filing_event",
     "compile_filing_projection_ref": ".filing_projection_ref",
     "content_hash_hex": ".hashing",
@@ -1161,13 +1161,13 @@ _LAZY_EXPORTS: dict[str, str] = {
     "hydrate_scenario_filing_period": ".period",
     "iban_mod_97": "._iban",
     "is_administrative_period_token": ".period",
-    "is_aeat_csv": "._aeat_csv",
+    "is_aeat_csv": ".aeat_csv",
     "is_link_like": "._link_safety",
     "lineage_obligations": ".compatibility_lifecycle",
-    "live_state_root_inputs": "._config_state_root",
+    "live_state_root_inputs": ".config_state_root",
     "model_candidate": ".model_catalogue",
     "modelo_has_codified_disposition": ".result_disposition",
-    "normalise_aeat_csv": "._aeat_csv",
+    "normalise_aeat_csv": ".aeat_csv",
     "normalise_corpus_text": ".corpus_text",
     "normalise_iban": "._iban",
     "normalise_product_identity_references": ".product_identity",
@@ -1175,18 +1175,18 @@ _LAZY_EXPORTS: dict[str, str] = {
     "orden_anual_iva_activity_anchors": "._orden_anual_html",
     "orden_anual_iva_authority_units": "._orden_anual_html",
     "orden_anual_iva_table_text": "._orden_anual_html",
-    "permitted_amendment_kind_values": "._amendment_kind_regime",
+    "permitted_amendment_kind_values": ".amendment_kind_regime",
     "pid_is_alive": "._pid_liveness",
-    "platform_user_data_root": "._config_state_root",
+    "platform_user_data_root": ".config_state_root",
     "post_filing_event_is_actionable": "._post_filing_event",
     "project_m210_tipo_renta_code": ".irnr",
     "provenance_stamp_transport": ".provenance_stamp",
     "provenance_transport_label": ".provenance_stamp",
     "read_toml": ".toml",
     "registry_period_kind": ".period",
-    "render_corpus_sidecar_text": "._corpus_sidecar",
+    "render_corpus_sidecar_text": ".corpus_sidecar",
     "require_optional_extra": ".optional_extras",
-    "resolve_amendment_kind_regime": "._amendment_kind_regime",
+    "resolve_amendment_kind_regime": ".amendment_kind_regime",
     "resolve_anchored_extracted_unit": ".corpus_text",
     "resolve_notificacion_estado_servicio": "._notificacion_estado_servicio",
     "result_disposition_casilla_ids": ".result_disposition",

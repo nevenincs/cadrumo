@@ -45,7 +45,7 @@ from cadrumo.application.registry.source_connectivity_authority import (
 from cadrumo.core.period import Period
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.aggregation import BindingSourceKind, CalculationSourceLineageRole, IntracomOperationType
-from cadrumo.core._calculation_route import ModeloCalculationRouteId
+from cadrumo.core.calculation_route import ModeloCalculationRouteId
 from cadrumo.core.resources import bundled_path
 from cadrumo.core.source_connectivity import SourceConnectivityConnectionIdentity
 from cadrumo.core.time import now

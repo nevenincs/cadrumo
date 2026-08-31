@@ -26,7 +26,7 @@ from typing import ClassVar, override
 import pytest
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....core import ConfirmationBlockReason
+from ....core.confirmation_gate import ConfirmationBlockReason
 from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.config import load_settings, override_settings
 from ....domain.iva.classification import InvoiceKind

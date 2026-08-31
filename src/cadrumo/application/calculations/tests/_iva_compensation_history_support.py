@@ -11,7 +11,7 @@ from pydantic import AnyHttpUrl
 
 from ....adapters.outbound.aeat.sede.iva_compensation_wallet import IVA_COMPENSATION_WALLET_URL
 from ....adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, IvaCompensationWalletObservation, IvaCompensationWalletRow, ObservedCasillaValue
-from ....core import CasillaValueKind
+from ....core.casilla_value_kind import CasillaValueKind
 from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.period import Period

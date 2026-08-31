@@ -36,7 +36,7 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, ValidationError
 
-from ....core import AEAT_CSV_MAX_LENGTH, AEAT_CSV_MIN_LENGTH, is_aeat_csv
+from ....core.aeat_csv import AEAT_CSV_MAX_LENGTH, AEAT_CSV_MIN_LENGTH, is_aeat_csv
 from ....core.period import Period
 from ....tests.aeat_literal_fixtures import COTEJO_VERIFICATION_URL_FIXTURE
 from .._schema import Justificante

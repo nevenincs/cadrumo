@@ -370,7 +370,7 @@ def google_sync_probe(
     file round-trips into `_probe/`.
     """
     from ....application.user_profile.capabilities import resolve_active_capability
-    from ....core import ServiceCapability
+    from ....core.capabilities import ServiceCapability
 
     # The read-only probe is a pure connectivity read and stays ungated. The
     # `--no-read-only` arm writes a sentinel file to Drive, so that write is a
@@ -928,7 +928,7 @@ def _inspect_pushed_remote_mirror(
 
 def _profile_archive_push_context() -> tuple[str, StorageProvider, str]:
     from ....application.user_profile.capabilities import resolve_active_capability
-    from ....core import ServiceCapability
+    from ....core.capabilities import ServiceCapability
 
     if not resolve_active_capability(ServiceCapability.GOOGLE_EXPORT).enabled:
         raise CliRefusedBoundaryError(

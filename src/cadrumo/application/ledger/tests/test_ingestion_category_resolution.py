@@ -29,7 +29,8 @@ from datetime import date
 
 import pytest
 
-from ....core import ClassifierInputSource, IvaCategoryOutcome
+from ....core import IvaCategoryOutcome
+from ....core.classifier_input_source import ClassifierInputSource
 from ....domain.iva.classification import CustomerTaxStatus, InvoiceKind, IvaTerritorialScope
 from ....domain.iva.establishment import record_country_code_status, stated_country_code_status
 from ....domain.iva.schema import IvaCategory, IvaRateKind

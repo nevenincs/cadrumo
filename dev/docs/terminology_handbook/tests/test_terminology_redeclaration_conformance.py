@@ -39,7 +39,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.docs, pytest.mark.hex_entrypo
 
 # Dev tooling runs from a source checkout by definition, so it owns its own
 # repo-root anchor. Production code has no repository concept and must never
-# export one (see cadrumo.core._config_state_root for the runtime data root).
+# export one (see cadrumo.core.config_state_root for the runtime data root).
 _REPO_ROOT = REPO_ROOT
 
 # User-docs prose surfaces. The generated glossary (which legitimately DEFINES

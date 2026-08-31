@@ -40,7 +40,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import ConfirmationBlockReason
+from ....core.confirmation_gate import ConfirmationBlockReason
 from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....domain.iva.regime_legend import REGIME_LEGENDS, RegimeLegend
 from ..confirmation_gate import BLOCKING_REASON_BY_DISCREPANCY_KIND, confirmation_blockers

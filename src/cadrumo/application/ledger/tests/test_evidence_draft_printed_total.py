@@ -29,7 +29,7 @@ import pytest
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import FindingResolutionAction
+from ....core.confirmation_gate import FindingResolutionAction
 from ....core.config import Settings
 from ....domain.invoices.enums import InvoiceClass
 from ....domain.iva.classification import InvoiceKind
