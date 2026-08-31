@@ -43,16 +43,16 @@ from typing import Annotated, Final, Literal
 
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
-from ...core.hex import Hex64Str
 from ...core.config import Settings
+from ...core.hex import Hex64Str
 from ...core.identity import AeatCertificadoId, BucketId, ContentDigest
 from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.time import now
+from ...core.time.clock import now
 from ...domain.attachments.enums import AttachmentKind, AttachmentSource
 from ...domain.attachments.protocols import AttachmentStoreProtocol
 from ...domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
-from ...domain.notifications import SancionLiquidacion
+from ...domain.notifications.sancion import SancionLiquidacion
 from .errors import (
     LiveApplicationInputError,
     LiveReadPrecondition,

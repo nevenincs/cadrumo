@@ -38,10 +38,10 @@ import secrets
 from collections.abc import Iterator
 from pathlib import Path
 
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field, NonNegativeInt, ValidationError
 
 from .....core.atomic_write import atomic_write_bytes
-from .....core.classification import AtRestTreatment, SensitivityClass, default_policy_for
+from .....core.classification.policies import AtRestTreatment, SensitivityClass, default_policy_for
 from .....core.directory_scan import scan_directory
 from .....core.external_constants import BINARY_MIME_TYPE
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
@@ -49,16 +49,11 @@ from .....core.hashing import sha256_hex as _sha256_hex
 from .....core.identity import ContentDigest
 from .....core.logging import get_logger
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from .....core.time import now
+from .....core.time.clock import now
 from .._namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from .._storage_path_definitions import BLOB_MANIFEST_SCHEMA_VERSION
 from ..crypto.aead import KEY_SIZE, EncryptedBlob, decrypt_record, encrypt_record
-from ..envelope import (
-    EncryptionMetadata,
-    Envelope,
-    load_envelope,
-    save_envelope,
-)
+from ..envelope._envelope import EncryptionMetadata, Envelope, load_envelope, save_envelope
 from ..errors import (
     BlobIntegrityError,
     BlobNotFoundError,
@@ -68,7 +63,8 @@ from ..errors import (
     EnvelopeVersionError,
     StorageValidationError,
 )
-from ..master_key import MasterKeyProvider, get_active_master_key
+from ..master_key._master_key import MasterKeyProvider
+from ..master_key.active_session import get_active_master_key
 
 _log = get_logger(__name__)
 
@@ -119,7 +115,7 @@ class BlobManifest(BaseModel):
 
     sha256_plaintext_hex: ContentDigest
     sha256_ciphertext_hex: ContentDigest | None = None
-    size_plaintext: int = Field(ge=0)
+    size_plaintext: NonNegativeInt
     content_type: str = Field(min_length=1)
     classification: SensitivityClass
     wrapped_dek: EncryptionMetadata | None = None

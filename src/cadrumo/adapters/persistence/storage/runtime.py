@@ -22,7 +22,7 @@ from ....core.config import (
     load_settings,
     settings_for_active_profile_bucket,
 )
-from ....core.time import now as _utc_now
+from ....core.time.clock import now as _utc_now
 from ._namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from ._runtime_readiness import (
     StorageRuntimeReadiness,
@@ -36,7 +36,7 @@ from ._runtime_readiness import (
 from .errors import (
     storage_validation_error as _storage_validation_error,
 )
-from .master_key import current_active_bucket_session, session_serves_bucket
+from .master_key.active_session import current_active_bucket_session, session_serves_bucket
 
 if TYPE_CHECKING:
     from .sql.secure_objects import SecureObjectRepository

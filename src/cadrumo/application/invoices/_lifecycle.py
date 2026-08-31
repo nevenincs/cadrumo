@@ -32,7 +32,7 @@ from pydantic import BaseModel
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core.aggregation import IntracomOperationType
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.time import now
+from ...core.time.clock import now
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.invoices.enums import InvoiceClass, PaymentStatus
 from ...domain.invoices.errors import InvoiceNotFoundError, InvoiceValidationError

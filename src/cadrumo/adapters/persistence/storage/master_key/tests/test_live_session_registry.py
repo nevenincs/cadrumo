@@ -18,7 +18,7 @@ import threading
 
 import pytest
 
-from ......core.time._clock import now
+from ......core.time.clock import now
 from .._live_sessions import (
     close_all_live_bucket_sessions,
     live_bucket_session_count,

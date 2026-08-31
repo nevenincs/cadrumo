@@ -19,7 +19,7 @@ from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.hashing import canonical_json_bytes
 from .....core.identity import canonical_profile_bucket_id
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from .....core.time import validate_utc_aware
+from .....core.time.utc import validate_utc_aware
 from ..crypto.aead import KEY_SIZE, EncryptedBlob, decrypt_record, encrypt_record
 from ..errors import DecryptionError, EncryptionError
 from .zeroise import zeroise as _zeroise

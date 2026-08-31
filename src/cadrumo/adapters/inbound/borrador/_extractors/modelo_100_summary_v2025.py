@@ -31,7 +31,7 @@ from typing import ClassVar
 from .....core.aeat_csv import normalise_aeat_csv
 from .....core.modelo import Modelo
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.time import now
+from .....core.time.clock import now
 from ...pdf import (
     SPANISH_AMOUNT_GROUP,
     ExtractedCasilla,
@@ -39,7 +39,7 @@ from ...pdf import (
     sha256_file,
     source_pdf_reference_path,
 )
-from .._parsers import extract_pages_text
+from .._parsers._pdfplumber_backend import extract_pages_text
 from .._schema import ArtefactKind, BorradorExtractionProfile, InboundBorradorObservation
 from ..errors import BorradorParseError
 

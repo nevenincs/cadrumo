@@ -19,11 +19,11 @@ from typing import Final, Literal
 
 from pydantic import BaseModel, Field, field_validator
 
-from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.config import AEAT_CERTIFICATE_PROTECTED_URL, assert_canonical_protected_resource
 from .....core.errors.hierarchy import AeatLoginAssertionError
 from .....core.identity import ContentDigest
-from .....core.time import validate_utc_aware
+from .....core.models import STRICT_FROZEN_CONFIG
+from .....core.time.utc import validate_utc_aware
 
 AEAT_STORAGE_STATE_SCHEMA_VERSION: Final[int] = 2
 """Schema version for certificate-auth :class:`PersistedSessionMetadata` records."""

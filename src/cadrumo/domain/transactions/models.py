@@ -18,24 +18,31 @@ from pydantic import (
 )
 from pydantic_core import core_schema
 
-from ...core.tipos_actividad import TipoActividad
-from ...core.prorrata_exclusions import ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS, Art104TresExclusion
 from ...core.concepto_ingreso import ConceptoIngreso
-from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
-from ...core.iva_deduction_fact import IvaDeductionFactKind
-from ...core.text_fold import fold_diacritics
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.external_constants import CLASSIFIED_BY_AUTO, DEFAULT_CURRENCY
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId, TransactionId
-from ...core.money import round_to_cents
+from ...core.iva_deduction_fact import IvaDeductionFactKind
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.money.rounding import round_to_cents
 from ...core.parsing import normalise_iso_3166_alpha2_jurisdiction, parse_iso8601_date
-from ...core.time import now, parse_iso_datetime
+from ...core.prorrata_exclusions import ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS, Art104TresExclusion
+from ...core.text_fold import fold_diacritics
+from ...core.time.clock import now
+from ...core.time.utc import parse_iso_datetime
+from ...core.tipos_actividad import TipoActividad
+from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ..identifiers import canonical_decimal_string
 from ..iva.deduction_facts import IvaDeductionClassificationProvenance
 from ..iva.prorrata import InputClassification
-from ..iva.schema import EUMemberState, IvaCashAccountingPaymentEvidence, IvaCashAccountingTreatment, IvaCategory, IvaExemptionArticle
+from ..iva.schema import (
+    EUMemberState,
+    IvaCashAccountingPaymentEvidence,
+    IvaCashAccountingTreatment,
+    IvaCategory,
+    IvaExemptionArticle,
+)
 from .enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from .errors import TransactionValidationError
 from .irpf_categories import (

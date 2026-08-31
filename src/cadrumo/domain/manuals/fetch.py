@@ -20,13 +20,13 @@ from typing import Protocol
 import httpx
 from pydantic import AnyHttpUrl, BaseModel, ValidationError
 
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.atomic_write import atomic_write_stream, atomic_write_text
 from ...core.config import Settings, load_settings
 from ...core.hashing import hash_file
 from ...core.logging import get_logger
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.paths import resolve_relative_subpath
-from ...core.time import now
+from ...core.time.clock import now
 from .errors import ManifestError
 from .loader import resolve_part_root
 from .schema import FetchedManualPart, ManualId, ManualPart

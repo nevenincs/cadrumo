@@ -37,7 +37,7 @@ from ...application.ledger.document_transcription import DocumentTranscription, 
 from ...core.config import load_settings
 from ...core.field_origin import FieldOrigin
 from ...core.provenance_stamp import LOCAL_TRANSPORT_LABEL
-from ...core.time import now
+from ...core.time.clock import now
 from ..client import LLMClient
 from ..evidence_draft_text import TextInvoiceFieldExtractor
 from ..models import LLMProvider, LLMResponse

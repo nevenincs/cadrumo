@@ -1,4 +1,4 @@
-"""Real-behavior tests for :mod:`cadrumo.core.time._clock`."""
+"""Real-behavior tests for :mod:`cadrumo.core.time.clock`."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ import pytest
 
 from ...config import override_settings
 from ...errors.hierarchy import CoreValidationError
-from .. import MADRID_TZ, clock_is_frozen, frozen_clock, now, today_madrid
+from ..clock import MADRID_TZ, clock_is_frozen, frozen_clock, now, today_madrid
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

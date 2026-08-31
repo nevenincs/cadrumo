@@ -16,21 +16,21 @@ from collections.abc import Callable
 from datetime import date, datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.inventory import (
     InventoryClosingAuthorityConflictError,
     InventoryLedgerRepository,
 )
-from ...adapters.persistence.storage import secure_object_repository_for_bucket
-from ...core.models import STRICT_FROZEN_CONFIG
+from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...core.config import Settings
-from ...core.time import now as _now_utc
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.time.clock import now as _now_utc
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import emit_bucket_event
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
-from ...domain.contribuyente.inventory import (
+from ...domain.contribuyente.inventory.records import (
     InventoryAcquisitionCost,
     InventoryClosingAuthorityRecord,
     InventoryLedger,
@@ -64,7 +64,7 @@ class InventoryActividadSummary(BaseModel):
     year: int = Field(ge=1900)
     valuation_method: ValuationMethod
     opening_stock: Decimal = Field(ge=Decimal("0"))
-    movement_count: int = Field(ge=0)
+    movement_count: NonNegativeInt
 
 
 class InventoryMovementCommand(BaseModel):

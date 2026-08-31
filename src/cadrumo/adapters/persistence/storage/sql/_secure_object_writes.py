@@ -11,7 +11,7 @@ from sqlalchemy import Table, bindparam, delete, insert, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from .....core.classification import SensitivityClass
+from .....core.classification.policies import SensitivityClass
 from .....core.hashing import sha256_hex
 from .....core.i18n import tr
 from .....core.secure_object_write import (
@@ -19,7 +19,7 @@ from .....core.secure_object_write import (
     DEFAULT_WRITE_PROVENANCE,
     SecureObjectWrite,
 )
-from .....core.time import validate_utc_aware
+from .....core.time.utc import validate_utc_aware
 from ..crypto.encrypted_columns import (
     encrypt_secure_object_payload,
     secure_object_key_digest,

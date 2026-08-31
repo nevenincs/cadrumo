@@ -29,11 +29,11 @@ from typing import ClassVar, cast
 
 from pydantic import BaseModel
 
-from .....core.secure_object_write import SecureObjectWrite
-from .....core.classification import SensitivityClass
+from .....core.classification.policies import SensitivityClass
 from .....core.config import Settings
 from .....core.logging import get_logger
-from .....core.time import now
+from .....core.secure_object_write import SecureObjectWrite
+from .....core.time.clock import now
 from .._path_safety import safe_repository_id
 from .._schema_lineage import inner_envelope_classification_is_expected
 from ..crypto.encrypted_columns import secure_object_key_digest

@@ -19,9 +19,9 @@ from typing import Annotated, Literal
 
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
-from ...core.hex import Hex64Str
 from ...core.casilla_id import CasillaId
-from ...core.time import UtcInstant
+from ...core.hex import Hex64Str
+from ...core.time.utc import UtcInstant
 from ..calculations.registry.ids import ModeloId
 from ._ids import ManualId, ManualPart
 from .errors import ManualValidationError

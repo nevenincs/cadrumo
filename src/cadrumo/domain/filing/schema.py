@@ -23,20 +23,20 @@ from pydantic import (
     model_validator,
 )
 
-from ...core.hex import Hex16Str
-from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.period import Period
-from ...core.casilla_id import CasillaId
 from ...core.aggregation import BindingSourceKind
+from ...core.casilla_id import CasillaId
 from ...core.errors.severity import BaseSeverity
 from ...core.hashing import content_hash_hex
+from ...core.hex import Hex16Str
 from ...core.i18n import Translatable as tr
 from ...core.identity import ContentDigest, SubjectTaxId
-from ...core.time import UtcInstant
-from ..calculations import RowSourceIdentity
+from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...core.period import Period
+from ...core.time.utc import UtcInstant
+from ..calculations._row_source_identity import RowSourceIdentity
 from ..calculations.registry.ids import BindingId, FormulaId, LegalRefId, RevisionId, SourceRefId
 from ..calculations.registry.schema_references import RegistrySnapshotRef
-from ..submission import ModeloDraftStatus
+from ..submission._protocols import ModeloDraftStatus
 from .errors import FilingValidationError
 
 APPROVAL_BASIS_VERSION = "review-basis-v4"

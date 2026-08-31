@@ -723,6 +723,6 @@ def _section(concept: ConceptRecord, language: OutputLanguage) -> LanguageSectio
 
 
 def _today() -> date:
-    from cadrumo.core.time import now
+    from cadrumo.core.time.clock import now
 
     return now().date()

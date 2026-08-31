@@ -19,11 +19,11 @@ from typing import Annotated, Final, override
 
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
-from ...core.hex import Hex64Str
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.hashing import content_hash_hex
+from ...core.hex import Hex64Str
 from ...core.identity import BucketId
-from ...core.time import UtcInstant, validate_utc_aware
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.time.utc import UtcInstant, validate_utc_aware
 from .errors import BucketEventValidationError
 
 BucketEventId = Hex64Str

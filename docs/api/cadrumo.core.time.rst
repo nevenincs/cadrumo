@@ -13,6 +13,6 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.core.time._clock
-   cadrumo.core.time._range
-   cadrumo.core.time._utc
+   cadrumo.core.time.clock
+   cadrumo.core.time.date_range
+   cadrumo.core.time.utc

@@ -7,10 +7,10 @@ from pathlib import Path
 from typing import Final, Literal
 from uuid import UUID
 
-from ...core.storage_taxonomy_locations import storage_location
-from ...core.storage_taxonomy import StorageCategory
 from ...core.paths import effective_storage_root
-from ...core.time import validate_utc_aware
+from ...core.storage_taxonomy import StorageCategory
+from ...core.storage_taxonomy_locations import storage_location
+from ...core.time.utc import validate_utc_aware
 from ..profile_deletion_hold_contract import ProfileDeletionHoldOwnerProjection
 from .custody_hold_models import (
     ProfileCustodyHoldAssessment,
@@ -87,10 +87,10 @@ class _ProfileCustodyHoldEvidenceOwner:
             # custody, not to reach past their facades: each names its owning
             # package's public surface exactly as a module-level import would.
             if self._owner == "legal":
-                from ..evidence import LegalHoldCaseAuthority
+                from ..evidence._profile_legal_hold import LegalHoldCaseAuthority
 
                 return LegalHoldCaseAuthority(root=self._storage_root).project(profile_id, now=now)
-            from ..filing import FilingRetentionAuthority
+            from ..filing._profile_filing_retention import FilingRetentionAuthority
 
             return FilingRetentionAuthority(root=self._storage_root).project(profile_id, now=now)
         except FileNotFoundError as exc:

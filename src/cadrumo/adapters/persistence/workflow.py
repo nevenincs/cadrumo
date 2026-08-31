@@ -15,30 +15,30 @@ from ...application.workflow.persistence import (
 )
 from ...application.workflow.run_models import WorkflowResult
 from ...application.workflow.state_models import WorkflowState
-from ...core.classification import SensitivityClass
+from ...core.classification.policies import SensitivityClass
 from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID, SecureObjectWrite
-from ...core.time import now as utc_now
+from ...core.time.clock import now as utc_now
 from ...domain.buckets.event import BucketEvent
 from ...domain.buckets.event_repository import append_bucket_event
 from .profile.buckets import BucketEventHistoryRepository
-from .storage import (
-    WORKFLOW_RUN_NAMESPACE,
-    WORKFLOW_STATE_NAMESPACE,
+from .storage._schema_lineage import inner_envelope_classification_is_expected, inner_envelope_version_is_current
+from .storage._secure_object_namespaces import WORKFLOW_RUN_NAMESPACE, WORKFLOW_STATE_NAMESPACE
+from .storage.crypto.encrypted_columns import secure_object_key_digest
+from .storage.envelope._envelope import Envelope
+from .storage.errors import (
     ClassificationError,
-    Envelope,
     EnvelopeVersionError,
     SecretStoreError,
-    SecureObjectRepository,
     SecureObjectRevisionConflictError,
     StorageError,
-    inner_envelope_classification_is_expected,
-    inner_envelope_version_is_current,
+)
+from .storage.runtime_repository import (
     secure_object_repository_for_active_bucket,
     secure_object_repository_for_cold_bootstrap_state,
 )
-from .storage.crypto.encrypted_columns import secure_object_key_digest
+from .storage.sql import SecureObjectRepository
 
 _logger = get_logger(__name__)
 

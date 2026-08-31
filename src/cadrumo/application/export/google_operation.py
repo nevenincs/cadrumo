@@ -14,12 +14,14 @@ from collections.abc import Callable
 from typing import ClassVar, Self
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, model_validator
 
+from ...core.bucket_pointer import require_active_bucket_id
 from ...core.capabilities import ServiceCapability
+from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.period import Period
 from ...core.operations import (
+    EFFECTS_WITHOUT_PARTIAL_COMMIT,
     OperationCancellation,
     OperationClosePolicy,
     OperationDeadline,
@@ -27,17 +29,15 @@ from ...core.operations import (
     OperationEffect,
     OperationInteractionKind,
 )
-from ...core.bucket_pointer import require_active_bucket_id
-from ...core.filing_year import FilingYear
-from ...core.operations import EFFECTS_WITHOUT_PARTIAL_COMMIT
-from ...core.time import now
+from ...core.period import Period
+from ...core.time.clock import now
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.ids import (
     ModeloId,
     RevisionId,
 )
 from ...domain.calculations.registry.schema import RegistrySnapshot
-from ..calculations import resolve_relations_from_local_store
+from ..calculations._relation_prefill import resolve_relations_from_local_store
 from ..operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -55,12 +55,8 @@ from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
 )
-from ..storage.calc_sheets import (
-    OperatorInputs,
-    RelationValues,
-    SheetExportPlan,
-    build_export_plan,
-)
+from ..storage.calc_sheets._engine import build_export_plan
+from ..storage.calc_sheets._records import OperatorInputs, RelationValues, SheetExportPlan
 from ..user_profile.capabilities import resolve_active_capability
 
 GOOGLE_SHEETS_EXPORT_OPERATION_DEFINITION_ID = "export.google-sheets"
@@ -144,9 +140,9 @@ class GoogleSheetsExportRemoteResult(BaseModel):
     folder_id: str | None = None
     spreadsheet_id: str | None = None
     spreadsheet_url: str | None = None
-    value_cells_written: int = Field(ge=0)
-    formula_cells_written: int = Field(ge=0)
-    protected_ranges_written: int = Field(ge=0)
+    value_cells_written: NonNegativeInt
+    formula_cells_written: NonNegativeInt
+    protected_ranges_written: NonNegativeInt
     tab_count: int = Field(ge=1)
     ranges_to_clear: tuple[str, ...] = ()
     value_cells_changed: int | None = Field(default=None, ge=0)
@@ -171,9 +167,9 @@ class GoogleSheetsExportOperationResult(BaseModel):
     folder_id: str | None = None
     spreadsheet_id: str | None = None
     spreadsheet_url: str | None = None
-    value_cells_written: int = Field(ge=0)
-    formula_cells_written: int = Field(ge=0)
-    protected_ranges_written: int = Field(ge=0)
+    value_cells_written: NonNegativeInt
+    formula_cells_written: NonNegativeInt
+    protected_ranges_written: NonNegativeInt
     tab_count: int = Field(ge=1)
     ranges_to_clear: tuple[str, ...] = ()
     value_cells_changed: int | None = Field(default=None, ge=0)

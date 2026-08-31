@@ -6,8 +6,9 @@ import json
 
 import pytest
 
-from ....adapters.persistence.storage import SensitivityClass, secure_object_repository_for_bucket
-from ....core.time import now
+from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+from ....core.classification.policies import SensitivityClass
+from ....core.time.clock import now
 from ....tests.cli_runner import invoke_cached_cli
 from ._isolated_profile_storage_fixtures import active_profile_isolated_backend
 

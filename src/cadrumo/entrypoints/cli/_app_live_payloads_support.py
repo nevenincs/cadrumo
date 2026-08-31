@@ -7,9 +7,9 @@ from typing import Annotated
 
 from pydantic import AfterValidator
 
-from ...core.period import Period
 from ...core.errors.hierarchy import CoreValidationError
-from ...core.time import validate_utc_aware
+from ...core.period import Period
+from ...core.time.utc import validate_utc_aware
 
 
 def _is_a_registry_period_token(value: str) -> str:

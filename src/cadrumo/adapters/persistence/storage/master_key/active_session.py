@@ -38,7 +38,7 @@ from contextvars import ContextVar
 from typing import TypeGuard
 
 from .....core.logging import get_logger
-from .....core.time._clock import now
+from .....core.time.clock import now
 from ..bucket.errors import BucketLockedError
 from ..errors import SecretStoreError
 from ._live_sessions import close_all_live_bucket_sessions

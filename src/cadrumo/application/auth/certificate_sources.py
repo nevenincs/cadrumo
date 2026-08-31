@@ -38,7 +38,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING, ClassVar
 
-from ...core.time import now
+from ...core.time.clock import now
 from .models import AuthState, CertificateSourceRecord
 from .operator_results import CertificateSourceNotFoundError
 

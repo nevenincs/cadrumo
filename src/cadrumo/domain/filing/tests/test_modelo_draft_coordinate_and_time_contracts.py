@@ -27,11 +27,11 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....core.period import Period
 from ....core.aggregation import BindingSourceKind
-from ....core.time import validate_utc_aware
+from ....core.period import Period
+from ....core.time.utc import validate_utc_aware
 from ...calculations.registry.schema_references import RegistrySnapshotRef
-from ...submission import ModeloDraftStatus
+from ...submission._protocols import ModeloDraftStatus
 from ..schema import ModeloBindingValue, ModeloDraft, ModeloValue, ModeloValueKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

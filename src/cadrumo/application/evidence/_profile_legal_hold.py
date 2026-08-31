@@ -17,12 +17,12 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 
-from ...core.storage_taxonomy_locations import storage_location
-from ...core.storage_taxonomy import StorageCategory
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.identity import PrefixedContentDigest
 from ...core.logging import get_logger
-from ...core.time import validate_utc_aware
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.storage_taxonomy import StorageCategory
+from ...core.storage_taxonomy_locations import storage_location
+from ...core.time.utc import validate_utc_aware
 from ..profile_deletion_hold_contract import ProfileDeletionHoldOwnerProjection
 from ..user_profile.custody_ports import (
     ProfileCustodyLocalRecordStore,

@@ -70,7 +70,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from ...core.time import now as _utc_now
+from ...core.time.clock import now as _utc_now
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from ._review_package_recipient_registry import RecipientFingerprintRecord
 from ._review_package_review_only_workspace import ReviewOnlyWorkspace

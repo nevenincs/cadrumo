@@ -24,14 +24,19 @@ from typing import TYPE_CHECKING
 from ....core.bucket_pointer import resolve_repository_bucket_id
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
-from ....core.time import now
-from ....domain.modelos.participation_index import TransactionParticipationIndexPersistenceError, TransactionRevisionParticipationIndex, derive_participation_index_id
-from ..storage import TRANSACTION_PARTICIPATION_INDEX_NAMESPACE, secure_object_repository_for_bucket
+from ....core.time.clock import now
+from ....domain.modelos.participation_index import (
+    TransactionParticipationIndexPersistenceError,
+    TransactionRevisionParticipationIndex,
+    derive_participation_index_id,
+)
+from ..storage._secure_object_namespaces import TRANSACTION_PARTICIPATION_INDEX_NAMESPACE
+from ..storage.runtime_repository import secure_object_repository_for_bucket
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from collections.abc import Iterable
 
-    from ..storage import SecureObjectRepository, SecureObjectWrite
+    from ..storage.sql import SecureObjectRepository, SecureObjectWrite
 
 _LOGGER = get_logger(__name__)
 
@@ -109,15 +114,13 @@ class TransactionParticipationIndexRepository:
                 condition is the one recognisable failure across every
                 key-addressed repository instead of a per-repository dialect.
         """
-        from ..storage import (
-            ClassificationError,
-            Envelope,
-            EnvelopeVersionError,
-            SecureObjectRowIdentityError,
+        from ..storage._schema_lineage import (
             inner_envelope_classification_is_expected,
             inner_envelope_version_is_current,
         )
         from ..storage.crypto.encrypted_columns import secure_object_key_digest
+        from ..storage.envelope._envelope import Envelope
+        from ..storage.errors import ClassificationError, EnvelopeVersionError, SecureObjectRowIdentityError
 
         object_key = derive_participation_index_id(transaction_id)
         try:
@@ -202,8 +205,8 @@ class TransactionParticipationIndexRepository:
         Returns:
             The number of stale participation objects removed.
         """
-        from ..storage import SecureObjectDeletion
         from ..storage.crypto.encrypted_columns import secure_object_key_digest
+        from ..storage.sql import SecureObjectDeletion
 
         writes = tuple(self.to_secure_object_write(index) for index in indexes)
         retained = {secure_object_key_digest(write.object_key).hex() for write in writes}
@@ -225,7 +228,8 @@ class TransactionParticipationIndexRepository:
         can be passed to ``save_with_secure_object_writes`` as an extra write
         slot, co-emitting atomically with the revision save.
         """
-        from ..storage import Envelope, SecureObjectWrite
+        from ..storage.envelope._envelope import Envelope
+        from ..storage.sql import SecureObjectWrite
 
         envelope = Envelope[TransactionRevisionParticipationIndex](
             schema_version=_PARTICIPATION_INDEX_SCHEMA_VERSION,

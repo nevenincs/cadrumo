@@ -8,8 +8,9 @@ from uuid import UUID
 import keyring
 import pytest
 
-from .....core import StorageCategory, storage_location
-from .....core.time import now as _now
+from .....core.storage_taxonomy import StorageCategory
+from .....core.storage_taxonomy_locations import storage_location
+from .....core.time.clock import now as _now
 from .....tests.secure_sql import (
     isolated_cli_runtime_profile,
     isolated_ephemeral_secure_sql,
@@ -17,7 +18,7 @@ from .....tests.secure_sql import (
     isolated_runtime_profile,
 )
 from ..custody.acceleration_receipt import PROFILE_SESSION_KEYCHAIN_SERVICE, mint_profile_session, profile_session_path
-from ..master_key import has_active_bucket_session
+from ..master_key.active_session import has_active_bucket_session
 from ..sql.engine import get_engine
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

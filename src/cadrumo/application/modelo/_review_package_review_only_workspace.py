@@ -43,11 +43,11 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors.hierarchy import CadrumoError
-from ...core.time import now as _utc_now
-from .review_package import ReviewPackageManifest
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.time.clock import now as _utc_now
 from ._review_package_recipient_encryption import RecipientDecryptedPackage
+from .review_package import ReviewPackageManifest
 
 
 class ReviewOnlyWorkspaceError(CadrumoError):

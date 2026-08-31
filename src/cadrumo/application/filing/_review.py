@@ -38,7 +38,7 @@ from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core.hashing import content_hash_hex
 from ...core.i18n import tr
 from ...core.logging import get_logger
-from ...core.time import now
+from ...core.time.clock import now
 from ...domain.calculations.registry.bindings import RegistryModeloObservation
 from ...domain.categories.profile import CategoryProfile
 from ...domain.categories.registry import resolve_category_profiles
@@ -49,7 +49,7 @@ from ...domain.filing.schema import ModeloApprovalBasis, ModeloDraft
 from ...domain.filing.validator import ModeloValidator, derive_validation_status
 from ...domain.identifiers import canonical_decimal_string
 from ...domain.invoices.models import InvoiceCatalogue
-from ...domain.submission import ModeloDraftStatus
+from ...domain.submission._protocols import ModeloDraftStatus
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ..user_profile.profile_record_repository import ProfileRecordRepository
@@ -664,7 +664,7 @@ def _load_prior_filing_observations_fingerprint(bucket_id: str) -> str:
     prior filed value in the bucket changes — reproducibly, from ``bucket_id``
     alone, without running the source mesh or resolving any relation.
     """
-    from ..calculations import CalculationObservationRepository
+    from ..calculations.observations_repository import CalculationObservationRepository
 
     return _prior_filing_observations_fingerprint(CalculationObservationRepository(bucket_id=bucket_id).iter_records())
 

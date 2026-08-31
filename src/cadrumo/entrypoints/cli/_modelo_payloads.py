@@ -23,7 +23,7 @@ from collections.abc import Sequence
 from datetime import date, datetime
 from typing import TYPE_CHECKING, Literal
 
-from pydantic import ConfigDict, Field, NonNegativeInt, field_validator, model_validator
+from pydantic import ConfigDict, Field, NonNegativeInt, computed_field, field_validator, model_validator
 
 from ...application.aggregation import (
     PerModeloAggregationContributor,
@@ -39,9 +39,6 @@ from ...application.modelo.work_review import (
     ModeloWorkProgress,
     ModeloWorkReview,
 )
-from ...core.refund_election import RefundElection
-from ...core.payment_election import PaymentElection
-from ...core.result_disposition import ResultDisposition
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.filing_year import FilingYear
@@ -55,10 +52,13 @@ from ...core.identity import (
     WorkUnitId,
 )
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
+from ...core.payment_election import PaymentElection
 from ...core.period import Period
 from ...core.prose_elision import IssueDetail, elided_prose
+from ...core.refund_election import RefundElection
+from ...core.result_disposition import ResultDisposition
 from ...core.text_bounds import NonEmptyStr
-from ...core.time import UtcInstant
+from ...core.time.utc import UtcInstant
 from ...domain.buckets.event import (
     BucketActorLabel,
     BucketEventId,
@@ -893,18 +893,46 @@ class FilingRecordImportResult(ModeloRecordPayload):
     """
 
     operation: str = "modelo.filing_record.import"
-    evidence_kind: ExternalEvidenceKind
-    evidence_reference_id: EvidenceReference
 
-    @model_validator(mode="after")
-    def _validate_imported_evidence_matches_record(self) -> FilingRecordImportResult:
-        """Prevent import metadata from diverging from the attested evidence row."""
+    @computed_field
+    @property
+    def evidence_kind(self) -> ExternalEvidenceKind:
+        """The imported evidence's kind, READ from the evidence rather than declared.
+
+        These two were accepted as their own input fields beside
+        ``external_evidence``, which already carries both, and a validator
+        checked the three agreed. Deriving them retires that check by making the
+        disagreement unconstructible: there is now one place the kind and the
+        reference come from, so a payload cannot state one thing in a flat field
+        and another in the evidence row it projects.
+
+        The wire shape is unchanged -- ``computed_field`` still emits them --
+        so this removes an input duplication without moving the envelope.
+        """
         if self.external_evidence is None:
             raise ValueError("imported filing record must carry external evidence")
-        if self.external_evidence.kind is not self.evidence_kind:
-            raise ValueError("evidence_kind must match external evidence")
-        if self.external_evidence.reference_id != self.evidence_reference_id:
-            raise ValueError("evidence_reference_id must match external evidence")
+        return self.external_evidence.kind
+
+    @computed_field
+    @property
+    def evidence_reference_id(self) -> EvidenceReference:
+        """The imported evidence's reference, read from the evidence row."""
+        if self.external_evidence is None:
+            raise ValueError("imported filing record must carry external evidence")
+        return self.external_evidence.reference_id
+
+    @model_validator(mode="after")
+    def _require_external_evidence(self) -> FilingRecordImportResult:
+        """An imported filing record carries the evidence it was imported from.
+
+        All that remains of a validator that also checked ``evidence_kind`` and
+        ``evidence_reference_id`` agreed with it. Those are derived from this
+        field now, so they cannot disagree with it; what is still worth
+        asserting is that the field is there at all, because an import without
+        evidence is not an import.
+        """
+        if self.external_evidence is None:
+            raise ValueError("imported filing record must carry external evidence")
         return self
 
 

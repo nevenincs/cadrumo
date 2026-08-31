@@ -30,10 +30,10 @@ from __future__ import annotations
 from datetime import datetime
 from typing import NoReturn
 
-from ....adapters.persistence.storage.master_key import looks_like_real_tax_id
-from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
+from ....adapters.persistence.storage.master_key._master_key import looks_like_real_tax_id
 from ....core.config import SecretStoreBackend, load_settings
-from ....core.time import now
+from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
+from ....core.time.clock import now
 from ....core.tty import stdin_is_tty
 from ....domain.user_profile.errors import ProfileNotFoundError
 from .errors import (

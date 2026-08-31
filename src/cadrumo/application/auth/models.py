@@ -9,9 +9,9 @@ from typing import Annotated
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 from ...core.hex import Hex64Str
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.identity import BucketId
-from ...core.time import validate_utc_aware
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.time.utc import validate_utc_aware
 
 type _AuthOperationId = Hex64Str
 """Identity of one durable auth operation.

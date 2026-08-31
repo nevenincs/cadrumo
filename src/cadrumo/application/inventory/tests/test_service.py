@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from ....core.time import now
+from ....core.time.clock import now
 from .._service import _now_utc  # re-exported alias
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

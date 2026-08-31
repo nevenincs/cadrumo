@@ -29,12 +29,12 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.modelo import Modelo
-from ...core.period import Period
 from ...core.hashing import sha256_hex
 from ...core.identity import AeatCsv, SubjectTaxId
-from ...core.time import UtcInstant, validate_utc_aware
+from ...core.modelo import Modelo
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.period import Period
+from ...core.time.utc import UtcInstant, validate_utc_aware
 from .errors import SubmissionValidationError
 
 _SUBMISSION_ID_LENGTH = 16

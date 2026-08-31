@@ -11,27 +11,27 @@ from tempfile import TemporaryDirectory
 from typing import Annotated, Literal, Protocol, runtime_checkable
 from uuid import UUID
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
-from ...core.prior_domiciliation_election import PriorDomiciliationElection
-from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.period import Period
-from ...core.product_identity import AeatProductSoftwareIdentity
 from ...core.filing_year import FilingYear
 from ...core.identity import CalculationRevisionId, ContentDigest
-from ...core.time import UtcInstant
+from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...core.period import Period
+from ...core.prior_domiciliation_election import PriorDomiciliationElection
+from ...core.product_identity import AeatProductSoftwareIdentity
+from ...core.time.utc import UtcInstant
 from ...domain.calculations.registry.ids import (
     ModeloId,
     RevisionId,
 )
 from ...domain.filing.schema import ModeloDraft
-from ...domain.submission import ModeloDraftStatus
-from ._export import (
+from ...domain.submission._protocols import ModeloDraftStatus
+from ._export import export_draft
+from ._export_verification import (
     DeclaracionExportResult,
     FilingExportConsumedResult,
     FilingExportPayloadConsumer,
     FilingExportValidatedPayload,
-    export_draft,
 )
 from ._producer_snapshot import FilingProducerSnapshot
 from .runtime import RegistrySchemaAccessor
@@ -65,7 +65,7 @@ class FilingExportOfficialProbe(BaseModel):
 
     record_id: _Token
     field_id: _Token
-    emitted_offset: int = Field(ge=0)
+    emitted_offset: NonNegativeInt
     length: int = Field(gt=0)
 
 

@@ -24,10 +24,11 @@ from typing import Final, Literal, Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
-from ...core.filing_year import FilingYear
-from ...core.time import UtcInstant, now
+from ...core.time.clock import now
+from ...core.time.utc import UtcInstant
 from .errors import IvaCompensationReconciliationInputError, IvaWalletReconciliationError
 
 DEFAULT_MAX_WALLET_AGE_DAYS: Final[int] = 31

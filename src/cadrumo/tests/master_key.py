@@ -5,13 +5,12 @@ from __future__ import annotations
 import secrets
 from typing import TYPE_CHECKING
 
-from ..adapters.persistence.storage import KEY_SIZE, SecretStoreError
-from ..adapters.persistence.storage.master_key import (
-    BucketSession,
-    MasterKeyReentrantError,
-    activate_session,
-)
-from ..core.time import now
+from ..adapters.persistence.storage.crypto.aead import KEY_SIZE
+from ..adapters.persistence.storage.errors import SecretStoreError
+from ..adapters.persistence.storage.master_key.active_session import activate_session
+from ..adapters.persistence.storage.master_key.bucket_session import BucketSession
+from ..adapters.persistence.storage.master_key.errors import MasterKeyReentrantError
+from ..core.time.clock import now
 
 if TYPE_CHECKING:
     from contextlib import AbstractContextManager

@@ -31,24 +31,18 @@ from pathlib import Path
 from pydantic import AnyHttpUrl, TypeAdapter, ValidationError
 
 from ....core.aeat_csv import is_aeat_csv, normalise_aeat_csv
+from ....core.decimal._grammar import european_thousands_reading_is_ambiguous
+from ....core.logging import get_logger
 from ....core.period import Period, PeriodError
 from ....core.text_fold import fold_diacritics
-from ....core.decimal import european_thousands_reading_is_ambiguous
-from ....core.logging import get_logger
-from ....core.time import now
+from ....core.time.clock import now
 from ....domain.justificante import (
     Justificante,
     JustificanteCsvNotFoundError,
     JustificanteParseError,
 )
-from ..pdf import (
-    EJERCICIO_LABEL,
-    MODELO_LABEL,
-    PRESENTADOR_NIF_LABEL,
-    parse_spanish_decimal,
-    sha256_file,
-    source_pdf_reference_path,
-)
+from ..pdf._label_regex import EJERCICIO_LABEL, MODELO_LABEL, PRESENTADOR_NIF_LABEL, parse_spanish_decimal
+from ..pdf._utils import sha256_file, source_pdf_reference_path
 
 _logger = get_logger(__name__)
 _ANY_HTTP_URL_ADAPTER = TypeAdapter(AnyHttpUrl)

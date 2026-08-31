@@ -42,26 +42,27 @@ from typing import ClassVar, Literal, override
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...adapters.persistence.storage import (
+from ...adapters.persistence.storage._path_safety import safe_repository_id
+from ...adapters.persistence.storage._secure_object_namespaces import (
     CALCULATION_OBSERVATIONS_NAMESPACE,
     IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE,
     IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE,
-    Envelope,
-    SecureBoundRepository,
-    SensitivityClass,
-    safe_repository_id,
 )
-from ...core.observed_header_fact import ObservedHeaderFact
-from ...core.prior_domiciliation_election import PriorDomiciliationElection
-from ...core.result_disposition import ResultDisposition
-from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.period import Period
-from ...core.secure_object_write import SecureObjectWrite
+from ...adapters.persistence.storage.envelope._envelope import Envelope
+from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
+from ...core.classification.policies import SensitivityClass
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.identity import FilingRecordId, same_tax_identifier, tax_id_identity_token
-from ...core.resources import bundled_path
-from ...core.time import UtcInstant, now
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.observed_header_fact import ObservedHeaderFact
+from ...core.period import Period
+from ...core.prior_domiciliation_election import PriorDomiciliationElection
+from ...core.resources._boundary import bundled_path
+from ...core.result_disposition import ResultDisposition
+from ...core.secure_object_write import SecureObjectWrite
+from ...core.time.clock import now
+from ...core.time.utc import UtcInstant
 from ...domain.calculations.registry.bindings import RegistryModeloObservation
 from ...domain.calculations.registry.casilla_membership import undeclared_casilla_ids
 from ...domain.calculations.registry.errors import RegistrySnapshotError

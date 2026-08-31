@@ -35,11 +35,11 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ...adapters.persistence.storage import LIVE_M036_DECLARATION_NAMESPACE
-from ...core.models import STRICT_FROZEN_CONFIG
+from ...adapters.persistence.storage._secure_object_namespaces import LIVE_M036_DECLARATION_NAMESPACE
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId, ContentDigest, ProfileId
-from ...core.time import now
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.time.clock import now
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import bucket_event_history_write, build_bucket_event
 from ...domain.calculations.registry.censo_modelos import CensoModeloEventKind

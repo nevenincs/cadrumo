@@ -31,18 +31,16 @@ from typing import ClassVar, NamedTuple, override
 from pydantic import BaseModel, Field
 
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ...adapters.persistence.storage import (
-    APPLICATION_EVIDENCE_BUNDLE_NAMESPACE,
-    SecureBoundRepository,
-    secure_object_repository_for_bucket,
-)
+from ...adapters.persistence.storage._secure_object_namespaces import APPLICATION_EVIDENCE_BUNDLE_NAMESPACE
+from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
+from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...core.config import Settings
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.hex import Hex64Str
 from ...core.identity import CalculationRevisionId
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.time import now
+from ...core.time.clock import now
 from ...core.unit_proportion import UnitFraction
 from ._models import (
     BundleVerificationState,

@@ -42,12 +42,12 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from ...core.modelo import Modelo
 from ...core.casilla_id import CasillaId
 from ...core.errors.severity import BaseSeverity
 from ...core.i18n import Translatable as tr
 from ...core.logging import get_logger
-from ...core.time import now
+from ...core.modelo import Modelo
+from ...core.time.clock import now
 from .protocols import (
     CasillaCollection,
     CasillaSchemaProvider,

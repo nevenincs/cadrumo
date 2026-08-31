@@ -56,10 +56,6 @@ from uuid import UUID
 
 from pydantic import BaseModel, ValidationError, model_validator
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.profile_session import ProfileSessionRefusalReason
-from ...core.storage_taxonomy_locations import storage_location
-from ...core.storage_taxonomy import StorageCategory
 from ...core.bucket_pointer import BucketPointer, resolve_active_bucket_id
 from ...core.config import load_settings
 from ...core.hashing import (
@@ -69,9 +65,13 @@ from ...core.hashing import (
 )
 from ...core.identity import BucketId
 from ...core.logging import get_logger
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.paths import effective_storage_root
-from ...core.time import now as _now
-from ...core.time import validate_utc_aware
+from ...core.profile_session import ProfileSessionRefusalReason
+from ...core.storage_taxonomy import StorageCategory
+from ...core.storage_taxonomy_locations import storage_location
+from ...core.time.clock import now as _now
+from ...core.time.utc import validate_utc_aware
 from ...domain.user_profile.errors import ProfileNotFoundError, UserProfileError
 from .authentication import ProfilePasswordProofOperation
 from .capsule_record import ProfileRecordSession

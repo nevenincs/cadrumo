@@ -27,15 +27,11 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
-from ....core.sync_surface import SyncSurface
 from ....core.bucket_pointer import require_active_bucket_id
-from ....core.time import now
-from ..sync_runs import (
-    SyncRunRecordRepositoryProtocol,
-    bounded_scope_description,
-    coverage_of,
-    record_sync_run,
-)
+from ....core.sync_surface import SyncSurface
+from ....core.time.clock import now
+from ..sync_runs._persist import record_sync_run
+from ..sync_runs._records import SyncRunRecordRepositoryProtocol, bounded_scope_description, coverage_of
 
 if TYPE_CHECKING:
     from ....adapters.outbound.google.calc_sheets_apply import CalcSheetsApplyResult

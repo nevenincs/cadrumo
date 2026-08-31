@@ -37,7 +37,7 @@ from .....core.external_constants import JSON_MIME_TYPE as _JSON_MIME_TYPE
 from .....core.hashing import sha256_hex
 from .....core.i18n import tr
 from .....core.logging import get_logger
-from .....core.time import now
+from .....core.time.clock import now
 from .....domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy
 
 # Importing the renta package registers the first-slice routing
@@ -47,7 +47,8 @@ from .....domain.calculations.registry.remote_state_guard import RemoteStateGuar
 from .....domain.calculations.registry.schema import RegistrySnapshot
 from .._html import parse_html
 from .._playwright import BrowserContext, Page, Playwright, PlaywrightError
-from ..browser import Profile, opened_browser_page, shared_playwright_runtime
+from ..browser import Profile
+from ..browser._factory import opened_browser_page, shared_playwright_runtime
 from ._adapter_utils import assert_pdf_response as _assert_pdf_response
 from ._adapter_utils import assert_read_landing
 from ._auth_state import storage_state_for_session

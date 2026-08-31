@@ -26,7 +26,7 @@ from textual.widgets import Button, Static
 from .....adapters.persistence.operations.journal import OperationJournalRepository
 from .....adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from .....adapters.persistence.operations.secure_references import operation_secure_reference_repository
-from .....adapters.persistence.storage import SecureObjectRepository
+from .....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from .....application.auth.operation_definitions import (
     build_auth_operation_definitions,
     build_auth_operation_registrations,
@@ -66,10 +66,10 @@ from .....application.user_profile.custody_ports import profile_custody_secure_o
 from .....application.user_profile.login_session import login_profile
 from .....application.user_profile.profile_record_repository import ProfileRecordRepository
 from .....application.user_profile.registration import register_profile_with_credentials
-from .....core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from .....core.config import override_settings
-from .....core.i18n import clear_output_language_cache
-from .....core.time import now
+from .....core.i18n._render import clear_output_language_cache
+from .....core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
+from .....core.time.clock import now
 from .....domain.user_profile.values import UserProfileFact
 from .....tests.aeat_literal_fixtures import aeat_url
 from .....tests.secure_sql import isolated_profile_storage_root

@@ -28,7 +28,8 @@ from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
 
 from .....core.errors.hierarchy import SiteHealthState
-from .....core.time import coerce_utc_aware, now
+from .....core.time.clock import now
+from .....core.time.utc import coerce_utc_aware
 from ._site_health import (
     SiteHealthEvidence,
     SiteHealthStatus,
@@ -69,7 +70,7 @@ _WAF_CORRELATION_MARKERS: tuple[str, ...] = (
 def _utcnow() -> datetime:
     """Return the current UTC timestamp.
 
-    Delegates to :func:`core.time._clock.now` so call-sites remain
+    Delegates to :func:`core.time.clock.now` so call-sites remain
     uniform across the production codebase.
     """
     return now()

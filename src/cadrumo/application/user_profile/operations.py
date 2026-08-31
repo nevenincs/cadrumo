@@ -6,10 +6,13 @@ from datetime import timedelta
 from pathlib import Path
 from uuid import UUID
 
-from pydantic import BaseModel, Field, SecretStr, field_validator
+from pydantic import BaseModel, Field, NonNegativeInt, SecretStr, field_validator
 
+from ...core.bucket_pointer import require_active_bucket_id
+from ...core.identity import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import (
+    EFFECTS_WITHOUT_PARTIAL_COMMIT,
     OperationCancellation,
     OperationClosePolicy,
     OperationDeadline,
@@ -17,10 +20,7 @@ from ...core.operations import (
     OperationEffect,
     OperationInteractionKind,
 )
-from ...core.bucket_pointer import require_active_bucket_id
-from ...core.identity import ContentDigest
-from ...core.operations import EFFECTS_WITHOUT_PARTIAL_COMMIT
-from ...core.time import now
+from ...core.time.clock import now
 from ..operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -143,7 +143,7 @@ class ProfileRepeatableRowMutationOperationResult(ProfileMutationOperationResult
     """Safe row identity and revision witness for a completed row mutation."""
 
     section_key: str = Field(min_length=1, max_length=120)
-    row_index: int = Field(ge=0)
+    row_index: NonNegativeInt
 
 
 class ProfileLogoutOperationResult(BaseModel):

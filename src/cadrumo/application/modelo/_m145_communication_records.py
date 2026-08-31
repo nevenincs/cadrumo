@@ -35,20 +35,20 @@ from decimal import InvalidOperation
 from enum import StrEnum
 from typing import TYPE_CHECKING, Annotated
 
-from pydantic import BaseModel, Field, TypeAdapter, field_validator, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, TypeAdapter, field_validator, model_validator
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ...adapters.persistence.storage import M145_COMMUNICATION_RECORD_NAMESPACE
-from ...core.export_layout_format import ExportLayoutFormat
-from ...core.hex import Hex64Str
-from ...core.models import STRICT_FROZEN_CONFIG
+from ...adapters.persistence.storage._secure_object_namespaces import M145_COMMUNICATION_RECORD_NAMESPACE
 from ...core.casilla_id import CasillaId, validated_casilla_id_map
-from ...core.decimal import coerce_decimal_strict
+from ...core.decimal._coerce import coerce_decimal_strict
 from ...core.errors.error_codes import resolve_error_message
+from ...core.export_layout_format import ExportLayoutFormat
 from ...core.hashing import content_hash_hex, sha256_hex
+from ...core.hex import Hex64Str
 from ...core.identity import BucketId, ContentDigest, IdentityError, validate_spanish_tax_id
 from ...core.logging import get_logger
-from ...core.time import now
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.time.clock import now
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import bucket_event_history_write
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
@@ -161,7 +161,7 @@ class M145CommunicationValidationResult(BaseModel):
     period_token: M145CommunicationPeriod
     revision_id: RevisionId = Field(min_length=1)
     valid: bool
-    issue_count: int = Field(ge=0)
+    issue_count: NonNegativeInt
     issues: tuple[M145CommunicationValidationIssue, ...]
     legal_refs: tuple[str, ...]
     source_refs: tuple[str, ...]

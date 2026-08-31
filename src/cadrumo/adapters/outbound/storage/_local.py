@@ -21,18 +21,17 @@ from collections.abc import Iterator, Mapping
 from datetime import datetime
 from pathlib import Path
 
-from ....application.operator_actions import (
-    no_action_precondition_verdict,
-)
-from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
+from ....application.operator_actions._preconditions import no_action_precondition_verdict
 from ....core.atomic_write import DurableWriteBatch, atomic_write_hardened_bytes, atomic_write_text
 from ....core.directory_scan import iter_directory, scan_directory
 from ....core.errors.hierarchy import CoreValidationError
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
+from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.paths import is_windows_long_path_error
-from ....core.time import now, validate_utc_aware
+from ....core.time.clock import now
+from ....core.time.utc import validate_utc_aware
 from ._integrity import verify_content_hash, verify_payload_byte_length
 from ._key_validation import assert_admissible_object_key_hmac
 from ._object_name import build_provider_object_name, provider_object_hmac_prefix, sanitize_provider_object_label

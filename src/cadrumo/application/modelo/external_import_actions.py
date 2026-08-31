@@ -44,15 +44,15 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 
+from ...core.casilla_id import CasillaId, validated_casilla_id
+from ...core.decimal._coerce import normalize_decimal_separators
+from ...core.identity import CalculationRevisionId
 from ...core.modelo import Modelo
 from ...core.period import Period
-from ...core.casilla_id import CasillaId, validated_casilla_id
-from ...core.decimal import normalize_decimal_separators
-from ...core.identity import CalculationRevisionId
-from ...core.time import now as _utc_now
+from ...core.time.clock import now as _utc_now
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
-from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.buckets.event_repository import bucket_event_history_write as _bucket_event_write
+from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ...domain.calculations.registry.ids import (
     BindingId,
@@ -60,12 +60,6 @@ from ...domain.calculations.registry.ids import (
 )
 from ...domain.justificante import Justificante, JustificanteRepositoryProtocol
 from ...domain.modelos.calculation_repository import upsert_calculation_revision
-from ...domain.modelos.codes import ModeloCode
-from ...domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind, ModeloRecord, ModeloRecordCatalogue, ModeloRecordStatus, derive_filing_record_id, is_receipt_bound_external_evidence
-from ...domain.modelos.filing_repository import upsert_filing_record
-from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol, ModeloRecordCatalogueRepositoryProtocol
-from ...domain.modelos.repository import upsert_work_unit
-from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -73,8 +67,25 @@ from ...domain.modelos.calculation_revision import (
     FilingInstanceEvidence,
     derive_calculation_revision_id,
 )
+from ...domain.modelos.codes import ModeloCode
+from ...domain.modelos.filing_record import (
+    ExternalEvidence,
+    ExternalEvidenceKind,
+    ModeloRecord,
+    ModeloRecordCatalogue,
+    ModeloRecordStatus,
+    derive_filing_record_id,
+    is_receipt_bound_external_evidence,
+)
+from ...domain.modelos.filing_repository import upsert_filing_record
+from ...domain.modelos.protocols import (
+    CalculationRevisionCatalogueRepositoryProtocol,
+    ModeloRecordCatalogueRepositoryProtocol,
+)
+from ...domain.modelos.repository import upsert_work_unit
+from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from ..calculations import CalculationObservationRepository, ObservationSourceKind
+from ..calculations.observations_repository import CalculationObservationRepository, ObservationSourceKind
 from ..user_profile.custody_ports import default_profile_bucket_event_history_repository
 from ..workflow.active_profile import require_active_profile_bucket_id
 from ._action_errors import ExternalModeloImportError
@@ -82,7 +93,6 @@ from ._calculation_helpers import external_filing_observations as _external_fili
 from ._registry_helpers import reject_unknown_import_casillas as _reject_unknown_import_casillas
 from ._revision_persistence import build_modelo_bucket_event as _build_bucket_event
 from ._revision_persistence import supersede_prior_current_filing as _supersede_prior_current_filing
-from .work_lifecycle import ActiveWorkUnitUse, create_work_unit, require_active_work_unit
 from .calculation_repository import calculation_revision_catalogue_repository
 from .filing_repository import modelo_record_catalogue_repository
 from .justificante_repository import justificante_repository as resolve_justificante_repository
@@ -95,6 +105,7 @@ from .work_addressing import (
     law_selected_revision_for_work_target,
     select_modelo_work_resolution,
 )
+from .work_lifecycle import ActiveWorkUnitUse, create_work_unit, require_active_work_unit
 from .work_unit_repository import work_unit_catalogue_repository
 
 

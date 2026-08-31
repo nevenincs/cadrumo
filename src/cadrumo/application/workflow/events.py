@@ -29,7 +29,7 @@ from pydantic import BaseModel, Field, StringConstraints
 
 from ...core.identity import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.time import now as utc_now
+from ...core.time.clock import now as utc_now
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import emit_bucket_event
 from ..user_profile.custody_ports import default_profile_bucket_event_history_repository

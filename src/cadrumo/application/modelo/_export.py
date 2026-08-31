@@ -44,30 +44,32 @@ from decimal import Decimal
 from pathlib import Path
 from typing import NamedTuple
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, NonNegativeInt
 
+from ...adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.refund_election import RefundElection
-from ...core.export_layout_format import ExportLayoutFormat
-from ...core.payment_election import PaymentElection
-from ...core.filing_producer_key import FilingProducerKey
-from ...core.prior_domiciliation_election import PriorDomiciliationElection
-from ...core.result_disposition import ResultDisposition
-from ...core.modelo import Modelo
-from ...core.operator_action_enums import ActionEvidenceProvenance
-from ...core.period import Period
-from ...core.product_identity import AeatProductSoftwareIdentity
+from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ...core.atomic_write import StagedPublication, hardened_staged_publication
+from ...core.export_layout_format import ExportLayoutFormat
+from ...core.filing_producer_key import FilingProducerKey
 from ...core.filing_year import FilingYear
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, PrefixedContentDigest, WorkUnitId
-from ...core.time import now as _utc_now
-from ...domain.bienes_inversion import (
+from ...core.modelo import Modelo
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.operator_action_enums import ActionEvidenceProvenance
+from ...core.payment_election import PaymentElection
+from ...core.period import Period
+from ...core.prior_domiciliation_election import PriorDomiciliationElection
+from ...core.product_identity import AeatProductSoftwareIdentity
+from ...core.refund_election import RefundElection
+from ...core.result_disposition import ResultDisposition
+from ...core.time.clock import now as _utc_now
+from ...domain.bienes_inversion.register import (
     BienesInversionIvaRegister,
     RegistroRegularizacionResult,
     compute_registro_regularizacion,
@@ -93,7 +95,7 @@ from ...domain.modelos.protocols import (
     VerificationReportCatalogueRepositoryProtocol,
 )
 from ...domain.modelos.work_unit import WorkUnit
-from ...domain.prorrata_register import ProrrataRegister
+from ...domain.prorrata_register.register import ProrrataRegister
 from ..aggregation import (
     IvaDifferentiatedDeductionContribution,
     IvaLedgerAggregation,
@@ -102,17 +104,20 @@ from ..aggregation import (
     resolve_m303_prorrata_transition_arrival,
     resolve_m303_supplier_regime_arrival,
 )
-from ..bienes_inversion import BienesInversionIvaRegisterRepository
-from ..calculations import (
-    CalculationObservationRepository,
-    CrossPeriodExpectedMemberSet,
-    IvaWalletDecisionRepository,
-    PriorDomiciliationElectionProjection,
+from ..calculations._m303_regimen_simplificado_annual_summary import (
     validate_m303_regimen_simplificado_annual_summary_target_revision,
 )
-from ..filing import (
+from ..calculations.cross_period_clean_state import CrossPeriodExpectedMemberSet
+from ..calculations.observations_repository import (
+    CalculationObservationRepository,
+    IvaWalletDecisionRepository,
+    PriorDomiciliationElectionProjection,
+)
+from ..filing._draft_construction import build_draft
+from ..filing._export import export_draft, export_layout_renderability_reason
+from ..filing._export_verification import DeclaracionExportResult, assert_export_artifact_matches_receipt
+from ..filing._producer_snapshot import (
     AmendmentEvidence,
-    DeclaracionExportResult,
     FilingElectionFacts,
     FilingModelProfileFacts,
     FilingProducerSnapshot,
@@ -123,18 +128,11 @@ from ..filing import (
     Modelo202ProducerProfile,
     PresenterIdentity,
     TaxpayerIdentityFacts,
-    approve_draft,
-    assert_export_artifact_matches_receipt,
-    build_draft,
     build_filing_producer_snapshot,
-    build_runtime_schema_provider,
-    export_draft,
-    export_layout_renderability_reason,
-    filing_profile_from_taxpayer,
     resolve_m303_filing_facts,
 )
-from ..filing.runtime import RegistrySchemaAccessor
-from ..prorrata_register import ProrrataRegisterRepository
+from ..filing._review import approve_draft
+from ..filing.runtime import RegistrySchemaAccessor, build_runtime_schema_provider, filing_profile_from_taxpayer
 from ._action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
@@ -409,7 +407,7 @@ class ModeloExportResult(BaseModel):
     filing_year: FilingYear
     period: Period
     output_path: Path
-    byte_size: int = Field(ge=0)
+    byte_size: NonNegativeInt
     file_sha256: ContentDigest
     format: str = Field(min_length=1)
     exported_at: datetime

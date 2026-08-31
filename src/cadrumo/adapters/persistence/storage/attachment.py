@@ -31,13 +31,13 @@ from typing import BinaryIO
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import sha256_hex
 from ....core.identity import BucketId
 from ....core.logging import get_logger
 from ....core.secure_object_write import SecureObjectWrite
-from ....core.time import now
+from ....core.time.clock import now
+from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....domain.attachments.errors import AttachmentNotFoundError, AttachmentPersistenceError, AttachmentValidationError
 from ....domain.attachments.models import Attachment, is_link_only_mime_type
 from ....domain.attachments.protocols import AttachmentStoreProtocol
@@ -50,7 +50,7 @@ from ._secure_object_namespaces import (
     ATTACHMENT_MANIFEST_NAMESPACE as ATTACHMENT_MANIFEST_STORAGE_NAMESPACE,
 )
 from .crypto.encrypted_columns import HashedLookup
-from .envelope import Envelope
+from .envelope._envelope import Envelope
 from .runtime_repository import secure_object_repository_for_active_bucket
 from .sql import SecureObjectRepository
 

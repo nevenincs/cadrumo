@@ -8,14 +8,16 @@ from typing import ClassVar, Literal, Protocol, runtime_checkable
 
 from pydantic import BaseModel, model_validator
 
-from ....core.models import STRICT_FROZEN_CONFIG
-from ....core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from ....core.identity import ContentDigest
+from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operations import (
     LIFECYCLES_BEFORE_ANY_CANCELLATION_REQUEST,
     LIFECYCLES_BEFORE_EXECUTOR_ENTRY,
+    OperationEffect,
+    OperationLifecycle,
+    OperationTerminalCondition,
 )
-from ....core.time import validate_utc_aware
+from ....core.time.utc import validate_utc_aware
 from ..capabilities import OperationRequestStoragePolicy
 from ..event_replay import OperationEventCursor
 from ..events import OperationEventCode

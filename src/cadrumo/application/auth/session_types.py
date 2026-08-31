@@ -9,10 +9,10 @@ from typing import Literal
 from pydantic import BaseModel, Field, field_validator
 
 from ...core.auth_provider import AuthProviderKind
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.config import AEAT_CERTIFICATE_PROTECTED_URL, assert_canonical_protected_resource
-from ...core.time import coerce_utc_aware
-from ...core.time import now as clock_now
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.time.clock import now as clock_now
+from ...core.time.utc import coerce_utc_aware
 
 
 class CertificateSessionDetail(BaseModel):

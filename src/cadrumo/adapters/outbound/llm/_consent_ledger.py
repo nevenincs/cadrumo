@@ -45,19 +45,14 @@ from __future__ import annotations
 import json
 from uuid import uuid4
 
-from ....adapters.persistence.storage import (
-    LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE,
-    current_active_bucket_session,
-    secure_object_repository_for_active_bucket,
-)
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import canonical_json_bytes
-from ....core.time import now
-from ....domain.evidence_consent import (
-    EvidenceConsentLedgerEntry,
-    evidence_consent_ledger_entry_object_key,
-)
+from ....core.time.clock import now
+from ....domain.evidence_consent._record import EvidenceConsentLedgerEntry, evidence_consent_ledger_entry_object_key
 from ....llm.errors import LLMConsentError
+from ...persistence.storage._secure_object_namespaces import LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE
+from ...persistence.storage.master_key.active_session import current_active_bucket_session
+from ...persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 
 __all__ = ["EvidenceConsentLedger"]
 

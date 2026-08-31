@@ -31,11 +31,11 @@ from typing import Final
 
 from pydantic import BaseModel, ValidationError
 
+from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
-from ...core.casilla_id import CasillaId, validated_casilla_id
-from ...core.resources import bundled_path
-from ...core.time import now as _utc_now
+from ...core.resources._boundary import bundled_path
+from ...core.time.clock import now as _utc_now
 from ...domain.calculations.registry.bindings import (
     CasillaObservation,
     RegistryModeloObservation,
@@ -54,7 +54,11 @@ from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.loader import load_registry_tree
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.temporal import select_revision
-from ..calculations import CalculationObservationRepository, ObservationSourceKind, observation_key
+from ..calculations.observations_repository import (
+    CalculationObservationRepository,
+    ObservationSourceKind,
+    observation_key,
+)
 from ._action_errors import ModeloLocalObservationError
 from ._registry_helpers import NUMERIC_CASILLA_DATA_TYPES
 

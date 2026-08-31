@@ -58,17 +58,15 @@ from typing import TYPE_CHECKING, ClassVar, override
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...adapters.persistence.storage import (
-    LEDGER_CONFIRMED_COUNTERPARTY_FACTS_NAMESPACE,
-    SecureBoundRepository,
-    SensitivityClass,
-)
+from ...adapters.persistence.storage._secure_object_namespaces import LEDGER_CONFIRMED_COUNTERPARTY_FACTS_NAMESPACE
+from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
+from ...core.classification.policies import SensitivityClass
 from ...core.classifier_input_source import ClassifierInputSource
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import sha256_hex
 from ...core.identity import ContentDigest
-from ...core.time import now
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.time.clock import now
 from ...domain.iva.classification import IvaTerritorialScope
 from ...domain.iva.schema import EUMemberState
 from .classification_assembly import DeclaredFact

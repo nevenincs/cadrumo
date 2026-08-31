@@ -29,7 +29,7 @@ from typing import Annotated
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.time import validate_utc_aware
+from ...core.time.utc import validate_utc_aware
 from .financial_operand import (
     OperationFinancialOperandKind,
     OperationFinancialOperandRefusalReason,

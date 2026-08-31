@@ -57,11 +57,11 @@ from ...application.live.remote_state_models import (
     IvaWalletCaptureReport,
     SourceFiledDataCaptureReport,
 )
-from ...application.operator_actions import ActionReference
-from ...core.period import Period, PeriodError
+from ...application.operator_actions._models import ActionReference
 from ...core.errors.hierarchy import CadrumoError
-from ...core.i18n import tr
+from ...core.i18n._render import tr
 from ...core.json_contract import Notice, NoticeSeverity
+from ...core.period import Period, PeriodError
 from ...domain.iva_compensation.reconciliation import IvaCompensationDecisionReason
 from ._app_live_auth_preflight import _emit_live_auth_preflight
 from ._app_live_rendering import _filed_capture_lines, _metric_line, _source_filed_capture_lines
@@ -873,7 +873,7 @@ def filed_list_cmd(
     across every registry-configured modelo. Omitted year bounds default to the
     current calendar year.
     """
-    from ...core.time import today_madrid
+    from ...core.time.clock import today_madrid
 
     resolved_from = year_from if year_from is not None else today_madrid().year
     resolved_to = year_to if year_to is not None else today_madrid().year

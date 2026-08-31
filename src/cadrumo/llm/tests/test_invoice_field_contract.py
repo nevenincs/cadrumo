@@ -32,7 +32,7 @@ from ...core.field_origin import FieldOrigin
 from ...core.period import Period
 from ...domain import iva as _iva_module
 from ...domain.iva.rates import load_iva_rate_table
-from ...domain.iva.schema import EUMemberState, IvaCategory, NO_PRINTED_TAX_IVA_CATEGORIES
+from ...domain.iva.schema import NO_PRINTED_TAX_IVA_CATEGORIES, EUMemberState, IvaCategory
 from ...domain.transactions.retencion_parameters import statutory_activity_retencion_rates
 from ...tests.attribute_scope import scoped_attribute
 from .. import invoice_extraction_prompt as _invoice_extraction_prompt
@@ -532,7 +532,7 @@ class TestTheDefaultPeriodIsDerivedNotGuessed:
     """The fallback coordinate is the current civil year's annual period."""
 
     def test_the_default_is_the_current_annual_period(self) -> None:
-        from ...core.time import today_madrid
+        from ...core.time.clock import today_madrid
 
         period = default_extraction_period()
 

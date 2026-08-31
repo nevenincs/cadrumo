@@ -17,9 +17,9 @@ from ...application.live.verify import (
     VerifySurface,
     VerifyVerdict,
 )
-from ...core.i18n import tr
+from ...core.i18n._render import tr
 from ...core.identity import tax_id_identity_token
-from ...core.time import now
+from ...core.time.clock import now
 from ._common import active_bucket_id_or_refuse, emit_envelope
 
 
@@ -165,7 +165,7 @@ def verify_nif_iva(
     """
     from ...adapters.outbound.aeat.sede.nif_iva_check import NifIvaCheckSedeDriver
     from ...application.live.verify import VerifyService
-    from ...core.access_gate import AeatAccessGate
+    from ...core.access_gate.gate import AeatAccessGate
     from ...core.config import load_settings
     from ._app_live_verify_payloads import VerifyNifIvaResult
 
@@ -206,7 +206,7 @@ def verify_tgvi(
     """
     from ...adapters.outbound.aeat.sede.groi_check import GroiSedeDriver
     from ...application.live.verify import VerifyService
-    from ...core.access_gate import AeatAccessGate
+    from ...core.access_gate.gate import AeatAccessGate
     from ...core.config import load_settings
     from ._app_live_verify_payloads import VerifyTgviResult
 

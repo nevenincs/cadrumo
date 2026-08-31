@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from .....core.time import now
+from .....core.time.clock import now
 from .._records import _utc_now
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -13,13 +13,12 @@ from types import MappingProxyType
 
 from pydantic import BaseModel, Field
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.aggregation import BindingSourceKind
-from ...core.aggregation import COUNTERPART_SOURCE_KINDS
+from ...core.aggregation import COUNTERPART_SOURCE_KINDS, BindingSourceKind
 from ...core.config import Settings
 from ...core.i18n import tr
 from ...core.identity import BucketId
-from ...core.time import UtcInstant
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.time.utc import UtcInstant
 from ...domain.calculations.registry.ids import LegalRefId
 from ._aggregator import ReviewQueue
 from .enums import ReviewItemKind, ReviewSeverity, ReviewState

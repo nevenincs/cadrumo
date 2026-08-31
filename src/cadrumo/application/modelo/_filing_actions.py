@@ -46,30 +46,34 @@ from ...adapters.persistence.profile.modelos_calculation import CalculationRevis
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ...core.refund_election import RefundElection
-from ...core.payment_election import PaymentElection
-from ...core.prior_domiciliation_election import PriorDomiciliationElection
-from ...core.result_disposition import ResultDisposition
 from ...core.config import Settings
 from ...core.identity import CalculationRevisionId
-from ...core.time import now as _utc_now
+from ...core.payment_election import PaymentElection
+from ...core.prior_domiciliation_election import PriorDomiciliationElection
+from ...core.refund_election import RefundElection
+from ...core.result_disposition import ResultDisposition
+from ...core.time.clock import now as _utc_now
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
 from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
 from ...domain.deadlines.models import TaxpayerProfile
+from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ...domain.modelos.codes import ModeloCode
+from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue, ModeloRecordStatus
-from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol, ModeloRecordCatalogueRepositoryProtocol, VerificationReportCatalogueRepositoryProtocol
+from ...domain.modelos.protocols import (
+    CalculationRevisionCatalogueRepositoryProtocol,
+    ModeloRecordCatalogueRepositoryProtocol,
+    VerificationReportCatalogueRepositoryProtocol,
+)
 from ...domain.modelos.verification_report import VerificationReport
 from ...domain.modelos.work_unit import WorkUnit
-from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
-from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from ..calculations import (
-    CalculationObservationRepository,
-    CrossPeriodExpectedMemberSet,
+from ..calculations._m303_regimen_simplificado_annual_summary import (
     validate_m303_regimen_simplificado_annual_summary_target_revision,
 )
+from ..calculations.cross_period_clean_state import CrossPeriodExpectedMemberSet
+from ..calculations.observations_repository import CalculationObservationRepository
 from ..workflow.engine import WorkflowEngine
 from ..workflow.persistence import WorkflowRunRepository
 from ._action_errors import (
@@ -96,12 +100,12 @@ from ._verification_actions import (
     cross_period_expected_member_sets_from_profile,
     require_cross_period_clean_state,
 )
-from .work_lifecycle import RevisionParentOperation, require_revision_parent_active
 from ._workflow_gate import build_revision_workflow_engine as _build_revision_workflow_engine
 from ._workflow_gate import run_revision_workflow_gate as _run_revision_workflow_gate
+from .work_lifecycle import RevisionParentOperation, require_revision_parent_active
 
 if TYPE_CHECKING:
-    from ..calculations import IvaWalletDecisionRepository
+    from ..calculations.observations_repository import IvaWalletDecisionRepository
 
 
 class ModeloFilingEvidenceMissingError(ModeloPreconditionErrorMixin, ModeloError):

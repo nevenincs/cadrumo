@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from ...core.descendant_relacion import ART_58_2_ENTITLING_RELACIONES, DescendantRelacion
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.text_bounds import CalendarMonth, is_calendar_month, is_canonical_month_set
-from ...core.time._clock import today_madrid
+from ...core.time.clock import today_madrid
 from .errors import ProfileValidationError
 from .family_types import (
     MAX_AGE_MENOR_TRES,

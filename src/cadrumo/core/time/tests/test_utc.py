@@ -1,4 +1,4 @@
-"""Real-behavior tests for :mod:`~core.time._utc`.
+"""Real-behavior tests for :mod:`~core.time.utc`.
 
 These cases pin the two explicit UTC policies exported by
 :mod:`~core.time`: :func:`~core.time.coerce_utc_aware` may normalise naive or
@@ -6,9 +6,9 @@ offset-aware datetimes to UTC, while :func:`~core.time.validate_utc_aware`
 refuses naive or non-UTC values with :class:`~core.errors.CoreValidationError`.
 
 See Also:
-    :mod:`~core.time._utc`
+    :mod:`~core.time.utc`
         Canonical UTC helper implementation under test.
-    :mod:`~core.time._clock`
+    :mod:`~core.time.clock`
         Adjacent wall-clock seam that produces UTC-aware ``now`` values.
     :class:`~datetime.datetime`
         Runtime value type whose ``tzinfo`` and offset semantics are exercised.
@@ -21,7 +21,7 @@ from datetime import UTC, datetime, timedelta, timezone
 import pytest
 
 from ...errors.hierarchy import CoreValidationError
-from .. import coerce_utc_aware, validate_utc_aware
+from ..utc import coerce_utc_aware, validate_utc_aware
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

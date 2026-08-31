@@ -37,10 +37,10 @@ from .....application.operations.models import OperationRequest
 from .....application.operations.registry import OperationRegistry
 from .....application.user_profile.login_session import login_profile
 from .....application.user_profile.registration import register_profile_with_credentials
-from .....core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from .....core.config import load_settings
+from .....core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from .....core.paths import effective_storage_root
-from .....core.time import now
+from .....core.time.clock import now
 from .....domain.user_profile.values import UserProfileFact
 from .....tests.secure_sql import isolated_profile_storage_root
 from ...operations.controller import OperationController

@@ -36,13 +36,14 @@ from pydantic import BaseModel, Field
 
 from ...adapters.outbound.aeat.sede.deudas import Deuda
 from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
-from ...adapters.persistence.storage import LIVE_DEUDAS_SNAPSHOT_NAMESPACE, secure_object_repository_for_bucket
+from ...adapters.persistence.storage._secure_object_namespaces import LIVE_DEUDAS_SNAPSHOT_NAMESPACE
+from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...core.config import Settings, load_settings
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId, SnapshotId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.source_locator import SourceUrl
-from ...core.time import now
+from ...core.time.clock import now
 from .errors import LiveApplicationInputError
 from .snapshot_base import (
     SnapshotNotFoundError,

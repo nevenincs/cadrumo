@@ -30,7 +30,7 @@ from datetime import datetime
 from ...core.identity import BucketId
 from ...core.json_contract import OutputSchema
 from ...core.text_bounds import PositiveCount
-from ...core.time import UtcInstant
+from ...core.time.utc import UtcInstant
 from ...domain.buckets.event import (
     BucketActorLabel,
     BucketEventId,

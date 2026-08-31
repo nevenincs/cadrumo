@@ -29,15 +29,15 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_validator
 
+from ...core.errors.severity import BaseSeverity
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
-from ...core.errors.severity import BaseSeverity
-from ...core.time import validate_utc_aware
+from ...core.time.utc import validate_utc_aware
 from ...domain.filing.schema import ModeloDraft
-from ...domain.submission import ModeloDraftStatus
-from ..operator_actions import PreconditionVerdict
+from ...domain.submission._protocols import ModeloDraftStatus
+from ..operator_actions._models import PreconditionVerdict
 from .errors import FilingPreconditionCondition, filing_no_recovery_verdict
 
 
@@ -70,9 +70,9 @@ class DeclaracionCalculateSummary(BaseModel):
     modelo: str = Field(min_length=1, max_length=8)
     period: Period
     status: ModeloDraftStatus
-    blocker_count: int = Field(ge=0)
-    warning_count: int = Field(ge=0)
-    info_count: int = Field(ge=0)
+    blocker_count: NonNegativeInt
+    warning_count: NonNegativeInt
+    info_count: NonNegativeInt
     precondition_verdict: PreconditionVerdict | None = None
     narrative: str
     calculated_at: datetime

@@ -22,7 +22,7 @@ from datetime import date, datetime, timedelta
 from pydantic import BaseModel, Field
 
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.time import now
+from ...core.time.clock import now
 from ...domain.deadlines.engine import DeadlineEngine
 from ...domain.deadlines.models import TaxpayerProfile
 from .calendar import build_overview_calendar

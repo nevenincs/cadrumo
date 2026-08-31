@@ -21,12 +21,12 @@ from ....application.operations.persistence.leases import (
     OperationOwnerLease,
 )
 from ....core.link_safety import is_link_like
-from ....core.storage_taxonomy_locations import storage_location
-from ....core.storage_taxonomy import StorageCategory
-from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.locks import exclusive_file_lock
-from ....core.time import validate_utc_aware
-from ..storage import RepositoryError
+from ....core.models import STRICT_FROZEN_CONFIG
+from ....core.storage_taxonomy import StorageCategory
+from ....core.storage_taxonomy_locations import storage_location
+from ....core.time.utc import validate_utc_aware
+from ..storage.errors import RepositoryError
 
 
 class _OperationLeaseRecord(BaseModel):

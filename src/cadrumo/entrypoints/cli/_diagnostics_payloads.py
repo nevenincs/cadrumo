@@ -27,11 +27,12 @@ from datetime import datetime
 
 from pydantic import NonNegativeInt, field_validator, model_validator
 
-from ...core.decimal import try_parse_canonical_decimal
+from ...core.decimal._grammar import try_parse_canonical_decimal
 from ...core.json_contract import OutputSchema
-from ...core.telemetry import TelemetryEventPayload, TelemetryTier
+from ...core.telemetry._schema import TelemetryEventPayload
+from ...core.telemetry._tier import TelemetryTier
 from ...core.text_bounds import NonEmptyStr, PositiveCount
-from ...core.time import validate_inclusive_iso_date_range
+from ...core.time.date_range import validate_inclusive_iso_date_range
 from ...core.unit_proportion import is_unit_proportion
 from ._decimal_wire import DecimalWireText
 

@@ -58,14 +58,15 @@ from pydantic import (
     model_validator,
 )
 
-from ...core.irnr import M210GrossIncomeSourceMode, M210_TIPO_RENTA_CODE_PROJECTION
-from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
+from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.hashing import content_hash_hex
 from ...core.identity import CalculationRevisionId, SnapshotId, WorkUnitId
-from ...core.time import validate_utc_aware
-from ..calculations import DirectRowMaterializationProvenance, RowBindingKey, RowCasillaKey, RowSourceIdentity
+from ...core.irnr import M210_TIPO_RENTA_CODE_PROJECTION, M210GrossIncomeSourceMode
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.time.utc import validate_utc_aware
+from ..calculations._row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
+from ..calculations._row_source_identity import RowBindingKey, RowSourceIdentity
 from ..calculations.registry.bindings import CasillaObservation
 from ..calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
 from ..calculations.registry.ids import BindingId, RelationId

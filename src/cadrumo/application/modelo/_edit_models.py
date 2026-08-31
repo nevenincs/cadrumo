@@ -22,7 +22,6 @@ from typing import Annotated, Literal
 
 from pydantic import Field, field_validator, model_validator
 
-from ...core.period import Period
 from ...core.casilla_id import CasillaId
 from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FilingYear
@@ -33,14 +32,15 @@ from ...core.identity import (
     ModeloEditBaselineId,
     WorkUnitId,
 )
-from ...core.time import validate_utc_aware
+from ...core.period import Period
+from ...core.time.utc import validate_utc_aware
 from ...domain.calculations.registry.ids import BindingId, RevisionId
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.filing.schema import ModeloScalar
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.row_models import ModeloDetailRow
 from ..operations.models import OperationDefinitionId, OperationId
-from ..operator_actions import ActionReference
+from ..operator_actions._models import ActionReference
 from .edit_contract import (
     ModeloEditCompatibilityTupleV1,
     ModeloEditExecutionEffect,

@@ -19,10 +19,10 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date, datetime, timedelta
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, NonNegativeInt
 
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.time import now, today_madrid
+from ...core.time.clock import now, today_madrid
 from ...domain.deadlines.engine import DeadlineEngine
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitState
@@ -76,7 +76,7 @@ class OverviewBacklog(BaseModel):
     range: OverviewCalendarRange
     as_of: date
     items: tuple[OverviewCalendarEntry, ...] = ()
-    late_count: int = Field(ge=0)
+    late_count: NonNegativeInt
     generated_at: datetime
     warnings: tuple[CalendarWarning, ...] = ()
     completeness: CalendarCompleteness = Field(default_factory=CalendarCompleteness)

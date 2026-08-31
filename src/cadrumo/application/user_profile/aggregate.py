@@ -10,10 +10,10 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, field_validator
 
 from ...core.identity import ContentDigest, PrefixedContentDigest, ProfileId, ProfileLabel
-from ...core.time import validate_utc_aware
+from ...core.time.utc import validate_utc_aware
 from ...domain.user_profile.values import ProfileSetupState
 
 
@@ -34,7 +34,7 @@ class UnlockedProfileFactSummary(BaseModel):
 
     availability: Literal["AVAILABLE_UNLOCKED"] = "AVAILABLE_UNLOCKED"
     setup_state: ProfileSetupState
-    fact_count: int = Field(ge=0)
+    fact_count: NonNegativeInt
     record_revision: int = Field(ge=1)
     content_digest: ContentDigest
 

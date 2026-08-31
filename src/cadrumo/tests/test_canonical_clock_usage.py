@@ -59,7 +59,7 @@ from ._inventory import SRC_CADRUMO, leaf_name, production_ast_items, repo_relat
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _SRC_ROOT = SRC_CADRUMO
-_CLOCK_MODULE = _SRC_ROOT / "core" / "time" / "_clock.py"
+_CLOCK_MODULE = _SRC_ROOT / "core" / "time" / "clock.py"
 _TEST_INFRA_MODULES: frozenset[Path] = frozenset(
     {
         _SRC_ROOT / "adapters" / "persistence" / "storage" / "envelope" / "tests" / "_repository_contract_support.py",

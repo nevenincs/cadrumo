@@ -33,7 +33,7 @@ from pydantic import BaseModel, Field
 from ...core.config import Settings, load_settings
 from ...core.identity import BucketId, TransactionId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.time import now
+from ...core.time.clock import now
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol

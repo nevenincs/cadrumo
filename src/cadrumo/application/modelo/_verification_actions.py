@@ -60,14 +60,14 @@ from ...adapters.persistence.profile.modelos_verification_reports import Verific
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ...core.aggregation import BindingSourceKind
+from ...core.casilla_id import CasillaId
+from ...core.config import Settings
+from ...core.identity import CalculationRevisionId
 from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
-from ...core.casilla_id import CasillaId
-from ...core.aggregation import BindingSourceKind
-from ...core.config import Settings
-from ...core.identity import CalculationRevisionId
-from ...core.time import now as _utc_now
+from ...core.time.clock import now as _utc_now
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
@@ -84,13 +84,6 @@ from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.iva.schema import CUOTA_LESS_M303_IVA_CATEGORIES
 from ...domain.modelos.calculation_repository import upsert_calculation_revision
-from ...domain.modelos.ledger_filing_snapshot import ManualFactBasisEntry
-from ...domain.modelos.participation_index import TransactionRevisionParticipation, upsert_transaction_participation
-from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol, ModeloRecordCatalogueRepositoryProtocol, VerificationReportCatalogueRepositoryProtocol
-from ...domain.modelos.repository import upsert_work_unit
-from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity, VerificationCompletenessStatus, VerificationReport, VerificationReportCatalogue, derive_verification_report_id
-from ...domain.modelos.verification_repository import upsert_verification_report
-from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -98,6 +91,25 @@ from ...domain.modelos.calculation_revision import (
     CalculationSourceIssue,
 )
 from ...domain.modelos.errors import ModeloValidationError
+from ...domain.modelos.ledger_filing_snapshot import ManualFactBasisEntry
+from ...domain.modelos.participation_index import TransactionRevisionParticipation, upsert_transaction_participation
+from ...domain.modelos.protocols import (
+    CalculationRevisionCatalogueRepositoryProtocol,
+    ModeloRecordCatalogueRepositoryProtocol,
+    VerificationReportCatalogueRepositoryProtocol,
+)
+from ...domain.modelos.repository import upsert_work_unit
+from ...domain.modelos.verification_report import (
+    ModeloVerificationFinding,
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
+    VerificationCompletenessStatus,
+    VerificationReport,
+    VerificationReportCatalogue,
+    derive_verification_report_id,
+)
+from ...domain.modelos.verification_repository import upsert_verification_report
+from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..aggregation import (
     MISSING_DEDUCTIBLE_IVA_EVIDENCE_SOURCE_KIND,
@@ -107,13 +119,12 @@ from ..aggregation import (
     compute_ledger_filing_snapshot,
     missing_evidence_advisory_observations,
 )
-from ..calculations import (
-    M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
-    CalculationObservationRepository,
-    CrossPeriodDependencyEvidence,
-    CrossPeriodExpectedMemberSet,
+from ..calculations._iva_compensation_casillas import M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA
+from ..calculations._m303_regimen_simplificado_annual_summary import (
     validate_m303_regimen_simplificado_annual_summary_target_revision,
 )
+from ..calculations.cross_period_clean_state import CrossPeriodDependencyEvidence, CrossPeriodExpectedMemberSet
+from ..calculations.observations_repository import CalculationObservationRepository
 from ..workflow.engine import WorkflowEngine
 from ..workflow.persistence import WorkflowRunRepository
 from ..workflow.run_models import WorkflowPurpose
@@ -187,13 +198,13 @@ from ._verification_preconditions import (
     build_verification_precondition_failure,
     project_verification_findings,
 )
-from .work_lifecycle import RevisionParentOperation, require_revision_parent_active
 from ._workflow_gate import build_revision_workflow_engine as _build_revision_workflow_engine
 from ._workflow_gate import run_revision_workflow_gate as _run_revision_workflow_gate
+from .work_lifecycle import RevisionParentOperation, require_revision_parent_active
 
 if TYPE_CHECKING:
-    from ...adapters.persistence.storage import SecureObjectWrite
-    from ..calculations import IvaWalletDecisionRepository
+    from ...adapters.persistence.storage.sql.secure_objects import SecureObjectWrite
+    from ..calculations.observations_repository import IvaWalletDecisionRepository
 
 from ._m303_regimen_simplificado_scope import m303_regimen_simplificado_annual_summary_applies
 from ._verification_predicates import (

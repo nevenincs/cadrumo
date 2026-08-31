@@ -8,7 +8,7 @@ half-built package for an attribute whose accessor did not exist yet, and
 
 That is not hypothetical: adding ``from .time import UtcInstant`` to
 ``secure_object_write`` (then imported at ``core/__init__`` line ~203) pulled
-``core.time._clock``, whose module-scope ``get_logger`` configures logging,
+``core.time.clock``, whose module-scope ``get_logger`` configures logging,
 which calls ``load_settings()`` — and the tree became unimportable for every
 agent until the chain was backed out.
 

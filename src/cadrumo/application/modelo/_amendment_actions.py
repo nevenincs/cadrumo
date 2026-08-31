@@ -44,27 +44,48 @@ from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ...core.modelo import Modelo
 from ...core.casilla_id import CasillaId
 from ...core.identity import CalculationRevisionId
-from ...core.time import now as _utc_now
+from ...core.modelo import Modelo
+from ...core.time.clock import now as _utc_now
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
-from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.buckets.event_repository import bucket_event_history_write as _bucket_event_write
+from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.justificante import JustificanteRepositoryProtocol
 from ...domain.modelos.calculation_repository import upsert_calculation_revision
-from ...domain.modelos.calculation_revision_aggregate import CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY, CalculationRevisionAggregateContext
-from ...domain.modelos.calculation_revision_amendment import m303_rectificativa_motive_is_applicable
-from ...domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue, ModeloRecordStatus, derive_filing_record_id
+from ...domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionAmendmentIdentity,
+    CalculationRevisionAmendmentKind,
+    CalculationRevisionCatalogue,
+    CalculationRevisionState,
+    FilingInstanceEvidence,
+    derive_calculation_revision_id,
+)
+from ...domain.modelos.calculation_revision_aggregate import (
+    CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY,
+    CalculationRevisionAggregateContext,
+)
+from ...domain.modelos.calculation_revision_amendment import (
+    M303RectificativaMotive,
+    m303_rectificativa_motive_is_applicable,
+)
+from ...domain.modelos.filing_record import (
+    ModeloRecord,
+    ModeloRecordCatalogue,
+    ModeloRecordStatus,
+    derive_filing_record_id,
+)
 from ...domain.modelos.filing_repository import upsert_filing_record
-from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol, ModeloRecordCatalogueRepositoryProtocol
+from ...domain.modelos.protocols import (
+    CalculationRevisionCatalogueRepositoryProtocol,
+    ModeloRecordCatalogueRepositoryProtocol,
+)
 from ...domain.modelos.repository import upsert_work_unit
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
-from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionAmendmentIdentity, CalculationRevisionAmendmentKind, CalculationRevisionCatalogue, CalculationRevisionState, FilingInstanceEvidence, derive_calculation_revision_id
-from ...domain.modelos.calculation_revision_amendment import M303RectificativaMotive
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ._action_errors import (
     AmendmentEvidenceMissingError,

@@ -30,11 +30,12 @@ import pytest
 from pydantic import BaseModel, SecretStr, ValidationError
 from pydantic_core import PydanticSerializationError
 
-from ...adapters.outbound.llm import LLMCache, UsageRecorder
+from ...adapters.outbound.llm._cache import LLMCache
+from ...adapters.outbound.llm._usage import UsageRecorder
 from ...application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
-from ...core.provenance_stamp import LOCAL_TRANSPORT_LABEL
-from ...core.field_origin import FieldOrigin
 from ...core.config import LLMProvider, override_settings
+from ...core.field_origin import FieldOrigin
+from ...core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from ...tests.fixtures.settings import EnvFileFreeSettings
 from ...tests.loopback_llm import (
     SilentLoopbackHandler,
@@ -524,7 +525,7 @@ def test_the_gate_runs_before_the_cache_read_and_before_adapter_construction() -
 
 def _consent_entries() -> tuple[str, ...]:
     """Return the recorded content addresses for the active profile, oldest first."""
-    from ...adapters.outbound.llm import EvidenceConsentLedger
+    from ...adapters.outbound.llm._consent_ledger import EvidenceConsentLedger
 
     return tuple(entry.evidence_content_address for entry in EvidenceConsentLedger().load_entries())
 
@@ -601,7 +602,7 @@ def test_a_dispatch_whose_record_cannot_be_written_is_refused_not_degraded(tmp_p
     ended; only the endpoint's silence proves the document did not leave the
     host before the record failed.
     """
-    from ...adapters.persistence.storage import suspend_active_session
+    from ...adapters.persistence.storage.master_key.active_session import suspend_active_session
 
     settings = _settings(tmp_path, cloud_upload_permitted=True)
     with _serve_openai() as (endpoint, bodies), override_settings(cadrumo_llm_openai_chat_completions_url=endpoint):
@@ -654,13 +655,11 @@ def test_the_ledger_read_refuses_an_unreadable_row_rather_than_skipping_it(tmp_p
     The corrupt record is written through the real repository at the ledger's
     own namespace, so it is reached by exactly the read path production uses.
     """
-    from ...adapters.outbound.llm import EvidenceConsentLedger
-    from ...adapters.persistence.storage import (
-        LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE,
-        secure_object_repository_for_active_bucket,
-    )
+    from ...adapters.outbound.llm._consent_ledger import EvidenceConsentLedger
+    from ...adapters.persistence.storage._secure_object_namespaces import LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE
+    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
     from ...core.hashing import canonical_json_bytes
-    from ...core.time import now
+    from ...core.time.clock import now
 
     settings = _settings(tmp_path, cloud_upload_permitted=True)
     with _serve_openai() as (endpoint, _), override_settings(cadrumo_llm_openai_chat_completions_url=endpoint):

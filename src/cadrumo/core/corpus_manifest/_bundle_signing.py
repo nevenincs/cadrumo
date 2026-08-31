@@ -55,9 +55,6 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import (
 )
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
-from ..hex import HEX_PATTERN_64 as _HEX_PATTERN_64
-from ..hex import HEX_PATTERN_128 as _HEX_PATTERN_128
-from ..models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..atomic_write import atomic_write_hardened_text
 from ..ed25519_signing import (
     digest_signature_is_valid,
@@ -68,8 +65,11 @@ from ..ed25519_signing import (
 )
 from ..errors.hierarchy import CadrumoError
 from ..external_constants import UTF_8_ENCODING
-from ..time import now as _utc_now
-from ..time import validate_utc_aware as _validate_utc_aware
+from ..hex import HEX_PATTERN_64 as _HEX_PATTERN_64
+from ..hex import HEX_PATTERN_128 as _HEX_PATTERN_128
+from ..models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ..time.clock import now as _utc_now
+from ..time.utc import validate_utc_aware as _validate_utc_aware
 
 #: Wire-format version of the signature envelope. Bumped when the envelope
 #: schema changes shape.
@@ -286,7 +286,7 @@ def sign_corpus_bundle(
             verification (propagated from
             :func:`~core.corpus_manifest.assert_corpus_bundle_verifies`).
     """
-    from . import assert_corpus_bundle_verifies
+    from .manifest import assert_corpus_bundle_verifies
 
     manifest = assert_corpus_bundle_verifies(bundle_path)
     signature_hex = sign_digest_hex(
@@ -343,7 +343,8 @@ def verify_corpus_bundle_signature(
         assertion should call
         :func:`~core.corpus_manifest.assert_corpus_bundle_signature_verifies`.
     """
-    from . import CorpusBundleError, CorpusManifestTamperError, verify_corpus_bundle
+    from .errors import CorpusBundleError, CorpusManifestTamperError
+    from .manifest import verify_corpus_bundle
 
     try:
         result = verify_corpus_bundle(bundle_path)

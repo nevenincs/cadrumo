@@ -9,9 +9,9 @@ from __future__ import annotations
 import typer
 
 from ...core.external_constants import OutputLanguage
-from ...core.i18n import tr
+from ...core.i18n._render import tr
 from ...core.logging import get_logger
-from ...core.time import now
+from ...core.time.clock import now
 from ...domain.buckets.event import BucketEventType
 from ...domain.categories.spending_category import SpendingCategory
 from ._common import _bad, emit_envelope
@@ -40,7 +40,7 @@ def _emit_ratios_event(
 ) -> None:
     """Append a ratios mutation event to the bucket-event-history catalogue."""
     from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-    from ...adapters.persistence.storage import secure_object_repository_for_bucket
+    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
     from ...domain.buckets.event import BucketEventObjectType
     from ...domain.buckets.event_repository import emit_bucket_event
 
@@ -71,7 +71,7 @@ def _emit_ratios_censo_override_warning(
 ) -> None:
     """Append LEDGER_RATIOS_CENSO_OVERRIDE_WARNING to the bucket catalogue."""
     from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-    from ...adapters.persistence.storage import secure_object_repository_for_bucket
+    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
     from ...domain.buckets.event import BucketEventObjectType
     from ...domain.buckets.event_repository import emit_bucket_event
 
@@ -101,7 +101,7 @@ def _resolved_ratio_year(year: int | None) -> int:
     read are year-versioned, so a pinned year would apply one year's law to
     every invocation. An operator replaying an earlier year passes ``--year``.
     """
-    from ...core.time import today_madrid
+    from ...core.time.clock import today_madrid
 
     return today_madrid().year if year is None else year
 
@@ -117,7 +117,7 @@ def ratios_list(
         load_usage_ratios_with_censo_guard,
     )
     from ...application.user_profile.censo_sync import CensoSyncService
-    from ...domain.usage_ratios import CensoRatioMismatchError
+    from ...domain.usage_ratios.errors import CensoRatioMismatchError
     from ._ledger_payloads import RatiosListResult, RatiosRowPayload
 
     bucket_id, profile_id = _ratios_bucket_and_profile()
@@ -210,7 +210,7 @@ def ratios_unset(
     """Clear one per-category usage-ratio override from the active bucket."""
     _activate_subcommand_output_language(ctx, output_language)
     from ...application.ledger.ratios import unset_usage_ratio
-    from ...domain.usage_ratios import UsageRatioValidationError
+    from ...domain.usage_ratios.errors import UsageRatioValidationError
     from ._ledger_payloads import RatiosUnsetResult
 
     bucket_id = _ratios_bucket_id()

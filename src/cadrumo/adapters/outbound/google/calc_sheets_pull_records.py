@@ -7,14 +7,14 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, NonNegativeInt
 
-from ....application.storage.calc_sheets import OperatorInput, SheetExportMetadata
+from ....application.storage.calc_sheets._records import OperatorInput, SheetExportMetadata
 from ....core.casilla_id import CasillaId
 from ....core.filing_year import FilingYear
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.period import Period
-from ....core.time import coerce_utc_aware
+from ....core.time.utc import coerce_utc_aware
 from ....domain.calculations.registry.ids import (
     BindingId,
     LegalRefId,
@@ -157,7 +157,7 @@ class PullResult(BaseModel):
     row_set_edits: tuple[RowSetEdit, ...] = ()
     metadata: PullMetadata
     metadata_match: MetadataMatchState
-    cells_read: int = Field(ge=0)
+    cells_read: NonNegativeInt
 
 
 class PullCoverageDiscrepancy(BaseModel):

@@ -33,7 +33,8 @@ from pydantic import BaseModel, Field
 from ...core.config import Settings
 from ...core.identity import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.time import UtcInstant, now
+from ...core.time.clock import now
+from ...core.time.utc import UtcInstant
 from .invoice_draft_records import InvoiceDraft
 
 __all__ = [

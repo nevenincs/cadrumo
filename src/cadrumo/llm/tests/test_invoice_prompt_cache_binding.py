@@ -28,10 +28,10 @@ from __future__ import annotations
 
 import pytest
 
-from ...adapters.outbound.llm import LLMCache
+from ...adapters.outbound.llm._cache import LLMCache
 from ...application.ledger.invoice_extraction_authority import resolve_invoice_extraction_authority_values
 from ...core.period import Period
-from ...core.time import now
+from ...core.time.clock import now
 from ...domain.transactions.models import DecisionProvenance
 from ..evidence_draft_text import TextInvoiceFieldExtractor
 from ..evidence_draft_vision import LocalVisionDocumentTranscriber

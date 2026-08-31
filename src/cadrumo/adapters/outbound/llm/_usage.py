@@ -17,16 +17,17 @@ from decimal import Decimal
 from pathlib import Path
 from uuid import uuid4
 
-from ....adapters.persistence.storage import LLM_USAGE_NAMESPACE, secure_object_repository_for_active_bucket
 from ....adapters.persistence.storage.crypto.encrypted_columns import secure_object_key_digest
-from ....core.classification import SensitivityClass
+from ....core.classification.policies import SensitivityClass
 from ....core.config import load_settings
 from ....core.hashing import canonical_json_bytes
-from ....core.redaction import default_rules_for_class, redact_structured
-from ....core.time import now
+from ....core.redaction.rules import default_rules_for_class, redact_structured
+from ....core.time.clock import now
 from ....llm.errors import LLMCacheError
 from ....llm.models import LLMResponse, UsageRecord, UsageSummary
 from ....llm.retention import select_retention_removal_keys
+from ...persistence.storage._secure_object_namespaces import LLM_USAGE_NAMESPACE
+from ...persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 
 _USAGE_NAMESPACE = LLM_USAGE_NAMESPACE.namespace
 _USAGE_VERSION = LLM_USAGE_NAMESPACE.schema_version

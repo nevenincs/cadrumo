@@ -12,13 +12,14 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Literal
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
-from ..core.hex import Hex64Str
-from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.bucket_pointer import BucketPointer
-from ..core.identity import BucketId, ContentDigest
-from ..core.time import validate_utc_aware
+from ..core.hex import Hex64Str
+from ..core.identity._bucket import BucketId
+from ..core.identity._digest import ContentDigest
+from ..core.models import STRICT_FROZEN_CONFIG
+from ..core.time.utc import validate_utc_aware
 from ..domain.user_profile.values import ProfileSetupState
 from ._bucket_deletion_contracts import BucketDeletionFingerprint
 
@@ -73,7 +74,7 @@ class ConfigResetRetentionDecision(BaseModel):
 
     assessed_at: datetime
     blocks_erase: bool
-    retained_record_count: int = Field(ge=0)
+    retained_record_count: NonNegativeInt
     latest_safe_erase_date: datetime | None = None
     override_approved: bool = False
     override_reason: str | None = Field(default=None, min_length=1, max_length=512)
@@ -233,10 +234,10 @@ class ConfigResetSummary(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    target_count: int = Field(ge=0)
-    deleted_count: int = Field(ge=0)
-    already_absent_count: int = Field(ge=0)
-    retention_override_count: int = Field(ge=0)
+    target_count: NonNegativeInt
+    deleted_count: NonNegativeInt
+    already_absent_count: NonNegativeInt
+    retention_override_count: NonNegativeInt
     completed_at: datetime
 
     @model_validator(mode="after")

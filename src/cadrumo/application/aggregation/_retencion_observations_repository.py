@@ -37,17 +37,16 @@ from typing import ClassVar, override
 
 from pydantic import BaseModel, Field
 
-from ...adapters.persistence.storage import (
-    RETENCION_OBSERVATIONS_NAMESPACE,
-    SecureBoundRepository,
-    SensitivityClass,
-    safe_repository_id,
-)
+from ...adapters.persistence.storage._path_safety import safe_repository_id
+from ...adapters.persistence.storage._secure_object_namespaces import RETENCION_OBSERVATIONS_NAMESPACE
+from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
 from ...core.aggregation import AggregationCaptureKind
+from ...core.classification.policies import SensitivityClass
 from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
-from ...core.time import UtcInstant, now
+from ...core.time.clock import now
+from ...core.time.utc import UtcInstant
 from ._observation_window import hashed_tax_id_token, replace_observation_window
 from ._retenciones import RetencionObservation, RetencionScheme
 from .errors import AggregationValidationError, t

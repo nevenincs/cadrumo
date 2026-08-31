@@ -302,6 +302,6 @@ def _load_existing(concepts_dir: Path) -> dict[str, ConceptRecord]:
 
 
 def _today() -> date:
-    from cadrumo.core.time import now
+    from cadrumo.core.time.clock import now
 
     return now().date()

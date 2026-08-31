@@ -33,24 +33,24 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.inbound.declaracion import InboundDeclaracionObservation, TemplateRevision
-from ....adapters.inbound.pdf import ExtractedCasilla
+from ....adapters.inbound.declaracion._schema import InboundDeclaracionObservation, TemplateRevision
+from ....adapters.inbound.pdf._shared import ExtractedCasilla
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core.period import Period
 from ....core.casilla_id import validated_casilla_id
-from ....core.time import now
+from ....core.period import Period
+from ....core.time.clock import now
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
-from ....domain.modelos.codes import ModeloCode
-from ....domain.modelos.repository import upsert_work_unit
-from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.repository import upsert_work_unit
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.registry_observations import registry_grounded_observations
 from ...workflow.persistence import workflow_state_repository

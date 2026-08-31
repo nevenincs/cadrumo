@@ -29,15 +29,15 @@ from pathlib import Path
 from typing import Any
 
 from ....core.authority_grade import RegistryAuthorityGrade
-from ....core.period import Period, is_administrative_period_token
 from ....core.casilla_id import CasillaId
-from ....core.text_fold import fold_diacritics
-from ....core.decimal import european_thousands_reading_is_ambiguous
+from ....core.decimal._grammar import european_thousands_reading_is_ambiguous
 from ....core.hashing import sha256_hex
 from ....core.identity import IdentityError, validate_spanish_tax_id
 from ....core.logging import get_logger
-from ....core.resources import bundled_path
-from ....core.time import now
+from ....core.period import Period, is_administrative_period_token
+from ....core.resources._boundary import bundled_path
+from ....core.text_fold import fold_diacritics
+from ....core.time.clock import now
 from ....domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ....domain.calculations.registry.casilla_membership import casillas_by_id
 from ....domain.calculations.registry.errors import RegistrySnapshotError
@@ -48,17 +48,11 @@ from ....domain.calculations.registry.schema_extraction import (
     ExtractionTargetDefinition,
 )
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ..pdf import (
-    PRESENTADOR_NIF_LABEL,
-    SPANISH_AMOUNT_GROUP,
-    TEXT_VALUE_GROUP,
-    ExtractedCasilla,
-    parse_spanish_decimal,
-    sha256_file,
-    source_pdf_reference_path,
-)
+from ..pdf._label_regex import PRESENTADOR_NIF_LABEL, SPANISH_AMOUNT_GROUP, TEXT_VALUE_GROUP, parse_spanish_decimal
+from ..pdf._shared import ExtractedCasilla
+from ..pdf._utils import sha256_file, source_pdf_reference_path
 from ._detect import detect_template_revision, detect_template_revision_from_pages
-from ._parsers import extract_pages_text, extract_pages_text_from_bytes
+from ._parsers._pdfplumber_backend import extract_pages_text, extract_pages_text_from_bytes
 from ._schema import InboundDeclaracionObservation, TemplateRevision
 from .errors import DeclaracionParseError, TemplateNotDetectedError
 

@@ -43,7 +43,7 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, TypedDict
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, NonNegativeInt, field_validator
 
 from ...adapters.outbound.aeat.sede.declarations import (
     DeclaracionesRegisterSession,
@@ -58,22 +58,22 @@ from ...adapters.outbound.aeat.sede.declarations_capture import (
 from ...adapters.outbound.aeat.sede.declarations_schema import Declaracion
 from ...adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
 from ...adapters.outbound.aeat.sede.schema import FiledDeclaracionObservation, FiledDeclarationAvailabilityReport
-from ...core.sync_surface import SyncSurface
-from ...core.register_scoping_signal import RegisterScopingSignal
-from ...core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
-from ...core.casilla_value_kind import CasillaValueKind
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.casilla_id import CasillaId
+from ...core.casilla_value_kind import CasillaValueKind
 from ...core.config import load_settings
 from ...core.errors.hierarchy import CadrumoError
+from ...core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ...core.filing_year import FilingYear
 from ...core.i18n import tr
 from ...core.identity import AeatExpedienteId
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
-from ...core.resources import bundled_path
-from ...core.time import now
+from ...core.register_scoping_signal import RegisterScopingSignal
+from ...core.resources._boundary import bundled_path
+from ...core.sync_surface import SyncSurface
+from ...core.time.clock import now
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings import RegistryModeloObservation
 from ...domain.calculations.registry.loader import load_registry_tree
@@ -85,12 +85,12 @@ from ...domain.calculations.registry.temporal import select_revision
 from ...domain.calculations.registry.verification_tolerance import verification_tolerance_or_exact
 from ..operations.events import OperationLogSeverity
 from ..operations.owner import OperationEventEmitter
-from ..storage.sync_runs import (
+from ..storage.sync_runs._persist import record_sync_run
+from ..storage.sync_runs._records import (
     SyncRunRecordReference,
     SyncRunRecordRepositoryProtocol,
     bounded_scope_description,
     coverage_of,
-    record_sync_run,
     sync_run_record_key,
 )
 from .errors import LiveApplicationInputError, LiveIvaSurfaceTimeoutError
@@ -120,7 +120,7 @@ if TYPE_CHECKING:
     from datetime import date
 
     from ...domain.deadlines.models import TaxpayerProfile
-    from ..calculations import CalculationObservationRepository
+    from ..calculations.observations_repository import CalculationObservationRepository
 
 
 FILED_HISTORY_PHASE_DISCOVERY = "filed-history.discovery"
@@ -1247,7 +1247,7 @@ async def discover_filed_history(
         SedeNavigationError: When the session carries no persisted browser state,
             propagated unchanged from the shared register bring-up.
     """
-    from ...core.time import today_madrid
+    from ...core.time.clock import today_madrid
 
     session, settings = await active_verified_session(operation="live-expedientes-read")
     async with shared_playwright(session) as playwright:
@@ -1501,8 +1501,8 @@ class FiledPeriodSelectionRow(BaseModel):
     modelo: str = Field(min_length=1, max_length=8)
     ejercicio: FilingYear
     period: str = Field(min_length=1, max_length=8)
-    raw_row_count: int = Field(ge=0)
-    selected_count: int = Field(ge=0)
+    raw_row_count: NonNegativeInt
+    selected_count: NonNegativeInt
     winning_expediente_id: AeatExpedienteId | None = None
 
     @property
@@ -1963,7 +1963,7 @@ def recapture_divergence_notices(
 
     Read BEFORE the capture is persisted; afterwards the prior values are gone.
     """
-    from ..calculations import CalculationObservationRepository as _Repository
+    from ..calculations.observations_repository import CalculationObservationRepository as _Repository
 
     repo = repository if repository is not None else _Repository()
     notices: list[Notice] = []
@@ -2218,7 +2218,7 @@ async def pull_filed_history(
     Returns:
         The composed :class:`FiledHistoryOnboardingRun`.
     """
-    from ...core.time import today_madrid
+    from ...core.time.clock import today_madrid
 
     resolved_today = today or today_madrid()
     await _emit_filed_history_phase(events, FILED_HISTORY_PHASE_DISCOVERY)

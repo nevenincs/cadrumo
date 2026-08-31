@@ -7,8 +7,9 @@ from collections.abc import Awaitable, Callable, Generator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 from pathlib import Path
-from typing import cast
+from typing import Final, cast
 from uuid import UUID
 
 import pytest
@@ -20,9 +21,18 @@ from ...adapters.persistence.operations.financial_operand_custody import (
 from ...adapters.persistence.operations.journal import OperationJournalRepository
 from ...adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ...adapters.persistence.operations.secure_references import operation_secure_reference_repository
-from ...adapters.persistence.storage import SecureObjectRepository
+from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...application.auth.operation_definitions import build_auth_operation_definitions
-from ...application.export import build_google_sheets_export_operation_definition
+from ...application.export.google_operation import build_google_sheets_export_operation_definition
+from ...application.modelo._calculation_actions import calculate_modelo_revision
+from ...application.modelo._verification_actions import verify_modelo_revision
+from ...application.modelo.external_import_actions import import_external_filing_evidence
+from ...application.modelo.operation_definitions import resolve_active_workflow_profile
+from ...application.modelo.tests.justificante_metadata import persist_justificante_metadata
 from ...application.modelo.work_lifecycle import create_work_unit
 from ...application.operations.composition import (
     OperationComposedServices,
@@ -70,14 +80,22 @@ from ...application.user_profile.login_session import login_profile
 from ...application.user_profile.profile_record_repository import ProfileRecordRepository
 from ...application.user_profile.registration import register_profile_with_credentials
 from ...core.auth_provider import AuthProviderKind
-from ...core.period import Period
 from ...core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
+from ...core.period import Period
 from ...core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
-from ...core.time import now
+from ...core.time.clock import now
+from ...domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
+from ...domain.modelos.filing_record import ExternalEvidenceKind
+from ...domain.modelos.verification_report import VerificationCompletenessStatus
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.user_profile.values import UserProfileFact
 from ...tests.aeat_literal_fixtures import aeat_url
-from ...tests.cross_period_seeding import resolved_revision
+from ...tests.cross_period_seeding import (
+    SEEDED_SOURCE_TAX_ID,
+    resolved_revision,
+    seed_clean_cross_period_sources,
+)
+from ...tests.profile_capsule import seed_modelo_ready_profile_record
 from ...tests.secure_sql import isolated_profile_storage_root
 from ..censal_review import _run as run_censal_review_through_services
 from ..operation_composition import build_production_operation_registry
@@ -98,9 +116,37 @@ class _RegisteredExecutorConformanceCase:
     expected_refusal_ref: str | None = None
 
 
+_PROFILE_CLOCK = datetime(2026, 8, 24, 18, tzinfo=UTC)
 _MODELO = "130"
 _MODELO_FILING_YEAR = 2025
 _MODELO_PERIOD = "1T"
+
+
+def _seed_modelo_ready_profile(profile_id: UUID) -> None:
+    """Give this case's profile the taxpayer facts modelo work requires.
+
+    The runtime registers with `identity.tax_id` alone, which is enough for the
+    auth and profile operations but NOT for modelo work: the readiness gate
+    refuses every modelo executor until the baseline paths are present. That
+    refusal is correct -- a work unit cannot be calculated against a taxpayer
+    whose regime is unknown -- so the fixture is what has to change.
+
+    Delegates to the canonical seeder rather than restating the fact tuple.
+    That tuple was already copied verbatim into four test modules and this was
+    nearly a fifth; the readiness gate decides what modelo work may run, so
+    every copy is another place for the answer to drift.
+
+    Seeded HERE rather than at registration because the profile is shared by
+    every case in this runtime, and `user-profile.censo-review` builds its
+    baseline from the record -- adding facts globally would change what that
+    operation is asked to adopt.
+    """
+    # Seeded under the identity the cross-period seeder files its sources with:
+    # the clean-state gate compares that evidence's authenticated identity
+    # against the ACTIVE profile's tax id, so a profile carrying a different one
+    # is refused with `mismatched_external_evidence_record` -- which names the
+    # source modelo, not the identity, and reads as a seeding failure instead.
+    seed_modelo_ready_profile_record(str(profile_id), clock=_PROFILE_CLOCK, tax_id=SEEDED_SOURCE_TAX_ID)
 
 
 def _seeded_modelo_work_unit(profile_id: UUID) -> WorkUnit:
@@ -113,6 +159,7 @@ def _seeded_modelo_work_unit(profile_id: UUID) -> WorkUnit:
     would never select, and every one of these executors resolves its
     revision from the unit.
     """
+    _seed_modelo_ready_profile(profile_id)
     revision = resolved_revision(modelo=_MODELO, filing_year=_MODELO_FILING_YEAR, period=_MODELO_PERIOD)
     return create_work_unit(
         bucket_id=str(profile_id),
@@ -196,6 +243,24 @@ _EXPECTATIONS: Mapping[str, _RegisteredExecutorConformanceCase] = {
         ),
         _RegisteredExecutorConformanceCase(
             "modelo.work.rename", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
+        ),
+        _RegisteredExecutorConformanceCase(
+            "modelo.work.discard", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
+        ),
+        _RegisteredExecutorConformanceCase(
+            "modelo.work.verify", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
+        ),
+        _RegisteredExecutorConformanceCase(
+            "modelo.work.file", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
+        ),
+        _RegisteredExecutorConformanceCase(
+            "modelo.edit.apply", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
+        ),
+        _RegisteredExecutorConformanceCase(
+            "modelo.export", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
+        ),
+        _RegisteredExecutorConformanceCase(
+            "modelo.work.amend", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
     )
 }
@@ -335,6 +400,266 @@ def _observation() -> CensalObservation:
     )
 
 
+_FIRST_QUARTER_PRIOR_PERIOD_BINDINGS: Final[dict[str, Decimal]] = {
+    "irpf.previous_year_economic_activity_net_income": Decimal("0"),
+    "modelo-130-resultados-negativos-anteriores": Decimal("0"),
+    "modelo-130-pagos-fraccionados-anteriores": Decimal("0"),
+}
+"""The three prior-period bindings M130 requires, zeroed because this is a 1T unit.
+
+ZERO IS THE GROUNDED ANSWER HERE, not a placeholder. The seeded unit is the
+FIRST quarter of its filing year, so there is no prior quarter to carry a
+negative result or a previous payment from, and no prior-year activity income
+recorded against this freshly created profile. The registry refuses a
+calculation with any of these unsupplied -- it named
+`irpf.previous_year_economic_activity_net_income` explicitly -- so they must be
+answered, and for a first quarter the true answer is nought.
+
+Supplying a non-zero figure would be the fabrication: it would assert prior
+filings this profile does not have.
+"""
+
+
+def _seeded_modelo_calculation_revision(profile_id: UUID) -> str:
+    """Calculate one real revision for the seeded unit, and return its id.
+
+    `casilla_inputs={}` is deliberate and is NOT a stub. The M130 revision
+    `2019-y-siguientes` declares eight bindings and twenty casillas and marks
+    NONE of them required, so an empty input set yields a genuine revision --
+    a return with nothing declared yet -- rather than a fabricated one.
+
+    That matters because this matrix asserts the executor SETTLES, cleans up
+    and refuses truthfully; it asserts no tax figure. Inventing income and
+    expense values to make the revision look substantial would put numbers
+    nobody grounded behind an AEAT-shaped conformance test name, and would
+    also require restating the M130 casilla constants that are already
+    redeclared in thirty-four modules.
+
+    The repositories resolve from the active session, as they do for the work
+    unit itself, so nothing here opens a second write path.
+    """
+    unit = _seeded_modelo_work_unit(profile_id)
+    revision = calculate_modelo_revision(
+        unit.work_unit_id,
+        actor=_ACTOR,
+        casilla_inputs={},
+        binding_values=_FIRST_QUARTER_PRIOR_PERIOD_BINDINGS,
+    )
+    return str(revision.calculation_revision_id)
+
+
+def _seeded_modelo_verification_report(profile_id: UUID) -> tuple[str, str]:
+    """Calculate a revision and verify it, returning both ids.
+
+    Reaches the verification authority through the SAME door the verify
+    executor uses, rather than re-deriving a report here: a fixture that built
+    its own report would be asserting that filing accepts something the
+    verification path never produced.
+
+    `file` approves a revision AND the verification that justified it, so both
+    ids have to come from one act of verification -- pairing a revision with a
+    report from some other run is exactly the stale-approval case the filing
+    authority exists to refuse.
+    """
+    unit = _seeded_modelo_work_unit(profile_id)
+    # Verification refuses a revision whose cross-period sources are unproven
+    # (`cross_period_dependency_unclean`, blocking), and filing in turn refuses
+    # anything not VERIFICADO_COMPLETO -- so the file path needs those sources
+    # materialised before it calculates. Seeded through the canonical helper,
+    # which files each source through the real external-import door and records
+    # an `aeat_sede_justificante` observation: the clean-state gate accepts
+    # nothing weaker, and stamping a passing observation without the filing
+    # behind it would prove the gate green on evidence no operator has.
+    seed_clean_cross_period_sources(
+        unit,
+        work_unit_repository=WorkUnitCatalogueRepository(),
+        calculation_repository=CalculationRevisionCatalogueRepository(),
+        filing_repository=ModeloRecordCatalogueRepository(),
+        bucket_event_repository=BucketEventHistoryRepository(),
+    )
+    revision = calculate_modelo_revision(
+        unit.work_unit_id,
+        actor=_ACTOR,
+        casilla_inputs={},
+        binding_values=_FIRST_QUARTER_PRIOR_PERIOD_BINDINGS,
+    )
+    revision_id = str(revision.calculation_revision_id)
+    report = verify_modelo_revision(
+        revision_id,
+        actor=_ACTOR,
+        workflow_profile=resolve_active_workflow_profile(),
+    )
+    # Verifying SUCCESSFULLY and GRANTING completeness are different outcomes: a
+    # run that reports blocking findings settles fine while leaving the revision
+    # in BORRADOR, and filing then refuses a state this fixture believed it had
+    # established. Naming the completeness status and the findings here turns
+    # that into a legible failure instead of an opaque refusal one layer down.
+    if report.completeness_status is not VerificationCompletenessStatus.COMPLETE:
+        # The facts, not just the kind: a blocking cross-period finding names the
+        # source modelo and the blockers that made it unclean, and those are the
+        # difference between "the fixture seeded nothing" and "the fixture seeded
+        # something the gate does not accept".
+        findings = (
+            "; ".join(
+                sorted(
+                    f"{finding.kind.value}/{finding.severity.value} {dict(finding.message_facts)}"
+                    for finding in report.findings
+                )
+            )
+            or "no findings reported"
+        )
+        raise AssertionError(
+            f"verification did not grant completeness on the seeded revision "
+            f"(status={report.completeness_status.value}); filing cannot be exercised until it does: {findings}"
+        )
+    return revision_id, str(report.verification_report_id)
+
+
+def _seeded_modelo_filing_record(profile_id: UUID) -> tuple[str, str]:
+    """File one real revision and return its filing-record and casilla ids.
+
+    Amendment corrects something already FILED, so its fixture cannot stop at a
+    verified revision: it needs the filing record that amendment is addressed
+    to. Reached through the same filing authority the `file` operation uses, so
+    the record amendment corrects is one the product actually produces.
+
+    The casilla is taken from the revision's own declared inputs rather than
+    named, for the reason the edit fixture gives: the M130 casilla mapping is
+    revision-scoped, and a literal here would be silently wrong the moment the
+    governing revision changes.
+    """
+    unit = _seeded_modelo_work_unit(profile_id)
+    revision = resolved_revision(modelo=_MODELO, filing_year=_MODELO_FILING_YEAR, period=_MODELO_PERIOD)
+    casilla_id = sorted(casilla.id for casilla in revision.casillas)[0]
+    evidence_reference_id = f"CSV{_MODELO}{_MODELO_FILING_YEAR}{_MODELO_PERIOD}".upper()
+    # The unit is created at the live clock, so the evidence cannot be stamped
+    # with the profile's fixed seeding clock: the catalogue refuses a work unit
+    # whose updated_at precedes its created_at, and rightly so.
+    evidence_clock = now()
+
+    # Amendment refuses a baseline with no external evidence
+    # (`AmendmentEvidenceMissingError`), and that refusal is correct: an
+    # amendment corrects a return the authority already holds, so the baseline
+    # has to be one AEAT evidenced rather than one this process filed locally.
+    # The record therefore comes through the external-import door, exactly as
+    # the cross-period seeder produces its own sources.
+    persist_justificante_metadata(
+        evidence_reference_id,
+        modelo=_MODELO,
+        filing_year=_MODELO_FILING_YEAR,
+        period=_MODELO_PERIOD,
+        captured_at=evidence_clock,
+        tax_id=SEEDED_SOURCE_TAX_ID,
+    )
+    record = import_external_filing_evidence(
+        work_unit_id=unit.work_unit_id,
+        casilla_values={casilla_id: Decimal("100")},
+        evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+        evidence_reference_id=evidence_reference_id,
+        actor=_ACTOR,
+        work_unit_repository=WorkUnitCatalogueRepository(),
+        calculation_repository=CalculationRevisionCatalogueRepository(),
+        filing_repository=ModeloRecordCatalogueRepository(),
+        bucket_event_repository=BucketEventHistoryRepository(),
+        expected_tax_id=SEEDED_SOURCE_TAX_ID,
+        clock=evidence_clock,
+    )
+    return str(record.filing_record_id), str(casilla_id)
+
+
+def _seeded_modelo_edit_submission(profile_id: UUID) -> tuple[str, object]:
+    """Admit an edit over a seeded revision and return its wire submission.
+
+    The casilla is RESOLVED FROM THE ADMISSION rather than named. The permitted
+    surface reports which scalars this revision actually accepts, so taking the
+    first writable one keeps this fixture free of a hardcoded casilla id --
+    which matters because that mapping is revision-scoped, and thirty-four
+    modules already freeze it as a literal.
+
+    The wire submission is built by
+    `ModeloEditApplySubmissionV1.from_submission`, the domain-to-wire
+    translation the contract owns, rather than by assembling the payload here.
+    A second translator would be free to disagree with the one the executor
+    reverses.
+    """
+    from ...adapters.persistence.profile.modelos_calculation import (
+        CalculationRevisionCatalogueRepository,
+    )
+    from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+    from ...application.modelo._edit_models import (
+        ModeloEditAdmissionRequestV1,
+        ModeloEditAdmittedV1,
+        ModeloEditScalarAddressV1,
+        ModeloEditScalarIntentKind,
+        ModeloEditSubmissionV1,
+        ModeloScalarEditIntentV1,
+    )
+    from ...application.modelo._edit_services import (
+        admit_modelo_edit,
+        modelo_edit_request_schema_identity,
+        modelo_edit_result_schema_identity,
+    )
+    from ...application.modelo.edit_contract import ModeloEditCompatibilityTupleV1, ModeloEditMutationFamily
+    from ...application.modelo.operation_definitions import ModeloEditApplySubmissionV1
+    from ...application.modelo.work_addressing import ModeloExactWorkUnitTarget
+    from ...application.modelo.workspace_models import ModeloWorkspaceExactWorkUnitTargetV1
+    from ...application.operations.registry import OperationSchemaIdentityV1
+
+    unit = _seeded_modelo_work_unit(profile_id)
+    calculate_modelo_revision(
+        unit.work_unit_id,
+        actor=_ACTOR,
+        casilla_inputs={},
+        binding_values=_FIRST_QUARTER_PRIOR_PERIOD_BINDINGS,
+    )
+    objects = secure_object_repository_for_active_bucket()
+    identity = OperationSchemaIdentityV1(
+        schema_id="modelo.edit.contract", schema_version=1, schema_fingerprint="a" * 64
+    )
+    admitted = admit_modelo_edit(
+        ModeloEditAdmissionRequestV1(
+            target=ModeloWorkspaceExactWorkUnitTargetV1(
+                target=ModeloExactWorkUnitTarget(work_unit_id=unit.work_unit_id, bucket_id=unit.bucket_id)
+            ),
+            mutation_family=ModeloEditMutationFamily.CALCULATE,
+        ),
+        bucket_id=unit.bucket_id,
+        work_catalogue=WorkUnitCatalogueRepository(objects=objects).load(),
+        calculation_catalogue=CalculationRevisionCatalogueRepository(objects=objects).load(),
+        compatibility=ModeloEditCompatibilityTupleV1(
+            contract_set_digest="a" * 64,
+            operation_definition_id="modelo.calculate",
+            definition_contract_digest="a" * 64,
+            request_schema=modelo_edit_request_schema_identity(),
+            result_schema=modelo_edit_result_schema_identity(),
+            review_projection_contract_version=None,
+            review_schema=None,
+            workspace_refresh_target_schema=identity,
+            financial_operand_schema=identity,
+        ),
+    )
+    if not isinstance(admitted, ModeloEditAdmittedV1):
+        raise AssertionError(f"edit admission refused for the conformance fixture: {admitted}")
+    writable = [
+        entry for entry in admitted.baseline.permitted_surface if getattr(entry, "kind", None) == "writable_scalar"
+    ]
+    if not writable:
+        raise AssertionError("the admitted revision permits no writable scalar; this fixture would be vacuous")
+    submission = ModeloEditSubmissionV1(
+        baseline=admitted.baseline,
+        mutation_family=ModeloEditMutationFamily.CALCULATE,
+        scalar_intents=(
+            ModeloScalarEditIntentV1(
+                address=ModeloEditScalarAddressV1(casilla_id=str(writable[0].casilla_id)),
+                kind=ModeloEditScalarIntentKind.SET_TYPED_VALUE,
+                value="100.00",
+            ),
+        ),
+    )
+    return unit.work_unit_id, ModeloEditApplySubmissionV1.from_submission(submission)
+
+
 def _payload(
     definition: OperationDefinition, *, profile_id: UUID, tmp_path: Path
 ) -> tuple[str, BaseModel, bytes | None]:
@@ -401,6 +726,71 @@ def _payload(
             values = {
                 "work_unit_id": unit.work_unit_id,
                 "new_name": "Conformance renamed unit",
+                "actor": _ACTOR,
+            }
+        case "modelo.export":
+            # A DRAFT revision is not exportable. `_require_exportable_revision_state`
+            # admits only SEALED states (VERIFICADO_COMPLETO, PRESENTADO,
+            # PRESENTADO_SUPERSEDIDO), because a fichero is a filing-grade
+            # artefact and a return still being edited has no business becoming
+            # one. So this seeds through verification rather than calculation.
+            revision_id, _report_id = _seeded_modelo_verification_report(profile_id)
+            subject_ref = revision_id
+            values = {
+                "calculation_revision_id": revision_id,
+                "output_path": str(tmp_path / "modelo-130-2025-1T.txt"),
+                "actor": _ACTOR,
+            }
+        case "modelo.edit.apply":
+            work_unit_id, wire_submission = _seeded_modelo_edit_submission(profile_id)
+            subject_ref = work_unit_id
+            values = {"submission": wire_submission}
+        case "modelo.work.file":
+            revision_id, report_id = _seeded_modelo_verification_report(profile_id)
+            subject_ref = revision_id
+            values = {
+                "approval": {
+                    "calculation_revision_id": revision_id,
+                    "verification_report_id": report_id,
+                },
+                "actor": _ACTOR,
+            }
+        case "modelo.work.amend":
+            filing_record_id, casilla_id = _seeded_modelo_filing_record(profile_id)
+            # The subject is the FILED RECORD, not the work unit: two amendments
+            # of one filed return describe competing corrections to the same
+            # declaration and must serialise against each other.
+            subject_ref = filing_record_id
+            values = {
+                "baseline": {"from_filing_record_id": filing_record_id},
+                # The request model is strict: the enum instance and a tuple,
+                # not their loose equivalents. A `.value` string and a list both
+                # round-trip through JSON but are refused at the boundary, which
+                # is the point of declaring the schema strict.
+                "amendment_kind": CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+                "overrides": ({"casilla_id": casilla_id, "value": "150.00"},),
+                "reason": "corrected the declared base for the conformance matrix",
+                "actor": _ACTOR,
+            }
+        case "modelo.work.verify":
+            revision_id = _seeded_modelo_calculation_revision(profile_id)
+            subject_ref = revision_id
+            values = {"calculation_revision_id": revision_id, "actor": _ACTOR}
+        case "modelo.work.discard":
+            # The baseline is the operator's EXACT APPROVAL, so it carries the
+            # unit's state as observed rather than as re-read: name and
+            # updated_at come off the seeded unit itself. A baseline resolved
+            # inside the executor would match by construction and the
+            # compare-and-swap this operation declares would never refuse.
+            unit = _seeded_modelo_work_unit(profile_id)
+            subject_ref = unit.work_unit_id
+            values = {
+                "baseline": {
+                    "work_unit_id": unit.work_unit_id,
+                    "name": unit.name,
+                    "observed_updated_at": unit.updated_at,
+                },
+                "reason": "discarded by the registered-executor conformance matrix",
                 "actor": _ACTOR,
             }
         case _:  # pragma: no cover - the coverage census names any definition missing a scenario.
@@ -686,3 +1076,32 @@ def test_censo_execution_deadline_settles_its_actual_cooperative_safe_stop(tmp_p
             assert cleanup.closed is True
 
         asyncio.run(run())
+
+
+def test_the_filing_authority_succeeds_on_the_same_fixture_its_operation_fails_on(tmp_path: Path) -> None:
+    """Localise a `modelo.work.file` failure to the platform or to the domain.
+
+    The registered `modelo.work.file` operation settles FAILED on this exact
+    fixture, and the supervisor stores the executor's exception as a digest
+    rather than a message -- so the projection cannot say whether filing itself
+    refused or the wrapper around it broke.
+
+    This is the control that answers it. Same runtime, same seeded and verified
+    revision, same actor and workflow profile; the only thing removed is the
+    operations platform. If this passes while the operation fails, the domain
+    path is sound and the defect is in the executor or the supervisor -- and
+    nobody has to repeat the investigation to find that out.
+    """
+    from ...application.modelo._filing_actions import file_modelo_revision
+
+    with _runtime(tmp_path / "authority-control", cleanup=_CloseWitness()) as (_driver, _registry, profile_id):
+        revision_id, _report_id = _seeded_modelo_verification_report(profile_id)
+
+        record = file_modelo_revision(
+            revision_id,
+            actor=_ACTOR,
+            workflow_profile=resolve_active_workflow_profile(),
+            notes=None,
+        )
+
+        assert record is not None, "the filing authority produced no record for a verified-complete revision"

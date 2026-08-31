@@ -10,12 +10,12 @@ from typing import NamedTuple, cast
 from sqlalchemy import Engine, bindparam, delete, inspect, select, text
 from sqlalchemy.orm import Session
 
-from .....core.classification import SensitivityClass
+from .....core.classification.policies import SensitivityClass
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.logging import get_logger
 from .....core.secure_object_write import SecureObjectWrite
-from .....core.time import coerce_utc_aware
-from .....core.time import now as _utc_now
+from .....core.time.clock import now as _utc_now
+from .....core.time.utc import coerce_utc_aware
 from .._runtime_readiness import StorageRuntimeReadinessCode, runtime_not_ready_error
 from .._schema_lineage import ensure_schema_version_readable, inner_envelope_classification_is_expected
 from .._secure_object_namespaces import (
@@ -294,7 +294,8 @@ class SecureObjectRepository(SecureObjectWriteOperations):
             self._registered_namespace_definition(namespace)
 
         from ..errors import SessionExpiredError
-        from ..master_key import current_active_bucket_session, evaluate_idle, session_serves_bucket
+        from ..master_key._idle_timeout import evaluate_idle
+        from ..master_key.active_session import current_active_bucket_session, session_serves_bucket
 
         session = current_active_bucket_session()
         if session is None:

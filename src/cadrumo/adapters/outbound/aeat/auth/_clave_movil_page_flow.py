@@ -29,12 +29,10 @@ from .....core.config import unwrap_optional_secret
 from .....core.errors.hierarchy import AeatLoginAssertionError
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.logging import get_logger
-from .....core.time import now
+from .....core.time.clock import now
 from .....domain.calculations.registry.remote_state_guard import RemoteOperation, assert_remote_operation_allowed
-from ....persistence.storage import (
-    CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE,
-    secure_object_repository_for_active_bucket,
-)
+from ....persistence.storage._secure_object_namespaces import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE
+from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from .._html import parse_html
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
 from .._representation_gate import (

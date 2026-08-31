@@ -43,16 +43,13 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from ....core.external_constants import UTF_8_ENCODING
-from ....core.time import now
-from ..storage import (
-    SecureObjectNamespaceDefinition,
-    SecureObjectRepository,
-    SecureObjectRevisionConflictError,
-    SecureObjectWrite,
-    secure_object_logical_path,
-)
+from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
+from ....core.time.clock import now
+from ..storage._namespace_registry import secure_object_logical_path
+from ..storage._secure_object_namespaces import SecureObjectNamespaceDefinition
+from ..storage.errors import SecureObjectRevisionConflictError
+from ..storage.sql import SecureObjectRepository, SecureObjectWrite
 
 
 class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
@@ -125,11 +122,15 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
 
     def _decode_record(self, payload: bytes) -> DocumentT:
         """Validate one loaded encrypted payload against the Envelope contract."""
-        from ..storage import Envelope, inner_envelope_classification_is_expected, inner_envelope_version_is_current
+        from ..storage._schema_lineage import (
+            inner_envelope_classification_is_expected,
+            inner_envelope_version_is_current,
+        )
+        from ..storage.envelope._envelope import Envelope
 
         envelope = Envelope.for_payload_type(self._model_type).model_validate_json(payload)
         if not inner_envelope_classification_is_expected(envelope.classification, self._definition.sensitivity):
-            from ..storage import ClassificationError
+            from ..storage.errors import ClassificationError
 
             raise ClassificationError(
                 f"{self.namespace}/{self.object_key} has classification {envelope.classification}; "
@@ -141,7 +142,7 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
                 },
             )
         if not inner_envelope_version_is_current(envelope.schema_version, self._definition.schema_version):
-            from ..storage import EnvelopeVersionError
+            from ..storage.errors import EnvelopeVersionError
 
             raise EnvelopeVersionError(
                 f"{self.namespace}/{self.object_key} is at version {envelope.schema_version}; "
@@ -199,7 +200,7 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
         read has no revision to assert -- but a caller that DID read one and
         omits it is choosing the silent discard.
         """
-        from ..storage import Envelope
+        from ..storage.envelope._envelope import Envelope
 
         envelope = Envelope[self._model_type](  # ty: ignore[invalid-type-form]  # reason: pydantic runtime generic parameterisation; the model type is a per-instance value, which no static type expression can carry
             schema_version=self._definition.schema_version,

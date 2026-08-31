@@ -40,7 +40,7 @@ from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState,
 from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ...domain.modelos.calculation_revision import SEALED_REVISION_STATES
 from ...domain.modelos.errors import ModeloError
-from ..calculations import correct_iva_compensation_period, seed_iva_compensation_period
+from ..calculations.iva_compensation_history import correct_iva_compensation_period, seed_iva_compensation_period
 from ._iva_wallet_gate import taxpayer_nif_for_bucket
 from ._preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
 
@@ -280,7 +280,7 @@ def correct_iva_compensation_period_for_bucket(
     if taxpayer_nif is None:
         raise _missing_taxpayer_error(bucket_id=bucket_id, subject_leaf_key="modelo.iva_wallet.correct")
 
-    from ..calculations import IvaCompensationHistoryRepository
+    from ..calculations.iva_compensation_history import IvaCompensationHistoryRepository
 
     repository = IvaCompensationHistoryRepository()
     existing = repository.load_period(period)
@@ -338,7 +338,7 @@ def _emit_iva_wallet_corrected_event(
 ) -> None:
     """Append the ``MODELO_IVA_WALLET_CORRECTED`` audit event for a correction."""
     from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-    from ...core.time import now
+    from ...core.time.clock import now
     from ...domain.buckets.event import BucketEventObjectType, BucketEventType
     from ...domain.buckets.event_repository import emit_bucket_event
 
@@ -452,7 +452,8 @@ def record_iva_compensation_override_for_bucket(
             },
         )
 
-    from ..calculations import IvaWalletDecisionRepository, reconcile_modelo_303_iva_compensation
+    from ..calculations._iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
+    from ..calculations.observations_repository import IvaWalletDecisionRepository
 
     existing = IvaWalletDecisionRepository().load_decision(taxpayer_nif, period)
     if existing is not None and not existing.blocked and str(existing.selected_authority) == "aeat_wallet":
@@ -464,7 +465,7 @@ def record_iva_compensation_override_for_bucket(
             },
         )
 
-    from ...core.time import now
+    from ...core.time.clock import now
     from ...domain.iva_compensation.reconciliation import IvaCompensationOverride
 
     snapshot = bundled_authority().snapshot(
@@ -509,7 +510,7 @@ def _emit_iva_wallet_override_event(
 ) -> None:
     """Append the ``MODELO_IVA_WALLET_OVERRIDE_RECORDED`` audit event for an override."""
     from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-    from ...core.time import now
+    from ...core.time.clock import now
     from ...domain.buckets.event import BucketEventObjectType, BucketEventType
     from ...domain.buckets.event_repository import emit_bucket_event
 

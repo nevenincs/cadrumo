@@ -6,10 +6,13 @@ from collections.abc import Awaitable, Callable
 from datetime import date
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt
 
-from ...core.register_scoping_signal import RegisterScopingSignal
+from ...core.bucket_pointer import require_active_bucket_id
 from ...core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
+from ...core.filing_year import FilingYear
+from ...core.identity import AeatExpedienteId
+from ...core.json_contract import Notice, NoticeSeverity
 from ...core.operations import (
     OperationCancellation,
     OperationClosePolicy,
@@ -18,11 +21,8 @@ from ...core.operations import (
     OperationEffect,
     OperationInteractionKind,
 )
-from ...core.bucket_pointer import require_active_bucket_id
-from ...core.filing_year import FilingYear
-from ...core.identity import AeatExpedienteId
-from ...core.json_contract import Notice, NoticeSeverity
-from ...core.time import now
+from ...core.register_scoping_signal import RegisterScopingSignal
+from ...core.time.clock import now
 from ...domain.deadlines.models import TaxpayerProfile
 from ..operations.capabilities import (
     OperationBaselinePolicy,
@@ -42,7 +42,7 @@ from ..operations.registry import (
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
 )
-from ..storage.sync_runs import SyncRunRecordReference, SyncRunRecordRepositoryProtocol
+from ..storage.sync_runs._records import SyncRunRecordReference, SyncRunRecordRepositoryProtocol
 from .filed_data_capture import (
     FILED_HISTORY_DECLARATION_PROGRESS_UNIT,
     FILED_HISTORY_DECLARATION_REFUSAL_CODE,
@@ -222,8 +222,8 @@ class FiledHistoryPairOutcomePublicV1(BaseModel):
     modelo: str = Field(min_length=1, max_length=8)
     ejercicio: FilingYear
     signals: tuple[FiledHistoryDiscoverySignal, ...] = Field(min_length=1)
-    row_count: int = Field(ge=0)
-    captured_count: int = Field(ge=0)
+    row_count: NonNegativeInt
+    captured_count: NonNegativeInt
     refused: bool
     failure_type: str | None = Field(default=None, min_length=1, max_length=128)
     failure_message: str | None = Field(default=None, min_length=1, max_length=2048)
@@ -250,8 +250,8 @@ class FiledPeriodSelectionPublicRowV1(BaseModel):
     modelo: str = Field(min_length=1, max_length=8)
     ejercicio: FilingYear
     period: str = Field(min_length=1, max_length=8)
-    raw_row_count: int = Field(ge=0)
-    selected_count: int = Field(ge=0)
+    raw_row_count: NonNegativeInt
+    selected_count: NonNegativeInt
     winning_expediente_id: AeatExpedienteId | None = None
 
 
@@ -278,8 +278,8 @@ class FiledHistoryPublicResultV1(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
 
     dry_run: bool
-    captured_count: int = Field(ge=0)
-    reached_count: int = Field(ge=0)
+    captured_count: NonNegativeInt
+    reached_count: NonNegativeInt
     scoping_signal: RegisterScopingSignal
     carries_a_taxpayer_specific_denominator: bool
     denominator_note: str
@@ -287,7 +287,7 @@ class FiledHistoryPublicResultV1(BaseModel):
     iva_wallet_divergence: str | None = Field(default=None, min_length=1, max_length=64)
     iva_wallet_blocked: bool
     notificaciones_status: str = Field(min_length=1, max_length=64)
-    notificaciones_row_count: int = Field(ge=0)
+    notificaciones_row_count: NonNegativeInt
     stage_failures: tuple[str, ...]
     sync_run_ref: SyncRunRecordReference | None
     evidence_notices: tuple[FiledHistoryEvidenceNoticeV1, ...]

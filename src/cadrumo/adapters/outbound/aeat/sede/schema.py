@@ -71,19 +71,19 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Literal
 
-from pydantic import AnyHttpUrl, BaseModel, Field, field_validator
+from pydantic import AnyHttpUrl, BaseModel, Field, NonNegativeInt, field_validator
 
-from .....core.observed_header_fact import ObservedHeaderFact
 from .....core.casilla_id import CasillaId
 from .....core.casilla_value_kind import CasillaValueKind
-from .....core.decimal import coerce_decimal_strict
+from .....core.decimal._coerce import coerce_decimal_strict
 from .....core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from .....core.filing_year import FilingYear
 from .....core.identity import AeatCsv, AeatExpedienteId, ContentDigest, RegistrySnapshotId
 from .....core.modelo import Modelo
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.observed_header_fact import ObservedHeaderFact
 from .....core.period import Period
-from .....core.time import UtcInstant
+from .....core.time.utc import UtcInstant
 from .....core.unit_proportion import UnitFraction
 from .errors import SedeValidationError
 
@@ -211,7 +211,7 @@ class FiledDeclaracionArtefact(BaseModel):
     kind: Literal["register_row", "submitted_file", "declaration_pdf", "justificante_pdf"]
     source_url: AnyHttpUrl
     content_type: str = Field(min_length=1, max_length=255)
-    byte_count: int = Field(ge=0)
+    byte_count: NonNegativeInt
     sha256: ContentDigest
     captured_at: datetime
     storage_ref: str | None = Field(default=None, min_length=1, max_length=4096)

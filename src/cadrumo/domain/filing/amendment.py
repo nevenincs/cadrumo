@@ -30,12 +30,12 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.period import Period
 from ...core.casilla_id import CasillaId
 from ...core.hashing import content_hash_hex
 from ...core.identity import AeatCsv
-from ...core.time import UtcInstant
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.period import Period
+from ...core.time.utc import UtcInstant
 from .protocols import ModeloInputs
 from .schema import ModeloDraft
 

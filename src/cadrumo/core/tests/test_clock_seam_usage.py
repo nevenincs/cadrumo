@@ -23,7 +23,7 @@ caught and an unrelated ``.now()`` / ``.today()`` on a non-datetime object is no
 * ``import datetime [as Y]`` binds a *module* name; ``Y.datetime.now(...)`` and
   ``Y.date.today(...)`` are offenders.
 
-The seam implementation itself (``core/time/_clock.py``) is the one production site
+The seam implementation itself (``core/time/clock.py``) is the one production site
 that legitimately calls ``datetime.now(tz=UTC)`` — it is the fallback the seam
 returns when unfrozen — and is skipped. The injectable live-AEAT sites, which accept
 an explicit ``now=`` parameter and fall back to real wall-clock only when the seam is
@@ -56,7 +56,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 #: The one production module that owns a bare ``datetime.now`` for a structural
 #: reason: it IS the seam, returning real wall-clock when unfrozen.
-_SKIP_FILES: frozenset[str] = frozenset({"core/time/_clock.py"})
+_SKIP_FILES: frozenset[str] = frozenset({"core/time/clock.py"})
 
 #: Injectable live-AEAT sites permitted to fall back to a bare ``datetime.now``.
 #: Keyed by ``src/cadrumo``-relative POSIX path → reason. Each accepts an explicit

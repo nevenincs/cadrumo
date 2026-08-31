@@ -29,9 +29,8 @@ from urllib.parse import urlsplit
 
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, SkipValidation, TypeAdapter, ValidationError
 
-from ...core.auth_provider import AuthProviderKind, ClaveMovilRoute
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.async_cleanup import AsyncResourceCleanupError, close_async_resources
+from ...core.auth_provider import AuthProviderKind, ClaveMovilRoute
 from ...core.errors.hierarchy import AeatLoginAssertionError, CadrumoError
 from ...core.identity import (
     IdentityError,
@@ -40,7 +39,9 @@ from ...core.identity import (
     validate_spanish_tax_id,
 )
 from ...core.logging import get_logger
-from ...core.time import now, validate_utc_aware
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.time.clock import now
+from ...core.time.utc import validate_utc_aware
 from ...domain.user_profile.values import ProfileSetupState
 from ..auth_credentials import ActiveCertificateCredentials
 from ..workflow.persistence import workflow_state_repository
@@ -356,7 +357,7 @@ async def require_verified_aeat_session(
             translated_message="application.auth.sessions.errors.state_missing",
         )
 
-    from ...adapters.outbound.aeat.browser import default_browser_session_factory
+    from ...adapters.outbound.aeat.browser._factory import default_browser_session_factory
 
     provider = select_provider(
         persisted.provider_kind,
@@ -1027,7 +1028,7 @@ def _active_profile_auth_facts() -> ClaveAuthFacts:
     surface, which is the same outcome this function already returns when no
     profile is active.
     """
-    from ...adapters.persistence.storage import active_bucket_session_serves
+    from ...adapters.persistence.storage.master_key.active_session import active_bucket_session_serves
     from ...core.bucket_pointer import resolve_active_bucket_id
     from ...domain.user_profile.errors import ProfileNotFoundError
     from ..user_profile.profile_record_repository import ProfileRecordRepository
@@ -1100,7 +1101,7 @@ def _build_provider(
     certificate_credentials: ActiveCertificateCredentials | None,
 ) -> AuthProvider:
     if browser_session_factory is None:
-        from ...adapters.outbound.aeat.browser import default_browser_session_factory
+        from ...adapters.outbound.aeat.browser._factory import default_browser_session_factory
 
         browser_session_factory = default_browser_session_factory
     return select_provider(

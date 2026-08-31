@@ -88,20 +88,20 @@ from ..adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ..adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ..adapters.persistence.storage import inspect_bucket_storage_runtime
-from ..core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ..core.auth_provider import AuthProviderKind
-from ..core.operator_action_enums import OperatorActionAxis
-from ..core.period import Period
-from ..core.aggregation import BindingSourceKind
+from ..adapters.persistence.storage.runtime import inspect_bucket_storage_runtime
 from ..core.aggregation import LEDGER_BINDING_SOURCE_KINDS as _LEDGER_PREFLIGHT_BINDING_SOURCES
+from ..core.aggregation import BindingSourceKind
+from ..core.auth_provider import AuthProviderKind
 from ..core.bucket_pointer import resolve_active_bucket_id
 from ..core.errors.hierarchy import CadrumoError
 from ..core.filing_year import FilingYear
 from ..core.hashing import content_hash_hex
-from ..core.identity import ProfileId
+from ..core.identity._profile import ProfileId
 from ..core.logging import get_logger
-from ..core.time import today_madrid
+from ..core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ..core.operator_action_enums import OperatorActionAxis
+from ..core.period import Period
+from ..core.time.clock import today_madrid
 from ..domain.calculations.registry.authority import bundled_authority
 from ..domain.calculations.registry.ids import RevisionId
 from ..domain.deadlines.engine import DeadlineEngine, compute_obligation_schedule
@@ -115,7 +115,7 @@ from ._state_projection_readiness import (
 from .auth.credentials import ActiveAuthProjectionSnapshot, active_auth_projection_span
 from .auth_credentials import ActiveCertificateCredentials
 from .ledger.preflight import LedgerPreflightIssue, LedgerPreflightIssueReason, preflight_ledger_tax_readiness
-from .operator_actions import PreconditionVerdict
+from .operator_actions._models import PreconditionVerdict
 from .user_profile.commands import ProfilePreflightRequirement
 from .workflow.profile_health import ActiveProfileHealth, assess_active_profile_health
 from .workflow.state_models import WorkflowState
@@ -682,7 +682,7 @@ def _build_modelo_readiness(
     if not requests or active_profile_id is None:
         return ()
 
-    from ..core.i18n import tr
+    from ..core.i18n._render import tr
     from ..domain.user_profile.values import ProfileSetupState
     from .modelo._profile_readiness_gate import (
         modelo_applicability_refusal,
@@ -920,7 +920,7 @@ def _missing_calculation_bindings_for_readiness(
     construction (``aeat-calculation-aggregation``).
     """
     from ..domain.calculations.registry.runtime_graph import enum_consumed_binding_ids, revision_date_binding_ids
-    from .calculations import relation_prefill_period_zero_default_binding_ids
+    from .calculations._relation_prefill_m202 import relation_prefill_period_zero_default_binding_ids
     from .modelo.profile_binding import (
         ProfileBindingResolutionError,
         profile_resolved_binding_ids,

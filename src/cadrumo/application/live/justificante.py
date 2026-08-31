@@ -63,24 +63,22 @@ if TYPE_CHECKING:
 from ...adapters.outbound.aeat.sede.declarations import open_declarations_register, shared_playwright
 from ...adapters.outbound.aeat.sede.walker import capture_justificante, walk_expedientes_tree
 from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
-from ...adapters.persistence.storage import (
+from ...adapters.persistence.storage._secure_object_namespaces import (
     LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE as JUSTIFICANTE_CAPTURE_STORAGE_NAMESPACE,
 )
-from ...adapters.persistence.storage import (
-    Envelope,
-    SecureObjectRepository,
-    secure_object_repository_for_bucket,
-)
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...adapters.persistence.storage.envelope._envelope import Envelope
+from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...core.aeat_csv import normalise_aeat_csv
-from ...core.modelo import Modelo
-from ...core.period import Period
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex, sha256_hex
 from ...core.identity import AeatCsv, AeatExpedienteId, BucketId, ContentDigest, SnapshotId, tax_id_identity_token
-from ...core.time import now
-from ..calculations import ObservationSourceKind
+from ...core.modelo import Modelo
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.period import Period
+from ...core.time.clock import now
+from ..calculations.observations_repository import ObservationSourceKind
 from .errors import (
     LiveApplicationInputError,
     LiveReadPrecondition,
@@ -714,7 +712,7 @@ def register_capture_as_filing_evidence(
     from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ...adapters.persistence.profile.justificante import JustificanteRepository
     from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-    from ...core.time import now
+    from ...core.time.clock import now
     from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType, derive_bucket_event_id
     from ...domain.buckets.event_repository import emit_bucket_events
     from ...domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind

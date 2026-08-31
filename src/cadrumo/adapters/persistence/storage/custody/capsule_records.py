@@ -21,7 +21,7 @@ from .....core.hashing import (
 )
 from .....core.identity import PrefixedContentDigest, ProfileLabel, canonical_profile_bucket_id
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from .....core.time import now as _now
+from .....core.time.clock import now as _now
 from ._filesystem_primitives import ProfileCustodyPasswordReadOperation
 from .digest_model import CustodyDigestModel
 from .errors import ProfileCustodyRecordError
@@ -239,13 +239,7 @@ class ProfileCustodyCommit(_ProfileCustodyCommitPayload, CustodyDigestModel):
     @field_validator("self_digest")
     @classmethod
     def _validate_self_digest(cls, value: str) -> str:
-        if (
-            len(value) != 71
-            or not value.startswith("sha256:")
-            or any(character not in "0123456789abcdef" for character in value[7:])
-        ):
-            raise ValueError("profile capsule self_digest must be a lowercase sha256 digest")
-        return value
+        return validate_prefixed_digest(value, field_name="profile capsule self_digest")
 
 
 

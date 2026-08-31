@@ -43,22 +43,22 @@ from contextlib import nullcontext
 from pathlib import Path
 from typing import override
 
-from .....core.period import Period
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.hashing import sha256_hex
-from .....core.time import now
+from .....core.period import Period
+from .....core.time.clock import now
 from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.casilla_membership import undeclared_casilla_ids
 from .....domain.calculations.registry.errors import RegistrySnapshotError
-from ....persistence.storage import (
+from ....persistence.storage._secure_object_namespaces import (
     AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
     AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE,
     AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE,
-    SecureBoundRepository,
-    SecureObjectRepository,
-    SecureObjectRowIdentityError,
-    secure_object_repository_for_active_bucket,
 )
+from ....persistence.storage.envelope._secure_repository import SecureBoundRepository
+from ....persistence.storage.errors import SecureObjectRowIdentityError
+from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+from ....persistence.storage.sql import SecureObjectRepository
 from .errors import ExpedienteNotFoundError, SedeValidationError
 from .schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, IvaCompensationWalletObservation
 

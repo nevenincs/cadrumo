@@ -36,12 +36,12 @@ if TYPE_CHECKING:
         Response,
     )
 
-from .....core.operator_action_enums import NoRecoveryOutcome
 from .....core.async_cleanup import await_cancellation_complete
 from .....core.config import Settings
 from .....core.errors.hierarchy import SiteHealthError, SiteHealthState
 from .....core.logging import get_logger
-from .....core.time import now
+from .....core.operator_action_enums import NoRecoveryOutcome
+from .....core.time.clock import now
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
 from ..auth.providers import BrowserContextProvisioner
 from ._site_health import (

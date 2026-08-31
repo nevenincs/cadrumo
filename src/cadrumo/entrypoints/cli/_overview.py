@@ -39,10 +39,10 @@ from ...application.overview.calendar_models import (
     OverviewCalendarRange,
 )
 from ...core.external_constants import OutputLanguage
-from ...core.i18n import tr
+from ...core.i18n._render import tr
 from ...core.json_contract import Notice, strict_round_trip
 from ...core.logging import get_logger
-from ...core.time import today_madrid
+from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.modelos.work_unit import WorkUnit
 from ._common import (
@@ -846,8 +846,8 @@ def overview_pipeline(
     from ...application.modelo._filing_actions import list_verification_reports
     from ...application.modelo.work_lifecycle import list_work_units
     from ...application.overview.pipeline_health import build_pipeline_health_report
-    from ...domain.modelos.verification_report import VerificationReport
     from ...domain.modelos.calculation_revision import CalculationRevision
+    from ...domain.modelos.verification_report import VerificationReport
     from ._ledger_payloads import LedgerStatusResult
 
     current = _state()

@@ -15,21 +15,21 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated, Self
 
-from pydantic import BaseModel, BeforeValidator, Field, field_validator, model_validator
+from pydantic import BaseModel, BeforeValidator, Field, NonNegativeInt, field_validator, model_validator
 
-from ...core.iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
-from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
-from ...core.modelo import Modelo
-from ...core.period import Period
 from ...core.aggregation import ThirdPartyDeclarationRole
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import (
     MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR,
     WORK_INCOME_MULTIPLE_PAGADORES_REDUCED_LIMIT_EUR_BY_YEAR,
 )
 from ...core.filing_year import FilingYear
+from ...core.iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
 from ...core.identity import SubjectTaxId
-from ...core.time import UtcInstant, validate_utc_aware
+from ...core.modelo import Modelo
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.period import Period
+from ...core.time.utc import UtcInstant, validate_utc_aware
+from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ..contribuyente.renta_codes import UE_EEA_COUNTRY_CODES, FiscalResidency
 from .errors import DeadlineValidationError
 
@@ -974,7 +974,7 @@ class RecargoBand(BaseModel):
     model_config = _STRICT_FROZEN
 
     id: str = Field(min_length=1, max_length=64)
-    min_completed_months: int = Field(ge=0)
+    min_completed_months: NonNegativeInt
     max_completed_months: int | None = None
     surcharge_pct: Decimal
     interest_applies: bool = False

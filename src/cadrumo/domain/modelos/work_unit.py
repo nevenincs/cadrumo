@@ -29,13 +29,13 @@ from typing import Annotated, cast, override
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
-from ...core.hex import Hex64Str
-from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.period import Period
 from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex
+from ...core.hex import Hex64Str
 from ...core.identity import BucketId, WorkUnitId
-from ...core.time import UtcInstant
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.period import Period
+from ...core.time.utc import UtcInstant
 from ..calculations.registry.ids import RevisionId
 from ..contribuyente.ccaa import CCAA
 from .codes import ModeloCode

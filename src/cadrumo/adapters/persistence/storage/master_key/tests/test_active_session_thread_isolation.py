@@ -30,7 +30,7 @@ from contextvars import copy_context
 
 import pytest
 
-from ......core.time._clock import now
+from ......core.time.clock import now
 from ..active_session import (
     activate_session,
     bind_active_bucket_session,

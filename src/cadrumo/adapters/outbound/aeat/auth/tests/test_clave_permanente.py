@@ -233,7 +233,7 @@ class TestVerify:
         provider = ClavePermanenteAuthProvider(settings)
 
         async def run() -> None:
-            from ......core.time import now
+            from ......core.time.clock import now
 
             attempted_at = now()
             session_without_context = AeatSession(

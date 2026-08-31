@@ -37,11 +37,11 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Protocol
 
-from ...core.secure_object_write import SecureObjectWrite
-from ...core.classification import SensitivityClass
+from ...core.classification.policies import SensitivityClass
 from ...core.config import Settings, StorageRouteKind, classify_storage_route, load_settings
 from ...core.logging import get_logger
-from ...core.time import now as utc_now
+from ...core.secure_object_write import SecureObjectWrite
+from ...core.time.clock import now as utc_now
 from ...domain.buckets.event import BucketEvent
 from .errors import WorkflowError
 from .events import (

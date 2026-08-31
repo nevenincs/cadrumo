@@ -20,14 +20,12 @@ from collections.abc import Callable
 
 from pydantic import BaseModel
 
-from ...adapters.persistence.storage import (
-    SecureObjectNamespaceDefinition,
-    SecureObjectRepository,
-    SecureObjectRevisionConflictError,
-)
-from ...core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
+from ...adapters.persistence.storage._secure_object_namespaces import SecureObjectNamespaceDefinition
+from ...adapters.persistence.storage.errors import SecureObjectRevisionConflictError
+from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...core.external_constants import UTF_8_ENCODING
-from ...core.time import UtcInstant
+from ...core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
+from ...core.time.utc import UtcInstant
 
 
 def ensure_singleton_keypair[KeypairT: BaseModel](

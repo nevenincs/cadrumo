@@ -45,9 +45,9 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, model_validator
 
-from ..models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..identity import AeatBoxNumber, ContentDigest, ContentDigestOrAbsent
-from ..time import validate_utc_aware
+from ..models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ..time.utc import validate_utc_aware
 
 #: Canonical shape of a run identifier: 16 lowercase hex characters, the form
 #: minted by :func:`core.observability.context._mint_run_id`. Declared once here

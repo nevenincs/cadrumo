@@ -36,14 +36,14 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ....core.logging import get_logger
-from ....core.time import now
+from ....core.time.clock import now
 from ....domain.filing.amendment import BaseAmendment, ModeloComplementaria, ModeloSustitutiva
-from ..storage import FILING_AMENDMENTS_NAMESPACE, secure_object_repository_for_bucket
+from ..storage._secure_object_namespaces import FILING_AMENDMENTS_NAMESPACE
+from ..storage.runtime_repository import secure_object_repository_for_bucket
 from ._filing_runtime import resolve_filing_repository_bucket_id
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
-    from ..storage import SecureObjectRepository
-    from ..storage.sql import SecureObjectRecord
+    from ..storage.sql import SecureObjectRecord, SecureObjectRepository
 
 type ModeloAmendment = ModeloComplementaria | ModeloSustitutiva
 
@@ -90,14 +90,14 @@ class ModeloAmendmentRepository:
 
     def envelope_path_for(self, amendment_id: str) -> Path:
         """Return a logical object marker for ``amendment_id``."""
-        from ..storage import safe_repository_id
+        from ..storage._path_safety import safe_repository_id
 
         safe_repository_id(amendment_id, context="amendment_id")
         return self.store_dir / amendment_id
 
     def lock_target_for(self, amendment_id: str) -> Path:
         """Return a logical lock marker; SQL transactions govern writes."""
-        from ..storage import safe_repository_id
+        from ..storage._path_safety import safe_repository_id
 
         safe_repository_id(amendment_id, context="amendment_id")
         return self.store_dir / f"{amendment_id}.lock"
@@ -124,15 +124,13 @@ class ModeloAmendmentRepository:
             SecureObjectRowIdentityError: The payload rebuilds a different
                 amendment id than the key it is filed under.
         """
-        from ..storage import (
-            ClassificationError,
-            Envelope,
-            EnvelopeVersionError,
-            SecureObjectRowIdentityError,
+        from ..storage._schema_lineage import (
             inner_envelope_classification_is_expected,
             inner_envelope_version_is_current,
         )
         from ..storage.crypto.encrypted_columns import secure_object_key_digest
+        from ..storage.envelope._envelope import Envelope
+        from ..storage.errors import ClassificationError, EnvelopeVersionError, SecureObjectRowIdentityError
 
         envelope = Envelope[ModeloAmendment].model_validate_json(record.payload.decode("utf-8"))
         if not inner_envelope_classification_is_expected(envelope.classification, _AMENDMENT_SENSITIVITY):
@@ -155,7 +153,7 @@ class ModeloAmendmentRepository:
 
     def load(self, amendment_id: str) -> ModeloAmendment | None:
         """Return the persisted amendment or ``None`` if absent."""
-        from ..storage import safe_repository_id
+        from ..storage._path_safety import safe_repository_id
 
         safe_repository_id(amendment_id, context="amendment_id")
         record = self._objects.load(
@@ -174,7 +172,8 @@ class ModeloAmendmentRepository:
         The row is stored under
         :data:`adapters.persistence.storage.FILING_AMENDMENTS_NAMESPACE`.
         """
-        from ..storage import Envelope, safe_repository_id
+        from ..storage._path_safety import safe_repository_id
+        from ..storage.envelope._envelope import Envelope
 
         safe_repository_id(amendment.amendment_id, context="amendment_id")
         envelope = Envelope[BaseAmendment](
@@ -196,7 +195,7 @@ class ModeloAmendmentRepository:
 
     def delete(self, amendment_id: str) -> bool:
         """Remove the persisted amendment for ``amendment_id``."""
-        from ..storage import safe_repository_id
+        from ..storage._path_safety import safe_repository_id
 
         safe_repository_id(amendment_id, context="amendment_id")
         deleted = self._objects.delete(_AMENDMENT_NAMESPACE, amendment_id)

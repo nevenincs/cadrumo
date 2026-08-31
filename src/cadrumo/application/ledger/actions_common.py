@@ -17,20 +17,20 @@ from typing import TYPE_CHECKING
 
 from pydantic import TypeAdapter
 
-from ...core.decimal import format_decimal
+from ...core.decimal._format import format_decimal
 from ...core.external_constants import CLASSIFIED_BY_AUTO, CLASSIFIED_BY_MANUAL
-from ...core.time import now
+from ...core.time.clock import now
 
 if TYPE_CHECKING:
-    from ...adapters.persistence.storage import SecureObjectWrite
+    from ...adapters.persistence.storage.sql.secure_objects import SecureObjectWrite
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...adapters.persistence.profile.usage_ratios import load_usage_ratios
-from ...adapters.persistence.storage import TRANSACTION_CATALOGUE_NAMESPACE
-from ...core.time import coerce_utc_aware
+from ...adapters.persistence.storage._secure_object_namespaces import TRANSACTION_CATALOGUE_NAMESPACE
+from ...core.time.utc import coerce_utc_aware
 from ...domain.attachments.errors import AttachmentNotFoundError, AttachmentValidationError
 from ...domain.attachments.protocols import AttachmentStoreProtocol as _AttachmentStoreProtocol
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
@@ -38,18 +38,15 @@ from ...domain.buckets.event_repository import append_bucket_event, build_bucket
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.invoices.models import InvoiceCatalogue
 from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
-from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.calculation_revision import SEALED_REVISION_STATES, CalculationRevisionState
+from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions.enums import BusinessClassification
 from ...domain.transactions.errors import TransactionNotFoundError, TransactionValidationError
 from ...domain.transactions.models import BucketTransactionRef, Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
-from ...domain.usage_ratios import (
-    UsageRatioProfile,
-    UsageRatioValidationError,
-    validate_usage_ratio_reference,
-)
+from ...domain.usage_ratios._model import UsageRatioProfile, validate_usage_ratio_reference
+from ...domain.usage_ratios.errors import UsageRatioValidationError
 from .evidence import PurchaseInvoiceEvidence
 from .evidence_reference import (
     EvidenceReferenceOutcome,
@@ -118,7 +115,7 @@ def resolve_bucket_event_repository(
     if repository is not None:
         assert isinstance(repository, BucketEventHistoryRepository)
         return repository
-    from ...adapters.persistence.storage import secure_object_repository_for_bucket
+    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 
     return BucketEventHistoryRepository(objects=secure_object_repository_for_bucket(bucket_id))
 
@@ -444,7 +441,7 @@ def resolve_attachment_store(
     construction helper with the other shared ledger action infrastructure
     prevents individual action modules from each reaching into storage.
     """
-    from ...adapters.persistence.storage import resolve_attachment_store
+    from ...adapters.persistence.storage.attachment import resolve_attachment_store
 
     return resolve_attachment_store(attachment_store)
 
@@ -457,7 +454,7 @@ def purchase_invoice_evidence_records(bucket_id: str) -> tuple[PurchaseInvoiceEv
     :class:`InvoiceCatalogue` written by invoice-import flows. Local imports mirror
     this module's existing deferred-import style.
     """
-    from ...adapters.persistence.storage import secure_object_repository_for_bucket
+    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
     from ...core.config import load_settings
     from .evidence import PurchaseInvoiceEvidenceRepository
 
@@ -891,7 +888,7 @@ def _commit_with_guarded_events(
         SecureObjectRevisionConflictError: Contention persisted across every
             attempt. Refusing beats the silent discard this replaced.
     """
-    from ...adapters.persistence.storage import SecureObjectRevisionConflictError
+    from ...adapters.persistence.storage.errors import SecureObjectRevisionConflictError
 
     last_conflict: SecureObjectRevisionConflictError | None = None
     for _attempt in range(attempts):

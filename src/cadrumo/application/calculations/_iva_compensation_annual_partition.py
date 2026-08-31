@@ -14,14 +14,14 @@ from collections.abc import Mapping
 from decimal import Decimal
 from typing import ClassVar, Final
 
-from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
-from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
+from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId
+from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ...core.logging import get_logger
 from ...core.modelo import Modelo
 from ...core.period import Period
-from ...core.time import now
+from ...core.time.clock import now
 from ...domain.calculations.registry.bindings import (
     RegistryModeloObservation,
     iva_compensation_annual_partition_requirement,
@@ -75,7 +75,7 @@ def _observed_value(values: Mapping[CasillaId, Decimal], casilla_id: CasillaId) 
 
 
 def _validate_303_observation_casilla_ids(observation: RegistryModeloObservation) -> None:
-    from ...core.resources import bundled_path
+    from ...core.resources._boundary import bundled_path
     from ...domain.calculations.registry.loader import load_registry_tree
 
     modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
@@ -259,7 +259,7 @@ class IvaCompensationAnnualPartitionSourceResolver:
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         revision = self._registry_snapshot.revision if self._registry_snapshot is not None else None
         if revision is None:
-            from ...core.resources import bundled_path
+            from ...core.resources._boundary import bundled_path
             from ...domain.calculations.registry.loader import load_registry_tree
 
             modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))

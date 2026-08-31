@@ -34,24 +34,18 @@ from typing import Annotated, ClassVar, override
 
 from pydantic import BaseModel, Field, StringConstraints
 
-from ...adapters.persistence.storage import (
-    AUTH_APODERADO_CONFIGURATION_NAMESPACE,
-    SecureBoundRepository,
-    SecureObjectRepository,
-    SecureObjectRowIdentityError,
-    SensitivityClass,
-    safe_repository_id,
-)
+from ...adapters.persistence.storage._path_safety import safe_repository_id
+from ...adapters.persistence.storage._secure_object_namespaces import AUTH_APODERADO_CONFIGURATION_NAMESPACE
+from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
+from ...adapters.persistence.storage.errors import SecureObjectRowIdentityError
+from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ...core.classification.policies import SensitivityClass
 from ...core.config import Settings
 from ...core.errors.hierarchy import CadrumoError
 from ...core.identity import BucketId, canonical_bucket_id
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.time import now
-from ...domain.auth import (
-    ApoderamientosCatalogue,
-    load_default_catalogue,
-    parse_scope_tokens,
-)
+from ...core.time.clock import now
+from ...domain.auth.apoderamientos.catalogue import ApoderamientosCatalogue, load_default_catalogue, parse_scope_tokens
 from .apoderado_text import ApoderadoNotes
 
 

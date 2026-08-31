@@ -25,7 +25,7 @@ from typing import TYPE_CHECKING
 
 from .....application.auth.protocols import BrowserContextPort, BrowserPagePort
 from .....core.logging import get_logger
-from .....core.time import now
+from .....core.time.clock import now
 from . import session_store as session_store
 from .authenticator import AEAT_SESSION_IDLE_TTL
 from .clave_movil_metadata import ClaveMovilSessionMetadata

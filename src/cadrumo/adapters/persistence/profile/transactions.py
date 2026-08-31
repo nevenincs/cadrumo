@@ -64,14 +64,15 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field, TypeAdapter, ValidationError, field_validator
 from sqlalchemy import delete, select, update
 
-from ....core.iva_deduction_fact import IvaDeductionFactKind
-from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.config import load_settings
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import sha256_hex
+from ....core.iva_deduction_fact import IvaDeductionFactKind
 from ....core.logging import get_logger
-from ....core.time import now, validate_utc_aware
-from ....domain.bienes_inversion import (
+from ....core.models import STRICT_FROZEN_CONFIG
+from ....core.time.clock import now
+from ....core.time.utc import validate_utc_aware
+from ....domain.bienes_inversion.register import (
     BienesInversionIvaRegister,
     InvestmentAssetAcquisitionLink,
     validate_investment_asset_reciprocity,
@@ -84,24 +85,25 @@ from ....domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind
 from ....domain.transactions.dates import transaction_eligible_date_span, transaction_filing_date
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.errors import LedgerStorageError, StoredTransactionDriftError
-from ....domain.transactions.models import LedgerDatePartition, OutOfWindowTransactionIndexEntry, OutOfWindowTransactionSummary, Transaction, TransactionCatalogue
+from ....domain.transactions.models import (
+    LedgerDatePartition,
+    OutOfWindowTransactionIndexEntry,
+    OutOfWindowTransactionSummary,
+    Transaction,
+    TransactionCatalogue,
+)
 from ....domain.transactions.repository import transaction_index_object_key, transaction_object_key
-from ..storage import (
+from ..storage._secure_object_namespaces import (
     PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE,
     TRANSACTION_CATALOGUE_NAMESPACE,
-    SecureObjectMigrationTarget,
-    SecureObjectRowIdentityError,
 )
-from ..storage.sql import TransactionDateIndexRow
+from ..storage.errors import SecureObjectRowIdentityError
+from ..storage.sql import SecureObjectMigrationTarget, TransactionDateIndexRow
 from .bienes_inversion import BienesInversionIvaRegisterRepository
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
-    from ..storage import (
-        SecureObjectDeletion,
-        SecureObjectNamespaceDefinition,
-        SecureObjectRepository,
-        SecureObjectWrite,
-    )
+    from ..storage._secure_object_namespaces import SecureObjectNamespaceDefinition
+    from ..storage.sql import SecureObjectDeletion, SecureObjectRepository, SecureObjectWrite
 
 _log = get_logger(__name__)
 
@@ -135,7 +137,7 @@ class _TransactionIndex(BaseModel):
 
 def _secure_objects_for_bucket(bucket_id: str) -> SecureObjectRepository:
     """Return the runtime-created secure-object repository for ``bucket_id``."""
-    from ..storage import secure_object_repository_for_bucket
+    from ..storage.runtime_repository import secure_object_repository_for_bucket
 
     return secure_object_repository_for_bucket(bucket_id, load_settings())
 
@@ -362,13 +364,12 @@ class TransactionCatalogueRepository:
             StoredTransactionDriftError: If a row payload fails pydantic schema
                 validation on deserialization.
         """
-        from ..storage import (
-            ClassificationError,
-            Envelope,
-            EnvelopeVersionError,
+        from ..storage._schema_lineage import (
             inner_envelope_classification_is_expected,
             inner_envelope_version_is_current,
         )
+        from ..storage.envelope._envelope import Envelope
+        from ..storage.errors import ClassificationError, EnvelopeVersionError
 
         index_ids = self._load_index_ids()
         if not index_ids:
@@ -472,7 +473,7 @@ class TransactionCatalogueRepository:
 
     def _validated_migrated_transactions(self, payloads: Mapping[str, bytes]) -> tuple[Transaction, ...]:
         """Return the complete semantically validated upgraded transaction set."""
-        from ..storage import Envelope
+        from ..storage.envelope._envelope import Envelope
 
         index_key = transaction_index_object_key(self._bucket_id)
         index_payload = payloads.get(index_key)
@@ -866,8 +867,8 @@ class TransactionCatalogueRepository:
 
     def _load_transactions_by_ids(self, transaction_ids: Iterable[str], *, read_context: str) -> list[Transaction]:
         """Load selected transaction rows through one targeted secure-object batch."""
-        from ..storage import Envelope
         from ..storage.crypto.encrypted_columns import secure_object_key_digest
+        from ..storage.envelope._envelope import Envelope
 
         selected_ids = tuple(sorted(transaction_ids))
         if not selected_ids:
@@ -1105,8 +1106,8 @@ class TransactionCatalogueRepository:
         comparison (``stored_hashes``) is always fresh; only the
         fresh-serialization side of the diff is skipped for a cache hit.
         """
-        from ..storage import SecureObjectDeletion, SecureObjectWrite
         from ..storage.crypto.encrypted_columns import secure_object_key_digest
+        from ..storage.sql import SecureObjectDeletion, SecureObjectWrite
 
         current_ids = self._load_index_ids()
         incoming_ids = set(catalogue.transactions)
@@ -1182,7 +1183,8 @@ class TransactionCatalogueRepository:
 
     def _load_index_ids(self, *, require_current: bool = True) -> set[str]:
         """Return the transaction ids the per-bucket membership index records."""
-        from ..storage import Envelope, inner_envelope_version_is_current
+        from ..storage._schema_lineage import inner_envelope_version_is_current
+        from ..storage.envelope._envelope import Envelope
 
         index_key = transaction_index_object_key(self._bucket_id)
         record = self._objects.load(
@@ -1206,7 +1208,7 @@ class TransactionCatalogueRepository:
 
     def _serialise_index(self, transaction_ids: set[str]) -> bytes:
         """Serialise the membership index (sorted ids) into encrypted-row bytes."""
-        from ..storage import Envelope
+        from ..storage.envelope._envelope import Envelope
 
         envelope = Envelope[_TransactionIndex](
             schema_version=_TX_CATALOGUE_VERSION,
@@ -1223,7 +1225,7 @@ class TransactionCatalogueRepository:
         ``now()``), so an unchanged transaction serialises to identical bytes —
         and an identical ``payload_hash`` — letting the diff skip rewriting it.
         """
-        from ..storage import Envelope
+        from ..storage.envelope._envelope import Envelope
 
         envelope = Envelope[Transaction](
             schema_version=_TX_CATALOGUE_VERSION,

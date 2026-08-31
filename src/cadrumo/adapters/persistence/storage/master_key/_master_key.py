@@ -29,7 +29,7 @@ from __future__ import annotations
 import sqlite3
 from typing import TYPE_CHECKING, Final, Protocol, runtime_checkable
 
-from .....core.time._clock import now
+from .....core.time.clock import now
 
 if TYPE_CHECKING:
     from contextlib import AbstractContextManager

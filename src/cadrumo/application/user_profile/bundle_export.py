@@ -34,16 +34,16 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from ...core.link_safety import is_link_like
-from ...core.fsync import fsync_parent_dir
 from ...core.atomic_write import atomic_write_hardened_bytes
 from ...core.directory_scan import scan_directory
 from ...core.external_constants import UTF_8_ENCODING
+from ...core.fsync import fsync_parent_dir
 from ...core.hashing import sha256_hex
+from ...core.link_safety import is_link_like
 from ...core.locks import exclusive_file_lock
 from ...core.locks_errors import LockAcquisitionError
 from ...core.logging import get_logger
-from ...core.time import now
+from ...core.time.clock import now
 from ...domain.user_profile.errors import ProfileExportError, ProfileNotFoundError
 from .bundle_export_contracts import (
     ProfileBundleExportReconcileFailure,

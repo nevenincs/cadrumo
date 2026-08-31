@@ -37,31 +37,27 @@ from pydantic import BaseModel, field_validator, model_validator
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ...core.identifier_grammar import NamespacedId
+from ...core.identity import CalculationRevisionId
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import (
     ActionArgumentSource,
     ActionArgumentStatus,
     ActionEvidenceProvenance,
     NoRecoveryOutcome,
 )
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
-from ...core.identifier_grammar import NamespacedId
-from ...core.identity import CalculationRevisionId
-from ...core.time import now as _utc_now
+from ...core.time.clock import now as _utc_now
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
-from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.buckets.event_repository import bucket_event_history_write as _bucket_event_write
+from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.contribuyente.ccaa import CCAA
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.repository import upsert_work_unit
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from ..operator_actions import (
-    ActionArgumentBinding,
-    ActionReference,
-    ConditionEvidence,
-)
+from ..operator_actions._models import ActionArgumentBinding, ActionReference, ConditionEvidence
 from ._action_errors import (
     CalculationRevisionNotFoundError,
     WorkUnitAlreadyDiscardedError,

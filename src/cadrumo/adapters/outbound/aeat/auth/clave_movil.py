@@ -66,7 +66,7 @@ from .....core.i18n import tr
 from .....core.identity import same_tax_identifier, tax_id_identity_token
 from .....core.logging import get_logger
 from .....core.remote_authority import canonical_remote_hostname
-from .....core.time import now
+from .....core.time.clock import now
 from .....domain.user_profile.errors import UserProfileError
 from .._playwright import PlaywrightTimeoutError
 from . import session_store as session_store
@@ -146,7 +146,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
         self._lifecycle = _CloseIntentBarrier()
         self._browser_session: BrowserSessionPort | None = None
         self._context: BrowserContextPort | None = None
-        self._active_session: AeatSession | None = None
+        self.active_session: AeatSession | None = None
 
     # ── Protocol surface ────────────────────────────────────────────────────
 
@@ -169,7 +169,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
         provider detail is :class:`ClaveMovilSessionDetail`.
         """
         async with self._lifecycle.work():
-            if self._active_session is not None:
+            if self.active_session is not None:
                 raise AeatLoginAssertionError(
                     "ClaveMovilAuthProvider already has an active session; call close() before authenticating again",
                     translated_message="adapters.auth.clave_movil.errors.already_active",
@@ -218,7 +218,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
             A 2-tuple of (:class:`AeatSession`, :class:`AeatLoginAssertion`).
         """
         async with self._lifecycle.work():
-            if self._active_session is not None:
+            if self.active_session is not None:
                 raise AeatLoginAssertionError(
                     "ClaveMovilAuthProvider already has an active session; call close() first",
                 )
@@ -262,7 +262,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
                 )
                 self._browser_session = session_like
                 self._context = context
-                self._active_session = session
+                self.active_session = session
                 # Explicit caller targets need selector dispatch; recorded
                 # landing metadata is already carried by the session detail
                 # and remains a direct probe.
@@ -287,7 +287,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
                 closed = await self._close_browser_session(session_like)
                 self._browser_session = None if closed else session_like
                 self._context = None if context_closed else context
-                self._active_session = None
+                self.active_session = None
                 raise
 
     def _finalize_probe_result(
@@ -317,7 +317,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
                 "idle_deadline": assertion.attempted_at + AEAT_SESSION_IDLE_TTL,
             },
         )
-        self._active_session = refreshed
+        self.active_session = refreshed
         refreshed_metadata = metadata.model_copy(
             update={
                 "authenticated_at": refreshed.authenticated_at,
@@ -381,7 +381,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
             )
         if not is_exact_active_provider_session(
             session,
-            self._active_session,
+            self.active_session,
             provider_kind=AuthProviderKind.CLAVE_MOVIL,
             detail_type=ClaveMovilSessionDetail,
         ):
@@ -498,7 +498,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
             browser_session_closed = await self._close_browser_session(self._browser_session)
             if browser_session_closed:
                 self._browser_session = None
-            self._active_session = None
+            self.active_session = None
         if not context_closed or not browser_session_closed:
             raise AuthProviderCleanupError(
                 "ClaveMovilAuthProvider retained browser resources after close",
@@ -625,12 +625,12 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
 
     def _active_profile_diagnostic_context(self, provider_identity: str) -> dict[str, object]:
         try:
-            from .....adapters.persistence.storage import active_bucket_session_serves
             from .....application.user_profile.profile_record_repository import ProfileRecordRepository
             from .....application.user_profile.projections import record_to_path_values, record_to_values
             from .....application.workflow.profile_bucket_scan import read_profile_bucket_by_id
             from .....core.bucket_pointer import resolve_active_bucket_id
             from .....domain.user_profile.errors import ProfileNotFoundError
+            from ....persistence.storage.master_key.active_session import active_bucket_session_serves
 
             bucket_id = resolve_active_bucket_id()
             pointer = read_profile_bucket_by_id(bucket_id) if bucket_id else None
@@ -865,7 +865,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
         )
         self._browser_session = session_like
         self._context = context
-        self._active_session = session
+        self.active_session = session
         log.info(
             "ClaveMovilAuthProvider: authenticated non_qr=%s landing=%s",
             self._settings.cadrumo_clave_prefer_non_qr,
@@ -1121,7 +1121,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
             )
             self._browser_session = session_like
             self._context = context
-            self._active_session = session
+            self.active_session = session
 
             assertion = await self._verify_in_work(session, target_url=target_url)
             if not assertion.is_valid:
@@ -1135,7 +1135,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
                     "idle_deadline": assertion.attempted_at + AEAT_SESSION_IDLE_TTL,
                 },
             )
-            self._active_session = refreshed
+            self.active_session = refreshed
             refreshed_metadata = metadata.model_copy(
                 update={
                     "authenticated_at": refreshed.authenticated_at,
@@ -1158,7 +1158,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
             context_closed = await self._close_context(context, reason="resume cleanup")
             self._browser_session = None
             self._context = None if context_closed else context
-            self._active_session = None
+            self.active_session = None
             if not await self._close_browser_session(session_like):
                 self._browser_session = session_like
             raise

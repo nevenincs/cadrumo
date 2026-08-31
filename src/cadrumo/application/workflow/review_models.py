@@ -6,10 +6,10 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field, field_validator
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.identity import BucketId, InvoiceId, TransactionId
-from ...core.time import now as utc_now
-from ...core.time import validate_utc_aware
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.time.clock import now as utc_now
+from ...core.time.utc import validate_utc_aware
 from ...domain.contribuyente.normalise import normalise_key
 
 

@@ -109,7 +109,7 @@ def default_invoice_extraction_period() -> Period:
     Returns:
         :class:`~core.Period`: The current civil year's annual period.
     """
-    from ...core.time import today_madrid
+    from ...core.time.clock import today_madrid
 
     return Period.from_year_and_code(today_madrid().year, "0A")
 

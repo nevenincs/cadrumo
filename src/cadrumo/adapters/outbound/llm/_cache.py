@@ -18,19 +18,20 @@ from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
 
-from ....adapters.persistence.storage import LLM_CACHE_NAMESPACE, secure_object_repository_for_active_bucket
-from ....core.classification import SensitivityClass
+from ....core.classification.policies import SensitivityClass
 from ....core.config import load_settings
 from ....core.hashing import canonical_json_bytes, content_hash_hex, sha256_hex
 from ....core.logging import get_logger
-from ....core.redaction import default_rules_for_class, redact_structured
-from ....core.time import now
+from ....core.redaction.rules import default_rules_for_class, redact_structured
+from ....core.time.clock import now
 from ....llm.errors import LLMCacheError
 from ....llm.models import CachedEntry, CacheKey, CacheStats, LLMProvider, LLMRequest, LLMResponse
 from ....llm.retention import select_retention_removal_keys
+from ...persistence.storage._secure_object_namespaces import LLM_CACHE_NAMESPACE
+from ...persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 
 if TYPE_CHECKING:
-    from ....adapters.persistence.storage import SecureObjectRepository
+    from ...persistence.storage.sql import SecureObjectRepository
 
 _log = get_logger(__name__)
 

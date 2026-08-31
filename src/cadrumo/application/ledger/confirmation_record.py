@@ -45,7 +45,8 @@ from ...core.field_origin import FieldOrigin
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId, ContentDigest, InvoiceId
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.time import UtcInstant, now
+from ...core.time.clock import now
+from ...core.time.utc import UtcInstant
 from .confirmation_gate import ConfirmationBlocker, FindingResolution
 from .deterministic_findings import deterministic_check_names
 from .invoice_draft_records import FieldProvenance, InvoiceDraft

@@ -28,7 +28,7 @@ from ...application.auth.catalogue import AuthProviderListing
 from ...application.auth.diagnostics import AuthDiagnosticDetail, AuthDiagnosticPhoneState, AuthDiagnosticSummary
 from ...application.auth.operator_results import AuthLoginResult, AuthStatusResult, AuthTestResult
 from ...application.auth.probes import ProviderProbeResult
-from ...application.bucket_maintenance import BucketDeletionFingerprint
+from ...application.bucket_maintenance._contracts import BucketDeletionFingerprint
 from ...application.config_reset import (
     ConfigResetOperationStatus,
     ConfigResetPauseReason,
@@ -38,13 +38,13 @@ from ...application.user_profile.aggregate import ProfileRestoreAuthority
 from ...application.user_profile.bundle_export_contracts import ProfileBundleExportPurpose, ProfileBundleExportTransport
 from ...application.workflow.events import WorkflowReasonClass
 from ...application.workflow.profile_health import ProfileHealthStatus, ProfileSource
-from ...core.hex import Hex64Str
 from ...core.errors.severity import BaseSeverity
+from ...core.hex import Hex64Str
 from ...core.identity import BucketId, ProfileId, ProfileLabel
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.text_bounds import NonEmptyStr, PositiveCount
-from ...core.time import validate_utc_aware
+from ...core.time.utc import validate_utc_aware
 from ...domain.auth.apoderamientos.catalogue import ApoderadoScopeCode, ApoderadoScopeName
 from ...domain.user_profile.values import PayloadSchemaVersion, ProfileSetupState
 

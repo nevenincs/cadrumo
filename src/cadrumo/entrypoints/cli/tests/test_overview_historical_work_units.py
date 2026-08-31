@@ -7,9 +7,9 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core.period import Period
 from ....core.bucket_pointer import resolve_active_bucket_id
-from ....core.time import now
+from ....core.period import Period
+from ....core.time.clock import now
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.repository import upsert_work_unit

@@ -36,10 +36,10 @@ import json
 from collections.abc import Callable, Mapping
 from typing import TYPE_CHECKING, Final
 
-from ...core.type_adapters import STR_KEYED_MAPPING_ADAPTER
-from ...core.storage_taxonomy import StorageCustodyProfile
 from ...core.errors.hierarchy import CadrumoError
-from ...core.time import now
+from ...core.storage_taxonomy import StorageCustodyProfile
+from ...core.time.clock import now
+from ...core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import emit_bucket_event
 

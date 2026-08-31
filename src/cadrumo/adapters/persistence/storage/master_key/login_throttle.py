@@ -49,7 +49,7 @@ from .....core.locks import exclusive_file_lock
 from .....core.locks_errors import LockAcquisitionError
 from .....core.logging import get_logger
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from .....core.time._utc import UtcInstant
+from .....core.time.utc import UtcInstant
 from .._storage_path_definitions import LOGIN_THROTTLE_FILENAME
 
 _log = get_logger(__name__)

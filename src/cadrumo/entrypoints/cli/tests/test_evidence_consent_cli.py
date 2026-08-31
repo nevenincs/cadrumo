@@ -75,7 +75,7 @@ def _seed_consented_dispatch(profile: TestRuntimeProfile, *, address: str = _DIG
     opened, so what the verb reads back is what a consented dispatch actually
     leaves behind.
     """
-    from ....adapters.outbound.llm import EvidenceConsentLedger
+    from ....adapters.outbound.llm._consent_ledger import EvidenceConsentLedger
 
     _ = profile
     EvidenceConsentLedger().append(
@@ -281,13 +281,11 @@ def test_a_dispatch_recorded_under_another_profile_is_not_listed_here(profile: T
     one except in the field under test. The own-profile row is seeded alongside
     it, so this cannot pass by the verb reporting nothing at all.
     """
-    from ....adapters.persistence.storage import (
-        LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE,
-        secure_object_repository_for_active_bucket,
-    )
+    from ....adapters.persistence.storage._secure_object_namespaces import LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE
+    from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
     from ....core.hashing import canonical_json_bytes
-    from ....core.time import now
-    from ....domain.evidence_consent import EvidenceConsentLedgerEntry
+    from ....core.time.clock import now
+    from ....domain.evidence_consent._record import EvidenceConsentLedgerEntry
 
     _seed_consented_dispatch(profile)
     foreign = EvidenceConsentLedgerEntry(

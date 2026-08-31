@@ -45,7 +45,7 @@ from ....core.json_contract import Notice, NoticeSeverity, emit_json_success
 from ....core.observability.capture import capture_envelopes
 from ....core.observability.fingerprint import compute_db_sha256
 from ....core.observability.golden import canonicalise, differing_field_names, differing_paths, mask_document
-from ....core.time import frozen_clock
+from ....core.time.clock import frozen_clock
 from ....domain.transactions.enums import TransactionDirection
 from ....tests.env_scope import scoped_cwd
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile

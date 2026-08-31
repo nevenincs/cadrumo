@@ -14,14 +14,14 @@ from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
-from ...core.period import Period, PeriodKind, StandardPeriodCode
 from ...core.filing_year import FilingYear
 from ...core.identity import AeatExpedienteId, ContentDigest, SubjectTaxId
-from ...core.time import UtcInstant
+from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.period import Period, PeriodKind, StandardPeriodCode
+from ...core.time.utc import UtcInstant
 from .errors import (
     IvaCompensationCarryForwardPolicyError,
     IvaCompensationYearRangeError,
@@ -172,7 +172,7 @@ class IvaCompensationCarryForwardLot(BaseModel):
     generated_amount: Decimal = Field(ge=_ZERO)
     applied_amount: Decimal = Field(ge=_ZERO)
     remaining_amount: Decimal = Field(ge=_ZERO)
-    age_years: int = Field(ge=0)
+    age_years: NonNegativeInt
     expiry_review_state: IvaCompensationExpiryReviewState
     source_observation_key: str = Field(min_length=1, max_length=96)
 

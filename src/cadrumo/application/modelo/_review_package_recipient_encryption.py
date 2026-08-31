@@ -121,23 +121,21 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import (
 )
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
-from ...adapters.persistence.storage import (
+from ...adapters.persistence.storage._secure_object_namespaces import (
     MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE as _NAMESPACE,
 )
-from ...adapters.persistence.storage import (
-    DecryptionError,
-)
 from ...adapters.persistence.storage.crypto.aead import EncryptedBlob, decrypt_record, derive_key, encrypt_record
-from ...core.hex import HEX_PATTERN_64 as _HEX_PATTERN_64
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...adapters.persistence.storage.errors import DecryptionError
 from ...core.errors.hierarchy import CadrumoError
+from ...core.hex import HEX_PATTERN_64 as _HEX_PATTERN_64
 from ...core.identity import BucketId, canonical_bucket_id
-from ...core.time import UtcInstant
-from ...core.time import now as _utc_now
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.time.clock import now as _utc_now
+from ...core.time.utc import UtcInstant
 from ._review_package_keypair import ensure_singleton_keypair
 
 if TYPE_CHECKING:
-    from ...adapters.persistence.storage import SecureObjectRepository
+    from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 
 #: Wire-format version of the recipient-encryption envelope. Bumped when
 #: the envelope schema changes shape.

@@ -49,7 +49,7 @@ from pydantic import BaseModel, Field
 
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.provenance_stamp import LOCAL_TRANSPORT_LABEL, provenance_stamp_transport
-from ...core.time import UtcInstant
+from ...core.time.utc import UtcInstant
 from .evidence_errors import PurchaseInvoiceEvidenceInputError
 from .extracted_document_cache import read_cached_transcription
 from .extraction_draft_store import load_extraction_drafts, write_extraction_draft
