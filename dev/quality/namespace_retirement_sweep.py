@@ -14,7 +14,10 @@ Five kinds go stale, and each fails in a different place:
 5. A ruff per-file ignore in pyproject, which simply stops applying.
 
 Classes 3 and 4 are the dangerous ones: they turn a gate green rather than
-red, so nothing announces them.
+red, so nothing announces them. They are also the easiest to miss, because a
+pin can sit inside the source of a subprocess a test spawns, where a plain AST
+walk of the parent sees one opaque string. Every string that itself parses as
+Python is re-walked for that reason.
 
 One literal is never rewritten. ``assert not (pkg / "_x.py").exists()``
 asserts the OLD module is gone, so repointing it at the public name inverts
@@ -114,20 +117,53 @@ def fix_module_object_imports() -> int:
     return fixed
 
 
+def _constants(text: str) -> list[ast.Constant]:
+    """Every string constant, INCLUDING those inside embedded Python source.
+
+    A test that reproduces a crash in a fresh interpreter passes the child's
+    program as one big string. Every pin inside it -- module basenames, function
+    names, paths -- is a constant of the CHILD, and ``ast.parse`` of the parent
+    sees a single opaque string where the parent's own walk expects many. So the
+    outer walk reports zero pins for a file that is nothing but pins.
+
+    That is not hypothetical: the config-reset recovery gate traces for a
+    ``delete`` in a file ending ``_lifecycle.py``. The module was renamed to
+    ``lifecycle.py`` and the pin then matched only an unrelated module with no
+    ``delete`` in it, so the destructive boundary was never injected and the
+    gate had stopped testing what it claimed. This sweep ran clean over it.
+
+    Any constant that itself parses as Python is therefore re-walked. Most
+    strings are not Python and raise, which is the filter.
+    """
+    found: list[ast.Constant] = []
+    try:
+        tree = ast.parse(text)
+    except SyntaxError:
+        return found
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Constant) or not isinstance(node.value, str):
+            continue
+        found.append(node)
+        if "\n" in node.value and len(node.value) > 40:
+            for inner in _constants(node.value):
+                # The child's own line numbers mean nothing in the parent, so
+                # anchor an embedded pin to the line the parent string starts on.
+                inner.lineno = node.lineno
+                found.append(inner)
+    return found
+
+
 def fix_pins() -> int:
     """Repoint source-path and basename literals naming a module that was made public."""
     public = {p.name for p in SRC.rglob("*.py")}
     edits: dict[Path, set[tuple[str, str]]] = {}
     for path in sorted(SRC.rglob("*.py")) + sorted(Path("dev").rglob("*.py")):
-        text = path.read_text(encoding="utf-8")
         try:
-            tree = ast.parse(text)
-        except (SyntaxError, UnicodeDecodeError):
+            text = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
             continue
         lines = text.splitlines()
-        for n in ast.walk(tree):
-            if not isinstance(n, ast.Constant) or not isinstance(n.value, str):
-                continue
+        for n in _constants(text):
             v = n.value.strip()
             if not v.endswith(".py") or "*" in v:
                 continue
