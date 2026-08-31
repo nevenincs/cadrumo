@@ -5,7 +5,7 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:1e1566b01d80f9301bd8a47a0b9c360786501792a4179f2e2894442ce2f741c3'
+body_hash: 'sha256:13e4e9328622d4cf65d67cb807d2c3773f74f834693f75428d9b112c87c78ea1'
 step_id: 'S140'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
@@ -71,4 +71,37 @@ size budget: scanned 5640 modules, 15608 production callables.
 size budget: FAIL - 78 finding(s).
 S140's diagnostics.py subject is absent from the 53 module and 22 callable over-budget findings; the remaining findings belong to other plan rows or concurrent work.
 exit 1
+```
+
+## Repair verification
+
+```text
+uv run --no-sync ruff check src/cadrumo/application/diagnostics.py
+All checks passed!
+exit 0
+
+uv run --no-sync ruff format --check src/cadrumo/application/diagnostics.py
+1 file already formatted
+exit 0
+
+uv run --no-sync python -c "import ast, pathlib; path=pathlib.Path('src/cadrumo/application/diagnostics.py'); tree=ast.parse(path.read_text(encoding='utf-8')); relocated={'CliVersionReport','ConfigRepairReport','DiagnosticCheck','DiagnosticFinding','DiagnosticStatus','RegistryIntegrityReport','RegistryVersionSummary','SecureObjectIntegrityReport','ensure_models_rebuilt'}; found=sorted({node.id for node in ast.walk(tree) if isinstance(node,ast.Name) and node.id in relocated}); assert not found, found; import cadrumo.application.diagnostics as module; exposed=sorted(name for name in relocated if hasattr(module,name)); assert not exposed, exposed; print('OLD_DIAGNOSTICS_CONTRACT_BINDINGS=0')"
+OLD_DIAGNOSTICS_CONTRACT_BINDINGS=0
+exit 0
+
+uv run --no-sync python -m compileall -q src/cadrumo/application/diagnostics.py
+exit 0
+
+uv run --no-sync pytest -n 0 --collect-only -q src/cadrumo/application/tests/test_diagnostics.py src/cadrumo/application/tests/test_diagnostics_dispatch.py
+55 tests collected in 3.28s
+No marker selector or --deselect option was supplied; deselected 0.
+exit 0
+
+uv run --no-sync pytest -n 0 -q src/cadrumo/application/tests/test_diagnostics_dispatch.py
+16 passed in 3.93s
+exit 0
+
+uv run --no-sync pytest -n 0 -q src/cadrumo/application/tests/test_diagnostics.py src/cadrumo/application/tests/test_diagnostics_dispatch.py
+.....
+The host command window ended before pytest emitted an exit status; no failure was reported in the captured partial output.
+exit unavailable
 ```
