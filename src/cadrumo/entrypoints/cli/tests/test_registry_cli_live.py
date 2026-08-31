@@ -45,7 +45,7 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.casilla_value_kind import CasillaValueKind
 from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ....core.period import Period
-from ....core.resources._boundary import bundled_path
+from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.iva_compensation.reconciliation import IvaCompensationDecisionReason

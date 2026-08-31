@@ -49,7 +49,7 @@ from ....core.errors.hierarchy import CadrumoError
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.time.clock import now
 from ..storage.crypto.encrypted_columns import HashedLookup
-from ..storage.envelope._envelope import Envelope
+from ..storage.envelope.contract import Envelope
 from ..storage.errors import ClassificationError, EnvelopeVersionError
 from ..storage.runtime_repository import secure_object_repository_for_bucket
 from ..storage.schema_lineage import inner_envelope_classification_is_expected, inner_envelope_version_is_current

@@ -23,7 +23,7 @@ import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.hashing import hash_file
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from .._validate import RegistryValidator
 from ..corpus_catalogue import resolve_record_design_binary
 from ..errors import NoRevisionForPeriodError, RegistryValidationError

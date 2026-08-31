@@ -46,7 +46,7 @@ from .....core.time.clock import now
 from .....core.time.utc import validate_utc_aware
 from ..blob_store._blob_store import BlobReference, EncryptedBlobStore
 from ..crypto.aead import derive_key
-from ..envelope._envelope import Envelope
+from ..envelope.contract import Envelope
 from ..errors import (
     BlobIntegrityError,
     BlobNotFoundError,

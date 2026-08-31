@@ -25,7 +25,7 @@ import re
 
 import pytest
 
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
 from ...export_field_kind import CasillaFieldKind
 from ..authority import bundled_authority

@@ -18,7 +18,7 @@ import pytest
 from defusedxml import ElementTree as DefusedElementTree
 
 from ....core.directory_scan import scan_directory
-from ....core.resources._boundary import bundled_path
+from ....core.resources.bundled_data import bundled_path
 from ..ccaa import CCAA
 from ..renta_codes import RENTA_MODELO100_CCAA_CODIGOS, modelo100_ccaa_codigo
 

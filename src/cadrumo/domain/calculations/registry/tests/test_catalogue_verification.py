@@ -14,7 +14,7 @@ from pydantic import ValidationError
 
 from .....core.external_constants import PDF_EXTENSION, XLS_EXTENSION, XLSM_EXTENSION, XLSX_EXTENSION
 from .....core.record_design_epoch import RECORD_DESIGN_EPOCH_RE
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from .....tests import REPO_ROOT
 from .....tests.aeat_literal_fixtures import RECORD_DESIGN_ROUTE_BASE_FIXTURE
 from .._snapshot_internals import check_snapshot_filing_review_tier

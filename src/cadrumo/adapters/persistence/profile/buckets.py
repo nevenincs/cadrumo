@@ -149,7 +149,7 @@ class BucketEventHistoryRepository:
 
     def load_revisioned(self) -> tuple[BucketEventHistoryCatalogue, str]:
         """Load the catalogue and the exact secure-object revision observed."""
-        from ..storage.envelope._envelope import Envelope
+        from ..storage.envelope.contract import Envelope
         from ..storage.errors import ClassificationError, EnvelopeVersionError
         from ..storage.schema_lineage import (
             inner_envelope_classification_is_expected,

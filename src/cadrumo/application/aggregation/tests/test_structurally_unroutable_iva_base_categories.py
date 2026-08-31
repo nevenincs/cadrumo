@@ -33,7 +33,7 @@ import pytest
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....core.period import Period
-from ....core.resources._boundary import bundled_path
+from ....core.resources.bundled_data import bundled_path
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ledger_bindings import structurally_unroutable_iva_base_categories

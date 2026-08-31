@@ -64,8 +64,8 @@ from ..profile.justificante import JustificanteRepository
 from ..profile.modelo_reconciliation import ModeloReconciliationRecordRepository
 from ..profile.submission import SubmissionRepository
 from .attachment import unwrap_blob_payload
-from .envelope._envelope import Envelope
-from .envelope._secure_repository import SecureBoundRepository
+from .envelope.contract import Envelope
+from .envelope.secure_bound_repository import SecureBoundRepository
 from .namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from .runtime_repository import secure_object_repository_for_bucket
 from .secure_object_namespaces import (

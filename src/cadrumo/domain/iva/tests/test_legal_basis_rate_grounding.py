@@ -33,7 +33,7 @@ from typing import cast
 
 import pytest
 
-from ....core.resources._boundary import bundled_path
+from ....core.resources.bundled_data import bundled_path
 from ...calculations.registry.authority import bundled_authority
 from ...invoices.enums import IvaRate, iva_rate_kind, iva_rate_percentage
 from ..errors import IvaCatalogueError

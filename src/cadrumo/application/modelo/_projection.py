@@ -31,7 +31,7 @@ from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.money.rounding import round_to_cents
 from ...core.period import Period
-from ...core.resources._boundary import bundled_path
+from ...core.resources.bundled_data import bundled_path
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.errors import (

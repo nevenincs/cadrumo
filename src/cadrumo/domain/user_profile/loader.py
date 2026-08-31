@@ -14,7 +14,7 @@ from typing import Final
 from pydantic import ValidationError
 
 from ...core.paths import path_stat_fingerprint
-from ...core.resources._boundary import bundled_path
+from ...core.resources.bundled_data import bundled_path
 from ...core.toml import freeze_toml, read_toml
 from .errors import UserProfileSchemaLoadError
 from .schema import ProfileSchemaDefinition

@@ -170,7 +170,7 @@ def test_foreign_bucket_manifest_is_isolated_from_load_and_listing(
         _ATTACHMENT_MANIFEST_SENSITIVITY,
         _ATTACHMENT_MANIFEST_VERSION,
     )
-    from ....adapters.persistence.storage.envelope._envelope import Envelope
+    from ....adapters.persistence.storage.envelope.contract import Envelope
 
     store = AttachmentStore()
     body = b"%PDF-1.4\nforeign bucket evidence to isolate\n%%EOF"

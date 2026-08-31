@@ -32,7 +32,7 @@ from pathlib import Path
 import pytest
 
 from .....core.directory_scan import DirectoryEntryKind, scan_directory
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from ._catalogue_verification_support import _catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

@@ -22,7 +22,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
-from cadrumo.core.resources._boundary import bundled_path
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]

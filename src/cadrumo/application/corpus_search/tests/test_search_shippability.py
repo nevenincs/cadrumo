@@ -17,7 +17,7 @@ from pathlib import Path
 import pytest
 
 from ....core.directory_scan import DirectoryEntryKind, iter_directory, scan_directory
-from ....core.resources._boundary import bundled_path
+from ....core.resources.bundled_data import bundled_path
 from .._lexical_index import build_lexical_index, iter_corpus_chunks
 from ._corpus_fixture import build_sample_corpus
 

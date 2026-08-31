@@ -63,7 +63,7 @@ if TYPE_CHECKING:
 from ...adapters.outbound.aeat.sede.declarations import open_declarations_register, shared_playwright
 from ...adapters.outbound.aeat.sede.walker import capture_justificante, walk_expedientes_tree
 from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
-from ...adapters.persistence.storage.envelope._envelope import Envelope
+from ...adapters.persistence.storage.envelope.contract import Envelope
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...adapters.persistence.storage.secure_object_namespaces import (
     LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE as JUSTIFICANTE_CAPTURE_STORAGE_NAMESPACE,

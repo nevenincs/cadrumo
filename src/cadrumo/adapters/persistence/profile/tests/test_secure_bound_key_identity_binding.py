@@ -37,7 +37,7 @@ from .....core.period import Period
 from .....domain.justificante import Justificante
 from .....tests.aeat_literal_fixtures import justificante_wlpl_cotejo_url
 from .....tests.secure_sql import isolated_runtime_profile
-from ...storage.envelope._secure_repository import SecureBoundRepository
+from ...storage.envelope.secure_bound_repository import SecureBoundRepository
 from ...storage.errors import SecureObjectRowIdentityError
 from ..justificante import JustificanteRepository
 

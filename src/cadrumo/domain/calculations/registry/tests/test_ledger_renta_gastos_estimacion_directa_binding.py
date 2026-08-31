@@ -10,7 +10,7 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from ....categories.registry import resolve_category_profiles
 from ....categories.spending_category import SpendingCategory
 from ....renta._ledger_expenses import (

@@ -71,7 +71,7 @@ from ...core.json_contract import Notice, NoticeSeverity
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...core.register_scoping_signal import RegisterScopingSignal
-from ...core.resources._boundary import bundled_path
+from ...core.resources.bundled_data import bundled_path
 from ...core.sync_surface import SyncSurface
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import bundled_authority

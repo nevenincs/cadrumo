@@ -2,7 +2,7 @@
 
 import pytest
 
-from ....core.resources._boundary import bundled_path
+from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.convenio import load_convenio_authority
 from ....domain.calculations.registry.loader import load_registry_tree
 from ....domain.calculations.registry.schema import RegistrySnapshot

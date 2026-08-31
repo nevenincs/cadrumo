@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from .._validate_exports import _validate_embedded_envelope_source_authority
 from ..errors import RegistryValidationError
 from ..schema import RegistryCatalogues

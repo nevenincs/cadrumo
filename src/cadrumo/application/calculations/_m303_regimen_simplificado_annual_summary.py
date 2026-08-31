@@ -17,7 +17,7 @@ from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.modelo import Modelo
 from ...core.period import Period
-from ...core.resources._boundary import bundled_path
+from ...core.resources.bundled_data import bundled_path
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings import m303_regimen_simplificado_annual_summary_requirement
 from ...domain.calculations.registry.ids import RevisionId

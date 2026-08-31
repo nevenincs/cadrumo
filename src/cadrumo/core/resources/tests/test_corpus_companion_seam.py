@@ -26,7 +26,7 @@ from pathlib import Path
 import pytest
 
 from ....core.directory_scan import DirectoryEntryKind, scan_directory
-from ....core.resources._boundary import bundled_path, resolve_companion_binary, resolve_corpus_binary
+from ....core.resources.bundled_data import bundled_path, resolve_companion_binary, resolve_corpus_binary
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

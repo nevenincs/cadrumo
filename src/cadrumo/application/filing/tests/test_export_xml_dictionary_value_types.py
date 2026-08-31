@@ -31,7 +31,7 @@ from xml.etree.ElementTree import Element
 import pytest
 from defusedxml import ElementTree as DefusedElementTree
 
-from ....core.resources._boundary import bundled_path
+from ....core.resources.bundled_data import bundled_path
 from ....domain.filing.errors import FilingExportValidationError
 from .._export_xml_dictionary import _format_xml_dictionary_value
 

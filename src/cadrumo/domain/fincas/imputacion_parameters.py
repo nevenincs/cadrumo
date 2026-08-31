@@ -26,7 +26,7 @@ from typing import Final
 from pydantic import BaseModel, Field
 
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.resources._boundary import bundled_path
+from ...core.resources.bundled_data import bundled_path
 from .errors import FincaValidationError
 
 

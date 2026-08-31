@@ -50,7 +50,7 @@ from ...core.casilla_id import CasillaId
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
-from ...core.resources._boundary import bundled_path
+from ...core.resources.bundled_data import bundled_path
 from ...core.time.clock import now
 from ...core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ...domain.calculations.registry.bindings import (

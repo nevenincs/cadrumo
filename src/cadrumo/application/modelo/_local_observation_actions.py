@@ -34,7 +34,7 @@ from pydantic import BaseModel, ValidationError
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
-from ...core.resources._boundary import bundled_path
+from ...core.resources.bundled_data import bundled_path
 from ...core.time.clock import now as _utc_now
 from ...domain.calculations.registry.bindings import (
     CasillaObservation,

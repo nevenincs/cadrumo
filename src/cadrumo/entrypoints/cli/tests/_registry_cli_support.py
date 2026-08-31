@@ -9,7 +9,7 @@ import typer
 from click.testing import Result
 from typer.core import TyperGroup
 
-from ....core.resources._boundary import bundled_path
+from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.cli_runner import cadrumo_click_command
 from ....tests.cli_runner import invoke_cached_cli as _invoke_cached_cli

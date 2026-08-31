@@ -30,7 +30,7 @@ from typing import Any
 import pytest
 
 from ....core.period import Period
-from ....core.resources._boundary import bundled_path
+from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.ledger_bindings import IvaLedgerObservation
 from ....domain.iva.flow import IvaFlowDirection
 from ....domain.iva.prorrata import ProrrataInputs, compute_prorrata_definitiva_anual

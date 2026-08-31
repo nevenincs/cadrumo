@@ -17,7 +17,7 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.irnr import ConvenioOverrideKind, TipoRentaIrnr
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from ..convenio import (
     ConvenioAuthority,
     ConvenioOverrideRow,

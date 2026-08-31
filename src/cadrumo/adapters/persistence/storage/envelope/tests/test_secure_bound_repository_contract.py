@@ -27,7 +27,7 @@ from ......core.classification.policies import SensitivityClass
 from ......core.config import Settings
 from ...sql import Base, SecureObjectRepository
 from ...sql.engine import create_engine_from_settings
-from .._secure_repository import SecureBoundRepository
+from ..secure_bound_repository import SecureBoundRepository
 from ._repository_contract_support import (
     EXPECTED_CHECK_COUNT,
     SecureRepositoryContractCase,

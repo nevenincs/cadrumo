@@ -38,7 +38,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core.resources._boundary import bundled_path
+from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.loader import load_registry_tree
 from ....domain.categories.errors import CategoryValidationError
 from ....domain.categories.registry import category_profile_years, resolve_category_profiles

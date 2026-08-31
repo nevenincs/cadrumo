@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 
 from ...core.errors.hierarchy import CoreValidationError, TerminalPreconditionErrorMixin
 from ...core.modelo import Modelo
-from ...core.resources._boundary import bundled_path
+from ...core.resources.bundled_data import bundled_path
 from ...core.result_disposition import ResultDisposition, result_disposition_is_refund
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.casilla_membership import casillas_by_id

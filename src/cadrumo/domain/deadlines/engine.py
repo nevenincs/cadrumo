@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Final, Protocol, runtime_checkable
 
 from ...core.logging import get_logger
 from ...core.modelo import Modelo
-from ...core.resources._boundary import bundled_path
+from ...core.resources.bundled_data import bundled_path
 from ...core.time.clock import now, today_madrid
 
 # Type-only registry references. Runtime callers below import the

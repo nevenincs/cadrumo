@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from .....core.directory_scan import scan_directory
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from .._snapshot_internals import collect_snapshot_ref_ids
 from ..loader import load_registry_tree
 from ..schema import RegistryCatalogues

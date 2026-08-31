@@ -40,7 +40,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from ..record_design import extract_record_design
 from ..record_design_pdf_repairs import _BARE_COORDINATE_TRIPLE_RE, _rejoin_bare_coordinate_rows
 

@@ -60,8 +60,8 @@ from ......tests.secure_sql import mutate_encrypted_secure_object_json
 from ...errors import ClassificationError
 from ...sql import Base, SecureObjectRow
 from ...sql.engine import create_engine_from_settings, dispose_engine
-from .._envelope import Envelope
-from .._secure_repository import SecureBoundRepository
+from ..contract import Envelope
+from ..secure_bound_repository import SecureBoundRepository
 
 _FOREIGN_CLASS_MAP: dict[SensitivityClass, SensitivityClass] = {
     SensitivityClass.AUDIT: SensitivityClass.OPERATIONAL,

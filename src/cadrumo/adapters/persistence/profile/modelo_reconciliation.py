@@ -14,7 +14,7 @@ from ....application.modelo.reconciliation_records import (
 from ....core.classification.policies import SensitivityClass
 from ....domain.buckets.event import BucketEvent
 from ....domain.buckets.event_repository import append_bucket_event
-from ..storage.envelope._secure_repository import SecureBoundRepository
+from ..storage.envelope.secure_bound_repository import SecureBoundRepository
 from ..storage.path_safety import safe_repository_id
 from ..storage.secure_object_namespaces import MODELO_RECONCILIATION_RECORDS_NAMESPACE
 from .buckets import BucketEventHistoryRepository

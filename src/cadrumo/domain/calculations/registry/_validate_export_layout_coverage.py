@@ -123,7 +123,7 @@ from typing import Final
 
 from ....core.aggregation import BindingSourceKind
 from ....core.export_layout_format import ExportLayoutFormat
-from ....core.resources._boundary import resolve_corpus_binary
+from ....core.resources.bundled_data import resolve_corpus_binary
 from ..export_field_kind import CasillaFieldKind
 from .binding_selector_utils import selector_as_dict
 from .errors import RegistryValidationError

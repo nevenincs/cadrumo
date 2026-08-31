@@ -35,7 +35,7 @@ from ...core.directory_scan import (
 )
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.fts_query import fts_or_group
-from ...core.resources._boundary import bundled_path
+from ...core.resources.bundled_data import bundled_path
 from ...core.spanish_stemming import (
     spanish_stemmer,
     spanish_word_tokens,

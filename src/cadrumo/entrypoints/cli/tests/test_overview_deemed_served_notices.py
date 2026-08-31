@@ -73,7 +73,7 @@ def test_deemed_served_notifications_emit_one_warning_notice_with_legal_provenan
 
 def test_deemed_served_legal_ref_resolves_against_the_registry_catalogue() -> None:
     """The provenance the notice hands the operator is a real, corpus-backed entry."""
-    from ....core.resources._boundary import bundled_path
+    from ....core.resources.bundled_data import bundled_path
     from ....domain.calculations.registry.legal import verify_legal_catalogue
 
     catalogue = bundled_authority().catalogues.legal

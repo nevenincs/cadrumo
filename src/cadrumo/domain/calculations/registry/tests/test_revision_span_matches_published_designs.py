@@ -148,7 +148,7 @@ from .....core.directory_scan import DirectoryEntryKind, scan_directory
 from .....core.external_constants import PDF_EXTENSION as _PDF_EXTENSION
 from .....core.external_constants import XLS_EXTENSION as _XLS_EXTENSION
 from .....core.period import PeriodKind, registry_period_kind
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
 from ..authority import ValidatedRegistryAuthority
 from ..record_design import (

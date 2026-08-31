@@ -112,7 +112,7 @@ from ...core.modelo import NON_REGISTRY_MODELOS as _NON_REGISTRY_MODELOS
 from ...core.modelo import Modelo as _Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
-from ...core.resources._boundary import bundled_path as _bundled_path
+from ...core.resources.bundled_data import bundled_path as _bundled_path
 from ...core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES as _REVIEWED_REVISION_REVIEW_STATUSES
 from ...core.revision_review import RevisionReviewStatus as _RevisionReviewStatus
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority as _ValidatedRegistryAuthority

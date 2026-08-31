@@ -75,7 +75,7 @@ def _observed_value(values: Mapping[CasillaId, Decimal], casilla_id: CasillaId) 
 
 
 def _validate_303_observation_casilla_ids(observation: RegistryModeloObservation) -> None:
-    from ...core.resources._boundary import bundled_path
+    from ...core.resources.bundled_data import bundled_path
     from ...domain.calculations.registry.loader import load_registry_tree
 
     modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
@@ -259,7 +259,7 @@ class IvaCompensationAnnualPartitionSourceResolver:
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         revision = self._registry_snapshot.revision if self._registry_snapshot is not None else None
         if revision is None:
-            from ...core.resources._boundary import bundled_path
+            from ...core.resources.bundled_data import bundled_path
             from ...domain.calculations.registry.loader import load_registry_tree
 
             modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))

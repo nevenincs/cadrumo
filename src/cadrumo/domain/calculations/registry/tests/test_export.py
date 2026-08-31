@@ -21,7 +21,7 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from ...export_field_kind import CasillaFieldKind
 from ..binding_selector_utils import (
     BindingExportDataType,

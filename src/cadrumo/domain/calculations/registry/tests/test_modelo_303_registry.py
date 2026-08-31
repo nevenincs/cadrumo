@@ -10,7 +10,7 @@ import pytest
 from .....core.aggregation import BindingAggregationOp, BindingSourceKind
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
 from .....tests.registry_observations import registry_grounded_modelo_observation
 from ....iva.deduction_facts import IvaDeductionClassificationProvenance

@@ -7,7 +7,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
 from .._formula_runtime_irnr import _irnr_resolve_tipo_gravamen_args
 from ..convenio import load_convenio_authority

@@ -30,7 +30,7 @@ from typing import ClassVar, override
 
 from pydantic import BaseModel
 
-from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
+from ...adapters.persistence.storage.envelope.secure_bound_repository import SecureBoundRepository
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...adapters.persistence.storage.secure_object_namespaces import APPLICATION_FILING_HISTORY_NAMESPACE
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository

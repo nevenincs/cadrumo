@@ -23,7 +23,7 @@ from typer.core import TyperGroup
 
 from ....application.review.filter import LedgerReviewFilterKey
 from ....core.directory_scan import scan_directory
-from ....core.resources._boundary import bundled_path
+from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.loader_cache import discover_modelo_sources
 from ....tests import REPO_ROOT
 from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli

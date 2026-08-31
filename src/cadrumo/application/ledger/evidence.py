@@ -57,7 +57,7 @@ from pydantic import BaseModel, Field, field_serializer
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.storage.attachment import AttachmentStore
-from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
+from ...adapters.persistence.storage.envelope.secure_bound_repository import SecureBoundRepository
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...adapters.persistence.storage.secure_object_namespaces import LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE
 from ...core.config import Settings

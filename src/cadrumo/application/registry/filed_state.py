@@ -24,7 +24,7 @@ from ...core.casilla_id import CasillaId as _CasillaId
 from ...core.casilla_id import validated_casilla_id as _validated_casilla_id
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
-from ...core.resources._boundary import bundled_path as _bundled_path
+from ...core.resources.bundled_data import bundled_path as _bundled_path
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority as _ValidatedRegistryAuthority
 from ...domain.calculations.registry.bindings import RegistryModeloObservation as _RegistryModeloObservation
 from ...domain.calculations.registry.bindings_previous_filing import (

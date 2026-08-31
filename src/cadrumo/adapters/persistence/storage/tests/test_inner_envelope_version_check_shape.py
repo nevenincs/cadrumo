@@ -45,7 +45,7 @@ _ENVELOPE_ORIGINS = frozenset(
     {
         "cadrumo.adapters.persistence.storage.Envelope",
         "cadrumo.adapters.persistence.storage.envelope.Envelope",
-        "cadrumo.adapters.persistence.storage.envelope._envelope.Envelope",
+        "cadrumo.adapters.persistence.storage.envelope.contract.Envelope",
     }
 )
 """Every absolute origin that names the persisted inner-envelope class."""

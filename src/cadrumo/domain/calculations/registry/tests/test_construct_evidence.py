@@ -8,7 +8,7 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from ..authority import bundled_authority
 from ..coverage import (
     ConstructEvidenceLedger,

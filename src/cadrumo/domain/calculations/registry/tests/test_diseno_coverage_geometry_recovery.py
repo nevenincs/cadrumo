@@ -28,7 +28,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from ..loader import load_registry_tree
 from ..record_design_coverage import build_diseno_coverage_report
 

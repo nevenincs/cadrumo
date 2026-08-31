@@ -83,7 +83,7 @@ from .....application.aggregation import aggregate_renta_m100_income_ledger
 from .....core.aggregation import LedgerIncomeGrounding
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from ....iva.classification import InvoiceKind
 from ....iva.components import category_cuota_is_zero_by_law
 from ....iva.schema import IvaCategory

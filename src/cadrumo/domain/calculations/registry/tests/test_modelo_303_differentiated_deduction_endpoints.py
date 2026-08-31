@@ -22,7 +22,7 @@ from .....core.prorrata_register import (
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,
 )
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from .....domain.bienes_inversion.register import (
     BienesInversionSectorContribution,
     BienInversionKind,

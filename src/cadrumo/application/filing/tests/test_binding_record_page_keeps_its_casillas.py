@@ -22,7 +22,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.resources._boundary import bundled_path
+from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.export import derive_export_layouts_from_bindings
 from ....domain.calculations.registry.loader import load_registry_tree
 from ....domain.calculations.registry.schema_exports import ExportRecordDefinition

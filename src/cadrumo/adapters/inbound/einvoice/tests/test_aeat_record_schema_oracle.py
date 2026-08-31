@@ -25,7 +25,7 @@ from contextlib import suppress
 
 import pytest
 
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from .._aeat_record_schema import (
     AEAT_RECORD_SCHEMA_FAMILIES,
     mandatory_child_elements,

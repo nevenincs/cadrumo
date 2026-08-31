@@ -21,7 +21,7 @@ from ....core.period import Period
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.product_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
 from ....core.refund_election import RefundElection
-from ....core.resources._boundary import bundled_path
+from ....core.resources.bundled_data import bundled_path
 from ....core.result_disposition import ResultDisposition
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister, RegistroRegularizacionResult
 from ....domain.calculations.export_field_kind import CasillaFieldKind

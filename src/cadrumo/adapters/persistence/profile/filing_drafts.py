@@ -36,7 +36,7 @@ from typing import TYPE_CHECKING, ClassVar, override
 from ....core.classification.policies import SensitivityClass
 from ....domain.filing.errors import FilingValidationError
 from ....domain.filing.schema import ModeloDraft, compute_modelo_draft_id
-from ..storage.envelope._secure_repository import SecureBoundRepository
+from ..storage.envelope.secure_bound_repository import SecureBoundRepository
 from ..storage.runtime_repository import secure_object_repository_for_bucket
 from ..storage.secure_object_namespaces import FILING_DRAFTS_NAMESPACE
 from ..storage.sql import SecureObjectWrite

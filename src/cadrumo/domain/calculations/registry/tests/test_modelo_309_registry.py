@@ -8,7 +8,7 @@ from functools import cache
 import pytest
 
 from .....core.iva_deduction_fact import IvaDeductionFactKind
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from ....iva.schema import IvaLedgerObservationRole
 from .._validate import RegistryValidator
 from ..loader import _load_shared_catalogue_files, load_modelo_directory

@@ -364,7 +364,7 @@ class TransactionCatalogueRepository:
             StoredTransactionDriftError: If a row payload fails pydantic schema
                 validation on deserialization.
         """
-        from ..storage.envelope._envelope import Envelope
+        from ..storage.envelope.contract import Envelope
         from ..storage.errors import ClassificationError, EnvelopeVersionError
         from ..storage.schema_lineage import (
             inner_envelope_classification_is_expected,
@@ -473,7 +473,7 @@ class TransactionCatalogueRepository:
 
     def _validated_migrated_transactions(self, payloads: Mapping[str, bytes]) -> tuple[Transaction, ...]:
         """Return the complete semantically validated upgraded transaction set."""
-        from ..storage.envelope._envelope import Envelope
+        from ..storage.envelope.contract import Envelope
 
         index_key = transaction_index_object_key(self._bucket_id)
         index_payload = payloads.get(index_key)
@@ -868,7 +868,7 @@ class TransactionCatalogueRepository:
     def _load_transactions_by_ids(self, transaction_ids: Iterable[str], *, read_context: str) -> list[Transaction]:
         """Load selected transaction rows through one targeted secure-object batch."""
         from ..storage.crypto.encrypted_columns import secure_object_key_digest
-        from ..storage.envelope._envelope import Envelope
+        from ..storage.envelope.contract import Envelope
 
         selected_ids = tuple(sorted(transaction_ids))
         if not selected_ids:
@@ -1183,7 +1183,7 @@ class TransactionCatalogueRepository:
 
     def _load_index_ids(self, *, require_current: bool = True) -> set[str]:
         """Return the transaction ids the per-bucket membership index records."""
-        from ..storage.envelope._envelope import Envelope
+        from ..storage.envelope.contract import Envelope
         from ..storage.schema_lineage import inner_envelope_version_is_current
 
         index_key = transaction_index_object_key(self._bucket_id)
@@ -1208,7 +1208,7 @@ class TransactionCatalogueRepository:
 
     def _serialise_index(self, transaction_ids: set[str]) -> bytes:
         """Serialise the membership index (sorted ids) into encrypted-row bytes."""
-        from ..storage.envelope._envelope import Envelope
+        from ..storage.envelope.contract import Envelope
 
         envelope = Envelope[_TransactionIndex](
             schema_version=_TX_CATALOGUE_VERSION,
@@ -1225,7 +1225,7 @@ class TransactionCatalogueRepository:
         ``now()``), so an unchanged transaction serialises to identical bytes —
         and an identical ``payload_hash`` — letting the diff skip rewriting it.
         """
-        from ..storage.envelope._envelope import Envelope
+        from ..storage.envelope.contract import Envelope
 
         envelope = Envelope[Transaction](
             schema_version=_TX_CATALOGUE_VERSION,

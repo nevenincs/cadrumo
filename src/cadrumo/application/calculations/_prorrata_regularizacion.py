@@ -56,7 +56,7 @@ from ...core.prorrata_register import (
     ProrrataRegisterRegime,
     regime_apportions_deduction,
 )
-from ...core.resources._boundary import bundled_path
+from ...core.resources.bundled_data import bundled_path
 from ...domain.calculations.registry.ids import (
     BindingId,
     LegalRefId,

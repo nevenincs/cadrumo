@@ -13,7 +13,7 @@ from typing import cast
 import pytest
 from pydantic import ValidationError
 
-from ....core.resources._boundary import bundled_path
+from ....core.resources.bundled_data import bundled_path
 from ...calculations.registry.authority import bundled_authority
 from ..errors import FincaValidationError
 from ..imputacion_parameters import (

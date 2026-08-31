@@ -30,7 +30,7 @@ from pydantic import BaseModel
 from ...core.casilla_id import CasillaId as _CasillaId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
-from ...core.resources._boundary import bundled_path as _bundled_path
+from ...core.resources.bundled_data import bundled_path as _bundled_path
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority as _ValidatedRegistryAuthority
 from ...domain.calculations.registry.errors import AmbiguousRevisionSelectionError as _AmbiguousRevisionSelectionError
 from ...domain.calculations.registry.errors import NoRevisionForPeriodError as _NoRevisionForPeriodError

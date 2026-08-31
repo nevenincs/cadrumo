@@ -22,7 +22,7 @@ from datetime import date
 
 import pytest
 
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from .._validate_orden_aplicabilidad import validate_orden_aplicabilidad
 from ..errors import RegistryValidationError
 from ..ids import LegalRefId, SourceRefId

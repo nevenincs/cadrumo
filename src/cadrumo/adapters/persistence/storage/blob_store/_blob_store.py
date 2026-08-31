@@ -51,7 +51,7 @@ from .....core.logging import get_logger
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.time.clock import now
 from ..crypto.aead import KEY_SIZE, EncryptedBlob, decrypt_record, encrypt_record
-from ..envelope._envelope import EncryptionMetadata, Envelope, load_envelope, save_envelope
+from ..envelope.contract import EncryptionMetadata, Envelope, load_envelope, save_envelope
 from ..errors import (
     BlobIntegrityError,
     BlobNotFoundError,

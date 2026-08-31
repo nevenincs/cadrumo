@@ -49,7 +49,7 @@ from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, StringConstra
 
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.resources._boundary import bundled_path
+from ...core.resources.bundled_data import bundled_path
 from ...core.toml import read_toml
 from .errors import DeadlineValidationError
 

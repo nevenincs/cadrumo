@@ -24,7 +24,7 @@ from ....core.errors.error_codes import get_registered_error_code, resolve_error
 from ....core.errors.hierarchy import CadrumoError
 from ....core.external_constants import M347_THRESHOLD_EUR
 from ....core.period import Period
-from ....core.resources._boundary import bundled_path
+from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.loader import load_modelo_directory
 from ....domain.calculations.registry.temporal import select_revision

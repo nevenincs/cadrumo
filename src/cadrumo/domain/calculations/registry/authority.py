@@ -28,7 +28,7 @@ from ....core.access_gate._authorization import (
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.hashing import content_hash_hex
 from ....core.identity import ContentDigest
-from ....core.resources._boundary import bundled_path as _bundled_path
+from ....core.resources.bundled_data import bundled_path as _bundled_path
 from ._snapshot_internals import _build_validated_snapshot
 from ._source_evidence_fingerprint import collect_source_evidence_fingerprints
 from ._supplementary_orden import collect_supplementary_orden_fingerprints, compile_supplementary_ordenes

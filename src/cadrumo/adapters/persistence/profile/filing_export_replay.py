@@ -16,7 +16,7 @@ from ....application.filing._export_verification import FilingExportValidatedPay
 from ....core.classification.policies import SensitivityClass
 from ....core.hashing import sha256_hex
 from ....core.time.clock import now
-from ..storage.envelope._secure_repository import SecureBoundRepository
+from ..storage.envelope.secure_bound_repository import SecureBoundRepository
 from ..storage.secure_object_namespaces import FILING_EXPORT_REPLAY_PROOFS_NAMESPACE
 
 

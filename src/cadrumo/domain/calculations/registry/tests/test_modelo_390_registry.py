@@ -11,7 +11,7 @@ import pytest
 from .....core.aggregation import BindingAggregationOp, BindingSourceKind
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from ....iva.schema import IvaLedgerObservationRole
 from .._validate import RegistryValidator
 from ..binding_aggregation import binding_aggregation_op

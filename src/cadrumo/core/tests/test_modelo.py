@@ -66,7 +66,7 @@ def test_non_registry_modelos_are_not_registry_loadable() -> None:
 def test_non_registry_modelos_have_no_registry_source_paths() -> None:
     """Known non-registry modelos must not appear as authoritative registry TOML."""
 
-    from ..resources._boundary import bundled_path
+    from ..resources.bundled_data import bundled_path
 
     modelos_dir = bundled_path("registry", "aeat", "modelos")
     offenders = [

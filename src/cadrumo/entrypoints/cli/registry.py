@@ -11,7 +11,7 @@ from ...application.registry.filed_state import verify_filed_state
 from ...application.registry.tree import RegistryTreeReport, inspect_registry_tree, verify_registry_tree
 from ...core.i18n._render import tr
 from ...core.json_contract import strict_round_trip
-from ...core.resources._boundary import bundled_path
+from ...core.resources.bundled_data import bundled_path
 from ._common import emit_envelope, resolve_optional_root
 from ._registry_diff_payloads import RegistryDiffRevisionsResult
 from ._registry_payloads import (

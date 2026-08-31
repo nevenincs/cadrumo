@@ -31,7 +31,7 @@ from typing import ClassVar, NamedTuple, override
 from pydantic import BaseModel, Field
 
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
+from ...adapters.persistence.storage.envelope.secure_bound_repository import SecureBoundRepository
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...adapters.persistence.storage.secure_object_namespaces import APPLICATION_EVIDENCE_BUNDLE_NAMESPACE
 from ...core.config import Settings

@@ -27,7 +27,7 @@ from datetime import date
 from decimal import Decimal
 from functools import cache
 
-from ....core.resources._boundary import bundled_path
+from ....core.resources.bundled_data import bundled_path
 from ...calculations.registry.formula_runtime_ops import resolve_parameter
 from ...calculations.registry.loader import load_registry_tree
 from ...calculations.registry.static_inspection import RegistryRevisionInspection

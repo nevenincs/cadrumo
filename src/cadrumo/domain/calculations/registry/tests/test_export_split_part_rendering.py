@@ -23,7 +23,7 @@ from itertools import pairwise
 
 import pytest
 
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from ..errors import RegistryValidationError
 from ..export_value_policy import ExportValuePolicy
 from ..fixed_width_codec import render_fixed_width_export_field

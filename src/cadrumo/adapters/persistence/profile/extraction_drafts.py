@@ -9,7 +9,7 @@ from ....application.ledger.extraction_draft_store import (
     extraction_draft_object_key,
 )
 from ....core.config import Settings
-from ..storage.envelope._secure_repository import SecureBoundRepository
+from ..storage.envelope.secure_bound_repository import SecureBoundRepository
 from ..storage.runtime_repository import secure_object_repository_for_bucket
 from ..storage.secure_object_namespaces import LEDGER_EXTRACTION_DRAFT_NAMESPACE
 

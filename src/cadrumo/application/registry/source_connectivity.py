@@ -23,7 +23,7 @@ from ...core.filing_year import FilingYear
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
-from ...core.resources._boundary import bundled_path
+from ...core.resources.bundled_data import bundled_path
 from ...core.source_connectivity import (
     SourceConnectivityCensusRow,
     SourceConnectivityDisposition,

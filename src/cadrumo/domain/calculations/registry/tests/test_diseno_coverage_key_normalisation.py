@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from ..record_design_coverage import (
     _normalised_box_number,
     _segmento_addresses_sheet,

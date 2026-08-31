@@ -26,7 +26,7 @@ from .....domain.buckets.event import (
 )
 from .....domain.buckets.event_repository import BucketEventHistoryPersistenceError
 from .....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
-from ...storage.envelope._envelope import Envelope
+from ...storage.envelope.contract import Envelope
 from ..buckets import (
     _CATALOGUE_VERSION,
     _NAMESPACE,

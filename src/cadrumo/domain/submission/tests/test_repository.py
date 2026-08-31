@@ -13,7 +13,7 @@ from sqlalchemy import select
 from ....adapters.persistence.profile.submission import (
     SubmissionRepository,
 )
-from ....adapters.persistence.storage.envelope._envelope import Envelope
+from ....adapters.persistence.storage.envelope.contract import Envelope
 from ....adapters.persistence.storage.errors import ClassificationError
 from ....adapters.persistence.storage.sql._orm import SecureObjectRow
 from ....adapters.persistence.storage.sql.engine import get_engine

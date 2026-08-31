@@ -26,7 +26,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....domain.calculations.registry.authority import bundled_authority
-from ...resources._registry import resources
+from ...resources.registry import resources
 from ..catalogue import Topic, TopicCatalogue, TopicCatalogueEmptyError, TopicNotFoundError, load_topic_catalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

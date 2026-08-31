@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from functools import cache
 
-from cadrumo.core.resources._boundary import bundled_path
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.loader import load_registry_tree
 from cadrumo.domain.categories.registry import load_category_profiles
 from cadrumo.domain.user_profile.labels import profile_schema_locale_keys

@@ -30,8 +30,8 @@ from ...sql import SecureObjectRepository
 from ...sql.secure_objects import SecureObjectRecord, SecureObjectUnreadable
 from ...sql.session import session_scope
 from ...tests.engine_bootstrap import bootstrap_sqlite_engine
-from .._envelope import Envelope
-from .._secure_repository import SecureBoundRepository
+from ..contract import Envelope
+from ..secure_bound_repository import SecureBoundRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

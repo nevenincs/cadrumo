@@ -7,7 +7,7 @@ from datetime import date
 import pytest
 
 from .....core.export_layout_format import ExportLayoutFormat
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
 from .._validate import RegistryValidator
 from ..schema import ModeloRevision

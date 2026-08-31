@@ -9,7 +9,7 @@ import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.corpus_text import normalise_corpus_text
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from .....tests.registry_observations import registry_grounded_modelo_observation
 from .._validate import RegistryValidator
 from ..authority import bundled_authority

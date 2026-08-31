@@ -12,11 +12,11 @@ from cadrumo.application.registry.source_connectivity import (
     load_source_connectivity_census,
     validate_census_destination_candidates,
 )
+from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.period import Period
-from cadrumo.core.aggregation import BindingSourceKind
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.source_connectivity import SourceConnectivityGroundingLocatorKind
-from cadrumo.core.resources._boundary import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.censo_modelos import CensoModeloEventKind
 from cadrumo.domain.calculations.registry.loader import load_modelo_directory

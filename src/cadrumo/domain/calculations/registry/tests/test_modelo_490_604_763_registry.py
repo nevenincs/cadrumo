@@ -33,7 +33,7 @@ from datetime import date
 import pytest
 
 from .....core.authority_grade import RegistryAuthorityGrade
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from .....core.tax_domain import TaxDomain
 from .._validate import RegistryValidator
 from ..errors import NoRevisionForPeriodError

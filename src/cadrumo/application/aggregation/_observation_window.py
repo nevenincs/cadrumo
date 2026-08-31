@@ -36,7 +36,7 @@ from ...core.time.clock import now
 from .errors import AggregationValidationError, t
 
 if TYPE_CHECKING:
-    from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
+    from ...adapters.persistence.storage.envelope.secure_bound_repository import SecureBoundRepository
 
 
 def hashed_tax_id_token(tax_id: str, *, field_name: str) -> str:

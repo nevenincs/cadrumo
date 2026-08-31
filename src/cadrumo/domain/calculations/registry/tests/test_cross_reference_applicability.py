@@ -12,7 +12,7 @@ from typing import Literal
 import pytest
 from pydantic import ValidationError
 
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
 from .._validate import RegistryValidator
 from ..errors import RegistryValidationError

@@ -193,7 +193,7 @@ def test_verdict_parser_negative_marker_wins_over_positive_token() -> None:
 # ---------------------------------------------------------------------------
 
 from ......core.directory_scan import scan_directory
-from ......core.resources._boundary import bundled_path
+from ......core.resources.bundled_data import bundled_path
 
 _GROI_RESPONSE_SAMPLES_DIR = bundled_path("corpus", "aeat_official", "groi_response_samples")
 

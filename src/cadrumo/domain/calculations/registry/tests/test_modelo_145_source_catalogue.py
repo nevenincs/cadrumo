@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from ..corpus_catalogue import verify_source_file
 from ..legal import verify_legal_catalogue
 from ..record_design import extract_record_design_pdf

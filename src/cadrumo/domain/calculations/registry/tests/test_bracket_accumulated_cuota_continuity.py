@@ -34,7 +34,7 @@ from itertools import pairwise
 
 import pytest
 
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from ..authority import bundled_authority
 from ..schema_formula import BracketEntry, ParameterDefinition
 

@@ -54,7 +54,7 @@ def load_usage_ratios(*, bucket_id: str, objects: SecureObjectRepository | None 
         bucket_id: Profile bucket identifier.
         objects: Optional :class:`SecureObjectRepository` override; resolved from settings when absent.
     """
-    from ..storage.envelope._envelope import Envelope
+    from ..storage.envelope.contract import Envelope
     from ..storage.errors import ClassificationError, EnvelopeVersionError
     from ..storage.runtime_repository import secure_object_repository_for_bucket
     from ..storage.schema_lineage import inner_envelope_classification_is_expected, inner_envelope_version_is_current
@@ -133,7 +133,7 @@ def save_usage_ratios(
         bucket_id: Profile bucket identifier.
         objects: Optional :class:`SecureObjectRepository` override; resolved from settings when absent.
     """
-    from ..storage.envelope._envelope import Envelope
+    from ..storage.envelope.contract import Envelope
     from ..storage.runtime_repository import secure_object_repository_for_bucket
 
     envelope = Envelope[UsageRatioProfile](

@@ -58,7 +58,7 @@ from typing import TYPE_CHECKING, ClassVar, override
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
+from ...adapters.persistence.storage.envelope.secure_bound_repository import SecureBoundRepository
 from ...adapters.persistence.storage.secure_object_namespaces import LEDGER_CONFIRMED_COUNTERPARTY_FACTS_NAMESPACE
 from ...core.classification.policies import SensitivityClass
 from ...core.classifier_input_source import ClassifierInputSource

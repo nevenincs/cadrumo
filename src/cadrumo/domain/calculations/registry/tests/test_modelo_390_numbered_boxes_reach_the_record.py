@@ -33,7 +33,7 @@ import re
 
 import pytest
 
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from ..authority import bundled_authority
 from ..export import derive_export_layouts_from_bindings
 from ..record_design import extract_record_design

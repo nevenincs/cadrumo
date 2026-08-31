@@ -36,7 +36,7 @@ import pytest
 
 from .....core.corpus_text import normalise_corpus_text, resolve_anchored_extracted_unit
 from .....core.directory_scan import scan_directory
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

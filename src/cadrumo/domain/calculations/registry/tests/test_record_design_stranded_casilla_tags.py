@@ -26,7 +26,7 @@ import re
 
 import pytest
 
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from ..record_design import extract_record_design
 from ..record_design_pdf_repairs import (
     _collapse_stuttered_row_prefix,

@@ -9,7 +9,7 @@ import pytest
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ....adapters.persistence.profile.snapshots import SecureSnapshotRepository
-from ....adapters.persistence.storage.envelope._envelope import Envelope
+from ....adapters.persistence.storage.envelope.contract import Envelope
 from ....adapters.persistence.storage.secure_object_namespaces import TEST_SNAPSHOT_BASE_PROBE_NAMESPACE
 from ....adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
 from ....core.classification.policies import SensitivityClass

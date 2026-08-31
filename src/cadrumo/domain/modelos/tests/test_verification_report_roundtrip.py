@@ -516,7 +516,7 @@ def test_verification_report_catalogue_wrong_inner_classification_is_localized(
 ) -> None:
     """A corrupted envelope classification raises a translated persistence error."""
 
-    from ....adapters.persistence.storage.envelope._envelope import Envelope
+    from ....adapters.persistence.storage.envelope.contract import Envelope
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         envelope = Envelope[VerificationReportCatalogue](
@@ -550,7 +550,7 @@ def test_verification_report_catalogue_unsupported_storage_version_is_localized(
 ) -> None:
     """A future inner envelope schema version raises a translated persistence error."""
 
-    from ....adapters.persistence.storage.envelope._envelope import Envelope
+    from ....adapters.persistence.storage.envelope.contract import Envelope
 
     stored_schema_version = _VERIFICATION_CATALOGUE_VERSION + 1
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:

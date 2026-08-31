@@ -40,7 +40,7 @@ from ....core.directory_scan import (
     scan_directory,
 )
 from ....core.hashing import blake2b_hex
-from ....core.resources._boundary import bundled_path
+from ....core.resources.bundled_data import bundled_path
 from ....core.storage_taxonomy import StorageCategory
 from ....core.storage_taxonomy_locations import storage_location
 from ....core.toml import freeze_toml, read_toml

@@ -8,7 +8,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.classification.policies import SensitivityClass
-from ....core.resources._boundary import bundled_path
+from ....core.resources.bundled_data import bundled_path
 from ...calculations.registry.authority import bundled_authority
 from ...calculations.registry.legal import verify_legal_catalogue
 from ..errors import SCHEMA_LOAD_MESSAGE_KEY, UserProfileNotFoundError, UserProfileSchemaLoadError

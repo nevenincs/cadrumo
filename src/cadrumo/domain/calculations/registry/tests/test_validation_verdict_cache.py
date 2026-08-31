@@ -25,7 +25,7 @@ from pathlib import Path
 import pytest
 
 from .....core.config import override_settings
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from .. import _validate_evidence as ve
 from .._validate import RegistryValidator
 from .._verdict_cache import (

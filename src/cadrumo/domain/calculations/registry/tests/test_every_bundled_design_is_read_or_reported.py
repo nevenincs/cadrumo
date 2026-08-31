@@ -51,7 +51,7 @@ from typing import Literal
 import pytest
 
 from .....core.directory_scan import DirectoryEntryKind, scan_directory
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from ..record_design import extract_record_design
 from ..record_design_pdf_repairs import _collapse_stuttered_row_prefix, _join_wrapped_row_descriptions
 from ..record_design_pdf_rows import _parse_pdf_row

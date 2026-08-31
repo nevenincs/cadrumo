@@ -34,7 +34,7 @@ from typing import Annotated, ClassVar, override
 
 from pydantic import BaseModel, Field, StringConstraints
 
-from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
+from ...adapters.persistence.storage.envelope.secure_bound_repository import SecureBoundRepository
 from ...adapters.persistence.storage.errors import SecureObjectRowIdentityError
 from ...adapters.persistence.storage.path_safety import safe_repository_id
 from ...adapters.persistence.storage.secure_object_namespaces import AUTH_APODERADO_CONFIGURATION_NAMESPACE

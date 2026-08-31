@@ -71,7 +71,7 @@ from .config_support import default_status_notificaciones_path as _default_statu
 from .errors.hierarchy import ActiveProfilePointerError, CoreValidationError
 from .external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from .paths import normalize_project_relative_path
-from .resources._boundary import bundled_path
+from .resources.bundled_data import bundled_path
 from .telemetry._tier import TelemetryTier
 
 if TYPE_CHECKING:

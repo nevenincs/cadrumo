@@ -51,7 +51,7 @@ from typing import ClassVar, override
 
 from pydantic import BaseModel, Field
 
-from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
+from ...adapters.persistence.storage.envelope.secure_bound_repository import SecureBoundRepository
 from ...adapters.persistence.storage.path_safety import safe_repository_id
 from ...adapters.persistence.storage.secure_object_namespaces import WITHHOLDING_OBSERVATIONS_NAMESPACE
 from ...core.aggregation import AggregationCaptureKind

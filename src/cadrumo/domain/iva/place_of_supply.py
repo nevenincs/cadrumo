@@ -54,7 +54,7 @@ from typing import TypeGuard
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.resources._boundary import bundled_path
+from ...core.resources.bundled_data import bundled_path
 from ...core.toml import read_toml
 from ...core.validity_window import ValidityWindow, years_covered_by_every_group
 from ._grounding import verify_table_legal_refs

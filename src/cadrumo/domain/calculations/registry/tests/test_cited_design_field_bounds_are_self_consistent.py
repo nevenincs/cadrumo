@@ -30,7 +30,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from ..export import derive_export_layouts_from_bindings
 from ..record_design_coverage import _extract_record_design
 from ..record_design_schema import RecordDesignSheet

@@ -24,7 +24,7 @@ import textwrap
 import pytest
 
 from ...errors import ClassificationError, EnvelopeVersionError
-from .._secure_repository import SecureBoundRepository
+from ..secure_bound_repository import SecureBoundRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

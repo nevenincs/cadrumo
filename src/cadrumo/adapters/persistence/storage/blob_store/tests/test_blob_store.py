@@ -17,7 +17,7 @@ from ......core.external_constants import UTF_8_ENCODING
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ......tests.path_obstruction import obstructed_path
 from ...crypto.aead import KEY_SIZE
-from ...envelope._envelope import Envelope
+from ...envelope.contract import Envelope
 from ...errors import (
     BlobIntegrityError,
     BlobNotFoundError,

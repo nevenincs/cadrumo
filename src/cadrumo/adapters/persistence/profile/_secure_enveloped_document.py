@@ -122,7 +122,7 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
 
     def _decode_record(self, payload: bytes) -> DocumentT:
         """Validate one loaded encrypted payload against the Envelope contract."""
-        from ..storage.envelope._envelope import Envelope
+        from ..storage.envelope.contract import Envelope
         from ..storage.schema_lineage import (
             inner_envelope_classification_is_expected,
             inner_envelope_version_is_current,
@@ -200,7 +200,7 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
         read has no revision to assert -- but a caller that DID read one and
         omits it is choosing the silent discard.
         """
-        from ..storage.envelope._envelope import Envelope
+        from ..storage.envelope.contract import Envelope
 
         envelope = Envelope[self._model_type](  # ty: ignore[invalid-type-form]  # reason: pydantic runtime generic parameterisation; the model type is a per-instance value, which no static type expression can carry
             schema_version=self._definition.schema_version,

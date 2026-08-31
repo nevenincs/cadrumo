@@ -525,7 +525,7 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
             "cadrumo.core.output_rendering",
             "cadrumo.core.paths",
             "cadrumo.core.redaction",
-            "cadrumo.core.resources._boundary",
+            "cadrumo.core.resources.bundled_data",
             "cadrumo.core.text_fold",
             "cadrumo.domain.calculations",
             "cadrumo.domain.calculations._row_casilla",
