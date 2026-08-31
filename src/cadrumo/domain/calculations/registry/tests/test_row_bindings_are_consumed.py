@@ -50,9 +50,12 @@ _UNCONSUMED_ROW_BINDING_DEFECTS: Final[dict[tuple[str, str], str]] = {
     ),
     ("360", "2010-y-siguientes"): (
         "5 modelo-360-refund-row-* bindings, 0 consumed across 235 fields on two page "
-        "records. The bundled diseno extract does not settle whether the refund block "
-        "repeats or uses fixed slots, so the SHAPE of the repair is open -- but the "
-        "bindings are unreachable under either reading."
+        "records. The shape of the repair is settled and is NOT a repeat: the bundled "
+        "diseno enumerates operations as fixed numbered slots on the pagina-2 record, "
+        "'1. Numero de operacion' at position 11 against '2. Numero de operacion' at "
+        "3111, each group carrying its own declared positions. So these bindings are "
+        "consumed by explicit binding fields at those positions, two groups of five, "
+        "and never by repeat = binding_rows."
     ),
 }
 
