@@ -9,7 +9,7 @@ related:
   - '[[2026-08-28-semantic-consolidation-cli-payload-projection-adr]]'
 modified: '2026-08-31'
 body_schema: body-v2
-body_hash: 'sha256:5bd677cfdad5d094fe1a8ee7ccc13a7d30406feef348e3319bb21456ffc97fc2'
+body_hash: 'sha256:c93b487d99bc2b7d161d1095eae5e6710cffd1d41b8694691271977bf4265f12'
 ---
 
 # `semantic-consolidation` plan
@@ -79,6 +79,7 @@ Six package namespaces carry a PEP 562 __getattr__ resolver, four of them byte-i
 - [x] `P02.S136` - Declare the calendar-month bound and its predicate once and adopt them at eight sites, two of which stated the same field's rule twice in one module; `src/cadrumo/core/text_bounds.py, src/cadrumo/domain/contribuyente/, src/cadrumo/application/wizard/, src/cadrumo/entrypoints/cli/`.
 - [x] `P02.S144` - Measure CLI model redefinition by field-set containment rather than searching for it, and retire the third currency declaration the earlier consolidation missed; `src/cadrumo/application/ledger/models.py, src/cadrumo/entrypoints/cli/_ledger_payloads.py`.
 - [x] `P02.S145` - Align the ledger export payload with the row it claims to mirror on all thirty-one fields, and repoint the currency case that my own earlier consolidation had turned into a non-wall; `src/cadrumo/entrypoints/cli/_ledger_payloads.py, src/cadrumo/application/ledger/models.py, src/cadrumo/entrypoints/cli/tests/test_ledger_interface_contract_payloads.py`.
+- [x] `P02.S146` - Declare the non-negative canonical-decimal predicate once and route both CLI money validators through it, then add the assertion to the three payloads that stringified a bounded amount without re-asserting the bound; `src/cadrumo/core/decimal/, src/cadrumo/entrypoints/cli/_modelo_iva_wallet_payloads.py, src/cadrumo/entrypoints/cli/_ledger_payloads.py, src/cadrumo/entrypoints/cli/_app_live_iva_wallet_payloads.py, src/cadrumo/entrypoints/cli/_ledger_business_payloads.py`.
 
 ### Phase `P03` - Consolidate the repeated secure-repository configuration shape
 
