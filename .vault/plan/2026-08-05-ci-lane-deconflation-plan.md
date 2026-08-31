@@ -10,7 +10,7 @@ related:
   - '[[2026-06-01-registry-period-code-union-cli-boundary-adr]]'
   - '[[2026-08-05-ci-lane-deconflation-step-check-attribution-audit]]'
 modified: '2026-08-31'
-body_hash: 'sha256:b0299ed05d2a3776d49b8b8002f6b0cc527dfe5a6c5c3c1fd20263703939fd3a'
+body_hash: 'sha256:cc978d1deff18eebad5cf5767f459b902defb686705aeb737eefd4550f6505ce'
 ---
 
 <!-- RETIRED: S01, S10, S181, S184, S186, S189, S191, S193, S194, S197, S199, S201, S203, S205, S207, S209, S211, S213, S215, S217, S219, S221 -->
@@ -284,7 +284,7 @@ Decompose every live size-budget subject by its owning source file, then regener
 - [x] `P05.S216` - Refactor the size-budget subjects in establishment.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/iva/establishment.py`.
 - [x] `P05.S218` - Refactor the size-budget subjects in calculation_revision.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/modelos/calculation_revision.py`.
 - [ ] `P05.S220` - Refactor the size-budget subjects in test_calculation_revision.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/modelos/tests/test_calculation_revision.py`.
-- [ ] `P05.S222` - Refactor the size-budget subjects in models.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/transactions/models.py`.
+- [x] `P05.S222` - Refactor the size-budget subjects in models.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/transactions/models.py`.
 - [ ] `P05.S223` - Refactor _config_payloads.py below the default size ceiling without raising its stale threshold.; `src/cadrumo/entrypoints/cli/_config_payloads.py`.
 - [ ] `P05.S224` - Refactor the size-budget subjects in _modelo_payloads.py into cohesive siblings without raising any threshold.; `src/cadrumo/entrypoints/cli/_modelo_payloads.py`.
 - [x] `P05.S225` - Refactor the size-budget subjects in test_machine_secret_channels_subprocess.py into cohesive siblings without raising any threshold.; `src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py`.
