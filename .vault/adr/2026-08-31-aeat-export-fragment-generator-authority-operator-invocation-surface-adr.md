@@ -95,6 +95,16 @@ The two owed trees become satisfiable and the queued row-binding repairs become
 landable, including the ones currently blocked in another lane. Publication becomes
 an auditable operator action rather than an undocumented one.
 
+The reach is wider than the two rows, and this was measured rather than assumed.
+Modelo 200's revisions both declare `authority_grade = "calculation"`, and each
+states the same reason in its own comment: filing refuses until the canonical
+generator publishes the exact design for that ejercicio. That is the tree this
+decision is about. So the missing surface does not merely leave two enrolment rows
+red -- it holds a modelo below filing grade, which in turn refuses every request
+for a filing snapshot of it. Seven of the eleven failures in the filing
+export-proof lane are that refusal, arriving there rather than here. One
+capability accounts for the owed trees, the modelo's grade, and those seven.
+
 The honest difficulty is that a publish verb makes it materially easier to overwrite
 shipped registry content, which today is effectively impossible. That is the point of
 the change and also its main hazard, which is why publish is specified to refuse when
