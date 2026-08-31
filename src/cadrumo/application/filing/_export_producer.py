@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from ...core import FilingProducerKey, PriorDomiciliationElection
+from ...core.filing_producer_key import FilingProducerKey
+from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.prorrata_register import ProrrataEspecialTransitionKind
 from ...core.period import Period
 from ...domain.deadlines.models import M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile

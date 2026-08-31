@@ -13,7 +13,7 @@ from typing import Final
 
 from pydantic import ValidationError
 
-from ...core import freeze_toml, read_toml
+from ...core.toml import freeze_toml, read_toml
 from ...core.paths import path_stat_fingerprint
 from ...core.resources import bundled_path
 from .errors import UserProfileSchemaLoadError

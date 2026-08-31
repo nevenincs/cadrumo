@@ -55,7 +55,9 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG as _STRICT_FROZEN_HIDDEN
-from ...core import ExportLayoutFormat, FilingProducerKey, PriorDomiciliationElection
+from ...core import ExportLayoutFormat
+from ...core.filing_producer_key import FilingProducerKey
+from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.modelo import Modelo
 from ...core.period import Period
 from ...core.casilla_id import CasillaId

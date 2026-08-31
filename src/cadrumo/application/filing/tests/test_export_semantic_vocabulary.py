@@ -8,7 +8,7 @@ from importlib import import_module
 
 import pytest
 
-from ....core import FilingProducerKey
+from ....core.filing_producer_key import FilingProducerKey
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations import registry

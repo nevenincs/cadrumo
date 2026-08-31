@@ -21,7 +21,7 @@ drifts silently because nothing reads the register against its source. The set
 is now derived by identity, which makes it complete by construction.
 
 See Also:
-    :mod:`~core._hex`
+    :mod:`~core.hex`
         Primitive definition under test.
     :mod:`~core.identity`
         Owner of the semantic aliases this suite derives its set from.
@@ -36,7 +36,7 @@ from pydantic import ValidationError
 
 from ... import core as _core_package
 from ...tests.fixtures.identity_holder import single_field_holder
-from .. import Hex64Str
+from ..hex import Hex64Str
 from .. import identity as _identity_package
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

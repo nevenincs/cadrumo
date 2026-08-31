@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     from ...domain.contribuyente.family_types import GuarderiaMonthSpend
     from ...domain.user_profile.values import UserProfileRecord
 
-from ...core import DescendantRelacion
+from ...core.descendant_relacion import DescendantRelacion
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.flows import REPEATING_INSTANCE_SEPARATOR
 from ...core.parsing import parse_bool, parse_iso8601_date
@@ -330,7 +330,7 @@ def _safe_relacion_and_entry_dates(
     the relación axis exists to prevent. The review verdict still blocks the
     final submit, so the operator is told rather than silently trimmed.
     """
-    from ...core import ART_58_2_ENTITLING_RELACIONES
+    from ...core.descendant_relacion import ART_58_2_ENTITLING_RELACIONES
 
     raw_relacion = (row.get("relacion") or "").strip()
     try:

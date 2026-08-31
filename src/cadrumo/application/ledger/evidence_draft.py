@@ -117,11 +117,11 @@ from ...application.invoices import build_catalogue_invoice, create_catalogue_in
 from ...core import (
     PDF_CONTAINER_SHAPES,
     STRUCTURED_DOCUMENT_SHAPES,
-    DraftDiscrepancyKind,
     ImageMediaType,
     ServiceCapability,
     detect_image_media_type,
 )
+from ...core.draft_discrepancy import DraftDiscrepancyKind
 from ...core.field_grounding import FieldGroundingOutcome
 from ...core.optional_extras import MissingOptionalExtraError
 from ...core.field_origin import FieldOrigin

@@ -13,9 +13,7 @@ from __future__ import annotations
 
 import pytest
 
-from .. import (
-    FilingProducerKey,
-)
+from ..filing_producer_key import FilingProducerKey
 from .._address_components import (
     FOREIGN_ADDRESS_COMPONENTS,
     FOREIGN_ADDRESS_INFIX,

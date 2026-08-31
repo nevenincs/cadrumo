@@ -11,7 +11,7 @@ from typing import cast
 
 from pydantic import BaseModel
 
-from ...core import Hex64Str
+from ...core.hex import Hex64Str
 from ...core.hashing import content_hash_hex
 from ...core.operations import (
     OperationCancellation,

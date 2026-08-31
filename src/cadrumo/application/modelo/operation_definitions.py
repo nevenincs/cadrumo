@@ -27,7 +27,8 @@ from typing import TYPE_CHECKING, Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from ...core import PaymentElection, RefundElection
+from ...core import RefundElection
+from ...core.payment_election import PaymentElection
 from ...core.irnr import M210PayerMode
 from ...core.country_code import CountryCodeAlpha2
 from ...core.errors.hierarchy import CadrumoError

@@ -31,7 +31,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field, ValidationError
 
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from cadrumo.core import freeze_toml, read_toml, to_str_keyed_dict
+from cadrumo.core.toml import freeze_toml, read_toml, to_str_keyed_dict
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources import bundled_path
 

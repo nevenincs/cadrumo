@@ -14,7 +14,8 @@ from ....application.calculations import (
     ObservationSourceKind,
     ResultDispositionProjection,
 )
-from ....core import ObservedHeaderFact, PriorDomiciliationElection
+from ....core import ObservedHeaderFact
+from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.result_disposition import ResultDisposition
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority

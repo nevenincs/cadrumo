@@ -24,7 +24,8 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import ConfirmationBlockReason, DraftDiscrepancyKind
+from ....core import ConfirmationBlockReason
+from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....domain.iva.classification import InvoiceKind
 from ..confirmation_gate import ConfirmationBlockedError, confirmation_blockers, resolved_blockers
 from ..evidence_draft import InvoiceDraft, _with_direction_contradiction

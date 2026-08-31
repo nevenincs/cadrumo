@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from ...core import ART_58_2_ENTITLING_RELACIONES
+from ...core.descendant_relacion import ART_58_2_ENTITLING_RELACIONES
 from ...core.external_constants import CUSTODIA_COMPARTIDA_PRORRATA_FACTOR
 from .descendant_record import DescendantRecordBase
 from .family_types import (

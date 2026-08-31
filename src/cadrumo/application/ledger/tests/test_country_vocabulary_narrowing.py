@@ -55,7 +55,8 @@ from datetime import date
 
 import pytest
 
-from ....core import ClassifierInputSource, DraftDiscrepancyKind
+from ....core import ClassifierInputSource
+from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....domain.iva.classification import CustomerTaxStatus, InvoiceKind, IvaTerritorialScope
 from ....domain.iva.establishment import StatedCountryCodeStatus
 from ....domain.iva.schema import IvaCategory

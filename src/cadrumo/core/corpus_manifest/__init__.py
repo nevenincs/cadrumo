@@ -40,7 +40,7 @@ from typing import ClassVar
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from ..models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Hex64Str
+from ..hex import Hex64Str
 from ...core.directory_scan import scan_directory
 from ..errors.hierarchy import CoreValidationError as _CoreValidationError
 from ..hashing import canonical_json_bytes as _canonical_json_bytes

@@ -164,7 +164,7 @@ def test_the_scan_reaches_a_real_population(head_tokens: frozenset[str]) -> None
     vocabulary -- a broken parse yields nothing, and a mis-parse yields tokens
     the closed enum does not carry.
     """
-    from .....core import FilingProducerKey
+    from .....core.filing_producer_key import FilingProducerKey
 
     assert head_tokens, "the header_key scan found nothing at HEAD; that is a broken scan, not a corpus"
     unknown = head_tokens - {member.value for member in FilingProducerKey}
@@ -197,7 +197,7 @@ def test_no_header_key_spells_a_spanish_concept_in_english(head_tokens: frozense
     :func:`test_the_gate_detects_a_known_dual_spelling`, against a hand-built
     corpus, so nothing is lost by asserting the real contract here.
     """
-    from .....core import FilingProducerKey
+    from .....core.filing_producer_key import FilingProducerKey
 
     assert english_stem_offenders(head_tokens) == ()
     producer_keys = {member.value for member in FilingProducerKey}

@@ -12,7 +12,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator, model_validator
 
-from cadrumo.core import FilingProducerKey
+from cadrumo.core.filing_producer_key import FilingProducerKey
 from cadrumo.core.filing_projection_ref import FilingProjectionRef, hydrate_filing_projection_ref
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKindValue

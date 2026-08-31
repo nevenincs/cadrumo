@@ -20,7 +20,7 @@ from typing import Literal
 
 import pytest
 
-from ......core import FilingProducerKey
+from ......core.filing_producer_key import FilingProducerKey
 from ......domain.calculations.export_field_kind import CasillaFieldKind
 from ......domain.calculations.registry.export_value_policy import ExportValuePolicy
 from ......domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition

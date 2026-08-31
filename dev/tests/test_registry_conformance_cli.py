@@ -53,7 +53,8 @@ from cadrumo.application.registry.conformance import (
     compare_annual_casilla_population,
     compare_annual_casilla_population_for_revision,
 )
-from cadrumo.core import ExternalOracleCorpus, RevisionReviewStatus
+from cadrumo.core import ExternalOracleCorpus
+from cadrumo.core.revision_review import RevisionReviewStatus
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.resources import bundled_path

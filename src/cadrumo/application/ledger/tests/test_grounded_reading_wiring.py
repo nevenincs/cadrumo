@@ -28,7 +28,7 @@ import pytest
 # import` edge as reaching through the inert namespace.
 import cadrumo.application.ledger.evidence_draft as evidence_draft_module
 
-from ....core import DraftDiscrepancyKind
+from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from ....core.optional_extras import LLM_EXTRA, MissingOptionalExtraError

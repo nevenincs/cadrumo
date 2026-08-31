@@ -39,7 +39,7 @@ from typing import Annotated
 
 from pydantic import AfterValidator, BeforeValidator, Field
 
-from .._hex import Hex64Str as _Hex64Str
+from ..hex import Hex64Str as _Hex64Str
 from ._bucket import BucketId, canonical_bucket_id
 from ._digest import ContentDigest, ContentDigestOrAbsent, PrefixedContentDigest
 from ._documents import (

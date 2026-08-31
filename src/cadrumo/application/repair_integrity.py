@@ -59,7 +59,7 @@ from ..adapters.persistence.storage import (
 from ..adapters.persistence.storage.sql.secure_objects import (
     SecureObjectDecryptabilityRow,
 )
-from ..core import Hex64Str
+from ..core.hex import Hex64Str
 from ..core.operator_action_enums import (
     ActionArgumentSource,
     ActionArgumentStatus,

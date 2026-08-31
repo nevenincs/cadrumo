@@ -10,7 +10,7 @@ from typing import Final, TypedDict
 
 import pytest
 
-from cadrumo.core import FilingProducerKey
+from cadrumo.core.filing_producer_key import FilingProducerKey
 from cadrumo.core.filing_projection_ref import (
     M303ProrrataActivityProjectionField,
     M303ProrrataActivityProjectionRef,

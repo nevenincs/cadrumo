@@ -348,7 +348,7 @@ def test_resolve_modelo_workspace_target_carries_review_status_from_the_registry
     workspace_repos: tuple[str, WorkUnitCatalogueRepository],
 ) -> None:
     """The shared resolved-target record must source review_status from the one REGISTRY capture."""
-    from ....core import RevisionReviewStatus
+    from ....core.revision_review import RevisionReviewStatus
 
     bucket_id, repository = workspace_repos
     work_unit = _seed_work_unit(repository, bucket_id=bucket_id)
@@ -1838,7 +1838,7 @@ def test_an_overflowing_facet_built_without_a_cursor_still_refuses(
 
 
 def _resolved_target_with_work_unit(*, work_unit_id: str, revision_id: str = "2022"):
-    from ....core import RevisionReviewStatus
+    from ....core.revision_review import RevisionReviewStatus
     from ....domain.modelos.work_unit import WorkUnitState
     from ..workspace_models import (
         ModeloWorkspaceResolvedTargetV1,

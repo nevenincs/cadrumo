@@ -23,7 +23,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....core import IvaCompensationStateProvenance
+from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ....core.period import Period
 from ..carry_forward import (
     IvaCompensationCarryForwardLot,

@@ -30,7 +30,7 @@ from datetime import datetime
 
 from ...application.modelo.review_package import ReviewPackageActor
 from ...application.modelo.review_package_text import ReviewFeedbackNote, ReviewPackageNote
-from ...core import Hex64Str
+from ...core.hex import Hex64Str
 from ...core.filing_year import FilingYear
 from ...core.identity import BucketId, CalculationRevisionId, WorkUnitId
 from ...core.json_contract import OutputSchema

@@ -32,7 +32,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import DraftDiscrepancyKind
+from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER

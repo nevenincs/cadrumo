@@ -39,7 +39,8 @@ from ...application.modelo.work_review import (
     ModeloWorkProgress,
     ModeloWorkReview,
 )
-from ...core import PaymentElection, RefundElection
+from ...core import RefundElection
+from ...core.payment_election import PaymentElection
 from ...core.result_disposition import ResultDisposition
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId

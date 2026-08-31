@@ -18,7 +18,7 @@ from typing import Literal, Protocol
 
 from pydantic import Field, model_validator
 
-from ....core import RevisionReviewStatus
+from ....core.revision_review import RevisionReviewStatus
 from ....core.casilla_id import CasillaId
 from .casilla_membership import casillas_by_id
 from .ids import BindingId, LegalRefId, ModeloId, RevisionId, SourceRefId

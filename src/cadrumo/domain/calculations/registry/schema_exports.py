@@ -12,7 +12,8 @@ from typing import Annotated, Final, Literal
 
 from pydantic import BeforeValidator, Field, field_validator, model_validator
 
-from ....core import DeclaracionIdioma, ExportLayoutFormat, FilingProducerKey
+from ....core import DeclaracionIdioma, ExportLayoutFormat
+from ....core.filing_producer_key import FilingProducerKey
 from ....core.filing_projection_ref import (
     FilingProjectionRef,
     filing_projection_ref_casilla_id,

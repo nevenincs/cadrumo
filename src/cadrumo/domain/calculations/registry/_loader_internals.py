@@ -16,7 +16,8 @@ from typing import cast, get_args, get_origin
 
 from pydantic import BaseModel, ValidationError
 
-from ....core import FilingProducerKey, freeze_toml, read_toml
+from ....core.filing_producer_key import FilingProducerKey
+from ....core.toml import freeze_toml, read_toml
 from ....core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ....core.filing_projection_ref import compile_filing_projection_ref
 from ....core.directory_scan import (

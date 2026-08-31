@@ -9,7 +9,8 @@ import pytest
 
 from ....adapters.outbound.aeat.sede.errors import SedeError
 from ....adapters.outbound.aeat.sede.schema import ObservedCasillaValue
-from ....core import CasillaValueKind, IvaCompensationStateProvenance, ObservedHeaderFact
+from ....core import CasillaValueKind, ObservedHeaderFact
+from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ....core.period import Period
 from ....core.errors.error_codes import ERROR_REGISTRY, build_error_envelope
 from ....domain.iva_compensation.carry_forward import IvaCompensationExpiryReviewState, build_iva_compensation_carry_forward_report, enforce_iva_compensation_four_year_window

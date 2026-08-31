@@ -19,7 +19,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING, Literal
 
-from pydantic import Field, NonNegativeInt, field_validator, model_validator
+from pydantic import NonNegativeInt, field_validator, model_validator
 
 from ...adapters.persistence.storage.custody.records import PostChangePasswordGeneration
 from ...application.auth.apoderado_service import RepresentedNif
@@ -36,8 +36,9 @@ from ...application.config_reset import (
 )
 from ...application.user_profile.aggregate import ProfileRestoreAuthority
 from ...application.user_profile.bundle_export_contracts import ProfileBundleExportPurpose, ProfileBundleExportTransport
+from ...application.workflow.events import WorkflowReasonClass
 from ...application.workflow.profile_health import ProfileHealthStatus, ProfileSource
-from ...core import Hex64Str
+from ...core.hex import Hex64Str
 from ...core.errors.severity import BaseSeverity
 from ...core.identity import BucketId, ProfileId, ProfileLabel
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
@@ -90,7 +91,7 @@ class WorkflowFingerprintPayload(OutputSchema):
     schema_version: PayloadSchemaVersion | None = None
     written_at: datetime | None = None
     byte_length: NonNegativeInt | None = None
-    reason_class: str = Field(min_length=1, max_length=64)
+    reason_class: WorkflowReasonClass
     recovered_bucket_id: BucketId | None = None
 
 

@@ -21,7 +21,7 @@ from typing import Annotated
 
 from pydantic import StringConstraints
 
-from .._hex import HEX_PATTERN_64, Hex64Str
+from ..hex import HEX_PATTERN_64, Hex64Str
 
 ContentDigest = Hex64Str
 """Lowercase hex-64 SHA-256 digest of a payload's exact bytes."""

@@ -24,7 +24,7 @@ from typing import Annotated, Final, Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field, PositiveInt, StringConstraints, field_validator, model_validator
 
-from cadrumo.core import ConceptLifecycle
+from cadrumo.core.concept_lifecycle import ConceptLifecycle
 from cadrumo.core.external_constants import OutputLanguage
 
 from ..._paths import REPO_ROOT, UTF_8

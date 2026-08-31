@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import IvaCompensationStateProvenance
+from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ....core.result_disposition import derive_result_disposition, result_disposition_casilla_ids
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period

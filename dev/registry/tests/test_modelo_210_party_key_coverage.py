@@ -14,7 +14,7 @@ from collections import Counter
 
 import pytest
 
-from cadrumo.core import FilingProducerKey
+from cadrumo.core.filing_producer_key import FilingProducerKey
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry.loader import load_catalogue_file
 

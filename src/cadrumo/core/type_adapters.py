@@ -22,7 +22,7 @@ once and reuses it, which is the behaviour the per-module copies were each
 paying for separately.
 
 See Also:
-    :func:`~core._toml.to_str_keyed_dict`
+    :func:`~core.toml.to_str_keyed_dict`
         The narrower TOML-specific bridge, which re-raises through a
         caller-supplied error factory instead of a
         :exc:`~pydantic.ValidationError`.

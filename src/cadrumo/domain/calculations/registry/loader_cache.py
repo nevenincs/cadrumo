@@ -33,7 +33,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from ....core import freeze_toml, read_toml
+from ....core.toml import freeze_toml, read_toml
 from ....core.storage_taxonomy_locations import storage_location
 from ....core.storage_taxonomy import StorageCategory
 from ....core.config import load_settings

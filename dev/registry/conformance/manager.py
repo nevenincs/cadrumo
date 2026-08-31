@@ -107,7 +107,7 @@ from cadrumo.application.registry.conformance import (
     audit_bundled_registry_conformance,
     compare_annual_casilla_population_for_revision,
 )
-from cadrumo.core import RevisionReviewStatus
+from cadrumo.core.revision_review import RevisionReviewStatus
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
 from cadrumo.core.i18n import lookup_translation_entry

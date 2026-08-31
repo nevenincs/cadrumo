@@ -43,7 +43,7 @@ from typing import Annotated, Final, Literal
 
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
-from ...core._hex import Hex64Str
+from ...core.hex import Hex64Str
 from ...core.config import Settings
 from ...core.identity import AeatCertificadoId, BucketId, ContentDigest
 from ...core.logging import get_logger

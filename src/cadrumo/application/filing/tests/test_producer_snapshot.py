@@ -9,7 +9,10 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....core import FilingProducerKey, PaymentElection, PriorDomiciliationElection, RefundElection
+from ....core import RefundElection
+from ....core.payment_election import PaymentElection
+from ....core.filing_producer_key import FilingProducerKey
+from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....core.result_disposition import ResultDisposition
 from ....core.prorrata_register import ProrrataEspecialTransitionKind, ProrrataRegisterRegime

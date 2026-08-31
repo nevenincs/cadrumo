@@ -27,7 +27,7 @@ from ...application.modelo.reconciliation_records import (
     ModeloReconciliationEvidenceKind,
     ModeloReconciliationVerdict,
 )
-from ...core import IvaCompensationStateProvenance
+from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ...core.period import Period
 from ...core.identity import BucketId, ProfileId, WorkUnitId
 from ...core.json_contract import OutputSchema

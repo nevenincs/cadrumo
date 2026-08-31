@@ -9,7 +9,9 @@ from pathlib import Path
 
 import pytest
 
-from ....core import PaymentElection, PriorDomiciliationElection, RefundElection
+from ....core import RefundElection
+from ....core.payment_election import PaymentElection
+from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.result_disposition import ResultDisposition
 from ....core.filing_projection_ref import (
     M303RegimenSimplificadoActivityField,

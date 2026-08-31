@@ -43,7 +43,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
-from ...core import PaymentElection, RefundElection
+from ...core import RefundElection
+from ...core.payment_election import PaymentElection
 from ...core.result_disposition import (
     ResultDisposition,
     derive_result_disposition,

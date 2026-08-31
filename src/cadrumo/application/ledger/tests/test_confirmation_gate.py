@@ -17,7 +17,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....core import ConfirmationBlockReason, DraftDiscrepancyKind, FindingResolutionAction
+from ....core import ConfirmationBlockReason, FindingResolutionAction
+from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from ..confirmation_gate import (

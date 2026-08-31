@@ -22,7 +22,8 @@ from pydantic import (
     model_validator,
 )
 
-from ....core import RevisionReviewStatus, TaxDomain
+from ....core import TaxDomain
+from ....core.revision_review import RevisionReviewStatus
 from ....core.irnr import M210_TIPO_RENTA_CODE_PROJECTION
 from ....core.result_disposition import ResultDisposition
 from ....core.authority_grade import RegistryAuthorityGrade, UNDECLARED_REGISTRY_AUTHORITY_GRADE

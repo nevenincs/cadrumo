@@ -62,7 +62,7 @@ from ...adapters.persistence.storage import (
     SecureBoundRepository,
     secure_object_repository_for_bucket,
 )
-from ...core import Hex64Str
+from ...core.hex import Hex64Str
 from ...core.config import Settings
 from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import PDF_EXTENSION, PDF_MIME_TYPE, XML_MIME_TYPE

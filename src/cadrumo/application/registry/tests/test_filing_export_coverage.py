@@ -10,7 +10,7 @@ from uuid import UUID
 import pytest
 from pydantic import ValidationError
 
-from ....core import RevisionReviewStatus
+from ....core.revision_review import RevisionReviewStatus
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.modelo import Modelo
 from ...filing import (

@@ -50,7 +50,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from ...core import DraftDiscrepancyKind
+from ...core.draft_discrepancy import DraftDiscrepancyKind
 from .evidence_draft import DraftDiscrepancyFinding, InvoiceDraft
 
 __all__ = [

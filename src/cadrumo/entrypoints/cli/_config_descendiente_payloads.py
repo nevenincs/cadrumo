@@ -37,7 +37,7 @@ from typing import Annotated
 
 from pydantic import NonNegativeInt, StringConstraints, field_validator, model_validator
 
-from ...core import ART_58_2_ENTITLING_RELACIONES, DescendantRelacion
+from ...core.descendant_relacion import ART_58_2_ENTITLING_RELACIONES, DescendantRelacion
 from ...core.json_contract import OutputSchema
 from ...core.text_bounds import CalendarMonth, is_calendar_month
 from ...core.time import today_madrid

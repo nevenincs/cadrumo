@@ -36,7 +36,7 @@ from ...adapters.persistence.storage import (
     SecureBoundRepository,
     secure_object_repository_for_bucket,
 )
-from ...core import Hex64Str
+from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.config import Settings
 from ...core.external_constants import UTF_8_ENCODING

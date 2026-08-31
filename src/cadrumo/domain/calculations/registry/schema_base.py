@@ -16,7 +16,8 @@ from typing import Annotated, Literal, get_args, get_origin
 
 from pydantic import BaseModel, BeforeValidator, Field, TypeAdapter, field_validator
 
-from ....core import LegalReviewStatus, RevisionReviewStatus
+from ....core import LegalReviewStatus
+from ....core.revision_review import RevisionReviewStatus
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.classification import SensitivityClass

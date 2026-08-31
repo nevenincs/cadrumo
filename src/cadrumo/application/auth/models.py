@@ -8,7 +8,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
-from ...core import Hex64Str
+from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.identity import BucketId
 from ...core.time import validate_utc_aware

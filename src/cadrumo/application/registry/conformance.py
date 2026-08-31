@@ -105,13 +105,13 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from ...core.modelo import NON_REGISTRY_MODELOS as _NON_REGISTRY_MODELOS
-from ...core import REVIEWED_REVISION_REVIEW_STATUSES as _REVIEWED_REVISION_REVIEW_STATUSES
+from ...core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES as _REVIEWED_REVISION_REVIEW_STATUSES
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.casilla_id import CasillaId as _CasillaId
 from ...core import ExportLayoutFormat as _ExportLayoutFormat
 from ...core.modelo import Modelo as _Modelo
-from ...core import RevisionReviewStatus as _RevisionReviewStatus
+from ...core.revision_review import RevisionReviewStatus as _RevisionReviewStatus
 from ...core.access_gate import ModeloAuthorization as _ModeloAuthorization
 from ...core.filing_year import FilingYear
 from ...core.resources import bundled_path as _bundled_path

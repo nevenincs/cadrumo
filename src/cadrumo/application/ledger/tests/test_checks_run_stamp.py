@@ -84,7 +84,7 @@ def test_a_check_added_to_the_declaration_also_runs() -> None:
     truthfully naming checks that never executed, which is worse than the gap it
     replaced because it reads as evidence.
     """
-    from ....core import DraftDiscrepancyKind
+    from ....core.draft_discrepancy import DraftDiscrepancyKind
     from ..evidence_draft import DraftDiscrepancyFinding, InvoiceDraft
 
     sentinel = DraftDiscrepancyFinding(kind=DraftDiscrepancyKind.ROLE_UNRESOLVED, detail="sentinel")

@@ -7,7 +7,7 @@ from collections import Counter
 
 import pytest
 
-from .....core import FilingProducerKey
+from .....core.filing_producer_key import FilingProducerKey
 from .....core.resources import bundled_path
 from .._validate import RegistryValidator
 from ..corpus_catalogue import resolve_record_design_binary

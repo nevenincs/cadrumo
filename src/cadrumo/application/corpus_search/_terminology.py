@@ -37,7 +37,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, StringConstraints
 
-from ...core import ConceptLifecycle
+from ...core.concept_lifecycle import ConceptLifecycle
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from ...core.text_fold import fold_diacritics
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN

@@ -91,7 +91,7 @@ def test_only_approved_concepts_render_drafts_excluded() -> None:
     Confirms the approved-only rule: drafts (the bulk of the Handbook) carry
     no curated definition and must never become a glossary entry.
     """
-    from cadrumo.core import ConceptLifecycle
+    from cadrumo.core.concept_lifecycle import ConceptLifecycle
 
     handbook = _load_handbook()
     approved = sum(1 for c in handbook.concepts if c.lifecycle is ConceptLifecycle.APPROVED)
@@ -116,7 +116,7 @@ def test_term_lines_are_declared_surfaces_and_aliases_share_one_entry() -> None:
     alias, some entry must render two or more consecutive term lines -- the
     alias-on-the-same-entry path. No term label is named.
     """
-    from cadrumo.core import ConceptLifecycle
+    from cadrumo.core.concept_lifecycle import ConceptLifecycle
 
     from ..terminology_handbook._enums import TermStatus
 
@@ -188,7 +188,7 @@ def test_entry_bodies_render_the_build_language_and_no_other() -> None:
     handbook, never through the generator -- and no body may be the text of a
     different language whose section says something else.
     """
-    from cadrumo.core import ConceptLifecycle
+    from cadrumo.core.concept_lifecycle import ConceptLifecycle
     from cadrumo.core.external_constants import OutputLanguage
 
     handbook = _load_handbook()
@@ -237,7 +237,7 @@ def test_a_concept_without_build_language_prose_never_borrows_another_language()
     Exercised by rendering the real handbook in a language whose sections are
     stripped from the records, which is the shape partial coverage takes.
     """
-    from cadrumo.core import ConceptLifecycle
+    from cadrumo.core.concept_lifecycle import ConceptLifecycle
     from cadrumo.core.external_constants import OutputLanguage
 
     handbook = _load_handbook()
@@ -288,7 +288,7 @@ def test_broader_related_relations_render_as_term_cross_references() -> None:
     rendered relation edges equals the count of approved-to-approved relations
     the source declares (a dropped or spurious edge fails the count).
     """
-    from cadrumo.core import ConceptLifecycle
+    from cadrumo.core.concept_lifecycle import ConceptLifecycle
 
     handbook = _load_handbook()
     rst, _ = render_glossary(_REPO_ROOT, handbook)

@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
 
-from ...core import read_toml
+from ...core.toml import read_toml
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from ...core.decimal import coerce_decimal
 from ...core.paths import path_stat_fingerprint

@@ -30,7 +30,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import DraftDiscrepancyKind
+from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ..closure_findings import (
     ROUNDING_ALLOWANCE_PER_TERM,
     closure_findings,

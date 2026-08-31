@@ -34,7 +34,7 @@ from ....application.ledger.evidence_draft import (
 )
 from ....application.ledger.extraction_draft_store import write_extraction_draft
 from ....application.ledger.grounded_reading import verified_provenance
-from ....core import DraftDiscrepancyKind
+from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from ....core.field_origin import FieldOrigin

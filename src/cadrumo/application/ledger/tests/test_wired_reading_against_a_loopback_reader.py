@@ -33,7 +33,7 @@ from typing import ClassVar, override
 
 import pytest
 
-from ....core import DraftDiscrepancyKind
+from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.config import load_settings, override_settings
 from ....tests.loopback_llm import (

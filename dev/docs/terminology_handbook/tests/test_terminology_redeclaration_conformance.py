@@ -72,7 +72,7 @@ def _approved_anchor_terms() -> tuple[str, ...]:
     generator renders them. Longest-first so a multi-word term is matched before
     a substring (``modelo 100`` before a bare ``modelo`` that is not an anchor).
     """
-    from cadrumo.core import ConceptLifecycle
+    from cadrumo.core.concept_lifecycle import ConceptLifecycle
 
     from .. import load_terminology_handbook
     from .._enums import TermStatus

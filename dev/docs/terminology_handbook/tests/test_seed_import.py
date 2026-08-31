@@ -21,7 +21,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core import ConceptLifecycle
+from cadrumo.core.concept_lifecycle import ConceptLifecycle
 from cadrumo.core.external_constants import OutputLanguage
 
 from .. import (

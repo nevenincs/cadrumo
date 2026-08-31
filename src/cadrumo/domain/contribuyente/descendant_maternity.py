@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ...core import ART_81_1_MATERNIDAD_RELACIONES, DescendantRelacion
+from ...core.descendant_relacion import ART_81_1_MATERNIDAD_RELACIONES, DescendantRelacion
 from .descendant_record import DescendantRecordBase
 from .family_types import (
     ART_81_1_ENTRY_WINDOW_YEARS,

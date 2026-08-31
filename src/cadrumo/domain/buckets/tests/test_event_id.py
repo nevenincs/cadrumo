@@ -14,7 +14,7 @@ import hashlib
 import pytest
 from pydantic import ValidationError
 
-from ....core import Hex64Str
+from ....core.hex import Hex64Str
 from ....tests.fixtures.identity_holder import single_field_holder
 from ..event import BucketEventId
 

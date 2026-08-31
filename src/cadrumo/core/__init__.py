@@ -102,7 +102,7 @@ if TYPE_CHECKING:
     from .casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
     from ._casilla_value_kind import CasillaValueKind
     from ._classifier_input_source import ClassifierInputSource, CounterpartyTaxablePersonStatus
-    from ._concept_lifecycle import ConceptLifecycle
+    from .concept_lifecycle import ConceptLifecycle
     from ._concepto_ingreso import (
         INGRESO_CONCEPTS_OUTSIDE_THE_ART_109_BASE,
         INGRESO_CONCEPTS_OUTSIDE_THE_VOLUME_BASE,
@@ -122,7 +122,7 @@ if TYPE_CHECKING:
     )
     from ._corpus_sidecar import render_corpus_sidecar_text
     from ._declaracion_idioma import DeclaracionIdioma
-    from ._descendant_relacion import (
+    from .descendant_relacion import (
         ART_58_2_ENTITLING_RELACIONES,
         ART_81_1_MATERNIDAD_RELACIONES,
         DescendantRelacion,
@@ -134,7 +134,7 @@ if TYPE_CHECKING:
         STRUCTURED_DOCUMENT_SHAPES,
         DocumentShape,
     )
-    from ._draft_discrepancy import DraftDiscrepancyKind
+    from .draft_discrepancy import DraftDiscrepancyKind
     from ._estado_casilla_oficial import EstadoCasillaOficial
     from ._export_exemption_reason import ExportExemptionReason
     from ._export_layout_format import ExportLayoutFormat
@@ -143,7 +143,7 @@ if TYPE_CHECKING:
     from .field_origin import FieldOrigin
     from ._field_role import FieldRole
     from ._filed_history_discovery_signal import FiledHistoryDiscoverySignal
-    from ._filing_producer_key import FilingProducerKey
+    from .filing_producer_key import FilingProducerKey
     from .filing_projection_ref import (
         M303_MESA_FACTS,
         M303_REPEATING_FACTS,
@@ -198,7 +198,7 @@ if TYPE_CHECKING:
         HardwareTier,
         hardware_tier_for_free_bytes,
     )
-    from ._hex import HEX_PATTERN_16, HEX_PATTERN_64, HEX_PATTERN_128, Hex16Str, Hex64Str
+    from .hex import HEX_PATTERN_16, HEX_PATTERN_64, HEX_PATTERN_128, Hex16Str, Hex64Str
     from ._iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
     from ._image_media_type import ImageMediaType, detect_image_media_type
     from ._invoice_link import LinkInconsistencyDirection
@@ -214,7 +214,7 @@ if TYPE_CHECKING:
         project_m210_tipo_renta_code,
     )
     from ._iva_category_resolution import IvaCategoryOutcome
-    from ._iva_compensation_provenance import IvaCompensationStateProvenance
+    from .iva_compensation_provenance import IvaCompensationStateProvenance
     from .iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
     from ._ledger_sort import LedgerSortField, LedgerSortOrder
     from ._legal_review import REVIEWED_LEGAL_STATUSES, LegalReviewStatus
@@ -283,7 +283,7 @@ if TYPE_CHECKING:
         orden_anual_iva_authority_units,
         orden_anual_iva_table_text,
     )
-    from ._payment_election import PaymentElection
+    from .payment_election import PaymentElection
     from .period import (
         FilingPeriodCode,
         Period,
@@ -311,7 +311,7 @@ if TYPE_CHECKING:
         PreconditionEvidence,
         PreconditionOutcomeInvariant,
     )
-    from ._prior_domiciliation_election import PriorDomiciliationElection
+    from .prior_domiciliation_election import PriorDomiciliationElection
     from ._profile_session import ProfileRecordUnavailability, ProfileSessionRefusalReason
     from ._prorrata_exclusions import (
         ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS,
@@ -348,7 +348,7 @@ if TYPE_CHECKING:
         result_disposition_is_refund,
         result_disposition_requires_bank_account,
     )
-    from ._revision_review import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
+    from .revision_review import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
     from ._schema_family_disposition import (
         UNRESOLVED_SCHEMA_FAMILY_DISPOSITIONS,
         RegistrySchemaFamilyDisposition,
@@ -390,7 +390,7 @@ if TYPE_CHECKING:
         NON_IAE_SUBJECT_TIPOS_ACTIVIDAD,
         TipoActividad,
     )
-    from ._toml import freeze_toml, read_toml, to_str_keyed_dict
+    from .toml import freeze_toml, read_toml, to_str_keyed_dict
     from .type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
     from .aggregation import (
         OBSERVATION_BACKED_BINDING_SOURCE_KINDS,
@@ -859,8 +859,8 @@ _LAZY_EXPORTS: dict[str, str] = {
     "AEAT_RECORD_BATCH_SHAPES": "._document_shape",
     "ANTHROPIC_EXTRA": ".optional_extras",
     "ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS": "._prorrata_exclusions",
-    "ART_58_2_ENTITLING_RELACIONES": "._descendant_relacion",
-    "ART_81_1_MATERNIDAD_RELACIONES": "._descendant_relacion",
+    "ART_58_2_ENTITLING_RELACIONES": ".descendant_relacion",
+    "ART_81_1_MATERNIDAD_RELACIONES": ".descendant_relacion",
     "AcceleratorKind": "._hardware",
     "ActionArgumentResolution": "._action_argument_resolution",
     "ActionArgumentSource": ".operator_action_enums",
@@ -883,7 +883,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "CasillaValueKind": "._casilla_value_kind",
     "ClassifierInputSource": "._classifier_input_source",
     "ClaveMovilRoute": ".auth_provider",
-    "ConceptLifecycle": "._concept_lifecycle",
+    "ConceptLifecycle": ".concept_lifecycle",
     "ConceptoIngreso": "._concepto_ingreso",
     "ConfirmationBlockReason": "._confirmation_gate",
     "ContentionCause": "._hardware",
@@ -894,10 +894,10 @@ _LAZY_EXPORTS: dict[str, str] = {
     "DEFAULT_WRITE_PROVENANCE": ".secure_object_write",
     "DeclaracionIdioma": "._declaracion_idioma",
     "DeploymentLicencePosture": ".model_catalogue",
-    "DescendantRelacion": "._descendant_relacion",
+    "DescendantRelacion": ".descendant_relacion",
     "DeudaDireccion": "._deuda_direccion",
     "DocumentShape": "._document_shape",
-    "DraftDiscrepancyKind": "._draft_discrepancy",
+    "DraftDiscrepancyKind": ".draft_discrepancy",
     "EXTERNAL_PATH_SETTINGS_FIELDS": ".storage_taxonomy",
     "ElidedProse": ".prose_elision",
     "EstadoCasillaOficial": "._estado_casilla_oficial",
@@ -912,7 +912,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "FieldRole": "._field_role",
     "FiledHistoryDiscoverySignal": "._filed_history_discovery_signal",
     "FilingPeriodCode": ".period",
-    "FilingProducerKey": "._filing_producer_key",
+    "FilingProducerKey": ".filing_producer_key",
     "FilingProjectionRef": ".filing_projection_ref",
     "FindingResolutionAction": "._confirmation_gate",
     "FingerprintParticipation": ".storage_taxonomy",
@@ -920,12 +920,12 @@ _LAZY_EXPORTS: dict[str, str] = {
     "FormerProductStateError": "._config_state_root",
     "GOOGLE_EXTRA": ".optional_extras",
     "GoogleCredentialSourceKind": "._google_credential_source",
-    "HEX_PATTERN_128": "._hex",
-    "HEX_PATTERN_16": "._hex",
-    "HEX_PATTERN_64": "._hex",
+    "HEX_PATTERN_128": ".hex",
+    "HEX_PATTERN_16": ".hex",
+    "HEX_PATTERN_64": ".hex",
     "HardwareTier": "._hardware",
-    "Hex16Str": "._hex",
-    "Hex64Str": "._hex",
+    "Hex16Str": ".hex",
+    "Hex64Str": ".hex",
     "IAE_SUBJECT_TIPOS_ACTIVIDAD": "._tipos_actividad",
     "IBAN_SHAPE_RE": "._iban",
     "INGRESO_CONCEPTS_OUTSIDE_THE_ART_109_BASE": "._concepto_ingreso",
@@ -933,7 +933,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "ImageMediaType": "._image_media_type",
     "IntracomOperationType": ".aggregation",
     "IvaCategoryOutcome": "._iva_category_resolution",
-    "IvaCompensationStateProvenance": "._iva_compensation_provenance",
+    "IvaCompensationStateProvenance": ".iva_compensation_provenance",
     "IvaDeductionEvidenceAuthority": ".iva_deduction_fact",
     "IvaDeductionFactKind": ".iva_deduction_fact",
     "LLM_EXTRA": ".optional_extras",
@@ -1040,7 +1040,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "PERSISTED_FORMATS": ".compatibility_lifecycle",
     "PRODUCT_IDENTITY": ".product_identity",
     "PROSE_ELISION_MARKER": ".prose_elision",
-    "PaymentElection": "._payment_election",
+    "PaymentElection": ".payment_election",
     "Period": ".period",
     "PeriodError": ".period",
     "PeriodKind": ".period",
@@ -1049,7 +1049,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "PreconditionActionIdentity": "._precondition_action_invariants",
     "PreconditionEvidence": "._precondition_action_invariants",
     "PreconditionOutcomeInvariant": "._precondition_action_invariants",
-    "PriorDomiciliationElection": "._prior_domiciliation_election",
+    "PriorDomiciliationElection": ".prior_domiciliation_election",
     "ProfileRecordUnavailability": "._profile_session",
     "ProfileSessionRefusalReason": "._profile_session",
     "ProrrataActivityRowType": ".prorrata_register",
@@ -1061,7 +1061,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "RECORD_DESIGN_EPOCH_RE": "._record_design_epoch",
     "RELEASED_FORMAT_FLOORS": ".compatibility_lifecycle",
     "REVIEWED_LEGAL_STATUSES": "._legal_review",
-    "REVIEWED_REVISION_REVIEW_STATUSES": "._revision_review",
+    "REVIEWED_REVISION_REVIEW_STATUSES": ".revision_review",
     "ROOT_DERIVED_STORAGE_FIELDS": ".storage_taxonomy",
     "RefundElection": "._refund_election",
     "RegisterScopingSignal": "._register_scoping_signal",
@@ -1073,7 +1073,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "RescateType": "._rescate_type",
     "ResultDisposition": ".result_disposition",
     "ReviewAdvisoryKind": "._confirmation_gate",
-    "RevisionReviewStatus": "._revision_review",
+    "RevisionReviewStatus": ".revision_review",
     "STORAGE_FIELD_CATEGORIES": ".storage_taxonomy",
     "STORAGE_ROOT_MODE": ".storage_materialization",
     "STORAGE_ROOT_SETTINGS_FIELD": ".storage_taxonomy",
@@ -1153,7 +1153,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "fold_printed_phrase": ".text_fold",
     "foreign_asset_obligation_group": "._foreign_asset_obligation",
     "obligation_groups_established_by_legal_refs": "._foreign_asset_obligation",
-    "freeze_toml": "._toml",
+    "freeze_toml": ".toml",
     "fsync_parent_dir": "._fsync",
     "fts_or_group": "._fts_query",
     "hardware_tier_for_free_bytes": "._hardware",
@@ -1182,7 +1182,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "project_m210_tipo_renta_code": ".irnr",
     "provenance_stamp_transport": ".provenance_stamp",
     "provenance_transport_label": ".provenance_stamp",
-    "read_toml": "._toml",
+    "read_toml": ".toml",
     "registry_period_kind": ".period",
     "render_corpus_sidecar_text": "._corpus_sidecar",
     "require_optional_extra": ".optional_extras",
@@ -1202,7 +1202,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "storage_path": ".storage_taxonomy",
     "ensure_storage_tree": ".storage_materialization",
     "storage_tree_targets": ".storage_taxonomy",
-    "to_str_keyed_dict": "._toml",
+    "to_str_keyed_dict": ".toml",
     "undeclared_persisted_formats": ".compatibility_lifecycle",
     "unicode_compose": ".text_fold",
     "unlink_lockfile": "._lockfile_unlink",

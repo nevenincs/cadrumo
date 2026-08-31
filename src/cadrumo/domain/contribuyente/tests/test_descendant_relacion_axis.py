@@ -25,7 +25,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from ....core import ART_58_2_ENTITLING_RELACIONES, DescendantRelacion
+from ....core.descendant_relacion import ART_58_2_ENTITLING_RELACIONES, DescendantRelacion
 from ..descendant import DescendantInfo
 from ..descendant_facts import (
     descendant_facts_from_list,
@@ -502,7 +502,7 @@ class TestGuardaYCustodiaJudicial:
         is a non-member, so a later reader does not admit it on the assumption
         that its omission was an oversight.
         """
-        from ....core import ART_81_1_MATERNIDAD_RELACIONES
+        from ....core.descendant_relacion import ART_81_1_MATERNIDAD_RELACIONES
 
         assert DescendantRelacion.GUARDA_Y_CUSTODIA_JUDICIAL not in ART_81_1_MATERNIDAD_RELACIONES
 

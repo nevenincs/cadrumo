@@ -8,11 +8,8 @@ from datetime import date
 from decimal import Decimal
 from types import MappingProxyType
 
-from ..core import (
-    ForeignAssetObligationGroup,
-    RevisionReviewStatus,
-    obligation_groups_established_by_legal_refs,
-)
+from ..core import ForeignAssetObligationGroup, obligation_groups_established_by_legal_refs
+from ..core.revision_review import RevisionReviewStatus
 from ..core.modelo import Modelo
 from ..core.resources import bundled_path
 from ..domain.calculations.registry.errors import RegistryValidationError

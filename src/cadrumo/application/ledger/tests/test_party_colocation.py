@@ -26,7 +26,8 @@ from typing import Final
 
 import pytest
 
-from ....core import ConfirmationBlockReason, DraftDiscrepancyKind
+from ....core import ConfirmationBlockReason
+from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from ....core.field_origin import FieldOrigin

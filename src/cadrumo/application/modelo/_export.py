@@ -52,13 +52,10 @@ from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogue
 from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import (
-    ExportLayoutFormat,
-    FilingProducerKey,
-    PaymentElection,
-    PriorDomiciliationElection,
-    RefundElection,
-)
+from ...core import ExportLayoutFormat, RefundElection
+from ...core.payment_election import PaymentElection
+from ...core.filing_producer_key import FilingProducerKey
+from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.result_disposition import ResultDisposition
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance

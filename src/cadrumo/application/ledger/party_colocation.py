@@ -70,7 +70,7 @@ from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel, Field
 
-from ...core import DraftDiscrepancyKind
+from ...core.draft_discrepancy import DraftDiscrepancyKind
 from ...core.models import STRICT_FROZEN_CONFIG
 from .grounding_anchor import printed_excerpt_occurs_in_text
 from .party_attribution import PARTY_ATTRIBUTED_ADDRESS_FIELDS, party_addresses
