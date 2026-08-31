@@ -35,7 +35,7 @@ from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.classification import InvoiceKind
 from ...review.models import InvoiceReviewRecord
-from .. import invoice_display_amounts, invoice_review_status
+from .._projection import invoice_display_amounts, invoice_review_status
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

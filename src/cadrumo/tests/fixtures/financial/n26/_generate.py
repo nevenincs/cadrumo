@@ -17,7 +17,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 
-from ... import FIXTURE_PROVENANCE_SYNTHETIC, SYNTHETIC_FIXTURE_PRODUCER
+from ...provenance import FIXTURE_PROVENANCE_SYNTHETIC, SYNTHETIC_FIXTURE_PRODUCER
 
 
 @dataclass(frozen=True)

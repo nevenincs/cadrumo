@@ -14,7 +14,6 @@ from ....application.user_profile.login_session_port import (
     ProfilePersistedSessionPort,
     ProfileSessionResumeOutcomePort,
 )
-from . import master_key
 from .custody.acceleration_receipt import (
     advance_persisted_profile_session_idle_deadline,
     delete_profile_session,
@@ -24,10 +23,18 @@ from .custody.acceleration_receipt import (
 )
 from .custody.acceleration_receipt_crypto import PersistedProfileSession
 from .custody.zeroise import zeroise
+from .master_key.active_session import (
+    bind_active_bucket_session,
+    close_active_bucket_session,
+    current_active_bucket_session,
+    session_serves_bucket,
+)
+from .master_key.bucket_session import BucketSession
+from .master_key.login_throttle import evaluate_login_throttle, record_login_failure, reset_login_throttle
 
 
-def _bucket_session(session: ProfileBucketSessionPort) -> master_key.BucketSession:
-    if not isinstance(session, master_key.BucketSession):
+def bucket_session(session: ProfileBucketSessionPort) -> BucketSession:
+    if not isinstance(session, BucketSession):
         raise TypeError("bucket session is not owned by the persistence substrate")
     return session
 
@@ -42,7 +49,7 @@ class _PersistenceProfileLoginSession:
     """Delegate the aggregate port to the canonical custody/session authorities."""
 
     def current_session(self) -> ProfileBucketSessionPort | None:
-        return master_key.current_active_bucket_session()
+        return current_active_bucket_session()
 
     def open_resumed_session(
         self,
@@ -55,7 +62,7 @@ class _PersistenceProfileLoginSession:
         absolute_deadline: datetime,
         storage_root: Path,
     ) -> ProfileBucketSessionPort:
-        return master_key.BucketSession.open_resumed(
+        return BucketSession.open_resumed(
             bucket_id=bucket_id,
             dek=dek,
             idle_minutes=idle_minutes,
@@ -66,14 +73,14 @@ class _PersistenceProfileLoginSession:
         )
 
     def bind_session(self, session: ProfileBucketSessionPort) -> None:
-        master_key.bind_active_bucket_session(_bucket_session(session))
+        bind_active_bucket_session(bucket_session(session))
 
     def close_active_session(self) -> None:
-        master_key.close_active_bucket_session()
+        close_active_bucket_session()
 
     def session_serves_bucket(self, session: ProfileBucketSessionPort | None, bucket_id: str) -> bool:
-        resolved = None if session is None else _bucket_session(session)
-        return master_key.session_serves_bucket(resolved, bucket_id)
+        resolved = None if session is None else bucket_session(session)
+        return session_serves_bucket(resolved, bucket_id)
 
     def evaluate_throttle(
         self,
@@ -82,13 +89,13 @@ class _PersistenceProfileLoginSession:
         bucket_id: str,
         now: datetime,
     ) -> ProfileLoginThrottleEvaluationPort:
-        return master_key.evaluate_login_throttle(storage_root=storage_root, bucket_id=bucket_id, now=now)
+        return evaluate_login_throttle(storage_root=storage_root, bucket_id=bucket_id, now=now)
 
     def record_login_failure(self, *, storage_root: Path, bucket_id: str, now: datetime) -> None:
-        master_key.record_login_failure(storage_root=storage_root, bucket_id=bucket_id, now=now)
+        record_login_failure(storage_root=storage_root, bucket_id=bucket_id, now=now)
 
     def reset_throttle(self, *, storage_root: Path, bucket_id: str) -> None:
-        master_key.reset_login_throttle(storage_root=storage_root, bucket_id=bucket_id)
+        reset_login_throttle(storage_root=storage_root, bucket_id=bucket_id)
 
     def acceleration_receipt_path(self, *, storage_root: Path, profile_id: UUID) -> Path:
         return profile_session_path(storage_root=storage_root, profile_id=profile_id)

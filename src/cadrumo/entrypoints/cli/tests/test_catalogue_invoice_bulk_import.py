@@ -31,7 +31,7 @@ from pathlib import Path
 
 import pytest
 
-from ....application.invoices import BULK_INVOICE_IMPORT_REQUIRED_COLUMNS
+from ....application.invoices._bulk_import import BULK_INVOICE_IMPORT_REQUIRED_COLUMNS
 from ....tests.cli_envelope import parse_json_object
 from ....tests.cli_envelope import require_schema_envelope as _json_result
 from ....tests.cli_runner import invoke_cached_cli

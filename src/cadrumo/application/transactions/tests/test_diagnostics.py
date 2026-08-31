@@ -9,11 +9,7 @@ from pydantic import ValidationError
 
 from ....core.errors.severity import BaseSeverity
 from ....core.i18n import Translatable as tr
-from .. import (
-    LedgerImportDiagnostic,
-    LedgerImportDiagnosticKind,
-    build_ledger_import_diagnostic,
-)
+from .._diagnostics import LedgerImportDiagnostic, LedgerImportDiagnosticKind, build_ledger_import_diagnostic
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

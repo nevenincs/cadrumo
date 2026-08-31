@@ -10,7 +10,7 @@ import typer
 
 from ...application.ledger.models import ApplyRulesResult
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
-from ...core.i18n import tr
+from ...core.i18n._render import tr
 from ...domain.transactions.classification_rule import LedgerClassificationRule
 from ...domain.transactions.enums import BusinessClassification, TransactionLifecycleState
 from ...domain.transactions.models import Transaction

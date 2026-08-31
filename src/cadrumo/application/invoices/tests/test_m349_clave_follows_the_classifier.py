@@ -21,7 +21,14 @@ from datetime import date
 
 import pytest
 
-from ....domain.iva.classification import CustomerTaxStatus, InvoiceKind, IvaInvoiceClassificationCriteria, IvaTerritorialScope, TransactionKind, classify_iva
+from ....domain.iva.classification import (
+    CustomerTaxStatus,
+    InvoiceKind,
+    IvaInvoiceClassificationCriteria,
+    IvaTerritorialScope,
+    TransactionKind,
+    classify_iva,
+)
 from ....domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind
 from .._source_resolver import _CLAVE_BY_KIND_AND_CATEGORY
 

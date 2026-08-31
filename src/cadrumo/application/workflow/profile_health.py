@@ -30,8 +30,11 @@ from typing import Literal
 
 from pydantic import BaseModel, PrivateAttr, ValidationError
 
+from ...core.bucket_pointer import resolve_active_bucket_id
+from ...core.config import load_settings, override_settings
+from ...core.errors.hierarchy import CadrumoError
+from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.profile_session import ProfileRecordUnavailability, ProfileSessionRefusalReason
 from ...core.operator_action_enums import (
     ActionArgumentSource,
     ActionArgumentStatus,
@@ -39,18 +42,9 @@ from ...core.operator_action_enums import (
     ActionEvidenceProvenance,
     NoRecoveryOutcome,
 )
-from ...core.bucket_pointer import resolve_active_bucket_id
-from ...core.config import load_settings, override_settings
-from ...core.errors.hierarchy import CadrumoError
-from ...core.logging import get_logger
-from ..operator_actions import (
-    ActionArgumentBinding,
-    ActionReference,
-    ConditionEvidence,
-    PreconditionVerdict,
-    active_profile_pointer_repair_verdict,
-    no_action_precondition_verdict,
-)
+from ...core.profile_session import ProfileRecordUnavailability, ProfileSessionRefusalReason
+from ..operator_actions._models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
+from ..operator_actions._preconditions import active_profile_pointer_repair_verdict, no_action_precondition_verdict
 from ..profile_preconditions import inspect_active_profile_precondition, profile_session_failure_verdict
 from ..user_profile.keys_validation import list_profile_key_records, validate_profile_values
 from ..user_profile.profile_pointer import active_profile_pointer_transaction

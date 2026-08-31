@@ -102,19 +102,19 @@ from datetime import date
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, NonNegativeInt
 
-from ...core.modelo import NON_REGISTRY_MODELOS as _NON_REGISTRY_MODELOS
-from ...core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES as _REVIEWED_REVISION_REVIEW_STATUSES
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
-from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
+from ...core.access_gate._authorization import ModeloAuthorization as _ModeloAuthorization
 from ...core.casilla_id import CasillaId as _CasillaId
 from ...core.export_layout_format import ExportLayoutFormat as _ExportLayoutFormat
-from ...core.modelo import Modelo as _Modelo
-from ...core.revision_review import RevisionReviewStatus as _RevisionReviewStatus
-from ...core.access_gate import ModeloAuthorization as _ModeloAuthorization
 from ...core.filing_year import FilingYear
-from ...core.resources import bundled_path as _bundled_path
+from ...core.modelo import NON_REGISTRY_MODELOS as _NON_REGISTRY_MODELOS
+from ...core.modelo import Modelo as _Modelo
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
+from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
+from ...core.resources._boundary import bundled_path as _bundled_path
+from ...core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES as _REVIEWED_REVISION_REVIEW_STATUSES
+from ...core.revision_review import RevisionReviewStatus as _RevisionReviewStatus
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority as _ValidatedRegistryAuthority
 from ...domain.calculations.registry.classification_coherence import DeclaredAxisUsage as _DeclaredAxisUsage
 from ...domain.calculations.registry.classification_coherence import ModeloClassificationRow as _ModeloClassificationRow
@@ -232,8 +232,8 @@ class DictionaryLayoutCasillaComparison(ConformanceModel):
     layout_id: str
     layout_format: str
     identity_measurement: _MeasurementStatus
-    registry_casilla_count: int = Field(ge=0)
-    registry_internal_only_count: int = Field(ge=0)
+    registry_casilla_count: NonNegativeInt
+    registry_internal_only_count: NonNegativeInt
     printed_form_membership: _MeasurementStatus
     xsd_only_attributes: _MeasurementStatus
     dictionary_source_ref: str | None = None
@@ -589,13 +589,13 @@ class RevisionCapabilityFacts(ConformanceModel):
     has_completeness_manifest: bool
     has_fixed_width_export: bool
     has_xml_dictionary_export: bool
-    extraction_profile_count: int = Field(ge=0)
-    casilla_count: int = Field(ge=0)
-    formula_count: int = Field(ge=0)
-    binding_count: int = Field(ge=0)
-    verification_expectation_count: int = Field(ge=0)
-    live_cross_reference_count: int = Field(ge=0)
-    casilla_continuidad_evolution_count: int = Field(ge=0)
+    extraction_profile_count: NonNegativeInt
+    casilla_count: NonNegativeInt
+    formula_count: NonNegativeInt
+    binding_count: NonNegativeInt
+    verification_expectation_count: NonNegativeInt
+    live_cross_reference_count: NonNegativeInt
+    casilla_continuidad_evolution_count: NonNegativeInt
 
 
 class LatestRevisionSupportProbe(ConformanceModel):
@@ -630,8 +630,8 @@ class LatestRevisionSupportProbe(ConformanceModel):
     has_fixed_width_export: bool
     has_xml_dictionary_export: bool
     has_extractor: bool
-    rename_count: int = Field(ge=0)
-    portal_compatibility_ref_count: int = Field(ge=0)
+    rename_count: NonNegativeInt
+    portal_compatibility_ref_count: NonNegativeInt
 
 
 class RevisionModelLawCoverage(ConformanceModel):

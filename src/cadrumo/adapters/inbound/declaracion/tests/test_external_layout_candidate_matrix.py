@@ -18,7 +18,7 @@ from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.modelo import Modelo
 from .....domain.calculations.registry.authority import bundled_authority
 from .....tests import FIXTURES_DIR
-from .....tests.fixtures.external_layout_candidates import (
+from .....tests.fixtures.external_layout_candidates.models import (
     ExternalLayoutCandidate,
     ExternalLayoutCandidateKind,
     ExternalLayoutRegistryApplicabilityVerdict,

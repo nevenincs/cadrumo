@@ -6,10 +6,8 @@ import pytest
 
 from ....core.operator_action_enums import NoRecoveryOutcome
 from ....entrypoints.cli.command_api import build_verb_input_schemas, command_schema_refs
-from ...operator_actions import (
-    OPERATOR_ACTION_CATALOGUE,
-    ActionReference,
-)
+from ...operator_actions._catalogue import OPERATOR_ACTION_CATALOGUE
+from ...operator_actions._models import ActionReference
 from ..manifest import (
     InputSchemaInventoryRow,
     LiveLeafInventoryRow,

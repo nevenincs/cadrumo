@@ -15,16 +15,16 @@ would compute.
 
 from __future__ import annotations
 
+from ...core.modelo import Modelo
 from ...core.observed_header_fact import ObservedHeaderFact
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.result_disposition import ResultDisposition
-from ...core.modelo import Modelo
+from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionAmendmentKind
 from ...domain.modelos.filing_record import ExternalEvidence, ModeloRecord
 from ...domain.modelos.protocols import ModeloRecordCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit import WorkUnit
-from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionAmendmentKind
-from ..calculations import (
-    M303_DECLARATION_TYPE_HEADER_KEY,
+from ..calculations._m303_carry_ingress import M303_DECLARATION_TYPE_HEADER_KEY
+from ..calculations.observations_repository import (
     CalculationObservationRepository,
     ObservationEnvelopePayload,
     PriorDomiciliationElectionProjection,

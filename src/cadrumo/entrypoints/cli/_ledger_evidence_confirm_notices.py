@@ -41,9 +41,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Final
 
-from ...core.iva_category_resolution import IvaCategoryOutcome
 from ...core.confirmation_gate import ConfirmationBlockReason
-from ...core.i18n import tr
+from ...core.i18n._render import tr
+from ...core.iva_category_resolution import IvaCategoryOutcome
 from ...core.json_contract import Notice, NoticeSeverity
 
 if TYPE_CHECKING:

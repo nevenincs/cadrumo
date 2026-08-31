@@ -26,11 +26,12 @@ from collections.abc import Mapping
 from decimal import Decimal
 from typing import ClassVar
 
+from ...adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId
 from ...core.modelo import Modelo
 from ...core.period import Period
-from ...domain.bienes_inversion import (
+from ...domain.bienes_inversion.register import (
     BienesInversionIvaRegister,
     BienInversionRecordError,
     RegistroRegularizacionResult,
@@ -49,7 +50,6 @@ from ..aggregation import (
     casilla_registry_legal_refs,
 )
 from ..aggregation.source_resolution_operations import storage_degradation_resolution
-from ..bienes_inversion import BienesInversionIvaRegisterRepository
 from ._revision_carry_gate import revision_carry_outcome
 from .observations_repository import CalculationObservationRepository
 

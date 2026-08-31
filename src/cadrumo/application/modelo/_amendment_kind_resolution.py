@@ -42,9 +42,9 @@ from ...core.amendment_kind_regime import (
     classify_amendment_liability_direction,
     resolve_amendment_kind_regime,
 )
-from ...core.result_disposition import result_disposition_casilla_ids
-from ...core.period import Period
 from ...core.casilla_id import CasillaId
+from ...core.period import Period
+from ...core.result_disposition import result_disposition_casilla_ids
 from ...domain.modelos.calculation_revision import CalculationRevisionAmendmentKind
 from ._action_errors import AmendmentComplementariaLiabilityDecreaseError, AmendmentKindNotPermittedError
 

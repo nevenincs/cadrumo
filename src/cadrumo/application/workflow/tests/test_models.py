@@ -16,11 +16,8 @@ from typing import Any, cast
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.outbound.aeat.browser import (
-    SiteHealthEvidence,
-    SiteHealthStatus,
-)
-from ....adapters.outbound.aeat.browser._site_health import parse_site_health_url
+from ....adapters.outbound.aeat.browser._site_health import SiteHealthEvidence, SiteHealthStatus, parse_site_health_url
+from ....core.errors.hierarchy import SiteHealthState
 from ....core.modelo import Modelo
 from ....core.operator_action_enums import (
     ActionArgumentStatus,
@@ -29,15 +26,9 @@ from ....core.operator_action_enums import (
     NoRecoveryOutcome,
 )
 from ....core.period import Period
-from ....core.errors.hierarchy import SiteHealthState
 from ....domain.deadlines.models import ModeloDeadline, ObligationStatus, RecargoBand, Recovery
 from ....tests.aeat_literal_fixtures import aeat_url
-from ...operator_actions import (
-    ActionArgumentBinding,
-    ActionReference,
-    ConditionEvidence,
-    PreconditionVerdict,
-)
+from ...operator_actions._models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
 from ..abort import WorkflowAbortReason
 from ..engine_helpers import DeadlineRole
 from ..run_models import (

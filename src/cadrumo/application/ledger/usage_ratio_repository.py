@@ -8,7 +8,7 @@ from contextvars import ContextVar
 from decimal import Decimal
 from typing import Protocol
 
-from ...domain.usage_ratios import UsageRatioProfile
+from ...domain.usage_ratios._model import UsageRatioProfile
 
 
 class UsageRatioCensoGuardLoader(Protocol):

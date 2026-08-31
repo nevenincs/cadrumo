@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 
-from ....core.redaction import CLI_PROFILE_ID_PLACEHOLDER
+from ....core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.cli_envelope import unwrap_schema_envelope
 
 

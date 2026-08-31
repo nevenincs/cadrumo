@@ -30,14 +30,14 @@ from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from ....domain.calculations.registry.ledger_bindings import (
     resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values,
 )
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.invoices.models import InvoiceCatalogue
-from ....domain.prorrata_register import ProrrataRegisterEntry
+from ....domain.prorrata_register.register import ProrrataRegisterEntry
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

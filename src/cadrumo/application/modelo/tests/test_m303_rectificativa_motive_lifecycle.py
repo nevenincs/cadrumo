@@ -13,7 +13,8 @@ from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....application.filing import (
+from ....application.filing._export_producer import m303_rectificativa_motive_producer_values
+from ....application.filing._producer_snapshot import (
     AmendmentEvidence,
     FilingElectionFacts,
     FilingProducerSnapshotError,
@@ -21,15 +22,14 @@ from ....application.filing import (
     PresenterIdentity,
     TaxpayerIdentityFacts,
     build_filing_producer_snapshot,
-    m303_rectificativa_motive_producer_values,
 )
-from ....core.refund_election import RefundElection
-from ....core.payment_election import PaymentElection
 from ....core.filing_producer_key import FilingProducerKey
-from ....core.prior_domiciliation_election import PriorDomiciliationElection
-from ....core.result_disposition import ResultDisposition
 from ....core.modelo import Modelo
+from ....core.payment_election import PaymentElection
 from ....core.period import Period
+from ....core.prior_domiciliation_election import PriorDomiciliationElection
+from ....core.refund_election import RefundElection
+from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.m303_orden_manifest import load_m303_annual_orden_authority
 from ....domain.calculations.registry.m303_orden_projection_models import M303RegimenSimplificadoSnapshot
@@ -38,12 +38,31 @@ from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from ....domain.justificante import Justificante
-from ....domain.modelos.calculation_revision_aggregate import CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY, CalculationRevisionAggregateContext
-from ....domain.modelos.calculation_revision_amendment import m303_rectificativa_motive_is_applicable, m303_rectificativa_record_design_from_snapshot
-from ....domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind, ModeloRecord, ModeloRecordCatalogue, derive_filing_record_id
+from ....domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionAmendmentIdentity,
+    CalculationRevisionAmendmentKind,
+    CalculationRevisionCatalogue,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
+)
+from ....domain.modelos.calculation_revision_aggregate import (
+    CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY,
+    CalculationRevisionAggregateContext,
+)
+from ....domain.modelos.calculation_revision_amendment import (
+    M303RectificativaMotive,
+    m303_rectificativa_motive_is_applicable,
+    m303_rectificativa_record_design_from_snapshot,
+)
+from ....domain.modelos.filing_record import (
+    ExternalEvidence,
+    ExternalEvidenceKind,
+    ModeloRecord,
+    ModeloRecordCatalogue,
+    derive_filing_record_id,
+)
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
-from ....domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionAmendmentIdentity, CalculationRevisionAmendmentKind, CalculationRevisionCatalogue, CalculationRevisionState, derive_calculation_revision_id
-from ....domain.modelos.calculation_revision_amendment import M303RectificativaMotive
 from ....tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.filing_evidence import general_m303_filing_evidence_from_regimen_snapshot

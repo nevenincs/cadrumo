@@ -33,7 +33,7 @@ from pathlib import Path
 
 import pytest
 
-from ......core.classification import SensitivityClass
+from ......core.classification.policies import SensitivityClass
 from ......core.external_constants import UTF_8_ENCODING
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ...crypto.aead import KEY_SIZE

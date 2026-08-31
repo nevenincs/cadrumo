@@ -23,10 +23,8 @@ from ._fincas_engine_fixture import engine
 
 __all__ = ["engine"]
 
-from ...storage import (
-    session_scope,
-)
 from ...storage.sql import FincaRow
+from ...storage.sql.session import session_scope
 from ..fincas import FincaRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

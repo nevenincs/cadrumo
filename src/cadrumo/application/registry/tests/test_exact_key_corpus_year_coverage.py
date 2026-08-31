@@ -38,13 +38,13 @@ from pathlib import Path
 
 import pytest
 
-from ....core.resources import bundled_path
+from ....core.resources._boundary import bundled_path
 from ....domain.calculations.registry.loader import load_registry_tree
-from ....domain.categories.registry import category_profile_years, resolve_category_profiles
 from ....domain.categories.errors import CategoryValidationError
+from ....domain.categories.registry import category_profile_years, resolve_category_profiles
 from ....domain.iva.catalogue import iva_catalogue_years, resolve_catalogue
-from ....domain.iva.place_of_supply import load_place_of_supply_table, place_of_supply_rule, place_of_supply_years
 from ....domain.iva.errors import IvaCatalogueError
+from ....domain.iva.place_of_supply import load_place_of_supply_table, place_of_supply_rule, place_of_supply_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -44,8 +44,8 @@ import pytest
 from pydantic import TypeAdapter
 
 from .....core.aeat_csv import is_aeat_csv
-from .....core.period import Period
 from .....core.directory_scan import scan_directory
+from .....core.period import Period
 from .....domain.justificante import Justificante
 from .....tests import FIXTURES_DIR as _FIXTURES_ROOT
 from .....tests import parse_committed_justificante_fixture

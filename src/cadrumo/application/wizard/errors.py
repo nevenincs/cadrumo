@@ -11,9 +11,15 @@ from __future__ import annotations
 from collections.abc import Mapping
 from enum import StrEnum
 
+from ...core.errors.hierarchy import (
+    CadrumoError,
+    CoreValidationError,
+    ProfileAnswerTypeError,
+    TerminalPreconditionErrorMixin,
+)
 from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
-from ...core.errors.hierarchy import CadrumoError, CoreValidationError, ProfileAnswerTypeError, TerminalPreconditionErrorMixin
-from ..operator_actions import PreconditionVerdict, no_action_precondition_verdict
+from ..operator_actions._models import PreconditionVerdict
+from ..operator_actions._preconditions import no_action_precondition_verdict
 
 
 class WizardPreconditionCondition(StrEnum):

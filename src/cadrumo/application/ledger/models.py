@@ -7,12 +7,17 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Annotated, Self
 
-from pydantic import AfterValidator, BaseModel, Field, StringConstraints, field_validator, model_validator
+from pydantic import (
+    AfterValidator,
+    BaseModel,
+    Field,
+    NonNegativeInt,
+    StringConstraints,
+    field_validator,
+    model_validator,
+)
 
-from ...core.prorrata_exclusions import Art104TresExclusion
-from ...core.hex import Hex64Str
-from ...core.iva_deduction_fact import IvaDeductionFactKind
-from ...core.decimal import is_non_negative_canonical_decimal
+from ...core.decimal._grammar import is_non_negative_canonical_decimal
 
 # CLASSIFIED_BY_MANUAL is re-exported for constants centralisation tests.
 from ...core.external_constants import (
@@ -22,7 +27,9 @@ from ...core.external_constants import (
     DEFAULT_CURRENCY,
 )
 from ...core.filing_year import FilingYear
+from ...core.hex import Hex64Str
 from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, TransactionId, WorkUnitId
+from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.parsing import (
     IsoCurrencyCode,
@@ -31,6 +38,7 @@ from ...core.parsing import (
     parse_iso8601_date,
 )
 from ...core.period import Period
+from ...core.prorrata_exclusions import Art104TresExclusion
 from ...core.text_bounds import NonEmptyStr
 from ...domain.iva.prorrata import InputClassification
 from ...domain.iva.schema import EUMemberState, IvaCategory
@@ -46,7 +54,7 @@ from ...domain.transactions.models import (
     TransactionLifecycleLineageEntry,
 )
 from ...domain.transactions.repository import ImportSummary
-from ..export import ExportSerializationFormat, verify_export_metadata
+from ..export.tabular import ExportSerializationFormat, verify_export_metadata
 from ..review.filter import LedgerReviewStatus
 
 _TRANSFER_ALLOWED_STATES = frozenset(
@@ -319,7 +327,6 @@ class ManualLedgerTransactionResult(BaseModel):
     stale_finalized_revisions: tuple[LedgerRemovalBlocker, ...] = ()
 
 
-
 IsoDateText = Annotated[str, StringConstraints(min_length=10, max_length=10)]
 """A calendar date as the wire carries it, ``YYYY-MM-DD``, fixed at ten characters."""
 
@@ -331,6 +338,7 @@ DiagnosticSeverity = Annotated[str, StringConstraints(min_length=1, max_length=1
 
 DiagnosticMessage = Annotated[str, StringConstraints(min_length=1, max_length=128)]
 """The operator-facing sentence an import diagnostic carries."""
+
 
 class LedgerTransactionPayload(_LedgerCountryCodeModel):
     """Canonical read projection for one ledger transaction."""
@@ -563,9 +571,9 @@ class LedgerSourceImportResult(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    rows: int = Field(ge=0)
-    imported: int = Field(ge=0)
-    skipped: int = Field(ge=0)
+    rows: NonNegativeInt
+    imported: NonNegativeInt
+    skipped: NonNegativeInt
     likely_duplicates: int = Field(default=0, ge=0)
     dry_run: bool
     verify: bool
@@ -576,8 +584,16 @@ class LedgerSourceImportResult(BaseModel):
     imported_transaction_refs: tuple[BucketTransactionRef, ...] = ()
     skipped_transaction_refs: tuple[BucketTransactionRef, ...] = ()
     likely_duplicate_transaction_refs: tuple[BucketTransactionRef, ...] = ()
-    validation: LedgerSourceValidationReport
-    source: LedgerSourceVerificationReport
+    # Tuples because a DIRECTORY import produces one of each per file. They were
+    # single, so the fold that combines per-file results could keep only the
+    # first and the other files' findings were unreachable -- a directory import
+    # reported one file's validation as though it were the import's.
+    #
+    # A single-file import carries a one-tuple. That is the shape the fold
+    # concatenates, and it means the single and the many are the same type
+    # rather than two spellings a caller has to tell apart.
+    validations: tuple[LedgerSourceValidationReport, ...]
+    sources: tuple[LedgerSourceVerificationReport, ...]
     diagnostics: tuple[LedgerImportDiagnosticReport, ...] = ()
 
 
@@ -656,14 +672,14 @@ class LedgerStatusReport(BaseModel):
     business_income_total: str = "0.00"
     business_expense_total: str = "0.00"
     business_net_total: str = "0.00"
-    total_count: int = Field(ge=0)
-    active_count: int = Field(ge=0)
-    archived_count: int = Field(ge=0)
-    stashed_count: int = Field(ge=0)
+    total_count: NonNegativeInt
+    active_count: NonNegativeInt
+    archived_count: NonNegativeInt
+    stashed_count: NonNegativeInt
     split_count: int = Field(ge=0, default=0)
-    pending_review_count: int = Field(ge=0)
-    reviewed_count: int = Field(ge=0)
-    skipped_count: int = Field(ge=0)
+    pending_review_count: NonNegativeInt
+    reviewed_count: NonNegativeInt
+    skipped_count: NonNegativeInt
     period: Period | None = None
     checked_transaction_count: int = Field(default=0, ge=0)
     readiness_issue_count: int = Field(default=0, ge=0)
@@ -786,7 +802,7 @@ class BulkClassifyFailure(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    row_index: int = Field(ge=0)
+    row_index: NonNegativeInt
     transaction_id: str
     reason: str = Field(min_length=1)
 
@@ -801,9 +817,9 @@ class BulkClassifyResult(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    total: int = Field(ge=0)
-    applied: int = Field(ge=0)
-    skipped: int = Field(ge=0)
+    total: NonNegativeInt
+    applied: NonNegativeInt
+    skipped: NonNegativeInt
     failures: tuple[BulkClassifyFailure, ...] = ()
     bucket_event_ids: tuple[str, ...] = ()
 
@@ -839,11 +855,11 @@ class ApplyRulesResult(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    rules_evaluated: int = Field(ge=0)
-    transactions_scanned: int = Field(ge=0)
-    matched: int = Field(ge=0)
-    skipped_already_classified: int = Field(ge=0)
-    no_match: int = Field(ge=0)
+    rules_evaluated: NonNegativeInt
+    transactions_scanned: NonNegativeInt
+    matched: NonNegativeInt
+    skipped_already_classified: NonNegativeInt
+    no_match: NonNegativeInt
     applied: tuple[ApplyRulesAppliedRow, ...] = ()
     bucket_event_ids: tuple[str, ...] = ()
 
@@ -937,8 +953,8 @@ class LedgerExportResult(BaseModel):
     export_format: ExportSerializationFormat
     media_type: str = Field(min_length=1)
     filename_extension: str = Field(min_length=1)
-    row_count: int = Field(ge=0)
-    byte_size: int = Field(ge=0)
+    row_count: NonNegativeInt
+    byte_size: NonNegativeInt
     sha256: ContentDigest
     fieldnames: tuple[str, ...]
     rows: tuple[LedgerExportRow, ...]

@@ -46,7 +46,7 @@ from ....core.flows import (
     FlowMode,
     FlowWidgetKind,
 )
-from ....core.i18n import tr
+from ....core.i18n._render import tr
 from ....entrypoints.tui.components.host import ScreenHostApp
 from ....entrypoints.tui.flows.app import FlowScreen
 

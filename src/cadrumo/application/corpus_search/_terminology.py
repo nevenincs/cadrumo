@@ -38,14 +38,14 @@ from typing import Annotated
 from pydantic import BaseModel, Field, StringConstraints
 
 from ...core.concept_lifecycle import ConceptLifecycle
-from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
-from ...core.text_fold import fold_diacritics
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.directory_scan import (
     scan_directory,
 )
 from ...core.external_constants import UTF_8_ENCODING
-from ...core.resources import bundled_path
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.resources._boundary import bundled_path
+from ...core.text_fold import fold_diacritics
+from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from .errors import CorpusSearchInputError
 
 _Text = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]

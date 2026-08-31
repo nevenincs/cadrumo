@@ -23,10 +23,10 @@ import sqlalchemy.exc as sa_exc
 import typer
 from pydantic import TypeAdapter
 
-from ....adapters.persistence.storage.master_key import NoActiveBucketSessionError
+from ....adapters.persistence.storage.master_key.active_session import NoActiveBucketSessionError
 from ....core.errors.error_codes import build_error_envelope, render_error_text
 from ....core.errors.hierarchy import CadrumoError
-from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES
+from ....core.i18n._render import SUPPORTED_OUTPUT_LANGUAGES
 from ....llm.models import LLMRequest, PromptDefinition
 from ..errors import (
     CliUnexpectedBoundaryError,

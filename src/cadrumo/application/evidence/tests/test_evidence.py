@@ -11,20 +11,21 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....adapters.persistence.storage import APPLICATION_EVIDENCE_BUNDLE_NAMESPACE
+from ....adapters.persistence.storage._secure_object_namespaces import APPLICATION_EVIDENCE_BUNDLE_NAMESPACE
 from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from .. import (
+from .._models import (
     BundleVerificationState,
+    EvidenceBundle,
     EvidenceBundleNotFoundError,
-    EvidenceBundleRepository,
-    EvidenceBundleService,
     EvidenceBundleVerificationError,
+    EvidenceRecordRef,
     VerificationCheck,
+    derive_bundle_id,
 )
-from .._models import EvidenceBundle, EvidenceRecordRef, derive_bundle_id
+from .._service import EvidenceBundleRepository, EvidenceBundleService
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

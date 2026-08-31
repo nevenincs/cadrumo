@@ -26,7 +26,7 @@ from textual.widgets import Input, Static
 from ....application.user_profile.login_interaction import attempt_profile_login
 from ....application.user_profile.login_session import logout_active_profile
 from ....core.credentials import ProfilePasswordRefusalReason, assess_profile_password
-from ....core.i18n import tr
+from ....core.i18n._render import tr
 from ....entrypoints.tui.components.host import ScreenHostApp
 from ....entrypoints.tui.components.status import PinnedStatusBar
 from ....entrypoints.tui.secret.credentials import assessment_refusal

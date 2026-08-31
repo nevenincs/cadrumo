@@ -12,11 +12,11 @@ from typing import NamedTuple
 
 from pydantic import BaseModel
 
-from ..core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..core.auth_provider import AuthProviderKind
 from ..core.config import Settings, load_settings
 from ..core.errors.hierarchy import CadrumoError
 from ..core.logging import get_logger
+from ..core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .auth.credentials import project_active_certificate_credentials
 from .auth.operator_probes import bind_profile_auth_settings, probe_provider_credentials
 from .auth.probes import ProviderProbeResult

@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.i18n import tr
+from ....core.i18n._render import tr
 from .._tty import NonTtyRefusedError
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

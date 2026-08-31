@@ -25,10 +25,10 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.outbound.aeat.sede.schema import FiledDeclarationAvailability, FiledDeclarationAvailabilityReport
-from ....core.register_scoping_signal import RegisterScopingSignal
+from ....core.casilla_id import validated_casilla_id
 from ....core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ....core.period import Period
-from ....core.casilla_id import validated_casilla_id
+from ....core.register_scoping_signal import RegisterScopingSignal
 from ....domain.deadlines.models import TaxpayerProfile
 from ..filed_data_capture import (
     ExpectedFiledDeclarationGrid,
@@ -67,7 +67,7 @@ def _autonomo(
     ``object`` on the way into the model, which is what a supplied date being
     silently the wrong type would have hidden.
     """
-    from ....domain.deadlines.models import EntityType, IVARegime, IrpfEstimationRegime, IrpfIncomeCategory
+    from ....domain.deadlines.models import EntityType, IrpfEstimationRegime, IrpfIncomeCategory, IVARegime
 
     return TaxpayerProfile(
         tax_id="X1234567L",
@@ -513,7 +513,11 @@ def _filed_130_observation_for_tests():
 
     from pydantic import AnyHttpUrl
 
-    from ....adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue
+    from ....adapters.outbound.aeat.sede.schema import (
+        FiledDeclaracionArtefact,
+        FiledDeclaracionObservation,
+        ObservedCasillaValue,
+    )
     from ....core.casilla_value_kind import CasillaValueKind
     from ....core.config import Settings
 
@@ -757,7 +761,7 @@ def test_recapture_divergence_notices_absorbs_a_within_tolerance_change_end_to_e
     from ....domain.calculations.registry.bindings import RegistryModeloObservation
     from ....tests.registry_observations import registry_grounded_observations
     from ....tests.secure_sql import isolated_runtime_profile
-    from ...calculations import CalculationObservationRepository
+    from ...calculations.observations_repository import CalculationObservationRepository
 
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
@@ -788,7 +792,7 @@ def test_recapture_divergence_notices_fires_beyond_tolerance_end_to_end(tmp_path
     from ....domain.calculations.registry.bindings import RegistryModeloObservation
     from ....tests.registry_observations import registry_grounded_observations
     from ....tests.secure_sql import isolated_runtime_profile
-    from ...calculations import CalculationObservationRepository
+    from ...calculations.observations_repository import CalculationObservationRepository
 
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()

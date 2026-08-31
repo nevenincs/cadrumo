@@ -14,9 +14,10 @@ from statistics import median
 from typing import TYPE_CHECKING, Final, Literal, cast
 from uuid import UUID
 
-from .....core import StorageCategory, storage_path
 from .....core.config import load_settings
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
+from .....core.storage_taxonomy import StorageCategory
+from .....core.storage_taxonomy_locations import storage_path
 from ..crypto.aead import KEY_SIZE
 from ._kdf_codec import (
     KDF_FRAME_CONTROL,

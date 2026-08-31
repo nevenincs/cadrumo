@@ -8,8 +8,13 @@ from __future__ import annotations
 
 import pytest
 
-from .....adapters.outbound.google.errors import GoogleAuthClientNotRegisteredError, GoogleAuthError, GoogleAuthExpiredError, GoogleAuthValidationError
-from .....adapters.outbound.storage import OutboundStorageError
+from .....adapters.outbound.google.errors import (
+    GoogleAuthClientNotRegisteredError,
+    GoogleAuthError,
+    GoogleAuthExpiredError,
+    GoogleAuthValidationError,
+)
+from .....adapters.outbound.storage.errors import OutboundStorageError
 from .....core.errors.error_codes import get_registered_error_code, resolve_error_message
 from .....core.i18n import tr
 from .._google import _google_refusal

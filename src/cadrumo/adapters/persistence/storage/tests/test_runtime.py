@@ -16,9 +16,10 @@ from .....core.errors.hierarchy import CadrumoError
 from .....core.external_constants import OutputLanguage
 from .._namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from .._secure_object_namespaces import WORKFLOW_STATE_NAMESPACE
-from ..bucket import bucket_paths
+from ..bucket._layout import bucket_paths
 from ..errors import StorageValidationError
-from ..master_key import BucketSession, activate_session
+from ..master_key.active_session import activate_session
+from ..master_key.bucket_session import BucketSession
 from ..runtime import (
     _SYNTHETIC_SESSION_BUCKET_IDS,
     StorageRuntime,

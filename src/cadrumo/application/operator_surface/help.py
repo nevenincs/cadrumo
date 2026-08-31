@@ -186,31 +186,7 @@ def _root_help() -> HelpDocument:
             ),
         ),
         sections=(
-            HelpSection(
-                title=tr("cli.operator_surface.help.root.section_start_resume"),
-                entries=(
-                    HelpEntry(
-                        command="aeat config profile create NAME",
-                        description=tr("cli.operator_surface.help.root.start_create"),
-                    ),
-                    HelpEntry(
-                        command="aeat config profile list",
-                        description=tr("cli.operator_surface.help.root.start_list"),
-                    ),
-                    HelpEntry(
-                        command="aeat config login NAME",
-                        description=tr("cli.operator_surface.help.root.start_login"),
-                    ),
-                    HelpEntry(
-                        command="aeat config profile status",
-                        description=tr("cli.operator_surface.help.root.start_status"),
-                    ),
-                    HelpEntry(
-                        command="aeat config profile edit [NAME]",
-                        description=tr("cli.operator_surface.help.root.start_edit"),
-                    ),
-                ),
-            ),
+            _root_start_resume_section(),
             HelpSection(
                 title=tr("cli.operator_surface.help.root.section_workflow"),
                 entries=(
@@ -305,6 +281,35 @@ def _root_help() -> HelpDocument:
             default=(
                 "Add --help for details. Remove sensitive log values, then report bugs at "
                 "github.com/nevenincs/cadrumo/issues."
+            ),
+        ),
+    )
+
+
+def _root_start_resume_section() -> HelpSection:
+    """Build the root landing's profile creation and resumption commands."""
+    return HelpSection(
+        title=tr("cli.operator_surface.help.root.section_start_resume"),
+        entries=(
+            HelpEntry(
+                command="aeat config profile create NAME",
+                description=tr("cli.operator_surface.help.root.start_create"),
+            ),
+            HelpEntry(
+                command="aeat config profile list",
+                description=tr("cli.operator_surface.help.root.start_list"),
+            ),
+            HelpEntry(
+                command="aeat config login NAME",
+                description=tr("cli.operator_surface.help.root.start_login"),
+            ),
+            HelpEntry(
+                command="aeat config profile status",
+                description=tr("cli.operator_surface.help.root.start_status"),
+            ),
+            HelpEntry(
+                command="aeat config profile edit [NAME]",
+                description=tr("cli.operator_surface.help.root.start_edit"),
             ),
         ),
     )

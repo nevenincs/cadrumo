@@ -44,11 +44,21 @@ from ...adapters.persistence.profile.modelos_calculation import CalculationRevis
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.identity import BucketId, WorkUnitId
-from ...domain.buckets.event import BucketActorLabel, BucketEventId, BucketEventObjectType, BucketEventType, bucket_event_order_key
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...domain.buckets.event import (
+    BucketActorLabel,
+    BucketEventId,
+    BucketEventObjectType,
+    BucketEventType,
+    bucket_event_order_key,
+)
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
-from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol, ModeloRecordCatalogueRepositoryProtocol, VerificationReportCatalogueRepositoryProtocol
+from ...domain.modelos.protocols import (
+    CalculationRevisionCatalogueRepositoryProtocol,
+    ModeloRecordCatalogueRepositoryProtocol,
+    VerificationReportCatalogueRepositoryProtocol,
+)
 from ...domain.modelos.work_unit import WorkUnitCatalogue
 from ._action_errors import WorkUnitNotFoundError
 from .work_addressing import (

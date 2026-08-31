@@ -33,16 +33,17 @@ from pathlib import Path
 
 import pytest
 
-from ....core.prorrata_register import ProrrataRegisterRegime
-from ....core.modelo import Modelo
-from ....core.casilla_id import validated_casilla_id
+from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....core.aggregation import BindingSourceKind
+from ....core.casilla_id import validated_casilla_id
+from ....core.modelo import Modelo
+from ....core.prorrata_register import ProrrataRegisterRegime
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
+from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations import CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA, CalculationObservationRepository
-from ...prorrata_register import ProrrataRegisterRepository
+from ...calculations._prorrata_regularizacion import CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA
+from ...calculations.observations_repository import CalculationObservationRepository
 from .._prorrata_regularizacion_advisory import collect_prorrata_regularizacion_diagnostics
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

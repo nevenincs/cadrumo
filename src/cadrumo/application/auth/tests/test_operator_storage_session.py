@@ -10,14 +10,13 @@ import pytest
 from pydantic import SecretStr
 
 from ....adapters.outbound.aeat.auth import session_store
-from ....adapters.persistence.storage import has_active_bucket_session
-from ....adapters.persistence.storage.bucket import (
-    BucketBusyError,
-    acquire_lock,
-    bucket_paths,
-    release_lock,
+from ....adapters.persistence.storage.bucket._layout import bucket_paths
+from ....adapters.persistence.storage.bucket._lockfile import acquire_lock, release_lock
+from ....adapters.persistence.storage.bucket.errors import BucketBusyError
+from ....adapters.persistence.storage.master_key.active_session import (
+    current_active_bucket_session,
+    has_active_bucket_session,
 )
-from ....adapters.persistence.storage.master_key import current_active_bucket_session
 from ....application.wizard.catalogue import WIZARD_FLOWS
 from ....core.auth_provider import AuthProviderKind
 from ....core.config import load_settings, override_settings

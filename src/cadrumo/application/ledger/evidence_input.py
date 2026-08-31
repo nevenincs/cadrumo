@@ -116,7 +116,7 @@ class EvidenceInput(BaseModel):
         forget to update. The probe reads magic bytes and, for a PDF, walks the
         embedded-file table -- it never consults ``mime_type``.
         """
-        from ...adapters.inbound.einvoice import probe_document_shape
+        from ...adapters.inbound.einvoice._shape import probe_document_shape
 
         return probe_document_shape(self.data)
 
@@ -152,7 +152,7 @@ def _reject_unreadable_bytes(data: bytes, *, mime_type: str) -> None:
     ``mime_type`` appears in the message only as the operator-visible breadcrumb
     identifying the record they are looking at; it decides nothing.
     """
-    from ...adapters.inbound.einvoice import probe_document_shape
+    from ...adapters.inbound.einvoice._shape import probe_document_shape
 
     if probe_document_shape(data) is DocumentShape.UNKNOWN:
         raise PurchaseInvoiceEvidenceInputError(

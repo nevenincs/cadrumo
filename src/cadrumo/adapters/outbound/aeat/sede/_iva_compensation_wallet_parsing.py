@@ -22,12 +22,13 @@ from urllib.parse import urljoin, urlsplit
 from bs4 import BeautifulSoup, Tag
 from pydantic import AnyHttpUrl, AnyUrl, TypeAdapter
 
-from .....core.period import Period
 from .....core.config import Settings
-from .....core.decimal import AEAT_THOUSANDS_SEPARATORS, is_aeat_printed_money, normalize_decimal_separators
+from .....core.decimal._coerce import normalize_decimal_separators
+from .....core.decimal._printed import AEAT_THOUSANDS_SEPARATORS, is_aeat_printed_money
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.hashing import sha256_hex
 from .....core.i18n import tr
+from .....core.period import Period
 from .....domain.calculations.registry.errors import RegistryValidationError
 from .....domain.calculations.registry.remote_state_guard import (
     RemoteOperation,

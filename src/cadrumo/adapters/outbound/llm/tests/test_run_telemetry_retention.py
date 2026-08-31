@@ -39,11 +39,11 @@ from pathlib import Path
 
 import pytest
 
-from .....adapters.persistence.storage import secure_object_repository_for_active_bucket
-from .....core.classification import SensitivityClass
+from .....core.classification.policies import SensitivityClass
 from .....core.config import override_settings
 from .....core.hashing import canonical_json_bytes
 from .....llm.errors import LLMCacheError
+from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from .._run_telemetry import (
     _RUN_TELEMETRY_NAMESPACE,
     _RUN_TELEMETRY_VERSION,

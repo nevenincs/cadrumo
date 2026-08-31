@@ -20,24 +20,24 @@ from decimal import Decimal
 import pytest
 
 from ....domain.calculations.registry.authority import bundled_authority
-from ...tests import isolated_profile_backend as _isolated_backend
+from ...tests._profile_backend_fixtures import _isolated_backend
 
 __all__ = ["_isolated_backend"]
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.period import Period
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
-from ....domain.modelos.codes import ModeloCode
-from ....domain.modelos.repository import upsert_work_unit
-from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
-from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.repository import upsert_work_unit
+from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....tests import general_m303_filing_evidence
 from ....tests.registry_observations import registry_grounded_observations
 from ...workflow.persistence import workflow_state_repository

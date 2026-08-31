@@ -16,7 +16,7 @@ from datetime import UTC, datetime
 import pytest
 from click.testing import Result
 
-from ....adapters.outbound.llm import LLMRunRecord, LLMRunTelemetryRecorder
+from ....adapters.outbound.llm._run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
 from ....tests.cli_envelope import unwrap_cli_result as _json_result
 from ....tests.cli_runner import invoke_cached_cli
 from ._strict_cli_fixture_support import diagnostics_isolated_backend

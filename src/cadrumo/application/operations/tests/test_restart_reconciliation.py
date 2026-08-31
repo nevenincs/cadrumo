@@ -25,8 +25,8 @@ from pydantic import BaseModel, Field
 
 from ....adapters.persistence.operations.journal import OperationJournalRepository
 from ....adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
-from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.hashing import content_hash_hex
+from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operations import (
     OperationCancellation,
     OperationClosePolicy,

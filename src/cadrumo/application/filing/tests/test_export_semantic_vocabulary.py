@@ -18,16 +18,12 @@ from ....domain.calculations.registry.schema_exports import (
     FilingEnvelopePrefixFieldDeclaration,
     FilingEnvelopePrefixRole,
 )
-from .. import (
-    FilingEnvelopeOccurrence,
-    FilingEnvelopeRenderRequest,
-    FilingEnvelopeRenderResult,
-    export_draft,
-    render_filing_envelope,
-)
 from .. import _export as export_module
-from .. import _export_producer as export_producer_module
 from .. import _record_renderer as record_renderer_module
+from .._export import export_draft, render_filing_envelope
+from .._export_envelope import FilingEnvelopeOccurrence, FilingEnvelopeRenderRequest, FilingEnvelopeRenderResult
+from .._export_producer import _SHARED_SNAPSHOT_PRODUCER_KEYS
+from .._producer_ownership import filing_producer_ownership
 
 modelo_export_module = import_module("cadrumo.application.modelo._export")
 
@@ -35,7 +31,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_snapshot_resolver_is_exhaustive_over_the_core_producer_vocabulary() -> None:
-    ownership = export_producer_module.filing_producer_ownership()
+    ownership = filing_producer_ownership(shared_snapshot_keys=_SHARED_SNAPSHOT_PRODUCER_KEYS)
     assert set(ownership) == set(FilingProducerKey)
     assert all(owner.strip() for owner in ownership.values())
 

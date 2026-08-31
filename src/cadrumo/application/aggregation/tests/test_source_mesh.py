@@ -12,7 +12,7 @@ from pydantic import ValidationError
 from ....adapters.persistence.storage.errors import DecryptionError
 from ....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....domain.calculations import DirectRowMaterializationProvenance
+from ....domain.calculations._row_casilla import DirectRowMaterializationProvenance
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ids import RevisionId
 from ....tests.aeat_literal_fixtures import IVA_WALLET_SOURCE_URL_FIXTURE
@@ -21,13 +21,15 @@ from .. import (
     CalculationSourceProvenance,
     CalculationSourceResolution,
     CompositeSourceResolverId,
+)
+from .._source_mesh import RowSourceIdentity, SourceMeshError, out_of_window_summary_source_diagnostic
+from ..errors import AggregationValidationError
+from ..source_resolution_operations import (
     collect_unhandled_source_diagnostics,
     merge_source_resolutions,
     merge_source_resolutions_by_precedence,
     storage_degradation_resolution,
 )
-from .._source_mesh import RowSourceIdentity, SourceMeshError, out_of_window_summary_source_diagnostic
-from ..errors import AggregationValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -1064,7 +1066,7 @@ def test_storage_degradation_resolution_emits_diagnostic_and_debug_log(
 ) -> None:
     error = DecryptionError("ciphertext authentication failed")
 
-    with caplog.at_level("DEBUG", logger="cadrumo.application.aggregation._source_mesh"):
+    with caplog.at_level("DEBUG", logger="cadrumo.application.aggregation.source_resolution_operations"):
         resolution = storage_degradation_resolution(
             resolver_id="ledger-iva",
             owned_sources=(BindingSourceKind.LEDGER_IVA_AGGREGATION,),

@@ -10,8 +10,8 @@ from click.testing import Result
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.ledger.filer_establishment import FILER_POSTCODE_FACT_PATH
-from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....core.config import override_settings
+from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session, set_active_test_profile_facts

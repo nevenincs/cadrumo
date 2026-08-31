@@ -7,7 +7,7 @@ from pydantic import BaseModel
 
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...pdf import ExtractedCasilla
-from .. import ExtractionWarning, InboundDeclaracionObservation, TemplateRevision
+from .._schema import ExtractionWarning, InboundDeclaracionObservation, TemplateRevision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 

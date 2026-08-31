@@ -61,8 +61,8 @@ from decimal import Decimal
 from enum import StrEnum
 from xml.etree.ElementTree import Element
 
+from ....core.decimal._coerce import coerce_decimal
 from ....core.document_shape import DocumentShape
-from ....core.decimal import coerce_decimal
 from ._aeat_record_schema import mandatory_child_elements
 from ._shape import probe_document_shape
 from ._xml import EInvoiceXmlParseError, parse_hardened_xml

@@ -33,7 +33,7 @@ from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.secure_sql import isolated_runtime_profile
-from ...invoices import link_invoice_transaction_catalogues, link_invoice_transaction_repositories
+from ...invoices._linking import link_invoice_transaction_catalogues, link_invoice_transaction_repositories
 from ..actions_manual import link_manual_transaction_invoice
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

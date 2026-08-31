@@ -13,9 +13,9 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from ......core import StorageCategory
 from ......core.config import Settings
 from ......core.directory_scan import scan_directory
+from ......core.storage_taxonomy import StorageCategory
 from ......tests.path_obstruction import obstructed_path
 from ..capsule import (
     list_current_profile_custody_capsule_ids,

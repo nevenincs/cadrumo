@@ -24,13 +24,21 @@ from decimal import Decimal
 
 import pytest
 
-from .....core.period import Period
 from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.period import Period
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from .....domain.filing.amendment import CasillaChange, ModeloComplementaria
-from .....domain.filing.schema import ModeloDraft, ModeloValue, ModeloValueKind, compute_modelo_draft_id, registry_schema_version
-from .....domain.submission import ModeloDraftStatus
-from ...storage import FILING_AMENDMENTS_NAMESPACE, Envelope, SecureObjectRowIdentityError
+from .....domain.filing.schema import (
+    ModeloDraft,
+    ModeloValue,
+    ModeloValueKind,
+    compute_modelo_draft_id,
+    registry_schema_version,
+)
+from .....domain.submission._protocols import ModeloDraftStatus
+from ...storage._secure_object_namespaces import FILING_AMENDMENTS_NAMESPACE
+from ...storage.envelope._envelope import Envelope
+from ...storage.errors import SecureObjectRowIdentityError
 from ...storage.sql.secure_objects import SecureObjectRepository
 from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ..filing_amendments import ModeloAmendmentRepository

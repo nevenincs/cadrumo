@@ -10,16 +10,15 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....core.directory_scan import iter_directory, scan_directory
+from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....tests.secure_sql import isolated_runtime_profile
-from ....persistence.storage import STORAGE_NAMESPACE_REGISTRY, StorageRemoteMirrorPolicy
-from .. import (
+from ....persistence.storage._namespace_registry import STORAGE_NAMESPACE_REGISTRY
+from ....persistence.storage._secure_object_namespaces import StorageRemoteMirrorPolicy
+from .._local import LocalFileSystemProvider
+from .._mirror_manifest import (
     REMOTE_MIRROR_MANIFEST_NAMESPACE,
     REMOTE_MIRROR_MANIFEST_SCHEMA_VERSION,
-    OutboundStorageIntegrityError,
-    RemoteMirrorIssueKind,
-    RemoteMirrorNamespaceManifest,
     build_remote_mirror_namespace_manifest,
     compare_remote_mirror_manifests,
     get_remote_mirror_namespace_manifest,
@@ -28,7 +27,8 @@ from .. import (
     put_remote_mirror_namespace_manifest,
     remote_mirror_object_key_hmac,
 )
-from .._local import LocalFileSystemProvider
+from .._records import RemoteMirrorIssueKind, RemoteMirrorNamespaceManifest
+from ..errors import OutboundStorageIntegrityError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

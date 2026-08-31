@@ -7,14 +7,10 @@ import inspect
 
 import pytest
 
-from ....core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
 from ....core.json_contract import ResolvedActionArgument
-from ...operator_actions import (
-    OPERATOR_ACTION_CATALOGUE,
-    ActionCatalogue,
-    ActionCatalogueEntry,
-    ActionReference,
-)
+from ....core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
+from ...operator_actions._catalogue import OPERATOR_ACTION_CATALOGUE, ActionCatalogue, ActionCatalogueEntry
+from ...operator_actions._models import ActionReference
 from .. import action_resolution as _action_resolution
 from ..action_resolution import ResolvedCatalogueAction, resolve_catalogue_action, resolve_notice_action
 from ..manifest import (

@@ -7,10 +7,10 @@ from typing import Literal, Self
 
 from pydantic import BaseModel, Field, model_validator
 
-from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from .....core.period import Period
 from .....core.filing_year import FilingYear
 from .....core.identity import AeatExpedienteId
+from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.period import Period
 
 __all__ = ["Declaracion"]
 

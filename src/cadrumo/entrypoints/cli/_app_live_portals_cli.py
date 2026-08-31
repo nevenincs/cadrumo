@@ -12,7 +12,7 @@ from typing import TypedDict
 
 import typer
 
-from ...core.i18n import tr
+from ...core.i18n._render import tr
 from ...domain.portals.categories import PortalCategory
 from ...domain.portals.errors import PortalRegistryError
 from ._common import emit_envelope
@@ -32,7 +32,7 @@ class _PortalRow(TypedDict):
 
 def _project_portal_refusal(error: PortalRegistryError) -> PortalRegistryError:
     """Attach the application-owned no-action projection to one domain refusal."""
-    from ...application.operator_actions import no_action_precondition_verdict
+    from ...application.operator_actions._preconditions import no_action_precondition_verdict
     from ._common import attach_cli_policy_verdict
 
     failure = error.portal_failure

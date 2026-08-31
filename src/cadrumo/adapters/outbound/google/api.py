@@ -20,9 +20,10 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING, Any, Protocol, TypedDict
 
-from ....application.operator_actions import PreconditionVerdict, no_action_precondition_verdict
+from ....application.operator_actions._models import PreconditionVerdict
+from ....application.operator_actions._preconditions import no_action_precondition_verdict
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
-from ..storage import (
+from ..storage.errors import (
     OutboundStorageError,
     OutboundStorageNetworkError,
     OutboundStorageNotFoundError,

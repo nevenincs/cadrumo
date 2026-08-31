@@ -22,15 +22,13 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.persistence.storage import (
-    WORKFLOW_RUN_NAMESPACE,
-    ClassificationError,
-    Envelope,
-    EnvelopeVersionError,
-    SensitivityClass,
-)
-from ....core.storage_taxonomy_locations import storage_path
-from ....core.storage_taxonomy import StorageCategory
+from ....adapters.persistence.storage._secure_object_namespaces import WORKFLOW_RUN_NAMESPACE
+from ....adapters.persistence.storage.envelope._envelope import Envelope
+from ....adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
+from ....core.classification.policies import SensitivityClass
+from ....core.config import override_settings
+from ....core.errors.hierarchy import SiteHealthState
+from ....core.external_constants import OutputLanguage
 from ....core.modelo import Modelo
 from ....core.operator_action_enums import (
     ActionArgumentStatus,
@@ -39,18 +37,12 @@ from ....core.operator_action_enums import (
     NoRecoveryOutcome,
 )
 from ....core.period import Period
-from ....core.config import override_settings
-from ....core.errors.hierarchy import SiteHealthState
-from ....core.external_constants import OutputLanguage
+from ....core.storage_taxonomy import StorageCategory
+from ....core.storage_taxonomy_locations import storage_path
 from ....domain.deadlines.models import ObligationStatus
-from ....domain.submission import ModeloDraftStatus
+from ....domain.submission._protocols import ModeloDraftStatus
 from ....tests.secure_sql import isolated_runtime_profile
-from ...operator_actions import (
-    ActionArgumentBinding,
-    ActionReference,
-    ConditionEvidence,
-    PreconditionVerdict,
-)
+from ...operator_actions._models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
 from ..errors import WorkflowError
 from ..persistence import WorkflowRunRepository, load_run, save_run
 from ..run_models import (
@@ -393,7 +385,7 @@ def test_workflow_run_aborted_reason_drift_surfaces_at_load(
 
     import json as _json
 
-    from ....adapters.persistence.storage import SensitivityClass
+    from ....core.classification.policies import SensitivityClass
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         objects = profile.repository

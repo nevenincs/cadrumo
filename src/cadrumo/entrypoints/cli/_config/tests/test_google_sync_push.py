@@ -10,20 +10,18 @@ import pytest
 from pydantic import ValidationError
 from sqlalchemy import text
 
-from .....adapters.outbound.storage import remote_mirror_object_label
-from .....adapters.outbound.storage import (
+from .....adapters.outbound.storage._local import LocalFileSystemProvider
+from .....adapters.outbound.storage._mirror_manifest import (
     REMOTE_MIRROR_MANIFEST_NAMESPACE,
-    OutboundStorageNotFoundError,
-    OutboundStorageValidationError,
-    ProviderKind,
-    RemoteMirrorNamespaceManifest,
     build_remote_mirror_namespace_manifest,
     put_remote_mirror_namespace_manifest,
     remote_mirror_object_key_hmac,
+    remote_mirror_object_label,
 )
-from .....adapters.outbound.storage._local import LocalFileSystemProvider
-from .....adapters.persistence.storage import STORAGE_NAMESPACE_REGISTRY
-from .....adapters.persistence.storage.sql import SecureObjectRepository
+from .....adapters.outbound.storage._records import ProviderKind, RemoteMirrorNamespaceManifest
+from .....adapters.outbound.storage.errors import OutboundStorageNotFoundError, OutboundStorageValidationError
+from .....adapters.persistence.storage._namespace_registry import STORAGE_NAMESPACE_REGISTRY
+from .....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from .....core.i18n import tr
 from .....tests.path_obstruction import obstructed_path
 from .....tests.secure_sql import isolated_runtime_profile

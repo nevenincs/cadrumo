@@ -40,7 +40,7 @@ from decimal import Decimal
 from ...core.casilla_id import CasillaId
 from ...domain.calculations.registry.schema import ModeloRevision
 from ..aggregation import CalculationSourceDiagnostic
-from ..calculations import CalculationObservationRepository
+from ..calculations.observations_repository import CalculationObservationRepository
 from ._bienes_inversion_advisory import collect_bienes_inversion_regularizacion_diagnostics
 from ._minimo_descendientes_advisory import (
     collect_descendientes_count_desync_diagnostics,

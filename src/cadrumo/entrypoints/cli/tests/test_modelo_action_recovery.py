@@ -10,7 +10,7 @@ from typing import Any
 
 import pytest
 
-from ....adapters.persistence.storage.sql import dispose_engine
+from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.modelo.work_lifecycle import get_work_unit
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.config import SecretStoreBackend, load_settings, override_settings

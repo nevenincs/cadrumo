@@ -28,11 +28,11 @@ from typing import TYPE_CHECKING
 from ....core.logging import get_logger
 from ....domain.invoices.errors import InvoicePersistenceError
 from ....domain.invoices.models import InvoiceCatalogue
-from ..storage import INVOICE_CATALOGUE_NAMESPACE
+from ..storage._secure_object_namespaces import INVOICE_CATALOGUE_NAMESPACE
 from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
 
 if TYPE_CHECKING:
-    from ..storage import SecureObjectRepository, SecureObjectWrite
+    from ..storage.sql import SecureObjectRepository, SecureObjectWrite
 
 _log = get_logger(__name__)
 
@@ -45,7 +45,7 @@ _INVOICE_OBJECT_KEY = INVOICE_CATALOGUE_NAMESPACE.require_default_object_key()
 def _secure_objects_for_bucket(bucket_id: str) -> SecureObjectRepository:
     """Return the runtime-created secure-object repository for ``bucket_id``."""
     from ....core.config import load_settings
-    from ..storage import secure_object_repository_for_bucket
+    from ..storage.runtime_repository import secure_object_repository_for_bucket
 
     return secure_object_repository_for_bucket(bucket_id, load_settings())
 

@@ -44,11 +44,11 @@ from datetime import date
 from decimal import Decimal
 from typing import Final, NamedTuple, Never, override
 
+from ...core.casilla_id import CasillaId
+from ...core.identity import same_tax_identifier
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
-from ...core.casilla_id import CasillaId
 from ...core.period import Period as _Period
-from ...core.identity import same_tax_identifier
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements
 from ...domain.calculations.registry.errors import RegistrySnapshotError
@@ -57,20 +57,24 @@ from ...domain.calculations.registry.schema import (
     ModeloRevision,
     RegistrySnapshot,
 )
-from ...domain.iva_compensation.reconciliation import IvaCompensationDecisionReason, IvaCompensationReconciliationDecision
-from ...domain.modelos.work_unit import WorkUnit
+from ...domain.iva_compensation.reconciliation import (
+    IvaCompensationDecisionReason,
+    IvaCompensationReconciliationDecision,
+)
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.errors import ModeloError
-from ..calculations import (
+from ...domain.modelos.work_unit import WorkUnit
+from ..calculations._binding_prefill import LocalIvaCompensationRecurrence
+from ..calculations._iva_compensation_casillas import (
     M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
     M303_DISPONIBLE_CASILLA,
-    CalculationObservationRepository,
-    IvaWalletDecisionRepository,
-    LocalIvaCompensationRecurrence,
+)
+from ..calculations._m303_carry_ingress import (
     M303CarryIngressError,
-    revision_carry_outcome,
     validate_normalized_m303_carry_observation_envelope,
 )
+from ..calculations._revision_carry_gate import revision_carry_outcome
+from ..calculations.observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository
 from ._action_errors import ModeloPreconditionErrorMixin
 from ._preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure
 
@@ -471,7 +475,7 @@ def _apply_wallet_resolution(
     backend_binding_values: dict[BindingId, Decimal],
 ) -> None:
     from ..aggregation import CalculationSourceContext
-    from ..calculations import IvaWalletDecisionSourceResolver
+    from ..calculations._iva_wallet_reconciliation import IvaWalletDecisionSourceResolver
     from .calculation_route import require_calculation_route_resolver
 
     resolver = IvaWalletDecisionSourceResolver(decision)
@@ -610,7 +614,7 @@ def load_persisted_iva_compensation_decision_for_work_unit(
     if taxpayer_nif is None:
         return None
     if repository is None:
-        from ..calculations import IvaWalletDecisionRepository
+        from ..calculations.observations_repository import IvaWalletDecisionRepository
 
         repository = IvaWalletDecisionRepository()
 
@@ -873,7 +877,7 @@ def _require_first_period_zero_decision_grounded(
 
 def _activity_start_proves_first_iva_period(work_unit: WorkUnit, snapshot: RegistrySnapshot) -> bool:
     """Return whether the profile proves no prior IVA-compensation obligation existed."""
-    from ..calculations import (
+    from ..calculations.cross_period_clean_state import (
         cross_period_dependency_requirements,
         partition_cross_period_requirements_by_activity_start,
     )
@@ -923,7 +927,7 @@ def lazily_reconcile_local_iva_compensation_for_work_unit(
     taxpayer_nif = taxpayer_nif_for_bucket(work_unit.bucket_id)
     if taxpayer_nif is None:
         return None
-    from ..calculations import reconcile_modelo_303_iva_compensation
+    from ..calculations._iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
 
     evidence = _prior_period_carry_evidence(work_unit, snapshot=snapshot)
     report = reconcile_modelo_303_iva_compensation(

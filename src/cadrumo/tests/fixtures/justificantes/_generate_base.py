@@ -32,7 +32,7 @@ from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 
 from ....core.external_constants import UTF_8_ENCODING, load_external_constants
-from .. import FIXTURE_PROVENANCE_SYNTHETIC
+from ..provenance import FIXTURE_PROVENANCE_SYNTHETIC
 
 SYNTHETIC_SANITIZER_VERSION = "0.1.0-synthetic"
 """Sidecar ``sanitizer_version`` for a generator-produced specimen.

@@ -20,7 +20,7 @@ from typing import Any, cast
 import pytest
 
 from ....core.config import override_settings
-from ....core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
+from ....core.redaction.rules import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.cli_runner import invoke_cached_cli
 from ._cli_json_support import _json_object
 from ._cli_surface_support import (
@@ -230,7 +230,7 @@ def _seed_usage_ratio_for_telefonia(bucket_id: str) -> None:
     """Persist a usage-ratio profile so the next allocate verb can resolve TELEFONIA_MOVIL."""
     from ....adapters.persistence.profile.usage_ratios import save_usage_ratios
     from ....domain.categories.spending_category import SpendingCategory
-    from ....domain.usage_ratios import UsageRatioProfile
+    from ....domain.usage_ratios._model import UsageRatioProfile
 
     save_usage_ratios(
         UsageRatioProfile(ratios={SpendingCategory.TELEFONIA_MOVIL: Decimal("0.60")}),

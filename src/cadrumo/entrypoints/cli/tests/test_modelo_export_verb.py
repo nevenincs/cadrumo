@@ -14,17 +14,17 @@ from click.testing import Result
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....application.workflow.persistence import workflow_state_repository
-from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.period import Period
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
-from ....domain.modelos.codes import ModeloCode
-from ....domain.modelos.repository import upsert_work_unit
-from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.repository import upsert_work_unit
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.cli_envelope import unwrap_envelope_notices as _notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload

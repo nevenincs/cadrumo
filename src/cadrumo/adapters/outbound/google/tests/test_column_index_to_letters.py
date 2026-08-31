@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....application.storage.calc_sheets import column_index_to_letters
+from .....application.storage.calc_sheets._records import column_index_to_letters
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

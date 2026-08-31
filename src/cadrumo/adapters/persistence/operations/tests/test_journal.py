@@ -43,6 +43,9 @@ from .....application.operations.persistence.leases import (
     operation_conflict_scope_reference,
 )
 from .....application.operations.persistence.replay import OperationReplayStatus
+from .....core.directory_scan import (
+    scan_directory,
+)
 from .....core.locks import exclusive_file_lock
 from .....core.operations import (
     OperationEffect,
@@ -50,10 +53,7 @@ from .....core.operations import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
-from .....core.directory_scan import (
-    scan_directory,
-)
-from ...storage import RepositoryError
+from ...storage.errors import RepositoryError
 from ..journal import OperationJournalRepository
 from ..lease import OperationLeaseFilesystemRepository, OperationLeaseStorage
 

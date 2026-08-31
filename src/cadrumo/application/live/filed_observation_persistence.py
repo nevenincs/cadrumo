@@ -36,21 +36,23 @@ from ...adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact, File
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.justificante import JustificanteRepository
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from ...application.calculations import (
-    CalculationObservationRepository,
+from ...application.calculations.iva_compensation_history import (
     IvaCompensationHistoryRepository,
-    ObservationSourceKind,
-    observation_key,
     persist_observation_envelope_and_iva_history,
 )
+from ...application.calculations.observations_repository import (
+    CalculationObservationRepository,
+    ObservationSourceKind,
+    observation_key,
+)
 from ...core.aeat_csv import normalise_aeat_csv
-from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
-from ...core.modelo import Modelo
-from ...core.period import Period, PeriodKind
 from ...core.hashing import sha256_hex
 from ...core.identity import same_tax_identifier
+from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.logging import get_logger
+from ...core.modelo import Modelo
+from ...core.period import Period, PeriodKind
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import emit_bucket_event
 from ...domain.iva_compensation.carry_forward import iva_compensation_period_sort_key

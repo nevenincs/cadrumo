@@ -12,9 +12,9 @@ from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core.period import Period
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core.aggregation import AggregationCaptureKind, BindingSourceKind
+from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record

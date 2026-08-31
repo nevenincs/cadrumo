@@ -7,8 +7,8 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
-from .....core.period import Period
 from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.period import Period
 from .....domain.calculations.registry.ids import LegalRefId
 from .._records import (
     OperatorInput,

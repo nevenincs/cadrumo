@@ -132,7 +132,7 @@ def assert_path_matches_grammar(*, key: str, root: Path, produced: Path) -> None
     # operator's real one, since isolation has not landed yet. This helper is
     # only ever called from inside a test body, well after isolation is in
     # place, so the import costs nothing to defer here.
-    from ..adapters.persistence.storage import STORAGE_NAMESPACE_REGISTRY
+    from ..adapters.persistence.storage._namespace_registry import STORAGE_NAMESPACE_REGISTRY
 
     definition = STORAGE_NAMESPACE_REGISTRY.path_by_key(key)
     pattern = _grammar_to_pattern(definition.grammar, root)

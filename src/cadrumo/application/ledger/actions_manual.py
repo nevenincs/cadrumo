@@ -20,13 +20,13 @@ from typing import TYPE_CHECKING, Literal
 from ...core.hashing import content_hash_hex
 
 if TYPE_CHECKING:
-    from ..invoices import InvoiceTransactionLinkResult
+    from ..invoices._linking import InvoiceTransactionLinkResult
 
+from ...core.aggregation import BindingSourceKind
+from ...core.decimal._format import format_decimal
+from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...core.iva_deduction_fact import IvaDeductionEvidenceAuthority
 from ...core.period import Period
-from ...core.aggregation import BindingSourceKind
-from ...core.decimal import format_decimal
-from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...domain.attachments.protocols import AttachmentStoreProtocol as _AttachmentStoreProtocol
 from ...domain.attachments.service import link_attachment_transaction
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
@@ -40,12 +40,17 @@ from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryPr
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.errors import TransactionValidationError
-from ...domain.transactions.models import Transaction, TransactionCatalogue, TransactionEditLineageEntry, TransactionEvidenceProvenanceEntry, TransactionLifecycleLineageEntry, derive_import_fingerprint
+from ...domain.transactions.models import (
+    Transaction,
+    TransactionCatalogue,
+    TransactionEditLineageEntry,
+    TransactionEvidenceProvenanceEntry,
+    TransactionLifecycleLineageEntry,
+    derive_import_fingerprint,
+)
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ...domain.usage_ratios import (
-    UsageRatioProfile,
-)
+from ...domain.usage_ratios._model import UsageRatioProfile
 from ..review.filter import LedgerReviewStatus
 from .actions_common import (
     EventSpec,
@@ -363,7 +368,7 @@ def link_manual_transaction_invoice(
     Returns an
     :class:`~cadrumo.application.invoices.InvoiceTransactionLinkResult`.
     """
-    from ..invoices import link_invoice_transaction_repositories
+    from ..invoices._linking import link_invoice_transaction_repositories
 
     trimmed_actor = require_actor(actor, operation="ledger invoice linkage")
     trimmed_source_command = require_source_command(source_command, operation="ledger invoice linkage")

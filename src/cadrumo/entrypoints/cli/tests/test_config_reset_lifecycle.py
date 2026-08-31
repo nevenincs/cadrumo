@@ -9,9 +9,9 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from ....adapters.persistence.storage.bucket import bucket_paths
-from ....core.period import Period
+from ....adapters.persistence.storage.bucket._layout import bucket_paths
 from ....core.config import override_settings
+from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue, derive_filing_record_id
 from ....tests.cli_runner import invoke_cached_cli

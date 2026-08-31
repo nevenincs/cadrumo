@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
-from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.hashing import content_hash_hex
 from ....core.identity import ContentDigest
+from ....core.models import STRICT_FROZEN_CONFIG
 from ..models import OperationDefinitionId, OperationId, OperationIdentity, OperationReference
 
 

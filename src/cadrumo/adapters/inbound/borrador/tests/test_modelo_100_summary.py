@@ -12,7 +12,9 @@ import pytest
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....domain.calculations.registry.schema_extraction import ExtractionProfileDefinition, ExtractionTargetDefinition
 from ...pdf import source_pdf_reference_path
-from .. import ArtefactKind, BorradorParseError, BorradorParseMode, InboundBorradorObservation, parse_borrador
+from .._parser import parse_borrador
+from .._schema import ArtefactKind, BorradorParseMode, InboundBorradorObservation
+from ..errors import BorradorParseError
 
 pytestmark = [
     pytest.mark.unit,

@@ -6,9 +6,9 @@ from datetime import UTC, datetime
 
 import pytest
 
+from ....core.i18n import extract_placeholders, tr
 from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.period import Period
-from ....core.i18n import extract_placeholders, tr
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
 from ..work_lifecycle import (
     lifecycle_continuation_for_work_history,

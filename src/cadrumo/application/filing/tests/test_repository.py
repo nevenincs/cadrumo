@@ -14,15 +14,22 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
-from ....adapters.persistence.storage import Envelope, SensitivityClass
-from ....adapters.persistence.storage.bucket import bucket_paths
+from ....adapters.persistence.storage.bucket._layout import bucket_paths
+from ....adapters.persistence.storage.envelope._envelope import Envelope
 from ....adapters.persistence.storage.errors import ClassificationError
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.classification.policies import SensitivityClass
+from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.filing.schema import ModeloDraft, ModeloValue, ModeloValueKind, compute_modelo_draft_id, registry_schema_version
-from ....domain.submission import ModeloDraftStatus
+from ....domain.filing.schema import (
+    ModeloDraft,
+    ModeloValue,
+    ModeloValueKind,
+    compute_modelo_draft_id,
+    registry_schema_version,
+)
+from ....domain.submission._protocols import ModeloDraftStatus
 from ....tests.secure_sql import TestRuntimeProfile
 from ..conftest import _BUCKET_ID
 

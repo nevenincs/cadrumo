@@ -16,16 +16,16 @@ import pytest
 
 from ....adapters.outbound.aeat.auth.errors import AeatSessionExpiredError
 from ....adapters.outbound.aeat.browser.session import BrowserError
-from ....application.operator_actions import lookup_action
+from ....application.operator_actions._catalogue import lookup_action
 from ....application.review.errors import ReviewKindReservedError
-from ....core.operator_action_enums import ActionArgumentStatus
-from ....core.access_gate import LiveSubmitForbiddenError
+from ....core.access_gate.errors import LiveSubmitForbiddenError
 from ....core.config import override_settings
 from ....core.errors.error_codes import ERROR_REGISTRY, ErrorCategory, ErrorEnvelope, render_error_text
 from ....core.errors.hierarchy import DecimalFormatError
-from ....core.i18n import tr
+from ....core.i18n._render import tr
 from ....core.json_contract import ENVELOPE_SCHEMA_VERSION, EnvelopeStatus, ResolvedPreconditionAction
 from ....core.observability.errors import RunContextMissingError
+from ....core.operator_action_enums import ActionArgumentStatus
 from ....domain.portals.errors import PortalIntegrityError
 from ....tests.cli_envelope import require_error_document
 from ....tests.cli_runner import invoke_cached_cli

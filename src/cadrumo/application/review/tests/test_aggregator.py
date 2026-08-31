@@ -11,17 +11,24 @@ import pytest
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.config import Settings
 from ....core.errors.severity import BaseSeverity
 from ....core.i18n import Translatable as tr
+from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.filing.schema import ModeloDraft, ModeloValidationFinding, ModeloValue, ModeloValueKind, compute_modelo_draft_id, registry_schema_version
+from ....domain.filing.schema import (
+    ModeloDraft,
+    ModeloValidationFinding,
+    ModeloValue,
+    ModeloValueKind,
+    compute_modelo_draft_id,
+    registry_schema_version,
+)
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ....domain.iva.classification import InvoiceKind
-from ....domain.submission import ModeloDraftStatus
+from ....domain.submission._protocols import ModeloDraftStatus
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

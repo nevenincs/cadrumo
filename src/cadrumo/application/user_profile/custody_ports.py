@@ -19,12 +19,12 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from ...core.storage_taxonomy_locations import storage_location
-from ...core.storage_taxonomy import StorageCategory, StorageCustodyProfile
-from ...core.classification import SensitivityClass
+from ...core.classification.policies import SensitivityClass
 from ...core.errors.hierarchy import CoreError
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.secure_object_write import SecureObjectWrite
+from ...core.storage_taxonomy import StorageCategory, StorageCustodyProfile
+from ...core.storage_taxonomy_locations import storage_location
 
 if TYPE_CHECKING:
     from ...domain.buckets.event import BucketEventHistoryCatalogue

@@ -17,7 +17,7 @@ from .....application.operations.financial_operand_custody import (
 from .....application.operations.persistence.financial_operand_custody import (
     OperationFinancialOperandCustodyConflictError,
 )
-from ...storage import RepositoryError
+from ...storage.errors import RepositoryError
 from ..financial_operand_custody import OperationFinancialOperandCustodyFilesystemRepository
 
 if TYPE_CHECKING:

@@ -17,7 +17,7 @@ from ...application.modelo.work_lifecycle import lifecycle_continuation_for_work
 from ...application.modelo.workspace import resolve_static_inspection_result
 from ...application.modelo.workspace_models import ModeloWorkspaceVisibleFilingTargetV1
 from ...core.external_constants import OutputLanguage
-from ...core.i18n import output_language
+from ...core.i18n._render import output_language
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.modelos.work_unit import WorkUnit

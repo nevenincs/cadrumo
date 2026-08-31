@@ -26,16 +26,19 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.tipos_actividad import TipoActividad
 from ....core.concepto_ingreso import ConceptoIngreso
 from ....core.period import Period
-from ....core.resources import bundled_path
+from ....core.resources._boundary import bundled_path
+from ....core.tipos_actividad import TipoActividad
 from ....domain.calculations.registry.loader import load_legal_parameters_only
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.irpf_categories import IRPF_CATEGORY_ACTIVIDAD_ECONOMICA
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.tipo_actividad_partitions import tipo_actividad_code_set
-from ....domain.transactions.volumen_ingresos import counts_toward_art_109_activity_income, counts_toward_volumen_de_ingresos
+from ....domain.transactions.volumen_ingresos import (
+    counts_toward_art_109_activity_income,
+    counts_toward_volumen_de_ingresos,
+)
 from ...aggregation.tests._renta_income_aggregation_support import _raw_transaction
 from .._art109_activity_income import (
     Art109ActivityIncomeCoverageStatus,

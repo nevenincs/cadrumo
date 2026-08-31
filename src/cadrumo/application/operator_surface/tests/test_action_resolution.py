@@ -5,12 +5,8 @@ from __future__ import annotations
 import pytest
 
 from ....core.operator_action_enums import ActionArgumentSource, NoRecoveryOutcome
-from ...operator_actions import (
-    ActionArgumentBindingSpecification,
-    ActionCatalogue,
-    ActionCatalogueEntry,
-    ActionReference,
-)
+from ...operator_actions._catalogue import ActionArgumentBindingSpecification, ActionCatalogue, ActionCatalogueEntry
+from ...operator_actions._models import ActionReference
 from ..errors import OperatorSurfaceContractError
 from ..manifest import (
     InputSchemaInventoryRow,

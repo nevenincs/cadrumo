@@ -14,15 +14,15 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
-from ...core.modelo_work_progress_state import ModeloWorkProgressState
-from ...core.estado_casilla_oficial import EstadoCasillaOficial
-from ...core.operator_action_enums import OperatorActionAxis
-from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.period import Period
-from ...core.casilla_id import CasillaId
 from ...core.aggregation import BindingSourceKind
+from ...core.casilla_id import CasillaId
+from ...core.estado_casilla_oficial import EstadoCasillaOficial
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId, CalculationRevisionId, WorkUnitId
+from ...core.modelo_work_progress_state import ModeloWorkProgressState
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.operator_action_enums import OperatorActionAxis
+from ...core.period import Period
 from ...domain.calculations.registry.authority import (
     ValidatedRegistryAuthority,
     bundled_authority,
@@ -62,12 +62,21 @@ from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_surfaces import CasillaConstraints, CasillaDefinition, RelationDefinition
 from ...domain.calculations.registry.temporal import select_revision
 from ...domain.filing.schema import ModeloScalar, ModeloValueKind
-from ...domain.modelos.codes import ModeloCode
-from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol, VerificationReportCatalogueRepositoryProtocol
-from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingSeverity, OPERATOR_ACTION_BY_MODELO_VERIFICATION_FINDING_KIND, VerificationCompletenessStatus, VerificationReport
-from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
+from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.errors import ModeloError
+from ...domain.modelos.protocols import (
+    CalculationRevisionCatalogueRepositoryProtocol,
+    VerificationReportCatalogueRepositoryProtocol,
+)
+from ...domain.modelos.verification_report import (
+    OPERATOR_ACTION_BY_MODELO_VERIFICATION_FINDING_KIND,
+    ModeloVerificationFinding,
+    ModeloVerificationFindingSeverity,
+    VerificationCompletenessStatus,
+    VerificationReport,
+)
+from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ._action_errors import (
     CalculationRevisionNotFoundError,

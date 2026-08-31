@@ -27,15 +27,15 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Annotated
 
-from pydantic import BaseModel, Field, field_serializer
+from pydantic import BaseModel, Field, NonNegativeInt, field_serializer
 
-from ...core.hex import Hex64Str
-from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.prose_elision import ElidedProse
 from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
+from ...core.hex import Hex64Str
 from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, FilingRecordId, WorkUnitId
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.prose_elision import ElidedProse
 from ...core.unit_proportion import UnitFraction
 from ...domain.buckets.event import BucketEventObjectType
 from .bundle_text import EvidenceBundleNotes
@@ -133,7 +133,7 @@ class EvidenceRecordRef(BaseModel):
     object_type: BucketEventObjectType
     object_id: str = Field(min_length=1, max_length=128)
     content_sha256: ContentDigest
-    payload_size_bytes: int = Field(ge=0)
+    payload_size_bytes: NonNegativeInt
 
 
 class EvidenceBundle(BaseModel):

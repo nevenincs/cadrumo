@@ -24,13 +24,13 @@ from ...application.modelo.work_addressing import (
     resolve_modelo_revision_for_operator_target,
     resolve_modelo_work_unit_for_operator_target,
 )
-from ...core.period import Period, PeriodError
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.errors.hierarchy import CadrumoError
-from ...core.i18n import tr
+from ...core.i18n._render import tr
 from ...core.logging import get_logger
-from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
+from ...core.period import Period, PeriodError
 from ...domain.modelos.calculation_revision import CalculationRevision
+from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ._common import _no_active_profile_refusal
 from ._modelo_cli_support import (
     bad_parameter_from_localized_context,

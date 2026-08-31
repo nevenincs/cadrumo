@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
-from ....core.redaction import CLI_BUCKET_ID_PLACEHOLDER
+from ....core.redaction.rules import CLI_BUCKET_ID_PLACEHOLDER
 from ._cli_json_support import _json_object
 from ._cli_surface_support import (
     _active_bucket_id,

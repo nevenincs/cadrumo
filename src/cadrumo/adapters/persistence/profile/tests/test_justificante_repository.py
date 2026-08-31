@@ -11,16 +11,14 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter, ValidationError
 
-from .....core.storage_taxonomy_locations import storage_path
-from .....core.storage_taxonomy import StorageCategory
+from .....core.classification.policies import SensitivityClass
 from .....core.period import Period
+from .....core.storage_taxonomy import StorageCategory
+from .....core.storage_taxonomy_locations import storage_path
 from .....domain.justificante import Justificante, JustificanteRepositoryProtocol
 from .....tests.aeat_literal_fixtures import JUSTIFICANTE_VERIFY_PATH_FIXTURE, aeat_url
 from .....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from ...storage import (
-    Envelope,
-    SensitivityClass,
-)
+from ...storage.envelope._envelope import Envelope
 from ...storage.errors import ClassificationError
 from ..justificante import JustificanteRepository
 

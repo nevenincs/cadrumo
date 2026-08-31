@@ -24,11 +24,11 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
-from ...core import M210PayerMode
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.country_code import CountryCodeAlpha2
 from ...core.i18n import tr
 from ...core.identity import TransactionId
+from ...core.irnr import M210PayerMode
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period

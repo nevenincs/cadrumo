@@ -8,9 +8,12 @@ from uuid import UUID
 
 import pytest
 
-from .. import KeyringUnavailableError, build_profile_login_session_port, master_key
+from .._profile_login_session import build_profile_login_session_port
 from ..custody.acceleration_receipt import ProfileSessionResumeOutcome, profile_session_path
 from ..custody.acceleration_receipt_crypto import PersistedProfileSession
+from ..errors import KeyringUnavailableError
+from ..master_key.bucket_session import BucketSession
+from ..master_key.login_throttle import ThrottleEvaluation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -31,13 +34,13 @@ def test_live_session_throttle_and_buffer_wipe_delegate_to_the_real_authorities(
         storage_root=tmp_path,
     )
 
-    assert isinstance(session, master_key.BucketSession)
+    assert isinstance(session, BucketSession)
     port.bind_session(session)
     assert port.current_session() is session
     assert port.session_serves_bucket(session, str(_PROFILE_ID)) is True
 
     initial = port.evaluate_throttle(storage_root=tmp_path, bucket_id=str(_PROFILE_ID), now=_NOW)
-    assert isinstance(initial, master_key.ThrottleEvaluation)
+    assert isinstance(initial, ThrottleEvaluation)
     assert initial.throttled is False
     port.record_login_failure(storage_root=tmp_path, bucket_id=str(_PROFILE_ID), now=_NOW)
     refused = port.evaluate_throttle(storage_root=tmp_path, bucket_id=str(_PROFILE_ID), now=_NOW)

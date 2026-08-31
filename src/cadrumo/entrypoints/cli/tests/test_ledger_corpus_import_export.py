@@ -51,7 +51,7 @@ def test_export_csv_is_refused_by_raw_bank_import_provider(tmp_path: Path) -> No
 
 def test_xlsx_import_is_id_for_id_parity_with_csv(tmp_path: Path) -> None:
     """The XLSX provider yields the same canonical rows as CSV."""
-    from ....adapters.inbound.financial.providers import CsvProvider
+    from ....adapters.inbound.financial.providers._csv import CsvProvider
     from ....domain.transactions.models import derive_transaction_id
 
     csv_path = _CORPUS / "bbva-business-eur.csv"

@@ -17,21 +17,15 @@ from pathlib import Path
 
 import pytest
 
-from .....core.locks import exclusive_file_lock
+from .....core.classification.policies import SensitivityClass
 from .....core.directory_scan import DirectoryEntryKind, scan_directory
+from .....core.locks import exclusive_file_lock
+from .....core.redaction.rules import default_rules_for_class, redact
 from .....tests.master_key import EphemeralMasterKeyProvider
-from .. import (
-    EncryptedBlobStore,
-    Envelope,
-    SecretRecord,
-    SecretStore,
-    SensitivityClass,
-    default_rules_for_class,
-    load_envelope,
-    redact,
-    safe_repository_id,
-    save_envelope,
-)
+from .._path_safety import safe_repository_id
+from ..blob_store._blob_store import EncryptedBlobStore
+from ..envelope._envelope import Envelope, load_envelope, save_envelope
+from ..secret_store.store import SecretRecord, SecretStore
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -117,7 +111,7 @@ def test_redaction_strips_audit_class_defaults() -> None:
 
 def test_path_safety_rejects_traversal(tmp_path: Path) -> None:
     """The substrate's typed id helper refuses a token shaped like a traversal."""
-    from .. import PathContainmentError
+    from ..errors import PathContainmentError
 
     with pytest.raises(PathContainmentError, match=r"separator"):
         safe_repository_id("../escape", context="smoke")
@@ -125,7 +119,7 @@ def test_path_safety_rejects_traversal(tmp_path: Path) -> None:
 
 def test_file_lock_serializes_writers(tmp_path: Path) -> None:
     """A second non-blocking acquire fails immediately while the lock is held."""
-    from .. import LockAcquisitionError
+    from .....core.locks_errors import LockAcquisitionError
 
     target = tmp_path / "shared.json"
     with (
@@ -180,7 +174,7 @@ def test_cross_process_lock_contention(tmp_path: Path) -> None:
     the sentinel is observed before attempting the contention probe.
     Deterministic on every platform; no opt-in env var required.
     """
-    from .. import LockAcquisitionError
+    from .....core.locks_errors import LockAcquisitionError
 
     target = tmp_path / "contended.json"
     proc = subprocess.Popen(

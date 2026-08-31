@@ -44,7 +44,7 @@ from typing import ClassVar, Final
 
 from pydantic import BaseModel
 
-from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
+from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.json_contract import Notice, NoticeSeverity
@@ -56,7 +56,7 @@ from ...core.prorrata_register import (
     ProrrataRegisterRegime,
     regime_apportions_deduction,
 )
-from ...core.resources import bundled_path
+from ...core.resources._boundary import bundled_path
 from ...domain.calculations.registry.ids import (
     BindingId,
     LegalRefId,
@@ -81,12 +81,12 @@ from ...domain.iva.prorrata import (
     is_especial_mandatory,
 )
 from ...domain.iva.schema import IvaCategory
-from ...domain.prorrata_register import (
+from ...domain.prorrata_register._protocols import ProrrataRegisterRepositoryProtocol
+from ...domain.prorrata_register.register import (
     ProrrataProvisionalResolution,
     ProrrataRegister,
     ProrrataRegisterEntry,
     ProrrataRegisterError,
-    ProrrataRegisterRepositoryProtocol,
     ThreeActiveYearsAggregate,
 )
 from ..aggregation import (

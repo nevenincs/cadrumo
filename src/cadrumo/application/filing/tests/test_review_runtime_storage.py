@@ -10,26 +10,26 @@ import pytest
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.errors import StorageValidationError
-from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.config import override_settings
 from ....core.hashing import content_hash_hex
+from ....core.period import Period
 from ....domain.filing.schema import ModeloDraft
-from ....domain.submission import ModeloDraftStatus
+from ....domain.submission._protocols import ModeloDraftStatus
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.filing import build_registry_filing_draft_from_decimals
 from ....tests.secure_sql import isolated_runtime_profile
 from ....tests.secure_sql import isolated_storage_root as _isolated_storage  # noqa: F401 - autouse fixture
-from .. import (
+from .._review import (
     ModeloApprovalStaleReason,
+    _transaction_catalogue_fingerprint,
     approval_stale_reasons,
     approve_draft,
-    build_runtime_schema_provider,
     compute_current_approval_basis,
 )
-from .._review import _transaction_catalogue_fingerprint
+from ..runtime import build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

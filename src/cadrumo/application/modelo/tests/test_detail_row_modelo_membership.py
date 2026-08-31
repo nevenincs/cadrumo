@@ -19,9 +19,17 @@ import pytest
 
 from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
-from ....domain.modelos.row_models import Modelo184MemberRow, Modelo210AgrupacionRentaRow, Modelo232VinculadaRow, Modelo347ContraparteRow, Modelo349OperadorRow, Modelo349RectificacionRow, ModeloDetailRow
-from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.modelos.errors import ModeloError
+from ....domain.modelos.row_models import (
+    Modelo184MemberRow,
+    Modelo210AgrupacionRentaRow,
+    Modelo232VinculadaRow,
+    Modelo347ContraparteRow,
+    Modelo349OperadorRow,
+    Modelo349RectificacionRow,
+    ModeloDetailRow,
+)
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from .._calculation_modelo_adjustments import require_detail_rows_declared_for_their_owning_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

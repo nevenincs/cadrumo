@@ -28,25 +28,21 @@ from typing import Annotated, ClassVar, Final, Literal, NamedTuple, Protocol, Se
 
 from pydantic import BaseModel, Field, TypeAdapter, field_serializer, field_validator, model_validator
 
-from ...core import M210GrossIncomeSourceMode
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId
-from ...core.decimal import coerce_decimal
+from ...core.decimal._coerce import coerce_decimal
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.filing_year import FilingYear
 from ...core.identity import BucketId, SnapshotId, WorkUnitId
+from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period
 from ...core.prose_elision import ElidedProse
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
-from ...domain.calculations import (
-    DirectRowMaterializationProvenance,
-    RowBindingKey,
-    RowCasillaKey,
-    RowSourceIdentity,
-)
+from ...domain.calculations._row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
+from ...domain.calculations._row_source_identity import RowBindingKey, RowSourceIdentity
 from ...domain.calculations.registry.ids import (
     BindingId,
     LegalRefId,

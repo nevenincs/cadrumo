@@ -28,7 +28,7 @@ See Also:
 
 from __future__ import annotations
 
-from ....adapters.outbound.storage import ProviderKind
+from ....adapters.outbound.storage._records import ProviderKind
 from ....core.json_contract import OutputSchema
 
 

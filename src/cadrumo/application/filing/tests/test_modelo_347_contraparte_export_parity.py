@@ -23,10 +23,10 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.casilla_id import CasillaId
 from ....core.aggregation import BindingSourceKind
+from ....core.casilla_id import CasillaId
 from ....core.external_constants import M347_CLAVE_C_THRESHOLD_EUR, M347_THRESHOLD_EUR
-from ....core.resources import bundled_path
+from ....core.resources._boundary import bundled_path
 from ....domain.calculations.registry.export import derive_export_layouts_from_bindings
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.invoice_bindings import InvoiceObservation, resolve_invoice_binding_row_values

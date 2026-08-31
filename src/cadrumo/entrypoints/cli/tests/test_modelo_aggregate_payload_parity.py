@@ -23,10 +23,9 @@ from ....application.aggregation import (
     PerModeloAggregationResult,
     aggregate_per_modelo,
 )
+from ....core.aggregation import BindingSourceKind, OperationKind347
 from ....core.modelo import Modelo
 from ....core.period import Period
-from ....core.aggregation import BindingSourceKind
-from ....core.aggregation import OperationKind347
 from .._modelo_payloads import ModeloAggregateResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

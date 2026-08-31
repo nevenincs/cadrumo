@@ -95,14 +95,14 @@ from pathlib import Path
 import pytest
 
 from ....core.period import Period
-from ....core.resources import resources
+from ....core.resources._registry import resources
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ....domain.iva.classification import InvoiceKind, TransactionKind
 from ....domain.iva.oss import OssIossRegime
 from ....domain.iva.schema import IvaCashAccountingTreatment, IvaRateKind
-from ....domain.renta import RentaDeductibilityContext, RentaDeductibleExpenseObservation
+from ....domain.renta._ledger_expenses import RentaDeductibilityContext, RentaDeductibleExpenseObservation
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

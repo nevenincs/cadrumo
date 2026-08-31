@@ -7,30 +7,28 @@ from decimal import Decimal
 from functools import cache
 from pathlib import Path
 
-from ....core.refund_election import RefundElection
-from ....core.payment_election import PaymentElection
-from ....core.prior_domiciliation_election import PriorDomiciliationElection
-from ....core.result_disposition import ResultDisposition
-from ....core.modelo import Modelo
-from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.modelo import Modelo
+from ....core.payment_election import PaymentElection
+from ....core.period import Period
+from ....core.prior_domiciliation_election import PriorDomiciliationElection
+from ....core.refund_election import RefundElection
+from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ....domain.modelos.calculation_revision import CalculationRevisionAmendmentKind
-from ....domain.submission import ModeloDraftStatus
-from .. import (
+from ....domain.submission._protocols import ModeloDraftStatus
+from .._draft_construction import build_draft
+from .._producer_snapshot import (
     AmendmentEvidence,
     FilingElectionFacts,
     FilingProducerSnapshot,
     GeneralFilingProfileFacts,
     Modelo111ProfileFacts,
-    ModeloOperatorProfile,
     PresenterIdentity,
     TaxpayerIdentityFacts,
-    build_draft,
     build_filing_producer_snapshot,
-    build_runtime_schema_provider,
 )
-from ..runtime import RegistrySchemaAccessor
+from ..runtime import ModeloOperatorProfile, RegistrySchemaAccessor, build_runtime_schema_provider
 
 _HEX_DIGEST = "a" * 64
 _PERIOD = Period.from_year_and_code(2026, "1T")

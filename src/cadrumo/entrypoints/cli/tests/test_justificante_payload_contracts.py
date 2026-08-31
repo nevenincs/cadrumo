@@ -23,7 +23,7 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
-from ....application.calculations import ObservationSourceKind
+from ....application.calculations.observations_repository import ObservationSourceKind
 from ....application.live.snapshot_base import SnapshotLifecycleState
 from ....core.modelo import Modelo
 from .._app_live_justificante_payloads import (

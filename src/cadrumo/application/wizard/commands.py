@@ -53,11 +53,11 @@ import typer._click.types
 from pydantic import BaseModel, ValidationError
 from pydantic_core import ErrorDetails
 
-from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
-from ...core.modelo import Modelo
-from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.flows import CheckpointAvailability, FlowMode
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
+from ...core.modelo import Modelo
+from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
+from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from ..flows.definition import FlowDefinition, FlowPage, FlowSection
 from ..flows.engine import start_flow, visible_sequence
 from ..flows.errors import FlowAnswerError, FlowSubmitError
@@ -1675,7 +1675,7 @@ def _emit_wizard_success(
     """
     from ...core.click_context import json_output_requested
     from ...domain.contribuyente.ccaa import CCAA
-    from ..operator_output import emit_operator_json_success
+    from ..operator_output._emit import emit_operator_json_success
     from .results import ConfigProfileCreateResult, ConfigProfileEditResult, ProfileWizardStatus
 
     # Two distinct values, deliberately: ``status_token`` is the closed
@@ -1759,7 +1759,7 @@ def _echo_wizard_text(lines: list[str], *, payload: object) -> None:
     import typer as _typer
 
     from ...core.output_rendering import render_command_output
-    from ..operator_output import sandbox_banner_line, sandbox_notice_for_active_bucket
+    from ..operator_output._sandbox_notice import sandbox_banner_line, sandbox_notice_for_active_bucket
 
     sandbox_notice = sandbox_notice_for_active_bucket()
     if sandbox_notice is not None:
@@ -1802,7 +1802,7 @@ def _resolved_descendientes_action() -> ResolvedNoticeAction | None:
     executable action always names a live verb or the emission refuses —
     the failure mode the old literal-command message could not have.
     """
-    from ..operator_actions import next_action
+    from ..operator_actions._catalogue import next_action
 
     return next_action("operator.profile.descendiente")
 

@@ -19,7 +19,10 @@ from ....adapters.persistence.profile.participation_index import TransactionPart
 from ....application.ledger.participation_read import get_transaction_participation
 from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
-from ....domain.modelos.participation_index import TransactionRevisionParticipation, TransactionRevisionParticipationIndex
+from ....domain.modelos.participation_index import (
+    TransactionRevisionParticipation,
+    TransactionRevisionParticipationIndex,
+)
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_runtime_profile
 from .._ledger_payloads import LedgerTrackResult, LedgerTransactionParticipationPayload

@@ -26,10 +26,10 @@ from typing import Literal, override
 
 from pydantic import BaseModel, Field
 
-from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import CoreValidationError
 from .....core.logging import get_logger
+from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.parsing import normalise_iso_4217_currency
 from .....core.tabular import (
     TabularSourceError,

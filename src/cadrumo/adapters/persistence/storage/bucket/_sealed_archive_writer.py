@@ -19,8 +19,8 @@ from datetime import datetime
 from pathlib import Path
 from uuid import uuid4
 
-from .....core import fsync_parent_dir
 from .....core.external_constants import UTF_8_ENCODING
+from .....core.fsync import fsync_parent_dir
 from .....core.logging import get_logger
 from .....core.product_identity import PRODUCT_IDENTITY
 from ._export_header import ExportArchiveHeader

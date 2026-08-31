@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.outbound.aeat.export import RegistryFixedWidthRecordRenderer
+from ....adapters.outbound.aeat.export._registry_record_renderer import RegistryFixedWidthRecordRenderer
 from ....tests.secure_sql import isolated_runtime_profile
 from .._m145_communication_records import (
     M145CommunicationCreateCommand,

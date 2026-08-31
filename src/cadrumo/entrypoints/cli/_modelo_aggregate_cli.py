@@ -23,12 +23,12 @@ from ...application.aggregation import (
     persist_retencion_observations,
     route_invoice_retenciones,
 )
-from ...application.invoices import resolve_catalogue_invoice
+from ...application.invoices._lifecycle import resolve_catalogue_invoice
+from ...core.external_constants import RETENCIONES_MODELOS
+from ...core.i18n._render import tr
+from ...core.json_contract import Notice, NoticeSeverity
 from ...core.modelo import Modelo
 from ...core.period import Period
-from ...core.external_constants import RETENCIONES_MODELOS
-from ...core.i18n import tr
-from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.calculations.registry.withholding_bindings import (
     WithholdingClaveBreakdown,
     aggregate_withholding_by_clave,

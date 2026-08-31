@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import pytest
 
-from ....adapters.persistence.storage import KeyringUnavailableError
 from ....adapters.persistence.storage.custody.errors import (
     ProfileCustodyPasswordError,
     ProfileCustodyRecordError,
@@ -12,6 +11,7 @@ from ....adapters.persistence.storage.custody.errors import (
     ProfileCustodyRefusal,
     ProfileCustodyRefusedError,
 )
+from ....adapters.persistence.storage.errors import KeyringUnavailableError
 from ..authentication import (
     ProfileAuthenticationRefusedError,
     ProfilePasswordProofOperation,

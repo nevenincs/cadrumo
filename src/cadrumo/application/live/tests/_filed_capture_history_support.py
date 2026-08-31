@@ -13,16 +13,20 @@ from pydantic import AnyHttpUrl
 
 from ....adapters.outbound.aeat.sede.declarations_schema import Declaracion
 from ....adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
-from ....adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue
+from ....adapters.outbound.aeat.sede.schema import (
+    FiledDeclaracionArtefact,
+    FiledDeclaracionObservation,
+    ObservedCasillaValue,
+)
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core.observed_header_fact import ObservedHeaderFact
-from ....core.casilla_value_kind import CasillaValueKind
 from ....core.authority_grade import RegistryAuthorityGrade
-from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.casilla_value_kind import CasillaValueKind
 from ....core.external_constants import load_external_constants
-from ....core.resources import bundled_path
+from ....core.observed_header_fact import ObservedHeaderFact
+from ....core.period import Period
+from ....core.resources._boundary import bundled_path
 from ....domain.calculations.registry.snapshot import build_snapshot
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.filing_record import ExternalEvidence, ModeloRecord, ModeloRecordStatus, derive_filing_record_id

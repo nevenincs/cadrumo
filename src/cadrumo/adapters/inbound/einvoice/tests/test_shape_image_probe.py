@@ -26,9 +26,9 @@ from io import BytesIO
 import pytest
 from PIL import Image
 
-from .....core.image_media_type import ImageMediaType, detect_image_media_type
 from .....core.document_shape import DocumentShape
 from .....core.errors.hierarchy import CoreValidationError
+from .....core.image_media_type import ImageMediaType, detect_image_media_type
 from .._shape import probe_document_shape
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]

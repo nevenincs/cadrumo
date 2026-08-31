@@ -22,8 +22,8 @@ import pytest
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core.period import Period
 from ....core.aggregation import BindingSourceKind
+from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ids import BindingId, RelationId
 from ....domain.calculations.registry.schema import DataBindingDefinition, FormulaDefinition, RegistrySnapshot
@@ -34,11 +34,11 @@ from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceResolution
 from .._calculation_actions import calculate_modelo_revision
-from ..work_lifecycle import create_work_unit
 from ..profile_binding import (
     ProfileBindingResolutionError,
     resolve_profile_sourced_bindings,
 )
+from ..work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

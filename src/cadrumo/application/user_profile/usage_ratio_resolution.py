@@ -42,7 +42,7 @@ from decimal import Decimal
 
 from ...adapters.persistence.profile.usage_ratios import load_usage_ratios
 from ...domain.categories.spending_category import SpendingCategory
-from ...domain.usage_ratios import derive_home_office_ratios_from_censo
+from ...domain.usage_ratios._service import derive_home_office_ratios_from_censo
 from .censo_sync import bound_raw_afectacion_ratio_for_bucket
 
 __all__ = ["resolve_effective_usage_ratios"]

@@ -21,7 +21,17 @@ import pytest
 import typer
 
 from ....core.config import override_settings
-from ....domain.modelos.row_models import Modelo184MemberRow, Modelo184ShareSumError, Modelo232VinculadaRow, Modelo347ContraparteRow, Modelo347ThresholdError, Modelo349OperadorRow, Modelo349RectificacionRow, validate_m184_member_share_sum, validate_m347_threshold
+from ....domain.modelos.row_models import (
+    Modelo184MemberRow,
+    Modelo184ShareSumError,
+    Modelo232VinculadaRow,
+    Modelo347ContraparteRow,
+    Modelo347ThresholdError,
+    Modelo349OperadorRow,
+    Modelo349RectificacionRow,
+    validate_m184_member_share_sum,
+    validate_m347_threshold,
+)
 from .._modelo_cli_support import parse_row_spec as _parse_row_spec
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

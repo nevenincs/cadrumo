@@ -24,10 +24,10 @@ from __future__ import annotations
 import sqlite3
 from collections.abc import Iterable, Sequence
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt
 
-from ...core.spanish_stemming import SpanishStemmer, spanish_stemmer, spanish_word_tokens, stem_spanish_terms
 from ...core.fts_query import fts_or_group
+from ...core.spanish_stemming import SpanishStemmer, spanish_stemmer, spanish_word_tokens, stem_spanish_terms
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -80,7 +80,7 @@ class CommandHit(BaseModel):
 
     command_key: str
     tool_name: str
-    rank: int = Field(ge=0)
+    rank: NonNegativeInt
     score: float
 
 

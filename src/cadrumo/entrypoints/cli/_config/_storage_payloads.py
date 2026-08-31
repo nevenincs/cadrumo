@@ -15,13 +15,9 @@ from __future__ import annotations
 
 from pydantic import NonNegativeInt
 
-from ....application.storage_management import (
-    StorageAreaDisposition,
-    StorageCheckIssueKind,
-    StorageOccupancy,
-)
-from ....core.storage_taxonomy import StorageArea
+from ....application.storage_management._models import StorageAreaDisposition, StorageCheckIssueKind, StorageOccupancy
 from ....core.json_contract import OutputSchema
+from ....core.storage_taxonomy import StorageArea
 from ....core.text_bounds import NonEmptyStr
 
 

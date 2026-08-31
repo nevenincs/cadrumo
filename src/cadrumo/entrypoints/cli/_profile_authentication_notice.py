@@ -19,7 +19,7 @@ def drain_profile_authentication_notices() -> tuple[Notice, ...]:
     if not _SESSION_NOT_PERSISTED.get():
         return ()
     _SESSION_NOT_PERSISTED.set(False)
-    from ...core.i18n import tr
+    from ...core.i18n._render import tr
 
     return (
         Notice(

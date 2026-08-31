@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from .....domain.contribuyente.inventory import (
+from .....domain.contribuyente.inventory.records import (
     InventoryAcquisitionCompleteness,
     InventoryAcquisitionCost,
     InventoryAcquisitionEvidence,

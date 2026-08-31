@@ -10,38 +10,35 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.errors.severity import BaseSeverity
 from ....core.i18n import Translatable as tr
+from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.filing.errors import ModeloBuilderError, ModeloDraftError
 from ....domain.filing.protocols import CasillaSchemaProvider
 from ....domain.filing.schema import ModeloDraft, ModeloValidationFinding, ModeloValueKind, compute_modelo_draft_id
 from ....domain.filing.validator import ModeloValidator
 from ....domain.invoices.models import InvoiceCatalogue
-from ....domain.submission import ModeloDraftStatus
+from ....domain.submission._protocols import ModeloDraftStatus
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import (
-    ModeloCalculateError,
+from .._draft_construction import _binding_provenance, build_draft
+from .._review import (
     approve_draft,
-    build_draft,
-    build_runtime_schema_provider,
     compute_current_approval_basis,
     empty_prior_filing_observations_fingerprint,
     empty_profile_activity_fingerprint,
-    iter_findings,
     refresh_review_status,
-    validate_draft,
 )
-from .._draft_construction import _binding_provenance
 from ..conftest import _BUCKET_ID
-from ..runtime import ModeloOperatorProfile
+from ..errors import ModeloCalculateError
+from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider
+from ..validation import iter_findings, validate_draft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

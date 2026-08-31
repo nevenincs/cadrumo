@@ -8,9 +8,9 @@ import sys
 
 import pytest
 
-from ....core.profile_session import ProfileSessionRefusalReason
-from ....core.external_constants import OutputLanguage
 from ....core.config import override_settings
+from ....core.external_constants import OutputLanguage
+from ....core.profile_session import ProfileSessionRefusalReason
 from ....tests.cli_runner import invoke_cached_cli
 from .._command_spec import ProfileAuthenticationPosture
 from .._command_specs import COMMAND_GRAPH

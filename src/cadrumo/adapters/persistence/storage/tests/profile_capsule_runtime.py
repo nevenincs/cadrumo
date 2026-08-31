@@ -17,10 +17,10 @@ from .....application.user_profile.recovery_custody import mint_profile_creation
 from .....core.identity import canonical_profile_bucket_id
 from .....core.paths import effective_storage_root
 from .....domain.user_profile.values import ProfileSetupState, UserProfileRecord
-from ..bucket import BucketPaths, bucket_paths
+from ..bucket._layout import BucketPaths, bucket_paths
 from ..custody.records import ProfileCustodyEnvelope, ProfileCustodyKdfParameters, ProfileCustodyWrappedDek
 from ..custody.sentinel import create_profile_custody_sentinel
-from ..master_key import BucketSession
+from ..master_key.bucket_session import BucketSession
 
 
 def derive_test_bucket_key(identity: str, *, purpose: str) -> bytes:

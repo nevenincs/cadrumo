@@ -19,7 +19,7 @@ from datetime import UTC, datetime
 import pytest
 
 from ...core.errors.error_codes import render_error_text
-from ...domain.retention import RetentionFloorError
+from ...domain.retention.errors import RetentionFloorError
 from .._bucket_deletion_contracts import BucketDeletionFingerprint
 from .._config_reset_models import (
     ConfigResetRetentionDecision,

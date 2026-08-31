@@ -35,7 +35,7 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....tests.secure_sql import isolated_runtime_profile
 from .test_e2e_ledger_m130_quarters_to_m100_annual import (
     _BUCKET_ID,

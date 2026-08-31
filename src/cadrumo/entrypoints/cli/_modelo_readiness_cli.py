@@ -10,8 +10,8 @@ from ...application.state_projection import (
     ProjectionModeloReadiness,
     build_operator_state_projection,
 )
-from ...core.period import Period, PeriodError
 from ...core.json_contract import Notice, NoticeSeverity
+from ...core.period import Period, PeriodError
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ._common import _no_active_profile_refusal, emit_envelope, resolve_cli_precondition_action
@@ -108,7 +108,7 @@ def _resolve_readiness_period(*, modelo: str, filing_year: int, period: str | No
 
 def _readiness_report(request: ModeloReadinessRequest) -> ProjectionModeloReadiness:
     from ...core.bucket_pointer import resolve_active_bucket_id
-    from ...core.i18n import tr as _tr
+    from ...core.i18n._render import tr as _tr
 
     if resolve_active_bucket_id() is None:
         raise _no_active_profile_refusal()

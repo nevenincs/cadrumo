@@ -16,7 +16,9 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.errors.hierarchy import CadrumoError, CoreError
-from .. import (
+from .._protocol import StorageProvider
+from .._records import ProviderKind, ProviderObjectMetadata, ProviderProbeReport, RemoteMirrorObjectManifest
+from ..errors import (
     OutboundStorageConflictError,
     OutboundStorageError,
     OutboundStorageIntegrityError,
@@ -26,12 +28,7 @@ from .. import (
     OutboundStorageQuotaError,
     OutboundStorageUnavailableError,
     OutboundStorageValidationError,
-    ProviderKind,
-    ProviderObjectMetadata,
-    ProviderProbeReport,
-    RemoteMirrorObjectManifest,
     StorageCorruptionError,
-    StorageProvider,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -163,30 +160,46 @@ def test_storage_validation_error_is_value_error_subclass() -> None:
     assert issubclass(OutboundStorageValidationError, ValueError)
 
 
-def test_storage_package_public_surface_keeps_factory_and_manifest_helpers_private_backends_hidden() -> None:
-    module = importlib.import_module("cadrumo.adapters.outbound.storage")
+def test_storage_contracts_resolve_at_their_defining_modules_and_backends_stay_private() -> None:
+    """Contracts stay reachable and named; concrete backends stay unexposed.
 
-    for public_symbol in (
-        "StorageProvider",
-        "ProviderKind",
-        "OutboundStorageError",
-        "get_storage_provider",
-        "REMOTE_MIRROR_MANIFEST_NAMESPACE",
-        "REMOTE_MIRROR_MANIFEST_SCHEMA_VERSION",
-        "build_remote_mirror_namespace_manifest",
-        "inspect_remote_mirror_upload",
-        "inspect_remote_mirror_download",
-    ):
-        assert hasattr(module, public_symbol), public_symbol
-        assert public_symbol in module.__all__, public_symbol
+    This pinned the package root's ``__all__``. That root is now an inert
+    namespace, so the same guarantee is asserted against the modules that
+    define these symbols.
 
-    for private_backend_symbol in (
-        "GoogleDriveProvider",
-        "LocalFileSystemProvider",
-        "InMemoryDriveProvider",
-    ):
-        assert not hasattr(module, private_backend_symbol), private_backend_symbol
-        assert private_backend_symbol not in module.__all__, private_backend_symbol
+    Those defining modules are themselves underscore-private, which is the
+    subject of the open mirror-manifest publicising step: consumers outside this
+    package currently reach a private module. This test deliberately does NOT
+    bless that shape -- it pins WHERE each contract lives so the publicising
+    move has something to move against, and it keeps the backend-privacy half
+    that still bites.
+    """
+    contracts = {
+        "_protocol": ("StorageProvider",),
+        "_records": ("ProviderKind",),
+        "errors": ("OutboundStorageError",),
+        "_factory": ("get_storage_provider",),
+        "_mirror_manifest": (
+            "REMOTE_MIRROR_MANIFEST_NAMESPACE",
+            "REMOTE_MIRROR_MANIFEST_SCHEMA_VERSION",
+            "build_remote_mirror_namespace_manifest",
+            "inspect_remote_mirror_upload",
+            "inspect_remote_mirror_download",
+        ),
+    }
+    for module_name, symbols in contracts.items():
+        module = importlib.import_module(f"cadrumo.adapters.outbound.storage.{module_name}")
+        for symbol in symbols:
+            assert hasattr(module, symbol), f"{module_name}.{symbol}"
+
+    root = importlib.import_module("cadrumo.adapters.outbound.storage")
+    assert not root.__all__, "the storage package root is inert and must export nothing"
+
+    for backend in ("GoogleDriveProvider", "LocalFileSystemProvider", "InMemoryDriveProvider"):
+        assert not hasattr(root, backend), backend
+        for module_name in ("_protocol", "_records", "_factory", "_mirror_manifest"):
+            module = importlib.import_module(f"cadrumo.adapters.outbound.storage.{module_name}")
+            assert not hasattr(module, backend), f"{module_name}.{backend}"
 
 
 def test_storage_provider_protocol_keeps_synchronous_bytes_contract() -> None:

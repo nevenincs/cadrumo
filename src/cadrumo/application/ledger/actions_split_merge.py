@@ -23,7 +23,13 @@ from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryPr
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions.enums import BusinessClassification, SplitRole, TransactionLifecycleState
 from ...domain.transactions.errors import TransactionValidationError
-from ...domain.transactions.models import SplitLineage, Transaction, TransactionCatalogue, TransactionLifecycleLineageEntry, derive_split_group_id
+from ...domain.transactions.models import (
+    SplitLineage,
+    Transaction,
+    TransactionCatalogue,
+    TransactionLifecycleLineageEntry,
+    derive_split_group_id,
+)
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .actions_common import (

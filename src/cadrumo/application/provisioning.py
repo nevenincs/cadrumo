@@ -29,9 +29,14 @@ from time import monotonic
 from typing import TypedDict, cast
 
 import httpx
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
+from ..core.config import Settings, load_settings
+from ..core.directory_scan import (
+    iter_directory,
+)
 from ..core.hardware import AcceleratorKind, ContentionCause, HardwareTier, hardware_tier_for_free_bytes
+from ..core.i18n._render import tr
 from ..core.model_catalogue import (
     DeploymentLicencePosture,
     ModelCandidate,
@@ -41,14 +46,9 @@ from ..core.model_catalogue import (
     candidates_for_role,
     model_candidate,
 )
+from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.optional_extras import LLM_EXTRA, OPTIONAL_EXTRAS, OptionalExtra, optional_extra_available
 from ..core.storage_taxonomy import ExternalPathRole
-from ..core.models import STRICT_FROZEN_CONFIG
-from ..core.config import Settings, load_settings
-from ..core.directory_scan import (
-    iter_directory,
-)
-from ..core.i18n import tr
 
 __all__ = [
     "LOCAL_MODEL_PROVISIONING_SERVICE",
@@ -557,7 +557,7 @@ class AcceleratorDevice(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    index: int = Field(ge=0)
+    index: NonNegativeInt
     name: str = Field(min_length=1)
     total_vram_bytes: int | None = Field(default=None, ge=0)
     free_vram_bytes: int | None = Field(default=None, ge=0)
@@ -836,7 +836,7 @@ class ModelSelection(ProvisioningOutcome):
     tier: HardwareTier
     binding_free_bytes: int | None = Field(default=None, ge=0)
     required_context_tokens: int = Field(gt=0)
-    safety_margin_bytes: int = Field(ge=0)
+    safety_margin_bytes: NonNegativeInt
     override_applied: bool = False
     selected: bool
     advisories: tuple[ModelSelectionAdvisory, ...] = ()

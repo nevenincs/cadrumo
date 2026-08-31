@@ -7,9 +7,9 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
-from ..core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ..core.models import STRICT_FROZEN_CONFIG
-from .operator_actions import PreconditionVerdict
+from ..core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
+from .operator_actions._models import PreconditionVerdict
 
 __all__ = [
     "OLLAMA_PROBE_CACHE_TTL_S",
@@ -89,7 +89,7 @@ def provisioning_no_recovery_verdict(
     facts: Mapping[str, ProvisioningFactValue],
 ) -> PreconditionVerdict:
     """Return the explicit closed outcome for one provisioning refusal."""
-    from .operator_actions import no_action_precondition_verdict
+    from .operator_actions._preconditions import no_action_precondition_verdict
 
     return no_action_precondition_verdict(
         condition_id=condition.value,

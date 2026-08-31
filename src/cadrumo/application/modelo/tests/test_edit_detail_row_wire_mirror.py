@@ -22,7 +22,14 @@ import pytest
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from ....core.irnr import M210PayerMode
-from ....domain.modelos.row_models import Modelo184MemberRow, Modelo210AgrupacionRentaRow, Modelo232VinculadaRow, Modelo347ContraparteRow, Modelo349OperadorRow, Modelo349RectificacionRow
+from ....domain.modelos.row_models import (
+    Modelo184MemberRow,
+    Modelo210AgrupacionRentaRow,
+    Modelo232VinculadaRow,
+    Modelo347ContraparteRow,
+    Modelo349OperadorRow,
+    Modelo349RectificacionRow,
+)
 from ...operations.registry import _strict_model_json_schema, _validate_credential_free_schema
 from .._edit_models import ModeloEditDetailRowIntentKind
 from .._edit_services import DETAIL_ROW_NATURAL_KEY_SEPARATOR, detail_row_natural_key

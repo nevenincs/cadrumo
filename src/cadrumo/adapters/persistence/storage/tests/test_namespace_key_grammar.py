@@ -16,11 +16,11 @@ import re
 
 import pytest
 
-from .....application.calculations import member_observation_key, observation_key
+from .....application.calculations.observations_repository import member_observation_key, observation_key
 from .....core.period import Period
 from .....domain.transactions.repository import transaction_index_object_key, transaction_object_key
-from .. import CALCULATION_OBSERVATIONS_NAMESPACE, TRANSACTION_CATALOGUE_NAMESPACE
 from .._namespace_registry import STORAGE_NAMESPACE_REGISTRY
+from .._secure_object_namespaces import CALCULATION_OBSERVATIONS_NAMESPACE, TRANSACTION_CATALOGUE_NAMESPACE
 from ..errors import NamespaceRegistryError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

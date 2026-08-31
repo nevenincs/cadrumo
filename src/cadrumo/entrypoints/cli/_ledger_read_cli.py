@@ -32,21 +32,21 @@ from ...application.ledger.actions_manual import (
 )
 from ...application.ledger.models import LedgerExportCommand
 from ...application.ledger.review_projection import ledger_transaction_review_status
-from ...application.operator_actions import ActionReference
+from ...application.operator_actions._models import ActionReference
 from ...application.review.errors import FilterParseError
 from ...application.review.filter import LedgerReviewFilterSpec
-from ...core.ledger_sort import LedgerSortField, LedgerSortOrder
-from ...core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
-from ...core.period import Period
 from ...core.bucket_pointer import resolve_active_bucket_id
-from ...core.decimal import coerce_decimal_strict
-from ...core.i18n import tr
+from ...core.decimal._coerce import coerce_decimal_strict
+from ...core.i18n._render import tr
 from ...core.json_contract import (
     Notice,
     NoticeSeverity,
     ResolvedActionArgument,
     strict_round_trip,
 )
+from ...core.ledger_sort import LedgerSortField, LedgerSortOrder
+from ...core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
+from ...core.period import Period
 from ...core.unit_proportion import is_unit_proportion
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.categories.spending_category import CATEGORY_FAMILY_MEMBERS, SpendingCategory, SpendingCategoryFamily
@@ -376,7 +376,7 @@ def ledger_check(
     ctx: typer.Context, bucket_id_option: str | None = None, period: str | None = None, year: int | None = None
 ) -> None:
     """Surface ledger anomalies and broken invoice links without mutating state."""
-    from ...application.invoices import verify_invoice_repository_links
+    from ...application.invoices._queries import verify_invoice_repository_links
     from ._ledger_payloads import LedgerLinkInconsistencyPayload
 
     if bucket_id_option is not None:

@@ -36,7 +36,7 @@ from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period, PeriodError
 from ...domain.iva.classification import InvoiceKind
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
-from ..transactions import LedgerImportDiagnosticKind
+from ..transactions._diagnostics import LedgerImportDiagnosticKind
 from .errors import FilterParseError
 
 __all__ = (

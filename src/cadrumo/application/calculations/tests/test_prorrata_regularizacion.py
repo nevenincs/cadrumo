@@ -26,13 +26,13 @@ from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogu
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from ....core.result_disposition import ResultDisposition
+from ....core.aggregation import BindingSourceKind
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
-from ....core.prorrata_register import ProrrataProvisionalProvenance
 from ....core.modelo import Modelo
 from ....core.period import Period
-from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....core.aggregation import BindingSourceKind
+from ....core.prorrata_register import ProrrataProvisionalProvenance
+from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_targets,
@@ -44,21 +44,20 @@ from ....domain.iva.flow import IvaFlowDirection
 from ....domain.iva.prorrata import RegularizacionProrrataDireccion
 from ....domain.iva.schema import IvaCategory, IvaExemptionArticle, IvaLedgerObservationRole, IvaRateKind
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
-from ....domain.modelos.codes import ModeloCode
-from ....domain.modelos.repository import upsert_work_unit
-from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from ....domain.prorrata_register import ProrrataProvisionalResolution
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.repository import upsert_work_unit
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from ....domain.prorrata_register.register import ProrrataProvisionalResolution
 from ....tests import general_m303_filing_evidence
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo._revision_persistence import persist_filed_revision
-from ...prorrata_register import evaluate_carried_prior_definitiva_seed
-from .. import CalculationObservationRepository
+from ...prorrata_register._seed import evaluate_carried_prior_definitiva_seed
 from .._prorrata_regularizacion import (
     CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA,
     build_prorrata_declared_volume_divergence_advisory,
@@ -67,6 +66,7 @@ from .._prorrata_regularizacion import (
     derive_prorrata_applicability,
     project_prorrata_regularizacion_feed,
 )
+from ..observations_repository import CalculationObservationRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

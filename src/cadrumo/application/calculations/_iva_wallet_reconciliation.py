@@ -39,13 +39,21 @@ from typing import TYPE_CHECKING, ClassVar
 
 from pydantic import BaseModel, ConfigDict
 
-from ...core.modelo import Modelo
-from ...core.period import Period
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.hashing import sha256_hex
+from ...core.modelo import Modelo
+from ...core.period import Period
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.iva_compensation.errors import IvaCompensationReconciliationInputError
-from ...domain.iva_compensation.reconciliation import DEFAULT_MAX_WALLET_AGE_DAYS, IvaCompensationOverride, IvaCompensationReconciliationDecision, IvaCompensationWalletObservationProtocol, local_recurrence_authority_source, reconcile_iva_compensation_wallet, validate_wallet_matches_snapshot
+from ...domain.iva_compensation.reconciliation import (
+    DEFAULT_MAX_WALLET_AGE_DAYS,
+    IvaCompensationOverride,
+    IvaCompensationReconciliationDecision,
+    IvaCompensationWalletObservationProtocol,
+    local_recurrence_authority_source,
+    reconcile_iva_compensation_wallet,
+    validate_wallet_matches_snapshot,
+)
 from ..aggregation import (
     CalculationSourceContext,
     CalculationSourceProvenance,

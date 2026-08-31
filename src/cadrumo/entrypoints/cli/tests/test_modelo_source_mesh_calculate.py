@@ -13,10 +13,10 @@ from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.profile.usage_ratios import save_usage_ratios
-from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
+from ....core.errors.error_codes import ERROR_REGISTRY
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
-from ....core.errors.error_codes import ERROR_REGISTRY
+from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.invoices.models import InvoiceCatalogue
@@ -25,7 +25,7 @@ from ....domain.iva.schema import EUMemberState, IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....domain.usage_ratios import UsageRatioProfile
+from ....domain.usage_ratios._model import UsageRatioProfile
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
@@ -304,7 +304,7 @@ def _seed_m100_profile_facts(bucket_id: str) -> None:
 
 
 def _seed_prior_m100_zero_carry() -> None:
-    from ....application.calculations import CalculationObservationRepository
+    from ....application.calculations.observations_repository import CalculationObservationRepository
 
     CalculationObservationRepository().save(
         CalculationObservationRepository().prepare_observation_envelope(
@@ -720,7 +720,7 @@ def test_work_calculate_persists_ledger_source_mesh_observations(tmp_path: Path)
     # A local_recurrence decision with selected_amount=0 satisfies the guard
     # while leaving the ledger mesh assertions meaningful.
     with open_test_profile_session(bucket_id):
-        from ....application.calculations import IvaWalletDecisionRepository
+        from ....application.calculations.observations_repository import IvaWalletDecisionRepository
         from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 
         TransactionCatalogueRepository(bucket_id=bucket_id).save(
@@ -830,7 +830,7 @@ def _seed_zero_iva_wallet_decision(bucket_id: str) -> None:
     with ``selected_amount=0`` satisfies the guard while leaving the source-mesh
     advisory assertions meaningful.
     """
-    from ....application.calculations import IvaWalletDecisionRepository
+    from ....application.calculations.observations_repository import IvaWalletDecisionRepository
     from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 
     with open_test_profile_session(bucket_id):

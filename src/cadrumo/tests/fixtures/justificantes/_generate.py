@@ -7,7 +7,7 @@ from pathlib import Path
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
-from .. import SYNTHETIC_FIXTURE_PRODUCER
+from ..provenance import SYNTHETIC_FIXTURE_PRODUCER
 from ._generate_base import (
     _FIXTURES,
     _draw,

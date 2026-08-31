@@ -13,9 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from ..adapters.persistence.storage.bucket import (
-    bucket_paths,
-)
+from ..adapters.persistence.storage.bucket._layout import bucket_paths
 from ..core.bucket_pointer import resolve_active_bucket_id
 from .secure_sql import isolated_two_bucket_runtime
 

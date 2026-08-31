@@ -19,17 +19,17 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.calculations.registry.ids import RelationId
-from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     CalculationSourceRef,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from .._modelo_payloads import (
     CalculationRevisionPayload,
     CasillaObservationPayload,

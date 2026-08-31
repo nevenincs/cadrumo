@@ -21,7 +21,7 @@ from __future__ import annotations
 from enum import StrEnum
 from functools import lru_cache
 
-from pydantic import BaseModel, Field, computed_field, field_validator, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, computed_field, field_validator, model_validator
 
 from ...core.aggregation import COUNTERPART_SOURCE_KIND_ORDER, BindingSourceKind
 from ...core.external_constants import COUNTERPART_MODELOS, FOREIGN_ASSET_MODELOS, RETENCIONES_MODELOS
@@ -104,9 +104,9 @@ class PerModeloAggregationLogFields(BaseModel):
     modelo: ModeloCode
     period: Period
     provider: PerModeloAggregationContributor
-    observation_count: int = Field(ge=0)
-    source_kind_count: int = Field(ge=0)
-    result_row_count: int = Field(ge=0)
+    observation_count: NonNegativeInt
+    source_kind_count: NonNegativeInt
+    result_row_count: NonNegativeInt
 
     def as_extra(self) -> LogExtra:
         """Return a typed logging ``extra`` payload with stable field names."""

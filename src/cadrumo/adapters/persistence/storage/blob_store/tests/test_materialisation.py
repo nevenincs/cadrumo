@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from ......core.classification import SensitivityClass
+from ......core.classification.policies import SensitivityClass
 from ......core.config import Settings
 from ......tests import assert_path_matches_grammar
 from ......tests.master_key import EphemeralMasterKeyProvider

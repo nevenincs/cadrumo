@@ -28,22 +28,32 @@ from pathlib import Path
 
 import pytest
 
-from .....core.period import Period
 from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.classification.policies import SensitivityClass
+from .....core.period import Period
 from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.bindings import CasillaObservation
 from .....domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
 from .....domain.calculations.registry.formula_runtime_ops import RegistryUnresolvedOutcomeReason
 from .....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from .....domain.filing_evidence import FilingEvidenceReference
-from .....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision, RegimenSimplificadoFilingRows
+from .....domain.iva.regimen_simplificado_rows import (
+    M303RegimenSimplificadoScope,
+    M303RegimenSimplificadoScopeDecision,
+    RegimenSimplificadoFilingRows,
+)
 from .....domain.modelos.calculation_repository import CalculationRevisionPersistenceError
-from .....domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionCatalogue, CalculationRevisionState, FilingInstanceEvidence, derive_calculation_revision_id
+from .....domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionCatalogue,
+    CalculationRevisionState,
+    FilingInstanceEvidence,
+    derive_calculation_revision_id,
+)
 from .....domain.modelos.calculation_revision_m303_evidence import M303Exonerado390FilingEvidence
 from .....domain.modelos.calculation_revision_m303_handoff import M303FilingInstanceEvidence
 from .....tests.filing_evidence import regimen_simplificado_filing_evidence
 from .....tests.secure_sql import isolated_runtime_profile
-from ...storage import SensitivityClass
 from ..modelos_calculation import (
     _CALCULATION_CATALOGUE_VERSION,
     _CALCULATION_NAMESPACE,
@@ -388,7 +398,7 @@ def test_calculation_revision_catalogue_wrong_inner_classification_is_localized(
 ) -> None:
     """A corrupted envelope classification raises a translated persistence error."""
 
-    from ...storage import Envelope
+    from ...storage.envelope._envelope import Envelope
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         envelope = Envelope[CalculationRevisionCatalogue](
@@ -422,7 +432,7 @@ def test_calculation_revision_catalogue_unsupported_storage_version_is_localized
 ) -> None:
     """A future inner envelope schema version raises a translated persistence error."""
 
-    from ...storage import Envelope
+    from ...storage.envelope._envelope import Envelope
 
     stored_schema_version = _CALCULATION_CATALOGUE_VERSION + 1
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
@@ -457,7 +467,7 @@ def test_pre_s58_evidence_less_catalogue_is_rejected_at_encrypted_load(
 ) -> None:
     """The V2 cutover admits no evidence-less legacy calculation catalogue."""
 
-    from ...storage import Envelope
+    from ...storage.envelope._envelope import Envelope
 
     original = next(iter(_populated_catalogue().values()))
     legacy_revision_id = derive_calculation_revision_id(

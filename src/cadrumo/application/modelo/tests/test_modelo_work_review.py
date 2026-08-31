@@ -9,10 +9,10 @@ from typing import TypedDict
 import pytest
 from pydantic import ValidationError
 
+from ....core.aggregation import BindingSourceKind
 from ....core.modelo_work_progress_state import ModeloWorkProgressState
 from ....core.period import Period
-from ....core.aggregation import BindingSourceKind
-from ....domain.calculations import RowSourceIdentity
+from ....domain.calculations._row_source_identity import RowSourceIdentity
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.calculations.registry.runtime_graph import revision_date_binding_ids
@@ -20,18 +20,28 @@ from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.temporal import select_revision
 from ....domain.filing.schema import ModeloValueKind
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
-from ....domain.modelos.codes import ModeloCode
-from ....domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol, VerificationReportCatalogueRepositoryProtocol
-from ....domain.modelos.repository import upsert_work_unit
-from ....domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity, VerificationCompletenessStatus, VerificationReport, derive_verification_report_id
-from ....domain.modelos.verification_repository import upsert_verification_report
-from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
     derive_calculation_revision_id_from_revision,
 )
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.protocols import (
+    CalculationRevisionCatalogueRepositoryProtocol,
+    VerificationReportCatalogueRepositoryProtocol,
+)
+from ....domain.modelos.repository import upsert_work_unit
+from ....domain.modelos.verification_report import (
+    ModeloVerificationFinding,
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
+    VerificationCompletenessStatus,
+    VerificationReport,
+    derive_verification_report_id,
+)
+from ....domain.modelos.verification_repository import upsert_verification_report
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.profile_capsule import load_test_profile_record, replace_test_profile_record

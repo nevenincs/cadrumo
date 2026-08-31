@@ -22,8 +22,8 @@ from ....application.live.deudas import (
     DeudasCapture,
     DeudasService,
 )
-from ....core.objeto_tributario import ObjetoTributario
 from ....core.deuda_direccion import DeudaDireccion
+from ....core.objeto_tributario import ObjetoTributario
 from ....core.period import Period
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.cli_runner import invoke_cached_cli

@@ -20,8 +20,8 @@ from typing import ClassVar, override
 import pytest
 from PIL import Image
 
-from ...core.image_media_type import ImageMediaType
 from ...core.config import override_settings
+from ...core.image_media_type import ImageMediaType
 from ...tests.loopback_llm import (
     SilentLoopbackHandler,
     ollama_chat_reply,

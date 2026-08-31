@@ -9,18 +9,18 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.period import Period
 from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
-from ....domain.modelos.ledger_filing_snapshot import LedgerFilingSnapshot
-from ....domain.modelos.work_unit import derive_work_unit_id
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.ledger_filing_snapshot import LedgerFilingSnapshot
+from ....domain.modelos.work_unit import derive_work_unit_id
 from ....tests import general_m303_filing_evidence
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from .._export import (

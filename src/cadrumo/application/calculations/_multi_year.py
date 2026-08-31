@@ -34,7 +34,7 @@ from ...domain.calculations.registry.authority import bundled_authority
 if TYPE_CHECKING:
     from pathlib import Path
 
-from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
+from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ..aggregation import (
@@ -156,7 +156,7 @@ class EnrollmentEvidence(BaseModel):
     @override
     def model_post_init(self, _context: object) -> None:
         """Enforce the >=2-distinct-years and per-observation-evidence contract."""
-        from ...core.access_gate import MIN_DISTINCT_RENTA_YEARS
+        from ...core.access_gate._authorization import MIN_DISTINCT_RENTA_YEARS
 
         if any(obs.modelo != self.modelo for obs in self.observations):
             mismatched = sorted({obs.modelo for obs in self.observations if obs.modelo != self.modelo})
@@ -300,7 +300,7 @@ class EnrollmentRecorder:
             EnrollmentEvidenceError: When fewer than two distinct renta years
                 were recorded.
         """
-        from ...core.access_gate import MIN_DISTINCT_RENTA_YEARS
+        from ...core.access_gate._authorization import MIN_DISTINCT_RENTA_YEARS
 
         distinct = sorted({obs.filing_year for obs in self._observations})
         if len(distinct) < MIN_DISTINCT_RENTA_YEARS:
@@ -339,7 +339,7 @@ def assert_enrollment_matches_manifest(
     if repository_root is None:
         manifest = bundled_authority().authorization_manifest
     else:
-        from ...core.access_gate import load_authorization_manifest
+        from ...core.access_gate._authorization import load_authorization_manifest
 
         manifest = load_authorization_manifest(repository_root)
     entry = manifest.entry_for(evidence.modelo)

@@ -23,7 +23,7 @@ from typing import Any
 import pytest
 from sqlalchemy import select
 
-from .....domain.contribuyente.inventory import (
+from .....domain.contribuyente.inventory.records import (
     INVENTORY_SCHEMA_VERSION,
     InventoryAcquisitionCompleteness,
     InventoryAcquisitionCost,
@@ -46,10 +46,11 @@ from .....tests.secure_sql import (
     mutate_encrypted_secure_object_json,
     read_db_at_rest_bytes,
 )
-from ....persistence.storage import PROFILE_INVENTORY_LEDGER_NAMESPACE, HashedLookup
 from ....persistence.storage.sql import SecureObjectRow
 from ....persistence.storage.sql.engine import get_engine
 from ....persistence.storage.sql.session import session_scope
+from ...storage._secure_object_namespaces import PROFILE_INVENTORY_LEDGER_NAMESPACE
+from ...storage.crypto.encrypted_columns import HashedLookup
 from ..inventory import InventoryLedgerRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

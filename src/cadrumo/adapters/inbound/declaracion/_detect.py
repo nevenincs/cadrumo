@@ -19,8 +19,8 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from ..pdf import EJERCICIO_LABEL, MODELO_LABEL
-from ._parsers import extract_pages_text
+from ..pdf._label_regex import EJERCICIO_LABEL, MODELO_LABEL
+from ._parsers._pdfplumber_backend import extract_pages_text
 from ._schema import TemplateRevision
 
 # AEAT renders the header stamp in the sede UI language the filer used, so both

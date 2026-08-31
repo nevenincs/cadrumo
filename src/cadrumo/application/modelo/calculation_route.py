@@ -6,8 +6,8 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Literal
 
-from ...core.calculation_route import ModeloCalculationRouteId
 from ...core.aggregation import BindingSourceKind
+from ...core.calculation_route import ModeloCalculationRouteId
 from ..aggregation import (
     AtribucionMemberSourceResolver,
     BindingSourceDisposition,
@@ -26,16 +26,14 @@ from ..aggregation import (
     build_binding_source_dispositions,
 )
 from ..aggregation._modelo_bindings_renta_expenses import LedgerRentaGastosEstimacionDirectaAggregationSourceResolver
-from ..calculations import (
-    BienesInversionRegularizacionSourceResolver,
-    IvaCompensationAnnualPartitionSourceResolver,
-    IvaWalletDecisionSourceResolver,
-    M303RegimenSimplificadoAnnualSummarySourceResolver,
-    PreviousFilingSourceResolver,
-    ProrrataRegularizacionSourceResolver,
-    RelationPrefillSourceResolver,
-)
-from ..invoices import InvoiceCatalogueSourceResolver
+from ..calculations._bienes_inversion_regularizacion import BienesInversionRegularizacionSourceResolver
+from ..calculations._iva_compensation_annual_partition import IvaCompensationAnnualPartitionSourceResolver
+from ..calculations._iva_wallet_reconciliation import IvaWalletDecisionSourceResolver
+from ..calculations._m303_regimen_simplificado_annual_summary import M303RegimenSimplificadoAnnualSummarySourceResolver
+from ..calculations._multi_year import PreviousFilingSourceResolver
+from ..calculations._prorrata_regularizacion import ProrrataRegularizacionSourceResolver
+from ..calculations._relation_prefill import RelationPrefillSourceResolver
+from ..invoices._source_resolver import InvoiceCatalogueSourceResolver
 from .borrador_binding import Modelo100BorradorSourceResolver
 
 type CalculationRouteResolverStage = Literal["pre_mesh", "mesh", "conditional", "post_mesh"]

@@ -14,10 +14,10 @@ from collections.abc import Iterable
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.operator_action_enums import ActionArgumentSource
 from ...core.identifier_grammar import FIELD_KEY_PATTERN, NamespacedId
 from ...core.json_contract import ResolvedActionReference, ResolvedNoticeAction
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.operator_action_enums import ActionArgumentSource
 
 
 class ActionArgumentBindingSpecification(BaseModel):

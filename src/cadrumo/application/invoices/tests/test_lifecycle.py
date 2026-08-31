@@ -26,10 +26,9 @@ from ....domain.invoices.errors import InvoiceNotFoundError, InvoiceValidationEr
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ....domain.iva.classification import InvoiceKind
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import (
+from .._creation import build_catalogue_invoice, create_catalogue_invoice
+from .._lifecycle import (
     CatalogueInvoicePatch,
-    build_catalogue_invoice,
-    create_catalogue_invoice,
     remove_catalogue_invoice,
     resolve_catalogue_invoice,
     resolve_catalogue_invoice_from_repository,

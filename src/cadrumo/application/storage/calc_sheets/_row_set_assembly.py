@@ -22,7 +22,7 @@ from ._engine import collect_row_sets
 __all__ = ["assemble_row_sets_for_snapshot"]
 
 if TYPE_CHECKING:
-    from ...calculations import AssembledObservations
+    from ...calculations.row_set_assembly import AssembledObservations
 
 
 class _RowSetCellShape(Protocol):
@@ -100,7 +100,7 @@ def assemble_row_sets_for_snapshot(
     # ``application.calculations`` imports this storage facade for relation
     # prefill, so defer the observation assembler until that package has
     # completed initialization.
-    from ...calculations import assemble_observations_for_snapshot
+    from ...calculations.row_set_assembly import assemble_observations_for_snapshot
 
     return tuple(assemble_observations_for_snapshot(grouping, cells, snapshot) for grouping, cells in prepared)
 

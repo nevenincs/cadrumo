@@ -7,7 +7,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....domain.deadlines.models import IVARegime, IrpfEstimationRegime
+from ....domain.deadlines.models import IrpfEstimationRegime, IVARegime
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ...wizard import catalogue as _wizard_catalogue  # noqa: F401  (registration side effect)
 from ..projections import (

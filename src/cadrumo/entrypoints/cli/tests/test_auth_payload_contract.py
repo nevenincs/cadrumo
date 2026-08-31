@@ -9,10 +9,7 @@ from pydantic import BaseModel, ValidationError
 
 from ....application.auth.operator_results import AuthLoginResult, AuthStatusResult, AuthTestResult
 from ....application.auth.probes import ProviderProbeResult
-from ....application.operator_actions import (
-    ConditionEvidence,
-    PreconditionVerdict,
-)
+from ....application.operator_actions._models import ConditionEvidence, PreconditionVerdict
 from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .._common import resolve_cli_precondition_action
 from .._config_payloads import AuthLoginPayload, AuthStatusPayload, AuthTestPayload

@@ -18,19 +18,18 @@ from typing import cast
 
 import pytest
 
-from ...adapters.persistence.storage import (
+from ...adapters.persistence.storage._secure_object_namespaces import (
     REPAIR_INTEGRITY_DECISION_NAMESPACE,
     WORKFLOW_STATE_NAMESPACE,
-    StorageValidationError,
-    has_active_bucket_session,
-    suspend_active_session,
 )
+from ...adapters.persistence.storage.errors import StorageValidationError
+from ...adapters.persistence.storage.master_key.active_session import has_active_bucket_session, suspend_active_session
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ...core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus, ActionConditionality
-from ...core.classification import SensitivityClass
+from ...core.classification.policies import SensitivityClass
 from ...core.config import override_settings
+from ...core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus, ActionConditionality
 from ...tests.master_key import EphemeralMasterKeyProvider
 from ...tests.secure_sql import isolated_runtime_profile
 from ..repair_integrity import (

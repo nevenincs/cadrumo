@@ -4,12 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from ......core.access_gate import (
-    AeatAccessGate,
-    AeatGateEnvSnapshot,
-    AeatLiveReadNotEnabledError,
-    LiveSubmitForbiddenError,
-)
+from ......core.access_gate.errors import AeatLiveReadNotEnabledError, LiveSubmitForbiddenError
+from ......core.access_gate.gate import AeatAccessGate, AeatGateEnvSnapshot
 from ......core.config import Settings, override_settings
 from ......core.errors.error_codes import render_error_text
 

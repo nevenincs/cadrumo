@@ -32,8 +32,8 @@ from typing import ClassVar, override
 
 import pytest
 
-from ...core.optional_extras import LLM_EXTRA
 from ...core.config import override_settings
+from ...core.optional_extras import LLM_EXTRA
 from ...tests.loopback_llm import (
     SilentLoopbackHandler,
     read_text_body,

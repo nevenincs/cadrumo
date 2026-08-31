@@ -38,15 +38,15 @@ from typing import Any
 
 import pytest
 
-from ..adapters.inbound.financial.providers import CsvProvider
-from ..adapters.outbound.fx import EcbReferenceRateProvider
+from ..adapters.inbound.financial.providers._csv import CsvProvider
+from ..adapters.outbound.fx._ecb_provider import EcbReferenceRateProvider
 from ..application.aggregation import (
     IvaLedgerAggregationIssueReason,
     aggregate_iva_ledger_observations,
     aggregate_renta_income_ledger,
 )
 from ..core.period import Period
-from ..domain.bienes_inversion import BienesInversionIvaRegister
+from ..domain.bienes_inversion.register import BienesInversionIvaRegister
 from ..domain.currency.models import CurrencyNormalizationStatus, MonetaryAmount
 from ..domain.currency.service import CurrencyNormalizationService
 from ..domain.iva.flow import IvaFlowDirection

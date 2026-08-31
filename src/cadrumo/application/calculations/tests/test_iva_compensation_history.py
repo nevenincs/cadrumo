@@ -9,9 +9,14 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.persistence.storage import SecureObjectRowIdentityError
+from ....adapters.persistence.storage.errors import SecureObjectRowIdentityError
 from ....core.period import Period
-from ....domain.iva_compensation.carry_forward import IvaCompensationCarryForwardLot, IvaCompensationExpiryReviewState, build_iva_compensation_carry_forward_report, enforce_iva_compensation_four_year_window
+from ....domain.iva_compensation.carry_forward import (
+    IvaCompensationCarryForwardLot,
+    IvaCompensationExpiryReviewState,
+    build_iva_compensation_carry_forward_report,
+    enforce_iva_compensation_four_year_window,
+)
 from ....domain.iva_compensation.errors import IvaCompensationCarryForwardPolicyError
 from ....tests.secure_sql import isolated_runtime_profile
 from .._iva_wallet_reconciliation import reconcile_iva_compensation_wallet

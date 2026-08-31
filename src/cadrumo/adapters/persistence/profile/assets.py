@@ -23,17 +23,17 @@ from pathlib import Path
 
 from ....core.errors.hierarchy import CadrumoError
 from ....core.logging import get_logger
-from ....domain.contribuyente.assets import (
+from ....domain.contribuyente.assets.records import (
     AmortizacionLedger,
     AssetRecord,
     AssetRecordError,
     AssetsLedgerDocument,
 )
-from ..storage import (
+from ..storage._secure_object_namespaces import (
     PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE,
     PROFILE_ASSETS_LEDGER_NAMESPACE,
-    SecureObjectRepository,
 )
+from ..storage.sql import SecureObjectRepository
 from ._secure_model_document import (
     ProfileBareModelSecurePersistence,
     resolve_profile_secure_object_repository,

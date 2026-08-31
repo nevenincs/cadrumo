@@ -21,7 +21,8 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_edit_receipts import ModeloEditReceiptRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....adapters.persistence.storage import SecureObjectRevisionConflictError, SecureObjectWrite
+from ....adapters.persistence.storage.errors import SecureObjectRevisionConflictError
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectWrite
 from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id

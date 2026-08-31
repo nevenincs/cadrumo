@@ -37,8 +37,8 @@ from pydantic import ValidationError as PydanticValidationError
 if TYPE_CHECKING:
     from playwright.async_api import BrowserContext, Locator, Page
 
-from .....core.casilla_id import CasillaId
 from .....core.async_cleanup import close_async_resources
+from .....core.casilla_id import CasillaId
 from .....core.config import Settings
 from .....core.errors.hierarchy import SiteHealthError
 from .....core.i18n import tr
@@ -57,7 +57,9 @@ from .....domain.calculations.registry.renta_web_open_oracle import (
     parse_renta_web_open_live_payload,
 )
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
-from ..browser import BrowserError, BrowserSession, DefaultBrowserSession, default_browser_session_factory
+from ..browser._factory import DefaultBrowserSession, default_browser_session_factory
+from ..browser.errors import BrowserError
+from ..browser.session import BrowserSession
 from ._adapter_utils import (
     assert_read_landing,
     normalize_display_text,

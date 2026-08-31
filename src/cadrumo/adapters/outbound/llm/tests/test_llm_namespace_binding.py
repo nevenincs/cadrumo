@@ -29,7 +29,7 @@ from sqlalchemy import select
 
 from .....llm.models import LLMProvider, LLMRequest, LLMResponse, UsageRecord
 from .....tests.secure_sql import TestRuntimeProfile
-from ....persistence.storage import (
+from ....persistence.storage._secure_object_namespaces import (
     LLM_CACHE_NAMESPACE,
     LLM_RUN_TELEMETRY_NAMESPACE,
     LLM_USAGE_NAMESPACE,

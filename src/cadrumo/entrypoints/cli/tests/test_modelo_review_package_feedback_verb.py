@@ -50,8 +50,8 @@ from ....application.modelo._review_package_recipient_encryption import (
     recipient_encryption_public_key,
 )
 from ....application.modelo._review_package_recipient_registry import RecipientFingerprintRegistryRepository
-from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....domain.buckets.event import BucketEventType
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
@@ -108,7 +108,7 @@ def _build_package(tmp_path: Path, *, name: str = "review-package.zip") -> tuple
 
 def _register_originator(recipient_id: str) -> str:
     """Register the active bucket's own encryption public key as an 'originator', return the hex."""
-    from ....adapters.persistence.storage import secure_object_repository_for_bucket
+    from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 
     repository = secure_object_repository_for_bucket(_BUCKET_ID)
     keypair = ensure_recipient_encryption_keypair(bucket_id=_BUCKET_ID, repository=repository)

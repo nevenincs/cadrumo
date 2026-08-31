@@ -569,7 +569,7 @@ def test_closing_a_provider_that_never_authenticated_is_clean(
 
     assert provider._context is None
     assert provider._browser_session is None
-    assert provider._active_session is None
+    assert provider.active_session is None
 
 
 @_profiles()
@@ -582,7 +582,7 @@ def test_a_fresh_provider_holds_no_session_or_browser_resources(
 
     assert provider._context is None
     assert provider._browser_session is None
-    assert provider._active_session is None
+    assert provider.active_session is None
 
 
 @_profiles()

@@ -22,18 +22,18 @@ from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogu
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ....application.ledger.actions_common import blocking_modelo_references
-from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.period import Period
 from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
-from ....domain.modelos.codes import ModeloCode
-from ....domain.modelos.repository import upsert_work_unit
-from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.repository import upsert_work_unit
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....tests.secure_sql import isolated_runtime_profile
 from .._revision_persistence import persist_filed_revision
 from .._verification_actions import _persist_verified_revision_evidence

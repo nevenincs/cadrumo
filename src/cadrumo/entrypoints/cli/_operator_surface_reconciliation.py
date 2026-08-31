@@ -20,7 +20,17 @@ from typing import TYPE_CHECKING
 import click
 
 if TYPE_CHECKING:
-    from ...application.operator_surface.manifest import CommandSchemaRef, ExplicitExclusionInventoryRow, InputSchemaInventoryRow, LiveLeafInventoryRow, MountedFamilyInventoryRow, OperatorSurfaceReconciliation, ProfilePolicyInventoryRow, ResultSchemaInventoryRow, SurfaceExposureInventoryRow
+    from ...application.operator_surface.manifest import (
+        CommandSchemaRef,
+        ExplicitExclusionInventoryRow,
+        InputSchemaInventoryRow,
+        LiveLeafInventoryRow,
+        MountedFamilyInventoryRow,
+        OperatorSurfaceReconciliation,
+        ProfilePolicyInventoryRow,
+        ResultSchemaInventoryRow,
+        SurfaceExposureInventoryRow,
+    )
     from ._verb_input_schema import VerbInputSchema
 
 __all__ = ["current_operator_surface_reconciliation"]
@@ -108,7 +118,13 @@ def _current_operator_surface_schema_rows(
 ) -> _CurrentOperatorSurfaceSchemaInventory:
     """Build application-owned reconciliation rows from the verified live sources."""
     from ...application.operator_surface.contract import get_operator_surface_contract
-    from ...application.operator_surface.manifest import InputSchemaInventoryRow, LiveLeafInventoryRow, MountedFamilyInventoryRow, ProfilePolicyInventoryRow, ResultSchemaInventoryRow
+    from ...application.operator_surface.manifest import (
+        InputSchemaInventoryRow,
+        LiveLeafInventoryRow,
+        MountedFamilyInventoryRow,
+        ProfilePolicyInventoryRow,
+        ResultSchemaInventoryRow,
+    )
     from ._command_schema import command_registration_policy
     from ._command_specs import COMMAND_GRAPH
 
@@ -252,7 +268,10 @@ def current_operator_surface_reconciliation() -> OperatorSurfaceReconciliation:
     constructed reconciliation, preserving the live inspection semantics used
     by standalone verification code.
     """
-    from ...application.operator_surface.manifest import OperatorSurfaceReconciliation, reconcile_operator_surface_inventory
+    from ...application.operator_surface.manifest import (
+        OperatorSurfaceReconciliation,
+        reconcile_operator_surface_inventory,
+    )
 
     ctx = click.get_current_context(silent=True)
     if ctx is None:

@@ -21,7 +21,7 @@ import pytest
 
 from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.schema import RegistrySnapshot
-from .. import build_export_plan
+from .._engine import build_export_plan
 from .._layout import plan_layout
 from .._translator import is_translatable
 

@@ -15,8 +15,8 @@ from ....core.config import override_settings
 from ....core.errors.error_codes import build_error_envelope
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES
-from ....core.resources import resources
-from ....core.topics import Topic, TopicCatalogue
+from ....core.resources._registry import resources
+from ....core.topics.catalogue import Topic, TopicCatalogue
 from ....domain.manuals.schema import ManualId, ManualPart
 from ..corpus import (
     RegistryCitationArticleProjection,

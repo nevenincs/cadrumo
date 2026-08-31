@@ -33,11 +33,11 @@ from collections.abc import AsyncGenerator, Mapping
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any, Final
 
-from .....core.operator_action_enums import NoRecoveryOutcome
 from .....core.async_cleanup import (
     close_async_resources,
 )
 from .....core.logging import get_logger
+from .....core.operator_action_enums import NoRecoveryOutcome
 from .errors import BrowserError, BrowserFailureMode, BrowserPreconditionCondition, browser_no_action_verdict
 from .profile import Profile
 from .session import BrowserSession

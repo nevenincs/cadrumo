@@ -15,8 +15,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 
-from ...core.aggregation import BindingSourceKind
-from ...core.aggregation import COUNTERPART_SOURCE_KIND_ORDER
+from ...core.aggregation import COUNTERPART_SOURCE_KIND_ORDER, BindingSourceKind
 from ...core.i18n import tr
 from ...core.logging import get_logger
 from .errors import OperatorSurfaceContractError, operator_surface_contract_verdict

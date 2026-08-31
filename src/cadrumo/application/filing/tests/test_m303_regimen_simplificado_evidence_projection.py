@@ -6,10 +6,9 @@ from decimal import Decimal
 
 import pytest
 
-from ....application.calculations import calculate_m303_regimen_simplificado_result
-from ....application.filing import build_filing_producer_snapshot
+from ....application.calculations._m303_regimen_simplificado import calculate_m303_regimen_simplificado_result
+from ....application.filing._producer_snapshot import build_filing_producer_snapshot
 from ....application.filing._projection import build_m303_filing_projection_plan
-from ....core.result_disposition import ResultDisposition
 from ....core.filing_projection_ref import (
     M303RegimenSimplificadoActivityField,
     M303RegimenSimplificadoActivityProjectionRef,
@@ -21,6 +20,7 @@ from ....core.filing_projection_ref import (
 )
 from ....core.modelo import Modelo
 from ....core.period import Period
+from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.export_field_kind import CasillaFieldKind
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
@@ -32,7 +32,14 @@ from ....domain.calculations.registry.schema_exports import (
     ExportRecordDefinition,
 )
 from ....domain.filing_evidence import FilingEvidenceReference
-from ....domain.iva.regimen_simplificado_rows import ActividadNoAgricolaSimplificado, EntradaModuloSimplificado, HechoActividadSimplificado, M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision, RegimenSimplificadoFilingRows
+from ....domain.iva.regimen_simplificado_rows import (
+    ActividadNoAgricolaSimplificado,
+    EntradaModuloSimplificado,
+    HechoActividadSimplificado,
+    M303RegimenSimplificadoScope,
+    M303RegimenSimplificadoScopeDecision,
+    RegimenSimplificadoFilingRows,
+)
 from ....domain.modelos.calculation_revision_m303_handoff import M303RegimenSimplificadoFilingEvidence
 from .test_producer_snapshot import _elections, _m303_filing_facts, _m303_profile, _presenter, _taxpayer_identity
 

@@ -11,9 +11,9 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from ....adapters.persistence.storage import SecureObjectRepository
-from ....core.calculation_route import ModeloCalculationRouteId
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
+from ....core.calculation_route import ModeloCalculationRouteId
 from ....core.source_connectivity import (
     SourceConnectivityCensusRow,
     SourceConnectivityConnectedProof,
@@ -276,7 +276,7 @@ def test_real_live_authority_encrypted_payload_roundtrip_and_raw_lineage_deletio
         _CALCULATION_NAMESPACE,
         _CALCULATION_OBJECT_KEY,
     )
-    from ....adapters.persistence.storage import SensitivityClass
+    from ....core.classification.policies import SensitivityClass
 
     authority, connection, proof, _ = _composition(tmp_path, secure_objects)
     repository = authority.calculation_revisions

@@ -13,9 +13,9 @@ from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core.period import Period
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.period import Period
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
 from ....domain.iva.classification import InvoiceKind

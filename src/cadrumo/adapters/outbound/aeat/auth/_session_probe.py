@@ -29,8 +29,8 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
-from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.logging import get_logger
+from .....core.models import STRICT_FROZEN_CONFIG
 
 if TYPE_CHECKING:
     from .....application.auth.protocols import BrowserContextPort, BrowserPagePort

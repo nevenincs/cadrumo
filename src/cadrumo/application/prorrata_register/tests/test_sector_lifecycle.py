@@ -24,11 +24,8 @@ from decimal import Decimal
 import pytest
 
 from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
-from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
-from .. import (
-    seed_sector_carried_definitive_from_register,
-    settle_sector_definitive,
-)
+from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
+from .._sector_lifecycle import seed_sector_carried_definitive_from_register, settle_sector_definitive
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

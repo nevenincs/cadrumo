@@ -14,7 +14,8 @@ from cryptography.x509.oid import NameOID
 from pydantic import SecretStr
 
 from ......core.config import AEAT_CERTIFICATE_PROTECTED_ORIGIN, Settings
-from ...browser import Profile, create_browser_session
+from ...browser import Profile
+from ...browser._factory import create_browser_session
 from ..certificate import (
     CertificateBundle,
     CertificateExpiredError,

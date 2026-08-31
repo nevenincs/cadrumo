@@ -33,9 +33,9 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.modelo import Modelo
 from ....core.period import Period
-from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import BindingId

@@ -14,7 +14,7 @@ from ....application.operations.persistence.events import (
 )
 from ....application.operations.persistence.journal import OperationPersistedSnapshot
 from ....core.models import STRICT_FROZEN_CONFIG
-from ..storage import RepositoryError
+from ..storage.errors import RepositoryError
 
 
 def _raise_if(condition: bool, message: str, error_type: type[Exception]) -> None:

@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.contribuyente.inventory import (
+from ....domain.contribuyente.inventory.records import (
     InventoryClosingAuthority,
     InventoryClosingAuthorityDecision,
     InventoryClosingAuthorityRecord,

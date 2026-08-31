@@ -43,17 +43,12 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any, Final
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, NonNegativeInt
 
-from ....application.storage.calc_sheets import (
-    SheetCellAddress,
-    SheetExportPlan,
-    SheetValueCell,
-    TabName,
-)
+from ....application.storage.calc_sheets._records import SheetCellAddress, SheetExportPlan, SheetValueCell, TabName
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
-from ..storage import OutboundStorageError, OutboundStorageNetworkError, OutboundStorageValidationError
+from ..storage.errors import OutboundStorageError, OutboundStorageNetworkError, OutboundStorageValidationError
 from ._calc_sheets_apply_formatting import (
     _build_auto_filter_requests,
     _build_base_font_requests,
@@ -181,9 +176,9 @@ class CalcSheetsApplyResult(BaseModel):
     spreadsheet_id: str = Field(min_length=1)
     spreadsheet_url: str = Field(min_length=1)
     folder_id: str = Field(min_length=1)
-    value_cells_written: int = Field(ge=0)
-    formula_cells_written: int = Field(ge=0)
-    protected_ranges_written: int = Field(ge=0)
+    value_cells_written: NonNegativeInt
+    formula_cells_written: NonNegativeInt
+    protected_ranges_written: NonNegativeInt
     row_set_headers_written: int = Field(ge=0, default=0)
     tab_count: int = Field(ge=1)
 
@@ -215,9 +210,9 @@ class CalcSheetsExportPreview(BaseModel):
     spreadsheet_id: str | None = None
     spreadsheet_url: str | None = None
     ranges_to_clear: tuple[str, ...] = ()
-    value_cells_changed: int = Field(ge=0)
-    value_cells_unchanged: int = Field(ge=0)
-    formula_cells_to_write: int = Field(ge=0)
+    value_cells_changed: NonNegativeInt
+    value_cells_unchanged: NonNegativeInt
+    formula_cells_to_write: NonNegativeInt
 
 
 def _google_service(credentials: object, service_name: str, version: str) -> Any:

@@ -53,19 +53,21 @@ from datetime import datetime
 from typing import Final
 
 from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
-from ...core.result_disposition import ResultDisposition
 from ...core.modelo import Modelo
+from ...core.result_disposition import ResultDisposition
 from ...domain.calculations.registry.bindings import RegistryModeloObservation
-from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.calculation_revision import CalculationRevision
-from ..calculations import (
-    CalculationObservationRepository,
+from ...domain.modelos.work_unit import WorkUnit
+from ..calculations.iva_compensation_history import (
     IvaCompensationHistoryRepository,
+    persist_observation_envelope_and_iva_history,
+)
+from ..calculations.observations_repository import (
+    CalculationObservationRepository,
     ObservationSourceKind,
     PriorDomiciliationElectionProjection,
     ResultDispositionProjection,
     observation_key,
-    persist_observation_envelope_and_iva_history,
 )
 from ._action_errors import ModeloLocalObservationError
 

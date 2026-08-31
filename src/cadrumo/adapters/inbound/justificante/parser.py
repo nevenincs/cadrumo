@@ -26,7 +26,7 @@ from ....domain.justificante import (
     JustificanteParserBackend,
 )
 from ._extract import extract_justificante, extract_justificante_from_digest
-from ._parsers import extract_text, extract_text_from_bytes
+from ._parsers.text_extraction import extract_text, extract_text_from_bytes
 
 _logger = get_logger(__name__)
 _INPUT_PDF_SOURCE_LABEL = "<input-pdf>"

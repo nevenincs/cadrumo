@@ -23,7 +23,7 @@ from ...core.errors.error_codes import resolve_error_message
 from ...core.i18n import tr
 from ...core.identity import IdentityError, validate_identity
 from ...core.parsing import parse_bool
-from ...core.redaction import redact_validation_context as _redact_validation_context
+from ...core.redaction.rules import redact_validation_context as _redact_validation_context
 from ...core.spanish_postcode import is_spanish_postcode
 from .errors import WizardValidationError
 from .models import WizardQuestion, WizardWidget

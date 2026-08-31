@@ -33,7 +33,7 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.secure_sql import isolated_runtime_profile
 from ....tests.write_unit_recorder import WriteUnitRecorder
-from .. import reconcile_invoice_catalogues, reconcile_invoice_repositories
+from .._reconciliation import reconcile_invoice_catalogues, reconcile_invoice_repositories
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -9,8 +9,8 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.outbound.aeat.sede.declarations_schema import Declaracion
-from ....core.period import Period
 from ....core.hashing import sha256_hex
+from ....core.period import Period
 from ....domain.calculations.registry.applicability import ApplicabilityVerdict
 from ....domain.deadlines.models import ObligationStatus
 from ....domain.modelos.filing_record import ExternalEvidenceKind

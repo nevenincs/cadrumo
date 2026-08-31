@@ -2,16 +2,26 @@
 
 from __future__ import annotations
 
-from ..application.calculations import calculate_m303_regimen_simplificado_result
+from ..application.calculations._m303_regimen_simplificado import calculate_m303_regimen_simplificado_result
 from ..core.period import Period
 from ..domain.calculations.registry.authority import bundled_authority
 from ..domain.calculations.registry.m303_orden_projection_models import M303RegimenSimplificadoSnapshot
 from ..domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ..domain.filing_evidence import FilingEvidenceReference
-from ..domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision, RegimenSimplificadoFilingRows
+from ..domain.iva.regimen_simplificado_rows import (
+    M303RegimenSimplificadoScope,
+    M303RegimenSimplificadoScopeDecision,
+    RegimenSimplificadoFilingRows,
+)
 from ..domain.modelos.calculation_revision import FilingInstanceEvidence
-from ..domain.modelos.calculation_revision_m303_evidence import M303DANA2024EligibilityEvidence, M303Exonerado390FilingEvidence
-from ..domain.modelos.calculation_revision_m303_handoff import M303FilingInstanceEvidence, M303RegimenSimplificadoFilingEvidence
+from ..domain.modelos.calculation_revision_m303_evidence import (
+    M303DANA2024EligibilityEvidence,
+    M303Exonerado390FilingEvidence,
+)
+from ..domain.modelos.calculation_revision_m303_handoff import (
+    M303FilingInstanceEvidence,
+    M303RegimenSimplificadoFilingEvidence,
+)
 
 
 def regimen_simplificado_filing_evidence(

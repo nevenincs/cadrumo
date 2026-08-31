@@ -25,15 +25,13 @@ from pathlib import Path
 
 from ....core.errors.hierarchy import CadrumoError
 from ....core.logging import get_logger
-from ....domain.bienes_inversion import (
+from ....domain.bienes_inversion.register import (
     BienesInversionIvaRegister,
     BienInversionIvaRecord,
     BienInversionRecordError,
 )
-from ..storage import (
-    PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE,
-    SecureObjectRepository,
-)
+from ..storage._secure_object_namespaces import PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE
+from ..storage.sql import SecureObjectRepository
 from ._secure_model_document import (
     ProfileBareModelSecurePersistence,
     resolve_profile_secure_object_repository,

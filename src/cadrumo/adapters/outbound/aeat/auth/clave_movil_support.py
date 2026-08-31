@@ -17,14 +17,14 @@ from uuid import uuid4
 
 from pydantic import SecretStr
 
-from .....core.operator_progress import OperatorProgress
 from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import AuthError
 from .....core.hashing import sha256_hex
 from .....core.identity import IdentityDocument, IdentityError, validate_identity
 from .....core.logging import get_logger
+from .....core.operator_progress import OperatorProgress
 from .....domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy
-from ....persistence.storage import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE
+from ....persistence.storage._secure_object_namespaces import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE
 from ..operator_progress import emit_operator_progress
 from .errors import AuthConfigurationError
 

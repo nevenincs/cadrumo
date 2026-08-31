@@ -11,14 +11,12 @@ from ....application.modelo.reconciliation_records import (
     ModeloReconciliationPersistencePort,
     ModeloReconciliationRecord,
 )
+from ....core.classification.policies import SensitivityClass
 from ....domain.buckets.event import BucketEvent
 from ....domain.buckets.event_repository import append_bucket_event
-from ..storage import (
-    MODELO_RECONCILIATION_RECORDS_NAMESPACE,
-    SecureBoundRepository,
-    SensitivityClass,
-    safe_repository_id,
-)
+from ..storage._path_safety import safe_repository_id
+from ..storage._secure_object_namespaces import MODELO_RECONCILIATION_RECORDS_NAMESPACE
+from ..storage.envelope._secure_repository import SecureBoundRepository
 from .buckets import BucketEventHistoryRepository
 
 

@@ -38,7 +38,11 @@ from ...domain.calculations.registry.ids import (
 )
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.deadlines.models import TaxpayerProfile
-from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
+from ...domain.modelos.verification_report import (
+    ModeloVerificationFinding,
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
+)
 
 if TYPE_CHECKING:
     from ...core.casilla_id import CasillaId

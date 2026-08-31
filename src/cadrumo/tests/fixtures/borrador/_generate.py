@@ -42,7 +42,7 @@ from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from .. import FIXTURE_PROVENANCE_SYNTHETIC, SYNTHETIC_FIXTURE_PRODUCER
+from ..provenance import FIXTURE_PROVENANCE_SYNTHETIC, SYNTHETIC_FIXTURE_PRODUCER
 
 _FIXTURES_DIR = Path(__file__).parent
 _BASE_LIQUIDABLE_GENERAL_CASILLA = validated_casilla_id(

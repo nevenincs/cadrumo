@@ -33,10 +33,10 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, TypeAdapter
 
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.buckets.event import BucketEventType
 from ...domain.user_profile.values import ProfileSetupState, UserProfileFact
 from .capsule_record import ProfileRecordConflictError

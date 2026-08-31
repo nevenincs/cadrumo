@@ -58,7 +58,7 @@ from pathlib import Path
 
 import pytest
 
-from ...adapters.persistence.storage import STORAGE_NAMESPACE_REGISTRY
+from ...adapters.persistence.storage._namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from ...core.directory_scan import scan_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

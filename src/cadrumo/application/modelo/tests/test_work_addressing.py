@@ -13,28 +13,24 @@ from sqlalchemy import event
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.operator_action_enums import ActionArgumentSource, ActionConditionality, NoRecoveryOutcome
 from ....core.period import Period
-from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
-from ....domain.modelos.repository import upsert_work_unit
-from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.repository import upsert_work_unit
+from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from .._action_errors import CalculationRevisionNotFoundError
 from .._selectors import ModeloCalculationRevisionSelector
-from ..work_lifecycle import (
-    create_work_unit,
-    discard_work_unit,
-)
 from ..work_addressing import (
     ModeloExactWorkUnitTarget,
     ModeloRevisionPick,
@@ -51,6 +47,10 @@ from ..work_addressing import (
     resolve_modelo_revision_pick,
     resolve_modelo_work_unit_id,
     select_modelo_work_resolution,
+)
+from ..work_lifecycle import (
+    create_work_unit,
+    discard_work_unit,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

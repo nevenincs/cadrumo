@@ -36,9 +36,9 @@ from pydantic import (
     field_validator,
 )
 
-from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.errors.hierarchy import SiteHealthState
-from .....core.redaction import redact_for_log
+from .....core.models import STRICT_FROZEN_CONFIG
+from .....core.redaction.rules import redact_for_log
 from .errors import BrowserValidationError
 
 _MAX_HTML_FRAGMENT_CHARS: Final = 4096

@@ -28,9 +28,10 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage import Envelope, SecureObjectRowIdentityError
-from ....core.period import Period
+from ....adapters.persistence.storage.envelope._envelope import Envelope
+from ....adapters.persistence.storage.errors import SecureObjectRowIdentityError
 from ....core.external_constants import UTF_8_ENCODING
+from ....core.period import Period
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ....tests.secure_sql import isolated_runtime_profile
 from ..observations_repository import (

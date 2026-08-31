@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 if TYPE_CHECKING:
-    from ...adapters.inbound.financial.providers import ParsedLedgerRow, ProviderValidation
+    from ...adapters.inbound.financial.providers._base import ParsedLedgerRow, ProviderValidation
 
 
 @runtime_checkable

@@ -59,7 +59,7 @@ from typer._click.shell_completion import CompletionItem
 from typer.core import TyperGroup
 from typer.main import get_command as _typer_get_command
 
-from ...core.i18n import tr
+from ...core.i18n._render import tr
 
 #: Per-group synonym tables keyed by the group's command ``name``.
 #: Each inner mapping projects an unknown command token onto the

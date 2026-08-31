@@ -13,17 +13,17 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core.period import Period
 from ....core.casilla_id import CasillaId
+from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_verification import (
     KNOWN_VERIFICATION_PREDICATE_OPERATORS,
     parse_verification_predicate_expression,
 )
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
-from ....domain.modelos.verification_report import ModeloVerificationFindingKind
 from ....domain.modelos.calculation_revision import CalculationRevision, derive_calculation_revision_id
 from ....domain.modelos.errors import ModeloValidationError
+from ....domain.modelos.verification_report import ModeloVerificationFindingKind
 from ....tests.secure_sql import isolated_runtime_profile
 from .._action_errors import StoredCalculationDriftError
 from .._calculation_actions import calculate_modelo_revision

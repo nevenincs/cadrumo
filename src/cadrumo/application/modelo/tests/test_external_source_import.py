@@ -8,29 +8,30 @@ from typing import override
 import pytest
 
 from ....adapters.persistence.profile.justificante import JustificanteRepository
-from ....adapters.persistence.storage import SecureObjectRevisionConflictError, SecureObjectWrite
+from ....adapters.persistence.storage.errors import SecureObjectRevisionConflictError
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectWrite
 from ....core.period import Period
 from ....domain.buckets.event import BucketEventType
-from ....domain.modelos.filing_record import ExternalEvidenceKind
 from ....domain.modelos.calculation_revision import CalculationRevisionAmendmentKind
-from ...calculations import (
+from ....domain.modelos.filing_record import ExternalEvidenceKind
+from ...calculations._cross_period_external_evidence import (
+    filing_external_evidence_blockers as _filing_external_evidence_blockers,
+)
+from ...calculations.cross_period_clean_state import CrossPeriodCleanStateBlocker
+from ...calculations.observations_repository import (
     CalculationObservationRepository,
-    CrossPeriodCleanStateBlocker,
     ObservationEnvelopePayload,
     ObservationSourceKind,
-)
-from ...calculations import (
-    filing_external_evidence_blockers as _filing_external_evidence_blockers,
 )
 from .._action_errors import ExternalModeloImportError
 from .._amendment_actions import amend_modelo_revision
 from .._calculation_actions import get_calculation_revision
-from ..work_lifecycle import create_work_unit
 from ..external_import_actions import (
     ExternalFilingBaselineSource,
     _validated_source_lexicals,
     import_external_filing_source,
 )
+from ..work_lifecycle import create_work_unit
 from ._import_flow_support import (
     _IMPORT_EXPENSE_CASILLA,
     _IMPORT_INCOME_CASILLA,

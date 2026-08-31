@@ -48,7 +48,8 @@ def profile_adapter_composition() -> Generator[None]:
         load_usage_ratios_with_censo_guard,
         save_usage_ratios,
     )
-    from ..adapters.persistence.storage import build_profile_custody_port, build_profile_login_session_port
+    from ..adapters.persistence.storage._profile_custody import build_profile_custody_port
+    from ..adapters.persistence.storage._profile_login_session import build_profile_login_session_port
     from ..adapters.persistence.workflow import build_workflow_persistence_port
     from ..application.auth.protocols import bind_session_store
     from ..application.auth.providers import bind_auth_provider_selector

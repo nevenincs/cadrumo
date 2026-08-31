@@ -8,8 +8,8 @@ import pytest
 
 from .....core.config import override_settings
 from .....core.errors.error_codes import build_error_envelope, resolve_error_message
-from .. import PathContainmentError
 from .._path_safety import safe_repository_id
+from ..errors import PathContainmentError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

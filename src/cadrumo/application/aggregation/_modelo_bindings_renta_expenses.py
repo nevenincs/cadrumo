@@ -16,8 +16,8 @@ from ...domain.calculations.registry.ledger_bindings import (
     unsupported_ledger_renta_gastos_estimacion_directa_observations,
 )
 from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
-from ...domain.prorrata_register import ProrrataRegisterRepositoryProtocol
-from ...domain.renta import RentaDeductibleExpenseObservation
+from ...domain.prorrata_register._protocols import ProrrataRegisterRepositoryProtocol
+from ...domain.renta._ledger_expenses import RentaDeductibleExpenseObservation
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..user_profile.usage_ratio_resolution import resolve_effective_usage_ratios
 from ._modelo_bindings import (
@@ -35,11 +35,13 @@ from ._source_mesh import (
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,
     CalculationSourceResolution,
+)
+from .source_resolution_operations import (
+    flatten_source_provenance_for as _flattened_provenance_for,
+)
+from .source_resolution_operations import (
     source_issue_diagnostics,
     storage_degradation_resolution,
-)
-from ._source_mesh import (
-    flatten_source_provenance_for as _flattened_provenance_for,
 )
 
 

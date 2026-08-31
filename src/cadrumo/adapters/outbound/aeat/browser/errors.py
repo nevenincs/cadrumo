@@ -22,9 +22,10 @@ from __future__ import annotations
 from collections.abc import Mapping
 from enum import StrEnum
 
-from .....application.operator_actions import PreconditionVerdict, no_action_precondition_verdict
-from .....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
+from .....application.operator_actions._models import PreconditionVerdict
+from .....application.operator_actions._preconditions import no_action_precondition_verdict
 from .....core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin
+from .....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 
 
 class BrowserPreconditionCondition(StrEnum):

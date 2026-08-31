@@ -37,8 +37,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....core.config import override_settings
+from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload

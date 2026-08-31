@@ -16,8 +16,8 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.casilla_id import CasillaId
 from ....core.aggregation import BindingSourceKind
+from ....core.casilla_id import CasillaId
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema import ModeloRevision

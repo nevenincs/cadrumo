@@ -19,7 +19,7 @@ from datetime import date, datetime
 
 from pydantic import Field, NonNegativeInt
 
-from ...application.evidence import BundleVerificationState
+from ...application.evidence._models import BundleVerificationState
 from ...application.evidence.bundle_text import EvidenceBundleNotes
 from ...application.workflow.run_models import (
     SiteHealthAlert,
@@ -27,13 +27,13 @@ from ...application.workflow.run_models import (
     WorkflowStage,
     WorkflowStepDetails,
 )
-from ...core.hex import Hex64Str
-from ...core.period import Period
 from ...core.aggregation import RetencionClave
 from ...core.filing_year import FilingYear
+from ...core.hex import Hex64Str
 from ...core.identifier_grammar import NamespacedId
 from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, FilingRecordId, WorkUnitId
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
+from ...core.period import Period
 from ...core.text_bounds import NonEmptyStr, PositiveCount
 from ...core.unit_proportion import UnitFraction
 from ...domain.buckets.event import (

@@ -12,7 +12,7 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....core import M210GrossIncomeSourceMode, M210PayerMode
+from ....core.irnr import M210GrossIncomeSourceMode, M210PayerMode
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.loader import load_modelo_directory
@@ -30,7 +30,7 @@ from ...modelo._action_errors import ModeloAggregationBindingError
 from ...modelo._calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from ...modelo._verification_actions import verify_modelo_revision
 from ...modelo.work_lifecycle import create_work_unit
-from ...tests import register_wizard_catalogue
+from ...tests._wizard_catalogue_fixtures import register_wizard_catalogue
 from .. import (
     compute_ledger_filing_evidence,
     compute_ledger_filing_snapshot,

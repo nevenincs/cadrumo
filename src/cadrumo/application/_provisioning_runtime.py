@@ -9,11 +9,11 @@ from time import monotonic
 from typing import TYPE_CHECKING, TypedDict, cast
 
 import httpx
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
+from ..core.config import Settings, load_settings
 from ..core.hardware import AcceleratorKind, ContentionCause
 from ..core.models import STRICT_FROZEN_CONFIG
-from ..core.config import Settings, load_settings
 from ._provisioning_contracts import (
     OLLAMA_PROBE_CACHE_TTL_S,
     OLLAMA_PROBE_TIMEOUT_S,
@@ -191,8 +191,8 @@ class ContentionSnapshot(ProvisioningOutcome):
     """
 
     model: str = Field(min_length=1)
-    requirement_bytes: int = Field(ge=0)
-    safety_margin_bytes: int = Field(ge=0)
+    requirement_bytes: NonNegativeInt
+    safety_margin_bytes: NonNegativeInt
     accelerator: AcceleratorKind
     free_vram_bytes: int | None = Field(default=None, ge=0)
     free_system_memory_bytes: int | None = Field(default=None, ge=0)

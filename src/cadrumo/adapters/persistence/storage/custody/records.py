@@ -18,6 +18,7 @@ from .....core.hashing import (
     canonical_json_digest,
     reject_duplicate_json_members,
     reject_json_constant,
+    validate_prefixed_digest,
 )
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..crypto.aead import GCM_TAG_SIZE, KEY_SIZE, NONCE_SIZE
@@ -56,12 +57,6 @@ def _decode_canonical_b64(value: str, *, field_name: str, expected_bytes: int) -
         raise ValueError(f"{field_name} must encode exactly {expected_bytes} bytes")
     if base64.b64encode(decoded).decode("ascii") != value:
         raise ValueError(f"{field_name} must use canonical base64")
-    return value
-
-
-def _validate_digest(value: str, *, field_name: str) -> str:
-    if _SHA256_DIGEST_RE.fullmatch(value) is None:
-        raise ValueError(f"{field_name} must be a lowercase sha256 digest")
     return value
 
 
@@ -176,7 +171,7 @@ class _ProfileCustodyEnvelopePayload(BaseModel):
     def _validate_previous_envelope_digest(cls, value: str | None) -> str | None:
         if value is None:
             return None
-        return _validate_digest(value, field_name="previous_envelope_digest")
+        return validate_prefixed_digest(value, field_name="previous_envelope_digest")
 
 
 class ProfileCustodyEnvelope(_ProfileCustodyEnvelopePayload, CustodyDigestModel):
@@ -191,7 +186,7 @@ class ProfileCustodyEnvelope(_ProfileCustodyEnvelopePayload, CustodyDigestModel)
     @field_validator("self_digest")
     @classmethod
     def _validate_self_digest(cls, value: str) -> str:
-        return _validate_digest(value, field_name="self_digest")
+        return validate_prefixed_digest(value, field_name="self_digest")
 
 
 

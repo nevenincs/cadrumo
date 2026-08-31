@@ -8,17 +8,17 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from ....core.period import Period
 from ....core.prorrata_register import (
     ProrrataEspecialTransitionKind,
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,
 )
-from ....core.period import Period
-from ....core.resources import bundled_path
+from ....core.resources._boundary import bundled_path
 from ....domain.calculations.registry.ledger_bindings import IvaLedgerObservation
 from ....domain.iva.flow import IvaFlowDirection
 from ....domain.iva.schema import IvaCashAccountingTreatment, IvaCategory, IvaLedgerObservationRole, IvaRateKind
-from ....domain.prorrata_register import (
+from ....domain.prorrata_register.register import (
     ProrrataEspecialTransitionEvidence,
     ProrrataRegister,
     ProrrataRegisterEntry,

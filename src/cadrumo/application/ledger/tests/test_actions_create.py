@@ -155,7 +155,7 @@ def test_manual_foreign_currency_row_converts_at_entry(
     """
     from datetime import date as _date
 
-    from ....adapters.outbound.fx import EcbReferenceRateProvider
+    from ....adapters.outbound.fx._ecb_provider import EcbReferenceRateProvider
     from ....domain.currency.service import CurrencyNormalizationService
     from ....tests.ecb_stub import ecb_csv_fetch
 

@@ -42,41 +42,36 @@ from contextlib import contextmanager
 from datetime import datetime
 from typing import Literal, Protocol, runtime_checkable
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, NonNegativeInt
 
-from ..adapters.persistence.storage import (
+from ..adapters.persistence.storage._namespace_registry import STORAGE_NAMESPACE_REGISTRY
+from ..adapters.persistence.storage._secure_object_namespaces import (
     REPAIR_INTEGRITY_DECISION_NAMESPACE as REPAIR_DECISION_STORAGE_NAMESPACE,
 )
-from ..adapters.persistence.storage import (
-    STORAGE_NAMESPACE_REGISTRY,
+from ..adapters.persistence.storage._secure_object_namespaces import (
     SYNC_RUN_RECORDS_NAMESPACE,
     USER_PROFILE_VALUE_NAMESPACE,
     WORKFLOW_STATE_NAMESPACE,
     SecureObjectNamespaceDefinition,
-    SecureObjectNamespaceIntegrity,
-    SecureObjectRepository,
 )
 from ..adapters.persistence.storage.sql.secure_objects import (
     SecureObjectDecryptabilityRow,
+    SecureObjectNamespaceIntegrity,
+    SecureObjectRepository,
 )
+from ..core.errors.hierarchy import CoreError
+from ..core.hashing import content_hash_hex
 from ..core.hex import Hex64Str
+from ..core.logging import get_logger
+from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.operator_action_enums import (
     ActionArgumentSource,
     ActionArgumentStatus,
     ActionConditionality,
     ActionEvidenceProvenance,
 )
-from ..core.models import STRICT_FROZEN_CONFIG
-from ..core.errors.hierarchy import CoreError
-from ..core.hashing import content_hash_hex
-from ..core.logging import get_logger
-from .diagnostics import DiagnosticCheck
-from .operator_actions import (
-    ActionArgumentBinding,
-    ActionReference,
-    ConditionEvidence,
-    PreconditionVerdict,
-)
+from .diagnostic_models import DiagnosticCheck
+from .operator_actions._models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
 
 _log = get_logger(__name__)
 
@@ -150,8 +145,8 @@ class RepairIntegrityReport(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     namespaces: tuple[SecureObjectNamespaceIntegrity, ...]
-    readable_total: int = Field(ge=0)
-    unreadable_total: int = Field(ge=0)
+    readable_total: NonNegativeInt
+    unreadable_total: NonNegativeInt
     check: DiagnosticCheck
 
 
@@ -193,7 +188,7 @@ class RepairListReport(BaseModel):
     namespace: str = Field(min_length=1)
     integrity: SecureObjectNamespaceIntegrity
     rows: tuple[RepairListRow, ...]
-    rows_total: int = Field(ge=0)
+    rows_total: NonNegativeInt
     filter_mode: str = Field(min_length=1)
 
 
@@ -314,7 +309,10 @@ def active_bucket_repair_session() -> Generator[None]:
             Commit flow that uses this context before calling
             :meth:`~cadrumo.adapters.persistence.storage.SecureObjectRepository.quarantine_unreadable_rows`.
     """
-    from ..adapters.persistence.storage import active_bucket_session_serves, has_active_bucket_session
+    from ..adapters.persistence.storage.master_key.active_session import (
+        active_bucket_session_serves,
+        has_active_bucket_session,
+    )
     from ..core.bucket_pointer import resolve_active_bucket_id
 
     # Probing decryptability under the WRONG bucket's key reports readable rows
@@ -402,7 +400,7 @@ def _build_repair_list_report(
 
 
 def _active_bucket_repair_repository() -> SecureObjectRepository:
-    from ..adapters.persistence.storage import secure_object_repository_for_active_bucket
+    from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 
     return secure_object_repository_for_active_bucket()
 
@@ -517,7 +515,7 @@ class RepairRemediationDecisionRepository:
     def _repo(self) -> SecureObjectRepository:
         if self._repository is not None:
             return self._repository
-        from ..adapters.persistence.storage import secure_object_repository_for_active_bucket
+        from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 
         return secure_object_repository_for_active_bucket()
 

@@ -28,6 +28,7 @@ from pydantic import (
 from pydantic.json_schema import JsonSchemaValue
 from pydantic_core import CoreSchema
 
+from ....core.identity import ContentDigest, WorkUnitId
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operations import (
     OperationCancellation,
@@ -35,11 +36,10 @@ from ....core.operations import (
     OperationDeadline,
     OperationDurability,
     OperationEffect,
+    OperationInteractionKind,
     OperationLifecycle,
 )
-from ....core.identity import ContentDigest, WorkUnitId
-from ....core.operations import OperationInteractionKind
-from ...operator_actions import ActionReference
+from ...operator_actions._models import ActionReference
 from ..capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,

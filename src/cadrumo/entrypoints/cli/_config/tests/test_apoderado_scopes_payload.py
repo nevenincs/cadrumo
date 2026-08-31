@@ -14,7 +14,7 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.json_contract import strict_round_trip
-from .....domain.auth.apoderamientos import load_default_catalogue
+from .....domain.auth.apoderamientos.catalogue import load_default_catalogue
 from ..._config_payloads import ApoderadoScopePayload, ApoderadoScopesListResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

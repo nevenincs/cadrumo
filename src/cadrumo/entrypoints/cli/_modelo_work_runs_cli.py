@@ -39,7 +39,7 @@ from ...application.workflow.resume import (
 )
 from ...application.workflow.run_models import SiteHealthAlert, WorkflowResult, WorkflowStage, WorkflowStepDetails
 from ...core.external_constants import OutputLanguage
-from ...core.i18n import tr
+from ...core.i18n._render import tr
 from ...core.json_contract import ResolvedPreconditionAction
 from ._action_rendering import resolved_precondition_action_json_cell
 from ._common import activate_subcommand_output_language, emit_envelope, resolve_cli_precondition_action

@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.bucket import bucket_paths
+from ....adapters.persistence.storage.bucket._layout import bucket_paths
 from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ....core.directory_scan import scan_directory
 from ..errors import WorkflowError
@@ -127,7 +127,7 @@ def test_reset_workflow_state_emit_failure_leaves_row_intact() -> None:
     through the repository's ``emit_reset`` constructor argument.
     """
 
-    from ....adapters.persistence.storage import WORKFLOW_STATE_NAMESPACE
+    from ....adapters.persistence.storage._secure_object_namespaces import WORKFLOW_STATE_NAMESPACE
     from ..persistence import WorkflowStateRepository
     from ..state_models import WorkflowState
 

@@ -28,11 +28,11 @@ from typing import TYPE_CHECKING, Protocol, cast, runtime_checkable
 
 import pytest
 
-from ..tests import temporary_env
+from ..tests._env import temporary_env
 from ..tests.secure_sql import isolated_runtime_profile
 
 if TYPE_CHECKING:
-    from ..adapters.persistence.storage.sql import SecureObjectRepository
+    from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 
 
 @runtime_checkable

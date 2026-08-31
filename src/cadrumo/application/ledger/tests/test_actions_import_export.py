@@ -48,7 +48,10 @@ def test_import_ledger_source_owns_provider_validation_ingest_and_persistence(
     # both parsed rows would be imported. A flat zero was the defect.
     assert dry_run.imported == 2
     assert dry_run.skipped == 0
-    assert dry_run.source.sha256 is not None
+    # One file, so one report -- the field is a tuple because a DIRECTORY import
+    # folds several and used to keep only the first.
+    assert len(dry_run.sources) == 1
+    assert dry_run.sources[0].sha256 is not None
     assert persisted.bucket_id == _BUCKET_ID
     assert persisted.imported == 2
     assert persisted.skipped == 0

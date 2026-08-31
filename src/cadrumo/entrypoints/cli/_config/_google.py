@@ -61,30 +61,31 @@ from ....adapters.outbound.google.session_store import (
     save_metadata,
     save_token,
 )
-from ....adapters.outbound.storage import (
-    OutboundStorageError,
-    OutboundStorageValidationError,
-    RemoteMirrorIssue,
-    RemoteMirrorIssueKind,
-    RemoteMirrorNamespaceManifest,
-    StorageProvider,
+from ....adapters.outbound.storage._factory import get_storage_provider
+from ....adapters.outbound.storage._mirror_manifest import (
     build_remote_mirror_namespace_manifest,
     compare_remote_mirror_manifests,
     get_remote_mirror_namespace_manifest,
-    get_storage_provider,
     inspect_remote_mirror_download,
     inspect_remote_mirror_upload,
     put_remote_mirror_namespace_manifest,
     remote_mirror_object_key_hmac,
     remote_mirror_object_label,
 )
-from ....adapters.persistence.storage import (
-    STORAGE_NAMESPACE_REGISTRY,
+from ....adapters.outbound.storage._protocol import StorageProvider
+from ....adapters.outbound.storage._records import (
+    RemoteMirrorIssue,
+    RemoteMirrorIssueKind,
+    RemoteMirrorNamespaceManifest,
+)
+from ....adapters.outbound.storage.errors import OutboundStorageError, OutboundStorageValidationError
+from ....adapters.persistence.storage._namespace_registry import STORAGE_NAMESPACE_REGISTRY
+from ....adapters.persistence.storage._secure_object_namespaces import (
     SecureObjectNamespaceDefinition,
     StorageRemoteMirrorPolicy,
-    secure_object_repository_for_active_bucket,
 )
-from ....adapters.persistence.storage.sql import verify_revision_self_consistency
+from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+from ....adapters.persistence.storage.sql._secure_object_crypto import verify_revision_self_consistency
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRawRow, SecureObjectRepository
 from ....core.config import load_settings
 from ....core.hashing import sha256_hex

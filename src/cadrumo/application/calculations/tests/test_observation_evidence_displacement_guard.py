@@ -21,8 +21,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from ....core.period import Period
 from ....core.casilla_id import validated_casilla_id
+from ....core.period import Period
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ....tests.secure_sql import isolated_runtime_profile
 from ..errors import ObservationEvidenceDisplacementError

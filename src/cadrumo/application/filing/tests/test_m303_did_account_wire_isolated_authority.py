@@ -9,10 +9,6 @@ from pathlib import Path
 
 import pytest
 
-from ....core.refund_election import RefundElection
-from ....core.payment_election import PaymentElection
-from ....core.prior_domiciliation_election import PriorDomiciliationElection
-from ....core.result_disposition import ResultDisposition
 from ....core.filing_projection_ref import (
     M303RegimenSimplificadoActivityField,
     M303RegimenSimplificadoActivityProjectionRef,
@@ -20,10 +16,14 @@ from ....core.filing_projection_ref import (
     M303RegimenSimplificadoFact,
 )
 from ....core.modelo import Modelo
+from ....core.payment_election import PaymentElection
 from ....core.period import Period
+from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.product_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
-from ....core.resources import bundled_path
-from ....domain.bienes_inversion import BienesInversionIvaRegister, RegistroRegularizacionResult
+from ....core.refund_election import RefundElection
+from ....core.resources._boundary import bundled_path
+from ....core.result_disposition import ResultDisposition
+from ....domain.bienes_inversion.register import BienesInversionIvaRegister, RegistroRegularizacionResult
 from ....domain.calculations.export_field_kind import CasillaFieldKind
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.loader import load_modelo_directory
@@ -40,30 +40,42 @@ from ....domain.calculations.registry.schema_exports import (
 )
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.calculations.registry.snapshot import build_snapshot
-from ....domain.deadlines.models import ChargeAccount, IVARegime, M303RegimeComposition, M303TaxTerritory, RefundAccount, TaxpayerProfile
+from ....domain.deadlines.models import (
+    ChargeAccount,
+    IVARegime,
+    M303RegimeComposition,
+    M303TaxTerritory,
+    RefundAccount,
+    TaxpayerProfile,
+)
 from ....domain.filing.errors import FilingExportValidationError
 from ....domain.filing.schema import ModeloDraft
 from ....domain.filing_evidence import FilingEvidenceReference
-from ....domain.iva.regimen_simplificado_rows import ActividadNoAgricolaSimplificado, EntradaModuloSimplificado, HechoActividadSimplificado, M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision, RegimenSimplificadoFilingRows
+from ....domain.iva.regimen_simplificado_rows import (
+    ActividadNoAgricolaSimplificado,
+    EntradaModuloSimplificado,
+    HechoActividadSimplificado,
+    M303RegimenSimplificadoScope,
+    M303RegimenSimplificadoScopeDecision,
+    RegimenSimplificadoFilingRows,
+)
 from ....domain.modelos.calculation_revision_m303_evidence import M303Exonerado390FilingEvidence
 from ....domain.modelos.calculation_revision_m303_handoff import M303RegimenSimplificadoFilingEvidence
-from ....domain.prorrata_register import ProrrataRegister
-from ....domain.submission import ModeloDraftStatus
+from ....domain.prorrata_register.register import ProrrataRegister
+from ....domain.submission._protocols import ModeloDraftStatus
 from ...aggregation import M303ProrrataTransitionArrival, M303SupplierRegimeArrival
-from ...calculations import calculate_m303_regimen_simplificado_result
-from .. import (
+from ...calculations._m303_regimen_simplificado import calculate_m303_regimen_simplificado_result
+from .._export import _filing_producer_values, _render_layout, export_draft, render_filing_envelope
+from .._export_envelope import FilingEnvelopeRenderRequest
+from .._producer_snapshot import (
     FilingElectionFacts,
-    FilingEnvelopeRenderRequest,
     FilingProducerSnapshot,
     FilingProducerSnapshotError,
     M303FilingFacts,
     PresenterIdentity,
     TaxpayerIdentityFacts,
     build_filing_producer_snapshot,
-    export_draft,
-    render_filing_envelope,
 )
-from .._export import _filing_producer_values, _render_layout
 from ..runtime import RegistrySchemaAccessor, _subview_from_snapshot, collection_from_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

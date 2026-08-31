@@ -50,7 +50,7 @@ from ..modelo.work_addressing import (
     ModeloWorkSelectorState,
     select_modelo_work_resolution,
 )
-from ..operator_actions import DeclaredNextAction
+from ..operator_actions._models import DeclaredNextAction
 from .next_actions import declare_next_action
 
 if TYPE_CHECKING:

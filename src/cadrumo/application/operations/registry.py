@@ -27,7 +27,7 @@ from ...core.operations import (
     OperationEffect,
     OperationInteractionKind,
 )
-from ..operator_actions import ActionReference
+from ..operator_actions._models import ActionReference
 from ._model_contract import require_strict_frozen_operation_model_graph
 from .capabilities import (
     OperationBaselinePolicy,

@@ -8,7 +8,7 @@ import pytest
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.config import override_settings
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.relations import relation_requirement_index, relation_source_requirements
 from .....domain.calculations.registry.schema import FormulaDefinition, RegistrySnapshot

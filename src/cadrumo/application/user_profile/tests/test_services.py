@@ -5,9 +5,9 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
+from ....core.errors.severity import BaseSeverity
 from ....core.modelo import Modelo
 from ....core.period import Period
-from ....core.errors.severity import BaseSeverity
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.profile_grounding import ProfileKeyGrounding
 from ....domain.user_profile.labels import profile_field_label

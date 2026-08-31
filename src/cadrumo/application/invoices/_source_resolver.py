@@ -26,11 +26,7 @@ from decimal import Decimal
 from typing import ClassVar
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ...adapters.persistence.storage import (
-    ClassificationError,
-    DecryptionError,
-    EnvelopeVersionError,
-)
+from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core.aggregation import (
     BindingSourceKind,
     CalculationSourceLineageRole,

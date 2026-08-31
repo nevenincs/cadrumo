@@ -17,7 +17,7 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.persistence.storage import build_profile_custody_port
+from ....adapters.persistence.storage._profile_custody import build_profile_custody_port
 from ....adapters.persistence.storage.custody.capsule import publish_profile_custody_capsule
 from ....adapters.persistence.storage.custody.capsule_records import ProfileCustodyCapsuleLabel
 from ....adapters.persistence.storage.custody.records import (

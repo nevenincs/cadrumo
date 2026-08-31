@@ -9,9 +9,11 @@ forbidden. The local submission lifecycle is owned by
 attempt is refused at the core access gate by
 :class:`core.access_gate.LiveSubmitForbiddenError`.
 
-Public API discipline: callers outside this subpackage import the renderer
-and translated adapter errors from this package root. Fixed-width value
-semantics are owned by :mod:`domain.calculations.registry`.
+Inert namespace. The renderer is reached at
+:mod:`~adapters.outbound.aeat.export._registry_record_renderer` and the
+translated adapter errors at :mod:`~adapters.outbound.aeat.export.errors`.
+Fixed-width value semantics are owned by
+:mod:`domain.calculations.registry`.
 
 See Also:
     :mod:`domain.submission`
@@ -22,11 +24,4 @@ See Also:
 
 from __future__ import annotations
 
-from ._registry_record_renderer import RegistryFixedWidthRecordRenderer
-from .errors import AeatExportFormatError, ExportError
-
-__all__ = [
-    "AeatExportFormatError",
-    "ExportError",
-    "RegistryFixedWidthRecordRenderer",
-]
+__all__: tuple[str, ...] = ()

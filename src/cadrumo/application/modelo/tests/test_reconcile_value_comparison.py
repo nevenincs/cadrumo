@@ -20,15 +20,15 @@ from decimal import Decimal
 import pytest
 
 from ....domain.calculations.registry.authority import bundled_authority
-from ...tests import isolated_profile_backend as _isolated_backend
+from ...tests._profile_backend_fixtures import _isolated_backend
 
 __all__ = ["_isolated_backend"]
 
 from ....adapters.inbound.justificante.parser import parse_justificante
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core.period import Period
 from ....core.casilla_id import validated_casilla_id
+from ....core.period import Period
 from ....domain.justificante import Justificante
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (

@@ -13,9 +13,9 @@ from typing import override
 import pytest
 from google.oauth2.credentials import Credentials
 
-from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....core.config import override_settings
 from .....core.errors.hierarchy import TerminalPreconditionErrorMixin
+from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....tests.env_scope import scoped_env_var
 from .....tests.secure_sql import isolated_runtime_profile
 from .. import active_profile as active_profile_module

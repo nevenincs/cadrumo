@@ -29,9 +29,11 @@ from typing import ClassVar, override
 
 from pydantic import ValidationError
 
+from ....core.classification.policies import SensitivityClass
 from ....core.logging import get_logger
-from ....domain.submission import ModeloPresentado
-from ..storage import SUBMISSION_RECORDS_NAMESPACE, SecureBoundRepository, SensitivityClass
+from ....domain.submission._models import ModeloPresentado
+from ..storage._secure_object_namespaces import SUBMISSION_RECORDS_NAMESPACE
+from ..storage.envelope._secure_repository import SecureBoundRepository
 
 _log = get_logger(__name__)
 
@@ -95,8 +97,8 @@ class SubmissionRepository(SecureBoundRepository[ModeloPresentado]):
             SecureObjectRowIdentityError: A row's payload rebuilds a different
                 submission id than the key it is filed under.
         """
-        from ..storage import SecureObjectRowIdentityError
         from ..storage.crypto.encrypted_columns import secure_object_key_digest
+        from ..storage.errors import SecureObjectRowIdentityError
         from ..storage.sql import SecureObjectRecord
 
         envelope_cls = self._envelope_cls()

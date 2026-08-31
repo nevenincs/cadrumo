@@ -12,13 +12,19 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
-from ....adapters.inbound.pdf import source_pdf_reference_path
+from ....adapters.inbound.pdf._utils import source_pdf_reference_path
 from ....application.user_profile.censo_sync import CENSO_SOURCE_TAG
-from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....domain.justificante import Justificante
+from ....core.period import Period
+from ....domain.justificante._schema import Justificante
 from ....domain.modelos.codes import ModeloCode
-from ....domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind, ModeloRecord, ModeloRecordStatus, derive_filing_record_id
+from ....domain.modelos.filing_record import (
+    ExternalEvidence,
+    ExternalEvidenceKind,
+    ModeloRecord,
+    ModeloRecordStatus,
+    derive_filing_record_id,
+)
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.aeat_literal_fixtures import aeat_url, justificante_cotejo_url
 from ....tests.profile_capsule import load_test_profile_record, open_test_profile_session, replace_test_profile_record

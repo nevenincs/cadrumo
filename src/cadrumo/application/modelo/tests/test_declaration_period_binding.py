@@ -24,8 +24,8 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
@@ -33,7 +33,7 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, U
 from ....tests import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations import IvaWalletDecisionRepository
+from ...calculations.observations_repository import IvaWalletDecisionRepository
 from .._calculation_actions import calculate_modelo_revision
 from ..work_lifecycle import create_work_unit
 

@@ -20,7 +20,7 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Annotated
 
-from pydantic import BaseModel, Field, StringConstraints, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, StringConstraints, model_validator
 
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
@@ -57,7 +57,7 @@ class CorpusChunk(BaseModel):
     doc_title: _Text
     section: str | None = None
     anchor: str | None = None
-    ordinal: int = Field(ge=0)
+    ordinal: NonNegativeInt
     text: _Text
 
 
@@ -69,7 +69,7 @@ class CorpusDocument(BaseModel):
     corpus_ref: _Text
     source_path: _Text
     title: _Text
-    chunk_count: int = Field(ge=0)
+    chunk_count: NonNegativeInt
 
 
 class LexicalSearchHit(BaseModel):
@@ -82,7 +82,7 @@ class LexicalSearchHit(BaseModel):
     doc_title: _Text
     section: str | None = None
     anchor: str | None = None
-    rank: int = Field(ge=0)
+    rank: NonNegativeInt
     score: float
     text: _Text
 
@@ -114,8 +114,8 @@ class CorpusIndexBuildResult(BaseModel):
     model_config = _STRICT_FROZEN
 
     database_path: _Text
-    document_count: int = Field(ge=0)
-    chunk_count: int = Field(ge=0)
+    document_count: NonNegativeInt
+    chunk_count: NonNegativeInt
 
 
 class RetrievalHit(BaseModel):
@@ -135,7 +135,7 @@ class RetrievalHit(BaseModel):
     doc_title: _Text
     text: _Text
     score: float = Field(ge=0.0)
-    rank: int = Field(ge=0)
+    rank: NonNegativeInt
     lexical_rank: int | None = None
 
 

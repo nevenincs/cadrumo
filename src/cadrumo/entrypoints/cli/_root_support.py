@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import typer
 
-from ...core.product_identity import PRODUCT_IDENTITY as _PRODUCT_IDENTITY
 from ...core.cli_metadata import is_metadata_invocation as _is_metadata_invocation
 from ...core.json_contract import strict_round_trip as _strict_round_trip
+from ...core.product_identity import PRODUCT_IDENTITY as _PRODUCT_IDENTITY
 from ._command_specs import COMMAND_GRAPH as _COMMAND_GRAPH
 from ._common import (
     active_profile_label,
@@ -58,7 +58,7 @@ def _emit_root_help_and_exit(ctx: typer.Context) -> None:
 
 def _root_profile_secret_help_lines() -> tuple[str, ...]:
     """Project graph-owned root profile-secret options into curated help."""
-    from ...core.i18n import tr
+    from ...core.i18n._render import tr
     from ._command_spec import OptionSpec
 
     root = _COMMAND_GRAPH.by_key()["root"]
@@ -89,7 +89,7 @@ def _root_profile_secret_help_lines() -> tuple[str, ...]:
 
 def _root_tui_help_lines() -> tuple[str, ...]:
     """Project the graph-owned global TUI request into curated root help."""
-    from ...core.i18n import tr
+    from ...core.i18n._render import tr
     from ._command_spec import OptionSpec
 
     root = _COMMAND_GRAPH.by_key()["root"]
@@ -146,7 +146,7 @@ def _emit_bare_invocation_and_exit(ctx: typer.Context) -> None:
     (which pull the registry) — it only renders the profile-creation prompt. Use
     the lightweight core resolver to avoid importing workflow.
     """
-    from ...adapters.persistence.storage import active_bucket_session_serves
+    from ...adapters.persistence.storage.master_key.active_session import active_bucket_session_serves
     from ...application.operator_surface.help import build_root_landing_report
     from ...application.workflow.profile_bucket_scan import list_profile_buckets
     from ...core.bucket_pointer import resolve_active_bucket_id

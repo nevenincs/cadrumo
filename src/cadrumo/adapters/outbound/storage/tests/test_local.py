@@ -21,25 +21,25 @@ from typing import Any, TypedDict
 
 import pytest
 
-from .....application.operator_actions import PreconditionVerdict
-from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from .....application.operator_actions._models import PreconditionVerdict
 from .....core.atomic_write import atomic_write_text
 from .....core.directory_scan import iter_directory, scan_directory
 from .....core.errors.error_codes import ERROR_REGISTRY, build_error_envelope, resolve_error_message
 from .....core.errors.hierarchy import TerminalPreconditionErrorMixin
 from .....core.i18n import tr
+from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....tests.path_obstruction import obstructed_path
-from .. import (
+from .._local import LocalFileSystemProvider, _local_failure_verdict
+from .._protocol import StorageProvider
+from .._records import ProviderKind
+from ..errors import (
     OutboundStorageIntegrityError,
     OutboundStorageNotFoundError,
     OutboundStoragePathTooLongError,
+    OutboundStoragePermissionError,
     OutboundStorageValidationError,
-    ProviderKind,
     StorageCorruptionError,
-    StorageProvider,
 )
-from .._local import LocalFileSystemProvider, _local_failure_verdict
-from ..errors import OutboundStoragePermissionError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

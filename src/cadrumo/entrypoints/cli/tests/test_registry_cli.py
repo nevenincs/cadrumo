@@ -8,7 +8,7 @@ import click
 import pytest
 
 from ....application.registry.tree import RegistryTreeReport
-from ....core.resources import bundled_path
+from ....core.resources._boundary import bundled_path
 from ....tests.cli_runner import cadrumo_click_command
 from ._registry_cli_fixtures import (
     _isolated_registry_cli_backend,

@@ -9,9 +9,9 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ....core import StorageCustodyProfile
-from ....core.classification import SensitivityClass
+from ....core.classification.policies import SensitivityClass
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core.storage_taxonomy import StorageCustodyProfile
 from ._namespace_taxonomy import (
     _CUSTODY_PROFILE_DISPOSITIONS,
     StorageCustodyDisposition,

@@ -40,7 +40,7 @@ from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
-from ._ledger_ux_support import _invoke, _open_ledger_ux_session
+from ._ledger_ux_support import _invoke, open_ledger_ux_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -109,7 +109,7 @@ def _grounded_draft() -> InvoiceDraft:
 @pytest.fixture
 def seeded_draft(tmp_path: Path) -> Iterator[None]:
     """A live bucket session carrying one pending draft of unverified attribution."""
-    with _open_ledger_ux_session(tmp_path):
+    with open_ledger_ux_session(tmp_path):
         bucket_id = resolve_active_bucket_id()
         assert bucket_id is not None
         write_extraction_draft(

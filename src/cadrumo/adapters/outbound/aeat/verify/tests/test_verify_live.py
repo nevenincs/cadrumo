@@ -16,7 +16,7 @@ import pytest
 
 from ......domain.justificante import JustificanteVerificationError
 from ......tests.live_gate import requires_live_enabled
-from .. import verify_csv
+from ..contract import verify_csv
 
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_outbound_adapter]
 

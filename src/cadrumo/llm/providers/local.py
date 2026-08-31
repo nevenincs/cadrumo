@@ -23,8 +23,8 @@ from typing import Protocol, cast, override
 import httpx
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...core.optional_extras import LLM_EXTRA, require_optional_extra
 from ...core.config import load_settings
+from ...core.optional_extras import LLM_EXTRA, require_optional_extra
 from ..errors import LLMPdfRasterisationError
 from ..models import LLMProvider
 from .base import (

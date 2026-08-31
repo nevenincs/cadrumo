@@ -49,10 +49,10 @@ from pathlib import Path
 
 import pytest
 
-from ....core.result_disposition import derive_result_disposition, result_disposition_casilla_ids
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
-from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.result_disposition import derive_result_disposition, result_disposition_casilla_ids
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import (
     RegistryModeloObservation,

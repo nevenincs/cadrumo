@@ -28,7 +28,7 @@ from enum import StrEnum
 from types import MappingProxyType
 from typing import Final, Literal
 
-from pydantic import BaseModel, Field, computed_field, field_serializer, field_validator
+from pydantic import BaseModel, Field, NonNegativeInt, computed_field, field_serializer, field_validator
 
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.identity import BucketId, TransactionId
@@ -53,7 +53,7 @@ from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.irpf_categories import has_employment_irpf_category
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
-from ...domain.usage_ratios import CensoRatioMismatchError
+from ...domain.usage_ratios.errors import CensoRatioMismatchError
 from ..aggregation import (
     IVA_LEDGER_COUNTERPARTY_GATE_REASONS,
     IVA_LEDGER_MISSING_FACT_REASONS,
@@ -110,8 +110,6 @@ class LedgerPreflightIssueReason(StrEnum):
     ANOMALY_NON_DECLARABLE_RECARGO_EQUIVALENCIA = "anomaly_non_declarable_recargo_equivalencia"
 
 
-
-
 class LedgerPreflightIssue(BaseModel):
     """One model-readiness issue attached to a bucket-local transaction."""
 
@@ -129,7 +127,7 @@ class LedgerPreflightReport(BaseModel):
 
     bucket_id: BucketId
     period: Period
-    checked_transaction_count: int = Field(ge=0)
+    checked_transaction_count: NonNegativeInt
     issues: Sequence[LedgerPreflightIssue] = Field(default_factory=tuple)
 
     @field_validator("issues")

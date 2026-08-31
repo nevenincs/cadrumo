@@ -31,12 +31,12 @@ __all__ = ["isolated_profile_storage"]
 
 from .... import __version__
 from ....application.operator_surface.help import build_help_document
-from ....core.external_constants import OutputLanguage
-from ....core.product_identity import PRODUCT_IDENTITY
 from ....core.bucket_pointer import BucketPointer, write_pointer
 from ....core.config import SecretStoreBackend, Settings, load_settings
-from ....core.i18n import tr
-from ....core.redaction import CLI_PROFILE_ID_PLACEHOLDER
+from ....core.external_constants import OutputLanguage
+from ....core.i18n._render import tr
+from ....core.product_identity import PRODUCT_IDENTITY
+from ....core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.user_profile import register_minimal_profile
 from ._isolated_profile_storage_fixtures import _isolated_state

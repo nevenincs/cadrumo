@@ -22,8 +22,8 @@ from collections.abc import Mapping
 
 from pydantic import ValidationError
 
-from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ...core.flows import REPEATING_INSTANCE_SEPARATOR
+from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ..flows.definition import FlowDefinition, FlowPage, FlowRepeatingGroup
 from ..flows.validators import CrossFieldValidator, ValidationVerdict, register_cross_field_validator
 from ..user_profile.projections import projection_for_taxpayer

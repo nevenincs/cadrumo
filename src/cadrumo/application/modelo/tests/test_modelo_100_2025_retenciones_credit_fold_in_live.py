@@ -57,10 +57,10 @@ from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core.period import Period
-from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core.aggregation import AggregationCaptureKind, BindingSourceKind
+from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import BindingId
@@ -74,7 +74,7 @@ from ...aggregation import (
     RetencionScheme,
     precedence_ladder_sources,
 )
-from ...calculations import CalculationObservationRepository
+from ...calculations.observations_repository import CalculationObservationRepository
 from .._calculation_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,

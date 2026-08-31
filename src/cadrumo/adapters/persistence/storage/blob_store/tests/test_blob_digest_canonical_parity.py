@@ -23,7 +23,7 @@ from __future__ import annotations
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
-from ......core.classification import SensitivityClass
+from ......core.classification.policies import SensitivityClass
 from ......core.hashing import sha256_hex
 from ......core.identity import ContentDigest
 from .._blob_store import BlobManifest, BlobReference, EncryptedBlobStore

@@ -38,12 +38,12 @@ from ...application.modelo.work_lifecycle import (
     list_work_units,
     rename_work_unit,
 )
-from ...core.modelo import Modelo
-from ...core.period import Period
 from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
-from ...core.i18n import tr
+from ...core.i18n._render import tr
 from ...core.json_contract import Notice
+from ...core.modelo import Modelo
+from ...core.period import Period
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.contribuyente.tax_residence import parse_tax_region

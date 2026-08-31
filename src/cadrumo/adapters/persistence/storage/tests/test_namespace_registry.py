@@ -9,17 +9,23 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .....core import StorageCustodyProfile
-from .....core.classification import SensitivityClass
+from .....core.classification.policies import SensitivityClass
 from .....core.errors.error_codes import ERROR_REGISTRY, build_error_envelope
 from .....core.product_identity import PRODUCT_IDENTITY
+from .....core.storage_taxonomy import StorageCustodyProfile
 from .....tests import (
     ast_for_path,
     leaf_name,
     package_python_files,
     repo_relative,
 )
-from .. import (
+from .._namespace_registry import (
+    STORAGE_NAMESPACE_REGISTRY,
+    secure_object_logical_path,
+    secure_object_namespace_logical_path,
+)
+from .._namespace_taxonomy import StoragePathAnchor, StoragePathKind
+from .._secure_object_namespaces import (
     AEAT_BROWSER_SESSION_NAMESPACE,
     AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
     AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE,
@@ -27,12 +33,7 @@ from .. import (
     APPLICATION_EVIDENCE_BUNDLE_NAMESPACE,
     ATTACHMENT_BLOB_NAMESPACE,
     ATTACHMENT_MANIFEST_NAMESPACE,
-    BLOB_MANIFEST_SCHEMA_VERSION,
-    BUCKET_DB_DIRNAME,
     BUCKET_EVENT_HISTORY_NAMESPACE,
-    BUCKET_LOCK_FILENAME,
-    BUCKET_MANIFEST_FILENAME,
-    BUCKETS_DIRNAME,
     CALCULATION_OBSERVATIONS_NAMESPACE,
     CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE,
     GOOGLE_DRIVE_CONFIG_NAMESPACE,
@@ -68,13 +69,14 @@ from .. import (
     StorageNamespaceScope,
     StorageRemoteMirrorPolicy,
 )
-from .._namespace_registry import (
-    STORAGE_NAMESPACE_REGISTRY,
-    secure_object_logical_path,
-    secure_object_namespace_logical_path,
+from .._storage_path_definitions import (
+    BLOB_MANIFEST_SCHEMA_VERSION,
+    BUCKET_DB_DIRNAME,
+    BUCKET_LOCK_FILENAME,
+    BUCKET_MANIFEST_FILENAME,
+    BUCKETS_DIRNAME,
+    StoragePathDefinition,
 )
-from .._namespace_taxonomy import StoragePathAnchor, StoragePathKind
-from .._storage_path_definitions import StoragePathDefinition
 from ..errors import NamespaceRegistryError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -194,7 +196,7 @@ def test_secure_object_registry_names_live_m036_declaration_namespace() -> None:
 
 def test_secure_object_registry_names_m145_communication_record_namespace() -> None:
     """Modelo 145 local communication records persist through this namespace."""
-    from .. import M145_COMMUNICATION_RECORD_NAMESPACE
+    from .._secure_object_namespaces import M145_COMMUNICATION_RECORD_NAMESPACE
 
     record = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("m145_communication_record")
 
@@ -294,7 +296,7 @@ def test_modelo_catalogue_namespaces_pin_their_persisted_addresses() -> None:
     deliberate pin that replaces it, alongside the singleton catalogue object key
     each of the four addresses its single row by.
     """
-    from .. import (
+    from .._secure_object_namespaces import (
         MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE,
         MODELO_FILING_RECORD_CATALOGUE_NAMESPACE,
         MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE,
@@ -1055,7 +1057,7 @@ def test_every_pinned_secure_object_method_still_exists() -> None:
     Found stale on its first run: ``list_object_keys`` was pinned and
     :class:`SecureObjectRepository` has no such method.
     """
-    from .. import SecureObjectRepository
+    from ..sql import SecureObjectRepository
 
     missing = sorted(name for name in _SECURE_OBJECT_METHODS if not hasattr(SecureObjectRepository, name))
 

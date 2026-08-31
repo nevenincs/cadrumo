@@ -25,10 +25,10 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 
-from ...core.modelo import Modelo
-from ...core.period import Period
 from ...core.errors.severity import BaseSeverity
+from ...core.modelo import Modelo
 from ...core.parsing import parse_iso8601_date
+from ...core.period import Period
 from ...domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
     derive_modelo_applicability,

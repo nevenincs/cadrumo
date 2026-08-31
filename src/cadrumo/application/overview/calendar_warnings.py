@@ -23,9 +23,9 @@ from collections.abc import Mapping
 from functools import lru_cache
 from types import MappingProxyType
 
+from ...core.external_constants import IVA_REGIME_MODELOS
 from ...core.modelo import Modelo as _Modelo
 from ...core.period import Period as _Period
-from ...core.external_constants import IVA_REGIME_MODELOS
 from ...domain.calculations.registry.applicability import (
     iter_modelo_applicability_rules as _iter_modelo_applicability_rules,
 )
@@ -33,7 +33,7 @@ from ...domain.calculations.registry.applicability_payer_facts import PayerFact 
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.deadlines.models import IrpfEstimationRegime as _IrpfEstimationRegime
 from ...domain.deadlines.models import IVARegime as _IVARegime
-from ..operator_actions import DeclaredNextAction
+from ..operator_actions._models import DeclaredNextAction
 from .calendar_models import (
     CalendarCompleteness,
     CalendarWarning,

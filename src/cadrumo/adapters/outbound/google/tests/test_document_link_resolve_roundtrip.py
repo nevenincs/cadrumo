@@ -32,7 +32,7 @@ from .....domain.attachments.enums import AttachmentKind, AttachmentSource
 from .....domain.attachments.errors import AttachmentValidationError
 from .....domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
 from .....tests.secure_sql import isolated_runtime_profile
-from ...storage import OutboundStoragePermissionError
+from ...storage.errors import OutboundStoragePermissionError
 from ..document_link_resolver import resolve_document_link
 from .drive_media_server import drive_media_endpoint
 

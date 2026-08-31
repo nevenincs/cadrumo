@@ -65,7 +65,7 @@ from ...application.modelo.work_wizard import (
 )
 from ...core.external_constants import OutputLanguage
 from ...core.flows import FlowMode
-from ...core.i18n import tr
+from ...core.i18n._render import tr
 from ...core.json_contract import Notice
 from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 from ._common import activate_subcommand_output_language, attach_cli_policy_verdict, emit_envelope

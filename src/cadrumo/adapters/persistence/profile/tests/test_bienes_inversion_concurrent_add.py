@@ -21,11 +21,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....domain.bienes_inversion import (
-    BienesInversionIvaRegister,
-    BienInversionIvaRecord,
-    BienInversionKind,
-)
+from .....domain.bienes_inversion.register import BienesInversionIvaRegister, BienInversionIvaRecord, BienInversionKind
 from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ..bienes_inversion import BienesInversionIvaRegisterRepository
 
@@ -102,7 +98,7 @@ def test_a_duplicate_identifier_is_still_refused_and_not_retried() -> None:
     repo = BienesInversionIvaRegisterRepository()
     repo.add(_record("bien-2022", year=2022))
 
-    from .....domain.bienes_inversion import BienInversionRecordError
+    from .....domain.bienes_inversion.register import BienInversionRecordError
 
     with pytest.raises(BienInversionRecordError):
         BienesInversionIvaRegisterRepository().add(_record("bien-2022", year=2022))

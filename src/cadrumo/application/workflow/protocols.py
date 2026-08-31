@@ -38,15 +38,15 @@ from datetime import date
 from typing import Protocol, override, runtime_checkable
 
 from ...core.auth_provider import AuthProviderDescription
-from ...core.period import Period
 from ...core.errors.severity import BaseSeverity
+from ...core.period import Period
 from ...domain.deadlines.models import Schedule, TaxpayerProfile
 
 # ``ModeloInputs`` and its element aliases are domain-owned input contracts.
 # This module consumes them for its protocol annotations; callers import them
 # directly from :mod:`cadrumo.domain.filing`.
 from ...domain.filing.protocols import ModeloInputs
-from ...domain.submission import ModeloDraftLike
+from ...domain.submission._protocols import ModeloDraftLike
 
 
 @runtime_checkable

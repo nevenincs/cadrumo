@@ -70,7 +70,7 @@ from ._edit_services import (
 )
 
 if TYPE_CHECKING:
-    from ...adapters.persistence.storage import SecureObjectWrite
+    from ...adapters.persistence.storage.sql.secure_objects import SecureObjectWrite
 
 _RESPONSIBLE_OWNER = "modelo.edit"
 _UNSUPPORTED_RECONSIDERATION = "resubmit without this intent once its follow-on Step lands, or split the submission"

@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ....core.period import Period
-from ...calculations import CalculationObservationRepository
+from ...calculations.observations_repository import CalculationObservationRepository
 from ...workflow.persistence import WorkflowRunRepository
 from ...workflow.run_models import WorkflowDeadlineContextDetails
 from .._filed_revision_observation import APP_FILING_SOURCE_KIND

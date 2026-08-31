@@ -31,10 +31,11 @@ from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
-from .....core import LOCKFILE_UNLINK_RETRY_SECONDS, pid_is_alive, unlink_lockfile
 from .....core.config import load_settings as _load_settings
 from .....core.external_constants import UTF_8_ENCODING
+from .....core.lockfile_unlink import LOCKFILE_UNLINK_RETRY_SECONDS, unlink_lockfile
 from .....core.logging import get_logger
+from .....core.pid_liveness import pid_is_alive
 from .._storage_path_definitions import BUCKET_LOCK_FILENAME
 from .errors import BucketBusyError, BucketValidationError
 

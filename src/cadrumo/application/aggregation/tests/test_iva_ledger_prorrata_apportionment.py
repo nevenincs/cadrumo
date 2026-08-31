@@ -28,20 +28,20 @@ import pytest
 
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage import SecureObjectRepository
+from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from ....core.period import Period
 from ....core.prorrata_register import (
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,
 )
-from ....core.period import Period
-from ....domain.bienes_inversion import BienesInversionIvaRegister
+from ....domain.bienes_inversion.register import BienesInversionIvaRegister
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.prorrata import InputClassification
-from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry, SectorDefinition
+from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry, SectorDefinition
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

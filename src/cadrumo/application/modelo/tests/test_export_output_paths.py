@@ -13,30 +13,44 @@ from ._export_test_support import isolated_backend
 __all__ = ["isolated_backend"]
 
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from ....application.calculations import (
+from ....application.calculations.observations_repository import (
     CalculationObservationRepository,
     ObservationSourceKind,
     ResultDispositionProjection,
 )
-from ....core.observed_header_fact import ObservedHeaderFact
-from ....core.payment_election import PaymentElection
-from ....core.prior_domiciliation_election import PriorDomiciliationElection
-from ....core.result_disposition import ResultDisposition
-from ....core.period import Period
 from ....core.directory_scan import (
     iter_directory,
 )
+from ....core.observed_header_fact import ObservedHeaderFact
+from ....core.payment_election import PaymentElection
+from ....core.period import Period
+from ....core.prior_domiciliation_election import PriorDomiciliationElection
+from ....core.result_disposition import ResultDisposition
 from ....domain.buckets.event import BucketEventType
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
-from ....domain.deadlines.models import ChargeAccount, IVARegime, M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile, RefundAccount, TaxpayerProfile
+from ....domain.deadlines.models import (
+    ChargeAccount,
+    IVARegime,
+    M303RegimeComposition,
+    M303TaxTerritory,
+    ModeloIVAProfile,
+    RefundAccount,
+    TaxpayerProfile,
+)
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
-from ....domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind, ModeloRecord, ModeloRecordStatus, derive_filing_record_id
-from ....domain.modelos.filing_repository import upsert_filing_record
 from ....domain.modelos.calculation_revision import (
     CalculationRevisionAmendmentIdentity,
     CalculationRevisionAmendmentKind,
     derive_calculation_revision_id_from_revision,
 )
+from ....domain.modelos.filing_record import (
+    ExternalEvidence,
+    ExternalEvidenceKind,
+    ModeloRecord,
+    ModeloRecordStatus,
+    derive_filing_record_id,
+)
+from ....domain.modelos.filing_repository import upsert_filing_record
 from .._action_errors import (
     ModeloChargeAccountMissingError,
     ModeloPaymentElectionCapabilityRefusedError,

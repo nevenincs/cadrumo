@@ -17,15 +17,15 @@ from pathlib import Path
 
 import pytest
 
-from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.directory_scan import scan_directory
-from ....core.resources import bundled_path
+from ....core.period import Period
+from ....core.resources._boundary import bundled_path
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ids import LegalRefId, SourceRefId
 from ....domain.calculations.registry.legal import verify_legal_catalogue
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind
-from ...calculations import (
+from ...calculations.cross_period_clean_state import (
     CrossPeriodCleanStateBlocker,
     CrossPeriodCleanStateVerdict,
     CrossPeriodDependencyEvidence,

@@ -24,7 +24,7 @@ import pytest
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....core.config import load_settings, override_settings
-from ....core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
+from ....core.redaction.rules import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.cli_envelope import unwrap_cli_result as _json
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root

@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from ..adapters.persistence.storage import dispose_engine
+from ..adapters.persistence.storage.sql.engine import dispose_engine
 from ..core.config import override_settings
 from .profile_capsule import open_test_profile_session
 from .secure_sql import isolated_profile_storage_root

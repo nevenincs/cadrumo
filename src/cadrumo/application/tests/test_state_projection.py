@@ -30,12 +30,12 @@ from uuid import UUID
 import pytest
 from pydantic import SecretStr
 
-from ...adapters.persistence.storage import master_key
 from ...adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from ...adapters.persistence.storage.custody.kdf_supervision import unlock_profile_custody
+from ...adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ...adapters.persistence.storage.sql.engine import dispose_engine
-from ...core.period import Period
 from ...core.config import SecretStoreBackend, Settings, override_settings
+from ...core.period import Period
 from ...domain.categories.spending_category import SpendingCategory
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
 from ...tests.bucket_layout import provision_bucket_directory
@@ -164,7 +164,7 @@ def _register_active_profile(*, overrides: Mapping[str, str] | None = None) -> s
         storage_root=storage_root,
     )
     profile_bind_bucket_session(session)
-    _ACTIVE_STORAGE_STACK.callback(master_key.close_active_bucket_session)
+    _ACTIVE_STORAGE_STACK.callback(close_active_bucket_session)
     _ACTIVE_STORAGE_STACK.callback(close_active_profile_record_session)
     register_minimal_profile(
         profile_id=outcome.profile_id,

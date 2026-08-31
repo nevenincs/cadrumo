@@ -16,21 +16,18 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Annotated
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, NonNegativeInt
 
+from ...core.identity import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.prose_elision import ElidedProse
-from ...core.identity import BucketId
 from ...core.unit_proportion import UnitProportion, is_unit_proportion
 from ...domain.categories.proportionality import ProportionalityKind, ProportionalityRule, effective_usage_ratio
 from ...domain.categories.registry import resolve_category_profiles
 from ...domain.categories.spending_category import HOME_OFFICE_FAMILIES, SpendingCategory, family_for
-from ...domain.usage_ratios import (
-    ELIGIBLE_USAGE_RATIO_CATEGORIES,
-    UsageRatioProfile,
-    UsageRatioValidationError,
-    usage_ratio_bucket_lock,
-)
+from ...domain.usage_ratios._model import ELIGIBLE_USAGE_RATIO_CATEGORIES, UsageRatioProfile
+from ...domain.usage_ratios._service import usage_ratio_bucket_lock
+from ...domain.usage_ratios.errors import UsageRatioValidationError
 from .usage_ratio_repository import load_usage_ratio_profile, save_usage_ratio_profile
 
 
@@ -76,8 +73,8 @@ class RatiosValidationReport(BaseModel):
 
     bucket_id: BucketId
     profile_present: bool
-    eligible_count: int = Field(ge=0)
-    overrides_count: int = Field(ge=0)
+    eligible_count: NonNegativeInt
+    overrides_count: NonNegativeInt
     missing_overrides: tuple[SpendingCategory, ...] = Field(default_factory=tuple)
     findings: tuple[RatiosValidationFinding, ...] = Field(default_factory=tuple)
 

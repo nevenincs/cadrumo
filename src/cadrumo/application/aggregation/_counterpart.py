@@ -19,7 +19,7 @@ from collections.abc import Mapping
 from decimal import Decimal
 from types import MappingProxyType
 
-from pydantic import BaseModel, Field, InstanceOf, field_validator, model_validator
+from pydantic import BaseModel, Field, InstanceOf, NonNegativeInt, field_validator, model_validator
 
 from ...core.aggregation import (
     CounterpartSourceKind,
@@ -149,7 +149,7 @@ class CounterpartRollup(_CounterpartBoundaryModel):
     counterparty_name: str = Field(default="", max_length=200)
     counterparty_country: CountryCodeAlpha2
     operation_kind: str = Field(min_length=1)
-    observations_count: int = Field(ge=0)
+    observations_count: NonNegativeInt
     total_taxable_base: Decimal = Field(ge=Decimal("0"))
     total_invoice_total: Decimal = Field(ge=Decimal("0"))
     requires_groi_check: bool = False
@@ -167,7 +167,7 @@ class CounterpartAggregation(BaseModel):
     modelo: str = Field(min_length=1)
     period: InstanceOf[Period]
     rollups: tuple[CounterpartRollup, ...] = Field(default_factory=tuple)
-    total_counterparties: int = Field(ge=0)
+    total_counterparties: NonNegativeInt
     total_taxable_base: Decimal = Field(ge=Decimal("0"))
     total_invoice_total: Decimal = Field(ge=Decimal("0"))
 

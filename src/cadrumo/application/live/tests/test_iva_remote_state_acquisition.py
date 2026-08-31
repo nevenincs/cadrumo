@@ -14,15 +14,12 @@ from pydantic import ValidationError
 
 from ....adapters.outbound.aeat.auth.clave_movil_support import ClaveMovilApprovalTimeoutError
 from ....adapters.outbound.aeat.sede.errors import SedeFailureMode, SedeNavigationError
-from ....adapters.persistence.storage import (
-    LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE,
-    SecureObjectRowIdentityError,
-)
-from ....adapters.persistence.storage.errors import StorageValidationError
+from ....adapters.persistence.storage._secure_object_namespaces import LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE
+from ....adapters.persistence.storage.errors import SecureObjectRowIdentityError, StorageValidationError
 from ....core.auth_provider import AuthProviderKind
-from ....core.period import Period
 from ....core.config import Settings
 from ....core.identity import nif_check_letter
+from ....core.period import Period
 from ....tests.secure_sql import isolated_runtime_profile, isolated_sessionless_storage_root, read_db_at_rest_bytes
 from ...auth.session_types import (
     AeatLoginAssertion,

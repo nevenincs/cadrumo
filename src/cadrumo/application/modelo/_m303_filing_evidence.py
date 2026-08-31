@@ -5,19 +5,19 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from decimal import Decimal
 
+from ...core.casilla_id import CasillaId
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
-from ...core.casilla_id import CasillaId
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.iva.refund_eligibility import is_last_filing_period_of_year
 from ...domain.iva.regimen_simplificado_rows import validate_regimen_simplificado_rows
-from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.calculation_revision import FilingInstanceEvidence
 from ...domain.modelos.calculation_revision_m303_handoff import M303FilingInstanceEvidence
-from ..calculations import calculate_m303_regimen_simplificado_result
+from ...domain.modelos.work_unit import WorkUnit
+from ..calculations._m303_regimen_simplificado import calculate_m303_regimen_simplificado_result
 from ._action_errors import M303FilingEvidenceError
 from ._m303_regimen_simplificado_scope import (
     active_taxpayer_profile,

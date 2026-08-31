@@ -26,10 +26,10 @@ from collections.abc import Mapping
 
 from pydantic import BaseModel, model_validator
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors.hierarchy import CadrumoError
 from ...core.identity import BucketId
-from ..operator_actions import PreconditionVerdict
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ..operator_actions._models import PreconditionVerdict
 from .catalogue import AuthProviderListing
 from .probes import ProviderProbeResult
 

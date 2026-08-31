@@ -24,12 +24,12 @@ from textual.widgets import (
 )
 
 from ......application.modelo.work_review import ModeloWorkOriginAnomaly
-from ......core.modelo_work_progress_state import ModeloWorkProgressState
-from ......core.estado_casilla_oficial import EstadoCasillaOficial
-from ......core.operator_action_enums import OperatorActionAxis
 from ......core.aggregation import BindingSourceKind
 from ......core.config import override_settings
-from ......core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
+from ......core.estado_casilla_oficial import EstadoCasillaOficial
+from ......core.i18n._render import SUPPORTED_OUTPUT_LANGUAGES, tr
+from ......core.modelo_work_progress_state import ModeloWorkProgressState
+from ......core.operator_action_enums import OperatorActionAxis
 from ......domain.calculations.registry.handoffs import RelationConsumptionChannel
 from ......domain.calculations.registry.schema_input_kind import InputKind
 from ......domain.filing.schema import ModeloValueKind

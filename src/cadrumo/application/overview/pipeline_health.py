@@ -49,20 +49,20 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.period import Period
 from ...core.i18n import tr
 from ...core.identity import BucketId, WorkUnitId
-from ...domain.modelos.verification_report import ModeloVerificationFindingSeverity, VerificationCompletenessStatus
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.period import Period
 from ...domain.modelos.calculation_revision import CalculationRevisionState
+from ...domain.modelos.verification_report import ModeloVerificationFindingSeverity, VerificationCompletenessStatus
 from ..ledger.models import LedgerStatusReport
-from ..operator_actions import DeclaredNextAction
+from ..operator_actions._models import DeclaredNextAction
 from .next_actions import declare_next_action
 
 if TYPE_CHECKING:
+    from ...domain.modelos.calculation_revision import CalculationRevision
     from ...domain.modelos.verification_report import VerificationReport
     from ...domain.modelos.work_unit import WorkUnit
-    from ...domain.modelos.calculation_revision import CalculationRevision
 
 
 class ModeloReadinessState(StrEnum):

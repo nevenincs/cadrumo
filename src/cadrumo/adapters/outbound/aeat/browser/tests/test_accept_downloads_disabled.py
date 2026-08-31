@@ -49,7 +49,8 @@ import pytest
 from playwright.async_api import Error as PlaywrightError
 
 from ......core.config import Settings
-from .. import Profile, create_browser_session
+from .. import Profile
+from .._factory import create_browser_session
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

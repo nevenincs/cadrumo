@@ -11,10 +11,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .....core import fsync_parent_dir
 from .....core.atomic_write import atomic_write_text
 from .....core.config import coerce_output_language_setting
 from .....core.external_constants import UTF_8_ENCODING
+from .....core.fsync import fsync_parent_dir
 from .....core.logging import get_logger
 from .._storage_path_definitions import BUCKET_OUTPUT_LANGUAGE_HINT_FILENAME
 from ._layout import bucket_paths

@@ -25,18 +25,15 @@ from pathlib import Path
 
 from ....core.errors.hierarchy import CadrumoError
 from ....core.logging import get_logger
-from ....domain.prorrata_register import (
+from ....domain.prorrata_register.register import (
     ProrrataActivityRow,
     ProrrataRegister,
     ProrrataRegisterEntry,
     ProrrataRegisterError,
     SectorDefinition,
 )
-from ..storage import (
-    PROFILE_PRORRATA_REGISTER_NAMESPACE,
-    SecureObjectRepository,
-    SecureObjectWrite,
-)
+from ..storage._secure_object_namespaces import PROFILE_PRORRATA_REGISTER_NAMESPACE
+from ..storage.sql import SecureObjectRepository, SecureObjectWrite
 from ._secure_model_document import (
     ProfileBareModelSecurePersistence,
     resolve_profile_secure_object_repository,

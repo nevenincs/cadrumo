@@ -9,12 +9,10 @@ import pytest
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ....adapters.persistence.profile.snapshots import SecureSnapshotRepository
-from ....adapters.persistence.storage import (
-    TEST_SNAPSHOT_BASE_PROBE_NAMESPACE,
-    Envelope,
-    SensitivityClass,
-)
+from ....adapters.persistence.storage._secure_object_namespaces import TEST_SNAPSHOT_BASE_PROBE_NAMESPACE
+from ....adapters.persistence.storage.envelope._envelope import Envelope
 from ....adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
+from ....core.classification.policies import SensitivityClass
 from ....core.errors.hierarchy import CadrumoError
 from ....core.hashing import content_hash_hex
 from ....core.identity import BucketId
@@ -475,7 +473,7 @@ def test_secure_snapshot_repository_conforms_to_protocol(
 
     Uses the expedientes namespace+model to exercise the generic class.
     """
-    from ....adapters.persistence.storage import LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE
+    from ....adapters.persistence.storage._secure_object_namespaces import LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE
     from ..expedientes import (
         PersistedExpedientesSnapshot,
         expedientes_snapshot_object_key,

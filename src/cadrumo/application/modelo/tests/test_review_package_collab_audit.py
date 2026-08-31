@@ -47,19 +47,18 @@ import pytest
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ....core.period import Period
 from ....core.casilla_id import validated_casilla_id
+from ....core.period import Period
 from ....domain.buckets.event import BucketEventObjectType, BucketEventType
 from ....domain.calculations.registry.bindings import CasillaObservation
-from ....domain.modelos.codes import ModeloCode
-from ....domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
 from ....tests.secure_sql import isolated_runtime_profile
-from ..review_package import verify_review_package
 from .._review_package_collab_audit import (
     emit_collab_package_counter_signed_event,
     emit_collab_package_decrypted_event,
@@ -79,6 +78,7 @@ from .._review_package_recipient_registry import (
 )
 from .._review_package_review_only_workspace import open_review_only_workspace
 from .._review_package_signing import ensure_review_package_signing_keypair, sign_review_package
+from ..review_package import verify_review_package
 from ._review_package_bytes_support import build_package_bytes
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

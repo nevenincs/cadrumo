@@ -32,7 +32,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ......core.classification import SensitivityClass
+from ......core.classification.policies import SensitivityClass
 from ......core.external_constants import UTF_8_ENCODING
 from ...errors import StorageValidationError
 from ..store import (

@@ -15,8 +15,8 @@ from dataclasses import dataclass
 from pydantic import ValidationError
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ...core.i18n._render import tr
 from ...core.irnr import M210PayerMode
-from ...core.i18n import tr
 from ...domain.transactions.enums import TransactionDirection
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.m210_income_classification import M210IncomeClassification

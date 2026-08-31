@@ -26,7 +26,9 @@ import pytest
 from .....core.config import override_settings
 from .....domain.filing.errors import ModeloDraftError
 from .....tests.secure_sql import isolated_storage_root as _isolated_storage  # noqa: F401 - autouse fixture
-from ...storage import StorageRuntimeReadinessCode, StorageValidationError, secure_object_repository_for_bucket
+from ...storage._runtime_readiness import StorageRuntimeReadinessCode
+from ...storage.errors import StorageValidationError
+from ...storage.runtime_repository import secure_object_repository_for_bucket
 from .._filing_runtime import resolve_filing_repository_bucket_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

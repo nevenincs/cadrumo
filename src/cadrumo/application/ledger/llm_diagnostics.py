@@ -39,9 +39,9 @@ from datetime import date
 from decimal import Decimal
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints
+from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, StringConstraints
 
-from ...adapters.outbound.llm import UsageRecorder
+from ...adapters.outbound.llm._usage import UsageRecorder
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...domain.transactions.models import Transaction
@@ -94,11 +94,11 @@ class LlmUsageCostProviderMetrics(BaseModel):
     model_config = _STRICT_FROZEN
 
     provider: LlmProviderName
-    calls: int = Field(ge=0)
-    cache_hits: int = Field(ge=0)
-    input_tokens: int = Field(ge=0)
-    output_tokens: int = Field(ge=0)
-    total_tokens: int = Field(ge=0)
+    calls: NonNegativeInt
+    cache_hits: NonNegativeInt
+    input_tokens: NonNegativeInt
+    output_tokens: NonNegativeInt
+    total_tokens: NonNegativeInt
     cost_estimate_usd: Decimal | None
     unpriced_calls: int = Field(default=0, ge=0)
 
@@ -118,10 +118,10 @@ class LlmConfidenceProviderMetrics(BaseModel):
     model_config = _STRICT_FROZEN
 
     provider: LlmProviderName
-    classified_count: int = Field(ge=0)
-    low_confidence_count: int = Field(ge=0)
-    high_confidence_count: int = Field(ge=0)
-    medium_confidence_count: int = Field(ge=0)
+    classified_count: NonNegativeInt
+    low_confidence_count: NonNegativeInt
+    high_confidence_count: NonNegativeInt
+    medium_confidence_count: NonNegativeInt
     min_confidence: Decimal | None = None
     max_confidence: Decimal | None = None
     mean_confidence: Decimal | None = None

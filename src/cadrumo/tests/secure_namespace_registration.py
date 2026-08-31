@@ -15,11 +15,11 @@ scaffolding.
 
 from __future__ import annotations
 
-from ..adapters.persistence.storage import (
+from ..adapters.persistence.storage._secure_object_namespaces import (
     SecureObjectNamespaceDefinition,
-    SecureObjectRepository,
     StorageHierarchyRegistry,
 )
+from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 
 __all__ = ["registered_objects"]
 

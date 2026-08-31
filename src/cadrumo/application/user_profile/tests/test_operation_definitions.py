@@ -18,8 +18,8 @@ from ....adapters.persistence.operations.secure_references import (
     OperationSecureReferenceRepository,
     operation_secure_reference_repository,
 )
-from ....adapters.persistence.storage import current_active_bucket_session
-from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....adapters.persistence.storage.master_key.active_session import current_active_bucket_session
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core.bucket_pointer import read_pointer
 from ....core.operations import (
     OperationEffect,

@@ -19,7 +19,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .....core import StorageCategory, storage_location
+from .....core.storage_taxonomy import StorageCategory
+from .....core.storage_taxonomy_locations import storage_location
 from ._layout import BucketPaths, bucket_paths, validate_path_component
 from .errors import BucketValidationError
 

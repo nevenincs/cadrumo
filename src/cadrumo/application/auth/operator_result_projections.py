@@ -10,7 +10,8 @@ from ...core.config import load_settings
 from ...core.i18n import tr
 from ...core.identity import tax_id_identity_token
 from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
-from ..operator_actions import PreconditionVerdict, no_action_precondition_verdict
+from ..operator_actions._models import PreconditionVerdict
+from ..operator_actions._preconditions import no_action_precondition_verdict
 from .operator_results import AuthConfigureResult, AuthStatusResult
 from .sessions import clave_auth_facts_from_profile_values, resolve_clave_credentials
 

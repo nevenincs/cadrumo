@@ -16,7 +16,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.period import Period
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitState

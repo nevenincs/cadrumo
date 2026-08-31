@@ -68,9 +68,9 @@ from decimal import Decimal
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ..application.ledger.models import ManualLedgerTransactionResult
-from ..core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..core.field_origin import FieldOrigin
 from ..core.identity import BucketId, TaxIdIdentityToken, TransactionId
+from ..core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..domain.categories.spending_category import SpendingCategory
 from ..domain.iva.schema import IvaCategory
 from ..domain.transactions.enums import BusinessClassification

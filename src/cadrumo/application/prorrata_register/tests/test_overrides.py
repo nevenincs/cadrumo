@@ -24,16 +24,17 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
-from ....core.modelo import Modelo
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.modelo import Modelo
+from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.prorrata_register import ProrrataRegisterEntry
+from ....domain.prorrata_register.register import ProrrataRegisterEntry
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations import CalculationObservationRepository, CrossPeriodCleanStateBlocker
-from .. import ProrrataRegisterService
+from ...calculations.cross_period_clean_state import CrossPeriodCleanStateBlocker
+from ...calculations.observations_repository import CalculationObservationRepository
 from .._seed import cross_check_prorrata_entry_against_prior_observation
+from .._service import ProrrataRegisterService
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

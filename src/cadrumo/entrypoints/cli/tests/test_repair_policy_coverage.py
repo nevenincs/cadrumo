@@ -33,7 +33,8 @@ from typing import cast
 import click
 import pytest
 
-from ....adapters.persistence.storage import STORAGE_NAMESPACE_REGISTRY, WORKFLOW_STATE_NAMESPACE
+from ....adapters.persistence.storage._namespace_registry import STORAGE_NAMESPACE_REGISTRY
+from ....adapters.persistence.storage._secure_object_namespaces import WORKFLOW_STATE_NAMESPACE
 from ....application.repair_integrity import build_repair_policy_command_surface_catalog
 from ....tests.cli_runner import cadrumo_click_command
 

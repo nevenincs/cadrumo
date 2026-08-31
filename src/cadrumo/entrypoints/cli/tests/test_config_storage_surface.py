@@ -7,9 +7,9 @@ from typing import Any
 
 import pytest
 
-from ....core.storage_taxonomy_locations import storage_path
-from ....core.storage_taxonomy import StorageArea, StorageCategory
 from ....core.config import override_settings
+from ....core.storage_taxonomy import StorageArea, StorageCategory
+from ....core.storage_taxonomy_locations import storage_path
 from ....tests.cli_runner import invoke_cached_cli, semantic_cli_output
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

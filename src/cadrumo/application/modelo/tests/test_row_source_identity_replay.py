@@ -8,14 +8,20 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.period import Period
 from ....core.aggregation import BindingSourceKind
-from ....domain.calculations import RowSourceIdentity
+from ....core.period import Period
+from ....domain.calculations._row_source_identity import RowSourceIdentity
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.filing.schema import ModeloBindingValue, ModeloDraft, ModeloValueKind, compute_modelo_draft_id, registry_schema_version
+from ....domain.filing.schema import (
+    ModeloBindingValue,
+    ModeloDraft,
+    ModeloValueKind,
+    compute_modelo_draft_id,
+    registry_schema_version,
+)
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.modelos.errors import ModeloValidationError
-from ....domain.submission import ModeloDraftStatus
+from ....domain.submission._protocols import ModeloDraftStatus
 from .._row_source_identity_replay import (
     attach_revision_row_source_identities,
     row_source_fingerprints_for_review,

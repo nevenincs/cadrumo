@@ -12,11 +12,12 @@ from typing import Any, cast
 
 import pytest
 
-from .....application.storage.calc_sheets import CALC_SHEETS_ENGINE_VERSION, SheetExportPlan
-from .....core.tax_domain import TaxDomain
+from .....application.storage.calc_sheets._engine import CALC_SHEETS_ENGINE_VERSION
+from .....application.storage.calc_sheets._records import SheetExportPlan
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from .....core.tax_domain import TaxDomain
 from .....domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistrySnapshot
-from ...storage import OutboundStorageConflictError, OutboundStorageError, OutboundStorageValidationError
+from ...storage.errors import OutboundStorageConflictError, OutboundStorageError, OutboundStorageValidationError
 from ..calc_sheets_apply import apply_export_plan, preview_export_plan
 from ..calc_sheets_pull import (
     _coerce_edit_value_to_decimal,

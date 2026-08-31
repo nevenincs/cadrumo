@@ -8,10 +8,10 @@ from datetime import UTC, datetime
 
 from pydantic import BaseModel, Field
 
-from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from .....core.period import Period
 from .....core.i18n import tr
 from .....core.logging import get_logger
+from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.period import Period
 from .._html import parse_html
 from ._adapter_utils import cell_text, normalize_response_text
 from .declarations_schema import Declaracion

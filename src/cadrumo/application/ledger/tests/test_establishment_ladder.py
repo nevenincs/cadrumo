@@ -44,8 +44,8 @@ __all__ = ["repository"]
 # import` edge as reaching through the inert namespace.
 import cadrumo.application.ledger.establishment_ladder as ladder_module
 
-from ....adapters.inbound.einvoice import ParsedEInvoice, parse_einvoice_document
-from ....adapters.persistence.storage import SecureObjectRowIdentityError
+from ....adapters.inbound.einvoice._parsers import ParsedEInvoice, parse_einvoice_document
+from ....adapters.persistence.storage.errors import SecureObjectRowIdentityError
 from ....core.classifier_input_source import ClassifierInputSource
 from ....domain.iva.classification import InvoiceKind, IvaTerritorialScope
 from ....domain.iva.errors import IvaCatalogueError

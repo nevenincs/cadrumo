@@ -17,11 +17,11 @@ import logging  # LOGGING-STDLIB-CONSTANTS-ONLY-RATIONALE: constants-only; no lo
 from collections.abc import Mapping
 from enum import StrEnum
 
-from ...application.operator_actions import PreconditionVerdict
+from ...application.operator_actions._models import PreconditionVerdict
 from ...core.config_state_root import FormerProductStateError
-from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin
 from ...core.logging import set_log_level
+from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 
 
 class LogLevelResolutionError(TerminalPreconditionErrorMixin[PreconditionVerdict], CadrumoError):
@@ -60,7 +60,7 @@ _STDERR_LOG_LEVEL_BY_CLI_LEVEL: dict[LogLevel, int] = {
 
 def _invalid_environment_log_level_error(*, allowed: str, value: str) -> LogLevelResolutionError:
     """Return the typed refusal for an unrecognised log-level environment value."""
-    from ...application.operator_actions import no_action_precondition_verdict
+    from ...application.operator_actions._preconditions import no_action_precondition_verdict
 
     return LogLevelResolutionError(
         translated_message="cli.log_levels.errors.invalid_env_value",

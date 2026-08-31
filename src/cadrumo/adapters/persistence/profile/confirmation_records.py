@@ -9,11 +9,9 @@ from ....application.ledger.confirmation_record import (
     confirmation_record_object_key,
 )
 from ....core.config import Settings
-from ..storage import (
-    LEDGER_CONFIRMATION_RECORD_NAMESPACE,
-    SecureBoundRepository,
-    secure_object_repository_for_bucket,
-)
+from ..storage._secure_object_namespaces import LEDGER_CONFIRMATION_RECORD_NAMESPACE
+from ..storage.envelope._secure_repository import SecureBoundRepository
+from ..storage.runtime_repository import secure_object_repository_for_bucket
 
 
 class ConfirmationRecordRepository(SecureBoundRepository[ConfirmationRecordDocument]):

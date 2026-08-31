@@ -23,7 +23,7 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel, Field
 
-from ....adapters.outbound.aeat.browser import DefaultBrowserSession
+from ....adapters.outbound.aeat.browser._factory import DefaultBrowserSession
 from ....adapters.outbound.aeat.browser.tests.real_http_boundary import (
     LocalHttpBoundary,
     opened_http_boundary,
@@ -35,9 +35,9 @@ from ....adapters.persistence.operations.secure_references import (
     OperationSecureReferenceRepository,
     operation_secure_reference_repository,
 )
-from ....adapters.persistence.storage import SecureObjectRepository
-from ....core.models import STRICT_FROZEN_CONFIG
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core.config import AEAT_CERTIFICATE_PROTECTED_URL, Settings
+from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operations import (
     OperationCancellation,
     OperationClosePolicy,

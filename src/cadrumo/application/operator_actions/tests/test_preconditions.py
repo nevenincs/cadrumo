@@ -9,7 +9,7 @@ import pytest
 
 from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ...workflow.profile_health import assess_active_profile_health
-from .. import (
+from .._preconditions import (
     active_profile_pointer_repair_verdict,
     corrupt_active_profile_pointer_verdict,
     no_action_precondition_verdict,

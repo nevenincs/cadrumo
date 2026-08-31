@@ -11,14 +11,19 @@ from pydantic import AnyHttpUrl
 
 from ....adapters.outbound.aeat.sede.iva_compensation_wallet import IVA_COMPENSATION_WALLET_URL
 from ....adapters.outbound.aeat.sede.schema import IvaCompensationWalletObservation, IvaCompensationWalletRow
-from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
-from ....core.period import Period
 from ....core.aggregation import BindingSourceKind
 from ....core.errors.error_codes import ERROR_REGISTRY, build_error_envelope
+from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
+from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ....domain.iva_compensation.errors import IvaCompensationReconciliationInputError, IvaWalletReconciliationError
-from ....domain.iva_compensation.reconciliation import IvaCompensationAuthoritySource, IvaCompensationDecisionReason, IvaCompensationOverride, IvaCompensationWalletObservationProtocol
+from ....domain.iva_compensation.reconciliation import (
+    IvaCompensationAuthoritySource,
+    IvaCompensationDecisionReason,
+    IvaCompensationOverride,
+    IvaCompensationWalletObservationProtocol,
+)
 from ....tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
 from ...aggregation import CalculationSourceContext
 from .._iva_wallet_reconciliation import (

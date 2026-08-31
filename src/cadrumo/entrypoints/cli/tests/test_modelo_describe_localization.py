@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
+from ....core.i18n._render import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ....tests.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -101,7 +101,7 @@ def test_describe_non_period_error_is_localized() -> None:
     This test verifies the locale key resolves to a non-empty string and
     the CLI does not surface a Python traceback.
     """
-    from ....core.i18n import tr
+    from ....core.i18n._render import tr
 
     # Confirm the locale key resolves with a message kwarg — this is the
     # same call the production code makes at the error site.
@@ -121,7 +121,7 @@ def test_describe_period_error_locale_key_interpolates_message() -> None:
     Verifies that the locale value contains the %{message} interpolation
     slot so callers can pass arbitrary registry error text through.
     """
-    from ....core.i18n import tr
+    from ....core.i18n._render import tr
 
     sentinel = "sentinel-registry-error-xyz"
     rendered = tr("cli.app.modelo.describe.period_error", message=sentinel)

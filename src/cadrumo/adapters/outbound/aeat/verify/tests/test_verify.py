@@ -10,13 +10,13 @@ from playwright.async_api import Playwright
 
 from ......core.config import Settings
 from ......domain.calculations.registry.errors import RegistryValidationError
-from ... import verify as verify_module
-from ...browser import DefaultBrowserSession
+from ...browser._factory import DefaultBrowserSession
 from ...browser.tests.real_http_boundary import (
     open_real_browser_session,
     opened_http_boundary,
 )
-from .. import verify_csv
+from .. import contract as verify_module
+from ..contract import verify_csv
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

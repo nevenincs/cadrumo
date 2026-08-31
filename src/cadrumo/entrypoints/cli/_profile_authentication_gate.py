@@ -309,7 +309,7 @@ def consume_root_fallback(
     arguments: Mapping[str, object],
 ) -> None:
     """Read all required payloads, authenticate exactly, and assert the session."""
-    from ...adapters.persistence.storage import active_bucket_session_serves
+    from ...adapters.persistence.storage.master_key.active_session import active_bucket_session_serves
     from ...application.user_profile.login_session import login_profile
 
     _read_and_stage_leaf(spec=spec, arguments=arguments, selection=leaf)

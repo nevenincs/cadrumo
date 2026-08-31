@@ -31,7 +31,7 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated, Literal
 
-from pydantic import AwareDatetime, BaseModel, BeforeValidator, Field, field_validator, model_validator
+from pydantic import AwareDatetime, BaseModel, BeforeValidator, Field, NonNegativeInt, field_validator, model_validator
 
 from ...core.auth_provider import AuthProviderKind
 from ...core.errors.hierarchy import SiteHealthState, SiteHealthStatusLike
@@ -43,8 +43,8 @@ from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...core.text_bounds import PositiveCount
 from ...domain.deadlines.models import ModeloDeadline, ObligationStatus
-from ...domain.submission import ModeloDraftStatus
-from ..operator_actions import ConditionEvidence, PreconditionVerdict
+from ...domain.submission._protocols import ModeloDraftStatus
+from ..operator_actions._models import ConditionEvidence, PreconditionVerdict
 from ._identity import period_identity_segment
 from .abort import WorkflowAbortReason
 from .engine_helpers import CertificateSeverityValue, DeadlineRole, FilingWindowState
@@ -131,7 +131,7 @@ class WorkflowSiteHealthFacts(BaseModel):
     observed_at: AwareDatetime
     http_status: int = Field(ge=100, le=599)
     retry_after_seconds: int | None = Field(default=None, ge=1)
-    detected_marker_count: int = Field(ge=0)
+    detected_marker_count: NonNegativeInt
 
     @model_validator(mode="after")
     def _validate_alert_identity(self) -> WorkflowSiteHealthFacts:
@@ -182,7 +182,7 @@ class WorkflowDeadlineRecoveryFacts(BaseModel):
 
     still_filable: bool
     recargo_band_id: str = Field(min_length=1, max_length=64)
-    min_completed_months: int = Field(ge=0)
+    min_completed_months: NonNegativeInt
     max_completed_months: int | None = Field(default=None, ge=0)
     surcharge_pct: Decimal = Field(ge=Decimal("0"))
     interest_applies: bool

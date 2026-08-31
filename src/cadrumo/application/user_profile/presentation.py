@@ -50,7 +50,11 @@ from ...core.i18n import tr
 from ...core.identity import ProfileId
 from ...core.json_contract import Notice, ResolvedNoticeAction
 from ...core.presentation import NoticePresentation
-from ...domain.deadlines.profiles import MODELO_IVA_BLOCK_REQUIRED_PATHS, modelo_iva_profile_required_paths, profile_claims_modelo_iva_block
+from ...domain.deadlines.profiles import (
+    MODELO_IVA_BLOCK_REQUIRED_PATHS,
+    modelo_iva_profile_required_paths,
+    profile_claims_modelo_iva_block,
+)
 from ...domain.user_profile.loader import load_user_profile_schema
 from ...domain.user_profile.schema import ProfileFieldType
 from ...domain.user_profile.values import UserProfileRecord

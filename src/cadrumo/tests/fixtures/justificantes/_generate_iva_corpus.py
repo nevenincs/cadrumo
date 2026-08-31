@@ -9,7 +9,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 
-from ....core.money import round_to_cents
+from ....core.money.rounding import round_to_cents
 from ._generate_base import _SEDE_ORIGIN
 
 

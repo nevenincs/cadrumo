@@ -10,12 +10,9 @@ import pytest
 
 from ....domain.iva_compensation.reconciliation import IvaCompensationDecisionReason
 from ....tests import general_m303_filing_evidence
-from ...calculations import (
-    CalculationObservationRepository,
-    IvaWalletDecisionRepository,
-    reconcile_modelo_303_iva_compensation,
-    seed_iva_compensation_period,
-)
+from ...calculations._iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
+from ...calculations.iva_compensation_history import seed_iva_compensation_period
+from ...calculations.observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository
 from .._calculation_actions import calculate_modelo_revision
 from .._iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from ._iva_wallet_engine_support import (

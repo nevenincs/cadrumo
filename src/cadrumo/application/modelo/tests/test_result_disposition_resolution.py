@@ -7,20 +7,20 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.result_disposition import ResultDisposition
-from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.errors.hierarchy import CoreValidationError
+from ....core.period import Period
+from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
-from ....domain.modelos.codes import ModeloCode
-from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....tests.registry_observations import registry_grounded_observations
 from .._result_disposition_resolution import resolve_modelo_result_disposition
 

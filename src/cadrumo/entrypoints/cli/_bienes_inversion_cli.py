@@ -12,9 +12,9 @@ from __future__ import annotations
 
 import typer
 
-from ...application.bienes_inversion import BienesInversionRegisterService
-from ...core.i18n import tr
-from ...domain.bienes_inversion import (
+from ...application.bienes_inversion._service import BienesInversionRegisterService
+from ...core.i18n._render import tr
+from ...domain.bienes_inversion.register import (
     BienInversionDisposal,
     BienInversionDisposalRegime,
     BienInversionIvaRecord,

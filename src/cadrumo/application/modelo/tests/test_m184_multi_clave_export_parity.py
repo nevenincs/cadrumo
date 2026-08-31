@@ -39,7 +39,7 @@ _REVISION = "2025-y-siguientes"
 
 
 def _revision():
-    from ....core.resources import bundled_path
+    from ....core.resources._boundary import bundled_path
 
     modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     return next(modelo for modelo in modelos if modelo.id == "184").revisions[_REVISION]

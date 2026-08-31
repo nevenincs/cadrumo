@@ -287,7 +287,7 @@ def _values_are_withheld(row: CensoPullDivergencePayload) -> bool:
     adjudicated from the output alone, and saying so is better than
     printing two hashes and leaving the operator to work out why.
     """
-    from ....core.redaction import redact_for_cli_output
+    from ....core.redaction.rules import redact_for_cli_output
 
     sides = [row.aeat_value] + ([] if row.profile_value is None else [row.profile_value])
     return any(redact_for_cli_output(side) != side for side in sides)

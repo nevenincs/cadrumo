@@ -17,7 +17,7 @@ from typing import Any, cast
 import typer
 from click import Choice
 
-from ...core.i18n import tr
+from ...core.i18n._render import tr
 from ._command_spec import (
     ArgumentSpec,
     BindingState,

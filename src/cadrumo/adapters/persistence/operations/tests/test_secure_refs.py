@@ -9,14 +9,11 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel, Field
 
-from .....core.classification import SensitivityClass
+from .....core.classification.policies import SensitivityClass
 from .....core.hashing import sha256_hex
 from .....tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
-from ...storage import (
-    STORAGE_NAMESPACE_REGISTRY,
-    StorageCustodyDisposition,
-    StorageNamespaceScope,
-)
+from ...storage._namespace_registry import STORAGE_NAMESPACE_REGISTRY
+from ...storage._secure_object_namespaces import StorageCustodyDisposition, StorageNamespaceScope
 from ...storage.errors import RepositoryError
 from ..secure_references import (
     OPERATION_SECURE_REFERENCE_NAMESPACE,

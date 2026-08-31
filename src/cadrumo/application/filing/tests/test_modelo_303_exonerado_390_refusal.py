@@ -7,40 +7,46 @@ from pathlib import Path
 
 import pytest
 
-from ....core.refund_election import RefundElection
-from ....core.payment_election import PaymentElection
-from ....core.prior_domiciliation_election import PriorDomiciliationElection
-from ....core.result_disposition import ResultDisposition
-from ....core.prorrata_register import ProrrataRegisterRegime
-from ....core.modelo import Modelo
-from ....core.period import Period
 from ....core.casilla_id import validated_casilla_id
+from ....core.modelo import Modelo
+from ....core.payment_election import PaymentElection
+from ....core.period import Period
+from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.product_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
-from ....domain.bienes_inversion import BienesInversionIvaRegister, compute_registro_regularizacion
+from ....core.prorrata_register import ProrrataRegisterRegime
+from ....core.refund_election import RefundElection
+from ....core.result_disposition import ResultDisposition
+from ....domain.bienes_inversion.register import BienesInversionIvaRegister, compute_registro_regularizacion
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.deadlines.models import M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile
 from ....domain.filing_evidence import FilingEvidenceReference
-from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision, RegimenSimplificadoFilingRows
-from ....domain.modelos.calculation_revision_m303_evidence import M303Exonerado390ActivityRowEvidence, M303Exonerado390EndpointEvidence, M303Exonerado390FilingEvidence
+from ....domain.iva.regimen_simplificado_rows import (
+    M303RegimenSimplificadoScope,
+    M303RegimenSimplificadoScopeDecision,
+    RegimenSimplificadoFilingRows,
+)
+from ....domain.modelos.calculation_revision_m303_evidence import (
+    M303Exonerado390ActivityRowEvidence,
+    M303Exonerado390EndpointEvidence,
+    M303Exonerado390FilingEvidence,
+)
 from ....domain.modelos.calculation_revision_m303_handoff import M303RegimenSimplificadoFilingEvidence
-from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
-from ....domain.submission import ModeloDraftStatus
+from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
+from ....domain.submission._protocols import ModeloDraftStatus
 from ....tests.filing_evidence import regimen_simplificado_filing_evidence
 from ...aggregation import M303ProrrataTransitionArrival, M303SupplierRegimeArrival
-from .. import (
+from .._draft_construction import build_draft
+from .._export import FilingExportError, export_draft
+from .._producer_snapshot import (
     FilingElectionFacts,
     FilingProducerSnapshotError,
     M303FilingFacts,
     PresenterIdentity,
     TaxpayerIdentityFacts,
-    build_draft,
     build_filing_producer_snapshot,
-    build_runtime_schema_provider,
-    export_draft,
 )
-from .._export import FilingExportError
-from ..runtime import ModeloOperatorProfile
+from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

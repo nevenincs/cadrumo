@@ -35,13 +35,13 @@ import pytest
 from pydantic import ValidationError
 from sqlalchemy import select
 
-from .....core.period import Period
-from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
-from .....domain.calculations import DirectRowMaterializationProvenance, RowSourceIdentity
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.period import Period
+from .....domain.calculations._row_casilla import DirectRowMaterializationProvenance
+from .....domain.calculations._row_source_identity import RowSourceIdentity
 from .....domain.calculations.registry.bindings import CasillaObservation
 from .....domain.modelos.calculation_repository import CalculationRevisionPersistenceError
-from .....domain.modelos.work_unit import derive_work_unit_id
 from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -50,9 +50,10 @@ from .....domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
     derive_calculation_revision_id_from_revision,
 )
+from .....domain.modelos.work_unit import derive_work_unit_id
 from .....tests.secure_objects_fixture import secure_objects
 from .....tests.secure_sql import mutate_encrypted_secure_object_json
-from ...storage import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
+from ...storage._secure_object_namespaces import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
 from ...storage.sql import SecureObjectRepository, SecureObjectRow
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
 
@@ -427,7 +428,7 @@ def test_legacy_source_provenance_without_required_identity_is_rejected_at_encry
 ) -> None:
     import json as _json
 
-    from ...storage import SensitivityClass
+    from .....core.classification.policies import SensitivityClass
     from ..modelos_calculation import (
         _CALCULATION_CATALOGUE_VERSION,
         _CALCULATION_NAMESPACE,
@@ -473,7 +474,7 @@ def test_source_provenance_blank_source_ref_payload_rejected_at_load(secure_obje
 
     import json as _json
 
-    from ...storage import SensitivityClass
+    from .....core.classification.policies import SensitivityClass
     from ..modelos_calculation import (
         _CALCULATION_CATALOGUE_VERSION,
         _CALCULATION_NAMESPACE,
@@ -524,7 +525,7 @@ def test_source_provenance_dropped_dependency_treatment_breaks_content_identity(
 
     import json as _json
 
-    from ...storage import SensitivityClass
+    from .....core.classification.policies import SensitivityClass
     from ..modelos_calculation import (
         _CALCULATION_CATALOGUE_VERSION,
         _CALCULATION_NAMESPACE,

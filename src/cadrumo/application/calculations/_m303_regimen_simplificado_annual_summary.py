@@ -11,13 +11,13 @@ from collections.abc import Mapping
 from decimal import Decimal
 from typing import ClassVar
 
+from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.authority_grade import RegistryAuthorityGrade
+from ...core.casilla_id import CasillaId
+from ...core.errors.hierarchy import CoreValidationError
 from ...core.modelo import Modelo
 from ...core.period import Period
-from ...core.casilla_id import CasillaId
-from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
-from ...core.errors.hierarchy import CoreValidationError
-from ...core.resources import bundled_path
+from ...core.resources._boundary import bundled_path
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings import m303_regimen_simplificado_annual_summary_requirement
 from ...domain.calculations.registry.ids import RevisionId
@@ -26,12 +26,23 @@ from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.temporal import select_revision
 from ...domain.filing_evidence import FilingEvidenceReference
 from ...domain.iva.regimen_simplificado_rows import ActividadAgricolaSimplificado
-from ...domain.modelos.filing_record import ModeloRecordStatus
-from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol, ModeloRecordCatalogueRepositoryProtocol
-from ...domain.modelos.work_unit import WorkUnit
-from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState, M303RegimenSimplificadoAnnualSummaryHandoff, M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS
-from ...domain.modelos.calculation_revision_m303_evidence import M303RegimenSimplificadoActivityCalculationResult, M303RegimenSimplificadoCalculationResult
+from ...domain.modelos.calculation_revision import (
+    M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS,
+    CalculationRevision,
+    CalculationRevisionState,
+    M303RegimenSimplificadoAnnualSummaryHandoff,
+)
+from ...domain.modelos.calculation_revision_m303_evidence import (
+    M303RegimenSimplificadoActivityCalculationResult,
+    M303RegimenSimplificadoCalculationResult,
+)
 from ...domain.modelos.calculation_revision_m303_handoff import M303FilingInstanceEvidence
+from ...domain.modelos.filing_record import ModeloRecordStatus
+from ...domain.modelos.protocols import (
+    CalculationRevisionCatalogueRepositoryProtocol,
+    ModeloRecordCatalogueRepositoryProtocol,
+)
+from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..aggregation import CalculationSourceContext, CalculationSourceProvenance, CalculationSourceResolution
 

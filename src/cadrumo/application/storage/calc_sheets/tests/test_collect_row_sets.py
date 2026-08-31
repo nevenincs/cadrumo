@@ -14,12 +14,11 @@ from itertools import pairwise
 
 import pytest
 
-from .....core.aggregation import BindingSourceKind
-from .....core.aggregation import BindingAggregation, BindingAggregationOp
+from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.errors import RegistryValidationError
 from .....domain.calculations.registry.schema import DataBindingDefinition
-from .. import collect_row_sets
+from .._engine import collect_row_sets
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

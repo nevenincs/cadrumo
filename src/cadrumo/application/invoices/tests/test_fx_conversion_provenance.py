@@ -32,7 +32,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.outbound.fx import ECB_RATE_SOURCE_ID, EcbReferenceRateProvider
+from ....adapters.outbound.fx._ecb_provider import ECB_RATE_SOURCE_ID, EcbReferenceRateProvider
 from ....domain.currency.service import resolve_fx_conversion_stamp
 from ....domain.iva.classification import InvoiceKind
 from ....tests.ecb_stub import ecb_csv_fetch

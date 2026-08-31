@@ -23,7 +23,7 @@ import pytest
 from ....core.hashing import content_hash_hex
 from ....domain.invoices.models import Invoice, InvoiceCatalogue
 from ....domain.iva.classification import InvoiceKind
-from ...invoices import build_catalogue_invoice
+from ...invoices._creation import build_catalogue_invoice
 from .._review import _invoice_catalogue_fingerprint
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

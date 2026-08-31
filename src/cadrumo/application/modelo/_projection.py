@@ -23,15 +23,15 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.modelo import Modelo
-from ...core.period import Period
 from ...core.casilla_id import CasillaId, validated_casilla_id
-from ...core.decimal import try_parse_canonical_decimal
+from ...core.decimal._grammar import try_parse_canonical_decimal
 from ...core.errors.hierarchy import CadrumoError
 from ...core.logging import get_logger
-from ...core.money import round_to_cents
-from ...core.resources import bundled_path
+from ...core.modelo import Modelo
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.money.rounding import round_to_cents
+from ...core.period import Period
+from ...core.resources._boundary import bundled_path
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.errors import (
@@ -55,8 +55,8 @@ from ...domain.calculations.registry.runtime_graph import (
 from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.calculations.registry.temporal import select_revision
-from ...domain.modelos.work_unit import WorkUnitState
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
+from ...domain.modelos.work_unit import WorkUnitState
 from ._calculate_input import (
     ModeloCalculateBindingInputError,
 )
@@ -68,8 +68,8 @@ from ._calculate_input import (
 )
 from ._calculation_actions import list_calculation_revisions
 from ._registry_helpers import validate_casilla_input_ids
-from .work_lifecycle import list_work_units
 from .profile_binding import resolve_profile_sourced_bindings
+from .work_lifecycle import list_work_units
 
 _LOG = get_logger(__name__)
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")

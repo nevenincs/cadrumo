@@ -18,7 +18,13 @@ def test_filing_record_payload_renders_external_evidence_and_amends() -> None:
     from datetime import UTC, datetime
 
     from ....domain.modelos.codes import ModeloCode
-    from ....domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind, ModeloRecord, ModeloRecordStatus, derive_filing_record_id
+    from ....domain.modelos.filing_record import (
+        ExternalEvidence,
+        ExternalEvidenceKind,
+        ModeloRecord,
+        ModeloRecordStatus,
+        derive_filing_record_id,
+    )
     from .._modelo_payloads import FilingRecordImportResult, ModeloRecordShowResult, WorkAmendResult
     from .._modelo_rendering import filing_record_payload as _filing_record_payload
 
@@ -66,13 +72,11 @@ def test_filing_record_payload_renders_external_evidence_and_amends() -> None:
     assert evidence.imported_at == imported_at
     payload_dict = payload.model_dump(mode="python")
     show_result = ModeloRecordShowResult.model_validate(payload_dict)
-    import_result = FilingRecordImportResult.model_validate(
-        {
-            "evidence_kind": evidence.kind,
-            "evidence_reference_id": evidence.reference_id,
-            **payload_dict,
-        },
-    )
+    # evidence_kind and evidence_reference_id are DERIVED from the evidence row
+    # now, so they are not supplied -- and supplying them is refused.
+    import_result = FilingRecordImportResult.model_validate(payload_dict)
+    assert import_result.evidence_kind is evidence.kind
+    assert import_result.evidence_reference_id == evidence.reference_id
     amend_result = WorkAmendResult.model_validate({"amendment_kind": "complementaria", **payload_dict})
     assert show_result.external_evidence is not None
     assert import_result.external_evidence is not None
@@ -110,8 +114,21 @@ def test_import_payload_rejects_external_evidence_that_differs_from_import_metad
         },
     }
 
-    with pytest.raises(ValidationError, match="evidence_kind must match"):
+    # The two flat fields are derived from ``external_evidence`` rather than
+    # accepted beside it, so the divergence this test names cannot be built at
+    # all: the payload is refused for SUPPLYING them, not for disagreeing.
+    #
+    # That is a stronger guarantee than the validator it replaced. A check that
+    # two inputs agree can only fire when someone remembers to run it; a value
+    # with one source has nothing to disagree with.
+    with pytest.raises(ValidationError, match="evidence_kind"):
         FilingRecordImportResult.model_validate(payload)
+
+    derived = FilingRecordImportResult.model_validate(
+        {k: v for k, v in payload.items() if k not in {"evidence_kind", "evidence_reference_id"}},
+    )
+    assert derived.evidence_kind is ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF
+    assert derived.evidence_reference_id == "CSV-303-2026-Q1"
 
 
 def test_filing_record_payload_omits_evidence_fields_when_absent() -> None:
@@ -169,7 +186,13 @@ def test_filing_record_lines_renders_external_evidence_and_amends_in_text_mode()
     from datetime import UTC, datetime
 
     from ....domain.modelos.codes import ModeloCode
-    from ....domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind, ModeloRecord, ModeloRecordStatus, derive_filing_record_id
+    from ....domain.modelos.filing_record import (
+        ExternalEvidence,
+        ExternalEvidenceKind,
+        ModeloRecord,
+        ModeloRecordStatus,
+        derive_filing_record_id,
+    )
     from .._modelo_rendering import filing_record_lines as _filing_record_lines
 
     imported_at = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)

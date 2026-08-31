@@ -22,7 +22,7 @@ from textual.binding import Binding
 from textual.containers import Vertical
 from textual.widgets import Footer, Static
 
-from ...core.i18n import tr
+from ...core.i18n._render import tr
 from .components.theme import BASE_CSS, install_cadrumo_themes, toggle_appearance, tokenised
 
 if TYPE_CHECKING:

@@ -117,8 +117,10 @@ def _import_kwargs(**overrides: object) -> dict[str, object]:
         "dry_run": False,
         "verify": False,
         "bucket_id": "bucket-1",
-        "validation": LedgerImportValidationPayload(valid=True),
-        "source": LedgerImportSourcePayload(requested=False),
+        # Lists: a directory import folds one report per file, and the fold used
+        # to keep only the first.
+        "validations": [LedgerImportValidationPayload(valid=True)],
+        "sources": [LedgerImportSourcePayload(requested=False)],
     }
     base.update(overrides)
     return base

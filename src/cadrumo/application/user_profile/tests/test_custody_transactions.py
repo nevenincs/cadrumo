@@ -33,19 +33,19 @@ from ....adapters.persistence.storage.custody.records import (
 )
 from ....adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
 from ....adapters.persistence.storage.custody.sentinel_contract import ProfileCustodySentinelRecord
-from ....adapters.persistence.storage.master_key import (
-    BucketSession,
+from ....adapters.persistence.storage.master_key.active_session import (
     bind_active_bucket_session,
     current_active_bucket_session,
 )
-from ....core.period import Period
+from ....adapters.persistence.storage.master_key.bucket_session import BucketSession
 from ....core.bucket_pointer import BucketPointer
 from ....core.config import Settings
+from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.filing_record import ModeloRecord, derive_filing_record_id
 from ... import user_profile as user_profiles
-from ...evidence import LegalHoldCaseAuthority
-from ...filing import FilingRetentionAuthority
+from ...evidence._profile_legal_hold import LegalHoldCaseAuthority
+from ...filing._profile_filing_retention import FilingRetentionAuthority
 from ..custody_hold_models import ProfileCustodyHoldEvidence
 from ..custody_repository import profile_custody_transaction_lock
 from ..custody_service import (

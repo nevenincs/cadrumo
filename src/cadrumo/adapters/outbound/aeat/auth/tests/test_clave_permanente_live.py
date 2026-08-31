@@ -33,7 +33,7 @@ import pytest
 from ......application.auth.session_types import AeatLoginAssertion, AeatSession, ClavePermanenteSessionDetail
 from ......core.config import Settings
 from ......tests.live_gate import requires_live_enabled
-from ...browser import default_browser_session_factory
+from ...browser._factory import default_browser_session_factory
 from .. import session_store as session_store
 from ..clave_permanente import ClavePermanenteAuthProvider
 

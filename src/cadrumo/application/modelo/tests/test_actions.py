@@ -15,9 +15,9 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.period import Period
-from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.aggregation import BindingSourceKind
+from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
@@ -29,14 +29,14 @@ from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.iva_compensation.reconciliation import IvaCompensationDivergence, IvaCompensationReconciliationDecision
-from ....domain.modelos.codes import ModeloCode
-from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from ...calculations import M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from ...calculations._iva_compensation_casillas import M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA
 from ...workflow.errors import WorkflowInputMismatchError
 from .._action_errors import ModeloAggregationBindingError
 from .._calculation_actions import (

@@ -16,12 +16,12 @@ from decimal import Decimal
 import pytest
 
 from ....core.json_contract import NoticeSeverity
-from ....domain.modelos.row_models import Modelo184MemberRow, Modelo349OperadorRow, ModeloDetailRow
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.row_models import Modelo184MemberRow, Modelo349OperadorRow, ModeloDetailRow
 from .._modelo_rendering import m184_socio_handoff_notices
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

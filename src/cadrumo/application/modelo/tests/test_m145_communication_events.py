@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.outbound.aeat.export import RegistryFixedWidthRecordRenderer
+from ....adapters.outbound.aeat.export._registry_record_renderer import RegistryFixedWidthRecordRenderer
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ....tests.secure_sql import isolated_runtime_profile

@@ -40,17 +40,18 @@ from typing import TYPE_CHECKING
 
 from ....core.bucket_pointer import resolve_repository_bucket_id
 from ....core.logging import get_logger
+from ....domain.modelos.errors import raise_catalogue_integrity_error
 from ....domain.modelos.repository import WorkUnitPersistenceError
 from ....domain.modelos.work_unit import WorkUnitCatalogue
-from ....domain.modelos.errors import raise_catalogue_integrity_error
-from ..storage import MODELO_WORK_UNIT_CATALOGUE_NAMESPACE, secure_object_repository_for_bucket
+from ..storage._secure_object_namespaces import MODELO_WORK_UNIT_CATALOGUE_NAMESPACE
+from ..storage.runtime_repository import secure_object_repository_for_bucket
 from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
     # pragma: no cover — import-cycle guard
-    from ..storage import SecureObjectRepository, SecureObjectWrite
+    from ..storage.sql import SecureObjectRepository, SecureObjectWrite
 
 _LOGGER = get_logger(__name__)
 _WORK_UNIT_PERSISTENCE_MESSAGE = "errors.fail.fail_modelo_work_unit_persistence"
@@ -179,7 +180,7 @@ class WorkUnitCatalogueRepository:
         self-committing :meth:`mutate`, and without the revision its batch
         rewrites the whole singleton row over a unit another caller created.
         """
-        from ..storage import ClassificationError, EnvelopeVersionError
+        from ..storage.errors import ClassificationError, EnvelopeVersionError
 
         try:
             catalogue, revision_id = self._storage.load_revisioned()

@@ -17,7 +17,7 @@ from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import reconcile_invoice_catalogues, reconcile_invoice_repositories
+from .._reconciliation import reconcile_invoice_catalogues, reconcile_invoice_repositories
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -24,10 +24,10 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl
 
-from ......core.casilla_value_kind import CasillaValueKind
-from ......core.period import Period
 from ......core.casilla_id import CasillaId, validated_casilla_id
+from ......core.casilla_value_kind import CasillaValueKind
 from ......core.config import Settings
+from ......core.period import Period
 from ......tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ..iva_compensation_wallet import IVA_COMPENSATION_WALLET_URL
 from ..observation_store import FiledDeclaracionObservationStore

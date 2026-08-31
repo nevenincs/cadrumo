@@ -28,7 +28,8 @@ from __future__ import annotations
 from typing import override
 
 from ....application.modelo.edit_contract import ModeloEditMutationResultReceiptV1
-from ..storage import MODELO_EDIT_RECEIPT_NAMESPACE, SecureBoundRepository
+from ..storage._secure_object_namespaces import MODELO_EDIT_RECEIPT_NAMESPACE
+from ..storage.envelope._secure_repository import SecureBoundRepository
 
 
 class ModeloEditReceiptRepository(SecureBoundRepository[ModeloEditMutationResultReceiptV1]):

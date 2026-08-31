@@ -17,19 +17,18 @@ from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepo
 from ....core.irnr import M210PayerMode
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.modelos.row_models import Modelo210AgrupacionRentaRow
 from ....domain.modelos.errors import ModeloError
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.modelos.row_models import Modelo210AgrupacionRentaRow
 from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.profile_capsule import seed_test_profile_record
+from ....tests.profile_capsule import seed_modelo_ready_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
-from ...tests import register_wizard_catalogue
+from ...tests._wizard_catalogue_fixtures import register_wizard_catalogue
 from .._calculate_input import WorkCalculateInputBundle, calculate_modelo_work_revision
 from .._calculation_actions import calculate_modelo_revision
 from .._m303_regimen_simplificado_scope import active_taxpayer_profile
-from ..work_lifecycle import create_work_unit
 from .._work_plazo import calculated_m210_plazo_resolution
+from ..work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -49,25 +48,15 @@ def _secure_backend(tmp_path: Path) -> Iterator[None]:
 
 
 def _seed_minimal_profile(objects: SecureObjectRepository) -> None:
-    seed_test_profile_record(
-        UserProfileRecord(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=_BUCKET_ID,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value="12345678Z"),
-                UserProfileFact(path="activities.description", value="Spanish rental income"),
-                UserProfileFact(path="iva.regime", value="GENERAL"),
-                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                UserProfileFact(path="iva.redeme_enrolled", value=False),
-                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            ),
-            created_at=_CLOCK,
-            updated_at=_CLOCK,
-        )
-    )
+    """Seed the modelo readiness baseline through the canonical seeder.
+
+    The fact tuple this used to restate lived here in four identical
+    copies. It is declared once in `tests.profile_capsule` now, because
+    the readiness gate decides what modelo work may run at all and every
+    copy was another place for that answer to drift.
+    """
+    del objects
+    seed_modelo_ready_profile_record(str(_BUCKET_ID), clock=_CLOCK)
 
 
 def _verify_plazo_notices(calculation_revision_id: str) -> tuple[dict[str, object], ...]:

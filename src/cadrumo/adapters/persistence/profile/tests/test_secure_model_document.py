@@ -12,10 +12,10 @@ import pytest
 from sqlalchemy import event
 from sqlalchemy.engine import Engine
 
-from .....adapters.persistence.storage import PROFILE_ASSETS_LEDGER_NAMESPACE
 from .....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
-from .....domain.contribuyente.assets import AssetClass, AssetRecord, AssetsLedgerDocument
+from .....domain.contribuyente.assets.records import AssetClass, AssetRecord, AssetsLedgerDocument
 from .....tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
+from ...storage._secure_object_namespaces import PROFILE_ASSETS_LEDGER_NAMESPACE
 from .._secure_model_document import ProfileBareModelSecurePersistence
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

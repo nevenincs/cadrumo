@@ -8,23 +8,23 @@ import anyio
 import click
 import pytest
 
-from ....application.operator_actions import (
+from ....application.operator_actions._models import (
     ActionArgumentBinding,
     ActionReference,
     ConditionEvidence,
     PreconditionVerdict,
-)
-from ....core.operator_action_enums import (
-    ActionArgumentSource,
-    ActionArgumentStatus,
-    ActionConditionality,
-    ActionEvidenceProvenance,
 )
 from ....core.json_contract import (
     Notice,
     NoticeSeverity,
     ResolvedActionArgument,
     ResolvedNoticeAction,
+)
+from ....core.operator_action_enums import (
+    ActionArgumentSource,
+    ActionArgumentStatus,
+    ActionConditionality,
+    ActionEvidenceProvenance,
 )
 from .. import current_operator_surface_reconciliation
 from .._common import (

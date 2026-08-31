@@ -31,43 +31,4 @@ See Also:
 
 from __future__ import annotations
 
-from ...adapters.persistence.profile.bienes_inversion import (
-    BienesInversionIvaRegisterRepository,
-)
-from ...domain.bienes_inversion import (
-    BienesInversionIvaRegister,
-    BienInversionIvaRecord,
-)
-
-
-class BienesInversionRegisterService:
-    """Declare and list tracked bienes de inversión on the active profile."""
-
-    def __init__(self, *, repository: BienesInversionIvaRegisterRepository | None = None) -> None:
-        """Initialise the service, defaulting to the active-bucket register repository."""
-        self._repository = repository if repository is not None else BienesInversionIvaRegisterRepository()
-
-    def declare(self, record: BienInversionIvaRecord) -> BienesInversionIvaRegister:
-        """Atomically add ``record`` to the register, refusing duplicate identifiers.
-
-        Args:
-            record: The capital-good record to persist.
-
-        Returns:
-            The updated :class:`BienesInversionIvaRegister`.
-        """
-        return self._repository.add(record)
-
-    def list_all(self) -> BienesInversionIvaRegister:
-        """Return the full active-profile register.
-
-        Returns:
-            A :class:`BienesInversionIvaRegister`; empty when nothing has been
-            declared.
-        """
-        return self._repository.load()
-
-
-__all__ = [
-    "BienesInversionRegisterService",
-]
+__all__: tuple[str, ...] = ()

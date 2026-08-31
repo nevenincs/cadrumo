@@ -21,13 +21,10 @@ from datetime import UTC, datetime
 
 import pytest
 
-from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.config import override_settings
 from ....core.errors.error_codes import render_error_json, render_error_text
-from ...operator_actions import (
-    ConditionEvidence,
-    PreconditionVerdict,
-)
+from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from ...operator_actions._models import ConditionEvidence, PreconditionVerdict
 from ...workflow.abort import WorkflowAbortReason
 from ...workflow.run_models import WorkflowResult, WorkflowStage, WorkflowStep
 from .._action_errors import ModeloWorkflowGateError

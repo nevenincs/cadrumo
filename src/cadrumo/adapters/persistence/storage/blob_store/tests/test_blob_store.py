@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ......core.classification import SensitivityClass
+from ......core.classification.policies import SensitivityClass
 from ......core.config import override_settings
 from ......core.errors.error_codes import build_error_envelope, resolve_error_message
 from ......core.external_constants import UTF_8_ENCODING
@@ -18,7 +18,7 @@ from ......tests.master_key import EphemeralMasterKeyProvider
 from ......tests.path_obstruction import obstructed_path
 from ..._storage_path_definitions import BLOB_MANIFEST_SCHEMA_VERSION
 from ...crypto.aead import KEY_SIZE
-from ...envelope import Envelope
+from ...envelope._envelope import Envelope
 from ...errors import (
     BlobIntegrityError,
     BlobNotFoundError,
@@ -26,9 +26,9 @@ from ...errors import (
     EnvelopeVersionError,
     StorageValidationError,
 )
-from ...master_key import BucketSession, NoActiveBucketSessionError, activate_session
-from .. import BlobReference
-from .._blob_store import BlobManifest, EncryptedBlobStore
+from ...master_key.active_session import NoActiveBucketSessionError, activate_session
+from ...master_key.bucket_session import BucketSession
+from .._blob_store import BlobManifest, BlobReference, EncryptedBlobStore
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -46,7 +46,7 @@ def _digest_hex(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def _bucket_session(*, dek: bytes) -> BucketSession:
+def bucket_session(*, dek: bytes) -> BucketSession:
     return BucketSession.open(
         bucket_id="test-bucket",
         kek=b"k" * KEY_SIZE,
@@ -341,7 +341,7 @@ class TestActiveSessionDefaultProvider:
     ) -> None:
         store = EncryptedBlobStore(root_dir=tmp_path / "store")
 
-        with activate_session(_bucket_session(dek=fixed_master_key)):
+        with activate_session(bucket_session(dek=fixed_master_key)):
             ref = store.put(b"active session blob", classification=SensitivityClass.FINANCIAL)
             assert store.get(ref) == b"active session blob"
 

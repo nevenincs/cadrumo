@@ -6,8 +6,8 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.modelo import Modelo
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.modelo import Modelo
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_verification import (
     ParsedVerificationPredicate,
@@ -15,8 +15,8 @@ from ....domain.calculations.registry.schema_verification import (
     VerificationPredicateOperator,
     parse_verification_predicate_expression,
 )
-from ....domain.modelos.verification_report import ModeloVerificationFindingKind
 from ....domain.modelos.errors import ModeloError
+from ....domain.modelos.verification_report import ModeloVerificationFindingKind
 from .._verification_actions import (
     evaluate_advisory_predicate_fires,
     evaluate_predicate_expression,

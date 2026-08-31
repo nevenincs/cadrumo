@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import pytest
 
-from ......core.classification import SensitivityClass
+from ......core.classification.policies import SensitivityClass
 from ......tests import assert_path_matches_grammar
 from .._blob_store import EncryptedBlobStore
 

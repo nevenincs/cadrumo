@@ -55,7 +55,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from typing import Final
 
-from ....core.classification import SensitivityClass
+from ....core.classification.policies import SensitivityClass
 from .errors import EnvelopeVersionError, StorageValidationError
 
 #: Upgrades one decrypted plaintext payload from ``from_version`` to

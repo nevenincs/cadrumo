@@ -19,13 +19,13 @@ import pytest
 from pydantic import BaseModel
 
 from ....core.descendant_relacion import DescendantRelacion
-from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.flows import (
     CheckpointAvailability,
     CopyRefKind,
     FlowMode,
     FlowWidgetKind,
 )
+from ....core.models import STRICT_FROZEN_CONFIG
 from ....domain.deadlines.models import EntityType
 from ...flows.definition import CopyRef, FlowChoice, FlowDefinition, FlowPage, FlowSection
 from ...flows.engine import FlowState, answer, start_flow, visible_sequence

@@ -20,8 +20,8 @@ from uuid import UUID, uuid4
 import keyring
 import pytest
 
-from ......core import ProfileSessionRefusalReason
 from ......core.errors.hierarchy import CoreValidationError
+from ......core.profile_session import ProfileSessionRefusalReason
 from ...custody.filesystem import (
     compare_and_replace_profile_custody_local_record,
     ensure_profile_custody_local_directory,

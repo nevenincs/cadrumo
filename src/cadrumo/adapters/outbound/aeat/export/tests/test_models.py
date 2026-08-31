@@ -15,12 +15,7 @@ import pytest
 from pydantic import ValidationError
 
 from ......core.period import Period
-from ......domain.submission import (
-    ModeloPresentado,
-    SubmissionAttempt,
-    SubmissionStatus,
-    make_submission_id,
-)
+from ......domain.submission._models import ModeloPresentado, SubmissionAttempt, SubmissionStatus, make_submission_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

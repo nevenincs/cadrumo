@@ -9,10 +9,7 @@ import pytest
 
 from ....adapters.persistence.storage.errors import StorageValidationError
 from ....domain.categories.spending_category import SpendingCategory
-from ....domain.usage_ratios import (
-    ELIGIBLE_USAGE_RATIO_CATEGORIES,
-    UsageRatioProfile,
-)
+from ....domain.usage_ratios._model import ELIGIBLE_USAGE_RATIO_CATEGORIES, UsageRatioProfile
 from ....tests.secure_sql import isolated_runtime_profile
 from ..ratios import (
     eligible_ratio_categories,

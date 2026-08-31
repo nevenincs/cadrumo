@@ -9,12 +9,11 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from ......core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ......core.classification import SensitivityClass
+from ......core.classification.policies import SensitivityClass
 from ......core.external_constants import UTF_8_ENCODING
+from ......core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...errors import ClassificationError, DecryptionError, EnvelopeVersionError, StorageValidationError
-from .. import EncryptionMetadata, Envelope
-from .._envelope import load_envelope, save_envelope
+from .._envelope import EncryptionMetadata, Envelope, load_envelope, save_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

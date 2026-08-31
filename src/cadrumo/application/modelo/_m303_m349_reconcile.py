@@ -28,21 +28,25 @@ from collections.abc import Mapping
 from datetime import datetime
 from decimal import Decimal
 
-from ...core.modelo import Modelo
 from ...core.casilla_id import CasillaId
+from ...core.modelo import Modelo
 from ...domain.calculations.registry.ids import (
     LegalRefId,
     SourceRefId,
 )
-from ...domain.modelos.codes import ModeloCode
-from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
-from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
-from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
     CalculationRevisionState,
 )
+from ...domain.modelos.codes import ModeloCode
+from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
+from ...domain.modelos.verification_report import (
+    ModeloVerificationFinding,
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
+)
+from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from .work_addressing import (
     ModeloWorkSelectionMode,

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ...adapters.persistence.storage import (
+from ...adapters.persistence.storage.errors import (
     ClassificationError,
     DecryptionError,
     EnvelopeVersionError,
@@ -12,7 +12,7 @@ from ...core.aggregation import BindingSourceKind
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.invoices.errors import InvoicePersistenceError
 from ...domain.transactions.errors import TransactionPersistenceError
-from ...domain.usage_ratios import UsageRatioPersistenceError
+from ...domain.usage_ratios.errors import UsageRatioPersistenceError
 from ._source_mesh import CalculationSourceResolution
 
 _STORAGE_DEGRADATION_ERRORS = (

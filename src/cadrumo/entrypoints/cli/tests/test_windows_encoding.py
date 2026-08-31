@@ -18,7 +18,7 @@ import io
 
 import pytest
 
-from ....core.access_gate import LiveSubmitForbiddenError
+from ....core.access_gate.errors import LiveSubmitForbiddenError
 from ....core.errors.error_codes import render_error_text
 from .._stdio import _set_windows_console_utf8, configure_stdio_for_utf8
 from ..errors import write_stderr

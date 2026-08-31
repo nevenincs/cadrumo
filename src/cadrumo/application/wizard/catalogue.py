@@ -8,10 +8,10 @@ file reads or environment lookups during construction.
 
 from __future__ import annotations
 
-from ...core.renta_declaracion_type import RentaDeclaracionType
 from ...core.aggregation import ThirdPartyDeclarationRole
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES
 from ...core.i18n import Translatable as tr
+from ...core.renta_declaracion_type import RentaDeclaracionType
 from ...core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH, SetupAnswers
 from ...core.wizard_catalogue import register_wizard_catalogue
 from ...domain.contribuyente.ccaa import CCAA

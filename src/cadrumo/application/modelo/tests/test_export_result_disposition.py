@@ -7,20 +7,26 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.refund_election import RefundElection
+from ....core.casilla_id import CasillaId
 from ....core.payment_election import PaymentElection
 from ....core.period import Period
-from ....core.casilla_id import CasillaId
+from ....core.refund_election import RefundElection
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import CasillaObservation
-from ....domain.deadlines.models import IVARegime, M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile, TaxpayerProfile
-from ....domain.modelos.codes import ModeloCode
-from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from ....domain.deadlines.models import (
+    IVARegime,
+    M303RegimeComposition,
+    M303TaxTerritory,
+    ModeloIVAProfile,
+    TaxpayerProfile,
+)
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from .._action_errors import (
     ModeloPaymentElectionCapabilityRefusedError,
     ModeloPaymentElectionIncompatibleError,

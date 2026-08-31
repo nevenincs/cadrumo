@@ -12,13 +12,13 @@ from click.testing import Result
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage.bucket import bucket_paths
+from ....adapters.persistence.storage.bucket._layout import bucket_paths
 from ....application.diagnostics import build_cli_version_report
-from ....core.storage_taxonomy_locations import storage_path
-from ....core.storage_taxonomy import StorageCategory
 from ....core.config import load_settings, override_settings
-from ....core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
+from ....core.redaction.rules import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
+from ....core.storage_taxonomy import StorageCategory
+from ....core.storage_taxonomy_locations import storage_path
 from ....domain.buckets.event import BucketEventType
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session, set_active_test_profile_facts
@@ -140,7 +140,7 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
 ) -> None:
     """Profile setup, config reads, deadlines, and filing runtime use one profile bucket."""
 
-    from ....application.filing import load_default_filing_profile
+    from ....application.filing.runtime import load_default_filing_profile
     from ....application.user_profile.projections import fact_value
     from ....application.workflow.persistence import workflow_state_repository
     from ....tests.profile_capsule import load_test_profile_record
@@ -200,7 +200,7 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
 
     # `config profile status` reads the profile-bound secure store, needing an
     # active bucket session that the in-process test runner does not re-open per invoke
-    # (#52 / master_key _active_session); hold the provider active across it.
+    # (#52 / master_key active_session); hold the provider active across it.
     status_result = _invoke(["--format", "json", "config", "profile", "status"])
     assert status_result.exit_code == 0, status_result.output
     status_envelope = json.loads(_json_output(status_result))
@@ -220,7 +220,7 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
 
     # overview calendar reads the profile-bound store for obligation derivation,
     # needing an active bucket session that the in-process test runner does not re-open
-    # per invoke (#52 / master_key _active_session); hold the provider active.
+    # per invoke (#52 / master_key active_session); hold the provider active.
     calendar_result = _invoke(
         [
             "--format",
@@ -667,10 +667,10 @@ def test_ledger_import_verify_source_records_original_file_digest(isolated_user_
     assert envelope["command"] == "ledger.import"
     payload = envelope["result"]
     assert payload["dry_run"] is True
-    assert payload["validation"]["valid"] is True
-    assert payload["source"]["requested"] is True
-    assert payload["source"]["path"] == str(source.resolve())
-    assert payload["source"]["sha256"] == hashlib.sha256(source_bytes).hexdigest()
+    assert payload["validations"][0]["valid"] is True
+    assert payload["sources"][0]["requested"] is True
+    assert payload["sources"][0]["path"] == str(source.resolve())
+    assert payload["sources"][0]["sha256"] == hashlib.sha256(source_bytes).hexdigest()
 
 
 def test_ledger_import_verify_source_rejects_missing_original_file(

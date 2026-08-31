@@ -24,7 +24,13 @@ from sqlalchemy.orm import Session
 
 from ....core.logging import get_logger
 from ....domain.fincas.enums import ExpenseCategory, UseType
-from ....domain.fincas.models import Arrendamiento, Finca, FincaAmortizacionLedgerEntry, FincaGasto, FincaRendimientoRecord
+from ....domain.fincas.models import (
+    Arrendamiento,
+    Finca,
+    FincaAmortizacionLedgerEntry,
+    FincaGasto,
+    FincaRendimientoRecord,
+)
 
 if TYPE_CHECKING:  # pragma: no cover — type-only imports
     from ..storage.sql import _orm
@@ -33,7 +39,7 @@ _log = get_logger(__name__)
 
 
 def _flush_or_wrap(session: Session, kind: str) -> None:
-    from ..storage import RepositoryError
+    from ..storage.errors import RepositoryError
 
     try:
         session.flush()
@@ -71,7 +77,7 @@ class FincaRepository:
         Raises:
             RepositoryError: When no row matches.
         """
-        from ..storage import RepositoryError
+        from ..storage.errors import RepositoryError
         from ..storage.sql import _orm
 
         row = self.session.get(_orm.FincaRow, record_id)
@@ -98,7 +104,7 @@ class FincaRepository:
         Returns:
             The persisted :class:`Finca` with any database-generated fields populated.
         """
-        from ..storage import RepositoryError
+        from ..storage.errors import RepositoryError
         from ..storage.sql import _orm
 
         row: _orm.FincaRow | None = None
@@ -148,7 +154,7 @@ class FincaRepository:
 
     def delete(self, record_id: int) -> None:
         """Delete the record with surrogate id ``record_id``."""
-        from ..storage import RepositoryError
+        from ..storage.errors import RepositoryError
         from ..storage.sql import _orm
 
         row = self.session.get(_orm.FincaRow, record_id)
@@ -160,7 +166,7 @@ class FincaRepository:
 
     @staticmethod
     def _to_record(row: _orm.FincaRow) -> Finca:
-        from ..storage import RepositoryError
+        from ..storage.errors import RepositoryError
 
         try:
             use_type = UseType(row.use_type)
@@ -232,7 +238,7 @@ class ArrendamientoRepository:
         Raises:
             RepositoryError: When no row matches.
         """
-        from ..storage import RepositoryError
+        from ..storage.errors import RepositoryError
         from ..storage.sql import _orm
 
         row = self.session.get(_orm.ArrendamientoRow, record_id)
@@ -242,7 +248,7 @@ class ArrendamientoRepository:
 
     def upsert(self, record: Arrendamiento) -> Arrendamiento:
         """Insert or update ``record`` and return the persisted :class:`Arrendamiento`."""
-        from ..storage import RepositoryError
+        from ..storage.errors import RepositoryError
         from ..storage.sql import _orm
 
         row: _orm.ArrendamientoRow | None = None
@@ -261,7 +267,7 @@ class ArrendamientoRepository:
 
     def delete(self, record_id: int) -> None:
         """Delete the record with surrogate id ``record_id``."""
-        from ..storage import RepositoryError
+        from ..storage.errors import RepositoryError
         from ..storage.sql import _orm
 
         row = self.session.get(_orm.ArrendamientoRow, record_id)
@@ -362,7 +368,7 @@ class FincaRendimientoRepository:
 
     def upsert(self, record: FincaRendimientoRecord) -> FincaRendimientoRecord:
         """Insert or update ``record`` and return the persisted :class:`FincaRendimientoRecord`."""
-        from ..storage import RepositoryError
+        from ..storage.errors import RepositoryError
         from ..storage.sql import _orm
 
         row: _orm.FincaRendimientoRecordRow | None = None
@@ -395,7 +401,7 @@ class FincaRendimientoRepository:
 
     def delete(self, record_id: int) -> None:
         """Delete the record with surrogate id ``record_id``."""
-        from ..storage import RepositoryError
+        from ..storage.errors import RepositoryError
         from ..storage.sql import _orm
 
         row = self.session.get(_orm.FincaRendimientoRecordRow, record_id)
@@ -443,7 +449,7 @@ class FincaGastoRepository:
 
     def add(self, record: FincaGasto) -> FincaGasto:
         """Insert ``record`` and return the persisted :class:`FincaGasto` entity."""
-        from ..storage import RepositoryError
+        from ..storage.errors import RepositoryError
         from ..storage.sql import _orm
 
         if record.id is not None:
@@ -467,7 +473,7 @@ class FincaGastoRepository:
         Returns:
             The persisted :class:`FincaGasto` with any database-generated fields populated.
         """
-        from ..storage import RepositoryError
+        from ..storage.errors import RepositoryError
         from ..storage.sql import _orm
 
         if record.id is None:
@@ -485,7 +491,7 @@ class FincaGastoRepository:
 
     def delete(self, record_id: int) -> None:
         """Delete the record with surrogate id ``record_id``."""
-        from ..storage import RepositoryError
+        from ..storage.errors import RepositoryError
         from ..storage.sql import _orm
 
         row = self.session.get(_orm.FincaGastoRow, record_id)
@@ -496,7 +502,7 @@ class FincaGastoRepository:
 
     @staticmethod
     def _to_record(row: _orm.FincaGastoRow) -> FincaGasto:
-        from ..storage import RepositoryError
+        from ..storage.errors import RepositoryError
 
         try:
             category = ExpenseCategory(row.category)
@@ -568,7 +574,7 @@ class FincaAmortizacionLedgerRepository:
 
     def upsert(self, record: FincaAmortizacionLedgerEntry) -> FincaAmortizacionLedgerEntry:
         """Insert or update ``record`` and return the persisted :class:`FincaAmortizacionLedgerEntry`."""
-        from ..storage import RepositoryError
+        from ..storage.errors import RepositoryError
         from ..storage.sql import _orm
 
         row: _orm.FincaAmortizacionLedgerRow | None = None
@@ -607,7 +613,7 @@ class FincaAmortizacionLedgerRepository:
 
     def delete(self, record_id: int) -> None:
         """Delete the record with surrogate id ``record_id``."""
-        from ..storage import RepositoryError
+        from ..storage.errors import RepositoryError
         from ..storage.sql import _orm
 
         row = self.session.get(_orm.FincaAmortizacionLedgerRow, record_id)

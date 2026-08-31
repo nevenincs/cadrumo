@@ -22,7 +22,7 @@ from .....application.user_profile.login_session import login_profile
 from .....application.user_profile.presentation import build_profile_presentation
 from .....application.user_profile.profile_record_repository import ProfileRecordRepository
 from .....application.user_profile.registration import register_profile_with_credentials
-from .....core.i18n import tr
+from .....core.i18n._render import tr
 from .....tests.secure_sql import isolated_profile_storage_root
 from ...components.host import ScreenHostApp
 from ...components.widgets import DisclosureGroup, RequirementBadge

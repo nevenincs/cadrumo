@@ -15,19 +15,24 @@ from typing import cast
 import pytest
 from pydantic import AnyHttpUrl
 
-from ....adapters.inbound.pdf import source_pdf_reference_path
-from ....core.period import Period
+from ....adapters.inbound.pdf._utils import source_pdf_reference_path
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.config import override_settings
 from ....core.errors.error_codes import resolve_error_message
+from ....core.period import Period
 from ....domain.filing.errors import ModeloImportError
 from ....domain.justificante import Justificante, JustificanteParseError
-from ....domain.submission import make_submission_id
+from ....domain.submission._models import make_submission_id
 from ....tests import FIXTURES_DIR
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
-from .. import ModeloOperatorProfile, build_draft, import_filing_from_justificante
-from .._import import RegistryImportSchemaProvider, _build_submission_record, _normalise_period
-from ..runtime import RegistrySchemaAccessor, build_runtime_schema_provider
+from .._draft_construction import build_draft
+from .._import import (
+    RegistryImportSchemaProvider,
+    _build_submission_record,
+    _normalise_period,
+    import_filing_from_justificante,
+)
+from ..runtime import ModeloOperatorProfile, RegistrySchemaAccessor, build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

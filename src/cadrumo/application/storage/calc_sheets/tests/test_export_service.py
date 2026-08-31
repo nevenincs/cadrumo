@@ -17,7 +17,7 @@ from pathlib import Path
 import pytest
 
 from .....adapters.outbound.google.calc_sheets_apply import apply_export_plan
-from .....adapters.outbound.storage import OutboundStorageValidationError
+from .....adapters.outbound.storage.errors import OutboundStorageValidationError
 from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from .....adapters.persistence.profile.sync_runs import SyncRunRecordRepository
 from .....core.sync_surface import SyncSurface

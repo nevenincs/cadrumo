@@ -40,25 +40,29 @@ from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
 
-from ....core.modelo import Modelo
 from ....core.bucket_pointer import resolve_repository_bucket_id
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.identity import SubjectTaxId
 from ....core.logging import get_logger
+from ....core.modelo import Modelo
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.modelos.calculation_repository import CalculationRevisionPersistenceError
-from ....domain.modelos.calculation_revision_aggregate import CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY, CalculationRevisionAggregateContext
 from ....domain.modelos.calculation_revision import (
     CalculationRevisionCatalogue,
     assert_revision_snapshot_evidence_coverage,
 )
+from ....domain.modelos.calculation_revision_aggregate import (
+    CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY,
+    CalculationRevisionAggregateContext,
+)
 from ....domain.modelos.errors import raise_catalogue_integrity_error
-from ..storage import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE, secure_object_repository_for_bucket
+from ..storage._secure_object_namespaces import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
+from ..storage.runtime_repository import secure_object_repository_for_bucket
 from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
-    from ..storage import SecureObjectRepository, SecureObjectWrite
+    from ..storage.sql import SecureObjectRepository, SecureObjectWrite
 
 _LOGGER = get_logger(__name__)
 _CALCULATION_NAMESPACE = MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace
@@ -163,13 +167,12 @@ class CalculationRevisionCatalogueRepository:
                 supports, or an integrity error surfaces while decrypting and
                 decoding the record.
         """
-        from ..storage import (
-            ClassificationError,
-            Envelope,
-            EnvelopeVersionError,
+        from ..storage._schema_lineage import (
             inner_envelope_classification_is_expected,
             inner_envelope_version_is_current,
         )
+        from ..storage.envelope._envelope import Envelope
+        from ..storage.errors import ClassificationError, EnvelopeVersionError
 
         try:
             record = self._objects.load(

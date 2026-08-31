@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from typing import Literal
 
-from ...core.period import Period
 from ...core.identity import AeatExpedienteId
 from ...core.json_contract import OutputSchema
+from ...core.period import Period
 
 
 class FiledListingRowPayload(OutputSchema):

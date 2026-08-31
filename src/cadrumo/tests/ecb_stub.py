@@ -22,7 +22,7 @@ from urllib.parse import parse_qs, urlparse
 from ..core.parsing import parse_iso8601_date
 
 if TYPE_CHECKING:
-    from ..adapters.outbound.fx import RateFetch
+    from ..adapters.outbound.fx._ecb_provider import RateFetch
 
 _CSV_HEADER = "KEY,FREQ,CURRENCY,CURRENCY_DENOM,EXR_TYPE,EXR_SUFFIX,TIME_PERIOD,OBS_VALUE"
 

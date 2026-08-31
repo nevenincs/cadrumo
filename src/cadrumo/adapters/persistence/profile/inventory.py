@@ -27,17 +27,15 @@ from pydantic import ValidationError
 
 from ....core.errors.hierarchy import CadrumoError
 from ....core.logging import get_logger
-from ....domain.contribuyente.inventory import (
+from ....domain.contribuyente.inventory.records import (
     InventoryClosingAuthorityRecord,
     InventoryLedger,
     InventoryLedgerDocument,
     InventoryLedgerError,
     MovementRecord,
 )
-from ..storage import (
-    PROFILE_INVENTORY_LEDGER_NAMESPACE,
-    SecureObjectRepository,
-)
+from ..storage._secure_object_namespaces import PROFILE_INVENTORY_LEDGER_NAMESPACE
+from ..storage.sql import SecureObjectRepository
 from ._secure_model_document import (
     ProfileBareModelSecurePersistence,
     resolve_profile_secure_object_repository,

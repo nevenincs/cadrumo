@@ -131,7 +131,7 @@ from ...core.aggregation import (
     RetencionScheme,
     work_income_retencion_treatment,
 )
-from ...core.money import CENT
+from ...core.money.rounding import CENT
 from ...domain.calculations.registry.ids import LegalRefId
 from ...domain.transactions.retencion_parameters import (
     administrador_retencion_legal_refs,

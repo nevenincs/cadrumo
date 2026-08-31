@@ -30,12 +30,12 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import get_args
 
-from ...core.modelo import Modelo
-from ...core.operator_action_enums import ActionEvidenceProvenance
-from ...core.casilla_id import CasillaId
 from ...core.aggregation import BindingSourceKind
-from ...core.decimal import coerce_decimal_strict
-from ...core.money import round_to_cents
+from ...core.casilla_id import CasillaId
+from ...core.decimal._coerce import coerce_decimal_strict
+from ...core.modelo import Modelo
+from ...core.money.rounding import round_to_cents
+from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.calculations.registry.binding_selector_utils import manual_input_record_field_selector
 from ...domain.calculations.registry.bindings import (
     CasillaObservation,
@@ -50,9 +50,17 @@ from ...domain.calculations.registry.schema import (
     ModeloRevision,
     RegistrySnapshot,
 )
-from ...domain.modelos.row_models import Modelo184MemberRow, Modelo210AgrupacionRentaRow, Modelo232VinculadaRow, Modelo347ContraparteRow, Modelo349OperadorRow, Modelo349RectificacionRow, ModeloDetailRow
-from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.errors import ModeloError
+from ...domain.modelos.row_models import (
+    Modelo184MemberRow,
+    Modelo210AgrupacionRentaRow,
+    Modelo232VinculadaRow,
+    Modelo347ContraparteRow,
+    Modelo349OperadorRow,
+    Modelo349RectificacionRow,
+    ModeloDetailRow,
+)
+from ...domain.modelos.work_unit import WorkUnit
 from ._action_errors import ModeloAggregationBindingError, ModeloCrossPeriodCleanStateError
 from ._preconditions import build_modelo_precondition_failure
 

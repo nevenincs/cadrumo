@@ -22,7 +22,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ....adapters.persistence.storage.master_key import BucketSession
+    from ....adapters.persistence.storage.master_key.bucket_session import BucketSession
 
 
 def _never_called() -> object:

@@ -28,7 +28,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Sequence
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, NonNegativeInt
 
 from ...core.field_role import FieldRole
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -83,7 +83,7 @@ class ResolvedColumn(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    column_index: int = Field(ge=0)
+    column_index: NonNegativeInt
     header: str
     field: str | None = None
     role: FieldRole = FieldRole.UNMAPPED

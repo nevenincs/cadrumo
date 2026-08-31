@@ -33,7 +33,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core.aggregation import BindingSourceKind
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
@@ -389,8 +389,8 @@ def test_s09_ledger_renta_income_resolver_enrolled_fires_on_m130(
         collect_unhandled_source_diagnostics,
         merge_source_resolutions,
     )
-    from ...calculations import PreviousFilingSourceResolver
-    from ...invoices import InvoiceCatalogueSourceResolver
+    from ...calculations._multi_year import PreviousFilingSourceResolver
+    from ...invoices._source_resolver import InvoiceCatalogueSourceResolver
 
     _wu_repo, _cr_repo, tx_repo, invoice_repo = _repos(secure_objects)
     revision = _revision("130", "2019-y-siguientes")

@@ -9,15 +9,10 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from ...application.auth.sessions import AuthenticatedAeatSessionResult
-from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
-from ...core.classification import SensitivityClass
+from ...core.classification.policies import SensitivityClass
 from ...core.hashing import sha256_hex
-from ...core.redaction import (
-    ALWAYS_REDACT_KEY_TERMS,
-    default_rules_for_class,
-    normalise_redaction_key,
-    redact,
-)
+from ...core.redaction.rules import ALWAYS_REDACT_KEY_TERMS, default_rules_for_class, normalise_redaction_key, redact
+from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from .errors import LiveIvaAcquisitionFailureMode, classify_live_iva_acquisition_failure
 from .remote_state_models import (
     IvaCompensationHistoryCaptureReport,

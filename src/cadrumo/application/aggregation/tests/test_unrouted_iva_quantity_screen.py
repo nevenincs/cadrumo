@@ -28,7 +28,7 @@ from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterR
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
-from ....domain.bienes_inversion import BienesInversionIvaRegister
+from ....domain.bienes_inversion.register import BienesInversionIvaRegister
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ledger_bindings import (
     IvaLedgerObservation,

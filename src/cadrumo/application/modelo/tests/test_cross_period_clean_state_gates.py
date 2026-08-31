@@ -10,37 +10,42 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
-from ....adapters.inbound.pdf import source_pdf_reference_path
+from ....adapters.inbound.pdf._utils import source_pdf_reference_path
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.justificante import Justificante
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
-from ....domain.modelos.codes import ModeloCode
-from ....domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind, ModeloRecord, ModeloRecordStatus, derive_filing_record_id
-from ....domain.modelos.filing_repository import upsert_filing_record
-from ....domain.modelos.repository import upsert_work_unit
-from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.filing_record import (
+    ExternalEvidence,
+    ExternalEvidenceKind,
+    ModeloRecord,
+    ModeloRecordStatus,
+    derive_filing_record_id,
+)
+from ....domain.modelos.filing_repository import upsert_filing_record
+from ....domain.modelos.repository import upsert_work_unit
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations import (
-    CalculationObservationRepository,
+from ...calculations.cross_period_clean_state import (
     CrossPeriodCleanStateBlocker,
     CrossPeriodCleanStateVerdict,
     CrossPeriodDependencyEvidence,
@@ -48,10 +53,11 @@ from ...calculations import (
     CrossPeriodDependencyRequirement,
     cross_period_dependency_requirements,
 )
+from ...calculations.observations_repository import CalculationObservationRepository
 from .._verification_actions import verify_modelo_revision
 from .._verification_cross_period import _cross_period_clean_state_findings
-from ..work_lifecycle import create_work_unit
 from ..external_import_actions import import_external_filing_evidence
+from ..work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

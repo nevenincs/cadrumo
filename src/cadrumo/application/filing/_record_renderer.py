@@ -6,10 +6,10 @@ from collections import Counter
 from collections.abc import Mapping
 from decimal import Decimal
 
+from ...core.casilla_id import CasillaId
+from ...core.decimal._coerce import coerce_decimal
 from ...core.filing_producer_key import FilingProducerKey
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
-from ...core.casilla_id import CasillaId
-from ...core.decimal import coerce_decimal
 from ...domain.calculations.export_field_kind import CasillaFieldKind
 from ...domain.calculations.registry.export import export_fields_overlap
 from ...domain.calculations.registry.ids import BindingId

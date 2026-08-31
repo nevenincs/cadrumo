@@ -12,8 +12,10 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Literal, cast
 from uuid import UUID
 
-from .....core import StorageCategory, is_link_like, storage_location
+from .....core.link_safety import is_link_like
 from .....core.paths import effective_storage_root
+from .....core.storage_taxonomy import StorageCategory
+from .....core.storage_taxonomy_locations import storage_location
 from ._capsule_data import (
     read_committed_data_file_posix as _read_committed_data_file_posix,
 )

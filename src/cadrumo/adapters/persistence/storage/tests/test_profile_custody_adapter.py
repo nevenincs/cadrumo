@@ -12,7 +12,7 @@ from .....application.user_profile.custody_ports import (
     ProfileRecordCryptoError,
     ProfileRecordEncryptedBlob,
 )
-from .. import build_profile_custody_port
+from .._profile_custody import build_profile_custody_port
 from ..custody.capsule_records import ProfileCustodyCapsuleLabel
 from ..custody.label_head_models import ProfileLabelHead
 from ..custody.label_head_repository import ProfileLabelHeadRepository

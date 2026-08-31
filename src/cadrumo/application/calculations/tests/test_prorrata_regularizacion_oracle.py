@@ -46,8 +46,18 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ....domain.calculations.registry.external_grounding import ManualWorkedExamplePayload
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from ....domain.calculations.registry.tests import oracle_declared_figures, read_manual_worked_example
-from ....domain.iva.prorrata import InputClassification, ProrrataInputs, ProrrataKind, RegularizacionProrrataDireccion, classify_input_deduction, compute_prorrata_general
+from ....domain.calculations.registry.tests._manual_oracle_support import (
+    oracle_declared_figures,
+    read_manual_worked_example,
+)
+from ....domain.iva.prorrata import (
+    InputClassification,
+    ProrrataInputs,
+    ProrrataKind,
+    RegularizacionProrrataDireccion,
+    classify_input_deduction,
+    compute_prorrata_general,
+)
 from .._prorrata_regularizacion import project_prorrata_regularizacion_feed
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

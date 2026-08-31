@@ -29,8 +29,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.directory_scan import scan_directory
+from ....core.operator_action_enums import NoRecoveryOutcome
 from ....domain.calculations.registry.authority import bundled_authority
 from .._m303_carry_ingress import M303CarryIngressError
 from ..errors import (

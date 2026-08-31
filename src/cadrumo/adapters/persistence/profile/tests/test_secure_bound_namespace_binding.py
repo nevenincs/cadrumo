@@ -26,9 +26,9 @@ from .....core.period import Period
 from .....domain.justificante import Justificante
 from .....tests.aeat_literal_fixtures import justificante_wlpl_cotejo_url
 from .....tests.secure_sql import isolated_runtime_profile
-from ....persistence.storage import JUSTIFICANTE_METADATA_NAMESPACE
 from ....persistence.storage.sql import SecureObjectRow
 from ....persistence.storage.sql.session import session_scope
+from ...storage._secure_object_namespaces import JUSTIFICANTE_METADATA_NAMESPACE
 from ..justificante import JustificanteRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

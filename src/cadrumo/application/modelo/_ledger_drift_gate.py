@@ -32,13 +32,17 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ...domain.modelos.calculation_revision import CalculationRevisionState
+from ...domain.modelos.verification_report import (
+    ModeloVerificationFinding,
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
+)
 from ..aggregation import evaluate_ledger_filing_staleness
 
 if TYPE_CHECKING:
-    from ...domain.modelos.work_unit import WorkUnit
     from ...domain.modelos.calculation_revision import CalculationRevision
+    from ...domain.modelos.work_unit import WorkUnit
 
 #: Grounding for the drift refusal. A declaración must reflect the operator's
 #: real accounting records (LIVA art. 164.1.4 the IVA declaration duty, RD

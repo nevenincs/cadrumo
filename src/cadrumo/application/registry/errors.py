@@ -5,9 +5,10 @@ from __future__ import annotations
 from collections.abc import Mapping
 from enum import StrEnum
 
-from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin
-from ..operator_actions import PreconditionVerdict, no_action_precondition_verdict
+from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
+from ..operator_actions._models import PreconditionVerdict
+from ..operator_actions._preconditions import no_action_precondition_verdict
 
 
 class RegistryPreconditionCondition(StrEnum):

@@ -31,10 +31,8 @@ from ....adapters.persistence.profile.usage_ratios import load_usage_ratios
 from ....core.config import override_settings
 from ....core.locks_errors import LockAcquisitionError
 from ....domain.categories.spending_category import SpendingCategory
-from ....domain.usage_ratios import (
-    ELIGIBLE_USAGE_RATIO_CATEGORIES,
-    usage_ratio_bucket_lock,
-)
+from ....domain.usage_ratios._model import ELIGIBLE_USAGE_RATIO_CATEGORIES
+from ....domain.usage_ratios._service import usage_ratio_bucket_lock
 from ....tests.secure_sql import isolated_runtime_profile
 from ..ratios import set_usage_ratio
 

@@ -41,17 +41,12 @@ from ....domain.filing.protocols import CasillaSchemaProvider
 from ....domain.filing.schema import ModeloDraft
 from ....domain.invoices.models import Invoice, InvoiceCatalogue
 from ....domain.iva.classification import InvoiceKind
-from ....domain.submission import ModeloDraftStatus
+from ....domain.submission._protocols import ModeloDraftStatus
 from ....tests.secure_sql import TestRuntimeProfile
-from ...invoices import build_catalogue_invoice
-from .. import (
-    ModeloApprovalStaleReason,
-    approval_stale_reasons,
-    approve_draft,
-    build_draft,
-    build_runtime_schema_provider,
-)
-from ..runtime import ModeloOperatorProfile
+from ...invoices._creation import build_catalogue_invoice
+from .._draft_construction import build_draft
+from .._review import ModeloApprovalStaleReason, approval_stale_reasons, approve_draft
+from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

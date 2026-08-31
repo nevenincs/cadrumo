@@ -160,7 +160,7 @@ class ConfirmationBlocker(BaseModel):
         # Imported at call time rather than module scope: this module is reached
         # by the CLI error path, and ``core.redaction`` reaches ``core.errors``
         # in turn -- the same cycle the sibling arms in this package defer.
-        from ...core.redaction import redact_for_cli_output
+        from ...core.redaction.rules import redact_for_cli_output
 
         return tuple(redact_for_cli_output(candidate.value) for candidate in self.candidates)
 

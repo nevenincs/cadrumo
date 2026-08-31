@@ -5,15 +5,27 @@ from __future__ import annotations
 from collections.abc import Iterable
 from decimal import Decimal, InvalidOperation
 
-from ...core.period import Period
 from ...core.errors.hierarchy import CoreValidationError
-from ...core.money import round_to_cents
+from ...core.money.rounding import round_to_cents
+from ...core.period import Period
 from ...domain.calculations.registry.m303_orden_projection_models import M303RegimenSimplificadoSnapshot
 from ...domain.calculations.registry.schema import RegistryCatalogues
 from ...domain.calculations.registry.schema_references import LegalParameter
 from ...domain.iva.refund_eligibility import is_last_filing_period_of_year
-from ...domain.iva.regimen_simplificado_rows import ActividadNoAgricolaSimplificado, ActividadOrdenAnual, M303RegimenSimplificadoScopeDecision, RegimenSimplificadoFilingRows, validate_regimen_simplificado_rows
-from ...domain.modelos.calculation_revision_m303_evidence import M303DANA2024EligibilityEvidence, M303DANA2024ReductionResult, M303RegimenSimplificadoActivityCalculationResult, M303RegimenSimplificadoCalculationResult, M303RegimenSimplificadoModuleCalculationResult
+from ...domain.iva.regimen_simplificado_rows import (
+    ActividadNoAgricolaSimplificado,
+    ActividadOrdenAnual,
+    M303RegimenSimplificadoScopeDecision,
+    RegimenSimplificadoFilingRows,
+    validate_regimen_simplificado_rows,
+)
+from ...domain.modelos.calculation_revision_m303_evidence import (
+    M303DANA2024EligibilityEvidence,
+    M303DANA2024ReductionResult,
+    M303RegimenSimplificadoActivityCalculationResult,
+    M303RegimenSimplificadoCalculationResult,
+    M303RegimenSimplificadoModuleCalculationResult,
+)
 
 _DANA_2024_PARAMETER_ID = "rdl-7-2024-art-11-2:iva-simplificado-reduccion-cuota-devengada-2024"
 _DANA_2024_PARAMETER_LEGAL_REFS = (

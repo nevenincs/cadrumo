@@ -10,13 +10,13 @@ from pydantic import SecretStr
 from ......application.auth.providers import AuthProvider, select_provider
 from ......application.modelo._workflow_gate import build_revision_deadline_window_checker
 from ......core.auth_provider import AuthProviderKind
-from ......core.period import Period
 from ......core.config import Settings
+from ......core.period import Period
 from ......domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ......domain.deadlines.engine import DeadlineEngine
 from ......domain.deadlines.models import IVARegime, TaxpayerProfile
 from ......domain.filing.schema import ModeloDraft, ModeloValidationFinding
-from ......domain.submission import DeadlineWindowChecker, ModeloDraftStatus
+from ......domain.submission._protocols import DeadlineWindowChecker, ModeloDraftStatus
 
 _DRAFT_TIME = datetime(2026, 4, 10, 12, 0, tzinfo=UTC)
 

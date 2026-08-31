@@ -20,20 +20,21 @@ from pathlib import Path
 
 import pytest
 
-from ....core.result_disposition import ResultDisposition
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.modelo import Modelo
 from ....core.period import Period
-from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.iva_compensation.filed_derivation import M303_COMPENSATION_RESULTADO_CASILLA
-from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations import CalculationObservationRepository, IvaCompensationHistoryRepository
+from ...calculations.iva_compensation_history import IvaCompensationHistoryRepository
+from ...calculations.observations_repository import CalculationObservationRepository
 from .._action_errors import ModeloLocalObservationError
 from .._filed_revision_observation import persist_filed_revision_observation
 

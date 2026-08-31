@@ -8,7 +8,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def test_financial_validation_error_typing_and_registry() -> None:
-    from ..adapters.inbound.financial.providers import FinancialValidationError
+    from ..adapters.inbound.financial.providers._base import FinancialValidationError
     from ..core.errors.error_codes import ERROR_REGISTRY, get_registered_error_code
     from ..core.errors.hierarchy import CadrumoError
 

@@ -6,10 +6,10 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field
 
-from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.aggregation import BindingSourceKind
 from ...core.identity import ContentDigest
-from ...domain.calculations import RowBindingKey
+from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...domain.calculations._row_source_identity import RowBindingKey
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.filing.schema import ModeloBindingValue, ModeloDraft, compute_modelo_draft_id
 from ...domain.identifiers import canonical_decimal_string

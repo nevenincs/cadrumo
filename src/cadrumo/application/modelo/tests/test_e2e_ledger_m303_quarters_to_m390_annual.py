@@ -53,12 +53,12 @@ from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogu
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core.result_disposition import ResultDisposition
-from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
-from ....core.period import Period
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.errors.hierarchy import CadrumoError
+from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from ....core.period import Period
+from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.deadlines.models import EntityType, IVARegime, LegalEntityForm, TaxpayerProfile
 from ....domain.invoices.models import InvoiceCatalogue
@@ -66,9 +66,9 @@ from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.schema import EUMemberState, IvaCategory
 from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
+from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.modelos.verification_report import VerificationCompletenessStatus, VerificationReport
 from ....domain.modelos.work_unit import WorkUnit
-from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -76,8 +76,8 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, U
 from ....tests.env_scope import ready_clave_settings
 from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
-from ...calculations import CalculationObservationRepository, IvaWalletDecisionRepository
-from ...invoices import build_catalogue_invoice
+from ...calculations.observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository
+from ...invoices._creation import build_catalogue_invoice
 from .._action_errors import ModeloCrossPeriodCleanStateError
 from .._calculation_actions import calculate_modelo_revision_from_bucket_aggregation
 from .._export import (

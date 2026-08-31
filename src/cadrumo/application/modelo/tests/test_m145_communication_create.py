@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage import M145_COMMUNICATION_RECORD_NAMESPACE
+from ....adapters.persistence.storage._secure_object_namespaces import M145_COMMUNICATION_RECORD_NAMESPACE
 from ....domain.calculations.registry.casilla_membership import undeclared_casilla_ids
 from ....tests.registry_tree import bundled_registry_tree
 from ....tests.secure_sql import isolated_runtime_profile

@@ -22,7 +22,7 @@ import pytest
 
 from ....adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
 from ....core.aggregation import BindingSourceKind
-from ....domain.bienes_inversion import (
+from ....domain.bienes_inversion.register import (
     BienInversionDisposal,
     BienInversionDisposalRegime,
     BienInversionIvaRecord,

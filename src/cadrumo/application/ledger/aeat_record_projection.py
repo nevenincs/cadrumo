@@ -41,7 +41,7 @@ See Also:
 
 from __future__ import annotations
 
-from ...adapters.inbound.einvoice import AeatParty, ParsedAeatRecord
+from ...adapters.inbound.einvoice._record_batch import AeatParty, ParsedAeatRecord
 from ...core.errors.hierarchy import CadrumoError
 
 __all__ = [

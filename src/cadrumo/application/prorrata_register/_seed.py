@@ -30,14 +30,16 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Final
 
-from ...core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.modelo import Modelo
 from ...core.period import Period
-from ...core.casilla_id import CasillaId, validated_casilla_id
+from ...core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.iva.m303_settlement import m303_annual_settlement_order_key
-from ...domain.prorrata_register import ProrrataRegisterEntry
-from ..calculations import CalculationObservationRepository, CrossPeriodCleanStateBlocker, revision_carry_outcome
+from ...domain.prorrata_register.register import ProrrataRegisterEntry
+from ..calculations._revision_carry_gate import revision_carry_outcome
+from ..calculations.cross_period_clean_state import CrossPeriodCleanStateBlocker
+from ..calculations.observations_repository import CalculationObservationRepository
 
 _PRORRATA_PORCENTAJE_CASILLA: Final[CasillaId] = validated_casilla_id(
     "iva.prorrata-porcentaje",

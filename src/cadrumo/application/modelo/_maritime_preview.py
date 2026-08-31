@@ -38,8 +38,8 @@ from ...application.calculations._maritime_exemption_service import (
 )
 from ...application.user_profile.projections import fact_value
 from ...core.parsing import parse_bool
-from ...domain.renta import MaritimeWorkerFacts, ProfileCompletenessError
-from ..calculations import MaritimeExemptionResult
+from ...domain.renta._maritime_exemption import MaritimeWorkerFacts, ProfileCompletenessError
+from ..calculations._maritime_exemption_service import MaritimeExemptionResult
 from ..workflow.persistence import workflow_state_repository
 
 

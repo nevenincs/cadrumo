@@ -18,10 +18,10 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID, SecureObjectWrite
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import canonical_json_bytes, sha256_hex
 from ...core.paths import effective_storage_root
+from ...core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID, SecureObjectWrite
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import append_bucket_event, build_bucket_event
 from ...domain.user_profile.errors import UserProfileError

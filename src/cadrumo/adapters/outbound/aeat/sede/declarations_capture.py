@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from .....core.observed_header_fact import ObservedHeaderFact
 from .....core.casilla_id import CasillaId
 from .....core.config import Settings
 from .....core.i18n import tr
+from .....core.observed_header_fact import ObservedHeaderFact
 from .....core.period import Period
 from .....domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements
 from .....domain.calculations.registry.errors import RegistryValidationError

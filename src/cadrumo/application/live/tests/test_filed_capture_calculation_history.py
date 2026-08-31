@@ -21,12 +21,12 @@ from ....adapters.outbound.aeat.sede.schema import (
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from ....core.casilla_value_kind import CasillaValueKind
-from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
-from ....core.period import Period
 from ....core.casilla_id import validated_casilla_id
+from ....core.casilla_value_kind import CasillaValueKind
 from ....core.config import Settings
+from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ....core.json_contract import NoticeSeverity
+from ....core.period import Period
 from ....domain.buckets.event import BucketEventType
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.errors import RegistryValidationError
@@ -34,13 +34,12 @@ from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ....domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import read_db_at_rest_bytes
-from ...calculations import (
-    CalculationObservationRepository,
-    IvaCompensationHistoryRepository,
-    ObservationSourceKind,
+from ...calculations._binding_prefill import (
     extract_modelo_303_local_iva_compensation_recurrence,
     resolve_bindings_from_local_store,
 )
+from ...calculations.iva_compensation_history import IvaCompensationHistoryRepository
+from ...calculations.observations_repository import CalculationObservationRepository, ObservationSourceKind
 from ..errors import LiveApplicationError, LiveApplicationInputError
 from ..filed_capture_finalizer import FiledCaptureFailurePolicy, finalize_filed_capture
 from ..filed_observation_persistence import (

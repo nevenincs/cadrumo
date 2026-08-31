@@ -26,12 +26,11 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ...core.operator_action_enums import NoRecoveryOutcome
-from ...core.aggregation import BindingSourceKind
-from ...core.aggregation import COUNTERPART_SOURCE_KIND_ORDER
+from ...core.aggregation import COUNTERPART_SOURCE_KIND_ORDER, BindingSourceKind
 from ...core.identifier_grammar import NamespacedId
 from ...core.logging import LogExtra
-from ..operator_actions import ActionReference
+from ...core.operator_action_enums import NoRecoveryOutcome
+from ..operator_actions._models import ActionReference
 
 
 class RootSurfaceName(StrEnum):

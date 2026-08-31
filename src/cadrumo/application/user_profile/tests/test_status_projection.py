@@ -45,7 +45,7 @@ def test_projection_module_exposes_only_status_projection_symbols() -> None:
 
 
 def test_secret_classed_field_is_masked() -> None:
-    from ....core.classification import SensitivityClass
+    from ....core.classification.policies import SensitivityClass
     from ..overview import mask_profile_field
 
     assert mask_profile_field(
@@ -70,7 +70,7 @@ def test_password_or_key_like_field_is_masked(path: str, label: str) -> None:
 
 
 def test_plain_identity_field_is_not_masked() -> None:
-    from ....core.classification import SensitivityClass
+    from ....core.classification.policies import SensitivityClass
     from ..overview import mask_profile_field
 
     assert not mask_profile_field(

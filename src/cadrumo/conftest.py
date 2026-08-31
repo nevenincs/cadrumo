@@ -54,7 +54,8 @@ os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = str(_COLLECTION_STORAGE_ROOT)
 # these modules' own import surfaces might trigger a premature
 # configure_logging() against is already set by the pure-stdlib lines above.
 from .core.external_constants import UTF_8_ENCODING  # noqa: E402
-from .tests import package_python_files, prime_ast_cache, register_collection_storage_root_cleanup  # noqa: E402
+from .tests._collection_storage_root import register_collection_storage_root_cleanup
+from .tests._inventory import package_python_files, prime_ast_cache
 from .tests.env_scope import release_settings_storage_directories  # noqa: E402
 
 # The other half of what apply_collection_storage_root(overwrite=True) used
@@ -258,14 +259,14 @@ def _evict_test_bound_bucket_session() -> Iterator[None]:
     if "cadrumo.adapters.persistence.storage" not in sys.modules:
         yield
         return
-    from .adapters.persistence.storage import current_active_bucket_session
+    from .adapters.persistence.storage.master_key.active_session import current_active_bucket_session
 
     inherited = current_active_bucket_session()
     yield
     bound = current_active_bucket_session()
     if bound is None or bound is inherited:
         return
-    from .adapters.persistence.storage import (
+    from .adapters.persistence.storage.master_key.active_session import (
         bind_active_bucket_session,
         close_active_bucket_session,
     )

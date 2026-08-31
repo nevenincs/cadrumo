@@ -51,7 +51,8 @@ from ....domain.modelos.filing_record import ModeloRecord
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
-from .. import AssessBucketDeletionCommand, BucketDeletionAssessment, BucketMaintenanceService
+from .._contracts import AssessBucketDeletionCommand, BucketDeletionAssessment
+from .._service import BucketMaintenanceService
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -104,7 +105,7 @@ def _filing_record(*, filed_at: datetime, seed: str) -> ModeloRecord:
 
 
 def _record_snapshot(root: Path, *records: ModeloRecord) -> None:
-    from ...filing import FilingRetentionAuthority
+    from ...filing._profile_filing_retention import FilingRetentionAuthority
 
     FilingRetentionAuthority(root=root).record_filing_catalogue(
         profile_id=UUID(_PROFILE_ID),
@@ -135,7 +136,7 @@ def _refusal_verdict(error: BucketDeleteRefusedError):
 
 def _remove_snapshot(root: Path) -> None:
     """Make the filing owner's otherwise-normal empty snapshot truly absent."""
-    from ...filing import FilingRetentionAuthority
+    from ...filing._profile_filing_retention import FilingRetentionAuthority
 
     snapshot_path = FilingRetentionAuthority(root=root).path(UUID(_PROFILE_ID))
     assert snapshot_path.exists()
@@ -205,7 +206,7 @@ def test_a_snapshot_that_cannot_be_authenticated_refuses_distinctly(tmp_path: Pa
     restored. An operator told only "retention assessment required" can act on
     neither.
     """
-    from ...filing import FilingRetentionAuthority
+    from ...filing._profile_filing_retention import FilingRetentionAuthority
 
     with _published_profile(tmp_path) as root:
         _record_snapshot(root)
@@ -230,7 +231,7 @@ def test_a_snapshot_that_cannot_be_authenticated_refuses_distinctly(tmp_path: Pa
 
 def test_a_linked_custody_target_refuses_with_its_exact_safety_verdict(tmp_path: Path) -> None:
     """The preflight must not follow a redirected capsule directory."""
-    from ....adapters.persistence.storage.bucket import bucket_paths
+    from ....adapters.persistence.storage.bucket._layout import bucket_paths
 
     with _published_profile(tmp_path) as root:
         paths = bucket_paths(root, _PROFILE_ID)
@@ -313,7 +314,7 @@ def test_the_fingerprint_folds_the_real_capsule_and_moves_with_it(tmp_path: Path
     operation, so a fingerprint that did not move would make that detector
     silently blind.
     """
-    from ....adapters.persistence.storage.bucket import bucket_paths
+    from ....adapters.persistence.storage.bucket._layout import bucket_paths
 
     with _published_profile(tmp_path) as root:
         _record_snapshot(root)

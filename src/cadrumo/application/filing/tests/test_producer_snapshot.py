@@ -9,17 +9,17 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....core.refund_election import RefundElection
-from ....core.payment_election import PaymentElection
-from ....core.filing_producer_key import FilingProducerKey
-from ....core.prior_domiciliation_election import PriorDomiciliationElection
-from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
-from ....core.result_disposition import ResultDisposition
-from ....core.prorrata_register import ProrrataEspecialTransitionKind, ProrrataRegisterRegime
-from ....core.modelo import Modelo
-from ....core.period import Period
 from ....core.casilla_id import validated_casilla_id
-from ....domain.bienes_inversion import (
+from ....core.filing_producer_key import FilingProducerKey
+from ....core.modelo import Modelo
+from ....core.payment_election import PaymentElection
+from ....core.period import Period
+from ....core.prior_domiciliation_election import PriorDomiciliationElection
+from ....core.prorrata_register import ProrrataEspecialTransitionKind, ProrrataRegisterRegime
+from ....core.refund_election import RefundElection
+from ....core.result_disposition import ResultDisposition
+from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
+from ....domain.bienes_inversion.register import (
     BienesInversionIvaRegister,
     BienInversionIvaRecord,
     BienInversionKind,
@@ -29,26 +29,50 @@ from ....domain.bienes_inversion import (
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.deadlines.models import ChargeAccount, IVARegime, M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile, RefundAccount, TaxpayerProfile
+from ....domain.deadlines.models import (
+    ChargeAccount,
+    IVARegime,
+    M303RegimeComposition,
+    M303TaxTerritory,
+    ModeloIVAProfile,
+    RefundAccount,
+    TaxpayerProfile,
+)
 from ....domain.filing.schema import ModeloDraft, compute_modelo_draft_id, registry_schema_version
 from ....domain.filing_evidence import FilingEvidenceReference
-from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision, RegimenSimplificadoFilingRows
+from ....domain.iva.regimen_simplificado_rows import (
+    M303RegimenSimplificadoScope,
+    M303RegimenSimplificadoScopeDecision,
+    RegimenSimplificadoFilingRows,
+)
 from ....domain.modelos.calculation_revision import CalculationRevisionAmendmentKind, FilingInstanceEvidence
-from ....domain.modelos.calculation_revision_m303_evidence import M303Exonerado390ActivityRowEvidence, M303Exonerado390EndpointEvidence, M303Exonerado390FilingEvidence
+from ....domain.modelos.calculation_revision_m303_evidence import (
+    M303Exonerado390ActivityRowEvidence,
+    M303Exonerado390EndpointEvidence,
+    M303Exonerado390FilingEvidence,
+)
 from ....domain.modelos.calculation_revision_m303_handoff import M303FilingInstanceEvidence
-from ....domain.prorrata_register import (
+from ....domain.prorrata_register.register import (
     ProrrataEspecialTransitionEvidence,
     ProrrataRegister,
     ProrrataRegisterEntry,
 )
-from ....domain.submission import ModeloDraftStatus
+from ....domain.submission._protocols import ModeloDraftStatus
 from ....tests.filing_evidence import regimen_simplificado_filing_evidence
 from ...aggregation import (
     M303ProrrataTransitionArrival,
     M303SupplierRegimeArrival,
     resolve_m303_prorrata_transition_arrival,
 )
-from .. import (
+from .. import __init__ as filing
+from .._export import (
+    _complementaria_page_marker,
+    _filing_producer_values,
+    _m303_complementaria_marker,
+    _m303_no_activity_marker,
+)
+from .._export_producer import m303_profile_lexicals
+from .._producer_snapshot import (
     M202_UNSUPPORTED_PRODUCER_IDS,
     AmendmentEvidence,
     ChargeAccountSelection,
@@ -69,14 +93,6 @@ from .. import (
     build_filing_producer_snapshot,
     resolve_m303_filing_facts,
 )
-from .. import __init__ as filing
-from .._export import (
-    _complementaria_page_marker,
-    _filing_producer_values,
-    _m303_complementaria_marker,
-    _m303_no_activity_marker,
-)
-from .._export_producer import m303_profile_lexicals
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

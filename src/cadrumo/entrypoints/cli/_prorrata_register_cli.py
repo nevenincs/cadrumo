@@ -25,15 +25,15 @@ from __future__ import annotations
 import typer
 from pydantic import ValidationError
 
-from ...application.prorrata_register import ProrrataRegisterService
+from ...application.prorrata_register._service import ProrrataRegisterService
+from ...core.i18n._render import tr
 from ...core.prorrata_register import (
     ProrrataEspecialTransitionKind,
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,
 )
-from ...core.i18n import tr
-from ...domain.prorrata_register import (
+from ...domain.prorrata_register.register import (
     ProrrataEspecialTransitionEvidence,
     ProrrataRegister,
     ProrrataRegisterEntry,

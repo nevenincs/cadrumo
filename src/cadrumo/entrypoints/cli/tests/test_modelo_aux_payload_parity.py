@@ -20,7 +20,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from ....application.evidence import BundleVerificationState
+from ....application.evidence._models import BundleVerificationState
 from ....core.aggregation import RetencionClave
 from ....domain.buckets.event import BucketEventObjectType, BucketEventType
 from .._modelo_aux_payloads import (

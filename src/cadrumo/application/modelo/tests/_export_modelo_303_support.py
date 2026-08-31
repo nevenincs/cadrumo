@@ -12,30 +12,36 @@ from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogu
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.runtime import inspect_bucket_storage_runtime
-from ....core.period import Period
 from ....core.config import Settings
+from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
-from ....domain.iva_compensation.reconciliation import IvaCompensationAuthoritySource, IvaCompensationReconciliationDecision
+from ....domain.iva_compensation.reconciliation import (
+    IvaCompensationAuthoritySource,
+    IvaCompensationReconciliationDecision,
+)
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
-from ....domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind, ModeloRecord, ModeloRecordStatus, derive_filing_record_id
-from ....domain.modelos.filing_repository import upsert_filing_record
-from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.filing_record import (
+    ExternalEvidence,
+    ExternalEvidenceKind,
+    ModeloRecord,
+    ModeloRecordStatus,
+    derive_filing_record_id,
+)
+from ....domain.modelos.filing_repository import upsert_filing_record
+from ....domain.modelos.repository import upsert_work_unit
 from ....tests.env_scope import ready_clave_settings
 from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.registry_observations import registry_grounded_observations
-from ...calculations import (
-    CalculationObservationRepository,
-    IvaWalletDecisionRepository,
-    cross_period_dependency_requirements,
-)
+from ...calculations.cross_period_clean_state import cross_period_dependency_requirements
+from ...calculations.observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository
 from .._calculation_actions import calculate_modelo_revision
 from .._calculation_helpers import external_filing_observations
 from .._verification_actions import verify_modelo_revision

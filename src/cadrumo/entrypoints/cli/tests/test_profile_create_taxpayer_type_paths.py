@@ -53,7 +53,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.i18n import tr
+from ....core.i18n._render import tr
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage
 from ....tests.user_profile import register_cli_profile

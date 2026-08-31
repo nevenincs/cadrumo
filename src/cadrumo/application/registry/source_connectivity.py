@@ -16,12 +16,14 @@ from typing import Literal, TypeGuard
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...core.aggregation import BindingSourceKind
 from ...core.calculation_route import ModeloCalculationRouteId
+from ...core.casilla_id import CasillaId
+from ...core.filing_year import FilingYear
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
-from ...core.casilla_id import CasillaId
-from ...core.aggregation import BindingSourceKind
+from ...core.resources._boundary import bundled_path
 from ...core.source_connectivity import (
     SourceConnectivityCensusRow,
     SourceConnectivityDisposition,
@@ -29,8 +31,6 @@ from ...core.source_connectivity import (
     SourceConnectivityGroundingLocatorKind,
     SourceConnectivityProofAuthority,
 )
-from ...core.filing_year import FilingYear
-from ...core.resources import bundled_path
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ...domain.calculations.registry.bindings import casillas_by_binding
 from ...domain.calculations.registry.censo_modelos import CensoModeloEventKind

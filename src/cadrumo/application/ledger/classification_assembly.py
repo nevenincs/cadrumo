@@ -84,11 +84,28 @@ from typing import TYPE_CHECKING, NamedTuple
 
 from pydantic import BaseModel, Field
 
-from ...core.iva_category_resolution import IvaCategoryOutcome
 from ...core.classifier_input_source import ClassifierInputSource, CounterpartyTaxablePersonStatus
+from ...core.iva_category_resolution import IvaCategoryOutcome
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...domain.iva.classification import CustomerTaxStatus, InvoiceKind, IvaInvoiceClassificationCriteria, IvaTerritorialScope, PartyFact, TransactionKind, classify_iva, domestic_categories_by_rate_kind, domestic_rate_tier_is_required, rate_kind_for_domestic_category
-from ...domain.iva.establishment import SPAIN_COUNTRY_CODE, StatedCountryCodeStatus, stated_country_code_status, territorial_scope_for_country, territorial_scope_for_spanish_postal_code
+from ...domain.iva.classification import (
+    CustomerTaxStatus,
+    InvoiceKind,
+    IvaInvoiceClassificationCriteria,
+    IvaTerritorialScope,
+    PartyFact,
+    TransactionKind,
+    classify_iva,
+    domestic_categories_by_rate_kind,
+    domestic_rate_tier_is_required,
+    rate_kind_for_domestic_category,
+)
+from ...domain.iva.establishment import (
+    SPAIN_COUNTRY_CODE,
+    StatedCountryCodeStatus,
+    stated_country_code_status,
+    territorial_scope_for_country,
+    territorial_scope_for_spanish_postal_code,
+)
 from ...domain.iva.identification import identification_state_for_printed_tax_identifier
 from ...domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind
 from ...domain.iva.supply_nature import SupplyNature

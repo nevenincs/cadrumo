@@ -14,7 +14,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from enum import StrEnum
 
-from ..core.profile_session import ProfileSessionRefusalReason
 from ..core.operator_action_enums import (
     ActionArgumentSource,
     ActionArgumentStatus,
@@ -22,14 +21,9 @@ from ..core.operator_action_enums import (
     ActionEvidenceProvenance,
     NoRecoveryOutcome,
 )
-from .operator_actions import (
-    ActionArgumentBinding,
-    ActionReference,
-    ConditionEvidence,
-    PreconditionVerdict,
-    conditionality_for_binding,
-    no_action_precondition_verdict,
-)
+from ..core.profile_session import ProfileSessionRefusalReason
+from .operator_actions._models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
+from .operator_actions._preconditions import conditionality_for_binding, no_action_precondition_verdict
 
 
 class ProfilePreconditionCondition(StrEnum):

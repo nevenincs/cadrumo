@@ -35,7 +35,7 @@ from decimal import Decimal
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
-from ....adapters.inbound.pdf import source_pdf_reference_path
+from ....adapters.inbound.pdf._utils import source_pdf_reference_path
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....application.flows.definition import FlowPage
 from ....application.flows.errors import FlowAnswerError
@@ -43,13 +43,13 @@ from ....application.flows.scripted import run_scripted_flow
 from ....application.modelo._action_errors import amendment_evidence_missing_precondition
 from ....application.modelo._calculation_actions import get_calculation_revision
 from ....application.modelo._filing_actions import get_filing_record
-from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
-from ....core.operator_action_enums import ActionConditionality, NoRecoveryOutcome
-from ....core.period import Period
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.flows import FlowMode
+from ....core.operator_action_enums import ActionConditionality, NoRecoveryOutcome
+from ....core.period import Period
+from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.justificante import Justificante
+from ....domain.justificante._schema import Justificante
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.cli_runner import invoke_cached_cli

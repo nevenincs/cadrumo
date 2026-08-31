@@ -31,15 +31,14 @@ from ....application.operations.persistence.replay import (
     OperationReplayPage,
     OperationReplayStatus,
 )
-from ....core.storage_taxonomy_locations import storage_location
-from ....core.storage_taxonomy import StorageCategory
-from ....core.models import STRICT_FROZEN_CONFIG
-from ....core.locks import exclusive_file_lock
 from ....core.directory_scan import (
     scan_directory,
 )
-from ....core.locks import exclusive_file_lock_async
-from ..storage import RepositoryError
+from ....core.locks import exclusive_file_lock, exclusive_file_lock_async
+from ....core.models import STRICT_FROZEN_CONFIG
+from ....core.storage_taxonomy import StorageCategory
+from ....core.storage_taxonomy_locations import storage_location
+from ..storage.errors import RepositoryError
 from ._journal_validation import OperationJournalRecord, validate_advance
 from .lease import OperationLeaseStorage
 

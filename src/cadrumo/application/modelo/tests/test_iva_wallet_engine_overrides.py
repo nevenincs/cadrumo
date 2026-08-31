@@ -13,17 +13,15 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....core.casilla_id import CasillaId
 from ....domain.iva_compensation.reconciliation import IvaCompensationOverride
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
-from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.repository import upsert_work_unit
 from ....tests.registry_observations import registry_grounded_observations
-from ...calculations import (
-    CalculationObservationRepository,
-    reconcile_modelo_303_iva_compensation,
-)
+from ...calculations._iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
+from ...calculations.observations_repository import CalculationObservationRepository
 from .._calculation_actions import calculate_modelo_revision
 from .._iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from .._iva_wallet_seed import (

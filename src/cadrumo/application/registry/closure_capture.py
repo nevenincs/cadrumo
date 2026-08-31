@@ -33,11 +33,11 @@ from datetime import date
 from secrets import token_bytes
 from threading import RLock
 
-from ...core.source_connectivity import SourceConnectivityProofAuthority
 from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import content_hash_hex
+from ...core.source_connectivity import SourceConnectivityProofAuthority
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
-from ..filing import FilingExportProofAuthority
+from ..filing._export_proof import FilingExportProofAuthority
 from .closure import RegistryClosureLimb
 from .filing_export_coverage import compose_filing_export_coverage
 from .source_connectivity import SourceConnectivityCensusManifest

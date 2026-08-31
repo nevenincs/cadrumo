@@ -10,9 +10,9 @@ from uuid import UUID
 
 from pydantic import ValidationError
 
-from ...core.storage_taxonomy_locations import storage_location
-from ...core.storage_taxonomy import StorageCategory
 from ...core.paths import effective_storage_root
+from ...core.storage_taxonomy import StorageCategory
+from ...core.storage_taxonomy_locations import storage_location
 from .custody_ports import ProfileCustodyLocalRecordStore, default_profile_custody_local_record_store
 from .custody_transactions import (
     CUSTODY_RECEIPT_MAX_BYTES,

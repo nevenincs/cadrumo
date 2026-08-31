@@ -10,39 +10,41 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, ValidationError
 
-from ...adapters.persistence.storage import (
-    SECURE_OBJECT_WORKFLOW_STATE_KEY,
-    StorageValidationError,
+from ...adapters.persistence.storage._secure_object_namespaces import SECURE_OBJECT_WORKFLOW_STATE_KEY
+from ...adapters.persistence.storage.errors import StorageValidationError
+from ...adapters.persistence.storage.master_key.active_session import (
     activate_session,
     has_active_bucket_session,
     suspend_active_session,
 )
-from ...adapters.persistence.storage.master_key import BucketSession
+from ...adapters.persistence.storage.master_key.bucket_session import BucketSession
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from ...adapters.persistence.storage.sql import dispose_engine
+from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ...core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
-from ...core.classification import SensitivityClass
+from ...core.classification.policies import SensitivityClass
 from ...core.config import override_settings
+from ...core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ...tests.master_key import EphemeralMasterKeyProvider
 from ...tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 from ...tests.user_profile import register_minimal_profile
-from ..diagnostics import (
+from ..diagnostic_models import (
     ConfigRepairReport,
     DiagnosticCheck,
     DiagnosticFinding,
     RegistryVersionSummary,
     SecureObjectIntegrityReport,
-    build_config_repair_report,
     ensure_models_rebuilt,
+)
+from ..diagnostics import (
+    _profile_check,
+    _registry_cross_domain_integrity_check,
+    build_config_repair_report,
     preview_quarantine_unreadable_secure_objects,
-    profile_check,
     quarantine_unreadable_secure_objects,
-    registry_cross_domain_integrity_check,
     render_config_repair_text,
     secure_object_unreadable_total,
 )
-from ..operator_actions import ConditionEvidence, PreconditionVerdict
+from ..operator_actions._models import ConditionEvidence, PreconditionVerdict
 from ..overview.next_actions import declare_next_action
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -98,7 +100,7 @@ def _save_probe_row(namespace: str, object_key: str, payload: bytes) -> None:
     )
 
 
-def _bucket_session(bucket_id: str) -> BucketSession:
+def bucket_session(bucket_id: str) -> BucketSession:
     return BucketSession.open(
         bucket_id=bucket_id,
         kek=b"k" * 32,
@@ -297,10 +299,7 @@ def test_render_browser_connectivity_text_resolves_row_label_keys() -> None:
     After fix: each key resolves to a real translated label.
     """
 
-    from ...adapters.outbound.aeat.browser import (
-        SiteHealthEvidence,
-        SiteHealthStatus,
-    )
+    from ...adapters.outbound.aeat.browser._site_health import SiteHealthEvidence, SiteHealthStatus
     from ...core.errors.hierarchy import SiteHealthState
     from ..diagnostics import render_browser_connectivity_text
 
@@ -455,7 +454,7 @@ def test_secure_object_unreadable_total_logs_route_session_mismatch(
 
     with (
         override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=_ACTIVE_BUCKET_ID) as settings,
-        activate_session(_bucket_session(_OTHER_BUCKET_ID)),
+        activate_session(bucket_session(_OTHER_BUCKET_ID)),
     ):
         dispose_engine(settings)
         try:
@@ -739,7 +738,7 @@ def test_build_cli_version_report_fast_path_needs_no_model_rebuild() -> None:
     ``build_cli_version_report(with_registry=False)`` is the fast-path
     call. It returns a ``CliVersionReport``, which must carry no field
     typed by a lazily imported name — otherwise the version path would
-    have to pay the heavy ``_ensure_models_rebuilt`` import cost.
+    have to pay the heavy ``ensure_models_rebuilt`` import cost.
     """
 
     from ..diagnostics import build_cli_version_report, render_cli_version_text
@@ -837,7 +836,7 @@ def test_profile_check_warn_row_names_every_missing_required_key() -> None:
         login_ready=False,
         next_action=_UNRENDERED_NEXT_ACTION,
     )
-    check = profile_check(report)
+    check = _profile_check(report)
 
     assert check.status == "warn"
     finding_keys = {finding.summary.split(" — ", 1)[0] for finding in check.findings}
@@ -887,7 +886,7 @@ def test_render_config_repair_text_lists_specific_findings() -> None:
         login_ready=False,
         next_action=_UNRENDERED_NEXT_ACTION,
     )
-    check = profile_check(report)
+    check = _profile_check(report)
     registry = RegistryVersionSummary(available=True, registry_root="/x", modelo_count=1, casilla_count=2)
     repair_report = ConfigRepairReport(
         overall="warn",
@@ -943,9 +942,9 @@ def test_config_repair_report_marks_registry_integrity_internal() -> None:
     problem rather than a profile gap.
     """
 
-    from ...core.resources import bundled_path
+    from ...core.resources._boundary import bundled_path
 
-    check = registry_cross_domain_integrity_check(bundled_path("registry", "aeat"))
+    check = _registry_cross_domain_integrity_check(bundled_path("registry", "aeat"))
     # Healthy registry → ok + operator audience. A failing registry would
     # carry audience='internal'; that branch is pinned by the renderer
     # test above against a constructed report.
@@ -1032,7 +1031,7 @@ def test_missing_active_bucket_session_is_classified_from_the_typed_chain_not_th
     expected cold start, because that downgrades a genuine fault to a warning
     and suppresses the detail the operator needs.
     """
-    from ...adapters.persistence.storage.master_key import NoActiveBucketSessionError
+    from ...adapters.persistence.storage.master_key.active_session import NoActiveBucketSessionError
     from ..diagnostics import _is_missing_active_bucket_session
 
     session_error = NoActiveBucketSessionError()

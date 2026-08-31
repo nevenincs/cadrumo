@@ -18,7 +18,10 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from ....adapters.persistence.storage import master_key
+from ....adapters.persistence.storage.master_key.active_session import (
+    close_active_bucket_session,
+    current_active_bucket_session,
+)
 from ....domain.user_profile.errors import ProfileNotFoundError
 from ....tests.secure_sql import isolated_profile_storage_root
 from ..login_session import login_profile
@@ -50,7 +53,7 @@ def test_closing_the_bucket_session_leaves_no_readable_record_authority(tmp_path
         assert profile_record_session_if_authenticated(outcome.profile_id) is not None
         ProfileRecordRepository.for_current_session(outcome.profile_id).load(outcome.profile_id)
 
-        master_key.close_active_bucket_session()
+        close_active_bucket_session()
 
         assert profile_record_session_if_authenticated(outcome.profile_id) is None
         with pytest.raises(ProfileNotFoundError):
@@ -74,7 +77,7 @@ def test_a_sealed_but_still_bound_session_serves_no_record_authority(tmp_path: P
 
         assert profile_record_session_if_authenticated(outcome.profile_id) is not None
 
-        live = master_key.current_active_bucket_session()
+        live = current_active_bucket_session()
         assert live is not None
         # Closed directly, NOT through the eviction door: ownership of a
         # session stays with whoever opened it, so this is a reachable state

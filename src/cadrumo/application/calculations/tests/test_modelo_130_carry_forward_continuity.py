@@ -42,15 +42,21 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import BindingId
-from ....domain.deadlines.models import IVARegime, M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile, TaxpayerProfile
+from ....domain.deadlines.models import (
+    IVARegime,
+    M303RegimeComposition,
+    M303TaxTerritory,
+    ModeloIVAProfile,
+    TaxpayerProfile,
+)
+from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.modelos.filing_record import ExternalEvidenceKind
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind
-from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.env_scope import ready_clave_settings
 from ....tests.profile_capsule import seed_test_profile_record
@@ -58,9 +64,9 @@ from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo._calculation_actions import calculate_modelo_revision
 from ...modelo._verification_actions import verify_modelo_revision
-from ...modelo.work_lifecycle import create_work_unit
 from ...modelo.external_import_actions import import_external_filing_evidence
 from ...modelo.tests.justificante_metadata import persist_justificante_metadata
+from ...modelo.work_lifecycle import create_work_unit
 from .._binding_prefill import resolve_bindings_from_local_store
 from ..observations_repository import CalculationObservationRepository
 

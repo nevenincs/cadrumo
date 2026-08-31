@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from importlib.metadata import version
 
-from ...adapters.inbound.pdf import extract_pages_text_from_bytes
+from ...adapters.inbound.pdf._pdfplumber import extract_pages_text_from_bytes
 from ...core.document_shape import PDF_CONTAINER_SHAPES
 from ...core.field_origin import FieldOrigin
 from ...core.provenance_stamp import LOCAL_TRANSPORT_LABEL

@@ -10,8 +10,8 @@ from shutil import copyfile
 import pytest
 from pydantic import ValidationError
 
-from ... import RECOGNISED_FIXTURE_PROVENANCES
-from .. import (
+from ...provenance import RECOGNISED_FIXTURE_PROVENANCES
+from ..models import (
     AEAT_PUBLISHED_FACSIMILE_CLASSIFICATION,
     EXTERNAL_LAYOUT_CANDIDATE_KINDS,
     EXTERNAL_LAYOUT_MODELOS,

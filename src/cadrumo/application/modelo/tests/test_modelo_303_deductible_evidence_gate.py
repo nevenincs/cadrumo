@@ -15,24 +15,29 @@ from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogu
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
-from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
-from ....domain.modelos.codes import ModeloCode
-from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity, VerificationCompletenessStatus, VerificationReport
-from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.verification_report import (
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
+    VerificationCompletenessStatus,
+    VerificationReport,
+)
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -45,8 +50,8 @@ from ...aggregation import (
     compute_ledger_filing_evidence,
     compute_ledger_filing_snapshot,
 )
-from ...calculations import IvaWalletDecisionRepository
-from ...invoices import build_catalogue_invoice, create_catalogue_invoice
+from ...calculations.observations_repository import IvaWalletDecisionRepository
+from ...invoices._creation import build_catalogue_invoice, create_catalogue_invoice
 from ...ledger.actions_manual import attach_manual_transaction_evidence, link_manual_transaction_invoice
 from ...ledger.evidence import PurchaseInvoiceEvidenceService
 from .._calculation_actions import calculate_modelo_revision_from_bucket_aggregation
