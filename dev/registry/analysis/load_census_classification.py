@@ -101,6 +101,8 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
         ),
         members=_registry(
             "authority",
+            "_loader_internals",
+            "_snapshot_internals",
             "bindings",
             "_compiled_cache",
             "convenio",
@@ -108,6 +110,7 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
             "loader",
             "loader_cache",
             "loader_fingerprints",
+            "_source_file_text",
             "m303_orden_census_artefact",
             "_m303_orden_constants",
             "_m303_orden_keys",
@@ -123,7 +126,11 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
             "_supplementary_orden",
             "_toml_helpers",
             "_validate",
+            "_validate_cross_revision_evolution",
             "_validate_evidence",
+            "_validate_parameter_temporal",
+            "_validate_producer_inventory",
+            "_validate_projection_endpoints",
             "_validation_memoization",
             "_verdict_cache",
         ),
@@ -144,6 +151,8 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
             "casilla_membership",
             "_citation_blocklist",
             "corpus_catalogue",
+            "deadline_coordinate",
+            "design_constant_bindings",
             "_cross_revision_divergence",
             "detail_record_bindings",
             "donativo_bindings",
@@ -154,13 +163,16 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
             "_formula_operator_contracts",
             "gasto193_bindings",
             "invoice_bindings",
+            "inventory_bindings",
             "irnr_ledger_bindings",
             "iva_wallet_relation_targets",
             "ledger_bindings",
             "ledger_impatriado_bindings",
             "legal",
+            "manual_input_selector",
             "modelo_localization",
             "period_offset_math",
+            "quantity_screen_enrolment",
             "record_design_coverage",
             "relations",
             "retenciones_bindings",
@@ -177,6 +189,7 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
             "schema_scalars",
             "schema_surfaces",
             "schema_verification",
+            "_supported_filing_years",
             "_validate_applicability_section",
             "_validate_application_links",
             "_validate_authority_grade",
@@ -316,7 +329,6 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
             "grounding the no-silent-under-declaration rule requires."
         ),
         members=_registry(
-            "_aeat_hosts",
             "aeat_nif_iva_oracle",
             "checker_oracle_flow",
             "external_grounding",
@@ -382,7 +394,6 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
             "rather than when the registry loads."
         ),
         members=_registry(
-            "_handoff_paths",
             "handoffs",
             "observation_fold",
             "_relation_aggregation",
@@ -417,17 +428,12 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
     ),
     ClassificationRule(
         classification="conditionally_reachable",
-        trigger=(
-            "registry gates that import through the facade: the construct-resolution gate "
-            "and the relation handoff-path audit gate"
-        ),
+        trigger="temporal-coherence advisory gate",
         reason=(
-            "Reached only from the package's own tests, which import them as 'from .. import "
-            "symbol'. Both surfaced as dead candidates on the module-level import graph and both "
-            "are alive; recording the trigger here is what keeps a later reader from repeating "
-            "that mistake."
+            "The temporal-coherence gate imports this validator to inspect a loaded revision; "
+            "the validated load itself does not invoke its advisory surface."
         ),
-        members=_registry("_constructs"),
+        members=_registry("validate_temporal_coherence"),
     ),
     ClassificationRule(
         classification="conditionally_reachable",
@@ -485,7 +491,6 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
             "cadrumo.core.classification",
             "cadrumo.core.config",
             "cadrumo.core.decimal._coerce",
-            "cadrumo.core.errors",
             "cadrumo.core.errors.error_codes",
             "cadrumo.core.errors.hierarchy",
             "cadrumo.core.errors.not_found",
@@ -508,16 +513,13 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
             "cadrumo.core.identity._nif_iva",
             "cadrumo.core.json_contract",
             "cadrumo.core.logging",
-            "cadrumo.core.observability",
             "cadrumo.core.observability.capture",
             "cadrumo.core.observability.context",
             "cadrumo.core.observability.errors",
             "cadrumo.core.observability.fingerprint",
-            "cadrumo.core.observability.golden",
             "cadrumo.core.observability.models",
             "cadrumo.core.observability.recorder",
             "cadrumo.core.observability.redaction_rules",
-            "cadrumo.core.observability.replay",
             "cadrumo.core.observability.sink",
             "cadrumo.core.observability.store",
             "cadrumo.core.output_rendering",
@@ -525,6 +527,9 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
             "cadrumo.core.redaction",
             "cadrumo.core.resources._boundary",
             "cadrumo.core.text_fold",
+            "cadrumo.domain.calculations",
+            "cadrumo.domain.calculations._row_casilla",
+            "cadrumo.domain.calculations._row_source_identity",
             "cadrumo.domain.calculations.export_field_kind",
             "cadrumo.domain.iva.regimen_simplificado_rows",
             "cadrumo.domain.iva.schema",
@@ -532,43 +537,26 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
             "cadrumo.domain.justificante.errors",
             "cadrumo.domain.justificante._protocols",
             "cadrumo.domain.justificante._schema",
-            "cadrumo.domain.manuals",
             "cadrumo.domain.manuals.errors",
-            "cadrumo.domain.manuals.fetch",
             "cadrumo.domain.manuals._ids",
             "cadrumo.domain.manuals.loader",
-            "cadrumo.domain.manuals.rule_id",
             "cadrumo.domain.manuals.schema",
-            "cadrumo.domain.manuals.verify",
-            "cadrumo.domain.modelos",
-            "cadrumo.domain.modelos.calculation_repository",
+            "cadrumo.domain.modelos.calculation_revision",
             "cadrumo.domain.modelos.calculation_revision_aggregate",
             "cadrumo.domain.modelos.calculation_revision_amendment",
             "cadrumo.domain.modelos.calculation_revision_m303_evidence",
             "cadrumo.domain.modelos.calculation_revision_m303_handoff",
             "cadrumo.domain.modelos.codes",
-            "cadrumo.domain.modelos.dt12_reduccion",
             "cadrumo.domain.modelos.errors",
             "cadrumo.domain.modelos.filing_record",
-            "cadrumo.domain.modelos.filing_repository",
-            "cadrumo.domain.modelos.iae_exemption",
+            "cadrumo.domain.modelos.filing_text",
             "cadrumo.domain.modelos.ledger_filing_snapshot",
-            "cadrumo.domain.modelos.m232_row_materialisation",
-            "cadrumo.domain.modelos.participation_index",
-            "cadrumo.domain.modelos.protocols",
-            "cadrumo.domain.modelos.repository",
             "cadrumo.domain.modelos.row_models",
-            "cadrumo.domain.modelos.sal_reserva_especial",
-            "cadrumo.domain.modelos.verification_report",
-            "cadrumo.domain.modelos.verification_repository",
             "cadrumo.domain.modelos.work_unit",
-            "cadrumo.domain.user_profile",
             "cadrumo.domain.user_profile.errors",
-            "cadrumo.domain.user_profile.labels",
             "cadrumo.domain.user_profile.loader",
             "cadrumo.domain.user_profile.registry_contract",
             "cadrumo.domain.user_profile.schema",
-            "cadrumo.domain.user_profile.values",
         ),
     ),
     ClassificationRule(
@@ -662,13 +650,7 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
             "a transaction or an M303 settlement is computed. The load reaches only its schema "
             "and the regimen-simplificado row models."
         ),
-        prefixes=("cadrumo.domain.iva", "cadrumo.domain.iva_compensation", "cadrumo.domain.prorrata_register"),
-    ),
-    ClassificationRule(
-        classification="conditionally_reachable",
-        trigger="ledger transaction ingest, classification and querying",
-        reason="The transactions domain runs for ledger operations, never for a registry load.",
-        prefixes=("cadrumo.domain.transactions", "cadrumo.domain.invoices"),
+        prefixes=("cadrumo.domain.iva", "cadrumo.domain.iva_compensation"),
     ),
     ClassificationRule(
         classification="conditionally_reachable",
@@ -702,7 +684,6 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
             "load imports them and runs none of them."
         ),
         members=(
-            "cadrumo.domain",
             "cadrumo.domain.errors",
             "cadrumo.domain.identifiers",
             "cadrumo.domain.period",
@@ -742,7 +723,6 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
             "surfaces, not by the registry load."
         ),
         members=(
-            "cadrumo.domain.bienes_inversion",
             "cadrumo.domain.filing_evidence",
         ),
     ),
