@@ -34,7 +34,7 @@ from ......core.errors.error_codes import ERROR_REGISTRY, build_error_envelope
 from ......core.storage_taxonomy import StorageCategory
 from ......core.storage_taxonomy_locations import storage_location
 from ......tests.bucket_layout import provision_bucket_directory
-from .._layout import (
+from ..directory_layout import (
     BucketPaths,
     bucket_paths,
 )
@@ -45,7 +45,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"buckets", "db", "blobs"})
 """Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 
-_LAYOUT_MODULE = Path(__file__).resolve().parent.parent / "_layout.py"
+_LAYOUT_MODULE = Path(__file__).resolve().parent.parent / "directory_layout.py"
 
 
 def test_provision_creates_two_subdirectories(tmp_path: Path) -> None:
@@ -251,4 +251,6 @@ def test_no_bare_directory_name_literal_survives_in_the_layout_module() -> None:
         storage_location(StorageCategory.BUCKET_BLOBS).subpath,
     )
     for name in governed:
-        assert name not in literals, f"_layout.py re-types the governed layout name {name!r}; read the taxonomy instead"
+        assert name not in literals, (
+            f"directory_layout.py re-types the governed layout name {name!r}; read the taxonomy instead"
+        )

@@ -43,7 +43,7 @@ from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...core.text_bounds import PositiveCount
 from ...domain.deadlines.models import ModeloDeadline, ObligationStatus
-from ...domain.submission._protocols import ModeloDraftStatus
+from ...domain.submission.models import ModeloDraftStatus
 from ..operator_actions.models import ConditionEvidence, PreconditionVerdict
 from ._identity import period_identity_segment
 from .abort import WorkflowAbortReason

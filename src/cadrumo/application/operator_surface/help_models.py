@@ -5,7 +5,9 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
+from pydantic import BaseModel, Field, StringConstraints, model_validator
+
+from .models import OPERATOR_SURFACE_MODEL_CONFIG
 
 
 class HelpSurface(StrEnum):
@@ -14,7 +16,6 @@ class HelpSurface(StrEnum):
     ROOT = "root"
     CONFIG = "config"
     APP = "app"
-
 
 
 HelpLabel = Annotated[str, StringConstraints(min_length=1, max_length=80)]
@@ -27,7 +28,7 @@ HelpProse = Annotated[str, StringConstraints(min_length=1, max_length=120)]
 class HelpEntry(BaseModel):
     """One localized command row in a curated :class:`HelpSection`."""
 
-    model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
+    model_config = OPERATOR_SURFACE_MODEL_CONFIG
 
     command: HelpLabel
     description: HelpLabel
@@ -36,7 +37,7 @@ class HelpEntry(BaseModel):
 class HelpSection(BaseModel):
     """One workflow-ordered section in a curated :class:`HelpDocument`."""
 
-    model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
+    model_config = OPERATOR_SURFACE_MODEL_CONFIG
 
     title: HelpLabel
     entries: tuple[HelpEntry, ...] = Field(min_length=1)
@@ -45,7 +46,7 @@ class HelpSection(BaseModel):
 class HelpDocument(BaseModel):
     """Localized operator-help document for one accepted surface."""
 
-    model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
+    model_config = OPERATOR_SURFACE_MODEL_CONFIG
 
     surface: HelpSurface
     heading: HelpProse
@@ -57,7 +58,7 @@ class HelpDocument(BaseModel):
 class RootLandingReport(BaseModel):
     """Bare-root landing report built from caller-projected profile state."""
 
-    model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
+    model_config = OPERATOR_SURFACE_MODEL_CONFIG
 
     profile_selected: bool = False
     active_profile: str | None = None

@@ -62,7 +62,7 @@ from ....domain.iva.regimen_simplificado_rows import (
 from ....domain.modelos.calculation_revision_m303_evidence import M303Exonerado390FilingEvidence
 from ....domain.modelos.calculation_revision_m303_handoff import M303RegimenSimplificadoFilingEvidence
 from ....domain.prorrata_register.register import ProrrataRegister
-from ....domain.submission._protocols import ModeloDraftStatus
+from ....domain.submission.models import ModeloDraftStatus
 from ...aggregation import M303ProrrataTransitionArrival, M303SupplierRegimeArrival
 from ...calculations._m303_regimen_simplificado import calculate_m303_regimen_simplificado_result
 from .._export import _filing_producer_values, _render_layout, export_draft, render_filing_envelope

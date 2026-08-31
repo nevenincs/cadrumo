@@ -37,7 +37,7 @@ from ....modelos.calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from ....submission._protocols import ModeloDraftStatus
+from ....submission.models import ModeloDraftStatus
 from ..bindings import (
     CasillaObservation,
     OracleModeloObservation,

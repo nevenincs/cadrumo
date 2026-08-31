@@ -244,8 +244,8 @@ def _run_child(
 def test_sorted_target_locks_pause_reset_and_exclude_a_real_application_writer(
     tmp_path: Path,
 ) -> None:
-    from ...adapters.persistence.storage.bucket._layout import bucket_paths
-    from ...adapters.persistence.storage.bucket._lockfile import lock_path
+    from ...adapters.persistence.storage.bucket.directory_layout import bucket_paths
+    from ...adapters.persistence.storage.bucket.lockfile import lock_path
     from ...core.bucket_pointer import pointer_path
     from .._config_reset_repository import ConfigResetJournalRepository
     from ..workflow.profile_bucket_scan import read_profile_bucket_by_id
@@ -355,7 +355,7 @@ def test_sorted_target_locks_pause_reset_and_exclude_a_real_application_writer(
 def test_fresh_process_reset_exclusion_retention_recheck_and_renewed_confirmation(
     tmp_path: Path,
 ) -> None:
-    from ...adapters.persistence.storage.bucket._layout import bucket_paths
+    from ...adapters.persistence.storage.bucket.directory_layout import bucket_paths
     from .._config_reset_models import (
         ConfigResetOperation,
         ConfigResetOperationStatus,

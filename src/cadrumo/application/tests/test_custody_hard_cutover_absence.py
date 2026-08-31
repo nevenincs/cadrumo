@@ -103,16 +103,21 @@ the root is wrong rather than when the matcher is.
 Nothing passes here by omission
 -------------------------------
 The path net's live findings are not shared-master reaches at all, and they are
-declared below rather than quietly excused.  ``bucket/_layout``,
-``bucket/_lockfile`` and ``blob_store/_materialisation`` are reached from three
-application modules because each of those package namespaces was made an inert
-marker without first promoting the submodule its callers needed: the private
-path is the only route left, so the reach did not choose it and no change in
-this layer closes it.  Declaring them keeps the breach visible and makes it
-expire on its own -- promote the modules and these entries red until they are
+declared below rather than quietly excused.  ``blob_store/_materialisation`` is
+reached from one application module because that package namespace was made an
+inert marker without first promoting the submodule its callers needed: the
+private path is the only route left, so the reach did not choose it and no
+change in this layer closes it.  Declaring it keeps the breach visible and makes
+it expire on its own -- promote the module and the entry reds until it is
 deleted.  Judging a reach defensible is a decision to write down, not a reason
 to leave it invisible, and that is as true of a reach somebody else's sweep
 created as of one this layer chose.
+
+That expiry is not hypothetical: the two bucket path declarations this section
+once carried were deleted when ``bucket/_layout`` and ``bucket/_lockfile`` were
+promoted to public defining modules.  A promoted reach is no longer a private
+path, so re-pointing the declaration at the new public name would have recorded
+a violation the tree does not have; deletion is the only honest close.
 
 Two of the declarations below therefore answer different questions, and the
 distinction is worth keeping: a shared-master entry is waiting on the custody
@@ -236,15 +241,14 @@ _MASTER_KEY_PACKAGE_ABSOLUTE = "master-key-module:cadrumo.adapters.persistence.s
 _MASTER_KEY_ACTIVE_SESSION = "master-key-module:adapters.persistence.storage.master_key.active_session"
 _MASTER_KEY_BUCKET_SESSION = "master-key-module:adapters.persistence.storage.master_key.bucket_session"
 
-# The path net's live findings.  These are a different class from the reaches
-# above and are declared on different grounds: nothing about the shared-master
-# cutover put them here.  Each package namespace was made inert without first
+# The path net's live finding.  This is a different class from the reaches
+# above and is declared on different grounds: nothing about the shared-master
+# cutover put it here.  The package namespace was made inert without first
 # promoting the submodule its callers needed, so the private path is the only
-# route left -- the reach did not choose it.  They are declared, not excused:
-# the boundary rule they breach is closed by promoting the module, and the
-# declaration expires the moment that lands.
-_BUCKET_LAYOUT = "private-path:adapters.persistence.storage.bucket._layout"
-_BUCKET_LOCKFILE = "private-path:adapters.persistence.storage.bucket._lockfile"
+# route left -- the reach did not choose it.  It is declared, not excused:
+# the boundary rule it breaches is closed by promoting the module, and the
+# declaration expires the moment that lands.  Two sibling bucket declarations
+# stood here until that promotion landed for them, and were deleted with it.
 _BLOB_STORE_MATERIALISATION = "private-path:adapters.persistence.storage.blob_store._materialisation"
 
 _DECLARED_OPEN_VIOLATIONS: dict[str, _OpenViolation] = {
@@ -268,13 +272,13 @@ _DECLARED_OPEN_VIOLATIONS: dict[str, _OpenViolation] = {
     ),
     "auth/operator_scope.py": _OpenViolation(
         reason=(
-            "Operator scoping reads the live bucket session from the shared-master package, and takes "
-            "the active bucket's paths and lock through private bucket submodules that its package "
-            "namespace no longer re-exports.  The session reaches follow the surviving substrate to "
-            "the per-profile capsule; the two path reaches follow those modules when they are "
-            "promoted to public defining modules."
+            "Operator scoping reads the live bucket session from the shared-master package.  The two "
+            "session reaches follow the surviving substrate to the per-profile capsule.  It also "
+            "takes the active bucket's paths and lock, which were private-path reaches until those "
+            "modules were promoted to public defining modules; those two declarations are gone "
+            "because the reaches they described no longer exist."
         ),
-        reaches=frozenset({_MASTER_KEY_ACTIVE_SESSION, _MASTER_KEY_BUCKET_SESSION, _BUCKET_LAYOUT, _BUCKET_LOCKFILE}),
+        reaches=frozenset({_MASTER_KEY_ACTIVE_SESSION, _MASTER_KEY_BUCKET_SESSION}),
     ),
     "auth/sessions.py": _OpenViolation(
         reason=(
@@ -283,15 +287,6 @@ _DECLARED_OPEN_VIOLATIONS: dict[str, _OpenViolation] = {
             "package as the per-profile capsule takes over composition."
         ),
         reaches=frozenset({_MASTER_KEY_ACTIVE_SESSION}),
-    ),
-    "bucket_maintenance/_deletion_paths.py": _OpenViolation(
-        reason=(
-            "Deletion-path validation resolves a bucket root's layout before any destructive "
-            "assessment, through a private bucket submodule its package namespace no longer "
-            "re-exports.  The bucket is the per-profile capsule's container; the import follows the "
-            "module when it is promoted to a public defining module."
-        ),
-        reaches=frozenset({_BUCKET_LAYOUT}),
     ),
     "diagnostics.py": _OpenViolation(
         reason=(

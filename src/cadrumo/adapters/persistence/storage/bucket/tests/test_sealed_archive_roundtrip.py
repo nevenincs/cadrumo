@@ -19,14 +19,14 @@ from pathlib import Path
 import pytest
 
 from ......core.directory_scan import scan_directory
-from .._export_header import ARCHIVE_SCHEMA_VERSION, ExportArchiveHeader
 from .._sealed_archive_errors import (
     SealedArchiveHeaderError,
     SealedArchiveLayoutError,
     SealedArchiveWriteError,
 )
-from .._sealed_archive_reader import read_sealed_archive
-from .._sealed_archive_writer import (
+from ..export_archive_header import ARCHIVE_SCHEMA_VERSION, ExportArchiveHeader
+from ..sealed_archive_reader import read_sealed_archive
+from ..sealed_archive_writer import (
     HEADER_MEMBER_NAME,
     PAYLOAD_MEMBER_NAME,
     SEALED_ARCHIVE_MEMBER_NAMES,

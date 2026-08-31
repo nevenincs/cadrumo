@@ -25,7 +25,7 @@ from pydantic import TypeAdapter, ValidationError
 from ......core.hashing import sha256_hex
 from ......core.identity import ContentDigest
 from ......core.product_identity import PRODUCT_IDENTITY
-from .._export_header import ARCHIVE_SCHEMA_VERSION, ExportArchiveHeader
+from ..export_archive_header import ARCHIVE_SCHEMA_VERSION, ExportArchiveHeader
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

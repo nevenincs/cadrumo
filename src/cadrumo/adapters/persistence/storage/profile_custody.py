@@ -65,8 +65,13 @@ from ....domain.user_profile.portable_export import CarriedSecureObject
 from ....domain.user_profile.values import UserProfileSnapshot
 from ..profile.buckets import BucketEventHistoryRepository
 from ..profile.snapshots import SecureSnapshotRepository
-from . import bucket
 from ._kdf_salt import KDF_SALT_BYTES
+from .bucket.directory_layout import bucket_paths
+from .bucket.export_archive_header import ARCHIVE_SCHEMA_VERSION, ExportArchiveHeader
+from .bucket.lockfile import acquire_lock, release_lock
+from .bucket.output_language_hint import read_bucket_output_language_hint
+from .bucket.sealed_archive_reader import read_sealed_archive
+from .bucket.sealed_archive_writer import write_sealed_archive
 from .crypto.aead import EncryptedBlob, decrypt_record, encrypt_record
 from .custody._filesystem_primitives import ensure_profile_custody_local_directory
 from .custody.capsule import (
@@ -242,13 +247,13 @@ class _PersistenceProfileCustodyLocalRecordStore:
 
 class _PersistenceProfileBucketStorage:
     def resolve(self, root: Path, bucket_id: str) -> ProfileBucketStoragePathsPort:
-        return bucket.bucket_paths(root, bucket_id)
+        return bucket_paths(root, bucket_id)
 
     def acquire_lock(self, paths: ProfileBucketStoragePathsPort, *, wait_seconds: float) -> None:
-        bucket.acquire_lock(paths, wait_seconds=wait_seconds)
+        acquire_lock(paths, wait_seconds=wait_seconds)
 
     def release_lock(self, paths: ProfileBucketStoragePathsPort) -> None:
-        bucket.release_lock(paths)
+        release_lock(paths)
 
 
 class _PersistenceProfileSecureObjectInventory:
@@ -476,7 +481,7 @@ class _PersistenceProfileCustody:
         return _PersistenceProfileCustodyLocalRecordStore()
 
     def archive_schema_version(self) -> int:
-        return bucket.ARCHIVE_SCHEMA_VERSION
+        return ARCHIVE_SCHEMA_VERSION
 
     def write_archive_container(
         self,
@@ -485,9 +490,9 @@ class _PersistenceProfileCustody:
         header: ProfileCapsuleArchiveHeaderMaterial,
         payload_bytes: bytes,
     ) -> None:
-        bucket.write_sealed_archive(
+        write_sealed_archive(
             target,
-            header=bucket.ExportArchiveHeader(
+            header=ExportArchiveHeader(
                 product=header.product,
                 bucket_id=header.bucket_id,
                 manifest_digest=header.manifest_digest,
@@ -498,7 +503,7 @@ class _PersistenceProfileCustody:
         )
 
     def read_archive_container(self, source: Path) -> ProfileCapsuleArchiveContentsMaterial:
-        contents = bucket.read_sealed_archive(source)
+        contents = read_sealed_archive(source)
         return ProfileCapsuleArchiveContentsMaterial(
             header=ProfileCapsuleArchiveHeaderMaterial(
                 product=contents.header.product,
@@ -757,7 +762,7 @@ class _PersistenceProfileCustody:
         return _PersistenceProfileBucketStorage()
 
     def read_output_language_hint(self, *, storage_root: Path, bucket_id: str) -> str | None:
-        return bucket.read_bucket_output_language_hint(
+        return read_bucket_output_language_hint(
             storage_root=storage_root,
             bucket_id=bucket_id,
         )
@@ -996,7 +1001,7 @@ class _PersistenceProfileCustody:
             return
 
         if database_file is None:
-            database_file = bucket.bucket_paths(root, str(profile_id)).database_file
+            database_file = bucket_paths(root, str(profile_id)).database_file
         with (
             self._temporary_session(profile_id=profile_id, dek=dek, root=root),
             secure_object_repository_for_staged_bucket(str(profile_id), database_file=database_file) as staged,

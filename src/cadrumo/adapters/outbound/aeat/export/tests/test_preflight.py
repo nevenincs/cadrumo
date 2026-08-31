@@ -10,8 +10,8 @@ from ......core.errors.severity import BaseSeverity
 from ......core.i18n import Translatable as tr
 from ......domain.filing.schema import ModeloValidationFinding
 from ......domain.submission._preflight import Preflight
-from ......domain.submission._protocols import ModeloDraftStatus
 from ......domain.submission.errors import SubmissionPreflightError
+from ......domain.submission.models import ModeloDraftStatus
 from ._preflight_support import clave_movil_provider, deadline_checker, modelo_draft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

@@ -68,7 +68,7 @@ from ...domain.calculations.registry.schema_exports import (
 )
 from ...domain.filing.errors import FilingExportError, FilingExportValidationError
 from ...domain.filing.schema import ModeloCasillaProvenance, ModeloDraft
-from ...domain.submission._protocols import ModeloDraftStatus
+from ...domain.submission.models import ModeloDraftStatus
 from ._envelope_modelo_policy import filing_envelope_modelo_policy
 from ._export_envelope import (
     FilingEnvelopeOccurrence as _FilingEnvelopeOccurrence,

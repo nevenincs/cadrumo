@@ -14,7 +14,7 @@ from .....core.config import Settings, StorageRouteKind, override_settings
 from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import CadrumoError
 from .....core.external_constants import OutputLanguage
-from ..bucket._layout import bucket_paths
+from ..bucket.directory_layout import bucket_paths
 from ..errors import StorageValidationError
 from ..master_key.active_session import activate_session
 from ..master_key.bucket_session import BucketSession

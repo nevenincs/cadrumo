@@ -69,7 +69,7 @@ from ...domain.filing.schema import registry_schema_version as _registry_schema_
 from ...domain.filing.validator import ModeloValidator as _ModeloValidator
 from ...domain.filing.validator import apply_validation as _apply_validation
 from ...domain.period import calculation_filing_date as _calculation_filing_date
-from ...domain.submission._protocols import ModeloDraftStatus as _ModeloDraftStatus
+from ...domain.submission.models import ModeloDraftStatus as _ModeloDraftStatus
 from .errors import ModeloApplicationError
 from .errors import ModeloApplicationError as _ModeloBuilderError
 

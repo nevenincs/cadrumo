@@ -57,8 +57,9 @@ from ...domain.deadlines.plazo import resolve_filing_window
 from ...domain.filing.protocols import ModeloInputs
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit import WorkUnit
-from ...domain.submission._protocols import DeadlineWindowChecker, ModeloDraftStatus
 from ...domain.submission.engine import SubmissionEngine
+from ...domain.submission.models import ModeloDraftStatus
+from ...domain.submission.protocols import DeadlineWindowChecker
 from ...domain.transactions.models import TransactionCatalogue
 from ..filing._draft_construction import build_draft
 from ..filing.draft_review import approve_draft

@@ -25,7 +25,7 @@ from typing import Union, get_args, get_origin
 
 import pytest
 
-from ...adapters.persistence.storage.bucket._layout import bucket_paths
+from ...adapters.persistence.storage.bucket.directory_layout import bucket_paths
 from ...tests import REPO_ROOT
 from ...tests.env_scope import isolated_aeat_env as _isolated_aeat_env
 from ...tests.env_scope import scoped_env_var, settings_without_env_file

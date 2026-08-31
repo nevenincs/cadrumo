@@ -23,7 +23,7 @@ from ...domain.calculations.registry.schema_exports import (
 )
 from ...domain.filing.errors import FilingExportValidationError
 from ...domain.filing.schema import ModeloDraft, registry_schema_version
-from ...domain.submission._protocols import ModeloDraftStatus
+from ...domain.submission.models import ModeloDraftStatus
 from ._envelope_modelo_policy import filing_envelope_modelo_policy
 from .producer_snapshot import FilingProducerSnapshot
 

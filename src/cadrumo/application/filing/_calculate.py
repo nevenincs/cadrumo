@@ -36,7 +36,7 @@ from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...core.time.utc import validate_utc_aware
 from ...domain.filing.schema import ModeloDraft
-from ...domain.submission._protocols import ModeloDraftStatus
+from ...domain.submission.models import ModeloDraftStatus
 from ..operator_actions.models import PreconditionVerdict
 from .errors import FilingPreconditionCondition, filing_no_recovery_verdict
 

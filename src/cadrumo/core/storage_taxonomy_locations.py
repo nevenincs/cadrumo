@@ -578,7 +578,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.PROFILE_CUSTODY_HOLD_FILING_OWNER,
         "profile-custody-holds/filing-retention-owner",
-        consumer_module="application/filing/_profile_filing_retention.py",
+        consumer_module="application/filing/retention.py",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
         override_policy=StorageOverridePolicy.FIXED,
@@ -675,7 +675,7 @@ _BUCKET_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         # Sibling to buckets/ under the storage root, never nested inside the
         # bucket directory it unlocks -- production states and enforces this
-        # separation (adapters.persistence.storage.bucket._keystore_paths,
+        # separation (adapters.persistence.storage.bucket.keystore_paths,
         # validate_keystore_separation), so this member's scope is its own
         # bucket-id-parameterized root, not BUCKET_RELATIVE.
         StorageCategory.BUCKET_KEYSTORE,

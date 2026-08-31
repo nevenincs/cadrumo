@@ -46,7 +46,7 @@ from ...domain.deadlines.models import Schedule, TaxpayerProfile
 # This module consumes them for its protocol annotations; callers import them
 # directly from :mod:`cadrumo.domain.filing`.
 from ...domain.filing.protocols import ModeloInputs
-from ...domain.submission._protocols import ModeloDraftLike
+from ...domain.submission.protocols import ModeloDraftLike
 
 
 @runtime_checkable

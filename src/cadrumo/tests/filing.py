@@ -38,7 +38,7 @@ from ..domain.filing.errors import ModeloBuilderError
 from ..domain.filing.protocols import ModeloInputs
 from ..domain.filing.schema import ModeloDraft
 from ..domain.invoices.models import InvoiceCatalogue
-from ..domain.submission._protocols import ModeloDraftStatus
+from ..domain.submission.models import ModeloDraftStatus
 from ..domain.transactions.models import TransactionCatalogue
 
 _REGISTRY_TEST_BUCKET_ID = "1465aefb-768a-4344-a564-1f0737966d59"  # was 'registry-test'

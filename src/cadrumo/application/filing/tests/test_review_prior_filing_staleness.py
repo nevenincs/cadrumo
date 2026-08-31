@@ -37,7 +37,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ....domain.filing.protocols import CasillaSchemaProvider
 from ....domain.filing.schema import ModeloDraft
-from ....domain.submission._protocols import ModeloDraftStatus
+from ....domain.submission.models import ModeloDraftStatus
 from ....tests.secure_sql import TestRuntimeProfile
 from ...calculations.observations_repository import CalculationObservationRepository
 from .._draft_construction import build_draft

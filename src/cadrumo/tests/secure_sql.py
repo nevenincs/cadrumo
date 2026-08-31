@@ -16,7 +16,7 @@ from sqlalchemy import Engine, Select
 from sqlalchemy import inspect as sa_inspect
 from sqlalchemy import text as sa_text
 
-from ..adapters.persistence.storage.bucket._layout import BucketPaths
+from ..adapters.persistence.storage.bucket.directory_layout import BucketPaths
 from ..adapters.persistence.storage.crypto.encrypted_columns import (
     decrypt_secure_object_payload,
     encrypt_secure_object_payload,

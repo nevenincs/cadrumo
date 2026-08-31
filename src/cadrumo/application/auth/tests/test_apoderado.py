@@ -10,7 +10,7 @@ import pytest
 from prompt_toolkit.input import create_pipe_input
 from prompt_toolkit.output.plain_text import PlainTextOutput
 
-from ....adapters.persistence.storage.bucket._layout import bucket_paths
+from ....adapters.persistence.storage.bucket.directory_layout import bucket_paths
 from ....core.config import Settings, override_settings
 from ....core.flows import FlowMode
 from ....core.identity import canonical_bucket_id

@@ -231,7 +231,7 @@ def test_a_snapshot_that_cannot_be_authenticated_refuses_distinctly(tmp_path: Pa
 
 def test_a_linked_custody_target_refuses_with_its_exact_safety_verdict(tmp_path: Path) -> None:
     """The preflight must not follow a redirected capsule directory."""
-    from ....adapters.persistence.storage.bucket._layout import bucket_paths
+    from ....adapters.persistence.storage.bucket.directory_layout import bucket_paths
 
     with _published_profile(tmp_path) as root:
         paths = bucket_paths(root, _PROFILE_ID)
@@ -314,7 +314,7 @@ def test_the_fingerprint_folds_the_real_capsule_and_moves_with_it(tmp_path: Path
     operation, so a fingerprint that did not move would make that detector
     silently blind.
     """
-    from ....adapters.persistence.storage.bucket._layout import bucket_paths
+    from ....adapters.persistence.storage.bucket.directory_layout import bucket_paths
 
     with _published_profile(tmp_path) as root:
         _record_snapshot(root)

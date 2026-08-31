@@ -236,7 +236,7 @@ def test_start_discovers_live_and_dangling_targets_then_completes(
     must NOT reappear, and the acquisition lock moved to a live target, where
     clearing it is a contract the reset actually holds.
     """
-    from ...adapters.persistence.storage.bucket._layout import bucket_paths
+    from ...adapters.persistence.storage.bucket.directory_layout import bucket_paths
     from ...core.auth_provider import AuthProviderKind
     from ...core.bucket_pointer import pointer_path
     from ...core.config import load_settings
@@ -608,7 +608,7 @@ def test_resume_pauses_once_when_target_content_changed_then_accepts_new_snapsho
 def test_resume_adds_changed_pointer_target_under_the_same_operation(
     tmp_path: Path,
 ) -> None:
-    from ...adapters.persistence.storage.bucket._layout import bucket_paths
+    from ...adapters.persistence.storage.bucket.directory_layout import bucket_paths
     from .._config_reset_models import ConfigResetOperationStatus, ConfigResetPauseReason
     from ..config_reset import resume_config_reset, start_config_reset
 

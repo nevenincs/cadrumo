@@ -15,8 +15,8 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
-from ...adapters.persistence.storage.bucket._layout import bucket_paths
-from ...adapters.persistence.storage.bucket._lockfile import acquire_lock, release_lock
+from ...adapters.persistence.storage.bucket.directory_layout import bucket_paths
+from ...adapters.persistence.storage.bucket.lockfile import acquire_lock, release_lock
 from ...adapters.persistence.storage.master_key.active_session import (
     current_active_bucket_session,
     session_serves_bucket,

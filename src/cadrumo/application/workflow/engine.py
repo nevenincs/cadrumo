@@ -36,8 +36,8 @@ from ...core.time.clock import now as _utcnow
 from ...core.time.clock import today_madrid
 from ...domain.deadlines.models import ModeloDeadline, ObligationStatus, TaxpayerProfile
 from ...domain.filing.errors import ModeloBuilderError
-from ...domain.submission._protocols import ModeloDraftStatus
 from ...domain.submission.errors import SubmissionPreflightError
+from ...domain.submission.models import ModeloDraftStatus
 from ..filing.runtime import build_runtime_schema_provider
 from ..operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
 from ..operator_actions.preconditions import no_action_precondition_verdict

@@ -31,7 +31,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from .._sealed_archive_errors import SealedArchiveLayoutError
-from .._sealed_archive_reader import _MAX_MEMBER_BYTES, _read_member_info
+from ..sealed_archive_reader import _MAX_MEMBER_BYTES, _read_member_info
 
 if TYPE_CHECKING:
     from pathlib import Path

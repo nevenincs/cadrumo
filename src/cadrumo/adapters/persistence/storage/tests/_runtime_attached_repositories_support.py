@@ -105,8 +105,13 @@ from .....domain.modelos.verification_report import (
     derive_verification_report_id,
 )
 from .....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
-from .....domain.submission._protocols import ModeloDraftStatus
-from .....domain.submission.models import ModeloPresentado, SubmissionAttempt, SubmissionStatus, make_submission_id
+from .....domain.submission.models import (
+    ModeloDraftStatus,
+    ModeloPresentado,
+    SubmissionAttempt,
+    SubmissionStatus,
+    make_submission_id,
+)
 from .....domain.transactions.enums import TransactionDirection
 from .....domain.transactions.models import Transaction, TransactionCatalogue
 from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

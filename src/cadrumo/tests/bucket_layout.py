@@ -25,14 +25,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ..adapters.persistence.storage.bucket._layout import bucket_paths
+from ..adapters.persistence.storage.bucket.directory_layout import bucket_paths
 from ..adapters.persistence.storage.bucket.errors import BucketAlreadyPresentError, BucketPathTooLongError
 from ..core.paths import is_windows_long_path_error
 
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from ..adapters.persistence.storage.bucket._layout import BucketPaths
+    from ..adapters.persistence.storage.bucket.directory_layout import BucketPaths
 
 __all__ = ["provision_bucket_directory"]
 
