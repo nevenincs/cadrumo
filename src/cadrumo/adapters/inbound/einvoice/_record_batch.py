@@ -1,6 +1,6 @@
 """Read an AEAT SII or VERI*FACTU submission as a BATCH of ledger records.
 
-Separate from :func:`~._parsers.parse_einvoice_document` on purpose, and the
+Separate from :func:`~.parsers.parse_einvoice_document` on purpose, and the
 separation is the design rather than an accident of layering. A Facturae, CII or
 UBL file is ONE commercial invoice a counterparty issued. A SII or VERI*FACTU
 file is a STREAM of records the taxpayer has already declared to AEAT -- the
@@ -64,8 +64,8 @@ from xml.etree.ElementTree import Element
 from ....core.decimal.coercion import coerce_decimal
 from ....core.document_shape import DocumentShape
 from ._aeat_record_schema import mandatory_child_elements
-from ._shape import probe_document_shape
-from ._xml import EInvoiceXmlParseError, parse_hardened_xml
+from .shape import probe_document_shape
+from .xml import EInvoiceXmlParseError, parse_hardened_xml
 
 __all__ = [
     "AeatRecordBatch",

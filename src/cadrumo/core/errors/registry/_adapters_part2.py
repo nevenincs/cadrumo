@@ -98,7 +98,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.inbound.einvoice._xml.EInvoiceXmlParseError",
+        "cadrumo.adapters.inbound.einvoice.xml.EInvoiceXmlParseError",
         ErrorCode(
             code="REFUSED_EINVOICE_XML_PARSE",
             category=ErrorCategory.REFUSED,

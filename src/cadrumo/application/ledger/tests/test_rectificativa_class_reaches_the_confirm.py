@@ -37,7 +37,7 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.inbound.einvoice._parsers import ParsedEInvoice, parse_einvoice_document
+from ....adapters.inbound.einvoice.parsers import ParsedEInvoice, parse_einvoice_document
 from ....core.directory_scan import iter_directory
 from ....domain.invoices.enums import InvoiceClass
 

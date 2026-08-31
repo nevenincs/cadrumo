@@ -19,7 +19,7 @@ from xml.etree.ElementTree import Element
 from ....core.document_shape import DocumentShape
 from ....core.errors.hierarchy import CoreValidationError
 from ....core.image_media_type import detect_image_media_type
-from ._xml import EInvoiceXmlParseError, parse_hardened_xml
+from .xml import EInvoiceXmlParseError, parse_hardened_xml
 
 __all__ = ["EMBEDDED_XML_SUFFIXES", "iter_pdf_embedded_files", "probe_document_shape"]
 

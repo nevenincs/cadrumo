@@ -21,8 +21,8 @@ from pathlib import Path
 import pytest
 from PIL import Image
 
-from ....adapters.inbound.einvoice._xml import EInvoiceXmlParseError
 from ....adapters.inbound.einvoice.parsers import parse_einvoice_document
+from ....adapters.inbound.einvoice.xml import EInvoiceXmlParseError
 from ....adapters.inbound.pdf.page_text_extraction import extract_pages_text_from_bytes
 from ....core.directory_scan import scan_directory
 from ....core.document_shape import STRUCTURED_DOCUMENT_SHAPES, DocumentShape
