@@ -21,6 +21,7 @@ import pytest
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.directory_scan import scan_directory
 from .._validate_revision_rules import validate_revision_windows
+from ..authority import bundled_authority
 from ..errors import (
     AmbiguousRevisionSelectionError,
     NoRevisionForPeriodError,
@@ -171,6 +172,31 @@ def test_no_revision_raises_typed_subclass_with_structured_natural_key() -> None
     assert err.filing_year == 2099
     assert err.period == "0A"
     assert err.revision_id == "r9"
+
+
+def test_modelo_390_2026_refusal_lists_the_enrolled_revision_set() -> None:
+    """The live Modelo 390 refusal distinguishes missing authority from failure.
+
+    The set is read from the bundled authority at the temporal raiser, not
+    reconstructed by a caller. This keeps the operator-facing fallback message
+    and machine-readable context synchronized with the enrolled registry.
+    """
+    with pytest.raises(NoRevisionForPeriodError) as excinfo:
+        bundled_authority().snapshot("390", filing_year=2026, period="0A")
+
+    err = excinfo.value
+    assert err.available_revision_ids == ("2021", "2022", "2023", "2024", "2025")
+    assert err.context == {
+        "modelo_id": "390",
+        "filing_year": 2026,
+        "period": "0A",
+        "revision_id": "",
+        "available_revision_ids": "2021,2022,2023,2024,2025",
+    }
+    assert str(err) == (
+        "modelo 390: no revision for year=2026 period='0A' revision=None; "
+        "modelo 390 declares: 2021, 2022, 2023, 2024, 2025"
+    )
 
 
 def test_ambiguous_selection_raises_typed_subclass_with_candidate_ids() -> None:
