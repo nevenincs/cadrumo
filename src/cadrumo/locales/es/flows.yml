@@ -69,6 +69,18 @@ flows:
     required_field_unavailable: Campo obligatorio del perfil
     section_title: '{title} - {present}/{total}'
     title: 'Perfil: {profile}'
+  modelo_edit:
+    footer: F2 revisar · Esc salir · F3 apariencia
+    review:
+      nothing_staged: No hay cambios que revisar.
+      unresolved_entries: Hay valores sin resolver. Corríjalos antes de revisar.
+    review_ready: 'Revisión lista. Casillas modificadas: {changed}.'
+    stale_conflict: Los datos han cambiado desde que se abrió la edición. Revise antes
+      de continuar.
+    title: Editar modelo
+    unresolved: 'Valor no reconocido en la casilla {casilla_id}. Casillas pendientes:
+      {count}.'
+    unsaved_on_leave: Hay cambios sin guardar. Revise o descarte antes de salir.
   modelo_review:
     column:
       action: Acción
