@@ -460,9 +460,7 @@ def test_no_bundled_design_is_unreadable_or_only_partly_read() -> None:
         for label, entries in sorted(grouped.items())
     )
     readable = sum(
-        1
-        for outcome in outcomes
-        if outcome.kind in {"complete", "corrected"} or outcome.design in provenance_only
+        1 for outcome in outcomes if outcome.kind in {"complete", "corrected"} or outcome.design in provenance_only
     )
     assert not grouped, (
         f"{len(outcomes) - readable} of {len(outcomes)} bundled designs are not fully read. Each is "
