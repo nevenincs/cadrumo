@@ -152,13 +152,6 @@
         "reason": "Pure re-export facade over the private bulk-import, creation, issuer-establishment, lifecycle, linking, projection and query siblings plus domain.invoices.service. Consumer sweep only."
       },
       {
-        "package": "cadrumo.application.registry",
-        "breaches": [
-          "import_binding"
-        ],
-        "reason": "Declares no exports at all -- its __all__ is already the empty inert marker -- and defines nothing. The single remaining breach is a module-scope import_module call kept purely for its cross-domain-check registration side effect, which the namespace docstring records as superseded by the snapshot builder that now registers idempotently on every build. Deleting the call is a behaviour change on a registration path, so it is recorded here rather than swept blind: this entry closes by deletion, not by a consumer rewrite."
-      },
-      {
         "package": "cadrumo.core",
         "breaches": [
           "import_binding",

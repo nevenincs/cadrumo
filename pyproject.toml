@@ -764,6 +764,11 @@ convention = "google"
 "src/cadrumo/adapters/persistence/storage/custody/tests/test_custody_root_lock_exclusion.py" = ["S603"]
 "src/cadrumo/adapters/persistence/storage/tests/test_substrate_smoke.py" = ["S603"]
 "src/cadrumo/domain/calculations/registry/tests/test_cross_domain_snapshot_registration.py" = ["S603"]
+# Whether the application registry namespace is a registration seam is a
+# property of a cold start: this session has already imported the namespace
+# and the renta check module through sibling tests. Same fixed
+# `sys.executable -c <script>` argv as the registration gate above.
+"src/cadrumo/application/registry/tests/test_namespace_is_not_a_registration_seam.py" = ["S603"]
 # The acceptance-wall regression gate runs the trusted `sys.executable -m pytest`
 # driver against explicit, catalogue-derived node ids (never untrusted input);
 # ruff's S603 heuristic cannot prove the catalogue-sourced argv is fixed
