@@ -50,9 +50,33 @@ class TargetPlatform:
     floor: str
 
 
+#: The Linux floors are 2.28, NOT the manylinux2014 baseline of 2.17.
+#
+# 2.17 was unsatisfiable, and had been since the ecosystem moved off it. The
+# cohort build failed with
+#
+#     runtime lock has no linux-aarch64 wheel for argon2-cffi-bindings==26.1.0
+#
+# which reads as a missing wheel and is not one: the lock carries
+# `argon2_cffi_bindings-26.1.0-cp310-abi3-manylinux_2_26_aarch64`, and 2.26 is
+# above a 2.17 floor, so nothing selectable existed. There is no 2.17 Linux
+# wheel for this package at any version in the lock, so the floor could not be
+# met by choosing differently - only by moving it. x86-64 sits behind the same
+# wall and merely failed second, aarch64 being first in this tuple.
+#
+# 2.28 is chosen rather than 2.26 because it is what the rest of this fleet
+# already promises: vaultspec-core, vaultspec-rag and vaultspec-dashboard all
+# pin their Linux builds to a digest-pinned manylinux_2_28 image and measure
+# 2.28 out of the published artifact. It covers RHEL 8, Rocky 8, Alma 8,
+# Debian 10+, Ubuntu 20.04+ and Amazon Linux 2023, and it satisfies the 2.26
+# wheels above with headroom.
+#
+# What this drops is glibc 2.17-era platforms - RHEL 7 and CentOS 7, both long
+# past end of life. That is a real narrowing and is stated here rather than
+# left implicit.
 SUPPORTED_TARGETS: Final[tuple[TargetPlatform, ...]] = (
-    TargetPlatform("linux-aarch64", "linux", "Linux", "aarch64", "posix", "glibc-2.17"),
-    TargetPlatform("linux-x86-64", "linux", "Linux", "x86_64", "posix", "glibc-2.17"),
+    TargetPlatform("linux-aarch64", "linux", "Linux", "aarch64", "posix", "glibc-2.28"),
+    TargetPlatform("linux-x86-64", "linux", "Linux", "x86_64", "posix", "glibc-2.28"),
     TargetPlatform("macos-arm64", "darwin", "Darwin", "arm64", "posix", "macos-11.0"),
     TargetPlatform("windows-x86-64", "win32", "Windows", "AMD64", "nt", "windows-10"),
 )
