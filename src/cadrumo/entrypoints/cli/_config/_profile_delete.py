@@ -91,19 +91,18 @@ def _refuse_erase_inside_the_retention_floor(assessment: BucketDeletionAssessmen
     snapshot and are never recomputed here, so the two refusals cannot report
     different NUMBERS for the same records.
 
-    What is duplicated, and stated plainly rather than claimed away, is the
-    DECISION: the all-profile flow tests the blocking flag together with a
-    recorded override, and this verb tests the flag alone because it offers no
-    override. A third condition added to the retention contract would reach one
-    site and not the other. Making that impossible means promoting the decision
-    to a shared application function, which lives in a module this surface does
-    not own; until that happens the duplication is a known cost, not an
-    invariant.
+    The DECISION was duplicated here too, and this docstring said so: the
+    all-profile flow tested the blocking flag together with a recorded
+    override, this verb tested the flag alone, and a third condition added to
+    the retention contract would have reached one site and not the other. It
+    now asks :func:`~domain.retention.erase_is_blocked`, so both surfaces
+    reach the same rule. No override is passed because this verb offers none,
+    which is the accurate statement rather than a value withheld.
     """
-    from ....domain.retention import RetentionFloorError
+    from ....domain.retention import RetentionFloorError, erase_is_blocked
 
     retention = assessment.retention
-    if retention is None or not retention.blocks_erase:
+    if retention is None or not erase_is_blocked(blocks_erase=retention.blocks_erase):
         return
     safe_from = retention.latest_safe_erase_date
     raise RetentionFloorError(

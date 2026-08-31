@@ -57,12 +57,10 @@ from typing import TYPE_CHECKING, Any, Final, Literal
 if TYPE_CHECKING:
     from googleapiclient.discovery import Resource as _GoogleResource
 
-from pydantic import BaseModel, Field, TypeAdapter, ValidationError
+from pydantic import TypeAdapter, ValidationError
 
 from ....application.storage.calc_sheets import (
     CALC_SHEETS_ENGINE_VERSION,
-    OperatorInput,
-    SheetExportMetadata,
     SheetExportPlan,
     SheetLayout,
     collect_row_sets,
@@ -70,13 +68,10 @@ from ....application.storage.calc_sheets import (
     plan_layout,
     registry_sha,
 )
-from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
-from ....core.period import Period
 from ....core.casilla_id import CasillaId
 from ....core.decimal import coerce_decimal, coerce_finite_european_decimal
-from ....core.filing_year import FilingYear
-from ....core.time import coerce_utc_aware
+from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
+from ....core.period import Period
 from ....domain.calculations.registry.casilla_membership import (
     casillas_by_id,
     undeclared_casilla_ids,
@@ -90,7 +85,6 @@ from ....domain.calculations.registry.ids import (
     LegalRefId,
     ModeloId,
     RelationId,
-    RevisionId,
     SourceRefId,
 )
 from ....domain.calculations.registry.schema import RegistrySnapshot
@@ -105,6 +99,36 @@ from ..storage import (
 )
 from ._preconditions import google_terminal_refusal
 from .api import execute_request
+from .calc_sheets_pull_records import (
+    BindingEdit as _BindingEdit,
+)
+from .calc_sheets_pull_records import (
+    MetadataMatchState as _MetadataMatchState,
+)
+from .calc_sheets_pull_records import (
+    OperatorEdit as _OperatorEdit,
+)
+from .calc_sheets_pull_records import (
+    PullCoverageDiscrepancy as _PullCoverageDiscrepancy,
+)
+from .calc_sheets_pull_records import (
+    PullMetadata as _PullMetadata,
+)
+from .calc_sheets_pull_records import (
+    PullResult as _PullResult,
+)
+from .calc_sheets_pull_records import (
+    RelationEdit as _RelationEdit,
+)
+from .calc_sheets_pull_records import (
+    RowSetCellEdit as _RowSetCellEdit,
+)
+from .calc_sheets_pull_records import (
+    RowSetEdit as _RowSetEdit,
+)
+from .calc_sheets_pull_records import (
+    ValueRange as _ValueRange,
+)
 
 _OWNERSHIP_KEY: Final[str] = "cadrumo_vault_app"
 _OWNERSHIP_VALUE: Final[str] = "cadrumo"
@@ -156,227 +180,6 @@ def _calc_sheets_pull_terminal_refusal(
         provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         outcome=outcome,
     )
-
-
-# A single batch-get value-range entry from the Sheets API.
-# Shape: {"range": str, "values": list[list[object]]}
-ValueRange = dict[str, Any]
-
-
-class OperatorEdit(BaseModel):
-    """One operator-edited cell value.
-
-    ``display_number`` and ``label`` are display-only fields added by the
-    pull adapter from the workbook's column metadata. They are not part of
-    the canonical
-    :class:`~application.storage.calc_sheets.OperatorInput` contract; use
-    :meth:`~adapters.outbound.google.calc_sheets_pull.OperatorEdit.to_operator_input`
-    to project this shape onto the canonical one.
-
-    ``value`` mirrors the cell's raw shape from Google Sheets. The union
-    is intentionally ambiguous between Decimal and numeric-shaped str
-    because the wire JSON representation cannot statically distinguish
-    them (pydantic serialises Decimal as a JSON string). The runtime
-    path in :func:`~adapters.outbound.google.compute_from_pull` is what
-    disambiguates via
-    :func:`~adapters.outbound.google.calc_sheets_pull._coerce_edit_value_to_decimal`
-    for numeric input casillas and
-    :func:`~adapters.outbound.google.calc_sheets_pull._enum_binding_text`
-    for enum bindings.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    casilla_id: CasillaId
-    display_number: str
-    label: str
-    value: Decimal | str | bool | None = None
-
-    def to_operator_input(self) -> OperatorInput:
-        """Project onto the canonical :class:`~application.storage.calc_sheets.OperatorInput` shape.
-
-        Drops display-only fields.
-        """
-        return OperatorInput(casilla_id=self.casilla_id, value=self.value)
-
-
-class BindingEdit(BaseModel):
-    """One operator-edited binding cell value (numeric or enum).
-
-    Same union-ambiguity reasoning as
-    :attr:`~adapters.outbound.google.calc_sheets_pull.OperatorEdit.value`
-    — the wire JSON cannot statically distinguish a CCAA-shape ``"04"`` from a
-    numeric ``Decimal("4")``. The runtime dispatch in
-    :func:`~adapters.outbound.google.compute_from_pull` is what routes the
-    value: enum bindings go through
-    :func:`~adapters.outbound.google.calc_sheets_pull._enum_binding_text`
-    and numeric bindings go through
-    :func:`~adapters.outbound.google.calc_sheets_pull._coerce_edit_value_to_decimal`.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    binding: BindingId
-    value: Decimal | str | None = None
-
-
-class RelationEdit(BaseModel):
-    """One pre-resolved cross-revision relation value mirrored in Tarifas.
-
-    The provenance / source_modelo / source_filing_year / source_periods /
-    source_casilla_ids / legal_refs / source_refs / resolved_at fields are
-    recovered from the workbook's developer metadata
-    (``cadrumo_relation:<relation>`` keys written by the apply adapter).
-    They are absent for relations that were edited manually in the
-    workbook without an apply round-trip; in that case the relation
-    is treated as ``provenance="operator_manual"`` by convention.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    relation: RelationId
-    value: Decimal | None = None
-    provenance: Literal["local_filing", "aeat_live", "operator_manual"] | None = None
-    source_modelo: ModeloId | None = None
-    source_filing_year: FilingYear | None = None
-    source_periods: tuple[str, ...] = ()
-    source_casilla_ids: tuple[CasillaId, ...] = ()
-    legal_refs: tuple[LegalRefId, ...] = ()
-    source_refs: tuple[SourceRefId, ...] = ()
-    resolved_at: datetime | None = None
-
-
-def relation_edit_payload(edit: RelationEdit) -> dict[str, object]:
-    """Project one :class:`RelationEdit` into its operator-facing payload row.
-
-    The single projection of this model, so a transport cannot decide for
-    itself which of the recovered fields are worth carrying. The CLI emitted
-    ``{relation, value}`` and dropped the rest — provenance, the source
-    modelo / filing year / periods / casillas, the legal and source
-    references, and the resolution instant — even though the pull had already
-    recovered every one of them from the workbook's developer metadata. A
-    number arrived at the operator with nothing saying where it came from,
-    which is precisely what the recovery exists to prevent: the same value can
-    be a local filing's carry, a live AEAT read, or a hand edit, and only the
-    provenance distinguishes them.
-
-    Values are rendered as strings rather than JSON numbers: a relation value
-    is a :class:`~decimal.Decimal`, and a float round-trip is not a rendering
-    detail on a figure that reaches a filing. ``resolved_at`` is emitted in
-    ISO-8601, and stays ``None`` when the relation was edited in the workbook
-    without an apply round-trip.
-    """
-    return {
-        "relation": edit.relation,
-        "value": str(edit.value) if edit.value is not None else None,
-        "provenance": edit.provenance,
-        "source_modelo": edit.source_modelo,
-        "source_filing_year": edit.source_filing_year,
-        "source_periods": list(edit.source_periods),
-        "source_casilla_ids": list(edit.source_casilla_ids),
-        "legal_refs": list(edit.legal_refs),
-        "source_refs": list(edit.source_refs),
-        "resolved_at": edit.resolved_at.isoformat() if edit.resolved_at is not None else None,
-    }
-
-
-class RowSetCellEdit(BaseModel):
-    """One operator-edited cell from a Detalle tab row-set."""
-
-    model_config = _STRICT_FROZEN
-
-    binding: BindingId
-    row_index: int = Field(ge=1)
-    value: Decimal | str | None = None
-
-
-class RowSetEdit(BaseModel):
-    """All operator-supplied detail rows for one row-set grouping."""
-
-    model_config = _STRICT_FROZEN
-
-    grouping: str = Field(min_length=1)
-    cells: tuple[RowSetCellEdit, ...] = ()
-
-
-class PullMetadata(BaseModel):
-    """Workbook identity metadata recovered from developer metadata.
-
-    This is a loose parsing shape: ``exported_at`` is ``str | None`` because
-    the developer-metadata round-trip may yield a raw ISO string or nothing.
-    Use
-    :meth:`~adapters.outbound.google.calc_sheets_pull.PullMetadata.to_sheet_export_metadata`
-    to project onto the strict canonical
-    :class:`~application.storage.calc_sheets.SheetExportMetadata` shape
-    when the workbook is known to carry a valid export stamp.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    modelo_id: str
-    revision_id: RevisionId
-    filing_year: int
-    period: str
-    engine_version: str
-    registry_sha: str
-    exported_at: str | None = None
-
-    def to_sheet_export_metadata(self) -> SheetExportMetadata | None:
-        """Project onto a :class:`~application.storage.calc_sheets.SheetExportMetadata`.
-
-        Parses ``exported_at`` from an ISO string. Returns ``None`` when the
-        stamp is absent or unparseable rather than raising, so callers can
-        treat it as ``metadata_match="missing"``.
-        """
-        if not self.exported_at:
-            return None
-        try:
-            dt = coerce_utc_aware(datetime.fromisoformat(self.exported_at))
-        except ValueError:
-            return None
-        return SheetExportMetadata(
-            modelo_id=self.modelo_id,
-            revision_id=self.revision_id,
-            filing_year=self.filing_year,
-            period=Period.from_year_and_code(self.filing_year, self.period),
-            engine_version=self.engine_version,
-            registry_sha=self.registry_sha,
-            exported_at=dt,
-        )
-
-
-class MetadataMatchState(StrEnum):
-    """Registry-SHA + stamp alignment result for a pulled Sheets workbook."""
-
-    MATCHES = "matches"
-    STALE = "stale"
-    MISSING = "missing"
-
-
-class PullResult(BaseModel):
-    """Outcome of one Google Sheets pull cycle.
-
-    Carries the typed edit families read from the workbook, the
-    :class:`~adapters.outbound.google.calc_sheets_pull.PullMetadata`
-    stamp recovered from developer metadata, the
-    :class:`~adapters.outbound.google.calc_sheets_pull.MetadataMatchState`
-    verdict against the caller's
-    :class:`~domain.calculations.registry.RegistrySnapshot`, and the count
-    of non-blank cells read.
-    ``metadata_match`` may be ``STALE`` or ``MISSING``; callers must treat that
-    as a refusal boundary before applying edits to local state.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    spreadsheet_id: str
-    operator_edits: tuple[OperatorEdit, ...]
-    binding_edits: tuple[BindingEdit, ...]
-    relation_edits: tuple[RelationEdit, ...]
-    row_set_edits: tuple[RowSetEdit, ...] = ()
-    metadata: PullMetadata
-    metadata_match: MetadataMatchState
-    cells_read: int = Field(ge=0)
 
 
 def _drive_service(credentials: object) -> _GoogleResource:
@@ -558,13 +361,13 @@ def _merge_developer_metadata_entries(entries: Iterable[Mapping[str, Any]]) -> d
 def _classify_metadata_match(
     pairs: Mapping[str, str],
     snapshot: RegistrySnapshot,
-) -> tuple[MetadataMatchState, PullMetadata]:
+) -> tuple[_MetadataMatchState, _PullMetadata]:
     if not pairs:
         # The MISSING verdict carries a placeholder PullMetadata so the
         # caller can still receive a typed record alongside the verdict.
         # Sentinel values satisfy PullMetadata's min_length=1 boundary
         # constraint without claiming real registry coordinates.
-        return MetadataMatchState.MISSING, PullMetadata(
+        return _MetadataMatchState.MISSING, _PullMetadata(
             modelo_id="missing",
             revision_id="missing",
             filing_year=0,
@@ -576,7 +379,7 @@ def _classify_metadata_match(
         filing_year = int(pairs.get("cadrumo_filing_year", "0"))
     except ValueError:
         filing_year = 0
-    metadata = PullMetadata(
+    metadata = _PullMetadata(
         modelo_id=pairs.get("cadrumo_modelo_id", ""),
         revision_id=pairs.get("cadrumo_revision_id", ""),
         filing_year=filing_year,
@@ -597,14 +400,14 @@ def _classify_metadata_match(
         and metadata.engine_version == CALC_SHEETS_ENGINE_VERSION
         and metadata.registry_sha == registry_sha(snapshot)
     )
-    return (MetadataMatchState.MATCHES if matches else MetadataMatchState.STALE), metadata
+    return (_MetadataMatchState.MATCHES if matches else _MetadataMatchState.STALE), metadata
 
 
 def _require_matching_metadata(
     *,
     spreadsheet_id: str,
-    metadata_match: MetadataMatchState,
-    metadata: PullMetadata,
+    metadata_match: _MetadataMatchState,
+    metadata: _PullMetadata,
     snapshot: RegistrySnapshot,
 ) -> None:
     """Refuse a workbook that cannot bind to the live snapshot and layout.
@@ -626,7 +429,7 @@ def _require_matching_metadata(
         and metadata.engine_version == CALC_SHEETS_ENGINE_VERSION
         and metadata.registry_sha == registry_sha(snapshot)
     )
-    if metadata_match is MetadataMatchState.MATCHES and metadata_binds_snapshot:
+    if metadata_match is _MetadataMatchState.MATCHES and metadata_binds_snapshot:
         return
     error = OutboundStorageConflictError(
         "refusing to read: "
@@ -693,7 +496,7 @@ def pull_operator_edits(
     *,
     spreadsheet_id: str,
     credentials: object,
-) -> PullResult:
+) -> _PullResult:
     """Read operator-edited cells back from a workbook into typed records.
 
     This is the readback entrypoint behind ``aeat config google sync calc
@@ -793,7 +596,7 @@ def pull_operator_edits(
     row_set_edits, row_set_cells_read = _read_row_set_edits(snapshot, sheets, spreadsheet_id)
     cells_read = casilla_cells_read + binding_cells_read + relation_cells_read + row_set_cells_read
 
-    return PullResult(
+    return _PullResult(
         spreadsheet_id=spreadsheet_id,
         operator_edits=operator_edits,
         binding_edits=binding_edits,
@@ -832,7 +635,7 @@ def _batch_get_values(
     sheets: Any,
     spreadsheet_id: str,
     ranges: list[str],
-) -> list[ValueRange]:
+) -> list[_ValueRange]:
     """One Sheets ``values.batchGet`` covering every supplied A1 range.
 
     Returns the raw ``valueRanges`` list from the response (each entry
@@ -855,7 +658,7 @@ def _batch_get_values(
     return response.get("valueRanges", []) or []
 
 
-def _raw_cell_value(value_ranges: list[ValueRange], cursor: int) -> object:
+def _raw_cell_value(value_ranges: list[_ValueRange], cursor: int) -> object:
     """Return the single-cell raw value at ``cursor`` in a batchGet response, or None."""
     vr = value_ranges[cursor] if cursor < len(value_ranges) else {}
     rows = vr.get("values", []) or []
@@ -863,14 +666,14 @@ def _raw_cell_value(value_ranges: list[ValueRange], cursor: int) -> object:
 
 
 def _decode_operator_edits(
-    value_ranges: list[ValueRange],
+    value_ranges: list[_ValueRange],
     cursor: int,
     operator_input_ids: list[CasillaId],
     casilla_by_id: Mapping[CasillaId, CasillaDefinition],
-) -> tuple[tuple[OperatorEdit, ...], int, int]:
+) -> tuple[tuple[_OperatorEdit, ...], int, int]:
     """Map the per-casilla slice of the batchGet response into typed OperatorEdits."""
     cells_read = 0
-    edits: list[OperatorEdit] = []
+    edits: list[_OperatorEdit] = []
     for casilla_id in operator_input_ids:
         raw = _raw_cell_value(value_ranges, cursor)
         cursor += 1
@@ -879,7 +682,7 @@ def _decode_operator_edits(
             cells_read += 1
         casilla = casilla_by_id[casilla_id]
         edits.append(
-            OperatorEdit(
+            _OperatorEdit(
                 casilla_id=casilla_id,
                 display_number=casilla.number,
                 label=casilla.label,
@@ -890,10 +693,10 @@ def _decode_operator_edits(
 
 
 def _decode_binding_edits(
-    value_ranges: list[ValueRange],
+    value_ranges: list[_ValueRange],
     cursor: int,
     binding_ids: list[BindingId],
-) -> tuple[tuple[BindingEdit, ...], int, int]:
+) -> tuple[tuple[_BindingEdit, ...], int, int]:
     """Map the per-binding slice of the batchGet response into typed BindingEdits.
 
     Booleans are stringified because
@@ -902,7 +705,7 @@ def _decode_binding_edits(
     enum-binding semantics expect a textual representation here.
     """
     cells_read = 0
-    edits: list[BindingEdit] = []
+    edits: list[_BindingEdit] = []
     for binding_id in binding_ids:
         raw = _raw_cell_value(value_ranges, cursor)
         cursor += 1
@@ -910,16 +713,16 @@ def _decode_binding_edits(
         if coerced is not None:
             cells_read += 1
         binding_value: Decimal | str | None = str(coerced) if isinstance(coerced, bool) else coerced
-        edits.append(BindingEdit(binding=binding_id, value=binding_value))
+        edits.append(_BindingEdit(binding=binding_id, value=binding_value))
     return tuple(edits), cursor, cells_read
 
 
 def _decode_relation_edits(
-    value_ranges: list[ValueRange],
+    value_ranges: list[_ValueRange],
     cursor: int,
     relation_ids: list[RelationId],
     metadata_pairs: Mapping[str, str],
-) -> tuple[tuple[RelationEdit, ...], int, int]:
+) -> tuple[tuple[_RelationEdit, ...], int, int]:
     """Map the per-relation slice of the batchGet response into typed RelationEdits.
 
     Per-relation provenance metadata is recovered from the workbook's
@@ -930,7 +733,7 @@ def _decode_relation_edits(
     every round trip.
     """
     cells_read = 0
-    edits: list[RelationEdit] = []
+    edits: list[_RelationEdit] = []
     for relation_id in relation_ids:
         raw = _raw_cell_value(value_ranges, cursor)
         cursor += 1
@@ -950,7 +753,7 @@ def _decode_relation_edits(
             metadata_pairs.get(f"cadrumo_relation:{relation_id}", ""),
         )
         edits.append(
-            RelationEdit(
+            _RelationEdit(
                 relation=relation_id,
                 value=coerced,
                 provenance=provenance,
@@ -1085,7 +888,7 @@ def _read_row_set_edits(
     snapshot: RegistrySnapshot,
     sheets: Any,
     spreadsheet_id: str,
-) -> tuple[tuple[RowSetEdit, ...], int]:
+) -> tuple[tuple[_RowSetEdit, ...], int]:
     """Read each row-set's Detalle-tab data area into typed row edits.
 
     Returns the per-grouping ``RowSetEdit`` tuple plus the total count
@@ -1097,14 +900,14 @@ def _read_row_set_edits(
         return ((), 0)
     block_ranges = [_row_set_block_range(row_set) for row_set in row_sets]
     value_ranges = _batch_get_values_for_row_sets(sheets, spreadsheet_id, block_ranges)
-    edits: list[RowSetEdit] = []
+    edits: list[_RowSetEdit] = []
     cells_read = 0
     for row_set_index, row_set in enumerate(row_sets):
         vr = value_ranges[row_set_index] if row_set_index < len(value_ranges) else {}
         rows = vr.get("values", []) or []
         cells, cells_in_block = _decode_row_set_block(rows, row_set)
         cells_read += cells_in_block
-        edits.append(RowSetEdit(grouping=row_set.grouping, cells=cells))
+        edits.append(_RowSetEdit(grouping=row_set.grouping, cells=cells))
     return tuple(edits), cells_read
 
 
@@ -1129,7 +932,7 @@ def _batch_get_values_for_row_sets(
     sheets: Any,
     spreadsheet_id: str,
     block_ranges: list[str],
-) -> list[ValueRange]:
+) -> list[_ValueRange]:
     """Sheets ``values.batchGet`` for row-set blocks; returns the raw valueRanges list."""
     response = execute_request(
         sheets.spreadsheets()
@@ -1149,7 +952,7 @@ def _batch_get_values_for_row_sets(
 def _decode_row_set_block(
     rows: list[list[object]],
     row_set: Any,
-) -> tuple[tuple[RowSetCellEdit, ...], int]:
+) -> tuple[tuple[_RowSetCellEdit, ...], int]:
     """Decode one row-set's block of (local_row, col_index) cells into typed edits.
 
     Returns the typed-cell tuple plus the non-blank-cells count for
@@ -1157,7 +960,7 @@ def _decode_row_set_block(
     columns are skipped — that's the Sheets-side defensive path when an
     operator pastes data past the allocated column count.
     """
-    cells: list[RowSetCellEdit] = []
+    cells: list[_RowSetCellEdit] = []
     cells_in_block = 0
     for local_row, row_values in enumerate(rows, start=1):
         for col_index, raw in enumerate(row_values, start=1):
@@ -1176,7 +979,7 @@ def _decode_row_set_cell(
     col_index: int,
     local_row: int,
     row_set: Any,
-) -> RowSetCellEdit | None:
+) -> _RowSetCellEdit | None:
     """Translate one Sheets cell into a typed RowSetCellEdit, or None to skip."""
     if raw is None or raw == "":
         return None
@@ -1190,50 +993,13 @@ def _decode_row_set_cell(
     if coerced is None:
         return None
     coerced_value: Decimal | str | None = str(coerced) if isinstance(coerced, bool) else coerced
-    return RowSetCellEdit(binding=binding_id, row_index=local_row, value=coerced_value)
-
-
-class PullCoverageDiscrepancy(BaseModel):
-    """One coverage delta between a plan and pulled workbook records.
-
-    The apply adapter writes a richly-shaped workbook (tariffs,
-    constraints, protected ranges, row-sets); the pull adapter
-    materialises a slimmer
-    :class:`~adapters.outbound.google.PullResult` of operator-editable
-    surfaces. A corrupted or hand-edited workbook could have structural cells
-    stripped or row-set columns removed without surfacing as a load error.
-    :func:`~adapters.outbound.google.calc_sheets_pull.verify_pull_coverage`
-    enumerates every coverage mismatch as one of these typed records so callers
-    can choose to refuse the merge, log a warning, or surface a diagnostic to
-    the operator.
-
-    The check is intentionally caller-opt-in: not every consumer of
-    :func:`~adapters.outbound.google.compute_from_pull` carries the
-    original
-    :class:`~application.storage.calc_sheets.SheetExportPlan`
-    (e.g. a fresh pull from a workbook the operator authored without
-    a prior apply). Callers that DO have the plan should run the
-    check before consuming the pull.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    kind: Literal[
-        "metadata_mismatch",
-        "row_set_missing",
-        "row_set_extra",
-        "binding_count_mismatch",
-        "relation_count_mismatch",
-    ]
-    detail: str = Field(min_length=1)
-    expected: str = ""
-    observed: str = ""
+    return _RowSetCellEdit(binding=binding_id, row_index=local_row, value=coerced_value)
 
 
 def verify_pull_coverage(
     plan: SheetExportPlan,
-    pull: PullResult,
-) -> tuple[PullCoverageDiscrepancy, ...]:
+    pull: _PullResult,
+) -> tuple[_PullCoverageDiscrepancy, ...]:
     """Return every coverage discrepancy between ``plan`` and ``pull``.
 
     Returns an empty tuple of :class:`PullCoverageDiscrepancy` when the two
@@ -1248,7 +1014,7 @@ def verify_pull_coverage(
     metadata digests for those surfaces when the apply side stamps
     them.
     """
-    discrepancies: list[PullCoverageDiscrepancy] = []
+    discrepancies: list[_PullCoverageDiscrepancy] = []
 
     # Metadata identity: registry coordinates must match exactly.
     plan_meta = plan.metadata
@@ -1260,7 +1026,7 @@ def verify_pull_coverage(
             plan_value = plan_meta.period.registry_token
         if pull_value != plan_value:
             discrepancies.append(
-                PullCoverageDiscrepancy(
+                _PullCoverageDiscrepancy(
                     kind="metadata_mismatch",
                     detail=f"metadata field {field_name!r} differs between plan and pull",
                     expected=str(plan_value),
@@ -1275,7 +1041,7 @@ def verify_pull_coverage(
     pulled_groupings = {edit.grouping for edit in pull.row_set_edits}
     for missing in sorted(planned_groupings - pulled_groupings):
         discrepancies.append(
-            PullCoverageDiscrepancy(
+            _PullCoverageDiscrepancy(
                 kind="row_set_missing",
                 detail=f"row-set grouping {missing!r} is declared by the plan but absent from the pull",
                 expected=missing,
@@ -1284,7 +1050,7 @@ def verify_pull_coverage(
         )
     for extra in sorted(pulled_groupings - planned_groupings):
         discrepancies.append(
-            PullCoverageDiscrepancy(
+            _PullCoverageDiscrepancy(
                 kind="row_set_extra",
                 detail=f"row-set grouping {extra!r} appears in the pull but is not declared by the plan",
                 expected="",
@@ -1297,7 +1063,7 @@ def verify_pull_coverage(
 
 def compute_from_pull(
     snapshot: RegistrySnapshot,
-    pull: PullResult,
+    pull: _PullResult,
 ) -> RegistryCalculationResult:
     """Run the local Decimal runtime against a :class:`~adapters.outbound.google.PullResult`.
 
@@ -1359,7 +1125,7 @@ def compute_from_pull(
     )
 
 
-def _require_metadata_match(*, pull: PullResult, snapshot: RegistrySnapshot) -> None:
+def _require_metadata_match(*, pull: _PullResult, snapshot: RegistrySnapshot) -> None:
     """Refuse to compute when the workbook metadata doesn't bind to the snapshot."""
     _require_matching_metadata(
         spreadsheet_id=pull.spreadsheet_id,
@@ -1400,7 +1166,7 @@ def _coerce_edit_value_to_decimal(value: Decimal | str | bool | None, *, input_k
 def _collect_input_casilla_values(
     *,
     snapshot: RegistrySnapshot,
-    edits: tuple[OperatorEdit, ...],
+    edits: tuple[_OperatorEdit, ...],
 ) -> dict[CasillaId, Decimal]:
     edits_by_casilla = {edit.casilla_id: edit for edit in edits}
     input_ids = frozenset(
@@ -1469,7 +1235,7 @@ def _collect_input_casilla_values(
 def _collect_binding_values(
     *,
     snapshot: RegistrySnapshot,
-    edits: tuple[BindingEdit, ...],
+    edits: tuple[_BindingEdit, ...],
 ) -> tuple[dict[BindingId, Decimal], dict[BindingId, str]]:
     edits_by_binding = {edit.binding: edit for edit in edits}
     binding_values: dict[BindingId, Decimal] = {}
@@ -1509,7 +1275,7 @@ def _enum_binding_text(value: Decimal | str | bool | None) -> str | None:
 def _collect_relation_values(
     *,
     snapshot: RegistrySnapshot,
-    edits: tuple[RelationEdit, ...],
+    edits: tuple[_RelationEdit, ...],
 ) -> dict[RelationId, Decimal]:
     edits_by_relation = {edit.relation: edit for edit in edits}
     relation_values: dict[RelationId, Decimal] = {}
@@ -1528,12 +1294,4 @@ def _collect_relation_values(
     return relation_values
 
 
-__all__ = [
-    "BindingEdit",
-    "OperatorEdit",
-    "PullMetadata",
-    "PullResult",
-    "RelationEdit",
-    "compute_from_pull",
-    "pull_operator_edits",
-]
+__all__ = ["compute_from_pull", "pull_operator_edits", "verify_pull_coverage"]

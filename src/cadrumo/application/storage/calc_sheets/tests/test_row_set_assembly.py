@@ -10,7 +10,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....adapters.outbound.google.calc_sheets_pull import RowSetCellEdit, RowSetEdit
+from .....adapters.outbound.google.calc_sheets_pull_records import RowSetCellEdit, RowSetEdit
 from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.detail_record_bindings import Modelo720RowObservation
 from .....domain.calculations.registry.errors import RegistryValidationError

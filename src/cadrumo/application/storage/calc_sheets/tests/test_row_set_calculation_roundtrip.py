@@ -10,15 +10,15 @@ import pytest
 from openpyxl import load_workbook
 from openpyxl.cell.cell import Cell
 
-from .....adapters.outbound.google.calc_sheets_pull import RowSetEdit
 from .....adapters.outbound.google.calc_sheets_pull import _decode_row_set_block
+from .....adapters.outbound.google.calc_sheets_pull_records import RowSetEdit
 from .....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from .....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from .....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from .....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from .....core.period import Period
 from .....core.aggregation import BindingSourceKind
 from .....core.hashing import content_hash_hex
+from .....core.period import Period
 from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.detail_record_bindings import Modelo720RowObservation
 from .....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord

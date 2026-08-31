@@ -39,6 +39,7 @@ from ._floor import (
     RetentionBlockingRecord,
     RetentionFloorAssessment,
     assess_retention_floor,
+    erase_is_blocked,
 )
 from .errors import RetentionError, RetentionFloorError
 
@@ -50,4 +51,5 @@ __all__ = [
     "RetentionFloorAssessment",
     "RetentionFloorError",
     "assess_retention_floor",
+    "erase_is_blocked",
 ]

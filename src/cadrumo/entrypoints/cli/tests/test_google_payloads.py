@@ -214,8 +214,7 @@ class TestPullRelationEditGrounding:
         from datetime import UTC, datetime
         from decimal import Decimal
 
-        from ....adapters.outbound.google.calc_sheets_pull import relation_edit_payload
-        from ....adapters.outbound.google.calc_sheets_pull import RelationEdit
+        from ....adapters.outbound.google.calc_sheets_pull_records import RelationEdit, relation_edit_payload
 
         edit = RelationEdit(
             relation="m130-cuota-carry",
@@ -254,8 +253,7 @@ class TestPullRelationEditGrounding:
         The optional fields must stay absent rather than acquire defaults that
         would assert a provenance the workbook never recorded.
         """
-        from ....adapters.outbound.google.calc_sheets_pull import relation_edit_payload
-        from ....adapters.outbound.google.calc_sheets_pull import RelationEdit
+        from ....adapters.outbound.google.calc_sheets_pull_records import RelationEdit, relation_edit_payload
 
         raw = _base_pull_payload()
         raw["relation_edits_populated"] = 1
