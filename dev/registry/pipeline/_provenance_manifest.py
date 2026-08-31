@@ -989,7 +989,7 @@ def _normalise_semantic_map_record(payload: Mapping[str, object]) -> dict[str, o
             "length": discriminator_payload["length"],
             "requires": discriminator_payload["requires"],
         }
-    normalised = {
+    normalised: dict[str, object] = {
         "sheet": _as_string(payload["sheet"], subject="semantic-map record sheet"),
         "record_identity": _as_string(
             payload["record_identity"],

@@ -9,7 +9,7 @@ references nor matches a semantic entry to parser output.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Annotated, Literal
+from typing import Annotated, Literal, cast
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator, model_validator
 
@@ -294,7 +294,8 @@ def _coerce_row_field_casilla_ids(value: object) -> object:
     independent of the order the mapping was authored in.
     """
     if isinstance(value, Mapping):
-        return tuple(sorted((str(key), item) for key, item in value.items()))
+        entries = cast(Mapping[object, object], value)
+        return tuple(sorted((str(key), item) for key, item in entries.items()))
     return value
 
 
