@@ -26,3 +26,4 @@ Submodules
    cadrumo.core.errors.registry._domain_part2
    cadrumo.core.errors.registry._domain_part3
    cadrumo.core.errors.registry._entrypoints
+   cadrumo.core.errors.registry.declared_codes
