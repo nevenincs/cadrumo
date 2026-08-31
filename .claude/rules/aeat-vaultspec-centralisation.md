@@ -3,27 +3,24 @@ name: aeat-vaultspec-centralisation
 trigger: always_on
 ---
 
-# AEAT vaultspec centralisation
+# AEAT Vaultspec centralisation
 
-Keep all repo-specific agent rules in `.vaultspec/rules/`. Do not place project
-rules, policies, handover mandates, or provider-specific instructions in any
-provider's own config; treat provider files as generated outputs, not authorship
-surfaces.
+## Authority and sync
 
-**Do not author new rules.** Codification is retired: the always-on corpus is
-loaded into every agent context, so each new rule taxes every session forever.
-Record durable lessons in the campaign's `.vault/audit/` document instead.
+- `.vaultspec/rules/` and `.vaultspec/skills/` are the authored project sources. Provider directories such as `.codex/rules/`, `.agents/skills/`, `.claude/`, `.gemini/`, and `.agent/` are generated destinations.
+- Edit, add, or remove project governance only at the Vaultspec source, then preview and run `vaultspec-core sync`. Do not hand-edit provider copies.
+- Files ending in `.builtin.md` and built-in Vaultspec skills are installation-owned. Never edit, delete, fork, or shadow them from the project.
+- Use the Vaultspec CLI for vault lifecycle metadata, status, links, stamps, archive operations, and generated indexes. Body-only edits still require the owning focused check afterward.
 
-**Rules must not reference private agent memory** — a rule is repo-committed and
-shared, so a citation to a private memory file is a dangling reference for every
-other reader. State the mandate inline.
+## Context budget
 
-Correct or remove an existing rule on its `.vaultspec/rules/*.md` source (or via
-`vaultspec-core spec rules edit|remove`) and propagate with
-`vaultspec-core sync`. Never hand-edit the generated `.claude/`, `.agents/`,
-`.codex/`, `AGENTS.md`, `GEMINI.md`, or `CLAUDE.md` copies — the next sync
-reverts the change, so the fix is lost.
+- Do not add a rule for a one-off defect, campaign, plan step, tool preference, or fact already enforced by code. Codification is retired for this project; strengthen the owning gate, schema, type, generator, or existing rule instead.
+- A rule states stable, enforceable invariants and the boundary they protect. Exclude dated inventories, frozen counts, migration history, agent topology, repeated examples, and long command transcripts.
+- A skill contains only a repeatable workflow whose procedural detail is genuinely needed at invocation time. Move optional detail into referenced resources; remove a skill when normal repository instructions are sufficient.
+- Provider-global skills and rules must be narrowly triggered and useful across projects. Project-specific behavior belongs here, not in a user's global context.
 
-Prefer merging a new mandate into the nearest existing rule over adding a file.
-When a rule's name is cited from `src/` docstrings, keep the name even while
-compressing the body.
+## Separation
+
+- Do not create private agent memory or a parallel policy directory.
+- Production code, tests, configuration, and user documentation do not cite Vaultspec documents, rule slugs, plan steps, audit names, or agent metadata. Existing citations are migration debt; do not add new ones.
+- Preserve existing rule slugs while they are referenced by current gates or source. Rename or consolidate only with an explicit repository-wide citation migration and validation.

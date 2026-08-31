@@ -3,61 +3,21 @@ name: sensitive-financial-data-secure-storage-only
 trigger: always_on
 ---
 
-# Sensitive financial data, and the AEAT safety gates
+# Sensitive financial data uses secure storage only
 
-## Secure storage is the only home
+## Storage and transport
 
-All sensitive financial data — every purchase invoice, every incoming or outgoing
-business invoice, every bank statement and supporting document, and any decrypted
-evidence bytes derived from them — persists ONLY inside the encrypted
-secure-storage backend, accessed through the active-profile-bucket runtime
-wrapper (`secure_object_repository_for_active_bucket` /
-`secure_object_repository_for_bucket`, the `SecureObjectRepository` substrate,
-and the content-addressed `AttachmentStore` that wraps it).
+- Taxpayer, credential, banking, ledger, invoice, filing, and evidence payloads are stored only through the project's approved encrypted persistence boundary.
+- Do not write sensitive payloads to source files, fixtures, logs, exceptions, command history, caches, plaintext databases, temporary files, generated references, vault documents, or agent transcripts.
+- Persist evidence as encrypted bytes with integrity and provenance metadata. A filesystem path or remote URL is not a secure stored copy.
+- Secrets come from the approved secret boundary and are never committed, echoed, serialized with domain data, or passed in command-line arguments when a safer channel exists.
+- Off-host transfer requires the explicitly approved encrypted integration and the minimum necessary fields. Do not upload real financial data to search, AI, analytics, paste, or debugging services.
 
-No code path may write or persist sensitive financial data anywhere else: no temp
-files, no scratch directories, no plaintext side stores, no on-disk caches, no
-logs. **Decrypted bytes may exist only transiently in process memory and must
-never be written out.** A path pointer to a cleartext file on operator disk is NOT
-a valid persistent home; the bytes themselves belong in secure storage.
+## Execution safety
 
-This is the load-bearing confidentiality guarantee of the whole application. An
-early design proposed a decrypted-temp-file route for subprocess agents and
-framed off-host upload as a tunable boundary; the operator rejected it outright —
-removing sensitive financial data from secure storage, by temp file or off-host,
-is never acceptable, and categorically unacceptable for gestors or serious
-professional use.
+- Tests use synthetic or irreversibly anonymized data. A production-shaped fixture must still contain no real identity or secret.
+- Logs and user-visible diagnostics expose stable identifiers and remediation, not raw payloads. Redaction happens before serialization or transport.
+- Local development and automated agents must never submit, amend, sign, or otherwise write a live AEAT filing. Live remote behavior is read-only unless the operator gives explicit transaction-specific authorization through the product's guarded workflow.
+- Cleanup of decrypted material is fail-safe and verified. If a workflow cannot guarantee secure lifetime and disposal, it must refuse the operation.
 
-## Never file, never mutate remotely
-
-**Never perform live AEAT submission.** Build, validate, verify, export, and
-require human filing outside the app. Live-write paths are prohibited unless a
-future accepted ADR explicitly replaces this rule.
-
-Guard every external AEAT write surface behind explicit live-test controls; use
-`CADRUMO_LIVE_TESTS_ENABLED` for opt-in and keep dry-run behavior as the default.
-Any read-only AEAT probe is pinned to the consulta view and **fails closed** on a
-filing-tool or procedure-launcher landing.
-
-Reject tests or code paths that can file, mutate, notify or submit remotely
-without an explicit safety gate and auditable provenance.
-
-## How
-
-- **Good:** invoice and attachment bytes are written and read through the
-  content-addressed `AttachmentStore`, wrapping encrypted `Envelope` records at
-  `FINANCIAL` sensitivity via the active-bucket wrapper; a consumer reads them
-  into memory and writes nothing to disk. A model that must read a document runs
-  **on-host** (in-tree extraction or a local vision model fed in-memory base64);
-  any off-host transmission is gated behind an explicit, per-invocation,
-  default-off, gestor-barred consent acknowledgement, and never uses a
-  file-writing transport.
-- **Bad:** materialising decrypted evidence to a temp file — even
-  bounded-lifetime, mode 600, promptly removed — for a subprocess to read by
-  path; storing only a `source_path` to a cleartext file as the durable home; or
-  writing sensitive values to logs, a plaintext side store, an on-disk cache or a
-  scratch dir.
-
-Source: operator directive; ADR `2026-06-10-llm-evidence-classification-adr`.
-Companions: `aeat-ledger-contract` (evidence bytes, not links),
-`aeat-calculation-grounding` (grounding tax semantics in official sources).
+Verification covers encryption at rest, redaction, temporary-material cleanup, secret handling, and refusal of unauthorized live writes.
