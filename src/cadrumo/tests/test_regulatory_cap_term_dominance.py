@@ -70,7 +70,7 @@ _NON_REGULATORY_EXEMPTIONS: Mapping[_SiteKey, str] = {
     ("application/operations/supervisor.py", "await_terminal"): (
         "Supervisor polling backoff is a runtime scheduling bound, not a tax cap."
     ),
-    ("adapters/outbound/google/_calc_sheets_apply.py", "_condition_for_constraint"): (
+    ("adapters/outbound/google/_calc_sheets_apply_formatting.py", "_condition_for_constraint"): (
         "Spreadsheet validation presentation bounds are not tax limits."
     ),
     ("adapters/persistence/storage/attachment.py", "_merge_with_stored_manifest"): (
