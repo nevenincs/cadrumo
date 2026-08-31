@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#tui-architecture'
 date: '2026-08-30'
-modified: '2026-08-30'
+modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:72b743d9658e2f10be372437996c8776d5ccf7e0982ad45e6d087c0747b1f147'
+body_hash: 'sha256:1e33075c380e861a359430f50438a3f14ec6c83e3675dddf823b0391827c1cc2'
 step_id: 'S349'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -77,3 +77,13 @@ Drop it rather than teaching the gate to ignore part of its own data.
 The bucket grew from 76 to 87 BETWEEN the measurement and the sweep, because
 peers landed relocations in the interim. That is the argument for fixing the
 census key first (see the S350 record).
+
+UPDATE 2026-08-31: the third escalation is RESOLVED, and it was already resolved before it was escalated.
+
+`domain/transactions/_ids.py` was routed as evidence that a removal landed without its ratchet shrink. Measured: the shrink DID land. `family2_shim_modules.paths` holds ZERO entries, and the module name appears nowhere in the baseline outside the explanatory `_note`, which records exactly why -- the last documented bridge is gone and its consumers resolve `TransactionId` through `cadrumo.core.identity`, the canonical owner.
+
+The stale-path scan that flagged it matched the path inside that prose. A scan that reads a file as text cannot tell a live ledger entry from a note explaining why an entry was removed, and the note is the record of the fix. Parsing the JSON and walking only non-underscore keys distinguishes them; grepping the file cannot.
+
+Two escalations remain and both are genuine ownership judgements, unchanged: `registry/_handoff_paths.py` merged by `e59e8a993b`, where whether the accepted complexity is the same complexity belongs to the registry owner; and `domain/contribuyente/family.py` split by `ffccf6c4f8`, which belongs to the domain owner.
+
+Also measured in passing, and load-bearing elsewhere: `production_family1_cross_package_private_imports.sites` is at ZERO. The hard-zero baseline is real, which is why a TUI editor module importing `application/modelo/_edit_models.py` would have been the first violation rather than one among many.

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-30'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:00341726babbeb32d343e843f359204c132e8b5eb3d0baaaa36dbfb65c3dbdfa'
+body_hash: 'sha256:c0a94e644cb5896aedec57abedacfcfb785632ed7a82d654e57736788a288595'
 related: []
 ---
 
@@ -2563,3 +2563,40 @@ Re-attested through the owning edit verb after this session's findings were
 appended by hand, so the body fingerprint matches its stamp.
 
 Re-attested through the owning edit verb; body fingerprint matches its stamp.
+
+### Correction 2026-08-31: two absence claims in this audit were the pattern, not the tree
+
+Two findings recorded earlier today asserted that something did not exist. Both
+were wrong, and both failed the same way: an empty search result was read as
+absence in the CODE when it was absence in the PATTERN or the PATH searched.
+
+The first claimed the Google Sheets export is not a registered operation. It is
+-- `GOOGLE_SHEETS_EXPORT_OPERATION_DEFINITION_ID` at
+`application/export/google_operation.py:66`, with phases, a definition builder
+and a registration builder. The search grepped the literal `definition_id="..."`
+kwarg form, which is what TEST fixtures use, while every real registration
+builds an `OperationDefinition` from a module-level constant. The same finding
+also claimed no censal path submits through the supervisor, having read
+`entrypoints/cli/_config/_censo_transport.py` and never opened
+`entrypoints/censal_review.py`, where the submission is.
+
+The second claimed the edit contract has no public defining module, blocking the
+C3 editor. `application/modelo/edit_contract.py` is exactly that module and says
+so in its docstring. The accurate finding is narrower and more useful: it
+publishes four symbols and deliberately withholds the intent and submission
+family, on the stated premise that no consumer outside the package addresses
+them -- a premise the C3 editor would falsify. That makes the editor's
+prerequisite a DECISION about where the boundary sits, not the 63-symbol
+relocation the original finding proposed, which is the precise widening that
+docstring rejects.
+
+**The rule this yields.** A non-empty grep carries its own evidence; an empty one
+carries none. Before recording an absence, point the same pattern at an instance
+known to exist -- if it does not light up there either, the pattern is the
+finding. Cheaper still, enumerate by construction: listing the package's public
+modules would have put `edit_contract` first on the page.
+
+The cost was not a wasted search. Both wrong claims were written into plan rows
+that were correct, and a row reading "premise corrected" or "blocked" presents
+as settled, so a confident wrong correction is worse than the uncertainty it
+replaced.

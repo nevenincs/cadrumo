@@ -5,12 +5,11 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:d669b377aae49d65cbfe4f0ab0a208c60f350fe4db7ab85021ef1220054c3d69'
+body_hash: 'sha256:20d74713ed72735d9be583c87cac5b7608830ab33a3e83c070d648e9ba84c5cd'
 step_id: 'S121'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
 ---
-
 
 # Refactor the size-budget subjects in declarations.py into cohesive siblings without raising any threshold.
 
@@ -19,7 +18,6 @@ related:
 - `src/cadrumo/adapters/outbound/aeat/sede/declarations.py`
 
 ## Changes
-
 
 - `M` `src/cadrumo/adapters/outbound/aeat/sede/declarations.py`
 - `A` `src/cadrumo/adapters/outbound/aeat/sede/declarations_capture.py`

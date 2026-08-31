@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#semantic-consolidation'
 date: '2026-08-30'
-modified: '2026-08-30'
+modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:2acf0339a4517af72751a5b087a51733fa3b301fa21d7e44c1db48ce1a921a4b'
+body_hash: 'sha256:e308ba54e671c646018004ec99f42fe920062143196710af23aaa1dea8fc5df7'
 related: []
 ---
 
@@ -131,3 +131,56 @@ Nominated by a duplication-triage sweep, then confirmed here against current
 code: both implementations read in full, the contradiction with the module
 docstring located, and the divergence demonstrated by execution rather than
 inferred from the source.
+
+## Resolution
+
+The operator ruled on 2026-08-31: no two validators, merge them. The ruling
+settles the question this audit left open, and the direction was not a
+free choice -- AEAT partitions the CIF kind letters three ways, `_documents`
+already implemented that partition, and `_tax_id`'s own module docstring stated
+it correctly while the code beneath it accepted the letter form for `ABEH`. The
+laxer surface was wrong against the authority AND against its own documentation,
+so the merge target was determined rather than picked.
+
+What landed:
+
+- `_documents._validate_cif` is the sole CIF leader policy. Its control-character
+  class check moved out of the shape regex, so the three-way partition decides
+  which control forms are legal rather than a character class deciding it in
+  advance.
+- `_tax_id`'s four restated validators -- NIF, prefixed NIF, NIE, CIF -- are
+  gone, 140 lines. `validate_spanish_tax_id` now normalises, width-checks,
+  refuses an unrecognised leader, then delegates to `validate_identity`. The
+  return SHAPE is all that differs between the two surfaces, which is what the
+  module docstring always claimed.
+- The refusal divergence this audit flagged is resolved in the richer direction:
+  the plain-English message the deleted surface carried is now on every raise in
+  `_documents`, so `str(exc)` is a sentence again rather than a translation key.
+  Collapsing to the poorer payload would have degraded every consumer that logs
+  the exception.
+- `_compute_cif_check`, orphaned by the merge, is deleted.
+
+Behaviour change, deliberate: an `ABEH` CIF with a letter control is now
+REFUSED. `B1234567D` was accepted before and is not a valid CIF. One test
+asserted that acceptance as the contract -- named
+`test_validate_spanish_tax_id_accepts_abeh_letter_form`, with a docstring
+explaining the historical dual form -- and was corrected rather than worked
+around. No fixture or registry value in the tree carries an `ABEH` letter-control
+CIF, so the blast radius was that single assertion.
+
+Two diagnostics sharpened as a consequence, both re-pinned with their reason:
+`W1234567L` now names the check letter AEAT expects instead of reporting a shape
+miss, and `A12345670` reports a wrong check DIGIT rather than the mixed-kind key
+it inherited from the laxer copy.
+
+### The gate
+
+`core/identity/tests/test_single_identity_algorithm.py` keeps it merged. It is
+structural, not a behavioural sample, because a sample cannot see a validator no
+test calls yet: each policy table and the checksum arithmetic must be declared
+once, outside prose, in the pinned authority. A third assertion refuses to let a
+rename hollow the authority out and leave the first two vacuously true.
+
+Proved by mutation from outside the repo -- a probe module restating `"ABEH"`
+reds the first arm, one recomputing `% 23` reds the second, and replacing the
+authority's own table with an equivalent expression reds the anti-vacuity arm.
