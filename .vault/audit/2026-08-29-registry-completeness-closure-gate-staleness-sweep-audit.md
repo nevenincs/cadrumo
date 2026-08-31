@@ -5,7 +5,7 @@ tags:
 date: '2026-08-29'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:0ddc5a37351e7fa11adb8ffd0204f7fadf7367b23b3acfe5287466c48752b367'
+body_hash: 'sha256:2a9b798ffd4c38a4b35852a4d1e18dc9563383194b99affb480c82100bf73293'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
@@ -1095,3 +1095,54 @@ discriminator is `git cat-file -e HEAD:<old path>`: present at HEAD and absent
 on disk means someone is mid-flight and the sweep is theirs to finish; absent
 in both means the breakage has LANDED and repointing is the repair, not an
 intrusion.
+
+## An import-integrity scan, and the two breakages collection cannot see
+
+After repairing the span-split consumers, the obvious question was whether any
+other relocation had landed unswept. Two static scans over all 6,667 modules
+under `src/` and `dev/`, no test run involved.
+
+**Unresolvable modules: 0.** Every first-party `import`/`from ... import`
+resolves to a module or package that exists. The span split was the only one.
+
+**Unresolvable NAMES: 2**, and both are the interesting kind, because neither
+is visible to a collection sweep -- both imports sit inside a function body, so
+they raise only when that one test runs:
+
+- `test_printed_country_name.py` imported `_normalise_printed_country_name`
+  from `establishment`. It lives in `country_vocabulary`; `establishment` only
+  calls it through that module. Repointed.
+- `dev/docs/sequences/tests/test_runner.py` imports
+  `probe_subprocess_providers` from `cadrumo.application.provisioning`. That
+  symbol is defined nowhere: commit `5d96d24034` (2026-08-07) is titled "delete
+  the subprocess provider probe and its doctor branch". The consumer has been
+  broken for over three weeks. NOT repaired here -- there is no target to
+  repoint to, and deciding what the test should assert once the probe is
+  deliberately gone is the deleting lane's call, not a mechanical fix.
+
+### The distinction worth keeping
+
+A module-level bad import kills COLLECTION, and pytest interrupts the whole run,
+so it is loud and total. A function-local bad import kills ONE TEST at run time
+and reads, in a failure summary, like a product defect rather than an unswept
+relocation. The second is strictly harder to attribute and survives far longer
+-- three weeks here, against the span split's hours.
+
+### Two scanner traps, both hit and both fixed before reporting
+
+The first pass reported **210** unresolvable modules. All false: for a package
+`__init__.py`, the current package is the file's OWN module, not its parent, so
+level-1 relative imports were resolved one level too high and every package
+initialiser's own submodules read as missing.
+
+The second pass reported **1,639** unresolvable names. Also false: PEP 695
+`type X = ...` produces an `ast.TypeAlias` node, which a collector written
+around `Assign`/`AnnAssign`/`FunctionDef`/`ClassDef` silently drops -- so every
+modern type alias in the tree looked undefined. Handling `TypeAlias` took it to
+12, of which 9 were dunder module attributes (`__doc__`, `__path__`) the
+scanner does not model.
+
+210, then 1,639, then 2. A scanner's first number is a measurement of the
+scanner. Neither figure was reportable, and the tell in both cases was the same:
+a defect count far too large to be consistent with a tree whose tests mostly
+pass.
