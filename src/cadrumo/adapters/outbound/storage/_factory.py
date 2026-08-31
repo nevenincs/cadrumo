@@ -46,10 +46,10 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from google.auth.credentials import Credentials
 
-from ....application.operator_actions import no_action_precondition_verdict
-from ....core import GoogleCredentialSourceKind
-from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
+from ....application.operator_actions._preconditions import no_action_precondition_verdict
 from ....core.config import Settings, load_settings
+from ....core.google_credential_source import GoogleCredentialSourceKind
+from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ._protocol import StorageProvider
 from ._records import ProviderKind
 from .errors import OutboundStorageError, OutboundStorageValidationError
@@ -256,7 +256,7 @@ def get_storage_provider(
     profile = _resolve_profile()
 
     if kind is ProviderKind.LOCAL_FILESYSTEM:
-        from ...persistence.storage.bucket import bucket_paths
+        from ...persistence.storage.bucket._layout import bucket_paths
         from ._local import LocalFileSystemProvider
 
         root = bucket_paths(settings_resolved.cadrumo_local_storage_root, profile).blobs_dir

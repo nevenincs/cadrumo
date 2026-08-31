@@ -33,8 +33,8 @@ from pydantic import TypeAdapter
 
 from ......domain.transactions.enums import TransactionDirection
 from ......tests import FIXTURES_DIR
-from .. import PdfN26Provider
 from .._detection import detect_provider
+from .._pdf_n26 import PdfN26Provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 

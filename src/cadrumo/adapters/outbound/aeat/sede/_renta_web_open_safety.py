@@ -39,8 +39,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from playwright.async_api import Dialog, Locator, Page, Request
 
-from .....core.text_fold import fold_diacritics
 from .....core.logging import get_logger
+from .....core.text_fold import fold_diacritics
 from .....domain.calculations.registry.remote_state_guard import AEAT_WRITE_FORBIDDEN_VERB_TOKENS
 from .errors import SedeFailureMode, SedeNavigationError
 

@@ -33,18 +33,17 @@ import pytest
 from .....core.logging import get_logger
 from .....tests.live_gate import requires_live_enabled, requires_live_google_enabled
 from .....tests.profile_capsule import open_test_profile_session
-from .. import (
+from .._factory import get_storage_provider
+from .._mirror_manifest import (
     REMOTE_MIRROR_MANIFEST_NAMESPACE,
-    OutboundStorageNotFoundError,
-    RemoteMirrorNamespaceManifest,
-    RemoteMirrorObjectManifest,
-    StorageProvider,
-    get_storage_provider,
     inspect_remote_mirror_download,
     inspect_remote_mirror_upload,
     put_remote_mirror_namespace_manifest,
     remote_mirror_object_key_hmac,
 )
+from .._protocol import StorageProvider
+from .._records import RemoteMirrorNamespaceManifest, RemoteMirrorObjectManifest
+from ..errors import OutboundStorageNotFoundError
 
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_outbound_adapter]
 

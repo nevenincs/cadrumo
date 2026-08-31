@@ -23,8 +23,8 @@ from typing import ClassVar, override
 import pytest
 from pydantic import BaseModel, ConfigDict
 
+from ......core.classification.policies import SensitivityClass
 from ......core.config import Settings
-from ... import SensitivityClass
 from ...sql import Base, SecureObjectRepository
 from ...sql.engine import create_engine_from_settings
 from .._secure_repository import SecureBoundRepository

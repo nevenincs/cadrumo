@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from ....application.live.notification_ports import NotificationDocumentProtocol
-from ....domain.notifications import SancionLiquidacion
-from ..pdf import extract_pages_text_from_bytes
+from ....domain.notifications.sancion import SancionLiquidacion
+from ..pdf._pdfplumber import extract_pages_text_from_bytes
 from ._sancion import parse_sancion_document
 from .errors import NotificacionParseError, SancionParseError
 

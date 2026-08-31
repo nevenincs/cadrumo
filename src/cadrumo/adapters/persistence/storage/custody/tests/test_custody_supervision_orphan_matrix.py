@@ -29,9 +29,9 @@ from uuid import UUID
 import pytest
 
 from ......application.user_profile.custody_ports import create_profile_custody_registration_material
-from ......core import pid_is_alive
 from ......core.config import Settings
 from ......core.hashing import canonical_json_bytes
+from ......core.pid_liveness import pid_is_alive
 from ..kdf_supervision import unlock_profile_custody
 from ..records import ProfileCustodyEnvelope
 from ..sentinel_contract import ProfileCustodySentinelRecord

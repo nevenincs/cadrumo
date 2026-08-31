@@ -21,7 +21,7 @@ from uuid import NAMESPACE_DNS, UUID, uuid1, uuid3, uuid4, uuid5
 
 import pytest
 
-from ......core import StorageCategory
+from ......core.storage_taxonomy import StorageCategory
 from ...errors import PathContainmentError
 from ..capsule_discovery import _canonical_profile_id
 from ..paths import profile_custody_directory_name, profile_custody_path

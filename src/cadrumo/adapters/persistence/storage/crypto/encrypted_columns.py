@@ -24,9 +24,9 @@ payload AEAD associated data so ciphertext copied across rows fails
 authentication.
 
 All decorators and helpers resolve key bytes through
-:func:`~adapters.persistence.storage.master_key._active_session.get_active_master_key`
+:func:`~adapters.persistence.storage.master_key.active_session.get_active_master_key`
 on the active
-:class:`~adapters.persistence.storage.master_key._bucket_session.BucketSession`.
+:class:`~adapters.persistence.storage.master_key.bucket_session.BucketSession`.
 Tests use :class:`~cadrumo.tests.master_key.EphemeralMasterKeyProvider`,
 whose context manager enters a real session without touching the OS
 keychain or file backend.
@@ -57,7 +57,7 @@ from ..errors import (
 from ..errors import (
     storage_validation_error as _storage_validation_error,
 )
-from ..master_key import get_active_hmac_subkey, get_active_master_key
+from ..master_key.active_session import get_active_hmac_subkey, get_active_master_key
 from .aead import EncryptedBlob, decrypt_record, encrypt_record
 
 

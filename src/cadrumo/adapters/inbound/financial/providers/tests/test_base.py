@@ -17,14 +17,15 @@ import pytest
 from ......core.tabular import coerce_cell_text
 from ......domain.transactions.raw_transaction import RawTransaction, SourceFormat
 from ......tests import FIXTURES_DIR
-from .. import (
+from .._base import (
     BankStatementParseError,
     FinancialValidationError,
     ProviderValidation,
-    detect_provider,
+    archive_cell_text,
+    parse_amount_value,
 )
-from .._base import archive_cell_text, parse_amount_value
 from .._csv import CsvProvider
+from .._detection import detect_provider
 from .._ofx import OfxProvider
 from .._pdf_n26 import PdfN26Provider
 from .._xlsx import XlsxProvider
@@ -234,7 +235,7 @@ def test_bank_statement_parse_error_carries_structured_attributes() -> None:
 
 def test_bank_statement_parse_error_is_financial_provider_error() -> None:
     """BankStatementParseError is catchable as FinancialProviderError."""
-    from ... import FinancialProviderError
+    from ...providers._base import FinancialProviderError
 
     err = BankStatementParseError("layout drift")
     assert isinstance(err, FinancialProviderError)

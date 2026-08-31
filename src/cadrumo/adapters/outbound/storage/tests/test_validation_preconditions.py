@@ -11,12 +11,13 @@ from typing import override
 import pytest
 
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
-from .. import OutboundStorageValidationError, ProviderKind
 from .. import _factory as factory_module
 from .. import _google_drive as drive_module
 from .. import _key_validation as key_module
 from .. import _local as local_module
 from .._key_validation import assert_admissible_object_key_hmac
+from .._records import ProviderKind
+from ..errors import OutboundStorageValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

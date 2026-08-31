@@ -25,8 +25,8 @@ from typing import Any
 
 import pytest
 
-from .. import OutboundStorageIntegrityError
 from .._google_drive_metadata import _metadata_from_drive_entry
+from ..errors import OutboundStorageIntegrityError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

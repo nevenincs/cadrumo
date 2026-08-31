@@ -27,10 +27,11 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from .....core import StorageCategory, storage_location
 from .....core.identity import BucketId
 from .....core.logging import get_logger
+from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.storage_taxonomy import StorageCategory
+from .....core.storage_taxonomy_locations import storage_location
 from .errors import BucketValidationError
 
 _log = get_logger(__name__)

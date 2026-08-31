@@ -16,7 +16,8 @@ import pytest
 from ......core.optional_extras import OFX_EXTRA, optional_extra_available
 from ......domain.transactions.enums import TransactionDirection
 from ......tests import FIXTURES_DIR
-from .. import InvalidFinancialSourceError, OfxProvider
+from .._base import InvalidFinancialSourceError
+from .._ofx import OfxProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 

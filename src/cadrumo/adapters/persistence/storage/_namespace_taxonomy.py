@@ -22,7 +22,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-from ....core import StorageCustodyProfile
+from ....core.storage_taxonomy import StorageCustodyProfile
 
 
 class StorageNamespaceScope(StrEnum):

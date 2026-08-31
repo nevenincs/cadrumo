@@ -9,10 +9,6 @@ from uuid import UUID
 
 import pytest
 
-from ......core import (
-    StorageCategory,
-    storage_location,
-)
 from ......core.credentials import (
     PROFILE_PASSWORD_MAX_SCALARS,
     PROFILE_PASSWORD_MAX_UTF8_BYTES,
@@ -20,6 +16,8 @@ from ......core.credentials import (
     ProfilePasswordRefusalReason,
     assess_profile_password,
 )
+from ......core.storage_taxonomy import StorageCategory
+from ......core.storage_taxonomy_locations import storage_location
 from ... import __all__ as storage_exports
 from .. import __all__ as custody_exports
 from ..errors import (

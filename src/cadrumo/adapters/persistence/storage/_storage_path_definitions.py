@@ -23,9 +23,10 @@ from typing import Final
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ....core import StorageCategory, storage_location
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.observability.store import ENVELOPE_FILENAME, EVENTS_FILENAME, TRACE_FILENAME
+from ....core.storage_taxonomy import StorageCategory
+from ....core.storage_taxonomy_locations import storage_location
 from ._namespace_taxonomy import StoragePathAnchor, StoragePathKind
 from .errors import NamespaceRegistryError
 

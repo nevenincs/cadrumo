@@ -21,7 +21,7 @@ from collections.abc import Iterable, Iterator, Mapping, Sequence
 from decimal import Decimal
 from typing import Any
 
-from ....application.storage.calc_sheets import (
+from ....application.storage.calc_sheets._records import (
     SheetCellAddress,
     SheetExportPlan,
     SheetFormulaCell,
@@ -29,10 +29,9 @@ from ....application.storage.calc_sheets import (
     SheetValueCell,
     TabName,
     column_letters_to_index,
-    evidence_table,
-    guide_stamps,
 )
-from ....core.decimal import coerce_decimal
+from ....application.storage.calc_sheets._workbook_export import evidence_table, guide_stamps
+from ....core.decimal._coerce import coerce_decimal
 
 #: Matches the single-cell anchor of a ``values.batchUpdate`` entry range:
 #: ``'Tab Name'!B4``. Every builder in this module emits an anchor plus a

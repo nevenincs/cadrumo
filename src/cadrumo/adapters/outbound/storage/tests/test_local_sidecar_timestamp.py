@@ -21,8 +21,8 @@ from pathlib import Path
 
 import pytest
 
-from .. import StorageCorruptionError
 from .._local import LocalFileSystemProvider
+from ..errors import StorageCorruptionError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

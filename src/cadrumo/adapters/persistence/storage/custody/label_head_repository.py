@@ -8,8 +8,9 @@ from uuid import UUID
 
 from pydantic import ValidationError
 
-from .....core import StorageCategory, storage_location
 from .....core.paths import effective_storage_root
+from .....core.storage_taxonomy import StorageCategory
+from .....core.storage_taxonomy_locations import storage_location
 from .capsule_records import ProfileCustodyCapsuleLabel
 from .errors import ProfileCustodyRecordError
 from .filesystem import (

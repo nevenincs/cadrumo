@@ -15,7 +15,7 @@ from decimal import Decimal
 import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .. import SPANISH_AMOUNT_GROUP, LabelHit, apply_label_regex, parse_spanish_decimal
+from .._label_regex import SPANISH_AMOUNT_GROUP, LabelHit, apply_label_regex, parse_spanish_decimal
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 _TEST_LABEL_CASILLA: CasillaId = validated_casilla_id("01", surface="_TEST_LABEL_CASILLA")

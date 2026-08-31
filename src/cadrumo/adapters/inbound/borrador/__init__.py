@@ -42,15 +42,4 @@ Examples:
 
 from __future__ import annotations
 
-from ._parser import parse_borrador
-from ._schema import ArtefactKind, BorradorExtractionProfile, BorradorParseMode, InboundBorradorObservation
-from .errors import BorradorParseError
-
-__all__ = [
-    "ArtefactKind",
-    "BorradorExtractionProfile",
-    "BorradorParseError",
-    "BorradorParseMode",
-    "InboundBorradorObservation",
-    "parse_borrador",
-]
+__all__: tuple[str, ...] = ()

@@ -42,11 +42,11 @@ from types import TracebackType
 import pytest
 from pydantic import BaseModel
 
-from ......core.classification import SensitivityClass
+from ......core.classification.policies import SensitivityClass
 from ......core.external_constants import UTF_8_ENCODING
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ...errors import ClassificationError, EnvelopeVersionError, StorageValidationError
-from ...master_key import BucketSession
+from ...master_key.bucket_session import BucketSession
 from .._envelope import (
     CIPHER_ENVELOPE_SCHEMA_VERSION,
     AeadAlgorithm,

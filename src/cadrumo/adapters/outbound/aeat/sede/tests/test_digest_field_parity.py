@@ -29,8 +29,8 @@ from typing import Any
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from ......core.period import Period
 from ......core.identity import ContentDigest
+from ......core.period import Period
 from ......tests.aeat_literal_fixtures import (
     ACCESO_DR_DETAIL_PATH_FIXTURE,
     KATA_COTEJO_DOC_ID_PATH_FIXTURE,

@@ -18,7 +18,8 @@ from pathlib import Path
 
 import pytest
 
-from .....core import STORAGE_TAXONOMY, StorageCategory, StorageScope, storage_location
+from .....core.storage_taxonomy import StorageCategory, StorageScope
+from .....core.storage_taxonomy_locations import STORAGE_TAXONOMY, storage_location
 from .._storage_path_definitions import (
     BUCKET_BLOBS_DIRNAME,
     BUCKET_DATABASE_FILENAME,
@@ -137,7 +138,7 @@ def test_moving_the_declaration_inward_introduced_no_upward_import() -> None:
     that made the fix worse than the defect it removed -- and it would have
     looked, in a diff, almost exactly like the change that was made.
     """
-    declaration = _DEFINITIONS_MODULE.parents[3] / "core" / "_storage_taxonomy.py"
+    declaration = _DEFINITIONS_MODULE.parents[3] / "core" / "storage_taxonomy.py"
     assert declaration.is_file(), f"the core declaration must be where this test looks: {declaration}"
 
     tree = ast.parse(declaration.read_text(encoding="utf-8"))

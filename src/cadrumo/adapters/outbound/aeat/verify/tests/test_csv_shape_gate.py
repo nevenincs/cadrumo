@@ -16,7 +16,7 @@ import pytest
 from ......core.aeat_csv import is_aeat_csv
 from ......core.config import Settings
 from ......domain.justificante import JustificanteVerificationError
-from .. import _VERIFY_HOST, _response_confirms_valid_csv, verify_csv
+from ..contract import _VERIFY_HOST, _response_confirms_valid_csv, verify_csv
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

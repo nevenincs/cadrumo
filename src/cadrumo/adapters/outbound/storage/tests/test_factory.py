@@ -16,24 +16,24 @@ from pathlib import Path
 
 import pytest
 
-from .....core import GoogleCredentialSourceKind
-from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....core.config import override_settings
 from .....core.errors.error_codes import resolve_error_message
+from .....core.google_credential_source import GoogleCredentialSourceKind
 from .....core.i18n import tr
+from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....tests.env_scope import scoped_env_var
 from .....tests.secure_sql import isolated_runtime_profile
-from ...google.impersonation import GoogleAuthAdcUnavailableError, GoogleCredentialSourceSelection, GoogleImpersonationConfig
+from ...google.impersonation import (
+    GoogleAuthAdcUnavailableError,
+    GoogleCredentialSourceSelection,
+    GoogleImpersonationConfig,
+)
 from ...google.records import DriveConfig, OAuthClient
 from ...google.session_store import save_client, save_credential_source_selection, save_drive_config
-from .. import (
-    OutboundStorageValidationError,
-    ProviderKind,
-    StorageProvider,
-    build_google_credentials,
-    get_storage_provider,
-    resolve_drive_root_folder_id,
-)
+from .._factory import build_google_credentials, get_storage_provider, resolve_drive_root_folder_id
+from .._protocol import StorageProvider
+from .._records import ProviderKind
+from ..errors import OutboundStorageValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

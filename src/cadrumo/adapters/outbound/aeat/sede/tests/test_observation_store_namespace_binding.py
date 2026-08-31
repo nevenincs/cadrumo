@@ -29,10 +29,10 @@ import pytest
 from pydantic import AnyHttpUrl
 from sqlalchemy import select
 
-from ......core.period import Period
 from ......core.config import Settings
+from ......core.period import Period
 from ......tests.secure_sql import isolated_runtime_profile
-from .....persistence.storage import (
+from .....persistence.storage._secure_object_namespaces import (
     AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
     AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE,
     AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE,

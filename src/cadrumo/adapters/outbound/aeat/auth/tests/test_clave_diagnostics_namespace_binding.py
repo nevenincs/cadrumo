@@ -30,10 +30,8 @@ from sqlalchemy import select
 
 from ......core import external_constants
 from ......tests.secure_sql import isolated_runtime_profile
-from .....persistence.storage import (
-    CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE,
-    secure_object_repository_for_active_bucket,
-)
+from .....persistence.storage._secure_object_namespaces import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE
+from .....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from .....persistence.storage.sql import SecureObjectRow
 from .....persistence.storage.sql.session import session_scope
 from ..clave_movil_support import DIAGNOSTIC_NAMESPACE, mint_diagnostic_id

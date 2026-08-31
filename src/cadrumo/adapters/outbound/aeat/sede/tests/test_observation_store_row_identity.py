@@ -30,8 +30,8 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl
 
-from ......core.period import Period
 from ......core.config import Settings
+from ......core.period import Period
 from ......tests.secure_sql import isolated_runtime_profile
 from ..errors import SedeValidationError
 from ..iva_compensation_wallet import IVA_COMPENSATION_WALLET_URL

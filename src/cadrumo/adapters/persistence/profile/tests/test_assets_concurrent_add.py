@@ -23,12 +23,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....domain.contribuyente.assets import (
-    AssetClass,
-    AssetRecord,
-    AssetRecordError,
-    AssetsLedgerDocument,
-)
+from .....domain.contribuyente.assets.records import AssetClass, AssetRecord, AssetRecordError, AssetsLedgerDocument
 from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ..assets import AssetsLedgerRepository
 

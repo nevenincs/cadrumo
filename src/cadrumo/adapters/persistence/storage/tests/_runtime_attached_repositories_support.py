@@ -25,16 +25,17 @@ from .....adapters.persistence.profile.modelos_work_units import WorkUnitCatalog
 from .....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from .....application.auth.apoderado_service import ApoderadoService
 from .....application.auth.diagnostics import list_auth_diagnostics
-from .....application.calculations import (
+from .....application.calculations.iva_compensation_history import IvaCompensationHistoryRepository
+from .....application.calculations.observations_repository import (
     CalculationObservationRepository,
-    IvaCompensationHistoryRepository,
     IvaWalletDecisionRepository,
 )
 from .....application.diagnostics import (
     preview_quarantine_unreadable_secure_objects,
     secure_object_unreadable_total,
 )
-from .....application.filing import ModeloHistory, ModeloHistoryEntry, ModeloHistoryRepository
+from .....application.filing._history_models import ModeloHistory, ModeloHistoryEntry
+from .....application.filing._history_repository import ModeloHistoryRepository
 from .....application.live.borrador_100 import (
     Borrador100Snapshot,
     Borrador100SnapshotRepository,
@@ -50,19 +51,32 @@ from .....application.repair_integrity import (
 from .....application.workflow.persistence import WorkflowRunRepository, WorkflowStateRepository
 from .....application.workflow.run_models import WorkflowResult, WorkflowStage, WorkflowStep
 from .....application.workflow.state_models import DeclaracionPointer, WorkflowState
-from .....core import IvaCompensationStateProvenance
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.period import Period as _Period
+from .....core.classification.policies import SensitivityClass
 from .....core.config import override_settings
+from .....core.iva_compensation_provenance import IvaCompensationStateProvenance
+from .....core.period import Period as _Period
 from .....domain.attachments.errors import AttachmentNotFoundError
-from .....domain.buckets.event import BucketEvent, BucketEventHistoryCatalogue, BucketEventObjectType, BucketEventType, derive_bucket_event_id
+from .....domain.buckets.event import (
+    BucketEvent,
+    BucketEventHistoryCatalogue,
+    BucketEventObjectType,
+    BucketEventType,
+    derive_bucket_event_id,
+)
 from .....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from .....domain.categories.spending_category import SpendingCategory
-from .....domain.contribuyente.assets import AmortizacionEntry, AmortizacionLedger, AssetClass, AssetRecord
-from .....domain.contribuyente.inventory import InventoryLedger, ValuationMethod
+from .....domain.contribuyente.assets.records import AmortizacionEntry, AmortizacionLedger, AssetClass, AssetRecord
+from .....domain.contribuyente.inventory.records import InventoryLedger, ValuationMethod
 from .....domain.filing.amendment import AmendmentKind, CasillaChange, ModeloComplementaria, make_amendment_id
-from .....domain.filing.schema import ModeloDraft, ModeloValue, ModeloValueKind, compute_modelo_draft_id, registry_schema_version
+from .....domain.filing.schema import (
+    ModeloDraft,
+    ModeloValue,
+    ModeloValueKind,
+    compute_modelo_draft_id,
+    registry_schema_version,
+)
 from .....domain.identifiers import ModeloIdentifier
 from .....domain.invoices.enums import IvaRate, PaymentStatus
 from .....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
@@ -70,27 +84,33 @@ from .....domain.iva.classification import InvoiceKind
 from .....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from .....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from .....domain.justificante import Justificante
-from .....domain.modelos.codes import ModeloCode
-from .....domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind, ModeloRecord, ModeloRecordCatalogue, derive_filing_record_id
-from .....domain.modelos.verification_report import VerificationCompletenessStatus, VerificationReport, VerificationReportCatalogue, derive_verification_report_id
-from .....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
 from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from .....domain.submission import (
-    ModeloDraftStatus,
-    ModeloPresentado,
-    SubmissionAttempt,
-    SubmissionStatus,
-    make_submission_id,
+from .....domain.modelos.codes import ModeloCode
+from .....domain.modelos.filing_record import (
+    ExternalEvidence,
+    ExternalEvidenceKind,
+    ModeloRecord,
+    ModeloRecordCatalogue,
+    derive_filing_record_id,
 )
+from .....domain.modelos.verification_report import (
+    VerificationCompletenessStatus,
+    VerificationReport,
+    VerificationReportCatalogue,
+    derive_verification_report_id,
+)
+from .....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
+from .....domain.submission._models import ModeloPresentado, SubmissionAttempt, SubmissionStatus, make_submission_id
+from .....domain.submission._protocols import ModeloDraftStatus
 from .....domain.transactions.enums import TransactionDirection
 from .....domain.transactions.models import Transaction, TransactionCatalogue
 from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from .....domain.usage_ratios import UsageRatioProfile
+from .....domain.usage_ratios._model import UsageRatioProfile
 from .....llm.models import LLMProvider, LLMRequest, LLMResponse, UsageRecord
 from .....tests.aeat_literal_fixtures import (
     AEAT_HOST_SUFFIX_EXPECTED,
@@ -105,17 +125,22 @@ from ....outbound.aeat.auth import session_store as _session_store
 from ....outbound.aeat.sede.errors import ExpedienteNotFoundError
 from ....outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
 from ....outbound.aeat.sede.schema import FiledDeclaracionArtefact
-from ....outbound.google.records import DriveConfig, OAuthClient, OAuthMetadata, OAuthToken, REQUIRED_SCOPES
 from ....outbound.google import session_store as google_session_store
-from ....outbound.llm import EvidenceConsentLedger, LLMCache, LLMRunTelemetryRecorder, UsageRecorder
+from ....outbound.google.records import REQUIRED_SCOPES, DriveConfig, OAuthClient, OAuthMetadata, OAuthToken
+from ....outbound.llm._cache import LLMCache
+from ....outbound.llm._consent_ledger import EvidenceConsentLedger
+from ....outbound.llm._run_telemetry import LLMRunTelemetryRecorder
+from ....outbound.llm._usage import UsageRecorder
 from ...profile.assets import load_amortizacion_ledger, load_assets, save_amortizacion_ledger, save_assets
 from ...profile.inventory import load_inventory, save_inventory
 from ...profile.recipient_replay_guard import RecipientReplayGuardRepository
 from ...profile.submission import SubmissionRepository
 from ...profile.usage_ratios import load_usage_ratios, save_usage_ratios
-from .. import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE, AttachmentStore, SensitivityClass, StorageValidationError
-from .._secure_object_namespaces import LLM_USAGE_NAMESPACE
-from ..master_key import BucketSession, activate_session
+from .._secure_object_namespaces import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE, LLM_USAGE_NAMESPACE
+from ..attachment import AttachmentStore
+from ..errors import StorageValidationError
+from ..master_key.active_session import activate_session
+from ..master_key.bucket_session import BucketSession
 from ..runtime_repository import secure_object_repository_for_active_bucket
 from ..sql.engine import dispose_engine
 from .registered_bucket import ensure_registered_bucket

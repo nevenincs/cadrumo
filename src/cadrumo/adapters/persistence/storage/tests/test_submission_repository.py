@@ -11,22 +11,16 @@ from datetime import UTC, datetime
 
 import pytest
 
-from .....core import StorageCategory, storage_path
+from .....core.classification.policies import SensitivityClass
 from .....core.period import Period
-from .....domain.submission import (
-    ModeloPresentado,
-    SubmissionAttempt,
-    SubmissionStatus,
-    make_submission_id,
-)
+from .....core.storage_taxonomy import StorageCategory
+from .....core.storage_taxonomy_locations import storage_path
+from .....domain.submission._models import ModeloPresentado, SubmissionAttempt, SubmissionStatus, make_submission_id
 from .....tests.secure_sql import TestRuntimeProfile
 from ...profile.submission import (
     SubmissionRepository,
 )
 from ...tests.runtime_profile_fixture import _runtime_profile
-from .. import (
-    SensitivityClass,
-)
 from ..errors import ClassificationError
 from ..sql.secure_objects import SecureObjectRepository
 
@@ -172,7 +166,7 @@ class TestClassificationGate:
         assert repo.load(filing.submission_id) == filing
 
     def test_foreign_class_object_refused(self, repo: SubmissionRepository) -> None:
-        from .. import Envelope
+        from ..envelope._envelope import Envelope
 
         filing = _make_filing()
         bad = Envelope[ModeloPresentado](

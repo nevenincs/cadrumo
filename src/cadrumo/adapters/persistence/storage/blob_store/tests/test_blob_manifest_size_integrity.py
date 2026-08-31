@@ -24,7 +24,7 @@ from pathlib import Path
 
 import pytest
 
-from ......core.classification import SensitivityClass
+from ......core.classification.policies import SensitivityClass
 from ......core.external_constants import UTF_8_ENCODING
 from ...errors import BlobIntegrityError
 from .._blob_store import EncryptedBlobStore

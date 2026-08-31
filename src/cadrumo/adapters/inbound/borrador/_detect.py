@@ -14,7 +14,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from ._parsers import extract_pages_text
+from ._parsers._pdfplumber_backend import extract_pages_text
 from ._schema import ArtefactKind
 from .errors import ArtefactNotRecognisedError
 

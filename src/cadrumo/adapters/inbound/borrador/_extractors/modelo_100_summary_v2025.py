@@ -29,8 +29,8 @@ from pathlib import Path
 from typing import ClassVar
 
 from .....core.aeat_csv import normalise_aeat_csv
-from .....core.modelo import Modelo
 from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.modelo import Modelo
 from .....core.time.clock import now
 from ...pdf import (
     SPANISH_AMOUNT_GROUP,

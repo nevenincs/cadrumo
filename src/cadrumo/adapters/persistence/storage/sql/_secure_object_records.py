@@ -9,11 +9,11 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, NonNegativeInt
 
-from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from .....core.classification import SensitivityClass
+from .....core.classification.policies import SensitivityClass
 from .....core.identity import ContentDigest
+from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 # Every digest-shaped column below is written by ``core.hashing.sha256_hex``
 # (directly, or via ``derive_revision_id``), so the canonical
@@ -45,7 +45,7 @@ class SecureObjectMetadata(BaseModel):
     classification: str = Field(min_length=1)
     schema_version: int = Field(ge=1)
     written_at: datetime
-    byte_length: int = Field(ge=0)
+    byte_length: NonNegativeInt
 
 
 class SecureObjectDeletion(BaseModel):
@@ -76,7 +76,7 @@ class SecureObjectUnreadable(BaseModel):
     model_config = _STRICT_FROZEN
 
     namespace: str = Field(min_length=1)
-    row_id: int = Field(ge=0)
+    row_id: NonNegativeInt
     object_key: bytes
     classification: str = Field(min_length=1)
     schema_version: int = Field(ge=1)
@@ -94,7 +94,7 @@ class SecureObjectRawRow(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    row_id: int = Field(ge=0)
+    row_id: NonNegativeInt
     namespace: str = Field(min_length=1)
     object_key: bytes
     classification: str = Field(min_length=1)
@@ -118,8 +118,8 @@ class SecureObjectNamespaceIntegrity(BaseModel):
     model_config = _STRICT_FROZEN
 
     namespace: str = Field(min_length=1)
-    readable: int = Field(ge=0)
-    unreadable: int = Field(ge=0)
+    readable: NonNegativeInt
+    unreadable: NonNegativeInt
 
 
 class SecureObjectDecryptabilityRow(BaseModel):
@@ -128,7 +128,7 @@ class SecureObjectDecryptabilityRow(BaseModel):
     model_config = _STRICT_FROZEN
 
     namespace: str = Field(min_length=1)
-    row_id: int = Field(ge=0)
+    row_id: NonNegativeInt
     object_key: bytes
     classification: str = Field(min_length=1)
     schema_version: int = Field(ge=1)

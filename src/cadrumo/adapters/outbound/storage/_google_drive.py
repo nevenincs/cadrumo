@@ -37,7 +37,7 @@ import io
 from collections.abc import Iterator, Mapping
 from typing import Any
 
-from ....application.operator_actions import no_action_precondition_verdict
+from ....application.operator_actions._preconditions import no_action_precondition_verdict
 from ....core.config import FORMER_PRODUCT_GOOGLE_DRIVE_VAULT_FOLDER_NAME, load_settings
 from ....core.external_constants import BINARY_MIME_TYPE as _BINARY_MIME_TYPE
 from ....core.hashing import sha256_hex

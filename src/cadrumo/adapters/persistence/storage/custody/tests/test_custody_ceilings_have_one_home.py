@@ -180,7 +180,7 @@ def test_the_storage_scan_reaches_the_crypto_module() -> None:
 
     assert "crypto/aead.py" in modules
     assert "custody/records.py" in modules
-    assert "master_key/_bucket_session.py" in modules
+    assert "master_key/bucket_session.py" in modules
 
 
 def _defining_function_modules(name: str) -> tuple[str, ...]:

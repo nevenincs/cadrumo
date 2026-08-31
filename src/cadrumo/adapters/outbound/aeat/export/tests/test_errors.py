@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from ......core.access_gate import LiveSubmitForbiddenError
+from ......core.access_gate.errors import LiveSubmitForbiddenError
 from ......core.errors.hierarchy import CadrumoError
-from ......domain.submission import SubmissionError, SubmissionPreflightError
+from ......domain.submission.errors import SubmissionError, SubmissionPreflightError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -21,9 +21,9 @@ def test_every_error_inherits_cadrumo_error() -> None:
 
 
 def test_export_errors_are_canonical_access_gate_errors() -> None:
-    from ......core.access_gate import LiveSubmitForbiddenError as CoreLiveSubmitForbiddenError
-    from ......domain.submission import SubmissionError as DomainSubmissionError
-    from ......domain.submission import SubmissionPreflightError as DomainSubmissionPreflightError
+    from ......core.access_gate.errors import LiveSubmitForbiddenError as CoreLiveSubmitForbiddenError
+    from ......domain.submission.errors import SubmissionError as DomainSubmissionError
+    from ......domain.submission.errors import SubmissionPreflightError as DomainSubmissionPreflightError
 
     assert LiveSubmitForbiddenError is CoreLiveSubmitForbiddenError
     assert SubmissionError is DomainSubmissionError

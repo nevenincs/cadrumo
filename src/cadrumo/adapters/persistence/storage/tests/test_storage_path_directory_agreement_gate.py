@@ -42,8 +42,8 @@ from typing import Final
 
 import pytest
 
-from .....core.storage_taxonomy_locations import storage_location
 from .....core.storage_taxonomy import StorageCategory
+from .....core.storage_taxonomy_locations import storage_location
 from .....tests import literal_directory_runs
 from .._namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from .._namespace_taxonomy import StoragePathAnchor, StoragePathKind

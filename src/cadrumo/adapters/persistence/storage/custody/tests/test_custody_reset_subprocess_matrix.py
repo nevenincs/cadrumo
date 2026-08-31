@@ -35,7 +35,8 @@ _LEGACY_BUCKET_ID = "33333333-3333-4333-8333-333333333333"
 _PROFILE_COMPOSITION_CHILD = r"""
 from contextlib import ExitStack
 
-from cadrumo.adapters.persistence.storage import build_profile_custody_port, build_profile_login_session_port
+from cadrumo.adapters.persistence.storage._profile_custody import build_profile_custody_port
+from cadrumo.adapters.persistence.storage._profile_login_session import build_profile_login_session_port
 from cadrumo.application.user_profile.custody_ports import bind_profile_custody_port
 from cadrumo.application.user_profile.login_session_port import bind_profile_login_session_port
 

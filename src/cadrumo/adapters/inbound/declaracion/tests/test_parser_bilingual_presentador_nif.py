@@ -49,9 +49,8 @@ import pytest
 
 from .....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from .....tests import FIXTURES_DIR
-from .. import parse_declaracion
 from .._detect import detect_template_revision
-from .._parser import _extract_tax_id
+from .._parser import _extract_tax_id, parse_declaracion
 from ..errors import DeclaracionParseError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]

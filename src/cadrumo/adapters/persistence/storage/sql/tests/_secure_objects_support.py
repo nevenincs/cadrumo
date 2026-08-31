@@ -15,32 +15,14 @@ import pytest
 from pydantic import ValidationError as ValidationError
 from sqlalchemy import event as event
 
-from ......core.classification import SensitivityClass
+from ......core.classification.policies import SensitivityClass
 from ......tests.master_key import EphemeralMasterKeyProvider
-from ... import (
-    STORAGE_NAMESPACE_REGISTRY as STORAGE_NAMESPACE_REGISTRY,
-)
-from ... import (
-    WORKFLOW_STATE_NAMESPACE as WORKFLOW_STATE_NAMESPACE,
-)
-from ... import (
-    SecureObjectNamespaceDefinition as SecureObjectNamespaceDefinition,
-)
-from ... import (
-    SecureObjectNamespaceIntegrity as SecureObjectNamespaceIntegrity,
-)
-from ... import (
-    SecureObjectWrite as SecureObjectWrite,
-)
-from ... import (
-    StorageCustodyDisposition as StorageCustodyDisposition,
-)
-from ... import (
-    StorageHierarchyRegistry as StorageHierarchyRegistry,
-)
-from ... import (
-    StorageNamespaceScope as StorageNamespaceScope,
-)
+from ..._namespace_registry import STORAGE_NAMESPACE_REGISTRY as STORAGE_NAMESPACE_REGISTRY
+from ..._secure_object_namespaces import WORKFLOW_STATE_NAMESPACE as WORKFLOW_STATE_NAMESPACE
+from ..._secure_object_namespaces import SecureObjectNamespaceDefinition as SecureObjectNamespaceDefinition
+from ..._secure_object_namespaces import StorageCustodyDisposition as StorageCustodyDisposition
+from ..._secure_object_namespaces import StorageHierarchyRegistry as StorageHierarchyRegistry
+from ..._secure_object_namespaces import StorageNamespaceScope as StorageNamespaceScope
 from ...errors import (
     ClassificationError as ClassificationError,
 )
@@ -57,6 +39,8 @@ from ...errors import (
     StorageValidationError as StorageValidationError,
 )
 from ...tests.engine_bootstrap import bootstrap_sqlite_engine
+from .. import SecureObjectNamespaceIntegrity as SecureObjectNamespaceIntegrity
+from .. import SecureObjectWrite as SecureObjectWrite
 from .._secure_object_records import SecureObjectRecord as SecureObjectRecord
 from .._secure_object_records import SecureObjectUnreadable as SecureObjectUnreadable
 from ..secure_objects import (

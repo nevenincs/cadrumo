@@ -30,10 +30,11 @@ from typing import TYPE_CHECKING
 import pytest
 
 from .....core.config import Settings, override_settings
-from .._secure_object_namespaces import WORKFLOW_STATE_NAMESPACE
 from .._runtime_readiness import StorageRuntimeReadinessCode
+from .._secure_object_namespaces import WORKFLOW_STATE_NAMESPACE
 from ..errors import StorageValidationError
-from ..master_key import BucketSession, activate_session
+from ..master_key.active_session import activate_session
+from ..master_key.bucket_session import BucketSession
 from ..runtime import inspect_storage_runtime
 from .registered_bucket import publish_registration_capsule
 

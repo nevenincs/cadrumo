@@ -11,16 +11,15 @@ import pytest
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
-from .....core.period import Period
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.errors.hierarchy import CadrumoError
-from .....core.money import round_to_cents
+from .....core.money.rounding import round_to_cents
+from .....core.period import Period
 from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.justificante import PdfModeloImportError
 from .....tests import FIXTURES_DIR
 from ...pdf import source_pdf_reference_path
-from .. import parse_declaracion
-from .._parser import _extract_pages_words
+from .._parser import _extract_pages_words, parse_declaracion
 from ..errors import DeclaracionParseError, TemplateNotDetectedError
 
 pytestmark = [

@@ -24,12 +24,9 @@ from ......core.config import Settings
 from ......core.directory_scan import scan_directory
 from ......core.errors.hierarchy import SiteHealthState
 from ......tests import FIXTURES_DIR
-from .. import (
-    SiteHealthEvidence,
-    SiteHealthStatus,
-    evaluate_response,
-)
+from .._site_health import SiteHealthEvidence, SiteHealthStatus
 from .._site_health_parsers import (
+    evaluate_response,
     parse_mantenimiento_banner,
     parse_rate_limit_response,
     parse_waf_challenge,

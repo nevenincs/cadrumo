@@ -21,7 +21,8 @@ from .....tests.master_key import EphemeralMasterKeyProvider
 from .._namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from .._secure_object_namespaces import WORKFLOW_STATE_NAMESPACE
 from ..errors import StorageError, StorageValidationError
-from ..master_key import BucketSession, activate_session
+from ..master_key.active_session import activate_session
+from ..master_key.bucket_session import BucketSession
 from ..runtime_repository import secure_object_repository_for_staged_bucket
 from ..sql.secure_objects import SecureObjectWrite
 

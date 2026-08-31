@@ -35,12 +35,12 @@ from ....core.external_constants import PDF_MIME_TYPE
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....domain.attachments.enums import AttachmentSource
-from ..storage import (
+from ..storage._drive_pagination import next_drive_page_token
+from ..storage.errors import (
     OutboundStorageError,
     OutboundStorageNetworkError,
     OutboundStoragePermissionError,
     OutboundStorageValidationError,
-    next_drive_page_token,
 )
 from ._preconditions import google_terminal_refusal
 from .api import execute_request

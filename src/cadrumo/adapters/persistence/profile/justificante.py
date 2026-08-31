@@ -25,8 +25,10 @@ from __future__ import annotations
 from collections.abc import Iterator
 from typing import ClassVar, override
 
+from ....core.classification.policies import SensitivityClass
 from ....domain.justificante import Justificante
-from ..storage import JUSTIFICANTE_METADATA_NAMESPACE, SecureBoundRepository, SensitivityClass
+from ..storage._secure_object_namespaces import JUSTIFICANTE_METADATA_NAMESPACE
+from ..storage.envelope._secure_repository import SecureBoundRepository
 
 
 class JustificanteRepository(SecureBoundRepository[Justificante]):

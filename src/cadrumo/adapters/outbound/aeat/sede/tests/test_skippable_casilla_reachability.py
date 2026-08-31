@@ -24,7 +24,7 @@ from __future__ import annotations
 import pytest
 
 from ......core.casilla_value_kind import CasillaValueKind
-from ......core.resources import bundled_path
+from ......core.resources._boundary import bundled_path
 from ......domain.calculations.registry.authority import bundled_authority
 from ......domain.calculations.registry.binding_selector_utils import selector_as_dict
 from ......domain.calculations.registry.export_parse import xml_dictionary_entries

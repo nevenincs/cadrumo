@@ -35,7 +35,7 @@ corruption report ever arrives.
 
 from __future__ import annotations
 
-from ....application.operator_actions import no_action_precondition_verdict
+from ....application.operator_actions._preconditions import no_action_precondition_verdict
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from .errors import OutboundStorageIntegrityError
 

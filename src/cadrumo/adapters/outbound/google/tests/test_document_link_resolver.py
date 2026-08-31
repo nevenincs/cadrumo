@@ -22,7 +22,7 @@ import pytest
 
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....domain.attachments.enums import AttachmentSource
-from ...storage import (
+from ...storage.errors import (
     OutboundStorageError,
     OutboundStorageNetworkError,
     OutboundStoragePermissionError,

@@ -19,8 +19,8 @@ from typing import Any
 import pytest
 from sqlalchemy import text
 
-from ......core.product_identity import PRODUCT_IDENTITY
 from ......core.config import Settings
+from ......core.product_identity import PRODUCT_IDENTITY
 from ......tests.env_scope import scoped_env_var
 from ...errors import StorageError
 from .. import create_engine_from_settings, dispose_engine

@@ -16,10 +16,17 @@ from pathlib import Path
 
 import pytest
 
-from .....domain.buckets.event import BucketEvent, BucketEventHistoryCatalogue, BucketEventObjectType, BucketEventType, derive_bucket_event_id
+from .....core.classification.policies import SensitivityClass
+from .....domain.buckets.event import (
+    BucketEvent,
+    BucketEventHistoryCatalogue,
+    BucketEventObjectType,
+    BucketEventType,
+    derive_bucket_event_id,
+)
 from .....domain.buckets.event_repository import BucketEventHistoryPersistenceError
 from .....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
-from ...storage import Envelope, SensitivityClass
+from ...storage.envelope._envelope import Envelope
 from ..buckets import (
     _CATALOGUE_VERSION,
     _NAMESPACE,

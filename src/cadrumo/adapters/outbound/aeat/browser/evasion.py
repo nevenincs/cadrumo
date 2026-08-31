@@ -23,8 +23,8 @@ if TYPE_CHECKING:
     # playwright is the optional `browser` extra; this type is annotation-only.
     from playwright.async_api import BrowserContext
 
-from .....core.operator_action_enums import NoRecoveryOutcome
 from .....core.logging import get_logger
+from .....core.operator_action_enums import NoRecoveryOutcome
 from .errors import (
     BrowserEvasionError,
     BrowserFailureMode,

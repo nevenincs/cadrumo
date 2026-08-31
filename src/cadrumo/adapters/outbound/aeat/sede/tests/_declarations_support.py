@@ -15,8 +15,8 @@ from pydantic import AnyHttpUrl
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
-from ......core.casilla_value_kind import CasillaValueKind
 from ......core.casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
+from ......core.casilla_value_kind import CasillaValueKind
 from ......core.config import Settings
 from ......core.period import Period
 from ......domain.calculations.registry.authority import bundled_authority
@@ -28,7 +28,8 @@ from ......domain.calculations.registry.relations import relation_source_require
 from ......domain.calculations.registry.schema_input_kind import InputKind
 from ......tests import FIXTURES_DIR
 from .....persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
-from ...browser import Profile, opened_browser_page, shared_playwright_runtime
+from ...browser import Profile
+from ...browser._factory import opened_browser_page, shared_playwright_runtime
 from ..declarations import (
     Declaracion,
     SedeParseError,

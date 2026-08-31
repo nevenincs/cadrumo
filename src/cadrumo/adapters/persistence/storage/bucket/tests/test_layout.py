@@ -30,8 +30,9 @@ from typing import Final
 import pytest
 from pydantic import ValidationError
 
-from ......core import StorageCategory, storage_location
 from ......core.errors.error_codes import ERROR_REGISTRY, build_error_envelope
+from ......core.storage_taxonomy import StorageCategory
+from ......core.storage_taxonomy_locations import storage_location
 from ......tests.bucket_layout import provision_bucket_directory
 from .._layout import (
     BucketPaths,

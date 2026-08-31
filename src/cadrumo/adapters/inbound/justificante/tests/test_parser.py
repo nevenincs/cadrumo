@@ -20,8 +20,8 @@ import pytest
 from pydantic import AnyHttpUrl, TypeAdapter, ValidationError
 
 from .....core.aeat_csv import is_aeat_csv
-from .....core.period import Period
 from .....core.directory_scan import scan_directory
+from .....core.period import Period
 from .....domain.justificante import (
     Justificante,
     JustificanteCsvNotFoundError,
@@ -39,8 +39,8 @@ from .....tests.aeat_literal_fixtures import (
 )
 from .....tests.pdf_fixtures import text_pdf_bytes
 from ...pdf import source_pdf_reference_path
+from .._parsers.text_extraction import _TEXT_CACHE, extract_text
 from ..parser import parse_justificante, parse_justificante_bytes
-from .._parsers import _TEXT_CACHE, extract_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 

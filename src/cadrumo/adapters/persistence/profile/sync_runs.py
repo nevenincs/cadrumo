@@ -6,14 +6,16 @@ from typing import ClassVar, override
 
 from pydantic import BaseModel
 
-from ....application.storage.sync_runs import (
+from ....application.storage.sync_runs._records import (
     SyncRunRecord,
     SyncRunRecordRepositoryProtocol,
     sync_run_record_key,
 )
+from ....core.classification.policies import SensitivityClass
 from ....domain.buckets.event import BucketEvent
 from ....domain.buckets.event_repository import bucket_event_history_write
-from ..storage import SYNC_RUN_RECORDS_NAMESPACE, SecureBoundRepository, SensitivityClass
+from ..storage._secure_object_namespaces import SYNC_RUN_RECORDS_NAMESPACE
+from ..storage.envelope._secure_repository import SecureBoundRepository
 from .buckets import BucketEventHistoryRepository
 
 

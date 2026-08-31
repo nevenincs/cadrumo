@@ -21,7 +21,8 @@ from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 
 from ....core.casilla_id import CasillaId
-from ....core.decimal import AEAT_THOUSANDS_SEPARATORS, normalize_decimal_separators
+from ....core.decimal._coerce import normalize_decimal_separators
+from ....core.decimal._printed import AEAT_THOUSANDS_SEPARATORS
 
 # The thousands-separator class is NOT declared here: it is
 # :data:`~core.decimal.AEAT_THOUSANDS_SEPARATORS`, shared with the anchored

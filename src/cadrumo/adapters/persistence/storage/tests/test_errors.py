@@ -6,7 +6,7 @@ import pytest
 
 from .....core.errors.error_codes import get_registered_error_code, resolve_error_message
 from .....core.errors.hierarchy import CadrumoError
-from ..bucket import BucketError
+from ..bucket.errors import BucketError
 from ..errors import (
     DecryptionError,
     PersistenceError,
@@ -16,7 +16,7 @@ from ..errors import (
     SecureStorageError,
     StorageError,
 )
-from ..master_key import NoActiveBucketSessionError
+from ..master_key.active_session import NoActiveBucketSessionError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

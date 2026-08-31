@@ -24,10 +24,10 @@ from __future__ import annotations
 from datetime import datetime
 from enum import StrEnum
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
-from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.identity import ContentDigest
+from ....core.models import STRICT_FROZEN_CONFIG
 
 # Every identifier below is a SHA-256 hex digest produced by
 # ``core.hashing.sha256_hex``, so each is the canonical
@@ -78,7 +78,7 @@ class ProviderObjectMetadata(BaseModel):
     namespace: str = Field(min_length=1)
     object_key_hmac: str = Field(min_length=1)
     provider_object_id: str = Field(min_length=1)
-    byte_length: int = Field(ge=0)
+    byte_length: NonNegativeInt
     content_hash: str = Field(min_length=1)
     written_at: datetime
 
@@ -115,7 +115,7 @@ class RemoteMirrorObjectManifest(BaseModel):
     object_key_hmac: _ObjectKeyHmac
     classification: str = Field(min_length=1)
     schema_version: int = Field(ge=1)
-    byte_length: int = Field(ge=0)
+    byte_length: NonNegativeInt
     ciphertext_hash: _CiphertextHash
     storage_revision_id: _StorageRevisionId | None = None
     previous_storage_revision_id: _StorageRevisionId | None = None
@@ -137,7 +137,7 @@ class RemoteMirrorNamespaceManifest(BaseModel):
 
     manifest_schema_version: int = Field(ge=1)
     namespace: str = Field(min_length=1)
-    object_count: int = Field(ge=0)
+    object_count: NonNegativeInt
     latest_revision_id: _StorageRevisionId | None = None
     latest_revision_written_at: datetime | None = None
     objects: tuple[RemoteMirrorObjectManifest, ...]

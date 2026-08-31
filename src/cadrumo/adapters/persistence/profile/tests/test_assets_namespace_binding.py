@@ -25,7 +25,7 @@ from pathlib import Path
 import pytest
 from sqlalchemy import select
 
-from .....domain.contribuyente.assets import (
+from .....domain.contribuyente.assets.records import (
     AmortizacionEntry,
     AmortizacionLedger,
     AssetClass,
@@ -34,12 +34,12 @@ from .....domain.contribuyente.assets import (
     LibertadAmortizacionElection,
 )
 from .....tests.secure_sql import isolated_runtime_profile
-from ....persistence.storage import (
+from ....persistence.storage.sql import SecureObjectRow
+from ....persistence.storage.sql.session import session_scope
+from ...storage._secure_object_namespaces import (
     PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE,
     PROFILE_ASSETS_LEDGER_NAMESPACE,
 )
-from ....persistence.storage.sql import SecureObjectRow
-from ....persistence.storage.sql.session import session_scope
 from ..assets import AmortizacionLedgerRepository, AssetsLedgerRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

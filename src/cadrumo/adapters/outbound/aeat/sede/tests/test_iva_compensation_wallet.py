@@ -11,10 +11,10 @@ from urllib.parse import urlsplit
 import pytest
 from pydantic import AnyUrl
 
-from ......core.period import Period
 from ......core.config import Settings
-from ......core.decimal import AEAT_THOUSANDS_SEPARATORS
+from ......core.decimal._printed import AEAT_THOUSANDS_SEPARATORS
 from ......core.external_constants import UTF_8_ENCODING
+from ......core.period import Period
 from ......domain.calculations.registry.errors import RegistryValidationError
 from ......domain.calculations.registry.remote_state_guard import RemoteOperation, assert_remote_operation_allowed
 from ......tests.aeat_literal_fixtures import (
@@ -25,7 +25,8 @@ from ......tests.aeat_literal_fixtures import (
     aeat_url,
     configured_path,
 )
-from ...browser import Profile, opened_browser_page, shared_playwright_runtime
+from ...browser import Profile
+from ...browser._factory import opened_browser_page, shared_playwright_runtime
 from .._adapter_utils import is_aeat_auth_gate_redirect
 from .._iva_compensation_wallet_parsing import (
     IVA_COMPENSATION_WALLET_READ_POLICY,

@@ -23,11 +23,11 @@ from typing import Literal, Protocol
 
 from pydantic import BaseModel, Field
 
-from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ....core.modelo import Modelo
 from ....core.casilla_id import CasillaId
 from ....core.identity import AeatCsv, ContentDigest
-from ..pdf import ExtractedCasilla
+from ....core.modelo import Modelo
+from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ..pdf._shared import ExtractedCasilla
 
 
 class ArtefactKind(StrEnum):

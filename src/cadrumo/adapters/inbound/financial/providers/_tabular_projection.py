@@ -28,10 +28,10 @@ See Also:
 
 from __future__ import annotations
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
-from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.field_role import FieldRole
+from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.tabular import NormalizedTable
 
 #: Roles that address at most one column of a table. A source carrying two
@@ -74,7 +74,7 @@ class ProjectedCell(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    column_index: int = Field(ge=0)
+    column_index: NonNegativeInt
     header: str
     role: FieldRole
     value: str
@@ -109,7 +109,7 @@ class UnmappedColumn(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    column_index: int = Field(ge=0)
+    column_index: NonNegativeInt
     header: str
 
 

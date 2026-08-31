@@ -23,8 +23,8 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
-from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.identity import ContentDigest
+from .....core.models import STRICT_FROZEN_CONFIG
 
 
 class PortalAuthMethod(StrEnum):

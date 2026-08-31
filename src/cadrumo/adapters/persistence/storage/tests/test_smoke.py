@@ -7,14 +7,16 @@ exposes the expected error hierarchy, and that every name in
 
 from __future__ import annotations
 
+from importlib import import_module
+
 import pytest
 
 from .....core import logging
 from .....core.errors.hierarchy import CadrumoError
 from ... import storage as storage_package
-from .. import RepositoryError, StorageError
 from .. import __all__ as storage_all
 from .. import __doc__ as storage_doc
+from ..errors import RepositoryError, StorageError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -45,21 +47,37 @@ def test_public_surface_is_complete() -> None:
 
 
 def test_runtime_master_key_and_namespace_boundaries_are_public() -> None:
-    """Critical storage boundaries must be imported from the package root."""
-    expected_exports = {
-        "MasterKeyProvider",
-        "activate_session",
-        "get_active_master_key",
-        "has_active_bucket_session",
-        "inspect_bucket_storage_runtime",
-        "inspect_storage_runtime",
-        "secure_object_logical_path",
-        "StorageRuntime",
-        "StorageRuntimeReadiness",
-        "STORAGE_NAMESPACE_REGISTRY",
-        "STORAGE_PATH_DEFINITIONS",
+    """Critical storage boundaries stay public on the modules that define them.
+
+    They were previously asserted to be importable from the package root. That
+    root is now an inert namespace, so this guards the same contract read one
+    layer in: each name is public, and reachable at exactly one canonical
+    module rather than through a re-export.
+    """
+    expected_by_module = {
+        "master_key": {
+            "MasterKeyProvider",
+            "activate_session",
+            "get_active_master_key",
+            "has_active_bucket_session",
+        },
+        "runtime": {
+            "StorageRuntime",
+            "inspect_bucket_storage_runtime",
+            "inspect_storage_runtime",
+        },
+        "_namespace_registry": {
+            "STORAGE_NAMESPACE_REGISTRY",
+            "secure_object_logical_path",
+        },
+        "_runtime_readiness": {"StorageRuntimeReadiness"},
+        "_storage_path_definitions": {"STORAGE_PATH_DEFINITIONS"},
     }
 
-    assert expected_exports <= set(storage_all)
-    unresolved = sorted(name for name in expected_exports if not hasattr(storage_package, name))
-    assert not unresolved, f"declared but unresolvable boundaries: {unresolved}"
+    unresolved: list[str] = []
+    for module_name, names in expected_by_module.items():
+        module = import_module(f"cadrumo.adapters.persistence.storage.{module_name}")
+        unresolved += [f"{module_name}.{n}" for n in sorted(names) if not hasattr(module, n)]
+
+    assert not unresolved, f"declared but unresolvable boundaries: {sorted(unresolved)}"
+    assert not set(storage_all), "the storage package root is inert and must export nothing"

@@ -16,7 +16,7 @@ from datetime import date
 
 import pytest
 
-from .....application.storage.calc_sheets import build_export_plan
+from .....application.storage.calc_sheets._engine import build_export_plan
 from .....domain.calculations.registry.authority import bundled_authority
 from .._calc_sheets_apply_formatting import (
     _build_auto_filter_requests,

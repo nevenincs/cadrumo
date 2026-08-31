@@ -21,9 +21,9 @@ import pytest
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy import Engine, text
 
+from ......core.classification.policies import SensitivityClass
 from ......core.config import override_settings
 from ......tests.master_key import EphemeralMasterKeyProvider
-from ... import SensitivityClass
 from ..._runtime_readiness import StorageRuntimeReadinessCode
 from ...errors import EnvelopeVersionError, SecureObjectUnreadableError, StorageValidationError
 from ...sql import SecureObjectRepository

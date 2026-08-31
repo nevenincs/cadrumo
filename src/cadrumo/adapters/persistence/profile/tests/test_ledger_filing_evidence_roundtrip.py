@@ -8,17 +8,17 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from .....core.period import Period
 from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.period import Period
 from .....domain.calculations.registry.bindings import CasillaObservation
-from .....domain.modelos.ledger_filing_snapshot import LedgerEvidenceRow, LedgerFilingEvidence, ManualFactBasisEntry
-from .....domain.modelos.work_unit import derive_work_unit_id
 from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from .....domain.modelos.ledger_filing_snapshot import LedgerEvidenceRow, LedgerFilingEvidence, ManualFactBasisEntry
+from .....domain.modelos.work_unit import derive_work_unit_id
 from .....tests import general_m303_filing_evidence
 from .....tests.secure_objects_fixture import secure_objects
 from ...storage.sql import SecureObjectRepository
@@ -169,7 +169,7 @@ def test_ledger_evidence_negative_amount_payload_rejected_at_load(secure_objects
 
     import json as _json
 
-    from ...storage import SensitivityClass
+    from .....core.classification.policies import SensitivityClass
     from ..modelos_calculation import (
         _CALCULATION_CATALOGUE_VERSION,
         _CALCULATION_NAMESPACE,
@@ -209,7 +209,7 @@ def test_ledger_evidence_malformed_identity_payload_rejected_at_load(secure_obje
     """Persisted evidence cannot rehydrate a non-canonical contributor identity."""
     import json as _json
 
-    from ...storage import SensitivityClass
+    from .....core.classification.policies import SensitivityClass
     from ..modelos_calculation import (
         _CALCULATION_CATALOGUE_VERSION,
         _CALCULATION_NAMESPACE,

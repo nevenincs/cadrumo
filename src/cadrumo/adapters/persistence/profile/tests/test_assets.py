@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from .....domain.contribuyente.assets import (
+from .....domain.contribuyente.assets.records import (
     AmortizacionEntry,
     AmortizacionLedger,
     AssetClass,

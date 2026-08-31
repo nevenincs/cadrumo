@@ -8,8 +8,8 @@ from decimal import Decimal
 
 import pytest
 
-from .....core.period import Period
 from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.period import Period
 from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.bindings import CasillaObservation as CasillaObservation
 from .....domain.calculations.registry.bindings import RegistryModeloObservation as RegistryModeloObservation
@@ -23,7 +23,8 @@ from .....domain.calculations.registry.relations import (
 from .....domain.period import calculation_filing_date
 from .....tests import FIXTURES_DIR
 from .....tests.registry_observations import registry_grounded_observations
-from .. import DeclaracionParseError, parse_declaracion
+from .._parser import parse_declaracion
+from ..errors import DeclaracionParseError
 
 pytestmark = [
     pytest.mark.unit,

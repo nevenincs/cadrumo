@@ -11,16 +11,6 @@ import pytest
 
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ...google.tests.drive_media_server import drive_files_list_endpoint
-from .. import (
-    OutboundStorageConflictError,
-    OutboundStorageError,
-    OutboundStorageIntegrityError,
-    OutboundStorageNetworkError,
-    OutboundStorageNotFoundError,
-    OutboundStoragePermissionError,
-    OutboundStorageQuotaError,
-    OutboundStorageUnavailableError,
-)
 from .. import _google_drive as drive_module
 from .. import _google_drive_metadata as drive_metadata_module
 from .._google_drive import GoogleDriveProvider
@@ -29,6 +19,16 @@ from .._google_drive_metadata import (
     _drive_storage_content_hash,
     _parse_drive_modified_time,
     _parse_drive_size,
+)
+from ..errors import (
+    OutboundStorageConflictError,
+    OutboundStorageError,
+    OutboundStorageIntegrityError,
+    OutboundStorageNetworkError,
+    OutboundStorageNotFoundError,
+    OutboundStoragePermissionError,
+    OutboundStorageQuotaError,
+    OutboundStorageUnavailableError,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

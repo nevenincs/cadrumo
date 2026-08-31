@@ -124,7 +124,8 @@ def test_loading_a_foreign_bucket_invoice_is_refused() -> None:
     The read check matters on its own: a row can predate the write guard, or
     arrive through any other writer against the same store.
     """
-    from ...storage import INVOICE_CATALOGUE_NAMESPACE, Envelope
+    from ...storage._secure_object_namespaces import INVOICE_CATALOGUE_NAMESPACE
+    from ...storage.envelope._envelope import Envelope
     from ...storage.sql.secure_objects import SecureObjectRepository
 
     catalogue = _catalogue(_invoice("INV-FOREIGN", bucket_id=_BUCKET_B))

@@ -10,14 +10,9 @@ import pytest
 
 from ......adapters.persistence.profile.submission import SubmissionRepository
 from ......core.config import Settings
-from ......domain.submission import (
-    ModeloPresentado,
-    SubmissionAttempt,
-    SubmissionEngine,
-    SubmissionError,
-    SubmissionStatus,
-    make_submission_id,
-)
+from ......domain.submission._engine import SubmissionEngine
+from ......domain.submission._models import ModeloPresentado, SubmissionAttempt, SubmissionStatus, make_submission_id
+from ......domain.submission.errors import SubmissionError
 from ......tests.secure_sql import isolated_runtime_profile
 from ._preflight_support import clave_movil_provider, deadline_checker, modelo_draft
 

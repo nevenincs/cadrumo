@@ -16,10 +16,10 @@ import pytest
 
 from ......application.auth.sessions import ensure_authenticated_aeat_session
 from ......core.auth_provider import AuthProviderKind
-from ......core.modelo import Modelo
-from ......core.period import Period
 from ......core.config import Settings, load_settings
 from ......core.errors.hierarchy import CadrumoError
+from ......core.modelo import Modelo
+from ......core.period import Period
 from ......tests.live_gate import requires_live_enabled
 from .._iva_compensation_wallet_parsing import is_aeat_wallet_read_url
 from ..errors import SedeError

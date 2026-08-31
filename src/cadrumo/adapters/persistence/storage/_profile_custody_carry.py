@@ -10,15 +10,15 @@ from types import MappingProxyType
 from pydantic import BaseModel
 
 from ....application.aggregation import PercepcionObservationRepository, RetencionObservationRepository
-from ....application.calculations import (
+from ....application.calculations.iva_compensation_history import IvaCompensationHistoryRepository
+from ....application.calculations.observations_repository import (
     CalculationObservationRepository,
-    IvaCompensationHistoryRepository,
     IvaWalletDecisionEnvelopePayload,
     IvaWalletDecisionRepository,
     iva_wallet_decision_event_key,
 )
-from ....application.evidence import EvidenceBundleRepository
-from ....application.filing import ModeloHistoryRepository
+from ....application.evidence._service import EvidenceBundleRepository
+from ....application.filing._history_repository import ModeloHistoryRepository
 from ....application.ledger.confirmation_record import (
     ConfirmationRecordDocument,
     confirmation_record_object_key,
@@ -45,11 +45,11 @@ from ....application.modelo._m145_communication_records import (
 )
 from ....application.user_profile.custody_ports import ProfileCustodyCarryMaterial
 from ....application.user_profile.repository import user_profile_snapshot_object_key
-from ....core import StorageCustodyProfile
 from ....core.external_constants import UTF_8_ENCODING as _UTF_8
 from ....core.hashing import canonical_json_bytes, sha256_hex
 from ....core.secure_object_write import SecureObjectWrite
-from ....domain.evidence_consent import EvidenceConsentLedgerEntry, evidence_consent_ledger_entry_object_key
+from ....core.storage_taxonomy import StorageCustodyProfile
+from ....domain.evidence_consent._record import EvidenceConsentLedgerEntry, evidence_consent_ledger_entry_object_key
 from ....domain.transactions.classification_rule import LedgerClassificationRule
 from ....domain.user_profile.errors import ProfileExportError
 from ....domain.user_profile.portable_export import CarriedSecureObject
@@ -63,21 +63,21 @@ from ..profile.filing_drafts import ModeloDraftRepository
 from ..profile.justificante import JustificanteRepository
 from ..profile.modelo_reconciliation import ModeloReconciliationRecordRepository
 from ..profile.submission import SubmissionRepository
-from . import (
+from ._namespace_registry import STORAGE_NAMESPACE_REGISTRY
+from ._secure_object_namespaces import (
     ATTACHMENT_MANIFEST_NAMESPACE,
     MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE,
     MODELO_FILING_RECORD_CATALOGUE_NAMESPACE,
     MODELO_WORK_UNIT_CATALOGUE_NAMESPACE,
     SECURE_OBJECT_CATALOGUE_KEY,
-    STORAGE_NAMESPACE_REGISTRY,
     TRANSACTION_CATALOGUE_NAMESPACE,
     USER_PROFILE_VALUE_NAMESPACE,
-    SecureBoundRepository,
     SecureObjectNamespaceDefinition,
-    secure_object_repository_for_bucket,
-    unwrap_blob_payload,
 )
-from .envelope import Envelope
+from .attachment import unwrap_blob_payload
+from .envelope._envelope import Envelope
+from .envelope._secure_repository import SecureBoundRepository
+from .runtime_repository import secure_object_repository_for_bucket
 from .sql import SecureObjectRecord
 
 _TYPED_CATEGORY_NAMESPACES: frozenset[str] = frozenset(

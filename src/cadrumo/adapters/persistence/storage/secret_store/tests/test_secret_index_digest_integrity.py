@@ -35,10 +35,10 @@ from pathlib import Path
 import pytest
 from pydantic import TypeAdapter
 
-from ......core import STR_KEYED_MAPPING_ADAPTER
-from ......core.classification import SensitivityClass
+from ......core.classification.policies import SensitivityClass
 from ......core.external_constants import UTF_8_ENCODING
 from ......core.hashing import sha256_hex
+from ......core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ...errors import StorageValidationError
 from ..store import SecretRecord, SecretStore
 

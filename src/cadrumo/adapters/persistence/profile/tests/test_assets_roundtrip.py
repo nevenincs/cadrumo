@@ -23,7 +23,7 @@ from pathlib import Path
 import pydantic
 import pytest
 
-from .....domain.contribuyente.assets import (
+from .....domain.contribuyente.assets.records import (
     AmortizacionEntry,
     AmortizacionLedger,
     AssetClass,
@@ -129,7 +129,7 @@ def test_assets_ledger_dropped_cost_basis_surfaces_at_load(
 
     from sqlalchemy import select
 
-    from ...storage import PROFILE_ASSETS_LEDGER_NAMESPACE
+    from ...storage._secure_object_namespaces import PROFILE_ASSETS_LEDGER_NAMESPACE
     from ...storage.sql import SecureObjectRow
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="196b0b56-31ec-4598-a910-9c4ae58ff804") as profile:
@@ -178,7 +178,7 @@ def test_assets_ledger_missing_cost_basis_surfaces_at_load(
 
     from sqlalchemy import select
 
-    from ...storage import PROFILE_ASSETS_LEDGER_NAMESPACE
+    from ...storage._secure_object_namespaces import PROFILE_ASSETS_LEDGER_NAMESPACE
     from ...storage.sql import SecureObjectRow
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="131dcb94-9624-4ef4-8837-36e1f0212b5a") as profile:

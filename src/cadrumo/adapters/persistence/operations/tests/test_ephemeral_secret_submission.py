@@ -47,9 +47,11 @@ from .....core.operations import (
     OperationClosePolicy,
     OperationDeadline,
     OperationDurability,
+    OperationEffect,
+    OperationLifecycle,
+    OperationTerminalCondition,
 )
-from .....core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
-from ...storage import RepositoryError
+from ...storage.errors import RepositoryError
 from ..journal import OperationJournalRepository
 from ..lease import OperationLeaseFilesystemRepository
 

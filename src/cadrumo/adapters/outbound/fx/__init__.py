@@ -16,22 +16,4 @@ transaction persistence or modelo binding projection.
 
 from __future__ import annotations
 
-from ._ecb_provider import (
-    ECB_DATA_API_HOST,
-    ECB_EXR_ENDPOINT,
-    ECB_RATE_SOURCE_ID,
-    LOOKBACK_DAYS,
-    EcbReferenceRateProvider,
-    RateFetch,
-    default_ecb_rate_provider,
-)
-
-__all__ = [
-    "ECB_DATA_API_HOST",
-    "ECB_EXR_ENDPOINT",
-    "ECB_RATE_SOURCE_ID",
-    "LOOKBACK_DAYS",
-    "EcbReferenceRateProvider",
-    "RateFetch",
-    "default_ecb_rate_provider",
-]
+__all__: tuple[str, ...] = ()

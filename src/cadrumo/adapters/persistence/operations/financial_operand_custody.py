@@ -22,11 +22,11 @@ from ....application.operations.persistence.financial_operand_custody import (
     OperationFinancialOperandCustodyConflictError,
     OperationFinancialOperandCustodyRepository,
 )
-from ....core.storage_taxonomy_locations import storage_path
-from ....core.storage_taxonomy import StorageCategory
-from ....core.locks import exclusive_file_lock
 from ....core.config import Settings
-from ..storage import RepositoryError
+from ....core.locks import exclusive_file_lock
+from ....core.storage_taxonomy import StorageCategory
+from ....core.storage_taxonomy_locations import storage_path
+from ..storage.errors import RepositoryError
 
 if TYPE_CHECKING:
     from pathlib import Path

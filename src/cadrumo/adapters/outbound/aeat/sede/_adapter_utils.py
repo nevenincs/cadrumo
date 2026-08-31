@@ -23,12 +23,12 @@ from re import compile
 from typing import TYPE_CHECKING, Any, Literal, Protocol
 from urllib.parse import urlsplit
 
-from .....core.models import STRICT_FROZEN_CONFIG
-from .....core.text_fold import fold_diacritics
 from .....core.config import Settings
 from .....core.external_constants import PDF_MIME_TYPE
 from .....core.i18n import tr
 from .....core.identity import tax_id_identity_token
+from .....core.models import STRICT_FROZEN_CONFIG
+from .....core.text_fold import fold_diacritics
 
 if TYPE_CHECKING:
     from playwright.async_api import Locator, Page

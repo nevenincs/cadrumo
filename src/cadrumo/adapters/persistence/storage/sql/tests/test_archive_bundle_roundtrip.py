@@ -33,7 +33,7 @@ from pathlib import Path
 import pytest
 from sqlalchemy.engine import Engine
 
-from ......core.classification import SensitivityClass
+from ......core.classification.policies import SensitivityClass
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ...tests.engine_bootstrap import bootstrap_sqlite_engine
 from .._orm import Base
