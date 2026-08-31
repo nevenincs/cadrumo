@@ -102,7 +102,11 @@ _FAILURE_CLASS_KEYS: tuple[tuple[str, str], ...] = (
     ("X1234567Z", "errors.identity.nie_check_letter_mismatch"),
     ("AB123456C", "errors.identity.cif_invalid_shape"),
     ("P1234567A", "errors.identity.cif_check_letter_mismatch_kind"),
-    ("A12345670", "errors.identity.cif_check_char_mismatch_mixed"),
+    # A is one of the ABEH digit-control kinds, so the failure is a wrong
+    # check DIGIT, not a wrong character of unsettled class. This surface
+    # used to report the mixed-kind key here because it carried its own,
+    # laxer copy of the leader policy.
+    ("A12345670", "errors.identity.cif_check_digit_mismatch"),
     ("C1234567X", "errors.identity.cif_check_char_mismatch_mixed"),
     ("A1234567%", "errors.identity.cif_control_char_invalid"),
 )

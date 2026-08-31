@@ -77,12 +77,24 @@ def test_validate_spanish_tax_id_accepts_cif_letter_control() -> None:
         assert validate_spanish_tax_id(value) == value
 
 
-def test_validate_spanish_tax_id_accepts_abeh_letter_form() -> None:
-    """ABEH CIF leaders historically accept either digit- or letter-control form."""
-    # body 1234567 digit-control is 4 (above); letter-control is 'D' — both
-    # forms are accepted for A/B/E/H leaders.
+def test_validate_spanish_tax_id_refuses_abeh_letter_form() -> None:
+    """An ABEH CIF carries a digit control, and only a digit control.
+
+    AEAT partitions the CIF kind letters three ways, and ``A``/``B``/``E``/``H``
+    are the digit-only class. The letter form of the same checksum is a
+    different kind's spelling, so accepting it here admits an identifier the
+    sede refuses -- with the declaration already built around it.
+
+    This test asserted the opposite until the two identity validators were
+    merged: one of them carried its own leader policy that read ABEH as mixed,
+    contradicting its own module docstring.
+    """
     assert validate_spanish_tax_id("B12345674") == "B12345674"
-    assert validate_spanish_tax_id("B1234567D") == "B1234567D"
+
+    with pytest.raises(IdentityError) as excinfo:
+        validate_spanish_tax_id("B1234567D")
+    assert excinfo.value.translated_message == "errors.identity.cif_check_digit_mismatch"
+    assert excinfo.value.context == {"kind": "B", "expected": "4", "got": "D"}
 
 
 def test_validate_spanish_tax_id_rejects_invalid_checksum() -> None:

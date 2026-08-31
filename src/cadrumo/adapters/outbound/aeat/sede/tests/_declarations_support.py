@@ -16,9 +16,9 @@ from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
 from ......core import CasillaValueKind
-from ......core.period import Period
 from ......core.casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
 from ......core.config import Settings
+from ......core.period import Period
 from ......domain.calculations.registry.authority import bundled_authority
 from ......domain.calculations.registry.errors import RegistryValidationError
 from ......domain.calculations.registry.export import resolve_export_layout
@@ -36,18 +36,18 @@ from ..declarations import (
     _assert_read_http,
     _declarations_page_shape_context,
     _extract_csv_from_url,
-    _observed_casillas_from_declaration_pdf,
     _parse_listbox,
     _parse_presented_at,
-    _read_guard_policy_from_snapshot,
     _select_combobox_value,
+)
+from ..declarations_capture import _select_authoritative_declaration as _select_authoritative_declaration_production
+from ..declarations_observations import (
+    _observed_casillas_from_declaration_pdf,
+    _read_guard_policy_from_snapshot,
     _verify_submitted_file_context,
     _with_derived_303_compensation_available_observation,
+    registry_observation_from_filed_declaration,
 )
-from ..declarations import (
-    _select_authoritative_declaration as _select_authoritative_declaration_production,
-)
-from ..declarations_observations import registry_observation_from_filed_declaration
 from ..observation_store import FiledDeclaracionObservationStore
 from ..schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue
 

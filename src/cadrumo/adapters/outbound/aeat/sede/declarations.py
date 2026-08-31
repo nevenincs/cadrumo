@@ -32,21 +32,12 @@ from urllib.parse import urlsplit
 
 from pydantic import AnyHttpUrl
 
-from .....core import ObservedHeaderFact
-from .....core.period import Period
-from .....core.casilla_id import CasillaId
 from .....core.config import Settings
 from .....core.external_constants import JSON_MIME_TYPE as _JSON_MIME_TYPE
 from .....core.hashing import sha256_hex
 from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....core.time import now
-from .....domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements
-from .....domain.calculations.registry.errors import RegistryValidationError
-from .....domain.calculations.registry.relations import (
-    relation_source_requirements,
-    source_presence_gaps,
-)
 from .....domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy
 
 # Importing the renta package registers the first-slice routing
@@ -54,7 +45,6 @@ from .....domain.calculations.registry.remote_state_guard import RemoteStateGuar
 # of a Modelo 100 revision fails loudly if that check is unregistered, so
 # the M100 routing referential-integrity gate runs on this declarations path.
 from .....domain.calculations.registry.schema import RegistrySnapshot
-from .....domain.calculations.registry.snapshot_coordinate import registry_snapshot_id
 from .._html import parse_html
 from .._playwright import BrowserContext, Page, Playwright, PlaywrightError
 from ..browser import Profile, opened_browser_page, shared_playwright_runtime
@@ -79,8 +69,6 @@ from ._declarations_fetch import (
     _SEDE_BASE,
     _assert_read_browser_action,
     _assert_read_http,
-    _capture_row_pdf_artefact,
-    _capture_submitted_file_artefact,
     _cotejo_document_url,
     _cotejo_view_url,
     _get_buscar_settle_ms,
@@ -93,39 +81,22 @@ from ._declarations_fetch import (
 from ._declarations_listbox import _has_class, _parse_listbox, _parse_presented_at
 from .declarations_observations import (
     FiledDeclaracionArtefactSink,
-    _declaration_pdf_extraction_profile_provisional,
-    _observed_casillas_from_declaration_pdf,
-    _observed_header_facts_from_submitted_file,
     _read_guard_policy_from_snapshot,
-    _register_row_artefact,
     _registry_snapshot_for_declaration,
-    _store_artefact,
-    _submitted_file_coverage_for_casillas,
-    _verify_submitted_file_context,
-    _with_derived_303_compensation_available_observation,
-    observed_casillas_from_submitted_file,
 )
 from .declarations_remote import extract_csv_from_url as _extract_csv_from_url
 from .declarations_schema import Declaracion
-from .errors import (
-    JustificanteFetchError,
-    SedeFailureMode,
-    SedeNavigationError,
-    SedeParseError,
-)
+from .errors import SedeFailureMode, SedeNavigationError, SedeParseError
 from .schema import (
-    FiledDeclaracionArtefact,
     FiledDeclaracionObservation,
     FiledDeclarationAvailability,
     FiledDeclarationAvailabilityReport,
     JustificanteRef,
-    ObservedCasillaValue,
     SedeCapture,
 )
 
 if TYPE_CHECKING:
     from .....application.auth.session_types import AeatSession
-    from .....domain.calculations.registry.schema import ModeloRevision
 
 
 log = get_logger(__name__)
@@ -498,6 +469,8 @@ class DeclaracionesRegisterSession:
             self._page,
             expediente_id=declaration.expediente_id,
         )
+        from .declarations_capture import _capture_filed_declaration_observation_from_row
+
         return await _capture_filed_declaration_observation_from_row(
             self.session,
             declaration,
@@ -1053,392 +1026,6 @@ async def capture_declaration(
         )
 
 
-async def capture_filed_declaration_observation(
-    session: AeatSession,
-    declaration: Declaracion,
-    *,
-    registry_snapshot: RegistrySnapshot | None = None,
-    settings: Settings | None = None,
-    playwright: Playwright | None = None,
-    artefact_sink: FiledDeclaracionArtefactSink | None = None,
-) -> FiledDeclaracionObservation:
-    """Capture a :class:`FiledDeclaracionObservation` with read-only evidence for one filed declaration.
-
-    The observation begins with the register row and then captures every
-    AEAT-served artefact this backend knows how to read from the row:
-    the justificante/declaration PDF and, when exposed by AEAT, the
-    submitted file download. Submitted files are parsed through the
-    registry export layout selected for the declaration snapshot.
-
-    Args:
-        session: Authenticated AEAT session.
-        declaration: The :class:`Declaracion` row to observe.
-        registry_snapshot: Optional pre-built :class:`RegistrySnapshot`. When
-            omitted, the snapshot is resolved from the declaration's modelo,
-            ejercicio, and period via the bundled registry authority.
-        settings: Optional :class:`Settings` override.
-        playwright: Optional pre-started Playwright instance.
-        artefact_sink: Optional callable that stores each captured artefact
-            and returns the (possibly updated) artefact record.
-    """
-    authenticated_identity = (session.identity_nif or "").strip()
-    if not authenticated_identity:
-        raise SedeNavigationError(
-            "AeatSession.identity_nif is empty; cannot bind live filing observation",
-            translated_message=tr("adapters.sede.errors.empty_identity_nif"),
-        )
-    snapshot = registry_snapshot or _registry_snapshot_for_declaration(declaration)
-    read_policy = _read_guard_policy_from_snapshot(snapshot)
-    async with _open_register_page(session, settings=settings, playwright=playwright) as (
-        page,
-        context,
-    ):
-        if not await _drive_search(
-            page,
-            modelo=declaration.modelo,
-            ejercicio=declaration.ejercicio,
-            read_policy=read_policy,
-        ):
-            raise SedeNavigationError(
-                f"AEAT declarations register does not offer ejercicio {declaration.ejercicio} "
-                f"for modelo {declaration.modelo}",
-            )
-
-        row_locator = _row_locator_for_expediente(
-            page,
-            expediente_id=declaration.expediente_id,
-        )
-        return await _capture_filed_declaration_observation_from_row(
-            session,
-            declaration,
-            row_locator=row_locator,
-            page=page,
-            context=context,
-            registry_snapshot=snapshot,
-            artefact_sink=artefact_sink,
-        )
-
-
-def _record_submitted_file_extraction_error(
-    metadata: dict[str, str],
-    error: RegistryValidationError | SedeParseError,
-) -> None:
-    """Persist the adapter's own submitted-file parser refusal verbatim.
-
-    The declaration-PDF fallback is evaluated by the caller after this record is
-    kept, so its diagnostic must remain metadata rather than being converted to
-    a partial extraction result here.
-    """
-    metadata["submitted_file_extraction_error"] = str(error)
-
-
-async def _capture_filed_declaration_observation_from_row(
-    session: AeatSession,
-    declaration: Declaracion,
-    *,
-    row_locator,
-    page: Page,
-    context: BrowserContext,
-    registry_snapshot: RegistrySnapshot | None,
-    artefact_sink: FiledDeclaracionArtefactSink | None,
-) -> FiledDeclaracionObservation:
-    authenticated_identity = (session.identity_nif or "").strip()
-    if not authenticated_identity:
-        raise SedeNavigationError(
-            "AeatSession.identity_nif is empty; cannot bind live filing observation",
-            translated_message=tr("adapters.sede.errors.empty_identity_nif"),
-        )
-    snapshot = registry_snapshot or _registry_snapshot_for_declaration(declaration)
-    read_policy = _read_guard_policy_from_snapshot(snapshot)
-    filing_period = declaration.period
-    observation_key = (
-        declaration.modelo,
-        declaration.ejercicio,
-        filing_period,
-        declaration.expediente_id,
-    )
-    listing_url = AnyHttpUrl(
-        _listing_url_for(
-            _origin_of(getattr(page, "url", None)),
-            modelo=declaration.modelo,
-            ejercicio=declaration.ejercicio,
-        ),
-    )
-
-    register_row, register_row_body = _register_row_artefact(declaration, source_url=listing_url)
-    artefacts: list[FiledDeclaracionArtefact] = [
-        _store_artefact(
-            artefact_sink,
-            observation_key=observation_key,
-            artefact=register_row,
-            body=register_row_body,
-        ),
-    ]
-    casillas: tuple[ObservedCasillaValue, ...] = ()
-    headers: tuple[ObservedHeaderFact, ...] = ()
-    extraction_coverage: dict[str, float] = {}
-    metadata = {
-        "tipo_solicitud": declaration.tipo_solicitud or "",
-        "observaciones": declaration.observaciones or "",
-    }
-
-    justificante, justificante_body = await _capture_row_pdf_artefact(
-        context=context,
-        row_locator=row_locator,
-        declaration=declaration,
-        cell_index=declaration.justificante_cell_index,
-        kind="justificante_pdf",
-        read_policy=read_policy,
-    )
-    artefacts.append(
-        _store_artefact(
-            artefact_sink,
-            observation_key=observation_key,
-            artefact=justificante,
-            body=justificante_body,
-        ),
-    )
-
-    declaration_pdf_body: bytes | None = None
-    if declaration.declaration_copy_link_text and declaration.declaration_copy_cell_index is not None:
-        declaration_pdf, declaration_pdf_body = await _capture_row_pdf_artefact(
-            context=context,
-            row_locator=row_locator,
-            declaration=declaration,
-            cell_index=declaration.declaration_copy_cell_index,
-            kind="declaration_pdf",
-            read_policy=read_policy,
-        )
-        artefacts.append(
-            _store_artefact(
-                artefact_sink,
-                observation_key=observation_key,
-                artefact=declaration_pdf,
-                body=declaration_pdf_body,
-            ),
-        )
-
-    if declaration.archive_link_text and declaration.archive_cell_index is not None:
-        try:
-            submitted_artefact, submitted_body = await _capture_submitted_file_artefact(
-                context=context,
-                page=page,
-                row_locator=row_locator,
-                declaration=declaration,
-                cell_index=declaration.archive_cell_index,
-                read_policy=read_policy,
-            )
-        except (JustificanteFetchError, SedeNavigationError) as exc:
-            metadata["submitted_file_capture_error"] = str(exc)
-        else:
-            submitted_artefact = _store_artefact(
-                artefact_sink,
-                observation_key=observation_key,
-                artefact=submitted_artefact,
-                body=submitted_body,
-            )
-            artefacts.append(submitted_artefact)
-            try:
-                casillas = observed_casillas_from_submitted_file(
-                    snapshot=snapshot,
-                    declaration=declaration,
-                    body=submitted_body,
-                    artefact=submitted_artefact,
-                )
-                extraction_coverage["submitted_file"] = _submitted_file_coverage_for_casillas(
-                    snapshot=snapshot,
-                    body=submitted_body,
-                    casillas=casillas,
-                )
-                # AEAT states the tipo de declaracion and the sin-actividad flag as
-                # HEADER fields in the same fichero these casillas came from. They are
-                # carried, deliberately not elected on: which identifier a disposition-
-                # aware read should key on is a separate decision, and the point here is
-                # that the evidence survives instead of being parsed and dropped.
-                #
-                # Collected as TYPED facts rather than folded into `metadata`. The
-                # metadata route reached storage through a projection built from a
-                # fixed key set, so an `aeat_<header_key>` entry was written here
-                # and discarded before persistence -- the evidence survived the
-                # parser and died one layer later, which is worse than never
-                # reading it because the capture looked complete.
-                headers = _observed_header_facts_from_submitted_file(
-                    snapshot=snapshot,
-                    body=submitted_body,
-                )
-            except (RegistryValidationError, SedeParseError) as exc:
-                _record_submitted_file_extraction_error(metadata, exc)
-
-    if not casillas and declaration_pdf_body is not None:
-        casillas = _observed_casillas_from_declaration_pdf(
-            snapshot=snapshot,
-            declaration=declaration,
-            body=declaration_pdf_body,
-        )
-        extraction_coverage["declaration_pdf"] = 1.0
-        if _declaration_pdf_extraction_profile_provisional(snapshot):
-            metadata["declaration_pdf_extraction_profile_provisional"] = "true"
-    elif not casillas and not declaration.archive_link_text and declaration_pdf_body is None:
-        raise SedeParseError(
-            f"AEAT declaration {declaration.expediente_id!r} did not expose submitted-file or declaration-copy data",
-        )
-
-    return FiledDeclaracionObservation(
-        modelo=declaration.modelo,
-        ejercicio=declaration.ejercicio,
-        period=filing_period,
-        expediente_id=declaration.expediente_id,
-        status=declaration.estado,
-        presented_at=declaration.presented_at,
-        authenticated_identity=authenticated_identity,
-        artefacts=tuple(artefacts),
-        casillas=casillas,
-        headers=headers,
-        metadata=metadata,
-        extraction_coverage=extraction_coverage,
-        # Year and period come from the DECLARATION, not the snapshot: stamping
-        # what the document itself declares is what lets a later comparison
-        # against the law-resolved snapshot detect a coordinate mismatch.
-        registry_snapshot_id=registry_snapshot_id(
-            modelo=snapshot.modelo.id,
-            revision_id=snapshot.revision.id,
-            filing_year=declaration.ejercicio,
-            period=declaration.period.registry_token,
-        ),
-    )
-
-
-async def capture_previous_filing_observations(
-    session: AeatSession,
-    revision: ModeloRevision,
-    *,
-    filing_year: int,
-    period: Period,
-    settings: Settings | None = None,
-    playwright: Playwright | None = None,
-    artefact_sink: FiledDeclaracionArtefactSink | None = None,
-) -> tuple[FiledDeclaracionObservation, ...]:
-    """Capture :class:`FiledDeclaracionObservation` records required by registry previous-filing bindings.
-
-    Args:
-        session: Authenticated AEAT session.
-        revision: The :class:`ModeloRevision` whose previous-filing binding
-            requirements determine which declarations are fetched.
-        filing_year: Tax year of the current filing.
-        period: Period code of the current filing.
-        settings: Optional :class:`Settings` override.
-        playwright: Optional pre-started Playwright instance.
-        artefact_sink: Optional callable storing each captured artefact.
-    """
-    observations: list[FiledDeclaracionObservation] = []
-    async with open_declarations_register(session, settings=settings, playwright=playwright) as register:
-        for requirement in previous_filing_observation_requirements(
-            revision,
-            filing_year=filing_year,
-            period=period.registry_token,
-        ):
-            source_period = requirement.periods[0]
-            rows = await register.walk(modelo=requirement.source_modelo, ejercicio=requirement.filing_year)
-            matches = tuple(row for row in rows if row.period.registry_token == source_period)
-            declaration = _select_authoritative_declaration(
-                matches,
-                modelo=requirement.source_modelo,
-                ejercicio=requirement.filing_year,
-                period_token=source_period,
-                context="previous-filing requirement",
-            )
-            observation = await register.capture_observation(declaration, artefact_sink=artefact_sink)
-            observation = _with_derived_303_compensation_available_observation(observation)
-            observed_casillas: set[CasillaId] = {casilla.casilla_id for casilla in observation.casillas}
-            missing, missing_presence_groups = source_presence_gaps(
-                required_source_casilla_ids=requirement.enforced_source_casilla_ids,
-                source_presence_groups=requirement.source_presence_groups,
-                observed_source_casilla_ids=observed_casillas,
-            )
-            if missing:
-                raise SedeParseError(
-                    f"previous-filing requirement {requirement.source_modelo!r}/"
-                    f"{requirement.filing_year}/{source_period!r} missing observed casillas {missing!r}",
-                )
-            if missing_presence_groups:
-                raise SedeParseError(
-                    f"previous-filing requirement {requirement.source_modelo!r}/"
-                    f"{requirement.filing_year}/{source_period!r} is missing required source-presence groups "
-                    f"{list(missing_presence_groups)!r}",
-                )
-            observations.append(observation)
-    return tuple(observations)
-
-
-async def capture_relation_source_observations(
-    session: AeatSession,
-    revision: ModeloRevision,
-    *,
-    filing_year: int,
-    period: Period,
-    settings: Settings | None = None,
-    playwright: Playwright | None = None,
-    artefact_sink: FiledDeclaracionArtefactSink | None = None,
-) -> tuple[FiledDeclaracionObservation, ...]:
-    """Capture :class:`FiledDeclaracionObservation` records required by registry cross-model relations.
-
-    Args:
-        session: Authenticated AEAT session.
-        revision: The :class:`ModeloRevision` whose cross-model relation
-            requirements determine which source declarations are fetched.
-        filing_year: Tax year of the current filing.
-        period: Period code of the current filing.
-        settings: Optional :class:`Settings` override.
-        playwright: Optional pre-started Playwright instance.
-        artefact_sink: Optional callable storing each captured artefact.
-    """
-    required_source_casilla_ids: dict[tuple[str, int, str], set[CasillaId]] = {}
-    for requirement in relation_source_requirements(revision, filing_year=filing_year, period=period.registry_token):
-        for source_period in requirement.periods:
-            key = (requirement.source_modelo, requirement.filing_year, source_period)
-            required_source_casilla_ids.setdefault(key, set()).update(requirement.source_casilla_ids)
-
-    observations: list[FiledDeclaracionObservation] = []
-    async with open_declarations_register(session, settings=settings, playwright=playwright) as register:
-        for (modelo, source_year, source_period), source_casilla_ids in sorted(required_source_casilla_ids.items()):
-            rows = await register.walk(modelo=modelo, ejercicio=source_year)
-            matches = tuple(row for row in rows if row.period.registry_token == source_period)
-            declaration = _select_authoritative_declaration(
-                matches,
-                modelo=modelo,
-                ejercicio=source_year,
-                period_token=source_period,
-                context="relation source requirement",
-            )
-            observation = await register.capture_observation(declaration, artefact_sink=artefact_sink)
-            observation = _with_derived_303_compensation_available_observation(observation)
-            observed_casillas: set[CasillaId] = {casilla.casilla_id for casilla in observation.casillas}
-            missing = sorted(source_casilla_ids.difference(observed_casillas))
-            if missing:
-                raise SedeParseError(
-                    f"relation source requirement {modelo!r}/{source_year}/{source_period!r} "
-                    f"missing observed casillas {missing!r}",
-                )
-            observations.append(observation)
-    return tuple(observations)
-
-
-def _select_authoritative_declaration(
-    declarations: tuple[Declaracion, ...],
-    *,
-    modelo: str,
-    ejercicio: int,
-    period_token: str,
-    context: str,
-) -> Declaracion:
-    """Select the latest accepted register row for one filed period."""
-    if not declarations:
-        raise SedeParseError(f"{context} {modelo!r}/{ejercicio}/{period_token!r} found no filed declaration")
-    active = tuple(row for row in declarations if row.estado.upper() == "ALTA")
-    candidates = active or declarations
-    return max(candidates, key=lambda row: (row.presented_at, row.expediente_id))
-
-
 def _row_locator_for_expediente(page: Page, *, expediente_id: str):
     """Return a Playwright locator pointing at the listitem whose ``Expediente`` cell text equals ``expediente_id``.
 
@@ -1464,11 +1051,7 @@ __all__ = [
     "Declaracion",
     "DeclaracionesRegisterSession",
     "_parse_presented_at",
-    "_verify_submitted_file_context",
     "capture_declaration",
-    "capture_filed_declaration_observation",
-    "capture_previous_filing_observations",
-    "capture_relation_source_observations",
     "open_declarations_register",
     "shared_playwright",
     "walk_declarations_register",
