@@ -616,7 +616,7 @@ ignore_imports =
     # which means consuming the adapter's record type here.
     cadrumo.application.filing.history_repository -> cadrumo.adapters.persistence.**
     cadrumo.application.filing.persistence_wiring -> cadrumo.adapters.persistence.**
-    cadrumo.application.inventory._service -> cadrumo.adapters.persistence.**
+    cadrumo.application.inventory.service -> cadrumo.adapters.persistence.**
     # Reaches NO persistence: this pin sat between two repository modules and
     # was wholly an inbound-adapter allowance. A justificante PDF is an
     # externally-authored format, so lifting a filing out of its bytes is
@@ -827,7 +827,7 @@ ignore_imports =
     # ── application production edges: modelos_work_units catalogue repository
     #    consolidation (import-centralization refactor; module-granularity) ──
     cadrumo.application.modelo.amendment_actions -> cadrumo.adapters.persistence.profile.modelos_work_units
-    cadrumo.application.modelo._calculate_input -> cadrumo.adapters.persistence.profile.modelos_work_units
+    cadrumo.application.modelo.calculate_input -> cadrumo.adapters.persistence.profile.modelos_work_units
     cadrumo.application.modelo.calculation_actions -> cadrumo.adapters.persistence.profile.modelos_work_units
     cadrumo.application.modelo.export -> cadrumo.adapters.persistence.profile.modelos_work_units
     cadrumo.application.modelo.filing_actions -> cadrumo.adapters.persistence.profile.modelos_work_units
@@ -840,7 +840,7 @@ ignore_imports =
     # ── buckets event-history repository ports-inversion (W01.P03.S05):
     #    the concrete BucketEventHistoryRepository moved to the persistence
     #    adapter behind BucketEventHistoryRepositoryProtocol ──
-    cadrumo.application.inventory._service -> cadrumo.adapters.persistence.profile.buckets
+    cadrumo.application.inventory.service -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.live.filed_observation_persistence -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.live.justificante -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.modelo.amendment_actions -> cadrumo.adapters.persistence.profile.buckets
