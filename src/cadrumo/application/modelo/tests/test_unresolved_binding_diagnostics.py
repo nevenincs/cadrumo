@@ -38,8 +38,7 @@ from ....domain.calculations.registry.formula_runtime import (
 )
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.schema_formula import FormulaExpression
-from ...aggregation import CalculationSourceResolution
-from ...aggregation.source_resolution_operations import merge_source_resolutions
+from ...aggregation import CalculationSourceResolution, merge_source_resolutions
 from .._calculation_source_staging import expected_but_missing_binding_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

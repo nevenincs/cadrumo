@@ -35,13 +35,11 @@ from ._source_mesh import (
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,
     CalculationSourceResolution,
-)
-from .source_resolution_operations import (
-    flatten_source_provenance_for as _flattened_provenance_for,
-)
-from .source_resolution_operations import (
     source_issue_diagnostics,
     storage_degradation_resolution,
+)
+from ._source_mesh import (
+    flatten_source_provenance_for as _flattened_provenance_for,
 )
 
 

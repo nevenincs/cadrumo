@@ -34,13 +34,13 @@ from typing import TYPE_CHECKING, ClassVar
 from pydantic import BaseModel, Field, model_validator
 
 from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.operator_action_enums import ActionEvidenceProvenance
+from ...core.period import Period
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.filing_year import FilingYear
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.operator_action_enums import ActionEvidenceProvenance
-from ...core.period import Period
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import (
@@ -53,8 +53,8 @@ from ..aggregation import (
     CalculationSourceContext,
     CalculationSourceProvenance,
     CalculationSourceResolution,
+    storage_degradation_resolution,
 )
-from ..aggregation.source_resolution_operations import storage_degradation_resolution
 from ._action_errors import ModeloPreconditionErrorMixin
 from ._decimal_parsing import decimal_from_string
 from ._preconditions import build_modelo_precondition_failure

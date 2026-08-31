@@ -42,9 +42,9 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
-from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
+from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.iva_wallet_relation_targets import (
@@ -56,8 +56,7 @@ from ....tests import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from ...aggregation import CalculationSourceProvenance, CalculationSourceResolution
-from ...aggregation.source_resolution_operations import merge_source_resolutions
+from ...aggregation import CalculationSourceProvenance, CalculationSourceResolution, merge_source_resolutions
 from ...calculations import CalculationObservationRepository
 from .._calculation_actions import (
     _resolve_bucket_source_mesh,

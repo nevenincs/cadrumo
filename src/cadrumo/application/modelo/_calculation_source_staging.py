@@ -32,8 +32,8 @@ from datetime import date
 from decimal import Decimal
 from types import MappingProxyType
 
-from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
+from ...core.aggregation import BindingSourceKind
 from ...domain.calculations.registry.casilla_membership import casillas_by_id
 from ...domain.calculations.registry.formula_initial_values import initial_value_casilla_ids
 from ...domain.calculations.registry.formula_runtime import calculate_registry_snapshot
@@ -53,8 +53,9 @@ from ..aggregation import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
     CalculationSourceResolution,
+    collect_unhandled_source_diagnostics,
+    merge_source_resolutions,
 )
-from ..aggregation.source_resolution_operations import collect_unhandled_source_diagnostics, merge_source_resolutions
 from ..calculations import (
     BienesInversionRegularizacionSourceResolver,
     CalculationObservationRepository,

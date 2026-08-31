@@ -28,8 +28,8 @@ from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.period import Period
+from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ...domain.calculations.registry.ids import (
     BindingId,
@@ -41,8 +41,7 @@ from ...domain.calculations.registry.schema import (
 )
 from ...domain.identifiers import canonical_decimal_string as _canonical_decimal_str
 from ...domain.modelos.work_unit import WorkUnit
-from ..aggregation import CalculationSourceResolution
-from ..aggregation.source_resolution_operations import merge_source_resolutions_by_precedence
+from ..aggregation import CalculationSourceResolution, merge_source_resolutions_by_precedence
 from ._binding_resolution import (
     lift_previous_filing_casilla_overrides_to_bindings,
     reject_binding_channel_mismatch,

@@ -45,17 +45,17 @@ from typing import ClassVar, Final
 from pydantic import BaseModel
 
 from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
-from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
-from ...core.casilla_id import CasillaId, validated_casilla_id
-from ...core.json_contract import Notice, NoticeSeverity
-from ...core.modelo import Modelo
-from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.period import Period
 from ...core.prorrata_register import (
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
     regime_apportions_deduction,
 )
+from ...core.modelo import Modelo
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.period import Period
+from ...core.casilla_id import CasillaId, validated_casilla_id
+from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
+from ...core.json_contract import Notice, NoticeSeverity
 from ...core.resources import bundled_path
 from ...domain.calculations.registry.ids import (
     BindingId,
@@ -71,15 +71,7 @@ from ...domain.calculations.registry.schema import (
 from ...domain.calculations.registry.temporal import select_revision
 from ...domain.iva.flow import IvaFlowDirection
 from ...domain.iva.m303_settlement import m303_annual_settlement_period_order
-from ...domain.iva.prorrata import (
-    ProrrataInputs,
-    RegularizacionProrrataDireccion,
-    RegularizacionProrrataResult,
-    compute_prorrata_definitiva_anual,
-    compute_regularizacion_prorrata_anual,
-    especial_mandatory_rule,
-    is_especial_mandatory,
-)
+from ...domain.iva.prorrata import ProrrataInputs, RegularizacionProrrataDireccion, RegularizacionProrrataResult, compute_prorrata_definitiva_anual, compute_regularizacion_prorrata_anual, especial_mandatory_rule, is_especial_mandatory
 from ...domain.iva.schema import IvaCategory
 from ...domain.prorrata_register import (
     ProrrataProvisionalResolution,
@@ -94,8 +86,8 @@ from ..aggregation import (
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,
     CalculationSourceResolution,
+    storage_degradation_resolution,
 )
-from ..aggregation.source_resolution_operations import storage_degradation_resolution
 from ._revision_carry_gate import revision_carry_outcome
 from .observations_repository import CalculationObservationRepository
 
