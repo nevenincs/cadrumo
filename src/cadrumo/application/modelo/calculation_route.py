@@ -16,7 +16,6 @@ from ..aggregation import (
     LedgerImpatriadoIncomeAggregationSourceResolver,
     LedgerIrnrIncomeAggregationSourceResolver,
     LedgerIvaAggregationSourceResolver,
-    LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
     LedgerRentaGastosPagoFraccionadoAggregationSourceResolver,
     LedgerRentaIncomeAggregationSourceResolver,
     ModeloSourceResolver,
@@ -26,6 +25,7 @@ from ..aggregation import (
     WithholdingSourceResolver,
     build_binding_source_dispositions,
 )
+from ..aggregation._modelo_bindings_renta_expenses import LedgerRentaGastosEstimacionDirectaAggregationSourceResolver
 from ..calculations import (
     BienesInversionRegularizacionSourceResolver,
     IvaCompensationAnnualPartitionSourceResolver,

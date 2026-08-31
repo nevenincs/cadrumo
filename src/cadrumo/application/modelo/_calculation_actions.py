@@ -52,11 +52,11 @@ from ...adapters.persistence.profile.modelos_calculation import CalculationRevis
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import M210_TIPO_RENTA_CODE_PROJECTION, M210GrossIncomeSourceMode
+from ...core.aggregation import BindingSourceKind
+from ...core.casilla_id import CasillaId
+from ...core.identity import CalculationRevisionId
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
-from ...core.casilla_id import CasillaId
-from ...core.aggregation import BindingSourceKind
-from ...core.identity import CalculationRevisionId
 from ...core.time import now as _utc_now
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations import (
@@ -86,10 +86,6 @@ from ...domain.calculations.registry.iva_wallet_relation_targets import (
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.modelos.calculation_repository import upsert_calculation_revision
-from ...domain.modelos.ledger_filing_snapshot import LedgerFilingSnapshot
-from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol, ModeloRecordCatalogueRepositoryProtocol
-from ...domain.modelos.row_models import Modelo210AgrupacionRentaRow, ModeloDetailRow
-from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -99,6 +95,13 @@ from ...domain.modelos.calculation_revision import (
     FilingInstanceEvidence,
     M303RegimenSimplificadoAnnualSummaryHandoff,
 )
+from ...domain.modelos.ledger_filing_snapshot import LedgerFilingSnapshot
+from ...domain.modelos.protocols import (
+    CalculationRevisionCatalogueRepositoryProtocol,
+    ModeloRecordCatalogueRepositoryProtocol,
+)
+from ...domain.modelos.row_models import Modelo210AgrupacionRentaRow, ModeloDetailRow
+from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..calculations import CalculationObservationRepository
@@ -782,7 +785,6 @@ def _resolve_bucket_source_mesh(
         LedgerImpatriadoIncomeAggregationSourceResolver,
         LedgerIrnrIncomeAggregationSourceResolver,
         LedgerIvaAggregationSourceResolver,
-        LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
         LedgerRentaGastosPagoFraccionadoAggregationSourceResolver,
         LedgerRentaIncomeAggregationSourceResolver,
         ModeloSourceResolver,
@@ -790,6 +792,9 @@ def _resolve_bucket_source_mesh(
         RetencionesAggregationSourceResolver,
         WithholdingSourceResolver,
         merge_source_resolutions,
+    )
+    from ..aggregation._modelo_bindings_renta_expenses import (
+        LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
     )
     from ..calculations import (
         IvaCompensationAnnualPartitionSourceResolver,

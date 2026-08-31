@@ -40,7 +40,7 @@ import pytest
 
 from ....core.modelo import Modelo
 from ....domain.calculations.registry.authority import bundled_authority
-from .._modelo_bindings import _INVOICE_LEDGER_SCREEN_BINDINGS
+from .._modelo_bindings_invoice_iva import _INVOICE_LEDGER_SCREEN_BINDINGS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

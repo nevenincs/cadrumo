@@ -35,7 +35,7 @@ from ....domain.invoices.models import Invoice
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.schema import IvaCategory
 from .._iva_ledger import resolve_iva_ledger_binding_values
-from .._modelo_bindings import _invoice_line_iva_observation
+from .._modelo_bindings_invoice_iva import _invoice_line_iva_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -153,12 +153,12 @@ from ._modelo_bindings import (
     LedgerImpatriadoIncomeAggregationSourceResolver,
     LedgerIrnrIncomeAggregationSourceResolver,
     LedgerIvaAggregationSourceResolver,
-    LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
     LedgerRentaGastosPagoFraccionadoAggregationSourceResolver,
     LedgerRentaIncomeAggregationSourceResolver,
-    RetencionesAggregationSourceResolver,
     aggregation_period_for_modelo,
 )
+from ._modelo_bindings_renta_expenses import LedgerRentaGastosEstimacionDirectaAggregationSourceResolver
+from ._modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 from ._models import CasillaAggregation, CasillaProvenance
 from ._oss_ioss import (
     OssIossInvoiceProjection,

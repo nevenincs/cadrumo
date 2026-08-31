@@ -27,9 +27,10 @@ from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.flow import derive_flow_for_classification
 from ....domain.iva.schema import IvaCashAccountingTreatment, IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import _modelo_bindings as modelo_bindings_module
+from .. import _modelo_bindings_invoice_iva as modelo_bindings_module
 from .. import _service as service_module
-from .._modelo_bindings import RetencionesAggregationSourceResolver, _raise_if_screened_invoice_iva_would_be_silent
+from .._modelo_bindings_invoice_iva import _raise_if_screened_invoice_iva_would_be_silent
+from .._modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 from .._preconditions import AggregationPreconditionCondition, aggregation_no_recovery_verdict
 from .._retencion_observations_repository import RetencionObservationRepository
 from .._service import _SUPPORTED_PER_MODELO_MODELOS, provider_for_modelo
@@ -71,7 +72,7 @@ _AGGREGATION_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
         AggregationPreconditionCondition.PER_MODELO_MODELO_SUPPORTED,
         (("modelo", "modelo"), ("supported_modelos", "'|'.join(_SUPPORTED_PER_MODELO_MODELOS)")),
     ),
-    "_modelo_bindings:_raise_if_screened_invoice_iva_would_be_silent:1": _contract(
+    "_modelo_bindings_invoice_iva:_raise_if_screened_invoice_iva_would_be_silent:1": _contract(
         AggregationPreconditionCondition.INVOICE_LEDGER_COMPLETE,
         (
             ("modelo", "str(context.modelo)"),
@@ -82,7 +83,7 @@ _AGGREGATION_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
             ("missing_binding_count", "0"),
         ),
     ),
-    "_modelo_bindings:_raise_if_screened_invoice_iva_would_be_silent:2": _contract(
+    "_modelo_bindings_invoice_iva:_raise_if_screened_invoice_iva_would_be_silent:2": _contract(
         AggregationPreconditionCondition.INVOICE_LEDGER_COMPLETE,
         (
             ("modelo", "str(context.modelo)"),
@@ -93,7 +94,7 @@ _AGGREGATION_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
             ("missing_binding_count", "len(missing_binding_values)"),
         ),
     ),
-    "_modelo_bindings:RetencionesAggregationSourceResolver.resolve:1": _contract(
+    "_modelo_bindings_retenciones:RetencionesAggregationSourceResolver.resolve:1": _contract(
         AggregationPreconditionCondition.RETENCIONES_OBSERVATIONS_PRESENT,
         (
             ("modelo", "str(context.modelo)"),

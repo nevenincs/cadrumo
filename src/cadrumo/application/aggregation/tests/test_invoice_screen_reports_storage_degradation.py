@@ -35,11 +35,11 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.invoices.errors import InvoicePersistenceError
 from ....domain.invoices.models import InvoiceCatalogue
-from .._modelo_bindings import (
-    CalculationSourceContext,
+from .._modelo_bindings_invoice_iva import (
     _raise_if_invoice_iva_would_be_silent,
     _screened_invoice_iva_observations,
 )
+from .._source_mesh import CalculationSourceContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
