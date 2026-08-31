@@ -3178,6 +3178,175 @@ def find_retired_tui_remnants(
 
 
 # ---------------------------------------------------------------------------
+# Violation family 11: non-inert package namespaces
+# ---------------------------------------------------------------------------
+
+
+class NamespaceInertnessBreach(StrEnum):
+    """One way a package ``__init__.py`` fails the inert-namespace contract.
+
+    The members are the verbs the boundary rule forbids a namespace to
+    perform -- import, bind, lazily resolve, re-export -- recorded SEPARATELY
+    rather than collapsed into a single non-inert flag, because they call for
+    different remedies and one of them is far more expensive than the others.
+    A namespace that only re-exports is repaired by repointing its consumers
+    at the defining modules and deleting the imports. A namespace that DEFINES
+    production code cannot be repaired that way at all: there is no defining
+    module for the consumers to be pointed at yet, so the definitions must
+    hard-move to one first. A lazy resolution map is a third shape again --
+    the names it serves have owners, but nothing names them at an import
+    edge, so a static consumer census cannot see who depends on what.
+
+    Collapsing the kinds into one flag, or into one tally, reports a
+    1690-line namespace holding a domain model and a four-line re-export as
+    the same finding.
+    """
+
+    IMPORT_BINDING = "import_binding"
+    """The namespace binds an import other than ``from __future__``."""
+
+    OWN_DEFINITION = "own_definition"
+    """The namespace binds a module-level name of its own."""
+
+    LAZY_RESOLUTION = "lazy_resolution"
+    """The namespace resolves names through PEP 562 or a lazy export map."""
+
+    SYMBOL_EXPORT = "symbol_export"
+    """The namespace declares a non-empty ``__all__``."""
+
+
+@dataclass(frozen=True, slots=True)
+class NonInertNamespace:
+    """One package namespace that is not inert, and how it breaches.
+
+    Identity is ``(package, breaches)``. The path is derivable from the
+    package and the evidence is a diagnostic aid, so neither participates in
+    equality: a namespace whose breach SET is unchanged is the same finding
+    however its contents were edited, and a namespace that loses or gains a
+    breach kind is deliberately a different one.
+    """
+
+    package: str
+    breaches: tuple[NamespaceInertnessBreach, ...]
+    path: Path = field(compare=False)
+    evidence: tuple[str, ...] = field(compare=False, default=())
+
+
+_LAZY_EXPORT_CONTAINERS: Final[frozenset[str]] = frozenset({"_EXPORTS", "_EXPORT_MAP", "_LAZY_EXPORTS"})
+_LAZY_MODULE_HOOKS: Final[frozenset[str]] = frozenset({"__getattr__", "__dir__"})
+
+
+def _is_dunder_name(name: str) -> bool:
+    return name.startswith("__") and name.endswith("__")
+
+
+def _declares_no_exports(value: ast.expr | None) -> bool:
+    """True only if ``value`` is provably an empty ``__all__`` literal.
+
+    An empty ``__all__`` is the one binding the boundary rule permits, as the
+    way a namespace documents that it is inert on purpose. Anything the
+    scanner cannot read as an empty literal -- ``list(_LAZY_EXPORTS)``, a bare
+    name, a comprehension -- is treated as declaring exports, because a
+    checker that guesses permissively about the construct it cannot parse
+    hands that construct its own escape hatch.
+    """
+    return isinstance(value, (ast.List, ast.Tuple, ast.Set)) and not value.elts
+
+
+def classify_namespace_inertness(path: Path, *, src_root: Path = SRC_ROOT) -> NonInertNamespace | None:
+    """Return one package ``__init__.py``'s inertness breaches, or ``None`` if inert.
+
+    Import edges are collected from the WHOLE file rather than its module
+    level: a function-local import inside a namespace is still the namespace
+    reaching for a project symbol, and it is the shape a rewrite reaches for
+    first when a module-level import is refused. Bindings are collected from
+    the module level only -- through the same branch flattening the shim
+    census uses, so a ``TYPE_CHECKING`` split or an optional-dependency
+    fallback still counts -- because a name bound inside a function body is
+    that function's local, not namespace surface.
+
+    Args:
+        path: The ``__init__.py`` to classify.
+        src_root: Source root its dotted package name is taken relative to.
+    """
+    tree = ast.parse(path.read_text(encoding=_UTF_8))
+    breaches: set[NamespaceInertnessBreach] = set()
+    evidence: set[str] = set()
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom):
+            if node.level == 0 and node.module == "__future__":
+                continue
+            target = "." * node.level + (node.module or "")
+        elif isinstance(node, ast.Import):
+            target = ", ".join(alias.name for alias in node.names)
+        else:
+            continue
+        breaches.add(NamespaceInertnessBreach.IMPORT_BINDING)
+        evidence.add(f"import {target}")
+
+    for node in _flatten_module_level_branches(tree.body):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            lazy = node.name in _LAZY_MODULE_HOOKS
+            breaches.add(NamespaceInertnessBreach.LAZY_RESOLUTION if lazy else NamespaceInertnessBreach.OWN_DEFINITION)
+            evidence.add(node.name)
+            continue
+        if isinstance(node, ast.TypeAlias) and isinstance(node.name, ast.Name):
+            breaches.add(NamespaceInertnessBreach.OWN_DEFINITION)
+            evidence.add(node.name.id)
+            continue
+        if not isinstance(node, (ast.Assign, ast.AnnAssign)):
+            continue
+        targets = node.targets if isinstance(node, ast.Assign) else (node.target,)
+        for target in targets:
+            if not isinstance(target, ast.Name):
+                continue
+            if target.id in _LAZY_EXPORT_CONTAINERS:
+                breaches.add(NamespaceInertnessBreach.LAZY_RESOLUTION)
+                evidence.add(target.id)
+            elif target.id == "__all__":
+                if not _declares_no_exports(node.value):
+                    breaches.add(NamespaceInertnessBreach.SYMBOL_EXPORT)
+                    evidence.add("__all__")
+            elif not _is_dunder_name(target.id):
+                breaches.add(NamespaceInertnessBreach.OWN_DEFINITION)
+                evidence.add(target.id)
+
+    if not breaches:
+        return None
+    return NonInertNamespace(
+        package=module_name_for(path, src_root=src_root),
+        breaches=tuple(sorted(breaches)),
+        path=path,
+        evidence=tuple(sorted(evidence)),
+    )
+
+
+def find_non_inert_namespaces(
+    package_root: Path = PKG_ROOT,
+    *,
+    src_root: Path = SRC_ROOT,
+) -> tuple[NonInertNamespace, ...]:
+    """Return every non-inert package namespace under ``package_root``.
+
+    Whole-tree by construction: inertness is a property of a namespace, not of
+    a diff, so a changed-file check would pass a package that was already
+    non-inert before the change under review.
+
+    Args:
+        package_root: Package tree whose ``__init__.py`` files are classified.
+        src_root: Source root the dotted package names are taken relative to.
+    """
+    classified = (
+        classify_namespace_inertness(path, src_root=src_root)
+        for path in sorted(
+            scan_directory(package_root, pattern="__init__.py", recursive=True, prune_directories=("__pycache__",))
+        )
+    )
+    return tuple(sorted((found for found in classified if found is not None), key=lambda found: found.package))
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -3222,6 +3391,7 @@ def main() -> int:
     dev_prose_violations = find_dev_prose_violations(dev_boundary_files)
     registry_loader_imports = find_registry_loader_import_violations(all_sites)
     dangling_imports = find_dangling_first_party_imports(all_sites)
+    non_inert_namespaces = find_non_inert_namespaces()
     orphaned_modules = find_orphaned_modules(
         py_files,
         first_party_census_files(),
@@ -3356,6 +3526,17 @@ def main() -> int:
         print(f"  [{kind}][{'test' if o.is_test else 'prod'}] {o.path}")
     print()
 
+    print(f"=== FAMILY 11: non-inert package namespaces: {len(non_inert_namespaces)} total ===")
+    print("  (a package __init__ may not import, bind, lazily resolve or re-export a project symbol;")
+    print("   an empty __all__ is the one permitted binding, documenting the inert boundary)")
+    for breach in NamespaceInertnessBreach:
+        matching = [n for n in non_inert_namespaces if breach in n.breaches]
+        print(f"    {breach.value:16s} {len(matching):4d}")
+    for namespace in non_inert_namespaces:
+        breaches = ", ".join(breach.value for breach in namespace.breaches)
+        print(f"  [{breaches}] {namespace.package}")
+    print()
+
     print(f"=== FIX STRATEGY: precondition promotions vs. simple consumer rewrites ({len(fix_classes)} pairs) ===")
     needs_promotion = [f for f in fix_classes if not f.already_in_facade]
     simple_rewrite = [f for f in fix_classes if f.already_in_facade]
@@ -3406,6 +3587,7 @@ def main() -> int:
     print(f"  dangling first-party import targets (Family 8): {len(dangling_imports)}")
     print(f"  orphaned modules (Family 9): {len(orphaned_modules)}")
     print(f"  retired TUI fixed-point remnants: {len(retired_tui_remnants)}")
+    print(f"  non-inert package namespaces (Family 11): {len(non_inert_namespaces)}")
     print()
 
     if args.json:
