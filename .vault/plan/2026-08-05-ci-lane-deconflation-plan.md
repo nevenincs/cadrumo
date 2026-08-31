@@ -10,7 +10,7 @@ related:
   - '[[2026-06-01-registry-period-code-union-cli-boundary-adr]]'
   - '[[2026-08-05-ci-lane-deconflation-step-check-attribution-audit]]'
 modified: '2026-08-31'
-body_hash: 'sha256:e252094ae1a2181f7cba2d719848965702d767a270deb23d348a09ac4cd5a197'
+body_hash: 'sha256:8f55b09cae52d5c5314272fffd0ba8786b1c84a1b061ec06531efcb9597ad1dc'
 ---
 
 <!-- RETIRED: S01, S10, S181, S184, S186, S189, S191, S193, S194, S197, S199, S201, S203, S205, S207, S209, S211, S213, S215, S217, S219, S221 -->
@@ -250,7 +250,7 @@ Decompose every live size-budget subject by its owning source file, then regener
 - [ ] `P05.S165` - Refactor the size-budget subjects in test_supervisor.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/operations/tests/test_supervisor.py`.
 - [x] `P05.S166` - Refactor the size-budget subjects in help.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/operator_surface/help.py`.
 - [ ] `P05.S167` - Refactor the size-budget subjects in conformance.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/registry/conformance.py`.
-- [ ] `P05.S168` - Refactor the size-budget subjects in repair_integrity.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/repair_integrity.py`.
+- [x] `P05.S168` - Refactor the size-budget subjects in repair_integrity.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/repair_integrity.py`.
 - [ ] `P05.S169` - Refactor the size-budget subjects in state_projection.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/state_projection.py`.
 - [ ] `P05.S170` - Refactor the size-budget subjects in custody_ports.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/user_profile/custody_ports.py`.
 - [ ] `P05.S171` - Refactor the size-budget subjects in login_session.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/user_profile/login_session.py`.
