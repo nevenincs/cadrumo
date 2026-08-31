@@ -50,33 +50,36 @@ from datetime import date
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, Literal
 
-from pydantic import AnyHttpUrl, BaseModel, Field, TypeAdapter, model_validator
+from pydantic import AnyHttpUrl, TypeAdapter
 
 from .. import __version__
-from ..core.operator_action_enums import (
-    ActionArgumentSource,
-    ActionArgumentStatus,
-    ActionConditionality,
-    ActionEvidenceProvenance,
-    NoRecoveryOutcome,
-)
-from ..core.modelo import Modelo
-from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.async_cleanup import close_async_resources
 from ..core.config import Settings
 from ..core.errors.hierarchy import SiteHealthError, SiteHealthState
 from ..core.i18n import tr
 from ..core.logging import default_log_file_path, get_logger
+from ..core.modelo import Modelo
+from ..core.operator_action_enums import NoRecoveryOutcome
 from ..core.redaction import CLI_PROFILE_ID_PLACEHOLDER
 from ..core.resources import bundled_path
 from ..core.time import now
-from .errors import DiagnosticModelError
-from .operator_actions import (
-    ActionArgumentBinding,
-    ActionReference,
-    ConditionEvidence,
-    PreconditionVerdict,
+from .diagnostic_models import (
+    CliVersionReport,
+    ConfigRepairReport,
+    DiagnosticCheck,
+    DiagnosticFinding,
+    DiagnosticStatus,
+    RegistryIntegrityReport,
+    RegistryVersionSummary,
+    SecureObjectIntegrityReport,
+    _diagnostic_action_verdict,
+    _diagnostic_no_recovery_verdict,
+    _missing_verdict_binding,
+    _resolved_verdict_binding,
+    ensure_models_rebuilt,
 )
+from .errors import DiagnosticModelError
+from .operator_actions import PreconditionVerdict
 
 # The browser adapter, the registry authority, the secure-object
 # repository, the workflow store, and the wizard-status projection are
@@ -88,7 +91,6 @@ from .operator_actions import (
 # version surface off the heavy import graph.
 if TYPE_CHECKING:
     from ..adapters.outbound.aeat.browser import SiteHealthStatus
-    from ..adapters.persistence.storage import SecureObjectNamespaceIntegrity
     from .wizard.status import WizardStatusReport
     from .workflow.profile_health import ActiveProfileHealth
     from .workflow.state_models import WorkflowState
@@ -98,292 +100,6 @@ _log = get_logger(__name__)
 _REGISTRY_INTEGRITY_PROBE_YEAR: Final[int] = 2025
 _REGISTRY_INTEGRITY_PROBE_DATE: Final[date] = date(2025, 12, 31)
 _SITE_HEALTH_URL_ADAPTER: Final[TypeAdapter[AnyHttpUrl]] = TypeAdapter(AnyHttpUrl)
-
-DiagnosticStatus = Literal["ok", "warn", "fail"]
-
-
-class RegistryVersionSummary(BaseModel):
-    """Stable registry summary suitable for version and repair surfaces.
-
-    Built from
-    :class:`~domain.calculations.registry.ValidatedRegistryAuthority` when
-    registry detail is requested, then embedded in both :class:`CliVersionReport`
-    and :class:`ConfigRepairReport`.
-
-    Every count is an inventory tally -- a ``len()`` over a loaded collection --
-    so it is non-negative by construction and declares that bound. The
-    unavailable-registry branch reports zeroes rather than omitting the summary,
-    which is why the counts default to ``0``.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    available: bool
-    registry_root: str
-    modelo_count: int = Field(default=0, ge=0)
-    revision_count: int = Field(default=0, ge=0)
-    casilla_count: int = Field(default=0, ge=0)
-    formula_count: int = Field(default=0, ge=0)
-    revision_ids: tuple[str, ...] = ()
-    error: str | None = None
-
-
-class CliVersionReport(BaseModel):
-    """Version payload rendered by root CLI version surfaces.
-
-    :func:`build_cli_version_report` fills the :class:`RegistryVersionSummary`
-    field, and :func:`render_cli_version_text` renders the text form used by the
-    root ``aeat --version`` command.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    package_name: str
-    package_version: str
-    registry: RegistryVersionSummary
-
-
-DiagnosticAudience = Literal["operator", "internal"]
-"""Who can act on a check.
-
-``operator`` rows describe a state the taxpayer can themselves resolve
-(an incomplete profile, a missing certificate). ``internal`` rows
-describe an application-side defect the taxpayer cannot fix (a
-registry-integrity regression). The renderer words the two distinctly
-so a taxpayer is never alarmed into thinking an internal bug is a field
-they forgot to fill in.
-"""
-
-
-class DiagnosticFinding(BaseModel):
-    """One concrete, named sub-finding inside a :class:`DiagnosticCheck`.
-
-    A bare counter (``31/40``) or a one-word verdict (``warn``) tells the
-    operator *that* something is wrong but never *what*. Each finding
-    names one specific cause in operator language. The parent check owns the
-    typed recovery outcome, so findings never duplicate executable transport
-    prose. The profile-keys check emits one finding per unset key; a
-    failing check emits one finding per concrete cause. Findings are
-    explanatory children, not a replacement for the parent row's required
-    recovery channel.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    summary: str
-    detail: str | None = None
-    requirement: Literal["required", "optional"] | None = None
-
-
-class DiagnosticCheck(BaseModel):
-    """One concrete config repair check.
-
-    A failing or warning row MUST carry one application-owned
-    ``precondition_verdict``. The verdict itself requires exactly one canonical
-    action reference or explicit no-recovery outcome. A row that supplies no
-    verdict is a
-    :class:`pydantic.ValidationError` at construction time by raising
-    :class:`~application.errors.DiagnosticModelError`. ``ok`` rows MUST
-    carry neither.
-
-    ``findings`` carries the per-cause breakdown: the specific keys that
-    are unset, the specific reasons a check failed. ``audience`` records
-    whether the operator can act on the row or whether it reports an
-    internal application defect. :func:`render_config_repair_text` and
-    :class:`ConfigRepairReport` preserve this distinction.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    name: str
-    status: DiagnosticStatus
-    summary: str
-    detail: str | None = None
-    precondition_verdict: PreconditionVerdict | None = None
-    audience: DiagnosticAudience = "operator"
-    findings: tuple[DiagnosticFinding, ...] = ()
-
-    @model_validator(mode="after")
-    def _enforce_actionable_contract(self) -> DiagnosticCheck:
-        if self.status in {"fail", "warn"}:
-            if self.precondition_verdict is None:
-                raise DiagnosticModelError(
-                    f"DiagnosticCheck(status={self.status!r}) must populate `precondition_verdict`; "
-                    "silent failing rows are forbidden",
-                )
-        else:  # status == "ok"
-            if self.precondition_verdict is not None:
-                raise DiagnosticModelError("DiagnosticCheck(status='ok') must not carry a recovery outcome")
-        return self
-
-
-def _diagnostic_action_verdict(
-    *,
-    condition_id: str,
-    evidence_id: str,
-    values: dict[str, str | bool | int],
-    action_id: str,
-    argument_bindings: tuple[ActionArgumentBinding, ...] = (),
-    missing_argument_names: tuple[str, ...] = (),
-) -> PreconditionVerdict:
-    """Build one diagnostics-owned actionable failed-condition verdict."""
-    return PreconditionVerdict(
-        failed_condition_id=condition_id,
-        evidence=(
-            ConditionEvidence(
-                condition_id=condition_id,
-                evidence_id=evidence_id,
-                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-                values=values,
-            ),
-        ),
-        action=ActionReference(action_id=action_id),
-        argument_bindings=argument_bindings,
-        missing_argument_names=missing_argument_names,
-        conditionality=(
-            ActionConditionality.REQUIRES_ARGUMENTS if missing_argument_names else ActionConditionality.IMMEDIATE
-        ),
-    )
-
-
-def _diagnostic_no_recovery_verdict(
-    *,
-    condition_id: str,
-    evidence_id: str,
-    values: dict[str, str | bool | int],
-    outcome: NoRecoveryOutcome,
-) -> PreconditionVerdict:
-    """Build one explicit diagnostics-owned closed recovery outcome."""
-    from .operator_actions import no_action_precondition_verdict
-
-    return no_action_precondition_verdict(
-        condition_id=condition_id,
-        evidence_id=evidence_id,
-        facts=values,
-        provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-        outcome=outcome,
-    )
-
-
-def _resolved_verdict_binding(argument_name: str, value: str | bool) -> ActionArgumentBinding:
-    """Bind a concrete diagnostics fact to one catalogue argument."""
-    return ActionArgumentBinding(
-        argument_name=argument_name,
-        status=ActionArgumentStatus.RESOLVED,
-        value=value,
-        source=ActionArgumentSource.VERDICT_CONTEXT,
-        source_key=argument_name,
-    )
-
-
-def _missing_verdict_binding(argument_name: str) -> ActionArgumentBinding:
-    """Declare one catalogue argument diagnostics cannot honestly supply."""
-    return ActionArgumentBinding(
-        argument_name=argument_name,
-        status=ActionArgumentStatus.MISSING,
-    )
-
-
-class SecureObjectIntegrityReport(BaseModel):
-    """Aggregated decryptability counts across every populated namespace.
-
-    Surfaces how many rows of the local ``secure_objects`` table can be
-    decrypted under the current master key. A non-zero ``unreadable`` total
-    almost always means the keychain master-key entry was rotated or
-    regenerated since the affected rows were written; the plaintexts are
-    cryptographically unrecoverable from this process.
-
-    ``namespaces`` carries
-    :class:`~adapters.persistence.storage.SecureObjectNamespaceIntegrity`
-    rows produced by the encrypted
-    :class:`~adapters.persistence.storage.SecureObjectRepository`.
-    The same aggregate shape is shared by :class:`ConfigRepairReport`,
-    :class:`~application.repair_integrity.RepairIntegrityReport`,
-    :func:`preview_quarantine_unreadable_secure_objects`, and
-    :func:`quarantine_unreadable_secure_objects`.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    namespaces: tuple[SecureObjectNamespaceIntegrity, ...] = ()
-    readable_total: int = 0
-    unreadable_total: int = 0
-
-
-class ConfigRepairReport(BaseModel):
-    """Composite report rendered by the bare ``aeat config repair`` command.
-
-    The report combines the public :class:`RegistryVersionSummary`, the
-    secure-object :class:`SecureObjectIntegrityReport`, and ordered
-    :class:`DiagnosticCheck` rows into one operator-facing health payload.
-    ``setup`` is a redacted
-    :class:`~application.wizard.status.WizardStatusReport` when
-    :class:`~application.workflow.WorkflowState` can be loaded.
-    :func:`build_config_repair_report` is the producer, and
-    :func:`render_config_repair_text` is the compact text renderer.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    overall: DiagnosticStatus
-    package_name: str
-    package_version: str
-    python_version: str
-    log_file: str
-    registry: RegistryVersionSummary
-    setup: WizardStatusReport | None
-    secure_objects: SecureObjectIntegrityReport
-    checks: tuple[DiagnosticCheck, ...]
-
-
-_models_rebuilt = False
-
-
-def _ensure_models_rebuilt() -> None:
-    """Resolve the deferred forward references on the heavy report models.
-
-    ``SecureObjectIntegrityReport`` and ``ConfigRepairReport`` carry
-    fields typed by ``SecureObjectNamespaceIntegrity`` and
-    ``WizardStatusReport``. Those names are imported lazily so the
-    ``aeat --version`` fast path never pulls the heavy secure-object and
-    wizard-status import subtrees. The two models are only ever
-    *constructed* by the diagnostics functions below — never by the
-    version path — so their forward references are resolved here, on
-    first use of a heavy function, when the real types are imported
-    anyway. Idempotent: the rebuild runs once per process.
-    """
-    global _models_rebuilt
-    if _models_rebuilt:
-        return
-    from ..adapters.persistence.storage import (
-        SecureObjectNamespaceIntegrity,
-    )
-    from .wizard.status import WizardStatusReport
-
-    # Keep the lazy model-rebuild namespace imports statically accessed as well.
-    _model_rebuild_types = (SecureObjectNamespaceIntegrity, WizardStatusReport)
-
-    SecureObjectIntegrityReport.model_rebuild(_types_namespace=locals())
-    ConfigRepairReport.model_rebuild(_types_namespace={**globals(), **locals()})
-    _models_rebuilt = True
-
-
-class RegistryIntegrityReport(BaseModel):
-    """Result of the opt-in full registry-validation probe.
-
-    The full registry TOML parse and cross-domain referential-integrity
-    gate stay off the ``--version`` and bare-invocation surfaces and run
-    only from the explicit ``aeat config repair integrity registry``
-    verb. This typed
-    report is what that verb renders: a :class:`RegistryVersionSummary` plus
-    the aggregate :class:`DiagnosticCheck` from
-    :func:`_registry_cross_domain_integrity_check`.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    registry: RegistryVersionSummary
-    check: DiagnosticCheck
 
 
 def build_cli_version_report(
@@ -434,7 +150,7 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
     Each emitted warning/failure row is validated by :class:`DiagnosticCheck` so
     the caller never receives a silent repair finding.
     """
-    _ensure_models_rebuilt()
+    ensure_models_rebuilt()
     root = registry_root or bundled_path("registry", "aeat")
     registry = _build_registry_version_summary(root)
     log_parent_exists = default_log_file_path().parent.exists()
@@ -743,7 +459,7 @@ def _probe_secure_objects_integrity() -> SecureObjectIntegrityReport:
     The per-namespace rows come from
     :meth:`~adapters.persistence.storage.SecureObjectRepository.probe_namespace_integrity`.
     """
-    _ensure_models_rebuilt()
+    ensure_models_rebuilt()
     from ..adapters.persistence.storage import (
         SecureObjectNamespaceIntegrity,
         secure_object_repository_for_active_bucket_or_default_route,
@@ -1389,7 +1105,7 @@ def quarantine_unreadable_secure_objects() -> SecureObjectIntegrityReport:
         moved to quarantine) and ``readable`` counts (= rows retained
         in ``secure_objects``).
     """
-    _ensure_models_rebuilt()
+    ensure_models_rebuilt()
     from ..adapters.persistence.storage import (
         secure_object_repository_for_active_bucket_or_default_route,
     )
@@ -1407,28 +1123,13 @@ def quarantine_unreadable_secure_objects() -> SecureObjectIntegrityReport:
     )
 
 
-ensure_models_rebuilt = _ensure_models_rebuilt
-profile_check = _profile_check
-registry_cross_domain_integrity_check = _registry_cross_domain_integrity_check
-
-
 __all__ = [
-    "CliVersionReport",
-    "ConfigRepairReport",
-    "DiagnosticCheck",
-    "DiagnosticFinding",
-    "RegistryIntegrityReport",
-    "RegistryVersionSummary",
-    "SecureObjectIntegrityReport",
     "build_cli_version_report",
     "build_config_repair_report",
     "build_registry_integrity_report",
-    "ensure_models_rebuilt",
     "preview_quarantine_unreadable_secure_objects",
     "probe_browser_connectivity",
-    "profile_check",
     "quarantine_unreadable_secure_objects",
-    "registry_cross_domain_integrity_check",
     "render_browser_connectivity_text",
     "render_cli_version_text",
     "render_config_repair_text",

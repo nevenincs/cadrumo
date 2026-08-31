@@ -10,7 +10,7 @@ related:
   - '[[2026-06-01-registry-period-code-union-cli-boundary-adr]]'
   - '[[2026-08-05-ci-lane-deconflation-step-check-attribution-audit]]'
 modified: '2026-08-31'
-body_hash: 'sha256:873241e44f823bcfac9ae112d4067351385cf99adc3ccb206aacac897b31844c'
+body_hash: 'sha256:f683f73c5be1b8cbf0e64a3a748141138161017507333fbf6bdecf74fd46394e'
 ---
 
 <!-- RETIRED: S01, S10, S181, S184, S186, S189, S191, S193, S194, S197, S199, S201, S203, S205, S207, S209, S211, S213, S215, S217, S219, S221 -->
@@ -204,7 +204,7 @@ Decompose every live size-budget subject by its owning source file, then regener
 - [x] `P05.S137` - Refactor the size-budget subjects in test_certificate_sources_check.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/auth/tests/test_certificate_sources_check.py`.
 - [x] `P05.S138` - Refactor the size-budget subjects in _relation_prefill.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/calculations/_relation_prefill.py`.
 - [x] `P05.S139` - Refactor the size-budget subjects in cross_period_clean_state.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/calculations/cross_period_clean_state.py`.
-- [ ] `P05.S140` - Refactor the size-budget subjects in diagnostics.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/diagnostics.py`.
+- [x] `P05.S140` - Refactor the size-budget subjects in diagnostics.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/diagnostics.py`.
 - [ ] `P05.S141` - Refactor the size-budget subjects in _export_producer.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/filing/_export_producer.py`.
 - [ ] `P05.S142` - Refactor the size-budget subjects in _export.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/filing/_export.py`.
 - [ ] `P05.S143` - Refactor the size-budget subjects in _producer_snapshot.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/filing/_producer_snapshot.py`.
