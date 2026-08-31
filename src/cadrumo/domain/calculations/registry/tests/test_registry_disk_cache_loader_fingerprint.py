@@ -165,20 +165,23 @@ def test_derived_embedded_types_all_resolve_to_first_party_sources_outside_the_r
         assert item.relative_source == item.source_path.relative_to(_CADRUMO_PACKAGE_DIR).as_posix()
 
 
-def test_derived_types_hash_their_private_defining_files_not_a_facade_init() -> None:
-    """Period and TaxDomain hash their private DEFINING files, not a package ``__init__``.
+def test_derived_types_hash_their_defining_files_not_a_facade_init() -> None:
+    """Period and TaxDomain hash their DEFINING files, not a package ``__init__``.
 
     Anti-regression proof carried over from the facade-target fix: collapsing a
     re-exported type onto ``core/__init__.py`` would silently defeat
-    invalidation when ``_period.py`` / ``_tax_domain.py`` change. Deriving from
+    invalidation when ``period.py`` / ``tax_domain.py`` change. Deriving from
     the type object rather than from an import path keeps that structural, but
     the assertion stays because the failure it guards is invisible otherwise.
+
+    Both modules are public now, so the guarantee is that the hash follows the
+    module that DEFINES the type -- privateness was never what mattered here.
     """
     resolved = {item.marker: item for item in _derive_embedded_foreign_types()}
     period = resolved["cadrumo.core.period.Period"]
     tax_domain = resolved["cadrumo.core.tax_domain.TaxDomain"]
     assert period.source_path.name == "period.py", period.source_path
-    assert tax_domain.source_path.name == "_tax_domain.py", tax_domain.source_path
+    assert tax_domain.source_path.name == "tax_domain.py", tax_domain.source_path
 
 
 def test_loader_fingerprint_incorporates_embedded_foreign_module_source() -> None:
