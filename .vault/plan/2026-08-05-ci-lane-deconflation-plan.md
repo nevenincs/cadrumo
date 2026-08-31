@@ -10,7 +10,7 @@ related:
   - '[[2026-06-01-registry-period-code-union-cli-boundary-adr]]'
   - '[[2026-08-05-ci-lane-deconflation-step-check-attribution-audit]]'
 modified: '2026-08-31'
-body_hash: 'sha256:078c43c1f20fb126d27774a4b28365eee1abeb9a9a09f571853feca6a0bf411d'
+body_hash: 'sha256:d0145bd4f42df472c12d73007d9b65729f866d87d3156c90f5b3b8c80b9b2964'
 ---
 
 <!-- RETIRED: S01, S10, S181, S184, S186, S189, S191, S193, S194, S197, S199, S201, S203, S205, S207, S209, S211, S213, S215, S217, S219, S221 -->
@@ -200,7 +200,7 @@ Decompose every live size-budget subject by its owning source file, then regener
 - [x] `P05.S135` - Refactor the size-budget subjects in test_renta_ledger.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/aggregation/tests/test_renta_ledger.py`.
 - [x] `P05.S136` - Refactor the size-budget subjects in operator.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/auth/operator.py`.
 - [x] `P05.S137` - Refactor the size-budget subjects in test_certificate_sources_check.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/auth/tests/test_certificate_sources_check.py`.
-- [ ] `P05.S138` - Refactor the size-budget subjects in _relation_prefill.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/calculations/_relation_prefill.py`.
+- [x] `P05.S138` - Refactor the size-budget subjects in _relation_prefill.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/calculations/_relation_prefill.py`.
 - [ ] `P05.S139` - Refactor the size-budget subjects in cross_period_clean_state.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/calculations/cross_period_clean_state.py`.
 - [ ] `P05.S140` - Refactor the size-budget subjects in diagnostics.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/diagnostics.py`.
 - [ ] `P05.S141` - Refactor the size-budget subjects in _export_producer.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/filing/_export_producer.py`.

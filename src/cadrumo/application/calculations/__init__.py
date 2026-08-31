@@ -137,9 +137,9 @@ from ._prorrata_regularizacion import (
 )
 from ._relation_prefill import (
     RelationPrefillSourceResolver,
-    relation_prefill_period_zero_default_binding_ids,
     resolve_relations_from_local_store,
 )
+from ._relation_prefill_m202 import relation_prefill_period_zero_default_binding_ids
 from ._revision_carry_gate import RevisionCarryOutcome, revision_carry_outcome
 from .cross_period_clean_state import (
     CrossPeriodCleanStateBlocker,
