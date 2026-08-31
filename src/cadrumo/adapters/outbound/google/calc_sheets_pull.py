@@ -34,7 +34,7 @@ See Also:
     :func:`~adapters.outbound.google.compute_from_pull` maps a matching
     pull into
     :class:`~domain.calculations.registry.RegistryCalculationResult`, and
-    :func:`~adapters.outbound.google.calc_sheets_pull.verify_pull_coverage`
+    :func:`~adapters.outbound.google.calc_sheets_pull_coverage.verify_pull_coverage`
     compares a pull against its source
     :class:`~application.storage.calc_sheets.SheetExportPlan` when the
     caller still has that plan.
@@ -61,7 +61,6 @@ from pydantic import TypeAdapter, ValidationError
 
 from ....application.storage.calc_sheets import (
     CALC_SHEETS_ENGINE_VERSION,
-    SheetExportPlan,
     SheetLayout,
     collect_row_sets,
     column_index_to_letters,
@@ -107,9 +106,6 @@ from .calc_sheets_pull_records import (
 )
 from .calc_sheets_pull_records import (
     OperatorEdit as _OperatorEdit,
-)
-from .calc_sheets_pull_records import (
-    PullCoverageDiscrepancy as _PullCoverageDiscrepancy,
 )
 from .calc_sheets_pull_records import (
     PullMetadata as _PullMetadata,
@@ -996,71 +992,6 @@ def _decode_row_set_cell(
     return _RowSetCellEdit(binding=binding_id, row_index=local_row, value=coerced_value)
 
 
-def verify_pull_coverage(
-    plan: SheetExportPlan,
-    pull: _PullResult,
-) -> tuple[_PullCoverageDiscrepancy, ...]:
-    """Return every coverage discrepancy between ``plan`` and ``pull``.
-
-    Returns an empty tuple of :class:`PullCoverageDiscrepancy` when the two
-    sides agree on the surfaces the pull captures. Non-empty tuples enumerate
-    structural deltas: missing row-set groupings, unexpected groupings,
-    binding count mismatch, relation count mismatch, or registry-metadata
-    drift.
-
-    Tariffs, cell constraints, and protected ranges are NOT
-    re-validated against the workbook itself (the pull adapter never
-    reads them back); a future extension can compare developer-
-    metadata digests for those surfaces when the apply side stamps
-    them.
-    """
-    discrepancies: list[_PullCoverageDiscrepancy] = []
-
-    # Metadata identity: registry coordinates must match exactly.
-    plan_meta = plan.metadata
-    pull_meta = pull.metadata
-    for field_name in ("modelo_id", "revision_id", "filing_year", "period", "registry_sha"):
-        plan_value = getattr(plan_meta, field_name)
-        pull_value = getattr(pull_meta, field_name)
-        if field_name == "period":
-            plan_value = plan_meta.period.registry_token
-        if pull_value != plan_value:
-            discrepancies.append(
-                _PullCoverageDiscrepancy(
-                    kind="metadata_mismatch",
-                    detail=f"metadata field {field_name!r} differs between plan and pull",
-                    expected=str(plan_value),
-                    observed=str(pull_value),
-                ),
-            )
-
-    # Row-set coverage: every grouping declared in the plan should
-    # produce a row-set edit (even if empty); extras signal that the
-    # workbook carries a row-set the plan did not declare.
-    planned_groupings = {row_set.grouping for row_set in plan.row_sets}
-    pulled_groupings = {edit.grouping for edit in pull.row_set_edits}
-    for missing in sorted(planned_groupings - pulled_groupings):
-        discrepancies.append(
-            _PullCoverageDiscrepancy(
-                kind="row_set_missing",
-                detail=f"row-set grouping {missing!r} is declared by the plan but absent from the pull",
-                expected=missing,
-                observed="",
-            ),
-        )
-    for extra in sorted(pulled_groupings - planned_groupings):
-        discrepancies.append(
-            _PullCoverageDiscrepancy(
-                kind="row_set_extra",
-                detail=f"row-set grouping {extra!r} appears in the pull but is not declared by the plan",
-                expected="",
-                observed=extra,
-            ),
-        )
-
-    return tuple(discrepancies)
-
-
 def compute_from_pull(
     snapshot: RegistrySnapshot,
     pull: _PullResult,
@@ -1294,4 +1225,4 @@ def _collect_relation_values(
     return relation_values
 
 
-__all__ = ["compute_from_pull", "pull_operator_edits", "verify_pull_coverage"]
+__all__ = ["compute_from_pull", "pull_operator_edits"]

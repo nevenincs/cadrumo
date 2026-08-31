@@ -566,7 +566,7 @@ def non_numeric_observed_casillas(
     is not numeric, or a numeric casilla whose token will not parse.
 
     Caller-opt-in, in the shape of
-    :func:`~adapters.outbound.google.calc_sheets_pull.verify_pull_coverage`: this is a query, not
+    :func:`~adapters.outbound.google.calc_sheets_pull_coverage.verify_pull_coverage`: this is a query, not
     a step in enrolment. It performs no side effects and can be called before or
     after
     :func:`registry_observation_from_filed_declaration`, so a caller with an

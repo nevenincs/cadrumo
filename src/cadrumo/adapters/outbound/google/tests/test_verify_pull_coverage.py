@@ -24,7 +24,7 @@ from .....application.storage.calc_sheets import (
     TabName,
 )
 from .....core.period import Period
-from ..calc_sheets_pull import verify_pull_coverage
+from ..calc_sheets_pull_coverage import verify_pull_coverage
 from ..calc_sheets_pull_records import (
     MetadataMatchState,
     PullCoverageDiscrepancy,

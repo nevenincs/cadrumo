@@ -40,6 +40,8 @@ _ALLOWED_MODULES: frozenset[str] = frozenset(
         "calc_sheets_apply.py",
         "_calc_sheets_apply_formatting.py",  # pure Sheets presentation and validation request builders
         "calc_sheets_pull.py",
+        "calc_sheets_pull_coverage.py",  # export-plan versus pull structural coverage validator
+        "calc_sheets_pull_records.py",  # typed Google Sheets pull wire records and payload projection
         "_calc_sheets_support.py",  # shared modelo-130 registry snapshot fixture builder
         "test_calc_sheets_transport_facet_parity.py",  # contract: offline/online transports render the same plan facets (alignment, protection)
         "document_link_resolver.py",  # follow-up contract: scope-compatible Drive doclink resolution
