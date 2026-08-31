@@ -9,9 +9,7 @@ from typing import Annotated, Self
 
 from pydantic import AfterValidator, BaseModel, Field, StringConstraints, field_validator, model_validator
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Art104TresExclusion, Hex64Str, IvaDeductionFactKind
-from ...core.period import Period
 
 # CLASSIFIED_BY_MANUAL is re-exported for constants centralisation tests.
 from ...core.external_constants import (
@@ -22,15 +20,24 @@ from ...core.external_constants import (
 )
 from ...core.filing_year import FilingYear
 from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, TransactionId, WorkUnitId
-from ...core.parsing import normalise_iso_3166_alpha2_jurisdiction, normalise_iso_4217_currency
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.parsing import IsoCurrencyCode, normalise_iso_3166_alpha2_jurisdiction, normalise_iso_4217_currency
+from ...core.period import Period
+from ...core.text_bounds import NonEmptyStr
 from ...domain.iva.prorrata import InputClassification
 from ...domain.iva.schema import EUMemberState, IvaCategory
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.m210_income_classification import M210IncomeClassification
-from ...domain.transactions.models import BucketTransactionRef, Transaction, TransactionEditLineageEntry, TransactionEvidenceProvenanceEntry, TransactionLifecycleLineageEntry
-from ...domain.transactions.repository import ImportSummary
 from ...domain.transactions.model_validation import validate_business_pct_coupling
+from ...domain.transactions.models import (
+    BucketTransactionRef,
+    Transaction,
+    TransactionEditLineageEntry,
+    TransactionEvidenceProvenanceEntry,
+    TransactionLifecycleLineageEntry,
+)
+from ...domain.transactions.repository import ImportSummary
 from ..export import ExportSerializationFormat, verify_export_metadata
 from ..review.filter import LedgerReviewStatus
 
@@ -123,7 +130,7 @@ class ManualLedgerTransactionCommand(_ManualLedgerTransactionInput):
     booked_date: date
     value_date: date | None = None
     amount: Decimal
-    currency: CurrencyCode = DEFAULT_CURRENCY
+    currency: IsoCurrencyCode = DEFAULT_CURRENCY
     direction: TransactionDirection
     counterparty: _LedgerOptionalText = None
     description: str = Field(min_length=1)
@@ -285,9 +292,6 @@ class ManualLedgerTransactionResult(BaseModel):
 IsoDateText = Annotated[str, StringConstraints(min_length=10, max_length=10)]
 """A calendar date as the wire carries it, ``YYYY-MM-DD``, fixed at ten characters."""
 
-CurrencyCode = Annotated[str, StringConstraints(min_length=3, max_length=3)]
-"""An ISO-4217 code, which is three characters by definition of the standard."""
-
 DiagnosticKind = Annotated[str, StringConstraints(min_length=1, max_length=32)]
 """What an import diagnostic is about."""
 
@@ -305,7 +309,7 @@ class LedgerTransactionPayload(_LedgerCountryCodeModel):
     booked_date: IsoDateText
     value_date: str | None = None
     amount: str = Field(min_length=1)
-    currency: CurrencyCode
+    currency: IsoCurrencyCode
     direction: str = Field(min_length=1)
     counterparty: str = ""
     description: str = Field(min_length=1)
@@ -820,16 +824,16 @@ class LedgerExportRow(BaseModel):
 
     bucket_id: BucketId
     transaction_id: TransactionId
-    lifecycle_state: str = Field(min_length=1)
+    lifecycle_state: NonEmptyStr
     booked_date: IsoDateText
     value_date: str = ""
     effective_date: IsoDateText
-    amount: str = Field(min_length=1)
-    currency: CurrencyCode
-    direction: str = Field(min_length=1)
+    amount: NonEmptyStr
+    currency: IsoCurrencyCode
+    direction: NonEmptyStr
     counterparty: str = ""
-    description: str = Field(min_length=1)
-    business_classification: str = Field(min_length=1)
+    description: NonEmptyStr
+    business_classification: NonEmptyStr
     business_pct: str = ""
     category_id: str = ""
     taxable_base: str = ""

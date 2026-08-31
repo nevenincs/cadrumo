@@ -38,7 +38,6 @@ from typing import TYPE_CHECKING
 from pydantic import NonNegativeInt, field_validator, model_validator
 
 from ...application.ledger.models import (
-    CurrencyCode,
     DiagnosticKind,
     DiagnosticMessage,
     DiagnosticSeverity,
@@ -175,7 +174,7 @@ class TransactionPayload(OutputSchema):
     booked_date: IsoDateText
     value_date: str | None = None
     amount: NonEmptyStr
-    currency: CurrencyCode
+    currency: IsoCurrencyCode
     direction: NonEmptyStr
     counterparty: str = ""
     description: NonEmptyStr
@@ -790,20 +789,29 @@ class LedgerExportRowPayload(OutputSchema):
     ``model_dump(mode="json")``. The flow stays the non-negative ``amount``
     magnitude plus the ``direction`` authority; every other column is
     a string the serializer already emits ("" for an absent optional column).
+
+    "Mirrors" is meant literally, and for four columns it was not true. The
+    canonical row requires content in ``lifecycle_state``, ``direction``,
+    ``description`` and ``business_classification``; this payload accepted an
+    empty string in each. A payload looser than the record it projects lets a
+    consumer validate a row the producer could never have emitted, so the
+    published schema promised less than the data actually carries. The columns
+    that are genuinely optional keep their ``""`` default -- that is the
+    serializer's absent-column spelling, not a missing bound.
     """
 
     bucket_id: BucketId
     transaction_id: TransactionId
-    lifecycle_state: str
+    lifecycle_state: NonEmptyStr
     booked_date: IsoDateText
     value_date: str = ""
     effective_date: IsoDateText
     amount: NonEmptyStr
     currency: IsoCurrencyCode
-    direction: str
+    direction: NonEmptyStr
     counterparty: str = ""
-    description: str
-    business_classification: str
+    description: NonEmptyStr
+    business_classification: NonEmptyStr
     business_pct: str = ""
     category_id: str = ""
     taxable_base: str = ""
