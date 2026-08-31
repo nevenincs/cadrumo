@@ -3404,7 +3404,7 @@ cli:
           declaración.
         modelo_audit_export: Exporta la auditoría de evidencias de una revisión de
           declaración.
-        modelo_audit_view: Muestra el manifiesto de un paquete de evidencias de una
+        modelo_audit_view: Muestra el manifiesto del paquete de evidencias de una
           revisión de declaración.
         modelo_bindings: Gestionar las vinculaciones de un modelo fiscal.
         modelo_describe: Describir la estructura de un modelo fiscal.
