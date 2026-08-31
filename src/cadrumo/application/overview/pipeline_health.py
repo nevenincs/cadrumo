@@ -56,7 +56,7 @@ from ...core.period import Period
 from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ...domain.modelos.verification_report import ModeloVerificationFindingSeverity, VerificationCompletenessStatus
 from ..ledger.models import LedgerStatusReport
-from ..operator_actions._models import DeclaredNextAction
+from ..operator_actions.models import DeclaredNextAction
 from .next_actions import declare_next_action
 
 if TYPE_CHECKING:

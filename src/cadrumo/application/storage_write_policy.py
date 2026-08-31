@@ -50,8 +50,8 @@ from ..core.operator_action_enums import (
     NoRecoveryOutcome,
 )
 from ..core.storage_taxonomy import STORAGE_ROOT_SETTINGS_FIELD
-from .operator_actions._models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
-from .operator_actions._preconditions import no_action_precondition_verdict
+from .operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
+from .operator_actions.preconditions import no_action_precondition_verdict
 
 
 class StorageWritePolicyCode(StrEnum):

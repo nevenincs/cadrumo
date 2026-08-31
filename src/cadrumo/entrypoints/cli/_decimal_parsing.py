@@ -24,7 +24,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from ...core.decimal._grammar import try_parse_canonical_decimal
+from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.i18n._render import tr
 from ._common import _bad
 

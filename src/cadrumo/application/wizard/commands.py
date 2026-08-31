@@ -1802,7 +1802,7 @@ def _resolved_descendientes_action() -> ResolvedNoticeAction | None:
     executable action always names a live verb or the emission refuses —
     the failure mode the old literal-command message could not have.
     """
-    from ..operator_actions._catalogue import next_action
+    from ..operator_actions.catalogue import next_action
 
     return next_action("operator.profile.descendiente")
 

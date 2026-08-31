@@ -32,7 +32,7 @@ from typing import get_args
 
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
-from ...core.decimal._coerce import coerce_decimal_strict
+from ...core.decimal.coercion import coerce_decimal_strict
 from ...core.modelo import Modelo
 from ...core.money.rounding import round_to_cents
 from ...core.operator_action_enums import ActionEvidenceProvenance

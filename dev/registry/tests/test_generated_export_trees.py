@@ -401,19 +401,24 @@ _CHECK_MODE_PENDING: dict[str, str] = {
     #
     # Whoever stamps one of these must expect the window refusal next, and fix it
     # rather than re-pin it.
-    # 200 is behind a DELIBERATE downgrade, not a reviewer stamp. Its single
-    # revision spans the incompatible 2024 and 2025 AEAT layouts, so
-    # its authority_grade was lowered to "calculation" to hold the filing boundary
-    # shut until layout-correct revisions exist. Check mode validates the
-    # candidate through the real authority and therefore asks for filing grade,
-    # so it cannot run for 200 at all while that stands.
+    # 200 is behind a DELIBERATE downgrade, not a reviewer stamp. Its
+    # authority_grade was lowered to "calculation" to hold the filing boundary
+    # shut while one revision spanned the incompatible 2024 and 2025 AEAT
+    # layouts. Check mode validates the candidate through the real authority and
+    # therefore asks for filing grade, so it cannot run for 200 while that stands.
+    #
+    # The split HAS since landed -- 200 now carries revisions 2024 and
+    # 2025-y-siguientes, each bound to its own design epoch -- but both still
+    # declare authority_grade = "calculation", so the split alone did not retire
+    # this entry. It retires when the grade is restored to filing, which is a
+    # separate decision from splitting the revision, and the assertion below
+    # fails the day check mode passes so the entry cannot outlive its reason.
     #
     # Recorded so the byte-equality half of this gate keeps working: without an
     # entry the row fails blind, and an unguarded published tree is free to
     # drift -- which is exactly what 347's map did unnoticed, per the note
-    # above. The entry retires itself the day the split lands and check mode
-    # passes.
-    "m200-2024": "cannot satisfy the requested 'filing' snapshot authority",
+    # above.
+    "m200-2025-y-siguientes": "cannot satisfy the requested 'filing' snapshot authority",
     # 185 and 222 are STALE grades, not wrong ones. Each revision carries a
     # human applicability review stamped 2026-08-21 recording "no export layout
     # of either kind is declared" and reaching "scheduling and applicability
@@ -442,6 +447,25 @@ _CHECK_MODE_PENDING: dict[str, str] = {
     # two positions SHORT of AEAT's own envelope, omitting the AUX block's
     # programa and NIF-desarrollo fields. The generated tree carries both.
 }
+
+
+def test_every_pending_check_mode_entry_names_an_enrolled_tree() -> None:
+    """A pending reason keyed to no row is unreachable, and unreachable is invisible.
+
+    ``_CHECK_MODE_PENDING`` is keyed by ``str(_GeneratedTree)``, which embeds the
+    revision id, so renaming a row silently orphans its entry: the lookup returns
+    ``None``, check mode is then expected to PASS, and the recorded reason stops
+    being asserted without anything going red. That is the one failure this dict
+    cannot self-report, because every other drift in it surfaces as a refusal
+    that does not match its recorded text.
+    """
+    enrolled = {str(tree) for tree in _GENERATED_TREES}
+    orphaned = sorted(set(_CHECK_MODE_PENDING) - enrolled)
+    assert orphaned == [], (
+        f"pending check-mode entries name no enrolled tree: {orphaned}. A row rename must carry "
+        "its entry with it; deleting the entry instead silently drops the reason this gate is "
+        "allowed to be pending."
+    )
 
 
 @pytest.mark.parametrize("tree", _GENERATED_TREES, ids=str)

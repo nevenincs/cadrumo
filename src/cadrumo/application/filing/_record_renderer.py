@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from decimal import Decimal
 
 from ...core.casilla_id import CasillaId
-from ...core.decimal._coerce import coerce_decimal
+from ...core.decimal.coercion import coerce_decimal
 from ...core.filing_producer_key import FilingProducerKey
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...domain.calculations.export_field_kind import CasillaFieldKind

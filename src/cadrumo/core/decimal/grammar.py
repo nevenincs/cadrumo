@@ -11,7 +11,7 @@ many error contracts.
 Relationship to the sibling helpers
 -----------------------------------
 
-:mod:`._coerce` is the *tolerant* half of this package: :func:`coerce_decimal`
+:mod:`.coercion` is the *tolerant* half of this package: :func:`coerce_decimal`
 swallows a parse failure and returns a configured default, and
 :func:`normalize_decimal_separators` transforms European separators for callers
 that must accept machine-produced text (bank exports, AEAT PDF extraction).

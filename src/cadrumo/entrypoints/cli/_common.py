@@ -105,8 +105,8 @@ if TYPE_CHECKING:
     from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ...application.auth.catalogue import AuthProviderListing
     from ...application.modelo.work_lifecycle import ModeloWorkLifecycleContinuation
-    from ...application.operator_actions._catalogue import ActionArgumentBindingSpecification
-    from ...application.operator_actions._models import ActionArgumentBinding, ActionReference, PreconditionVerdict
+    from ...application.operator_actions.catalogue import ActionArgumentBindingSpecification
+    from ...application.operator_actions.models import ActionArgumentBinding, ActionReference, PreconditionVerdict
     from ...application.workflow.state_models import WorkflowState
     from ...core.json_contract import ResolvedActionReference, ResolvedNoticeAction
     from ...domain.deadlines.models import TaxpayerProfile
@@ -376,7 +376,7 @@ def _resolve_cli_precondition_action_reference(
     action = verdict.action
     if action is None:
         return None
-    from ...application.operator_actions._catalogue import OPERATOR_ACTION_CATALOGUE
+    from ...application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
     from ...application.operator_surface.action_resolution import resolve_catalogue_action
     from ...core.json_contract import ResolvedActionReference
 
@@ -550,7 +550,7 @@ def _live_action_input_schema(command_key: str) -> VerbInputSchema:
 
 def _resolve_notice_actions(notices: Sequence[Notice] | None) -> tuple[Notice, ...]:
     """Join success-notice actions to their live CLI paths before presentation."""
-    from ...application.operator_actions._catalogue import lookup_action
+    from ...application.operator_actions.catalogue import lookup_action
     from ...core.json_contract import ResolvedNoticeAction
 
     resolved: list[Notice] = []
@@ -753,7 +753,7 @@ def resolve_notice_action(
     stable action identity and provenance-bearing concrete values; they cannot
     hand-assemble a wire action or silently omit a live required input.
     """
-    from ...application.operator_actions._catalogue import OPERATOR_ACTION_CATALOGUE
+    from ...application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
     from ...application.operator_surface.action_resolution import (
         resolve_notice_action as resolve_application_notice_action,
     )

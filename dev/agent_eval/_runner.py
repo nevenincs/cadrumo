@@ -76,7 +76,7 @@ from ._models import (
 )
 
 if TYPE_CHECKING:
-    from cadrumo.application.operator_actions._models import PreconditionVerdict
+    from cadrumo.application.operator_actions.models import PreconditionVerdict
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 

@@ -25,7 +25,7 @@ from collections.abc import Mapping
 from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING
 
-from ...core.decimal._coerce import coerce_decimal_strict
+from ...core.decimal.coercion import coerce_decimal_strict
 from ...core.modelo import Modelo
 from ...core.resources._boundary import bundled_path
 from ...domain.calculations.registry.loader import load_legal_parameters_only

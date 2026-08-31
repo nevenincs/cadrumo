@@ -33,8 +33,8 @@ from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.time.clock import now
 from ...core.time.utc import validate_utc_aware
-from ..operator_actions._models import PreconditionVerdict
-from ..operator_actions._preconditions import no_action_precondition_verdict
+from ..operator_actions.models import PreconditionVerdict
+from ..operator_actions.preconditions import no_action_precondition_verdict
 from .errors import AuthDiagnosticPayloadError, AuthDiagnosticPhoneStateError
 
 _DIAGNOSTIC_NAMESPACE = CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.namespace

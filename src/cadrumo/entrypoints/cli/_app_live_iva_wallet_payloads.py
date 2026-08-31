@@ -17,7 +17,7 @@ from ...application.live.remote_state_models import (
     LiveIvaReadStatus,
     LiveIvaReadSurface,
 )
-from ...core.decimal._grammar import is_non_negative_canonical_decimal
+from ...core.decimal.grammar import is_non_negative_canonical_decimal
 from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ...core.json_contract import OutputSchema
 from ...core.period import Period

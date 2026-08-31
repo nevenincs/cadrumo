@@ -12,7 +12,7 @@ from ...core.operator_action_enums import (
     ActionEvidenceProvenance,
     NoRecoveryOutcome,
 )
-from ._models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
+from .models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
 
 
 def conditionality_for_binding(binding: ActionArgumentBinding) -> ActionConditionality:

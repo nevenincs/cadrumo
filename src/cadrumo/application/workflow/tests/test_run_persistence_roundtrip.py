@@ -42,7 +42,7 @@ from ....core.storage_taxonomy_locations import storage_path
 from ....domain.deadlines.models import ObligationStatus
 from ....domain.submission._protocols import ModeloDraftStatus
 from ....tests.secure_sql import isolated_runtime_profile
-from ...operator_actions._models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
+from ...operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
 from ..errors import WorkflowError
 from ..persistence import WorkflowRunRepository, load_run, save_run
 from ..run_models import (

@@ -50,7 +50,7 @@ from typing import Protocol, TypedDict
 from pydantic import ValidationError
 
 from ...core.aggregation import BindingAggregationOp, RetencionClave, RowSetGroupingKind
-from ...core.decimal._coerce import coerce_decimal
+from ...core.decimal.coercion import coerce_decimal
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.foreign_asset_obligation import M720AssetClassCode
 from ...core.modelo_232_codigos import MetodoValoracion, TipoOperacionVinculada

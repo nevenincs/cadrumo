@@ -13,8 +13,8 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.core.decimal._coerce
-   cadrumo.core.decimal._fixed_width
-   cadrumo.core.decimal._format
-   cadrumo.core.decimal._grammar
-   cadrumo.core.decimal._printed
+   cadrumo.core.decimal.coercion
+   cadrumo.core.decimal.fixed_width
+   cadrumo.core.decimal.formatting
+   cadrumo.core.decimal.grammar
+   cadrumo.core.decimal.printed_money

@@ -44,7 +44,7 @@ from ...core.period import Period
 from ...core.text_bounds import PositiveCount
 from ...domain.deadlines.models import ModeloDeadline, ObligationStatus
 from ...domain.submission._protocols import ModeloDraftStatus
-from ..operator_actions._models import ConditionEvidence, PreconditionVerdict
+from ..operator_actions.models import ConditionEvidence, PreconditionVerdict
 from ._identity import period_identity_segment
 from .abort import WorkflowAbortReason
 from .engine_helpers import CertificateSeverityValue, DeadlineRole, FilingWindowState

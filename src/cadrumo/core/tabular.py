@@ -51,7 +51,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from .config import load_settings
-from .decimal._grammar import european_thousands_reading_is_ambiguous
+from .decimal.grammar import european_thousands_reading_is_ambiguous
 from .errors.hierarchy import CoreValidationError
 from .external_constants import CSV_ENCODING_FALLBACK_CHAIN
 from .logging import get_logger

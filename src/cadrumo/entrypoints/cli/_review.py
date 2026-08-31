@@ -12,7 +12,7 @@ from ...application.review.operator import (
     project_review_item,
     project_review_queue,
 )
-from ...core.decimal._coerce import coerce_decimal_strict
+from ...core.decimal.coercion import coerce_decimal_strict
 from ...core.errors.error_codes import resolve_error_message
 from ...core.external_constants import OutputLanguage
 from ...core.i18n._render import tr

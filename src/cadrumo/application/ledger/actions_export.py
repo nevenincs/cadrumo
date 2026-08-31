@@ -14,7 +14,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from ...core.atomic_write import atomic_write_bytes
-from ...core.decimal._format import format_decimal
+from ...core.decimal.formatting import format_decimal
 from ...core.hashing import content_hash_hex
 
 if TYPE_CHECKING:

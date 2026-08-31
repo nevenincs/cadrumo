@@ -43,8 +43,8 @@ from ...core.operator_action_enums import (
     NoRecoveryOutcome,
 )
 from ...core.profile_session import ProfileRecordUnavailability, ProfileSessionRefusalReason
-from ..operator_actions._models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
-from ..operator_actions._preconditions import active_profile_pointer_repair_verdict, no_action_precondition_verdict
+from ..operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
+from ..operator_actions.preconditions import active_profile_pointer_repair_verdict, no_action_precondition_verdict
 from ..profile_preconditions import inspect_active_profile_precondition, profile_session_failure_verdict
 from ..user_profile.keys_validation import list_profile_key_records, validate_profile_values
 from ..user_profile.profile_pointer import active_profile_pointer_transaction

@@ -29,7 +29,7 @@ from pydantic import BaseModel, model_validator
 from ...core.errors.hierarchy import CadrumoError
 from ...core.identity import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ..operator_actions._models import PreconditionVerdict
+from ..operator_actions.models import PreconditionVerdict
 from .catalogue import AuthProviderListing
 from .probes import ProviderProbeResult
 

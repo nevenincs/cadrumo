@@ -61,7 +61,7 @@ from decimal import Decimal
 from enum import StrEnum
 from xml.etree.ElementTree import Element
 
-from ....core.decimal._coerce import coerce_decimal
+from ....core.decimal.coercion import coerce_decimal
 from ....core.document_shape import DocumentShape
 from ._aeat_record_schema import mandatory_child_elements
 from ._shape import probe_document_shape

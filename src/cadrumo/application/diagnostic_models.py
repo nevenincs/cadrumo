@@ -21,7 +21,7 @@ from ..core.operator_action_enums import (
     NoRecoveryOutcome,
 )
 from .errors import DiagnosticModelError
-from .operator_actions._models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
+from .operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
 
 if TYPE_CHECKING:
     from ..adapters.persistence.storage.sql.secure_objects import SecureObjectNamespaceIntegrity
@@ -144,7 +144,7 @@ def _diagnostic_no_recovery_verdict(
     outcome: NoRecoveryOutcome,
 ) -> PreconditionVerdict:
     """Build one explicit diagnostics-owned closed recovery outcome."""
-    from .operator_actions._preconditions import no_action_precondition_verdict
+    from .operator_actions.preconditions import no_action_precondition_verdict
 
     return no_action_precondition_verdict(
         condition_id=condition_id,

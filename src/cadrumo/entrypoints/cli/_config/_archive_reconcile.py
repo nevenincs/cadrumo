@@ -28,7 +28,7 @@ from typing import TYPE_CHECKING
 
 import typer
 
-from ....application.operator_actions._models import ActionReference
+from ....application.operator_actions.models import ActionReference
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity

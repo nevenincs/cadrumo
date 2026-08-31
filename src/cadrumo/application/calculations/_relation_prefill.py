@@ -63,7 +63,7 @@ from typing import TYPE_CHECKING, ClassVar, Final, NamedTuple, TypedDict
 from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId
-from ...core.decimal._grammar import try_parse_canonical_decimal
+from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.logging import get_logger
 from ...core.modelo import Modelo
 from ...core.parsing import parse_iso8601_date

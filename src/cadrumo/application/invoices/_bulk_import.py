@@ -44,8 +44,8 @@ from pydantic import BaseModel, Field, NonNegativeInt, ValidationError
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core.country_code import CountryCodeAlpha2
-from ...core.decimal._coerce import coerce_decimal, normalize_decimal_separators
-from ...core.decimal._grammar import try_parse_canonical_decimal
+from ...core.decimal.coercion import coerce_decimal, normalize_decimal_separators
+from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing import IsoCurrencyCode, parse_iso8601_date

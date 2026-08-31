@@ -38,7 +38,7 @@ from ....application.ledger.batch_ingest import (
     batch_item_identity,
 )
 from ....application.ledger.preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
-from ....application.operator_actions._models import ConditionEvidence, PreconditionVerdict
+from ....application.operator_actions.models import ConditionEvidence, PreconditionVerdict
 from ....application.provisioning import ProvisioningPreconditionCondition
 from ....core.config import override_settings
 from ....core.json_contract import ResolvedActionReference, ResolvedNoticeAction, ResolvedPreconditionAction

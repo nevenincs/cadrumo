@@ -67,7 +67,7 @@ from ._diagnostics_payloads import (
 
 def _llm_no_run_data_notice(*, code: str):
     """Return the factual no-run notice with the catalogue-owned classifier action."""
-    from ...application.operator_actions._models import ActionReference
+    from ...application.operator_actions.models import ActionReference
     from ...core.json_contract import Notice, NoticeSeverity
     from ._common import resolve_notice_action
 

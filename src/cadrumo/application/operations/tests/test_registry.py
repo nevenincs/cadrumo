@@ -39,7 +39,7 @@ from ....core.operations import (
     OperationInteractionKind,
     OperationLifecycle,
 )
-from ...operator_actions._models import ActionReference
+from ...operator_actions.models import ActionReference
 from ..capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,

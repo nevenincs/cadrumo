@@ -6,7 +6,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.operator_action_enums import NoRecoveryOutcome
-from ...operator_actions._models import ActionReference
+from ...operator_actions.models import ActionReference
 from ..models import ManifestActionProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

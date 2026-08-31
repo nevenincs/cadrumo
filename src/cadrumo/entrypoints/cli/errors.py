@@ -47,7 +47,7 @@ import typer
 from pydantic import BaseModel, ValidationError
 
 from ...application.cli_exception_preconditions import CliExceptionPrecondition
-from ...application.operator_actions._models import PreconditionVerdict
+from ...application.operator_actions.models import PreconditionVerdict
 from ...core.click_context import argv_requests_json, json_output_requested
 from ...core.config_state_root import FormerProductStateError
 from ...core.errors.error_codes import (
@@ -1056,7 +1056,7 @@ def _active_profile_pointer_error_verdict(error: ActiveProfilePointerError) -> P
         or context.get("root_fallback_refused") is not True
     ):
         return None
-    from ...application.operator_actions._preconditions import corrupt_active_profile_pointer_verdict
+    from ...application.operator_actions.preconditions import corrupt_active_profile_pointer_verdict
 
     return corrupt_active_profile_pointer_verdict(path=path)
 

@@ -36,7 +36,7 @@ from datetime import UTC, date, datetime
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
-from ...application.operator_actions._catalogue import next_action
+from ...application.operator_actions.catalogue import next_action
 from ...core.aeat_csv import normalise_aeat_csv
 from ...core.i18n import tr
 from ...core.identity import same_tax_identifier

@@ -87,7 +87,7 @@ _NON_OWNER_GENERIC_IMPORTS: dict[str, tuple[str, ...]] = {
     "cadrumo.application.aggregation._renta_gasto_ledger": ("LedgerAggregationResultBase",),
     "cadrumo.application.aggregation._renta_income_ledger": ("LedgerAggregationResultBase",),
     "cadrumo.application.aggregation._renta_ledger": ("LedgerAggregationResultBase",),
-    "cadrumo.application.operator_actions._models": ("PreconditionOutcomeInvariant",),
+    "cadrumo.application.operator_actions.models": ("PreconditionOutcomeInvariant",),
     "cadrumo.application.user_profile.bundle_export_operation": ("JournalRepositoryBase",),
     "cadrumo.core.json_contract": ("PreconditionOutcomeInvariant",),
 }

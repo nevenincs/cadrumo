@@ -46,7 +46,7 @@ from pydantic import BaseModel, ValidationError
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core.aggregation import IntracomOperationType
-from ...core.decimal._grammar import try_parse_canonical_decimal
+from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.errors.error_codes import resolve_error_message
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.identity import IdentityError, validate_spanish_tax_id

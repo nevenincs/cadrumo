@@ -36,7 +36,7 @@ from ...application.modelo.work_addressing import (
 )
 from ...application.modelo.work_lifecycle import lifecycle_continuation_for_work_history
 from ...core.casilla_id import CasillaId, validated_casilla_id
-from ...core.decimal._grammar import try_parse_canonical_decimal
+from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.external_constants import OutputLanguage
 from ...core.i18n._render import tr
 from ...core.logging import get_logger

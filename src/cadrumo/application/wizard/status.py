@@ -17,7 +17,7 @@ from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...domain.deadlines.models import TaxpayerProfile
-from ..operator_actions._models import DeclaredNextAction
+from ..operator_actions.models import DeclaredNextAction
 from ..state_projection import build_auth_readiness
 from ..user_profile.completeness import iva_regime_required
 from ..user_profile.keys_validation import list_profile_key_records, validate_profile_values

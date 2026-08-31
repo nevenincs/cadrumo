@@ -71,7 +71,7 @@ from ..core.operator_action_enums import (
     ActionEvidenceProvenance,
 )
 from .diagnostic_models import DiagnosticCheck
-from .operator_actions._models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
+from .operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
 
 _log = get_logger(__name__)
 

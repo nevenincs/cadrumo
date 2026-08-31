@@ -54,7 +54,7 @@ from typing import ClassVar, Final, Literal
 from pydantic import BaseModel
 
 from .....core.config import load_settings
-from .....core.decimal._coerce import coerce_decimal
+from .....core.decimal.coercion import coerce_decimal
 from .....core.errors.hierarchy import CadrumoError, CoreValidationError
 from .....core.hashing import sha256_hex as _sha256_hex
 from .....core.logging import get_logger

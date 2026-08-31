@@ -37,7 +37,7 @@ from ...application.modelo.work_addressing import (
 )
 from ...application.modelo.work_lifecycle import get_work_unit
 from ...core.casilla_id import CasillaId, validated_casilla_id
-from ...core.decimal._grammar import try_parse_canonical_decimal
+from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.errors.error_codes import resolve_error_message
 from ...core.errors.hierarchy import CadrumoError
 from ...core.hex import HEX_PATTERN_64

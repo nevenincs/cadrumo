@@ -97,7 +97,7 @@ from .diagnostic_models import (
     ensure_models_rebuilt as _ensure_models_rebuilt,
 )
 from .errors import DiagnosticModelError
-from .operator_actions._models import PreconditionVerdict
+from .operator_actions.models import PreconditionVerdict
 
 # The browser adapter, the registry authority, the secure-object
 # repository, the workflow store, and the wizard-status projection are

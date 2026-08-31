@@ -28,7 +28,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ....application.operator_actions._models import PreconditionVerdict
+from ....application.operator_actions.models import PreconditionVerdict
 from ....core.errors.hierarchy import CadrumoError, CoreError, TerminalPreconditionErrorMixin
 
 

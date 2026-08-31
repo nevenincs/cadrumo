@@ -37,7 +37,7 @@ from typing import Literal
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId
-from ...core.decimal._grammar import try_parse_canonical_decimal
+from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import M347_THRESHOLD_EUR
 from ...core.irnr import (

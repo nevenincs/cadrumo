@@ -43,7 +43,7 @@ from decimal import Decimal
 from pydantic import BaseModel
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
-from ...core.decimal._coerce import coerce_decimal
+from ...core.decimal.coercion import coerce_decimal
 from ...core.external_constants import DEDUCCION_MATERNIDAD_COTIZACIONES_CEILING_RETIRED_FILING_YEAR, UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.parsing import parse_iso8601_date

@@ -48,7 +48,7 @@ from ..core.paths import (
     windows_storage_root_long_path_margin,
 )
 from .auth.probes import ProviderProbeResult
-from .operator_actions._models import ActionReference, ConditionEvidence, PreconditionVerdict
+from .operator_actions.models import ActionReference, ConditionEvidence, PreconditionVerdict
 
 if TYPE_CHECKING:
     from ..domain.calculations.registry.authority import ValidatedRegistryAuthority

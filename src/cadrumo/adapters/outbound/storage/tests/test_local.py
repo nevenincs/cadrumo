@@ -21,7 +21,7 @@ from typing import Any, TypedDict
 
 import pytest
 
-from .....application.operator_actions._models import PreconditionVerdict
+from .....application.operator_actions.models import PreconditionVerdict
 from .....core.atomic_write import atomic_write_text
 from .....core.directory_scan import iter_directory, scan_directory
 from .....core.errors.error_codes import ERROR_REGISTRY, build_error_envelope, resolve_error_message

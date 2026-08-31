@@ -20,7 +20,7 @@ from decimal import Decimal
 
 import pytest
 
-from .._coerce import coerce_decimal, coerce_finite_european_decimal
+from ..coercion import coerce_decimal, coerce_finite_european_decimal
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -82,7 +82,7 @@ def test_coerce_decimal_debug_log_omits_raw_malformed_value(
 ) -> None:
     raw_value = "not-a-decimal-secret"
 
-    with caplog.at_level(logging.DEBUG, logger="cadrumo.core.decimal._coerce"):
+    with caplog.at_level(logging.DEBUG, logger="cadrumo.core.decimal.coercion"):
         assert coerce_decimal(raw_value) is None
 
     relevant = [

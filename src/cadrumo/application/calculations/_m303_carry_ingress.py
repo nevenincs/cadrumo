@@ -33,7 +33,7 @@ from ...domain.iva_compensation.filed_derivation import (
 )
 
 if TYPE_CHECKING:
-    from ..operator_actions._models import PreconditionVerdict
+    from ..operator_actions.models import PreconditionVerdict
 
     _M303CarryIngressErrorMixin = TerminalPreconditionErrorMixin[PreconditionVerdict]
 else:

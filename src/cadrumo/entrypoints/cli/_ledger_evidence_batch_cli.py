@@ -36,7 +36,7 @@ from typing import TYPE_CHECKING
 
 import typer
 
-from ...application.operator_actions._models import ActionReference
+from ...application.operator_actions.models import ActionReference
 from ...core.i18n._render import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedNoticeAction
 from ...core.output_rendering import OutputFormat
@@ -56,7 +56,7 @@ from ._ledger_evidence_batch_payloads import EvidenceBatchResult
 
 if TYPE_CHECKING:
     from ...application.ledger.batch_ingest import BatchItemResult, BatchRunResult, UnresolvedBatchSource
-    from ...application.operator_actions._models import PreconditionVerdict
+    from ...application.operator_actions.models import PreconditionVerdict
 
 __all__ = ["evidence_batch"]
 

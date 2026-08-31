@@ -28,7 +28,7 @@ from ....core.precondition_action_invariants import (
     PreconditionEvidence,
     PreconditionOutcomeInvariant,
 )
-from .._models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
+from ..models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

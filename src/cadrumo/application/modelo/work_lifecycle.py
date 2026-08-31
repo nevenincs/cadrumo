@@ -57,7 +57,7 @@ from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.repository import upsert_work_unit
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from ..operator_actions._models import ActionArgumentBinding, ActionReference, ConditionEvidence
+from ..operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence
 from ._action_errors import (
     CalculationRevisionNotFoundError,
     WorkUnitAlreadyDiscardedError,

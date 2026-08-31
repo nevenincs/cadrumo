@@ -22,8 +22,8 @@ from ..core.operator_action_enums import (
     NoRecoveryOutcome,
 )
 from ..core.profile_session import ProfileSessionRefusalReason
-from .operator_actions._models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
-from .operator_actions._preconditions import conditionality_for_binding, no_action_precondition_verdict
+from .operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
+from .operator_actions.preconditions import conditionality_for_binding, no_action_precondition_verdict
 
 
 class ProfilePreconditionCondition(StrEnum):

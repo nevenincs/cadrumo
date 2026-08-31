@@ -37,7 +37,7 @@ from decimal import Decimal
 from typing import NamedTuple
 
 from ...core.casilla_id import CasillaId
-from ...core.decimal._coerce import coerce_decimal
+from ...core.decimal.coercion import coerce_decimal
 from ...core.modelo import Modelo
 from ...domain.calculations.registry.ids import LegalRefId
 from ...domain.calculations.registry.schema import ModeloRevision

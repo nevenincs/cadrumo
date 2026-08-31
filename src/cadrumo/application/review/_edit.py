@@ -38,8 +38,8 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core.decimal._coerce import coerce_decimal
-from ...core.decimal._grammar import try_parse_canonical_decimal
+from ...core.decimal.coercion import coerce_decimal
+from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...domain.invoices.enums import numeric_iva_rate_percentages
 from .errors import EditParseError
@@ -146,7 +146,7 @@ def _coerce_invoice_amount(clause: EditClause, *, scope: str) -> Decimal:
     :func:`_coerce_decimal`, because the tolerant helper RESOLVES the ambiguous
     Spanish thousands shape instead of refusing it: ``coerce_decimal("1.000")``
     answers one euro where the operator may have meant one thousand. That is not
-    hypothetical here -- ``core.decimal._grammar`` records an operator's
+    hypothetical here -- ``core.decimal.grammar`` records an operator's
     ``12.500`` euros being read as twelve fifty on a threshold field by exactly
     this route, which is why the ambiguity check was moved into the canonical
     parser.

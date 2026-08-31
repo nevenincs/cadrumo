@@ -26,7 +26,7 @@ from __future__ import annotations
 import json
 from collections.abc import Sequence
 
-from ...application.operator_actions._models import ActionReference, DeclaredNextAction
+from ...application.operator_actions.models import ActionReference, DeclaredNextAction
 from ...application.overview.calendar import actionable_post_filing_events
 from ...application.overview.calendar_evidence import NO_AEAT_HISTORY_NOTICE_CODE
 from ...application.overview.calendar_models import (

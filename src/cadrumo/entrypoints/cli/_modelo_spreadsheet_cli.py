@@ -20,7 +20,7 @@ from ...adapters.outbound.storage._factory import build_google_credentials, reso
 from ...adapters.outbound.storage.errors import OutboundStorageError
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.config import load_settings
-from ...core.decimal._coerce import coerce_decimal
+from ...core.decimal.coercion import coerce_decimal
 from ...core.period import Period
 from ...domain.calculations.registry.authority import bundled_authority as _bundled_authority
 from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError

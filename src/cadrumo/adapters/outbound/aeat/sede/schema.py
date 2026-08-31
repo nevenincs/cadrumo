@@ -75,7 +75,7 @@ from pydantic import AnyHttpUrl, BaseModel, Field, NonNegativeInt, field_validat
 
 from .....core.casilla_id import CasillaId
 from .....core.casilla_value_kind import CasillaValueKind
-from .....core.decimal._coerce import coerce_decimal_strict
+from .....core.decimal.coercion import coerce_decimal_strict
 from .....core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from .....core.filing_year import FilingYear
 from .....core.identity import AeatCsv, AeatExpedienteId, ContentDigest, RegistrySnapshotId

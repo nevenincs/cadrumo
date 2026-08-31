@@ -35,7 +35,7 @@ from ...modelo._selectors import ModeloCalculationRevisionSelector
 from ...modelo._workflow_gate import workflow_period_for_work_unit
 from ...modelo.work_addressing import ModeloExactWorkUnitTarget, ModeloVisibleFilingTarget
 from ...modelo.work_lifecycle import create_work_unit
-from ...operator_actions._models import ConditionEvidence, PreconditionVerdict
+from ...operator_actions.models import ConditionEvidence, PreconditionVerdict
 from ..abort import WorkflowAbortReason
 from ..engine_recording import record_site_unavailable, record_unhandled
 from ..errors import WorkflowAbortSignalError, WorkflowError

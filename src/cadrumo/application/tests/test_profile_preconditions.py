@@ -8,7 +8,7 @@ import pytest
 
 from ...core.operator_action_enums import NoRecoveryOutcome
 from ...core.profile_session import ProfileSessionRefusalReason
-from ..operator_actions._models import PreconditionVerdict
+from ..operator_actions.models import PreconditionVerdict
 from ..profile_preconditions import (
     FormerProductDetectionScope,
     ProfileSelectionFailure,

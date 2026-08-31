@@ -12,7 +12,7 @@ import pytest
 from pydantic import AnyUrl
 
 from ......core.config import Settings
-from ......core.decimal._printed import AEAT_THOUSANDS_SEPARATORS
+from ......core.decimal.printed_money import AEAT_THOUSANDS_SEPARATORS
 from ......core.external_constants import UTF_8_ENCODING
 from ......core.period import Period
 from ......domain.calculations.registry.errors import RegistryValidationError

@@ -24,7 +24,7 @@ from typing import TYPE_CHECKING, Final
 
 import typer
 
-from ....application.operator_actions._models import ActionReference
+from ....application.operator_actions.models import ActionReference
 from ....application.storage_management._models import StorageCheckIssueKind, StorageTreeIssueKind
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity

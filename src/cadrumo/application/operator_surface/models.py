@@ -30,7 +30,7 @@ from ...core.aggregation import COUNTERPART_SOURCE_KIND_ORDER, BindingSourceKind
 from ...core.identifier_grammar import NamespacedId
 from ...core.logging import LogExtra
 from ...core.operator_action_enums import NoRecoveryOutcome
-from ..operator_actions._models import ActionReference
+from ..operator_actions.models import ActionReference
 
 
 class RootSurfaceName(StrEnum):

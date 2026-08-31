@@ -490,7 +490,7 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
             "cadrumo.core.atomic_write",
             "cadrumo.core.classification",
             "cadrumo.core.config",
-            "cadrumo.core.decimal._coerce",
+            "cadrumo.core.decimal.coercion",
             "cadrumo.core.errors.error_codes",
             "cadrumo.core.errors.hierarchy",
             "cadrumo.core.errors.not_found",

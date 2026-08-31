@@ -43,7 +43,7 @@ from ...application.ledger.models import (
     DiagnosticSeverity,
     IsoDateText,
 )
-from ...core.decimal._grammar import is_non_negative_canonical_decimal, try_parse_canonical_decimal
+from ...core.decimal.grammar import is_non_negative_canonical_decimal, try_parse_canonical_decimal
 from ...core.identity import (
     BucketId,
     CalculationRevisionId,

@@ -6,7 +6,7 @@ of well-known inputs).  Tests are NOT tautological because the expected
 strings are computed independently of the implementation.
 
 See Also:
-    :mod:`~core.decimal._format`
+    :mod:`~core.decimal.formatting`
         Canonical formatter module that replaced the four former local helper
         copies.
     :class:`~core.errors.DecimalFormatError`
@@ -24,7 +24,7 @@ from decimal import Decimal
 import pytest
 
 from ...errors.hierarchy import DecimalFormatError
-from .._format import format_decimal
+from ..formatting import format_decimal
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

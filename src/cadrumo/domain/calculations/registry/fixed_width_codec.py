@@ -10,7 +10,7 @@ from typing import Annotated, Literal, Protocol
 from pydantic import BeforeValidator
 
 from ....core.casilla_id import CasillaId
-from ....core.decimal._fixed_width import coerce_fixed_width_decimal
+from ....core.decimal.fixed_width import coerce_fixed_width_decimal
 from ....core.errors.hierarchy import CadrumoError
 from ....core.money.rounding import round_to_cents
 from .errors import RegistryValidationError

@@ -31,7 +31,7 @@ from ...core.time.clock import now as _utcnow
 from ...domain.deadlines.engine import compute_obligation_schedule, next_deadline
 from ...domain.deadlines.errors import NoDeadlineWindowsError, ScheduleComputationError
 from ...domain.deadlines.models import ModeloDeadline, Schedule, TaxpayerProfile
-from ..operator_actions._preconditions import no_action_precondition_verdict
+from ..operator_actions.preconditions import no_action_precondition_verdict
 from .errors import WorkflowAbortSignalError
 from .protocols import DeadlineEngineProtocol
 from .run_models import WorkflowAbortReason, WorkflowPurpose, WorkflowStage, WorkflowStep

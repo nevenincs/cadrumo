@@ -28,7 +28,7 @@ from typing import cast
 from pydantic import ValidationError
 
 from ...core.citation_grounding import CitationGrounding
-from ...core.decimal._coerce import coerce_decimal
+from ...core.decimal.coercion import coerce_decimal
 from ...core.i18n import Translatable as tr
 from ...core.paths import path_stat_fingerprint
 from ...core.resources._boundary import bundled_path

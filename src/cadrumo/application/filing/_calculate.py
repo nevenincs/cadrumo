@@ -37,7 +37,7 @@ from ...core.period import Period
 from ...core.time.utc import validate_utc_aware
 from ...domain.filing.schema import ModeloDraft
 from ...domain.submission._protocols import ModeloDraftStatus
-from ..operator_actions._models import PreconditionVerdict
+from ..operator_actions.models import PreconditionVerdict
 from .errors import FilingPreconditionCondition, filing_no_recovery_verdict
 
 

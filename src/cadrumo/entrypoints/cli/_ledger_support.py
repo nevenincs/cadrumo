@@ -22,7 +22,7 @@ from ...application.cli_exception_preconditions import CliExceptionPrecondition,
 from ...application.ledger.actions_manual import ledger_transaction_payload, list_manual_transactions
 from ...application.ledger.id_resolution import resolve_transaction_id
 from ...application.ledger.review_projection import ledger_transaction_review_status
-from ...core.decimal._format import format_decimal
+from ...core.decimal.formatting import format_decimal
 from ...core.errors.hierarchy import CadrumoError
 from ...core.i18n._render import tr
 from ...core.json_contract import Notice, OutputSchema

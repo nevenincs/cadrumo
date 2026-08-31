@@ -35,7 +35,7 @@ from ...application.modelo.registry_discovery import (
     registry_modelo_codes,
     registry_support_matrix,
 )
-from ...application.operator_actions._models import ActionReference
+from ...application.operator_actions.models import ActionReference
 from ...application.state_projection import CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.i18n._render import tr

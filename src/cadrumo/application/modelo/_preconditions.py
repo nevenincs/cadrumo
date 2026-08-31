@@ -19,8 +19,8 @@ from ...core.operator_action_enums import (
     NoRecoveryOutcome,
 )
 from ...domain.modelos.work_unit import WorkUnit
-from ..operator_actions._catalogue import lookup_action
-from ..operator_actions._models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
+from ..operator_actions.catalogue import lookup_action
+from ..operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
 from ..operator_surface.models import ManifestActionProfile
 
 

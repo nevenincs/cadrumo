@@ -29,8 +29,8 @@ from typing import ClassVar
 from ...core.errors.hierarchy import TerminalPreconditionErrorMixin
 from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...domain.filing.errors import FilingExportError, ModeloBuilderError, ModeloImportError
-from ..operator_actions._models import PreconditionVerdict
-from ..operator_actions._preconditions import no_action_precondition_verdict
+from ..operator_actions.models import PreconditionVerdict
+from ..operator_actions.preconditions import no_action_precondition_verdict
 
 
 class FilingPreconditionCondition(StrEnum):

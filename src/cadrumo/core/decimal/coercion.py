@@ -43,7 +43,7 @@ from decimal import Decimal, InvalidOperation
 from typing import overload
 
 from ..logging import get_logger
-from ._grammar import european_thousands_reading_is_ambiguous
+from .grammar import european_thousands_reading_is_ambiguous
 
 _logger = get_logger(__name__)
 

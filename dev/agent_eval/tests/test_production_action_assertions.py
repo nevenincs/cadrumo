@@ -6,9 +6,9 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.application.modelo._preconditions import build_modelo_precondition_failure
-from cadrumo.application.operator_actions._preconditions import no_action_precondition_verdict
-from cadrumo.core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
+from cadrumo.application.operator_actions.preconditions import no_action_precondition_verdict
 from cadrumo.core.json_contract import EnvelopeStatus
+from cadrumo.core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 
 from .._action_coverage import LeafConditionScenario, production_leaf_condition_scenario_matrix
 from .._models import (

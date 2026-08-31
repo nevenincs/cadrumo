@@ -48,7 +48,7 @@ from ...core.identity import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from ...domain.iva.classification import InvoiceKind
-from ..operator_actions._models import PreconditionVerdict
+from ..operator_actions.models import PreconditionVerdict
 from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 
 if TYPE_CHECKING:

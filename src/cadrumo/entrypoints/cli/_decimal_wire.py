@@ -28,7 +28,7 @@ from typing import Annotated, Any
 
 from pydantic import AfterValidator
 
-from ...core.decimal._grammar import try_parse_canonical_decimal
+from ...core.decimal.grammar import try_parse_canonical_decimal
 
 
 def _validate_decimal_wire(value: str, *, signed: bool) -> str:

@@ -54,7 +54,7 @@ from pydantic import BaseModel, Field
 
 from ....core.casilla_id import CasillaId
 from ....core.config import load_settings
-from ....core.decimal._coerce import coerce_decimal
+from ....core.decimal.coercion import coerce_decimal
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.period import Period
 from ....domain.calculations.registry.casilla_membership import undeclared_casilla_ids

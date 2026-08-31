@@ -33,7 +33,7 @@ from ...domain.modelos.calculation_revision import CalculationSourceRef
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.work_unit import WorkUnitState
 from ..ledger.preflight import LedgerPreflightIssueReason
-from ..operator_actions._models import ActionReference
+from ..operator_actions.models import ActionReference
 from ..registry.closure import RegistryClosureLimb
 from .work_addressing import ModeloExactWorkUnitTarget, ModeloVisibleFilingTarget
 from .work_review import ModeloWorkReview

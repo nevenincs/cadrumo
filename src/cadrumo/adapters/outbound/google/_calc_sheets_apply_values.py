@@ -31,7 +31,7 @@ from ....application.storage.calc_sheets._records import (
     column_letters_to_index,
 )
 from ....application.storage.calc_sheets._workbook_export import evidence_table, guide_stamps
-from ....core.decimal._coerce import coerce_decimal
+from ....core.decimal.coercion import coerce_decimal
 
 #: Matches the single-cell anchor of a ``values.batchUpdate`` entry range:
 #: ``'Tab Name'!B4``. Every builder in this module emits an anchor plus a

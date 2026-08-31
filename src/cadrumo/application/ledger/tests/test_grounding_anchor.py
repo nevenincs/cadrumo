@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....core.decimal._coerce import coerce_finite_european_decimal
+from ....core.decimal.coercion import coerce_finite_european_decimal
 from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin

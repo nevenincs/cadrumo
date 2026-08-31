@@ -32,11 +32,11 @@ from ...application.ledger.actions_manual import (
 )
 from ...application.ledger.models import LedgerExportCommand
 from ...application.ledger.review_projection import ledger_transaction_review_status
-from ...application.operator_actions._models import ActionReference
+from ...application.operator_actions.models import ActionReference
 from ...application.review.errors import FilterParseError
 from ...application.review.filter import LedgerReviewFilterSpec
 from ...core.bucket_pointer import resolve_active_bucket_id
-from ...core.decimal._coerce import coerce_decimal_strict
+from ...core.decimal.coercion import coerce_decimal_strict
 from ...core.i18n._render import tr
 from ...core.json_contract import (
     Notice,
