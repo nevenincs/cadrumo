@@ -5,7 +5,7 @@ tags:
 date: '2026-08-29'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:2a9b798ffd4c38a4b35852a4d1e18dc9563383194b99affb480c82100bf73293'
+body_hash: 'sha256:00bc7e427a55664dbfd11349a00e541691a3a6c5bb11f74661695a635f783597'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
@@ -1146,3 +1146,65 @@ scanner does not model.
 scanner. Neither figure was reportable, and the tell in both cases was the same:
 a defect count far too large to be consistent with a tree whose tests mostly
 pass.
+
+## Which narrow vocabularies are dangerous, and which are not
+
+Having found the same defect twice in membership sets, the third one in the
+pipeline deserved the same scrutiny -- and it turns out to be correctly built,
+for a reason worth stating because it distinguishes the two cases.
+
+`_FILING_INSTRUCTION_ONLY_CONTENTS` is a single-phrase set, `{"no
+cumplimentar"}`, matched on an exact stripped casefold. Narrower than the
+naturaleza sets ever were, and the narrowness is deliberate: "'no' and
+'cumplimentar' both appear inside legitimate descriptions of what a slot
+carries, and a loose rule would make real wire facts invisible to review."
+
+The difference that matters is what happens to an unmatched value.
+
+- Naturaleza: an unrecognised text spelling fell to an `else` and was recorded
+  as the ALPHANUMERIC derivation. The fall-through was a WRONG ANSWER, silently.
+- Filing instruction: an unrecognised variant makes `_states_no_wire_fact`
+  false, so the field is read as stating its wire fact, the prose does not
+  parse, and the renderer REFUSES. The fall-through is a refusal.
+
+So the question to ask of a narrow vocabulary is not "does it list every
+spelling AEAT uses" but "where does an unlisted spelling land". A set whose
+miss lands on a refusal can be as narrow as its author can defend, and being
+narrow is then a virtue -- it keeps a real value in front of a reviewer. A set
+whose miss lands on a branch must be exhaustive, because nothing downstream
+will ever question the answer it produced.
+
+That reframes the earlier lesson usefully: widening a set is not the whole
+change *when a discriminator reads it*. Where the set only decides
+matched-or-refused, widening it is the whole change, and not widening it is
+safe.
+
+### Measured: widening that phrase set would have been the defect
+
+Censusing every design field whose content mentions *cumpliment* across all 27
+enrolled designs gives 76 distinct contents. Exactly one is the instruction
+phrase, on 6 fields:
+
+```
+x6   'No cumplimentar'                                    -> matched
+```
+
+Every other one is a genuine description of what the slot carries:
+
+```
+'Se cumplimentará una de las siguientes claves: "C": ... "T": Transmisión tel…'
+'deberá cumplimentarse obligatoriamente uno de los siguientes campos: 121 …'
+'Se cumplimenta con el porcentaje de retención aplicado por el obligado a …'
+'Se consignarán los días de alta cotizados … cumplimentados a ceros por la izquierda.'
+```
+
+So a keyword rule on *cumplimentar* would have swept roughly seventy
+value-bearing fields into "the design states no wire fact", which is the precise
+harm the author's comment predicted. The prediction was not defensive
+hand-waving; it is now measured.
+
+This is the counterexample to the instinct the naturaleza defect encourages.
+Having just been burned by a set that was too narrow, the reflex is to widen
+every set nearby. Here widening is the defect, and the discriminator is the one
+above: a miss lands on a refusal, so narrowness costs a reviewer's attention,
+while looseness costs seventy fields their review.
