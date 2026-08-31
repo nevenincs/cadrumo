@@ -5,7 +5,7 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:80bd0f7c1f396383a841a9ecfcd8f95d92a9b92383077f8977fb686b788eb179'
+body_hash: 'sha256:1e5b22bd1883d3d2187f744a158128375e9a23f34b9e64bfa7d3eb702484f881'
 related: []
 ---
 
@@ -130,4 +130,50 @@ repair is open in a way modelo 184's is not.
 Enrolled with reasons in
 `registry/tests/test_row_bindings_are_consumed.py`, whose companion test reds if a
 revision is repaired without its entry being removed.
+
+
+### Closing the gap is a coordinated migration, not an incremental change
+
+Two attempts established the real cost, and both corrections make the CODE change
+smaller while making the SEQUENCING harder.
+
+What the fix is NOT: the renderer does not materialise rows. It emits the record
+DEFINITION, and the runtime already honours `repeat == "binding_rows"` in
+`registry/export_parse.py`. The map's entry side is already capable too --
+`SemanticMapEntry` carries `binding: BindingId | None` and `CasillaFieldKind`
+already admits `BINDING`. So the code change is three small edits:
+
+1. `SemanticMapRecord`: widen `repeat`, add `binding_record` and
+   `row_field_casilla_ids`.
+2. `_export_tree` line ~591: pass both through beside `repeat`.
+3. `_provenance_manifest`: add the keys to `_SEMANTIC_MAP_RECORD_KEYS`.
+
+Two constraints found by doing it, each of which refused the change correctly:
+
+**The record must stay hashable.** `_export_tree` proves the joined records
+attest exactly the supplied map by comparing two `frozenset`s, so a `Mapping`
+field raises `unhashable type: 'dict'` across fifteen tests. The carrier must be
+a sorted `tuple[tuple[str, CasillaId], ...]` normalised at the boundary, which
+also keeps two maps declaring the same pairs in different order equal. The
+renderer converts it back to the mapping the registry schema declares.
+
+**Adding a key forces a normalisation version bump.** `_require_exact_keys`
+refuses an unknown key with "review and version the normaliser", by design, and
+every committed `_generation.provenance.json` carries
+`EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION` and is refused on mismatch. So the
+moment the keys are added, EVERY enrolled generated tree is invalid until
+regenerated.
+
+**The sequencing hazard, which is the reason this is not incremental.**
+Regenerating is exactly what must not happen before the maps are re-authored: a
+regeneration today ships modelo 347's truncation and leaves modelo 184's
+unrepaired. The only safe order is
+
+> widen schema + normaliser + version -> re-author the modelo 347, 184 and 360
+> maps against their disenos -> regenerate every enrolled tree -> verify modelo
+> 347 byte-equal to its committed tree, which is a correct oracle for that one.
+
+That is one transaction across the generator, three authored maps and every
+enrolled tree. Attempting it piecewise leaves the tree in a state where the
+obvious next action ships a silent under-declaration.
 
