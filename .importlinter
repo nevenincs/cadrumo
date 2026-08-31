@@ -490,10 +490,10 @@ ignore_imports =
     # pinned at the narrower `persistence.storage`, so the new target is named
     # exactly rather than widening the existing pin.
     cadrumo.application.modelo.m145_communication_records -> cadrumo.adapters.persistence.profile.snapshots
-    cadrumo.application.modelo._review_package_recipient_encryption -> cadrumo.adapters.persistence.storage.**
-    cadrumo.application.modelo._review_package_recipient_encryption -> cadrumo.adapters.persistence.storage.crypto.aead
+    cadrumo.application.modelo.review_package_recipient_encryption -> cadrumo.adapters.persistence.storage.**
+    cadrumo.application.modelo.review_package_recipient_encryption -> cadrumo.adapters.persistence.storage.crypto.aead
     cadrumo.application.modelo.review_package_recipient_registry -> cadrumo.adapters.persistence.storage.**
-    cadrumo.application.modelo._review_package_signing -> cadrumo.adapters.persistence.storage.secure_object_namespaces
+    cadrumo.application.modelo.review_package_signing -> cadrumo.adapters.persistence.storage.secure_object_namespaces
     # The mint-or-load-winner keypair primitive was extracted from the signing and
     # recipient-encryption modules above; both are pinned, so the extraction inherits
     # their sanctioned reach rather than introducing a new one.
@@ -524,7 +524,7 @@ ignore_imports =
     cadrumo.application.bucket_maintenance._deletion_paths -> cadrumo.adapters.persistence.**
     cadrumo.application.calculations._iva_compensation_annual_partition -> cadrumo.adapters.persistence.**
     cadrumo.application.calculations.iva_compensation_history -> cadrumo.adapters.persistence.**
-    cadrumo.application.calculations._multi_year -> cadrumo.adapters.persistence.**
+    cadrumo.application.calculations.multi_year -> cadrumo.adapters.persistence.**
     cadrumo.application.calculations.observations_repository -> cadrumo.adapters.persistence.**
     cadrumo.application.calculations.relation_prefill -> cadrumo.adapters.persistence.**
     cadrumo.application.diagnostics -> cadrumo.adapters.outbound.aeat.browser.**
@@ -662,7 +662,7 @@ ignore_imports =
     # ── arch-remediation-ports-inversion: submission repository relocated to
     #    adapters.persistence.profile.submission; the workflow gate constructs the
     #    concrete and injects it into the SubmissionEngine, tests seed via it ──
-    cadrumo.application.modelo._workflow_gate -> cadrumo.adapters.persistence.profile.submission
+    cadrumo.application.modelo.workflow_gate -> cadrumo.adapters.persistence.profile.submission
     # ── arch-remediation-ports-inversion: justificante repository relocated to
     #    adapters.persistence.profile.justificante (no domain port; no domain
     #    caller); application/entrypoint callers import the adapter directly ──
@@ -730,7 +730,7 @@ ignore_imports =
     cadrumo.application.live.notifications -> cadrumo.adapters.persistence.**
     cadrumo.application.live.verify -> cadrumo.adapters.persistence.**
     cadrumo.application.modelo.borrador_binding -> cadrumo.adapters.persistence.**
-    cadrumo.application.modelo._m036_lifecycle -> cadrumo.adapters.persistence.**
+    cadrumo.application.modelo.m036_lifecycle -> cadrumo.adapters.persistence.**
     # Reconciliation compares a filed declaracion and its justificante against
     # the local calculation. Both arrive as externally-authored documents an
     # INBOUND adapter parses; this module consumes those parses and owns only
@@ -778,20 +778,20 @@ ignore_imports =
     #    (module-granularity replaces the pre-refactor deep-submodule edge) ──
     cadrumo.application.modelo._revision_persistence -> cadrumo.adapters.persistence.profile.participation_index
     cadrumo.application.modelo.participation_index_rebuild -> cadrumo.adapters.persistence.profile.participation_index
-    cadrumo.application.modelo._verification_actions -> cadrumo.adapters.persistence.profile.participation_index
+    cadrumo.application.modelo.verification_actions -> cadrumo.adapters.persistence.profile.participation_index
     cadrumo.application.modelo.export -> cadrumo.adapters.persistence.profile.modelos_verification_reports
-    cadrumo.application.modelo._filing_actions -> cadrumo.adapters.persistence.profile.modelos_verification_reports
+    cadrumo.application.modelo.filing_actions -> cadrumo.adapters.persistence.profile.modelos_verification_reports
     cadrumo.application.modelo._history -> cadrumo.adapters.persistence.profile.modelos_verification_reports
-    cadrumo.application.modelo._verification_actions -> cadrumo.adapters.persistence.profile.modelos_verification_reports
+    cadrumo.application.modelo.verification_actions -> cadrumo.adapters.persistence.profile.modelos_verification_reports
     # ── modelos_filing catalogue repository ports-inversion (W04.P09.S14):
     #    the concrete ModeloRecordCatalogueRepository moved to the persistence
     #    adapter behind ModeloRecordCatalogueRepositoryProtocol ──
     cadrumo.application.modelo.amendment_actions -> cadrumo.adapters.persistence.profile.modelos_filing
     cadrumo.application.modelo.export -> cadrumo.adapters.persistence.profile.modelos_filing
-    cadrumo.application.modelo._filing_actions -> cadrumo.adapters.persistence.profile.modelos_filing
+    cadrumo.application.modelo.filing_actions -> cadrumo.adapters.persistence.profile.modelos_filing
     cadrumo.application.modelo._history -> cadrumo.adapters.persistence.profile.modelos_filing
     cadrumo.application.modelo.participation_index_rebuild -> cadrumo.adapters.persistence.profile.modelos_filing
-    cadrumo.application.modelo._verification_actions -> cadrumo.adapters.persistence.profile.modelos_filing
+    cadrumo.application.modelo.verification_actions -> cadrumo.adapters.persistence.profile.modelos_filing
     cadrumo.application.filing._complementaria -> cadrumo.adapters.persistence.profile.filing_drafts
     cadrumo.application.review._adapters -> cadrumo.adapters.persistence.profile.filing_drafts
     # ── filing amendment repository ports-inversion (W03.P08.S11):
@@ -813,29 +813,29 @@ ignore_imports =
     cadrumo.application.invoices.catalogue_reads -> cadrumo.adapters.persistence.profile.invoices
     cadrumo.application.invoices._reconciliation -> cadrumo.adapters.persistence.profile.invoices
     cadrumo.application.invoices.creation_wizard -> cadrumo.adapters.persistence.profile.invoices
-    cadrumo.application.modelo._calculation_actions -> cadrumo.adapters.persistence.profile.invoices
+    cadrumo.application.modelo.calculation_actions -> cadrumo.adapters.persistence.profile.invoices
     cadrumo.application.review._adapters -> cadrumo.adapters.persistence.profile.invoices
     cadrumo.application.modelo.amendment_actions -> cadrumo.adapters.persistence.profile.modelos_calculation
-    cadrumo.application.modelo._calculation_actions -> cadrumo.adapters.persistence.profile.modelos_calculation
+    cadrumo.application.modelo.calculation_actions -> cadrumo.adapters.persistence.profile.modelos_calculation
     cadrumo.application.modelo.export -> cadrumo.adapters.persistence.profile.modelos_calculation
-    cadrumo.application.modelo._filing_actions -> cadrumo.adapters.persistence.profile.modelos_calculation
+    cadrumo.application.modelo.filing_actions -> cadrumo.adapters.persistence.profile.modelos_calculation
     cadrumo.application.modelo._history -> cadrumo.adapters.persistence.profile.modelos_calculation
     cadrumo.application.modelo._iva_wallet_seed -> cadrumo.adapters.persistence.profile.modelos_calculation
     cadrumo.application.modelo.participation_index_rebuild -> cadrumo.adapters.persistence.profile.modelos_calculation
     cadrumo.application.modelo.selectors -> cadrumo.adapters.persistence.profile.modelos_calculation
-    cadrumo.application.modelo._verification_actions -> cadrumo.adapters.persistence.profile.modelos_calculation
+    cadrumo.application.modelo.verification_actions -> cadrumo.adapters.persistence.profile.modelos_calculation
     # ── application production edges: modelos_work_units catalogue repository
     #    consolidation (import-centralization refactor; module-granularity) ──
     cadrumo.application.modelo.amendment_actions -> cadrumo.adapters.persistence.profile.modelos_work_units
     cadrumo.application.modelo._calculate_input -> cadrumo.adapters.persistence.profile.modelos_work_units
-    cadrumo.application.modelo._calculation_actions -> cadrumo.adapters.persistence.profile.modelos_work_units
+    cadrumo.application.modelo.calculation_actions -> cadrumo.adapters.persistence.profile.modelos_work_units
     cadrumo.application.modelo.export -> cadrumo.adapters.persistence.profile.modelos_work_units
-    cadrumo.application.modelo._filing_actions -> cadrumo.adapters.persistence.profile.modelos_work_units
+    cadrumo.application.modelo.filing_actions -> cadrumo.adapters.persistence.profile.modelos_work_units
     cadrumo.application.modelo._history -> cadrumo.adapters.persistence.profile.modelos_work_units
     cadrumo.application.modelo._iva_wallet_seed -> cadrumo.adapters.persistence.profile.modelos_work_units
     cadrumo.application.modelo.participation_index_rebuild -> cadrumo.adapters.persistence.profile.modelos_work_units
     cadrumo.application.modelo.taxation_comparison -> cadrumo.adapters.persistence.profile.modelos_work_units
-    cadrumo.application.modelo._verification_actions -> cadrumo.adapters.persistence.profile.modelos_work_units
+    cadrumo.application.modelo.verification_actions -> cadrumo.adapters.persistence.profile.modelos_work_units
     cadrumo.application.modelo.work_lifecycle -> cadrumo.adapters.persistence.profile.modelos_work_units
     # ── buckets event-history repository ports-inversion (W01.P03.S05):
     #    the concrete BucketEventHistoryRepository moved to the persistence
@@ -844,14 +844,14 @@ ignore_imports =
     cadrumo.application.live.filed_observation_persistence -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.live.justificante -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.modelo.amendment_actions -> cadrumo.adapters.persistence.profile.buckets
-    cadrumo.application.modelo._calculation_actions -> cadrumo.adapters.persistence.profile.buckets
+    cadrumo.application.modelo.calculation_actions -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.modelo.export -> cadrumo.adapters.persistence.profile.buckets
-    cadrumo.application.modelo._filing_actions -> cadrumo.adapters.persistence.profile.buckets
+    cadrumo.application.modelo.filing_actions -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.modelo._history -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.modelo._iva_wallet_seed -> cadrumo.adapters.persistence.profile.buckets
-    cadrumo.application.modelo._m036_lifecycle -> cadrumo.adapters.persistence.profile.buckets
+    cadrumo.application.modelo.m036_lifecycle -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.modelo.m145_communication_records -> cadrumo.adapters.persistence.profile.buckets
-    cadrumo.application.modelo._verification_actions -> cadrumo.adapters.persistence.profile.buckets
+    cadrumo.application.modelo.verification_actions -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.modelo.work_lifecycle -> cadrumo.adapters.persistence.profile.buckets
     # ── transactions catalogue repository ports-inversion (W02.P07.S09):
     #    the concrete TransactionCatalogueRepository moved to the persistence
@@ -867,10 +867,10 @@ ignore_imports =
     cadrumo.application.invoices._reconciliation -> cadrumo.adapters.persistence.profile.transactions
     cadrumo.application.modelo._art109_activity_income -> cadrumo.adapters.persistence.profile.transactions
     cadrumo.application.modelo._ledger_drift_gate -> cadrumo.adapters.persistence.profile.transactions
-    cadrumo.application.modelo._calculation_actions -> cadrumo.adapters.persistence.profile.transactions
+    cadrumo.application.modelo.calculation_actions -> cadrumo.adapters.persistence.profile.transactions
     cadrumo.application.modelo._calculation_preparation -> cadrumo.adapters.persistence.profile.transactions
     cadrumo.application.modelo._m349_ledger_guard -> cadrumo.adapters.persistence.profile.transactions
-    cadrumo.application.modelo._verification_actions -> cadrumo.adapters.persistence.profile.transactions
+    cadrumo.application.modelo.verification_actions -> cadrumo.adapters.persistence.profile.transactions
     cadrumo.application.review._adapters -> cadrumo.adapters.persistence.profile.transactions
     # ── prorrata-register repository ports-inversion (gate-drift-reconciliation
     #    P01): the concrete ProrrataRegisterRepository stays in the persistence
@@ -879,5 +879,5 @@ ignore_imports =
     #    sec. 538). The storage edge is _prorrata_regularizacion's direct import
     #    of the ClassificationError/DecryptionError/EnvelopeVersionError boundary
     #    exception classes (plain exceptions, no port to invert). ──
-    cadrumo.application.calculations._prorrata_regularizacion -> cadrumo.adapters.persistence.storage.errors
+    cadrumo.application.calculations.prorrata_regularizacion -> cadrumo.adapters.persistence.storage.errors
     cadrumo.application.modelo._revision_persistence -> cadrumo.adapters.persistence.profile.prorrata_register
