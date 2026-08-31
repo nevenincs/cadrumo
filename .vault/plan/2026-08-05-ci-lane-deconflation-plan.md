@@ -10,7 +10,7 @@ related:
   - '[[2026-06-01-registry-period-code-union-cli-boundary-adr]]'
   - '[[2026-08-05-ci-lane-deconflation-step-check-attribution-audit]]'
 modified: '2026-08-31'
-body_hash: 'sha256:d00341e92c0cdfca5f7237be0bc6730de9ff99e533894296ce0b9ee7d7fe3d89'
+body_hash: 'sha256:9c4998a7b753e806011a8b40bd60efe6811616843a0414006dfdc43d73cc8966'
 ---
 
 <!-- RETIRED: S01, S10, S181, S184, S186, S189, S191, S193, S194, S197, S199, S201, S203, S205, S207, S209, S211, S213, S215, S217, S219, S221 -->
@@ -267,7 +267,7 @@ Decompose every live size-budget subject by its owning source file, then regener
 - [x] `P05.S183` - Refactor the size-budget subjects in bindings.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/bindings.py`.
 - [x] `P05.S185` - Refactor the size-budget subjects in formula_runtime.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/formula_runtime.py`.
 - [x] `P05.S187` - Refactor the size-budget subjects in invoice_bindings.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/invoice_bindings.py`.
-- [ ] `P05.S188` - Refactor the size-budget subjects in ledger_bindings.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/ledger_bindings.py`.
+- [x] `P05.S188` - Refactor the size-budget subjects in ledger_bindings.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/ledger_bindings.py`.
 - [x] `P05.S190` - Refactor the size-budget subjects in record_design.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/record_design.py`.
 - [ ] `P05.S192` - Refactor the size-budget subjects in schema.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/schema.py`.
 - [ ] `P05.S195` - Refactor the size-budget subjects in test_catalogue_verification.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/tests/test_catalogue_verification.py`.
