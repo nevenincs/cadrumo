@@ -5,7 +5,7 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:9ad86a85ec9ad5f9485707b2f48894dd3de6656e0f32da3dbacdcf1f882ea1fb'
+body_hash: 'sha256:efc829b7d35306ad1832f93aeaf5353da7d6d96216f48779c9518b597442d3ea'
 related:
   - "[[2026-08-05-ci-lane-deconflation-P02-S81]]"
 ---
@@ -25,8 +25,8 @@ Current gates code chooses a CSV evidence kind but directly seeds the CSV record
 
 ### verification-boundary | low | Static blast-radius evidence is not a pytest receipt
 
-The sibling modules contain no references to either blocker identity, supporting the planâ€™s bounded assertion boundary. No fresh test was run, no latent sibling fixture was changed, and S87â€™s later narrow verification is not borrowed.
+The sibling modules contain no references to either blocker identity, supporting the plan's bounded assertion boundary. No fresh test was run, no latent sibling fixture was changed, and S87's later narrow verification is not borrowed.
 
 ## Recommendations
 
-Keep any future fixture repair in the ownerâ€™s source change and verify the exact module narrowly against a stable HEAD. Preserve absent-versus-divergent blocker assertions where they become relevant.
+Keep any future fixture repair in the owner's source change and verify the exact module narrowly against a stable HEAD. Preserve absent-versus-divergent blocker assertions where they become relevant.
