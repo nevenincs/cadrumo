@@ -102,8 +102,16 @@ generator publishes the exact design for that ejercicio. That is the tree this
 decision is about. So the missing surface does not merely leave two enrolment rows
 red -- it holds a modelo below filing grade, which in turn refuses every request
 for a filing snapshot of it. Seven of the eleven failures in the filing
-export-proof lane are that refusal, arriving there rather than here. One
-capability accounts for the owed trees, the modelo's grade, and those seven.
+export-proof lane are that refusal, arriving there rather than here.
+
+A fourth gate fails on the same absence, in a fourth module. The declared-casilla
+walk admits a revision only when it carries an export layout, and modelo 200
+carries none on either revision -- confirmed against the loaded authority rather
+than a directory listing. So the modelo is enrolled among those the walk must
+reach and is never reached, and that gate refuses correctly.
+
+One capability accounts for the owed trees, the modelo's grade, the seven
+export-proof refusals, and this walk.
 
 The honest difficulty is that a publish verb makes it materially easier to overwrite
 shipped registry content, which today is effectively impossible. That is the point of
