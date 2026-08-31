@@ -24,7 +24,6 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.i18n import extract_placeholders
 
 from .manager import (
@@ -34,6 +33,8 @@ from .manager import (
     _covered_by_namespace,
     _flatten_raw_locale_leaves,
     _load_intentional_identical,
+    discover_locale_codes,
+    locale_catalogue_source,
 )
 
 _REFERENCE_LOCALE_FILE = "en.yml"
@@ -154,10 +155,12 @@ def catalogue_status(manager: LocaleManager) -> tuple[CatalogueStatusRecord, ...
     )
     allowlist = _load_intentional_identical(manager.locales_dir / _INTENTIONAL_IDENTICAL_FILENAME)
 
-    leaves_by_file = {
-        path.name: _string_leaves(_flatten_raw_locale_leaves(manager.load_locale(path)))
-        for path in scan_directory(manager.locales_dir, pattern="*.yml")
-    }
+    leaves_by_file: dict[str, dict[str, object]] = {}
+    for locale in sorted(discover_locale_codes(manager.locales_dir)):
+        source = locale_catalogue_source(manager.locales_dir, locale)
+        if source is None:
+            continue
+        leaves_by_file[f"{locale}.yml"] = _string_leaves(_flatten_raw_locale_leaves(manager.load_locale(source)))
     reference_leaves = leaves_by_file.get(_REFERENCE_LOCALE_FILE, {})
     modelo_source_leaves = leaves_by_file.get(_MODELO_SOURCE_LOCALE_FILE, {})
 
