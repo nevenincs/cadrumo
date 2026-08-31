@@ -10,7 +10,7 @@ related:
   - '[[2026-06-01-registry-period-code-union-cli-boundary-adr]]'
   - '[[2026-08-05-ci-lane-deconflation-step-check-attribution-audit]]'
 modified: '2026-08-31'
-body_hash: 'sha256:ac6fc5d2d4d5ba93d7d8e30ee101d955330b39800e66e0ce33896dabb7ee1b4c'
+body_hash: 'sha256:5f759ba8d234bf8cfe10146e10fce2e8dc3c4b38bdd0167cc8760972448f54f0'
 ---
 
 <!-- RETIRED: S01, S10, S181, S184, S186, S189, S191, S193, S194, S197, S199, S201, S203, S205, S207, S209, S211, S213, S215, S217, S219, S221 -->
@@ -261,7 +261,7 @@ Decompose every live size-budget subject by its owning source file, then regener
 - [ ] `P05.S176` - Refactor the size-budget subjects in _filing_projection_ref.py into cohesive siblings without raising any threshold.; `src/cadrumo/core/_filing_projection_ref.py`.
 - [ ] `P05.S177` - Refactor config.py below the default size ceiling without raising its stale threshold.; `src/cadrumo/core/config.py`.
 - [x] `P05.S178` - Refactor the size-budget subjects in _application_part2.py into cohesive siblings without raising any threshold.; `src/cadrumo/core/errors/registry/_application_part2.py`.
-- [ ] `P05.S179` - Refactor the size-budget subjects in context.py into cohesive siblings without raising any threshold.; `src/cadrumo/core/observability/context.py`.
+- [x] `P05.S179` - Refactor the size-budget subjects in context.py into cohesive siblings without raising any threshold.; `src/cadrumo/core/observability/context.py`.
 - [x] `P05.S180` - Refactor the size-budget subjects in _validate_revision_sections.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/_validate_revision_sections.py`.
 - [x] `P05.S182` - Refactor the size-budget subjects in authority.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/authority.py`.
 - [x] `P05.S183` - Refactor the size-budget subjects in bindings.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/bindings.py`.
