@@ -5,29 +5,10 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:1ee01bf3e690d3b0a0d42734c59af81c585e9d6963af3f93f12c32f3ceb1d52a'
+body_hash: 'sha256:f1a723f009c35c7b09da01abbbe8865c3a0f6d48988408ee32f41cf6d009976d'
 related:
   - "[[2026-08-05-ci-lane-deconflation-P02-S78]]"
 ---
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace ci-lane-deconflation with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
 # `ci-lane-deconflation` audit: `p02 s78 correction lifecycle self review`
 
 ## Scope
@@ -53,3 +34,4 @@ S87 plan prose says the later narrow module passed, but no historic literal term
 ## Recommendations
 
 - When citing S77, retain S78's correction and require a standalone receipt on a stable tree before making a production-behavior claim.
+
