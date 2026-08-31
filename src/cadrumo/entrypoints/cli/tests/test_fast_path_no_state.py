@@ -28,11 +28,11 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from ....core.storage_taxonomy_locations import storage_location
-from ....core.storage_taxonomy import StorageCategory
-from ....core.product_identity import PRODUCT_IDENTITY
 from ....core.bucket_pointer import pointer_path
 from ....core.directory_scan import iter_directory
+from ....core.product_identity import PRODUCT_IDENTITY
+from ....core.storage_taxonomy import StorageCategory
+from ....core.storage_taxonomy_locations import storage_location
 from ....tests.cli_runner import invoke_cached_cli
 from ._sessionless_root_fixtures import _sessionless_root
 

@@ -29,7 +29,7 @@ import pytest
 
 from ....core.config import load_settings, override_settings
 from ....core.directory_scan import DirectoryEntryKind, scan_directory
-from ....core.redaction import CLI_PROFILE_ID_PLACEHOLDER
+from ....core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
 from ....tests import REPO_ROOT
 from ....tests.subprocess_cli import run_cadrumo_subprocess
 from ....tests.user_profile import register_cli_profile
@@ -87,7 +87,7 @@ def _register_profile(storage_root: Path, label: str, **facts: str) -> str:
         # runs in a child. Release the parent's real SQLite engine so Windows
         # observes the same process boundary as an operator's completed create
         # command and can rename the capsule during deletion.
-        from ....adapters.persistence.storage.sql import dispose_engines_for_bucket
+        from ....adapters.persistence.storage.sql.engine import dispose_engines_for_bucket
 
         dispose_engines_for_bucket(profile_id)
         return profile_id

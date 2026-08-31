@@ -30,14 +30,14 @@ from typing import TYPE_CHECKING, Annotated
 
 from pydantic import AfterValidator, NonNegativeInt, field_validator
 
-from ...core.decimal import is_non_negative_canonical_decimal
+from ...core.decimal._grammar import is_non_negative_canonical_decimal
 from ...core.identity import BucketId, InvoiceId, TaxIdIdentityToken
 from ...core.json_contract import OutputSchema
 from ...core.parsing import IsoCurrencyCode
 from ...core.percentage import PERCENTAGE_MAX, PERCENTAGE_MIN
 from ...core.text_bounds import NonEmptyStr, PositiveCount
 from ...core.unit_proportion import UNIT_PROPORTION_MAX, UNIT_PROPORTION_MIN
-from ...domain.contribuyente.inventory import (
+from ...domain.contribuyente.inventory.records import (
     INVENTORY_SCHEMA_VERSION,
     InventoryYear,
     MovementKind,
@@ -76,7 +76,7 @@ def _validate_inventory_schema_version(value: str) -> str:
 _InventorySchemaVersion = Annotated[str, AfterValidator(_validate_inventory_schema_version)]
 
 if TYPE_CHECKING:
-    from ...application.inventory import InventoryValuationPreviewResult as _AppInventoryValuationPreviewResult
+    from ...application.inventory._service import InventoryValuationPreviewResult as _AppInventoryValuationPreviewResult
 
 # ---------------------------------------------------------------------------
 # P07 — Inventory sub-app

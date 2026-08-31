@@ -75,7 +75,7 @@ print(json.dumps({
 
 
 def test_operator_help_is_resolved_from_each_owning_spec_translation_key() -> None:
-    from ....core.i18n import tr
+    from ....core.i18n._render import tr
 
     expected = COMMAND_GRAPH.by_schema_identity()
     schemas = build_verb_input_schemas(tuple(sorted(expected)))

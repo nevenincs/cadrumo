@@ -17,8 +17,8 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.period import Period
-from ....domain.modelos.filing_record import ModeloRecordStatus
 from ....domain.modelos.calculation_revision import CalculationRevisionAmendmentKind
+from ....domain.modelos.filing_record import ModeloRecordStatus
 from .._modelo_amend_wizard_payloads import WorkAmendWizardResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

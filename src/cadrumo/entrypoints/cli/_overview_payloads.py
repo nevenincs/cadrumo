@@ -30,7 +30,7 @@ from typing import Literal, Self
 
 from pydantic import NonNegativeInt, model_validator
 
-from ...application.operator_actions import ActionReference
+from ...application.operator_actions._models import ActionReference
 from ...application.overview.data_prep import DataPrepStepId, DataPrepStepState
 from ...application.overview.pipeline_health import ModeloReadinessState
 from ...core.identity import AeatCsv, CalculationRevisionId, FilingRecordId, ProfileId, SnapshotId, WorkUnitId

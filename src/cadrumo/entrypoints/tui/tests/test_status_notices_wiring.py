@@ -19,7 +19,7 @@ from __future__ import annotations
 import pytest
 from textual.widgets import Static
 
-from ....application.calculations import CalculationObservationRepository
+from ....application.calculations.observations_repository import CalculationObservationRepository
 from ....application.user_profile.login_session import login_profile
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....application.user_profile.status_projection import build_status_page_data

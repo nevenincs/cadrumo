@@ -26,7 +26,11 @@ from pydantic import ValidationError
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....application.overview.pipeline_health import ModeloReadinessState
 from ....core.bucket_pointer import resolve_active_bucket_id
-from ....domain.modelos.verification_report import VerificationCompletenessStatus, VerificationReport, derive_verification_report_id
+from ....domain.modelos.verification_report import (
+    VerificationCompletenessStatus,
+    VerificationReport,
+    derive_verification_report_id,
+)
 from ....domain.modelos.verification_repository import upsert_verification_report
 from ....tests.cli_envelope import unwrap_envelope_notices as _notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload

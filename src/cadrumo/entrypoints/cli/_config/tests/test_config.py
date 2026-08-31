@@ -133,7 +133,7 @@ def _corrupt_bucket_db(tmp_path: Path) -> None:
     open the corrupted file. This drives the catch-all branch that
     wraps non-``CadrumoError`` exceptions into ``ConfigBoundaryError``.
 
-    Layout per ``_bucket_session.py``:
+    Layout per ``bucket_session.py``:
     ``<storage_root>/buckets/<bucket_id>/db/cadrumo.db``.
     """
     dispose_engine()  # flush cached connections so the rewrite is observed

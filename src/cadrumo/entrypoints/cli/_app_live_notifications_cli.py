@@ -28,14 +28,15 @@ from typing import TYPE_CHECKING, Literal, TypedDict
 
 import typer
 
-from ...adapters.inbound.notificacion import NotificationDocumentReader
-from ...adapters.outbound.aeat.sede.notifications import assert_notification_content_readable, fetch_notification_document
-from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
-from ...adapters.persistence.storage import (
-    LIVE_NOTIFICATION_DOCUMENT_NAMESPACE,
-    AttachmentStore,
-    secure_object_repository_for_bucket,
+from ...adapters.inbound.notificacion._document_reader import NotificationDocumentReader
+from ...adapters.outbound.aeat.sede.notifications import (
+    assert_notification_content_readable,
+    fetch_notification_document,
 )
+from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
+from ...adapters.persistence.storage._secure_object_namespaces import LIVE_NOTIFICATION_DOCUMENT_NAMESPACE
+from ...adapters.persistence.storage.attachment import AttachmentStore
+from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...application.live.errors import LiveApplicationInputError
 from ...application.live.notification_documents import (
     NotificationDocumentNotFoundError,
@@ -49,7 +50,7 @@ from ...application.live.notifications import (
     pull_notification_document,
 )
 from ...core.config import Settings, load_settings
-from ...core.i18n import tr
+from ...core.i18n._render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ._app_live_auth_preflight import _emit_live_auth_preflight
 from ._app_live_notifications_payloads import (
@@ -68,7 +69,7 @@ from ._app_live_notifications_payloads import (
 from ._common import active_bucket_id_or_refuse, emit_envelope, notice_lines
 
 if TYPE_CHECKING:
-    from ...domain.notifications import SancionLiquidacion
+    from ...domain.notifications.sancion import SancionLiquidacion
 
 
 def _bucket_id() -> str:

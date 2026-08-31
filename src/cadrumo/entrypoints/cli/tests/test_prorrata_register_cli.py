@@ -16,18 +16,14 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....core.prorrata_register import (
     ProrrataEspecialTransitionKind,
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,
 )
-from ....domain.prorrata_register import (
-    ProrrataRegister,
-    ProrrataRegisterEntry,
-    SectorDefinition,
-)
+from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
+from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry, SectorDefinition
 from ....tests.secure_sql import isolated_runtime_profile
 from ._cli_surface_profile_fixture import _isolated_backend
 from ._cli_surface_support import (

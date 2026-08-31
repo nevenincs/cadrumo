@@ -19,8 +19,8 @@ from ......application.modelo.work_addressing import ModeloVisibleFilingTarget
 from ......application.modelo.work_lifecycle import create_work_unit
 from ......application.modelo.workspace import resolve_static_inspection_result
 from ......application.modelo.workspace_models import ModeloWorkspaceVisibleFilingTargetV1
-from ......core.period import Period
 from ......core.external_constants import OutputLanguage
+from ......core.period import Period
 from ......domain.calculations.registry.authority import bundled_authority
 from ......domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ......tests.profile_capsule import seed_test_profile_record

@@ -18,13 +18,14 @@ from __future__ import annotations
 
 from pydantic import field_validator
 
-from ...core.decimal import try_parse_canonical_decimal
+from ...core.decimal._grammar import try_parse_canonical_decimal
 from ...core.identity import BucketId
 from ...core.json_contract import OutputSchema
 from ...core.text_bounds import NonEmptyStr
 from ...domain.categories.proportionality import ProportionalityKind
 from ...domain.categories.spending_category import SpendingCategory
-from ...domain.usage_ratios import UsageRatioValidationError, validate_usage_ratio_bound
+from ...domain.usage_ratios._model import validate_usage_ratio_bound
+from ...domain.usage_ratios.errors import UsageRatioValidationError
 
 
 def _validated_ratio_text(value: str, *, field: str) -> str:

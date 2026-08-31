@@ -17,30 +17,38 @@ from typer.testing import CliRunner
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....adapters.persistence.storage import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
-from ....adapters.persistence.storage.sql import SecureObjectRepository, SecureObjectRow
+from ....adapters.persistence.storage._secure_object_namespaces import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
+from ....adapters.persistence.storage.sql._orm import SecureObjectRow
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....application.modelo.work_review import ModeloWorkReview, build_modelo_work_review
-from ....core.operator_action_enums import OperatorActionAxis
-from ....core.period import Period
 from ....core.aggregation import BindingSourceKind
 from ....core.json_contract import (
     EnvelopeStatus,
     SchemaEnvelope,
     derive_status,
 )
-from ....domain.calculations import RowSourceIdentity
+from ....core.operator_action_enums import OperatorActionAxis
+from ....core.period import Period
+from ....domain.calculations._row_source_identity import RowSourceIdentity
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
-from ....domain.modelos.codes import ModeloCode
-from ....domain.modelos.repository import upsert_work_unit
-from ....domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind, ModeloVerificationFindingSeverity, VerificationCompletenessStatus, VerificationReport, derive_verification_report_id
-from ....domain.modelos.verification_repository import upsert_verification_report
-from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.repository import upsert_work_unit
+from ....domain.modelos.verification_report import (
+    ModeloVerificationFinding,
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
+    VerificationCompletenessStatus,
+    VerificationReport,
+    derive_verification_report_id,
+)
+from ....domain.modelos.verification_repository import upsert_verification_report
+from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from .. import app
 from .._command_schema import command_schema_types

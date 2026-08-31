@@ -17,9 +17,9 @@ from datetime import date
 import pytest
 
 from ....application.overview.calendar_models import OverviewCalendarEvent, OverviewCalendarEventType
-from ....core.post_filing_event import PostFilingEventKind
-from ....core.notificacion_estado_servicio import NotificacionEstadoServicio
 from ....core.json_contract import NoticeSeverity, ResolvedNoticeAction
+from ....core.notificacion_estado_servicio import NotificacionEstadoServicio
+from ....core.post_filing_event import PostFilingEventKind
 from ....domain.calculations.registry.authority import bundled_authority
 from .._overview_rendering import (
     DEEMED_SERVED_LEGAL_REF,
@@ -73,7 +73,7 @@ def test_deemed_served_notifications_emit_one_warning_notice_with_legal_provenan
 
 def test_deemed_served_legal_ref_resolves_against_the_registry_catalogue() -> None:
     """The provenance the notice hands the operator is a real, corpus-backed entry."""
-    from ....core.resources import bundled_path
+    from ....core.resources._boundary import bundled_path
     from ....domain.calculations.registry.legal import verify_legal_catalogue
 
     catalogue = bundled_authority().catalogues.legal

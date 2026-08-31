@@ -26,13 +26,13 @@ from ...application.modelo._quickfile import (
     run_modelo_quickfile,
 )
 from ...application.workflow.persistence import workflow_state_repository
-from ...core.refund_election import RefundElection
-from ...core.payment_election import PaymentElection
-from ...core.prior_domiciliation_election import PriorDomiciliationElection
-from ...core.period import Period, PeriodError
 from ...core.external_constants import OutputLanguage
-from ...core.i18n import tr
+from ...core.i18n._render import tr
 from ...core.json_contract import Notice
+from ...core.payment_election import PaymentElection
+from ...core.period import Period, PeriodError
+from ...core.prior_domiciliation_election import PriorDomiciliationElection
+from ...core.refund_election import RefundElection
 from ._app_quickfile_payloads import QuickfileResultPayload
 from ._common import (
     _filing_taxpayer_or_refuse,

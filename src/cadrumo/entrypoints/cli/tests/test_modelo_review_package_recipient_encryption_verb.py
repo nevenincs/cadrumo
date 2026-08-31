@@ -130,7 +130,7 @@ def test_encrypt_for_recipient_then_decrypt_recovers_original_bytes(tmp_path: Pa
     # this test registers the fingerprint FIRST (mirroring the real
     # taxpayer/accountant workflow: the accountant shares their public key
     # before anything is sealed for them).
-    from ....adapters.persistence.storage import secure_object_repository_for_bucket
+    from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 
     repository = secure_object_repository_for_bucket(_BUCKET_ID)
     keypair = ensure_recipient_encryption_keypair(bucket_id=_BUCKET_ID, repository=repository)
@@ -200,7 +200,7 @@ def test_encrypt_for_recipient_then_decrypt_recovers_original_bytes(tmp_path: Pa
 def test_encrypt_for_recipient_review_only_and_expiry_round_trip(tmp_path: Path) -> None:
     package_path = _build_package(tmp_path)
 
-    from ....adapters.persistence.storage import secure_object_repository_for_bucket
+    from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 
     repository = secure_object_repository_for_bucket(_BUCKET_ID)
     keypair = ensure_recipient_encryption_keypair(bucket_id=_BUCKET_ID, repository=repository)
@@ -252,7 +252,7 @@ def test_encrypt_for_recipient_review_only_and_expiry_round_trip(tmp_path: Path)
 def test_decrypt_refuses_on_replayed_envelope(tmp_path: Path) -> None:
     package_path = _build_package(tmp_path)
 
-    from ....adapters.persistence.storage import secure_object_repository_for_bucket
+    from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 
     repository = secure_object_repository_for_bucket(_BUCKET_ID)
     keypair = ensure_recipient_encryption_keypair(bucket_id=_BUCKET_ID, repository=repository)

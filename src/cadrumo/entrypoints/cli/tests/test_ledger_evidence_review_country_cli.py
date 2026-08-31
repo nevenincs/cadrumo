@@ -46,7 +46,7 @@ from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.config import load_settings
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha2
-from ._ledger_ux_support import _invoke, _open_ledger_ux_session
+from ._ledger_ux_support import _invoke, open_ledger_ux_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -75,7 +75,7 @@ def seeded_draft(tmp_path: Path) -> Iterator[None]:
     # the gate reads what the reader stored, so a fixture that stores nothing
     # cannot raise a blocker whatever the check list does.
     stored = read.model_copy(update={"discrepancies": deterministic_findings(read)})
-    with _open_ledger_ux_session(tmp_path):
+    with open_ledger_ux_session(tmp_path):
         bucket_id = resolve_active_bucket_id()
         assert bucket_id is not None
         write_extraction_draft(

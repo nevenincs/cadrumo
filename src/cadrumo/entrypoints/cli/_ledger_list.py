@@ -22,8 +22,8 @@ from ...application.ledger.id_resolution import compute_display_id_width
 from ...application.ledger.models import LedgerReviewQuery, ManualLedgerTransactionResult
 from ...application.ledger.review_projection import ledger_transaction_review_status
 from ...application.review.filter import LedgerReviewFilterSpec
+from ...core.i18n._render import tr
 from ...core.ledger_sort import LedgerSortField, LedgerSortOrder
-from ...core.i18n import tr
 from ...domain.buckets.event import BucketEventHistoryCatalogue, BucketEventObjectType, BucketEventType
 from ...domain.transactions.models import Transaction
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol

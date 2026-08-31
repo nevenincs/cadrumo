@@ -27,7 +27,6 @@ from ...application.modelo._action_errors import (
     WorkUnitNotFoundError,
 )
 from ...application.modelo._amendment_actions import amend_modelo_revision
-from ...application.modelo.work_lifecycle import lifecycle_continuation_for_work_history
 from ...application.modelo.work_addressing import (
     ModeloWorkAddressNotFoundError,
     ModeloWorkRevisionConflictError,
@@ -35,12 +34,13 @@ from ...application.modelo.work_addressing import (
     ModeloWorkUnitNotFoundError,
     ModeloWorkVisibleTargetAmbiguousError,
 )
-from ...core.modelo import Modelo
+from ...application.modelo.work_lifecycle import lifecycle_continuation_for_work_history
 from ...core.casilla_id import CasillaId, validated_casilla_id
-from ...core.decimal import try_parse_canonical_decimal
+from ...core.decimal._grammar import try_parse_canonical_decimal
 from ...core.external_constants import OutputLanguage
-from ...core.i18n import tr
+from ...core.i18n._render import tr
 from ...core.logging import get_logger
+from ...core.modelo import Modelo
 from ...domain.modelos.calculation_revision import CalculationRevisionAmendmentKind
 from ...domain.modelos.calculation_revision_amendment import M303RectificativaMotive
 from ._common import activate_subcommand_output_language

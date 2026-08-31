@@ -28,11 +28,11 @@ from ...application.ledger.extraction_draft_store import (
 from ...application.ledger.invoice_draft_records import FieldProvenance, InvoiceDraft
 from ...application.ledger.party_attribution import PartyAttributionAdvisory, party_attribution_advisory
 from ...application.ledger.review_advisories import review_advisory_kinds
-from ...application.operator_actions import ActionReference
+from ...application.operator_actions._models import ActionReference
 from ...core.config import load_settings
 from ...core.confirmation_gate import ConfirmationBlockReason, FindingResolutionAction, ReviewAdvisoryKind
 from ...core.draft_discrepancy import DraftDiscrepancyKind
-from ...core.i18n import tr
+from ...core.i18n._render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.iva.establishment import StatedCountryCodeStatus
 from ._common import _bad, _state, _tx_repo, emit_envelope, resolve_notice_action

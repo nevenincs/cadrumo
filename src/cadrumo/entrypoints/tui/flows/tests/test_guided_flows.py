@@ -18,7 +18,7 @@ from pydantic import BaseModel
 
 from .....application.flows.definition import CopyRef, FlowChoice, FlowDefinition, FlowPage, FlowSection
 from .....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
-from .....core.i18n import SUPPORTED_OUTPUT_LANGUAGES
+from .....core.i18n._render import SUPPORTED_OUTPUT_LANGUAGES
 from .....tests.locales_root_fixture import locales_root_scope
 from ...components.host import ScreenHostApp
 from ..app import FlowScreen

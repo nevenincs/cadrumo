@@ -27,7 +27,7 @@ from ...application.overview.calendar_models import (
     OverviewCalendarRange,
 )
 from ...core.hashing import sha256_hex
-from ...core.i18n import tr
+from ...core.i18n._render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.logging import get_logger
 from ...domain.modelos.work_unit import WorkUnit
@@ -213,7 +213,7 @@ def overview_no_aeat_history_notice(*, tax_route: TaxRoute | None) -> Notice | N
     command should fail over.
     """
     from ...application.calculations.observations_repository import CalculationObservationRepository
-    from ...application.operator_actions import ActionReference
+    from ...application.operator_actions._models import ActionReference
     from ...core.json_contract import ResolvedNoticeAction
 
     try:

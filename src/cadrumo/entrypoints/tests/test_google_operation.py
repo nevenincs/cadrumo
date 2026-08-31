@@ -14,7 +14,7 @@ import pytest
 from ...adapters.persistence.operations.journal import OperationJournalRepository
 from ...adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ...adapters.persistence.operations.secure_references import operation_secure_reference_repository
-from ...application.export import (
+from ...application.export.google_operation import (
     GOOGLE_SHEETS_EXPORT_OPERATION_DEFINITION_ID,
     GOOGLE_SHEETS_EXPORT_PHASE_APPLY,
     GOOGLE_SHEETS_EXPORT_PHASE_PLAN,

@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from ...application.operator_surface.help_models import HelpSurface
-from ...application.operator_surface.help_models import HelpLabel, HelpProse
+from ...application.operator_surface.help_models import HelpLabel, HelpProse, HelpSurface
 from ...core.json_contract import OutputSchema
 from ...core.text_bounds import NonEmptyList
 

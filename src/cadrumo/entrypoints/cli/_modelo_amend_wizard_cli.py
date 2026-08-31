@@ -74,18 +74,20 @@ from ...application.modelo._calculation_actions import get_calculation_revision
 from ...application.modelo._filing_actions import get_filing_record
 from ...application.modelo.registry_discovery import registry_casillas_for_registry_scope
 from ...core.amendment_kind_regime import permitted_amendment_kind_values
+from ...core.decimal._grammar import try_parse_canonical_decimal
+from ...core.external_constants import OutputLanguage
+from ...core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
+from ...core.i18n._render import tr
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
-from ...core.decimal import try_parse_canonical_decimal
-from ...core.external_constants import OutputLanguage
-from ...core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
-from ...core.i18n import tr
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.query_reports import ModeloCasillaRow
-from ...domain.modelos.calculation_revision_amendment import m303_rectificativa_motive_is_applicable
 from ...domain.modelos.calculation_revision import CalculationRevisionAmendmentKind
-from ...domain.modelos.calculation_revision_amendment import M303RectificativaMotive
+from ...domain.modelos.calculation_revision_amendment import (
+    M303RectificativaMotive,
+    m303_rectificativa_motive_is_applicable,
+)
 from ._common import activate_subcommand_output_language, emit_envelope
 from ._modelo_amend_wizard_payloads import AmendWizardCorrectedCasillaPayload, WorkAmendWizardResult
 from ._modelo_behavior_support import require_active_profile, resolve_work_unit_for_cli
@@ -93,9 +95,9 @@ from ._modelo_cli_support import bad_parameter_from_error, resolve_default_actor
 from ._modelo_rendering import filing_record_lines
 
 if TYPE_CHECKING:
+    from ...domain.modelos.calculation_revision import CalculationRevision
     from ...domain.modelos.filing_record import ModeloRecord
     from ...domain.modelos.work_unit import WorkUnit
-    from ...domain.modelos.calculation_revision import CalculationRevision
 __all__ = ["work_amend_wizard"]
 
 

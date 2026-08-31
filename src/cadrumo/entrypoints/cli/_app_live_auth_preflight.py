@@ -8,7 +8,7 @@ import typer
 
 from ...application.auth.operator import build_live_auth_preflight_report
 from ...application.auth.operator_results import LiveAuthPreflightReport
-from ...core.redaction import redact_for_cli_output
+from ...core.redaction.rules import redact_for_cli_output
 
 
 def _metric_line(key: str, value: object) -> str:

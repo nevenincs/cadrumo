@@ -24,9 +24,9 @@ from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....application.aggregation import AggregationValidationError, RetencionObservationRepository
-from ....application.invoices import build_catalogue_invoice, create_catalogue_invoice
+from ....application.invoices._creation import build_catalogue_invoice, create_catalogue_invoice
 from ....application.modelo._calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )

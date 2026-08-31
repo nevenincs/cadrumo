@@ -28,7 +28,7 @@ import re
 
 import pytest
 
-from ....core.i18n import tr
+from ....core.i18n._render import tr
 from ....domain.contribuyente.descendant_facts import parse_descendiente_flag
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

@@ -65,7 +65,7 @@ from collections.abc import Sequence
 
 from ...application.ledger.invoice_draft_records import FieldProvenance
 from ...core.field_grounding import FieldGroundingOutcome
-from ...core.i18n import tr
+from ...core.i18n._render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 
 __all__ = ["DEGRADED_GROUNDING_OUTCOMES", "field_degradation_notices"]

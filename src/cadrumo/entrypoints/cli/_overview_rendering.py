@@ -26,17 +26,27 @@ from __future__ import annotations
 import json
 from collections.abc import Sequence
 
-from ...application.operator_actions import ActionReference, DeclaredNextAction
+from ...application.operator_actions._models import ActionReference, DeclaredNextAction
 from ...application.overview.calendar import actionable_post_filing_events
 from ...application.overview.calendar_evidence import NO_AEAT_HISTORY_NOTICE_CODE
-from ...application.overview.calendar_models import CalendarWarning, OverviewCalendar, OverviewCalendarEntry, OverviewCalendarEvent, OverviewCalendarRange, OverviewStatusReport, SuppressedCalendarEntry
+from ...application.overview.calendar_models import (
+    CalendarWarning,
+    OverviewCalendar,
+    OverviewCalendarEntry,
+    OverviewCalendarEvent,
+    OverviewCalendarRange,
+    OverviewStatusReport,
+    SuppressedCalendarEntry,
+)
 from ...application.overview.coverage import CoverageAdviceReason, ObligationCoverageReport
-from ...application.overview.next_actions import OverviewStatusNextStep, OverviewStatusNextStepId, build_overview_status_next_steps
-from ...application.overview.pipeline_health import ModeloReadinessState
 from ...application.overview.data_prep import DataPrepStepState as _DataPrepStepState
-from ...core.notificacion_estado_servicio import NotificacionEstadoServicio
-from ...core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
-from ...core.i18n import tr
+from ...application.overview.next_actions import (
+    OverviewStatusNextStep,
+    OverviewStatusNextStepId,
+    build_overview_status_next_steps,
+)
+from ...application.overview.pipeline_health import ModeloReadinessState
+from ...core.i18n._render import tr
 from ...core.json_contract import (
     Notice,
     NoticeSeverity,
@@ -44,6 +54,8 @@ from ...core.json_contract import (
     ResolvedNoticeAction,
     strict_round_trip,
 )
+from ...core.notificacion_estado_servicio import NotificacionEstadoServicio
+from ...core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
 from ._common import resolve_notice_action
 from ._overview_payloads import (
     OverviewAgendaResult,

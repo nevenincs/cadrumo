@@ -34,11 +34,10 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.errors import SessionExpiredError, StorageValidationError
-from ....adapters.persistence.storage.master_key import BucketSession
-from ....adapters.persistence.storage.master_key._active_session import _active_session
+from ....adapters.persistence.storage.master_key.active_session import active_session
+from ....adapters.persistence.storage.master_key.bucket_session import BucketSession
 from ....adapters.persistence.storage.runtime import StorageRuntimeReadinessCode
-from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....adapters.persistence.storage.sql.secure_objects import SensitivityClass
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository, SensitivityClass
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -86,14 +85,14 @@ def _inactive_repository(tmp_path: Path) -> SecureObjectRepository:
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="97602740-eaa9-46db-851e-b253171bcaed") as profile:
         repository = profile.repository
-    assert _active_session.get() is None
+    assert active_session.get() is None
     return repository
 
 
 def _active_bucket_session() -> BucketSession:
     """Return the live BucketSession the master-key provider activated."""
 
-    session = _active_session.get()
+    session = active_session.get()
     assert isinstance(session, BucketSession), "master-key provider must activate a BucketSession"
     return session
 
@@ -178,7 +177,7 @@ def test_profile_bound_repository_without_active_session_fails_closed(
     stale repository handle.
     """
 
-    assert _active_session.get() is None
+    assert active_session.get() is None
     with pytest.raises(StorageValidationError) as raised:
         _inactive_repository._check_session_freshness()
 

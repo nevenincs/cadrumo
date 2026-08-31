@@ -10,9 +10,10 @@ from pathlib import Path
 
 import pytest
 
-from ....application.calculations import CalculationObservationRepository, resolve_bindings_from_local_store
-from ....core.period import Period
+from ....application.calculations._binding_prefill import resolve_bindings_from_local_store
+from ....application.calculations.observations_repository import CalculationObservationRepository
 from ....core.casilla_id import validated_casilla_id
+from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ....domain.user_profile.loader import load_user_profile_schema

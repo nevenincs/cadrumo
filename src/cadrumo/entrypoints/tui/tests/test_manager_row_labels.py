@@ -95,7 +95,7 @@ def test_a_closed_choice_row_renders_its_operator_label_not_its_token() -> None:
 
 def test_the_shipped_clave_route_row_never_renders_app_request() -> None:
     from ....application.user_profile.overview import build_profile_overview
-    from ....core.i18n import tr
+    from ....core.i18n._render import tr
     from ....domain.user_profile.values import UserProfileFact, UserProfileRecord
 
     storage_value = "app_request"

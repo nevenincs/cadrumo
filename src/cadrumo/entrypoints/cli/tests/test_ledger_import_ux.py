@@ -122,7 +122,9 @@ def test_generic_csv_missing_currency_warning_is_provider_neutral_in_cli(tmp_pat
 
     assert result.exit_code == 0, result.output
     payload = _json_object(_json_document(result.output)["result"])
-    validation = payload["validation"]
+    # One file imported, so one report. The field is a list because a
+    # DIRECTORY import folds several and used to keep only the first.
+    validation = payload["validations"][0]
     assert isinstance(validation, dict)
     assert validation["valid"] is True
     assert len(validation["warnings"]) == 1
@@ -461,7 +463,7 @@ def test_verify_source_hashes_the_named_file_only_when_verify_is_also_set(tmp_pa
         ["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "csv", "--dry-run"],
     )
     assert unverified.exit_code == 0, unverified.output
-    unverified_source = json.loads(unverified.output)["result"]["source"]
+    unverified_source = json.loads(unverified.output)["result"]["sources"][0]
     assert unverified_source["requested"] is False
     assert unverified_source["path"] is None
     assert unverified_source["sha256"] is None
@@ -482,7 +484,7 @@ def test_verify_source_hashes_the_named_file_only_when_verify_is_also_set(tmp_pa
         ],
     )
     assert verify_without_source_file.exit_code == 0, verify_without_source_file.output
-    verify_only_source = json.loads(verify_without_source_file.output)["result"]["source"]
+    verify_only_source = json.loads(verify_without_source_file.output)["result"]["sources"][0]
     assert verify_only_source["requested"] is True
     assert verify_only_source["path"] is None
     assert verify_only_source["sha256"] is None
@@ -505,7 +507,7 @@ def test_verify_source_hashes_the_named_file_only_when_verify_is_also_set(tmp_pa
         ],
     )
     assert verified.exit_code == 0, verified.output
-    verified_source = json.loads(verified.output)["result"]["source"]
+    verified_source = json.loads(verified.output)["result"]["sources"][0]
     assert verified_source["requested"] is True
     assert verified_source["path"] == str(original.resolve())
     assert verified_source["sha256"] is not None
@@ -528,7 +530,7 @@ def test_verify_source_hashes_the_named_file_only_when_verify_is_also_set(tmp_pa
         ],
     )
     assert verify_source_without_verify.exit_code == 0, verify_source_without_verify.output
-    ignored_source = json.loads(verify_source_without_verify.output)["result"]["source"]
+    ignored_source = json.loads(verify_source_without_verify.output)["result"]["sources"][0]
     assert ignored_source["requested"] is False
     assert ignored_source["path"] is None
     assert ignored_source["sha256"] is None

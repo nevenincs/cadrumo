@@ -26,7 +26,7 @@ from pathlib import Path
 import pytest
 
 from ....core.external_constants import OutputLanguage
-from ....core.i18n import lookup_translation
+from ....core.i18n._render import lookup_translation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

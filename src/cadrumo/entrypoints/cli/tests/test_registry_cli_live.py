@@ -15,7 +15,11 @@ from typer.core import TyperGroup
 
 from ....adapters.outbound.aeat.sede.declarations_schema import Declaracion
 from ....adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
-from ....adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue
+from ....adapters.outbound.aeat.sede.schema import (
+    FiledDeclaracionArtefact,
+    FiledDeclaracionObservation,
+    ObservedCasillaValue,
+)
 from ....application.live.errors import LiveIvaAcquisitionFailureMode
 from ....application.live.filed_data import (
     FiledDataListingRow,
@@ -35,13 +39,13 @@ from ....application.live.remote_state_models import (
     LiveIvaReadStatus,
 )
 from ....application.registry.filed_state import verify_filed_state
+from ....core.access_gate.errors import AeatLiveReadNotEnabledError
+from ....core.auth_provider import AuthProviderKind
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.casilla_value_kind import CasillaValueKind
 from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
-from ....core.auth_provider import AuthProviderKind
 from ....core.period import Period
-from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....core.access_gate import AeatLiveReadNotEnabledError
-from ....core.resources import bundled_path
+from ....core.resources._boundary import bundled_path
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.iva_compensation.reconciliation import IvaCompensationDecisionReason

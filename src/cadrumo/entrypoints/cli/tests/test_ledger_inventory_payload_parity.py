@@ -38,7 +38,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....domain.contribuyente.inventory import (
+from ....domain.contribuyente.inventory.records import (
     InventoryAcquisitionCost,
     InventoryLedger,
     MovementKind,

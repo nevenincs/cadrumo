@@ -15,7 +15,8 @@ from pathlib import Path
 import pytest
 from openpyxl import Workbook
 
-from ....application.calculations import CalculationObservationRepository, resolve_bindings_from_local_store
+from ....application.calculations._binding_prefill import resolve_bindings_from_local_store
+from ....application.calculations.observations_repository import CalculationObservationRepository
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope

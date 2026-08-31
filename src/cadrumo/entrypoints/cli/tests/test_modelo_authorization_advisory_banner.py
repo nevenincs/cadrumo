@@ -22,7 +22,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core.access_gate import AuthorizationState
+from ....core.access_gate._authorization import AuthorizationState
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord

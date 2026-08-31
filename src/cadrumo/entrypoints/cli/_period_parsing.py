@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING
 
 import typer
 
-from ...core.i18n import tr
+from ...core.i18n._render import tr
 from ._common import _bad
 
 if TYPE_CHECKING:

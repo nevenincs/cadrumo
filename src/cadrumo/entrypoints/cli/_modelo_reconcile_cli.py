@@ -22,7 +22,7 @@ import typer
 
 from ...application.modelo.reconciliation import ModeloReconciliationReport
 from ...application.modelo.reconciliation_records import ModeloReconciliationEvidenceKind
-from ...core.i18n import tr
+from ...core.i18n._render import tr
 from ...domain.modelos.work_unit import WorkUnit
 from ._common import active_bucket_id_or_refuse, emit_envelope
 from ._modelo_behavior_support import require_active_profile, resolve_work_unit_for_cli

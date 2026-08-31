@@ -34,19 +34,19 @@ from ...application.modelo._local_observation_spreadsheet import (
     parse_casilla_lexical_spreadsheet,
     parse_casilla_value_spreadsheet,
 )
-from ...application.modelo.work_lifecycle import get_work_unit
 from ...application.modelo.external_import_actions import (
     ExternalFilingBaselineSource,
     import_external_filing_evidence,
     import_external_filing_source,
 )
-from ...core.period import Period, PeriodError
+from ...application.modelo.work_lifecycle import get_work_unit
 from ...core.casilla_id import CasillaId, validated_casilla_id
-from ...core.decimal import try_parse_canonical_decimal
-from ...core.i18n import tr
+from ...core.decimal._grammar import try_parse_canonical_decimal
+from ...core.i18n._render import tr
+from ...core.period import Period, PeriodError
 from ...domain.modelos.codes import ModeloCode
-from ...domain.modelos.filing_record import ExternalEvidenceKind
 from ...domain.modelos.errors import ModeloValidationError
+from ...domain.modelos.filing_record import ExternalEvidenceKind
 from ._common import _declared_tax_id, emit_envelope
 from ._modelo_cli_support import (
     bad_parameter_from_error,

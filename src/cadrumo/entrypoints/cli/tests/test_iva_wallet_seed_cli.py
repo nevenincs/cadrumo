@@ -8,11 +8,11 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....application.calculations import (
+from ....application.calculations.iva_compensation_history import (
     IvaCompensationHistoryRepository,
-    query_iva_wallet_balance,
     seed_iva_compensation_period,
 )
+from ....application.calculations.iva_wallet_balance import query_iva_wallet_balance
 from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ....core.period import Period
 from ....domain.iva_compensation.carry_forward import IvaCompensationCarryForwardLot, IvaCompensationExpiryReviewState

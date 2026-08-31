@@ -16,9 +16,9 @@ from typing import TYPE_CHECKING
 
 from ....application.modelo.work_addressing import ensure_modelo_work_unit_for_active_target
 from ....application.modelo.work_wizard import ModeloWorkWizardRun, open_modelo_work_wizard
+from ....core.flows import FlowMode
 from ....core.modelo import Modelo
 from ....core.period import Period
-from ....core.flows import FlowMode
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....domain.user_profile.values import UserProfileFact
 from ..flows.app import FlowScreen

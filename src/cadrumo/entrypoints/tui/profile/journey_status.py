@@ -25,7 +25,7 @@ from ....application.user_profile.presentation import (
     ProfileFieldPresentationV1,
     ProfilePresentationV1,
 )
-from ....core.i18n import tr
+from ....core.i18n._render import tr
 from ....domain.user_profile.labels import profile_field_label, profile_section_title
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.schema import ProfileFieldDefinition, ProfileSectionDefinition

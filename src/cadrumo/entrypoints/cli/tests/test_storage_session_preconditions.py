@@ -8,13 +8,13 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.bucket import BucketLockedError, NoActiveBucketError
+from ....adapters.persistence.storage.bucket.errors import BucketLockedError, NoActiveBucketError
 from ....adapters.persistence.storage.errors import (
     MasterKeyMaterialMissingError,
     MasterKeyUnavailableError,
     SessionExpiredError,
 )
-from ....adapters.persistence.storage.master_key import NoActiveBucketSessionError
+from ....adapters.persistence.storage.master_key.active_session import NoActiveBucketSessionError
 from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_cli_profile
@@ -26,18 +26,18 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _CADRUMO_ROOT = Path(__file__).resolve().parents[3]
 _PERSISTENCE_PRODUCERS = {
-    "master_key/_active_session.py": _CADRUMO_ROOT
+    "master_key/active_session.py": _CADRUMO_ROOT
     / "adapters"
     / "persistence"
     / "storage"
     / "master_key"
-    / "_active_session.py",
-    "master_key/_bucket_session.py": _CADRUMO_ROOT
+    / "active_session.py",
+    "master_key/bucket_session.py": _CADRUMO_ROOT
     / "adapters"
     / "persistence"
     / "storage"
     / "master_key"
-    / "_bucket_session.py",
+    / "bucket_session.py",
     "master_key/_master_key.py": _CADRUMO_ROOT
     / "adapters"
     / "persistence"
@@ -91,8 +91,8 @@ def _raise_call_contracts(path: Path) -> tuple[tuple[str, Mapping[str, str]], ..
 def test_s70_exactly_five_producers_keep_observed_fact_expression_polarity() -> None:
     """The five persistence producers have one complete, mutation-sensitive census."""
     assert {relative: _raise_call_contracts(path) for relative, path in _PERSISTENCE_PRODUCERS.items()} == {
-        "master_key/_active_session.py": (("NoActiveBucketSessionError", {}),),
-        "master_key/_bucket_session.py": (
+        "master_key/active_session.py": (("NoActiveBucketSessionError", {}),),
+        "master_key/bucket_session.py": (
             (
                 "MasterKeyUnavailableError",
                 {

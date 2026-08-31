@@ -14,8 +14,8 @@ from typing import TYPE_CHECKING
 
 import typer
 
-from ....core.capabilities import ServiceCapability
 from ....core.bucket_pointer import resolve_active_bucket_id
+from ....core.capabilities import ServiceCapability
 
 if TYPE_CHECKING:
     from ....application.provisioning import ContentionSnapshot, DependencyStatus, HardwareProfile
@@ -77,7 +77,7 @@ def _assess_selected_model_load(profile: HardwareProfile) -> ContentionSnapshot 
 
 def config_check(ctx: typer.Context) -> None:
     """Report external-dependency availability + the active profile's capability posture."""
-    from ....adapters.outbound.storage import windows_worst_case_object_path_suffix_length
+    from ....adapters.outbound.storage._path_budget import windows_worst_case_object_path_suffix_length
     from ....application.preflight import run_preflight_checks
     from ....application.provisioning import (
         probe_hardware_profile,

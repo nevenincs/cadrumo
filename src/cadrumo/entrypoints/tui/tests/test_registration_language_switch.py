@@ -25,7 +25,7 @@ from textual.widgets._select import SelectOverlay
 from ....application.user_profile.login_session import login_profile
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.credentials import assess_profile_password
-from ....core.i18n import output_language, tr
+from ....core.i18n._render import output_language, tr
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....entrypoints.tui.components.host import ScreenHostApp
 from ....entrypoints.tui.secret.registration import RecoveryWordsScreen, RegistrationScreen

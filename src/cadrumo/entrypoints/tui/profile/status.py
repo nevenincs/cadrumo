@@ -32,7 +32,7 @@ from textual.containers import Vertical
 from textual.screen import Screen
 from textual.widgets import Footer, Static
 
-from ....core.i18n import tr
+from ....core.i18n._render import tr
 from ....entrypoints.tui.components.keyboard import localize_key_descriptions
 from ....entrypoints.tui.components.theme import (
     BASE_CSS,

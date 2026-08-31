@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.i18n import tr
+from ....core.i18n._render import tr
 from .._command_spec import DefaultKind
 from .._modelo_spreadsheet_command_specs import MODELO_SPREADSHEET_COMMAND_SPECS
 

@@ -47,13 +47,18 @@ import typer
 from pydantic import BaseModel, ValidationError
 
 from ...application.cli_exception_preconditions import CliExceptionPrecondition
-from ...application.operator_actions import PreconditionVerdict
-from ...core.config_state_root import FormerProductStateError
+from ...application.operator_actions._models import PreconditionVerdict
 from ...core.click_context import argv_requests_json, json_output_requested
-from ...core.errors.error_codes import get_error_exit_code, get_registered_error_code, render_error_json, render_error_text
+from ...core.config_state_root import FormerProductStateError
+from ...core.errors.error_codes import (
+    get_error_exit_code,
+    get_registered_error_code,
+    render_error_json,
+    render_error_text,
+)
 from ...core.errors.hierarchy import ActiveProfilePointerError, CadrumoError
 from ...core.json_contract import Notice, ResolvedPreconditionAction
-from ...core.redaction import redact_for_cli_output
+from ...core.redaction.rules import redact_for_cli_output
 from ...domain.user_profile.errors import StoredProfileDriftError
 
 _log = logging.getLogger(__name__)
@@ -625,7 +630,7 @@ def sandbox_notice_for_error() -> Notice | None:
     indicator must never mask the original error being reported.
     """
     try:
-        from ...application.operator_output import sandbox_notice_for_active_bucket
+        from ...application.operator_output._sandbox_notice import sandbox_notice_for_active_bucket
 
         return sandbox_notice_for_active_bucket()
     except Exception:  # the sandbox indicator must never break error emit
@@ -713,7 +718,7 @@ def render_error_payload(
         text = "\n".join((*notice_lines(authentication_notices), text))
     if notice is None:
         return text
-    from ...application.operator_output import sandbox_banner_line
+    from ...application.operator_output._sandbox_notice import sandbox_banner_line
 
     return f"{sandbox_banner_line(notice)}\n{text}"
 
@@ -1051,7 +1056,7 @@ def _active_profile_pointer_error_verdict(error: ActiveProfilePointerError) -> P
         or context.get("root_fallback_refused") is not True
     ):
         return None
-    from ...application.operator_actions import corrupt_active_profile_pointer_verdict
+    from ...application.operator_actions._preconditions import corrupt_active_profile_pointer_verdict
 
     return corrupt_active_profile_pointer_verdict(path=path)
 

@@ -33,8 +33,8 @@ from ....application.live.verify import (
     VerifyService,
     VerifySurface,
 )
-from ....core.period import Period
 from ....core.config import override_settings
+from ....core.period import Period
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ....tests.cli_runner import invoke_cached_cli
 from .._app_live import (

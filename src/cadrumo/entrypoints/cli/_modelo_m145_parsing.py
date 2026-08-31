@@ -26,7 +26,7 @@ from ...application.modelo._m145_communication_records import (
 )
 from ...application.modelo.m145_communication_period import M145CommunicationPeriod
 from ...core.casilla_id import CasillaId
-from ...core.i18n import tr
+from ...core.i18n._render import tr
 
 type ParseCasillaOverride = Callable[[str], tuple[CasillaId, str]]
 

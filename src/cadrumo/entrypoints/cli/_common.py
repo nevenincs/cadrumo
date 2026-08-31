@@ -36,12 +36,12 @@ import typer
 import typer._click.types as typer_click_types
 from pydantic import BaseModel, Field, field_validator
 
-from ...core.modelo import Modelo, NON_REGISTRY_MODELOS
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.cli_metadata import is_metadata_invocation
 from ...core.external_constants import OutputLanguage
-from ...core.i18n import tr
+from ...core.i18n._render import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedActionArgument, ResolvedPreconditionAction
+from ...core.modelo import NON_REGISTRY_MODELOS, Modelo
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.output_rendering import OutputFormat, render_command_output
 from ...core.text_bounds import NonEmptyStr
 from ._command_suggestions import INVOCATION_REMAINDER_META_KEY
@@ -105,12 +105,8 @@ if TYPE_CHECKING:
     from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ...application.auth.catalogue import AuthProviderListing
     from ...application.modelo.work_lifecycle import ModeloWorkLifecycleContinuation
-    from ...application.operator_actions import (
-        ActionArgumentBinding,
-        ActionArgumentBindingSpecification,
-        ActionReference,
-        PreconditionVerdict,
-    )
+    from ...application.operator_actions._catalogue import ActionArgumentBindingSpecification
+    from ...application.operator_actions._models import ActionArgumentBinding, ActionReference, PreconditionVerdict
     from ...application.workflow.state_models import WorkflowState
     from ...core.json_contract import ResolvedActionReference, ResolvedNoticeAction
     from ...domain.deadlines.models import TaxpayerProfile
@@ -380,7 +376,7 @@ def _resolve_cli_precondition_action_reference(
     action = verdict.action
     if action is None:
         return None
-    from ...application.operator_actions import OPERATOR_ACTION_CATALOGUE
+    from ...application.operator_actions._catalogue import OPERATOR_ACTION_CATALOGUE
     from ...application.operator_surface.action_resolution import resolve_catalogue_action
     from ...core.json_contract import ResolvedActionReference
 
@@ -554,7 +550,7 @@ def _live_action_input_schema(command_key: str) -> VerbInputSchema:
 
 def _resolve_notice_actions(notices: Sequence[Notice] | None) -> tuple[Notice, ...]:
     """Join success-notice actions to their live CLI paths before presentation."""
-    from ...application.operator_actions import lookup_action
+    from ...application.operator_actions._catalogue import lookup_action
     from ...core.json_contract import ResolvedNoticeAction
 
     resolved: list[Notice] = []
@@ -722,7 +718,7 @@ def emit_envelope(
 
             emit_json_success(command, result, notices=resolved_notices, active_profile=None)
             return
-        from ...application.operator_output import emit_operator_json_success
+        from ...application.operator_output._emit import emit_operator_json_success
 
         active_profile = active_profile_label()
         emit_operator_json_success(command, result, notices=resolved_notices, active_profile=active_profile)
@@ -735,7 +731,7 @@ def emit_envelope(
         rendered_lines = tuple(lines)
     else:
         rendered_lines = (*lines, *notice_lines(resolved_notices), *_action_text_lines(resolved_notices))
-        from ...application.operator_output import sandbox_banner_line, sandbox_notice_for_active_bucket
+        from ...application.operator_output._sandbox_notice import sandbox_banner_line, sandbox_notice_for_active_bucket
 
         sandbox_notice = sandbox_notice_for_active_bucket()
         if sandbox_notice is not None:
@@ -757,8 +753,10 @@ def resolve_notice_action(
     stable action identity and provenance-bearing concrete values; they cannot
     hand-assemble a wire action or silently omit a live required input.
     """
-    from ...application.operator_actions import OPERATOR_ACTION_CATALOGUE
-    from ...application.operator_surface.action_resolution import resolve_notice_action as resolve_application_notice_action
+    from ...application.operator_actions._catalogue import OPERATOR_ACTION_CATALOGUE
+    from ...application.operator_surface.action_resolution import (
+        resolve_notice_action as resolve_application_notice_action,
+    )
 
     resolved = resolve_application_notice_action(
         action=action,
@@ -823,10 +821,10 @@ def active_profile_label() -> str | None:
     (:func:`~cadrumo.core.json_contract.emit_json_success`) never scans
     profile manifests.
     """
-    from ...adapters.persistence.storage import StorageValidationError
+    from ...adapters.persistence.storage.errors import StorageValidationError
     from ...application.workflow.profile_bucket_scan import resolve_profile_bucket
-    from ...core.config_state_root import FormerProductStateError
     from ...core.bucket_pointer import resolve_active_bucket_id
+    from ...core.config_state_root import FormerProductStateError
 
     try:
         bucket_id = resolve_active_bucket_id()
@@ -907,7 +905,7 @@ def _label_for(listing: AuthProviderListing) -> str:
 
 def _translate(translatable: str) -> str:
     """Render a str in the operator's preferred locale (Spanish first)."""
-    from ...core.i18n import tr
+    from ...core.i18n._render import tr
 
     return tr(translatable)
 
@@ -1113,7 +1111,7 @@ def activate_subcommand_output_language(ctx: typer.Context, language: OutputLang
     if language is None:
         return
     from ...core.config import override_settings
-    from ...core.i18n import clear_output_language_cache
+    from ...core.i18n._render import clear_output_language_cache
 
     ctx.with_resource(override_settings(cadrumo_output_language=language))
     clear_output_language_cache()

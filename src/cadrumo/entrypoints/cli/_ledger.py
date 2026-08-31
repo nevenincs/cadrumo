@@ -24,15 +24,15 @@ from ...adapters.persistence.profile.transactions import TransactionCatalogueRep
 from ...application.ledger.actions_manual import create_manual_transaction, update_manual_transaction_fields
 from ...application.ledger.id_resolution import resolve_lineage_transaction_id
 from ...application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
-from ...core.prorrata_exclusions import Art104TresExclusion
-from ...core.irnr import M210PayerMode
-from ...core.iva_deduction_fact import IvaDeductionFactKind
-from ...core.prorrata_register import ProrrataRegisterRegime
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.external_constants import DEFAULT_CURRENCY
-from ...core.i18n import tr
+from ...core.i18n._render import tr
+from ...core.irnr import M210PayerMode
+from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.logging import get_logger
+from ...core.prorrata_exclusions import Art104TresExclusion
+from ...core.prorrata_register import ProrrataRegisterRegime
 from ...domain.iva.prorrata import InputClassification
 from ...domain.iva.schema import EUMemberState, IvaCategory
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, is_classified
@@ -147,7 +147,7 @@ def _prorrata_especial_inert_notice(
     if input_classification is None:
         return None
     from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-    from ...application.prorrata_register import ProrrataRegisterService
+    from ...application.prorrata_register._service import ProrrataRegisterService
 
     service = ProrrataRegisterService(repository=ProrrataRegisterRepository(bucket_id=bucket_id))
     entry = service.get(ejercicio, sector_id=sector_id)
@@ -191,7 +191,7 @@ def _prorrata_sector_unmatched_notice(
     if sector_id is None:
         return None
     from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-    from ...application.prorrata_register import ProrrataRegisterService
+    from ...application.prorrata_register._service import ProrrataRegisterService
 
     service = ProrrataRegisterService(repository=ProrrataRegisterRepository(bucket_id=bucket_id))
     if service.list_all().sector_definition_for(sector_id) is not None:
@@ -318,7 +318,7 @@ def ledger_add(
     # Same ECB-backed normalizer the file-import path wires in: a manually
     # entered foreign-currency row must convert at entry, or it persists with no
     # value_in_eur and every aggregation gate withholds it from the modelo.
-    from ...adapters.outbound.fx import default_ecb_rate_provider
+    from ...adapters.outbound.fx._ecb_provider import default_ecb_rate_provider
     from ...domain.currency.service import CurrencyNormalizationService
 
     try:

@@ -32,11 +32,11 @@ from .....application.modelo.work_review import (
     ModeloWorkReview,
     ModeloWorkReviewCasilla,
 )
-from .....core.modelo_work_progress_state import ModeloWorkProgressState
-from .....core.estado_casilla_oficial import EstadoCasillaOficial
-from .....core.operator_action_enums import OperatorActionAxis
 from .....core.aggregation import BindingSourceKind
-from .....core.i18n import tr
+from .....core.estado_casilla_oficial import EstadoCasillaOficial
+from .....core.i18n._render import tr
+from .....core.modelo_work_progress_state import ModeloWorkProgressState
+from .....core.operator_action_enums import OperatorActionAxis
 from .....domain.calculations.registry.handoffs import RelationConsumptionChannel
 from .....domain.calculations.registry.schema_input_kind import InputKind
 from .....domain.filing.schema import ModeloValueKind

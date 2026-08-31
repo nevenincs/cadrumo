@@ -29,7 +29,7 @@ from uuid import UUID
 
 import pytest
 
-from ....core.redaction import CLI_PROFILE_ID_PLACEHOLDER
+from ....core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.secure_sql import reap_profile_session_keys
 from ....tests.subprocess_cli import run_cadrumo_subprocess
 
@@ -105,7 +105,7 @@ def _envelope(result: subprocess.CompletedProcess[str]) -> dict[str, Any]:
 
 def _create_profile(storage_root: Path) -> str:
     """Register one capsule through the current credential-only creation door."""
-    from ....adapters.persistence.storage.master_key import close_active_bucket_session
+    from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
     from ....application.user_profile.registration import register_profile_with_credentials
     from ....core.config import override_settings
 

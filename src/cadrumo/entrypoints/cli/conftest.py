@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 from ...core.config import reset_settings_cache
-from ...core.i18n import OUTPUT_LANGUAGE_ENV_VAR, clear_output_language_cache
+from ...core.i18n._render import OUTPUT_LANGUAGE_ENV_VAR, clear_output_language_cache
 from ...tests import temporary_env
 from ...tests.profile_capsule import open_test_profile_session
 from ...tests.secure_sql import isolated_profile_storage_root
@@ -27,7 +27,7 @@ def overview_cli_backend(tmp_path: Path) -> Iterator[None]:
 @pytest.fixture
 def open_bucket_cli_backend(tmp_path: Path) -> Iterator[None]:
     """Open the dedicated ledger UX bucket lifecycle for one requesting test."""
-    from .tests import open_ledger_ux_session
+    from .tests._ledger_ux_support import open_ledger_ux_session
 
     with open_ledger_ux_session(tmp_path):
         yield

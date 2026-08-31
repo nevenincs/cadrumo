@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage import AttachmentStore
+from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....domain.attachments.enums import AttachmentKind, AttachmentSource
 from ....domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment

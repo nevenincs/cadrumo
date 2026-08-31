@@ -14,7 +14,7 @@ import json
 import pytest
 from pydantic import ValidationError
 
-from ....application.export import ExportSerializationFormat
+from ....application.export.tabular import ExportSerializationFormat
 from ....application.ledger.models import LedgerExportResult, LedgerExportRow
 from ....core.operator_action_enums import OperatorActionAxis
 from ....domain.categories.proportionality import ProportionalityKind

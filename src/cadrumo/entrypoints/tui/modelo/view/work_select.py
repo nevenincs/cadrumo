@@ -18,7 +18,7 @@ from textual.binding import Binding
 from textual.screen import Screen
 from textual.widgets import DataTable, Static
 
-from .....core.i18n import tr
+from .....core.i18n._render import tr
 from .....domain.modelos.work_unit import WorkUnit
 from ...components.theme import BASE_CSS, install_cadrumo_themes, toggle_appearance, tokenised
 from ...components.widgets import ContentDataTable, ContentScroll

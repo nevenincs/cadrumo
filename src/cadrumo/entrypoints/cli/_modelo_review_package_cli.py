@@ -124,7 +124,6 @@ from ...application.modelo._selectors import (
     ModeloCalculationRevisionSelectorNotFoundError,
     ModeloCalculationRevisionSelectorStateError,
 )
-from ...application.modelo.work_lifecycle import get_work_unit
 from ...application.modelo.review_package import (
     ReviewPackageError,
     ReviewPackageIntegrityError,
@@ -136,13 +135,14 @@ from ...application.modelo.work_addressing import (
     ModeloWorkAddressNotFoundError,
     ModeloWorkPeriodTokenError,
 )
+from ...application.modelo.work_lifecycle import get_work_unit
 from ...application.workflow.persistence import workflow_state_repository
-from ...core.refund_election import RefundElection
-from ...core.payment_election import PaymentElection
-from ...core.prior_domiciliation_election import PriorDomiciliationElection
-from ...core.period import Period
 from ...core.external_constants import UTF_8_ENCODING
-from ...core.i18n import tr
+from ...core.i18n._render import tr
+from ...core.payment_election import PaymentElection
+from ...core.period import Period
+from ...core.prior_domiciliation_election import PriorDomiciliationElection
+from ...core.refund_election import RefundElection
 from ._common import _filing_taxpayer_or_refuse, emit_envelope
 from ._modelo_behavior_support import resolve_revision_for_cli
 from ._modelo_cli_support import (
@@ -308,7 +308,7 @@ def review_package_sign(ctx: typer.Context, package: Path, output: Path, bucket_
     from ._modelo_cli_support import bad_parameter_from_error
 
     resolved_bucket_id = resolve_explicit_or_active_bucket_id(bucket_id)
-    from ...adapters.persistence.storage import secure_object_repository_for_bucket
+    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 
     repository = secure_object_repository_for_bucket(resolved_bucket_id)
     keypair = ensure_review_package_signing_keypair(bucket_id=resolved_bucket_id, repository=repository)
@@ -378,7 +378,7 @@ def review_package_counter_sign(
     except ValueError as exc:
         raise bad_parameter_from_error(ReviewPackageSigningError(str(exc))) from exc
     resolved_bucket_id = resolve_explicit_or_active_bucket_id(bucket_id)
-    from ...adapters.persistence.storage import secure_object_repository_for_bucket
+    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 
     repository = secure_object_repository_for_bucket(resolved_bucket_id)
     counter_signer_keypair = ensure_review_package_signing_keypair(bucket_id=resolved_bucket_id, repository=repository)
@@ -502,7 +502,7 @@ def review_package_decrypt(ctx: typer.Context, envelope_path: Path, output: Path
     except ValueError as exc:
         raise bad_parameter_from_error(RecipientEncryptionError(str(exc))) from exc
     resolved_bucket_id = resolve_explicit_or_active_bucket_id(bucket_id)
-    from ...adapters.persistence.storage import secure_object_repository_for_bucket
+    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 
     repository = secure_object_repository_for_bucket(resolved_bucket_id)
     keypair = ensure_recipient_encryption_keypair(bucket_id=resolved_bucket_id, repository=repository)
@@ -619,7 +619,7 @@ def review_package_import_feedback(
     except ValueError as exc:
         raise bad_parameter_from_error(RecipientEncryptionError(str(exc))) from exc
     resolved_bucket_id = resolve_explicit_or_active_bucket_id(bucket_id)
-    from ...adapters.persistence.storage import secure_object_repository_for_bucket
+    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 
     repository = secure_object_repository_for_bucket(resolved_bucket_id)
     keypair = ensure_recipient_encryption_keypair(bucket_id=resolved_bucket_id, repository=repository)

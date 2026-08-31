@@ -36,7 +36,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from ....tests.cli_envelope import unwrap_schema_envelope
-from ._ledger_ux_support import _invoke, _open_ledger_ux_session
+from ._ledger_ux_support import _invoke, open_ledger_ux_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -84,7 +84,7 @@ def test_the_bare_question_reports_what_is_confirmed(tmp_path: Path) -> None:
     and what it will answer are the same value. The payload says which question
     was asked by carrying no evidenced territory.
     """
-    with _open_ledger_ux_session(tmp_path):
+    with open_ledger_ux_session(tmp_path):
         _confirm_canarias()
         shown = _show(_COUNTERPARTY_CIF)
 
@@ -104,7 +104,7 @@ def test_evidence_disagreeing_with_the_confirmation_is_visible_before_a_confirm(
     value and said nothing, while a confirm against that document would settle no
     territory at all and raise a blocker -- the divergence the row names.
     """
-    with _open_ledger_ux_session(tmp_path):
+    with open_ledger_ux_session(tmp_path):
         _confirm_canarias()
         shown = _show(_COUNTERPARTY_CIF, "--evidenced-scope", _EVIDENCED)
 
@@ -132,7 +132,7 @@ def test_a_contradiction_is_distinguishable_from_an_unanswered_counterparty(
     verb. This is the assertion that makes ``contradicted`` load-bearing rather
     than decorative.
     """
-    with _open_ledger_ux_session(tmp_path):
+    with open_ledger_ux_session(tmp_path):
         never_asked = _show("B98765674", "--evidenced-scope", _EVIDENCED)
         _confirm_canarias()
         contradicted = _show(_COUNTERPARTY_CIF, "--evidenced-scope", _EVIDENCED)
@@ -152,7 +152,7 @@ def test_agreeing_evidence_leaves_the_confirmed_answer_standing(tmp_path: Path) 
     document against a remembered answer -- and it must come back clean with the
     fact intact.
     """
-    with _open_ledger_ux_session(tmp_path):
+    with open_ledger_ux_session(tmp_path):
         _confirm_canarias()
         shown = _show(_COUNTERPARTY_CIF, "--evidenced-scope", _CONFIRMED)
 
@@ -173,7 +173,7 @@ def test_the_contradiction_reaches_the_operator_through_the_notice_channel(
     what lifts the envelope status, so the disagreement is visible to a caller
     that reads only the spine.
     """
-    with _open_ledger_ux_session(tmp_path):
+    with open_ledger_ux_session(tmp_path):
         _confirm_canarias()
         result = _invoke(
             [
@@ -209,7 +209,7 @@ def test_an_unknown_territory_is_refused_with_the_accepted_set(tmp_path: Path) -
     the accepted set instead of refusing bare. Pinned because the value of the
     option depends on an operator being able to discover the vocabulary.
     """
-    with _open_ledger_ux_session(tmp_path):
+    with open_ledger_ux_session(tmp_path):
         result = _invoke(
             ["app", "ledger", "counterparty", "view", _COUNTERPARTY_CIF, "--evidenced-scope", "canarias"],
         )
@@ -226,7 +226,7 @@ def test_the_identification_an_operator_confirmed_is_readable(tmp_path: Path) ->
     A write-only fact at the operator boundary is worse than an absent one: it
     cannot be told apart from a value nobody supplied.
     """
-    with _open_ledger_ux_session(tmp_path):
+    with open_ledger_ux_session(tmp_path):
         recorded = _invoke(
             [
                 "app",
@@ -254,7 +254,7 @@ def test_an_unconfirmed_identification_reads_as_absent_not_as_a_default(tmp_path
     inventing one, which is the same refusal every rung on this axis makes: an
     unstated fact is absent, never a default.
     """
-    with _open_ledger_ux_session(tmp_path):
+    with open_ledger_ux_session(tmp_path):
         _confirm_canarias()
         shown = _show(_COUNTERPARTY_CIF)
 
@@ -269,7 +269,7 @@ def test_an_identification_can_be_confirmed_without_a_territory(tmp_path: Path) 
     knowing where it is established -- that is the whole reason the axis was
     split -- and requiring the territory made the half they knew unrecordable.
     """
-    with _open_ledger_ux_session(tmp_path):
+    with open_ledger_ux_session(tmp_path):
         recorded = _invoke(
             [
                 "app",
@@ -295,7 +295,7 @@ def test_an_unanswered_territory_settles_nothing_and_never_defaults(tmp_path: Pa
     their operations are not subject to. A record answering only the
     identification must leave the rung settling nothing.
     """
-    with _open_ledger_ux_session(tmp_path):
+    with open_ledger_ux_session(tmp_path):
         _invoke(
             [
                 "app",
@@ -320,7 +320,7 @@ def test_a_confirmation_asserting_neither_fact_is_refused(tmp_path: Path) -> Non
     question with a silence that reads as a confirmed absence. The refusal names
     both flags, so an operator who supplied neither learns what either would do.
     """
-    with _open_ledger_ux_session(tmp_path):
+    with open_ledger_ux_session(tmp_path):
         refused = _invoke(
             ["app", "ledger", "counterparty", "confirm", _COUNTERPARTY_CIF],
         )
@@ -331,7 +331,7 @@ def test_a_confirmation_asserting_neither_fact_is_refused(tmp_path: Path) -> Non
 
 def test_a_territory_only_confirmation_still_works(tmp_path: Path) -> None:
     """Positive control on the relaxation: the original shape is unaffected."""
-    with _open_ledger_ux_session(tmp_path):
+    with open_ledger_ux_session(tmp_path):
         _confirm_canarias()
         shown = _show(_COUNTERPARTY_CIF)
 

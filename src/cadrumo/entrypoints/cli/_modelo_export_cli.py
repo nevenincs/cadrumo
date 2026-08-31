@@ -35,11 +35,11 @@ from ...application.modelo.work_addressing import (
     ModeloWorkPeriodTokenError,
 )
 from ...application.workflow.persistence import workflow_state_repository
-from ...core.refund_election import RefundElection
+from ...core.i18n._render import tr
+from ...core.json_contract import Notice, NoticeSeverity
 from ...core.payment_election import PaymentElection
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
-from ...core.i18n import tr
-from ...core.json_contract import Notice, NoticeSeverity
+from ...core.refund_election import RefundElection
 from ._common import _filing_taxpayer_or_refuse, emit_envelope
 from ._modelo_behavior_support import resolve_optional_cli_period, resolve_revision_for_cli
 from ._modelo_cli_support import (

@@ -100,7 +100,7 @@ def activate_profile_session(
     # is refused regardless of it.
     refuse_on_arguments_alone(spec, arguments)
 
-    from ...adapters.persistence.storage import active_bucket_session_serves
+    from ...adapters.persistence.storage.master_key.active_session import active_bucket_session_serves
     from ...application.storage_write_policy import inspect_storage_write_policy
     from ...core.bucket_pointer import resolve_active_bucket_id
 
@@ -159,7 +159,7 @@ def activate_profile_session(
         target_profile_label=target_profile_label,
         requested_leaf=leaf,
     )
-    from ...core.i18n import clear_output_language_cache
+    from ...core.i18n._render import clear_output_language_cache
 
     clear_output_language_cache()
 
@@ -177,8 +177,8 @@ def _resume_or_authenticate(
     target_profile_label: str | None,
     requested_leaf: RequestedCliLeaf,
 ) -> None:
-    from ...adapters.persistence.storage import active_bucket_session_serves
     from ...adapters.persistence.storage.errors import KeyringUnavailableError
+    from ...adapters.persistence.storage.master_key.active_session import active_bucket_session_serves
     from ...application.profile_preconditions import profile_session_failure_verdict
     from ...application.user_profile.login_session import bind_resumed_profile_session
 
@@ -224,7 +224,7 @@ def authenticate_profile_for_manager(ctx: typer.Context, *, bucket_id: str) -> b
 
 def resume_registered_profile_for_manager(ctx: typer.Context, *, bucket_id: str) -> None:
     """Resume and bind a profile just registered by the manager frontend."""
-    from ...adapters.persistence.storage import active_bucket_session_serves
+    from ...adapters.persistence.storage.master_key.active_session import active_bucket_session_serves
     from ...application.user_profile.login_session import bind_resumed_profile_session
 
     refusal = bind_resumed_profile_session(bucket_id=bucket_id)

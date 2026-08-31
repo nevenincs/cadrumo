@@ -9,7 +9,7 @@ from functools import cache
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Literal, cast
 
-from ...core.i18n import output_language, tr
+from ...core.i18n._render import output_language, tr
 from ._command_spec import DefaultKind, OptionSpec, SchemaState
 
 if TYPE_CHECKING:

@@ -39,7 +39,7 @@ from textual.screen import Screen
 from textual.widgets import Static
 
 from .....application.modelo.workspace_models import ModeloWorkspaceFacetName
-from .....core.i18n import tr
+from .....core.i18n._render import tr
 from ...components.theme import toggle_appearance
 from ...components.widgets import ContentDataTable, ContentScroll
 from .controller import ModeloWorkspaceReadSession

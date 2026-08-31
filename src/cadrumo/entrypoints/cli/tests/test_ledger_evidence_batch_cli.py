@@ -38,14 +38,14 @@ from ....application.ledger.batch_ingest import (
     batch_item_identity,
 )
 from ....application.ledger.preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
-from ....application.operator_actions import ConditionEvidence, PreconditionVerdict
+from ....application.operator_actions._models import ConditionEvidence, PreconditionVerdict
 from ....application.provisioning import ProvisioningPreconditionCondition
-from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.config import override_settings
 from ....core.json_contract import ResolvedActionReference, ResolvedNoticeAction, ResolvedPreconditionAction
+from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....domain.iva.classification import InvoiceKind
 from .._ledger_evidence_batch_cli import _batch_payload, _batch_text_lines, _run_notices
-from ._ledger_ux_support import _invoke, _open_ledger_ux_session
+from ._ledger_ux_support import _invoke, open_ledger_ux_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -78,7 +78,7 @@ def session(tmp_path: Path) -> Iterator[None]:
     real extraction path. No model is contacted: the poison refuses on its bytes
     and the structured record is read by a parser.
     """
-    with _open_ledger_ux_session(tmp_path), override_settings(cadrumo_llm_contention_check_override=True):
+    with open_ledger_ux_session(tmp_path), override_settings(cadrumo_llm_contention_check_override=True):
         yield
 
 

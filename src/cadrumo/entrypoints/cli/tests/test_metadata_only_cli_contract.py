@@ -11,7 +11,7 @@ from typing import cast
 
 import pytest
 
-from ....adapters.persistence.storage import close_active_bucket_session
+from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_cli_profile

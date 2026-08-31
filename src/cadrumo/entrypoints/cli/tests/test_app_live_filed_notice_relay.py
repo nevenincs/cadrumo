@@ -36,8 +36,8 @@ from ....application.live.remote_state_models import (
     SourceFiledDataCaptureReport,
 )
 from ....core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
-from ....core.period import Period
 from ....core.json_contract import Notice, NoticeSeverity, emit_json_success
+from ....core.period import Period
 from .._app_live import _filed_capture_notices, _filed_pull_all_notices, _filed_pull_all_result_and_lines
 from .._app_live_filed_payloads import FiledCaptureResult, FiledCaptureSourcesResult
 

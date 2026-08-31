@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.i18n import tr
+from ....core.i18n._render import tr
 from .._ledger import _invoice_link_error_bad_parameter
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

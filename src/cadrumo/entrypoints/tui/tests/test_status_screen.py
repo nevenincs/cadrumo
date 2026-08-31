@@ -30,8 +30,7 @@ from ....application.user_profile.status_projection import (
     StatusPageData,
     StatusProfileRow,
 )
-from ....core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
-from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES
+from ....core.i18n._render import SUPPORTED_OUTPUT_LANGUAGES
 from ....core.json_contract import (
     Notice,
     NoticeSeverity,
@@ -39,6 +38,7 @@ from ....core.json_contract import (
     ResolvedActionReference,
     ResolvedNoticeAction,
 )
+from ....core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
 from ....tests.locales_root_fixture import locales_root_scope
 from ..components.host import ScreenHostApp
 from ..profile.status import StatusScreen

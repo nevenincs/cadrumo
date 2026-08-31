@@ -6,7 +6,6 @@ from datetime import datetime
 
 from ...application.calculations.observations_repository import ObservationSourceKind
 from ...application.live.snapshot_base import SnapshotLifecycleState
-from ...core.modelo import Modelo
 from ...core.filing_year import FilingYear
 from ...core.identity import (
     AeatCsv,
@@ -17,6 +16,7 @@ from ...core.identity import (
     SnapshotId,
 )
 from ...core.json_contract import OutputSchema
+from ...core.modelo import Modelo
 from ._app_live_payloads_support import JustificantePeriodToken
 
 

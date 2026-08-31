@@ -43,8 +43,7 @@ from ...application.ledger.models import (
     DiagnosticSeverity,
     IsoDateText,
 )
-from ...core.invoice_link import LinkInconsistencyDirection
-from ...core.decimal import is_non_negative_canonical_decimal, try_parse_canonical_decimal
+from ...core.decimal._grammar import is_non_negative_canonical_decimal, try_parse_canonical_decimal
 from ...core.identity import (
     BucketId,
     CalculationRevisionId,
@@ -54,6 +53,7 @@ from ...core.identity import (
     TransactionId,
     WorkUnitId,
 )
+from ...core.invoice_link import LinkInconsistencyDirection
 from ...core.json_contract import OutputRootSchema, OutputSchema
 from ...core.parsing import IsoCurrencyCode, parse_iso8601_date
 from ...core.period import Period
@@ -970,8 +970,11 @@ class LedgerImportPayload(OutputSchema):
     imported_transaction_refs: list[LedgerImportTransactionRefPayload] = []
     skipped_transaction_refs: list[LedgerImportTransactionRefPayload] = []
     likely_duplicate_transaction_refs: list[LedgerImportTransactionRefPayload] = []
-    validation: LedgerImportValidationPayload
-    source: LedgerImportSourcePayload
+    # Tuples, mirroring the record: a DIRECTORY import produces one report per
+    # file and the application fold now keeps them all. A single-file import
+    # carries a one-element list.
+    validations: list[LedgerImportValidationPayload]
+    sources: list[LedgerImportSourcePayload]
     diagnostics: list[LedgerImportDiagnosticPayload] = []
 
     @classmethod

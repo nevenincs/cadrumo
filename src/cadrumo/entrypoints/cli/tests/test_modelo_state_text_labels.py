@@ -6,15 +6,15 @@ from datetime import UTC, datetime
 
 import pytest
 
-from ....core.period import Period
 from ....core.config import override_settings
-from ....domain.modelos.codes import ModeloCode
-from ....domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
+from ....core.period import Period
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
 from .._modelo_rendering import (
     calculation_observation_lines,
     calculation_revision_lines,

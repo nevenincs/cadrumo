@@ -46,7 +46,7 @@ from datetime import date as _date
 
 import typer
 
-from ...core.i18n import tr
+from ...core.i18n._render import tr
 from ._common import emit_envelope
 from ._decimal_parsing import optional_decimal_text
 from ._diagnostics_payloads import (
@@ -67,7 +67,7 @@ from ._diagnostics_payloads import (
 
 def _llm_no_run_data_notice(*, code: str):
     """Return the factual no-run notice with the catalogue-owned classifier action."""
-    from ...application.operator_actions import ActionReference
+    from ...application.operator_actions._models import ActionReference
     from ...core.json_contract import Notice, NoticeSeverity
     from ._common import resolve_notice_action
 

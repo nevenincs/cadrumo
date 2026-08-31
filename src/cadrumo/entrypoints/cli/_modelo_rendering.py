@@ -29,15 +29,15 @@ from ...application.modelo._work_plazo import (
     modelo_work_deadline_posture,
 )
 from ...core.casilla_id import CasillaId
-from ...core.i18n import tr
+from ...core.i18n._render import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedPreconditionAction
 from ...domain.calculations.registry.binding_selector_utils import BooleanBindingEncodedValue
 from ...domain.calculations.registry.bindings import CasillaObservation
+from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ...domain.modelos.filing_record import ModeloRecord
 from ...domain.modelos.row_models import Modelo184MemberRow
 from ...domain.modelos.verification_report import ModeloVerificationFinding, VerificationReport
 from ...domain.modelos.work_unit import WorkUnit
-from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ._action_rendering import resolved_precondition_action_json_cell
 from ._common import resolve_cli_precondition_action
 from ._modelo_payloads import (

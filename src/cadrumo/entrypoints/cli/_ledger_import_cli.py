@@ -19,7 +19,7 @@ from ...application.ledger.models import (
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.directory_scan import DirectoryEntryKind, scan_directory
 from ...core.external_constants import XLS_EXTENSION, XLSX_EXTENSION
-from ...core.i18n import tr
+from ...core.i18n._render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.transactions.errors import TransactionValidationError
 from ._common import _bad, _state, _tx_repo, emit_envelope
@@ -169,7 +169,11 @@ def _import_report(result: LedgerSourceImportResult, *, verbose: bool, verify: b
             ),
         )
     if verbose or verify:
-        lines.extend(_validation_lines(result.validation, result.source))
+        # Every file's report, not just the first. A directory import folds
+        # several results into one and used to show one file's validation as
+        # though it spoke for the import.
+        for validation, source in zip(result.validations, result.sources, strict=True):
+            lines.extend(_validation_lines(validation, source))
     return _ImportReport(
         lines=lines,
         notices=notices,
@@ -190,7 +194,7 @@ def ledger_import(
     """Import a financial-statement file via the existing provider registry."""
     normalised_provider = _validate_import_provider(provider)
     context = _import_bucket_context(dry_run=dry_run)
-    from ...adapters.outbound.fx import default_ecb_rate_provider
+    from ...adapters.outbound.fx._ecb_provider import default_ecb_rate_provider
     from ...domain.currency.service import CurrencyNormalizationService
 
     currency_normalizer = CurrencyNormalizationService(rate_provider=default_ecb_rate_provider())

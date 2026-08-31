@@ -137,7 +137,7 @@ def _form() -> App[Any]:
     # layout of two plain text fields, or wording is a finding about the
     # harness, never about the application. Drive one of the real callers
     # above instead when the thing under evaluation is an actual form.
-    from ....core.i18n import tr
+    from ....core.i18n._render import tr
     from ....core.presentation import FormField, FormPage
     from ....entrypoints.tui.components.form_screen import FormApp
 

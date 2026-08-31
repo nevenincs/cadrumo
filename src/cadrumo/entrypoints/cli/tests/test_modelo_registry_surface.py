@@ -32,7 +32,7 @@ import pytest
 import typer
 
 from ....application.modelo._action_errors import WorkUnitNotFoundError
-from ....core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
+from ....core.redaction.rules import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 from ....domain.user_profile.values import ProfileSetupState
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.cli_runner import invoke_cached_cli

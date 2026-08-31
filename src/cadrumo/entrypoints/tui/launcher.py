@@ -32,9 +32,9 @@ def profile_storage_scope(root: Path) -> Generator[Path]:
     scope has bound them; neither needs to know which concrete adapter serves
     the session.
     """
-    from ...core.storage_taxonomy_locations import STORAGE_TAXONOMY, storage_location
-    from ...core.storage_taxonomy import StorageCategory
     from ...core.config import SecretStoreBackend, load_settings, override_settings
+    from ...core.storage_taxonomy import StorageCategory
+    from ...core.storage_taxonomy_locations import STORAGE_TAXONOMY, storage_location
     from ..adapter_composition import profile_adapter_composition
 
     storage_root = root / "cadrumo-storage"

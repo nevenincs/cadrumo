@@ -13,7 +13,7 @@ import typer
 
 from ....core.bucket_pointer import resolve_active_bucket_id as _resolve_active_bucket_id
 from ....core.errors.hierarchy import CadrumoError as _CadrumoError
-from ....core.redaction import (
+from ....core.redaction.rules import (
     CLI_BUCKET_ID_PLACEHOLDER,
     CLI_PROFILE_ID_PLACEHOLDER,
     redact_structured_for_cli_output,

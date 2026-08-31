@@ -68,7 +68,7 @@ from ....core.flows import (
     FrontendCapability,
     PageStatus,
 )
-from ....core.i18n import tr
+from ....core.i18n._render import tr
 from ....core.parsing import parse_bool
 from ..components.dialogs import ConfirmScreen
 from ..components.host import ScreenHostApp

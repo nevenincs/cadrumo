@@ -15,9 +15,9 @@ the settlement auto-seed (general / ninguna).
 
 from __future__ import annotations
 
-from ...core.prorrata_register import ProrrataEspecialTransitionKind
 from ...core.identity import BucketId
 from ...core.json_contract import OutputSchema
+from ...core.prorrata_register import ProrrataEspecialTransitionKind
 
 
 class ProrrataEspecialTransitionPayload(OutputSchema):

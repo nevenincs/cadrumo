@@ -12,9 +12,9 @@ from ....adapters.outbound.aeat.sede.observation_store import FiledDeclaracionOb
 from ....adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact, FiledDeclaracionObservation
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from ....application.calculations import CalculationObservationRepository
-from ....core.period import Period
+from ....application.calculations.observations_repository import CalculationObservationRepository
 from ....core.config import load_settings
+from ....core.period import Period
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.modelos.filing_repository import upsert_filing_record
 from ....tests import FIXTURES_DIR

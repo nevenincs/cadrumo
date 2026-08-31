@@ -291,7 +291,7 @@ def test_a_divergence_whose_values_are_masked_says_so() -> None:
     does — proven below by driving both a masked and an unmasked value
     through it.
     """
-    from .....core.redaction import redact_for_cli_output
+    from .....core.redaction.rules import redact_for_cli_output
 
     tax_id = "00000000T"
     postcode = "28013"
