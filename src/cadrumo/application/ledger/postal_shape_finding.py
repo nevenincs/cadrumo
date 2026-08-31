@@ -51,11 +51,15 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ...core.draft_discrepancy import DraftDiscrepancyKind
-from ...domain.iva.establishment import country_code_for_printed_country_name, territorial_scope_for_country, territorial_scope_for_spanish_postal_code
+from ...domain.iva.establishment import (
+    country_code_for_printed_country_name,
+    territorial_scope_for_country,
+    territorial_scope_for_spanish_postal_code,
+)
 from .party_attribution import party_addresses
 
 if TYPE_CHECKING:
-    from .evidence_draft import DraftDiscrepancyFinding, InvoiceDraft
+    from .invoice_draft_records import DraftDiscrepancyFinding, InvoiceDraft
 
 __all__ = ["postal_shape_findings"]
 
@@ -93,7 +97,7 @@ def postal_shape_findings(draft: InvoiceDraft) -> tuple[DraftDiscrepancyFinding,
     # the draft module reaches the parsers and the reading package, so binding it
     # at module scope would make this leaf pay for all of it. Read exactly as if
     # it were written at module scope.
-    from .evidence_draft import DraftDiscrepancyFinding
+    from .invoice_draft_records import DraftDiscrepancyFinding
 
     findings: list[DraftDiscrepancyFinding] = []
     for party in party_addresses():

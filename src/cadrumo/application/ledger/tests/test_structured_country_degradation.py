@@ -58,7 +58,7 @@ it.
 See Also:
     :func:`~application.ledger.country_vocabulary_advisory`
         The non-blocking channel an unplaceable code reaches the operator on.
-    :class:`~application.ledger.evidence_draft.FieldProvenance`
+    :class:`~application.ledger.invoice_draft_records.FieldProvenance`
         The envelope that records what the record stated, value or none.
 """
 
@@ -71,11 +71,11 @@ from typing import Final
 import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core.iva_category_resolution import IvaCategoryOutcome
 from ....core.classifier_input_source import ClassifierInputSource
+from ....core.config import Settings
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
-from ....core.config import Settings
+from ....core.iva_category_resolution import IvaCategoryOutcome
 from ....domain.iva.classification import CustomerTaxStatus, InvoiceKind, IvaTerritorialScope
 from ....domain.iva.establishment import StatedCountryCodeStatus, record_country_code_status
 from ....domain.iva.schema import IvaCategory
@@ -91,7 +91,8 @@ from ..classifier_inputs import collect_classifier_inputs
 from ..confirm_establishment import ConfirmedEstablishment, resolve_confirmed_establishment
 from ..country_vocabulary_advisory import country_vocabulary_advisory
 from ..establishment_ladder import resolve_draft_counterparty_establishment
-from ..evidence_draft import InvoiceDraft, extract_invoice_draft_from_evidence
+from ..evidence_draft import extract_invoice_draft_from_evidence
+from ..invoice_draft_records import InvoiceDraft
 from ._evidence_test_support import _BUCKET_ID, _make_svc
 from ._evidence_test_support import runtime_profile as runtime_profile
 from ._evidence_test_support import seeded_filer_profile as seeded_filer_profile

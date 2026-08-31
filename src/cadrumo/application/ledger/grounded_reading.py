@@ -51,9 +51,9 @@ from .document_direction import (
     derive_invoice_kind_from_filer_role,
 )
 from .document_transcription import DocumentTranscription
-from .evidence_draft import DraftDiscrepancyFinding, FieldProvenance, InvoiceDraft
 from .grounding_anchor import evaluate_anchor, printed_excerpt_occurs, refused_anchor_of
 from .identity_roles import IdentityCandidate, resolve_counterparty_identity
+from .invoice_draft_records import DraftDiscrepancyFinding, FieldProvenance, InvoiceDraft
 from .party_attribution import stamp_unverified_party_attribution
 from .party_colocation import (
     PartyAttributionOutcome,

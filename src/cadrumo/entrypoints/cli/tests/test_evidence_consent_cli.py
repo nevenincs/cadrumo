@@ -33,11 +33,11 @@ from ....tests.consent_profile_fixture import consent_profile
 __all__ = ["consent_profile"]
 
 from ....application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
-from ....application.ledger.evidence_draft import InvoiceDraft
 from ....application.ledger.extracted_document_cache import write_cached_transcription
 from ....application.ledger.extraction_draft_store import write_extraction_draft
-from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
+from ....application.ledger.invoice_draft_records import InvoiceDraft
 from ....core.field_origin import FieldOrigin
+from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import TestRuntimeProfile
 

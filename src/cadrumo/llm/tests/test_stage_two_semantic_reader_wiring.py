@@ -34,9 +34,9 @@ from typing import TYPE_CHECKING, override
 import pytest
 
 from ...application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
-from ...core.provenance_stamp import LOCAL_TRANSPORT_LABEL
-from ...core.field_origin import FieldOrigin
 from ...core.config import load_settings
+from ...core.field_origin import FieldOrigin
+from ...core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from ...core.time import now
 from ..client import LLMClient
 from ..evidence_draft_text import TextInvoiceFieldExtractor
@@ -45,7 +45,7 @@ from ..models import LLMProvider, LLMResponse
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 if TYPE_CHECKING:
-    from ...application.ledger.evidence_draft import InvoiceDraft
+    from ...application.ledger.invoice_draft_records import InvoiceDraft
     from ..models import LLMRequest
 
 _REPLY = json.dumps(

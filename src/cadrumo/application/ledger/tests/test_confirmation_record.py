@@ -46,7 +46,7 @@ from ..confirmation_record import (
     re_stamped_provenance,
     write_confirmation_record,
 )
-from ..evidence_draft import FieldAmbiguityCandidate, FieldProvenance, InvoiceDraft
+from ..invoice_draft_records import FieldAmbiguityCandidate, FieldProvenance, InvoiceDraft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

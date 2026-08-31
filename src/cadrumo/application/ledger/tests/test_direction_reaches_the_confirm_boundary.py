@@ -26,9 +26,9 @@ from typing import ClassVar, override
 import pytest
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
+from ....core.config import load_settings, override_settings
 from ....core.confirmation_gate import ConfirmationBlockReason
 from ....core.draft_discrepancy import DraftDiscrepancyKind
-from ....core.config import load_settings, override_settings
 from ....domain.iva.classification import InvoiceKind
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.cli_runner import invoke_cached_cli
@@ -44,12 +44,9 @@ from ....tests.profile_capsule import open_test_profile_session, set_active_test
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ..confirmation_gate import ConfirmationBlockedError, confirmation_blockers
-from ..evidence_draft import (
-    InvoiceDraft,
-    confirm_invoice_draft_from_evidence,
-    extract_invoice_draft_from_evidence,
-)
+from ..evidence_draft import confirm_invoice_draft_from_evidence, extract_invoice_draft_from_evidence
 from ..filer_establishment import FILER_TAX_ID_FACT_PATH
+from ..invoice_draft_records import InvoiceDraft
 from ._loopback_reader import READING_RUNTIME_MODEL
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]

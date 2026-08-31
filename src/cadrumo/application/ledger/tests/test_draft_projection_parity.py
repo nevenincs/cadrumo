@@ -32,7 +32,7 @@ from ....entrypoints.cli._ledger_business_payloads import (
     EvidenceFieldAmbiguityCandidatePayload,
     EvidenceFieldProvenancePayload,
 )
-from ..evidence_draft import (
+from ..invoice_draft_records import (
     DraftDiscrepancyFinding,
     FieldAmbiguityCandidate,
     FieldProvenance,

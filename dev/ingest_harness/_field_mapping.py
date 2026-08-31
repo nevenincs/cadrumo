@@ -1,6 +1,6 @@
 """The declared map from the corpus key's vocabulary to the product's draft fields.
 
-The corpus key and :class:`~application.ledger.evidence_draft.InvoiceDraft` name the same
+The corpus key and :class:`~application.ledger.invoice_draft_records.InvoiceDraft` name the same
 concepts differently. Measured over the pinned key: of the key's 33 field names
 only 7 spell a draft field identically, so a scorer comparing by name alone
 credits 711 of the corpus's 2873 non-null truth slots and books the rest as

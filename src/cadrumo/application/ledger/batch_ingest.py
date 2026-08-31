@@ -43,10 +43,10 @@ from typing import TYPE_CHECKING, Final, Literal, get_args, override
 
 from pydantic import BaseModel, Field, TypeAdapter
 
-from ...core.provenance_stamp import LOCAL_TRANSPORT_LABEL
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.directory_scan import scan_directory
 from ...core.identity import ContentDigest
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from ...domain.iva.classification import InvoiceKind
 from ..operator_actions import PreconditionVerdict
 from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
@@ -56,8 +56,8 @@ if TYPE_CHECKING:
     from ...core.config import Settings
     from ..provisioning import HardwareProfile
     from .evidence import PurchaseInvoiceEvidenceService
-    from .evidence_draft import InvoiceDraft
     from .extraction_draft_store import StoredExtractionDraft
+    from .invoice_draft_records import InvoiceDraft
 
 __all__ = [
     "BATCH_ITEM_STATUSES",

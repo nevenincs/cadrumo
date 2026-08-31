@@ -21,7 +21,7 @@ from ....core.classifier_input_source import ClassifierInputSource, Counterparty
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.iva.classification import CustomerTaxStatus
 from ..classifier_inputs import ClassifierInputFact, collect_classifier_inputs
-from ..evidence_draft import InvoiceDraft
+from ..invoice_draft_records import InvoiceDraft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

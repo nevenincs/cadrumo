@@ -4,7 +4,7 @@ Wires the on-host document readers to the ledger CLI: an operator can run
 ``evidence add``
 against a real PDF, then ``evidence extract --evidence-id <id>`` to read the
 supplier NIF / invoice number / date / base / IVA rate / IVA amount / total
-into a reviewable :class:`~application.ledger.evidence_draft.InvoiceDraft` -- without
+into a reviewable :class:`~application.ledger.invoice_draft_records.InvoiceDraft` -- without
 minting an :class:`~domain.invoices.Invoice`.
 
 Every case drives the real Typer CLI tree, a real encrypted bucket session,
@@ -18,7 +18,7 @@ See Also:
         CLI-facing resolver that loads stored bytes and returns the draft.
     :func:`~application.ledger.evidence_textlayer.transcribe_text_layer`
         Acquisition-stage primitive reached by the text-native happy path.
-    :class:`~application.ledger.evidence_draft.InvoiceDraft`
+    :class:`~application.ledger.invoice_draft_records.InvoiceDraft`
         Reviewable, non-persisted payload asserted by the command output.
     :func:`~application.ledger.evidence_draft.confirm_invoice_draft_from_evidence`
         Follow-on review step that turns a draft into a catalogue invoice.

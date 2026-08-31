@@ -43,7 +43,7 @@ bundled vocabulary placed the record's token, so it is empty for precisely the
 codes this module exists to report -- and reading it made every firing above
 unreachable from a real document while the module's own tests, which set that
 field by hand, stayed green. The verbatim token lives on
-:attr:`~application.ledger.evidence_draft.InvoiceDraft.supplier_stated_country_code` and its
+:attr:`~application.ledger.invoice_draft_records.InvoiceDraft.supplier_stated_country_code` and its
 sibling, and that is what is asked. A structured record stating ``THA`` for a
 Thai supplier was otherwise byte-identical, all the way to the operator, to one
 carrying no address block at all.
@@ -86,11 +86,16 @@ from typing import TYPE_CHECKING, Final
 from pydantic import BaseModel, Field
 
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...domain.iva.establishment import StatedCountryCodeStatus, country_code_for_printed_country_name, record_country_code_status, territorial_scope_for_country
+from ...domain.iva.establishment import (
+    StatedCountryCodeStatus,
+    country_code_for_printed_country_name,
+    record_country_code_status,
+    territorial_scope_for_country,
+)
 from .party_attribution import PartyAddress, party_addresses
 
 if TYPE_CHECKING:
-    from .evidence_draft import InvoiceDraft
+    from .invoice_draft_records import InvoiceDraft
 
 __all__ = [
     "COUNTRY_VOCABULARY_ADVISED_STATUSES",

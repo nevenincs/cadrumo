@@ -37,7 +37,7 @@ See Also:
         One recorded off-host dispatch; the unit this survey enumerates.
     :func:`~application.ledger.extracted_document_cache.read_cached_transcription`
         The stage-1 cache a local re-derivation reads instead of the document.
-    :class:`~application.ledger.evidence_draft.InvoiceDraft`
+    :class:`~application.ledger.invoice_draft_records.InvoiceDraft`
         The artefact class re-derivation replaces.
 """
 
@@ -58,7 +58,7 @@ from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdi
 if TYPE_CHECKING:
     from ...core.config import Settings
     from .document_transcription import DocumentTranscription
-    from .evidence_draft import InvoiceDraft
+    from .invoice_draft_records import InvoiceDraft
 
 __all__ = [
     "CloudDerivedArtefact",

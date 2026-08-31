@@ -60,9 +60,9 @@ from ...adapters.inbound.pdf import extract_pages_text_from_bytes
 from ...adapters.outbound.llm import LLMCache, UsageRecorder
 from ...application.ledger.closure_findings import closure_findings
 from ...application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
-from ...application.ledger.evidence_draft import InvoiceDraft
 from ...application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
 from ...application.ledger.grounding_anchor import evaluate_anchor
+from ...application.ledger.invoice_draft_records import InvoiceDraft
 from ...core.config import LLMProvider, override_settings
 from ...core.field_grounding import FieldGroundingOutcome
 from ...core.field_origin import FieldOrigin

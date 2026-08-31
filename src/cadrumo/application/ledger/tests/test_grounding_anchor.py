@@ -15,14 +15,13 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ....core.decimal import coerce_finite_european_decimal
 from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.field_grounding import FieldGroundingOutcome
-from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from ....core.field_origin import FieldOrigin
-from ....core.decimal import coerce_finite_european_decimal
+from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from ..closure_findings import closure_findings
 from ..document_transcription import DocumentTranscription, TranscriberIdentity
-from ..evidence_draft import FieldProvenance, InvoiceDraft
 from ..evidence_input import EvidenceInput
 from ..evidence_textlayer import transcribe_text_layer
 from ..grounding_anchor import (
@@ -32,6 +31,7 @@ from ..grounding_anchor import (
     normalise_for_anchor_search,
     strip_printed_unit,
 )
+from ..invoice_draft_records import FieldProvenance, InvoiceDraft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -77,7 +77,7 @@ from .party_attribution import PARTY_ATTRIBUTED_ADDRESS_FIELDS, party_addresses
 
 if TYPE_CHECKING:
     from .document_transcription import DocumentTranscription
-    from .evidence_draft import DraftDiscrepancyFinding, FieldProvenance, InvoiceDraft
+    from .invoice_draft_records import DraftDiscrepancyFinding, FieldProvenance, InvoiceDraft
 
 __all__ = [
     "PartyAttributionOutcome",
@@ -302,7 +302,7 @@ def party_attribution_findings(
     # Call-time import for the cycle-break reason the sibling checks use: the
     # draft module reaches the parsers and the reading package, so binding it at
     # module scope would make this leaf pay for all of it.
-    from .evidence_draft import DraftDiscrepancyFinding
+    from .invoice_draft_records import DraftDiscrepancyFinding
 
     return tuple(
         DraftDiscrepancyFinding(

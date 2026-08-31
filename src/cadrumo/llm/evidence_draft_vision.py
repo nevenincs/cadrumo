@@ -10,7 +10,7 @@ that mean* -- so a wrong result could not be attributed to either: a
 transcription error and a reasoning error arrived in the same shape. Worse, the
 anchors came back from the same call that produced the values, so there was
 nothing independent to check them against. The provenance record had to say so
-(:attr:`~application.ledger.evidence_draft.FieldProvenance.anchor_self_reported`), and a
+(:attr:`~application.ledger.invoice_draft_records.FieldProvenance.anchor_self_reported`), and a
 self-reported anchor can never read as verified, because a fabricating model is
 self-consistent too. The vision lane was therefore structurally incapable of
 earning the grounding the text lane earned for free.

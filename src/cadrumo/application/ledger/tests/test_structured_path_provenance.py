@@ -30,11 +30,12 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....core.config import Settings
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
-from ....core.config import Settings
-from ..evidence_draft import InvoiceDraft, extract_invoice_draft_from_evidence
+from ..evidence_draft import extract_invoice_draft_from_evidence
 from ..grounding_anchor import normalise_for_anchor_search
+from ..invoice_draft_records import InvoiceDraft
 from ._evidence_test_support import _BUCKET_ID, _make_svc
 from ._evidence_test_support import runtime_profile as runtime_profile
 from ._ledger_value_fixtures import isolated_settings, secure_objects

@@ -30,7 +30,7 @@ from ...application.ledger.consent_withdrawal import (
     survey_cloud_consent,
 )
 from ...application.ledger.document_transcription import DocumentTranscription
-from ...application.ledger.evidence_draft import InvoiceDraft
+from ...application.ledger.invoice_draft_records import InvoiceDraft
 from ...core.config import load_settings
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity

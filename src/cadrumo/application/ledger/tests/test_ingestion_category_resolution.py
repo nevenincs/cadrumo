@@ -29,8 +29,8 @@ from datetime import date
 
 import pytest
 
-from ....core.iva_category_resolution import IvaCategoryOutcome
 from ....core.classifier_input_source import ClassifierInputSource
+from ....core.iva_category_resolution import IvaCategoryOutcome
 from ....domain.iva.classification import CustomerTaxStatus, InvoiceKind, IvaTerritorialScope
 from ....domain.iva.establishment import record_country_code_status, stated_country_code_status
 from ....domain.iva.schema import IvaCategory, IvaRateKind
@@ -44,7 +44,7 @@ from ..classification_assembly import (
     resolve_ingestion_iva_category,
 )
 from ..classifier_inputs import collect_classifier_inputs
-from ..evidence_draft import InvoiceDraft
+from ..invoice_draft_records import InvoiceDraft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

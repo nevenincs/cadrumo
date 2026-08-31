@@ -61,11 +61,11 @@ from typing import Any, Final
 from pydantic import BaseModel, ConfigDict
 
 from cadrumo.application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
-from cadrumo.application.ledger.evidence_draft import FieldProvenance, InvoiceDraft
+from cadrumo.application.ledger.invoice_draft_records import FieldProvenance, InvoiceDraft
 from cadrumo.application.ledger.party_colocation import party_regions
 from cadrumo.core.field_grounding import FieldGroundingOutcome
-from cadrumo.core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from cadrumo.core.field_origin import FieldOrigin
+from cadrumo.core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 
 from .._paths import UTF_8
 

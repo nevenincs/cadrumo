@@ -7,7 +7,7 @@ to tell a transcription error from a reasoning error, and a perfect
 transcription obtained by any other means had nowhere to go.
 
 This module is the second stage that made splitting them possible: text in,
-grounded :class:`~application.ledger.evidence_draft.InvoiceDraft` out. Both acquisition lanes
+grounded :class:`~application.ledger.invoice_draft_records.InvoiceDraft` out. Both acquisition lanes
 now feed it -- the deterministic text-layer extractor and
 :class:`~llm.LocalVisionDocumentTranscriber`, which transcribes and interprets
 nothing. Splitting it out means the
@@ -49,7 +49,7 @@ every field against an independent authority, so a fabricated value is dropped
 even if the prompt fails to prevent it.
 
 See Also:
-    :class:`~application.ledger.evidence_draft.InvoiceDraft`
+    :class:`~application.ledger.invoice_draft_records.InvoiceDraft`
         Typed draft this reader returns after grounded re-validation.
     :func:`~llm.invoice_field_grounding.ground_extracted_fields`
         Shared grounded re-validation this reader and the vision reader both use.
@@ -65,8 +65,8 @@ import asyncio
 from collections.abc import Collection
 
 from ..application.ledger.document_transcription import DocumentTranscription
-from ..application.ledger.evidence_draft import InvoiceDraft
 from ..application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
+from ..application.ledger.invoice_draft_records import InvoiceDraft
 from ..application.ledger.invoice_extraction_authority import (
     InvoiceExtractionAuthorityValues,
     resolve_invoice_extraction_authority_values,

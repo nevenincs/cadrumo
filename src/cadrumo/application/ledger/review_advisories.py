@@ -46,7 +46,7 @@ from .country_vocabulary_advisory import country_vocabulary_advisory
 from .party_attribution import party_attribution_advisory
 
 if TYPE_CHECKING:
-    from .evidence_draft import InvoiceDraft
+    from .invoice_draft_records import InvoiceDraft
 
 __all__ = ["review_advisory_kinds"]
 

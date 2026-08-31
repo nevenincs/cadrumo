@@ -85,7 +85,7 @@ def test_a_check_added_to_the_declaration_also_runs() -> None:
     replaced because it reads as evidence.
     """
     from ....core.draft_discrepancy import DraftDiscrepancyKind
-    from ..evidence_draft import DraftDiscrepancyFinding, InvoiceDraft
+    from ..invoice_draft_records import DraftDiscrepancyFinding, InvoiceDraft
 
     sentinel = DraftDiscrepancyFinding(kind=DraftDiscrepancyKind.ROLE_UNRESOLVED, detail="sentinel")
     with scoped_attribute(
@@ -118,7 +118,7 @@ def test_a_minted_record_carries_the_stamp() -> None:
     from decimal import Decimal
 
     from ..confirmation_record import build_confirmation_record
-    from ..evidence_draft import InvoiceDraft
+    from ..invoice_draft_records import InvoiceDraft
 
     record = build_confirmation_record(
         bucket_id="bucket-checks-run",
@@ -150,7 +150,7 @@ def test_the_stamp_is_not_folded_into_the_derived_identity() -> None:
     from decimal import Decimal
 
     from ..confirmation_record import InvoiceConfirmationRecord, build_confirmation_record
-    from ..evidence_draft import InvoiceDraft
+    from ..invoice_draft_records import InvoiceDraft
 
     def _mint() -> InvoiceConfirmationRecord:
         return build_confirmation_record(

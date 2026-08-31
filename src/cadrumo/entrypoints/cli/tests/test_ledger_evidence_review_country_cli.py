@@ -40,11 +40,11 @@ from typing import Final
 import pytest
 
 from ....application.ledger.deterministic_findings import deterministic_findings
-from ....application.ledger.evidence_draft import InvoiceDraft
 from ....application.ledger.extraction_draft_store import write_extraction_draft
-from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
+from ....application.ledger.invoice_draft_records import InvoiceDraft
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.config import load_settings
+from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha2
 from ._ledger_ux_support import _invoke, _open_ledger_ux_session
 

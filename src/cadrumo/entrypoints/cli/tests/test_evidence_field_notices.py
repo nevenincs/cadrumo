@@ -16,13 +16,13 @@ from pathlib import Path
 import pytest
 
 from ....application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
-from ....application.ledger.evidence_draft import FieldAmbiguityCandidate, FieldProvenance, InvoiceDraft
 from ....application.ledger.grounded_reading import verified_provenance
 from ....application.ledger.identity_roles import IdentityCandidate, resolve_counterparty_identity
+from ....application.ledger.invoice_draft_records import FieldAmbiguityCandidate, FieldProvenance, InvoiceDraft
 from ....core.field_grounding import FieldGroundingOutcome
-from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from ....core.field_origin import FieldOrigin
 from ....core.json_contract import Notice, NoticeSeverity, derive_status
+from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from .._evidence_field_notices import DEGRADED_GROUNDING_OUTCOMES, field_degradation_notices
 from ._english_locale_fixture import english_locale_fixture
 

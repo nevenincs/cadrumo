@@ -41,10 +41,10 @@ from typing import TYPE_CHECKING
 
 from ...core.draft_discrepancy import DraftDiscrepancyKind
 from ...domain.iva.legend_derivation import LegendDerivationOutcome, derive_category_from_regime_legend
-from .evidence_draft import DraftDiscrepancyFinding
+from .invoice_draft_records import DraftDiscrepancyFinding
 
 if TYPE_CHECKING:
-    from .evidence_draft import InvoiceDraft
+    from .invoice_draft_records import InvoiceDraft
 
 __all__ = ["draft_prints_a_repercutido_line", "regime_contradiction_finding"]
 
@@ -86,7 +86,7 @@ def regime_contradiction_finding(draft: InvoiceDraft) -> DraftDiscrepancyFinding
             figures the document stated.
 
     Returns:
-        A :class:`~application.ledger.evidence_draft.DraftDiscrepancyFinding` when the printed
+        A :class:`~application.ledger.invoice_draft_records.DraftDiscrepancyFinding` when the printed
         mention and the charged tax cannot both be true, else ``None``.
     """
     derivation = derive_category_from_regime_legend(

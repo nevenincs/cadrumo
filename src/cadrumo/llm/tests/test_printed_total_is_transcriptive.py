@@ -25,7 +25,7 @@ authored to agree with itself could not fail on the defect that is actually
 planted in the corpus, so the divergent pair is used as the corpus states it.
 
 See Also:
-    :class:`~application.ledger.evidence_draft.InvoiceDraft`
+    :class:`~application.ledger.invoice_draft_records.InvoiceDraft`
         The record whose total this pins as transcriptive.
 """
 

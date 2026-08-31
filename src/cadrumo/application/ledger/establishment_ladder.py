@@ -98,7 +98,11 @@ from pydantic import BaseModel, Field
 from ...core.classifier_input_source import ClassifierInputSource
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.iva.classification import IvaTerritorialScope
-from ...domain.iva.establishment import country_code_for_printed_country_name, territorial_scope_for_country, territorial_scope_for_spanish_postal_code
+from ...domain.iva.establishment import (
+    country_code_for_printed_country_name,
+    territorial_scope_for_country,
+    territorial_scope_for_spanish_postal_code,
+)
 from ...domain.iva.identification import identification_state_for_printed_tax_identifier
 from ...domain.iva.legend_derivation import match_regime_legend
 from ...domain.iva.lookup import rate_kinds_for_declared_rate
@@ -120,7 +124,7 @@ if TYPE_CHECKING:
     from datetime import date
 
     from ...domain.iva.classification import InvoiceKind
-    from .evidence_draft import InvoiceDraft
+    from .invoice_draft_records import InvoiceDraft
 
 __all__ = [
     "CounterpartyEstablishment",

@@ -66,15 +66,20 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
-from ...core.iva_category_resolution import IvaCategoryOutcome
-from ...core.confirmation_gate import ConfirmationBlockReason
 from ...core.classifier_input_source import ClassifierInputSource
+from ...core.confirmation_gate import ConfirmationBlockReason
+from ...core.iva_category_resolution import IvaCategoryOutcome
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing import parse_iso8601_date
 from ...domain.iva.classification import InvoiceKind, IvaTerritorialScope
 from ...domain.iva.establishment import record_country_code_status
 from ...domain.iva.schema import IvaCategory, IvaRateKind
-from ...domain.iva.supply_nature import SupplyNature, SupplyNatureDerivationOutcome, derive_supply_nature_from_citation, supply_nature_implied_by_category
+from ...domain.iva.supply_nature import (
+    SupplyNature,
+    SupplyNatureDerivationOutcome,
+    derive_supply_nature_from_citation,
+    supply_nature_implied_by_category,
+)
 from .classification_assembly import (
     ClassificationAssembly,
     DeclaredFact,
@@ -94,7 +99,7 @@ if TYPE_CHECKING:
     from datetime import date
 
     from ...domain.user_profile.values import UserProfileRecord
-    from .evidence_draft import InvoiceDraft
+    from .invoice_draft_records import InvoiceDraft
 
 __all__ = ["ConfirmedEstablishment", "resolve_confirmed_establishment"]
 

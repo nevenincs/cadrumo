@@ -52,7 +52,7 @@ shape -- so this is a statement about which documents exist, never about the
 resolver being unwired.
 
 See Also:
-    :class:`~application.ledger.evidence_draft.FieldProvenance`
+    :class:`~application.ledger.invoice_draft_records.FieldProvenance`
         The per-field envelope the stamp lives on, beside the anchor and role
         evidence it sits alongside.
     :func:`~application.ledger.establishment_ladder.scope_printed_evidence_would_establish`
@@ -76,7 +76,7 @@ from ...domain.iva.classification import IvaTerritorialScope
 from .establishment_ladder import scope_printed_evidence_would_establish
 
 if TYPE_CHECKING:
-    from .evidence_draft import FieldProvenance, InvoiceDraft
+    from .invoice_draft_records import FieldProvenance, InvoiceDraft
 
 __all__ = [
     "ATTRIBUTION_ESTABLISHING_ORIGINS",

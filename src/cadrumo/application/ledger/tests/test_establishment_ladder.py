@@ -49,7 +49,11 @@ from ....adapters.persistence.storage import SecureObjectRowIdentityError
 from ....core.classifier_input_source import ClassifierInputSource
 from ....domain.iva.classification import InvoiceKind, IvaTerritorialScope
 from ....domain.iva.errors import IvaCatalogueError
-from ....domain.iva.establishment import country_code_for_printed_tax_identifier, territorial_scope_for_country, territorial_scope_for_spanish_postal_code
+from ....domain.iva.establishment import (
+    country_code_for_printed_tax_identifier,
+    territorial_scope_for_country,
+    territorial_scope_for_spanish_postal_code,
+)
 from ....domain.iva.identification import identification_state_for_printed_tax_identifier
 from ....domain.iva.schema import EUMemberState
 from ....tests.attribute_scope import scoped_attribute
@@ -66,12 +70,8 @@ from ..establishment_ladder import (
     resolve_counterparty_establishment_scope,
     resolve_draft_counterparty_establishment,
 )
-from ..evidence_draft import (
-    InvoiceDraft,
-    InvoiceDraftLine,
-    InvoiceDraftRateBreakdown,
-    counterparty_draft_side,
-)
+from ..evidence_draft import counterparty_draft_side
+from ..invoice_draft_records import InvoiceDraft, InvoiceDraftLine, InvoiceDraftRateBreakdown
 from ..regime_contradiction import draft_prints_a_repercutido_line
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

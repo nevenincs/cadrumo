@@ -32,18 +32,18 @@ from pathlib import Path
 
 import pytest
 
+from ....core.directory_scan import (
+    scan_directory,
+)
 from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
-from ....core.directory_scan import (
-    scan_directory,
-)
 from ..closure_findings import closure_findings
-from ..evidence_draft import InvoiceDraft
 from ..evidence_input import EvidenceInput
 from ..evidence_textlayer import transcribe_text_layer
 from ..identity_roles import IdentityCandidate, resolve_counterparty_identity
+from ..invoice_draft_records import InvoiceDraft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -48,12 +48,12 @@ from typing import Final
 from pydantic import BaseModel, ConfigDict, Field
 
 from cadrumo.application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
-from cadrumo.application.ledger.evidence_draft import FieldProvenance, InvoiceDraft
 from cadrumo.application.ledger.grounding_anchor import printed_excerpt_occurs_in_text
+from cadrumo.application.ledger.invoice_draft_records import FieldProvenance, InvoiceDraft
 from cadrumo.application.ledger.party_colocation import party_regions
 from cadrumo.core.field_grounding import FieldGroundingOutcome
-from cadrumo.core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from cadrumo.core.field_origin import FieldOrigin
+from cadrumo.core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 
 __all__ = [
     "AUTHORED_LABEL_PAIRS",

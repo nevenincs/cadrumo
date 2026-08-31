@@ -14,7 +14,13 @@ from datetime import date
 import pytest
 
 from ....core.classifier_input_source import ClassifierInputSource
-from ....domain.iva.classification import CustomerTaxStatus, InvoiceKind, IvaTerritorialScope, TransactionKind, domestic_rate_tier_is_required
+from ....domain.iva.classification import (
+    CustomerTaxStatus,
+    InvoiceKind,
+    IvaTerritorialScope,
+    TransactionKind,
+    domestic_rate_tier_is_required,
+)
 from ....domain.iva.schema import IvaCategory, IvaRateKind
 from ....domain.iva.supply_nature import SupplyNature
 from ..classification_assembly import (
@@ -24,7 +30,7 @@ from ..classification_assembly import (
     classify_from_assembled_criteria,
 )
 from ..classifier_inputs import collect_classifier_inputs
-from ..evidence_draft import InvoiceDraft
+from ..invoice_draft_records import InvoiceDraft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

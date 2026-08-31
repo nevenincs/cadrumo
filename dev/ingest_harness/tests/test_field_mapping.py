@@ -1,7 +1,7 @@
 """The mapping table's gate: it must fit the product, cover the key, and bite.
 
 Every assertion here runs against the real pinned corpus and the real
-:class:`~application.ledger.evidence_draft.InvoiceDraft`, because a map proved against a fixture
+:class:`~application.ledger.invoice_draft_records.InvoiceDraft`, because a map proved against a fixture
 is proved against its author's memory of the two things it sits between -- which
 is the failure it exists to remove.
 """
@@ -12,7 +12,7 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.application.ledger.evidence_draft import InvoiceDraft
+from cadrumo.application.ledger.invoice_draft_records import InvoiceDraft
 
 from .._field_mapping import (
     KEY_FIELD_MAPPINGS,

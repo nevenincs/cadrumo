@@ -67,7 +67,7 @@ independent transcription at all -- see
 outcome says so.
 
 See Also:
-    :class:`~application.ledger.evidence_draft.FieldProvenance`
+    :class:`~application.ledger.invoice_draft_records.FieldProvenance`
         The envelope this module produces, carrying the anchor it verified.
     :func:`~application.ledger.evidence_textlayer.transcribe_text_layer`
         The acquisition stage whose verbatim output this checks against.
@@ -84,15 +84,15 @@ from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel
 
+from ...core.decimal import coerce_finite_european_decimal
 from ...core.document_shape import DocumentShape
 from ...core.field_grounding import FieldGroundingOutcome
 from ...core.field_origin import FieldOrigin
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.text_fold import unicode_compose
-from ...core.decimal import coerce_finite_european_decimal
 from ...domain.iva.establishment import country_code_for_stated_country_code
 from .document_transcription import DocumentTranscription
-from .evidence_draft import FieldAmbiguityCandidate, FieldProvenance
+from .invoice_draft_records import FieldAmbiguityCandidate, FieldProvenance
 
 if TYPE_CHECKING:
     from ...adapters.inbound.einvoice import ParsedEInvoice
@@ -568,7 +568,7 @@ def ground_structured_value(
     element path in the note distinguishes that.
 
     Args:
-        field: Name of the :class:`~application.ledger.evidence_draft.InvoiceDraft` field.
+        field: Name of the :class:`~application.ledger.invoice_draft_records.InvoiceDraft` field.
         value: The typed value the parser produced.
         element_path: Where in the record it came from, for the operator's note.
         source_text: The record's own text, decoded from the source bytes.
@@ -642,7 +642,7 @@ def ground_anchored_value(
     running it, which is the failure this module exists to make unnecessary.
 
     Args:
-        field: Name of the :class:`~application.ledger.evidence_draft.InvoiceDraft` field.
+        field: Name of the :class:`~application.ledger.invoice_draft_records.InvoiceDraft` field.
         value: The typed value proposed.
         anchor: The verbatim printed form claimed as its source.
         origin: How the value was obtained.

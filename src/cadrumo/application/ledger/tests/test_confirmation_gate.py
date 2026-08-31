@@ -28,12 +28,7 @@ from ..confirmation_gate import (
     confirmation_blockers,
     resolved_blockers,
 )
-from ..evidence_draft import (
-    DraftDiscrepancyFinding,
-    FieldAmbiguityCandidate,
-    FieldProvenance,
-    InvoiceDraft,
-)
+from ..invoice_draft_records import DraftDiscrepancyFinding, FieldAmbiguityCandidate, FieldProvenance, InvoiceDraft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

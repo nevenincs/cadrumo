@@ -27,7 +27,7 @@ put a legal conclusion behind an unverified reading.
 See Also:
     :class:`~domain.iva.IvaInvoiceClassificationCriteria`
         The substrate classifier's input record these facts eventually feed.
-    :class:`~application.ledger.evidence_draft.InvoiceDraft`
+    :class:`~application.ledger.invoice_draft_records.InvoiceDraft`
         The read document these evidence-sourced facts are derived from.
 """
 
@@ -48,7 +48,7 @@ if TYPE_CHECKING:
     from typing import Self
 
     from ...domain.deadlines.models import TaxpayerProfile
-    from .evidence_draft import InvoiceDraft
+    from .invoice_draft_records import InvoiceDraft
 
 __all__ = [
     "ClassifierInputFact",

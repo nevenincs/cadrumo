@@ -60,11 +60,11 @@ established EU IVA authority (:mod:`core.identity`) rather than a local
 Spain-shaped test.
 
 See Also:
-    :class:`~application.ledger.evidence_draft.FieldProvenance`
+    :class:`~application.ledger.invoice_draft_records.FieldProvenance`
         The envelope a resolution produces.
     :func:`~application.ledger.grounding_anchor.ground_ambiguous_candidates`
         The sanctioned constructor for the ambiguous outcome.
-    :class:`~application.ledger.evidence_draft.DraftDiscrepancyFinding`
+    :class:`~application.ledger.invoice_draft_records.DraftDiscrepancyFinding`
         Carrier for the unverified-identity and unresolved-role findings.
 """
 
@@ -75,7 +75,6 @@ from pydantic import BaseModel
 from ...core.draft_discrepancy import DraftDiscrepancyKind
 from ...core.field_grounding import FieldGroundingOutcome
 from ...core.field_origin import FieldOrigin
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.identity import (
     IdentityError,
     nif_iva_format_for_country,
@@ -83,9 +82,10 @@ from ...core.identity import (
     same_tax_identifier,
     validate_spanish_tax_id,
 )
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.iva.establishment import country_code_for_printed_tax_identifier
-from .evidence_draft import DraftDiscrepancyFinding, FieldAmbiguityCandidate, FieldProvenance
 from .grounding_anchor import ground_ambiguous_candidates
+from .invoice_draft_records import DraftDiscrepancyFinding, FieldAmbiguityCandidate, FieldProvenance
 
 __all__ = [
     "IdentityCandidate",

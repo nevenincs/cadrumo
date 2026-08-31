@@ -24,7 +24,7 @@ replaced underneath it.
 See Also:
     :class:`~application.ledger.confirmation_gate.ConfirmationBlocker`
         The findings whose resolutions this record carries.
-    :class:`~application.ledger.evidence_draft.InvoiceDraft`
+    :class:`~application.ledger.invoice_draft_records.InvoiceDraft`
         The reading the assertions are recorded against.
     :class:`~domain.invoices.Invoice`
         The record the confirmation minted.
@@ -39,16 +39,16 @@ from typing import Protocol, Self
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...core.config import Settings
 from ...core.field_grounding import FieldGroundingOutcome
 from ...core.field_origin import FieldOrigin
-from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.config import Settings
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId, ContentDigest, InvoiceId
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time import UtcInstant, now
 from .confirmation_gate import ConfirmationBlocker, FindingResolution
 from .deterministic_findings import deterministic_check_names
-from .evidence_draft import FieldProvenance, InvoiceDraft
+from .invoice_draft_records import FieldProvenance, InvoiceDraft
 
 __all__ = [
     "ConfirmationRecordDocument",
@@ -73,7 +73,7 @@ class FieldAssertion(BaseModel):
     """One field the operator asserted a value for, beside what the document said.
 
     Attributes:
-        field: Name of the :class:`~application.ledger.evidence_draft.InvoiceDraft` field.
+        field: Name of the :class:`~application.ledger.invoice_draft_records.InvoiceDraft` field.
         asserted_value: The value the operator asserted, as printed. Always
             carried as a string: the record is about what was CLAIMED, and
             re-typing it into the field's own type would re-run the parse the

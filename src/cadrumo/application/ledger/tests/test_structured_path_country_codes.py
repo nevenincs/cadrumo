@@ -45,14 +45,15 @@ import pytest
 
 from ....adapters.inbound.einvoice import parse_einvoice_document
 from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....core.config import Settings
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
-from ....core.config import Settings
 from ....domain.iva.classification import InvoiceKind, IvaTerritorialScope
 from ....domain.iva.establishment import country_code_for_stated_country_code, territorial_scope_for_country
 from ..establishment_ladder import EstablishmentRung, resolve_draft_counterparty_establishment
-from ..evidence_draft import FieldProvenance, InvoiceDraft, extract_invoice_draft_from_evidence
+from ..evidence_draft import extract_invoice_draft_from_evidence
 from ..grounding_anchor import ground_structured_value
+from ..invoice_draft_records import FieldProvenance, InvoiceDraft
 from ._evidence_test_support import _BUCKET_ID, _make_svc
 from ._evidence_test_support import runtime_profile as runtime_profile
 from ._ledger_value_fixtures import isolated_settings, secure_objects

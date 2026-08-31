@@ -57,8 +57,8 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.identity import same_tax_identifier
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.iva.classification import InvoiceKind
 from .grounding_anchor import printed_excerpt_occurs_in_text
 from .party_attribution import party_addresses
@@ -66,7 +66,7 @@ from .party_colocation import party_regions
 
 if TYPE_CHECKING:
     from .document_transcription import DocumentTranscription
-    from .evidence_draft import InvoiceDraft
+    from .invoice_draft_records import InvoiceDraft
 
 __all__ = [
     "DIRECTION_BY_FILER_ROLE",

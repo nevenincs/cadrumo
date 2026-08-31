@@ -39,15 +39,15 @@ import pytest
 
 from ....application.ledger.deterministic_findings import deterministic_findings
 from ....application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
-from ....application.ledger.evidence_draft import FieldProvenance, InvoiceDraft
 from ....application.ledger.extraction_draft_store import write_extraction_draft
 from ....application.ledger.grounded_reading import ground_draft_against_transcription
-from ....core.confirmation_gate import ReviewAdvisoryKind
-from ....core.field_grounding import FieldGroundingOutcome
-from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
-from ....core.field_origin import FieldOrigin
+from ....application.ledger.invoice_draft_records import FieldProvenance, InvoiceDraft
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.config import load_settings
+from ....core.confirmation_gate import ReviewAdvisoryKind
+from ....core.field_grounding import FieldGroundingOutcome
+from ....core.field_origin import FieldOrigin
+from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from ._ledger_ux_support import _invoke, _open_ledger_ux_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

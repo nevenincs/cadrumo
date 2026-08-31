@@ -1,6 +1,6 @@
 """Encrypted store for pre-confirm extraction drafts.
 
-An :class:`~application.ledger.evidence_draft.InvoiceDraft` is derived financial data: supplier
+An :class:`~application.ledger.invoice_draft_records.InvoiceDraft` is derived financial data: supplier
 tax id, invoice number, taxable base, per-rate cuota. Persisting one is STORAGE
 rather than processing, so it routes through the core's encrypted bucket-scoped
 repository and never through the inference subpackage, which holds no storage
@@ -30,11 +30,11 @@ from typing import Protocol
 
 from pydantic import BaseModel, Field
 
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.config import Settings
 from ...core.identity import BucketId
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time import UtcInstant, now
-from .evidence_draft import InvoiceDraft
+from .invoice_draft_records import InvoiceDraft
 
 __all__ = [
     "ExtractionDraftDocument",

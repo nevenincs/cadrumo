@@ -27,13 +27,6 @@ __all__ = ["consent_profile"]
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from ....tests.secure_sql import TestRuntimeProfile
-from ..evidence_draft import (
-    FieldAmbiguityCandidate,
-    FieldProvenance,
-    InvoiceDraft,
-    InvoiceDraftLine,
-    InvoiceDraftRateBreakdown,
-)
 from ..extraction_draft_store import (
     ExtractionDraftDocument,
     StoredExtractionDraft,
@@ -41,6 +34,13 @@ from ..extraction_draft_store import (
     load_extraction_drafts,
     read_extraction_draft,
     write_extraction_draft,
+)
+from ..invoice_draft_records import (
+    FieldAmbiguityCandidate,
+    FieldProvenance,
+    InvoiceDraft,
+    InvoiceDraftLine,
+    InvoiceDraftRateBreakdown,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

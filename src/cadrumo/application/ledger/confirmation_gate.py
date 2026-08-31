@@ -25,11 +25,11 @@ The second blocker source is the grounding pass rather than the discrepancy
 checks: a counterparty identifier whose reading was
 :attr:`~core.FieldGroundingOutcome.AMBIGUOUS` produced competing candidates and
 no decision. That is not an arithmetic failure and raises no
-:class:`~application.ledger.evidence_draft.DraftDiscrepancyFinding`, but confirming it picks one
+:class:`~application.ledger.invoice_draft_records.DraftDiscrepancyFinding`, but confirming it picks one
 real taxpayer's identifier over another's by accident.
 
 See Also:
-    :class:`~application.ledger.evidence_draft.InvoiceDraft`
+    :class:`~application.ledger.invoice_draft_records.InvoiceDraft`
         The proposal this gate guards.
     :func:`~application.ledger.closure_findings`
         Where the arithmetic blockers come from.
@@ -46,11 +46,11 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core.confirmation_gate import ConfirmationBlockReason, FindingResolutionAction
 from ...core.draft_discrepancy import DraftDiscrepancyKind
-from ...core.field_grounding import FieldGroundingOutcome
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.errors.hierarchy import CadrumoError
+from ...core.field_grounding import FieldGroundingOutcome
 from ...core.hashing import content_hash_hex
-from .evidence_draft import FieldAmbiguityCandidate, InvoiceDraft
+from ...core.models import STRICT_FROZEN_CONFIG
+from .invoice_draft_records import FieldAmbiguityCandidate, InvoiceDraft
 from .preconditions import LedgerPreconditionCondition, LedgerPreconditionErrorMixin, ledger_no_recovery_verdict
 
 __all__ = [

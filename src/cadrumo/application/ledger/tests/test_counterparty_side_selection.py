@@ -28,7 +28,7 @@ that they are. What survives is the selection alone.
 See Also:
     :func:`~application.ledger.evidence_draft.confirm_invoice_draft_from_evidence`
         The confirm step whose side selection these cases pin.
-    :class:`~application.ledger.evidence_draft.InvoiceDraft`
+    :class:`~application.ledger.invoice_draft_records.InvoiceDraft`
         Carries the two printed parties the selection chooses between.
 """
 

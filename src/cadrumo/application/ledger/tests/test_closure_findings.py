@@ -36,7 +36,7 @@ from ..closure_findings import (
     closure_findings,
     within_rounding_allowance,
 )
-from ..evidence_draft import InvoiceDraft, InvoiceDraftRateBreakdown
+from ..invoice_draft_records import InvoiceDraft, InvoiceDraftRateBreakdown
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

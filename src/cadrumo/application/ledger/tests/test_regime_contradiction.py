@@ -44,7 +44,7 @@ from ....core.confirmation_gate import ConfirmationBlockReason
 from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....domain.iva.regime_legend import REGIME_LEGENDS, RegimeLegend
 from ..confirmation_gate import BLOCKING_REASON_BY_DISCREPANCY_KIND, confirmation_blockers
-from ..evidence_draft import InvoiceDraft
+from ..invoice_draft_records import InvoiceDraft
 from ..regime_contradiction import draft_prints_a_repercutido_line, regime_contradiction_finding
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
