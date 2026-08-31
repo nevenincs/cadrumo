@@ -75,6 +75,7 @@ from ._binding_prefill import (
     extract_modelo_303_local_iva_compensation_recurrence,
     resolve_bindings_from_local_store,
 )
+from ._cross_period_external_evidence import filing_external_evidence_blockers
 from ._foreign_asset_redeclaration import (
     modelo_720_declared_observation,
     modelo_720_evidence_observation,
@@ -155,7 +156,6 @@ from .cross_period_clean_state import (
     cross_period_dependency_inventory,
     cross_period_dependency_requirements,
     evaluate_cross_period_clean_state,
-    filing_external_evidence_blockers,
     partition_cross_period_requirements_by_activity_start,
 )
 from .cross_period_models import (
