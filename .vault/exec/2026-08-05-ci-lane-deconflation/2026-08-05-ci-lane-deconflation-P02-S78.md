@@ -5,7 +5,7 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:7443c1cd867d79bb80fba3fb41e75196707cdbc99ee1672ce8d0171d1c3adbc6'
+body_hash: 'sha256:6e4fc1de1bdd4a2743ac05dbd402d24388d8195492ea1b8cce95e59bbf5119eb'
 step_id: 'S78'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
@@ -18,6 +18,10 @@ related:
 - `src/cadrumo/application/calculations/cross_period_clean_state.py`
 
 
+## Changes
+
+- `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S78.md` â€” records the S78 correction/lifecycle attestation.
+- `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p02-s78-correction-lifecycle-self-review-audit.md` â€” records the independent correction-boundary review.
 ## Notes
 
 This is a correction and lifecycle attestation for the exact plan row at `.vault/plan/2026-08-05-ci-lane-deconflation-plan.md:106`; it made no source action. S78 retracts S77's filing-blocking production-defect inference: the fixture saved an observation over the real CSV-register import's key, replacing its source kind and the two identity values used by the checker. The red accepts case therefore did not establish a broken production import.
