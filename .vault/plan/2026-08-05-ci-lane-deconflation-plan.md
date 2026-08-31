@@ -10,7 +10,7 @@ related:
   - '[[2026-06-01-registry-period-code-union-cli-boundary-adr]]'
   - '[[2026-08-05-ci-lane-deconflation-step-check-attribution-audit]]'
 modified: '2026-08-31'
-body_hash: 'sha256:9236c1b4980b774586d381c50e06d104769028668d06fbac30c5ce2b4aed94a1'
+body_hash: 'sha256:e252094ae1a2181f7cba2d719848965702d767a270deb23d348a09ac4cd5a197'
 ---
 
 <!-- RETIRED: S01, S10, S181, S184, S186, S189, S191, S193, S194, S197, S199, S201, S203, S205, S207, S209, S211, S213, S215, S217, S219, S221 -->
@@ -246,7 +246,7 @@ Decompose every live size-budget subject by its owning source file, then regener
 - [ ] `P05.S161` - Refactor the size-budget subjects in work_addressing.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/modelo/work_addressing.py`.
 - [ ] `P05.S162` - Refactor the size-budget subjects in workspace_models.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/modelo/workspace_models.py`.
 - [ ] `P05.S163` - Refactor the size-budget subjects in workspace.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/modelo/workspace.py`.
-- [ ] `P05.S164` - Refactor the size-budget subjects in supervisor.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/operations/supervisor.py`.
+- [x] `P05.S164` - Refactor the size-budget subjects in supervisor.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/operations/supervisor.py`.
 - [ ] `P05.S165` - Refactor the size-budget subjects in test_supervisor.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/operations/tests/test_supervisor.py`.
 - [x] `P05.S166` - Refactor the size-budget subjects in help.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/operator_surface/help.py`.
 - [ ] `P05.S167` - Refactor the size-budget subjects in conformance.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/registry/conformance.py`.
