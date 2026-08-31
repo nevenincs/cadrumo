@@ -24,9 +24,9 @@ from ..models import (
     Invoice,
     InvoiceCatalogue,
     InvoiceLine,
-    _normalise_invoice_monetary_fields,
     derive_invoice_id,
 )
+from ..normalization import _normalise_invoice_monetary_fields
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

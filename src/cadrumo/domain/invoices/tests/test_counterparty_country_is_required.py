@@ -25,7 +25,8 @@ from ....core.identity import IdentityError
 from ...iva.classification import InvoiceKind
 from ..enums import IvaRate, PaymentStatus
 from ..errors import InvoiceValidationError
-from ..models import Invoice, InvoiceLine, _normalise_invoice_counterparty
+from ..models import Invoice, InvoiceLine
+from ..normalization import _normalise_invoice_counterparty
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
