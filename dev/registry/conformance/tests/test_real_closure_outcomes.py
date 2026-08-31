@@ -19,13 +19,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.application.filing import (
-    FilingElectionFacts,
-    GeneralFilingProfileFacts,
-    PresenterIdentity,
-    TaxpayerIdentityFacts,
-    build_filing_producer_snapshot,
-)
+from cadrumo.application.filing._producer_snapshot import FilingElectionFacts, GeneralFilingProfileFacts, PresenterIdentity, TaxpayerIdentityFacts, build_filing_producer_snapshot
 from cadrumo.application.registry.filing_export_coverage import compose_filing_export_coverage
 from cadrumo.application.registry.source_connectivity import load_source_connectivity_census
 from cadrumo.application.registry.source_connectivity_coverage import compose_source_connectivity_coverage
@@ -38,13 +32,13 @@ from cadrumo.core.modelo import Modelo
 from cadrumo.core.period import Period
 from cadrumo.core.product_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
 from cadrumo.core.source_connectivity import SourceConnectivityDisposition
-from cadrumo.core.resources import bundled_path
+from cadrumo.core.resources._boundary import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.deadlines.models import RefundAccount
 from cadrumo.domain.filing.schema import ModeloDraft, ModeloValue, ModeloValueKind
-from cadrumo.domain.submission import ModeloDraftStatus
+from cadrumo.domain.submission._protocols import ModeloDraftStatus
 
 from ...filing_export_proof import (
     FilingExportLiveProofEntry,

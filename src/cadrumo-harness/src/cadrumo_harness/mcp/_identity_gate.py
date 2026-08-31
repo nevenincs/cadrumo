@@ -24,7 +24,7 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from cadrumo.core.i18n import tr
+from cadrumo.core.i18n._render import tr
 
 from ._command_policy import CommandPolicyProjection, command_policy
 from ._harness_tools import HARNESS_LOAD_TOOL, WHOAMI_TOOL

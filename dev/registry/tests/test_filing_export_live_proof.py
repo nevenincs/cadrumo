@@ -23,7 +23,7 @@ from cadrumo.core.modelo import Modelo
 from cadrumo.core.period import Period
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.product_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
-from cadrumo.core.resources import bundled_path
+from cadrumo.core.resources._boundary import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ..filing_export_proof import (
@@ -54,13 +54,7 @@ def _m111_entry() -> FilingExportLiveProofEntry:
 
 
 def _m200_producer_snapshot():
-    from cadrumo.application.filing import (
-        FilingElectionFacts,
-        GeneralFilingProfileFacts,
-        PresenterIdentity,
-        TaxpayerIdentityFacts,
-        build_filing_producer_snapshot,
-    )
+    from cadrumo.application.filing._producer_snapshot import FilingElectionFacts, GeneralFilingProfileFacts, PresenterIdentity, TaxpayerIdentityFacts, build_filing_producer_snapshot
 
     return build_filing_producer_snapshot(
         modelo=Modelo.M200,

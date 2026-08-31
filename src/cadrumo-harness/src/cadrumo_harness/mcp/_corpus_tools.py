@@ -24,7 +24,8 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from cadrumo.application.corpus_search import RetrievalMode, RetrievalResponse, search_corpus
+from cadrumo.application.corpus_search._models import RetrievalMode, RetrievalResponse
+from cadrumo.application.corpus_search._runtime import search_corpus
 
 if TYPE_CHECKING:
     # Typing-only: the MCP SDK is supplied by the sibling harness distribution;

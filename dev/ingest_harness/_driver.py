@@ -85,7 +85,7 @@ def read_structured_draft(document: CorpusDocument) -> dict[str, Any]:
     """
     # Imported at call time: the product package is heavy and the harness's own
     # shape tests import this module without ever driving a document.
-    from cadrumo.adapters.inbound.einvoice import parse_einvoice_document
+    from cadrumo.adapters.inbound.einvoice._parsers import parse_einvoice_document
 
     path = _document_path(document)
     try:

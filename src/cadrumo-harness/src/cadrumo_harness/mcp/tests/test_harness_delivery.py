@@ -24,7 +24,7 @@ from uuid import UUID
 import anyio
 import pytest
 
-from cadrumo.adapters.persistence.storage import master_key
+from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.adapters.persistence.storage.custody.capsule import (
     load_committed_profile_password_material,
 )
@@ -84,7 +84,7 @@ def _authenticated_current_profile(*, profile_id: str, passphrase: str, storage_
     try:
         yield
     finally:
-        master_key.close_active_bucket_session()
+        close_active_bucket_session()
 
 
 def _shipped_skill_names() -> set[str]:

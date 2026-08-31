@@ -23,7 +23,7 @@ from cadrumo.application.registry.closure import RegistryClosureLimb
 from cadrumo.application.registry.filing_export_coverage import compose_filing_export_coverage
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.modelo import Modelo
-from cadrumo.core.resources import bundled_path
+from cadrumo.core.resources._boundary import bundled_path
 from cadrumo.domain.calculations.registry.authority import (
     ValidatedRegistryAuthority,
     bundled_authority,

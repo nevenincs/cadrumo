@@ -26,12 +26,12 @@ from enum import StrEnum
 from pathlib import Path
 from typing import cast
 
-from cadrumo.adapters.persistence.storage import close_active_bucket_session
+from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from cadrumo.core.errors.error_codes import ErrorEnvelope
 from cadrumo.core.external_constants import UTF_8_ENCODING
-from cadrumo.core.i18n import tr
+from cadrumo.core.i18n._render import tr
 from cadrumo.core.json_contract import (
     ENVELOPE_SCHEMA_VERSION,
     EnvelopeStatus,
@@ -85,7 +85,7 @@ def _terminal_transport_projection(
     outcome: NoRecoveryOutcome,
 ) -> ResolvedPreconditionAction:
     """Resolve one transport-owned terminal observation through shared authority."""
-    from cadrumo.application.operator_actions import no_action_precondition_verdict
+    from cadrumo.application.operator_actions._preconditions import no_action_precondition_verdict
     from cadrumo.entrypoints.cli import resolve_cli_precondition_action
 
     return resolve_cli_precondition_action(

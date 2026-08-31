@@ -48,7 +48,7 @@ from importlib.metadata import version as distribution_version
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from cadrumo.adapters.persistence.storage import close_all_live_bucket_sessions
+from cadrumo.adapters.persistence.storage.master_key.active_session import close_all_live_bucket_sessions
 from cadrumo.application.wizard.compiler import ensure_profile_keys_registered
 from cadrumo.core.config_state_root import FormerProductStateError
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
@@ -490,7 +490,7 @@ def _tool_arg_limit(value: object, default: int) -> int:
 
 def _declined_message(*, command_key: str, decision: ConfirmDecision) -> str:
     """The client-relayed, localized text for a not-confirmed call."""
-    from cadrumo.core.i18n import tr
+    from cadrumo.core.i18n._render import tr
 
     return tr(
         "mcp.elicitation.confirm.declined",

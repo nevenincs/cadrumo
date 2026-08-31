@@ -360,7 +360,7 @@ class TestSandboxEvictsBoundBucketSession:
 
     def test_login_binding_is_evicted_at_teardown(self, tmp_path: Path) -> None:
         """A real login binds a real session inside, and nothing survives outside."""
-        from cadrumo.adapters.persistence.storage.master_key import current_active_bucket_session
+        from cadrumo.adapters.persistence.storage.master_key.active_session import current_active_bucket_session
         from cadrumo.tests.cli_runner import invoke_cached_cli
 
         assert current_active_bucket_session() is None, "a prior test leaked a bucket session"

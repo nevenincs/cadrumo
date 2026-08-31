@@ -151,7 +151,7 @@ def arguments_faithfulness(
 
 def advisory_line(result: FaithfulnessResult) -> str:
     """The warning line the server prepends to a result for an advisory mismatch (client-relayed, localized)."""
-    from cadrumo.core.i18n import tr
+    from cadrumo.core.i18n._render import tr
 
     return tr(
         "mcp.faithfulness.advisory",

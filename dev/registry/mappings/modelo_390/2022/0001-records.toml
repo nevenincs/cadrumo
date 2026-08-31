@@ -1,0 +1,54 @@
+schema_version = 1
+fragment_id = "records"
+modelo = "390"
+design_epoch = "2022"
+source_ref = "aeat-dr-390-2022"
+source_sha256 = "7c6554f3182df51daaec37284dd891eb925e1f92df7e69bc01b8ccfb8e4f26fe"
+
+[[records]]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+export_record_id = "modelo-390-page-01"
+record_type = "page_01"
+
+[[records]]
+sheet = "Pág. 2"
+record_identity = "Pág. 2"
+export_record_id = "modelo-390-page-02"
+record_type = "page_02"
+
+[[records]]
+sheet = "Pág. 3"
+record_identity = "Pág. 3"
+export_record_id = "modelo-390-page-03"
+record_type = "page_03"
+
+[[records]]
+sheet = "Pág. 4"
+record_identity = "Pág. 4"
+export_record_id = "modelo-390-page-04"
+record_type = "page_04"
+
+[[records]]
+sheet = "Pág. 5"
+record_identity = "Pág. 5"
+export_record_id = "modelo-390-page-05"
+record_type = "page_05"
+
+[[records]]
+sheet = "Pág. 6"
+record_identity = "Pág. 6"
+export_record_id = "modelo-390-page-06"
+record_type = "page_06"
+
+[[records]]
+sheet = "Pág. 7"
+record_identity = "Pág. 7"
+export_record_id = "modelo-390-page-07"
+record_type = "page_07"
+
+[[records]]
+sheet = "Pág. 8"
+record_identity = "Pág. 8"
+export_record_id = "modelo-390-page-08"
+record_type = "page_08"

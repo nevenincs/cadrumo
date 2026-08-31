@@ -27,7 +27,7 @@ import pytest
 from click.testing import CliRunner
 
 from cadrumo.adapters.persistence.profile.filing_drafts import ModeloDraftRepository
-from cadrumo.application.operator_actions import ActionReference
+from cadrumo.application.operator_actions._models import ActionReference
 from cadrumo.core.period import Period
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.json_contract import ResolvedNoticeAction
@@ -39,7 +39,7 @@ from cadrumo.domain.filing.schema import (
     compute_modelo_draft_id,
     registry_schema_version,
 )
-from cadrumo.domain.submission import ModeloDraftStatus
+from cadrumo.domain.submission._protocols import ModeloDraftStatus
 from cadrumo.entrypoints.cli._common import resolve_notice_action
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices
 from cadrumo.tests.cli_runner import invoke_cached_cli

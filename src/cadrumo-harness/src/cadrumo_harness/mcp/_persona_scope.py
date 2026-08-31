@@ -292,7 +292,7 @@ def is_handoff_denied(
 
 def handoff_denial_message(*, persona: AgentPersona, command_key: str) -> str:
     """The instructive refusal for a denied handoff call, naming the owning persona (client-relayed, localized)."""
-    from cadrumo.core.i18n import tr
+    from cadrumo.core.i18n._render import tr
 
     return tr(
         "mcp.persona.handoff_denied",

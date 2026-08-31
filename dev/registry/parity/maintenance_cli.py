@@ -9,7 +9,7 @@ from typing import Annotated
 import typer
 from pydantic import BaseModel
 
-from cadrumo.core.resources import bundled_path
+from cadrumo.core.resources._boundary import bundled_path
 from cadrumo.domain.calculations.registry.live_parity import OracleEnvironment
 
 from .maintenance import (

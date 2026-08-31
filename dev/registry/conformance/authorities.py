@@ -7,9 +7,9 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 
-from cadrumo.application.filing import FilingExportProofAuthority
+from cadrumo.application.filing._export_proof import FilingExportProofAuthority
 from cadrumo.core.source_connectivity import SourceConnectivityProofAuthority
-from cadrumo.core.resources import bundled_path
+from cadrumo.core.resources._boundary import bundled_path
 from cadrumo.domain.calculations.registry.authority import (
     ValidatedRegistryAuthority,
     bundled_authority,

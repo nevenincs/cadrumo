@@ -45,7 +45,7 @@ import pytest
 
 from cadrumo.core.corpus_text import normalise_corpus_text, resolve_anchored_extracted_unit
 from cadrumo.core.directory_scan import scan_directory
-from cadrumo.core.resources import bundled_path
+from cadrumo.core.resources._boundary import bundled_path
 from cadrumo.domain.calculations.registry.legal import (
     legal_reference_quotes_corpus,
     verify_legal_catalogue_grounding,
