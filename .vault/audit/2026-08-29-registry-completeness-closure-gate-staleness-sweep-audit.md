@@ -5,7 +5,7 @@ tags:
 date: '2026-08-29'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:00bc7e427a55664dbfd11349a00e541691a3a6c5bb11f74661695a635f783597'
+body_hash: 'sha256:390cd7dd15ef094ecf529fba5e13e31b33484a02bdb9dfb1279cb265c1cd49d4'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
@@ -1208,3 +1208,50 @@ Having just been burned by a set that was too narrow, the reflex is to widen
 every set nearby. Here widening is the defect, and the discriminator is the one
 above: a miss lands on a refusal, so narrowness costs a reviewer's attention,
 while looseness costs seventy fields their review.
+
+## The HEAD-vs-disk discriminator is DIRECTIONAL, and the deadlock can be mutual
+
+The rule recorded above -- present at HEAD and absent on disk means someone is
+mid-flight, absent in both means the breakage has landed -- is sound but
+incomplete, and the missing half was found in practice on a facade retirement
+running beside this work.
+
+Applied to the FILES a lane is holding, the check says "they are mid-flight,
+wait for them". Applied to the MODULES THOSE FILES IMPORT, it can say the same
+thing about you. A worked instance, measured module by module:
+
+```
+utils                 HEAD=yes  disk=no    <- retiring lane removes it; consumers at HEAD still import it
+source_provenance     HEAD=no   disk=yes   <- renaming lane's files import it; it exists only on disk
+page_text_extraction  HEAD=yes  disk=yes
+extracted_casilla     HEAD=yes  disk=yes
+label_regex           HEAD=yes  disk=yes
+```
+
+Each lane's commit alone breaks HEAD, in mirror image: one would remove a module
+HEAD still imports, the other would import a module HEAD does not have. Reading
+only the held files shows one direction and invites an indefinite wait for a
+lane that is equally blocked on you.
+
+**The resolution is additive, not a joint commit.** The new module was committed
+ALONE, removing nothing, so HEAD resolves for both lanes and either can land
+next in any order. The retirement of the displaced module follows afterwards.
+The cost is a duplicate definition visible only to a checkout of that single
+revision and never to a gate -- which is a real cost under
+`no-legacy-compatibility`, and is why the retirement must actually follow rather
+than be forgotten.
+
+### Lesson
+
+Run the HEAD-vs-disk check on the module DEPENDENCY EDGES, not on the files. The
+file-level answer names who is mid-flight; the edge-level answer tells you
+whether the block is one-way or a cycle. And when it is a cycle, look for the
+additive move that makes HEAD resolvable for both sides -- coordinating two
+lanes into one commit means one absorbs the other's work under its message,
+which is the thing to avoid.
+
+A second confirmation from the same exchange: an AST sweep of function bodies
+across `src/` and `dev/` came back clean for that retirement -- thirteen
+function-local imports touching the relevant package, none reaching the facade.
+A clean result from that scan is still worth having, because a green collection
+cannot produce it.
