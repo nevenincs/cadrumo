@@ -32,7 +32,10 @@ from dataclasses import dataclass, replace
 from decimal import Decimal
 from typing import Literal
 
-from ...application.calculations import resolve_maritime_exemption
+from ...application.calculations._maritime_exemption_service import (
+    resolve_maritime_exemption,
+    retmar_mandatory_filing,
+)
 from ...application.user_profile.projections import fact_value
 from ...core.parsing import parse_bool
 from ...domain.renta import MaritimeWorkerFacts, ProfileCompletenessError
@@ -53,11 +56,29 @@ class ModeloMaritimeExemptionPreview:
         retmar_warning_error: Optional
             :class:`~cadrumo.domain.renta.ProfileCompletenessError` for the CLI to
             translate into ``retmar_warning`` while still emitting observations.
+
+    Read ``retmar_mandatory_filing`` from this preview, never from
+    ``result``: on the warning path the result was computed from cleared facts
+    and its copy of that answer is false regardless of the truth.
     """
 
     facts: MaritimeWorkerFacts
     result: MaritimeExemptionResult
     retmar_warning_error: ProfileCompletenessError | None = None
+
+    @property
+    def retmar_mandatory_filing(self) -> bool:
+        """Whether RETMAR registration makes this filing mandatory.
+
+        Read from :attr:`facts` rather than from :attr:`result`, and that is the
+        whole point of the property. On the warning path ``result`` was computed
+        from facts with the RETMAR flag deliberately cleared, so its own copy of
+        this answer is false whether or not the worker is registered. Asking
+        here, through the service's one determination, keeps the two paths
+        agreeing and keeps the answer out of the renderer that was previously
+        reconstructing it.
+        """
+        return retmar_mandatory_filing(self.facts)
 
 
 def _vessel_flag(value: str | None) -> Literal["ES", "foreign"] | None:

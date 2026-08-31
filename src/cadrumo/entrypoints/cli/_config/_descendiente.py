@@ -153,21 +153,19 @@ def _ambiguous_relacion_indices(new_rows: list[DescendantInfo], *, index_offset:
     reaches an already-stored row, including one declared before this notice
     existed at all.
 
-    ``DESCENDIENTE`` is the only ambiguous value: the AEAT manual positively
-    documents a grandchild or other descendant by consanguinidad other than a
-    child, and a minor held under judicial guarda y custodia, as mínimo-
-    eligible under Art. 58.1 while excluding both from the Art. 81.1 deducción
-    by name — and the relación axis has no member for either today, so
-    neither can be stated even by an operator who knows the distinction
-    matters. Every other relación this flag accepts is unambiguous by
-    construction, whether or not it is entitled.
+    Which relación is ambiguous is the domain's answer, not this surface's:
+    :func:`~domain.contribuyente.relacion_is_ambiguous_for_maternidad` states it
+    once, with the manual's reasoning. The months gate stays here because it
+    genuinely differs between the two callers -- this one asks whether the
+    operator declared months, the calculate-time one whether those months
+    actually contribute to the filing.
     """
-    from ....core import DescendantRelacion
+    from ....domain.contribuyente.descendant_maternity import relacion_is_ambiguous_for_maternidad
 
     return tuple(
         index_offset + position
         for position, row in enumerate(new_rows)
-        if row.meses_madre_trabajo and row.relacion is DescendantRelacion.DESCENDIENTE
+        if row.meses_madre_trabajo and relacion_is_ambiguous_for_maternidad(row.relacion)
     )
 
 

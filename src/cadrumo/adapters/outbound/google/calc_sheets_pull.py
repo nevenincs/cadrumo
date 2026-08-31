@@ -696,7 +696,7 @@ def _decode_binding_edits(
     """Map the per-binding slice of the batchGet response into typed BindingEdits.
 
     Booleans are stringified because
-    :attr:`~adapters.outbound.google.calc_sheets_pull.BindingEdit.value`
+    :attr:`~adapters.outbound.google.calc_sheets_pull_records.BindingEdit.value`
     (``Decimal | str | None``) does not carry a bool path — the runtime
     enum-binding semantics expect a textual representation here.
     """
@@ -1000,15 +1000,15 @@ def compute_from_pull(
 
     Maps each edit family back to the runtime contract:
 
-    - :attr:`~adapters.outbound.google.calc_sheets_pull.OperatorEdit.value`
+    - :attr:`~adapters.outbound.google.calc_sheets_pull_records.OperatorEdit.value`
       flows into runtime ``inputs``, with ``Decimal("0")`` substituted for
       ``None`` so the runtime's "every non-computed casilla has a value"
       precondition holds.
-    - :attr:`~adapters.outbound.google.calc_sheets_pull.BindingEdit.value`
+    - :attr:`~adapters.outbound.google.calc_sheets_pull_records.BindingEdit.value`
       is routed by the binding's ``typed_enum`` declaration: numeric bindings
       flow into ``binding_values`` as Decimals; enum bindings flow into
       ``enum_binding_values`` as plain strings.
-    - :attr:`~adapters.outbound.google.calc_sheets_pull.RelationEdit.value`
+    - :attr:`~adapters.outbound.google.calc_sheets_pull_records.RelationEdit.value`
       flows into ``relation_values`` as Decimals, with ``Decimal("0")``
       substituted for ``None``.
 
@@ -1067,7 +1067,7 @@ def _require_metadata_match(*, pull: _PullResult, snapshot: RegistrySnapshot) ->
 
 
 def _coerce_edit_value_to_decimal(value: Decimal | str | bool | None, *, input_key: str) -> Decimal:
-    """Coerce an :attr:`~adapters.outbound.google.calc_sheets_pull.OperatorEdit.value` shape.
+    """Coerce an :attr:`~adapters.outbound.google.calc_sheets_pull_records.OperatorEdit.value` shape.
 
     An absent cell stays zero so the runtime can evaluate the complete input
     lattice. Any supplied malformed or non-finite numeric value is refused;

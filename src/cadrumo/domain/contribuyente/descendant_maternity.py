@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ...core import ART_81_1_MATERNIDAD_RELACIONES
+from ...core import ART_81_1_MATERNIDAD_RELACIONES, DescendantRelacion
 from .descendant_record import DescendantRecordBase
 from .family_types import (
     ART_81_1_ENTRY_WINDOW_YEARS,
@@ -196,3 +196,39 @@ class DescendantMaternityMixin(DescendantRecordBase):
         ):
             return 0
         return len(frozenset(self.meses_madre_trabajo) & self._maternidad_eligible_months(filing_year))
+
+
+def relacion_is_ambiguous_for_maternidad(relacion: DescendantRelacion) -> bool:
+    """Whether a declared relación cannot distinguish an Art. 81.1 child from a mínimo-only descendant.
+
+    ``DESCENDIENTE`` is the ONLY ambiguous value, and for ONE remaining
+    population: a grandchild or other descendant by consanguinidad other than a
+    child, whom the AEAT manual documents as mínimo-eligible under Art. 58.1
+    while excluding them from Art. 81.1. The axis has no member for them, so a
+    filer with such a child has no truthful value but ``DESCENDIENTE``. That is
+    also the value a filer with a genuine hijo gets by never being asked, since
+    the fact is never written for the default even when the operator typed it
+    explicitly. The two are indistinguishable at the stored fact, which is the
+    whole reason a notice exists rather than a refusal.
+
+    Both sites used to name a SECOND population here -- a minor held under
+    guarda y custodia by judicial resolución -- and both were out of date.
+    :attr:`~core.DescendantRelacion.GUARDA_Y_CUSTODIA_JUDICIAL` was added for
+    exactly that carer and is excluded from
+    :data:`~core.ART_81_1_MATERNIDAD_RELACIONES`, so they can state their
+    relationship truthfully and the deducción already does not reach them. The
+    behaviour was right; the reasoning beside it was written twice and neither
+    copy followed the axis when it gained the member. Stating it once is what
+    surfaced that.
+
+    Asked in two places, at two different moments: the declaration surface warns
+    the operator as they type, and the calculate path catches an already-stored
+    row, including one declared before the notice existed. Each keeps its own
+    months gate -- declared months at declaration time, contributing months at
+    calculate time -- because those genuinely differ. What must not differ is
+    which relación is ambiguous, and that lived as a repeated
+    ``is DescendantRelacion.DESCENDIENTE`` at both sites with the reasoning
+    restated beside each. A member added to the axis for either population would
+    have had to reach both.
+    """
+    return relacion is DescendantRelacion.DESCENDIENTE
