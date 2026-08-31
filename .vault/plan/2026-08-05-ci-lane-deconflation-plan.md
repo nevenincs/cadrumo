@@ -10,7 +10,7 @@ related:
   - '[[2026-06-01-registry-period-code-union-cli-boundary-adr]]'
   - '[[2026-08-05-ci-lane-deconflation-step-check-attribution-audit]]'
 modified: '2026-08-31'
-body_hash: 'sha256:64b7109bca8b1348ba8b64e6ea6194fc01bd838939980b46211683feb9af4324'
+body_hash: 'sha256:cb311a18c920689790eb6f33d4ebb8ef222049c6e5f85ec88acc85346a993bf0'
 ---
 
 <!-- RETIRED: S01, S10, S181, S184, S186, S189, S191, S193, S194, S197, S199, S201, S203, S205, S207, S209, S211, S213, S215, S217, S219, S221 -->
@@ -196,7 +196,7 @@ Decompose every live size-budget subject by its owning source file, then regener
 - [x] `P05.S132` - Refactor the size-budget subjects in _source_mesh.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/aggregation/_source_mesh.py`.
 - [x] `P05.S133` - Refactor the size-budget subjects in test_iva_ledger.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/aggregation/tests/test_iva_ledger.py`.
 - [x] `P05.S134` - Refactor the size-budget subjects in test_modelo_source_mesh_ledger.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/aggregation/tests/test_modelo_source_mesh_ledger.py`.
-- [ ] `P05.S135` - Refactor the size-budget subjects in test_renta_ledger.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/aggregation/tests/test_renta_ledger.py`.
+- [x] `P05.S135` - Refactor the size-budget subjects in test_renta_ledger.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/aggregation/tests/test_renta_ledger.py`.
 - [ ] `P05.S136` - Refactor the size-budget subjects in operator.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/auth/operator.py`.
 - [ ] `P05.S137` - Refactor the size-budget subjects in test_certificate_sources_check.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/auth/tests/test_certificate_sources_check.py`.
 - [ ] `P05.S138` - Refactor the size-budget subjects in _relation_prefill.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/calculations/_relation_prefill.py`.
