@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#import-centralization'
 date: '2026-08-30'
-modified: '2026-08-30'
+modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:dc9c1d0d2134baeadf78e2d97cd4d57b5600998267779d395c63634a591bab16'
+body_hash: 'sha256:e7a2a6d5e79bfe73ee87abc32cc2763bb58fbb7d6364acc716b0ef1e43402254'
 related:
   - "[[2026-07-01-import-centralization-adr]]"
 ---
@@ -101,3 +101,83 @@ It belongs to whoever holds those uncommitted files.
 
 Until that lands, no slice of this campaign is verifiable, and an unverifiable
 import sweep of the innermost package is not worth its risk.
+
+
+## Outcome: zero remaining sites
+
+The campaign ran to completion on 2026-08-31. Measured against the same method
+that produced the 5,812-site estimate: **0 facade sites resolvable to a core
+module, and 0 private modules left directly under `cadrumo/core`.**
+
+All 85 private modules were promoted to public names and every consumer repointed,
+in batches that each landed the rename and its consumer sweep together so the tree
+was never left with a repointed consumer and an unrenamed module. The 24
+`DeferredTarget("cadrumo.core", ...)` string targets, deliberately left in an
+earlier pass because their homes were private, were repointed last -- the
+promotions are exactly what unblocked them.
+
+The 49 imports that remain against `cadrumo.core` are SUBMODULE imports
+(`from cadrumo.core import config, logging, external_constants, bucket_pointer,
+aggregation`). Those are not facade re-exports and are correct as they stand.
+
+### The facade itself is NOT removed, and should not be
+
+`core/__init__.py` keeps its PEP 562 `__getattr__` and its 357-entry
+`_LAZY_EXPORTS` map. That looks like the obvious last step and is the one thing
+this campaign deliberately did not do.
+
+`core/tests/test_early_init_facade_imports.py` documents why. The package once
+bound most of its surface eagerly and served a few names through a `__getattr__`
+defined near the END of `__init__`. Any module imported EARLIER in that file which
+reached the settings validator asked a half-built package for an attribute whose
+accessor did not exist yet, and `import cadrumo.core` failed for the whole
+process -- the tree became unimportable for every agent until the chain was backed
+out. The facade now resolves its entire surface lazily and imports no submodule
+while it executes, precisely so there is no earlier module to reach back from.
+
+So this `__getattr__` is load-bearing against a real, once-observed outage, not a
+re-export of convenience. Removing it is an ADR-level decision about that import
+cycle, not a cleanup, and it must not be done on the strength of "the rule
+prohibits PEP 562 export maps". What the campaign achieved is the part that
+mattered: nothing in production depends on the facade to reach a symbol any more,
+so the map now serves only a handful of core's own tests.
+
+### Rewriter defects, each found by the tree and each fixed in the tool
+
+Every one of these silently produced a WRONG rewrite rather than an error, which
+is why the count check before writing and the collection check after are both
+mandatory:
+
+- **Scope.** The relative-import rule was not scoped to core, so `from ._models
+  import` was rewritten inside every other package owning a `_models.py`.
+  Collection hit 800 errors. Repair restores an import only where the package
+  genuinely lacks the public module, so it cannot mask a real promotion.
+- **Over-correction.** Scoping it to "files directly in cadrumo/core" then broke
+  `from .._hex import` in `core/identity/`, which legitimately means `core._hex`.
+  The rule now RESOLVES the dots against the tree instead of guessing by
+  directory, which settles both cases from one rule.
+- **A guard that was always true.** The resolution rule carried a "core/_OLD.py
+  does not exist" check, but the rename runs at the END of a sweep, so inside core
+  it was always true and core's own files were skipped every time.
+- **Prose uses a shorter form.** Docstrings say ``core._x``, not
+  ``cadrumo.core._x``, so six `:mod:`/`:class:` references survived the qualified
+  replace. The lookahead added with the fix stops `core._storage_taxonomy` from
+  swallowing `core._storage_taxonomy_locations`.
+- **PEP 695 type aliases** (`type CasillaId = ...`) are `ast.TypeAlias`, not
+  assignments, so `CasillaId` was invisible and its 595 references were nearly
+  missed.
+- **The aliased submodule form** `from .. import _x as owner` was explicitly
+  skipped by the rule that handled the bare form.
+
+### Operational notes
+
+Transient `OSError 22` writes on this share abort a sweep mid-way and leave a
+promotion half-applied -- consumers repointed, module not renamed. The tool
+retries writes, and the trailing `git mv` needs its own retry because it loses
+lock races against concurrent agents. `--pathspec-from-file` is required for
+commits: these file sets run past the argv limit.
+
+The eight residual collection errors throughout belonged to concurrent uncommitted
+relocations under `adapters/persistence/storage` and `application/aggregation` and
+were excluded from every commit in this campaign.
+
