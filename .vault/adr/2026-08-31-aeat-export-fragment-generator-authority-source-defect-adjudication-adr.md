@@ -5,20 +5,20 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:7d1e94022b1e19880538294353d7b118edbeaf51a77964391502bbc04484df4b'
+body_hash: 'sha256:7668e681d8ce180d2a516bb0d4ed91893c2d54266fcde08b6f48cc1fc58e9af6'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
   - "[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]"
   - '[[2026-08-31-aeat-export-fragment-generator-authority-m390-2022-page-7-constant-reference]]'
 ---
 
-# `aeat-export-fragment-generator-authority` adr: `adjudicating a self-contradictory cell in an official AEAT record design` | (**status:** `proposed`)
+# `aeat-export-fragment-generator-authority` adr: `adjudicating a self-contradictory cell in an official AEAT record design` | (**status:** `accepted`)
 
 ## Problem Statement
 
 The generator treats an AEAT-published record design as authoritative and compares every literal field against it byte-for-byte. That comparison has now refused a modelo 390 filing-year 2022 fragment, and the refusal is correct: the published workbook contradicts itself, stating both an eleven-character constant and the twelve-byte slot that constant occupies. The measurement, the two independent passes behind it, and the reason only one of the two halves can be honoured are recorded in `2026-08-31-aeat-export-fragment-generator-authority-m390-2022-page-7-constant-reference`.
 
-No accepted record says what the generator should do when the authority is internally inconsistent. Until one does, a real and correctly-detected source defect blocks the modelo 390 2022 semantic map, and through it the export-tree work that the temporal-coverage and completeness-closure campaigns wait on. The decision is needed now because the alternative routes around it all destroy the check that found the defect.
+No accepted record said what the generator should do when the authority is internally inconsistent. Until this one, a real and correctly-detected source defect blocked the modelo 390 2022 semantic map, and through it the export-tree work that the temporal-coverage and completeness-closure campaigns wait on. The decision was needed because the alternative routes around it all destroy the check that found the defect.
 
 ## Considerations
 
@@ -71,6 +71,8 @@ The knockout is the digest pin. It converts a correction from an assertion about
 It also keeps the detection intact. The gate still refuses everything it refuses today; it simply distinguishes a defect nobody has examined from one that has been examined, recorded, and evidenced.
 
 ## Consequences
+
+ACCEPTED 2026-08-31 on the operator's direction to carry the adjudication into code rather than hold it for a separate ruling. Acceptance authorises exactly what this record describes and nothing wider: a hash-pinned declaration for the Pag. 7 cell of the 2022 workbook, and the mechanism that consults it. It does not authorise a second entry without its own evidence.
 
 The modelo 390 2022 map lands, and the export-tree chain behind it moves.
 
