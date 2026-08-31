@@ -878,3 +878,46 @@ what makes the test sound without record alignment: a coincidence across two
 different record types is vanishingly unlikely, and the generator's own geometry
 validation (contiguity plus `declared_total`) already refuses a field straddling
 a blank run inside its OWN record.
+
+## Phase 2 measured from the loaded snapshot: both named items are correct absences
+
+`audit_bundled_registry_conformance(validate=True)`, read through the authority
+rather than off a directory listing:
+
+```
+total rows:                  128
+rows NOT registry_validated:   0
+rows reporting any gap_tiers: 121
+rows reporting required_tier_gaps: 0
+```
+
+Every conformance row is `registry_validated`, and no row anywhere reports a
+required-tier gap. The two items carried as open resolve as follows.
+
+**modelo 165 revision 2023-2025** does carry `layout_authority` in `gap_tiers`
+-- it is the only row in the tree with any gap beyond
+`executable_parity_evidence` -- but its `required_tier_gaps` is empty and its
+`authority_scope` is `inspection_only`. That is the computation working as
+designed: required-tier gaps are projected only for a `filing_eligible` ledger,
+so an inspection-only revision keeps the discovery evidence visible in
+`gap_tiers` without a non-filing read being promoted to a filing-grade defect.
+A layout authority is what FILING needs, and this revision does not claim to
+file.
+
+**modelo 714 revision 2025** has `layout_authority` SATISFIED and
+`authority_scope = filing`. Its only gap is `executable_parity_evidence`, which
+is not a required tier at all.
+
+### The distinction that decides both
+
+`REQUIRED_COVERAGE_TIERS` is `(legal_authority, official_source_guidance,
+layout_authority)`, and the module says why the boundary is public: "a gap on
+one of these is a failure, while a gap on `executable_parity_evidence` is a
+reported absence, and a consumer that cannot tell them apart reports an expected
+absence as a defect."
+
+That is precisely the trap here. Reading `gap_tiers` gives 121 of 128 rows
+"failing"; reading `required_tier_gaps` gives zero. The registry already
+encodes the difference between an absence it expects and one it refuses -- the
+reporting error is to collapse them. Read the field the model computes for the
+question being asked, not the field whose name is closest to it.
