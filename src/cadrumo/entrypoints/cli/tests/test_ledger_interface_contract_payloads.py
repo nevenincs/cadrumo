@@ -314,7 +314,14 @@ def test_export_and_preflight_payloads_use_typed_nested_rows() -> None:
         ("byte_size", -1),
         ("rows", [{**export_row, "booked_date": "not-a-date"}]),
         ("rows", [{**export_row, "amount": "not-a-decimal"}]),
-        ("rows", [{**export_row, "currency": "eur"}]),
+        # "EURO" rather than "eur". A lowercase code is NORMALISED by the
+        # canonical currency annotation, on the payload and on the
+        # application row alike, so it is no longer a wall on either side --
+        # asserting a refusal here would pin the payload as stricter than the
+        # record it mirrors, which is the divergence this test exists to
+        # forbid. The word "euros" is a real operator mistake the LLM
+        # extraction fixtures carry, and both sides refuse it.
+        ("rows", [{**export_row, "currency": "EURO"}]),
     ):
         with pytest.raises(ValidationError):
             LedgerExportPayload.model_validate({**export.model_dump(), field: value})

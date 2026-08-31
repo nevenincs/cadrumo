@@ -23,7 +23,7 @@ from ....core.config import (
     settings_for_active_profile_bucket,
 )
 from ....core.time import now as _utc_now
-from ._namespace_registry import STORAGE_NAMESPACE_REGISTRY
+from ._secure_object_namespaces import STORAGE_NAMESPACE_REGISTRY
 from ._runtime_readiness import (
     StorageRuntimeReadiness,
     StorageRuntimeReadinessCode,

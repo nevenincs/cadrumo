@@ -69,7 +69,7 @@ from .. import (
     StorageNamespaceScope,
     StorageRemoteMirrorPolicy,
 )
-from .._namespace_registry import (
+from .._secure_object_namespaces import (
     StoragePathAnchor,
     StoragePathDefinition,
     StoragePathKind,
@@ -95,7 +95,7 @@ def test_secure_object_registry_names_live_m036_declaration_namespace() -> None:
     """The M036 declarative-recording verbs
     persist operator declarations through this namespace.
     """
-    from .._namespace_registry import LIVE_M036_DECLARATION_NAMESPACE
+    from .._secure_object_namespaces import LIVE_M036_DECLARATION_NAMESPACE
 
     declaration = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("live_m036_declaration")
 
@@ -797,7 +797,7 @@ def _iter_aeat_production_sources() -> tuple[Path, ...]:
         sorted(
             path
             for path in package_python_files(include_data=True)
-            if not _is_test_surface(path) and path.name != "_namespace_registry.py"
+            if not _is_test_surface(path) and path.name != "_secure_object_namespaces.py"
         ),
     )
 
@@ -878,19 +878,19 @@ def _collect_imported_registry_namespace_bindings(tree: ast.AST) -> dict[str, st
 def _is_storage_namespace_import(node: ast.ImportFrom) -> bool:
     return node.module in {
         "cadrumo.adapters.persistence.storage",
-        "cadrumo.adapters.persistence.storage._namespace_registry",
-        "_namespace_registry",
+        "cadrumo.adapters.persistence.storage._secure_object_namespaces",
+        "_secure_object_namespaces",
     } or (
         node.level > 0
         and node.module
         in {
             "adapters.persistence.storage",
-            "adapters.persistence.storage._namespace_registry",
+            "adapters.persistence.storage._secure_object_namespaces",
             "persistence.storage",
-            "persistence.storage._namespace_registry",
+            "persistence.storage._secure_object_namespaces",
             "storage",
-            "storage._namespace_registry",
-            "_namespace_registry",
+            "storage._secure_object_namespaces",
+            "_secure_object_namespaces",
         }
     )
 

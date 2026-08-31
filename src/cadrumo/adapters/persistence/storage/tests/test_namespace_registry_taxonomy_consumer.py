@@ -41,7 +41,7 @@ from .._storage_path_definitions import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _DEFINITIONS_MODULE = Path(__file__).resolve().parent.parent / "_storage_path_definitions.py"
-_REGISTRY_MODULE = Path(__file__).resolve().parent.parent / "_namespace_registry.py"
+_REGISTRY_MODULE = Path(__file__).resolve().parent.parent / "_secure_object_namespaces.py"
 
 #: Each exported constant beside the taxonomy member that declares it.
 _BOUND_CONSTANTS = (

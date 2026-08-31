@@ -18,7 +18,7 @@ from pathlib import Path
 import pytest
 
 from .....tests.master_key import EphemeralMasterKeyProvider
-from .._namespace_registry import STORAGE_NAMESPACE_REGISTRY, WORKFLOW_STATE_NAMESPACE
+from .._secure_object_namespaces import STORAGE_NAMESPACE_REGISTRY, WORKFLOW_STATE_NAMESPACE
 from ..errors import StorageError, StorageValidationError
 from ..master_key import BucketSession, activate_session
 from ..runtime_repository import secure_object_repository_for_staged_bucket

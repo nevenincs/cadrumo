@@ -41,13 +41,13 @@ from ....core.time import now
 from ....domain.attachments.errors import AttachmentNotFoundError, AttachmentPersistenceError, AttachmentValidationError
 from ....domain.attachments.models import Attachment, is_link_only_mime_type
 from ....domain.attachments.protocols import AttachmentStoreProtocol
-from ._namespace_registry import (
+from ._secure_object_namespaces import (
     ATTACHMENT_BLOB_NAMESPACE as ATTACHMENT_BLOB_STORAGE_NAMESPACE,
 )
-from ._namespace_registry import (
+from ._secure_object_namespaces import (
     ATTACHMENT_MANIFEST_NAMESPACE as ATTACHMENT_MANIFEST_STORAGE_NAMESPACE,
 )
-from ._namespace_registry import secure_object_namespace_logical_path
+from ._secure_object_namespaces import secure_object_namespace_logical_path
 from ._schema_lineage import inner_envelope_classification_is_expected, inner_envelope_version_is_current
 from .crypto.encrypted_columns import HashedLookup
 from .envelope import Envelope

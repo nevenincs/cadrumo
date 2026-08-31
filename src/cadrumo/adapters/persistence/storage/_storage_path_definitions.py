@@ -1,6 +1,6 @@
 """Filesystem and blob storage-hierarchy path contracts.
 
-Split out of ``_namespace_registry.py`` along the seam that module's own
+Split out of ``_secure_object_namespaces.py`` along the seam that module's own
 docstring already named: the SQL secure-object namespace keys are a
 different concern -- logical database keys, not filesystem paths -- and keep
 their own declarations there. Everything here is the other half: the
@@ -11,10 +11,10 @@ prefix, an outbound namespace, a per-run id) that cannot be enumerable
 :class:`~cadrumo.core.StorageCategory` members.
 
 :data:`STORAGE_PATH_DEFINITIONS` is consumed by
-``_namespace_registry.STORAGE_NAMESPACE_REGISTRY``, which combines it with
+``_secure_object_namespaces.STORAGE_NAMESPACE_REGISTRY``, which combines it with
 the SQL namespace definitions into one
 :class:`~adapters.persistence.storage.StorageHierarchyRegistry`. Nothing
-here reaches back into ``_namespace_registry.py``, so there is no cycle.
+here reaches back into ``_secure_object_namespaces.py``, so there is no cycle.
 """
 
 from __future__ import annotations

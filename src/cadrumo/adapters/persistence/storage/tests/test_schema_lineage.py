@@ -25,7 +25,7 @@ from .....core.compatibility_lifecycle import (
     expected_floor,
     lineage_obligations,
 )
-from .._namespace_registry import STORAGE_NAMESPACE_REGISTRY
+from .._secure_object_namespaces import STORAGE_NAMESPACE_REGISTRY
 from .._schema_lineage import (
     SECURE_OBJECT_DURABILITY_FLOOR,
     deregister_secure_object_schema_upgrader,

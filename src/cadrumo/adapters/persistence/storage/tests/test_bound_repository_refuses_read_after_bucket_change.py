@@ -30,7 +30,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from .....core.config import Settings, override_settings
-from .._namespace_registry import WORKFLOW_STATE_NAMESPACE
+from .._secure_object_namespaces import WORKFLOW_STATE_NAMESPACE
 from .._runtime_readiness import StorageRuntimeReadinessCode
 from ..errors import StorageValidationError
 from ..master_key import BucketSession, activate_session

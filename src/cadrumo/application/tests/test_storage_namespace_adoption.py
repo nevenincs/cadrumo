@@ -1,7 +1,7 @@
 """Production-root adoption gate for secure-object namespace metadata.
 
 Every secure-object namespace declared in
-:data:`~adapters.persistence.storage._namespace_registry.STORAGE_NAMESPACE_REGISTRY`
+:data:`~adapters.persistence.storage._secure_object_namespaces.STORAGE_NAMESPACE_REGISTRY`
 carries a :class:`~adapters.persistence.storage.SecureObjectNamespaceDefinition`
 that is the single authority for its ``namespace`` string, ``sensitivity``
 :class:`~core.classification.SensitivityClass`, and envelope ``schema_version``.
@@ -80,7 +80,7 @@ _BOUND_METADATA_CLASSVARS = ("namespace", "sensitivity", "schema_version")
 # The registry-authoring module legitimately constructs definitions from raw
 # ``SensitivityClass`` members; it is the authority, not a consumer, so it is
 # excluded from the redeclaration scan.
-_REGISTRY_AUTHORING_MODULE = "_namespace_registry.py"
+_REGISTRY_AUTHORING_MODULE = "_secure_object_namespaces.py"
 
 
 def _package_root() -> Path:

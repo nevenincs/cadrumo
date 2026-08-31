@@ -24,7 +24,7 @@ from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....core.time import coerce_utc_aware, validate_utc_aware
 from .....core.time import now as _utc_now
-from .._namespace_registry import (
+from .._secure_object_namespaces import (
     SecureObjectNamespaceDefinition,
     StorageHierarchyRegistry,
     is_former_product_namespace,

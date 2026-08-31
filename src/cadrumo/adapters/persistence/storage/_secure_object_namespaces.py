@@ -1,4 +1,4 @@
-"""Typed registry for secure-storage namespace and hierarchy contracts.
+"""Typed secure-object namespace and hierarchy contracts.
 
 Each :class:`SecureObjectNamespaceDefinition` carries a
 :class:`SensitivityClass` field that governs the at-rest encryption
@@ -40,7 +40,7 @@ SECURE_OBJECT_WORKFLOW_STATE_KEY = "state"
 # The bucket/keystore layout names, the fan-out shape declarations, and
 # StoragePathDefinition itself live in _storage_path_definitions.py --
 # imported above, re-exported below -- so every existing caller of
-# `from .._namespace_registry import BUCKETS_DIRNAME` (etc.) keeps working
+# `from .._secure_object_namespaces import BUCKETS_DIRNAME` (etc.) keeps working
 # unchanged. The SQL secure-object namespace keys below are the concern that
 # stays: logical database keys, not filesystem paths.
 _SECURE_OBJECTS_TABLE_PATH_KEY = "secure_objects_table"
