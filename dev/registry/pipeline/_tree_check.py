@@ -12,8 +12,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from cadrumo.core.link_safety import is_link_like
 from cadrumo.core.directory_scan import iter_directory
+from cadrumo.core.link_safety import is_link_like
 from cadrumo.domain.calculations.registry.errors import (
     RegistryError,
     RegistryValidationError,
@@ -32,6 +32,7 @@ from ._provenance_manifest import (
 from ._render_profile import RenderProfile, RenderProfileSourceEvidence
 from ._semantic_map import SemanticMap
 from ._semantic_map_join import JoinedRecordDesign
+from ._source_defects import SourceDefectDeclaration
 from ._tree_validation import (
     GeneratedExportTreeValidationContext,
     ValidatedGeneratedExportTree,
@@ -87,6 +88,7 @@ def check_generated_export_tree(
     transport_profile: ExportTreeTransportProfile,
     render_profile: RenderProfile,
     render_profile_source_evidence: RenderProfileSourceEvidence,
+    source_defects: tuple[SourceDefectDeclaration, ...] = (),
 ) -> CheckedGeneratedExportTree:
     """Regenerate and compare one target without writing, repairing, or publishing it.
 
@@ -105,6 +107,7 @@ def check_generated_export_tree(
         transport_profile=transport_profile,
         render_profile=render_profile,
         render_profile_source_evidence=render_profile_source_evidence,
+        source_defects=source_defects,
     )
     candidate = validate_generated_export_tree(
         context=context.validation,
