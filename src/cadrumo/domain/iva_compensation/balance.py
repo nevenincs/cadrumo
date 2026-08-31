@@ -12,10 +12,10 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Annotated, Final
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, NonNegativeInt
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.filing_year import FilingYear
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .carry_forward import (
     IvaCompensationCarryForwardReport,
     IvaCompensationExpiryReviewState,
@@ -48,7 +48,7 @@ class IvaWalletBalanceReport(BaseModel):
     total_balance: Decimal = Field(ge=Decimal("0"))
     active_balance: Decimal = Field(ge=Decimal("0"))
     expired_balance: Decimal = Field(ge=Decimal("0"))
-    lot_count: int = Field(ge=0)
+    lot_count: NonNegativeInt
     next_expiry_year: CompensationExpiryYear | None = None
     unallocated_applied_amount: Decimal = Field(ge=Decimal("0"))
 

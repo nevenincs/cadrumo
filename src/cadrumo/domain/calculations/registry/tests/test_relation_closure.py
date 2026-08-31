@@ -7,9 +7,9 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.aggregation import BindingSourceKind
-from .....core.resources import bundled_path
+from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.resources._boundary import bundled_path
 from .....tests.registry_observations import registry_grounded_modelo_observation
 from .._validate import RegistryValidator
 from .._validate_relation_sources import (

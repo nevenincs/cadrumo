@@ -39,7 +39,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from ..classification import (
+from ..classification.policies import (
     ClassificationPolicy,
     OutputSensitivityClass,
     RedactionRule,
@@ -49,7 +49,7 @@ from ..classification import (
     default_policy_for,
 )
 from ..errors.hierarchy import RedactionError
-from ..redaction import default_rules, default_rules_for, default_rules_for_class
+from ..redaction.rules import default_rules, default_rules_for, default_rules_for_class
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

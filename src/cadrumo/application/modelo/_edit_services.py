@@ -16,14 +16,11 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from ...core.decimal import (
-    european_thousands_reading_is_ambiguous,
-    normalize_decimal_separators,
-    try_parse_canonical_decimal,
-)
+from ...core.decimal._coerce import normalize_decimal_separators
+from ...core.decimal._grammar import european_thousands_reading_is_ambiguous, try_parse_canonical_decimal
 from ...core.hashing import content_hash_hex
 from ...core.parsing import parse_bool, parse_iso8601_date
-from ...core.time import now as clock_now
+from ...core.time.clock import now as clock_now
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.runtime_graph import revision_date_binding_ids
 from ...domain.calculations.registry.schema import ModeloRevision
@@ -479,13 +476,26 @@ _DETAIL_ROW_NATURAL_KEY_FIELDS: dict[str, tuple[str, ...]] = {
 }
 
 
+def detail_row_identity_components(row: ModeloDetailRow) -> tuple[str, ...]:
+    """Return the row's declared identity fields, unjoined and in declared order.
+
+    The components and the joined key are the SAME facts read from the same
+    declaration, which is why they live together: a caller that needs the
+    parts must never obtain them by splitting the key. Splitting cannot be
+    made correct -- a component containing the separator is indistinguishable
+    from a boundary once joined -- so the only safe direction is components
+    first, key derived.
+    """
+    fields = _DETAIL_ROW_NATURAL_KEY_FIELDS[row.row_type]
+    return tuple(str(getattr(row, field)) for field in fields)
+
+
 def detail_row_natural_key(row: ModeloDetailRow) -> str:
     """Return the row's own already-declared business key, joined for compound keys.
 
     Never a minted or positional identity -- see :class:`ModeloEditDetailRowAddressV1`.
     """
-    fields = _DETAIL_ROW_NATURAL_KEY_FIELDS[row.row_type]
-    return DETAIL_ROW_NATURAL_KEY_SEPARATOR.join(str(getattr(row, field)) for field in fields)
+    return DETAIL_ROW_NATURAL_KEY_SEPARATOR.join(detail_row_identity_components(row))
 
 
 def _disallowed_intent_refusal(address: ModeloEditAddressV1) -> ModeloEditRefusalV1:
@@ -636,6 +646,7 @@ def preflight_modelo_edit(
 
 __all__ = [
     "admit_modelo_edit",
+    "detail_row_identity_components",
     "detail_row_natural_key",
     "modelo_edit_request_schema_identity",
     "modelo_edit_result_schema_identity",

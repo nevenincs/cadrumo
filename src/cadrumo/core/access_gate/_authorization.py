@@ -41,10 +41,10 @@ from typing import Final
 
 from pydantic import BaseModel, Field, model_validator
 
-from ..models import STRICT_FROZEN_CONFIG
 from ...core.directory_scan import scan_directory
+from ..modelo import NON_REGISTRY_MODELOS, Modelo
+from ..models import STRICT_FROZEN_CONFIG
 from ..toml import read_toml
-from ..modelo import Modelo, NON_REGISTRY_MODELOS
 from .errors import AuthorizationManifestError
 
 #: Minimum number of distinct renta (annual) years an enrolling test must

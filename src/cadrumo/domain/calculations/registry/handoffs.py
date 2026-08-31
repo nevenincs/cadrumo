@@ -12,13 +12,13 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Literal, NamedTuple
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
+from ....core.aggregation import BindingSourceKind, RelationAggregationOp
 from ....core.authority_grade import RegistryAuthorityGrade
+from ....core.casilla_id import CasillaId
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import FilingPeriodCode, RegistrySelectorPeriodCode
-from ....core.casilla_id import CasillaId
-from ....core.aggregation import BindingSourceKind, RelationAggregationOp
 from ._relation_aggregation import relation_aggregation_op
 from ._validate import RegistryValidator
 from .authority import ValidatedRegistryAuthority
@@ -566,11 +566,11 @@ class HandoffPathClassification(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    total: int = Field(ge=0)
-    canonical_relation_prefill: int = Field(ge=0)
-    iva_wallet_exception: int = Field(ge=0)
-    non_canonical: int = Field(ge=0)
-    parallel: int = Field(ge=0)
+    total: NonNegativeInt
+    canonical_relation_prefill: NonNegativeInt
+    iva_wallet_exception: NonNegativeInt
+    non_canonical: NonNegativeInt
+    parallel: NonNegativeInt
 
 
 class RegistryHandoffPathAudit(BaseModel):

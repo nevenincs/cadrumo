@@ -1,43 +1,26 @@
 """Canonical time and :class:`~datetime.datetime` helpers for the AEAT domain.
 
-Public surface
---------------
+This namespace is inert. Import every contract below directly from the module
+that defines it.
 
-* :func:`now` — return the current UTC-aware :class:`~datetime.datetime`.
-* :func:`today_madrid` — the current Europe/Madrid civil date (the authority for
-  regulated date-boundary reference-date defaults), derived from :func:`now`.
-* :data:`MADRID_TZ` — Spain's peninsular civil timezone (Europe/Madrid).
-* :func:`frozen_clock` — replay/test-scoped seam that freezes :func:`now`.
-* :func:`clock_is_frozen` — whether a :func:`frozen_clock` scope is active.
-* :func:`parse_iso_datetime` — parse ISO-8601 text before applying the
-  caller's UTC policy.
-* :func:`coerce_utc_aware` — coerce naive or offset-aware datetimes to UTC.
-* :func:`validate_utc_aware` — assert UTC-awareness or raise
-  :class:`core.errors.CoreValidationError`.
-* :data:`UtcInstant` — the same contract as a pydantic field annotation, for
-  models that declare an instant.
-* :func:`validate_inclusive_date_range` — assert a ``since``/``until`` pair
-  names a non-empty closed interval.
-* :func:`validate_inclusive_iso_date_range` — the same invariant applied to the
-  serialised ``YYYY-MM-DD`` bounds carried on wire payloads.
+* :mod:`cadrumo.core.time.clock` — :func:`~cadrumo.core.time.clock.now` (the
+  current UTC-aware instant), :func:`~cadrumo.core.time.clock.today_madrid`
+  (the current Europe/Madrid civil date, the authority for regulated
+  date-boundary reference-date defaults), :data:`~cadrumo.core.time.clock.MADRID_TZ`
+  (Spain's peninsular civil timezone), and the replay/test-scoped
+  :func:`~cadrumo.core.time.clock.frozen_clock` seam with its
+  :func:`~cadrumo.core.time.clock.clock_is_frozen` predicate.
+* :mod:`cadrumo.core.time.utc` — :func:`~cadrumo.core.time.utc.parse_iso_datetime`
+  (policy-neutral ISO-8601 parsing), :func:`~cadrumo.core.time.utc.coerce_utc_aware`,
+  :func:`~cadrumo.core.time.utc.validate_utc_aware`, and the
+  :data:`~cadrumo.core.time.utc.UtcInstant` pydantic field annotation carrying the
+  same contract declaratively.
+* :mod:`cadrumo.core.time.date_range` —
+  :func:`~cadrumo.core.time.date_range.validate_inclusive_date_range` and its
+  serialised-bounds counterpart
+  :func:`~cadrumo.core.time.date_range.validate_inclusive_iso_date_range`.
 """
 
 from __future__ import annotations
 
-from ._clock import MADRID_TZ, clock_is_frozen, frozen_clock, now, today_madrid
-from ._range import validate_inclusive_date_range, validate_inclusive_iso_date_range
-from ._utc import UtcInstant, coerce_utc_aware, parse_iso_datetime, validate_utc_aware
-
-__all__ = [
-    "MADRID_TZ",
-    "UtcInstant",
-    "clock_is_frozen",
-    "coerce_utc_aware",
-    "frozen_clock",
-    "now",
-    "parse_iso_datetime",
-    "today_madrid",
-    "validate_inclusive_date_range",
-    "validate_inclusive_iso_date_range",
-    "validate_utc_aware",
-]
+__all__: tuple[str, ...] = ()

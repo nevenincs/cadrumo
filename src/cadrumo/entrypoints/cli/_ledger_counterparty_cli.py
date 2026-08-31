@@ -46,9 +46,9 @@ from typing import TYPE_CHECKING
 
 import typer
 
-from ...core.i18n import tr
+from ...core.i18n._render import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ...core.time import now
+from ...core.time.clock import now
 from ...domain.iva.classification import IvaTerritorialScope
 from ...domain.iva.schema import EUMemberState
 from ._common import _bad, emit_envelope

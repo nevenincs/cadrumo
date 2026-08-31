@@ -24,15 +24,18 @@ from uuid import UUID
 
 import pytest
 
-from ....adapters.persistence.storage import master_key
 from ....adapters.persistence.storage.custody.capsule import (
     inventory_committed_profile_custody_capsule,
     recognize_current_profile_capsule,
 )
-from ....core.time import now as _now
+from ....adapters.persistence.storage.master_key.active_session import (
+    close_active_bucket_session,
+    current_active_bucket_session,
+)
+from ....core.time.clock import now as _now
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...evidence import LegalHoldCaseAuthority
-from ...filing import FilingRetentionAuthority
+from ...evidence._profile_legal_hold import LegalHoldCaseAuthority
+from ...filing._profile_filing_retention import FilingRetentionAuthority
 from ..custody_service import (
     _ProfileCustodyTransactionCapability as ProfileCustodyTransactionService,
 )
@@ -55,7 +58,7 @@ _LABEL_RECORD_RELATIVE_PATH = "data/profile-label.v1.json"
 
 def _close_live_login() -> None:
     close_active_profile_record_session()
-    master_key.close_active_bucket_session()
+    close_active_bucket_session()
 
 
 def _register_and_sign_in(root: Path) -> UUID:
@@ -69,7 +72,7 @@ def _register_and_sign_in(root: Path) -> UUID:
         recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
     )
     login_profile(name=outcome.profile_id, passphrase_callback=lambda: _PASSWORD)
-    assert master_key.current_active_bucket_session() is not None, (
+    assert current_active_bucket_session() is not None, (
         "the login must be live, or nothing here reproduces the logged-in case"
     )
     return UUID(outcome.profile_id)
@@ -206,7 +209,7 @@ def test_the_marker_still_bites_after_the_deletion_revokes_its_own_session(tmp_p
                 action=service._revoke_process_secrets,
             )
 
-            assert master_key.current_active_bucket_session() is None
+            assert current_active_bucket_session() is None
             assert not (capsule / "db/cadrumo.db-wal").exists(), (
                 "the revocation must have checkpointed the sidecars away, or the guard is not under test"
             )

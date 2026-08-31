@@ -48,22 +48,22 @@ from typing import TYPE_CHECKING
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PublicKey
 from pydantic import BaseModel, Field, model_validator
 
-from ...adapters.persistence.storage import (
+from ...adapters.persistence.storage._secure_object_namespaces import (
     MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE as _NAMESPACE,
 )
-from ...adapters.persistence.storage import (
+from ...adapters.persistence.storage.runtime_repository import (
     secure_object_repository_for_active_bucket,
     secure_object_repository_for_bucket,
 )
-from ...core.hex import HEX_PATTERN_64 as _HEX_PATTERN_64
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ...core.hashing import sha256_hex
-from ...core.time import now as _utc_now
+from ...core.hex import HEX_PATTERN_64 as _HEX_PATTERN_64
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.time.clock import now as _utc_now
 
 if TYPE_CHECKING:
-    from ...adapters.persistence.storage import SecureObjectRepository
+    from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 
 #: Raw X25519 public key size in bytes (RFC 7748).
 _X25519_PUBLIC_KEY_BYTES = 32

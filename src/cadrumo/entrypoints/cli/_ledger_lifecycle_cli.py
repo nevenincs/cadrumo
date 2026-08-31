@@ -26,9 +26,9 @@ from ...application.ledger.id_resolution import compute_display_id_width
 from ...application.ledger.models import SplitChildCommand
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.external_constants import PDF_MIME_TYPE
-from ...core.i18n import tr
+from ...core.i18n._render import tr
 from ...core.json_contract import Notice, NoticeSeverity, strict_round_trip
-from ...core.time import now
+from ...core.time.clock import now
 from ...domain.attachments.enums import AttachmentSource, DocumentLinkSource
 from ...domain.transactions.enums import BusinessClassification, is_classified
 from ...domain.transactions.errors import TransactionValidationError
@@ -208,8 +208,8 @@ def ledger_evidence_pull(
     """
     from ...adapters.outbound.google.active_profile import resolve_active_profile
     from ...adapters.outbound.google.document_link_resolver import resolve_document_link
-    from ...adapters.outbound.storage import build_google_credentials
-    from ...adapters.persistence.storage import AttachmentStore
+    from ...adapters.outbound.storage._factory import build_google_credentials
+    from ...adapters.persistence.storage.attachment import AttachmentStore
     from ...application.ledger.actions_manual import attach_manual_transaction_evidence
     from ...domain.attachments.enums import AttachmentKind
     from ...domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
@@ -313,8 +313,8 @@ def ledger_evidence_pull_all(
         list_drive_folder_documents,
         resolve_document_link,
     )
-    from ...adapters.outbound.storage import build_google_credentials
-    from ...adapters.persistence.storage import AttachmentStore
+    from ...adapters.outbound.storage._factory import build_google_credentials
+    from ...adapters.persistence.storage.attachment import AttachmentStore
     from ...domain.attachments.enums import AttachmentKind
     from ...domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
     from ._ledger_payloads import LedgerEvidencePullAllFilePayload, LedgerEvidencePullAllResult

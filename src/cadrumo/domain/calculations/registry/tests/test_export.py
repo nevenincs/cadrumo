@@ -20,9 +20,8 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from .....core.aggregation import BindingSourceKind
-from .....core.aggregation import BindingAggregation, BindingAggregationOp
-from .....core.resources import bundled_path
+from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
+from .....core.resources._boundary import bundled_path
 from ...export_field_kind import CasillaFieldKind
 from ..binding_selector_utils import (
     BindingExportDataType,

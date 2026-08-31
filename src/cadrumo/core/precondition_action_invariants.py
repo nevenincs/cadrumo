@@ -11,6 +11,7 @@ from typing import Final, Self
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
 from .action_argument_resolution import ActionArgumentResolution
+from .identifier_grammar import FIELD_KEY_PATTERN, NamespacedId
 from .models import STRICT_FROZEN_CONFIG
 from .operator_action_enums import (
     ActionArgumentSource,
@@ -19,7 +20,6 @@ from .operator_action_enums import (
     ActionEvidenceProvenance,
     NoRecoveryOutcome,
 )
-from .identifier_grammar import FIELD_KEY_PATTERN, NamespacedId
 
 _PRESENTATION_KEY_TOKENS: Final[frozenset[str]] = frozenset(
     {

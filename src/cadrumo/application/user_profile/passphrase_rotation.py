@@ -38,7 +38,7 @@ from ...core.errors.hierarchy import CadrumoError
 from ...core.identity import ProfileId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.paths import effective_storage_root
-from ...core.time import now as _now
+from ...core.time.clock import now as _now
 from ...domain.buckets.event import BucketEventType
 from .authentication import ProfilePasswordProofOperation
 from .capsule_record import ProfileRecordCommandEvent, ProfileRecordSession, ProfileRecordStore

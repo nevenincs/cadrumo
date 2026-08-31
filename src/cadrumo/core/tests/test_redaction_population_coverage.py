@@ -35,11 +35,11 @@ from collections.abc import Callable
 
 import pytest
 
-from ..iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
-from ..classification import RedactionRule, SensitivityClass
+from ..classification.policies import RedactionRule, SensitivityClass
 from ..hashing import sha256_hex
+from ..iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
 from ..identity import IdentityError, nif_iva_format_for_country, normalise_nif_iva, validate_identity
-from ..redaction import (
+from ..redaction.rules import (
     _NIF_PATTERN,
     default_rules_for_class,
     redact_for_cli_output,

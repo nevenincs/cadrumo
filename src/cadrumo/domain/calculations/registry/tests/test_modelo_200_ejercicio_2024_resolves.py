@@ -37,7 +37,7 @@ import tomllib
 
 import pytest
 
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from ..errors import NoRevisionForPeriodError
 from ..temporal import select_revision
 from ._registry_schema_support import _committed_modelo

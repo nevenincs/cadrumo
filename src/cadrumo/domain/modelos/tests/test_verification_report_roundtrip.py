@@ -18,8 +18,9 @@ from pydantic import ValidationError
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
-from ....adapters.persistence.storage import MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE, SensitivityClass
+from ....adapters.persistence.storage._secure_object_namespaces import MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.classification.policies import SensitivityClass
 from ....tests.secure_sql import isolated_runtime_profile
 from ..calculation_revision import (
     CalculationRevision,
@@ -515,7 +516,7 @@ def test_verification_report_catalogue_wrong_inner_classification_is_localized(
 ) -> None:
     """A corrupted envelope classification raises a translated persistence error."""
 
-    from ....adapters.persistence.storage import Envelope
+    from ....adapters.persistence.storage.envelope._envelope import Envelope
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         envelope = Envelope[VerificationReportCatalogue](
@@ -549,7 +550,7 @@ def test_verification_report_catalogue_unsupported_storage_version_is_localized(
 ) -> None:
     """A future inner envelope schema version raises a translated persistence error."""
 
-    from ....adapters.persistence.storage import Envelope
+    from ....adapters.persistence.storage.envelope._envelope import Envelope
 
     stored_schema_version = _VERIFICATION_CATALOGUE_VERSION + 1
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:

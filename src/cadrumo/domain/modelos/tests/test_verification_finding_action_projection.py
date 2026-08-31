@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core.operator_action_enums import OperatorActionAxis
 from ....core.directory_scan import scan_directory
+from ....core.operator_action_enums import OperatorActionAxis
 from ..verification_report import (
     OPERATOR_ACTION_BY_MODELO_VERIFICATION_FINDING_KIND,
     ModeloVerificationFinding,

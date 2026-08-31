@@ -30,14 +30,16 @@ import pytest
 from ....core.i18n import Translatable as tr
 from ....tests.aeat_literal_fixtures import RENTA_DEDUCIBILIDAD_CITATION_URL_FIXTURE
 from ...categories.profile import CategoryProfile
-from ...categories.proportionality import CategoryCitation, CategoryCitationSource, ProportionalityKind, ProportionalityRule, parse_http_url
+from ...categories.proportionality import (
+    CategoryCitation,
+    CategoryCitationSource,
+    ProportionalityKind,
+    ProportionalityRule,
+    parse_http_url,
+)
 from ...categories.spending_category import SpendingCategory
 from ...contribuyente.ccaa import CCAA
-from .. import (
-    RentaDeductibilityContext,
-    resolve_region_category_profiles,
-    select_deductibility_profile,
-)
+from .._ledger_expenses import RentaDeductibilityContext, resolve_region_category_profiles, select_deductibility_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -45,10 +45,10 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Protocol
 
 from ...adapters.inbound.justificante.parser import parse_justificante
+from ...core.logging import get_logger
 from ...core.modelo import Modelo
 from ...core.period import Period, PeriodError
-from ...core.logging import get_logger
-from ...core.time import MADRID_TZ
+from ...core.time.clock import MADRID_TZ
 from ...domain.filing.errors import ModeloBuilderError
 from ...domain.filing.protocols import CasillaSchemaProvider
 from ...domain.filing.schema import ModeloDraft
@@ -57,7 +57,7 @@ from .errors import ModeloApplicationError as ModeloImportError
 from .runtime import ModeloOperatorProfile
 
 if TYPE_CHECKING:
-    from ...domain.submission import ModeloPresentado
+    from ...domain.submission._models import ModeloPresentado
 
 _logger = get_logger(__name__)
 
@@ -140,7 +140,7 @@ def import_filing_from_justificante(
 
     # Deferred import: `cadrumo.application.filing` imports this module, so top-level
     # resolution of ``build_draft`` would form a cycle.
-    from . import build_draft
+    from ._draft_construction import build_draft
 
     try:
         draft = build_draft(
@@ -268,7 +268,7 @@ def _build_submission_record(
     coordinate. Naive receipt times retain the importer contract of Madrid
     civil time; aware receipt times retain their supplied instant.
     """
-    from ...domain.submission import ModeloPresentado, SubmissionAttempt, SubmissionStatus, make_submission_id
+    from ...domain.submission._models import ModeloPresentado, SubmissionAttempt, SubmissionStatus, make_submission_id
 
     presented_at = justificante.presented_at
     if presented_at.utcoffset() is None:

@@ -30,16 +30,16 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....adapters.persistence.storage import (
+from ....adapters.persistence.storage._secure_object_namespaces import (
     BUCKET_EVENT_HISTORY_NAMESPACE,
     MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE,
     MODELO_FILING_RECORD_CATALOGUE_NAMESPACE,
     MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE,
     MODELO_WORK_UNIT_CATALOGUE_NAMESPACE,
     SecureObjectNamespaceDefinition,
-    SecureObjectRepository,
-    SensitivityClass,
 )
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ....core.classification.policies import SensitivityClass
 from ....domain.buckets.event import BucketEventHistoryCatalogue
 from ....tests.secure_sql import isolated_runtime_profile
 from ..calculation_revision import CalculationRevisionCatalogue

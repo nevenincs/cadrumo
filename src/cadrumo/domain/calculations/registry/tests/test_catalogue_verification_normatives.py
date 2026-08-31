@@ -10,7 +10,7 @@ import pytest
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.corpus_text import normalise_corpus_text
 from .....core.directory_scan import scan_directory
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from .....tests import REPO_ROOT
 from ..corpus_catalogue import verify_source_file
 from ..errors import RegistryValidationError

@@ -4,7 +4,7 @@ import hashlib
 
 import pytest
 
-from ..classification import (
+from ..classification.policies import (
     OutputSensitivityClass,
     RedactionRule,
     RedactionStrategy,
@@ -12,7 +12,7 @@ from ..classification import (
     default_output_policy_for,
     default_policy_for,
 )
-from ..redaction import (
+from ..redaction.rules import (
     CLI_BUCKET_ID_PLACEHOLDER,
     CLI_OBJECT_KEY_PLACEHOLDER,
     CLI_PROFILE_ID_PLACEHOLDER,

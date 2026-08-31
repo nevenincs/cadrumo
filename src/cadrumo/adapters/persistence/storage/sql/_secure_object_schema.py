@@ -8,9 +8,9 @@ from typing import Final
 
 from sqlalchemy import Engine, text
 
-from .....core import HEX_PATTERN_64
 from .....core.external_constants import UTF_8_ENCODING
-from .....core.time import now as _utc_now
+from .....core.hex import HEX_PATTERN_64
+from .....core.time.clock import now as _utc_now
 from ..errors import StorageValidationError
 
 VARCHAR_64: Final[str] = "VARCHAR(64)"

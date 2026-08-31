@@ -32,10 +32,10 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field, field_validator
 
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT
 from ...core.identity import validate_spanish_tax_id
+from ...core.models import STRICT_FROZEN_CONFIG
 from ..user_profile.values import UserProfileFact
 
 

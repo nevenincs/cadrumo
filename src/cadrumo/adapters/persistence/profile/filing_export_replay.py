@@ -6,20 +6,18 @@ from datetime import timedelta
 from typing import ClassVar, override
 from uuid import uuid4
 
-from ....application.filing import (
+from ....application.filing._export_proof import (
     FilingExportSecureCustodyRecord,
     FilingExportSecureReplayEvidence,
     FilingExportSecureReplayRequest,
     FilingExportSourcePinnedProbeExpectation,
-    FilingExportValidatedPayload,
 )
+from ....application.filing._export_verification import FilingExportValidatedPayload
+from ....core.classification.policies import SensitivityClass
 from ....core.hashing import sha256_hex
-from ....core.time import now
-from ..storage import (
-    FILING_EXPORT_REPLAY_PROOFS_NAMESPACE,
-    SecureBoundRepository,
-    SensitivityClass,
-)
+from ....core.time.clock import now
+from ..storage._secure_object_namespaces import FILING_EXPORT_REPLAY_PROOFS_NAMESPACE
+from ..storage.envelope._secure_repository import SecureBoundRepository
 
 
 class FilingExportReplayCustodyRepository(SecureBoundRepository[FilingExportSecureCustodyRecord]):

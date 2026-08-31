@@ -20,7 +20,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....core.money import round_to_cents
+from .....core.money.rounding import round_to_cents
 from ._modelo_131_modulos_engine_support import (
     _AUTOSERVICIO_647_2,
     _CAFES_ESPECIAL_673_1,

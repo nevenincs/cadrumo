@@ -6,8 +6,8 @@ from datetime import date
 
 import pytest
 
-from .....core.result_disposition import ResultDisposition
 from .....core.period import Period
+from .....core.result_disposition import ResultDisposition
 from ..deadline_coordinate import (
     DeadlineSemanticCoordinate,
     deadline_semantic_coordinate,

@@ -55,7 +55,7 @@ from pathlib import Path
 import pytest
 
 from .....core.directory_scan import scan_directory
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

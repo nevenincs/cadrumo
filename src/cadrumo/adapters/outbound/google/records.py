@@ -27,9 +27,9 @@ from urllib.parse import urlsplit
 
 from pydantic import BaseModel, Field, field_validator
 
-from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.config import Settings
-from ....core.time import UtcInstant
+from ....core.models import STRICT_FROZEN_CONFIG
+from ....core.time.utc import UtcInstant
 
 # Scopes the desktop app requests at first login. Per Google's
 # Identity Platform "Sign in with Google" guidance, an OAuth flow that

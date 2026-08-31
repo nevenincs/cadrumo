@@ -29,7 +29,7 @@ from datetime import date
 
 import pytest
 
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from .._validate import RegistryValidator
 from ..authority import bundled_authority
 from ._registry_schema_support import _committed_modelo
@@ -110,7 +110,7 @@ def test_event_driven_and_delegated_modelos_have_no_calendar_windows() -> None:
 
 
 def test_all_five_are_registry_backed() -> None:
-    from .....core.access_gate import CANONICAL_MODELO_FLEET
+    from .....core.access_gate._authorization import CANONICAL_MODELO_FLEET
 
     for mid in ("181", "270"):
         assert mid in CANONICAL_MODELO_FLEET

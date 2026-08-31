@@ -31,7 +31,7 @@ from ...core.identity import (
     ModeloEditMutationResultReceiptId,
     WorkUnitId,
 )
-from ...core.time import validate_utc_aware
+from ...core.time.utc import validate_utc_aware
 from ...domain.buckets.event import BucketEventId
 from ..operations.models import OperationDefinitionId, OperationId, OperationReference
 from ..operations.registry import OperationSchemaIdentityV1

@@ -7,8 +7,8 @@ from datetime import date
 
 import pytest
 
-from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.aggregation import BindingSourceKind
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from .._validate import RegistryValidator
 from ..authority import ValidatedRegistryAuthority
 from ..binding_selector_utils import BindingFixedExportSelector

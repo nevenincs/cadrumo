@@ -30,7 +30,7 @@ from ...core.external_constants import (
     DT12_TRANSITIONAL_CONTINGENCIA_LAST_YEAR,
     DT12_TRANSITIONAL_WINDOW_FOLLOWING_YEARS,
 )
-from ...core.money import round_to_cents
+from ...core.money.rounding import round_to_cents
 from .errors import PensionReduccionError
 
 

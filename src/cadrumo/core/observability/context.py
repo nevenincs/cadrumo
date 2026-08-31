@@ -21,11 +21,11 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from ..models import STRICT_FROZEN_CONFIG
 from ..config import load_settings
 from ..identity import ContentDigest, ContentDigestOrAbsent
 from ..logging import attach_run_sink, detach_run_sink, get_logger
-from ..time import now
+from ..models import STRICT_FROZEN_CONFIG
+from ..time.clock import now
 from .capture import _CAPTURE_SINK
 from .fingerprint import (
     compute_corpus_sha256,

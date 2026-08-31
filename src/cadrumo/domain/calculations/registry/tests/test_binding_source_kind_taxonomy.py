@@ -19,11 +19,11 @@ import pytest
 from pydantic import BaseModel, ValidationError
 
 from .....application.aggregation import DEFERRED_SOURCE_KINDS
-from .....core.aggregation import BindingSourceKind
 from .....core.aggregation import (
     COUNTERPART_SOURCE_KINDS,
     INVOICE_BINDING_SOURCE_KINDS,
     LEDGER_BINDING_SOURCE_KINDS,
+    BindingSourceKind,
 )
 from ._registry_schema_support import _committed_registry_tree
 

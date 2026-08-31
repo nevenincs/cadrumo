@@ -240,8 +240,8 @@ def test_tr_survives_a_storage_root_settings_cannot_construct_over(
     """
     import sqlite3
 
-    from ...config_state_root import FormerProductStateError
     from ...config import Settings, _constructed_settings
+    from ...config_state_root import FormerProductStateError
     from ...i18n import tr
     from .. import _render
 

@@ -17,10 +17,10 @@ from typing import Annotated, Final, Self
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.classification.policies import SensitivityClass
+from ...core.decimal._coerce import coerce_decimal_strict
 from ...core.modelo import Modelo
-from ...core.classification import SensitivityClass
-from ...core.decimal import coerce_decimal_strict
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.parsing import parse_bool, parse_iso8601_date
 from .errors import UserProfileNotFoundError, UserProfileValidationError
 

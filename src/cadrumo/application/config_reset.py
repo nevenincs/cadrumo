@@ -9,8 +9,9 @@ from uuid import UUID
 from ..core.bucket_pointer import BucketPointer
 from ..core.config import load_settings
 from ..core.errors.hierarchy import CadrumoError
-from ..core.time import now
-from ..domain.retention import RetentionFloorAssessment, RetentionFloorError, erase_is_blocked
+from ..core.time.clock import now
+from ..domain.retention._floor import RetentionFloorAssessment, erase_is_blocked
+from ..domain.retention.errors import RetentionFloorError
 from ._config_reset_models import (
     ConfigResetAuthClearance,
     ConfigResetAuthClearanceMode,
@@ -34,11 +35,8 @@ from ._config_reset_repository import (
 from .auth.operator import reset_operator_auth
 from .auth.operator_cleanup import clear_operator_auth_acquisition_locks
 from .auth.operator_scope import operator_auth_revocation_is_reachable
-from .bucket_maintenance import (
-    AssessBucketDeletionCommand,
-    BucketDeletionAssessment,
-    BucketMaintenanceService,
-)
+from .bucket_maintenance._contracts import AssessBucketDeletionCommand, BucketDeletionAssessment
+from .bucket_maintenance._service import BucketMaintenanceService
 from .user_profile.custody_hold_models import ProfileCustodyRetentionOverride
 from .user_profile.lifecycle import ProfileCapsuleLifecycle
 from .user_profile.profile_pointer import active_profile_pointer_transaction

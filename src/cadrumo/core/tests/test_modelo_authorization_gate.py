@@ -38,10 +38,10 @@ import ast
 
 import pytest
 
-from ...application.calculations import assert_enrollment_matches_manifest
+from ...application.calculations._multi_year import assert_enrollment_matches_manifest
 from ...domain.calculations.registry.authority import bundled_authority
 from ...tests import repo_path
-from ..access_gate import (
+from ..access_gate._authorization import (
     CANONICAL_MODELO_FLEET,
     FLEET_SIZE,
     MIN_DISTINCT_RENTA_YEARS,

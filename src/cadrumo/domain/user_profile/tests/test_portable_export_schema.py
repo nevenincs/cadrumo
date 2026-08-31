@@ -9,7 +9,7 @@ from types import MappingProxyType
 import pytest
 from pydantic import ValidationError
 
-from ....core.classification import SensitivityClass
+from ....core.classification.policies import SensitivityClass
 from ....core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ..portable_export import CarriedSecureObject, CoverageManifest, UserProfilePortableExport

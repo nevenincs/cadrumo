@@ -11,8 +11,8 @@ import pytest
 
 from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
-from ....core.storage_taxonomy_locations import storage_path
 from ....core.storage_taxonomy import StorageCategory
+from ....core.storage_taxonomy_locations import storage_path
 from ....tests.secure_sql import TestRuntimeProfile
 from ..enums import AttachmentKind, AttachmentSource
 from ..errors import AttachmentNotFoundError, AttachmentValidationError
@@ -170,7 +170,7 @@ def test_foreign_bucket_manifest_is_isolated_from_load_and_listing(
         _ATTACHMENT_MANIFEST_SENSITIVITY,
         _ATTACHMENT_MANIFEST_VERSION,
     )
-    from ....adapters.persistence.storage.envelope import Envelope
+    from ....adapters.persistence.storage.envelope._envelope import Envelope
 
     store = AttachmentStore()
     body = b"%PDF-1.4\nforeign bucket evidence to isolate\n%%EOF"

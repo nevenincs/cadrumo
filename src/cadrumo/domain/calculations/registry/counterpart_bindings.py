@@ -8,11 +8,11 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.aggregation import COUNTERPART_SOURCE_KINDS, BindingSourceKind, CounterpartSourceKind
 from ....core.country_code import CountryCodeAlpha2
 from ....core.filing_year import FilingYear
 from ....core.identity import TaxIdIdentityToken
+from ....core.models import STRICT_FROZEN_CONFIG
 from ._m347_threshold import m347_declarable_party_ids
 from .binding_selector_utils import (
     intracommunity_clave_validator,

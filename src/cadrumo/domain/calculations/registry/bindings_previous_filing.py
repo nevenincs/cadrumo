@@ -27,11 +27,10 @@ from typing import ClassVar, Literal, Protocol
 
 from pydantic import BaseModel, field_validator, model_validator
 
+from ....core.aggregation import BindingAggregationOp, BindingSourceKind
+from ....core.casilla_id import CasillaId
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import RegistrySelectorPeriodCode
-from ....core.casilla_id import CasillaId
-from ....core.aggregation import BindingSourceKind
-from ....core.aggregation import BindingAggregationOp
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import invariant_diagnostics, selector_against_model
 from .binding_selector_utils import selector_as_dict as _selector_as_dict

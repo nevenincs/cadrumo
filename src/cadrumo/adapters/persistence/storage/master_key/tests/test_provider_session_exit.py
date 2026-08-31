@@ -24,7 +24,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from ......core.time._clock import now
+from ......core.time.clock import now
 from .._provider_session import exit_provider_session
 from ..active_session import activate_session, bind_active_bucket_session, current_active_bucket_session
 from ..bucket_session import BucketSession

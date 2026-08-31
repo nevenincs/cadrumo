@@ -98,7 +98,7 @@ def _citation_issues(
     caused solely by the first.
     """
     # Keep this local: registry binding modules consume the IVA public facade.
-    from ...core.resources import bundled_path
+    from ...core.resources._boundary import bundled_path
     from ..calculations.registry.legal import legal_reference_quotes_corpus, verify_legal_reference
 
     issues: list[IvaVerificationIssue] = []

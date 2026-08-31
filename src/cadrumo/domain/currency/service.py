@@ -17,7 +17,7 @@ from decimal import Decimal
 from typing import Protocol
 
 from ...core.external_constants import DEFAULT_CURRENCY
-from ...core.money import round_to_cents
+from ...core.money.rounding import round_to_cents
 from .models import (
     CurrencyNormalizationStatus,
     FxConversionStamp,

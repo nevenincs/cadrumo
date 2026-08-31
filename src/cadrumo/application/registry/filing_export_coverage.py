@@ -16,10 +16,11 @@ from typing import Protocol
 
 from pydantic import BaseModel, Field, computed_field, model_validator
 
-from ...core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.time import UtcInstant, now
+from ...core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES
+from ...core.time.clock import now
+from ...core.time.utc import UtcInstant
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ...domain.calculations.registry.corpus_catalogue import verify_source_file
 from ...domain.calculations.registry.errors import (
@@ -32,7 +33,7 @@ from ...domain.calculations.registry.temporal import (
     coverage_assessment_horizon,
     revision_selection_coordinates,
 )
-from ..filing import (
+from ..filing._export_proof import (
     FilingExportProof,
     FilingExportProofAuthority,
     FilingExportProofChannel,

@@ -48,19 +48,15 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, StringConstraints
 
-from ...core.corpus_manifest import (
-    CorpusBundleError,
-    CorpusManifestTamperError,
-    build_corpus_bundle,
-    verify_corpus_bundle,
-)
+from ...core.corpus_manifest.errors import CorpusBundleError, CorpusManifestTamperError
+from ...core.corpus_manifest.manifest import build_corpus_bundle, verify_corpus_bundle
 from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.filing_year import FilingYear
 from ...core.identity import BucketId, CalculationRevisionId, WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
-from ...core.time import now as _utc_now
+from ...core.time.clock import now as _utc_now
 from ...domain.modelos.calculation_revision import CURRENT_SEALED_REVISION_STATES, CalculationRevision
 from ...domain.modelos.filing_text import ACTOR_LABEL_MAX_LENGTH
 from ...domain.modelos.work_unit import WorkUnit

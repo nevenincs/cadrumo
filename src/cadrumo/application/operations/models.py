@@ -15,7 +15,7 @@ from pydantic import BaseModel, Field, model_validator
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
-from ...core.time import validate_utc_aware
+from ...core.time.utc import validate_utc_aware
 from ._model_contract import require_strict_frozen_operation_model_graph
 
 type OperationId = Hex64Str

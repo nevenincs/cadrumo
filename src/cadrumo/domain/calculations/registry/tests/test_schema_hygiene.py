@@ -16,10 +16,10 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.aggregation import BindingTypedEnumKind
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.directory_scan import scan_directory
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from ...export_field_kind import CasillaFieldKind
 from ..authority import bundled_authority
 from ..schema import DataBindingDefinition, ModeloDefinition

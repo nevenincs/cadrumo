@@ -20,6 +20,6 @@ enumerate which artefacts depend on a cloud read, and an entry aged out of
 existence would make that withdrawal silently incomplete.
 """
 
-from ._record import EvidenceConsentLedgerEntry, evidence_consent_ledger_entry_object_key
+from __future__ import annotations
 
-__all__ = ["EvidenceConsentLedgerEntry", "evidence_consent_ledger_entry_object_key"]
+__all__: tuple[str, ...] = ()

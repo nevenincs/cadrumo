@@ -45,40 +45,4 @@ See Also:
 
 from __future__ import annotations
 
-from ._consent import telemetry_emit_permitted
-from ._emit import LocalNoopTelemetrySink, TelemetrySink, emit_telemetry_event
-from ._http_sink import HttpTelemetrySink
-from ._producers import (
-    emit_command_invocation_telemetry,
-    emit_error_frequency_telemetry,
-    emit_llm_run_telemetry,
-)
-from ._schema import (
-    TELEMETRY_METRIC_REGISTRY,
-    CounterSpec,
-    TelemetryEventPayload,
-    TimingSpec,
-    build_telemetry_payload,
-)
-from ._tier import TelemetryTier
-from ._workspace import workspace_hash
-from .errors import TelemetrySchemaError
-
-__all__ = [
-    "TELEMETRY_METRIC_REGISTRY",
-    "CounterSpec",
-    "HttpTelemetrySink",
-    "LocalNoopTelemetrySink",
-    "TelemetryEventPayload",
-    "TelemetrySchemaError",
-    "TelemetrySink",
-    "TelemetryTier",
-    "TimingSpec",
-    "build_telemetry_payload",
-    "emit_command_invocation_telemetry",
-    "emit_error_frequency_telemetry",
-    "emit_llm_run_telemetry",
-    "emit_telemetry_event",
-    "telemetry_emit_permitted",
-    "workspace_hash",
-]
+__all__: tuple[str, ...] = ()

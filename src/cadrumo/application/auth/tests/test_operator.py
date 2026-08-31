@@ -14,14 +14,14 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....core.auth_provider import AuthProviderKind, ClaveMovilRoute
+from ....core.config import Settings, load_settings, override_settings
 from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.period import Period
-from ....core.config import Settings, load_settings, override_settings
-from ....core.time import frozen_clock
+from ....core.time.clock import frozen_clock
 from ....domain.buckets.event import BucketEventType
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.filing.schema import ModeloDraft, compute_modelo_draft_id, registry_schema_version
-from ....domain.submission import ModeloDraftStatus
+from ....domain.submission._protocols import ModeloDraftStatus
 from ....tests.profile_storage_root_fixture import bucket_session_storage_fixture
 from ....tests.user_profile import register_minimal_profile
 from ..._state_projection_auth import ProjectionAuthReadiness

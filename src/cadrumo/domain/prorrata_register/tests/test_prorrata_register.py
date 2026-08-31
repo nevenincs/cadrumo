@@ -33,7 +33,7 @@ from ....core.prorrata_register import (
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,
 )
-from .. import (
+from ..register import (
     ProrrataActivityRow,
     ProrrataEspecialTransitionEvidence,
     ProrrataRegister,

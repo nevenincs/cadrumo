@@ -8,8 +8,8 @@ from typing import cast
 import pytest
 
 from ....core.irnr import M210_TIPO_RENTA_CODE_PROJECTION
-from ....core.result_disposition import ResultDisposition
 from ....core.period import Period
+from ....core.result_disposition import ResultDisposition
 from ...calculations.registry.schema import DeadlineWindowDefinition, ModeloRevision
 from ..errors import DeadlineValidationError
 from ..plazo import _resolve_projected_filing_window, resolve_filing_window

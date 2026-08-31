@@ -8,7 +8,17 @@ from typing import Literal
 from unicodedata import normalize
 
 from ....core.identity import ContentDigest
-from ....domain.iva.regimen_simplificado_rows import ActividadOrdenAnual, AutoridadAgricolaOrdenAnualNoResuelta, DificilJustificacionOrdenAnual, IndiceCuotaDevengadaAgricolaOrdenAnual, IndiceTemporadaOrdenAnual, ModuloOrdenAnual, PorcentajeIngresoCuentaAgricolaOrdenAnual, PorcentajeIngresoCuentaIaeOrdenAnual, ReduccionLorcaOrdenAnual
+from ....domain.iva.regimen_simplificado_rows import (
+    ActividadOrdenAnual,
+    AutoridadAgricolaOrdenAnualNoResuelta,
+    DificilJustificacionOrdenAnual,
+    IndiceCuotaDevengadaAgricolaOrdenAnual,
+    IndiceTemporadaOrdenAnual,
+    ModuloOrdenAnual,
+    PorcentajeIngresoCuentaAgricolaOrdenAnual,
+    PorcentajeIngresoCuentaIaeOrdenAnual,
+    ReduccionLorcaOrdenAnual,
+)
 from ._m303_orden_keys import (
     activity_legal_key,
     agricultural_index_legal_key,

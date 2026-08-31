@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import pytest
 
+from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.aggregation import BindingSourceKind
-from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from ...export_field_kind import CasillaFieldKind
 from ..authority import bundled_authority
 from ..export import derive_export_layouts_from_bindings

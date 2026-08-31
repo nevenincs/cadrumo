@@ -29,12 +29,12 @@ import pytest
 from ..amendment_kind_regime import (
     AmendmentLiabilityDirection,
     classify_amendment_liability_direction,
+    modelo_has_codified_amendment_regime,
     permitted_amendment_kind_values,
     resolve_amendment_kind_regime,
 )
 from ..modelo import Modelo
 from ..period import Period
-from ..amendment_kind_regime import modelo_has_codified_amendment_regime
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

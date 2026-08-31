@@ -20,7 +20,7 @@ from decimal import Decimal
 
 import pytest
 
-from .. import coerce_decimal, coerce_finite_european_decimal
+from .._coerce import coerce_decimal, coerce_finite_european_decimal
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

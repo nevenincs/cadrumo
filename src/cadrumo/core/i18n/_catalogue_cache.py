@@ -55,12 +55,11 @@ from pathlib import Path
 from pydantic import BaseModel
 
 from ...core.models import STRICT_FROZEN_CONFIG
-
-from ..storage_taxonomy import StorageCategory
-from ..storage_taxonomy_locations import storage_path
 from ..atomic_write import atomic_write_best_effort_text
 from ..external_constants import UTF_8_ENCODING
 from ..hashing import content_hash_hex
+from ..storage_taxonomy import StorageCategory
+from ..storage_taxonomy_locations import storage_path
 
 _CACHE_FILENAME_PREFIX = "cadrumo_locale_catalogue_"
 _CACHE_SCHEMA_VERSION = "flat-catalogue-v1"

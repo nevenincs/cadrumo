@@ -43,7 +43,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from ..authority import ValidatedRegistryAuthority
 from ..record_design import extract_record_design
 from ..record_design_schema import RecordDesignSheet

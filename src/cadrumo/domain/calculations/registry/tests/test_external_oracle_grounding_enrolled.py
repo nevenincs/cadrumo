@@ -41,9 +41,9 @@ from pathlib import Path
 
 import pytest
 
-from .....core.external_oracle_corpus import ExternalOracleCorpus
 from .....core.directory_scan import scan_directory
-from .....core.resources import bundled_path
+from .....core.external_oracle_corpus import ExternalOracleCorpus
+from .....core.resources._boundary import bundled_path
 from ..external_grounding import (
     audit_bundled_external_grounding,
     load_bundled_external_oracle_inventory,

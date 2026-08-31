@@ -10,6 +10,7 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from ... import core
+from .. import filing_projection_ref as owner
 from ..filing_projection_ref import (
     FilingProjectionRef,
     M303DifferentiatedDeductionProjectionField,
@@ -29,7 +30,6 @@ from ..filing_projection_ref import (
     compile_filing_projection_ref,
     filing_projection_ref_casilla_id,
 )
-from .. import filing_projection_ref as owner
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

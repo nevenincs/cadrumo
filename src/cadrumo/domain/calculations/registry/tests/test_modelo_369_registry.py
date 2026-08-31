@@ -9,9 +9,9 @@ from functools import lru_cache
 
 import pytest
 
-from .....core.period import Period
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.resources import bundled_path
+from .....core.period import Period
+from .....core.resources._boundary import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
 from .._validate import RegistryValidator
 from ..authority import bundled_authority

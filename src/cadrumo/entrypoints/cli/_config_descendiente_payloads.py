@@ -40,7 +40,7 @@ from pydantic import NonNegativeInt, StringConstraints, field_validator, model_v
 from ...core.descendant_relacion import ART_58_2_ENTITLING_RELACIONES, DescendantRelacion
 from ...core.json_contract import OutputSchema
 from ...core.text_bounds import CalendarMonth, is_canonical_month_set
-from ...core.time._clock import today_madrid
+from ...core.time.clock import today_madrid
 from ...domain.contribuyente.descendant_record import DescendantRecordFields
 
 DescendantNif = Annotated[

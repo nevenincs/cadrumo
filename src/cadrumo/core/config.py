@@ -71,8 +71,8 @@ from .config_support import default_status_notificaciones_path as _default_statu
 from .errors.hierarchy import ActiveProfilePointerError, CoreValidationError
 from .external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from .paths import normalize_project_relative_path
-from .resources import bundled_path
-from .telemetry import TelemetryTier
+from .resources._boundary import bundled_path
+from .telemetry._tier import TelemetryTier
 
 if TYPE_CHECKING:
     from .bucket_pointer import BucketPointer
@@ -1458,7 +1458,7 @@ def override_settings(**overrides: object) -> Iterator[Settings]:
     # resolution itself, which the invalidator recognises and skips -- see
     # ``clear_output_language_cache_for_settings_override``. Lazy import:
     # ``i18n._render`` imports this module.
-    from .i18n import clear_output_language_cache_for_settings_override
+    from .i18n._render import clear_output_language_cache_for_settings_override
 
     token = _settings_override.set(new_settings)
     clear_output_language_cache_for_settings_override()

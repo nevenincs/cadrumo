@@ -25,22 +25,4 @@ See Also:
 
 from __future__ import annotations
 
-from .catalogue import (
-    ALL_TOKEN,
-    ApoderadoScope,
-    ApoderamientosCatalogue,
-    UnknownScopeError,
-    expand_all_token,
-    load_default_catalogue,
-    parse_scope_tokens,
-)
-
-__all__ = [
-    "ALL_TOKEN",
-    "ApoderadoScope",
-    "ApoderamientosCatalogue",
-    "UnknownScopeError",
-    "expand_all_token",
-    "load_default_catalogue",
-    "parse_scope_tokens",
-]
+__all__: tuple[str, ...] = ()

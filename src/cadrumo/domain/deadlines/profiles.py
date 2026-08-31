@@ -22,11 +22,11 @@ from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 from typing import TypedDict
 
-from ...core.modelo import Modelo
-from ...core.period import Period
 from ...core.aggregation import ThirdPartyDeclarationRole
+from ...core.modelo import Modelo
 from ...core.parsing import parse_bool as _parse_bool
 from ...core.parsing import parse_date as _parse_date_canonical
+from ...core.period import Period
 from ...core.setup_answers import SetupAnswers, project_setup_answers
 from .errors import ProfileError
 from .models import (

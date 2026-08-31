@@ -22,9 +22,9 @@ from .schema import (
 if TYPE_CHECKING:
     from ..calculations.registry.schema import ModeloDefinition, ModeloRevision
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.aggregation import BindingSourceKind
 from ...core.errors.severity import BaseSeverity
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..calculations.registry.bindings import ProfileSelector
 from ..calculations.registry.ids import RevisionId
 

@@ -53,7 +53,7 @@ from decimal import Decimal
 from pydantic import BaseModel, Field
 
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.money import round_to_cents
+from ...core.money.rounding import round_to_cents
 from .errors import IvaRateNotFoundError
 from .lookup import coexisting_tier_rates, lookup_rate
 from .schema import EUMemberState, IvaCategory, IvaRateKind, IvaRateRecord

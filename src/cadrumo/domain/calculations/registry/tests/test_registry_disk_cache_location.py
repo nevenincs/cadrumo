@@ -16,8 +16,8 @@ from typing import Final
 
 import pytest
 
-from .....core.storage_taxonomy_locations import storage_location
 from .....core.storage_taxonomy import StorageCategory
+from .....core.storage_taxonomy_locations import storage_location
 from ..loader_cache import (
     _resolve_registry_disk_cache_dir,
     registry_disk_cache_dir,

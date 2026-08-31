@@ -17,10 +17,10 @@ from typing import Protocol
 import pytest
 
 from ....tests.storage_scope import storage_overrides
-from ...storage_taxonomy_locations import storage_path
-from ...storage_taxonomy import StorageCategory
 from ...config import override_settings
 from ...directory_scan import scan_directory
+from ...storage_taxonomy import StorageCategory
+from ...storage_taxonomy_locations import storage_path
 from ..context import current_run_context, run_context
 from ..errors import RunTracePersistenceError
 from ..models import GenericPayload, RunEventKind, RunEventPayload, RunOutcome

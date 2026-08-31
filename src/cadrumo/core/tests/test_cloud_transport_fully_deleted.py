@@ -523,8 +523,8 @@ def test_a_reader_reachable_only_under_consent_stamps_the_transport_it_actually_
     reader that assembled a hardcoded label would satisfy any source-level
     pattern while storing the same lie.
     """
-    from ..provenance_stamp import LOCAL_TRANSPORT_LABEL
     from ..config import LLMProvider
+    from ..provenance_stamp import LOCAL_TRANSPORT_LABEL
 
     off_host = {
         "TextInvoiceFieldExtractor": LLMProvider.OPENAI,

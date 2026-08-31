@@ -50,7 +50,7 @@ from typing import cast
 
 import pytest
 
-from ....core.resources import bundled_path
+from ....core.resources._boundary import bundled_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -25,7 +25,7 @@ import pytest
 
 from ....domain.user_profile.values import new_profile_snapshot_id
 from ...json_contract import OutputSchema, emit_json_success
-from ...time import frozen_clock, now
+from ...time.clock import frozen_clock, now
 from ..capture import capture_envelopes, capture_is_armed, record_emitted_envelope
 from ..context import _mint_run_id
 from ..errors import GoldenCaptureError, GoldenReplayMismatchError

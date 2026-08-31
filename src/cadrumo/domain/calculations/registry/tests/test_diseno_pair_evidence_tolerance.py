@@ -36,7 +36,7 @@ import re
 
 import pytest
 
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from ..record_design import extract_record_design
 from ._registry_schema_support import _committed_registry_tree
 

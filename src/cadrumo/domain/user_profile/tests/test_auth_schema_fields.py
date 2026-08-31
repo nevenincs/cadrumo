@@ -32,7 +32,7 @@ from __future__ import annotations
 import pytest
 
 from ....core.auth_provider import AuthProviderKind
-from ....core.classification import AtRestTreatment, SensitivityClass, default_policy_for
+from ....core.classification.policies import AtRestTreatment, SensitivityClass, default_policy_for
 from ..schema import ProfileSchemaDefinition
 from ._schema_loader_fixtures import function_scoped_schema  # noqa: F401
 

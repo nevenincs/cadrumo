@@ -152,7 +152,7 @@ def test_binary_mime_consumers_alias_core_constant() -> None:
 
     import inspect
 
-    from ...adapters.persistence.storage.blob_store import EncryptedBlobStore
+    from ...adapters.persistence.storage.blob_store._blob_store import EncryptedBlobStore
     from ..external_constants import BINARY_MIME_TYPE
 
     _assert_module_constant_identity(

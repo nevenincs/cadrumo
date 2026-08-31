@@ -26,13 +26,13 @@ import pytest
 from pydantic import ValidationError
 
 from ....domain.calculations.registry.authority import bundled_authority
-from ...resources import resources
-from .. import Topic, TopicCatalogue, TopicCatalogueEmptyError, TopicNotFoundError, load_topic_catalogue
+from ...resources._registry import resources
+from ..catalogue import Topic, TopicCatalogue, TopicCatalogueEmptyError, TopicNotFoundError, load_topic_catalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 assert __package__ is not None
-topics_module = sys.modules[__package__.removesuffix(".tests")]
+topics_module = sys.modules[__package__.removesuffix(".tests") + ".catalogue"]
 
 _EXPECTED_TOPICS = frozenset(
     {

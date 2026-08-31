@@ -14,7 +14,7 @@ from pydantic import ValidationError
 
 from ...core.bucket_pointer import BucketPointer
 from ...core.paths import effective_storage_root
-from ...core.time import now as _utc_now
+from ...core.time.clock import now as _utc_now
 from .custody_hold import ProfileCustodyHoldAuthority
 from .custody_hold_models import ProfileCustodyRetentionOverride, hold_permits_local_deletion
 from .custody_ports import (

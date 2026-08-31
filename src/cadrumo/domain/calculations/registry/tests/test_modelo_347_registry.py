@@ -6,7 +6,7 @@ from datetime import date
 
 import pytest
 
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
 from .._validate import RegistryValidator
 from ..errors import NoRevisionForPeriodError

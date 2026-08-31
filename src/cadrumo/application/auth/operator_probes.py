@@ -12,14 +12,14 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
-from ...adapters.persistence.storage import has_active_bucket_session
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...adapters.persistence.storage.master_key.active_session import has_active_bucket_session
 from ...core.auth_provider import AuthProviderKind
 from ...core.config import Settings, load_settings
 from ...core.errors.hierarchy import CadrumoError
 from ...core.i18n import tr
 from ...core.logging import get_logger
-from ...core.time import now
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.time.clock import now
 from ..auth_credentials import (
     ActiveCertificateCredentials,
     unnamed_certificate_credentials,

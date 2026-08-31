@@ -8,8 +8,8 @@ from typing import Any, cast
 
 import pytest
 
-from .....core.casilla_id import CasillaId
 from .....core.aggregation import BindingSourceKind, IntracomOperationType
+from .....core.casilla_id import CasillaId
 from ..binding_selector_utils import selector_as_dict
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..invoice_bindings import (

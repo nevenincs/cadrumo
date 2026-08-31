@@ -32,8 +32,8 @@ from decimal import Decimal, localcontext
 
 from pydantic import BaseModel, Field, model_validator
 
-from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.models import STRICT_FROZEN_CONFIG
 from ....domain.period import calculation_filing_date
 from . import _formula_runtime_irnr as _irnr
 from . import _formula_runtime_m131 as _m131

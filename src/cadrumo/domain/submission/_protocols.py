@@ -28,14 +28,14 @@ from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from pydantic import BaseModel
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.auth_provider import AuthProviderDescription
 from ...core.errors.severity import BaseSeverity
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ._models import ModeloPresentado
 
 if TYPE_CHECKING:  # pragma: no cover — type-only import
-    from ...core.period import Period
     from ...core.identity import SubjectTaxId
+    from ...core.period import Period
 
 
 @runtime_checkable

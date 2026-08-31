@@ -21,8 +21,8 @@ from typing import IO, TYPE_CHECKING
 import i18n
 import yaml
 
-from ..config_state_root import FormerProductStateError
 from ..config import _settings_override, coerce_output_language_setting, load_settings
+from ..config_state_root import FormerProductStateError
 from ..errors.hierarchy import CoreError
 from ..external_constants import DEFAULT_OUTPUT_LANGUAGE, OUTPUT_LANGUAGE_ENV_VAR, SUPPORTED_OUTPUT_LANGUAGES
 from ..logging import get_logger

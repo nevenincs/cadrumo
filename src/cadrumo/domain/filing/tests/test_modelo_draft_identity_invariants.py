@@ -25,7 +25,7 @@ from pydantic import ValidationError
 
 from ....core.period import Period
 from ...calculations.registry.schema_references import RegistrySnapshotRef
-from ...submission import ModeloDraftStatus
+from ...submission._protocols import ModeloDraftStatus
 from ..schema import ModeloDraft, ModeloValue, ModeloValueKind, registry_schema_version
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

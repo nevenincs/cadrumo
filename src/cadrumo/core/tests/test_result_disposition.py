@@ -19,14 +19,14 @@ from typing import Final
 
 import pytest
 
+from ..casilla_id import CasillaId, validated_casilla_id
+from ..errors.hierarchy import CoreValidationError
 from ..result_disposition import (
     ResultDisposition,
     derive_result_disposition,
     modelo_has_codified_disposition,
     result_disposition_casilla_ids,
 )
-from ..casilla_id import CasillaId, validated_casilla_id
-from ..errors.hierarchy import CoreValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

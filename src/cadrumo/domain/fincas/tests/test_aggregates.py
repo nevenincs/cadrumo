@@ -17,10 +17,8 @@ from ....adapters.persistence.profile.fincas import (
     FincaRendimientoRepository,
     FincaRepository,
 )
-from ....adapters.persistence.storage import (
-    session_scope,
-)
 from ....adapters.persistence.storage.sql.engine import get_engine
+from ....adapters.persistence.storage.sql.session import session_scope
 from ....tests.secure_sql import isolated_runtime_profile
 from ..aggregates import compute_finca_aggregates
 from ..enums import ExpenseCategory, ReduccionTier, UseType

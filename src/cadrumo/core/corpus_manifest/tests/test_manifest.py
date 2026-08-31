@@ -25,9 +25,8 @@ from pathlib import Path
 
 import pytest
 
-from .. import (
-    CorpusManifestDriftError,
-    CorpusManifestTamperError,
+from ..errors import CorpusManifestDriftError, CorpusManifestTamperError
+from ..manifest import (
     assert_corpus_clean,
     build_corpus_manifest,
     load_corpus_manifest,

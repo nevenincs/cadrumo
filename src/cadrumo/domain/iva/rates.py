@@ -17,11 +17,11 @@ from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
 
+from ...core.decimal._coerce import coerce_decimal
+from ...core.paths import path_stat_fingerprint
+from ...core.resources._boundary import bundled_path
 from ...core.toml import read_toml
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
-from ...core.decimal import coerce_decimal
-from ...core.paths import path_stat_fingerprint
-from ...core.resources import bundled_path
 from ._grounding import legal_ref_failures, registry_catalogues
 from .errors import IvaCatalogueError, IvaRateOverlapError, IvaValidationError
 from .schema import EUMemberState, IvaRateKind, IvaRateRecord

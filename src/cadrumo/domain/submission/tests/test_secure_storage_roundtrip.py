@@ -126,7 +126,7 @@ def test_submission_dropped_justificante_csv_surfaces_at_load(tmp_path: Path) ->
 
     from sqlalchemy import select
 
-    from ....adapters.persistence.storage.sql import SecureObjectRow
+    from ....adapters.persistence.storage.sql._orm import SecureObjectRow
 
     submission_namespace = SubmissionRepository.namespace
 
@@ -183,7 +183,7 @@ def test_submission_corrupted_period_surfaces_at_load(tmp_path: Path) -> None:
 
     from sqlalchemy import select
 
-    from ....adapters.persistence.storage.sql import SecureObjectRow
+    from ....adapters.persistence.storage.sql._orm import SecureObjectRow
 
     submission_namespace = SubmissionRepository.namespace
 

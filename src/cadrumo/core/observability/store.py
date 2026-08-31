@@ -28,14 +28,14 @@ from typing import Never
 
 from pydantic import ValidationError
 
-from ..storage_taxonomy_locations import storage_path
-from ..storage_taxonomy import StorageCategory
 from ..atomic_write import atomic_write_text
 from ..config import Settings, load_settings
 from ..directory_scan import scan_directory
 from ..logging import get_logger
 from ..paths import directory_byte_total, select_filesystem_retention_survivors
-from ..time import now
+from ..storage_taxonomy import StorageCategory
+from ..storage_taxonomy_locations import storage_path
+from ..time.clock import now
 from .errors import RunTracePersistenceError, RunTraceValidationError
 from .models import RUN_ID_PATTERN, RunEvent, RunTrace
 from .redaction_rules import diagnostic_rules
@@ -176,7 +176,7 @@ def save_trace(trace: RunTrace, *, settings: Settings | None = None) -> Path:
     Returns:
         Absolute path of the written ``trace.json`` file.
     """
-    from ..redaction import redact_structured
+    from ..redaction.rules import redact_structured
 
     target = _run_dir(trace.run_id, settings=settings) / TRACE_FILENAME
     redacted = redact_structured(trace.model_dump(mode="json"), rules=diagnostic_rules())
@@ -358,7 +358,7 @@ def save_events_append(
     Returns:
         Absolute path of the appended ``events.jsonl`` file.
     """
-    from ..redaction import redact_structured
+    from ..redaction.rules import redact_structured
 
     target = _run_dir(run_id, settings=settings) / EVENTS_FILENAME
     redacted = redact_structured(event.model_dump(mode="json"), rules=diagnostic_rules())

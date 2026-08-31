@@ -28,9 +28,9 @@ from __future__ import annotations
 
 from datetime import date
 
+from ..core.errors.hierarchy import CadrumoError
 from ..core.period import Period
 from ..core.period import PeriodError as CorePeriodError
-from ..core.errors.hierarchy import CadrumoError
 
 
 class RegistryPeriodError(CadrumoError):

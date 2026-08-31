@@ -50,33 +50,54 @@ from datetime import date
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, Literal
 
-from pydantic import AnyHttpUrl, BaseModel, Field, TypeAdapter, model_validator
+from pydantic import AnyHttpUrl, TypeAdapter
 
 from .. import __version__
-from ..core.operator_action_enums import (
-    ActionArgumentSource,
-    ActionArgumentStatus,
-    ActionConditionality,
-    ActionEvidenceProvenance,
-    NoRecoveryOutcome,
-)
-from ..core.modelo import Modelo
-from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.async_cleanup import close_async_resources
 from ..core.config import Settings
 from ..core.errors.hierarchy import SiteHealthError, SiteHealthState
-from ..core.i18n import tr
+from ..core.i18n._render import tr
 from ..core.logging import default_log_file_path, get_logger
-from ..core.redaction import CLI_PROFILE_ID_PLACEHOLDER
-from ..core.resources import bundled_path
-from ..core.time import now
-from .errors import DiagnosticModelError
-from .operator_actions import (
-    ActionArgumentBinding,
-    ActionReference,
-    ConditionEvidence,
-    PreconditionVerdict,
+from ..core.modelo import Modelo
+from ..core.operator_action_enums import NoRecoveryOutcome
+from ..core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
+from ..core.resources._boundary import bundled_path
+from ..core.time.clock import now
+from .diagnostic_models import (
+    CliVersionReport as _CliVersionReport,
 )
+from .diagnostic_models import (
+    ConfigRepairReport as _ConfigRepairReport,
+)
+from .diagnostic_models import (
+    DiagnosticCheck as _DiagnosticCheck,
+)
+from .diagnostic_models import (
+    DiagnosticFinding as _DiagnosticFinding,
+)
+from .diagnostic_models import (
+    DiagnosticStatus as _DiagnosticStatus,
+)
+from .diagnostic_models import (
+    RegistryIntegrityReport as _RegistryIntegrityReport,
+)
+from .diagnostic_models import (
+    RegistryVersionSummary as _RegistryVersionSummary,
+)
+from .diagnostic_models import (
+    SecureObjectIntegrityReport as _SecureObjectIntegrityReport,
+)
+from .diagnostic_models import (
+    _diagnostic_action_verdict,
+    _diagnostic_no_recovery_verdict,
+    _missing_verdict_binding,
+    _resolved_verdict_binding,
+)
+from .diagnostic_models import (
+    ensure_models_rebuilt as _ensure_models_rebuilt,
+)
+from .errors import DiagnosticModelError
+from .operator_actions._models import PreconditionVerdict
 
 # The browser adapter, the registry authority, the secure-object
 # repository, the workflow store, and the wizard-status projection are
@@ -87,8 +108,7 @@ from .operator_actions import (
 # Importing them lazily inside the functions that actually run keeps the
 # version surface off the heavy import graph.
 if TYPE_CHECKING:
-    from ..adapters.outbound.aeat.browser import SiteHealthStatus
-    from ..adapters.persistence.storage import SecureObjectNamespaceIntegrity
+    from ..adapters.outbound.aeat.browser._site_health import SiteHealthStatus
     from .wizard.status import WizardStatusReport
     from .workflow.profile_health import ActiveProfileHealth
     from .workflow.state_models import WorkflowState
@@ -99,298 +119,12 @@ _REGISTRY_INTEGRITY_PROBE_YEAR: Final[int] = 2025
 _REGISTRY_INTEGRITY_PROBE_DATE: Final[date] = date(2025, 12, 31)
 _SITE_HEALTH_URL_ADAPTER: Final[TypeAdapter[AnyHttpUrl]] = TypeAdapter(AnyHttpUrl)
 
-DiagnosticStatus = Literal["ok", "warn", "fail"]
-
-
-class RegistryVersionSummary(BaseModel):
-    """Stable registry summary suitable for version and repair surfaces.
-
-    Built from
-    :class:`~domain.calculations.registry.ValidatedRegistryAuthority` when
-    registry detail is requested, then embedded in both :class:`CliVersionReport`
-    and :class:`ConfigRepairReport`.
-
-    Every count is an inventory tally -- a ``len()`` over a loaded collection --
-    so it is non-negative by construction and declares that bound. The
-    unavailable-registry branch reports zeroes rather than omitting the summary,
-    which is why the counts default to ``0``.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    available: bool
-    registry_root: str
-    modelo_count: int = Field(default=0, ge=0)
-    revision_count: int = Field(default=0, ge=0)
-    casilla_count: int = Field(default=0, ge=0)
-    formula_count: int = Field(default=0, ge=0)
-    revision_ids: tuple[str, ...] = ()
-    error: str | None = None
-
-
-class CliVersionReport(BaseModel):
-    """Version payload rendered by root CLI version surfaces.
-
-    :func:`build_cli_version_report` fills the :class:`RegistryVersionSummary`
-    field, and :func:`render_cli_version_text` renders the text form used by the
-    root ``aeat --version`` command.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    package_name: str
-    package_version: str
-    registry: RegistryVersionSummary
-
-
-DiagnosticAudience = Literal["operator", "internal"]
-"""Who can act on a check.
-
-``operator`` rows describe a state the taxpayer can themselves resolve
-(an incomplete profile, a missing certificate). ``internal`` rows
-describe an application-side defect the taxpayer cannot fix (a
-registry-integrity regression). The renderer words the two distinctly
-so a taxpayer is never alarmed into thinking an internal bug is a field
-they forgot to fill in.
-"""
-
-
-class DiagnosticFinding(BaseModel):
-    """One concrete, named sub-finding inside a :class:`DiagnosticCheck`.
-
-    A bare counter (``31/40``) or a one-word verdict (``warn``) tells the
-    operator *that* something is wrong but never *what*. Each finding
-    names one specific cause in operator language. The parent check owns the
-    typed recovery outcome, so findings never duplicate executable transport
-    prose. The profile-keys check emits one finding per unset key; a
-    failing check emits one finding per concrete cause. Findings are
-    explanatory children, not a replacement for the parent row's required
-    recovery channel.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    summary: str
-    detail: str | None = None
-    requirement: Literal["required", "optional"] | None = None
-
-
-class DiagnosticCheck(BaseModel):
-    """One concrete config repair check.
-
-    A failing or warning row MUST carry one application-owned
-    ``precondition_verdict``. The verdict itself requires exactly one canonical
-    action reference or explicit no-recovery outcome. A row that supplies no
-    verdict is a
-    :class:`pydantic.ValidationError` at construction time by raising
-    :class:`~application.errors.DiagnosticModelError`. ``ok`` rows MUST
-    carry neither.
-
-    ``findings`` carries the per-cause breakdown: the specific keys that
-    are unset, the specific reasons a check failed. ``audience`` records
-    whether the operator can act on the row or whether it reports an
-    internal application defect. :func:`render_config_repair_text` and
-    :class:`ConfigRepairReport` preserve this distinction.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    name: str
-    status: DiagnosticStatus
-    summary: str
-    detail: str | None = None
-    precondition_verdict: PreconditionVerdict | None = None
-    audience: DiagnosticAudience = "operator"
-    findings: tuple[DiagnosticFinding, ...] = ()
-
-    @model_validator(mode="after")
-    def _enforce_actionable_contract(self) -> DiagnosticCheck:
-        if self.status in {"fail", "warn"}:
-            if self.precondition_verdict is None:
-                raise DiagnosticModelError(
-                    f"DiagnosticCheck(status={self.status!r}) must populate `precondition_verdict`; "
-                    "silent failing rows are forbidden",
-                )
-        else:  # status == "ok"
-            if self.precondition_verdict is not None:
-                raise DiagnosticModelError("DiagnosticCheck(status='ok') must not carry a recovery outcome")
-        return self
-
-
-def _diagnostic_action_verdict(
-    *,
-    condition_id: str,
-    evidence_id: str,
-    values: dict[str, str | bool | int],
-    action_id: str,
-    argument_bindings: tuple[ActionArgumentBinding, ...] = (),
-    missing_argument_names: tuple[str, ...] = (),
-) -> PreconditionVerdict:
-    """Build one diagnostics-owned actionable failed-condition verdict."""
-    return PreconditionVerdict(
-        failed_condition_id=condition_id,
-        evidence=(
-            ConditionEvidence(
-                condition_id=condition_id,
-                evidence_id=evidence_id,
-                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-                values=values,
-            ),
-        ),
-        action=ActionReference(action_id=action_id),
-        argument_bindings=argument_bindings,
-        missing_argument_names=missing_argument_names,
-        conditionality=(
-            ActionConditionality.REQUIRES_ARGUMENTS if missing_argument_names else ActionConditionality.IMMEDIATE
-        ),
-    )
-
-
-def _diagnostic_no_recovery_verdict(
-    *,
-    condition_id: str,
-    evidence_id: str,
-    values: dict[str, str | bool | int],
-    outcome: NoRecoveryOutcome,
-) -> PreconditionVerdict:
-    """Build one explicit diagnostics-owned closed recovery outcome."""
-    from .operator_actions import no_action_precondition_verdict
-
-    return no_action_precondition_verdict(
-        condition_id=condition_id,
-        evidence_id=evidence_id,
-        facts=values,
-        provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-        outcome=outcome,
-    )
-
-
-def _resolved_verdict_binding(argument_name: str, value: str | bool) -> ActionArgumentBinding:
-    """Bind a concrete diagnostics fact to one catalogue argument."""
-    return ActionArgumentBinding(
-        argument_name=argument_name,
-        status=ActionArgumentStatus.RESOLVED,
-        value=value,
-        source=ActionArgumentSource.VERDICT_CONTEXT,
-        source_key=argument_name,
-    )
-
-
-def _missing_verdict_binding(argument_name: str) -> ActionArgumentBinding:
-    """Declare one catalogue argument diagnostics cannot honestly supply."""
-    return ActionArgumentBinding(
-        argument_name=argument_name,
-        status=ActionArgumentStatus.MISSING,
-    )
-
-
-class SecureObjectIntegrityReport(BaseModel):
-    """Aggregated decryptability counts across every populated namespace.
-
-    Surfaces how many rows of the local ``secure_objects`` table can be
-    decrypted under the current master key. A non-zero ``unreadable`` total
-    almost always means the keychain master-key entry was rotated or
-    regenerated since the affected rows were written; the plaintexts are
-    cryptographically unrecoverable from this process.
-
-    ``namespaces`` carries
-    :class:`~adapters.persistence.storage.SecureObjectNamespaceIntegrity`
-    rows produced by the encrypted
-    :class:`~adapters.persistence.storage.SecureObjectRepository`.
-    The same aggregate shape is shared by :class:`ConfigRepairReport`,
-    :class:`~application.repair_integrity.RepairIntegrityReport`,
-    :func:`preview_quarantine_unreadable_secure_objects`, and
-    :func:`quarantine_unreadable_secure_objects`.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    namespaces: tuple[SecureObjectNamespaceIntegrity, ...] = ()
-    readable_total: int = 0
-    unreadable_total: int = 0
-
-
-class ConfigRepairReport(BaseModel):
-    """Composite report rendered by the bare ``aeat config repair`` command.
-
-    The report combines the public :class:`RegistryVersionSummary`, the
-    secure-object :class:`SecureObjectIntegrityReport`, and ordered
-    :class:`DiagnosticCheck` rows into one operator-facing health payload.
-    ``setup`` is a redacted
-    :class:`~application.wizard.status.WizardStatusReport` when
-    :class:`~application.workflow.WorkflowState` can be loaded.
-    :func:`build_config_repair_report` is the producer, and
-    :func:`render_config_repair_text` is the compact text renderer.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    overall: DiagnosticStatus
-    package_name: str
-    package_version: str
-    python_version: str
-    log_file: str
-    registry: RegistryVersionSummary
-    setup: WizardStatusReport | None
-    secure_objects: SecureObjectIntegrityReport
-    checks: tuple[DiagnosticCheck, ...]
-
-
-_models_rebuilt = False
-
-
-def _ensure_models_rebuilt() -> None:
-    """Resolve the deferred forward references on the heavy report models.
-
-    ``SecureObjectIntegrityReport`` and ``ConfigRepairReport`` carry
-    fields typed by ``SecureObjectNamespaceIntegrity`` and
-    ``WizardStatusReport``. Those names are imported lazily so the
-    ``aeat --version`` fast path never pulls the heavy secure-object and
-    wizard-status import subtrees. The two models are only ever
-    *constructed* by the diagnostics functions below — never by the
-    version path — so their forward references are resolved here, on
-    first use of a heavy function, when the real types are imported
-    anyway. Idempotent: the rebuild runs once per process.
-    """
-    global _models_rebuilt
-    if _models_rebuilt:
-        return
-    from ..adapters.persistence.storage import (
-        SecureObjectNamespaceIntegrity,
-    )
-    from .wizard.status import WizardStatusReport
-
-    # Keep the lazy model-rebuild namespace imports statically accessed as well.
-    _model_rebuild_types = (SecureObjectNamespaceIntegrity, WizardStatusReport)
-
-    SecureObjectIntegrityReport.model_rebuild(_types_namespace=locals())
-    ConfigRepairReport.model_rebuild(_types_namespace={**globals(), **locals()})
-    _models_rebuilt = True
-
-
-class RegistryIntegrityReport(BaseModel):
-    """Result of the opt-in full registry-validation probe.
-
-    The full registry TOML parse and cross-domain referential-integrity
-    gate stay off the ``--version`` and bare-invocation surfaces and run
-    only from the explicit ``aeat config repair integrity registry``
-    verb. This typed
-    report is what that verb renders: a :class:`RegistryVersionSummary` plus
-    the aggregate :class:`DiagnosticCheck` from
-    :func:`_registry_cross_domain_integrity_check`.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    registry: RegistryVersionSummary
-    check: DiagnosticCheck
-
 
 def build_cli_version_report(
     registry_root: Path | None = None,
     *,
     with_registry: bool = True,
-) -> CliVersionReport:
+) -> _CliVersionReport:
     """Return the package and registry summary for CLI version surfaces.
 
     The ``with_registry`` flag controls whether the full registry
@@ -409,15 +143,15 @@ def build_cli_version_report(
         root = registry_root or bundled_path("registry", "aeat")
         summary = _build_registry_version_summary(root)
     else:
-        summary = RegistryVersionSummary(available=False, registry_root="")
-    return CliVersionReport(
+        summary = _RegistryVersionSummary(available=False, registry_root="")
+    return _CliVersionReport(
         package_name="cadrumo",
         package_version=__version__,
         registry=summary,
     )
 
 
-def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepairReport:
+def build_config_repair_report(registry_root: Path | None = None) -> _ConfigRepairReport:
     """Return local diagnostics for the ``aeat config repair`` surface.
 
     Returns a :class:`ConfigRepairReport` enumerating every diagnostic
@@ -438,18 +172,18 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
     root = registry_root or bundled_path("registry", "aeat")
     registry = _build_registry_version_summary(root)
     log_parent_exists = default_log_file_path().parent.exists()
-    checks: list[DiagnosticCheck] = [
-        DiagnosticCheck(
+    checks: list[_DiagnosticCheck] = [
+        _DiagnosticCheck(
             name="environment.python",
             status="ok",
             summary=sys.version.split()[0],
         ),
-        DiagnosticCheck(
+        _DiagnosticCheck(
             name="package.version",
             status="ok",
             summary=__version__,
         ),
-        DiagnosticCheck(
+        _DiagnosticCheck(
             name="logging.file",
             status="ok" if log_parent_exists else "warn",
             summary=str(default_log_file_path()),
@@ -467,7 +201,7 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
                 )
             ),
         ),
-        DiagnosticCheck(
+        _DiagnosticCheck(
             name="registry.load",
             status="ok" if registry.available else "fail",
             summary=(
@@ -509,7 +243,7 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
         # warn with the profile-health verdict that tells the operator to log in.
         state = workflow_state_repository().load()
         checks.append(
-            DiagnosticCheck(
+            _DiagnosticCheck(
                 name="secure_state.load",
                 status="ok",
                 summary=tr("cli.diagnostics.summary.state_backend_readable"),
@@ -530,7 +264,7 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
         profile_health = assess_active_profile_health()
         missing_active_bucket_session = _is_missing_active_bucket_session(exc)
         checks.append(
-            DiagnosticCheck(
+            _DiagnosticCheck(
                 name="secure_state.load",
                 status="warn" if missing_active_bucket_session else "fail",
                 summary=tr("cli.diagnostics.summary.state_backend_unreadable"),
@@ -561,7 +295,7 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
     checks.append(_secure_objects_integrity_check(secure_objects))
     checks.append(_registry_cross_domain_integrity_check(root))
 
-    return ConfigRepairReport(
+    return _ConfigRepairReport(
         overall=_overall_status(tuple(checks)),
         package_name="cadrumo",
         package_version=__version__,
@@ -603,7 +337,7 @@ def render_browser_connectivity_text(status: SiteHealthStatus) -> str:
 
 
 async def _probe_browser_connectivity(settings: Settings) -> SiteHealthStatus:
-    from ..adapters.outbound.aeat.browser import default_browser_session_factory
+    from ..adapters.outbound.aeat.browser._factory import default_browser_session_factory
 
     url = settings.site_health_probe_url
     session = await default_browser_session_factory(settings)
@@ -614,7 +348,7 @@ async def _probe_browser_connectivity(settings: Settings) -> SiteHealthStatus:
         try:
             await session.navigate(page, url)
         except SiteHealthError as exc:
-            from ..adapters.outbound.aeat.browser import SiteHealthStatus
+            from ..adapters.outbound.aeat.browser._site_health import SiteHealthStatus
 
             status = exc.status
             if not isinstance(status, SiteHealthStatus):
@@ -630,7 +364,7 @@ async def _probe_browser_connectivity(settings: Settings) -> SiteHealthStatus:
 
 
 def _ok_site_health_status(url: str) -> SiteHealthStatus:
-    from ..adapters.outbound.aeat.browser import SiteHealthEvidence, SiteHealthStatus
+    from ..adapters.outbound.aeat.browser._site_health import SiteHealthEvidence, SiteHealthStatus
 
     return SiteHealthStatus(
         state=SiteHealthState.OK,
@@ -644,7 +378,7 @@ def _ok_site_health_status(url: str) -> SiteHealthStatus:
     )
 
 
-def render_config_repair_text(report: ConfigRepairReport) -> str:
+def render_config_repair_text(report: _ConfigRepairReport) -> str:
     """Render a compact human-readable repair report.
 
     Preserves :attr:`DiagnosticCheck.audience` and never reconstructs command
@@ -698,7 +432,7 @@ def _repair_safe_wizard_status(
     )
 
 
-def _finding_tag(finding: DiagnosticFinding) -> str:
+def _finding_tag(finding: _DiagnosticFinding) -> str:
     """Return the requirement prefix rendered ahead of a finding summary."""
     if finding.requirement == "required":
         return f"{tr('cli.diagnostics.repair.finding_required', default='required')}: "
@@ -707,14 +441,14 @@ def _finding_tag(finding: DiagnosticFinding) -> str:
     return ""
 
 
-def _build_registry_version_summary(registry_root: Path) -> RegistryVersionSummary:
+def _build_registry_version_summary(registry_root: Path) -> _RegistryVersionSummary:
     from ..domain.calculations.registry.authority import ValidatedRegistryAuthority
 
     try:
         authority = ValidatedRegistryAuthority.load(registry_root, source_root=bundled_path())
     except Exception as exc:  # pragma: no cover - covered by later repair diagnostics.
         _log.debug("registry version summary load failed for %s", registry_root, exc_info=True)
-        return RegistryVersionSummary(
+        return _RegistryVersionSummary(
             available=False,
             registry_root=str(registry_root),
             error=f"{type(exc).__name__}: {exc}",
@@ -722,7 +456,7 @@ def _build_registry_version_summary(registry_root: Path) -> RegistryVersionSumma
 
     modelos = tuple(authority.modelos)
     revisions = tuple(revision for modelo in modelos for revision in modelo.revisions.values())
-    return RegistryVersionSummary(
+    return _RegistryVersionSummary(
         available=True,
         registry_root=str(registry_root),
         modelo_count=len(modelos),
@@ -733,7 +467,7 @@ def _build_registry_version_summary(registry_root: Path) -> RegistryVersionSumma
     )
 
 
-def _probe_secure_objects_integrity() -> SecureObjectIntegrityReport:
+def _probe_secure_objects_integrity() -> _SecureObjectIntegrityReport:
     """Iterate every populated secure-objects namespace and aggregate counts.
 
     Returns an empty report when the table is empty or the engine cannot
@@ -744,10 +478,10 @@ def _probe_secure_objects_integrity() -> SecureObjectIntegrityReport:
     :meth:`~adapters.persistence.storage.SecureObjectRepository.probe_namespace_integrity`.
     """
     _ensure_models_rebuilt()
-    from ..adapters.persistence.storage import (
-        SecureObjectNamespaceIntegrity,
+    from ..adapters.persistence.storage.runtime_repository import (
         secure_object_repository_for_active_bucket_or_default_route,
     )
+    from ..adapters.persistence.storage.sql.secure_objects import SecureObjectNamespaceIntegrity
 
     try:
         repo = secure_object_repository_for_active_bucket_or_default_route()
@@ -759,7 +493,7 @@ def _probe_secure_objects_integrity() -> SecureObjectIntegrityReport:
             exc,
             exc_info=True,
         )
-        return SecureObjectIntegrityReport()
+        return _SecureObjectIntegrityReport()
     integrity_items: list[SecureObjectNamespaceIntegrity] = []
     for ns in namespaces:
         try:
@@ -778,14 +512,14 @@ def _probe_secure_objects_integrity() -> SecureObjectIntegrityReport:
     integrity = tuple(integrity_items)
     readable_total = sum(item.readable for item in integrity)
     unreadable_total = sum(item.unreadable for item in integrity)
-    return SecureObjectIntegrityReport(
+    return _SecureObjectIntegrityReport(
         namespaces=integrity,
         readable_total=readable_total,
         unreadable_total=unreadable_total,
     )
 
 
-def _secure_objects_integrity_check(report: SecureObjectIntegrityReport) -> DiagnosticCheck:
+def _secure_objects_integrity_check(report: _SecureObjectIntegrityReport) -> _DiagnosticCheck:
     """Render the ``secure_objects.integrity`` repair row.
 
     A non-zero unreadable total becomes a warn :class:`DiagnosticCheck` whose
@@ -793,12 +527,12 @@ def _secure_objects_integrity_check(report: SecureObjectIntegrityReport) -> Diag
     """
     if report.unreadable_total == 0:
         if report.readable_total == 0:
-            return DiagnosticCheck(
+            return _DiagnosticCheck(
                 name="secure_objects.integrity",
                 status="ok",
                 summary=tr("cli.diagnostics.summary.secure_objects_empty"),
             )
-        return DiagnosticCheck(
+        return _DiagnosticCheck(
             name="secure_objects.integrity",
             status="ok",
             summary=tr(
@@ -812,7 +546,7 @@ def _secure_objects_integrity_check(report: SecureObjectIntegrityReport) -> Diag
         for item in report.namespaces
         if item.unreadable > 0
     )
-    return DiagnosticCheck(
+    return _DiagnosticCheck(
         name="secure_objects.integrity",
         status="warn",
         summary=tr(
@@ -835,7 +569,7 @@ def _secure_objects_integrity_check(report: SecureObjectIntegrityReport) -> Diag
     )
 
 
-def _registry_cross_domain_integrity_check(registry_root: Path) -> DiagnosticCheck:
+def _registry_cross_domain_integrity_check(registry_root: Path) -> _DiagnosticCheck:
     """Cross-domain integrity check by exercising the snapshot-build gate.
 
     Loads :class:`~domain.calculations.registry.ValidatedRegistryAuthority`
@@ -862,7 +596,7 @@ def _registry_cross_domain_integrity_check(registry_root: Path) -> DiagnosticChe
             on=_REGISTRY_INTEGRITY_PROBE_DATE,
         )
     except RegistryValidationError as exc:
-        return DiagnosticCheck(
+        return _DiagnosticCheck(
             name="registry.integrity",
             status="fail",
             summary=tr("cli.diagnostics.summary.registry_integrity_failed"),
@@ -876,7 +610,7 @@ def _registry_cross_domain_integrity_check(registry_root: Path) -> DiagnosticChe
             audience="internal",
         )
     except Exception as exc:  # pragma: no cover - defensive: registry not loadable
-        return DiagnosticCheck(
+        return _DiagnosticCheck(
             name="registry.integrity",
             status="warn",
             summary=tr("cli.diagnostics.summary.registry_integrity_skipped"),
@@ -889,14 +623,14 @@ def _registry_cross_domain_integrity_check(registry_root: Path) -> DiagnosticChe
             ),
             audience="internal",
         )
-    return DiagnosticCheck(
+    return _DiagnosticCheck(
         name="registry.integrity",
         status="ok",
         summary=tr("cli.diagnostics.summary.registry_integrity_ok"),
     )
 
 
-def build_registry_integrity_report(registry_root: Path | None = None) -> RegistryIntegrityReport:
+def build_registry_integrity_report(registry_root: Path | None = None) -> _RegistryIntegrityReport:
     """Run the full registry validation as a standalone :class:`RegistryIntegrityReport` probe.
 
     Backs the ``aeat config repair integrity registry`` verb. Bundles
@@ -906,13 +640,13 @@ def build_registry_integrity_report(registry_root: Path | None = None) -> Regist
     off every fast-path surface.
     """
     root = registry_root or bundled_path("registry", "aeat")
-    return RegistryIntegrityReport(
+    return _RegistryIntegrityReport(
         registry=_build_registry_version_summary(root),
         check=_registry_cross_domain_integrity_check(root),
     )
 
 
-def _active_profile_storage_check(health: ActiveProfileHealth) -> DiagnosticCheck:
+def _active_profile_storage_check(health: ActiveProfileHealth) -> _DiagnosticCheck:
     """Render :class:`ActiveProfileHealth` storage status before semantic readiness."""
     active_profile = health.active_profile_label or (
         CLI_PROFILE_ID_PLACEHOLDER if health.active_profile is not None else "-"
@@ -924,13 +658,13 @@ def _active_profile_storage_check(health: ActiveProfileHealth) -> DiagnosticChec
         status=health.status,
     )
     if health.status in {"none", "incomplete", "ready"}:
-        return DiagnosticCheck(
+        return _DiagnosticCheck(
             name="profile.storage",
             status="ok",
             summary=summary,
         )
     detail = health.profile_record_error or None
-    return DiagnosticCheck(
+    return _DiagnosticCheck(
         name="profile.storage",
         status="warn",
         summary=summary,
@@ -939,7 +673,7 @@ def _active_profile_storage_check(health: ActiveProfileHealth) -> DiagnosticChec
     )
 
 
-def _profile_unavailable_check(health: ActiveProfileHealth) -> DiagnosticCheck:
+def _profile_unavailable_check(health: ActiveProfileHealth) -> _DiagnosticCheck:
     """Render a profile-readiness row when only :class:`ActiveProfileHealth` is available."""
     if health.status == "profile_locked":
         # A locked profile is neither absent nor broken: the capsule is
@@ -947,21 +681,21 @@ def _profile_unavailable_check(health: ActiveProfileHealth) -> DiagnosticCheck:
         # someone logs in. Falling through to either sibling branch below
         # would tell the operator something untrue -- "unreadable" implies
         # damage, "no profile configured" implies nothing was ever set up.
-        return DiagnosticCheck(
+        return _DiagnosticCheck(
             name="profile.readiness",
             status="warn",
             summary=tr("cli.diagnostics.summary.profile_locked"),
             precondition_verdict=_required_profile_health_verdict(health),
         )
     if health.status in {"dangling_pointer", "missing_profile_record", "profile_record_unreadable"}:
-        return DiagnosticCheck(
+        return _DiagnosticCheck(
             name="profile.readiness",
             status="warn",
             summary=tr("cli.diagnostics.summary.profile_unreadable", status=health.status),
             detail=health.profile_record_error or None,
             precondition_verdict=_required_profile_health_verdict(health),
         )
-    return DiagnosticCheck(
+    return _DiagnosticCheck(
         name="profile.readiness",
         status="warn",
         summary=tr("cli.diagnostics.summary.profile_none", default="No profile configured"),
@@ -969,7 +703,7 @@ def _profile_unavailable_check(health: ActiveProfileHealth) -> DiagnosticCheck:
     )
 
 
-def _unset_profile_key_findings(state: WorkflowState | None) -> tuple[DiagnosticFinding, ...]:
+def _unset_profile_key_findings(state: WorkflowState | None) -> tuple[_DiagnosticFinding, ...]:
     """Return one finding per profile key the active profile leaves unset.
 
     Each finding names the canonical key path, its operator-facing label,
@@ -993,7 +727,7 @@ def _unset_profile_key_findings(state: WorkflowState | None) -> tuple[Diagnostic
     from .user_profile.projections import record_to_path_values
 
     values = record_to_path_values(record)
-    findings: list[DiagnosticFinding] = []
+    findings: list[_DiagnosticFinding] = []
     for entry in list_profile_key_records():
         raw = values.get(entry.key)
         if raw is not None and raw.strip() != "":
@@ -1003,7 +737,7 @@ def _unset_profile_key_findings(state: WorkflowState | None) -> tuple[Diagnostic
         )
         label = tr(str(entry.description))
         findings.append(
-            DiagnosticFinding(
+            _DiagnosticFinding(
                 summary=f"{entry.key} — {label}",
                 requirement=requirement,
             ),
@@ -1016,7 +750,7 @@ def _profile_check(
     *,
     profile_health: ActiveProfileHealth | None = None,
     state: WorkflowState | None = None,
-) -> DiagnosticCheck:
+) -> _DiagnosticCheck:
     """Render semantic profile readiness from wizard status plus workflow state.
 
     ``report`` supplies the
@@ -1032,7 +766,7 @@ def _profile_check(
         # is benign, so it gets its own sentence rather than falling through
         # to `report.active_profile is None` below, which reports the
         # "no profile configured" summary that is untrue of a locked one.
-        return DiagnosticCheck(
+        return _DiagnosticCheck(
             name="profile.readiness",
             status="warn",
             summary=tr("cli.diagnostics.summary.profile_locked"),
@@ -1043,7 +777,7 @@ def _profile_check(
         "missing_profile_record",
         "profile_record_unreadable",
     }:
-        return DiagnosticCheck(
+        return _DiagnosticCheck(
             name="profile.readiness",
             status="warn",
             summary=tr("cli.diagnostics.summary.profile_unreadable", status=profile_health.status),
@@ -1051,7 +785,7 @@ def _profile_check(
             precondition_verdict=_required_profile_health_verdict(profile_health),
         )
     if report.active_profile is None:
-        return DiagnosticCheck(
+        return _DiagnosticCheck(
             name="profile.readiness",
             status="warn",
             summary=tr("cli.diagnostics.summary.profile_none"),
@@ -1071,7 +805,7 @@ def _profile_check(
     unset_findings = _unset_profile_key_findings(state)
     if not report.profile_ready:
         return _profile_not_ready_check(report, unset_findings=unset_findings)
-    return DiagnosticCheck(
+    return _DiagnosticCheck(
         name="profile.readiness",
         status="ok",
         summary=tr(
@@ -1087,8 +821,8 @@ def _profile_check(
 def _profile_not_ready_check(
     report: WizardStatusReport,
     *,
-    unset_findings: tuple[DiagnosticFinding, ...],
-) -> DiagnosticCheck:
+    unset_findings: tuple[_DiagnosticFinding, ...],
+) -> _DiagnosticCheck:
     """Render the readiness row for a profile still missing required keys.
 
     Prefers the record probe's own findings; when it is unavailable the row
@@ -1097,7 +831,7 @@ def _profile_not_ready_check(
     keys already named by a required finding are not repeated.
     """
     findings = _profile_not_ready_findings(report, unset_findings)
-    return DiagnosticCheck(
+    return _DiagnosticCheck(
         name="profile.readiness",
         status="warn",
         summary=tr(
@@ -1113,17 +847,17 @@ def _profile_not_ready_check(
 
 def _profile_not_ready_findings(
     report: WizardStatusReport,
-    unset_findings: tuple[DiagnosticFinding, ...],
-) -> tuple[DiagnosticFinding, ...]:
+    unset_findings: tuple[_DiagnosticFinding, ...],
+) -> tuple[_DiagnosticFinding, ...]:
     missing_required = tuple(f for f in unset_findings if f.requirement == "required")
     if not missing_required:
         missing_required = tuple(
-            DiagnosticFinding(summary=_grounded_profile_key_summary(key), requirement="required")
+            _DiagnosticFinding(summary=_grounded_profile_key_summary(key), requirement="required")
             for key in report.missing_required
         )
     already_named = {finding.summary.split(" — ", 1)[0] for finding in missing_required}
     enrolment_findings = tuple(
-        DiagnosticFinding(summary=_grounded_profile_key_summary(key), requirement="required")
+        _DiagnosticFinding(summary=_grounded_profile_key_summary(key), requirement="required")
         for key in report.missing_enrolment
         if key not in already_named
     )
@@ -1178,9 +912,9 @@ def _grounded_profile_key_summary(key: str) -> str:
     return f"{key} — {requirement.label}"
 
 
-def _auth_unavailable_check(health: ActiveProfileHealth) -> DiagnosticCheck:
+def _auth_unavailable_check(health: ActiveProfileHealth) -> _DiagnosticCheck:
     """Render auth readiness when workflow state cannot expose wizard status."""
-    return DiagnosticCheck(
+    return _DiagnosticCheck(
         name="auth.readiness",
         status="warn",
         summary=tr("cli.diagnostics.summary.auth_state_unreadable"),
@@ -1203,10 +937,10 @@ def _required_profile_health_verdict(health: ActiveProfileHealth) -> Preconditio
     return verdict
 
 
-def _auth_check(report: WizardStatusReport) -> DiagnosticCheck:
+def _auth_check(report: WizardStatusReport) -> _DiagnosticCheck:
     """Render auth readiness from :class:`WizardStatusReport`."""
     if not report.auth_provider:
-        return DiagnosticCheck(
+        return _DiagnosticCheck(
             name="auth.readiness",
             status="warn",
             summary=tr("cli.diagnostics.summary.auth_none"),
@@ -1223,7 +957,7 @@ def _auth_check(report: WizardStatusReport) -> DiagnosticCheck:
             ),
         )
     if not report.login_ready:
-        return DiagnosticCheck(
+        return _DiagnosticCheck(
             name="auth.readiness",
             status="warn",
             summary=tr(
@@ -1239,7 +973,7 @@ def _auth_check(report: WizardStatusReport) -> DiagnosticCheck:
                 argument_bindings=(_resolved_verdict_binding("provider", report.auth_provider),),
             ),
         )
-    return DiagnosticCheck(
+    return _DiagnosticCheck(
         name="auth.readiness",
         status="ok",
         summary=tr(
@@ -1274,7 +1008,7 @@ def _is_missing_active_bucket_session(exc: BaseException) -> bool:
     whenever a ``__cause__`` was present. Identity marking keeps a self- or
     mutually-referential chain from looping.
     """
-    from ..adapters.persistence.storage.master_key import NoActiveBucketSessionError
+    from ..adapters.persistence.storage.master_key.active_session import NoActiveBucketSessionError
 
     seen: set[int] = set()
     pending: list[BaseException] = [exc]
@@ -1297,7 +1031,7 @@ def _compact_exception(exc: BaseException) -> str:
     return f"{type(exc).__name__}: {message}"
 
 
-def _overall_status(checks: tuple[DiagnosticCheck, ...]) -> DiagnosticStatus:
+def _overall_status(checks: tuple[_DiagnosticCheck, ...]) -> _DiagnosticStatus:
     if any(check.status == "fail" for check in checks):
         return "fail"
     if any(check.status == "warn" for check in checks):
@@ -1305,7 +1039,7 @@ def _overall_status(checks: tuple[DiagnosticCheck, ...]) -> DiagnosticStatus:
     return "ok"
 
 
-def render_cli_version_text(report: CliVersionReport) -> str:
+def render_cli_version_text(report: _CliVersionReport) -> str:
     """Render a compact text line for human-facing version output."""
     registry = report.registry
     if not registry.available:
@@ -1348,7 +1082,7 @@ def secure_object_unreadable_total() -> int:
     return _probe_secure_objects_integrity().unreadable_total
 
 
-def preview_quarantine_unreadable_secure_objects() -> SecureObjectIntegrityReport:
+def preview_quarantine_unreadable_secure_objects() -> _SecureObjectIntegrityReport:
     """Report the rows ``repair quarantine`` would move, mutating nothing.
 
     Backs the ``aeat config repair quarantine --dry-run`` preview. Runs
@@ -1368,7 +1102,7 @@ def preview_quarantine_unreadable_secure_objects() -> SecureObjectIntegrityRepor
         return _probe_secure_objects_integrity()
 
 
-def quarantine_unreadable_secure_objects() -> SecureObjectIntegrityReport:
+def quarantine_unreadable_secure_objects() -> _SecureObjectIntegrityReport:
     """Move every undecryptable secure-object row into the quarantine table.
 
     Delegates to
@@ -1390,7 +1124,7 @@ def quarantine_unreadable_secure_objects() -> SecureObjectIntegrityReport:
         in ``secure_objects``).
     """
     _ensure_models_rebuilt()
-    from ..adapters.persistence.storage import (
+    from ..adapters.persistence.storage.runtime_repository import (
         secure_object_repository_for_active_bucket_or_default_route,
     )
     from .repair_integrity import active_bucket_repair_session
@@ -1400,35 +1134,20 @@ def quarantine_unreadable_secure_objects() -> SecureObjectIntegrityReport:
         namespaces = repo.quarantine_unreadable_rows()
     quarantined_total = sum(item.unreadable for item in namespaces)
     retained_total = sum(item.readable for item in namespaces)
-    return SecureObjectIntegrityReport(
+    return _SecureObjectIntegrityReport(
         namespaces=namespaces,
         readable_total=retained_total,
         unreadable_total=quarantined_total,
     )
 
 
-ensure_models_rebuilt = _ensure_models_rebuilt
-profile_check = _profile_check
-registry_cross_domain_integrity_check = _registry_cross_domain_integrity_check
-
-
 __all__ = [
-    "CliVersionReport",
-    "ConfigRepairReport",
-    "DiagnosticCheck",
-    "DiagnosticFinding",
-    "RegistryIntegrityReport",
-    "RegistryVersionSummary",
-    "SecureObjectIntegrityReport",
     "build_cli_version_report",
     "build_config_repair_report",
     "build_registry_integrity_report",
-    "ensure_models_rebuilt",
     "preview_quarantine_unreadable_secure_objects",
     "probe_browser_connectivity",
-    "profile_check",
     "quarantine_unreadable_secure_objects",
-    "registry_cross_domain_integrity_check",
     "render_browser_connectivity_text",
     "render_cli_version_text",
     "render_config_repair_text",

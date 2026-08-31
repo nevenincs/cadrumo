@@ -36,7 +36,7 @@ import re
 
 import pytest
 
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from ..authority import bundled_authority
 from ..schema import ModeloRevision
 

@@ -25,14 +25,11 @@ from typing import Union, get_args, get_origin
 
 import pytest
 
-from ...adapters.persistence.storage.bucket import bucket_paths
+from ...adapters.persistence.storage.bucket._layout import bucket_paths
 from ...tests import REPO_ROOT
 from ...tests.env_scope import isolated_aeat_env as _isolated_aeat_env
 from ...tests.env_scope import scoped_env_var, settings_without_env_file
-from ..config_state_root import StateRootInputs, platform_user_data_root
 from ..auth_provider import AuthProviderKind
-from ..storage_taxonomy_locations import storage_location
-from ..storage_taxonomy import StorageCategory
 from ..bucket_pointer import BucketPointer
 from ..config import (
     Settings,
@@ -41,7 +38,10 @@ from ..config import (
     load_settings,
     reset_settings_cache,
 )
+from ..config_state_root import StateRootInputs, platform_user_data_root
 from ..external_constants import load_external_constants
+from ..storage_taxonomy import StorageCategory
+from ..storage_taxonomy_locations import storage_location
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

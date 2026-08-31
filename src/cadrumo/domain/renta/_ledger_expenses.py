@@ -20,16 +20,22 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ...core.aggregation import BindingSourceKind
+from ...core.casilla_id import CasillaId
+from ...core.filing_year import FilingYear
+from ...core.identity import TransactionId
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
-from ...core.casilla_id import CasillaId
-from ...core.aggregation import BindingSourceKind
-from ...core.filing_year import FilingYear
-from ...core.identity import TransactionId
 from ...core.unit_proportion import UnitProportion, is_unit_proportion
 from ..categories.profile import CategoryProfile
-from ..categories.proportionality import CategoryCitation, ProportionalityKind, ProportionalityRule, StatutoryCapPeriod, StatutoryCapVariant
+from ..categories.proportionality import (
+    CategoryCitation,
+    ProportionalityKind,
+    ProportionalityRule,
+    StatutoryCapPeriod,
+    StatutoryCapVariant,
+)
 from ..categories.spending_category import SpendingCategory, SpendingCategoryFamily, family_for
 from ..contribuyente.ccaa import CCAA
 from ._first_slice_routing import FIRST_SLICE_EXPENSE_CASILLAS

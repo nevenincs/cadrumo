@@ -9,13 +9,13 @@ from typing import Annotated, Self
 
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
-from ...core.record_design_epoch import RECORD_DESIGN_EPOCH_PATTERN
-from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.period import Period
 from ...core.casilla_id import CasillaId
 from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex
 from ...core.identity import ContentDigest
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.period import Period
+from ...core.record_design_epoch import RECORD_DESIGN_EPOCH_PATTERN
 from ...core.unit_proportion import UnitProportion
 from ..calculations.registry.ids import LegalRefId, RevisionId, SourceRefId
 from ..filing_evidence import FilingEvidenceReference

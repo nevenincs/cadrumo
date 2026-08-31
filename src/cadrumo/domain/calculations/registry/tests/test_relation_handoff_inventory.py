@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from .._relation_aggregation import relation_aggregation_op
 from ..authority import bundled_authority
 from ..bindings import bound_casilla_binding_ids

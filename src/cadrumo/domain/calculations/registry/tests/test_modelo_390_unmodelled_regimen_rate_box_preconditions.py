@@ -24,7 +24,7 @@ import re
 
 import pytest
 
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from ..authority import bundled_authority
 from ..rate_box_partition import derive_rate_box_partitions
 from ..schema import ModeloRevision

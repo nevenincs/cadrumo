@@ -6,9 +6,9 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator
 
-from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.aggregation import BindingSourceKind
 from ...core.identity import ContentDigest
+from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from .registry.ids import BindingId
 
 type RowBindingKey = tuple[BindingId, int]

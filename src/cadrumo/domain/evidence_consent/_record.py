@@ -21,7 +21,7 @@ from pydantic import BaseModel, Field
 
 from ...core.identity import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.time import UtcInstant
+from ...core.time.utc import UtcInstant
 
 __all__ = ["EvidenceConsentLedgerEntry", "evidence_consent_ledger_entry_object_key"]
 

@@ -34,7 +34,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from ..record_design import (
     _EMPTY_CORRECTIONS,
     _better_page_record_lines,

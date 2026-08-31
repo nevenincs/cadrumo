@@ -184,7 +184,8 @@ def test_no_production_module_walks_out_of_the_package() -> None:
 def test_resources_package_re_exports_boundary() -> None:
     """The boundary functions stay accessible through the package init."""
 
-    from .. import as_path, bundled_path, packaged_data, resources
+    from .._boundary import as_path, bundled_path, packaged_data
+    from .._registry import resources
 
     assert packaged_data is not None
     assert bundled_path is not None

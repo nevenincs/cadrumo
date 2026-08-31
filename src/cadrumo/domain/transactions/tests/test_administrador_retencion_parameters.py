@@ -30,7 +30,7 @@ from decimal import Decimal
 import pytest
 
 from ....core.directory_scan import scan_directory
-from ....core.resources import bundled_path
+from ....core.resources._boundary import bundled_path
 from ..retencion_parameters import (
     AdministradorRetencionRates,
     administrador_retencion_legal_refs,

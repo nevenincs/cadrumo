@@ -28,12 +28,12 @@ from datetime import date
 from decimal import Decimal
 from typing import Literal
 
-from ...core.modelo import Modelo
 from ...core.logging import get_logger
-from ...core.time import today_madrid
+from ...core.modelo import Modelo
+from ...core.time.clock import today_madrid
 from ...domain.deadlines.models import TaxpayerProfile
-from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.calculation_revision import CalculationRevision
+from ...domain.modelos.work_unit import WorkUnit
 
 _LOG = get_logger(__name__)
 

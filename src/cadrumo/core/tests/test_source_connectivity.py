@@ -7,8 +7,27 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from ... import core
 from ...domain.modelos.calculation_revision import CalculationSourceRef
+from ..aggregation import BindingSourceKind, CalculationSourceLineageRole
+from ..calculation_route import ModeloCalculationRouteId
+from ..source_connectivity import (
+    SourceConnectivityCandidateIdentity,
+    SourceConnectivityCensusRow,
+    SourceConnectivityConnectedProof,
+    SourceConnectivityConnectionIdentity,
+    SourceConnectivityDisposition,
+    SourceConnectivityEncryptedRevisionProof,
+    SourceConnectivityExecutableEvidence,
+    SourceConnectivityExecutableEvidenceRole,
+    SourceConnectivityExpiryPosture,
+    SourceConnectivityFollowUp,
+    SourceConnectivityGrounding,
+    SourceConnectivityGroundingLocatorKind,
+    SourceConnectivityOperatorReachabilityProof,
+    SourceConnectivityProofAuthority,
+    SourceConnectivityProofFailureCause,
+    SourceConnectivityResolverOwnershipProof,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -26,7 +45,7 @@ class _CoreProtocolTestAuthority:
     def __init__(
         self,
         *,
-        enrolled: frozenset[core.BindingSourceKind] = frozenset({core.BindingSourceKind.COLLECTIBLE_INVOICE}),
+        enrolled: frozenset[BindingSourceKind] = frozenset({BindingSourceKind.COLLECTIBLE_INVOICE}),
         workflows: frozenset[tuple[str, str]] = frozenset({(_ENTRYPOINT_ID, _COMMAND_ID)}),
         evidence_digests: dict[str, str] | None = None,
     ) -> None:
@@ -38,25 +57,25 @@ class _CoreProtocolTestAuthority:
             "operator-reachability": _EVIDENCE_DIGEST,
         }
 
-    def source_is_enrolled(self, connection: core.SourceConnectivityConnectionIdentity) -> bool:
+    def source_is_enrolled(self, connection: SourceConnectivityConnectionIdentity) -> bool:
         return connection.source_kind in self._enrolled
 
     def operator_workflow_reaches_source(
         self,
-        connection: core.SourceConnectivityConnectionIdentity,
-        proof: core.SourceConnectivityOperatorReachabilityProof,
+        connection: SourceConnectivityConnectionIdentity,
+        proof: SourceConnectivityOperatorReachabilityProof,
     ) -> bool:
         return proof.connection == connection and (proof.entrypoint_id, proof.command_id) in self._workflows
 
     def executable_evidence_digest(
         self,
-        evidence: core.SourceConnectivityExecutableEvidence,
+        evidence: SourceConnectivityExecutableEvidence,
     ) -> str | None:
         return self._evidence_digests.get(evidence.evidence_id)
 
     def encrypted_revision_matches(
         self,
-        proof: core.SourceConnectivityEncryptedRevisionProof,
+        proof: SourceConnectivityEncryptedRevisionProof,
     ) -> bool:
         return (
             proof.persisted_source_identity == proof.connection.source_ref
@@ -70,24 +89,24 @@ class _WorkflowAuthorityWithoutConnection:
     def __init__(self) -> None:
         self._authority = _CoreProtocolTestAuthority()
 
-    def source_is_enrolled(self, connection: core.SourceConnectivityConnectionIdentity) -> bool:
+    def source_is_enrolled(self, connection: SourceConnectivityConnectionIdentity) -> bool:
         return self._authority.source_is_enrolled(connection)
 
     def operator_workflow_reaches_source(
         self,
-        proof: core.SourceConnectivityOperatorReachabilityProof,
+        proof: SourceConnectivityOperatorReachabilityProof,
     ) -> bool:
         return (proof.entrypoint_id, proof.command_id) in self._authority._workflows
 
     def executable_evidence_digest(
         self,
-        evidence: core.SourceConnectivityExecutableEvidence,
+        evidence: SourceConnectivityExecutableEvidence,
     ) -> str | None:
         return self._authority.executable_evidence_digest(evidence)
 
     def encrypted_revision_matches(
         self,
-        proof: core.SourceConnectivityEncryptedRevisionProof,
+        proof: SourceConnectivityEncryptedRevisionProof,
     ) -> bool:
         return self._authority.encrypted_revision_matches(proof)
 
@@ -95,9 +114,9 @@ class _WorkflowAuthorityWithoutConnection:
 def _grounding(
     reference: str = _TEST_LOCATOR,
     *,
-    kind: core.SourceConnectivityGroundingLocatorKind = core.SourceConnectivityGroundingLocatorKind.REPOSITORY,
-) -> core.SourceConnectivityGrounding:
-    return core.SourceConnectivityGrounding(
+    kind: SourceConnectivityGroundingLocatorKind = SourceConnectivityGroundingLocatorKind.REPOSITORY,
+) -> SourceConnectivityGrounding:
+    return SourceConnectivityGrounding(
         locator_kind=kind,
         reference=reference,
         summary="Independent evidence for the asserted census fact.",
@@ -107,12 +126,12 @@ def _grounding(
 def _connection(
     *,
     candidate_id: str = "invoice.collectible",
-    source_kind: core.BindingSourceKind = core.BindingSourceKind.COLLECTIBLE_INVOICE,
+    source_kind: BindingSourceKind = BindingSourceKind.COLLECTIBLE_INVOICE,
     source_ref: str = "collectible_invoice:inv-0001",
     resolver_id: str = "invoice-source-resolver",
     revision_id: str = _REVISION_ID,
-) -> core.SourceConnectivityConnectionIdentity:
-    return core.SourceConnectivityConnectionIdentity(
+) -> SourceConnectivityConnectionIdentity:
+    return SourceConnectivityConnectionIdentity(
         candidate_id=candidate_id,
         source_kind=source_kind,
         source_ref=source_ref,
@@ -122,14 +141,14 @@ def _connection(
 
 
 def _executable_evidence(
-    connection: core.SourceConnectivityConnectionIdentity,
+    connection: SourceConnectivityConnectionIdentity,
     *,
     evidence_id: str,
-    role: core.SourceConnectivityExecutableEvidenceRole,
+    role: SourceConnectivityExecutableEvidenceRole,
     reference: str = _TEST_LOCATOR,
     digest: str = _EVIDENCE_DIGEST,
-) -> core.SourceConnectivityExecutableEvidence:
-    return core.SourceConnectivityExecutableEvidence(
+) -> SourceConnectivityExecutableEvidence:
+    return SourceConnectivityExecutableEvidence(
         evidence_id=evidence_id,
         role=role,
         connection=connection,
@@ -139,34 +158,34 @@ def _executable_evidence(
 
 
 def _connected_proof(
-    connection: core.SourceConnectivityConnectionIdentity,
+    connection: SourceConnectivityConnectionIdentity,
     *,
     command_id: str = _COMMAND_ID,
     operator_reference: str = _TEST_LOCATOR,
-) -> core.SourceConnectivityConnectedProof:
+) -> SourceConnectivityConnectedProof:
     resolver_evidence = _executable_evidence(
         connection,
         evidence_id="resolver-enrollment",
-        role=core.SourceConnectivityExecutableEvidenceRole.RESOLVER_ENROLLMENT,
+        role=SourceConnectivityExecutableEvidenceRole.RESOLVER_ENROLLMENT,
     )
     revision_evidence = _executable_evidence(
         connection,
         evidence_id="encrypted-revision",
-        role=core.SourceConnectivityExecutableEvidenceRole.ENCRYPTED_REVISION,
+        role=SourceConnectivityExecutableEvidenceRole.ENCRYPTED_REVISION,
     )
     operator_evidence = _executable_evidence(
         connection,
         evidence_id="operator-reachability",
-        role=core.SourceConnectivityExecutableEvidenceRole.OPERATOR_REACHABILITY,
+        role=SourceConnectivityExecutableEvidenceRole.OPERATOR_REACHABILITY,
         reference=operator_reference,
     )
-    return core.SourceConnectivityConnectedProof(
-        resolver_ownership=core.SourceConnectivityResolverOwnershipProof(
+    return SourceConnectivityConnectedProof(
+        resolver_ownership=SourceConnectivityResolverOwnershipProof(
             connection=connection,
             owner="calculation architecture",
             enrollment_evidence=(resolver_evidence,),
         ),
-        encrypted_revision=core.SourceConnectivityEncryptedRevisionProof(
+        encrypted_revision=SourceConnectivityEncryptedRevisionProof(
             connection=connection,
             persisted_source_identity=connection.source_ref,
             persisted_source_fingerprint=_FINGERPRINT,
@@ -175,11 +194,11 @@ def _connected_proof(
             anti_tautology_mutation=True,
             evidence=(revision_evidence,),
         ),
-        operator_reachability=core.SourceConnectivityOperatorReachabilityProof(
+        operator_reachability=SourceConnectivityOperatorReachabilityProof(
             connection=connection,
             entrypoint_id=_ENTRYPOINT_ID,
             command_id=command_id,
-            route_id=core.ModeloCalculationRouteId.MODELO_WORK_CALCULATION,
+            route_id=ModeloCalculationRouteId.MODELO_WORK_CALCULATION,
             canonical_cli_path=("app", "modelo", "work", "calculate"),
             resolver_observed=True,
             evidence=(operator_evidence,),
@@ -189,21 +208,21 @@ def _connected_proof(
 
 def _connected_payload(
     *,
-    connection: core.SourceConnectivityConnectionIdentity | None = None,
-    proof: core.SourceConnectivityConnectedProof | None = None,
+    connection: SourceConnectivityConnectionIdentity | None = None,
+    proof: SourceConnectivityConnectedProof | None = None,
 ) -> dict[str, object]:
     selected_connection = connection or _connection()
     selected_proof = proof or _connected_proof(selected_connection)
     return {
         "candidate_id": selected_connection.candidate_id,
-        "disposition": core.SourceConnectivityDisposition.CONNECTED,
+        "disposition": SourceConnectivityDisposition.CONNECTED,
         "grounding": (_grounding(),),
         "owner": "calculation architecture",
         "connected_proof": selected_proof,
     }
 
 
-def _basic_row_payload(disposition: core.SourceConnectivityDisposition) -> dict[str, object]:
+def _basic_row_payload(disposition: SourceConnectivityDisposition) -> dict[str, object]:
     return {
         "candidate_id": "inventory.stock",
         "disposition": disposition,
@@ -212,9 +231,17 @@ def _basic_row_payload(disposition: core.SourceConnectivityDisposition) -> dict[
     }
 
 
-def test_core_facade_exposes_every_connectivity_owner() -> None:
-    expected = {name for name in core.__all__ if name.startswith("SourceConnectivity")}
-    assert expected == {
+def test_every_connectivity_owner_is_public_on_its_defining_module() -> None:
+    """Every connectivity owner stays publicly enrolled where it is defined.
+
+    This pinned the core facade's exported set. The facade is now an inert
+    namespace, so the same enrolment is asserted one layer in, against the
+    module that actually defines these types.
+    """
+    from .. import source_connectivity
+
+    exposed = {name for name in source_connectivity.__all__ if name.startswith("SourceConnectivity")}
+    assert exposed == {
         "SourceConnectivityCandidateId",
         "SourceConnectivityCandidateIdentity",
         "SourceConnectivityCensusRow",
@@ -233,13 +260,13 @@ def test_core_facade_exposes_every_connectivity_owner() -> None:
         "SourceConnectivityProofFailureCause",
         "SourceConnectivityResolverOwnershipProof",
     }
-    assert expected <= set(dir(core))
-    assert isinstance(_CoreProtocolTestAuthority(), core.SourceConnectivityProofAuthority)
+    assert exposed <= set(dir(source_connectivity))
+    assert isinstance(_CoreProtocolTestAuthority(), SourceConnectivityProofAuthority)
 
 
 def test_workflow_authority_without_connection_fails_at_protocol_usage() -> None:
     with pytest.raises(TypeError, match="positional argument"):
-        core.SourceConnectivityCensusRow.model_validate(
+        SourceConnectivityCensusRow.model_validate(
             _connected_payload(),
             context={"source_connectivity_proof_authority": _WorkflowAuthorityWithoutConnection()},
         )
@@ -257,29 +284,29 @@ def test_workflow_authority_can_refuse_a_cross_connection_proof() -> None:
 @pytest.mark.parametrize("candidate_id", ["", "Inventory", "inventory stock", "inventory/stock"])
 def test_candidate_identity_refuses_noncanonical_ids(candidate_id: str) -> None:
     with pytest.raises(ValidationError):
-        core.SourceConnectivityCandidateIdentity(candidate_id=candidate_id)
+        SourceConnectivityCandidateIdentity(candidate_id=candidate_id)
 
 
 def test_census_row_refuses_an_unknown_disposition() -> None:
     with pytest.raises(ValidationError):
-        core.SourceConnectivityCensusRow.model_validate(
-            _basic_row_payload(core.SourceConnectivityDisposition.NOT_APPLICABLE) | {"disposition": "invented"},
+        SourceConnectivityCensusRow.model_validate(
+            _basic_row_payload(SourceConnectivityDisposition.NOT_APPLICABLE) | {"disposition": "invented"},
         )
 
 
 @pytest.mark.parametrize(
     ("kind", "reference"),
     [
-        (core.SourceConnectivityGroundingLocatorKind.HTTPS, "http://example.test/evidence"),
-        (core.SourceConnectivityGroundingLocatorKind.HTTPS, "https://user@example.test/evidence"),
-        (core.SourceConnectivityGroundingLocatorKind.LEGAL_REFERENCE, "Not Canonical"),
-        (core.SourceConnectivityGroundingLocatorKind.SOURCE_REFERENCE, "source/ref"),
-        (core.SourceConnectivityGroundingLocatorKind.REPOSITORY, "outside/repository.txt"),
-        (core.SourceConnectivityGroundingLocatorKind.REPOSITORY, "src/../secret.txt"),
+        (SourceConnectivityGroundingLocatorKind.HTTPS, "http://example.test/evidence"),
+        (SourceConnectivityGroundingLocatorKind.HTTPS, "https://user@example.test/evidence"),
+        (SourceConnectivityGroundingLocatorKind.LEGAL_REFERENCE, "Not Canonical"),
+        (SourceConnectivityGroundingLocatorKind.SOURCE_REFERENCE, "source/ref"),
+        (SourceConnectivityGroundingLocatorKind.REPOSITORY, "outside/repository.txt"),
+        (SourceConnectivityGroundingLocatorKind.REPOSITORY, "src/../secret.txt"),
     ],
 )
 def test_grounding_refuses_unfetchable_locator_shapes(
-    kind: core.SourceConnectivityGroundingLocatorKind,
+    kind: SourceConnectivityGroundingLocatorKind,
     reference: str,
 ) -> None:
     with pytest.raises(ValidationError):
@@ -289,67 +316,67 @@ def test_grounding_refuses_unfetchable_locator_shapes(
 @pytest.mark.parametrize(
     "disposition",
     [
-        core.SourceConnectivityDisposition.GROUNDING_BLOCKED,
-        core.SourceConnectivityDisposition.INGRESS_BLOCKED,
-        core.SourceConnectivityDisposition.REGISTRY_BLOCKED,
+        SourceConnectivityDisposition.GROUNDING_BLOCKED,
+        SourceConnectivityDisposition.INGRESS_BLOCKED,
+        SourceConnectivityDisposition.REGISTRY_BLOCKED,
     ],
 )
 def test_blocked_rows_require_review_expiry_and_bounded_follow_up(
-    disposition: core.SourceConnectivityDisposition,
+    disposition: SourceConnectivityDisposition,
 ) -> None:
     with pytest.raises(ValidationError, match="blocked connectivity row requires"):
-        core.SourceConnectivityCensusRow.model_validate(_basic_row_payload(disposition))
+        SourceConnectivityCensusRow.model_validate(_basic_row_payload(disposition))
 
 
 def test_candidate_and_manual_rows_require_their_actionability_fields() -> None:
     with pytest.raises(ValidationError, match="connectivity candidate requires"):
-        core.SourceConnectivityCensusRow.model_validate(
-            _basic_row_payload(core.SourceConnectivityDisposition.CONNECT_CANDIDATE),
+        SourceConnectivityCensusRow.model_validate(
+            _basic_row_payload(SourceConnectivityDisposition.CONNECT_CANDIDATE),
         )
     with pytest.raises(ValidationError, match="manual-by-design"):
-        core.SourceConnectivityCensusRow.model_validate(
-            _basic_row_payload(core.SourceConnectivityDisposition.MANUAL_BY_DESIGN),
+        SourceConnectivityCensusRow.model_validate(
+            _basic_row_payload(SourceConnectivityDisposition.MANUAL_BY_DESIGN),
         )
 
 
 def test_expiry_posture_is_deterministic_at_the_explicit_boundary() -> None:
-    row = core.SourceConnectivityCensusRow.model_validate(
-        _basic_row_payload(core.SourceConnectivityDisposition.GROUNDING_BLOCKED)
+    row = SourceConnectivityCensusRow.model_validate(
+        _basic_row_payload(SourceConnectivityDisposition.GROUNDING_BLOCKED)
         | {
             "review_condition": "Official evidence settles the target.",
             "expires_on": date(2026, 9, 1),
-            "bounded_follow_up": core.SourceConnectivityFollowUp(
+            "bounded_follow_up": SourceConnectivityFollowUp(
                 action_id="inventory-grounding",
                 deadline=date(2026, 9, 1),
                 completion_criterion="The official destination is adjudicated.",
             ),
         },
     )
-    assert row.expiry_posture(as_of=date(2026, 8, 31)) is core.SourceConnectivityExpiryPosture.CURRENT
-    assert row.expiry_posture(as_of=date(2026, 9, 1)) is core.SourceConnectivityExpiryPosture.EXPIRED
-    assert row.expiry_posture(as_of=date(2027, 1, 1)) is core.SourceConnectivityExpiryPosture.EXPIRED
+    assert row.expiry_posture(as_of=date(2026, 8, 31)) is SourceConnectivityExpiryPosture.CURRENT
+    assert row.expiry_posture(as_of=date(2026, 9, 1)) is SourceConnectivityExpiryPosture.EXPIRED
+    assert row.expiry_posture(as_of=date(2027, 1, 1)) is SourceConnectivityExpiryPosture.EXPIRED
 
 
 def test_follow_up_deadline_cannot_outlive_review_and_owner_is_explicit_or_inherited() -> None:
-    base = _basic_row_payload(core.SourceConnectivityDisposition.GROUNDING_BLOCKED) | {
+    base = _basic_row_payload(SourceConnectivityDisposition.GROUNDING_BLOCKED) | {
         "review_condition": "Official evidence settles the target.",
         "expires_on": date(2026, 9, 1),
     }
     with pytest.raises(ValidationError, match="must not outlive"):
-        core.SourceConnectivityCensusRow.model_validate(
+        SourceConnectivityCensusRow.model_validate(
             base
             | {
-                "bounded_follow_up": core.SourceConnectivityFollowUp(
+                "bounded_follow_up": SourceConnectivityFollowUp(
                     action_id="late-action",
                     deadline=date(2026, 9, 2),
                     completion_criterion="Close the evidence gap.",
                 ),
             },
         )
-    inherited = core.SourceConnectivityCensusRow.model_validate(
+    inherited = SourceConnectivityCensusRow.model_validate(
         base
         | {
-            "bounded_follow_up": core.SourceConnectivityFollowUp(
+            "bounded_follow_up": SourceConnectivityFollowUp(
                 action_id="inherited-action",
                 deadline=date(2026, 9, 1),
                 completion_criterion="Close the evidence gap.",
@@ -358,7 +385,7 @@ def test_follow_up_deadline_cannot_outlive_review_and_owner_is_explicit_or_inher
     )
     explicit = inherited.model_copy(
         update={
-            "bounded_follow_up": core.SourceConnectivityFollowUp(
+            "bounded_follow_up": SourceConnectivityFollowUp(
                 action_id="explicit-action",
                 owner="registry architecture",
                 deadline=date(2026, 9, 1),
@@ -372,15 +399,15 @@ def test_follow_up_deadline_cannot_outlive_review_and_owner_is_explicit_or_inher
 
 def test_connected_claim_cannot_be_constructed_from_shape_without_authority() -> None:
     with pytest.raises(ValidationError, match="live proof authority"):
-        core.SourceConnectivityCensusRow.model_validate(_connected_payload())
+        SourceConnectivityCensusRow.model_validate(_connected_payload())
 
 
 def test_authority_admits_a_complete_supported_connected_claim() -> None:
-    row = core.SourceConnectivityCensusRow.validate_with_authority(
+    row = SourceConnectivityCensusRow.validate_with_authority(
         _connected_payload(),
         authority=_CoreProtocolTestAuthority(),
     )
-    assert row.disposition is core.SourceConnectivityDisposition.CONNECTED
+    assert row.disposition is SourceConnectivityDisposition.CONNECTED
     assert row.connected_proof is not None
     assert row.connected_proof.connection == _connection()
 
@@ -400,10 +427,10 @@ def test_authority_admits_a_complete_supported_connected_claim() -> None:
 def test_connectivity_source_reference_acceptance_matches_persisted_model_exactly(source_ref: str) -> None:
     persisted = CalculationSourceRef(
         resolver_id="invoice-source-resolver",
-        resolved_binding_source=core.BindingSourceKind.COLLECTIBLE_INVOICE,
-        contributor_source_kind=core.BindingSourceKind.COLLECTIBLE_INVOICE.value,
-        contributor_binding_source=core.BindingSourceKind.COLLECTIBLE_INVOICE,
-        lineage_role=core.CalculationSourceLineageRole.PRIMARY,
+        resolved_binding_source=BindingSourceKind.COLLECTIBLE_INVOICE,
+        contributor_source_kind=BindingSourceKind.COLLECTIBLE_INVOICE.value,
+        contributor_binding_source=BindingSourceKind.COLLECTIBLE_INVOICE,
+        lineage_role=CalculationSourceLineageRole.PRIMARY,
         source_ref=source_ref,
         parent_source_ref=None,
         fingerprint=_FINGERPRINT,
@@ -419,10 +446,10 @@ def test_connectivity_source_reference_rejection_matches_persisted_model(source_
     with pytest.raises(ValidationError):
         CalculationSourceRef(
             resolver_id="invoice-source-resolver",
-            resolved_binding_source=core.BindingSourceKind.COLLECTIBLE_INVOICE,
-            contributor_source_kind=core.BindingSourceKind.COLLECTIBLE_INVOICE.value,
-            contributor_binding_source=core.BindingSourceKind.COLLECTIBLE_INVOICE,
-            lineage_role=core.CalculationSourceLineageRole.PRIMARY,
+            resolved_binding_source=BindingSourceKind.COLLECTIBLE_INVOICE,
+            contributor_source_kind=BindingSourceKind.COLLECTIBLE_INVOICE.value,
+            contributor_binding_source=BindingSourceKind.COLLECTIBLE_INVOICE,
+            lineage_role=CalculationSourceLineageRole.PRIMARY,
             parent_source_ref=None,
             source_ref=source_ref,
             fingerprint=_FINGERPRINT,
@@ -440,7 +467,7 @@ def test_connected_proof_refuses_every_cross_component_identity_mismatch(mutated
     proof = _connected_proof(connection)
     mutations: dict[str, object] = {
         "candidate_id": "different.candidate",
-        "source_kind": core.BindingSourceKind.PROFILE,
+        "source_kind": BindingSourceKind.PROFILE,
         "source_ref": "foreign_asset:asset-0002",
         "resolver_id": "different-resolver",
         "calculation_revision_id": "d" * 64,
@@ -450,7 +477,7 @@ def test_connected_proof_refuses_every_cross_component_identity_mismatch(mutated
         ValidationError,
         match=r"same connection|asserted connection|persisted source identity",
     ):
-        core.SourceConnectivityConnectedProof.model_validate(
+        SourceConnectivityConnectedProof.model_validate(
             {
                 "resolver_ownership": proof.resolver_ownership,
                 "encrypted_revision": proof.encrypted_revision.model_copy(update={"connection": different}),
@@ -465,21 +492,21 @@ def test_role_specific_proof_refuses_unrelated_or_wrong_role_evidence() -> None:
     evidence = _executable_evidence(
         unrelated,
         evidence_id="wrong-evidence",
-        role=core.SourceConnectivityExecutableEvidenceRole.OPERATOR_REACHABILITY,
+        role=SourceConnectivityExecutableEvidenceRole.OPERATOR_REACHABILITY,
     )
     with pytest.raises(ValidationError, match="asserted connection"):
-        core.SourceConnectivityOperatorReachabilityProof(
+        SourceConnectivityOperatorReachabilityProof(
             connection=connection,
             entrypoint_id=_ENTRYPOINT_ID,
             command_id=_COMMAND_ID,
-            route_id=core.ModeloCalculationRouteId.MODELO_WORK_CALCULATION,
+            route_id=ModeloCalculationRouteId.MODELO_WORK_CALCULATION,
             canonical_cli_path=("app", "modelo", "work", "calculate"),
             resolver_observed=True,
             evidence=(evidence,),
         )
     wrong_role = evidence.model_copy(update={"connection": connection})
     with pytest.raises(ValidationError, match="must carry role"):
-        core.SourceConnectivityEncryptedRevisionProof(
+        SourceConnectivityEncryptedRevisionProof(
             connection=connection,
             persisted_source_identity=connection.source_ref,
             persisted_source_fingerprint=_FINGERPRINT,
@@ -496,10 +523,10 @@ def test_proof_truth_claims_reject_coercible_substitutes(truthy: object) -> None
     evidence = _executable_evidence(
         connection,
         evidence_id="encrypted-revision",
-        role=core.SourceConnectivityExecutableEvidenceRole.ENCRYPTED_REVISION,
+        role=SourceConnectivityExecutableEvidenceRole.ENCRYPTED_REVISION,
     )
     with pytest.raises(ValidationError):
-        core.SourceConnectivityEncryptedRevisionProof.model_validate(
+        SourceConnectivityEncryptedRevisionProof.model_validate(
             {
                 "connection": connection,
                 "persisted_source_identity": connection.source_ref,
@@ -517,10 +544,10 @@ def test_false_strict_proof_assertion_is_refused() -> None:
     evidence = _executable_evidence(
         connection,
         evidence_id="encrypted-revision",
-        role=core.SourceConnectivityExecutableEvidenceRole.ENCRYPTED_REVISION,
+        role=SourceConnectivityExecutableEvidenceRole.ENCRYPTED_REVISION,
     )
     with pytest.raises(ValidationError, match="every strict proof assertion"):
-        core.SourceConnectivityEncryptedRevisionProof(
+        SourceConnectivityEncryptedRevisionProof(
             connection=connection,
             persisted_source_identity=connection.source_ref,
             persisted_source_fingerprint=_FINGERPRINT,
@@ -545,7 +572,7 @@ def test_encrypted_revision_proof_refuses_raw_or_normalised_source_reference_dri
     connection = _connection()
     proof = _connected_proof(connection).encrypted_revision
     with pytest.raises(ValidationError, match="persisted source identity"):
-        core.SourceConnectivityEncryptedRevisionProof.model_validate(
+        SourceConnectivityEncryptedRevisionProof.model_validate(
             proof.model_dump() | {"persisted_source_identity": persisted_source_identity},
         )
 
@@ -558,16 +585,16 @@ def test_authority_refuses_persisted_source_fingerprint_drift() -> None:
     )
     changed_proof = connected_proof.model_copy(update={"encrypted_revision": changed_revision_proof})
     with pytest.raises(ValidationError, match="does not match persisted source provenance"):
-        core.SourceConnectivityCensusRow.validate_with_authority(
+        SourceConnectivityCensusRow.validate_with_authority(
             _connected_payload(connection=connection, proof=changed_proof),
             authority=_CoreProtocolTestAuthority(),
         )
 
 
 def test_authority_refuses_a_deferred_source_kind() -> None:
-    connection = _connection(source_kind=core.BindingSourceKind.RELATED_PARTY_OPERATION)
+    connection = _connection(source_kind=BindingSourceKind.RELATED_PARTY_OPERATION)
     with pytest.raises(ValidationError, match="not enrolled"):
-        core.SourceConnectivityCensusRow.validate_with_authority(
+        SourceConnectivityCensusRow.validate_with_authority(
             _connected_payload(connection=connection),
             authority=_CoreProtocolTestAuthority(),
         )
@@ -577,7 +604,7 @@ def test_authority_refuses_an_arbitrary_operator_command_identity() -> None:
     connection = _connection()
     proof = _connected_proof(connection, command_id="anything")
     with pytest.raises(ValidationError, match="workflow is not supported"):
-        core.SourceConnectivityCensusRow.validate_with_authority(
+        SourceConnectivityCensusRow.validate_with_authority(
             _connected_payload(connection=connection, proof=proof),
             authority=_CoreProtocolTestAuthority(),
         )
@@ -586,14 +613,14 @@ def test_authority_refuses_an_arbitrary_operator_command_identity() -> None:
 @pytest.mark.parametrize(
     ("failure", "expected_cause"),
     (
-        ("source_enrollment", core.SourceConnectivityProofFailureCause.SOURCE_NOT_ENROLLED),
-        ("operator_workflow", core.SourceConnectivityProofFailureCause.OPERATOR_WORKFLOW_UNSUPPORTED),
-        ("encrypted_provenance", core.SourceConnectivityProofFailureCause.ENCRYPTED_PROVENANCE_MISMATCH),
+        ("source_enrollment", SourceConnectivityProofFailureCause.SOURCE_NOT_ENROLLED),
+        ("operator_workflow", SourceConnectivityProofFailureCause.OPERATOR_WORKFLOW_UNSUPPORTED),
+        ("encrypted_provenance", SourceConnectivityProofFailureCause.ENCRYPTED_PROVENANCE_MISMATCH),
     ),
 )
 def test_connected_proof_failures_emit_their_structured_pydantic_cause(
     failure: str,
-    expected_cause: core.SourceConnectivityProofFailureCause,
+    expected_cause: SourceConnectivityProofFailureCause,
 ) -> None:
     """Classified live-proof failures must not collapse to Pydantic's ``value_error`` fallback."""
     connection = _connection()
@@ -610,7 +637,7 @@ def test_connected_proof_failures_emit_their_structured_pydantic_cause(
         proof = proof.model_copy(update={"encrypted_revision": encrypted_revision})
 
     with pytest.raises(ValidationError) as error:
-        core.SourceConnectivityCensusRow.validate_with_authority(
+        SourceConnectivityCensusRow.validate_with_authority(
             _connected_payload(connection=connection, proof=proof),
             authority=authority,
         )
@@ -619,10 +646,10 @@ def test_connected_proof_failures_emit_their_structured_pydantic_cause(
     assert error_type == expected_cause.value
     assert error_type != "value_error"
     assert (
-        core.SourceConnectivityProofFailureCause.from_validation_error_type("value_error")
-        is core.SourceConnectivityProofFailureCause.LIVE_PROOF_VALIDATION_FAILED
+        SourceConnectivityProofFailureCause.from_validation_error_type("value_error")
+        is SourceConnectivityProofFailureCause.LIVE_PROOF_VALIDATION_FAILED
     )
-    assert core.SourceConnectivityProofFailureCause.from_validation_error_type(error_type) is expected_cause
+    assert SourceConnectivityProofFailureCause.from_validation_error_type(error_type) is expected_cause
 
 
 def test_authority_refuses_missing_or_changed_executable_evidence() -> None:
@@ -632,7 +659,7 @@ def test_authority_refuses_missing_or_changed_executable_evidence() -> None:
         operator_reference="src/cadrumo/fake/tests/test_does_not_exist.py:999",
     )
     with pytest.raises(ValidationError) as missing_error:
-        core.SourceConnectivityCensusRow.validate_with_authority(
+        SourceConnectivityCensusRow.validate_with_authority(
             _connected_payload(connection=connection, proof=missing_proof),
             authority=_CoreProtocolTestAuthority(
                 evidence_digests={
@@ -642,10 +669,10 @@ def test_authority_refuses_missing_or_changed_executable_evidence() -> None:
             ),
         )
     assert missing_error.value.errors(include_url=False)[0]["type"] == (
-        core.SourceConnectivityProofFailureCause.EXECUTABLE_EVIDENCE_MISSING.value
+        SourceConnectivityProofFailureCause.EXECUTABLE_EVIDENCE_MISSING.value
     )
     with pytest.raises(ValidationError) as digest_mismatch_error:
-        core.SourceConnectivityCensusRow.validate_with_authority(
+        SourceConnectivityCensusRow.validate_with_authority(
             _connected_payload(connection=connection),
             authority=_CoreProtocolTestAuthority(
                 evidence_digests={
@@ -656,13 +683,13 @@ def test_authority_refuses_missing_or_changed_executable_evidence() -> None:
             ),
         )
     assert digest_mismatch_error.value.errors(include_url=False)[0]["type"] == (
-        core.SourceConnectivityProofFailureCause.EXECUTABLE_EVIDENCE_DIGEST_MISMATCH.value
+        SourceConnectivityProofFailureCause.EXECUTABLE_EVIDENCE_DIGEST_MISMATCH.value
     )
     assert (
-        core.SourceConnectivityProofFailureCause.from_validation_error_type(
+        SourceConnectivityProofFailureCause.from_validation_error_type(
             digest_mismatch_error.value.errors(include_url=False)[0]["type"],
         )
-        is core.SourceConnectivityProofFailureCause.EXECUTABLE_EVIDENCE_DIGEST_MISMATCH
+        is SourceConnectivityProofFailureCause.EXECUTABLE_EVIDENCE_DIGEST_MISMATCH
     )
 
 
@@ -672,6 +699,6 @@ def test_connected_proof_rejects_non_test_executable_evidence_shape() -> None:
         _executable_evidence(
             connection,
             evidence_id="implementation-only",
-            role=core.SourceConnectivityExecutableEvidenceRole.RESOLVER_ENROLLMENT,
+            role=SourceConnectivityExecutableEvidenceRole.RESOLVER_ENROLLMENT,
             reference="src/cadrumo/application/aggregation/_source_mesh.py:1",
         )

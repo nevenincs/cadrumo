@@ -52,14 +52,16 @@ from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ....adapters.persistence.storage import LLM_RUN_TELEMETRY_NAMESPACE, secure_object_repository_for_active_bucket
 from ....adapters.persistence.storage.crypto.encrypted_columns import secure_object_key_digest
 from ....core.config import load_settings
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import canonical_json_bytes
-from ....core.time import UtcInstant, now
+from ....core.time.clock import now
+from ....core.time.utc import UtcInstant
 from ....llm.errors import LLMCacheError
 from ....llm.retention import select_retention_removal_keys
+from ...persistence.storage._secure_object_namespaces import LLM_RUN_TELEMETRY_NAMESPACE
+from ...persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 
 __all__ = ["LLMRunRecord", "LLMRunTelemetryRecorder", "LLMRunTelemetrySummary"]
 

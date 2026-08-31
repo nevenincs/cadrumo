@@ -36,8 +36,8 @@ from pydantic import ValidationError
 
 from ... import core as _core_package
 from ...tests.fixtures.identity_holder import single_field_holder
-from ..hex import Hex64Str
 from .. import identity as _identity_package
+from ..hex import Hex64Str
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

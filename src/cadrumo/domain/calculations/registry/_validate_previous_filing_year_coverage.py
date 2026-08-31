@@ -51,8 +51,8 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 
-from ....core.modelo import Modelo
 from ....core.aggregation import BindingSourceKind
+from ....core.modelo import Modelo
 from .bindings_previous_filing import previous_filing_source_reference
 from .errors import RegistryValidationError
 from .ids import BindingId, ModeloId

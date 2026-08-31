@@ -61,8 +61,8 @@ from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ...core.identity import BucketId, CalculationRevisionId, WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.time import UtcInstant
-from ...core.time import now as _utc_now
+from ...core.time.clock import now as _utc_now
+from ...core.time.utc import UtcInstant
 from ._review_package_counter_sign import CounterSignedReceipt, verify_counter_signed_receipt
 from ._review_package_recipient_encryption import (
     RecipientDecryptedPackage,

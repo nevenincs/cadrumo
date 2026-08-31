@@ -11,13 +11,9 @@ import pytest
 
 from ....tests.loopback_recording_server import run_loopback_server, stop_loopback_server
 from ...config import Settings
-from .. import (
-    HttpTelemetrySink,
-    TelemetryTier,
-    emit_command_invocation_telemetry,
-    emit_error_frequency_telemetry,
-    emit_llm_run_telemetry,
-)
+from .._http_sink import HttpTelemetrySink
+from .._producers import emit_command_invocation_telemetry, emit_error_frequency_telemetry, emit_llm_run_telemetry
+from .._tier import TelemetryTier
 from ._telemetry_endpoint_support import RecordingTelemetryEndpoint
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

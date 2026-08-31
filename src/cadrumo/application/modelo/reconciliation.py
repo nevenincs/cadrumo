@@ -53,11 +53,11 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.modelo import Modelo
 from ...core.errors.hierarchy import CadrumoError
 from ...core.identity import BucketId, WorkUnitId, same_tax_identifier, tax_id_identity_token
-from ...core.time import now
+from ...core.modelo import Modelo
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.time.clock import now
 from ...domain.filing.reconciliation.errors import ReconciliationDeclaracionParseError
 from ...domain.justificante import JustificanteParseError
 from ._action_errors import WorkUnitNotFoundError
@@ -98,8 +98,8 @@ if TYPE_CHECKING:
     from ...core.period import Period
     from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
     from ...domain.justificante import Justificante
-    from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
     from ...domain.modelos.calculation_revision import CalculationRevision
+    from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 
 _DECLARATION_CASILLA_RECONCILE_MODELOS: frozenset[Modelo] = frozenset(
     {Modelo.M100, Modelo.M111, Modelo.M130, Modelo.M190, Modelo.M303, Modelo.M390}

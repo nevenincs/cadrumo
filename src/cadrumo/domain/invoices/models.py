@@ -20,10 +20,9 @@ from typing import TYPE_CHECKING, Final, Self, cast, override
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
-from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from ...core.aggregation import IntracomOperationType, TravelAgencyMediationType
 from ...core.country_code import CountryCodeAlpha2
-from ...core.decimal import coerce_decimal
+from ...core.decimal._coerce import coerce_decimal
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import content_hash_hex
@@ -35,10 +34,11 @@ from ...core.identity import (
     tax_id_identity_token,
 )
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.money import CENT, round_to_cents
+from ...core.money.rounding import CENT, round_to_cents
 from ...core.parsing import normalise_iso_4217_currency
 from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
-from ...core.time import UtcInstant
+from ...core.time.utc import UtcInstant
+from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from ..identifiers import canonical_decimal_string
 from ..iva.classification import InvoiceKind, TransactionKind
 from ..iva.errors import IvaRateNotFoundError

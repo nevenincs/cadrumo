@@ -87,11 +87,11 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ....core.export_layout_format import ExportLayoutFormat
-from ....core.export_exemption_reason import ExportExemptionReason
+from ....core.aggregation import BindingSourceKind
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId
-from ....core.aggregation import BindingSourceKind
+from ....core.export_exemption_reason import ExportExemptionReason
+from ....core.export_layout_format import ExportLayoutFormat
 from .bindings import binding_source_casilla_ids, binding_source_modelo
 from .export import derive_export_layouts_from_bindings, fixed_width_record_casilla_ids
 from .runtime_graph import expression_casilla_refs

@@ -6,7 +6,7 @@ import secrets
 from datetime import timedelta
 
 from ..adapters.outbound.google.calc_sheets_apply import apply_export_plan, preview_export_plan
-from ..adapters.outbound.storage import build_google_credentials, resolve_drive_root_folder_id
+from ..adapters.outbound.storage._factory import build_google_credentials, resolve_drive_root_folder_id
 from ..adapters.persistence.operations.financial_operand_custody import (
     OperationFinancialOperandCustodyFilesystemRepository,
 )
@@ -18,7 +18,7 @@ from ..application.auth.operation_definitions import (
     build_auth_operation_definitions,
     build_auth_operation_registrations,
 )
-from ..application.export import (
+from ..application.export.google_operation import (
     GoogleSheetsExportRemoteResult,
     GoogleSheetsExportRootFolderRequiredError,
     GoogleSheetsExportService,
@@ -42,7 +42,8 @@ from ..application.operations.registry import (
     OperationDefinition,
     OperationRegistry,
 )
-from ..application.storage.calc_sheets import SheetExportPlan, TabName, export_modelo_to_sheets
+from ..application.storage.calc_sheets._export_service import export_modelo_to_sheets
+from ..application.storage.calc_sheets._records import SheetExportPlan, TabName
 from ..application.user_profile.censal_operation import CENSAL_OPERATION_DEFINITION, build_censal_operation_registration
 from ..application.user_profile.operations import (
     build_user_profile_operation_definitions,
@@ -50,7 +51,7 @@ from ..application.user_profile.operations import (
 )
 from ..core.config import Settings, load_settings
 from ..core.paths import effective_storage_root
-from ..core.time import now
+from ..core.time.clock import now
 
 _LEASE_DURATION = timedelta(minutes=10)
 _EXECUTION_TIMEOUT = timedelta(hours=1)

@@ -46,18 +46,18 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 
 from ...directory_scan import scan_directory
-from .. import (
+from .._bundle_signing import (
     CorpusBundleSigningError,
     CorpusBundleSigningKeyNotFoundError,
-    CorpusBundleVerificationError,
     assert_corpus_bundle_signature_verifies,
-    build_corpus_bundle,
     corpus_signing_public_key,
     generate_corpus_signing_keypair,
     load_corpus_signing_keypair,
     sign_corpus_bundle,
     verify_corpus_bundle_signature,
 )
+from ..errors import CorpusBundleVerificationError
+from ..manifest import build_corpus_bundle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

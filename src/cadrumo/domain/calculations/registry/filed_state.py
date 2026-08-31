@@ -8,10 +8,10 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
-from ....core.models import STRICT_FROZEN_CONFIG
-from ....core.period import FilingPeriodCode, Period
 from ....core.casilla_id import CasillaId
 from ....core.filing_year import FilingYear
+from ....core.models import STRICT_FROZEN_CONFIG
+from ....core.period import FilingPeriodCode, Period
 from .bindings import CasillaObservation, RegistryModeloObservation
 from .errors import RegistryValidationError
 from .formula_runtime import RegistryCalculationResult

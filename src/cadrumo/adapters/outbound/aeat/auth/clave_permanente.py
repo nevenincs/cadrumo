@@ -74,7 +74,7 @@ from .....core.config import unwrap_optional_secret
 from .....core.errors.hierarchy import AeatLoginAssertionError
 from .....core.logging import get_logger
 from .....core.remote_authority import canonical_remote_hostname
-from .....core.time import now
+from .....core.time.clock import now
 from .._playwright import PlaywrightTimeoutError
 from . import session_store as session_store
 from ._clave_provider_common import (
@@ -133,7 +133,7 @@ class ClavePermanenteAuthProvider:
         self._lifecycle = _CloseIntentBarrier()
         self._browser_session: BrowserSessionPort | None = None
         self._context: BrowserContextPort | None = None
-        self._active_session: AeatSession | None = None
+        self.active_session: AeatSession | None = None
 
     # ── Protocol surface ────────────────────────────────────────────────────
 
@@ -156,7 +156,7 @@ class ClavePermanenteAuthProvider:
         :class:`~adapters.outbound.aeat.auth.ClavePermanenteSessionDetail`.
         """
         async with self._lifecycle.work():
-            if self._active_session is not None:
+            if self.active_session is not None:
                 raise AeatLoginAssertionError(
                     "ClavePermanenteAuthProvider already has an active session; "
                     "call close() before authenticating again",
@@ -226,7 +226,7 @@ class ClavePermanenteAuthProvider:
             )
         if not is_exact_active_provider_session(
             session,
-            self._active_session,
+            self.active_session,
             provider_kind=AuthProviderKind.CLAVE_PERMANENTE,
             detail_type=ClavePermanenteSessionDetail,
         ):
@@ -326,7 +326,7 @@ class ClavePermanenteAuthProvider:
             browser_session_closed = await self._close_browser_session(self._browser_session)
             if browser_session_closed:
                 self._browser_session = None
-            self._active_session = None
+            self.active_session = None
         if not context_closed or not browser_session_closed:
             raise AuthProviderCleanupError(
                 "ClavePermanenteAuthProvider retained browser resources after close",
@@ -641,7 +641,7 @@ class ClavePermanenteAuthProvider:
         )
         self._browser_session = session_like
         self._context = context
-        self._active_session = session
+        self.active_session = session
         log.info("ClavePermanenteAuthProvider: authenticated landing=%s", landing_url)
         return session
 
@@ -769,7 +769,7 @@ class ClavePermanenteAuthProvider:
             )
             self._browser_session = session_like
             self._context = context
-            self._active_session = session
+            self.active_session = session
 
             assertion = await self._verify_in_work(session, target_url=target_url)
             if not assertion.is_valid:
@@ -783,7 +783,7 @@ class ClavePermanenteAuthProvider:
                     "idle_deadline": assertion.attempted_at + AEAT_SESSION_IDLE_TTL,
                 },
             )
-            self._active_session = refreshed
+            self.active_session = refreshed
             refreshed_metadata = metadata.model_copy(
                 update={
                     "authenticated_at": refreshed.authenticated_at,
@@ -806,7 +806,7 @@ class ClavePermanenteAuthProvider:
             context_closed = await self._close_context(context, reason="resume cleanup")
             self._browser_session = None
             self._context = None if context_closed else context
-            self._active_session = None
+            self.active_session = None
             if not await self._close_browser_session(session_like):
                 self._browser_session = session_like
             raise

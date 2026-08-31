@@ -38,10 +38,10 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.outbound.fx import ECB_RATE_SOURCE_ID
+from ....adapters.outbound.fx._ecb_provider import ECB_RATE_SOURCE_ID
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ....adapters.persistence.storage import SensitivityClass
 from ....core.aggregation import IntracomOperationType, TravelAgencyMediationType
+from ....core.classification.policies import SensitivityClass
 from ....tests.secure_sql import isolated_runtime_profile
 from ...iva.classification import InvoiceKind, TransactionKind
 from ...iva.oss import OssIossRegime

@@ -53,13 +53,8 @@ from ..fincas.amortization_ledger import compute_amortization_for_year
 from ..fincas.enums import ExpenseCategory, UseType
 from ..fincas.expense_rollup import CarryForwardEntry, compute_gastos_for_year
 from ..fincas.models import Finca, FincaGasto, FincaRendimientoRecord
-from ..renta import (
-    MaritimeWorkerFacts,
-    RentaDeductibilityContext,
-    RentaDeductibleExpenseFact,
-    calculate_art_7p_exemption,
-    evaluate_renta_deductibility,
-)
+from ..renta._ledger_expenses import RentaDeductibilityContext, RentaDeductibleExpenseFact, evaluate_renta_deductibility
+from ..renta._maritime_exemption import MaritimeWorkerFacts, calculate_art_7p_exemption
 
 _SiteKey = tuple[str, str]
 

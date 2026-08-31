@@ -17,7 +17,7 @@ from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError,
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.period import Period, hydrate_scenario_filing_period
 from cadrumo.core.casilla_id import CasillaId
-from cadrumo.core.time import now
+from cadrumo.core.time.clock import now
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import (
     RegistrySnapshotError,

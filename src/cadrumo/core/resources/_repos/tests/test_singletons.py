@@ -4,18 +4,16 @@ from __future__ import annotations
 
 import pytest
 
-from .. import (
-    ApoderamientosRepository,
-    IvaRateTableRepository,
-    RecargoBandsRepository,
-    TopicCatalogueRepository,
-)
+from ..apoderamientos import ApoderamientosRepository
+from ..iva_rate_tables import IvaRateTableRepository
+from ..recargo_bands import RecargoBandsRepository
+from ..topics import TopicCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def test_apoderamientos_singleton_loads_real_catalogue() -> None:
-    from .....domain.auth.apoderamientos import ApoderamientosCatalogue
+    from .....domain.auth.apoderamientos.catalogue import ApoderamientosCatalogue
 
     repo = ApoderamientosRepository()
 
@@ -33,7 +31,7 @@ def test_apoderamientos_singleton_loads_real_catalogue() -> None:
 
 
 def test_topics_singleton_loads_real_catalogue() -> None:
-    from ....topics import TopicCatalogue
+    from ....topics.catalogue import TopicCatalogue
 
     repo = TopicCatalogueRepository()
 

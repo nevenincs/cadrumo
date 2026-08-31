@@ -13,14 +13,23 @@ from datetime import datetime
 from types import MappingProxyType
 from typing import Self, override
 
-from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, field_serializer, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    NonNegativeInt,
+    TypeAdapter,
+    field_serializer,
+    field_validator,
+    model_validator,
+)
 
-from ...core.hex import Hex64Str
-from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors.hierarchy import CoreValidationError
+from ...core.hex import Hex64Str
 from ...core.identity import BucketId, ContentDigest
-from ...core.time import UtcInstant, parse_iso_datetime, validate_utc_aware
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.time.utc import UtcInstant, parse_iso_datetime, validate_utc_aware
+from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from .enums import AttachmentKind, AttachmentSource
 from .errors import AttachmentValidationError
 
@@ -135,7 +144,7 @@ class Attachment(BaseModel):
     source_reference: str = Field(min_length=1)
     sha256: ContentDigest
     mime_type: str = Field(min_length=1)
-    bytes_size: int = Field(ge=0)
+    bytes_size: NonNegativeInt
     captured_at: UtcInstant
     linked_transaction_ids: tuple[str, ...] = ()
     linked_invoice_ids: tuple[str, ...] = ()

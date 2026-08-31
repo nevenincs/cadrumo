@@ -19,8 +19,8 @@ from typing import TYPE_CHECKING, Final, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
+from .identity._bucket import BucketId
 from .models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from .identity import BucketId
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Callable
@@ -200,8 +200,8 @@ def _await_uncontended(operation: Callable[[], None]) -> None:
 
 def write_pointer(root: Path, pointer: BucketPointer) -> None:
     """Atomically replace the one strict pointer record under its owner lock."""
-    from .fsync import fsync_parent_dir
     from .atomic_write import atomic_write_hardened_bytes
+    from .fsync import fsync_parent_dir
 
     target = pointer_path(root)
     _await_uncontended(lambda: atomic_write_hardened_bytes(target, pointer.to_toml().encode("utf-8")))

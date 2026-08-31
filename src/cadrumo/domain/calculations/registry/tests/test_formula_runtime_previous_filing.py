@@ -6,8 +6,8 @@ from decimal import Decimal
 
 import pytest
 
-from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
+from .....core.authority_grade import RegistryAuthorityGrade
 from .....tests.registry_observations import registry_grounded_modelo_observation
 from ..bindings_previous_filing import (
     previous_filing_observation_requirements,

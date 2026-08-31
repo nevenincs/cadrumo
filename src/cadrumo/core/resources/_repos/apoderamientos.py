@@ -21,7 +21,7 @@ class ApoderamientosRepository(ResourceCacheRepository[object, None]):
 
     @override
     def _load(self, key: None) -> object:
-        from ....domain.auth.apoderamientos import load_default_catalogue
+        from ....domain.auth.apoderamientos.catalogue import load_default_catalogue
 
         return load_default_catalogue()
 

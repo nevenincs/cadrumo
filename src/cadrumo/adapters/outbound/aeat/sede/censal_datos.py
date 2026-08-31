@@ -49,13 +49,13 @@ from .....application.user_profile.censal_observation import (
     CensalObservationAddress,
     CensalObservationIdentity,
 )
-from .....core.text_fold import fold_diacritics
 from .....core.async_cleanup import close_async_resources
 from .....core.config import Settings
 from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....core.parsing import parse_date
-from .....core.time import now
+from .....core.text_fold import fold_diacritics
+from .....core.time.clock import now
 from .....domain.calculations.registry.remote_state_guard import (
     RemoteOperation,
     RemoteStateGuardPolicy,
@@ -63,7 +63,8 @@ from .....domain.calculations.registry.remote_state_guard import (
 )
 from .._html import parse_html
 from .._playwright import Page, PlaywrightError
-from ..browser import BrowserSession, DefaultBrowserSession, default_browser_session_factory
+from ..browser._factory import DefaultBrowserSession, default_browser_session_factory
+from ..browser.session import BrowserSession
 from ._adapter_utils import assert_read_http_for
 from ._auth_state import storage_state_for_session
 from ._browser_constants import PLAYWRIGHT_WAIT_DOMCONTENTLOADED

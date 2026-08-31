@@ -7,9 +7,11 @@ from enum import StrEnum
 from itertools import pairwise
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, model_validator
 
+from ...core.identity import ContentDigest
 from ...core.operations import (
+    LIFECYCLES_BEFORE_ANY_CANCELLATION_REQUEST,
     OperationCancellation,
     OperationClosePolicy,
     OperationEffect,
@@ -18,9 +20,7 @@ from ...core.operations import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
-from ...core.identity import ContentDigest
-from ...core.operations import LIFECYCLES_BEFORE_ANY_CANCELLATION_REQUEST
-from ...core.time import validate_utc_aware
+from ...core.time.utc import validate_utc_aware
 from .event_replay import OperationEventCursor
 from .events import OperationEventCode, OperationEventSequence, OperationLogSeverity
 from .interactions import OperationActorReference, OperationInteractionId
@@ -193,7 +193,7 @@ class OperationPublicProgressV1(BaseModel):
 
     model_config = _PUBLIC_CONFIG
 
-    completed: Annotated[int, Field(ge=0)]
+    completed: NonNegativeInt
     total: Annotated[int, Field(gt=0)]
     unit_code: OperationEventCode | None
     phase_code: OperationEventCode | None
@@ -442,7 +442,7 @@ class OperationPublicProgressEventV1(_OperationPublicEventBase):
     """Public projection of one bounded operation progress event."""
 
     kind: Literal[OperationEventKind.PROGRESS] = OperationEventKind.PROGRESS
-    completed: Annotated[int, Field(ge=0)]
+    completed: NonNegativeInt
     total: Annotated[int, Field(gt=0)]
     unit_code: OperationEventCode | None
 

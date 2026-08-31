@@ -60,7 +60,7 @@ from ._inventory import SRC_CADRUMO, production_ast_items
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _SRC_ROOT = SRC_CADRUMO
-_CANONICAL_UTC_MODULE = _SRC_ROOT / "core" / "time" / "_utc.py"
+_CANONICAL_UTC_MODULE = _SRC_ROOT / "core" / "time" / "utc.py"
 
 
 def _tree_has_inline_tzinfo_guard(tree: ast.AST) -> bool:

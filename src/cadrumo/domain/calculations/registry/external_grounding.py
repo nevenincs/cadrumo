@@ -71,17 +71,17 @@ from typing import Annotated, Final, Literal
 
 from pydantic import BaseModel, BeforeValidator, Field, ValidationError, model_validator
 
-from ....core.external_oracle_corpus import ExternalOracleCorpus
-from ....core.models import STRICT_FROZEN_CONFIG
-from ....core.period import RegistrySelectorPeriodCode
 from ....core.casilla_id import CasillaId
-from ....core.prose_elision import ElidedProse
 from ....core.directory_scan import (
     scan_directory,
 )
 from ....core.external_constants import UTF_8_ENCODING
+from ....core.external_oracle_corpus import ExternalOracleCorpus
 from ....core.filing_year import FilingYear
-from ....core.resources import bundled_path
+from ....core.models import STRICT_FROZEN_CONFIG
+from ....core.period import RegistrySelectorPeriodCode
+from ....core.prose_elision import ElidedProse
+from ....core.resources._boundary import bundled_path
 from .errors import RegistryValidationError
 from .ids import ModeloId, RevisionId
 from .loader import load_registry_tree

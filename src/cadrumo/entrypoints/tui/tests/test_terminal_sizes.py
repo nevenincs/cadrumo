@@ -32,7 +32,7 @@ from textual.widgets import Button, DataTable, Input, Select
 from ....adapters.persistence.operations.journal import OperationJournalRepository
 from ....adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ....adapters.persistence.operations.secure_references import operation_secure_reference_repository
-from ....adapters.persistence.storage import SecureObjectRepository
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....application.auth.apoderado_flow import build_apoderado_flow_definition
 from ....application.modelo.operation_definitions import (
     MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
@@ -50,8 +50,8 @@ from ....application.user_profile.overview import ProfileOverview, build_profile
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.flows import FlowMode
-from ....core.time import now
-from ....domain.auth import load_default_catalogue
+from ....core.time.clock import now
+from ....domain.auth.apoderamientos.catalogue import load_default_catalogue
 from ....tests.profile_capsule import load_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
 from ..components.host import ScreenHostApp

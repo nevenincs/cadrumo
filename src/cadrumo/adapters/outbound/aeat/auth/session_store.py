@@ -23,7 +23,6 @@ from pathlib import Path
 
 from pydantic import BaseModel, JsonValue, TypeAdapter, model_validator
 
-from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.auth_session_keys import (
     former_product_auth_session_path_for,
     is_former_product_auth_session_path,
@@ -31,12 +30,11 @@ from .....core.auth_session_keys import (
 from .....core.errors.hierarchy import AuthError
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.hashing import content_hash_hex
-from .....core.time import now
-from ....persistence.storage import (
-    AEAT_BROWSER_SESSION_NAMESPACE,
-    SecureObjectRepository,
-    secure_object_repository_for_active_bucket,
-)
+from .....core.models import STRICT_FROZEN_CONFIG
+from .....core.time.clock import now
+from ....persistence.storage._secure_object_namespaces import AEAT_BROWSER_SESSION_NAMESPACE
+from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+from ....persistence.storage.sql import SecureObjectRepository
 
 _SESSION_VERSION = AEAT_BROWSER_SESSION_NAMESPACE.schema_version
 type JsonObject = Mapping[str, JsonValue]

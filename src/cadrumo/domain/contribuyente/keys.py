@@ -24,8 +24,8 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.i18n import Translatable as tr
+from ...core.models import STRICT_FROZEN_CONFIG
 from .errors import ProfileKeysRegistrationError, ProfileValidationError
 from .normalise import normalise_key
 

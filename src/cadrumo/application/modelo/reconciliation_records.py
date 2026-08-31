@@ -26,11 +26,11 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Protocol
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_validator
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.identity import BucketId, WorkUnitId
-from ...core.time import validate_utc_aware
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.time.utc import validate_utc_aware
 from ...domain.buckets.event import BucketEvent, BucketEventId
 from ...domain.calculations.registry.ids import (
     LegalRefId,
@@ -242,7 +242,7 @@ class ModeloReconciliationHistoryEntry(BaseModel):
     source_kind: ModeloReconciliationEvidenceKind
     source_path: str
     verdict: ModeloReconciliationVerdict
-    diff_count: int = Field(ge=0)
+    diff_count: NonNegativeInt
     diffs: tuple[ModeloReconciliationDiff, ...] = ()
     actor: ModeloActorLabel
     reconciled_at: datetime

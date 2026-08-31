@@ -43,8 +43,8 @@ from ....core.identity import ContentDigest, TransactionId
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.parsing import IsoCurrencyCode
 from ....core.period import Period
-from ....core.time import now as _utc_now
-from ....core.time import validate_utc_aware
+from ....core.time.clock import now as _utc_now
+from ....core.time.utc import validate_utc_aware
 from ....domain.calculations.registry.ids import (
     BindingId,
     FormulaId,

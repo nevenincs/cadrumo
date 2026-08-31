@@ -11,11 +11,11 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.config import Settings, load_settings
 from ...core.errors.severity import BaseSeverity
 from ...core.i18n import tr
 from ...core.logging import get_logger
+from ...core.models import STRICT_FROZEN_CONFIG
 from .errors import ManifestError, ManualNotFoundError, ManualParseError, ManualReviewRequiredError
 from .loader import iter_sections, load_manual, resolve_part_root
 from .schema import ManualId, ManualPart, Section

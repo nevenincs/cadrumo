@@ -42,12 +42,12 @@ from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import NameOID
 from pydantic import BaseModel, Field, PrivateAttr, SecretStr
 
-from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.errors.hierarchy import AuthError
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.identity import IdentityError, validate_spanish_tax_id
 from .....core.logging import get_logger
-from .....core.time import coerce_utc_aware
+from .....core.models import STRICT_FROZEN_CONFIG
+from .....core.time.utc import coerce_utc_aware
 from .errors import AuthValidationError
 
 log = get_logger(__name__)

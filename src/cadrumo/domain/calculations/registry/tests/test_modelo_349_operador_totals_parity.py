@@ -54,10 +54,12 @@ import pytest
 
 from .....core.aggregation import BindingSourceKind
 from .....tests.registry_tree import bundled_registry_tree
-from ..invoice_bindings import (
-    InvoiceObservation,
+from .._invoice_row_materialization import (
     Modelo349OperadorTotalsParity,
     compute_modelo_349_operador_totals_parity,
+)
+from ..invoice_bindings import (
+    InvoiceObservation,
     resolve_invoice_binding_values,
 )
 from ._modelo_349_registry_support import _modelo_349_revision
@@ -210,7 +212,7 @@ def test_totals_parity_default_is_exact_equality_not_a_hardcoded_cent() -> None:
     equality instead of merely being silent, and the default is pinned against a
     positive statement.
     """
-    from .....core.resources import bundled_path
+    from .....core.resources._boundary import bundled_path
     from ..snapshot import build_snapshot
 
     # Scoped to M349 alone rather than through ``bundled_authority()``,

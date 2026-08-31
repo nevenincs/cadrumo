@@ -25,7 +25,7 @@ from ...core.hashing import sha256_hex
 from ...core.identity import SnapshotId, TransactionId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.parsing import IsoCurrencyCode
-from ...core.time import UtcInstant
+from ...core.time.utc import UtcInstant
 from ...core.unit_proportion import UnitProportion
 from ..calculations.registry.ids import LegalRefId, SourceRefId
 

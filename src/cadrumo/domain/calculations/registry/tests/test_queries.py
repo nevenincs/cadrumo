@@ -8,8 +8,8 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from .....core.modelo import Modelo
 from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.modelo import Modelo
 from ..authority import bundled_authority
 from ..errors import NoRevisionForPeriodError, RegistryValidationError
 from ..queries import RegistryQueryService, ResolvedRegistryQueryContext, relations_by_target_binding

@@ -11,8 +11,10 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, SecretStr
 
 from ...core.auth_provider import AuthProviderKind
+from ...core.bucket_pointer import require_active_bucket_id
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import (
+    EFFECTS_WITHOUT_PARTIAL_COMMIT,
     OperationCancellation,
     OperationClosePolicy,
     OperationDeadline,
@@ -20,9 +22,7 @@ from ...core.operations import (
     OperationEffect,
     OperationInteractionKind,
 )
-from ...core.bucket_pointer import require_active_bucket_id
-from ...core.operations import EFFECTS_WITHOUT_PARTIAL_COMMIT
-from ...core.time import now
+from ...core.time.clock import now
 from ..operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,

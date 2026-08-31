@@ -21,7 +21,7 @@ from __future__ import annotations
 from ...application.review.enums import ReviewSeverity, ReviewState
 from ...core.identity import BucketId
 from ...core.json_contract import OutputSchema
-from ...core.time import UtcInstant
+from ...core.time.utc import UtcInstant
 from ...domain.calculations.registry.ids import LegalRefId
 
 

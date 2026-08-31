@@ -30,11 +30,11 @@ from typing import TYPE_CHECKING, Protocol
 
 from pydantic import BaseModel, Field
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.modelo import UNMODELED_OBLIGATIONS as _UNMODELED_OBLIGATIONS
 from ...core.calendar_shift import shift_by_calendar_years
 from ...core.filing_year import FilingYear
-from ...core.time import now, today_madrid
+from ...core.modelo import UNMODELED_OBLIGATIONS as _UNMODELED_OBLIGATIONS
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.time.clock import now, today_madrid
 from ...domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
     derive_modelo_applicability,
@@ -46,7 +46,7 @@ from ...domain.deadlines.engine import DeadlineEngine
 from ...domain.deadlines.errors import DeadlineValidationError, NoDeadlineWindowsError
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.deadlines.recargo import twelve_month_anniversary
-from ...domain.retention import TAX_RECORD_RETENTION_FLOOR_YEARS
+from ...domain.retention._floor import TAX_RECORD_RETENTION_FLOOR_YEARS
 from .errors import OverviewExplainError
 
 if TYPE_CHECKING:

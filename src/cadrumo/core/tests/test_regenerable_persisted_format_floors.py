@@ -2,8 +2,7 @@
 
 import pytest
 
-from ..compatibility_lifecycle import PERSISTED_FORMATS, RELEASED_FORMAT_FLOORS
-from ..compatibility_lifecycle import misclassified_floor_keys
+from ..compatibility_lifecycle import PERSISTED_FORMATS, RELEASED_FORMAT_FLOORS, misclassified_floor_keys
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

@@ -10,17 +10,17 @@ from collections.abc import Mapping
 from enum import StrEnum
 from typing import Annotated, Final, Literal
 
-from pydantic import BeforeValidator, Field, field_validator, model_validator
+from pydantic import BeforeValidator, Field, NonNegativeInt, field_validator, model_validator
 
-from ....core.export_layout_format import ExportLayoutFormat
+from ....core.casilla_id import CasillaId
 from ....core.declaracion_idioma import DeclaracionIdioma
+from ....core.export_layout_format import ExportLayoutFormat
 from ....core.filing_producer_key import FilingProducerKey
 from ....core.filing_projection_ref import (
     FilingProjectionRef,
     filing_projection_ref_casilla_id,
     hydrate_filing_projection_ref,
 )
-from ....core.casilla_id import CasillaId
 from ..export_field_kind import CasillaFieldKind, CasillaFieldKindValue
 from .errors import RegistryValidationError
 from .export_semantics import (
@@ -638,7 +638,7 @@ class ExportRecordDefinition(RegistryModel):
 
     id: RecordId
     record_type: str
-    order: int = Field(ge=0)
+    order: NonNegativeInt
     encoding: ExportEncodingValue
     line_ending: Literal["crlf", "lf", "none"]
     required: bool = True

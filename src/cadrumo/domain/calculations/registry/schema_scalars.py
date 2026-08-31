@@ -9,10 +9,10 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, BeforeValidator, Field, SerializeAsAny
 
-from ....core.iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
 from ....core.country_code import COUNTRY_CODE_ALPHA2_PATTERN
-from ....core.decimal import coerce_decimal
+from ....core.decimal._coerce import coerce_decimal
 from ....core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
+from ....core.iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
 from ....core.identity import IdentityError, validate_spanish_tax_id
 from ....core.period import StandardPeriodCode
 from ....core.spanish_postcode import SPANISH_POSTCODE_PATTERN, SPANISH_PROVINCE_CODE_PATTERN

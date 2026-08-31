@@ -18,7 +18,6 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, TypeAdapter, ValidationError, field_validator, model_validator
 
-from ...core.hex import Hex64Str
 from ...core.bucket_pointer import BucketPointer
 from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import (
@@ -26,9 +25,10 @@ from ...core.hashing import (
     prefixed_digest,
     validate_prefixed_digest,
 )
+from ...core.hex import Hex64Str
 from ...core.identity import PrefixedContentDigest, ProfileLabel
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.time import validate_utc_aware
+from ...core.time.utc import validate_utc_aware
 from .custody_hold_models import (
     ProfileCustodyHoldAssessment,
     ProfileCustodyRetentionOverride,

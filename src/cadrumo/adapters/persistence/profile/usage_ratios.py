@@ -25,20 +25,15 @@ from pydantic import ValidationError
 
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
-from ....core.time import now
+from ....core.time.clock import now
 from ....domain.categories.spending_category import home_office_categories
-from ....domain.usage_ratios import (
-    ELIGIBLE_USAGE_RATIO_CATEGORIES,
-    CensoRatioMismatchError,
-    UsageRatioPersistenceError,
-    UsageRatioProfile,
-    derive_home_office_ratios_from_censo,
-    usage_ratios_object_key,
-)
-from ..storage import USAGE_RATIO_PROFILE_NAMESPACE
+from ....domain.usage_ratios._model import ELIGIBLE_USAGE_RATIO_CATEGORIES, UsageRatioProfile
+from ....domain.usage_ratios._service import derive_home_office_ratios_from_censo, usage_ratios_object_key
+from ....domain.usage_ratios.errors import CensoRatioMismatchError, UsageRatioPersistenceError
+from ..storage._secure_object_namespaces import USAGE_RATIO_PROFILE_NAMESPACE
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
-    from ..storage import SecureObjectRepository
+    from ..storage.sql import SecureObjectRepository
 
 __all__ = [
     "load_usage_ratios",
@@ -59,7 +54,8 @@ def load_usage_ratios(*, bucket_id: str, objects: SecureObjectRepository | None 
         bucket_id: Profile bucket identifier.
         objects: Optional :class:`SecureObjectRepository` override; resolved from settings when absent.
     """
-    from ..storage import Envelope, inner_envelope_classification_is_expected, inner_envelope_version_is_current
+    from ..storage._schema_lineage import inner_envelope_classification_is_expected, inner_envelope_version_is_current
+    from ..storage.envelope._envelope import Envelope
     from ..storage.errors import ClassificationError, EnvelopeVersionError
     from ..storage.runtime_repository import secure_object_repository_for_bucket
 
@@ -137,7 +133,7 @@ def save_usage_ratios(
         bucket_id: Profile bucket identifier.
         objects: Optional :class:`SecureObjectRepository` override; resolved from settings when absent.
     """
-    from ..storage import Envelope
+    from ..storage.envelope._envelope import Envelope
     from ..storage.runtime_repository import secure_object_repository_for_bucket
 
     envelope = Envelope[UsageRatioProfile](

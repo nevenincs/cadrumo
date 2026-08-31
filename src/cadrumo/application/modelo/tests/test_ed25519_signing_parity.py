@@ -191,6 +191,6 @@ def test_round_trip_verification_succeeds() -> None:
 
 
 def _utc_now():
-    from ....core.time import now
+    from ....core.time.clock import now
 
     return now()

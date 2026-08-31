@@ -39,6 +39,8 @@ from typing import Final, NamedTuple
 
 import pytest
 
+from ..config import override_settings
+from ..observability.fingerprint import compute_data_root_sha256, data_root_cache_exclusions
 from ..storage_taxonomy import (
     FINGERPRINT_EXCLUDED_STORAGE_FIELDS,
     STORAGE_TAXONOMY,
@@ -46,8 +48,6 @@ from ..storage_taxonomy import (
     StorageCategory,
     StorageScope,
 )
-from ..config import override_settings
-from ..observability.fingerprint import compute_data_root_sha256, data_root_cache_exclusions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

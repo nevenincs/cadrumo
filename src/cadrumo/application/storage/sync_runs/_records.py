@@ -49,12 +49,12 @@ from collections.abc import Sequence
 from datetime import datetime
 from typing import Annotated, Protocol, runtime_checkable
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, NonNegativeInt, field_validator
 
+from ....core.identity import BucketId
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.sync_surface import SyncSurface
-from ....core.identity import BucketId
-from ....core.time import validate_utc_aware
+from ....core.time.utc import validate_utc_aware
 from ....domain.buckets.event import BucketEvent, BucketEventId
 
 __all__ = [
@@ -126,8 +126,8 @@ class SyncRunCoverage(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    unit_count: int = Field(ge=0)
-    divergence_count: int = Field(ge=0)
+    unit_count: NonNegativeInt
+    divergence_count: NonNegativeInt
 
     @field_validator("divergence_count")
     @classmethod

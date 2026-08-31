@@ -10,12 +10,6 @@ import textwrap
 import pytest
 from pydantic import ValidationError
 
-from ...operator_action_enums import (
-    ActionArgumentSource,
-    ActionArgumentStatus,
-    ActionConditionality,
-    ActionEvidenceProvenance,
-)
 from ...config import override_settings
 from ...json_contract import (
     ActionConditionEvidence,
@@ -24,6 +18,12 @@ from ...json_contract import (
     ResolvedPreconditionAction,
 )
 from ...locks_errors import LockAcquisitionError
+from ...operator_action_enums import (
+    ActionArgumentSource,
+    ActionArgumentStatus,
+    ActionConditionality,
+    ActionEvidenceProvenance,
+)
 from ..error_codes import ErrorEnvelope, build_error_envelope, render_error_json, render_error_text
 from ..hierarchy import ActiveProfilePointerError, CadrumoError
 

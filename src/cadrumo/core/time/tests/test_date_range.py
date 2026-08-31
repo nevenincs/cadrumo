@@ -18,7 +18,7 @@ from datetime import date
 import pytest
 
 from ...errors.hierarchy import CoreValidationError
-from .._range import validate_inclusive_date_range, validate_inclusive_iso_date_range
+from ..date_range import validate_inclusive_date_range, validate_inclusive_iso_date_range
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

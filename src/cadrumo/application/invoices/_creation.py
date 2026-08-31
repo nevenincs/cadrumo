@@ -31,13 +31,13 @@ from typing import Final
 
 from pydantic import BaseModel
 
-from ...adapters.outbound.fx import default_ecb_rate_provider
+from ...adapters.outbound.fx._ecb_provider import default_ecb_rate_provider
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core.aggregation import IntracomOperationType
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.money import round_to_cents
+from ...core.money.rounding import round_to_cents
 from ...core.parsing import normalise_iso_4217_currency
-from ...core.time import now
+from ...core.time.clock import now
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import emit_bucket_event
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
@@ -117,7 +117,7 @@ def emit_catalogue_invoice_event(
     outlive the slim store that used to be their only emitter.
     """
     from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-    from ...adapters.persistence.storage import secure_object_repository_for_bucket
+    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 
     repository = event_repository or BucketEventHistoryRepository(
         objects=secure_object_repository_for_bucket(bucket_id),

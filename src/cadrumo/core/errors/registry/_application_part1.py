@@ -328,7 +328,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.topics.TopicNotFoundError",
+        "cadrumo.core.topics.catalogue.TopicNotFoundError",
         ErrorCode(
             code="REFUSED_TOPIC_NOT_FOUND",
             category=ErrorCategory.REFUSED,
@@ -338,7 +338,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.topics.TopicCatalogueEmptyError",
+        "cadrumo.core.topics.catalogue.TopicCatalogueEmptyError",
         ErrorCode(
             code="REFUSED_TOPIC_CATALOGUE_EMPTY",
             category=ErrorCategory.REFUSED,

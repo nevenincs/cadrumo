@@ -54,9 +54,9 @@ from pathlib import Path
 import pytest
 
 from .....application.aggregation import aggregate_renta_ledger_expenses
-from .....core.period import Period
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.resources import bundled_path
+from .....core.period import Period
+from .....core.resources._boundary import bundled_path
 from ....categories.spending_category import SpendingCategory
 from ....invoices.models import InvoiceCatalogue
 from ....transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState

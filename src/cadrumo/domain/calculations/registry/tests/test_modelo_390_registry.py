@@ -8,10 +8,10 @@ from typing import Any
 
 import pytest
 
+from .....core.aggregation import BindingAggregationOp, BindingSourceKind
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.aggregation import BindingAggregationOp, BindingSourceKind
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from ....iva.schema import IvaLedgerObservationRole
 from .._validate import RegistryValidator
 from ..binding_aggregation import binding_aggregation_op

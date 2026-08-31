@@ -8,10 +8,10 @@ from typing import Literal
 
 from pydantic import Field, field_validator, model_validator
 
-from ....core.period import FilingPeriodCode, RegistrySelectorPeriodCode
-from ....core.casilla_id import CasillaId
 from ....core.aggregation import RelationAggregation
+from ....core.casilla_id import CasillaId
 from ....core.identity import AeatBoxNumber, ContinuidadId
+from ....core.period import FilingPeriodCode, RegistrySelectorPeriodCode
 from ._schema_export_exemption import ExportExemptionReasonValue
 from .errors import RegistryValidationError
 from .ids import (

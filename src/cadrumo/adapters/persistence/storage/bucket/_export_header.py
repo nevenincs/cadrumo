@@ -20,11 +20,11 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field, field_validator
 
-from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.errors.hierarchy import CoreValidationError
 from .....core.identity import BucketId, ContentDigest
+from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.product_identity import PRODUCT_IDENTITY
-from .....core.time import validate_utc_aware
+from .....core.time.utc import validate_utc_aware
 
 #: The one archive framing this build reads and writes. The header declares
 #: it and the model refuses every other value, so a bundle carrying a

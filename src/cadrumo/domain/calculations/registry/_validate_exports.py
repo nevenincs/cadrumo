@@ -35,9 +35,9 @@ from collections import Counter
 from collections.abc import Mapping
 from pathlib import Path
 
-from ....core.filing_projection_ref import FilingProjectionRef
-from ....core.casilla_id import CasillaId
 from ....core.aggregation import BindingAggregationOp
+from ....core.casilla_id import CasillaId
+from ....core.filing_projection_ref import FilingProjectionRef
 from ..export_field_kind import CasillaFieldKind
 from ._validate_evidence import EvidenceValidator
 from ._validate_export_field_widths import validate_draft_field_slot_width

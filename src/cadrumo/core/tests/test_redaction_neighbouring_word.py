@@ -35,7 +35,7 @@ from collections.abc import Callable
 import pytest
 
 from ..identity import normalise_nif_iva, same_tax_identifier
-from ..redaction import redact_for_cli_output, redact_for_log
+from ..redaction.rules import redact_for_cli_output, redact_for_log
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

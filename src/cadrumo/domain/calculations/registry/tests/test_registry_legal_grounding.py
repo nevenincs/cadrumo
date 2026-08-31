@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from .....core.directory_scan import scan_directory
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from .._validate import RegistryValidator
 from ..authority import bundled_authority
 from ..corpus_catalogue import verify_source_catalogue

@@ -51,8 +51,8 @@ from typing import ClassVar
 from pydantic import BaseModel
 
 from .models import STRICT_FROZEN_CONFIG
-from .storage_taxonomy import StorageCategory, storage_location
 from .product_identity import PRODUCT_IDENTITY
+from .storage_taxonomy import StorageCategory, storage_location
 
 _WINDOWS_PLATFORM = "win32"
 _MACOS_PLATFORM = "darwin"

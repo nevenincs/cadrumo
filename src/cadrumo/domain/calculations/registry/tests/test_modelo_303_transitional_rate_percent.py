@@ -53,7 +53,7 @@ from pathlib import Path
 import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
 from ....period import Period, calculation_filing_date
 from ..authority import bundled_authority

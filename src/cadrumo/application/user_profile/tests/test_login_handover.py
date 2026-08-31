@@ -26,11 +26,8 @@ from uuid import UUID
 import pytest
 from sqlalchemy.exc import DatabaseError as SqlDatabaseError
 
-from ....adapters.persistence.storage import (
-    build_profile_custody_port,
-    build_profile_login_session_port,
-    master_key,
-)
+from ....adapters.persistence.storage._profile_custody import build_profile_custody_port
+from ....adapters.persistence.storage._profile_login_session import build_profile_login_session_port
 from ....adapters.persistence.storage.custody.acceleration_receipt import profile_session_path, resume_profile_session
 from ....adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from ....adapters.persistence.storage.custody.errors import ProfileCustodyRecordError
@@ -38,12 +35,17 @@ from ....adapters.persistence.storage.custody.filesystem import (
     compare_and_replace_same_or_predecessor_profile_custody_local_record,
 )
 from ....adapters.persistence.storage.custody.sentinel import PROFILE_CUSTODY_SENTINEL_FILENAME
-from ....core.profile_session import ProfileSessionRefusalReason
+from ....adapters.persistence.storage.master_key.active_session import (
+    close_active_bucket_session,
+    current_active_bucket_session,
+)
+from ....adapters.persistence.storage.master_key.login_throttle import evaluate_login_throttle
 from ....core import config as config_module
 from ....core.bucket_pointer import BucketPointer, read_pointer, write_pointer
 from ....core.config import Settings
 from ....core.directory_scan import iter_directory
-from ....core.time import now as _now
+from ....core.profile_session import ProfileSessionRefusalReason
+from ....core.time.clock import now as _now
 from ....domain.buckets.event_repository import BucketEventHistoryPersistenceError
 from ....tests.secure_sql import isolated_profile_storage_root
 from ..authentication import ProfileAuthenticationRefusedError
@@ -121,7 +123,7 @@ def _register_two_profiles(storage_root: Path) -> tuple[str, str]:
 def _close_live_login() -> None:
 
     close_active_profile_record_session()
-    master_key.close_active_bucket_session()
+    close_active_bucket_session()
 
 
 def _child_settings(storage_root: Path) -> tuple[Settings, Token[Settings | None], ExitStack]:
@@ -346,7 +348,7 @@ def _conflicted_b_handover_child(
     _ = settings
     try:
         login_profile(name=profile_a, passphrase_callback=lambda: _PASSWORD_A)
-        active_a = master_key.current_active_bucket_session()
+        active_a = current_active_bucket_session()
         record_a = require_profile_record_session(profile_a)
 
         def candidate_password() -> str:
@@ -358,13 +360,13 @@ def _conflicted_b_handover_child(
         try:
             login_profile(name=profile_b, passphrase_callback=candidate_password)
         except ActiveProfilePointerTransactionError:
-            active_after_conflict = master_key.current_active_bucket_session()
+            active_after_conflict = current_active_bucket_session()
             assert active_after_conflict is not None
             result_queue.put(
                 {
                     "active_bucket": active_after_conflict.bucket_id,
                     "record_profile": str(require_profile_record_session(profile_a).profile_id),
-                    "same_live": master_key.current_active_bucket_session() is active_a,
+                    "same_live": current_active_bucket_session() is active_a,
                     "same_record": require_profile_record_session(profile_a) is record_a,
                 }
             )
@@ -387,7 +389,7 @@ def _acceleration_failure_handover_child(
     try:
         login_profile(name=profile_a, passphrase_callback=lambda: _PASSWORD_A)
         result = login_profile(name=profile_b, passphrase_callback=lambda: _PASSWORD_B)
-        active = master_key.current_active_bucket_session()
+        active = current_active_bucket_session()
         result_queue.put(
             {
                 "active_bucket": active.bucket_id if active is not None else None,
@@ -418,7 +420,7 @@ def _recover_selected_profile_child(
     _ = settings
     try:
         result = login_profile(name=None, passphrase_callback=lambda: _PASSWORD_B)
-        active = master_key.current_active_bucket_session()
+        active = current_active_bucket_session()
         assert active is not None
         result_queue.put(
             {
@@ -898,7 +900,7 @@ def test_rejected_b_password_is_non_oracular_and_leaves_active_a_intact(tmp_path
         profile_a, profile_b = _register_two_profiles(storage_root)
         try:
             login_profile(name=profile_a, passphrase_callback=lambda: _PASSWORD_A)
-            active_a = master_key.current_active_bucket_session()
+            active_a = current_active_bucket_session()
             record_a = require_profile_record_session(profile_a)
             pointer_a = read_pointer(storage_root)
 
@@ -908,14 +910,14 @@ def test_rejected_b_password_is_non_oracular_and_leaves_active_a_intact(tmp_path
             assert refused.value.translated_message == "application.user_profile.errors.profile_authentication_refused"
             assert refused.value.context is None
             assert candidate not in repr(refused.value)
-            assert master_key.evaluate_login_throttle(
+            assert evaluate_login_throttle(
                 storage_root=storage_root,
                 bucket_id=profile_b,
                 now=_now(),
             ).throttled
 
             assert read_pointer(storage_root) == pointer_a
-            assert master_key.current_active_bucket_session() is active_a
+            assert current_active_bucket_session() is active_a
             assert require_profile_record_session(profile_a) is record_a
             assert not profile_session_path(storage_root=storage_root, profile_id=UUID(profile_b)).exists()
         finally:
@@ -929,7 +931,7 @@ def test_invalid_b_candidate_material_leaves_active_a_and_pointer_bytes_intact(t
         instant = datetime.now(UTC)
         try:
             login_profile(name=profile_a, now=instant, passphrase_callback=lambda: _PASSWORD_A)
-            active_a = master_key.current_active_bucket_session()
+            active_a = current_active_bucket_session()
             record_a = require_profile_record_session(profile_a)
             pointer_a = read_pointer(storage_root)
             sentinel_path = storage_root / "buckets" / profile_b / "data" / PROFILE_CUSTODY_SENTINEL_FILENAME
@@ -943,7 +945,7 @@ def test_invalid_b_candidate_material_leaves_active_a_and_pointer_bytes_intact(t
                 )
 
             assert read_pointer(storage_root) == pointer_a
-            assert master_key.current_active_bucket_session() is active_a
+            assert current_active_bucket_session() is active_a
             assert require_profile_record_session(profile_a) is record_a
             assert not profile_session_path(storage_root=storage_root, profile_id=UUID(profile_b)).exists()
         finally:
@@ -956,7 +958,7 @@ def test_corrupt_b_activation_store_rolls_back_every_a_authority(tmp_path: Path)
         profile_a, profile_b = _register_two_profiles(storage_root)
         try:
             login_profile(name=profile_a, passphrase_callback=lambda: _PASSWORD_A)
-            active_a = master_key.current_active_bucket_session()
+            active_a = current_active_bucket_session()
             record_a = require_profile_record_session(profile_a)
             pointer_a = read_pointer(storage_root)
             a_session_path = profile_session_path(storage_root=storage_root, profile_id=UUID(profile_a))
@@ -972,7 +974,7 @@ def test_corrupt_b_activation_store_rolls_back_every_a_authority(tmp_path: Path)
             restored_pointer = read_pointer(storage_root)
             assert restored_pointer.bucket_id == pointer_a.bucket_id
             assert restored_pointer.transition_revision == pointer_a.transition_revision + 2
-            assert master_key.current_active_bucket_session() is active_a
+            assert current_active_bucket_session() is active_a
             assert require_profile_record_session(profile_a) is record_a
             assert (a_session_path.read_bytes() if a_session_path.is_file() else None) == a_session_before
             assert not b_session_path.exists()
@@ -986,15 +988,15 @@ def test_successful_b_handover_publishes_before_retiring_a(tmp_path: Path) -> No
         profile_a, profile_b = _register_two_profiles(storage_root)
         try:
             login_profile(name=profile_a, passphrase_callback=lambda: _PASSWORD_A)
-            active_a = master_key.current_active_bucket_session()
+            active_a = current_active_bucket_session()
 
             result = login_profile(name=profile_b, passphrase_callback=lambda: _PASSWORD_B)
 
             assert result.bucket_id == profile_b
             assert result.closed_previous_bucket_id == profile_a
-            assert master_key.current_active_bucket_session() is not active_a
-            assert master_key.current_active_bucket_session() is not None
-            active_b = master_key.current_active_bucket_session()
+            assert current_active_bucket_session() is not active_a
+            assert current_active_bucket_session() is not None
+            active_b = current_active_bucket_session()
             assert active_b is not None
             assert active_b.bucket_id == profile_b
             assert require_profile_record_session(profile_b).profile_id.hex == profile_b.replace("-", "")

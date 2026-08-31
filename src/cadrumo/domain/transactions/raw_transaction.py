@@ -20,11 +20,11 @@ from types import MappingProxyType
 
 from pydantic import BaseModel, Field, field_serializer, field_validator
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.identity import ContentDigest
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.parsing import normalise_iso_4217_currency
-from ...core.time import UtcInstant, validate_utc_aware
+from ...core.time.utc import UtcInstant, validate_utc_aware
 from .errors import TransactionValidationError
 
 

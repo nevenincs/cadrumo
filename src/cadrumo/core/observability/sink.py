@@ -111,7 +111,7 @@ class JsonlRunSink(logging.Handler):
             # thread-safe on a frozen model, so holding the lock across
             # the encode step would serialise work that does not need
             # mutual exclusion.
-            from ..redaction import redact_structured
+            from ..redaction.rules import redact_structured
 
             redacted = redact_structured(event.model_dump(mode="json"), rules=diagnostic_rules())
             line = json.dumps(redacted, sort_keys=True, separators=(",", ":")) + "\n"

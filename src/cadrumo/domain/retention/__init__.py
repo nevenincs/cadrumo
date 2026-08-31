@@ -33,23 +33,4 @@ See Also:
 
 from __future__ import annotations
 
-from ._floor import (
-    TAX_RECORD_RETENTION_FLOOR_YEARS,
-    RetainableFilingRecord,
-    RetentionBlockingRecord,
-    RetentionFloorAssessment,
-    assess_retention_floor,
-    erase_is_blocked,
-)
-from .errors import RetentionError, RetentionFloorError
-
-__all__ = [
-    "TAX_RECORD_RETENTION_FLOOR_YEARS",
-    "RetainableFilingRecord",
-    "RetentionBlockingRecord",
-    "RetentionError",
-    "RetentionFloorAssessment",
-    "RetentionFloorError",
-    "assess_retention_floor",
-    "erase_is_blocked",
-]
+__all__: tuple[str, ...] = ()

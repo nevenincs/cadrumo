@@ -30,7 +30,7 @@ from pathlib import Path
 import pytest
 
 from .....core.config import override_settings
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from .._loader_internals import (
     _collect_registry_directory_fingerprints,
     _collect_registry_tree_fingerprints,

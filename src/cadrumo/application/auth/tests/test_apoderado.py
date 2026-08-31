@@ -10,12 +10,12 @@ import pytest
 from prompt_toolkit.input import create_pipe_input
 from prompt_toolkit.output.plain_text import PlainTextOutput
 
-from ....adapters.persistence.storage.bucket import bucket_paths
+from ....adapters.persistence.storage.bucket._layout import bucket_paths
 from ....core.config import Settings, override_settings
 from ....core.flows import FlowMode
 from ....core.identity import canonical_bucket_id
-from ....core.time import now
-from ....domain.auth.apoderamientos import UnknownScopeError
+from ....core.time.clock import now
+from ....domain.auth.apoderamientos.catalogue import UnknownScopeError
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile, isolated_two_bucket_runtime
 from ...flows.definition import FlowPage
 from ...flows.errors import FlowRunAbandonedError

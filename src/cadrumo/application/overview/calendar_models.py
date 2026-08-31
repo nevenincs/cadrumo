@@ -21,23 +21,23 @@ from enum import StrEnum
 from types import MappingProxyType
 from typing import Annotated, Protocol, Self, cast
 
-from pydantic import BaseModel, BeforeValidator, Field, PlainSerializer, model_validator
+from pydantic import BaseModel, BeforeValidator, Field, NonNegativeInt, PlainSerializer, model_validator
 
-from ...core.notificacion_estado_servicio import NotificacionEstadoServicio as _NotificacionEstadoServicio
-from ...core.post_filing_event import PostFilingEventKind as _PostFilingEventKind
 from ...core.filing_year import FilingYear
 from ...core.identity import AeatCsv, CalculationRevisionId, FilingRecordId, SnapshotId, WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.notificacion_estado_servicio import NotificacionEstadoServicio as _NotificacionEstadoServicio
 from ...core.period import Period as _Period
+from ...core.post_filing_event import PostFilingEventKind as _PostFilingEventKind
 from ...core.prose_elision import ElidedProse
 from ...core.source_locator import SourceUrl
-from ...core.time import validate_inclusive_date_range as _validate_inclusive_date_range
+from ...core.time.date_range import validate_inclusive_date_range as _validate_inclusive_date_range
 from ...domain.calculations.registry.applicability import ApplicabilityVerdict
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.deadlines.festivos import HolidayJurisdiction as _HolidayJurisdiction
 from ...domain.deadlines.models import ObligationStatus as _ObligationStatus
 from ...domain.deadlines.models import Recovery as _Recovery
-from ..operator_actions import DeclaredNextAction
+from ..operator_actions._models import DeclaredNextAction
 from .coverage import ObligationCoverageReport
 
 
@@ -451,13 +451,13 @@ class OverviewStatusReport(BaseModel):
     model_config = _STRICT_FROZEN
 
     active_profile_name: str | None = None
-    transactions: int = Field(ge=0)
-    invoices: int = Field(ge=0)
-    drafts: int = Field(ge=0)
+    transactions: NonNegativeInt
+    invoices: NonNegativeInt
+    drafts: NonNegativeInt
     work_units: int = Field(default=0, ge=0)
     discarded_work_units: int = Field(default=0, ge=0)
     calculation_revisions: int = Field(default=0, ge=0)
-    unreadable_rows: int = Field(ge=0)
+    unreadable_rows: NonNegativeInt
     filing_obligation_advisories: tuple[str, ...] = Field(default=())
     unsupported_work_create_modelos: tuple[str, ...] = Field(default=())
 

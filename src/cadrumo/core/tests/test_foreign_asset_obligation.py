@@ -10,13 +10,13 @@ from __future__ import annotations
 
 import pytest
 
+from ..aggregation import ForeignAssetClass
 from ..foreign_asset_obligation import (
     FOREIGN_ASSET_CLASS_OBLIGATION_GROUP,
     MODELO_720_FOREIGN_ASSET_CLASS_CODES,
     ForeignAssetObligationGroup,
     foreign_asset_obligation_group,
 )
-from ..aggregation import ForeignAssetClass
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

@@ -10,9 +10,9 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....core.tipos_actividad import TipoActividad
-from ....core.prorrata_exclusions import Art104TresExclusion
 from ....core.concepto_ingreso import ConceptoIngreso
+from ....core.prorrata_exclusions import Art104TresExclusion
+from ....core.tipos_actividad import TipoActividad
 from ...iva.prorrata import InputClassification
 from ...iva.schema import IvaCategory, IvaExemptionArticle
 from ..enums import BusinessClassification, TransactionDirection, TransactionLifecycleState

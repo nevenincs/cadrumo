@@ -18,8 +18,8 @@ from typing import Literal, Protocol
 
 from pydantic import Field, model_validator
 
-from ....core.revision_review import RevisionReviewStatus
 from ....core.casilla_id import CasillaId
+from ....core.revision_review import RevisionReviewStatus
 from .casilla_membership import casillas_by_id
 from .ids import BindingId, LegalRefId, ModeloId, RevisionId, SourceRefId
 from .schema import (

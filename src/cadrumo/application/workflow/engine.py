@@ -19,6 +19,10 @@ from collections.abc import Mapping
 from datetime import date, datetime
 from typing import NoReturn
 
+from ...core.config import Settings
+from ...core.errors.hierarchy import SiteHealthError
+from ...core.errors.severity import BaseSeverity
+from ...core.logging import get_logger
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import (
     ActionArgumentStatus,
@@ -26,25 +30,17 @@ from ...core.operator_action_enums import (
     ActionEvidenceProvenance,
     NoRecoveryOutcome,
 )
-from ...core.period import Period
-from ...core.config import Settings
-from ...core.errors.hierarchy import SiteHealthError
-from ...core.errors.severity import BaseSeverity
-from ...core.logging import get_logger
 from ...core.parsing import enum_value as _enum_value
-from ...core.time import now as _utcnow
-from ...core.time import today_madrid
+from ...core.period import Period
+from ...core.time.clock import now as _utcnow
+from ...core.time.clock import today_madrid
 from ...domain.deadlines.models import ModeloDeadline, ObligationStatus, TaxpayerProfile
 from ...domain.filing.errors import ModeloBuilderError
-from ...domain.submission import ModeloDraftStatus, SubmissionPreflightError
+from ...domain.submission._protocols import ModeloDraftStatus
+from ...domain.submission.errors import SubmissionPreflightError
 from ..filing.runtime import build_runtime_schema_provider
-from ..operator_actions import (
-    ActionArgumentBinding,
-    ActionReference,
-    ConditionEvidence,
-    PreconditionVerdict,
-    no_action_precondition_verdict,
-)
+from ..operator_actions._models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
+from ..operator_actions._preconditions import no_action_precondition_verdict
 from ._deadline_stage import abort_missing_deadline_obligation, resolve_deadline_stage_obligation
 from .engine_helpers import (
     DeadlineRole,

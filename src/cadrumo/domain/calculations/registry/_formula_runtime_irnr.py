@@ -31,8 +31,8 @@ from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING, NoReturn
 
-from ....core.irnr import ConvenioOverrideKind, TipoRentaIrnr
 from ....core.casilla_id import CasillaId
+from ....core.irnr import ConvenioOverrideKind, TipoRentaIrnr
 from ...contribuyente.renta_codes import UE_EEA_COUNTRY_CODES
 from .convenio import ConvenioOverride
 from .errors import RegistryValidationError

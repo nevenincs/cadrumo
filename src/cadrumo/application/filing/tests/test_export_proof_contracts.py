@@ -9,15 +9,14 @@ from uuid import UUID
 import pytest
 from pydantic import ValidationError
 
-from ....core.period import Period
 from ....core.hashing import sha256_hex
-from ....core.time import now
+from ....core.period import Period
+from ....core.time.clock import now
 from ....domain.filing.errors import FilingExportValidationError
-from .. import (
-    DeclaracionExportResult,
+from .._export import export_draft
+from .._export_proof import (
     FilingExportConformanceRequest,
     FilingExportConformanceVectorEvidence,
-    FilingExportConsumedResult,
     FilingExportGeneratedOutput,
     FilingExportOfficialProbe,
     FilingExportProofAssessment,
@@ -28,9 +27,8 @@ from .. import (
     FilingExportPublicProvenance,
     FilingExportSecureReplayReceipt,
     FilingExportSecureReplayRequest,
-    FilingExportValidatedPayload,
-    export_draft,
 )
+from .._export_verification import DeclaracionExportResult, FilingExportConsumedResult, FilingExportValidatedPayload
 from ._export_support import (
     _approved_modelo_111_registry_draft,
     _schema_provider,

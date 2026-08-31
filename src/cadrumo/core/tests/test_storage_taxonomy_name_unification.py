@@ -28,6 +28,7 @@ from typing import Final
 
 import pytest
 
+from ..config import Settings, StorageRouteKind
 from ..config_state_root import (
     BUCKET_DB_DIRNAME,
     BUCKETS_DIRNAME,
@@ -39,7 +40,6 @@ from ..config_state_root import (
 )
 from ..config_storage_route import classify_storage_route_for_settings
 from ..storage_taxonomy import StorageCategory, storage_location
-from ..config import Settings, StorageRouteKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

@@ -52,11 +52,11 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import (
 )
 from pydantic import BaseModel, Field
 
-from ...adapters.persistence.storage import MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE as _NAMESPACE
-from ...core.hex import HEX_PATTERN_64 as _HEX_PATTERN_64
-from ...core.hex import HEX_PATTERN_128 as _HEX_PATTERN_128
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.corpus_manifest import CorpusBundleError, CorpusManifestTamperError, verify_corpus_bundle
+from ...adapters.persistence.storage._secure_object_namespaces import (
+    MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE as _NAMESPACE,
+)
+from ...core.corpus_manifest.errors import CorpusBundleError, CorpusManifestTamperError
+from ...core.corpus_manifest.manifest import verify_corpus_bundle
 from ...core.ed25519_signing import (
     digest_signature_is_valid,
     ed25519_private_key_from_hex,
@@ -65,14 +65,17 @@ from ...core.ed25519_signing import (
     sign_digest_hex,
 )
 from ...core.errors.hierarchy import CadrumoError
+from ...core.hex import HEX_PATTERN_64 as _HEX_PATTERN_64
+from ...core.hex import HEX_PATTERN_128 as _HEX_PATTERN_128
 from ...core.identity import BucketId, CalculationRevisionId, canonical_bucket_id
-from ...core.time import UtcInstant
-from ...core.time import now as _utc_now
-from .review_package import assert_review_package_verifies
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.time.clock import now as _utc_now
+from ...core.time.utc import UtcInstant
 from ._review_package_keypair import ensure_singleton_keypair
+from .review_package import assert_review_package_verifies
 
 if TYPE_CHECKING:
-    from ...adapters.persistence.storage import SecureObjectRepository
+    from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 
 #: Wire-format version of the signature envelope. Bumped when the envelope
 #: schema changes shape (e.g. a future multi-signer / counter-sign extension).

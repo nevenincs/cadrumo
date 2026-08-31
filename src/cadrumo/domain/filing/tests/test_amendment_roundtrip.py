@@ -21,10 +21,10 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.persistence.profile.filing_amendments import ModeloAmendmentRepository
-from ....core.storage_taxonomy_locations import storage_path
-from ....core.storage_taxonomy import StorageCategory
-from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.period import Period
+from ....core.storage_taxonomy import StorageCategory
+from ....core.storage_taxonomy_locations import storage_path
 from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ...calculations.registry.schema_references import RegistrySnapshotRef
 from ..amendment import (
@@ -252,8 +252,8 @@ def test_filing_amendment_emptied_delta_surfaces_at_load(
 
     from sqlalchemy import select
 
-    from ....adapters.persistence.storage import FILING_AMENDMENTS_NAMESPACE
-    from ....adapters.persistence.storage.sql import SecureObjectRow
+    from ....adapters.persistence.storage._secure_object_namespaces import FILING_AMENDMENTS_NAMESPACE
+    from ....adapters.persistence.storage.sql._orm import SecureObjectRow
     from ....adapters.persistence.storage.sql.session import session_scope
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:

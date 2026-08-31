@@ -71,12 +71,13 @@ import keyring.core
 from click.testing import Result
 from pydantic import BaseModel, Field, JsonValue
 
-from cadrumo.adapters.persistence.storage import close_active_bucket_session, dispose_engine
+from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from cadrumo.adapters.persistence.storage.sql.engine import dispose_engine
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import publish_test_profile_capsule
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core.atomic_write import atomic_write_best_effort_text
 from cadrumo.core.config import load_settings, override_settings
-from cadrumo.core.time import frozen_clock
+from cadrumo.core.time.clock import frozen_clock
 from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.tests.cli_runner import invoke_cached_cli, semantic_cli_text
 from cadrumo.tests.profile_capsule import (
@@ -492,8 +493,8 @@ def _provisioned_sandbox_profile() -> Iterator[None]:
     with open_test_profile_session(SANDBOX_PROFILE_ID):
         from uuid import UUID
 
-        from cadrumo.application.evidence import LegalHoldCaseAuthority
-        from cadrumo.application.filing import try_record_filing_retention_snapshot
+        from cadrumo.application.evidence._profile_legal_hold import LegalHoldCaseAuthority
+        from cadrumo.application.filing._profile_filing_retention import try_record_filing_retention_snapshot
 
         record = upsert_test_profile_facts(SANDBOX_PROFILE_ID, _SANDBOX_PROFILE_FACTS)
         with bound_test_profile_record(SANDBOX_PROFILE_ID) as repository:

@@ -23,7 +23,7 @@ from pydantic import ValidationError
 
 from ....tests.env_scope import isolated_aeat_env, settings_without_env_file
 from ...config import Settings
-from .. import TelemetryTier
+from .._tier import TelemetryTier
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

@@ -13,9 +13,9 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ..core.identity._digest import PrefixedContentDigest
 from ..core.models import STRICT_FROZEN_CONFIG
-from ..core.identity import PrefixedContentDigest
-from ..core.time import validate_utc_aware
+from ..core.time.utc import validate_utc_aware
 
 
 class ProfileDeletionHoldOwnerProjection(BaseModel):

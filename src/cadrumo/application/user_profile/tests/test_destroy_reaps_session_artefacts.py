@@ -32,18 +32,19 @@ from uuid import UUID
 
 import pytest
 
-from ....adapters.persistence.storage import master_key
 from ....adapters.persistence.storage.custody.acceleration_receipt import profile_session_path
-from ....adapters.persistence.storage.master_key import (
-    BucketSession,
+from ....adapters.persistence.storage.master_key.active_session import (
     bind_active_bucket_session,
-    login_throttle_path,
+    close_active_bucket_session,
+    current_active_bucket_session,
 )
+from ....adapters.persistence.storage.master_key.bucket_session import BucketSession
+from ....adapters.persistence.storage.master_key.login_throttle import login_throttle_path, record_login_failure
 from ....core.bucket_pointer import read_pointer
-from ....core.time import now as _now
+from ....core.time.clock import now as _now
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...evidence import LegalHoldCaseAuthority
-from ...filing import FilingRetentionAuthority
+from ...evidence._profile_legal_hold import LegalHoldCaseAuthority
+from ...filing._profile_filing_retention import FilingRetentionAuthority
 from ..custody_service import (
     _ProfileCustodyTransactionCapability as ProfileCustodyTransactionService,
 )
@@ -67,7 +68,7 @@ def _close_live_login() -> None:
     """Release both process-local authorities without asserting anything."""
 
     close_active_profile_record_session()
-    master_key.close_active_bucket_session()
+    close_active_bucket_session()
 
 
 def _register_with_a_live_process_secret(storage_root: Path) -> tuple[UUID, BucketSession]:
@@ -145,7 +146,7 @@ def test_destroying_a_profile_clears_its_durable_failed_login_backoff(tmp_path: 
             )
             profile_id = UUID(outcome.profile_id)
             _authorise_clear_hold(storage_root, profile_id)
-            master_key.record_login_failure(storage_root=storage_root, bucket_id=outcome.profile_id, now=_now())
+            record_login_failure(storage_root=storage_root, bucket_id=outcome.profile_id, now=_now())
             throttle_path = login_throttle_path(storage_root=storage_root, bucket_id=outcome.profile_id)
             assert throttle_path.is_file(), "the backoff must exist, or its removal proves nothing"
 
@@ -178,7 +179,7 @@ def test_destroying_a_profile_revokes_its_live_process_secret_and_clears_the_poi
             _destroy(storage_root, profile_id)
 
             assert live.sealed is True
-            assert master_key.current_active_bucket_session() is None
+            assert current_active_bucket_session() is None
             assert read_pointer(storage_root).bucket_id is None
         finally:
             _close_live_login()
@@ -248,6 +249,6 @@ def test_the_process_secret_revocation_spares_an_unrelated_live_session(tmp_path
 
             assert effect is ProfileCustodySessionOwnerEffect.VERIFIED_ABSENT
             assert unrelated.sealed is False
-            assert master_key.current_active_bucket_session() is unrelated
+            assert current_active_bucket_session() is unrelated
         finally:
             _close_live_login()

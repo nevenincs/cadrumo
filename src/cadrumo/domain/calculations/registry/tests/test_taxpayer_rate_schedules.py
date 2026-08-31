@@ -7,7 +7,7 @@ from collections.abc import Mapping
 import pytest
 
 from .....core.authority_grade import RegistryAuthorityGrade
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from ..binding_selector_utils import selector_as_dict
 from ..ids import ParameterId
 from ..schema_formula import FormulaExpression

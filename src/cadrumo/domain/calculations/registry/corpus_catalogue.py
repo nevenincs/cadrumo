@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Final
 
 from ....core.hashing import hash_file
-from ....core.resources import resolve_companion_binary
+from ....core.resources._boundary import resolve_companion_binary
 from .errors import RegistryValidationError
 from .legal import _PROVISION_SUFFIXED_FILENAME
 from .schema_references import SourceReference

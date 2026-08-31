@@ -50,6 +50,7 @@ from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
@@ -57,14 +58,10 @@ from ...core.identity import CalculationRevisionId
 from ...core.irnr import M210_TIPO_RENTA_CODE_PROJECTION, M210GrossIncomeSourceMode
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
-from ...core.time import now as _utc_now
+from ...core.time.clock import now as _utc_now
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
-from ...domain.calculations import (
-    DirectRowMaterializationProvenance,
-    RowBindingKey,
-    RowCasillaKey,
-    RowSourceIdentity,
-)
+from ...domain.calculations._row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
+from ...domain.calculations._row_source_identity import RowBindingKey, RowSourceIdentity
 from ...domain.calculations.registry.bindings import (
     bound_casilla_binding_ids,
     resolve_available_bound_inputs_by_casilla_id,
@@ -104,11 +101,12 @@ from ...domain.modelos.row_models import Modelo210AgrupacionRentaRow, ModeloDeta
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
-from ..calculations import CalculationObservationRepository
-from ..calculations import cross_period_dependency_requirements as _cross_period_dependency_requirements
-from ..filing import modelo_record_repository_for_application
-from ..inventory import inventory_ledger_repository_for_bucket
-from ..prorrata_register import ProrrataRegisterRepository
+from ..calculations.cross_period_clean_state import (
+    cross_period_dependency_requirements as _cross_period_dependency_requirements,
+)
+from ..calculations.observations_repository import CalculationObservationRepository
+from ..filing._runtime_repository import modelo_record_repository_for_application
+from ..inventory._service import inventory_ledger_repository_for_bucket
 from ._action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
@@ -184,7 +182,7 @@ from .calculation_route import require_calculation_route_resolver as _require_ca
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from ...adapters.persistence.storage import SecureObjectWrite
+    from ...adapters.persistence.storage.sql.secure_objects import SecureObjectWrite
     from ...domain.calculations.registry.detail_record_bindings import Modelo720RowObservation
     from ...domain.calculations.registry.schema import RegistrySnapshot
     from ..aggregation import (
@@ -193,7 +191,7 @@ if TYPE_CHECKING:
         CalculationSourceResolution,
         ForeignAssetIngestObservation,
     )
-    from ..calculations import IvaWalletDecisionRepository
+    from ..calculations.observations_repository import IvaWalletDecisionRepository
     from ..live.borrador_100 import Borrador100SnapshotRepository
 
 
@@ -796,13 +794,13 @@ def _resolve_bucket_source_mesh(
         LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
     )
     from ..aggregation.source_resolution_operations import merge_source_resolutions
-    from ..calculations import (
-        IvaCompensationAnnualPartitionSourceResolver,
+    from ..calculations._iva_compensation_annual_partition import IvaCompensationAnnualPartitionSourceResolver
+    from ..calculations._m303_regimen_simplificado_annual_summary import (
         M303RegimenSimplificadoAnnualSummarySourceResolver,
-        PreviousFilingSourceResolver,
-        RelationPrefillSourceResolver,
     )
-    from ..invoices import InvoiceCatalogueSourceResolver
+    from ..calculations._multi_year import PreviousFilingSourceResolver
+    from ..calculations._relation_prefill import RelationPrefillSourceResolver
+    from ..invoices._source_resolver import InvoiceCatalogueSourceResolver
 
     resolved_work_unit_repository = work_unit_repository or WorkUnitCatalogueRepository()
     resolved_calculation_repository = calculation_repository or CalculationRevisionCatalogueRepository()

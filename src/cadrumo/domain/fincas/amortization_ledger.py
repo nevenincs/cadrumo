@@ -21,11 +21,11 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field
 
-from ...core.modelo import Modelo
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.external_constants import AMORTIZACION_INMUEBLE_RATE
 from ...core.logging import get_logger
-from ...core.money import round_to_cents as _round_to_cents
+from ...core.modelo import Modelo
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.money.rounding import round_to_cents as _round_to_cents
 from .errors import AmortizationLedgerCapExceededError
 from .models import Finca, FincaAmortizacionLedgerEntry, FincaRendimientoRecord
 

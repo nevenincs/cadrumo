@@ -14,16 +14,14 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from functools import cache
 
-from ._repos import (
-    ApoderamientosRepository,
-    CategoryProfileRepository,
-    HolidayCalendarRepository,
-    IvaCatalogueRepository,
-    IvaRateTableRepository,
-    ManualRepository,
-    RecargoBandsRepository,
-    TopicCatalogueRepository,
-)
+from ._repos.apoderamientos import ApoderamientosRepository
+from ._repos.category_profiles import CategoryProfileRepository
+from ._repos.holiday_calendars import HolidayCalendarRepository
+from ._repos.iva_catalogues import IvaCatalogueRepository
+from ._repos.iva_rate_tables import IvaRateTableRepository
+from ._repos.manuals import ManualRepository
+from ._repos.recargo_bands import RecargoBandsRepository
+from ._repos.topics import TopicCatalogueRepository
 
 
 @dataclass(slots=True, frozen=True)

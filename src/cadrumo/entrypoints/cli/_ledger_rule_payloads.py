@@ -21,7 +21,7 @@ from ...application.ledger.llm_diagnostics import LlmProviderName
 from ...core.hex import Hex64Str
 from ...core.identity import TransactionId
 from ...core.json_contract import OutputSchema
-from ...core.time import UtcInstant
+from ...core.time.utc import UtcInstant
 from ...domain.transactions.classification_rule import (
     LedgerClassificationRule,
     RuleActor,

@@ -8,15 +8,17 @@ from pathlib import Path
 import pytest
 
 from ... import core as core_package
-from ..product_identity import (
-    AeatProductSoftwareEvidence,
-    AeatProductSoftwareIdentity,
-    PRODUCT_IDENTITY,
-    normalise_product_identity_references,
-)
 from .. import __all__ as core_all
 from .. import product_identity as identity_module
-from ..product_identity import AEAT_AUTHORITY_SHORT_NAME, IdentityReferent, ProductIdentity
+from ..product_identity import (
+    AEAT_AUTHORITY_SHORT_NAME,
+    PRODUCT_IDENTITY,
+    AeatProductSoftwareEvidence,
+    AeatProductSoftwareIdentity,
+    IdentityReferent,
+    ProductIdentity,
+    normalise_product_identity_references,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

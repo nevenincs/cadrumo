@@ -89,6 +89,16 @@ if TYPE_CHECKING:
         is_aeat_csv,
         normalise_aeat_csv,
     )
+    from .aggregation import (
+        OBSERVATION_BACKED_BINDING_SOURCE_KINDS,
+        AggregationCaptureKind,
+        BindingAggregationOp,
+        BindingSourceKind,
+        CalculationSourceLineageRole,
+        IntracomOperationType,
+        ThirdPartyDeclarationRole,
+        TravelAgencyMediationType,
+    )
     from .amendment_kind_regime import (
         AmendmentLiabilityDirection,
         classify_amendment_liability_direction,
@@ -102,6 +112,16 @@ if TYPE_CHECKING:
     from .casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
     from .casilla_value_kind import CasillaValueKind
     from .classifier_input_source import ClassifierInputSource, CounterpartyTaxablePersonStatus
+    from .compatibility_lifecycle import (
+        COMPATIBILITY_REGIME,
+        PERSISTED_FORMATS,
+        RELEASED_FORMAT_FLOORS,
+        PersistedFormatClass,
+        expected_floor,
+        lineage_obligations,
+        stale_persisted_format_declarations,
+        undeclared_persisted_formats,
+    )
     from .concept_lifecycle import ConceptLifecycle
     from .concepto_ingreso import (
         INGRESO_CONCEPTS_OUTSIDE_THE_ART_109_BASE,
@@ -121,6 +141,13 @@ if TYPE_CHECKING:
         ReviewAdvisoryKind,
     )
     from .corpus_sidecar import render_corpus_sidecar_text
+    from .corpus_text import (
+        CorpusAnchorResolutionError,
+        corpus_redaction_marks,
+        extracted_unit_count,
+        normalise_corpus_text,
+        resolve_anchored_extracted_unit,
+    )
     from .declaracion_idioma import DeclaracionIdioma
     from .descendant_relacion import (
         ART_58_2_ENTITLING_RELACIONES,
@@ -138,6 +165,7 @@ if TYPE_CHECKING:
     from .estado_casilla_oficial import EstadoCasillaOficial
     from .export_exemption_reason import ExportExemptionReason
     from .export_layout_format import ExportLayoutFormat
+    from .external_constants import M347_CLAVE_C_THRESHOLD_EUR, M347_THRESHOLD_EUR, OutputLanguage
     from .external_oracle_corpus import ExternalOracleCorpus
     from .field_grounding import FieldGroundingOutcome
     from .field_origin import FieldOrigin
@@ -198,6 +226,7 @@ if TYPE_CHECKING:
         HardwareTier,
         hardware_tier_for_free_bytes,
     )
+    from .hashing import content_hash_hex, sha256_hex
     from .hex import HEX_PATTERN_16, HEX_PATTERN_64, HEX_PATTERN_128, Hex16Str, Hex64Str
     from .iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
     from .image_media_type import ImageMediaType, detect_image_media_type
@@ -220,6 +249,13 @@ if TYPE_CHECKING:
     from .legal_review import REVIEWED_LEGAL_STATUSES, LegalReviewStatus
     from .link_safety import is_link_like
     from .lockfile_unlink import LOCKFILE_UNLINK_RETRY_SECONDS, unlink_lockfile
+    from .locks import exclusive_file_lock
+    from .manual_corpus_sidecar import (
+        MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX,
+        MANUAL_CORPUS_TEXT_SCHEMA_VERSION,
+        MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX,
+        ManualCorpusTextSidecar,
+    )
     from .model_catalogue import (
         DEFAULT_MODEL_BY_RUNTIME_AND_ROLE,
         MODEL_CATALOGUE,
@@ -244,6 +280,17 @@ if TYPE_CHECKING:
     )
     from .objeto_tributario import ObjetoTributario
     from .observed_header_fact import ObservedHeaderFact
+    from .operations import (
+        OperationCancellation,
+        OperationClosePolicy,
+        OperationDeadline,
+        OperationDurability,
+        OperationEffect,
+        OperationEventKind,
+        OperationInteractionKind,
+        OperationLifecycle,
+        OperationTerminalCondition,
+    )
     from .operator_action_enums import (
         ActionArgumentSource,
         ActionArgumentStatus,
@@ -283,6 +330,7 @@ if TYPE_CHECKING:
         orden_anual_iva_authority_units,
         orden_anual_iva_table_text,
     )
+    from .output_rendering import OutputFormat
     from .payment_election import PaymentElection
     from .period import (
         FilingPeriodCode,
@@ -312,6 +360,12 @@ if TYPE_CHECKING:
         PreconditionOutcomeInvariant,
     )
     from .prior_domiciliation_election import PriorDomiciliationElection
+    from .product_identity import (
+        PRODUCT_IDENTITY,
+        AeatProductSoftwareEvidence,
+        AeatProductSoftwareIdentity,
+        normalise_product_identity_references,
+    )
     from .profile_session import ProfileRecordUnavailability, ProfileSessionRefusalReason
     from .prorrata_exclusions import (
         ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS,
@@ -325,6 +379,7 @@ if TYPE_CHECKING:
         SectorDiferenciadoLetra,
         regime_apportions_deduction,
     )
+    from .prose_elision import PROSE_ELISION_MARKER, ElidedProse, elide_to_cap, elided_prose
     from .provenance_stamp import (
         LOCAL_TRANSPORT_LABEL,
         build_provenance_stamp,
@@ -353,6 +408,30 @@ if TYPE_CHECKING:
         UNRESOLVED_SCHEMA_FAMILY_DISPOSITIONS,
         RegistrySchemaFamilyDisposition,
     )
+    from .secure_object_write import (
+        ABSENT_SECURE_OBJECT_REVISION_ID,
+        DEFAULT_WRITE_PROVENANCE,
+        SecureObjectWrite,
+    )
+    from .source_connectivity import (
+        SourceConnectivityCandidateId,
+        SourceConnectivityCandidateIdentity,
+        SourceConnectivityCensusRow,
+        SourceConnectivityConnectedProof,
+        SourceConnectivityConnectionIdentity,
+        SourceConnectivityDisposition,
+        SourceConnectivityEncryptedRevisionProof,
+        SourceConnectivityExecutableEvidence,
+        SourceConnectivityExecutableEvidenceRole,
+        SourceConnectivityExpiryPosture,
+        SourceConnectivityFollowUp,
+        SourceConnectivityGrounding,
+        SourceConnectivityGroundingLocatorKind,
+        SourceConnectivityOperatorReachabilityProof,
+        SourceConnectivityProofAuthority,
+        SourceConnectivityProofFailureCause,
+        SourceConnectivityResolverOwnershipProof,
+    )
     from .spanish_stemming import (
         SpanishStemmer,
         spanish_stemmer,
@@ -360,6 +439,7 @@ if TYPE_CHECKING:
         stem_spanish_terms,
         stem_spanish_text,
     )
+    from .storage_materialization import STORAGE_ROOT_MODE, ensure_storage_tree
     from .storage_taxonomy import (
         EXTERNAL_PATH_SETTINGS_FIELDS,
         FINGERPRINT_EXCLUDED_STORAGE_FIELDS,
@@ -385,6 +465,7 @@ if TYPE_CHECKING:
     )
     from .sync_surface import SyncSurface
     from .tax_domain import TaxDomain
+    from .text_fold import fold_diacritics, fold_printed_phrase, unicode_compose
     from .tipos_actividad import (
         IAE_SUBJECT_TIPOS_ACTIVIDAD,
         NON_IAE_SUBJECT_TIPOS_ACTIVIDAD,
@@ -392,87 +473,6 @@ if TYPE_CHECKING:
     )
     from .toml import freeze_toml, read_toml, to_str_keyed_dict
     from .type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
-    from .aggregation import (
-        OBSERVATION_BACKED_BINDING_SOURCE_KINDS,
-        AggregationCaptureKind,
-        BindingAggregationOp,
-        BindingSourceKind,
-        CalculationSourceLineageRole,
-        IntracomOperationType,
-        ThirdPartyDeclarationRole,
-        TravelAgencyMediationType,
-    )
-    from .compatibility_lifecycle import (
-        COMPATIBILITY_REGIME,
-        PERSISTED_FORMATS,
-        RELEASED_FORMAT_FLOORS,
-        PersistedFormatClass,
-        expected_floor,
-        lineage_obligations,
-        stale_persisted_format_declarations,
-        undeclared_persisted_formats,
-    )
-    from .corpus_text import (
-        CorpusAnchorResolutionError,
-        corpus_redaction_marks,
-        extracted_unit_count,
-        normalise_corpus_text,
-        resolve_anchored_extracted_unit,
-    )
-    from .external_constants import M347_CLAVE_C_THRESHOLD_EUR, M347_THRESHOLD_EUR, OutputLanguage
-    from .hashing import content_hash_hex, sha256_hex
-    from .locks import exclusive_file_lock
-    from .manual_corpus_sidecar import (
-        MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX,
-        MANUAL_CORPUS_TEXT_SCHEMA_VERSION,
-        MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX,
-        ManualCorpusTextSidecar,
-    )
-    from .operations import (
-        OperationCancellation,
-        OperationClosePolicy,
-        OperationDeadline,
-        OperationDurability,
-        OperationEffect,
-        OperationEventKind,
-        OperationInteractionKind,
-        OperationLifecycle,
-        OperationTerminalCondition,
-    )
-    from .output_rendering import OutputFormat
-    from .product_identity import (
-        PRODUCT_IDENTITY,
-        AeatProductSoftwareEvidence,
-        AeatProductSoftwareIdentity,
-        normalise_product_identity_references,
-    )
-    from .prose_elision import PROSE_ELISION_MARKER, ElidedProse, elide_to_cap, elided_prose
-    from .secure_object_write import (
-        ABSENT_SECURE_OBJECT_REVISION_ID,
-        DEFAULT_WRITE_PROVENANCE,
-        SecureObjectWrite,
-    )
-    from .source_connectivity import (
-        SourceConnectivityCandidateId,
-        SourceConnectivityCandidateIdentity,
-        SourceConnectivityCensusRow,
-        SourceConnectivityConnectedProof,
-        SourceConnectivityConnectionIdentity,
-        SourceConnectivityDisposition,
-        SourceConnectivityEncryptedRevisionProof,
-        SourceConnectivityExecutableEvidence,
-        SourceConnectivityExecutableEvidenceRole,
-        SourceConnectivityExpiryPosture,
-        SourceConnectivityFollowUp,
-        SourceConnectivityGrounding,
-        SourceConnectivityGroundingLocatorKind,
-        SourceConnectivityOperatorReachabilityProof,
-        SourceConnectivityProofAuthority,
-        SourceConnectivityProofFailureCause,
-        SourceConnectivityResolverOwnershipProof,
-    )
-    from .storage_materialization import STORAGE_ROOT_MODE, ensure_storage_tree
-    from .text_fold import fold_diacritics, fold_printed_phrase, unicode_compose
 
 
 __all__: list[str] = [

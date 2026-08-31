@@ -49,7 +49,7 @@ from ...core.hashing import bounded_canonical_json_bytes, sha256_hex
 from ...core.identity import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.product_identity import PRODUCT_IDENTITY
-from ...core.time import now as _now
+from ...core.time.clock import now as _now
 from .capsule_restore import ProfileCapsuleSource, read_profile_capsule_source
 from .custody_ports import (
     ProfileCapsuleArchiveHeaderMaterial,

@@ -27,13 +27,10 @@ import pytest
 from pydantic import ValidationError
 
 from ...errors.error_codes import get_registered_error_code
-from .. import (
-    CorpusBundleError,
-    CorpusBundleVerificationError,
+from ..errors import CorpusBundleError, CorpusBundleVerificationError, CorpusManifestError, CorpusManifestTamperError
+from ..manifest import (
     CorpusEntry,
     CorpusManifest,
-    CorpusManifestError,
-    CorpusManifestTamperError,
     assert_corpus_bundle_verifies,
     assert_corpus_clean,
     build_corpus_bundle,
@@ -211,7 +208,7 @@ def test_corpus_drift_refusal_is_key_only(tmp_path: Path) -> None:
 
 def test_bundle_refusals_are_key_only(tmp_path: Path) -> None:
     """Every bundle-structure refusal renders as its key with typed facts."""
-    from .. import verify_corpus_bundle
+    from ..manifest import verify_corpus_bundle
 
     not_a_zip = tmp_path / "not-a-zip.zip"
     not_a_zip.write_bytes(b"plain bytes, not an archive")

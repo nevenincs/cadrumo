@@ -376,6 +376,6 @@ def _validate_or_refuse(handbook: TerminologyHandbook) -> None:
 def _stamp(today: date | None) -> date:
     if today is not None:
         return today
-    from cadrumo.core.time import now
+    from cadrumo.core.time.clock import now
 
     return now().date()

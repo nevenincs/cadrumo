@@ -41,8 +41,8 @@ from .....application.aggregation import (
 # under no longer exists, which stopped this module COLLECTING at all -- a
 # gate running zero assertions rather than failing loudly.
 from .....application.modelo.calculation_route import CALCULATION_ROUTE_ENROLLED_SOURCES
-from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.aggregation import BindingSourceKind
+from .....core.authority_grade import RegistryAuthorityGrade
 from ..authority import bundled_authority
 from ..errors import AmbiguousRevisionSelectionError
 from ..schema_input_kind import InputKind

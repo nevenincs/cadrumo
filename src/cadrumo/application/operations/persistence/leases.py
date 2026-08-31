@@ -8,11 +8,11 @@ from typing import Literal, cast
 
 from pydantic import BaseModel, Field, model_validator
 
-from ....core.hex import Hex64Str
-from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.hashing import content_hash_hex
+from ....core.hex import Hex64Str
 from ....core.identity import ContentDigest
-from ....core.time import validate_utc_aware
+from ....core.models import STRICT_FROZEN_CONFIG
+from ....core.time.utc import validate_utc_aware
 from ..models import OperationId
 
 type OperationConflictScopeReference = Hex64Str

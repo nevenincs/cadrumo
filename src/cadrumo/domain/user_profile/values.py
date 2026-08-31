@@ -16,15 +16,15 @@ from uuid import uuid4
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.decimal import try_parse_canonical_decimal
+from ...core.decimal._grammar import try_parse_canonical_decimal
 from ...core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANCE_SOURCE_MANUAL_CLI
 from ...core.hashing import canonical_json_bytes, content_hash_hex
 from ...core.identity import ContentDigest, ContentDigestOrAbsent
 from ...core.identity import ProfileId as _ProfileId
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.parsing import parse_bool, parse_iso8601_date
-from ...core.time import UtcInstant
-from ...core.time import now as _utc_now
+from ...core.time.clock import now as _utc_now
+from ...core.time.utc import UtcInstant
 from .errors import UserProfileValidationError
 from .loader import load_user_profile_schema
 

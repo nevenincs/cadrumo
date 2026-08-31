@@ -7,7 +7,7 @@ from collections.abc import Callable
 import pytest
 
 from .....core.errors.severity import BaseSeverity
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from ....deadlines.models import IVARegime, ModeloEnrollment, TaxpayerProfile
 from ....user_profile.loader import load_user_profile_schema
 from ....user_profile.registry_contract import validate_user_profile_registry_contract

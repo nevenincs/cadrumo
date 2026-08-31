@@ -23,7 +23,16 @@ if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
 
     from ....core.config import Settings
-    from ....domain.manuals.schema import Manual, ManualCasillaReference, ManualCatalogue, ManualId, ManualPart, Rule, RuleKind, Section
+    from ....domain.manuals.schema import (
+        Manual,
+        ManualCasillaReference,
+        ManualCatalogue,
+        ManualId,
+        ManualPart,
+        Rule,
+        RuleKind,
+        Section,
+    )
 
 
 class ManualKey(TypedResourceKey):

@@ -29,12 +29,15 @@ from uuid import UUID
 
 import pytest
 
-from ....adapters.persistence.storage import master_key
 from ....adapters.persistence.storage.custody.acceleration_receipt import profile_session_path
-from ....adapters.persistence.storage.master_key import current_active_bucket_session, login_throttle_path
-from ....core.profile_session import ProfileSessionRefusalReason
+from ....adapters.persistence.storage.master_key.active_session import (
+    close_active_bucket_session,
+    current_active_bucket_session,
+)
+from ....adapters.persistence.storage.master_key.login_throttle import login_throttle_path, record_login_failure
 from ....core.bucket_pointer import read_pointer
-from ....core.time import now as _now
+from ....core.profile_session import ProfileSessionRefusalReason
+from ....core.time.clock import now as _now
 from ....tests.secure_sql import isolated_profile_storage_root
 from ..login_session import (
     bind_resumed_profile_session,
@@ -54,7 +57,7 @@ def _close_live_login() -> None:
     """Release both process-local authorities without asserting anything."""
 
     close_active_profile_record_session()
-    master_key.close_active_bucket_session()
+    close_active_bucket_session()
 
 
 def _register_and_login(storage_root: Path) -> str:
@@ -63,7 +66,7 @@ def _register_and_login(storage_root: Path) -> str:
         recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
     )
     login_profile(name=outcome.profile_id, passphrase_callback=lambda: _PASSWORD)
-    assert master_key.current_active_bucket_session() is not None
+    assert current_active_bucket_session() is not None
     assert read_pointer(storage_root).bucket_id is not None
     return outcome.profile_id
 
@@ -87,11 +90,11 @@ def test_logout_clears_the_live_session_the_pointer_and_the_persisted_accelerati
             signed_out = logout_active_profile()
 
             assert signed_out == profile_id
-            assert master_key.current_active_bucket_session() is None
+            assert current_active_bucket_session() is None
             assert not session_path.exists()
             assert read_pointer(storage_root).bucket_id is None
             assert bind_resumed_profile_session(bucket_id=profile_id) is ProfileSessionRefusalReason.ABSENT
-            assert master_key.current_active_bucket_session() is None
+            assert current_active_bucket_session() is None
         finally:
             _close_live_login()
 
@@ -131,7 +134,7 @@ def test_logout_clears_the_failed_login_backoff(tmp_path: Path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         try:
             profile_id = _register_and_login(storage_root)
-            master_key.record_login_failure(storage_root=storage_root, bucket_id=profile_id, now=_now())
+            record_login_failure(storage_root=storage_root, bucket_id=profile_id, now=_now())
             throttle_path = login_throttle_path(storage_root=storage_root, bucket_id=profile_id)
             assert throttle_path.is_file(), "the backoff must exist, or its removal proves nothing"
 
@@ -157,7 +160,7 @@ def test_second_logout_is_a_clean_no_op(tmp_path: Path) -> None:
 
             assert logout_active_profile() is None
 
-            assert master_key.current_active_bucket_session() is None
+            assert current_active_bucket_session() is None
             assert read_pointer(storage_root).bucket_id is None
             assert not session_path.exists()
         finally:
@@ -168,7 +171,7 @@ def test_logout_without_any_session_is_a_no_op(tmp_path: Path) -> None:
     """Signing out of a storage root that never had a session reports ``None``."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
         assert logout_active_profile() is None
-        assert master_key.current_active_bucket_session() is None
+        assert current_active_bucket_session() is None
 
 
 def test_login_after_logout_is_a_fresh_authentication_not_a_resume(tmp_path: Path) -> None:
@@ -183,7 +186,7 @@ def test_login_after_logout_is_a_fresh_authentication_not_a_resume(tmp_path: Pat
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         try:
             profile_id = _register_and_login(storage_root)
-            first = master_key.current_active_bucket_session()
+            first = current_active_bucket_session()
             assert first is not None
             logout_active_profile()
 
@@ -191,7 +194,7 @@ def test_login_after_logout_is_a_fresh_authentication_not_a_resume(tmp_path: Pat
 
             assert outcome.already_authenticated is False
             assert outcome.bucket_id == profile_id
-            assert master_key.current_active_bucket_session() is not first
+            assert current_active_bucket_session() is not first
             assert read_pointer(storage_root).bucket_id is not None
         finally:
             _close_live_login()

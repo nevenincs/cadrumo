@@ -22,16 +22,8 @@ from pathlib import Path
 import pytest
 
 from ...directory_scan import scan_directory
-from .. import (
-    CorpusBundleError,
-    CorpusBundleVerificationError,
-    CorpusManifestError,
-    CorpusManifestTamperError,
-    assert_corpus_bundle_verifies,
-    build_corpus_bundle,
-    load_corpus_manifest,
-    verify_corpus_bundle,
-)
+from ..errors import CorpusBundleError, CorpusBundleVerificationError, CorpusManifestError, CorpusManifestTamperError
+from ..manifest import assert_corpus_bundle_verifies, build_corpus_bundle, load_corpus_manifest, verify_corpus_bundle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

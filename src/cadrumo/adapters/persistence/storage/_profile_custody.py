@@ -47,11 +47,12 @@ from ....application.user_profile.custody_ports import (
     ProfileSecureObjectInventoryPort,
     ProfileSnapshotPersistencePort,
 )
-from ....core import StorageCategory, StorageCustodyProfile, storage_location
-from ....core.classification import SensitivityClass
+from ....core.classification.policies import SensitivityClass
 from ....core.config import Settings
 from ....core.hashing import prefixed_digest
-from ....core.time import now as _utc_now
+from ....core.storage_taxonomy import StorageCategory, StorageCustodyProfile
+from ....core.storage_taxonomy_locations import storage_location
+from ....core.time.clock import now as _utc_now
 from ....domain.user_profile.errors import (
     PROFILE_SNAPSHOT_CLASSIFICATION_MISMATCH_MESSAGE,
     PROFILE_SNAPSHOT_VERSION_UNSUPPORTED_MESSAGE,
@@ -64,23 +65,10 @@ from ....domain.user_profile.portable_export import CarriedSecureObject
 from ....domain.user_profile.values import UserProfileSnapshot
 from ..profile.buckets import BucketEventHistoryRepository
 from ..profile.snapshots import SecureSnapshotRepository
-from . import (
-    USER_PROFILE_SNAPSHOT_NAMESPACE,
-    USER_PROFILE_VALUE_NAMESPACE,
-    ClassificationError,
-    EnvelopeVersionError,
-    KeyringUnavailableError,
-    MasterKeyMaterialMissingError,
-    PersistenceError,
-    SecureObjectRepository,
-    bucket,
-    generate_recovery_key,
-    master_key,
-    secure_object_repository_for_active_bucket,
-    secure_object_repository_for_bucket,
-    secure_object_repository_for_staged_bucket,
-)
+from . import bucket
 from ._kdf_salt import KDF_SALT_BYTES
+from ._recovery_key import generate_recovery_key
+from ._secure_object_namespaces import USER_PROFILE_SNAPSHOT_NAMESPACE, USER_PROFILE_VALUE_NAMESPACE
 from .crypto.aead import EncryptedBlob, decrypt_record, encrypt_record
 from .custody._filesystem_primitives import ensure_profile_custody_local_directory
 from .custody.capsule import (
@@ -146,6 +134,32 @@ from .custody.sentinel_contract import (
     parse_profile_custody_sentinel_record,
     verify_profile_custody_sentinel,
 )
+from .errors import (
+    ClassificationError,
+    EnvelopeVersionError,
+    KeyringUnavailableError,
+    MasterKeyMaterialMissingError,
+    PersistenceError,
+)
+from .master_key.active_session import activate_session, current_active_bucket_session, session_serves_bucket
+from .master_key.bucket_session import BucketSession
+from .master_key.kdf_params import (
+    ARGON2_VERSION,
+    MAX_MEMORY_COST_KIB,
+    MAX_PARALLELISM,
+    MAX_TIME_COST,
+    MIN_MEMORY_COST_KIB,
+    MIN_PARALLELISM,
+    MIN_TIME_COST,
+    KdfParams,
+)
+from .master_key.master_key_derivation import derive_kek_with_params
+from .runtime_repository import (
+    secure_object_repository_for_active_bucket,
+    secure_object_repository_for_bucket,
+    secure_object_repository_for_staged_bucket,
+)
+from .sql import SecureObjectRepository
 
 
 def _capsule_relative(category: StorageCategory) -> Path:
@@ -336,13 +350,13 @@ class _PersistenceProfileSnapshotStore:
 class _PersistenceProfileRecordCrypto:
     def passphrase_kdf_policy(self) -> ProfilePassphraseKdfPolicy:
         return ProfilePassphraseKdfPolicy(
-            version=master_key.ARGON2_VERSION,
-            minimum_memory_cost_kib=master_key.MIN_MEMORY_COST_KIB,
-            maximum_memory_cost_kib=master_key.MAX_MEMORY_COST_KIB,
-            minimum_time_cost=master_key.MIN_TIME_COST,
-            maximum_time_cost=master_key.MAX_TIME_COST,
-            minimum_parallelism=master_key.MIN_PARALLELISM,
-            maximum_parallelism=master_key.MAX_PARALLELISM,
+            version=ARGON2_VERSION,
+            minimum_memory_cost_kib=MIN_MEMORY_COST_KIB,
+            maximum_memory_cost_kib=MAX_MEMORY_COST_KIB,
+            minimum_time_cost=MIN_TIME_COST,
+            maximum_time_cost=MAX_TIME_COST,
+            minimum_parallelism=MIN_PARALLELISM,
+            maximum_parallelism=MAX_PARALLELISM,
             salt_bytes=KDF_SALT_BYTES,
         )
 
@@ -396,8 +410,8 @@ class _PersistenceProfileRecordCrypto:
         associated_data: bytes,
     ) -> ProfilePassphraseEncryptedRecord:
         try:
-            parameters = master_key.KdfParams.default()
-            sealing_key = master_key.derive_kek_with_params(
+            parameters = KdfParams.default()
+            sealing_key = derive_kek_with_params(
                 passphrase,
                 parameters.salt,
                 memory_cost=parameters.memory_cost,
@@ -439,7 +453,7 @@ class _PersistenceProfileRecordCrypto:
         ):
             raise ProfileRecordCryptoError("profile passphrase KDF parameters are unsupported")
         try:
-            sealing_key = master_key.derive_kek_with_params(
+            sealing_key = derive_kek_with_params(
                 passphrase,
                 parameters.salt,
                 memory_cost=parameters.memory_cost,
@@ -975,8 +989,8 @@ class _PersistenceProfileCustody:
         root: Path,
         database_file: Path | None = None,
     ) -> Generator[ProfileCustodySecureObjectRepositoryPort]:
-        active = master_key.current_active_bucket_session()
-        if database_file is None and master_key.session_serves_bucket(active, str(profile_id)):
+        active = current_active_bucket_session()
+        if database_file is None and session_serves_bucket(active, str(profile_id)):
             settings = Settings(cadrumo_local_storage_root=root, cadrumo_active_profile=str(profile_id))
             yield secure_object_repository_for_bucket(str(profile_id), settings)
             return
@@ -992,7 +1006,7 @@ class _PersistenceProfileCustody:
     @contextmanager
     def _temporary_session(self, *, profile_id: UUID, dek: bytes, root: Path) -> Generator[None]:
         instant = _utc_now()
-        bridge = master_key.BucketSession.open_resumed(
+        bridge = BucketSession.open_resumed(
             bucket_id=str(profile_id),
             dek=dek,
             idle_minutes=1,
@@ -1002,7 +1016,7 @@ class _PersistenceProfileCustody:
             storage_root=root,
         )
         try:
-            with master_key.activate_session(bridge):
+            with activate_session(bridge):
                 yield
         finally:
             bridge.close()

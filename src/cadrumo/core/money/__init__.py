@@ -16,31 +16,4 @@ the euro-cent boundary for any operator-facing or filed value.
 
 from __future__ import annotations
 
-from decimal import ROUND_HALF_UP, Decimal
-
-CENT = Decimal("0.01")
-
-
-def round_to_cents(value: Decimal) -> Decimal:
-    """Round *value* to euro-cent precision with half-up semantics.
-
-    Args:
-        value: The :class:`~decimal.Decimal` amount to round.
-
-    Returns:
-        A :class:`~decimal.Decimal` quantised to two fractional
-        digits using :data:`decimal.ROUND_HALF_UP`.
-
-    Raises:
-        ~decimal.InvalidOperation: When quantising *value* to two fractional
-            digits would exceed the active decimal context's precision — from 27
-            integral digits under the default 28-digit context. Callers reachable
-            from operator input must refuse an out-of-range magnitude at their own
-            boundary rather than let this escape: this function is crossed long
-            before the AEAT export encoder, so it, not the encoder, is the first
-            boundary an unbounded figure meets.
-    """
-    return value.quantize(CENT, rounding=ROUND_HALF_UP)
-
-
-__all__ = ["CENT", "round_to_cents"]
+__all__: tuple[str, ...] = ()

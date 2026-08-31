@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.casilla_id import CasillaId
+from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ._row_source_identity import RowSourceIdentity
 from .registry.ids import BindingId, RevisionId
 

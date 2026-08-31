@@ -30,7 +30,7 @@ from pydantic import ValidationError
 
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.external_constants import CLASSIFIED_BY_AUTO, CLASSIFIED_BY_MANUAL
-from ...core.time import parse_iso_datetime, validate_utc_aware
+from ...core.time.utc import parse_iso_datetime, validate_utc_aware
 from ...core.unit_proportion import is_unit_proportion
 from .enums import BusinessClassification
 from .errors import TransactionValidationError

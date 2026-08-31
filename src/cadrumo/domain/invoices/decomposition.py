@@ -55,9 +55,14 @@ from typing import TYPE_CHECKING, Final, Self
 
 from pydantic import BaseModel, model_validator
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.identity import InvoiceId
-from ..iva.components import IvaComponentPresence, IvaKindApplicability, category_bears_taxable_base, category_components
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ..iva.components import (
+    IvaComponentPresence,
+    IvaKindApplicability,
+    category_bears_taxable_base,
+    category_components,
+)
 from ..iva.schema import IvaCategory
 from .errors import InvoiceValidationError
 

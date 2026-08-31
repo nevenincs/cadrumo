@@ -54,13 +54,13 @@ from .....application.auth.session_types import (
     is_exact_active_provider_session,
 )
 from .....application.auth_credentials import ActiveCertificateCredentials
-from .....core.auth_provider import AuthProviderDescription, AuthProviderKind
 from .....core.async_cleanup import close_async_resources
+from .....core.auth_provider import AuthProviderDescription, AuthProviderKind
 from .....core.config import AEAT_CERTIFICATE_PROTECTED_URL
 from .....core.config import Settings as _Settings
 from .....core.errors.hierarchy import AeatLoginAssertionError
 from .....core.logging import get_logger
-from .....core.time import now
+from .....core.time.clock import now
 from . import session_store as session_store
 from .authenticator_persistence import (
     AEAT_STORAGE_STATE_SCHEMA_VERSION,
@@ -268,7 +268,7 @@ class AeatAuthenticator:
         self._lock = asyncio.Lock()
         self._browser_session: BrowserSessionPort | None = None
         self._context: BrowserContextPort | None = None
-        self._active_session: AeatSession | None = None
+        self.active_session: AeatSession | None = None
         self._inflight_pages = 0
         self._inflight_drained: asyncio.Event = asyncio.Event()
         self._inflight_drained.set()
@@ -329,7 +329,7 @@ class AeatAuthenticator:
                 context creation.
         """
         async with self._lifecycle.work(), self._lock:
-            if self._active_session is not None:
+            if self.active_session is not None:
                 raise AeatLoginAssertionError(
                     "AeatAuthenticator already has an active session; "
                     "call close() or reauthenticate() before "
@@ -411,14 +411,14 @@ class AeatAuthenticator:
         )
         self._browser_session = session_like
         self._context = context
-        self._active_session = session
+        self.active_session = session
         try:
             await self._capture_storage_state_locked(session)
         except Exception:  # AeatLoginAssertionError/OSError/PlaywrightError; cleanup + re-raise
             await self._drop_context()
             if await self._close_browser_session(session_like):
                 self._browser_session = None
-            self._active_session = None
+            self.active_session = None
             raise
         log.info(
             "AeatAuthenticator: authenticated thumbprint=%s",
@@ -490,7 +490,7 @@ class AeatAuthenticator:
                 or ``close()`` was called).
         """
         if session.is_stale():
-            from .....core.redaction import redact_for_log
+            from .....core.redaction.rules import redact_for_log
 
             raise AeatSessionExpiredError(
                 redact_for_log(
@@ -511,7 +511,7 @@ class AeatAuthenticator:
                     "no active browser context; call authenticate() first",
                     translated_message="adapters.auth.authenticator.errors.no_active_context",
                 )
-            _require_exact_active_certificate_session(session, self._active_session)
+            _require_exact_active_certificate_session(session, self.active_session)
             self._inflight_pages += 1
             self._inflight_drained.clear()
 
@@ -527,7 +527,7 @@ class AeatAuthenticator:
     async def capture_storage_state(self, session: AeatSession) -> Path:
         """Persist the active Playwright state and :class:`PersistedSessionMetadata`."""
         async with self._lifecycle.work(), self._lock:
-            if self._active_session != session:
+            if self.active_session != session:
                 raise AeatLoginAssertionError(
                     "capture_storage_state() requires the currently active authenticated session",
                     translated_message="adapters.auth.authenticator.errors.capture_requires_active_session",
@@ -704,7 +704,7 @@ class AeatAuthenticator:
                 browser_session_closed = await self._close_browser_session(self._browser_session)
                 if browser_session_closed:
                     self._browser_session = None
-                self._active_session = None
+                self.active_session = None
         if not context_closed or not browser_session_closed:
             raise AuthProviderCleanupError(
                 "AeatAuthenticator retained browser resources after close",
@@ -885,14 +885,14 @@ class AeatAuthenticator:
             )
         self._browser_session = session_like
         self._context = context
-        self._active_session = session
+        self.active_session = session
         try:
             await self._capture_storage_state_locked(session)
         except Exception:  # AeatLoginAssertionError/OSError/PlaywrightError; cleanup + re-raise
             await self._drop_context()
             if await self._close_browser_session(session_like):
                 self._browser_session = None
-            self._active_session = None
+            self.active_session = None
             raise
         log.info(
             "AeatAuthenticator: resumed persisted session thumbprint=%s",
@@ -972,7 +972,7 @@ class AeatAuthenticator:
             self._browser_session = session_like
         elif self._browser_session is session_like:
             self._browser_session = None
-        self._active_session = None
+        self.active_session = None
 
     def _resolve_storage_state_path(
         self,

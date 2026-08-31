@@ -8,8 +8,8 @@ from decimal import Decimal
 import pytest
 
 from .....core.irnr import ConvenioOverrideKind, TipoRentaIrnr
+from .....core.resources._boundary import bundled_path
 from .....core.result_disposition import ResultDisposition
-from .....core.resources import bundled_path
 from .._validate import RegistryValidator
 from ..convenio import load_convenio_authority
 from ..errors import NoRevisionForPeriodError

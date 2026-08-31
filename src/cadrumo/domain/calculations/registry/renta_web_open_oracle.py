@@ -9,11 +9,11 @@ from typing import Final, Literal, Protocol
 
 from pydantic import AnyUrl, BaseModel, Field, field_validator
 
-from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.config import Settings
-from ....core.decimal import coerce_finite_european_decimal, normalize_decimal_separators
+from ....core.decimal._coerce import coerce_finite_european_decimal, normalize_decimal_separators
 from ....core.identity import AeatBoxNumber
+from ....core.models import STRICT_FROZEN_CONFIG
 from .errors import RegistryValidationError
 from .external_grounding import (
     BUNDLED_ORACLE_EVIDENCE_LOCATOR_MAX_LENGTH,

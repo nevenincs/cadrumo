@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from ..corpus_catalogue import (
     verify_source_catalogue,
     verify_source_file,

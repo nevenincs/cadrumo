@@ -93,7 +93,7 @@ from datetime import date
 
 import pytest
 
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
 from ..authority import ValidatedRegistryAuthority
 from ..schema import ModeloRevision

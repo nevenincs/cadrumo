@@ -22,7 +22,7 @@ import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.directory_scan import scan_directory
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
 from ..remote_state_guard import RemoteStateGuardPolicy, remote_state_policy_from_cross_reference
 from ..renta_web_open_oracle import (

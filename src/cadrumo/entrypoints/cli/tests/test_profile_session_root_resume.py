@@ -37,14 +37,14 @@ from ....adapters.persistence.storage.custody.acceleration_receipt import (
     profile_session_path,
 )
 from ....adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
-from ....adapters.persistence.storage.master_key import (
+from ....adapters.persistence.storage.master_key.active_session import (
     close_active_bucket_session,
     current_active_bucket_session,
 )
 from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....core.profile_session import ProfileSessionRefusalReason
 from ....core.config import load_settings, override_settings
-from ....core.time import now as _now
+from ....core.profile_session import ProfileSessionRefusalReason
+from ....core.time.clock import now as _now
 from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli, semantic_cli_output
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -286,7 +286,7 @@ class TestFailClosedRefusals:
     def test_explicit_history_reads_the_requested_profile_repository(self) -> None:
         first_bucket_id = _create_profile("history-first")
         from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-        from ....adapters.persistence.storage import secure_object_repository_for_bucket
+        from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 
         with open_test_profile_session(first_bucket_id):
             first_catalogue = BucketEventHistoryRepository(

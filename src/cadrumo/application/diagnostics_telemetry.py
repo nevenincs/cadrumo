@@ -52,16 +52,13 @@ from __future__ import annotations
 from pydantic import BaseModel, ConfigDict
 
 from ..core.config import Settings, load_settings
-from ..core.telemetry import (
-    HttpTelemetrySink,
-    TelemetryEventPayload,
-    TelemetryTier,
-    build_telemetry_payload,
-    emit_telemetry_event,
-    telemetry_emit_permitted,
-    workspace_hash,
-)
-from ..core.time import now
+from ..core.telemetry._consent import telemetry_emit_permitted
+from ..core.telemetry._emit import emit_telemetry_event
+from ..core.telemetry._http_sink import HttpTelemetrySink
+from ..core.telemetry._schema import TelemetryEventPayload, build_telemetry_payload
+from ..core.telemetry._tier import TelemetryTier
+from ..core.telemetry._workspace import workspace_hash
+from ..core.time.clock import now
 from .diagnostics_run_health import build_run_health_report
 
 __all__ = [

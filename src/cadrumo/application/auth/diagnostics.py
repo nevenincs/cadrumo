@@ -23,18 +23,18 @@ from urllib.parse import urlsplit
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...adapters.persistence.storage import (
-    CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE,
-    SecureObjectRepository,
-    secure_object_repository_for_active_bucket,
-)
+from ...adapters.persistence.storage._secure_object_namespaces import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE
+from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.external_constants import UTF_8_ENCODING, load_external_constants
 from ...core.hashing import canonical_json_bytes, sha256_hex
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
-from ...core.time import now, validate_utc_aware
-from ..operator_actions import PreconditionVerdict, no_action_precondition_verdict
+from ...core.time.clock import now
+from ...core.time.utc import validate_utc_aware
+from ..operator_actions._models import PreconditionVerdict
+from ..operator_actions._preconditions import no_action_precondition_verdict
 from .errors import AuthDiagnosticPayloadError, AuthDiagnosticPhoneStateError
 
 _DIAGNOSTIC_NAMESPACE = CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.namespace

@@ -47,24 +47,19 @@ from pydantic import BaseModel
 
 from ....core.errors.hierarchy import CadrumoError
 from ....core.external_constants import UTF_8_ENCODING
-from ....core.time import now
-from ..storage import (
-    ClassificationError,
-    Envelope,
-    EnvelopeVersionError,
-    HashedLookup,
-    SecureObjectWrite,
-    inner_envelope_classification_is_expected,
-    inner_envelope_version_is_current,
-    secure_object_repository_for_bucket,
-)
-from ..storage.sql import SecureObjectRepository
+from ....core.time.clock import now
+from ..storage._schema_lineage import inner_envelope_classification_is_expected, inner_envelope_version_is_current
+from ..storage.crypto.encrypted_columns import HashedLookup
+from ..storage.envelope._envelope import Envelope
+from ..storage.errors import ClassificationError, EnvelopeVersionError
+from ..storage.runtime_repository import secure_object_repository_for_bucket
+from ..storage.sql import SecureObjectRepository, SecureObjectWrite
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from ....core.classification import SensitivityClass
-    from ..storage import SecureObjectNamespaceDefinition
+    from ....core.classification.policies import SensitivityClass
+    from ..storage._secure_object_namespaces import SecureObjectNamespaceDefinition
     from ..storage.sql import SecureObjectRecord
 
 __all__ = ["SecureSnapshotRepository"]

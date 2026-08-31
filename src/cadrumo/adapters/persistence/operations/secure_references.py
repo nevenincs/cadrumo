@@ -7,18 +7,15 @@ from datetime import datetime
 
 from pydantic import BaseModel, ValidationError
 
-from ....core.classification import AtRestTreatment, SensitivityClass, default_policy_for
+from ....core.classification.policies import AtRestTreatment, SensitivityClass, default_policy_for
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import sha256_hex
 from ....core.identity import ContentDigest
-from ....core.time import validate_utc_aware
-from ..storage import (
-    OPERATION_SECURE_REFERENCE_NAMESPACE,
-    RepositoryError,
-    SecureObjectNamespaceDefinition,
-    SecureObjectRepository,
-    secure_object_repository_for_active_bucket,
-)
+from ....core.time.utc import validate_utc_aware
+from ..storage._secure_object_namespaces import OPERATION_SECURE_REFERENCE_NAMESPACE, SecureObjectNamespaceDefinition
+from ..storage.errors import RepositoryError
+from ..storage.runtime_repository import secure_object_repository_for_active_bucket
+from ..storage.sql import SecureObjectRepository
 
 _SECURE_REFERENCE_SCHEMA_VERSION = 1
 _CONTENT_DIGEST_OBJECT_KEY_GRAMMAR = "{content_digest}"

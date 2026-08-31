@@ -32,14 +32,14 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import TYPE_CHECKING
 
+from ...core.decimal._grammar import try_parse_canonical_decimal
 from ...core.descendant_relacion import ART_58_2_ENTITLING_RELACIONES, DescendantRelacion
-from ...core.decimal import try_parse_canonical_decimal
 from ...core.errors.hierarchy import ProfileAnswerTypeError
 from ...core.flows import REPEATING_INSTANCE_SEPARATOR, CopyRefKind, FlowWidgetKind
 from ...core.identity import IdentityError, validate_identity
 from ...core.parsing import parse_iso8601_date
 from ...core.text_bounds import CALENDAR_MONTH_MAX, CALENDAR_MONTH_MIN, is_calendar_month
-from ...core.time import today_madrid
+from ...core.time.clock import today_madrid
 from ...domain.deadlines.models import EntityType
 from ..flows.definition import (
     CopyRef,

@@ -22,9 +22,9 @@ from typing import override
 import pytest
 
 from ....tests.storage_scope import storage_overrides
-from ...storage_taxonomy import StorageCategory
 from ...config import override_settings
 from ...logging import get_logger
+from ...storage_taxonomy import StorageCategory
 from ..context import run_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

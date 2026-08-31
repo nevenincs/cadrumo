@@ -40,8 +40,8 @@ from pathlib import Path
 import pytest
 
 from .....core.directory_scan import scan_directory
-from .....core.resources import bundled_path
-from .....tests.fixtures import (
+from .....core.resources._boundary import bundled_path
+from .....tests.fixtures.provenance import (
     FIXTURE_PROVENANCE_REAL,
     FIXTURE_PROVENANCE_SYNTHETIC,
     provenance_mismatches,

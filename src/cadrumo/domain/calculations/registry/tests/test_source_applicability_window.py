@@ -21,7 +21,7 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from .._snapshot_internals import _SUBSTANTIVE_LAW_KINDS, collect_snapshot_ref_ids
 from .._validate_orden_aplicabilidad import RevisionLegalApplicabilityWindow
 from ..errors import RegistryValidationError

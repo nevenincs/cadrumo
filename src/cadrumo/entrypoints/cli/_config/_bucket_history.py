@@ -13,7 +13,7 @@ import typer
 
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
-from ....core.time import coerce_utc_aware
+from ....core.time.utc import coerce_utc_aware
 from ....domain.buckets.event import BucketEvent, BucketEventType
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._common import emit_envelope
@@ -35,7 +35,7 @@ def profile_history(
     """Browse the active profile's append-only event history."""
     _activate_subcommand_output_language(ctx, output_language)
     from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-    from ....adapters.persistence.storage import secure_object_repository_for_bucket
+    from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
     from .._config_bucket_history_payloads import BucketHistoryResult
 
     profile_label, bucket_id = _resolve_profile_history_target(profile, ctx=ctx)

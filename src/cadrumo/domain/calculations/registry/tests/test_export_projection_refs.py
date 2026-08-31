@@ -9,6 +9,7 @@ from typing import Literal
 import pytest
 from pydantic import ValidationError
 
+from .....core.casilla_id import validated_casilla_id
 from .....core.filing_producer_key import FilingProducerKey
 from .....core.filing_projection_ref import (
     M303Exonerado390OperacionesTercerosProjectionRef,
@@ -18,7 +19,6 @@ from .....core.filing_projection_ref import (
     M303RegimenSimplificadoModuleProjectionRef,
     M303RegimenSimplificadoModuleValue,
 )
-from .....core.casilla_id import validated_casilla_id
 from .._loader_internals import _compile_export_semantic_field, _compile_projection_endpoint_declaration
 from .._snapshot_internals import _validate_materialized_export_record_families
 from .._validate_evidence import EvidenceValidator

@@ -6,7 +6,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....application.calculations import calculate_m303_regimen_simplificado_result
+from .....application.calculations._m303_regimen_simplificado import calculate_m303_regimen_simplificado_result
 from .....core.filing_projection_ref import (
     M303RegimenSimplificadoActivityField,
     M303RegimenSimplificadoActivityProjectionRef,
@@ -18,7 +18,15 @@ from .....core.filing_projection_ref import (
 )
 from .....core.period import Period
 from .....domain.iva.errors import IvaValidationError
-from .....domain.iva.regimen_simplificado_rows import ActividadAgricolaSimplificado, ActividadNoAgricolaSimplificado, EntradaModuloSimplificado, HechoActividadSimplificado, M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision, RegimenSimplificadoFilingRows
+from .....domain.iva.regimen_simplificado_rows import (
+    ActividadAgricolaSimplificado,
+    ActividadNoAgricolaSimplificado,
+    EntradaModuloSimplificado,
+    HechoActividadSimplificado,
+    M303RegimenSimplificadoScope,
+    M303RegimenSimplificadoScopeDecision,
+    RegimenSimplificadoFilingRows,
+)
 from ....filing_evidence import FilingEvidenceReference
 from ..authority import bundled_authority
 from ..errors import RegistryValidationError

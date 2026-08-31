@@ -13,10 +13,10 @@ from datetime import date
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, Protocol, runtime_checkable
 
-from ...core.modelo import Modelo
 from ...core.logging import get_logger
-from ...core.resources import bundled_path
-from ...core.time import now, today_madrid
+from ...core.modelo import Modelo
+from ...core.resources._boundary import bundled_path
+from ...core.time.clock import now, today_madrid
 
 # Type-only registry references. Runtime callers below import the
 # concrete symbols lazily inside the helpers that use them so importing

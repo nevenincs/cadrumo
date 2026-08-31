@@ -47,13 +47,15 @@ from decimal import Decimal
 from uuid import uuid4
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ...adapters.persistence.storage import AttachmentStore, secure_object_repository_for_bucket
+from ...adapters.persistence.storage.attachment import AttachmentStore
+from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...core.config import Settings, load_settings
 from ...core.document_shape import PDF_CONTAINER_SHAPES
 from ...core.image_media_type import ImageMediaType, detect_image_media_type
 from ...core.logging import get_logger
 from ...core.provenance_stamp import provenance_stamp_transport
-from ...core.time import coerce_utc_aware, now
+from ...core.time.clock import now
+from ...core.time.utc import coerce_utc_aware
 from ...domain.buckets.event import BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH, BucketEventObjectType, BucketEventType
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.categories.spending_category import SpendingCategory
@@ -361,7 +363,7 @@ def _record_injected_classifier_run[T](run: Callable[[], T], *, provider: str) -
     """
     import time
 
-    from ...adapters.outbound.llm import LLMRunRecord, LLMRunTelemetryRecorder
+    from ...adapters.outbound.llm._run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
     from ...llm.errors import LLMCacheError
 
     started_at = now()

@@ -33,7 +33,7 @@ from ..core.operations import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
-from ..core.time import now
+from ..core.time.clock import now
 from .operation_composition import compose_operation_dependencies
 
 _OBSERVATION_LIMIT = 256

@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from ..errors import RegistryValidationError
 from ..loader import load_catalogue_file
 from ..record_design import extract_record_design

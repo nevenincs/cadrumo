@@ -67,10 +67,10 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import TypedDict
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, model_validator
 
-from ..adapters.outbound.llm import LLMRunRecord, LLMRunTelemetryRecorder
-from ..core.time import validate_inclusive_date_range
+from ..adapters.outbound.llm._run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
+from ..core.time.date_range import validate_inclusive_date_range
 from .auth.operator import test_operator_auth
 
 __all__ = [
@@ -139,9 +139,9 @@ class LlmRunProviderMetrics(BaseModel):
     model_config = _STRICT_FROZEN
 
     provider: str = Field(min_length=1)
-    runs: int = Field(ge=0)
-    succeeded: int = Field(ge=0)
-    failed: int = Field(ge=0)
+    runs: NonNegativeInt
+    succeeded: NonNegativeInt
+    failed: NonNegativeInt
     min_duration_ms: int | None = None
     max_duration_ms: int | None = None
     mean_duration_ms: Decimal | None = None
@@ -256,7 +256,7 @@ class RunRecordView(BaseModel):
     caller: str = Field(min_length=1)
     provider: str = Field(min_length=1)
     model: str = ""
-    duration_ms: int = Field(ge=0)
+    duration_ms: NonNegativeInt
     succeeded: bool
     error_kind: str = ""
     started_at: datetime
@@ -559,9 +559,9 @@ class LlmUsageModelMetrics(BaseModel):
     model_config = _STRICT_FROZEN
 
     model: str = ""
-    runs: int = Field(ge=0)
-    succeeded: int = Field(ge=0)
-    failed: int = Field(ge=0)
+    runs: NonNegativeInt
+    succeeded: NonNegativeInt
+    failed: NonNegativeInt
     min_duration_ms: int | None = None
     max_duration_ms: int | None = None
     mean_duration_ms: Decimal | None = None
@@ -586,9 +586,9 @@ class LlmRunHealthProviderMetrics(BaseModel):
     model_config = _STRICT_FROZEN
 
     provider: str = Field(min_length=1)
-    runs: int = Field(ge=0)
-    succeeded: int = Field(ge=0)
-    failed: int = Field(ge=0)
+    runs: NonNegativeInt
+    succeeded: NonNegativeInt
+    failed: NonNegativeInt
     min_duration_ms: int | None = None
     max_duration_ms: int | None = None
     mean_duration_ms: Decimal | None = None

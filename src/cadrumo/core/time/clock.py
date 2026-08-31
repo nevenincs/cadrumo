@@ -1,9 +1,9 @@
 """Canonical wall-clock helpers for the AEAT domain.
 
 A single, testable entry-point for obtaining the current UTC time.
-Call-sites must import :func:`now` from :mod:`cadrumo.core.time` rather
-than inlining ``datetime.now(tz=UTC)`` directly, so the production
-clock can be traced and call-sites stay uniform.
+Call-sites must import :func:`now` from this module rather than inlining
+``datetime.now(tz=UTC)`` directly, so the production clock can be traced
+and call-sites stay uniform.
 
 Deterministic-output seam
 -------------------------
@@ -31,7 +31,7 @@ from datetime import UTC, date, datetime
 from zoneinfo import ZoneInfo
 
 from ..errors.hierarchy import CoreValidationError
-from ._utc import validate_utc_aware
+from .utc import validate_utc_aware
 
 _FROZEN_INSTANT: ContextVar[datetime | None] = ContextVar(
     "_aeat_frozen_clock_instant",

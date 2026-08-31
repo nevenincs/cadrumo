@@ -8,10 +8,16 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from .....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from .....core.aggregation import BindingAggregationOp, BindingSourceKind
+from .....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....iva.flow import IvaFlowDirection
-from ....iva.schema import IvaCashAccountingTreatment, IvaCategory, IvaExemptionArticle, IvaLedgerObservationRole, IvaRateKind
+from ....iva.schema import (
+    IvaCashAccountingTreatment,
+    IvaCategory,
+    IvaExemptionArticle,
+    IvaLedgerObservationRole,
+    IvaRateKind,
+)
 from ..errors import RegistryValidationError
 from ..ledger_bindings import (
     IvaLedgerObservation,

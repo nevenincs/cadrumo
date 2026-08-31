@@ -5,11 +5,9 @@ from __future__ import annotations
 import pytest
 
 from ...errors import ResourceNotFoundError
-from .. import (
-    CategoryProfileRepository,
-    HolidayCalendarRepository,
-    IvaCatalogueRepository,
-)
+from ..category_profiles import CategoryProfileRepository
+from ..holiday_calendars import HolidayCalendarRepository
+from ..iva_catalogues import IvaCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

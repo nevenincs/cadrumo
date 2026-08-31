@@ -114,7 +114,7 @@ def test_the_registry_declares_the_window_in_years_for_every_shipped_revision() 
 
 def test_no_registry_revision_still_declares_the_window_in_days() -> None:
     """ANTI-REGRESSION: a days-declared parameter is the shape that carried the defect."""
-    from ....core.resources import bundled_path
+    from ....core.resources._boundary import bundled_path
 
     registry = bundled_path("registry")
     offenders = sorted(

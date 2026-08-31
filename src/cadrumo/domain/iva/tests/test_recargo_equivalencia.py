@@ -26,7 +26,7 @@ from typing import cast
 import pytest
 from pydantic import ValidationError
 
-from ....core.resources import bundled_path
+from ....core.resources._boundary import bundled_path
 from ..recargo_equivalencia import LivaArt161RecargoRates, load_recargo_rates
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

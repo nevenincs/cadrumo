@@ -35,25 +35,23 @@ from typing import Final
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
-from .....core.classification import SensitivityClass, default_policy_for
+from .....core.classification.policies import SensitivityClass, default_policy_for
 from .....core.errors.hierarchy import CoreValidationError
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.identity import ContentDigest
 from .....core.locks import exclusive_file_lock
 from .....core.logging import get_logger
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from .....core.time import now, validate_utc_aware
+from .....core.time.clock import now
+from .....core.time.utc import validate_utc_aware
 from .._storage_path_definitions import (
     SECRET_INDEX_FILENAME,
     SECRET_INDEX_SCHEMA_VERSION,
     SECRET_RECORD_SCHEMA_VERSION,
 )
-from ..blob_store import (
-    BlobReference,
-    EncryptedBlobStore,
-)
+from ..blob_store._blob_store import BlobReference, EncryptedBlobStore
 from ..crypto.aead import derive_key
-from ..envelope import Envelope
+from ..envelope._envelope import Envelope
 from ..errors import (
     BlobIntegrityError,
     BlobNotFoundError,
@@ -66,7 +64,8 @@ from ..errors import (
 from ..errors import (
     storage_validation_error as _storage_validation_error,
 )
-from ..master_key import MasterKeyProvider, get_active_master_key
+from ..master_key._master_key import MasterKeyProvider
+from ..master_key.active_session import get_active_master_key
 
 _log = get_logger(__name__)
 

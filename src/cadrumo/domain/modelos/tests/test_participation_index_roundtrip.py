@@ -27,7 +27,8 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
-from ....adapters.persistence.storage import TRANSACTION_PARTICIPATION_INDEX_NAMESPACE, SensitivityClass
+from ....adapters.persistence.storage._secure_object_namespaces import TRANSACTION_PARTICIPATION_INDEX_NAMESPACE
+from ....core.classification.policies import SensitivityClass
 from ....core.period import Period
 from ....tests.secure_sql import isolated_runtime_profile
 from ..codes import ModeloCode
@@ -170,7 +171,7 @@ def test_participation_index_dropped_filing_record_surfaces_at_load(tmp_path: Pa
 
 def test_participation_index_wrong_inner_classification_is_localized(tmp_path: Path) -> None:
     """A corrupted envelope classification raises a translated persistence error."""
-    from ....adapters.persistence.storage import Envelope
+    from ....adapters.persistence.storage.envelope._envelope import Envelope
 
     object_key = derive_participation_index_id(_TRANSACTION_ID)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:

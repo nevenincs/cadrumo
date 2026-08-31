@@ -38,52 +38,66 @@ from typing import ClassVar, override
 
 from pydantic import BaseModel
 
-from ...adapters.outbound.aeat.sede.iva_compensation_wallet import PRE303_PRESENTATION_SERVICE_URL as _PRE303_PRESENTATION_SERVICE_URL
-from ...adapters.outbound.aeat.sede.declarations_schema import Declaracion as _Declaracion
-from ...adapters.outbound.aeat.sede.schema import FiledDeclaracionObservation as _FiledDeclaracionObservation
-from ...adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore as _FiledDeclaracionObservationStore
-from ...adapters.outbound.aeat.sede.schema import IvaCompensationWalletObservation as _IvaCompensationWalletObservation
-from ...adapters.outbound.aeat.sede.iva_compensation_wallet import fetch_iva_compensation_wallet as _fetch_iva_compensation_wallet
 from ...adapters.outbound.aeat.sede.declarations import open_declarations_register as _open_declarations_register
 from ...adapters.outbound.aeat.sede.declarations import shared_playwright as _shared_playwright
-from ...adapters.persistence.storage import (
+from ...adapters.outbound.aeat.sede.declarations_schema import Declaracion as _Declaracion
+from ...adapters.outbound.aeat.sede.iva_compensation_wallet import (
+    PRE303_PRESENTATION_SERVICE_URL as _PRE303_PRESENTATION_SERVICE_URL,
+)
+from ...adapters.outbound.aeat.sede.iva_compensation_wallet import (
+    fetch_iva_compensation_wallet as _fetch_iva_compensation_wallet,
+)
+from ...adapters.outbound.aeat.sede.observation_store import (
+    FiledDeclaracionObservationStore as _FiledDeclaracionObservationStore,
+)
+from ...adapters.outbound.aeat.sede.schema import FiledDeclaracionObservation as _FiledDeclaracionObservation
+from ...adapters.outbound.aeat.sede.schema import IvaCompensationWalletObservation as _IvaCompensationWalletObservation
+from ...adapters.persistence.storage._secure_object_namespaces import (
     LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE as _LIVE_IVA_REMOTE_STATE_ACQUISITIONS_STORAGE_NAMESPACE,
 )
-from ...adapters.persistence.storage import (
-    SecureBoundRepository as _SecureBoundRepository,
-)
-from ...adapters.persistence.storage import (
-    SecureObjectRepository as _SecureObjectRepository,
-)
-from ...adapters.persistence.storage import (
+from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository as _SecureBoundRepository
+from ...adapters.persistence.storage.runtime_repository import (
     secure_object_repository_for_active_bucket as _secure_object_repository_for_active_bucket,
 )
+from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository as _SecureObjectRepository
 from ...application.auth.session_types import AeatSession as _AeatSession
 from ...application.auth.sessions import AuthenticatedAeatSessionResult as _AuthenticatedAeatSessionResult
 from ...application.auth.sessions import ensure_authenticated_aeat_session as _ensure_authenticated_aeat_session
-from ...application.calculations import CalculationObservationRepository as _CalculationObservationRepository
-from ...application.calculations import IvaCompensationHistoryRepository as _IvaCompensationHistoryRepository
-from ...application.calculations import IvaWalletDecisionRepository as _IvaWalletDecisionRepository
-from ...application.calculations import iva_wallet_decision_key as _iva_wallet_decision_key
-from ...application.calculations import reconcile_modelo_303_iva_compensation as _reconcile_modelo_303_iva_compensation
-from ...core.storage_taxonomy import StorageCategory
-from ...core.modelo import Modelo
-from ...core.period import Period
-from ...core.storage_taxonomy_locations import storage_location as _storage_location
-from ...core.access_gate import AeatAccessGate as _AeatAccessGate
+from ...application.calculations._iva_wallet_reconciliation import (
+    reconcile_modelo_303_iva_compensation as _reconcile_modelo_303_iva_compensation,
+)
+from ...application.calculations.iva_compensation_history import (
+    IvaCompensationHistoryRepository as _IvaCompensationHistoryRepository,
+)
+from ...application.calculations.observations_repository import (
+    CalculationObservationRepository as _CalculationObservationRepository,
+)
+from ...application.calculations.observations_repository import (
+    IvaWalletDecisionRepository as _IvaWalletDecisionRepository,
+)
+from ...application.calculations.observations_repository import iva_wallet_decision_key as _iva_wallet_decision_key
+from ...core.access_gate.gate import AeatAccessGate as _AeatAccessGate
 from ...core.bucket_pointer import resolve_active_bucket_id as _resolve_active_bucket_id
 from ...core.config import Settings as _Settings
 from ...core.config import load_settings as _load_settings
 from ...core.errors.hierarchy import CadrumoError as _CadrumoError
 from ...core.hashing import sha256_hex as _sha256_hex
 from ...core.identity import tax_id_identity_token as _tax_id_identity_token
-from ...core.time import now
+from ...core.modelo import Modelo
+from ...core.period import Period
+from ...core.storage_taxonomy import StorageCategory
+from ...core.storage_taxonomy_locations import storage_location as _storage_location
+from ...core.time.clock import now
 from ...domain.calculations.registry.authority import bundled_authority
-from ...domain.iva_compensation.reconciliation import IvaCompensationAuthoritySource as _IvaCompensationAuthoritySource
 from ...domain.iva_compensation.carry_forward import IvaCompensationCarryForwardLot as _IvaCompensationCarryForwardLot
 from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState as _IvaCompensationPeriodState
-from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision as _IvaCompensationReconciliationDecision
-from ...domain.iva_compensation.carry_forward import build_iva_compensation_carry_forward_report as _build_iva_compensation_carry_forward_report
+from ...domain.iva_compensation.carry_forward import (
+    build_iva_compensation_carry_forward_report as _build_iva_compensation_carry_forward_report,
+)
+from ...domain.iva_compensation.reconciliation import IvaCompensationAuthoritySource as _IvaCompensationAuthoritySource
+from ...domain.iva_compensation.reconciliation import (
+    IvaCompensationReconciliationDecision as _IvaCompensationReconciliationDecision,
+)
 from .errors import LiveApplicationError, LiveApplicationInputError, LiveIvaSurfaceTimeoutError
 from .filed_data_capture import capture_report_path as _capture_report_path
 from .filed_observation_persistence import latest_declarations_by_period as _latest_declarations_by_period
@@ -226,10 +240,10 @@ def load_iva_remote_state(
 def _active_profile_storage_span():
     active_bucket_id = _resolve_active_bucket_id()
     if active_bucket_id is None:
-        from ...adapters.persistence.storage import StorageValidationError as _StorageValidationError
+        from ...adapters.persistence.storage.errors import StorageValidationError as _StorageValidationError
 
         raise _StorageValidationError(translated_message="errors.storage.runtime.not_ready")
-    from ...adapters.persistence.storage import (
+    from ...adapters.persistence.storage.master_key.active_session import (
         active_bucket_session_serves as _active_bucket_session_serves,
     )
 
@@ -239,7 +253,7 @@ def _active_profile_storage_span():
     if _active_bucket_session_serves(active_bucket_id):
         yield
         return
-    from ...adapters.persistence.storage import StorageValidationError as _StorageValidationError
+    from ...adapters.persistence.storage.errors import StorageValidationError as _StorageValidationError
 
     raise _StorageValidationError(translated_message="errors.storage.runtime.not_ready")
 

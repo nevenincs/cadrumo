@@ -20,9 +20,9 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field, SecretStr
 
-from .models import STRICT_FROZEN_CONFIG
 from .external_constants import OutputLanguage, load_external_constants
-from .identity import BucketId
+from .identity._bucket import BucketId
+from .models import STRICT_FROZEN_CONFIG
 
 _EXTERNAL_CONSTANTS = load_external_constants()
 

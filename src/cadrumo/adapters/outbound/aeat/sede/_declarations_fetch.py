@@ -23,7 +23,7 @@ from .....core.config import Settings, load_settings
 from .....core.external_constants import BINARY_MIME_TYPE as _BINARY_MIME_TYPE
 from .....core.hashing import sha256_hex
 from .....core.logging import get_logger
-from .....core.time import now
+from .....core.time.clock import now
 
 # Importing the renta package registers the first-slice routing
 # cross-domain snapshot check with the registry validator. build_snapshot

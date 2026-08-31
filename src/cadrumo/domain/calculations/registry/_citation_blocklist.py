@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Literal, NamedTuple
 
-from ....core.text_fold import fold_diacritics
 from ....core.i18n import Translatable as tr
+from ....core.text_fold import fold_diacritics
 
 CitationSource = Literal[
     "ley",

@@ -7,7 +7,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from .._validate import RegistryValidator
 from ._registry_schema_support import _committed_modelo
 

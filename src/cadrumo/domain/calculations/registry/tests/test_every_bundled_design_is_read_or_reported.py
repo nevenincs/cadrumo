@@ -51,7 +51,7 @@ from typing import Literal
 import pytest
 
 from .....core.directory_scan import DirectoryEntryKind, scan_directory
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from ..record_design import (
     _collapse_stuttered_row_prefix,
     _extract_pdf_text_lines,

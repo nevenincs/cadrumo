@@ -14,7 +14,7 @@ from ....application.modelo._action_errors import (
     WorkUnitAlreadyDiscardedError,
     WorkUnitMutationRefusedError,
 )
-from ...access_gate import LiveSubmitForbiddenError
+from ...access_gate.errors import LiveSubmitForbiddenError
 from ...i18n import UnmatchedPlaceholderError, tr
 from ...logging import SecretScrubbingFilter, configure_logging
 from ...observability.errors import RunContextMissingError, RunTracePersistenceError

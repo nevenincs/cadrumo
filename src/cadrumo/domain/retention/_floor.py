@@ -21,13 +21,13 @@ from collections.abc import Iterable
 from datetime import datetime
 from typing import Final, Protocol, runtime_checkable
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, NonNegativeInt
 
 from ...core.calendar_shift import shift_by_calendar_years
 from ...core.filing_year import FilingYear
 from ...core.identity import FilingRecordId
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.time import UtcInstant
+from ...core.time.utc import UtcInstant
 
 #: Legal retention floor (in whole years) for a filed tax record before it may
 #: be erased. Binding provision: Ley 58/2003 (Ley General Tributaria) art. 66 —
@@ -104,7 +104,7 @@ class RetentionFloorAssessment(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     as_of: UtcInstant
-    floor_years: int = Field(ge=0)
+    floor_years: NonNegativeInt
     retained: tuple[RetentionBlockingRecord, ...] = ()
 
     @property

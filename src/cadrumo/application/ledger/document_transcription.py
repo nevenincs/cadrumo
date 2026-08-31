@@ -39,9 +39,10 @@ from typing import Never, Self, SupportsIndex, override
 from pydantic import BaseModel, Field, model_serializer, model_validator
 
 from ...core.field_origin import FieldOrigin
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.identity import ContentDigest
-from ...core.time import UtcInstant, now
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.time.clock import now
+from ...core.time.utc import UtcInstant
 
 __all__ = [
     "ACQUISITION_ORIGINS",

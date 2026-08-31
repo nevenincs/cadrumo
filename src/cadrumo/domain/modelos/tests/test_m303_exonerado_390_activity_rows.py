@@ -9,7 +9,11 @@ from pydantic import ValidationError
 
 from ....core.casilla_id import validated_casilla_id
 from ...filing_evidence import FilingEvidenceReference
-from ..calculation_revision_m303_evidence import M303Exonerado390ActivityRowEvidence, M303Exonerado390EndpointEvidence, M303Exonerado390FilingEvidence
+from ..calculation_revision_m303_evidence import (
+    M303Exonerado390ActivityRowEvidence,
+    M303Exonerado390EndpointEvidence,
+    M303Exonerado390FilingEvidence,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

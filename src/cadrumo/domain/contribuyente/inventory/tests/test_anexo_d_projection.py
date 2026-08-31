@@ -10,7 +10,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....filing_evidence import FilingEvidenceReference
-from .. import (
+from ..records import (
     InventoryAcquisitionCompleteness,
     InventoryAcquisitionCost,
     InventoryAcquisitionEvidence,

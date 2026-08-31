@@ -53,16 +53,16 @@ from typing import ClassVar, Final, Literal
 
 from pydantic import BaseModel
 
-from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from .....core.text_fold import fold_diacritics
 from .....core.config import load_settings
-from .....core.decimal import coerce_decimal
+from .....core.decimal._coerce import coerce_decimal
 from .....core.errors.hierarchy import CadrumoError, CoreValidationError
 from .....core.hashing import sha256_hex as _sha256_hex
 from .....core.logging import get_logger
+from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.parsing import normalise_iso_4217_currency
 from .....core.tabular import coerce_cell_text
-from .....core.time import now
+from .....core.text_fold import fold_diacritics
+from .....core.time.clock import now
 from .....domain.transactions.enums import TransactionDirection
 from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 

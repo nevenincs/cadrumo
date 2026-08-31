@@ -7,8 +7,8 @@ from typing import Self
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from .operator_action_enums import ActionArgumentSource, ActionArgumentStatus
 from .identifier_grammar import FIELD_KEY_PATTERN, NAMESPACED_ID_PATTERN
+from .operator_action_enums import ActionArgumentSource, ActionArgumentStatus
 
 _STRICT_FROZEN_CONFIG = ConfigDict(
     extra="forbid",

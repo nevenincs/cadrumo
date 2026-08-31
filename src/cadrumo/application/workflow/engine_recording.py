@@ -6,12 +6,13 @@ from collections.abc import Callable
 from datetime import datetime
 from typing import NoReturn
 
-from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.errors.error_codes import build_error_envelope
 from ...core.errors.hierarchy import SiteHealthError
 from ...core.logging import get_logger
-from ...core.time import now as _utcnow
-from ..operator_actions import PreconditionVerdict, no_action_precondition_verdict
+from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
+from ...core.time.clock import now as _utcnow
+from ..operator_actions._models import PreconditionVerdict
+from ..operator_actions._preconditions import no_action_precondition_verdict
 from .abort import WorkflowAbortReason
 from .errors import UnhandledWorkflowError, WorkflowAbortSignalError
 from .run_models import (

@@ -6,7 +6,7 @@ from datetime import date
 
 import pytest
 
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from ..authority import bundled_authority
 from ..corpus_catalogue import verify_source_catalogue
 from ..legal import verify_legal_catalogue

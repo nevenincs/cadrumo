@@ -14,8 +14,8 @@ from pathlib import Path
 
 import pytest
 
-from .....core.schema_family_disposition import RegistrySchemaFamilyDisposition
 from .....core.authority_grade import RegistryAuthorityGrade
+from .....core.schema_family_disposition import RegistrySchemaFamilyDisposition
 from .._schema_family_coverage import build_revision_coverage_manifest
 from .._validate_authority_grade import validate_authority_grade_section
 from ..loader import load_registry_tree

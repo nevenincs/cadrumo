@@ -21,8 +21,8 @@ from typing import Annotated, Final, NamedTuple
 
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
-from .models import STRICT_FROZEN_CONFIG
 from .identity import ContentDigest, SubjectTaxId
+from .models import STRICT_FROZEN_CONFIG
 
 
 class IdentityReferent(StrEnum):

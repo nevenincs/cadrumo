@@ -37,33 +37,33 @@ from collections.abc import Mapping
 from datetime import date
 from typing import TYPE_CHECKING
 
-from ...core.modelo import Modelo as _Modelo
-from ...core.notificacion_estado_servicio import NotificacionEstadoServicio as _NotificacionEstadoServicio
-from ...core.post_filing_event import PostFilingEventKind as _PostFilingEventKind
-from ...core.post_filing_event import classify_post_filing_event_kind as _classify_post_filing_event_kind
-from ...core.post_filing_event import post_filing_event_is_actionable as _post_filing_event_is_actionable
-from ...core.notificacion_estado_servicio import (
-    resolve_notificacion_estado_servicio as _resolve_notificacion_estado_servicio,
-)
 from ...core.external_constants import IVA_REGIME_MODELOS
 from ...core.i18n import tr as _tr
 from ...core.identity import same_tax_identifier
 from ...core.logging import get_logger as _get_logger
-from ...core.time import now
+from ...core.modelo import Modelo as _Modelo
+from ...core.notificacion_estado_servicio import NotificacionEstadoServicio as _NotificacionEstadoServicio
+from ...core.notificacion_estado_servicio import (
+    resolve_notificacion_estado_servicio as _resolve_notificacion_estado_servicio,
+)
+from ...core.post_filing_event import PostFilingEventKind as _PostFilingEventKind
+from ...core.post_filing_event import classify_post_filing_event_kind as _classify_post_filing_event_kind
+from ...core.post_filing_event import post_filing_event_is_actionable as _post_filing_event_is_actionable
+from ...core.time.clock import now
 from ...domain.calculations.registry.applicability import ApplicabilityVerdict as _ApplicabilityVerdict
 from ...domain.calculations.registry.applicability import derive_modelo_applicability as _derive_modelo_applicability
 from ...domain.calculations.registry.applicability import taxpayer_model_is_declared as _taxpayer_model_is_declared
 from ...domain.deadlines.engine import DeadlineEngine as _DeadlineEngine
+from ...domain.deadlines.engine import ScheduleProducer as _ScheduleProducer
+from ...domain.deadlines.engine import classify_obligation_status as _classify_obligation_status
 from ...domain.deadlines.errors import DeadlineValidationError as _DeadlineValidationError
-from ...domain.deadlines.models import ModeloDeadline as _ModeloDeadline
 from ...domain.deadlines.errors import NoDeadlineWindowsError as _NoDeadlineWindowsError
+from ...domain.deadlines.festivos import shift_deadline as _shift_deadline
+from ...domain.deadlines.models import ModeloDeadline as _ModeloDeadline
 from ...domain.deadlines.models import ObligationStatus as _ObligationStatus
 from ...domain.deadlines.models import Schedule as _Schedule
-from ...domain.deadlines.engine import ScheduleProducer as _ScheduleProducer
 from ...domain.deadlines.models import TaxpayerProfile as _TaxpayerProfile
-from ...domain.deadlines.engine import classify_obligation_status as _classify_obligation_status
 from ...domain.deadlines.plazo import resolve_filing_window as _resolve_filing_window
-from ...domain.deadlines.festivos import shift_deadline as _shift_deadline
 from ...domain.modelos.work_unit import WorkUnit as _WorkUnit
 from ...domain.modelos.work_unit import WorkUnitState as _WorkUnitState
 from .calendar_evidence import (

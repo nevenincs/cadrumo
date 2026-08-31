@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from .._validate import RegistryValidator
 from .._validate_cross_revision import (
     declared_cross_revision_continuity_semantic_linkage_failures,

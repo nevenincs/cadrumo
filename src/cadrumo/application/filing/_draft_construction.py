@@ -17,13 +17,13 @@ from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from typing import NamedTuple
 
-from ...core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ...core.aggregation import BindingSourceKind as _BindingSourceKind
 from ...core.casilla_id import CasillaId as _CasillaId
-from ...core.period import Period as _Period
 from ...core.parsing import parse_bool as _parse_bool
 from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
-from ...core.time import now as _utc_now
+from ...core.period import Period as _Period
+from ...core.time.clock import now as _utc_now
+from ...core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings import bound_casilla_binding_ids as _registry_bound_casilla_binding_ids
 from ...domain.calculations.registry.casilla_membership import (
@@ -54,20 +54,20 @@ from ...domain.calculations.registry.schema_surfaces import CasillaDefinition as
 from ...domain.filing.protocols import CasillaCollection as _CasillaCollection
 from ...domain.filing.protocols import CasillaSchemaProvider as _CasillaSchemaProvider
 from ...domain.filing.protocols import DeadlineChecker as _DeadlineChecker
+from ...domain.filing.protocols import ModeloInputs as _ModeloInputs
+from ...domain.filing.protocols import ModeloProfile as _ModeloProfile
 from ...domain.filing.schema import ModeloBindingValue as _ModeloBindingValue
 from ...domain.filing.schema import ModeloCasillaProvenance as _ModeloCasillaProvenance
 from ...domain.filing.schema import ModeloDraft as _ModeloDraft
-from ...domain.filing.protocols import ModeloInputs as _ModeloInputs
-from ...domain.filing.protocols import ModeloProfile as _ModeloProfile
 from ...domain.filing.schema import ModeloScalar as _ModeloScalar
-from ...domain.filing.validator import ModeloValidator as _ModeloValidator
 from ...domain.filing.schema import ModeloValue as _ModeloValue
 from ...domain.filing.schema import ModeloValueKind as _ModeloValueKind
-from ...domain.filing.validator import apply_validation as _apply_validation
 from ...domain.filing.schema import compute_modelo_draft_id as _compute_modelo_draft_id
 from ...domain.filing.schema import registry_schema_version as _registry_schema_version
+from ...domain.filing.validator import ModeloValidator as _ModeloValidator
+from ...domain.filing.validator import apply_validation as _apply_validation
 from ...domain.period import calculation_filing_date as _calculation_filing_date
-from ...domain.submission import ModeloDraftStatus as _ModeloDraftStatus
+from ...domain.submission._protocols import ModeloDraftStatus as _ModeloDraftStatus
 from .errors import ModeloApplicationError
 from .errors import ModeloApplicationError as _ModeloBuilderError
 
@@ -88,7 +88,7 @@ def _refuse_unsupported_filing_year(period: _Period) -> None:
             that declaration, because a refusal an operator cannot act on is an
             outage rather than a guard.
     """
-    from ...core.resources import bundled_path
+    from ...core.resources._boundary import bundled_path
     from ...domain.calculations.registry.loader import load_registry_tree
 
     _modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))

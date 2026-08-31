@@ -23,7 +23,7 @@ from collections.abc import Callable
 import pytest
 
 from ..iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
-from ..redaction import redact_for_cli_output, redact_for_log
+from ..redaction.rules import redact_for_cli_output, redact_for_log
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

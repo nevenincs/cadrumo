@@ -27,7 +27,7 @@ from textual.widgets import Button
 from .....adapters.persistence.operations.journal import OperationJournalRepository
 from .....adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from .....adapters.persistence.operations.secure_references import operation_secure_reference_repository
-from .....adapters.persistence.storage import SecureObjectRepository
+from .....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from .....application.auth.operation_definitions import (
     build_auth_operation_definitions,
     build_auth_operation_registrations,
@@ -72,7 +72,7 @@ from .....core.operations import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
-from .....core.time import now
+from .....core.time.clock import now
 from .....domain.user_profile.values import UserProfileFact
 from .....tests.aeat_literal_fixtures import aeat_url
 from .....tests.secure_sql import isolated_profile_storage_root

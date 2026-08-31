@@ -9,7 +9,7 @@ from typing import get_args
 import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.resources import bundled_path
+from .....core.resources._boundary import bundled_path
 from .....tests.registry_observations import registry_grounded_modelo_observation
 from .._validate import RegistryValidator
 from ..bindings import resolve_available_bound_inputs_by_casilla_id

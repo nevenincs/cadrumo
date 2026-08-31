@@ -43,7 +43,7 @@ from .....application.user_profile.registration import register_profile_with_cre
 from .....core.config import load_settings
 from .....core.paths import effective_storage_root
 from .....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
-from .....core.time import now
+from .....core.time.clock import now
 from .....domain.user_profile.values import UserProfileFact
 from .....tests.secure_sql import isolated_profile_storage_root
 from .. import sync_review
