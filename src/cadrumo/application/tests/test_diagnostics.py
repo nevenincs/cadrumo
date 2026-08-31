@@ -21,26 +21,24 @@ from ...adapters.persistence.storage.master_key import BucketSession
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ...adapters.persistence.storage.sql import dispose_engine
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ...core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.classification import SensitivityClass
 from ...core.config import override_settings
-from ...core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ...tests.master_key import EphemeralMasterKeyProvider
 from ...tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 from ...tests.user_profile import register_minimal_profile
-from ..diagnostic_models import (
+from ..diagnostics import (
     ConfigRepairReport,
     DiagnosticCheck,
     DiagnosticFinding,
     RegistryVersionSummary,
     SecureObjectIntegrityReport,
-    ensure_models_rebuilt,
-)
-from ..diagnostics import (
-    _profile_check,
-    _registry_cross_domain_integrity_check,
     build_config_repair_report,
+    ensure_models_rebuilt,
     preview_quarantine_unreadable_secure_objects,
+    profile_check,
     quarantine_unreadable_secure_objects,
+    registry_cross_domain_integrity_check,
     render_config_repair_text,
     secure_object_unreadable_total,
 )
@@ -741,7 +739,7 @@ def test_build_cli_version_report_fast_path_needs_no_model_rebuild() -> None:
     ``build_cli_version_report(with_registry=False)`` is the fast-path
     call. It returns a ``CliVersionReport``, which must carry no field
     typed by a lazily imported name — otherwise the version path would
-    have to pay the heavy ``ensure_models_rebuilt`` import cost.
+    have to pay the heavy ``_ensure_models_rebuilt`` import cost.
     """
 
     from ..diagnostics import build_cli_version_report, render_cli_version_text
@@ -839,7 +837,7 @@ def test_profile_check_warn_row_names_every_missing_required_key() -> None:
         login_ready=False,
         next_action=_UNRENDERED_NEXT_ACTION,
     )
-    check = _profile_check(report)
+    check = profile_check(report)
 
     assert check.status == "warn"
     finding_keys = {finding.summary.split(" — ", 1)[0] for finding in check.findings}
@@ -889,7 +887,7 @@ def test_render_config_repair_text_lists_specific_findings() -> None:
         login_ready=False,
         next_action=_UNRENDERED_NEXT_ACTION,
     )
-    check = _profile_check(report)
+    check = profile_check(report)
     registry = RegistryVersionSummary(available=True, registry_root="/x", modelo_count=1, casilla_count=2)
     repair_report = ConfigRepairReport(
         overall="warn",
@@ -947,7 +945,7 @@ def test_config_repair_report_marks_registry_integrity_internal() -> None:
 
     from ...core.resources import bundled_path
 
-    check = _registry_cross_domain_integrity_check(bundled_path("registry", "aeat"))
+    check = registry_cross_domain_integrity_check(bundled_path("registry", "aeat"))
     # Healthy registry → ok + operator audience. A failing registry would
     # carry audience='internal'; that branch is pinned by the renderer
     # test above against a constructed report.

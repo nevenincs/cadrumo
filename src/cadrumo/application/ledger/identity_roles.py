@@ -278,12 +278,58 @@ def resolve_counterparty_identity(
         verified.append((candidate, token))
 
     if not verified:
-        return _unanchored_identity_resolution(
-            field=field,
-            candidates=candidates,
-            origin=origin,
-            findings=findings,
-            own_excludable=own_excludable,
+        # ABSENT is not UNVERIFIABLE, and the two are separated on whether any
+        # candidate was PRINTED AND REJECTED -- which is exactly what `findings`
+        # already records. Nothing rejected means the document simply carries no
+        # counterparty identifier: a factura simplificada may legitimately omit
+        # it, an ordinary domestic ticket names no customer at all, and raising
+        # an unresolved ROLE over a role nobody could have stated fires a blocker
+        # across a large correct population. An operator taught to clear it
+        # unread clears it on the one document where it is genuinely right.
+        #
+        # The envelope stays UNANCHORED either way, and that is the load-bearing
+        # half: withholding the finding says the question was NOT ASKED, never
+        # that the role is fine. A caller reading "no ROLE_UNRESOLVED" as a
+        # resolved counterparty would be reading an absence as a verdict; the
+        # resolution reports `resolved=None` and an unanchored envelope so no
+        # such reading is available.
+        if not findings:
+            return IdentityRoleResolution(
+                provenance=FieldProvenance(
+                    field=field,
+                    origin=origin,
+                    grounding=FieldGroundingOutcome.UNANCHORED,
+                    note=(
+                        "the document states no tax identifier for the counterparty; nothing was "
+                        "resolved because there was nothing to resolve"
+                        if candidates
+                        else "the document states no tax identifier"
+                    ),
+                ),
+            )
+        return IdentityRoleResolution(
+            provenance=FieldProvenance(
+                field=field,
+                origin=origin,
+                grounding=FieldGroundingOutcome.UNANCHORED,
+                note="no identifier on the document verified as a counterparty identity",
+            ),
+            findings=(
+                *findings,
+                DraftDiscrepancyFinding(
+                    kind=DraftDiscrepancyKind.ROLE_UNRESOLVED,
+                    field=field,
+                    detail=(
+                        "every identifier the document prints for the counterparty failed verification, "
+                        "so the true counterparty is invisible to a validating read"
+                        + (
+                            ", and the filer's own identifier was not available to exclude"
+                            if not own_excludable
+                            else ""
+                        )
+                    ),
+                ),
+            ),
         )
 
     # An identity resolves on POSITIVE role evidence, never on survival. This is
@@ -369,56 +415,6 @@ def resolve_counterparty_identity(
                 detail=(
                     f"{len(competing)} identifiers could each be the counterparty; "
                     f"selecting one by position would be a guess"
-                ),
-            ),
-        ),
-    )
-
-
-def _unanchored_identity_resolution(
-    *,
-    field: str,
-    candidates: tuple[IdentityCandidate, ...],
-    origin: FieldOrigin,
-    findings: list[DraftDiscrepancyFinding],
-    own_excludable: bool,
-) -> IdentityRoleResolution:
-    """Build the unanchored result when no candidate verified.
-
-    ABSENT is not UNVERIFIABLE: nothing rejected means the document simply
-    stated no counterparty identifier, while rejected candidates must surface
-    both their failed verification and the unresolved role.
-    """
-    if not findings:
-        return IdentityRoleResolution(
-            provenance=FieldProvenance(
-                field=field,
-                origin=origin,
-                grounding=FieldGroundingOutcome.UNANCHORED,
-                note=(
-                    "the document states no tax identifier for the counterparty; nothing was "
-                    "resolved because there was nothing to resolve"
-                    if candidates
-                    else "the document states no tax identifier"
-                ),
-            ),
-        )
-    return IdentityRoleResolution(
-        provenance=FieldProvenance(
-            field=field,
-            origin=origin,
-            grounding=FieldGroundingOutcome.UNANCHORED,
-            note="no identifier on the document verified as a counterparty identity",
-        ),
-        findings=(
-            *findings,
-            DraftDiscrepancyFinding(
-                kind=DraftDiscrepancyKind.ROLE_UNRESOLVED,
-                field=field,
-                detail=(
-                    "every identifier the document prints for the counterparty failed verification, "
-                    "so the true counterparty is invisible to a validating read"
-                    + (", and the filer's own identifier was not available to exclude" if not own_excludable else "")
                 ),
             ),
         ),
