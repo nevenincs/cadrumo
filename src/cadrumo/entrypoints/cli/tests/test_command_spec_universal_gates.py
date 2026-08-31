@@ -12,7 +12,7 @@ from typing import Any, cast
 
 import pytest
 
-from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES, lookup_translation_entry
+from ....core.i18n._render import SUPPORTED_OUTPUT_LANGUAGES, lookup_translation_entry
 from ....core.json_contract import OutputRootSchema, OutputSchema
 from .._command_spec import (
     CommandSpec,
@@ -592,9 +592,17 @@ def test_exact_set_detector_bites_on_missing_duplicate_and_undeclared_nodes() ->
 def test_every_parent_edge_target_schema_locale_and_policy_is_complete() -> None:
     by_key = COMMAND_GRAPH.by_key()
     schema_identities: list[str] = []
+    # Collected rather than raised on the first spec. Retiring one namespace
+    # breaks every spec that reached a symbol through it, and failing fast
+    # names one of them, so the sweep costs a full run per broken target
+    # instead of one run for all of them.
+    unresolvable_targets: list[str] = []
     for node in COMMAND_GRAPH.nodes():
         spec = node.spec
-        _assert_all_deferred_targets(spec)
+        try:
+            _assert_all_deferred_targets(spec)
+        except AssertionError as exc:
+            unresolvable_targets.append(f"{spec.key}: {exc.args[0] if exc.args else exc}")
         if spec.parent_key is None:
             assert spec.kind == "root"
         else:
@@ -627,6 +635,7 @@ def test_every_parent_edge_target_schema_locale_and_policy_is_complete() -> None
             for locale in SUPPORTED_OUTPUT_LANGUAGES:
                 present, _value = lookup_translation_entry(key.value, locale=locale)
                 assert present, f"{spec.key}: {key.value!r} absent from {locale}"
+    assert not unresolvable_targets, "deferred targets that do not resolve:\n" + "\n".join(unresolvable_targets)
     assert len(schema_identities) == len(set(schema_identities))
 
 
