@@ -10,7 +10,7 @@ related:
   - '[[2026-06-01-registry-period-code-union-cli-boundary-adr]]'
   - '[[2026-08-05-ci-lane-deconflation-step-check-attribution-audit]]'
 modified: '2026-08-31'
-body_hash: 'sha256:f335c3666846a828a46fccb3ccd0da12c194788561adf86d50739bec1f22c69e'
+body_hash: 'sha256:920707930e660f43492b4ffd86bec18e9043d70060f4678921196ff143e545f6'
 ---
 
 <!-- RETIRED: S01, S10, S181, S184, S186, S189, S191, S193, S194, S197, S199, S201, S203, S205, S207, S209, S211, S213, S215, S217, S219, S221 -->
@@ -218,7 +218,7 @@ Decompose every live size-budget subject by its owning source file, then regener
 - [ ] `P05.S146` - Refactor the size-budget subjects in classification_assembly.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/ledger/classification_assembly.py`.
 - [ ] `P05.S147` - Refactor the size-budget subjects in evidence_draft.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/ledger/evidence_draft.py`.
 - [x] `P05.S148` - Refactor the size-budget subjects in evidence.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/ledger/evidence.py`.
-- [ ] `P05.S149` - Refactor the size-budget subjects in identity_roles.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/ledger/identity_roles.py`.
+- [x] `P05.S149` - Refactor the size-budget subjects in identity_roles.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/ledger/identity_roles.py`.
 - [ ] `P05.S150` - Refactor the size-budget subjects in llm_classification.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/ledger/llm_classification.py`.
 - [ ] `P05.S151` - Refactor the size-budget subjects in filed_data_capture.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/live/filed_data_capture.py`.
 - [ ] `P05.S152` - Refactor the size-budget subjects in _amendment_actions.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/modelo/_amendment_actions.py`.
