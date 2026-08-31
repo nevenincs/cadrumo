@@ -10,7 +10,7 @@ related:
   - '[[2026-06-01-registry-period-code-union-cli-boundary-adr]]'
   - '[[2026-08-05-ci-lane-deconflation-step-check-attribution-audit]]'
 modified: '2026-08-31'
-body_hash: 'sha256:fe5266584ee2197d0d5ba2eb69dd45b5ff4e23f5420e0a495e87e2176d5e5071'
+body_hash: 'sha256:59ca9160886b75ce6495a15544c7bc9b846baac5fa4b7bc3dac9466cf208804c'
 ---
 
 <!-- RETIRED: S01, S10, S181, S184, S186, S189, S191, S193, S194, S197, S199, S201, S203, S205, S207, S209, S211, S213, S215, S217, S219, S221 -->
@@ -270,7 +270,7 @@ Decompose every live size-budget subject by its owning source file, then regener
 - [x] `P05.S188` - Refactor the size-budget subjects in ledger_bindings.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/ledger_bindings.py`.
 - [x] `P05.S190` - Refactor the size-budget subjects in record_design.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/record_design.py`.
 - [x] `P05.S192` - Refactor the size-budget subjects in schema.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/schema.py`.
-- [ ] `P05.S195` - Refactor the size-budget subjects in test_catalogue_verification.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/tests/test_catalogue_verification.py`.
+- [x] `P05.S195` - Refactor the size-budget subjects in test_catalogue_verification.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/tests/test_catalogue_verification.py`.
 - [ ] `P05.S196` - Refactor the size-budget subjects in test_detail_record_observations.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/tests/test_detail_record_observations.py`.
 - [ ] `P05.S198` - Refactor the size-budget subjects in test_modelo_100_registry_roles.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_registry_roles.py`.
 - [ ] `P05.S200` - Refactor the size-budget subjects in test_modelo_303_registry.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/tests/test_modelo_303_registry.py`.
