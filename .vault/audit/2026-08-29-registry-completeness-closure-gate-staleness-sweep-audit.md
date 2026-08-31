@@ -389,3 +389,46 @@ test edits in the shared tree during the session. Sequential runs of the touched
 modules are the only sound evidence; on those every changed module passes, and the
 only registry failure remaining in that set is the pre-existing modelo 165 / 714
 law-coverage gate.
+
+### Generated export-tree enrolment: two owed trees, one wrong-year pairing
+
+Two enrolled rows in `dev/registry/tests/test_generated_export_trees.py` were
+red and both looked like stale enrolment. Neither was. Nothing was deleted --
+`git status` is clean on both revision directories and both `export/` trees are
+absent at HEAD -- and the rows carry the deliberate "enrolled with the layout,
+not after it" discipline that the m347 entry above them explains.
+
+`m200-2024` failed with a source-authority refusal rather than an absent tree:
+the row paired revision `2024` with `aeat-dr-200-2025`. That source carries
+`record_design_epoch = "2025"` and `applies_from = 2025-01-01`, and only
+`2025-y-siguientes` declares it among its revision-level `source_refs` -- the
+sibling `aeat-dr-200-2024` carries `applies_to = 2024-12-31`. The epoch year is
+the ejercicio, not the AEAT publication year, which refutes the tempting reading
+that a design published in 2025 under Orden HAC/657/2025 (approving modelo 200
+for periodos impositivos of 2024) belongs to the 2024 revision. Three fields
+(source_ref, epoch, filing_year) already said 2025 against one saying 2024, so
+the revision string was the outlier. Corrected in `266a0cd467`; the anchor
+coverage case, previously refused, now passes -- the pairing validates only when
+it is right, which is the proof the correction is not cosmetic.
+
+Revision `2024` retains its own reviewed design and a full parsed mapping set
+under `dev/registry/mappings/modelo_200/2024/`, and owes an enrolment row once
+its tree is rendered. That row is deliberately NOT added yet: enrolling ahead of
+a tree is sanctioned, but adding a row whose only effect today is a second
+permanent red buys nothing until the render lands.
+
+Both `m200-2025-y-siguientes` and `m390-2022` now fail on the one honest ground
+that remains: `render_complete_export_tree` succeeds for each, so the tree is
+renderable and simply never published. That was surfacing as a bare
+`FileNotFoundError` out of `iterdir`, which reads as a broken row and invites
+exactly the wrong repair. The enrolment row is the ONLY staleness detector a
+committed tree has, so the assertion now names the tree as owed and says to
+publish it through the generator's own publication authority rather than retire
+the row.
+
+Unrelated and pre-existing, confirmed in the same run: both m347 rows still fail
+at the `filecmp` byte comparison on `0002-record-m347-declarado.toml`, the
+`repeat = "binding_rows"` gap the semantic map cannot express. That comparison
+also runs BEFORE check mode, so it masks the refusal message the check-mode
+guard was given for this case -- the ordering is worth fixing when that gap is
+closed.

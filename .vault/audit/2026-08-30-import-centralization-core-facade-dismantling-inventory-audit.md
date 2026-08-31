@@ -5,7 +5,7 @@ tags:
 date: '2026-08-30'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:036d74fa7d0d98407295c83499e8be6e9ea98fff997257e7294e73793dea42c3'
+body_hash: 'sha256:cd8d16fad1838cb943209622e5db61997870636024ff4e4ca446779351807289'
 related:
   - "[[2026-07-01-import-centralization-adr]]"
 ---
@@ -179,3 +179,39 @@ commits: these file sets run past the argv limit.
 The eight residual collection errors throughout belonged to concurrent uncommitted
 relocations under `adapters/persistence/storage` and `application/aggregation` and
 were excluded from every commit in this campaign.
+
+
+### Postscript: parse the rendered source before writing it
+
+The sweep's worst defect was not a wrong rewrite, it was an UNPARSEABLE one, and
+it is worth stating separately because the blast radius is categorically larger.
+
+One heuristic indented any column-zero `from X import` whose next non-blank line
+happened to be indented -- true for a multi-line import, a dict literal, a wrapped
+call. It rewrote 2,604 files in a single pass and left `IndentationError` at module
+scope, which makes the module AND every package importing it unimportable. At peak
+a peer measured 3,192 syntax errors across `src/cadrumo`. `cadrumo/tests/__init__.py`
+was among them, which the root conftest imports, so ALL pytest collection died.
+
+Three second-order effects none of which are visible from the sweeping session:
+
+- **A background commit-retry loop stages from disk at attempt time.** Another
+  session's retry loop picked up corrupted files and would have committed them
+  under ITS commit message; that session caught seven of thirteen in one batch.
+  A rewrite defect therefore lands in history attributed to somebody else.
+- **`lint-imports` aborts on the first syntax error** and prints no tally, so the
+  layering gate evaluates ZERO contracts while appearing to be one narrow
+  complaint. A gate that reports nothing reads as green-adjacent.
+- Peers correctly refuse to repair files that look like live edits, so the damage
+  persists and blocks their lanes rather than being fixed by whoever hits it.
+
+**The guard is one line and belongs in every source rewriter:** `ast.parse` the
+rendered text and skip the write if it raises. Microseconds against a rewrite
+already being done, and it would have caught every instance here.
+
+Recovery that did NOT destroy concurrent work, for the next person: restore HEAD's
+indentation only on lines whose content is otherwise byte-identical (so peer edits
+survive), then repair the remainder verified by COMPILATION rather than by pattern
+matching -- de-indent a candidate, compile, keep it only if it parses. Reverting
+whole files with `git checkout` would have discarded peer edits in the same files.
+

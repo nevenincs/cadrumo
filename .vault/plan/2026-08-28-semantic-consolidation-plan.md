@@ -9,7 +9,7 @@ related:
   - '[[2026-08-28-semantic-consolidation-cli-payload-projection-adr]]'
 modified: '2026-08-31'
 body_schema: body-v2
-body_hash: 'sha256:eccb699c720494aa583f0c1a34aee6259c0b6db06be568fea9590d7046a5caf5'
+body_hash: 'sha256:8434ee299db03f57f49004b805af418bdb0395ae111ae360fb78d384981c38de'
 ---
 
 # `semantic-consolidation` plan
@@ -23,12 +23,13 @@ body_hash: 'sha256:eccb699c720494aa583f0c1a34aee6259c0b6db06be568fea9590d7046a5c
 Six package namespaces carry a PEP 562 __getattr__ resolver, four of them byte-identical in behaviour. This is duplication and an independent rules breach: package namespaces must be inert and export maps are prohibited. Closed first because it removes code rather than reconciling it, and because every later phase reads imports that these resolvers currently obscure.
 
 - [x] `P01.S06` - Retire the domain/modelos lazy export map, repointing every consumer at the owning defining module; `src/cadrumo/domain/modelos/__init__.py`.
-- [ ] `P01.S07` - Retire the storage lazy export map last of its subtree, repointing its core, custody and crypto facing entries; `src/cadrumo/adapters/persistence/storage/__init__.py`.
+- [x] `P01.S07` - Retire the storage lazy export map last of its subtree, repointing its core, custody and crypto facing entries; `src/cadrumo/adapters/persistence/storage/__init__.py`.
 - [ ] `P01.S08` - Retire the core lazy export map in full, the largest slice, on the measured finding that the facade saves a real consumer nothing; `src/cadrumo/core/__init__.py`.
 - [x] `P01.S09` - Census and rule on the second population of namespace export maps the mechanism-name search missed, under different identifiers; `src/cadrumo/`.
 - [x] `P01.S41` - Repoint the one consumer the crypto retirement missed, which reached encrypt_record through the now-inert namespace and broke every profile passphrase encryption; `src/cadrumo/adapters/persistence/storage/_profile_custody.py`.
 - [x] `P01.S42` - Gate the retirement blind spot: refuse an attribute read through a package namespace that does not expose it, so a retirement cannot half-land; `src/cadrumo/tests/test_namespace_attribute_reachability.py`.
 - [ ] `P01.S80` - Hold the domain/modelos retirement uncommitted while a peer session lands an overlapping application/modelo relocation, because sixty files carry both diffs and neither can commit atomically without capturing the other; `src/cadrumo/domain/modelos/`.
+- [x] `P01.S170` - Retire the four storage child namespaces the parent map was blocking, and re-confirm that three previously-reverted namespaces still fail on their own merits; `src/cadrumo/adapters/persistence/storage/`.
 
 ### Phase `P02` - Reconcile the CLI payload models against the models they restate
 
@@ -36,9 +37,9 @@ Six package namespaces carry a PEP 562 __getattr__ resolver, four of them byte-i
 
 - [x] `P02.S01` - Gate the CLI payload boundary: refuse a payload declaring a constraint or validator its canonical model does not own, per module, property-based, six arms mutation-proved; `src/cadrumo/entrypoints/cli/tests/test_cli_payload_constraint_authority.py`.
 - [x] `P02.S02` - Promote the canonical evidence-reference and amendment-reason aliases to public defining modules and dedupe the twice-declared discard-reason alias; `src/cadrumo/domain/modelos/`.
-- [ ] `P02.S03` - Reconcile the modelo payload modules onto canonical aliases and move the imported-evidence match invariant to the filing-record model; `src/cadrumo/entrypoints/cli/_modelo_payloads.py`.
+- [x] `P02.S03` - Reconcile the modelo payload modules onto canonical aliases and move the imported-evidence match invariant to the filing-record model; `src/cadrumo/entrypoints/cli/_modelo_payloads.py`.
 - [x] `P02.S04` - Reconcile the ledger payload modules onto canonical transaction, invoice, counterparty and rule aliases; `src/cadrumo/entrypoints/cli/`.
-- [ ] `P02.S05` - Reconcile the config, diagnostics, overview and registry payload modules onto their canonical aliases; `src/cadrumo/entrypoints/cli/`.
+- [x] `P02.S05` - Reconcile the config, diagnostics, overview and registry payload modules onto their canonical aliases; `src/cadrumo/entrypoints/cli/`.
 - [x] `P02.S18` - Source the business-pct bound from the domain constraint the CLI helper restates, keeping only the operator-facing percent formatting in the CLI; `src/cadrumo/entrypoints/cli/_ledger_support.py`.
 - [x] `P02.S43` - Judge a payload validator by its body rather than its presence, so the two sanctioned shapes stop reading as violations, and teach the detector that a threshold literal is usually wrapped in a constructor call; `src/cadrumo/entrypoints/cli/tests/test_cli_payload_constraint_authority.py`.
 - [x] `P02.S44` - Type the counterparty key as the canonical content digest on both sides: the key is a SHA-256 hex value, and the CLI had dropped its bound to a single character; `src/cadrumo/application/ledger/counterparty_establishment.py`.
@@ -63,7 +64,7 @@ Six package namespaces carry a PEP 562 __getattr__ resolver, four of them byte-i
 - [x] `P02.S111` - Give the Spanish postcode format a domain-level home, since it is enforced only by the setup wizard and no other write path to address_postcode refuses a malformed value; `src/cadrumo/core/setup_answers.py`.
 - [x] `P02.S112` - Rehome the ledger folder-import aggregation and the Drive remote-object label derivation, both of which the CLI computes with no application or adapter counterpart; `src/cadrumo/entrypoints/cli/`.
 - [x] `P02.S113` - Rehome the ledger folder-import fold beside the function that produces the per-file results, asserting the invocation-wide fields agree rather than silently taking the first file's; `src/cadrumo/application/ledger/actions_import.py`.
-- [ ] `P02.S115` - Widen the folder-import fold so a directory import reports every file's validation and verification report, not only the first; `src/cadrumo/application/ledger/models.py`.
+- [x] `P02.S115` - Widen the folder-import fold so a directory import reports every file's validation and verification report, not only the first; `src/cadrumo/application/ledger/models.py`.
 - [x] `P02.S117` - Rehome the Drive object-label derivation beside the hmac half of the same naming scheme, keeping it distinct from the manifest label whose policy differs; `src/cadrumo/adapters/outbound/storage/, src/cadrumo/entrypoints/cli/_config/`.
 - [x] `P02.S119` - Adopt ModeloCode on the aggregation contract and result payloads, leaving the operator-input command untyped so its registry-driven refusal can still name the supported set; `src/cadrumo/application/aggregation/_service.py, src/cadrumo/entrypoints/cli/_modelo_payloads.py`.
 - [x] `P02.S125` - Declare the represented-NIF length bound once and the two password-generation bounds beside the envelope that owns them, closing a result payload that reported a generation the envelope would refuse to store; `src/cadrumo/application/auth/, src/cadrumo/adapters/persistence/storage/custody/, src/cadrumo/entrypoints/cli/`.
@@ -89,6 +90,7 @@ Six package namespaces carry a PEP 562 __getattr__ resolver, four of them byte-i
 - [x] `P02.S153` - Bound the purchase-invoice evidence money fields on the record and its patch, after tracing the two that reach a renta deduction; `src/cadrumo/application/ledger/evidence.py`.
 - [x] `P02.S155` - Correct the fifteen fixture sites left carrying a CIF the merged leader policy refuses, after re-deriving the checksum I had dismissed them on; `src/cadrumo/application/overview/tests/, src/cadrumo/domain/calculations/registry/tests/`.
 - [x] `P02.S156` - Elide the rendered finding message instead of refusing it, and state the workflow reason-class bound once, clearing the config and modelo payload modules; `src/cadrumo/entrypoints/cli/_modelo_payloads.py, src/cadrumo/entrypoints/cli/_config_payloads.py, src/cadrumo/application/workflow/events.py`.
+- [x] `P02.S162` - State the canonical month-set rule once, so the descendant record and the wire payload projecting it stop implementing uniqueness and ordering separately; `src/cadrumo/core/text_bounds.py, src/cadrumo/domain/contribuyente/descendant_record.py, src/cadrumo/entrypoints/cli/_config_descendiente_payloads.py`.
 
 ### Phase `P03` - Consolidate the repeated secure-repository configuration shape
 
@@ -107,9 +109,11 @@ Eleven repository classes declare the identical namespace, payload_type, schema_
 
 Behaviour-fingerprint matches that are small, self-contained and mechanically rehomable once a canonical home is ruled: the uppercase-alphanumeric code validator across domain auth and the CLI payloads, the passphrase strength renderer across two TUI screens, the projection row selector across M200 and M296, the snapshot lister across borrador and justificante, and three identical secure-persistence constructors.
 
+
 ### Phase `P05` - Adjudicate the enum-subset rebuilt groupings
 
 Fifty-two enum-subset clusters at two to six sites, each a candidate partition of a closed axis stated more than once. Every one needs the substitutability pre-filter before collapse, because two modules naming the same members for genuinely different rules must stay apart. The home-office family grouping closed earlier is the worked precedent for both the fix and the gate.
+
 
 ### Phase `P06` - Collapse the filing-year axis onto one declared bound
 
@@ -121,7 +125,7 @@ The same filing_year field carries six contradictory windows across the tree -- 
 - [x] `P06.S13` - Gate the axis: refuse a restated year window on a field the adjudication named a filing year, mutation-proved; `src/cadrumo/core/tests/`.
 - [x] `P06.S122` - Extract the self-verifying custody digest base into a leaf module so every custody record can reach it, the two capsule records having been unable to subclass it where it lived; `src/cadrumo/adapters/persistence/storage/custody/`.
 - [x] `P06.S123` - Extend the custody digest base with the digest field validator, the mismatch check and the canonical payload, then subclass the five records that hand-roll them; `src/cadrumo/adapters/persistence/storage/custody/`.
-- [ ] `P06.S124` - Move the remaining three custody records onto the digest base, each with its digest proved unchanged, the envelope and recovery envelope and capsule commit still hand-rolling the computation; `src/cadrumo/adapters/persistence/storage/custody/`.
+- [x] `P06.S124` - Move the remaining three custody records onto the digest base, each with its digest proved unchanged, the envelope and recovery envelope and capsule commit still hand-rolling the computation; `src/cadrumo/adapters/persistence/storage/custody/`.
 - [x] `P06.S128` - Rule on the operator-clave accumulator, whose docstring calls it a mutable accumulator while its config freezes it, so every aggregation write raises; `src/cadrumo/domain/calculations/registry/invoice_bindings.py`.
 
 ### Phase `P07` - Rule on the second population of non-inert package namespaces
@@ -130,12 +134,12 @@ The lazy-export ADR assembled its population by searching for one identifier, _L
 
 - [x] `P07.S14` - Re-census the non-inert namespaces by construct rather than identifier, and count consumers through relative imports as well as absolute ones; `src/cadrumo/`.
 - [x] `P07.S15` - Reconcile the lazy-facade static-binding gate with the retirement ruling so its docstring stops describing the mechanism as deliberate; `src/cadrumo/tests/test_lazy_facade_static_bindings.py`.
-- [ ] `P07.S16` - Retire the small differently-named export maps in portals, transactions, llm, llm providers, entrypoints and operator_surface, one package per commit; `src/cadrumo/`.
-- [ ] `P07.S17` - Relocate the production code out of the four namespaces that are modules in disguise before their namespaces can be made inert; `src/cadrumo/`.
+- [x] `P07.S16` - Retire the small differently-named export maps in portals, transactions, llm, llm providers, entrypoints and operator_surface, one package per commit; `src/cadrumo/`.
+- [x] `P07.S17` - Relocate the production code out of the four namespaces that are modules in disguise before their namespaces can be made inert; `src/cadrumo/`.
 - [x] `P07.S64` - Retire the portals namespace: publicise its seven owning modules, repoint every consumer, and leave the package inert; `src/cadrumo/domain/portals/`.
 - [x] `P07.S65` - Retire the entrypoints namespace, which hid two exports below an unconditional raise so a censo transport import of the censal review resolved to nothing at runtime; `src/cadrumo/entrypoints/`.
-- [ ] `P07.S66` - Retire the transactions, llm and operator_surface namespaces, the last of the low-risk export maps; `src/cadrumo/`.
-- [ ] `P07.S67` - Relocate the production code out of the overview, contribuyente and core errors namespaces, which define it directly and cannot be made inert by deleting a map; `src/cadrumo/`.
+- [x] `P07.S66` - Retire the transactions, llm and operator_surface namespaces, the last of the low-risk export maps; `src/cadrumo/`.
+- [x] `P07.S67` - Relocate the production code out of the overview, contribuyente and core errors namespaces, which define it directly and cannot be made inert by deleting a map; `src/cadrumo/`.
 - [x] `P07.S68` - Retire the operator_surface export map, publicising its eight modules and repointing twenty-three consumers; `src/cadrumo/application/operator_surface/`.
 - [x] `P07.S69` - Scan every namespace for a name promised in its export surface that cannot resolve, confirming the entrypoints break was the last of its kind; `src/cadrumo/`.
 - [x] `P07.S70` - Retire the overview namespace, moving the four status-report builders it defined into their own module and retiring a lazy guard whose circular-import justification had gone stale; `src/cadrumo/application/overview/`.
@@ -163,6 +167,15 @@ The lazy-export ADR assembled its population by searching for one identifier, _L
 - [x] `P07.S114` - Publicise the secret store's defining module, which the inert namespace left unreachable for its blob-store and storage consumers; `src/cadrumo/adapters/persistence/storage/secret_store/`.
 - [ ] `P07.S118` - Publicise the mirror-manifest module so its remote-naming contracts are reachable without going through the storage namespace; `src/cadrumo/adapters/outbound/storage/`.
 - [x] `P07.S158` - Make the retirement sweep survive a peer's concurrent rename, then repoint the two stale gate pins it found and correct the expectation the vacuous one had been hiding; `dev/quality/namespace_retirement_sweep.py, dev/tests/test_projection_ref_compiler_callers.py, src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry_taxonomy_consumer.py`.
+- [x] `P07.S163` - Retire the light eager re-export facades on an import resolver that reads every relative form, after a regex census reported twelve namespaces unread that 386 tests were reading; `src/cadrumo/`.
+- [x] `P07.S164` - Relocate the production code out of the four namespaces that are modules in disguise, and repoint the forwarded names at the modules that define them; `src/cadrumo/`.
+- [x] `P07.S165` - Relocate the topics catalogue and the AEAT access gate onto public modules, moving the pinned public surface and the error-registry entries with them; `src/cadrumo/core/`.
+- [x] `P07.S166` - Relocate the classification policies, external-layout fixture models and borrador extractor selection onto public modules, and repoint the storage lazy map's string module paths; `src/cadrumo/`.
+- [x] `P07.S167` - Relocate the six remaining clean disguised-module namespaces onto public modules and move their error-registry entries with them; `src/cadrumo/`.
+- [x] `P07.S168` - Relocate the verify contract, filing validation and fixture provenance onto public modules, repointing the module-object attribute access the AST scan cannot see; `src/cadrumo/`.
+- [x] `P07.S169` - Correct the restored packaging oracle that asserts the retired cadrumo.entrypoints.cli:main console script instead of the live _cli_main:main, once a built wheel is available to verify against; `dev/packaging/tests/test_installed_oracles.py`.
+- [x] `P07.S171` - Guard every rewrite with a parse of the rendered source before writing, and widen the post-write damage scan to the dev root the rewriter was already writing to; `dev/quality/`.
+- [x] `P07.S172` - Guard the retirement sweep against creating cross-package private imports, and encode the three verified-broken exclusions so the sweep stops re-proposing them; `dev/quality/`.
 
 ### Phase `P08` - Consolidate the repeated constrained scalar shapes
 
@@ -192,7 +205,7 @@ An AST census of every pydantic Field constraint in production code found the sa
 - [ ] `P08.S40` - Migrate the secure-object revision id from its delimiter-joined hash convention to the canonical content-hash primitive; `src/cadrumo/adapters/persistence/storage/sql/_secure_object_crypto.py`.
 - [x] `P08.S49` - Adopt the non-negative integer type pydantic already ships at the hundred-plus CLI count fields that retyped the bound, having first confirmed the emitted schema is byte-identical; `src/cadrumo/entrypoints/cli/`.
 - [x] `P08.S50` - Record why the ge=1 count sites are not swept: the positive-integer type is an exclusive bound and emits a different schema, so the swap would move the published contract for no semantic gain; `src/cadrumo/`.
-- [ ] `P08.S51` - Extend the non-negative count adoption to the remaining domain, application and adapter sites once the shared tree is quieter; `src/cadrumo/`.
+- [x] `P08.S51` - Extend the non-negative count adoption to the remaining domain, application and adapter sites once the shared tree is quieter; `src/cadrumo/`.
 - [x] `P08.S62` - Correct the justificante presented-at classification, which the UTC sweep typed as an instant although AEAT stamps a local wall-clock time the extractor reads naive, and keep the parse-completion timestamp as the counter-example; `src/cadrumo/domain/justificante/_schema.py`.
 - [x] `P08.S63` - Gate the classification the UTC sweep got wrong: refuse a field promising an instant whose producer parses a printed local time and can only return a naive value, mutation-proved on both arms; `src/cadrumo/core/tests/test_utc_instant_sources_are_aware.py`.
 - [x] `P08.S71` - Route the manual ledger command through the canonical business-pct coupling validator, publicising the module so application code can reach what it had been re-implementing byte for byte; `src/cadrumo/domain/transactions/model_validation.py`.
@@ -202,7 +215,7 @@ An AST census of every pydantic Field constraint in production code found the sa
 - [x] `P08.S90` - Add a tree-wide relative-import resolver as a standing check, so a repoint that emits the wrong dot depth is caught before it reaches a commit; `src/cadrumo/tests/`.
 - [x] `P08.S92` - Sweep the second stale-pin class the path sweep could not see: gates naming their canonical module by bare basename, distinguishing those from assertions that a retired module is absent; `src/cadrumo/, dev/`.
 - [x] `P08.S93` - Run both stale-pin sweeps after every namespace retirement rather than once, since each retirement creates new stale pins; `src/cadrumo/, dev/`.
-- [ ] `P08.S94` - Rule on the two application/modelo edit-execution functions that compose a secure-object write without asserting a revision, a pre-existing finding the composing-write gate reports; `src/cadrumo/application/modelo/_edit_execution.py`.
+- [x] `P08.S94` - Rule on the two application/modelo edit-execution functions that compose a secure-object write without asserting a revision, a pre-existing finding the composing-write gate reports; `src/cadrumo/application/modelo/_edit_execution.py`.
 - [x] `P08.S96` - Sweep the third stale-pin class: ruff per-file ignores in pyproject naming modules the retirements made public, deleting rather than repointing where a narrower inline suppression already covers the site; `pyproject.toml`.
 - [x] `P08.S97` - Rehome the censal no-write-surface scan and its anti-tautology guard off the sede facade onto the censal module, so emptying a namespace cannot turn a guard green by emptiness; `src/cadrumo/adapters/outbound/aeat/sede/tests/`.
 - [x] `P08.S98` - Repoint the setup-answers lazy module accessor at deadlines.models, and move the FiscalResidency reads to the renta-code module that actually defines them; `src/cadrumo/core/setup_answers.py`.
@@ -216,6 +229,7 @@ An AST census of every pydantic Field constraint in production code found the sa
 - [x] `P08.S159` - Align the raw Orden module coefficient with the seasonal sibling beside it and the runtime it compiles into, so a bad extraction refuses at the boundary that can name its source; `src/cadrumo/domain/calculations/registry/_m303_orden_raw_models.py`.
 - [x] `P08.S160` - Adjudicate the gross-amount zero disagreement as deliberate and write its reason at the site, since the reason lived only in a test; `src/cadrumo/domain/renta/_ledger_expenses.py`.
 - [x] `P08.S161` - Adopt the positive-count alias at the twelve domain and application sites restating its bound, leaving the wider non-negative sweep to its own precondition; `src/cadrumo/core/tabular.py, src/cadrumo/domain/, src/cadrumo/application/workflow/run_models.py`.
+- [ ] `P08.S173` - Design one shared production-scan-surface definition and adopt it at the walkers that mean the whole surface, leaving the deliberately scoped ones scoped and saying so; `src/cadrumo/tests/_inventory.py`.
 
 ## Parallelization
 

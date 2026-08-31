@@ -5,7 +5,7 @@ tags:
 date: '2026-08-30'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:2255adde284b6fb1d1f4aa2ced53e92d6eadf84e9ef2cd7d7e9499705f74d046'
+body_hash: 'sha256:abfb3bebbbc89eed11dc57df88b64980b459793959d38d379d530e24712ba4b5'
 related: []
 ---
 
@@ -2242,6 +2242,907 @@ Across three runs the crash landed on three DIFFERENT modules -- `core/_notifica
 
 **Operational consequence.** While a relocation campaign is live against this tree, an import-graph gate measures the campaign, not the code. Its verdict is only meaningful once the churn settles, and a red run taken at face value mid-campaign would send someone chasing a defect that does not exist.
 
+### The interface plan's governance records are one unbuilt chain, not eight independent rows
+
+**Pathway:** `.vault/plan/2026-08-11-tui-interface-plan.md`, measured 2026-08-31.
+
+Eight rows in this plan exist to record a governance fact, and each is specified to wiki-link the previous one:
+
+`S01` C1 cohort-open -> `S38` C1 exit -> `S49` C2 cohort-open -> `S59` C2 exit -> `S71` C3 prerequisite -> `S79` C3 exit -> `S90` C4 exit -> `S93` C5 aggregate.
+
+**Every one is unchecked.** That is the finding. Approached row by row -- which is how a plan invites you to approach it -- S79 reads as an ordinary next step after S78; it is not, because its link target does not exist, and neither does that target's target, four levels down to a root that was never written. Eight of the plan's 37 remaining rows are this single spine, and it can only be built from the root. A reader taking the rows at face value would attempt S79, discover S71, attempt S71, discover S59, and so on -- rediscovering the chain one blocked row at a time.
+
+**`S71` additionally rests on a false premise, and it is the dangerous kind.** The row asserts "Both suites already ship and pass" and names `application/modelo/tests/test_edit_contract_invariants.py` and `application/operations/tests/test_financial_operand_invariants.py`. NEITHER FILE EXISTS, under that name or any other, anywhere in the tree. The real coverage is `test_edit_contract.py` plus seven suites in `application/operations/tests/` (`test_financial_operand.py`, `_conformance`, `_custody`, `_dependency_receipt`, `_executor_custody`, `_registration`, and `test_contract_invariants.py`). This is worse than a stale path because the row's entire product is a RECORD asserting those suites were proven green against a named commit: written as specified, it would cite two paths that resolve to nothing while reading as evidence that they passed.
+
+**How the wrong paths presented, which is the reusable part.** Running the two named files reported `no tests ran` rather than a green, because the deselection guard names what a selection actually matched. A bare pytest invocation over a nonexistent path exits cleanly and looks like success; the guard is the only reason the row's premise was checked rather than assumed.
+
+**Remediation.** Correct `S71`'s named paths to the suites that exist, and record on each spine row that it is chain-dependent, so the dependency is visible from the row rather than discovered by attempting it. Do not write any of these records until its link target resolves -- a governance artifact citing a name that does not exist is the failure mode the chain exists to prevent.
+
+### The modelo executors declare eleven phase codes and emit none of them
+
+**Pathway:** `src/cadrumo/application/modelo/operation_definitions.py`, measured 2026-08-31.
+
+Seven registered modelo operations declare `phase_codes` on their definitions --
+`modelo.work.rename`, `modelo.work.discard`, `modelo.edit.apply`,
+`modelo.work.verify.{gates,persist}`, `modelo.work.file.{preconditions,record}`,
+`modelo.export.{preconditions,render}` and
+`modelo.work.amend.{baseline,record}`, eleven codes in total.
+
+**The module calls `.phase(` ZERO times.** Every other executor family does:
+auth, export, live and user-profile all publish through
+`context.events.phase(...)`, the censal one at three distinct points.
+
+**Why this is a live operator defect rather than a tidiness issue.** Phase
+events are how a frontend learns an operation is progressing. The C4 actions
+enrolled under `W06.P12c.S82`-`S87` all present through the shared
+`OperationModal`, which renders its progress view from observed events. So an
+operator invoking rename, discard, verify, file, export or amend sees NOTHING
+between submitting and settling -- on operations that write to their filing
+records. A declared phase nobody emits is worse than no declaration, because
+the definition advertises progress reporting that the surface then cannot show.
+
+**How it surfaced, which is the part worth reusing.** Not by reading the
+executors -- their absence of a call is invisible to anyone not looking for it.
+It surfaced because the registered-executor conformance matrix
+(`entrypoints/tests/test_registered_executor_conformance.py`) asserts
+`set(observed_phase_codes) & set(definition.phase_codes)` and reported an EMPTY
+observed set once the modelo cases could finally execute. That matrix had never
+covered the modelo family, and the first thing it found on being pointed at it
+was eleven unbacked declarations.
+
+**Two false leads discarded on the way, both plausible.** The runs also emit
+`KeyringUnavailableError` at DEBUG level -- deferred profile-session retirement
+and mint cleanup -- which is easy to blame given this campaign's separate
+credential-store trouble, and is not the cause. And before that, every modelo
+case was refused by the profile readiness gate, which looked like the whole
+story; closing that fixture gap is what let the real one appear underneath.
+
+**Remediation is per-executor, not central.** Each executor must publish its own
+declared codes at the points they name, in the order the definition declares --
+`preconditions` before `record`, `gates` before `persist`. A central shim
+emitting a definition's codes on its behalf would satisfy the matrix while
+reporting phases that never happened, which is the same failure in a costume.
+
+### One taxpayer baseline, restated in 105 files
+
+**Pathway:** the modelo readiness fact set, measured 2026-08-31.
+
+The nine-fact taxpayer baseline the modelo readiness gate requires --
+`identity.tax_id`, `activities.description`, `iva.regime`,
+`tax_residence.jurisdiction_scope`, `iva.m303_regime_composition` and the four
+IVA enrolment flags -- is written out verbatim in **105 files**. Not similar
+sets: the identical nine paths with the identical values.
+
+**Why the number was wrong twice before it was right.** A first pass reported
+FOUR copies, found by searching for the function name `_seed_minimal_profile`.
+That is a name-scoped search for a content-scoped property, and it under-counted
+by a factor of twenty-six. Searching for a distinctive VALUE from the tuple
+(`iva.m303_regime_composition`) found all 105, every one of them carrying the
+full set. This is the same measurement error class recorded elsewhere in this
+audit -- counting what a thing is CALLED when the question is what it CONTAINS.
+
+**Why duplication matters here specifically, beyond tidiness.** This tuple is
+not decoration: the readiness gate consults these exact paths to decide whether
+any modelo work may run at all. 105 copies are 105 places for that answer to
+drift, and a copy that silently falls behind produces a suite passing against a
+taxpayer shape the gate no longer accepts -- green tests over a taxpayer the
+product would refuse.
+
+**Canonical home established, five sites collapsed.**
+`MODELO_READY_PROFILE_FACTS` and `seed_modelo_ready_profile_record` now live
+once in `src/cadrumo/tests/profile_capsule.py`, beside the
+`seed_test_profile_record` they delegate to. The four `_seed_minimal_profile`
+copies in `application/modelo/tests` and the newly added conformance seeder all
+delegate to it; verified at 16 passed across the three heaviest of them.
+
+**The remaining ~100 are not swept, deliberately.** They belong to many
+unrelated suites across aggregation, calculations and elsewhere, and a
+mechanical rewrite of a hundred peer-owned test fixtures in a shared worktree
+is how one lane breaks several others at once. The canonical declaration is the
+precondition for that sweep, not a substitute for it; each site should adopt it
+as its owner touches it.
+
+### The same executors report no EFFECT either, which is a false claim rather than a silence
+
+**Pathway:** `src/cadrumo/application/modelo/operation_definitions.py`, measured 2026-08-31, found immediately after the phase-emission finding above.
+
+The modelo module calls `.effect(` **zero** times. `censal_operation` calls it
+four times; `user_profile/operations` likewise. So every modelo operation
+settles reporting `OperationEffect.NONE`.
+
+**This is worse than the missing phases, and the difference is worth stating.**
+A missing phase is an ABSENCE -- an operator sees no progress. A missing effect
+is an ASSERTION: the platform records that a rename changed nothing, that a
+discard discarded nothing, that a file wrote nothing. Anything reasoning over
+operation outcomes -- a refresh decision, an audit read, an operator asking
+whether their filing action took -- is told a falsehood rather than left
+uninformed. On filing-adjacent operations that is the more dangerous of the two.
+
+**How it surfaced, and why the first fix was needed to see it.** The
+conformance matrix asserts `observed.projection.effect is case.expected_effect`.
+That assertion is UNREACHABLE until the phase assertion above it passes, so the
+empty-phase failure was masking it. Fixing phases made the effect check
+reachable and it failed immediately -- one defect standing behind another, in
+the same executors, discoverable only in order.
+
+**Repaired for rename and discard**, following the progression the working
+executors use rather than inventing one: `UNKNOWN` before the write, `UPDATED`
+after. On discard the `UNKNOWN` is placed BEFORE the approval check
+specifically, because a stale-approval refusal leaves the unit untouched --
+claiming `UPDATED` earlier would tell an observer a discard landed that never
+did. Both cases now pass the matrix end to end, with phases and effects
+observable.
+
+**Five executors still report neither**: edit.apply, export, verify, file and
+amend. They also still lack conformance scenarios, so nothing currently
+observes them -- which is precisely why the gap survived. The remediation is
+per-executor for the same reason given above: a central shim emitting a
+definition's declared codes and a default effect would satisfy the matrix while
+reporting work that never happened.
+
+### Amendment: all seven modelo executors now report, and the residue is fixtures rather than defects
+
+**Measured 2026-08-31**, superseding the "repaired for rename and discard" note above.
+
+The module now carries **7 phase calls and 15 effect calls**, from zero of each.
+Every modelo executor publishes what it can observe:
+
+- `modelo.edit.apply` publishes its single declared phase IN FULL, because it is
+  the only one with no inner delegation. It also now distinguishes two outcomes
+  that previously reported identically: a failed compare-and-swap reports
+  `NONE`, the truthful statement that nothing changed, as against the `UNKNOWN`
+  carried while the outcome was still open. Before this, a successful apply and
+  a no-op refusal were indistinguishable to any observer.
+- `rename` and `discard` publish their single phase and both effects.
+- `verify`, `file`, `export` and `amend` publish their ENTRY phase and both
+  effects, and deliberately do NOT publish their inner phase.
+
+**The unemitted inner phases are a recorded gap, not an accepted one.** Each of
+those four hands the whole job to an authority that performs both stages inside
+one call, so the transition is invisible from the executor. Emitting it after
+the call returns would mark ENTERING a stage that had already finished -- an
+observer reading a phase that never bracketed any work, which is a worse report
+than silence. It closes one of two ways: the authority receives the operation
+context and publishes the transition it can actually see, or the definition
+stops declaring a phase nobody can honestly emit. Both belong to that
+authority's owner.
+
+**The rationale is stated ONCE**, as a module-level DELEGATED PHASE REPORTING
+note, with each executor carrying a one-line reference. Repeating an eight-line
+explanation in four docstrings would be the same duplication this audit records
+elsewhere, in prose instead of code.
+
+**Verified at 20 passed / 6 failed** across the whole matrix. All six failures
+are the expected residue: five modelo definitions still declare no conformance
+SCENARIO -- edit.apply, export, verify, file, amend -- plus the census test that
+counts them. Every non-modelo definition passes, so repairing the executors
+regressed nothing. The remaining work is antecedent fixtures (a calculation
+revision, a revision plus verification report, a filed record), not further
+executor defects.
+
+### Thirty-four modules redeclare the M130 casilla-name mapping, and canonicalising it blindly would be wrong
+
+**Pathway:** the M130 casilla identity constants, measured 2026-08-31.
+
+`_M130_INGRESOS_CASILLA = validated_casilla_id("01")` and its siblings
+(`_GASTOS` = 02, `_PREVIOUS_PAYMENTS` = 05, `_RETENCIONES` = 06,
+`_PAGO_FRACCIONADO` = 07, `_AGRARIAN_VOLUME` = 08, `_AGRARIAN_WITHHELD` = 10,
+`_DIFERENCIA_PREVIA` = 14, `_CARRY_FORWARD` = 15) are **defined independently
+in 34 modules** and referenced in 40. Each is a private redeclaration of the
+same mapping from a human name to a casilla number.
+
+**The obvious remedy is the wrong one, and that is the finding.** A single
+canonical `M130_INGRESOS_CASILLA` constant would be a mapping that IS NOT
+STABLE: casilla ids are revision-scoped, and this campaign already records that
+ids renumber across filing years -- keying anything by casilla id across
+revisions injects the wrong box. A shared constant would silently be correct
+for the revisions it was written against and wrong for the others, which is
+worse than 34 honest local copies, because a local copy sits next to the test
+that pins its revision.
+
+**So the duplication is real but the correct shape is a question, not a sweep.**
+Three candidate shapes, none of them free: a revision-keyed accessor
+(`m130_casilla("ingresos", revision=...)`) resolving through the registry that
+already owns the numbering; a canonical constant per REVISION rather than per
+name; or leaving them local and accepting that the mapping is test-scoped by
+nature. The first is the only one that cannot silently drift, and it is also
+the only one that requires the registry to expose a name-to-casilla lookup it
+may not have.
+
+**Not swept, deliberately.** Rewriting 34 peer-owned test modules onto a
+constant that may be wrong for their revision would convert a visible
+duplication into an invisible correctness defect, inside test fixtures that
+currently pass. Recorded so the shape is decided before the sweep, rather than
+discovered afterwards.
+
+**Related and already acted on:** the taxpayer-baseline duplication recorded
+above (105 files) DID have a safe canonical form, because that fact set is not
+revision-scoped -- which is precisely why one was collapsed and this one was
+not. The two look like the same finding and are not.
+
+### Amendment: the safe canonical shape for the M130 casillas already exists and is private
+
+**Measured 2026-08-31**, resolving the "three candidate shapes" left open above.
+
+The revision-keyed accessor is not hypothetical. `casilla_id_for_unique_revision_semantic_role(revision, semantic_role, *, modelo_id)`
+ships in `application/modelo/_semantic_role_resolution.py`, with a stricter
+sibling `casilla_id_for_unambiguous_revision_semantic_role`. It resolves a
+SEMANTIC ROLE to a casilla id **for a given revision**, which is precisely the
+one shape that cannot silently drift as ids renumber -- and it is already the
+production mechanism, used by `_binding_resolution`, `_calculate_input`, and the
+art20, art52, dt12 and attribution advisories.
+
+So the 34 test redeclarations are not merely duplicated, they are duplicating a
+STRUCTURALLY WEAKER form of something the product already does correctly:
+`"01"` frozen as a literal where production asks the revision.
+
+**What blocks the sweep is a boundary, not a design question.** The module is
+underscore-private, and every one of its consumers lives inside
+`application/modelo`. Tests in `application/calculations/tests`,
+`adapters/inbound/declaracion/tests`, `adapters/outbound/google/tests` and the
+rest cannot import it without the cross-package private import the architecture
+rule forbids at a hard-zero baseline. There is no public re-export, and adding
+one is exactly the widening question the C3 editor hit with `_edit_models` --
+settled there by an operator ruling for a narrow application-owned facade
+rather than by publishing the family.
+
+**Corrected from the finding above.** That entry framed this as three candidate
+shapes needing a decision. It is one shape, already chosen and proven in
+production, needing a legal route to reach it. That is a smaller and more
+specific ask, and it is the same boundary question this campaign has now met
+three times -- the edit contract, the operator action catalogue, and now
+semantic-role resolution.
+
+
+### A failed operation's reason is not visible in its own projection
+
+**Pathway:** `modelo.export` through the registered-executor conformance matrix, 2026-08-31.
+
+With a scenario supplied, `modelo.export` executes and settles `FAILED`. The
+public projection carries `terminal_condition=FAILED`, `refusal_ref=None`, and
+`diagnostic_ref='sha256:33b715bb...'` -- a DIGEST. Nothing in the observable
+projection says why, and the failing test output cannot say either.
+
+**Why that matters beyond this test.** The projection is what a frontend reads.
+An operator whose export fails is shown a terminal failure and a hash. The
+distinction the platform draws between `refusal_ref` (a typed, explainable
+refusal) and `diagnostic_ref` (an opaque stored diagnostic) means an executor
+raising rather than refusing produces an outcome no surface can explain. This is
+the same shape as W07.P16.S340's concern about routing the spreadsheet export
+through the supervisor: the CLI currently maps four executor exceptions to four
+distinct operator messages, and through the platform they would become one
+opaque failure unless each is reconstructible.
+
+**MY OWN MEASUREMENT ERROR, recorded because it is the third of its class today
+and I committed it while documenting the other two.** I grepped the log for
+`thin`, matched it, and was about to record "confirmed: export refuses a
+structurally thin fichero, same completeness gate as filing". The match was
+inside the word "no**thin**g", in an unrelated assertion message. A substring
+search for a short token found a coincidence and it read exactly like
+confirmation of a hypothesis I already believed. The two gate defects repaired
+earlier in this session -- the `_workspace_producers` scan and the discard
+cancellation check -- are the identical error in committed code.
+
+**So the honest state is:** export fails, the cause is opaque, and the
+completeness-gate hypothesis is UNCONFIRMED. It remains plausible -- the export
+authority takes a `verification_repository` and the modelo-export rule does
+refuse thin ficheros -- but a signature and a rule are not a measurement.
+Resolving `diagnostic_ref` through whatever stores it would settle it.
+
+
+### `modelo.export` raised NameError on every run: a runtime name imported TYPE_CHECKING-only
+
+**Pathway:** `src/cadrumo/application/modelo/operation_definitions.py:114,126,827`.
+Found 2026-08-31 by recovering the exception type behind an opaque
+`diagnostic_ref`.
+
+`ModeloExportCommand` was imported ONLY inside the `if TYPE_CHECKING:` block
+while being CONSTRUCTED at runtime in the export executor's preconditions
+phase. `export_modelo_revision`, from the very same `._export` module, was
+imported at runtime one line above -- so the two halves of one call site were
+split across the type-only and runtime boundaries. Every execution of
+`modelo.export` through the operations platform raised `NameError` before
+reaching the export authority at all.
+
+**Remediation applied:** `ModeloExportCommand` moved to the runtime import
+beside `export_modelo_revision`; `ModeloExportResult`, used only in
+annotations, correctly stays type-only.
+
+**How it survived.** Nothing executed the path. Ruff, mypy and import-hygiene
+all read it as correct -- under `TYPE_CHECKING` the name IS bound for a type
+checker, so static analysis is structurally incapable of seeing this. Only
+execution finds it, and no test executed `modelo.export` until this matrix
+gained a scenario for it. This is the cost of a declared-but-unexercised
+executor stated concretely: the S45 matrix's whole premise is that a definition
+without a scenario proves nothing, and here the unproven definition was
+outright broken.
+
+**Correcting my own prior claim.** I recorded earlier that `modelo.export` was
+plausibly boundary-blocked behind the export completeness gate, reasoning from
+its `verification_repository` dependency and the modelo-export rule. That was
+wrong, and wrong in the more expensive direction: a signature-shaped inference
+nominated an owner ruling for something that was a two-line import defect. The
+same reasoning currently underwrites the `modelo.work.file` and
+`modelo.work.amend` blocked claims, and those are now explicitly UNVERIFIED by
+the same standard -- each needs its exception type recovered before it is
+reported as needing anything from an owner.
+
+**Method, reusable.** The correlation key is deliberately non-reversing, and it
+stays so: it digests `(operation_id, definition_id, exception_type,
+terminal_revision)`, and message, args and traceback are absent by
+construction. But when a failing run is in hand, three of those four inputs are
+known, so enumerating candidate exception classes and matching the digest
+recovers the TYPE without weakening the design. 770 classes, one hit.
+
+
+### A gate now covers the guard-only-name defect class tree-wide
+
+**Added:** `dev/quality/type_checking_runtime_use_scan.py` and
+`dev/tests/test_type_checking_runtime_use_gate.py`, 2026-08-31.
+
+The export `NameError` above was one instance of a class no tool in this
+repository could see, so it is now scanned for directly. The scanner reuses
+`type_checking_guarded_nodes` from `import_hygiene_scan` rather than walking
+the guard a second time -- a second guard-detector in a gate whose subject is
+duplicate authorities would be self-refuting.
+
+**Proven against real code, not a fixture.** Run over the tree it reports 0
+findings; run over the SAME module as it stands at HEAD it reports exactly 1 --
+`ModeloExportCommand` at HEAD's line 745. The gate is green because the defect
+was fixed, and it demonstrably reds on the genuine article. The durable
+anti-tautology proof in the suite uses an inline source of that exact shape,
+because a HEAD-pinned proof stops proving anything the moment the fix lands.
+
+**Three deferral forms are exempt, and each cost a false positive to learn.**
+The first run reported 13 findings, of which 12 were correct code: PEP 695
+`type X = ...` alias values (11) and a PEP 695 type-parameter bound (1) are
+lazily evaluated exactly as annotations are, so a guard-only name is right
+there. Had I reported that first run as a finding list, twelve of thirteen
+entries would have been wrong. Each exemption now carries a regression test, so
+a future widening of the scanner cannot silently re-acquire them.
+
+**Scope note.** This finds the name that is never bound. It cannot find the
+name bound to the WRONG module, which is the sibling defect and needs
+execution.
+
+
+### The tree is currently broken by two torn relocations, and no gate sees it
+
+**Measured 2026-08-31** by a static resolve of every first-party
+`from X import name` edge against the names X actually binds. 5,791 modules,
+**63 dangling import names**, concentrated in two in-flight relocations:
+
+| target module | dangling names | production consumer |
+|---|---:|---|
+| `domain.calculations.registry.record_design` | 50 | -- |
+| `adapters.outbound.aeat.browser` | 10 | `sede/declarations.py:50` |
+| `registry.record_design_pdf_row_repairs` | 1 | `record_design_pdf_reader.py:35` |
+| `entrypoints.cli.tests._ledger_ux_support` | 1 | -- |
+| `adapters.persistence.storage` | 1 | -- |
+
+**Both are confirmed by execution, not inference.** Importing the two
+production modules raises:
+
+- `cannot import name 'Profile' from cadrumo.adapters.outbound.aeat.browser`
+- `cannot import name '_uses_page_record_layout' from ...record_design_pdf_row_repairs`
+
+`browser/__init__.py` is now correctly inert (`__all__ = ()`, no imports, no
+`__getattr__`), and `_extract_pdf_text_lines` is defined nowhere in `src/`. So
+in both cases the DEFINITION side of a relocation landed and the CONSUMER sweep
+did not -- exactly what the one-commit atomicity rule for relocations exists to
+prevent, and consistent with the `relocation:*` commits on recent HEAD.
+
+**Not remediated here.** This is another area's live work; editing it would
+collide with the peer mid-relocation. It is recorded so the owners have exact
+targets.
+
+**Consequence for the TUI lane.** The registry breakage makes
+`test_registered_executor_conformance.py` uncollectable, so the modelo matrix
+cannot be run to completion until the peer lands their sweep. That is an
+external block on measuring S333, distinct from the boundary questions.
+
+**The gap worth closing.** Nothing in the repository detects this class. It is
+not a type error and not an import-hygiene violation -- the edge points at the
+right canonical module, the name simply is not there any more. A static
+resolve, which needs no imports and no test run, would have reddened the moment
+the definition moved. A gate is deliberately NOT landed yet: it would be red on
+arrival for reasons this lane must not fix, and a red-on-arrival gate trains
+people to ignore it. It should land with, or just behind, the sweep that closes
+the 63.
+
+
+### `modelo.work.file` is blocked one step earlier than recorded, and not on a boundary
+
+**Settled by reading, 2026-08-31**, with no test run -- the tree was
+uncollectable at the time and this needed none.
+
+The filing authority refuses at `_filing_actions.py:358`:
+`if target.state is not CalculationRevisionState.VERIFICADO_COMPLETO`, raising
+`CalculationRevisionStateError` with a `precondition_failure`. So the
+verified-complete requirement is REAL -- that much of the original claim
+survives contact with the code.
+
+What does not survive is the remedy. The recorded blocker was "needs a
+verified-complete revision -> casilla-keyed inputs -> boundary ruling", which
+pointed at an owner decision about resolving casillas by semantic role. But the
+file scenario's seeder ALREADY reaches completion through the real authority:
+`_seeded_modelo_verification_report` calls `verify_modelo_revision`, and
+`_verification_actions.py:1264` transitions the revision to
+`VERIFICADO_COMPLETO` on success. The revision should therefore already be in
+the state filing demands.
+
+**So the real question is narrower and purely internal:** why does verification
+not GRANT completion on the seeded zero-activity 1T revision, when the
+`modelo.work.verify` case settles SUCCEEDED? Settling successfully and granting
+completion are different outcomes -- a verify run that reports blocking findings
+succeeds as an operation while leaving the revision in `BORRADOR`. Nothing here
+needs an owner ruling; it needs the post-verify revision state read.
+
+**Next measurement, when the tree collects:** assert the revision's state
+directly after `_seeded_modelo_verification_report` returns. If it is
+`BORRADOR`, the findings that withheld the grant are the actual subject, and
+`modelo.work.amend` -- which sits behind `file` -- moves with it.
+
+**Pattern, third instance today.** `export` was called boundary-blocked and was
+an import bug. `file` was called boundary-blocked and is a verification-grant
+question. Both claims came from reading a dependency in a signature and
+inferring a domain requirement. The inference has now been wrong twice in the
+same direction: toward nominating an owner ruling for something the code
+answers on its own.
+
+
+### CORRECTION: the "two torn relocations" finding above misread a tree-wide codemod
+
+**Retracted 2026-08-31**, same session, before anyone acted on it.
+
+The finding above reports 63 dangling first-party import names as two
+independent peer relocations that landed their definition side without their
+consumer sweep, and cites the atomic-relocation rule against them. The
+measurements are real -- the imports did dangle, and the two production modules
+did raise `ImportError` when imported. The DIAGNOSIS is what fails.
+
+Minutes later, 2,592 of 6,601 Python files simultaneously failed to parse, every
+one with `IndentationError` at a multi-line `from X import (` that had acquired
+a leading indent. That is a codemod pass across the whole tree, not a hand
+edit, and it was still running: successive counts fell 2592 -> 2491 -> 2448 ->
+2179 -> 1811 -> 1515 as it repaired behind itself. The `record_design` and
+`browser` breakages were almost certainly its leading edge rather than two
+peers each violating the same rule at the same hour.
+
+**Why the wrong reading was so comfortable.** Torn relocation FITS: the repo
+runs an active `relocation:*` campaign, recent HEAD carries three such commits,
+and there is a standing rule about exactly this failure. A hypothesis with a
+rule already written for it feels confirmed on arrival. The count falling 63 ->
+52 was read as a peer converging on their sweep; it was the codemod moving.
+
+**The distinguishing evidence was available and not sought.** One parse of the
+tree would have separated the two readings instantly -- a torn relocation
+leaves every file parseable, and this left a third of them not. The dangling
+imports were counted without ever asking whether the files still compiled.
+
+**Consequence for the inventory.** The 63-name list and its 5-module table are
+WITHDRAWN as a work list. They describe a moment inside a rewrite, not a stable
+state, and nobody should sweep against them. Re-measure once the tree is quiet.
+
+**What survives unchanged**, because none of it depended on that diagnosis: the
+`modelo.export` `NameError` and its fix, the guard-only-name gate, and the
+`file` re-diagnosis -- each established by reading or executing a specific path.
+The standing gap also survives: nothing here detects a first-party import whose
+target no longer defines the name, and that remains worth a gate once there is
+a quiet tree to green it against.
+
+
+### An inert namespace broke two production call sites, measured on a settled tree
+
+**Pathway:** `adapters/persistence/storage/_profile_custody.py:979` and
+`_profile_login_session.py:45`, 2026-08-31.
+
+Both call `master_key.current_active_bucket_session()` as a PACKAGE ATTRIBUTE.
+`master_key/__init__.py` is now inert, and the function's canonical home is the
+private `master_key/_active_session.py:187`, so the attribute no longer
+resolves: `AttributeError: module 'cadrumo.adapters.persistence.storage.master_key'
+has no attribute 'current_active_bucket_session'`.
+
+**This one is real, unlike the earlier retraction.** It was measured after the
+tree-wide codemod fully converged -- 0 of 6,593 files unparseable, the matrix
+collecting all 26 -- so it is not a mid-rewrite artefact. It accounts for 24 of
+the 26 matrix failures, including `auth.*` cases that passed earlier today.
+
+**Why the dangling-import scan missed it.** That scanner resolves
+`from X import name` edges. This is attribute access on an imported module, so
+there is no import edge naming the symbol at all. The two detectors are
+complementary and neither subsumes the other: a namespace retirement breaks
+BOTH spellings, and a scan for one reports the tree clean.
+
+**Not remediated here.** The mechanical repoint would be
+`from .master_key._active_session import current_active_bucket_session`, but
+that reaches a PRIVATE module from outside its package, which the architecture
+rule forbids -- so closing this needs a decision about the function's public
+home, which belongs to the namespace-retirement lane, not this one.
+
+**Consequence.** S333 remains unmeasurable, now for a third distinct reason in
+one session: first a torn consumer sweep, then a tree-wide codemod, now this.
+The executor-side work is unaffected -- the modelo definitions, the export fix
+and the guard-only-name gate are all independently verified -- but the matrix
+cannot report a modelo conformance count until the storage namespace lands its
+consumers.
+
+
+### The layering gate went 6/4 to 8/2, and `file`'s blocker finally has a name
+
+**2026-08-31**, all measured on a settled tree (0 unparseable, 5,694 files analysed).
+
+**`master_key` namespace, fixed.** The package `__init__` went inert while ~54
+call sites still reached `master_key.<symbol>` as a package ATTRIBUTE across 12
+files (2 production, 10 tests). Those modules IMPORT cleanly and fail at CALL
+time, which is why every import check reported them green and why this was
+misdiagnosed twice. Five private defining modules were promoted to public homes
+(`_active_session`, `_login_throttle`, `_master_key_derivation`, `_kdf_params`,
+`_bucket_session`) and every consumer repointed to a direct import -- no
+re-export, no `__init__` binding. Dangling first-party imports across the tree:
+63 -> 0, the one survivor being a deliberate absence-gate fixture that says so
+in its own docstring.
+
+**Two layering contracts turned green, both by correcting the contract rather
+than the code.**
+
+- *Only the TUI launcher may wire concrete adapters*: every violation was a
+  TEST module building the real repositories it exercises, which this project
+  mandates over mocks. Pinned with the same fixture pattern already recorded for
+  `domain.**.tests.**` in the same file. Verified first that NO production TUI
+  module outside the launcher imports adapters -- which is the property the
+  contract exists to hold.
+- *TUI feature implementations share components rather than each other*:
+  `operations` was listed as a peer feature. It is not one. It is the shared
+  surface for running any registered operation, parameterised by definition id
+  and owning no domain, and BOTH `modelo` and `profile` consume it -- which is
+  precisely what "share rather than each other" describes. It cannot move under
+  `components` either, since that contract holds components to Textual and
+  neutral core presentation while this depends on `application.operations`.
+
+**`modelo.work.file`'s blocker, named at last.** Verification returns
+`status=blocked` with `cross_period_dependency_unclean`. Not a boundary
+question, not casilla-keyed inputs, not an owner ruling -- the third wrong
+blocker withdrawn from this row today. The canonical
+`seed_clean_cross_period_sources` helper is now wired into the file path.
+Matrix stands at 4 passed / 3 failed for the modelo family.
+
+**A performance claim of mine, retracted within minutes of writing it.** I
+routed `art_109_retained_income_threshold` off a direct `load_registry_tree`
+onto `bundled_authority()`, and wrote a comment asserting it removed a full
+filesystem walk per call from a verification hot path. Then I measured both:
+old repeat 2.38s, new repeat 2.32s -- indistinguishable -- and the authority is
+an order of magnitude SLOWER to build cold (77s vs 7s). The stack trace that
+sent me there was real, but a trace showing a walk does not establish that the
+walk is uncached or that it dominates. The change stands on the
+registry-authority rule alone, the value is unchanged at 0.70 (RD 439/2007 art.
+109), and the comment now says so. Had I not measured, a false performance
+claim would have shipped in a code comment where the next reader would inherit
+it as fact.
+
+
+### The file case's cost is not the cross-period seeding
+
+**Measured 2026-08-31.** `modelo.work.file` in the conformance matrix exceeded a
+2,400-second per-test budget after the cross-period seeding was wired in, which
+looked like the seeding being unaffordable on this share. It is not.
+
+`application/modelo/tests/test_file_flow_verify.py::test_verify_grants_for_a_closed_past_period_real_registry`
+performs the SAME seeding and the same real verification, grants completeness,
+and passes in **17.5 seconds**. Eleven of thirteen tests in that module pass in
+189s total. So seed-then-verify is affordable by two orders of magnitude, and
+the cost in the conformance case belongs to something else in the integration
+runtime rather than to the domain work.
+
+**Why this matters beyond one slow test.** The obvious reading -- "the seeding
+is expensive, the share is slow" -- is an environmental explanation, and those
+fit every symptom without predicting anything. A single comparable test settled
+it in three minutes. The remaining suspects are specific and checkable: the
+integration fixture registers a profile per case behind a deliberately slow
+Argon2 KDF, and the seeded sources multiply whatever that fixture does per
+operation.
+
+**Incidental, and worth separating from the above:** that module also has two
+genuine failures --
+`test_verify_emits_blocking_rule_when_registry_unresolved_real_registry` and
+`test_mark_verificado_completo_refuses_a_ledger_derived_revision`. They are not
+from this lane's changes (nothing here touched verification), and they are
+recorded rather than fixed because they belong to the verification owner.
+
+**Also note the granting condition.** The passing test is named "for a CLOSED
+PAST PERIOD", which is a real precondition on the grant rather than an
+incidental fixture choice. The conformance fixture files 2025 1T against a
+2026-08-31 clock, so it satisfies that -- but any future fixture that moves the
+period forward will lose the grant for a reason that has nothing to do with
+seeding.
+
+
+### A timeout stack is not a profile
+
+**2026-08-31**, after chasing two false culprits with it.
+
+The `modelo.work.file` conformance case exceeded 1,800s and again 2,400s. Each
+kill printed a stack, and each stack sat inside registry loading -- first
+`load_registry_tree -> os.walk`, then `load_catalogue_file -> path.resolve()`.
+Both read as "found the bottleneck". Both were wrong:
+
+- `load_registry_tree`: old repeat 2.38s, new repeat 2.32s. Rerouting it to the
+  validated authority changed nothing about speed (and is slower cold, 77s vs
+  7s). It stands as a correctness fix only.
+- `tipo_actividad_code_set -> _legal_parameters`, which carries NO `@lru_cache`
+  while its immediate sibling `load_tipo_actividad_selectors` does: measured at
+  **26ms per call**. Cached downstream. Not the cost either.
+
+**The method error.** A timeout kills the process at an arbitrary instant, so
+its stack shows where execution HAPPENED TO BE, which is biased toward whatever
+runs most often -- not toward whatever is slowest. Frequently-executed cheap
+code is exactly what such a stack surfaces, and it is indistinguishable at a
+glance from a genuine hot spot. Two hypotheses, both confidently wrong, both
+killed by one timing loop each. The comparison that actually informed anything
+was a sibling test: the same seed-then-verify passes in 17.5s as a unit test, so
+the cost is in the integration runtime, not the domain work. The file case's
+real cost remains UNIDENTIFIED, and saying so is more useful than a third
+plausible culprit.
+
+### The facade gate reads HEAD, so it reports on a tree nobody is running
+
+`dev/tests/test_facade_export_gate.py` fails 4 of 9, naming
+`master_key._active_session` and `BucketSession` among its targets, which looks
+like fallout from this lane promoting five master_key modules to public homes.
+It is not. Checked directly: `BucketSession` resolves, the named consumers
+import cleanly, and the tree-wide dangling-import count is 1 -- the deliberate
+absence-gate fixture.
+
+The gate resolves imports against **git HEAD**, and
+`master_key/_active_session.py` does not exist at HEAD at all. So it is
+measuring the namespace campaign's committed state, which is mid-relocation and
+broken, while the working tree that everything actually runs against is sound.
+During a session whose work is deliberately uncommitted, this gate cannot
+distinguish "the author has not committed" from "the import is broken", and it
+reports the second when the first is true.
+
+
+### What `modelo.work.file` actually costs, measured rather than guessed
+
+**2026-08-31**, after two wrong culprits taken from timeout stacks.
+
+The seeding the file case needs is exactly ONE cross-period source group:
+`('100', 2024, '0A')`, four casillas -- a full annual IRPF return, filed through
+the real external-import door because the clean-state gate accepts nothing
+weaker. Not a fan-out of many sources, as the runtime cost suggested.
+
+The numbers that bound the problem:
+
+| context | same seed-then-verify |
+|---|---|
+| unit (`test_file_flow_verify.py`) | 17.5s, grants completeness |
+| seven modelo conformance cases, no seeding | 128s total, ~18s each |
+| integration file case, with seeding | >1800s, killed |
+
+So the domain work is ~17s and the integration fixture is ~18s per case. Their
+sum is not 1800s. The amplification is in the integration path -- encrypted
+secure storage, per-case profile registration behind a deliberately slow Argon2
+KDF, and whatever an M100 filing multiplies across them.
+
+**Which component amplifies is NOT identified**, and that is where this stops.
+Three candidate explanations remain live and each is cheap to test with a timing
+harness around the fixture stages; none has been tested, so none is recorded as
+the cause. The prior two entries in this audit are what that costs when skipped:
+both named a culprit from a kill-stack and both were wrong by two orders of
+magnitude.
+
+**Consequence for S333.** The file scenario is CORRECT -- its blocker
+(`cross_period_dependency_unclean`) is now named and its seeding is wired to the
+canonical helper. It is not runnable in this environment inside a sane test
+budget, which is a different statement from blocked, and a different statement
+from failing. `modelo.work.amend` sits behind it and inherits the same
+condition.
+
+
+### The file case's multiplier, identified: M100 carries 2,103 casillas
+
+**Measured 2026-08-31**, closing the entry above.
+
+| revision | casillas | bindings |
+|---|---:|---:|
+| M130 2025 1T (`2019-y-siguientes`) | 20 | 8 |
+| M100 2024 (`2024`) | **2,103** | 67 |
+
+The file scenario's single cross-period source is `('100', 2024, '0A')`, so
+satisfying the clean-state gate means filing a full annual IRPF return through
+`import_external_filing_evidence` -- 2,103 casillas rather than the 20 every
+other modelo case in the matrix touches. A **105x** structural ratio, against an
+observed amplification of >100x (17.5s in the unit context, >1800s in the
+integration runtime). Those agree closely enough to treat the size as the
+multiplier rather than a coincidence.
+
+**What is now known vs still open.** The MULTIPLIER is identified: the file case
+is not doing the same work as its siblings, it is doing a hundred times more of
+it, and no amount of timeout tuning changes that. What remains open is the
+PER-RECORD cost in the encrypted integration path -- 2,103 records taking >1800s
+is roughly a second each, which is high enough to be worth a separate look and
+is NOT claimed here as a defect, because it has not been measured in isolation.
+
+**Why this took four attempts.** The first three explanations came from timeout
+stacks and one plausible-sounding narrative each: a registry tree walk (measured
+equal), an uncached legal-parameter load (26ms), and "the seeding is expensive
+on this share" (17.5s elsewhere). The measurement that settled it -- counting
+the casillas in the two revisions -- took one command and could have been run
+first. Structural size was the cheapest thing to check and the last thing
+checked.
+
+**Practical consequence for S333.** Nothing about the file scenario needs
+fixing; it is correct and its blocker is named. The matrix simply cannot afford
+it at the same budget as its siblings. That is a fixture-economics question for
+the matrix's owner -- accept a long-running case, or seed the M100 source
+through a cheaper door that still satisfies the clean-state gate honestly -- and
+not a defect in the file path.
+
+
+### QUALIFICATION to the entry above: 2,103 casillas are declared, but only 4 are written
+
+**Same session, minutes later**, before the claim could be relied on.
+
+The entry above states that M100's 2,103 casillas are the multiplier, on the
+strength of a 105x structural ratio matching a >100x runtime ratio. Checked the
+mechanism afterwards, and it does not follow as written:
+`source_casilla_values(source_casilla_ids)` supplies **4 values** -- the four
+casillas the M130 revision actually declares as cross-period sources.
+`import_external_filing_evidence` therefore imports four values, not 2,103.
+
+So the sizes are real and the ratio is real, but the CAUSAL PATH is not
+established. A surviving explanation is that filing an M100 triggers a
+calculation across the whole revision -- 2,103 casillas of formulas evaluated to
+admit four imported values -- which would scale with revision size exactly as
+observed. That is a hypothesis. It has not been measured, and the last three
+hypotheses in this audit that went unmeasured were each wrong by two orders of
+magnitude.
+
+**What stands:** the file case does structurally different work from every other
+modelo case (an annual return rather than a quarterly one), and it cannot run at
+the matrix's ordinary budget. Both are directly measured.
+
+**What does not stand:** that the 2,103 casillas are being written, or that
+per-record encrypted storage cost is the mechanism. A matching ratio is
+suggestive and is not a mechanism, which is the same error as reading a
+kill-stack as a profile -- one level up.
+
+
+### RETRACTION: the file case is not expensive. It runs in 88 seconds.
+
+**2026-08-31.** The two entries above analyse why `modelo.work.file` cannot
+afford to run -- a 105x structural ratio, an annual-versus-quarterly return, a
+fixture-economics decision for the matrix owner. Run alone with nothing else
+executing, it completes in **88.52 seconds** and fails on an assertion.
+
+Every timeout was self-inflicted. Multiple pytest processes were running
+concurrently against the same registry cache and profile storage while those
+measurements were taken. The project's own local-execution rule says to re-run
+dependent commands sequentially when concurrent runs could contend for the same
+cache, database, port or generated output; that is exactly what was violated,
+and then the resulting contention was attributed to the code under test.
+
+**So the whole chain was wrong, in a specific and instructive way.** Four
+explanations were offered for a phenomenon that did not exist: a registry tree
+walk, an uncached legal-parameter load, encrypted per-record storage cost, and
+M100's 2,103 casillas. Each was investigated seriously and two were measured
+precisely. Precision on a false premise buys nothing -- the ratio really was
+105x, and it explained nothing, because there was no slowness to explain. The
+control that would have caught it -- run the thing once with nothing else
+running -- was cheaper than any of the four investigations and was skipped
+because the phenomenon looked too consistent to be an artefact. It was
+consistent because the contention was.
+
+**The real state of `modelo.work.file`:** it executes end to end in 88 seconds
+and is refused by its own fixture assertion --
+`verification did not grant completeness (status=blocked);
+cross_period_dependency_unclean/blocking`. So wiring in
+`seed_clean_cross_period_sources` did NOT clear the gate, which is a real and
+tractable finding rather than an environmental one.
+
+**Lead worth following.** The passing sibling `_verify_revision` in
+`_file_flow_support.py` seeds through the SAME repository instances it then
+verifies with. The conformance fixture constructs fresh repositories and lets
+`verify_modelo_revision` resolve its own. The fixture's assertion now reports
+the finding's `message_facts` -- source modelo and blockers -- which separates
+"seeded nothing" from "seeded something the gate rejects".
+
+
+### `modelo.work.file`: the domain path is sound, the platform wrapper is not
+
+**2026-08-31**, with the case running alone in ~50-88s per attempt.
+
+Two defects were fixed to get here, both in the fixture rather than the product:
+
+1. **Identity divergence.** `seed_clean_cross_period_sources` files every source
+   under a hardcoded `X1234567L`, while the clean-state gate compares that
+   evidence's `authenticated_identity` against the ACTIVE PROFILE's tax id. The
+   conformance profile carried `12345678Z`, so the gate refused with
+   `mismatched_external_evidence_record` -- a message naming `source_modelo` and
+   the binding, and never mentioning identity, which is why it read as a seeding
+   failure. The seeder spelled that identity in TWO places; it is now one
+   exported `SEEDED_SOURCE_TAX_ID` whose docstring states the coupling, and the
+   profile capsule takes an identity override (defaulted, so its six existing
+   consumers are untouched).
+2. **A wrong fix of mine, reverted.** I first read the mismatch as the fixture
+   declaring "a second answer for one figure" and removed the previous-filing
+   binding override. That produced `binding has no supplied value`, disproving
+   it: the gate does not compare that value at all, and the unit tests supply
+   zero against the same non-zero seeded evidence and pass. Restored, along with
+   the constant introduced only to support the removal.
+
+**Verification now GRANTS completeness.** The fixture assertion is gone and the
+operation runs end to end.
+
+**What remains is a platform defect, and it is now localised.** The operation
+settles `FAILED` with `effect=UPDATED` and an opaque `diagnostic_ref`; the
+exception type recovered from that digest is `builtins.RuntimeError`. A control
+test added beside the matrix calls `file_modelo_revision` directly in the SAME
+runtime on the SAME seeded, verified revision with the same actor, elections and
+workflow profile -- and PASSES. So the domain filing path is sound and the fault
+is in the executor or the supervisor around it.
+
+**Four candidate `RuntimeError` sources were checked and eliminated** rather
+than assumed: the calculation-repository composition guard (neither filing nor
+verification resolves it), a supervisor thread hop losing a ContextVar (there is
+no thread hop), the async file lock (raises no RuntimeError), and diverging
+election defaults (identical on both sides, `COMPENSAR`/`INGRESO`). The cause is
+not yet identified, and is recorded as unidentified.
+
+**Platform gap this exposes.** An executor that RAISES produces an outcome no
+surface can explain -- no `refusal_ref`, a digest for a message, and nothing
+logged with `exc_info`. Diagnosing it required brute-forcing the digest over 770
+exception classes and then writing a control test to bisect platform from
+domain. That is the concrete cost of the design W07.P16.S340 flags for the
+spreadsheet export.
+
+
+### Filing can never succeed from any async caller: `asyncio.run` inside the workflow gate
+
+**Root cause, 2026-08-31.** `_workflow_gate.py:347` calls
+`asyncio.run(engine.run_for_period(...))` from synchronous code.
+`file_modelo_revision` runs that preflight gate, so when the registered
+`modelo.work.file` executor -- which is `async` and therefore already inside a
+running event loop -- reaches it, Python raises
+`RuntimeError: asyncio.run() cannot be called from a running event loop`.
+Reproduced directly.
+
+This explains every observation exactly: the operation settles FAILED after
+emitting only `phase(preconditions)` and `effect(UNKNOWN)` -- filing raises
+before `effect(UPDATED)` -- while the control test calling
+`file_modelo_revision` synchronously in the SAME runtime on the SAME revision
+passes. Not a fixture problem, not the share, not registry loading.
+
+**Scope is wider than one operation.** Any async caller is affected, which
+includes the TUI and every registered operation that reaches this gate. Filing
+through the operations platform cannot work today.
+
+**And it reveals that `modelo.work.verify` conforms VACUOUSLY.** Verification
+calls the same gate at `_verification_actions.py:1041`, but guarded by
+`if granted:`. The verify conformance fixture seeds no cross-period sources, so
+verification never grants, the gate is never reached, and the case passes
+without ever exercising its own success path. It would fail the moment its
+fixture became complete enough to grant -- which is exactly what happened to the
+file fixture once seeding was wired in. A green case that is green because the
+subject refuses is the failure mode this matrix exists to prevent.
+
+**Correction to my own reading, an hour earlier.** I reported that the file
+executor reached `effect(UPDATED)` and therefore that filing had succeeded. It
+had not: the only effect event emitted was `UNKNOWN`, and the `UPDATED` I
+matched was a member of the definition's `permitted_effects` frozenset in the
+same repr. Reading a capability declaration as an observed event inverted the
+conclusion.
+
+### Unrelated: one mangled import from a peer rewrite, repaired
+
+`adapters/inbound/justificante/_parsers/text_extraction.py:23` read
+`from ...pdf.cadrumo.adapters.inbound.pdf._utils import sha256_file` -- a
+relative prefix with a full absolute path appended, which a codemod produced.
+It broke collection of every suite importing that package. Repaired to
+`from ...pdf._utils import sha256_file`; a tree-wide scan for the same shape
+found no others.
+
+
 ## Recommendations
 
 Append a new row citing `W05.P23.S307`, scoped to the local-configuration sweep,
@@ -2641,3 +3542,88 @@ The EDIT baseline is not. It carries `issued_at`, `expires_at` and `baseline_id`
 This is the `section_path` collision class again -- one word, two meanings, prose as the only thing keeping them apart -- but sharper, because here the two meanings imply CONTRADICTORY handling and the wrong one fails silently rather than loudly.
 
 **Remediation.** Neither type needs renaming for correctness, but each should state its comparison contract where a reader meets it: the workspace baseline that it is content-derived and comparable, the edit baseline that it is admission-scoped and must be compared through the compare-and-swap. A sweep confirmed no OTHER production site compares an edit baseline by record equality; the one that did was mine.
+
+### One ruling would unblock three findings: how a consumer outside `application/modelo` reaches a private authority
+
+Three separate items in this audit and its sibling plans reduce to the same
+question, and answering it once resolves all three. They are recorded here
+together because, stated apart, each reads as its own design problem and none
+looks decidable.
+
+**The shape, common to all three.** A capability is implemented correctly,
+lives in an underscore-private module, and has consumers only inside its own
+package -- so nothing is wrong with it. Then a consumer outside that package
+needs it. The architecture rule forbids both available routes: importing the
+private module is a cross-package private import at a hard-zero baseline, and
+reaching it through a re-exporting namespace is a prohibited re-export.
+
+**Instance one, already ruled on and therefore the precedent.** The C3 editor
+needed the Edit Contract intent and submission family from `_edit_models`. The
+operator ruled: keep the family private, and add a NARROW APPLICATION-OWNED
+FACADE taking operator-level calls, so the frontend holds a handle rather than
+the contract types. `application/modelo/edit_session.py` is that facade, and it
+works -- it is what let W06.P12b.S72 through S79 close.
+
+**Instance two.** `application/operator_actions/` holds the canonical action
+catalogue behind three private modules, and its `__init__.py` re-exports 15
+symbols, which is itself a live violation of the inert-namespace rule. Recorded
+on interface W06.P12c.S80. That row turned out not to need the catalogue, so it
+closed -- but the violation stands on its own and the next consumer will meet
+it.
+
+**Instance three, this audit's most recent.** `casilla_id_for_unique_revision_semantic_role`
+in `_semantic_role_resolution.py` is the revision-safe way to resolve a casilla
+by meaning rather than by frozen number. Thirty-four test modules across four
+packages currently hardcode `"01"` instead, because they cannot legally reach
+it.
+
+**Why one ruling rather than three.** The facade precedent answers the shape,
+not just the edit contract: publish the narrow operator-level call a consumer
+actually needs, not the implementation family behind it. Applied to instance
+three that is a single revision-keyed resolver; to instance two, whatever an
+action surface genuinely invokes. What is NOT settled -- and is the actual ask
+-- is whether that precedent GENERALISES, or was specific to the edit contract
+because a frontend was the consumer. A TEST is the consumer in instance three,
+which may or may not earn the same treatment.
+
+**Until it is answered, the honest state of each is unchanged:** the literals
+stay local, the namespace violation stays recorded, and no row is closed by
+reaching through a boundary to make a gate green.
+
+
+### Sequencing note for the four remaining modelo conformance scenarios
+
+Measured 2026-08-31, after three of seven were brought to conformance. The four
+remaining are not equally blocked, and treating them as one backlog wastes the
+distinction.
+
+**`file` and `amend` wait on the boundary ruling, not on fixture work.** Filing
+marks a VERIFIED-COMPLETE revision, and a zero-activity return verifies without
+being complete -- correct product behaviour. A substantive revision needs
+casilla-id-keyed inputs, and those ids are the mapping redeclared in 34 modules
+whose revision-safe resolver is private to `application/modelo`. `amend` then
+needs the filed record `file` produces, so it sits behind both.
+
+**`export` is probably in the same class but was NOT confirmed.** Its authority
+takes a `verification_repository`, which suggests it shares the completeness
+requirement, and the modelo-export rule already refuses a structurally thin
+fichero. That is an inference from a signature, not a measurement -- worth one
+run before assuming it.
+
+**`modelo.edit.apply` is the one that avoids the boundary entirely**, and is
+therefore the best next target. Its scenario can resolve its casilla
+DYNAMICALLY from the admitted permitted surface rather than naming one, which
+is how the C4 enrolment suites already do it -- so it needs no casilla constant
+and no ruling. Its payload can be built through
+`ModeloEditApplySubmissionV1.from_submission`, the domain-to-wire translation
+added under interface W06.P12b.S77, rather than a second translator.
+
+**What makes it larger than verify's fixture, so the next attempt is not
+surprised:** `admit_modelo_edit` takes catalogue OBJECTS (`WorkUnitCatalogue`,
+`CalculationRevisionCatalogue`), not the repositories the conformance runtime
+holds, so both must be loaded first; it also takes a compatibility tuple, of
+which only the request and result schema identities are actually checked by
+`_incompatible_axis`. The guarded apply then re-resolves the baseline at the
+commit point, so the fixture must not let the tree move between admission and
+submission.
+
