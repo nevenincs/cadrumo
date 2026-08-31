@@ -8,7 +8,7 @@ materialises filed rows as provenance-bearing
 :class:`CasillaObservation` records.
 
 See Also:
-    :func:`~adapters.outbound.aeat.sede.capture_filed_declaration_observation`
+    :func:`~adapters.outbound.aeat.sede.declarations_capture.capture_filed_declaration_observation`
         Browser capture surface that produces filed-declaration observations.
     :func:`registry_observation_from_filed_declaration`
         Conversion boundary from Sede observations to registry observations.
@@ -26,13 +26,13 @@ from urllib.parse import urlsplit
 from pydantic import AnyHttpUrl
 
 from .....core import CasillaValueKind, ExportLayoutFormat, ObservedHeaderFact
-from .....core.modelo import Modelo
-from .....core.period import Period
 from .....core.casilla_id import CasillaId
 from .....core.config import Settings
 from .....core.external_constants import JSON_MIME_TYPE as _JSON_MIME_TYPE
 from .....core.hashing import canonical_json_bytes, sha256_hex
 from .....core.i18n import tr
+from .....core.modelo import Modelo
+from .....core.period import Period
 from .....core.resources import bundled_path
 from .....core.time import now
 from .....domain.calculations.export_field_kind import CasillaFieldKind
@@ -62,7 +62,14 @@ from .....domain.calculations.registry.runtime_graph import expression_casilla_r
 from .....domain.calculations.registry.schema import RegistrySnapshot
 from .....domain.calculations.registry.schema_exports import ExportFieldDefinition
 from .....domain.calculations.registry.schema_surfaces import CasillaDefinition
-from .....domain.iva_compensation.filed_derivation import M303CompensationAvailableDerivation, M303_COMPENSATION_AVAILABLE_CASILLA, M303_COMPENSATION_GENERADA_CASILLA, M303_COMPENSATION_POSTERIOR_CASILLA, M303_COMPENSATION_RESULTADO_CASILLA, derive_m303_compensation_available_from_casillas
+from .....domain.iva_compensation.filed_derivation import (
+    M303_COMPENSATION_AVAILABLE_CASILLA,
+    M303_COMPENSATION_GENERADA_CASILLA,
+    M303_COMPENSATION_POSTERIOR_CASILLA,
+    M303_COMPENSATION_RESULTADO_CASILLA,
+    M303CompensationAvailableDerivation,
+    derive_m303_compensation_available_from_casillas,
+)
 from ....inbound.declaracion import DeclaracionParseError, parse_declaracion_bytes
 from .declarations_schema import Declaracion
 from .errors import SedeParseError, SedeValidationError

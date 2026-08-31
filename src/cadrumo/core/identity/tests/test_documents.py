@@ -81,7 +81,12 @@ def test_invalid_documents_rejected_with_expected_message() -> None:
         ("not-an-identity-doc", "errors.identity.cif_invalid_shape"),
         ("1234567Z", "errors.identity.nif_invalid_shape"),
         ("123456789Z", "errors.identity.nif_invalid_shape"),
-        ("W1234567L", "errors.identity.cif_invalid_shape"),
+        # W is a letter-control kind and L is a letter, so the control
+        # reaches the checksum rather than bouncing off the shape regex:
+        # naming the letter AEAT expects repairs the identifier in one step,
+        # where "not shaped like a CIF" sends the operator looking at the
+        # seven digits that were never wrong.
+        ("W1234567L", "errors.identity.cif_check_letter_mismatch_kind"),
         ("A12345670", "errors.identity.cif_check_digit_mismatch"),
         ("I12345674", "errors.identity.nif_invalid_shape"),
         ("12345678A", "errors.identity.nif_check_letter_mismatch"),

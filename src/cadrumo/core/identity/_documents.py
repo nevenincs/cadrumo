@@ -34,6 +34,8 @@ from ..errors.hierarchy import CadrumoError
 
 _NIF_LETTERS = "TRWAGMYFPDXBNJZSQVHLCKE"
 _NIE_PREFIX_MAP = {"X": "0", "Y": "1", "Z": "2"}
+_PREFIXED_NIF_LEADERS = "KLM"
+"""Natural-person NIF leaders for taxpayers without a DNI or NIE."""
 _CIF_KIND_LETTERS = "ABCDEFGHJNPQRSUVW"
 """Closed catalogue of CIF leading kind characters per AEAT current spec (17 letters).
 
@@ -60,7 +62,7 @@ _CIF_LETTER_TABLE = "JABCDEFGHI"
 _NIF_PATTERN = re.compile(r"^(\d{8})([A-Z])$")
 _PREFIXED_NIF_PATTERN = re.compile(r"^([KLM])(\d{7})([A-Z])$")
 _NIE_PATTERN = re.compile(r"^([XYZ])(\d{7})([A-Z])$")
-_CIF_PATTERN = re.compile(rf"^([{_CIF_KIND_LETTERS}])(\d{{7}})([0-9A-J])$")
+_CIF_PATTERN = re.compile(rf"^([{_CIF_KIND_LETTERS}])(\d{{7}})(.)$")
 
 
 class IdentityDocument(StrEnum):
@@ -115,11 +117,11 @@ def _cif_check_value(digits: str) -> int:
     * even positions: ``digit`` directly.
 
     The check value is ``(10 - (sum mod 10)) mod 10``. This kernel returns
-    the raw integer and leaves the digit-vs-letter rendering and the
-    per-kind acceptance policy to the caller, because the two identity
-    surfaces (:func:`_compute_cif_check` here and
-    :func:`cadrumo.core.identity._tax_id.validate_spanish_tax_id`) apply
-    deliberately divergent CIF leader-set policies over the same arithmetic.
+    the raw integer; :func:`_validate_cif` renders it as a digit or a letter
+    and applies the per-kind acceptance policy. That policy exists once, here,
+    and both identity surfaces reach it -- the enum-returning
+    :func:`validate_identity` and the string-returning
+    :func:`cadrumo.core.identity.validate_spanish_tax_id`.
 
     Args:
         digits: The 7-digit body of the CIF.
@@ -138,34 +140,12 @@ def _cif_check_value(digits: str) -> int:
     return (10 - (total % 10)) % 10
 
 
-def _compute_cif_check(kind: str, digits: str) -> str:
-    """Compute the CIF check character per AEAT's Luhn-style algorithm.
-
-    Delegates the arithmetic to :func:`_cif_check_value` and renders the
-    result as a digit or as :data:`_CIF_LETTER_TABLE` indexed by the
-    check value depending on the leading ``kind`` letter.
-
-    Args:
-        kind: The CIF leading kind letter.
-        digits: The 7-digit body of the CIF.
-
-    Returns:
-        The expected check character as a one-character string.
-    """
-    check_int = _cif_check_value(digits)
-    if kind in _CIF_KIND_DIGIT_ONLY:
-        return str(check_int)
-    if kind in _CIF_KIND_LETTER_ONLY:
-        return _CIF_LETTER_TABLE[check_int]
-    # Mixed kinds — either digit or letter is acceptable.
-    return str(check_int)
-
-
 def _validate_nif(candidate: str) -> IdentityDocument:
     """Validate a NIF candidate, raising :class:`IdentityError` on mismatch."""
     match = _NIF_PATTERN.match(candidate)
     if match is None:
         raise IdentityError(
+            f"tax identifier {candidate!r} is not shaped like a NIF",
             translated_message="errors.identity.nif_invalid_shape",
             context={"candidate": candidate},
         )
@@ -173,6 +153,7 @@ def _validate_nif(candidate: str) -> IdentityDocument:
     expected = nif_check_letter(int(digits))
     if letter != expected:
         raise IdentityError(
+            f"NIF checksum mismatch for {digits}: expected check letter {expected!r}, got {letter!r}",
             translated_message="errors.identity.nif_check_letter_mismatch",
             context={"digits": digits, "expected": expected, "got": letter},
         )
@@ -184,6 +165,7 @@ def _validate_prefixed_nif(candidate: str) -> IdentityDocument:
     match = _PREFIXED_NIF_PATTERN.match(candidate)
     if match is None:
         raise IdentityError(
+            f"tax identifier {candidate!r} is not shaped like a NIF",
             translated_message="errors.identity.nif_invalid_shape",
             context={"candidate": candidate},
         )
@@ -191,6 +173,7 @@ def _validate_prefixed_nif(candidate: str) -> IdentityDocument:
     expected = nif_check_letter(int(digits))
     if letter != expected:
         raise IdentityError(
+            f"NIF checksum mismatch for {prefix + digits}: expected check letter {expected!r}, got {letter!r}",
             translated_message="errors.identity.nif_check_letter_mismatch",
             context={"digits": prefix + digits, "expected": expected, "got": letter},
         )
@@ -202,6 +185,7 @@ def _validate_nie(candidate: str) -> IdentityDocument:
     match = _NIE_PATTERN.match(candidate)
     if match is None:
         raise IdentityError(
+            f"tax identifier {candidate!r} is not shaped like a NIE",
             translated_message="errors.identity.nie_invalid_shape",
             context={"candidate": candidate},
         )
@@ -210,52 +194,70 @@ def _validate_nie(candidate: str) -> IdentityDocument:
     expected = nif_check_letter(int(numeric_str))
     if letter != expected:
         raise IdentityError(
+            f"NIE checksum mismatch for {prefix + digits}: expected check letter {expected!r}, got {letter!r}",
             translated_message="errors.identity.nie_check_letter_mismatch",
             context={"body": prefix + digits, "expected": expected, "got": letter},
         )
     return IdentityDocument.NIE
 
 
-# ALT-CIF-LEADER-RATIONALE-DOCUMENTS: this validator enforces a THIRD,
-# digit-only class for _CIF_KIND_DIGIT_ONLY ("ABEH") that the sibling
-# core.identity._tax_id._validate_cif treats as mixed (digit-or-letter
-# accepted); deliberately divergent leader-set policies over the shared
-# _cif_check_value arithmetic above, per that function's own docstring.
 def _validate_cif(candidate: str) -> IdentityDocument:
-    """Validate a CIF candidate, raising :class:`IdentityError` on mismatch."""
+    """Validate a CIF candidate, raising :class:`IdentityError` on mismatch.
+
+    The one home of the CIF leader policy. AEAT partitions the kind letters
+    three ways and the partition decides which control characters are legal:
+    :data:`_CIF_KIND_DIGIT_ONLY` accepts only the digit form,
+    :data:`_CIF_KIND_LETTER_ONLY` only the letter form, and every remaining
+    kind accepts either, both being historically in circulation.
+
+    The middle class is the one worth naming. A digit-only kind that also
+    accepts the letter form is not a laxer reading of the same rule -- it
+    accepts an identifier AEAT rejects, so a counterparty passes the boundary
+    here and bounces at the sede with the declaration already built.
+    """
     match = _CIF_PATTERN.match(candidate)
     if match is None:
         raise IdentityError(
+            f"tax identifier {candidate!r} is not shaped like a CIF",
             translated_message="errors.identity.cif_invalid_shape",
             context={"candidate": candidate},
         )
     kind, digits, check = match.group(1), match.group(2), match.group(3)
-    expected_digit = _compute_cif_check(kind, digits)
+    if not check.isalnum():
+        raise IdentityError(
+            f"CIF checksum control character {check!r} in tax identifier {candidate!r} must be a digit or letter",
+            translated_message="errors.identity.cif_control_char_invalid",
+            context={"candidate": candidate, "got": check},
+        )
+    check_int = _cif_check_value(digits)
+    expected_digit = str(check_int)
+    expected_letter = _CIF_LETTER_TABLE[check_int]
     if kind in _CIF_KIND_DIGIT_ONLY:
         if check != expected_digit:
             raise IdentityError(
+                f"CIF checksum mismatch (kind {kind}): expected check digit {expected_digit!r}, got {check!r}",
                 translated_message="errors.identity.cif_check_digit_mismatch",
                 context={"kind": kind, "expected": expected_digit, "got": check},
             )
     elif kind in _CIF_KIND_LETTER_ONLY:
-        if check != expected_digit:
+        if check != expected_letter:
             raise IdentityError(
+                f"CIF checksum mismatch (kind {kind}): expected check letter {expected_letter!r}, got {check!r}",
                 translated_message="errors.identity.cif_check_letter_mismatch_kind",
-                context={"kind": kind, "expected": expected_digit, "got": check},
+                context={"kind": kind, "expected": expected_letter, "got": check},
             )
-    else:
-        # Mixed kind: accept either the digit form or the corresponding letter form.
-        check_int = int(expected_digit)
-        if check != expected_digit and check != _CIF_LETTER_TABLE[check_int]:
-            raise IdentityError(
-                translated_message="errors.identity.cif_check_char_mismatch_mixed",
-                context={
-                    "kind": kind,
-                    "expected": expected_digit,
-                    "alt": _CIF_LETTER_TABLE[check_int],
-                    "got": check,
-                },
-            )
+    elif check not in (expected_digit, expected_letter):
+        raise IdentityError(
+            f"CIF checksum mismatch (kind {kind}): expected {expected_digit} or "
+            f"check letter {expected_letter!r}, got {check!r}",
+            translated_message="errors.identity.cif_check_char_mismatch_mixed",
+            context={
+                "kind": kind,
+                "expected": expected_digit,
+                "alt": expected_letter,
+                "got": check,
+            },
+        )
     return IdentityDocument.CIF
 
 
@@ -289,12 +291,15 @@ def validate_identity(candidate: object) -> IdentityDocument:
         )
     normalised = candidate.strip().upper().replace("-", "").replace(" ", "")
     if not normalised:
-        raise IdentityError(translated_message="errors.identity.document_empty")
+        raise IdentityError(
+            "tax identifier is empty",
+            translated_message="errors.identity.document_empty",
+        )
     # Try prefixed NIF and NIE first (they have unambiguous prefixes);
     # then CIF (also unambiguous on its leading letter set); then NIF.
-    if normalised[0] in "KLM":
+    if normalised[0] in _PREFIXED_NIF_LEADERS:
         return _validate_prefixed_nif(normalised)
-    if normalised[0] in "XYZ":
+    if normalised[0] in _NIE_PREFIX_MAP:
         return _validate_nie(normalised)
     if normalised[0] in _CIF_KIND_LETTERS:
         return _validate_cif(normalised)

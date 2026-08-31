@@ -45,21 +45,30 @@ from typing import TYPE_CHECKING, Protocol, TypedDict
 
 from pydantic import BaseModel, Field, field_validator
 
-from ...adapters.outbound.aeat.sede.declarations import DeclaracionesRegisterSession, capture_previous_filing_observations, capture_relation_source_observations, discover_filed_declaration_availability, open_declarations_register, shared_playwright
+from ...adapters.outbound.aeat.sede.declarations import (
+    DeclaracionesRegisterSession,
+    discover_filed_declaration_availability,
+    open_declarations_register,
+    shared_playwright,
+)
+from ...adapters.outbound.aeat.sede.declarations_capture import (
+    capture_previous_filing_observations,
+    capture_relation_source_observations,
+)
 from ...adapters.outbound.aeat.sede.declarations_schema import Declaracion
 from ...adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
 from ...adapters.outbound.aeat.sede.schema import FiledDeclaracionObservation, FiledDeclarationAvailabilityReport
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import CasillaValueKind, FiledHistoryDiscoverySignal, RegisterScopingSignal, SyncSurface
-from ...core.period import Period
-from ...core.casilla_id import CasillaId
 from ...core.bucket_pointer import require_active_bucket_id
+from ...core.casilla_id import CasillaId
 from ...core.config import load_settings
 from ...core.errors.hierarchy import CadrumoError
 from ...core.filing_year import FilingYear
 from ...core.i18n import tr
 from ...core.identity import AeatExpedienteId
 from ...core.json_contract import Notice, NoticeSeverity
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.period import Period
 from ...core.resources import bundled_path
 from ...core.time import now
 from ...domain.calculations.registry.authority import bundled_authority

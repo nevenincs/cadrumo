@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from ......core.period import Period
 from ......core.casilla_id import CasillaId, validated_casilla_id
+from ......core.period import Period
 from ..declarations_observations import resolve_relation_values_from_filed_declarations
 from ._declarations_support import (
     UTC,
@@ -286,10 +286,8 @@ def test_capture_filed_declaration_empty_nif_carries_translated_message() -> Non
     translated_message when AeatSession.identity_nif is whitespace-only."""
     import asyncio
 
-    from ..declarations import (
-        Declaracion,
-        capture_filed_declaration_observation,
-    )
+    from ..declarations import Declaracion
+    from ..declarations_capture import capture_filed_declaration_observation
     from ..errors import SedeNavigationError
 
     session = _whitespace_nif_session()
