@@ -5,18 +5,11 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:e38224b320c26e7b986a624ec769c6b9e343a1cc198ed3fb8aa1e34495ddfaf5'
+body_hash: 'sha256:80018349b0268745f638460f93b0168cb46bfcf3dbddce446a2b42e5f733799e'
 step_id: 'S204'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
 ---
-
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
-
 # Refactor the size-budget subjects in test_revision_span_matches_published_designs.py into cohesive siblings without raising any threshold.
 
 ## Scope
