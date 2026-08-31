@@ -5,7 +5,7 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:bb4f202bb3d19968a6731926986635d9ffc76a6df0d1d686846779eecc43bf5b'
+body_hash: 'sha256:4f6b4b96278b5c7592dc2bc4843491fee2700f07878258c047d0e9bfe3c030f7'
 step_id: 'S143'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
@@ -63,5 +63,12 @@ exit 0
 120
 exit 0
 
-Isolated-index staged-diff review: source peer import-order hunk was rebuilt out of the staged blob; `PEER_HUNK_EXCLUDED=true` and `git diff --cached --check` exit 0 before commit.
+git diff --cached --check
+exit 0
+
+$commit='80417ba85f'; $path='src/cadrumo/application/filing/_producer_snapshot.py'; $names=@('from ...core.refund_election import RefundElection','from ...core.payment_election import PaymentElection','from ...core.prior_domiciliation_election import PriorDomiciliationElection','from ...core.result_disposition import ResultDisposition, result_disposition_is_refund','from ...core.modelo import Modelo','from ...core.models import STRICT_FROZEN_CONFIG','from ...core.period import Period, StandardPeriodCode','from ...core.identity import SubjectTaxId'); $parent=git show "${commit}^:$path" | Where-Object { $_ -in $names }; $step=git show "${commit}:$path" | Where-Object { $_ -in $names }; if($parent.Count -ne $names.Count -or $step.Count -ne $names.Count -or (Compare-Object $parent $step)){throw 'immutable peer import-order mismatch'}; Write-Output ('IMMUTABLE_PARENT_ORDER=' + ($parent -join ' | ')); Write-Output ('IMMUTABLE_STEP_ORDER=' + ($step -join ' | ')); Write-Output 'IMMUTABLE_PEER_IMPORT_ORDER_UNCHANGED=true'; Write-Output 'exit 0'
+IMMUTABLE_PARENT_ORDER=from ...core.refund_election import RefundElection | from ...core.payment_election import PaymentElection | from ...core.prior_domiciliation_election import PriorDomiciliationElection | from ...core.result_disposition import ResultDisposition, result_disposition_is_refund | from ...core.modelo import Modelo | from ...core.models import STRICT_FROZEN_CONFIG | from ...core.period import Period, StandardPeriodCode | from ...core.identity import SubjectTaxId
+IMMUTABLE_STEP_ORDER=from ...core.refund_election import RefundElection | from ...core.payment_election import PaymentElection | from ...core.prior_domiciliation_election import PriorDomiciliationElection | from ...core.result_disposition import ResultDisposition, result_disposition_is_refund | from ...core.modelo import Modelo | from ...core.models import STRICT_FROZEN_CONFIG | from ...core.period import Period, StandardPeriodCode | from ...core.identity import SubjectTaxId
+IMMUTABLE_PEER_IMPORT_ORDER_UNCHANGED=true
+exit 0
 ```
