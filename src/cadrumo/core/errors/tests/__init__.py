@@ -15,31 +15,4 @@ much it scanned.
 
 from __future__ import annotations
 
-import importlib.util
-
-__all__ = ["describe_optional_extras"]
-
-#: Capability-gated optional extras whose presence changes what an
-#: import-walking gate can see, each paired with the top-level module that
-#: proves the extra is installed.
-_OPTIONAL_EXTRAS: tuple[tuple[str, str], ...] = (
-    ("browser", "playwright"),
-    ("google", "googleapiclient"),
-    ("anthropic", "anthropic"),
-)
-
-
-def _is_installed(module: str) -> bool:
-    try:
-        return importlib.util.find_spec(module) is not None
-    except (ImportError, ValueError):
-        # A missing parent package makes find_spec raise rather than return
-        # None; either way the extra is not usable here.
-        return False
-
-
-def describe_optional_extras() -> str:
-    """Return a one-line summary of the optional extras shaping this run."""
-    return "extras: " + ", ".join(
-        f"{name}={'present' if _is_installed(module) else 'absent'}" for name, module in _OPTIONAL_EXTRAS
-    )
+__all__: tuple[str, ...] = ()
