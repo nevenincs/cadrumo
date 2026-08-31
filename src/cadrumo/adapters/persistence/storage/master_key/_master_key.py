@@ -29,17 +29,17 @@ from __future__ import annotations
 import sqlite3
 from typing import TYPE_CHECKING, Final, Protocol, runtime_checkable
 
-from .....core.time import now
+from .....core.time._clock import now
 
 if TYPE_CHECKING:
     from contextlib import AbstractContextManager
     from types import TracebackType
 
-    from ._bucket_session import BucketSession
+    from .bucket_session import BucketSession
 
-from .....core import StorageCategory
 from .....core.bucket_pointer import resolve_active_bucket_id
 from .....core.logging import get_logger
+from .....core.storage_taxonomy import StorageCategory
 from ..crypto.aead import KEY_SIZE
 from ..errors import (
     DecryptionError,
@@ -142,8 +142,8 @@ def refuse_unsecured_bucket_with_real_profile(session: BucketSession) -> None:
         UnsecuredModeRefusedError: When the bucket's profile cannot be
             proven synthetic, or carries a real NIF / NIE / CIF.
     """
-    from .....core import bucket_scoped_storage_path
     from .....core.config import load_settings
+    from .....core.storage_taxonomy_locations import bucket_scoped_storage_path
     from .._secure_object_namespaces import USER_PROFILE_VALUE_NAMESPACE
     from ..crypto.encrypted_columns import decrypt_encrypted_bytes_column
 
@@ -225,9 +225,9 @@ def _provider_enter(
     pointer-first lock order remains intact.
     """
     from .....core.config import load_settings
-    from ..bucket import NoActiveBucketError
-    from ._active_session import activate_session
-    from ._bucket_session import BucketSession
+    from ..bucket.errors import NoActiveBucketError
+    from .active_session import activate_session
+    from .bucket_session import BucketSession
 
     if provider.session is not None:
         from .errors import MasterKeyReentrantError

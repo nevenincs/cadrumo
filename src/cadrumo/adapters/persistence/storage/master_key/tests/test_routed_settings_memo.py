@@ -23,8 +23,8 @@ from datetime import UTC, datetime, timedelta
 import pytest
 
 from ......core.config import Settings
-from ...bucket import BucketLockedError
-from .._bucket_session import _ROUTED_SETTINGS_MEMO_SIZE, BucketSession
+from ...bucket.errors import BucketLockedError
+from ..bucket_session import _ROUTED_SETTINGS_MEMO_SIZE, BucketSession
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

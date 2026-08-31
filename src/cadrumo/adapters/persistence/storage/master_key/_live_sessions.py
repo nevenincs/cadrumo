@@ -19,7 +19,7 @@ shape whenever a session was bound off the main thread.
 
 This module is that escape hatch and nothing more. It does NOT own session
 lifecycle, does NOT bind anything, and must never be used to *find* a session to
-work with - :func:`~._active_session.get_active_master_key` and its neighbours
+work with - :func:`~.active_session.get_active_master_key` and its neighbours
 remain the only sanctioned readers, and routing real work through here would
 re-create the shared-key hazard the ContextVar design exists to prevent.
 
@@ -28,7 +28,7 @@ an explicit close is garbage collected normally and its buffers go with it; the
 registry never extends the lifetime of key material it is meant to destroy.
 
 See Also:
-    :func:`~._active_session.close_active_bucket_session`
+    :func:`~.active_session.close_active_bucket_session`
         The ordinary, context-scoped close every normal caller wants.
 """
 
@@ -41,7 +41,7 @@ from typing import TYPE_CHECKING
 from .....core.logging import get_logger
 
 if TYPE_CHECKING:
-    from ._bucket_session import BucketSession
+    from .bucket_session import BucketSession
 
 _log = get_logger(__name__)
 
@@ -84,7 +84,7 @@ def close_all_live_bucket_sessions() -> int:
     """Close every registered session, zeroising its keys. Returns how many closed.
 
     The cross-context counterpart to
-    :func:`~._active_session.close_active_bucket_session`, for the two callers
+    :func:`~.active_session.close_active_bucket_session`, for the two callers
     that genuinely need it: the interpreter-exit hook and an embedding watchdog's
     pre-exit hook before an :func:`os._exit` that would otherwise skip both.
 

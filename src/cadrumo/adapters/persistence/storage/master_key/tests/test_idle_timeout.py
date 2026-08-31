@@ -7,12 +7,12 @@ from datetime import UTC, datetime, timedelta
 import pytest
 
 from ...errors import StorageValidationError
-from .._bucket_session import BucketSession
 from .._idle_timeout import (
     DEFAULT_IDLE_LOCK_MINUTES,
     IdleEvaluation,
     evaluate_idle,
 )
+from ..bucket_session import BucketSession
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

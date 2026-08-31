@@ -7,7 +7,7 @@ import secrets
 import pytest
 from pydantic import ValidationError
 
-from .._kdf_params import KdfParams
+from ..kdf_params import KdfParams
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

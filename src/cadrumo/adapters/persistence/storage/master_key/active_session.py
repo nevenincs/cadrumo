@@ -38,15 +38,15 @@ from contextvars import ContextVar
 from typing import TypeGuard
 
 from .....core.logging import get_logger
-from .....core.time import now
-from ..bucket import BucketLockedError
+from .....core.time._clock import now
+from ..bucket.errors import BucketLockedError
 from ..errors import SecretStoreError
-from ._bucket_session import BucketSession
 from ._live_sessions import close_all_live_bucket_sessions
+from .bucket_session import BucketSession
 
 _log = get_logger(__name__)
 
-_active_session: ContextVar[BucketSession | None] = ContextVar(
+active_session: ContextVar[BucketSession | None] = ContextVar(
     "aeat_active_bucket_session",
     default=None,
 )
@@ -84,11 +84,11 @@ def activate_session(session: BucketSession) -> Iterator[None]:
             the column-level encryption key for the duration of the
             block.
     """
-    token = _active_session.set(session)
+    token = active_session.set(session)
     try:
         yield
     finally:
-        _active_session.reset(token)
+        active_session.reset(token)
 
 
 def bind_active_bucket_session(session: BucketSession) -> None:
@@ -109,7 +109,7 @@ def bind_active_bucket_session(session: BucketSession) -> None:
     Args:
         session: The unlocked :class:`BucketSession` to bind.
     """
-    _active_session.set(session)
+    active_session.set(session)
 
 
 def _require_fresh_active_session() -> BucketSession:
@@ -125,7 +125,7 @@ def _require_fresh_active_session() -> BucketSession:
             currently active on the calling thread or task.
         BucketLockedError: When the active session has expired.
     """
-    session = _active_session.get()
+    session = active_session.get()
     if session is None:
         raise NoActiveBucketSessionError()
     if session.is_expired(now()):
@@ -181,7 +181,7 @@ def get_active_hmac_subkey(context: bytes) -> bytes:
 
 def has_active_bucket_session() -> bool:
     """Return whether an active :class:`BucketSession` is bound."""
-    return _active_session.get() is not None
+    return active_session.get() is not None
 
 
 def current_active_bucket_session() -> BucketSession | None:
@@ -195,7 +195,7 @@ def current_active_bucket_session() -> BucketSession | None:
     context; :func:`activate_session`, :func:`suspend_active_session`, and
     :func:`close_active_bucket_session` own binding changes.
     """
-    return _active_session.get()
+    return active_session.get()
 
 
 def session_serves_bucket(session: BucketSession | None, bucket_id: str) -> TypeGuard[BucketSession]:
@@ -242,7 +242,7 @@ def active_bucket_session_serves(bucket_id: str) -> bool:
     :func:`~application.auth.operator_scope.active_profile_storage_span`; this
     function owns the bucket-identity half that every caller needs.
     """
-    return session_serves_bucket(_active_session.get(), bucket_id)
+    return session_serves_bucket(active_session.get(), bucket_id)
 
 
 def close_active_bucket_session() -> None:
@@ -257,24 +257,24 @@ def close_active_bucket_session() -> None:
     leave a key-owning or sealed object advertised as active. An identity check
     preserves a replacement binding installed reentrantly during cleanup.
     """
-    session = _active_session.get()
+    session = active_session.get()
     if session is None:
         return
     try:
         session.close()
     finally:
-        if _active_session.get() is session:
-            _active_session.set(None)
+        if active_session.get() is session:
+            active_session.set(None)
 
 
 @contextmanager
 def suspend_active_session() -> Iterator[None]:
     """Temporarily clear the active :class:`BucketSession` for the current context."""
-    token = _active_session.set(None)
+    token = active_session.set(None)
     try:
         yield
     finally:
-        _active_session.reset(token)
+        active_session.reset(token)
 
 
 def _close_active_session_at_exit() -> None:

@@ -9,16 +9,14 @@ from pathlib import Path
 import pytest
 
 from ......core.config import SecretStoreBackend, Settings, override_settings
-from ...bucket import (
-    BucketLockedError,
-)
+from ...bucket.errors import BucketLockedError
 from ...errors import MasterKeyUnavailableError
-from .._active_session import (
+from ..active_session import (
     NoActiveBucketSessionError,
     activate_session,
     get_active_master_key,
 )
-from .._bucket_session import BucketSession
+from ..bucket_session import BucketSession
 from ._master_key_support import _publish_registration_capsule
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -117,7 +115,7 @@ def test_bucket_session_close_disposes_by_bucket_identity_under_explicit_databas
             cadrumo_local_storage_root=tmp_path / "state",
             cadrumo_database_url=f"sqlite:///{explicit_db.as_posix()}",
         ),
-        caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.persistence.storage.master_key._bucket_session"),
+        caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.persistence.storage.master_key.bucket_session"),
     ):
         session.close()
 

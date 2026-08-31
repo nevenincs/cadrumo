@@ -9,16 +9,16 @@ from typing import TypedDict
 import pytest
 
 from ......core.errors.hierarchy import CoreValidationError
-from ...bucket import BucketLockedError
+from ...bucket.errors import BucketLockedError
 from ...errors import StorageValidationError
-from .._active_session import (
+from ..active_session import (
     activate_session,
     active_bucket_session_serves,
     close_active_bucket_session,
     current_active_bucket_session,
     has_active_bucket_session,
 )
-from .._bucket_session import (
+from ..bucket_session import (
     BucketSession,
 )
 

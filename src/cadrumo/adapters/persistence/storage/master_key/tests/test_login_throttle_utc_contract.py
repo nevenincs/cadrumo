@@ -33,7 +33,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .._login_throttle import (
+from ..login_throttle import (
     LOGIN_THROTTLE_SCHEMA_VERSION,
     LoginThrottleState,
     ThrottleEvaluation,
