@@ -628,7 +628,7 @@ def test_modelo_353_iva_bindings_resolve_against_substrate_observations() -> Non
 
     from ....iva.flow import IvaFlowDirection
     from ....iva.schema import IvaCategory, IvaRateKind
-    from ..ledger_iva_bindings import (
+    from ..ledger_bindings import (
         IvaLedgerObservation,
         resolve_ledger_iva_aggregation_binding_values,
     )

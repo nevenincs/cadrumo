@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import pytest
 
-from ..record_design_pdf_repairs import _undouble_struck_rows
+from ..record_design import _undouble_struck_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

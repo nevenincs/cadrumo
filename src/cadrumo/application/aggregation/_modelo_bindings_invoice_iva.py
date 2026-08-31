@@ -17,7 +17,9 @@ from ...core.modelo import Modelo
 from ...core.money.rounding import round_to_cents
 from ...core.period import Period
 from ...domain.calculations.registry.ids import BindingId
-from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
+from ...domain.calculations.registry.ledger_bindings import (
+    IvaLedgerObservation,
+)
 from ...domain.invoices.enums import IvaRate, iva_rate_kind, iva_rate_slot_percentage
 from ...domain.invoices.models import Invoice, InvoiceLine
 from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol

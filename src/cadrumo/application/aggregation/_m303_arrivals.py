@@ -18,7 +18,7 @@ from pydantic import BaseModel, field_validator, model_validator
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period, StandardPeriodCode
 from ...core.prorrata_register import ProrrataEspecialTransitionKind, ProrrataRegisterRegime
-from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
+from ...domain.calculations.registry.ledger_bindings import IvaLedgerObservation
 from ...domain.iva.schema import IvaCashAccountingTreatment
 from ...domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from ._iva_ledger import IvaLedgerAggregation

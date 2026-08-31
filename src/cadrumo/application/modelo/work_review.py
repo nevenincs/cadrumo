@@ -27,8 +27,10 @@ from ...domain.calculations.registry.authority import (
     ValidatedRegistryAuthority,
     bundled_authority,
 )
-from ...domain.calculations.registry.binding_targets import casillas_by_binding
-from ...domain.calculations.registry.bindings import CasillaObservation
+from ...domain.calculations.registry.bindings import (
+    CasillaObservation,
+    casillas_by_binding,
+)
 from ...domain.calculations.registry.export import (
     clasificar_casillas_oficiales,
     derive_export_layouts_from_bindings,

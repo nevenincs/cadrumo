@@ -22,8 +22,7 @@ from ...core.result_disposition import ResultDisposition
 from .errors import DeadlineValidationError
 
 if TYPE_CHECKING:
-    from ..calculations.registry.schema import ModeloRevision
-    from ..calculations.registry.schema_deadlines import DeadlineWindowDefinition
+    from ..calculations.registry.schema import DeadlineWindowDefinition, ModeloRevision
 
     type DeadlineWindowProjection = tuple[str, ModeloRevision, DeadlineWindowDefinition]
 

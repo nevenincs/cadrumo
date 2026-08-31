@@ -27,8 +27,7 @@ from decimal import Decimal
 from ....core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS, BindingSourceKind
 from ....core.casilla_id import CasillaId
 from .binding_selector_utils import selector_as_dict as _binding_selector_as_dict
-from .binding_targets import bound_casilla_binding_ids
-from .bindings import CasillaObservation, resolve_bound_casilla_binding_value
+from .bindings import CasillaObservation, bound_casilla_binding_ids, resolve_bound_casilla_binding_value
 from .bindings_previous_filing import PreviousModeloSelector
 from .casilla_membership import casillas_by_id
 from .errors import RegistryValidationError

@@ -15,15 +15,18 @@ from ....core.casilla_id import CasillaId
 from .casilla_membership import casillas_by_id, declared_casilla_ids
 from .ids import BindingId, RelationId
 from .schema import (
+    ApplicationLinkDefinition,
+    ConstructDefinition,
     DataBindingDefinition,
+    DeadlineWindowDefinition,
+    DependencyClassificationDefinition,
     FormulaDefinition,
     ModeloRevision,
+    ModeloScheduleDefinition,
 )
-from .schema_deadlines import DeadlineWindowDefinition, ModeloScheduleDefinition
 from .schema_exports import ExportLayoutDefinition
 from .schema_extraction import ExtractionProfileDefinition
 from .schema_formula import ParameterDefinition
-from .schema_revision_members import ApplicationLinkDefinition, ConstructDefinition, DependencyClassificationDefinition
 from .schema_surfaces import CasillaDefinition, RelationDefinition
 from .schema_verification import LiveCrossReferenceDecision, VerificationExpectationDefinition, WorkbookParityReference
 from .validate_revision_identity import collect_record_id_lists

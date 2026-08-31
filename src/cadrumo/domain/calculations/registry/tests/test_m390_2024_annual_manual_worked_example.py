@@ -178,10 +178,7 @@ from ....iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from ..authority import ValidatedRegistryAuthority, bundled_authority
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
-from ..ledger_iva_bindings import (
-    IvaLedgerObservation,
-    resolve_ledger_iva_aggregation_binding_values,
-)
+from ..ledger_bindings import IvaLedgerObservation, resolve_ledger_iva_aggregation_binding_values
 from ._ledger_iva_aggregation_support import _deduction_provenance
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

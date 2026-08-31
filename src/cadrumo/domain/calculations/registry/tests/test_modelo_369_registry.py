@@ -17,7 +17,7 @@ from .._validate import RegistryValidator
 from ..authority import bundled_authority
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..ids import LegalRefId
-from ..ledger_oss_bindings import (
+from ..ledger_bindings import (
     OssIossLedgerObservation,
     resolve_ledger_oss_aggregation_binding_values,
 )

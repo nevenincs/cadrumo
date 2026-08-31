@@ -43,11 +43,10 @@ from ..classification_coherence import (
     audit_bundled_classification_coherence,
     build_classification_coherence_audit,
 )
-from ..schema import ModeloDefinition, ModeloRevision
+from ..schema import DependencyClassificationDefinition, ModeloDefinition, ModeloRevision
 from ..schema_base import CalculationClass
 from ..schema_input_kind import InputKind
 from ..schema_references import PeriodSelector
-from ..schema_revision_members import DependencyClassificationDefinition
 from ..schema_surfaces import CasillaDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

@@ -22,12 +22,12 @@ from ..relations import relation_source_requirements
 from ..runtime_graph import expression_relation_refs
 from ..schema import (
     DataBindingDefinition,
+    DependencyClassificationDefinition,
     ModeloDefinition,
     ModeloRevision,
     RegistryCatalogues,
 )
 from ..schema_input_kind import InputKind
-from ..schema_revision_members import DependencyClassificationDefinition
 from ..schema_surfaces import RelationDefinition
 from ._registry_schema_support import _committed_registry_tree
 

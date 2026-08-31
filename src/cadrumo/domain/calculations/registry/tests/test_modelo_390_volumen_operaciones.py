@@ -47,11 +47,7 @@ from .....core.directory_scan import scan_directory
 from ....iva.flow import IvaFlowDirection
 from ....iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from ..authority import bundled_authority
-from ..ledger_iva_bindings import (
-    IvaLedgerObservation,
-    iva_ledger_selector,
-    resolve_ledger_iva_aggregation_binding_values,
-)
+from ..ledger_bindings import IvaLedgerObservation, iva_ledger_selector, resolve_ledger_iva_aggregation_binding_values
 from ..runtime_graph import expression_casilla_refs
 from ..schema import ModeloRevision
 

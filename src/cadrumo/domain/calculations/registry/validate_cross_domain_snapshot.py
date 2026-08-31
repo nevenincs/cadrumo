@@ -162,7 +162,7 @@ def check_cross_domain_snapshot_routing(
     only emptiness grants passage to exactly that state, which is the silent
     half of the failure this guard exists to make loud.
     """
-    from .ledger_renta_gastos_estimacion_directa_bindings import renta_first_slice_binding_target_casillas
+    from .ledger_bindings import renta_first_slice_binding_target_casillas
 
     casilla_ids = frozenset(checker.casilla_ids)
     renta_first_slice_binding_targets = renta_first_slice_binding_target_casillas(snapshot.revision)

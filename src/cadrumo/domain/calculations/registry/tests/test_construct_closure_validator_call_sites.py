@@ -20,7 +20,7 @@ from .._validate import RegistryValidator
 from .._validate_constructs import _CONSTRUCT_MEMBER_ATTRS, validate_construct_closure
 from .._validate_evidence import EvidenceValidator
 from ..errors import RegistryValidationError
-from ..schema_revision_members import ConstructDefinition
+from ..schema import ConstructDefinition
 from ._referential_integrity_support import (
     REFERENCE_LEGAL_ID,
     REFERENCE_SOURCE_ID,

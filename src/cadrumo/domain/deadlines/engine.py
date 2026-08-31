@@ -23,8 +23,7 @@ from ...core.time.clock import now, today_madrid
 # this module does not trigger the ~870ms ValidatedRegistryAuthority
 # parse — load it only when a deadline computation actually runs.
 if TYPE_CHECKING:
-    from ..calculations.registry.schema import ModeloRevision
-    from ..calculations.registry.schema_deadlines import DeadlineWindowDefinition
+    from ..calculations.registry.schema import DeadlineWindowDefinition, ModeloRevision
     from ..calculations.registry.schema_verification import ProfilePredicateDefinition
 
 from .errors import (

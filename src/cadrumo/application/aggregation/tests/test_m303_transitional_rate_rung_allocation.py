@@ -40,7 +40,7 @@ from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.binding_selector_utils import selector_as_dict
-from ....domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
+from ....domain.calculations.registry.ledger_bindings import IvaLedgerObservation
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.iva.flow import IvaFlowDirection
 from ....domain.iva.lookup import rate_kinds_for_declared_rate

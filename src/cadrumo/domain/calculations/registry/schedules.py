@@ -13,8 +13,7 @@ from typing import Final
 from pydantic import ConfigDict, TypeAdapter, ValidationError
 
 from .errors import RegistryValidationError
-from .schema import ModeloRevision
-from .schema_deadlines import ModeloScheduleDefinition
+from .schema import ModeloRevision, ModeloScheduleDefinition
 from .schema_verification import ProfilePredicateDefinition
 
 __all__ = [

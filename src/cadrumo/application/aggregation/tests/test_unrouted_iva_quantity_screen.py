@@ -30,7 +30,7 @@ from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeduct
 from ....core.period import Period
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.calculations.registry.ledger_iva_bindings import (
+from ....domain.calculations.registry.ledger_bindings import (
     IvaLedgerObservation,
     unrouted_ledger_iva_quantities,
     unsupported_ledger_iva_observations,

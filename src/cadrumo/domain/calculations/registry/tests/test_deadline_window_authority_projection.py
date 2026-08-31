@@ -8,8 +8,7 @@ import pytest
 
 from ..authority import bundled_authority
 from ..deadline_coordinate import deadline_window_semantic_coordinates
-from ..schema import ModeloRevision
-from ..schema_deadlines import DeadlineWindowDefinition
+from ..schema import DeadlineWindowDefinition, ModeloRevision
 from ..temporal import select_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

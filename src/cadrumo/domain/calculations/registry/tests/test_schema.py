@@ -19,11 +19,10 @@ from pydantic import TypeAdapter, ValidationError
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from ...export_field_kind import CasillaFieldKind
 from ..ids import LegalRefId, SourceRefId
-from ..schema import FormulaDefinition
+from ..schema import ConstructDefinition, FormulaDefinition
 from ..schema_exports import ExportFieldDefinition
 from ..schema_formula import FormulaExpression
 from ..schema_input_kind import InputKind
-from ..schema_revision_members import ConstructDefinition
 from ..schema_surfaces import CasillaDefinition, RelationDefinition
 from ..schema_verification import (
     DiscrepancyCause,

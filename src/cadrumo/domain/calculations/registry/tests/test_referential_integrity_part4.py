@@ -12,12 +12,16 @@ from ...export_field_kind import CasillaFieldKind
 from .._validate import RegistryValidator
 from ..errors import RegistryValidationError
 from ..schema import (
+    ApplicationLinkDefinition,
+    ConstructDefinition,
+    DeadlineWindowDefinition,
+    DependencyClassificationDefinition,
     FormulaDefinition,
     ModeloDefinition,
     ModeloRevision,
+    ModeloScheduleDefinition,
     RegistryCatalogues,
 )
-from ..schema_deadlines import DeadlineWindowDefinition, ModeloScheduleDefinition
 from ..schema_exports import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
@@ -25,11 +29,6 @@ from ..schema_exports import (
 )
 from ..schema_formula import FormulaExpression
 from ..schema_input_kind import InputKind
-from ..schema_revision_members import (
-    ApplicationLinkDefinition,
-    ConstructDefinition,
-    DependencyClassificationDefinition,
-)
 from ..schema_surfaces import RelationDefinition
 from ._referential_integrity_support import (
     REFERENCE_LEGAL_ID,

@@ -22,9 +22,7 @@ import pytest
 from ....core.casilla_id import CasillaId
 from ....core.modelo import Modelo
 from ...calculations.registry.authority import bundled_authority
-from ...calculations.registry.ledger_renta_gastos_estimacion_directa_bindings import (
-    renta_first_slice_binding_target_casillas,
-)
+from ...calculations.registry.ledger_bindings import renta_first_slice_binding_target_casillas
 from ...categories.spending_category import SpendingCategory
 from .._first_slice_routing import (
     FIRST_SLICE_EXPENSE_CASILLAS,

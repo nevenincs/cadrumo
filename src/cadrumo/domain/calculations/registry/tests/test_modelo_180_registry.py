@@ -16,7 +16,7 @@ from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..errors import RegistryValidationError
 from ..formula_runtime import calculate_registry_snapshot
 from ..relations import relation_source_requirements, resolve_relation_values_from_observations
-from ..schema_revision_members import ApplicationLinkDefinition
+from ..schema import ApplicationLinkDefinition
 from ..snapshot import build_snapshot
 from ._registry_schema_support import _committed_modelo, _committed_snapshot
 

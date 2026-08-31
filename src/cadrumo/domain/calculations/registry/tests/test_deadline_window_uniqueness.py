@@ -11,7 +11,7 @@ from .....core.result_disposition import ResultDisposition
 from .._validate import RegistryValidator
 from .._validate_revision_rules import validate_deadline_window_uniqueness
 from ..errors import RegistryValidationError
-from ..schema_deadlines import DeadlineWindowDefinition
+from ..schema import DeadlineWindowDefinition
 from ..schema_references import PeriodSelector
 from ._referential_integrity_support import minimal_catalogues, minimal_modelo, minimal_revision
 

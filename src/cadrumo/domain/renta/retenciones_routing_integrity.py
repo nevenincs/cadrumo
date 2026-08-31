@@ -2,7 +2,7 @@
 
 The ``modelo-130-actividad-economica-retenciones-cumulative`` binding matches
 casilla 01 income rows (``target_casilla_id = "01"``, the OBSERVATION-MATCH
-key: see :class:`~domain.calculations.registry.ledger_renta_income_bindings.RentaLedgerIncomeSelector`'s
+key: see :class:`~domain.calculations.registry._ledger_bindings._RentaLedgerIncomeSelector`'s
 docstring for why that field cannot also name the output casilla) but its
 resolved value is redirected onto casilla 06 -- retenciones e ingresos a
 cuenta soportados -- by a hardcoded application-layer constant

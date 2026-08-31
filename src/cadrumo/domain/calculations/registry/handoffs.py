@@ -22,20 +22,20 @@ from ....core.period import FilingPeriodCode, RegistrySelectorPeriodCode
 from ._relation_aggregation import relation_aggregation_op
 from ._validate import RegistryValidator
 from .authority import ValidatedRegistryAuthority
-from .binding_targets import bound_casilla_binding_ids
+from .bindings import bound_casilla_binding_ids
 from .errors import RegistryValidationError
 from .ids import BindingId, LegalRefId, ModeloId, RelationId, RevisionId, SourceRefId
 from .iva_wallet_relation_targets import is_iva_wallet_owned_relation_target
 from .relations import RegistryFoldRequirement, relation_source_requirements
 from .runtime_graph import expression_binding_refs, expression_relation_refs
 from .schema import (
+    DependencyClassificationDefinition,
     ModeloDefinition,
     ModeloRevision,
     RegistryCatalogues,
     RegistrySnapshot,
 )
 from .schema_references import PeriodSelector
-from .schema_revision_members import DependencyClassificationDefinition
 from .schema_surfaces import RelationDefinition, RelationPeriodAlignment, RelationRevisionSelector
 
 __all__ = [

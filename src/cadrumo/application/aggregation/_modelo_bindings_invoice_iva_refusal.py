@@ -7,7 +7,9 @@ from decimal import Decimal
 
 from ...core.period import Period
 from ...domain.calculations.registry.ids import BindingId
-from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
+from ...domain.calculations.registry.ledger_bindings import (
+    IvaLedgerObservation,
+)
 from ...domain.invoices.models import Invoice
 from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ._iva_ledger import (

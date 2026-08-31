@@ -14,8 +14,7 @@ from .._validate_revision_rules import (
     validate_periodic_deadline_completeness,
 )
 from ..errors import RegistryValidationError
-from ..schema import SupportedFilingYearsCatalogue
-from ..schema_deadlines import DeadlineWindowDefinition, ModeloScheduleDefinition
+from ..schema import DeadlineWindowDefinition, ModeloScheduleDefinition, SupportedFilingYearsCatalogue
 from ..schema_references import PeriodSelector
 from ._referential_integrity_support import minimal_catalogues, minimal_modelo, minimal_revision
 

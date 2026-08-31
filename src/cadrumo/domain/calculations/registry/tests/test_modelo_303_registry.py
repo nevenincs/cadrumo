@@ -620,7 +620,7 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
 
     from ....iva.flow import IvaFlowDirection
     from ....iva.schema import IvaCategory, IvaRateKind
-    from ..ledger_iva_bindings import (
+    from ..ledger_bindings import (
         IvaLedgerObservation,
         resolve_ledger_iva_aggregation_binding_values,
     )

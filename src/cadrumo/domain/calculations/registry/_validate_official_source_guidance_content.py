@@ -68,7 +68,7 @@ from typing import Final
 
 from ._source_file_text import read_source_file_text
 from ._validate_evidence import EvidenceValidator
-from .schema_deadlines import DeadlineWindowDefinition
+from .schema import DeadlineWindowDefinition
 from .schema_references import SourceReference
 
 #: A suppression notice must itself say something was suppressed or repealed.

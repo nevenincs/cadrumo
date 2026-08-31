@@ -32,7 +32,7 @@ from ...core.source_connectivity import (
     SourceConnectivityProofAuthority,
 )
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
-from ...domain.calculations.registry.binding_targets import casillas_by_binding
+from ...domain.calculations.registry.bindings import casillas_by_binding
 from ...domain.calculations.registry.censo_modelos import CensoModeloEventKind
 from ...domain.calculations.registry.handoffs import (
     RelationConsumptionChannel,

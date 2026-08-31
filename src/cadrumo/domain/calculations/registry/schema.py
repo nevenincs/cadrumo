@@ -27,8 +27,10 @@ from ....core.authority_grade import UNDECLARED_REGISTRY_AUTHORITY_GRADE, Regist
 from ....core.casilla_id import CasillaId
 from ....core.classification.policies import SensitivityClass
 from ....core.filing_projection_ref import FilingProjectionRef, filing_projection_ref_casilla_id
+from ....core.irnr import M210_TIPO_RENTA_CODE_PROJECTION
 from ....core.modelo import Modelo
-from ....core.period import Period, RegistrySelectorPeriodCode
+from ....core.period import Period, PeriodKind, RegistrySelectorPeriodCode, registry_period_kind
+from ....core.result_disposition import ResultDisposition
 from ....core.revision_review import RevisionReviewStatus
 from ....core.tax_domain import TaxDomain
 from ._schema_governance import (
@@ -39,16 +41,20 @@ from ._schema_governance import (
 from ._toml_helpers import as_toml_table as _as_toml_table
 from .errors import RegistryValidationError
 from .ids import (
+    ApplicabilityRuleId,
     ApplicationLinkId,
     BindingId,
     ConstructId,
     CrossReferenceId,
     DeadlineWindowId,
     DependencyClassificationId,
+    ExportLayoutId,
     ExtractionProfileId,
     FormulaId,
     LegalRefId,
     ModeloId,
+    ParameterId,
+    RelationId,
     RevisionId,
     SourceRefId,
     VerificationExpectationId,
@@ -128,6 +134,7 @@ from .schema_scalars import (
 )
 from .schema_verification import (
     LiveCrossReferenceDecision,
+    ProfilePredicateDefinition,
     RegistryVerificationPolicy,
     VerificationExpectationDefinition,
     VerificationPredicateDefinition,
@@ -136,14 +143,19 @@ from .schema_verification import (
 )
 
 __all__ = [
+    "ApplicationLinkDefinition",
     "BindingSelector",
     "CasillaProducerInventory",
     "CasillaProducerProvenance",
+    "ConstructDefinition",
     "DataBindingDefinition",
+    "DeadlineWindowDefinition",
     "DecimalValue",
+    "DependencyClassificationDefinition",
     "FormulaDefinition",
     "ModeloDefinition",
     "ModeloRevision",
+    "ModeloScheduleDefinition",
     "RegistryCatalogues",
     "RegistrySnapshot",
     "SupportedFilingYearsCatalogue",
@@ -170,8 +182,6 @@ from .schema_base import (
     manifest_only_fields,
     schema_family_fields,
 )
-from .schema_deadlines import DeadlineWindowDefinition as _DeadlineWindowDefinition
-from .schema_deadlines import ModeloScheduleDefinition as _ModeloScheduleDefinition
 from .schema_exports import ExportLayoutDefinition, ProjectionEndpointDeclaration
 from .schema_extraction import ExtractionProfileDefinition
 from .schema_formula import (
@@ -183,18 +193,6 @@ from .schema_references import (
     LegalReference,
     PeriodSelector,
     SourceReference,
-)
-from .schema_revision_members import (
-    ApplicabilityRuleDefinition as _ApplicabilityRuleDefinition,
-)
-from .schema_revision_members import (
-    ApplicationLinkDefinition as _ApplicationLinkDefinition,
-)
-from .schema_revision_members import (
-    ConstructDefinition as _ConstructDefinition,
-)
-from .schema_revision_members import (
-    DependencyClassificationDefinition as _DependencyClassificationDefinition,
 )
 from .schema_surfaces import (
     CalculationCompletenessManifest,
@@ -228,6 +226,372 @@ _validate_country_code = _validate_country_code_impl
 _validate_iban_string = _validate_iban_string_impl
 _validate_nif_string = _validate_nif_string_impl
 _validate_period_code = _validate_period_code_impl
+
+
+class ApplicationLinkDefinition(RegistryModel):
+    """Declare one application surface that requires this registry authority."""
+
+    id: ApplicationLinkId
+    surface: Literal[
+        "calculation",
+        "filing",
+        "review",
+        "approval",
+        "reconciliation",
+        "export",
+        "deadline",
+        "portal",
+        "extractor",
+        "workflow",
+        "communication",
+        "payer_delivery",
+    ]
+    consumer: str
+    requires_snapshot: Literal[True]
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
+
+
+class ConstructDefinition(RegistryModel):
+    """Declare one legally grounded construct and the revision members it joins."""
+
+    id: ConstructId
+    localization_key: str = Field(min_length=1, exclude=True, repr=False)
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
+    casilla_ids: tuple[CasillaId, ...] = ()
+    formulas: tuple[FormulaId, ...] = ()
+    parameters: tuple[ParameterId, ...] = ()
+    bindings: tuple[BindingId, ...] = ()
+    relations: tuple[RelationId, ...] = ()
+    export_layouts: tuple[ExportLayoutId, ...] = ()
+    extraction_profiles: tuple[ExtractionProfileId, ...] = ()
+    live_cross_references: tuple[CrossReferenceId, ...] = ()
+    workbook_parity_refs: tuple[WorkbookParityRefId, ...] = ()
+    verification_expectations: tuple[VerificationExpectationId, ...] = ()
+    application_links: tuple[ApplicationLinkId, ...] = ()
+    deadline_windows: tuple[DeadlineWindowId, ...] = ()
+    filing_schedules: tuple[str, ...] = ()
+    dependency_classifications: tuple[DependencyClassificationId, ...] = ()
+
+    def get_title(self, locale: str) -> str:
+        """Resolve the construct title from the shared catalogue."""
+        resolved = resolve_modelo_localization((self.localization_key,), locale=locale, required=True)
+        assert resolved is not None
+        return resolved
+
+    @property
+    def title(self) -> str:
+        """Return the strict official-Spanish construct title."""
+        return self.get_title("es")
+
+    @field_validator(
+        "casilla_ids",
+        "formulas",
+        "parameters",
+        "bindings",
+        "relations",
+        "export_layouts",
+        "extraction_profiles",
+        "live_cross_references",
+        "workbook_parity_refs",
+        "verification_expectations",
+        "application_links",
+        "deadline_windows",
+        "filing_schedules",
+        "dependency_classifications",
+    )
+    @classmethod
+    def _member_ids_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if len(set(value)) != len(value):
+            raise RegistryValidationError("construct member ids must be unique")
+        return value
+
+    @model_validator(mode="after")
+    def _validate_membership(self) -> ConstructDefinition:
+        member_groups = (
+            self.casilla_ids,
+            self.formulas,
+            self.parameters,
+            self.bindings,
+            self.relations,
+            self.export_layouts,
+            self.extraction_profiles,
+            self.live_cross_references,
+            self.workbook_parity_refs,
+            self.verification_expectations,
+            self.application_links,
+            self.deadline_windows,
+            self.filing_schedules,
+            self.dependency_classifications,
+        )
+        if not any(member_groups):
+            raise RegistryValidationError(f"construct {self.id!r} must declare at least one revision member")
+        return self
+
+
+class DependencyClassificationDefinition(RegistryModel):
+    """Classify how one source modelo contributes to this modelo's authority."""
+
+    id: DependencyClassificationId
+    source_modelo: ModeloId
+    treatment: Literal["direct_annual_settlement", "factual_evidence", "non_dependency"]
+    taxpayer_files_source: bool = True
+    """Whether the taxpayer FILES the source modelo (True) or merely SUFFERS its withholding (False).
+
+    True (default) for modelos the taxpayer is the obligor of (e.g. 130/131 pagos fraccionados the
+    autónomo files). False for retenciones the taxpayer SUFFERS but the PAYER files (e.g. 111/115/
+    123/193) - the taxpayer cannot file these, so the M100 cross-period dependency on them is not a
+    filing the taxpayer must evidence; the clean-state gate scopes such a dependency out as
+    not-applicable (advisory), the value coming from the income certificate (operator override or a
+    filed source where one exists). A regulated payee/payer distinction, grounded per the AEAT M100
+    dictionary and LIRPF art. 99 (retenciones e ingresos a cuenta).
+    """
+    conditional_on_economic_activity: bool = False
+    """Whether the taxpayer files the source modelo ONLY when they have economic activity.
+
+    True for pagos-fraccionados modelos an autónomo files IFF they carry on an economic
+    activity (130 estimación directa / 131 objetiva). The clean-state gate scopes such a
+    dependency out as not-applicable when the taxpayer has DECLARED income categories that do
+    not include actividad económica (a salaried/rental-only filer never files 130/131). Fail-
+    closed: when economic-activity status is undeclared the dependency stays enforced. Only
+    meaningful together with ``taxpayer_files_source = true``. Grounded in LIRPF art. 99 /
+    RIRPF art. 109 (pago fraccionado of actividades económicas).
+    """
+    target_constructs: tuple[ConstructId, ...] = ()
+    relation_refs: tuple[RelationId, ...] = ()
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
+
+    @field_validator("target_constructs", "relation_refs")
+    @classmethod
+    def _tuple_values_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if len(set(value)) != len(value):
+            raise RegistryValidationError("dependency classification tuple entries must be unique")
+        return value
+
+    @model_validator(mode="after")
+    def _validate_classification(self) -> DependencyClassificationDefinition:
+        if self.treatment == "non_dependency":
+            if self.target_constructs or self.relation_refs:
+                raise RegistryValidationError(
+                    f"non-dependency classification {self.id!r} must not declare target members",
+                )
+            return self
+        if not self.target_constructs:
+            raise RegistryValidationError(f"dependency classification {self.id!r} must declare target_constructs")
+        return self
+
+
+class ApplicabilityRuleDefinition(RegistryModel):
+    """A registry-authored modelo-applicability rule fragment.
+
+    The TOML-authored counterpart of
+    :class:`~cadrumo.domain.calculations.registry.applicability.ModeloApplicabilityRule`.
+    Every closed-vocabulary field here is a plain string (or a set of them),
+    never a ``domain.deadlines`` enum type: importing that package from this
+    module would close an import cycle, since ``domain.deadlines`` itself
+    depends on :class:`DeadlineWindowDefinition`, declared in this same
+    module. Registry TOML stays free-form;
+    :func:`~._applicability.hydrate_applicability_rule` is the loader
+    boundary that resolves every string to its enum member, surfacing an
+    unknown token as a registry load failure naming the offending value.
+
+    Attributes:
+        id: The rule's own identifier, unique within its revision.
+        applicable_entity_types: :class:`~domain.deadlines.EntityType` token
+            strings the modelo applies to.
+        required_income_categories: :class:`~domain.deadlines.IrpfIncomeCategory`
+            token strings gating a natural person's applicability. Empty means
+            the modelo does not gate on income category.
+        required_estimation_regimes: :class:`~domain.deadlines.IrpfEstimationRegime`
+            token strings gating a natural person's applicability. Empty means
+            the modelo does not gate on estimation regime.
+        applicable_fiscal_residencies: :class:`~domain.deadlines.FiscalResidency`
+            token strings positively keeping the modelo in scope. Empty means
+            the modelo does not gate on fiscal residency.
+        applicable_iva_regimes: :class:`~domain.deadlines.IVARegime` token
+            strings positively keeping the modelo in scope. Empty means the
+            modelo does not gate on IVA regime.
+        required_payer_fact: The
+            :class:`~._applicability_payer_facts.PayerFact` token string the
+            modelo's applicability depends on, or ``None`` when the modelo
+            does not gate on a payer fact.
+        applicable_reason: Operator-facing prose for the ``APPLICABLE`` verdict.
+        not_applicable_reason: Operator-facing prose for the
+            ``NOT_APPLICABLE`` verdict.
+        cuota_bearing: ``True`` when the modelo is a cuota self-assessment
+            (see :attr:`ModeloApplicabilityRule.cuota_bearing`).
+        legal_refs: Scoped registry citation keys grounding the rule.
+    """
+
+    id: ApplicabilityRuleId
+    applicable_entity_types: Annotated[tuple[str, ...], Field(min_length=1)]
+    required_income_categories: tuple[str, ...] = ()
+    required_estimation_regimes: tuple[str, ...] = ()
+    applicable_fiscal_residencies: tuple[str, ...] = ()
+    applicable_iva_regimes: tuple[str, ...] = ()
+    required_payer_fact: str | None = None
+    applicable_reason: Annotated[str, Field(min_length=1)]
+    not_applicable_reason: Annotated[str, Field(min_length=1)]
+    cuota_bearing: bool = False
+    legal_refs: LegalRefs
+
+    @field_validator(
+        "applicable_entity_types",
+        "required_income_categories",
+        "required_estimation_regimes",
+        "applicable_fiscal_residencies",
+        "applicable_iva_regimes",
+    )
+    @classmethod
+    def _tuple_values_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if len(set(value)) != len(value):
+            raise RegistryValidationError("applicability rule tuple entries must be unique")
+        return value
+
+
+def _parse_deadline_window_period(value: object) -> Period:
+    """Hydrate a deadline-window period through :class:`~core.Period`."""
+    if isinstance(value, Period):
+        return value
+    if isinstance(value, Mapping):
+        try:
+            return Period.model_validate(value)
+        except ValueError as exc:
+            raise ValueError(f"invalid deadline window period mapping {value!r}: {exc}") from exc
+    if not isinstance(value, str):
+        raise ValueError(f"deadline window period must be a string or Period, got {type(value).__name__}")
+
+    try:
+        return Period.from_string(value)
+    except ValueError as exc:
+        raise ValueError(f"invalid deadline window period {value!r}: {exc}") from exc
+
+
+class DeadlineWindowDefinition(RegistryModel):
+    """Declare the applicable opening, closing, and payment dates for a filing."""
+
+    id: DeadlineWindowId
+    filing_year: FilingYear
+    period: Annotated[Period, BeforeValidator(_parse_deadline_window_period)]
+    period_kind: Literal["monthly", "quarterly", "annual", "ad_hoc"]
+    opens_on: date
+    closes_on: date
+    payment_cutoff_on: date | None = None
+    applicability_condition_mode: Literal["all", "any"] = "all"
+    applicability_conditions: tuple[ProfilePredicateDefinition, ...] = ()
+    resultado_scope: (
+        Annotated[
+            ResultDisposition,
+            BeforeValidator(lambda value: ResultDisposition(value) if isinstance(value, str) else value),
+        ]
+        | None
+    ) = None
+    tipo_renta_scope: tuple[str, ...] | None = None
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
+
+    @field_validator("tipo_renta_scope")
+    @classmethod
+    def _validate_tipo_renta_scope(cls, value: tuple[str, ...] | None) -> tuple[str, ...] | None:
+        """Preserve official M210 codes without folding them into rate concepts."""
+        if value is None:
+            return None
+        if not value:
+            raise RegistryValidationError("deadline window tipo_renta_scope must not be empty")
+        if len(set(value)) != len(value):
+            raise RegistryValidationError("deadline window tipo_renta_scope entries must be unique")
+        unknown_codes = tuple(code for code in value if code not in M210_TIPO_RENTA_CODE_PROJECTION)
+        if unknown_codes:
+            accepted = ", ".join(sorted(M210_TIPO_RENTA_CODE_PROJECTION))
+            raise RegistryValidationError(
+                f"deadline window tipo_renta_scope contains unknown official Modelo 210 codes "
+                f"{unknown_codes!r}; accepted codes: {accepted}",
+            )
+        return value
+
+    @model_validator(mode="after")
+    def _validate_window(self) -> DeadlineWindowDefinition:
+        if self.filing_year != self.period.filing_year:
+            raise RegistryValidationError(
+                f"deadline window {self.id!r} filing_year {self.filing_year} must match "
+                f"period filing_year {self.period.filing_year}",
+            )
+        if self.opens_on > self.closes_on:
+            raise RegistryValidationError(f"deadline window {self.id!r} opens_on must not be after closes_on")
+        if self.payment_cutoff_on is not None and self.payment_cutoff_on > self.closes_on:
+            raise RegistryValidationError(f"deadline window {self.id!r} payment_cutoff_on must not be after closes_on")
+        if self.applicability_condition_mode == "any" and not self.applicability_conditions:
+            raise RegistryValidationError(f"deadline window {self.id!r} any-mode requires applicability conditions")
+        return self
+
+
+_SCHEDULE_PERIOD_KINDS: dict[str, frozenset[PeriodKind]] = {
+    "monthly": frozenset({PeriodKind.MONTHLY}),
+    "quarterly": frozenset({PeriodKind.QUARTERLY, PeriodKind.INSTALMENT, PeriodKind.EXTENDED}),
+    "annual": frozenset({PeriodKind.ANNUAL}),
+    # Event/administrative tokens are EXTENDED in the canonical classifier.
+    # Modelo 840 deliberately uses 0A as the exercise coordinate for an ad-hoc
+    # IAE filing, so ANNUAL is also an admitted token shape for this schedule
+    # contract; legal/source grounding still owns whether that declaration is
+    # correct for a particular modelo.
+    "ad_hoc": frozenset({PeriodKind.EXTENDED, PeriodKind.ANNUAL}),
+}
+
+
+def _filing_schedule_period_kind_mismatches(period_kind: str, periods: tuple[str, ...]) -> tuple[str, ...]:
+    """Return schedule tokens whose canonical cadence contradicts ``period_kind``."""
+    accepted = _SCHEDULE_PERIOD_KINDS[period_kind]
+    mismatches: list[str] = []
+    for token in periods:
+        try:
+            canonical_kind = registry_period_kind(token)
+        except ValueError:
+            mismatches.append(token)
+            continue
+        if canonical_kind not in accepted:
+            mismatches.append(token)
+    return tuple(mismatches)
+
+
+filing_schedule_period_kind_mismatches = _filing_schedule_period_kind_mismatches
+"""Public facade for the filing-schedule period-kind consistency predicate."""
+
+
+class ModeloScheduleDefinition(RegistryModel):
+    """Declare the filing periods and profile conditions for a modelo schedule."""
+
+    id: str = Field(min_length=1, max_length=128, pattern=r"^[A-Za-z0-9_.-]+$")
+    period_kind: Literal["monthly", "quarterly", "annual", "ad_hoc"]
+    periods: tuple[RegistrySelectorPeriodCode, ...] = Field(min_length=1)
+    profile_condition_mode: Literal["all", "any"] = "all"
+    profile_conditions: tuple[ProfilePredicateDefinition, ...] = ()
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
+
+    @property
+    def is_periodic(self) -> bool:
+        """Whether this schedule requires complete recurring deadline coverage."""
+        return self.period_kind in ("monthly", "quarterly")
+
+    @field_validator("periods")
+    @classmethod
+    def _periods_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if len(set(value)) != len(value):
+            raise RegistryValidationError("filing schedule periods must be unique")
+        return value
+
+    @model_validator(mode="after")
+    def _validate_schedule(self) -> ModeloScheduleDefinition:
+        if self.profile_condition_mode == "any" and not self.profile_conditions:
+            raise RegistryValidationError(f"filing schedule {self.id!r} any-mode requires profile conditions")
+        mismatches = _filing_schedule_period_kind_mismatches(self.period_kind, self.periods)
+        if mismatches:
+            raise RegistryValidationError(
+                f"filing schedule {self.id!r} period_kind {self.period_kind!r} contradicts periods {mismatches!r}",
+            )
+        return self
 
 
 class DataBindingDefinition(RegistryModel):
@@ -728,12 +1092,12 @@ class ModeloRevision(RegistryModel):
     live_cross_references: Annotated[tuple[LiveCrossReferenceDecision, ...], SCHEMA_FAMILY] = ()
     workbook_parity_refs: Annotated[tuple[WorkbookParityReference, ...], SCHEMA_FAMILY] = ()
     verification_expectations: Annotated[tuple[VerificationExpectationDefinition, ...], SCHEMA_FAMILY] = ()
-    application_links: Annotated[tuple[_ApplicationLinkDefinition, ...], SCHEMA_FAMILY] = ()
-    deadline_windows: Annotated[tuple[_DeadlineWindowDefinition, ...], SCHEMA_FAMILY] = ()
-    filing_schedules: Annotated[tuple[_ModeloScheduleDefinition, ...], SCHEMA_FAMILY] = ()
-    constructs: Annotated[tuple[_ConstructDefinition, ...], SCHEMA_FAMILY] = ()
-    dependency_classifications: Annotated[tuple[_DependencyClassificationDefinition, ...], SCHEMA_FAMILY] = ()
-    applicability: Annotated[tuple[_ApplicabilityRuleDefinition, ...], SCHEMA_FAMILY] = ()
+    application_links: Annotated[tuple[ApplicationLinkDefinition, ...], SCHEMA_FAMILY] = ()
+    deadline_windows: Annotated[tuple[DeadlineWindowDefinition, ...], SCHEMA_FAMILY] = ()
+    filing_schedules: Annotated[tuple[ModeloScheduleDefinition, ...], SCHEMA_FAMILY] = ()
+    constructs: Annotated[tuple[ConstructDefinition, ...], SCHEMA_FAMILY] = ()
+    dependency_classifications: Annotated[tuple[DependencyClassificationDefinition, ...], SCHEMA_FAMILY] = ()
+    applicability: Annotated[tuple[ApplicabilityRuleDefinition, ...], SCHEMA_FAMILY] = ()
     completeness_manifest: CalculationCompletenessManifest | None = None
     verification_predicates: Annotated[tuple[VerificationPredicateDefinition, ...], SCHEMA_FAMILY] = ()
     continuidad_validation: Literal["advisory", "strict"] = "advisory"
@@ -1064,11 +1428,11 @@ class RegistrySnapshot(RegistryModel):
     live_cross_references: Mapping[CrossReferenceId, LiveCrossReferenceDecision]
     workbook_parity_refs: Mapping[WorkbookParityRefId, WorkbookParityReference]
     verification_expectations: Mapping[VerificationExpectationId, VerificationExpectationDefinition]
-    application_links: Mapping[ApplicationLinkId, _ApplicationLinkDefinition]
-    deadline_windows: Mapping[DeadlineWindowId, _DeadlineWindowDefinition]
-    filing_schedules: Mapping[str, _ModeloScheduleDefinition]
-    constructs: Mapping[ConstructId, _ConstructDefinition]
-    dependency_classifications: Mapping[DependencyClassificationId, _DependencyClassificationDefinition]
+    application_links: Mapping[ApplicationLinkId, ApplicationLinkDefinition]
+    deadline_windows: Mapping[DeadlineWindowId, DeadlineWindowDefinition]
+    filing_schedules: Mapping[str, ModeloScheduleDefinition]
+    constructs: Mapping[ConstructId, ConstructDefinition]
+    dependency_classifications: Mapping[DependencyClassificationId, DependencyClassificationDefinition]
     convenio: ConvenioAuthority = Field(default_factory=ConvenioAuthority.empty)
     supplementary_ordenes: Mapping[Modelo, M303AnnualOrdenAuthority] = Field(
         default_factory=dict[Modelo, M303AnnualOrdenAuthority],

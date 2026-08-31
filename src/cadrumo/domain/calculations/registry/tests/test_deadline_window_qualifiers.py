@@ -10,7 +10,7 @@ from pydantic import ValidationError
 from .....core.irnr import M210_TIPO_RENTA_CODE_PROJECTION, TipoRentaIrnr
 from .....core.result_disposition import ResultDisposition
 from ..errors import RegistryValidationError
-from ..schema_deadlines import DeadlineWindowDefinition
+from ..schema import DeadlineWindowDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
