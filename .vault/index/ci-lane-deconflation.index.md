@@ -4,17 +4,24 @@ tags:
   - '#index'
   - '#ci-lane-deconflation'
 date: '2026-08-16'
-modified: '2026-08-30'
+modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:ce1b1338a0f57a806f9ff22ed23fa55d5a50bcb03f5cedde84952a99f5872678'
+body_hash: 'sha256:5556b189b6ba921a0437266f74b31fe5df056ce4d8817f6f6bb021071b306e6d'
 related:
   - '[[2026-08-05-ci-lane-deconflation-P02-S119]]'
+  - '[[2026-08-05-ci-lane-deconflation-P02-S120]]'
   - '[[2026-08-05-ci-lane-deconflation-P02-S54]]'
   - '[[2026-08-05-ci-lane-deconflation-P02-S61]]'
   - '[[2026-08-05-ci-lane-deconflation-P02-S64]]'
   - '[[2026-08-05-ci-lane-deconflation-P02-S65]]'
   - '[[2026-08-05-ci-lane-deconflation-P02-S68]]'
   - '[[2026-08-05-ci-lane-deconflation-P02-S69]]'
+  - '[[2026-08-05-ci-lane-deconflation-P05-S121]]'
+  - '[[2026-08-05-ci-lane-deconflation-P05-S122]]'
+  - '[[2026-08-05-ci-lane-deconflation-P05-S123]]'
+  - '[[2026-08-05-ci-lane-deconflation-P05-S124]]'
+  - '[[2026-08-05-ci-lane-deconflation-P05-S125]]'
+  - '[[2026-08-05-ci-lane-deconflation-P05-S126]]'
   - '[[2026-08-05-ci-lane-deconflation-adr]]'
   - '[[2026-08-05-ci-lane-deconflation-exec-verification-evidence-adr]]'
   - '[[2026-08-05-ci-lane-deconflation-ledger]]'
@@ -29,12 +36,19 @@ related:
   - '[[2026-08-13-ci-lane-deconflation-deferred-carry-forward-audit]]'
   - '[[2026-08-25-ci-lane-deconflation-clean-head-reconciliation-audit]]'
   - '[[2026-08-30-ci-lane-deconflation-calculate-result-provenance-asymmetry-audit]]'
+  - '[[2026-08-30-ci-lane-deconflation-cli-imports-tui-adr-d11-breach-audit]]'
   - '[[2026-08-30-ci-lane-deconflation-load-census-classification-backlog-audit]]'
   - '[[2026-08-30-ci-lane-deconflation-s119-code-review-audit]]'
   - '[[2026-08-30-ci-lane-deconflation-s61-code-review-audit]]'
   - '[[2026-08-30-ci-lane-deconflation-s64-code-review-audit]]'
   - '[[2026-08-30-ci-lane-deconflation-s65-code-review-audit]]'
   - '[[2026-08-30-ci-lane-deconflation-s69-code-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s120-code-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s121-code-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s122-code-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s123-code-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s124-code-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s125-code-review-audit]]'
   - '[[2026-08-31-ci-lane-deconflation-s68-code-review-audit]]'
 ---
 
@@ -61,12 +75,19 @@ Auto-generated index of all documents tagged with `#ci-lane-deconflation`.
 - `2026-08-13-ci-lane-deconflation-deferred-carry-forward-audit` - `ci-lane-deconflation` audit: `deferred carry-forward at 45 of 49`
 - `2026-08-25-ci-lane-deconflation-clean-head-reconciliation-audit` - `ci-lane-deconflation` audit: `Reconcile the tooling gate against clean HEAD`
 - `2026-08-30-ci-lane-deconflation-calculate-result-provenance-asymmetry-audit` - `ci-lane-deconflation` audit: `Calculate and wizard results omit source provenance`
+- `2026-08-30-ci-lane-deconflation-cli-imports-tui-adr-d11-breach-audit` - `ci-lane-deconflation` audit: `CLI imports TUI in breach of ADR D11`
 - `2026-08-30-ci-lane-deconflation-load-census-classification-backlog-audit` - `ci-lane-deconflation` audit: `Load census classification backlog`
 - `2026-08-30-ci-lane-deconflation-s119-code-review-audit` - `ci-lane-deconflation` audit: `P02.S119 code review`
 - `2026-08-30-ci-lane-deconflation-s61-code-review-audit` - `ci-lane-deconflation` audit: `P02.S61 code review`
 - `2026-08-30-ci-lane-deconflation-s64-code-review-audit` - `ci-lane-deconflation` audit: `P02.S64 code review`
 - `2026-08-30-ci-lane-deconflation-s65-code-review-audit` - `ci-lane-deconflation` audit: `S65 code review`
 - `2026-08-30-ci-lane-deconflation-s69-code-review-audit` - `ci-lane-deconflation` audit: `S69 closure code review`
+- `2026-08-31-ci-lane-deconflation-s120-code-review-audit` - `ci-lane-deconflation` audit: `P02 S120 code review`
+- `2026-08-31-ci-lane-deconflation-s121-code-review-audit` - `ci-lane-deconflation` audit: `S121 code review`
+- `2026-08-31-ci-lane-deconflation-s122-code-review-audit` - `ci-lane-deconflation` audit: `P05 S122 code review`
+- `2026-08-31-ci-lane-deconflation-s123-code-review-audit` - `ci-lane-deconflation` audit: `P05 S123 code review`
+- `2026-08-31-ci-lane-deconflation-s124-code-review-audit` - `ci-lane-deconflation` audit: `P05 S124 code review`
+- `2026-08-31-ci-lane-deconflation-s125-code-review-audit` - `ci-lane-deconflation` audit: `P05 S125 code review`
 - `2026-08-31-ci-lane-deconflation-s68-code-review-audit` - `ci-lane-deconflation` audit: `P02.S68 code review`
 
 ### exec
@@ -79,6 +100,13 @@ Auto-generated index of all documents tagged with `#ci-lane-deconflation`.
 - `2026-08-05-ci-lane-deconflation-P02-S65` - The remaining join-ratchet entries need a RECORD-level discriminator, not a design constant -- and Modelo 349 already declares one the coverage checker never reads. MEASURED 2026-08-28, and this CORRECTS an earlier reading of the same rows. FIRST FINDING, which stands: none of the seven sheets can be closed by authoring a DESIGN constant, because AEAT publishes none. All seven declare exactly two constants -- the tipo marker and the modelo number -- and every one is already matched by a record. Modelo 193 is the clearest: `modelo-193-perceptor` and `modelo-193-gastos` both declare {(1,1): '2', (2,3): '193'} and nothing else, while their sheets declare the same two. What separates them is SHAPE, 41 fields against 9 on the record side and 39 against 10 on the design side. SECOND FINDING, which corrects the first's conclusion: `ExportRecordDefinition` carries a `discriminator` field -- a REGISTRY concept rather than an AEAT one -- so a discriminator CAN be authored even where AEAT prints no constant. Modelo 349 already has one on both tying records: `modelo-349-operador` declares `RecordDiscriminator(offset=147, length=32, requires='blank')` and `modelo-349-rectificacion` declares the same coordinate `requires='non_blank'`. The coverage checker does not consult it -- `discriminator` appears once in that module, in a comment about an unrelated page discriminator -- so this is the same shape as the `_record_literals` gap already fixed for design constants: the declaration exists, is authored, and the checker cannot see it. THE DESIGN CORROBORATES THE DISCRIMINATOR: at that exact coordinate the Operador sheet declares a field with NO content while the Rectificaciones sheet declares one carrying 'Estos campos se cumplimentaran...'. So the two sheets really do differ there, which is what makes the record-level rule a faithful reading rather than an invention. WHAT IS STILL A DECISION, and why this is not being implemented on the spot: teaching the join to consult the discriminator means mapping a RUNTIME blankness rule onto a DESIGN content cell -- requires='blank' matching a sheet field that declares no content, requires='non_blank' matching one that does. That is an inference across two vocabularies, and today has repeatedly shown that a plausible cross-vocabulary rule is exactly where a matcher admits more than intended. It wants grounding before it ships. If it holds it closes Modelo 349's two entries with no new schema at all, and gives Modelo 184, 193 and 296 an authorable route for the remaining five
 - `2026-08-05-ci-lane-deconflation-P02-S68` - Modelo 296's join tie cannot take a discriminator on the obvious run, because AEAT marks every field in it OPTIONAL. MEASURED 2026-08-28, and the refusal is the finding. M296's 'Tipo 2 - Registro De Perceptor' sheet ties FOUR ways rather than two -- m296-perceptor, m296-perceptor-intereses, m296-anexo-a-pagos and m296-anexo-b-certificados all agree on the only two constants the sheet declares, {(1,1): '2', (2,3): '296'}. Its sibling sheet 'Perceptor, Toma El Valor' already joins uniquely because it declares a third constant (500,1)='F', which is why only one entry is open. A STRUCTURALLY PERFECT CANDIDATE EXISTS: scanning for spans the perceptor sheet describes as real data and EVERY rival sheet describes as filler yields a contiguous run from @402 to @499 -- NIF DEL PAGADOR ANTERIOR, PROCEDIMIENTO ESPECIAL DE RETENCIONES, CLAVE DE MERCADO, CODIGO LEI DEL PERCEPTOR, NIF EN EL PAIS DE RESIDENCIA FISCAL, FECHA DE NACIMIENTO, LUGAR DE NACIMIENTO and PAIS O TERRITORIO DE RESIDENCIA FISCAL, with every rival sheet declaring the same span as filler. On the join alone that would resolve the tie. IT MUST NOT BE AUTHORED, and the reason is not about the join at all. `RecordDiscriminator` is consumed by the PARSER at runtime to identify which record a row is, so a `requires='non_blank'` rule is a claim that a real filing always populates that span. Reading the design's own obligatorio markers: every one of those eight fields is obligatorio=False, and LUGAR DE NACIMIENTO carries no marker at all. So a legitimate perceptor record that leaves all eight optional fields blank -- a resident-country NIF absent, no LEI, no prior payer -- would be MIS-IDENTIFIED by that discriminator. Authoring it would trade a coverage-checker tie for a record-identification defect on a filed IRNR return, which is a strictly worse bargain. WHAT WOULD WORK instead, unmeasured so far: discriminating the RIVALS rather than the subject, if each anexo and the intereses record has a span it always populates; or a mandatory field elsewhere in the perceptor record. Both need the same obligatorio grounding this row applied, and M296's export tree is GENERATED, so any discriminator goes in `dev/registry/mappings/modelo_296` and republishes through the generator authority rather than being hand-edited into src
 - `2026-08-05-ci-lane-deconflation-P02-S69` - The last 5 ratchet entries cannot be closed by a runtime discriminator at all, and the reason is uniform. MEASURED 2026-08-28 across both remaining modelos, applying the obligatorio test that Modelo 296 forced into the method. M184: scanning both Tipo-2 sheets for runs one fills and the other declares filler yields seven candidates on the entidad side -- RETENCIONES E INGRESOS A CUENTA @233+12, SITUACION DEL INMUEBLE @245+1, REFERENCIA CATASTRAL @246+20, DETALLE DE GASTOS RENDIMIENTOS @266+130, CRITERIO DE COBROS Y PAGOS @396+1, a second DETALLE block @397+101, and NUMERO DE DIAS DE ARRENDAMIENTO @498+3 -- and exactly one on the socio side, NIF DEL REPRESENTANTE FISCAL @27+9. EVERY ONE is obligatorio=False or carries no marker at all, including both large DETALLE blocks. M296 measured the same way: all eight fields in its otherwise-perfect @402-499 run are optional. SO THE STRUCTURAL TEST PASSES EVERYWHERE AND THE SEMANTIC TEST FAILS EVERYWHERE. A `RecordDiscriminator` is consumed by the parser at RUNTIME to decide which record a row is, so `requires='non_blank'` asserts that a real filing always populates the span. On these runs that assertion is false by AEAT's own marking: an entidad record for a rented property with no gastos detail, or a perceptor with no prior payer and no LEI, would be mis-identified. Closing a coverage-checker tie by that means would plant a record-identification defect in a filed return. THE REMAINING FIVE THEREFORE NEED A MECHANISM THAT MAKES NO RUNTIME CLAIM, which is exactly the option this campaign set aside earlier: the generator mapping already records `record_identity` per entry, naming which design sheet each record belongs to, and the coverage checker re-derives that from constants instead of reading it. Surfacing it asserts nothing about what a filing contains -- it states which sheet the record was authored against, which is a fact about the registry rather than about a taxpayer. It is an export-schema change, since production must not import dev and the identity would have to travel in the generated fragments the checker already reads, so it is ADR-grade. That is the honest endgame for these five: not more authoring, and not a looser join, but carrying an authored fact the checker currently guesses at
+- `2026-08-05-ci-lane-deconflation-P02-S120` - Adjudicate the 108 unclassified modules the rebuilt load census exposed. Measured at HEAD 2026-08-30: universe 384, classified 276, 108 unclassified of which 103 are registry submodules. These were preempted rather than absent -- the old facade reader raised inside build_reference_map before the classification assertion ran. Grounded split: 80 sit INSIDE the static load closure and are live by the same evidence the existing ValidatedRegistryAuthority.load rules cite; 28 sit outside it and are the post-load public surface plus the oracle and parity tiers (snapshot, queries, coverage, handoffs, the four m303 projections, aeat_nif_iva_oracle, groi_oracle, renta_web_open_oracle, live_parity and the rest, enumerated in the audit). Do NOT close this with one bulk live rule over the 80: a bulk membership list is exactly what produced the duplicate claim on _validate_cross_revision_contiguity that the census refused. Review the 28 individually, since absence from the LOAD closure is not evidence of death for a post-load module, and re-run the census immediately before adjudicating because the package is being actively split
+- `2026-08-05-ci-lane-deconflation-P05-S121` - Refactor the size-budget subjects in declarations.py into cohesive siblings without raising any threshold.
+- `2026-08-05-ci-lane-deconflation-P05-S122` - Refactor the size-budget subjects in calc_sheets_apply.py into cohesive siblings without raising any threshold.
+- `2026-08-05-ci-lane-deconflation-P05-S123` - Refactor the size-budget subjects in calc_sheets_pull.py into cohesive siblings without raising any threshold.
+- `2026-08-05-ci-lane-deconflation-P05-S124` - Refactor the size-budget subjects in _google_drive.py into cohesive siblings without raising any threshold.
+- `2026-08-05-ci-lane-deconflation-P05-S125` - Refactor the size-budget subjects in _namespace_registry.py into cohesive siblings without raising any threshold.
+- `2026-08-05-ci-lane-deconflation-P05-S126` - Refactor the size-budget subjects in _profile_custody_carry.py into cohesive siblings without raising any threshold.
 
 ### plan
 
