@@ -38,7 +38,7 @@ from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_tree import bundled_registry_tree
 from ....tests.secure_sql import TestRuntimeProfile, isolated_two_bucket_runtime
 from ...aggregation import CalculationSourceContext
-from .._source_resolver import (
+from ..source_resolver import (
     _OWNED_SOURCES,
     M349_CLAVE_INFERRED_REASON,
     InvoiceCatalogueSourceResolver,
@@ -1832,6 +1832,8 @@ def test_m347_role_fact_advisories_fires_for_an_unset_clave_d_fact_and_not_once_
     assert undeclared_diagnostics[0].source_ref == f"invoice:{undeclared_purchase.invoice_id}"
     assert undeclared_diagnostics[0].remedy
     assert declared_diagnostics == ()
+
+
 # Declarable-coverage proof
 #
 # Folding the slim store into the canonical structure retires a live M347/M349
@@ -1908,7 +1910,7 @@ def test_m349_declarable_facts_are_reachable_on_the_canonical_path(
     forces the tax id to BE that country's NIF-IVA, so there is only ever one
     party identity on the aggregate. Same facts, fewer authorities.
     """
-    from .._source_resolver import _invoice_observation
+    from ..source_resolver import _invoice_observation
 
     context = CalculationSourceContext(
         bucket_id=secure_profile.bucket_id,
@@ -2001,7 +2003,7 @@ def test_m347_declarable_facts_are_reachable_on_the_canonical_path(
     coincide would not detect the two being confused.
     """
     from ....domain.invoices.models import derive_invoice_id
-    from .._source_resolver import _invoice_observation
+    from ..source_resolver import _invoice_observation
 
     context = CalculationSourceContext(
         bucket_id=secure_profile.bucket_id,

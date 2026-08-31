@@ -611,8 +611,8 @@ ignore_imports =
     # creation path constructs the default ECB rate provider (the concrete
     # ExchangeRateProvider) — the outbound-wiring edge sec. 538 permits, pinned
     # at the narrow fx target rather than a broad adapters wildcard.
-    cadrumo.application.invoices._creation -> cadrumo.adapters.outbound.fx._ecb_provider
-    cadrumo.application.invoices._source_resolver -> cadrumo.adapters.persistence.**
+    cadrumo.application.invoices.catalogue_creation -> cadrumo.adapters.outbound.fx._ecb_provider
+    cadrumo.application.invoices.source_resolver -> cadrumo.adapters.persistence.**
     # ── application/ledger narrowed from `adapters.**` to the layer each module
     #    actually reaches. A broad wildcard admits an INBOUND-adapter edge from
     #    these modules without review, and that is the one class this contract
@@ -788,15 +788,15 @@ ignore_imports =
     cadrumo.application.aggregation._renta_ledger -> cadrumo.adapters.persistence.profile.invoices
     cadrumo.application.aggregation._renta_income_ledger -> cadrumo.adapters.persistence.profile.invoices
     cadrumo.application.filing.draft_review -> cadrumo.adapters.persistence.profile.invoices
-    cadrumo.application.invoices._bulk_import -> cadrumo.adapters.persistence.profile.invoices
-    cadrumo.application.invoices._creation -> cadrumo.adapters.persistence.profile.invoices
-    cadrumo.application.invoices._creation -> cadrumo.adapters.persistence.profile.buckets
-    cadrumo.application.invoices._creation -> cadrumo.adapters.persistence.storage.runtime_repository
-    cadrumo.application.invoices._lifecycle -> cadrumo.adapters.persistence.profile.invoices
-    cadrumo.application.invoices._linking -> cadrumo.adapters.persistence.profile.invoices
-    cadrumo.application.invoices._queries -> cadrumo.adapters.persistence.profile.invoices
+    cadrumo.application.invoices.bulk_import -> cadrumo.adapters.persistence.profile.invoices
+    cadrumo.application.invoices.catalogue_creation -> cadrumo.adapters.persistence.profile.invoices
+    cadrumo.application.invoices.catalogue_creation -> cadrumo.adapters.persistence.profile.buckets
+    cadrumo.application.invoices.catalogue_creation -> cadrumo.adapters.persistence.storage.runtime_repository
+    cadrumo.application.invoices.catalogue_lifecycle -> cadrumo.adapters.persistence.profile.invoices
+    cadrumo.application.invoices.transaction_linking -> cadrumo.adapters.persistence.profile.invoices
+    cadrumo.application.invoices.catalogue_reads -> cadrumo.adapters.persistence.profile.invoices
     cadrumo.application.invoices._reconciliation -> cadrumo.adapters.persistence.profile.invoices
-    cadrumo.application.invoices._wizard -> cadrumo.adapters.persistence.profile.invoices
+    cadrumo.application.invoices.creation_wizard -> cadrumo.adapters.persistence.profile.invoices
     cadrumo.application.modelo._calculation_actions -> cadrumo.adapters.persistence.profile.invoices
     cadrumo.application.review._adapters -> cadrumo.adapters.persistence.profile.invoices
     cadrumo.application.modelo._amendment_actions -> cadrumo.adapters.persistence.profile.modelos_calculation
@@ -846,8 +846,8 @@ ignore_imports =
     cadrumo.application.aggregation._renta_income_ledger -> cadrumo.adapters.persistence.profile.transactions
     cadrumo.application.aggregation._renta_ledger -> cadrumo.adapters.persistence.profile.transactions
     cadrumo.application.filing.draft_review -> cadrumo.adapters.persistence.profile.transactions
-    cadrumo.application.invoices._linking -> cadrumo.adapters.persistence.profile.transactions
-    cadrumo.application.invoices._queries -> cadrumo.adapters.persistence.profile.transactions
+    cadrumo.application.invoices.transaction_linking -> cadrumo.adapters.persistence.profile.transactions
+    cadrumo.application.invoices.catalogue_reads -> cadrumo.adapters.persistence.profile.transactions
     cadrumo.application.invoices._reconciliation -> cadrumo.adapters.persistence.profile.transactions
     cadrumo.application.modelo._art109_activity_income -> cadrumo.adapters.persistence.profile.transactions
     cadrumo.application.modelo._ledger_drift_gate -> cadrumo.adapters.persistence.profile.transactions

@@ -33,7 +33,7 @@ from ..calculations._m303_regimen_simplificado_annual_summary import M303Regimen
 from ..calculations._multi_year import PreviousFilingSourceResolver
 from ..calculations._prorrata_regularizacion import ProrrataRegularizacionSourceResolver
 from ..calculations._relation_prefill import RelationPrefillSourceResolver
-from ..invoices._source_resolver import InvoiceCatalogueSourceResolver
+from ..invoices.source_resolver import InvoiceCatalogueSourceResolver
 from .borrador_binding import Modelo100BorradorSourceResolver
 
 type CalculationRouteResolverStage = Literal["pre_mesh", "mesh", "conditional", "post_mesh"]

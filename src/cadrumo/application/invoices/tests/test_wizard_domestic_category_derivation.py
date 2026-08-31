@@ -29,7 +29,7 @@ from decimal import Decimal
 import pytest
 
 from ....domain.iva.schema import IvaCategory
-from .._wizard import _derived_domestic_category
+from ..creation_wizard import _derived_domestic_category
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

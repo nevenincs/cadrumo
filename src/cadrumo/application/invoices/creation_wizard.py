@@ -60,7 +60,7 @@ from ...domain.invoices.validators import validate_country_code, validate_iva_nu
 from ...domain.iva.classification import InvoiceKind, domestic_categories_by_rate_kind
 from ...domain.iva.lookup import rate_kinds_for_declared_rate
 from ...domain.iva.schema import EUMemberState, IvaCategory
-from ._creation import build_catalogue_invoice, create_catalogue_invoice
+from .catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
 
 __all__ = [
     "InvoiceWizardFieldError",

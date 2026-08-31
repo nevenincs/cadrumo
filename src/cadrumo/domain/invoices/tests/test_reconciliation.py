@@ -11,7 +11,7 @@ import pytest
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
-from ....application.invoices._linking import link_invoice_transaction_repositories
+from ....application.invoices.transaction_linking import link_invoice_transaction_repositories
 from ....core.invoice_link import LinkInconsistencyDirection
 from ...iva.classification import InvoiceKind
 from ...transactions.enums import TransactionDirection

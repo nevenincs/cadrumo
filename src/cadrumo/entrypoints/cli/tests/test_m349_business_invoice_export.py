@@ -12,7 +12,7 @@ from click.testing import Result
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....application.aggregation import CalculationSourceContext
-from ....application.invoices._source_resolver import InvoiceCatalogueSourceResolver
+from ....application.invoices.source_resolver import InvoiceCatalogueSourceResolver
 from ....core.period import Period
 from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.loader import load_modelo_path

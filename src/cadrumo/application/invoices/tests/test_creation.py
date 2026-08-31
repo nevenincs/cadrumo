@@ -35,8 +35,8 @@ from ...aggregation import (
     proxy_attributed_invoice_ids,
     resolve_invoice_devengo,
 )
-from .._creation import build_catalogue_invoice, create_catalogue_invoice
-from .._source_resolver import InvoiceCatalogueSourceResolver
+from ..catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
+from ..source_resolver import InvoiceCatalogueSourceResolver
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

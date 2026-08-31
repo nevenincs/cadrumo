@@ -134,6 +134,9 @@ _CRASH_HARNESS = _SETTINGS_PREAMBLE + dedent(
         # with no delete at all -- so the trace never fired and the boundary
         # was never injected. A pin naming a file is a rename away from
         # testing nothing, which is why the RuntimeError below exists.
+        # That collider has since been renamed again, to
+        # invoices/catalogue_lifecycle.py, so the name above no longer
+        # resolves; it is kept because it is what actually collided.
         "deleting_after_effect": ("user_profile/lifecycle.py", "delete"),
     }
 

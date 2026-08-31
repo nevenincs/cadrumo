@@ -49,38 +49,6 @@ See Also:
 from __future__ import annotations
 
 from ...domain.invoices.service import find_invoice, find_unmatched
-from ._bulk_import import (
-    BULK_INVOICE_IMPORT_ALLOWED_COLUMNS,
-    BULK_INVOICE_IMPORT_REQUIRED_COLUMNS,
-    BulkImportSourceRow,
-    BulkInvoiceImportResult,
-    BulkInvoiceImportRow,
-    BulkInvoiceImportRowFailure,
-    BulkInvoiceImportSource,
-    import_invoices_from_rows,
-    read_bulk_invoice_import_source,
-)
-from ._creation import (
-    CatalogueInvoiceCreateResult,
-    build_catalogue_invoice,
-    create_catalogue_invoice,
-    resolve_iva_rate_slot,
-)
-from ._issuer_establishment import issuer_established_in_tai, simplificada_requires_tax_id_for_domestic_issuer
-from ._lifecycle import (
-    CatalogueInvoicePatch,
-    CatalogueInvoiceRemoveResult,
-    CatalogueInvoiceUpdateResult,
-    remove_catalogue_invoice,
-    resolve_catalogue_invoice,
-    resolve_catalogue_invoice_from_repository,
-    update_catalogue_invoice,
-)
-from ._linking import (
-    InvoiceTransactionLinkResult,
-    link_invoice_transaction_catalogues,
-    link_invoice_transaction_repositories,
-)
 from ._projection import (
     InvoiceMatchProjection,
     InvoiceMatchRow,
@@ -92,7 +60,39 @@ from ._projection import (
     project_invoice_review,
     project_invoice_reviews,
 )
-from ._queries import (
+from ._reconciliation import (
+    InvoiceReconciliationResult,
+    ReconciliationSkippedSuggestion,
+    reconcile_invoice_catalogues,
+    reconcile_invoice_repositories,
+)
+from .bulk_import import (
+    BULK_INVOICE_IMPORT_ALLOWED_COLUMNS,
+    BULK_INVOICE_IMPORT_REQUIRED_COLUMNS,
+    BulkImportSourceRow,
+    BulkInvoiceImportResult,
+    BulkInvoiceImportRow,
+    BulkInvoiceImportRowFailure,
+    BulkInvoiceImportSource,
+    import_invoices_from_rows,
+    read_bulk_invoice_import_source,
+)
+from .catalogue_creation import (
+    CatalogueInvoiceCreateResult,
+    build_catalogue_invoice,
+    create_catalogue_invoice,
+    resolve_iva_rate_slot,
+)
+from .catalogue_lifecycle import (
+    CatalogueInvoicePatch,
+    CatalogueInvoiceRemoveResult,
+    CatalogueInvoiceUpdateResult,
+    remove_catalogue_invoice,
+    resolve_catalogue_invoice,
+    resolve_catalogue_invoice_from_repository,
+    update_catalogue_invoice,
+)
+from .catalogue_reads import (
     InvoiceListRow,
     get_invoice_from_repository,
     list_invoice_repository_rows,
@@ -101,15 +101,15 @@ from ._queries import (
     list_unmatched_invoice_rows,
     verify_invoice_repository_links,
 )
-from ._reconciliation import (
-    InvoiceReconciliationResult,
-    ReconciliationSkippedSuggestion,
-    reconcile_invoice_catalogues,
-    reconcile_invoice_repositories,
+from .creation_wizard import InvoiceWizardFieldError, InvoiceWizardResult, create_invoice_via_wizard
+from .issuer_establishment import issuer_established_in_tai, simplificada_requires_tax_id_for_domestic_issuer
+from .self_counterparty import counterparty_is_the_filer
+from .source_resolver import InvoiceCatalogueSourceResolver, invoice_direction_to_source_kind
+from .transaction_linking import (
+    InvoiceTransactionLinkResult,
+    link_invoice_transaction_catalogues,
+    link_invoice_transaction_repositories,
 )
-from ._self_counterparty import counterparty_is_the_filer
-from ._source_resolver import InvoiceCatalogueSourceResolver, invoice_direction_to_source_kind
-from ._wizard import InvoiceWizardFieldError, InvoiceWizardResult, create_invoice_via_wizard
 
 __all__ = [
     "BULK_INVOICE_IMPORT_ALLOWED_COLUMNS",

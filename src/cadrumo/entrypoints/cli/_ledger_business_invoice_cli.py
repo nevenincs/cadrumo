@@ -21,9 +21,9 @@ from pathlib import Path
 import typer
 from pydantic import ValidationError
 
-from ...application.invoices._bulk_import import import_invoices_from_rows, read_bulk_invoice_import_source
-from ...application.invoices._creation import build_catalogue_invoice, create_catalogue_invoice
-from ...application.invoices._lifecycle import (
+from ...application.invoices.bulk_import import import_invoices_from_rows, read_bulk_invoice_import_source
+from ...application.invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
+from ...application.invoices.catalogue_lifecycle import (
     CatalogueInvoicePatch,
     remove_catalogue_invoice,
     resolve_catalogue_invoice_from_repository,
@@ -180,7 +180,7 @@ def _simplificada_tax_id_notices(invoice: Invoice) -> list[Notice]:
         return []
     # Function-local for the cycle reason the sibling profile-backed advisories
     # document: the profile package reaches back into this layer.
-    from ...application.invoices._issuer_establishment import simplificada_requires_tax_id_for_domestic_issuer
+    from ...application.invoices.issuer_establishment import simplificada_requires_tax_id_for_domestic_issuer
     from ...application.user_profile.profile_record_repository import ProfileRecordRepository
     from ...application.user_profile.projections import projection_for_taxpayer
     from ...core.bucket_pointer import resolve_active_bucket_id
@@ -378,7 +378,7 @@ def invoice_wizard(
     rather than re-written or raised as a duplicate
     (``aeat-cli-contract``).
     """
-    from ...application.invoices._wizard import create_invoice_via_wizard
+    from ...application.invoices.creation_wizard import create_invoice_via_wizard
 
     bucket_id = _business_invoice_bucket_id()
     resolved_iva_category = iva_category or _catalogue_iva_category_for_operation_type(operation_type)

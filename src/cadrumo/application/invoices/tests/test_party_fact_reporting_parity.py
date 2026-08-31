@@ -19,7 +19,7 @@ from __future__ import annotations
 import pytest
 
 from ....domain.iva.classification import PartyFact, classifiable_categories
-from .._source_resolver import _CLAVE_BY_KIND_AND_CATEGORY
+from ..source_resolver import _CLAVE_BY_KIND_AND_CATEGORY
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

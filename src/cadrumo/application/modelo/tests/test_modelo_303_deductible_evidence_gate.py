@@ -51,7 +51,7 @@ from ...aggregation import (
     compute_ledger_filing_snapshot,
 )
 from ...calculations.observations_repository import IvaWalletDecisionRepository
-from ...invoices._creation import build_catalogue_invoice, create_catalogue_invoice
+from ...invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
 from ...ledger.actions_manual import attach_manual_transaction_evidence, link_manual_transaction_invoice
 from ...ledger.evidence import PurchaseInvoiceEvidenceService
 from .._calculation_actions import calculate_modelo_revision_from_bucket_aggregation

@@ -25,8 +25,8 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import activ
 from cadrumo.adapters.persistence.storage.master_key.bucket_session import BucketSession
 from cadrumo.adapters.persistence.storage.sql import SecureObjectRepository
 from cadrumo.application.aggregation import CalculationSourceContext
-from cadrumo.application.invoices._creation import build_catalogue_invoice, create_catalogue_invoice
-from cadrumo.application.invoices._source_resolver import InvoiceCatalogueSourceResolver
+from cadrumo.application.invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
+from cadrumo.application.invoices.source_resolver import InvoiceCatalogueSourceResolver
 from cadrumo.application.modelo._calculation_actions import (
     _require_calculation_route_resolver,
     _source_bound_casilla_inputs,

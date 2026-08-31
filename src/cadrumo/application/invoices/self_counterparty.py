@@ -10,7 +10,7 @@ cross-checks against what the *counterparty* declared, so a self-dealing row
 is matched against the filer's own return.
 
 This lives in the application layer for the same reason
-:mod:`~application.invoices._issuer_establishment` does: it is a fact about the
+:mod:`~application.invoices.issuer_establishment` does: it is a fact about the
 TAXPAYER, not about the invoice, and :class:`~domain.invoices.Invoice` is a pure
 domain record that does not reach into profile state.
 

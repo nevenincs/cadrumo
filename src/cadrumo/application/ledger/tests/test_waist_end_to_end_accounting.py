@@ -46,8 +46,8 @@ from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ....application.aggregation import CalculationSourceContext
-from ....application.invoices._creation import build_catalogue_invoice, create_catalogue_invoice
-from ....application.invoices._source_resolver import InvoiceCatalogueSourceResolver
+from ....application.invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
+from ....application.invoices.source_resolver import InvoiceCatalogueSourceResolver
 from ....core.aggregation import INVOICE_BINDING_SOURCE_KINDS, BindingSourceKind
 from ....core.document_shape import STRUCTURED_DOCUMENT_SHAPES
 from ....core.period import Period

@@ -19,7 +19,7 @@ from decimal import Decimal
 
 import pytest
 
-from .._wizard import _validate_iva_rate, _validate_taxable_base, _WizardFieldError
+from ..creation_wizard import _validate_iva_rate, _validate_taxable_base, _WizardFieldError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
