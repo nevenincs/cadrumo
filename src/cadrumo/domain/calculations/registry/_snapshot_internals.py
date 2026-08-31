@@ -13,9 +13,9 @@ from datetime import date
 from pathlib import Path
 from typing import Protocol
 
+from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.legal_review import LegalReviewStatus
 from ....core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
-from ....core.authority_grade import RegistryAuthorityGrade
 from ._validate import RegistryValidator
 from ._validate_orden_aplicabilidad import RevisionLegalApplicabilityWindow, validate_orden_aplicabilidad
 from ._validate_references import check_all_id_references
@@ -137,12 +137,14 @@ def _collect_deadline_schedule_refs(
 # Protocol declares. ``_install_cross_domain_snapshot_checks`` imports them by
 # name so the registration is deterministic at snapshot build, independent of
 # whatever else the importing process happened to load first.
-# Each entry names a peer package's PUBLIC top-level facade, never one of its
-# private submodules: a runtime-built import target carries the same ownership
-# rule as a static import, and the AST import scanner cannot see these strings.
-# The facade's own ``__init__`` imports the check module that registers, so
-# importing the package is what runs the registration.
-_CROSS_DOMAIN_CHECK_MODULES: tuple[str, ...] = ("cadrumo.domain.renta",)
+# Each entry names the PUBLIC module that actually performs the registration,
+# not its package facade: a runtime-built import target carries the same
+# ownership rule as a static import, and the AST import scanner cannot see
+# these strings. Naming the facade instead made this depend on that package's
+# ``__init__`` importing the check module as a side effect, so making the
+# namespace inert -- which the architecture rule requires -- silently stopped
+# the registration and failed every Modelo 100 snapshot validation.
+_CROSS_DOMAIN_CHECK_MODULES: tuple[str, ...] = ("cadrumo.domain.renta.first_slice_routing_integrity",)
 _cross_domain_checks_installed = False
 
 

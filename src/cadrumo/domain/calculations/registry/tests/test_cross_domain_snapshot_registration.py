@@ -3,7 +3,7 @@
 The registry validator runs peer-domain referential-integrity checks
 through the abstract ``CrossDomainSnapshotCheck`` Protocol. The concrete
 renta first-slice routing check lives in
-``cadrumo.domain.renta._first_slice_routing_integrity`` and registers itself
+``cadrumo.domain.renta.first_slice_routing_integrity`` and registers itself
 as an import side effect.
 
 That registration must NOT depend on import order. ``_build_validated_snapshot``
@@ -92,26 +92,34 @@ def test_m100_build_on_renta_free_import_path_registers_the_gate() -> None:
     assert "M100_GATE_REGISTERED" in result.stdout, result.stdout
 
 
-def test_m100_build_succeeds_when_renta_is_imported() -> None:
-    """Importing ``renta`` registers the check; the M100 build then passes.
+def test_m100_build_succeeds_when_the_check_module_is_imported() -> None:
+    """Importing the CHECK MODULE registers the check; the M100 build then passes.
 
     Companion to the loud-failure case: it proves the guard is satisfied
     by the registration side effect rather than by a blanket refusal to
-    build M100. The subprocess imports ``cadrumo.domain.renta`` before
-    building, so the first-slice routing check is registered and the
-    committed M100 snapshot passes the referential-integrity gate.
+    build M100.
+
+    This imported the ``cadrumo.domain.renta`` PACKAGE until the namespace was
+    made inert, which is what the architecture rule requires of every package
+    ``__init__``. Registration had been riding on that facade importing the
+    check module for its side effect, so emptying it silently unregistered the
+    gate and every Modelo 100 snapshot validation failed. The side effect now
+    belongs to the module that actually calls
+    ``register_cross_domain_snapshot_check``, which is also what
+    ``_CROSS_DOMAIN_CHECK_MODULES`` names, so no inert namespace sits between
+    the registry and the registration.
     """
 
     result = _run_python(
         """
-        import cadrumo.domain.renta  # noqa: F401  -- registration side effect
+        import cadrumo.domain.renta.first_slice_routing_integrity  # noqa: F401  -- registration side effect
 
         from cadrumo.core.resources import resources
         from cadrumo.domain.calculations.registry.authority import bundled_authority
         from cadrumo.domain.calculations.registry._validate_references import _CROSS_DOMAIN_SNAPSHOT_CHECKS
 
         assert _CROSS_DOMAIN_SNAPSHOT_CHECKS, (
-            "importing renta must register at least one cross-domain check"
+            "importing the check module must register at least one cross-domain check"
         )
 
         snapshot = bundled_authority().snapshot("100", filing_year=2025, period="0A")

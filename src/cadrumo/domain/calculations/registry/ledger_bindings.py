@@ -29,13 +29,13 @@ from typing import Annotated, Literal, NamedTuple, Protocol
 
 from pydantic import BaseModel, BeforeValidator, Field, field_validator, model_validator
 
-from ....core.iva_deduction_fact import IvaDeductionFactKind
 from ....core.aggregation import (
     BindingAggregationOp,
     BindingSourceKind,
     LedgerIncomeGrounding,
 )
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.iva_deduction_fact import IvaDeductionFactKind
 from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.unit_proportion import UnitProportion
@@ -1321,7 +1321,7 @@ def renta_first_slice_binding_target_casillas(revision: ModeloRevision) -> froze
     for them -- so their required set is legitimately empty even though the
     universal routing table's codomain is wider. The snapshot-time
     referential-integrity gate
-    (:mod:`cadrumo.domain.renta._first_slice_routing_integrity`) uses this
+    (:mod:`cadrumo.domain.renta.first_slice_routing_integrity`) uses this
     per-revision set rather than the universal table so it only fails when a
     binding THIS revision actually declares points at a casilla absent from
     that same revision -- the real defect class the gate exists to catch,

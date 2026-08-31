@@ -10,7 +10,7 @@ observation validator, the renta-ledger aggregator, the snapshot-time
 referential-integrity gate) reads from the single
 :data:`FIRST_SLICE_EXPENSE_CASILLAS` constant declared here.
 
-The companion :mod:`._first_slice_routing_integrity` module registers a
+The companion :mod:`.first_slice_routing_integrity` module registers a
 snapshot-time referential-integrity check, but it validates a NARROWER
 claim than "every casilla this table mentions exists on every
 revision": casilla ids are added, split, and renumbered across Modelo
