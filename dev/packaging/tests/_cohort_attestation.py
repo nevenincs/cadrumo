@@ -38,8 +38,8 @@ def add_test_runtime_wheelhouse(
     manifest = {
         "lock_sha256": hashlib.sha256(lock).hexdigest(),
         "platform_floors": {
-            "linux-aarch64": "glibc-2.17",
-            "linux-x86-64": "glibc-2.17",
+            "linux-aarch64": "glibc-2.28",
+            "linux-x86-64": "glibc-2.28",
             "macos-arm64": "macos-11.0",
             "windows-x86-64": "windows-10",
         },

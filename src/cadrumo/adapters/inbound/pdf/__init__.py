@@ -33,7 +33,8 @@ See Also:
 from __future__ import annotations
 
 from ....domain.justificante import PdfModeloImportError
-from ._label_regex import (
+from .extracted_casilla import ExtractedCasilla
+from .label_regex import (
     EJERCICIO_LABEL,
     MODELO_LABEL,
     PRESENTADOR_NIF_LABEL,
@@ -43,14 +44,13 @@ from ._label_regex import (
     apply_label_regex,
     parse_spanish_decimal,
 )
-from ._pdfplumber import (
+from .page_text_extraction import (
     extract_pages_text_concatenated,
     extract_pages_text_from_bytes,
     extract_pages_text_from_path,
     extract_pages_text_with_fast_path,
 )
-from ._shared import ExtractedCasilla
-from ._utils import sha256_file, source_pdf_reference_path
+from .utils import sha256_file, source_pdf_reference_path
 
 __all__ = [
     "EJERCICIO_LABEL",

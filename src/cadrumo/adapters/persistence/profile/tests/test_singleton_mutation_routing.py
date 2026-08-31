@@ -118,8 +118,8 @@ def test_write_verb_carries_no_unguarded_write_path(name: str, verb: Callable[..
 
 def _catalogue_services() -> tuple[tuple[str, Callable[..., object]], ...]:
     """The application services that mutate the invoice catalogue in place."""
-    from .....application.invoices._creation import create_catalogue_invoice
-    from .....application.invoices._lifecycle import remove_catalogue_invoice, update_catalogue_invoice
+    from .....application.invoices.catalogue_creation import create_catalogue_invoice
+    from .....application.invoices.catalogue_lifecycle import remove_catalogue_invoice, update_catalogue_invoice
 
     return (
         ("create_catalogue_invoice", create_catalogue_invoice),

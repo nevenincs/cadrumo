@@ -206,7 +206,7 @@ def refuse_a_counterparty_that_is_the_filer(counterparty_tax_id: str) -> None:
         PurchaseInvoiceEvidenceInputError: When the identifier is the filer's
             own.
     """
-    from ..invoices._self_counterparty import counterparty_is_the_filer
+    from ..invoices.self_counterparty import counterparty_is_the_filer
     from ..wizard.status import WizardStatusError, load_active_taxpayer_profile
     from ..workflow.persistence import workflow_state_repository
 
@@ -270,7 +270,7 @@ def refuse_an_issued_document_the_filer_did_not_issue(
     if kind is not InvoiceKind.ISSUED or extracted_supplier_tax_id is None:
         return
 
-    from ..invoices._self_counterparty import counterparty_is_the_filer
+    from ..invoices.self_counterparty import counterparty_is_the_filer
     from ..wizard.status import WizardStatusError, load_active_taxpayer_profile
     from ..workflow.persistence import workflow_state_repository
 

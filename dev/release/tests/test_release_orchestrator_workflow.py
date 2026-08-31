@@ -103,10 +103,37 @@ def test_two_dispatches_cannot_interleave_two_versions() -> None:
     assert "cadrumo" in concurrency["group"], "the group must be product-scoped on a shared account"
 
 
+#: The only jobs permitted off the self-hosted fleet. Both dispatch a fleet
+#: workflow and then BLOCK on it, and every packaging lane needs the single
+#: `[self-hosted, Linux, X64]` runner - so waiting on that runner held the one
+#: machine the dispatched run required. Measured on run 33335781162: `campaign`
+#: in_progress holding `cadrumo-linux-x64-1` while `packaging-quick` sat queued
+#: 52 minutes and never started.
+POLLING_JOBS: Final[frozenset[str]] = frozenset({"campaign", "acquire"})
+
+
 def test_every_job_runs_on_the_self_hosted_fleet() -> None:
-    """No hosted runner, ever - the standing operator mandate on cost."""
+    """No hosted runner except the two that would otherwise deadlock the fleet.
+
+    The mandate is about COST, and it still binds everywhere it can: only the
+    jobs whose entire body is `gh` plus a polling module are exempt, and they
+    are exempt because holding a fleet runner to wait for a fleet job is a
+    deadlock, not because hosted runners are convenient. The cost premise does
+    not apply here in any case - cadrumo is a public repository, and
+    GitHub-hosted runners are free for public repositories.
+
+    Pinned in BOTH directions on purpose. A new job must not quietly escape to
+    a hosted runner, and these two must not quietly drift back onto the fleet
+    and reintroduce the deadlock.
+    """
     for name, job in _document()["jobs"].items():
         runner = job["runs-on"]
+        if name in POLLING_JOBS:
+            assert runner == "ubuntu-latest", (
+                f"{name} dispatches a fleet workflow and waits on it; running it on the fleet "
+                "deadlocks against the run it dispatched"
+            )
+            continue
         assert isinstance(runner, list) and runner[0] == "self-hosted", f"{name} escapes the self-hosted fleet"
 
 

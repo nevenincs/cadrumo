@@ -20,7 +20,7 @@ from collections import OrderedDict
 from pathlib import Path
 
 from .....domain.justificante import JustificanteParseError, JustificanteParserBackend
-from ...pdf._utils import sha256_file
+from ...pdf.utils import sha256_file
 
 _INPUT_PDF_SOURCE_LABEL = "<input-pdf>"
 _TEXT_CACHE_MAXSIZE = 256

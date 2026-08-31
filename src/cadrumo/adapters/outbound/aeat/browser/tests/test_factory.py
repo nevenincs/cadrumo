@@ -13,8 +13,8 @@ from ......core.config import Settings
 from ......core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ...tests._process_support import wait_for_process_exit
 from .. import Profile
-from .._factory import create_browser_session, opened_browser_page, shared_playwright_runtime
 from ..errors import BrowserError, BrowserPreconditionCondition
+from ..factory import create_browser_session, opened_browser_page, shared_playwright_runtime
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

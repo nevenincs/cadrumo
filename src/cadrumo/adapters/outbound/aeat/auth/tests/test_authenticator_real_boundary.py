@@ -16,7 +16,7 @@ from ......core.auth_session_keys import aeat_auth_session_storage_state_path
 from ......core.config import AEAT_CERTIFICATE_PROTECTED_URL, Settings
 from ......core.errors.hierarchy import AeatLoginAssertionError
 from ......tests.secure_sql import isolated_runtime_profile
-from ...browser._factory import DefaultBrowserSession
+from ...browser.factory import DefaultBrowserSession
 from ...browser.tests.real_http_boundary import opened_http_boundary, real_browser_factory
 from ...tests._process_support import wait_for_process_exit
 from .. import session_store as session_store

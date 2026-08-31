@@ -77,7 +77,7 @@ from ....tests.env_scope import ready_clave_settings
 from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
 from ...calculations.observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository
-from ...invoices._creation import build_catalogue_invoice
+from ...invoices.catalogue_creation import build_catalogue_invoice
 from .._action_errors import ModeloCrossPeriodCleanStateError
 from .._calculation_actions import calculate_modelo_revision_from_bucket_aggregation
 from .._export import (

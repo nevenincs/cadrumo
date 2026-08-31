@@ -19,7 +19,7 @@ from ....domain.deadlines.models import FiscalResidency, IVARegime, TaxpayerProf
 from ....domain.invoices.enums import InvoiceClass, IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.classification import InvoiceKind
-from .._issuer_establishment import issuer_established_in_tai, simplificada_requires_tax_id_for_domestic_issuer
+from ..issuer_establishment import issuer_established_in_tai, simplificada_requires_tax_id_for_domestic_issuer
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

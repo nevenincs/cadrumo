@@ -40,7 +40,7 @@ from .._representation_gate import (
     dismiss_pre303_alert_modal_if_present,
     wait_for_own_name_representation_selector,
 )
-from ..browser._factory import DefaultBrowserSession, default_browser_session_factory
+from ..browser.factory import DefaultBrowserSession, default_browser_session_factory
 from ._adapter_utils import assert_read_landing, is_aeat_auth_gate_redirect, landed_origin, redacted_url
 from ._auth_state import storage_state_for_session
 from ._browser_constants import (

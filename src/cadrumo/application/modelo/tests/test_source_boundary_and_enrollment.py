@@ -390,7 +390,7 @@ def test_s09_ledger_renta_income_resolver_enrolled_fires_on_m130(
         merge_source_resolutions,
     )
     from ...calculations._multi_year import PreviousFilingSourceResolver
-    from ...invoices._source_resolver import InvoiceCatalogueSourceResolver
+    from ...invoices.source_resolver import InvoiceCatalogueSourceResolver
 
     _wu_repo, _cr_repo, tx_repo, invoice_repo = _repos(secure_objects)
     revision = _revision("130", "2019-y-siguientes")

@@ -8,8 +8,8 @@ from decimal import Decimal
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from ....application.invoices._creation import CatalogueInvoiceCreateResult, build_catalogue_invoice
-from ....application.invoices._lifecycle import CatalogueInvoiceRemoveResult, CatalogueInvoiceUpdateResult
+from ....application.invoices.catalogue_creation import CatalogueInvoiceCreateResult, build_catalogue_invoice
+from ....application.invoices.catalogue_lifecycle import CatalogueInvoiceRemoveResult, CatalogueInvoiceUpdateResult
 from ....domain.iva.classification import InvoiceKind
 from .._command_schema import command_schema_types
 from .._ledger_business_invoice_cli import _catalogue_invoice_payload

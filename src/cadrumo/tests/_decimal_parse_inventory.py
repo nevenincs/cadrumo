@@ -22,7 +22,7 @@ The ratchet built to stop unvalidated text parses therefore *blesses by name* a
 destination that silently resolves the one shape that carries the defect. A new
 text boundary could satisfy the rule above and ship exactly what it exists to
 catch, and this repo has paid for that twice: the module docstring of
-:mod:`~application.invoices._bulk_import` records an operator's ``12.500`` euros
+:mod:`~application.invoices.bulk_import` records an operator's ``12.500`` euros
 read as twelve fifty on a threshold field, and a live ``--set iva_amount=1.000``
 becoming one euro was fixed at the ``--set`` money boundary.
 

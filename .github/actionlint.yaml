@@ -1,0 +1,19 @@
+# Runner labels this repository is permitted to schedule onto.
+#
+# actionlint refuses any `runs-on:` label absent from this list, and that is the
+# point rather than bookkeeping. A mistyped or retired label does not fail at
+# dispatch - it QUEUES, unbounded, with no logs and no failure, which is
+# indistinguishable from a busy fleet while it happens and is the most expensive
+# way this pipeline can break. Enumerating the set here turns a silent stall into
+# a lint error on the pull request.
+#
+# Only genuinely custom labels belong here. `self-hosted`, `Linux`, `Windows`,
+# `macOS`, `X64` and `ARM64` are all understood natively and are deliberately
+# absent. Adding a runner with a new label means declaring it here, which is what
+# makes the typo detectable.
+self-hosted-runner:
+  labels:
+    # Carried by `gw-workstation-win`, which owns the Scoop bucket publication
+    # path. The plain `[self-hosted, Windows, X64]` lanes must NOT land on it by
+    # accident, which is why the distinction is a label rather than a comment.
+    - windows-scoop

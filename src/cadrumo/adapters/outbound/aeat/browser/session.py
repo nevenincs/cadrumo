@@ -44,11 +44,6 @@ from .....core.operator_action_enums import NoRecoveryOutcome
 from .....core.time.clock import now
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
 from ..auth.providers import BrowserContextProvisioner
-from ._site_health import (
-    SiteHealthEvidence,
-    SiteHealthStatus,
-    parse_site_health_url,
-)
 from ._site_health_probe import probe_response
 from .errors import (
     BrowserError,
@@ -58,6 +53,11 @@ from .errors import (
 )
 from .evasion import EvasionStrategy, PlaywrightStealthEvasion
 from .profile import Profile
+from .site_health_records import (
+    SiteHealthEvidence,
+    SiteHealthStatus,
+    parse_site_health_url,
+)
 
 logger = get_logger(__name__)
 

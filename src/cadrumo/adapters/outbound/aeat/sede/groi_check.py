@@ -55,8 +55,8 @@ from .....domain.calculations.registry.remote_state_guard import (
     RemoteOperation,
     RemoteStateGuardPolicy,
 )
-from ..browser._factory import default_browser_session_factory
 from ..browser.errors import BrowserError
+from ..browser.factory import default_browser_session_factory
 from ..browser.session import BrowserSession
 from ._adapter_utils import (
     _LocateHelper,

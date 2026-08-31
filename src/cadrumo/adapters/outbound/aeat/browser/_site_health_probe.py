@@ -10,7 +10,7 @@ trivial: this module MUST NOT import anything from
 See Also:
     :func:`adapters.outbound.aeat.browser._site_health_parsers.evaluate_response`
         Pure parser suite delegated to by :func:`probe_response`.
-    :class:`adapters.outbound.aeat.browser._site_health.SiteHealthStatus`
+    :class:`adapters.outbound.aeat.browser.site_health_records.SiteHealthStatus`
         Concrete status record returned for maintenance, WAF, rate-limit, and
         unreachable classifications.
 """
@@ -19,8 +19,8 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ._site_health import SiteHealthStatus
 from ._site_health_parsers import evaluate_response
+from .site_health_records import SiteHealthStatus
 
 
 def probe_response(

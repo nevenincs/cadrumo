@@ -61,7 +61,7 @@ from pydantic import BaseModel, Field
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.storage.attachment import AttachmentStore
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-from ...application.invoices._creation import build_catalogue_invoice, create_catalogue_invoice
+from ...application.invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
 from ...core.aggregation import IntracomOperationType
 from ...core.config import Settings
 from ...core.config import load_settings as _load_settings

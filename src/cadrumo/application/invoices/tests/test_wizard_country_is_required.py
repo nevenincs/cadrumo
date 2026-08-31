@@ -26,7 +26,7 @@ import inspect
 
 import pytest
 
-from .._wizard import create_invoice_via_wizard
+from ..creation_wizard import create_invoice_via_wizard
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

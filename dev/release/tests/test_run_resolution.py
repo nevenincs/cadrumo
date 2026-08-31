@@ -463,23 +463,45 @@ def test_dispatch_workflow_raises_on_gh_failure(tmp_path: Path) -> None:
         rr.dispatch_workflow(_WORKFLOW, ref=_HEAD_SHA, gh_executable=str(script))
 
 
-@pytest.mark.parametrize("mutable_or_malformed_ref", ["main", "abc123", "g" * 40])
-def test_dispatch_workflow_refuses_non_immutable_ref_before_invoking_gh(
+@pytest.mark.parametrize("blank_ref", ["", "   ", "\t"])
+def test_dispatch_workflow_refuses_a_blank_ref_before_invoking_gh(
     tmp_path: Path,
-    mutable_or_malformed_ref: str,
+    blank_ref: str,
 ) -> None:
-    """A branch or malformed ref produces no external dispatch side effect."""
+    """An empty ref produces no external dispatch side effect.
+
+    A blank ref is the one shape that must never reach the API: ``gh`` reads it
+    as the default branch and would dispatch something nobody asked for. Every
+    other shape is GitHub's to judge — it answers with a 422 naming the ref,
+    which beats anything guessable from the string.
+    """
     capture = tmp_path / "argv.txt"
     script = _write_argv_capture_gh(tmp_path / "bin", capture_path=capture)
 
-    with pytest.raises(rr.RunResolutionError, match="40-character"):
-        rr.dispatch_workflow(
-            _WORKFLOW,
-            ref=mutable_or_malformed_ref,
-            gh_executable=str(script),
-        )
+    with pytest.raises(rr.RunResolutionError, match="empty"):
+        rr.dispatch_workflow(_WORKFLOW, ref=blank_ref, gh_executable=str(script))
 
     assert not capture.exists()
+
+
+def test_dispatch_workflow_sends_a_branch_ref_to_gh(tmp_path: Path) -> None:
+    """A branch is dispatchable, and this is the case the old contract forbade.
+
+    `workflow_dispatch` accepts a branch or tag and refuses a commit SHA with
+    ``HTTP 422: No ref found for: <sha>``. This module used to require a SHA, so
+    no dispatch it made could succeed against the live API — and the suite did
+    not notice, because a stub ``gh`` accepts anything. This test pins the shape
+    that actually reaches GitHub.
+    """
+    capture = tmp_path / "argv.txt"
+    script = _write_argv_capture_gh(tmp_path / "bin", capture_path=capture)
+
+    rr.dispatch_workflow(_WORKFLOW, ref="main", gh_executable=str(script))
+
+    argv = capture.read_text(encoding="utf-8")
+    assert "--ref" in argv
+    assert "main" in argv
+    assert _HEAD_SHA not in argv, "the dispatch must not carry the SHA as its ref"
 
 
 def test_list_workflow_runs_parses_real_subprocess_output(tmp_path: Path) -> None:
@@ -534,6 +556,7 @@ def test_dispatch_and_resolve_composes_dispatch_then_resolve(tmp_path: Path) -> 
 
     resolved = rr.dispatch_and_resolve(
         _WORKFLOW,
+        dispatch_ref="main",
         head_sha=_HEAD_SHA,
         resolve_budget=rr.PollBudget(total_seconds=30, initial_interval_seconds=1, max_interval_seconds=5),
         gh_executable=str(script),
@@ -564,6 +587,7 @@ def test_dispatch_and_resolution_share_the_same_immutable_revision_when_main_adv
 
     resolved = rr.dispatch_and_resolve(
         _WORKFLOW,
+        dispatch_ref="main",
         head_sha=_HEAD_SHA,
         resolve_budget=rr.PollBudget(total_seconds=30, initial_interval_seconds=1, max_interval_seconds=5),
         gh_executable=str(script),
@@ -573,7 +597,12 @@ def test_dispatch_and_resolution_share_the_same_immutable_revision_when_main_adv
     )
 
     argv = _read_argv(capture)
-    assert argv[argv.index("--ref") + 1] == _HEAD_SHA
+    # The dispatch names the BRANCH, because that is what the API accepts. The
+    # guarantee this test exists for is unchanged and now rests entirely on
+    # resolution: main had already advanced, and the run selected is still the
+    # one at the commit the release chose, not the newer one.
+    assert argv[argv.index("--ref") + 1] == "main"
+    assert _HEAD_SHA not in argv
     assert _OTHER_SHA not in argv
     assert resolved.head_sha == _HEAD_SHA
     assert resolved.run_id == "77"
@@ -588,6 +617,7 @@ def test_dispatch_and_resolve_normalizes_uppercase_before_dispatch_and_matching(
 
     resolved = rr.dispatch_and_resolve(
         _WORKFLOW,
+        dispatch_ref="main",
         head_sha=_HEAD_SHA.upper(),
         resolve_budget=rr.PollBudget(total_seconds=30),
         gh_executable=str(script),
@@ -597,7 +627,10 @@ def test_dispatch_and_resolve_normalizes_uppercase_before_dispatch_and_matching(
     )
 
     argv = _read_argv(capture)
-    assert argv[argv.index("--ref") + 1] == _HEAD_SHA
+    # Normalisation is about the MATCH, not the dispatch: the ref sent to gh is
+    # the branch, and the canonical lowercase SHA is what identifies the run.
+    assert argv[argv.index("--ref") + 1] == "main"
+    assert _HEAD_SHA.upper() not in argv
     assert resolved.head_sha == _HEAD_SHA
 
 
@@ -615,6 +648,7 @@ def test_dispatch_and_resolve_rejects_mutable_head_before_clock_or_gh_side_effec
     with pytest.raises(rr.RunResolutionError, match="40-character"):
         rr.dispatch_and_resolve(
             _WORKFLOW,
+            dispatch_ref="main",
             head_sha="main",
             resolve_budget=rr.PollBudget(total_seconds=30),
             gh_executable=str(script),

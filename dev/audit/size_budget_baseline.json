@@ -34,7 +34,7 @@
     "src/cadrumo/entrypoints/tui/tests/test_flow_tui_app.py": 1497
   },
   "callables": {
-    "src/cadrumo/application/invoices/_wizard.py::create_invoice_via_wizard": 210,
+    "src/cadrumo/application/invoices/creation_wizard.py::create_invoice_via_wizard": 210,
     "src/cadrumo/application/modelo/_calculation_actions.py::_calculate_modelo_revision_with_trusted_mesh_sources": 202,
     "src/cadrumo/application/modelo/_filing_actions.py::file_modelo_revision": 217,
     "src/cadrumo/application/modelo/_quickfile.py::run_modelo_quickfile": 235,

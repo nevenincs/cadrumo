@@ -96,6 +96,75 @@ permissions:
   contents: read
 
 jobs:
+  cadrumo-workflow-lint:
+    name: Cadrumo / workflow lint (actionlint)
+    # actionlint is the only thing that reads these files before GitHub itself
+    # does, and it earns a gate here for one failure class this fleet keeps
+    # paying for: a `runs-on:` label that no registered runner carries. That
+    # does not fail at dispatch - it QUEUES, unbounded, producing no logs and no
+    # failure. Twenty workflow files had no static verification of any kind
+    # before this job existed.
+    #
+    # The labels this repository may schedule onto live in
+    # .github/actionlint.yaml, which actionlint reads automatically.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Run actionlint
+        shell: bash
+        env:
+          # Pinned by version AND digest: this step downloads an executable and
+          # runs it, so the archive is verified before it is unpacked.
+          #
+          # The digest is pinned PER ARCHITECTURE deliberately. A single digest
+          # naming `linux_amd64.tar.gz` does not FAIL on an arm64 runner, it
+          # PASSES - the file really is the amd64 archive the digest names - and
+          # then dies at `Exec format error`. A verification step that reports
+          # success while handing back an unusable binary is worse than none.
+          # Both digests are the upstream published checksums for this version;
+          # bump the version and both digests together.
+          ACTIONLINT_VERSION: 1.7.12
+          ACTIONLINT_SHA256_AMD64: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8
+          ACTIONLINT_SHA256_ARM64: 325e971b6ba9bfa504672e29be93c24981eeb1c07576d730e9f7c8805afff0c6
+        run: |
+          set -euo pipefail
+          kernel="$(uname -s)"
+          if [ "$kernel" != "Linux" ]; then
+            echo "::error::this step pins only Linux actionlint archives; runner reports '$kernel'" >&2
+            exit 1
+          fi
+          machine="$(uname -m)"
+          case "$machine" in
+            x86_64|amd64)  goarch=amd64; want="$ACTIONLINT_SHA256_AMD64" ;;
+            aarch64|arm64) goarch=arm64; want="$ACTIONLINT_SHA256_ARM64" ;;
+            *)
+              echo "::error::no pinned actionlint digest for architecture '$machine'; refusing to run an unverified binary" >&2
+              exit 1
+              ;;
+          esac
+          tarball="actionlint_${ACTIONLINT_VERSION}_linux_${goarch}.tar.gz"
+          curl -fsSL -o "$RUNNER_TEMP/$tarball" \
+            "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/${tarball}"
+          echo "${want}  $RUNNER_TEMP/$tarball" | sha256sum --check --strict
+          tar xzf "$RUNNER_TEMP/$tarball" -C "$RUNNER_TEMP" actionlint
+          # Prove it EXECUTES before trusting the gate: the check a digest
+          # cannot make, since a correct digest for the wrong architecture
+          # verifies cleanly and fails only here.
+          "$RUNNER_TEMP/actionlint" --version
+          "$RUNNER_TEMP/actionlint" -no-color -shellcheck= -pyflakes= .github/workflows/*.yml
+
+      - name: Reclaim runner disk (always)
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          rm -rf "${RUNNER_TEMP:-/tmp}"/actionlint "${RUNNER_TEMP:-/tmp}"/actionlint_*.tar.gz 2>/dev/null || true
+
   cadrumo-static:
     name: Cadrumo / static checks / Python 3.13
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository

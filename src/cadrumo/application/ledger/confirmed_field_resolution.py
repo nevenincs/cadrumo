@@ -33,7 +33,7 @@ from datetime import date
 from decimal import Decimal
 
 from ...adapters.inbound.einvoice._parsers import FacturaeInvoiceClass
-from ...application.invoices._creation import resolve_iva_rate_slot
+from ...application.invoices.catalogue_creation import resolve_iva_rate_slot
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.parsing import parse_iso8601_date
 from ...domain.invoices.enums import InvoiceClass

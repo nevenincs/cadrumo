@@ -276,6 +276,11 @@ def test_emitted_outputs_cover_every_known_input_in_both_states(tmp_path: Path) 
         "need_packaging_run_id": "true",
         "need_scoop_run_id": "false",
         "need_homebrew_run_id": "false",
+        # The two host-extension channels share one operator-minted evidence
+        # release, so they contribute a single boolean. It is `false` today
+        # because neither is claimed; the slot exists so the workflow has
+        # something to guard on the moment one is.
+        "need_claude_evidence_release": "false",
     }
 
 

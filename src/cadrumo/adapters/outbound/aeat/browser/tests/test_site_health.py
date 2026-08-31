@@ -24,13 +24,13 @@ from ......core.config import Settings
 from ......core.directory_scan import scan_directory
 from ......core.errors.hierarchy import SiteHealthState
 from ......tests import FIXTURES_DIR
-from .._site_health import SiteHealthEvidence, SiteHealthStatus
 from .._site_health_parsers import (
     evaluate_response,
     parse_mantenimiento_banner,
     parse_rate_limit_response,
     parse_waf_challenge,
 )
+from ..site_health_records import SiteHealthEvidence, SiteHealthStatus
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -453,7 +453,7 @@ class TestRateLimitRetryAfter:
 
 
 def _evidence(**overrides: object) -> SiteHealthEvidence:
-    from .._site_health import parse_site_health_url
+    from ..site_health_records import parse_site_health_url
 
     base: dict[str, Any] = {
         "url": parse_site_health_url(_PROBE_URL),
@@ -475,7 +475,7 @@ class TestSiteHealthModels:
         assert ev.detected_markers == ("marker",)
 
     def test_evidence_rejects_unknown_key(self) -> None:
-        from .._site_health import parse_site_health_url
+        from ..site_health_records import parse_site_health_url
 
         valid_url = parse_site_health_url(_PROBE_URL)
         with pytest.raises(ValidationError, match=r"Extra inputs are not permitted"):

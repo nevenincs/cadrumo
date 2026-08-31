@@ -26,7 +26,7 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....application.aggregation import AggregationValidationError, RetencionObservationRepository
-from ....application.invoices._creation import build_catalogue_invoice, create_catalogue_invoice
+from ....application.invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
 from ....application.modelo._calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )

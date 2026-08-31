@@ -16,7 +16,7 @@ from .....core.async_cleanup import close_async_resources
 from .....core.config import load_settings
 from .....core.logging import get_logger
 from .._playwright import PlaywrightError
-from ._factory import default_browser_session_factory
+from .factory import default_browser_session_factory
 from .session import BrowserError
 
 logger = get_logger(__name__)

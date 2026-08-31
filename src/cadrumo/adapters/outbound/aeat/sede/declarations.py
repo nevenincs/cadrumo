@@ -48,7 +48,7 @@ from .....domain.calculations.registry.schema import RegistrySnapshot
 from .._html import parse_html
 from .._playwright import BrowserContext, Page, Playwright, PlaywrightError
 from ..browser import Profile
-from ..browser._factory import opened_browser_page, shared_playwright_runtime
+from ..browser.factory import opened_browser_page, shared_playwright_runtime
 from ._adapter_utils import assert_pdf_response as _assert_pdf_response
 from ._adapter_utils import assert_read_landing
 from ._auth_state import storage_state_for_session

@@ -11,7 +11,7 @@ See Also:
         Canonical source-kind taxonomy proving the route is invoice-owned.
     :data:`~core.external_constants.M347_THRESHOLD_EUR`
         Legal declaration floor applied by the summary binding test.
-    :class:`~application.invoices._source_resolver.InvoiceCatalogueSourceResolver`
+    :class:`~application.invoices.source_resolver.InvoiceCatalogueSourceResolver`
         Application resolver that projects domestic invoices into the same binding route.
 """
 

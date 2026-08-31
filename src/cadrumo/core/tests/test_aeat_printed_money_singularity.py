@@ -58,7 +58,7 @@ import re
 import pytest
 
 from ...adapters.inbound.notificacion import _sancion
-from ...adapters.inbound.pdf._label_regex import SPANISH_AMOUNT_GROUP
+from ...adapters.inbound.pdf.label_regex import SPANISH_AMOUNT_GROUP
 from ...adapters.outbound.aeat.sede import _iva_compensation_wallet_parsing
 from ...tests import aeat_relative, production_python_files
 from ..decimal.printed_money import AEAT_THOUSANDS_SEPARATORS, is_aeat_printed_money

@@ -376,7 +376,7 @@ def ledger_check(
     ctx: typer.Context, bucket_id_option: str | None = None, period: str | None = None, year: int | None = None
 ) -> None:
     """Surface ledger anomalies and broken invoice links without mutating state."""
-    from ...application.invoices._queries import verify_invoice_repository_links
+    from ...application.invoices.catalogue_reads import verify_invoice_repository_links
     from ._ledger_payloads import LedgerLinkInconsistencyPayload
 
     if bucket_id_option is not None:

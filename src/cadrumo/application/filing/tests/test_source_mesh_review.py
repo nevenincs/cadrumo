@@ -43,7 +43,7 @@ from ....domain.invoices.models import Invoice, InvoiceCatalogue
 from ....domain.iva.classification import InvoiceKind
 from ....domain.submission.models import ModeloDraftStatus
 from ....tests.secure_sql import TestRuntimeProfile
-from ...invoices._creation import build_catalogue_invoice
+from ...invoices.catalogue_creation import build_catalogue_invoice
 from .._draft_construction import build_draft
 from ..draft_review import ModeloApprovalStaleReason, approval_stale_reasons, approve_draft
 from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider

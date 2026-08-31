@@ -35,7 +35,7 @@ from decimal import Decimal
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
-from ....adapters.inbound.pdf._utils import source_pdf_reference_path
+from ....adapters.inbound.pdf.utils import source_pdf_reference_path
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....application.flows.definition import FlowPage
 from ....application.flows.errors import FlowAnswerError

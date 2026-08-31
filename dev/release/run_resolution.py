@@ -170,6 +170,21 @@ def _canonical_commit_sha(value: str, *, field_name: str) -> str:
     return value.lower()
 
 
+def _dispatchable_ref(value: str) -> str:
+    """Return a ref usable as ``workflow_dispatch``'s ``ref``, or refuse.
+
+    Deliberately permissive about SHAPE and strict about emptiness: GitHub owns
+    the question of whether a branch or tag exists and answers it with a 422,
+    which is a better error than anything guessed from the string. What must not
+    reach the API is a blank ref, which reads as "the default branch" and would
+    dispatch something nobody asked for.
+    """
+    candidate = value.strip()
+    if not candidate:
+        raise RunResolutionError("dispatch ref is empty; pass the branch or tag the workflow should run at")
+    return candidate
+
+
 def dispatch_workflow(
     workflow_path: str,
     *,
@@ -184,10 +199,20 @@ def dispatch_workflow(
     entire reason :func:`resolve_dispatched_run` exists. Callers wanting strict
     happens-before semantics must capture their own created-after timestamp
     BEFORE calling this function (:func:`dispatch_and_resolve` does this).
+
+    ``ref`` must be a BRANCH OR TAG. It used to be required to be a commit SHA,
+    which the GitHub API does not accept for ``workflow_dispatch``::
+
+        HTTP 422: No ref found for: 491dca41a34a6b6bd24d455d898b7e0b506de300
+
+    so no dispatch from this function could ever have succeeded. The unit tests
+    did not catch it because they exercise a stub ``gh``, which accepts a SHA
+    happily; only the live API refuses. Identity of the dispatched run is still
+    established by SHA — see :func:`dispatch_and_resolve`.
     """
-    immutable_ref = _canonical_commit_sha(ref, field_name="ref")
+    dispatch_ref = _dispatchable_ref(ref)
     gh = _resolve_gh(gh_executable)
-    arguments = ["workflow", "run", workflow_path, "--repo", repo_slug, "--ref", immutable_ref]
+    arguments = ["workflow", "run", workflow_path, "--repo", repo_slug, "--ref", dispatch_ref]
     for key, value in sorted((inputs or {}).items()):
         arguments += ["-f", f"{key}={value}"]
     _run_gh(gh, arguments)
@@ -374,6 +399,7 @@ def dispatch_and_resolve(
     workflow_path: str,
     *,
     head_sha: str,
+    dispatch_ref: str,
     inputs: Mapping[str, str] | None = None,
     resolve_budget: PollBudget,
     repo_slug: str = _DEFAULT_REPO_SLUG,
@@ -385,19 +411,30 @@ def dispatch_and_resolve(
     """Dispatch one workflow and resolve the run IT started.
 
     Captures ``created_after`` from ``now()`` immediately before dispatching,
-    dispatches the workflow at the same immutable ``head_sha`` resolution will
-    match, then polls for that run. A mutable branch ref is deliberately not an
-    option here: if ``main`` advances between the release bump and dispatch,
-    dispatching ``main`` while resolving the bumped SHA can never converge.
-    This is the single entry point the orchestrator is expected to call;
-    :func:`dispatch_workflow` and :func:`resolve_dispatched_run` stay exposed
-    separately for finer-grained composition and testing.
+    dispatches ``dispatch_ref``, then polls for the run whose head commit is
+    ``head_sha``. This is the single entry point the orchestrator is expected to
+    call; :func:`dispatch_workflow` and :func:`resolve_dispatched_run` stay
+    exposed separately for finer-grained composition and testing.
+
+    THE TWO REFS ARE SEPARATE ON PURPOSE. This function used to dispatch the
+    ``head_sha`` itself, reasoning that "a mutable branch ref is deliberately
+    not an option here: if ``main`` advances between the release bump and
+    dispatch, dispatching ``main`` while resolving the bumped SHA can never
+    converge." The concern is real; the remedy was not available, because
+    ``workflow_dispatch`` refuses a commit SHA outright and every dispatch
+    failed with HTTP 422 before reaching that risk.
+
+    So the race is now DETECTED rather than prevented. Dispatch happens at a ref
+    the API accepts, and resolution still matches ``head_sha`` exactly — if the
+    branch advanced in between, no run matches and the resolver refuses. That is
+    the same outcome the old design wanted, arrived at by failing loudly instead
+    of by a mechanism that could not run.
     """
     canonical_head_sha = _canonical_commit_sha(head_sha, field_name="head_sha")
     created_after = now()
     dispatch_workflow(
         workflow_path,
-        ref=canonical_head_sha,
+        ref=dispatch_ref,
         inputs=inputs,
         repo_slug=repo_slug,
         gh_executable=gh_executable,
@@ -525,6 +562,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Dispatch a workflow and wait for the run this dispatch started.")
     parser.add_argument("--workflow", required=True)
     parser.add_argument("--head-sha", required=True)
+    parser.add_argument(
+        "--dispatch-ref",
+        required=True,
+        help="Branch or tag to dispatch at. The run is still identified by --head-sha.",
+    )
     parser.add_argument("--input", action="append", default=[], metavar="KEY=VALUE")
     parser.add_argument("--repository", default=_DEFAULT_REPO_SLUG)
     parser.add_argument("--resolve-seconds", type=float, default=600.0)
@@ -543,6 +585,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     run = dispatch_and_resolve(
         args.workflow,
         head_sha=args.head_sha,
+        dispatch_ref=args.dispatch_ref,
         inputs=inputs,
         resolve_budget=PollBudget(total_seconds=args.resolve_seconds),
         repo_slug=args.repository,

@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
-from ....adapters.inbound.pdf._utils import source_pdf_reference_path
+from ....adapters.inbound.pdf.utils import source_pdf_reference_path
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....core.period import Period
 from ....domain.justificante import Justificante

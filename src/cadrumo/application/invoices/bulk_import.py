@@ -59,7 +59,7 @@ from ._bulk_import_columns import (
     ColumnRoleMapper,
     resolve_bulk_import_columns,
 )
-from ._creation import build_catalogue_invoice, create_catalogue_invoice
+from .catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
 
 __all__ = [
     "BULK_INVOICE_IMPORT_ALLOWED_COLUMNS",

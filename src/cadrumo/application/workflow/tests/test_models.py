@@ -16,7 +16,11 @@ from typing import Any, cast
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.outbound.aeat.browser._site_health import SiteHealthEvidence, SiteHealthStatus, parse_site_health_url
+from ....adapters.outbound.aeat.browser.site_health_records import (
+    SiteHealthEvidence,
+    SiteHealthStatus,
+    parse_site_health_url,
+)
 from ....core.errors.hierarchy import SiteHealthState
 from ....core.modelo import Modelo
 from ....core.operator_action_enums import (

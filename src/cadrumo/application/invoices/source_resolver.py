@@ -189,9 +189,29 @@ class InvoiceCatalogueSourceResolver:
         *,
         invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
     ) -> None:
+        """Bind the resolver to an invoice catalogue repository.
+
+        Args:
+            invoice_repository: Repository the resolver reads invoices from. When
+                omitted, each :meth:`resolve` call opens the catalogue for the
+                bucket named by its own context.
+        """
         self._invoice_repository = invoice_repository
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
+        """Resolve this context's invoice-source bindings against the catalogue.
+
+        Args:
+            context: Modelo, revision, period, and bucket selecting both the
+                active invoice sources and the invoices in scope.
+
+        Returns:
+            The resolution carrying binding values, Modelo 349 detail rows,
+            linked transaction ids, diagnostics, and source provenance. Sources
+            the active revision does not declare resolve to an empty result, and
+            a degraded catalogue read resolves to a storage-degradation result
+            rather than a zero total.
+        """
         active_sources = _invoice_sources_for_revision(context)
         if not active_sources:
             return CalculationSourceResolution(resolver_id=self.resolver_id, owned_sources=self.owned_sources)

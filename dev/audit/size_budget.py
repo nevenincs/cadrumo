@@ -42,9 +42,12 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from contextlib import nullcontext
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
+
+from dev.quality.stable_tree_generation import refuse_if_tree_moves
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(_REPO_ROOT / "src") not in sys.path:  # pragma: no cover - import bootstrap
@@ -152,8 +155,15 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    modules = measure_module_lines()
-    callables = measure_callable_lines()
+    # Bracketed ONLY when writing, for the same reason as the complexity
+    # baseline: a race during a WRITE persists into the artefact as limits keyed
+    # to modules that no longer exist, while a race during the comparison run
+    # costs at most one noisy verdict. Guarding the comparison would refuse the
+    # CI gate whenever any lane touched the tree.
+    guard = refuse_if_tree_moves(_REPO_ROOT) if args.write_baseline else nullcontext()
+    with guard:
+        modules = measure_module_lines()
+        callables = measure_callable_lines()
     assert_real_corpus(modules, callables)
 
     print(f"size budget: scanned {len(modules)} modules, {len(callables)} production callables.")

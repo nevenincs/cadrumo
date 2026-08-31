@@ -28,7 +28,7 @@ from ....core.identity import ContentDigest
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.period import Period, PeriodError
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ..pdf._shared import ExtractedCasilla
+from ..pdf.extracted_casilla import ExtractedCasilla
 
 
 class TemplateRevision(BaseModel):

@@ -62,10 +62,8 @@ from ...core.time.clock import now as _utc_now
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations._row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
 from ...domain.calculations._row_source_identity import RowBindingKey, RowSourceIdentity
-from ...domain.calculations.registry.bindings import (
-    bound_casilla_binding_ids,
-    resolve_available_bound_inputs_by_casilla_id,
-)
+from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
+from ...domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ...domain.calculations.registry.casilla_membership import casillas_by_id
 from ...domain.calculations.registry.formula_runtime import (
     RegistryCalculationResult,
@@ -105,7 +103,7 @@ from ..calculations.cross_period_clean_state import (
     cross_period_dependency_requirements as _cross_period_dependency_requirements,
 )
 from ..calculations.observations_repository import CalculationObservationRepository
-from ..filing._runtime_repository import modelo_record_repository_for_application
+from ..filing.persistence_wiring import modelo_record_repository_for_application
 from ..inventory._service import inventory_ledger_repository_for_bucket
 from ._action_errors import (
     CalculationRevisionNotFoundError,
@@ -800,7 +798,7 @@ def _resolve_bucket_source_mesh(
     )
     from ..calculations._multi_year import PreviousFilingSourceResolver
     from ..calculations._relation_prefill import RelationPrefillSourceResolver
-    from ..invoices._source_resolver import InvoiceCatalogueSourceResolver
+    from ..invoices.source_resolver import InvoiceCatalogueSourceResolver
 
     resolved_work_unit_repository = work_unit_repository or WorkUnitCatalogueRepository()
     resolved_calculation_repository = calculation_repository or CalculationRevisionCatalogueRepository()

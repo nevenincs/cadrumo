@@ -48,9 +48,9 @@ from ....domain.calculations.registry.schema_extraction import (
     ExtractionTargetDefinition,
 )
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ..pdf._label_regex import PRESENTADOR_NIF_LABEL, SPANISH_AMOUNT_GROUP, TEXT_VALUE_GROUP, parse_spanish_decimal
-from ..pdf._shared import ExtractedCasilla
-from ..pdf._utils import sha256_file, source_pdf_reference_path
+from ..pdf.extracted_casilla import ExtractedCasilla
+from ..pdf.label_regex import PRESENTADOR_NIF_LABEL, SPANISH_AMOUNT_GROUP, TEXT_VALUE_GROUP, parse_spanish_decimal
+from ..pdf.utils import sha256_file, source_pdf_reference_path
 from ._detect import detect_template_revision, detect_template_revision_from_pages
 from ._parsers._pdfplumber_backend import extract_pages_text, extract_pages_text_from_bytes
 from ._schema import InboundDeclaracionObservation, TemplateRevision

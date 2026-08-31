@@ -15,7 +15,7 @@ by :class:`core.errors.SiteHealthError`. The marker corpora reflect the
 observed mantenimiento, WAF, and rate-limit responses on AEAT Sede Electrónica.
 
 See Also:
-    :class:`adapters.outbound.aeat.browser._site_health.SiteHealthStatus`
+    :class:`adapters.outbound.aeat.browser.site_health_records.SiteHealthStatus`
         Frozen record returned by every positive parser classification.
     :class:`core.errors.SiteHealthState`
         Closed state catalogue emitted by this parser suite.
@@ -30,7 +30,7 @@ from email.utils import parsedate_to_datetime
 from .....core.errors.hierarchy import SiteHealthState
 from .....core.time.clock import now
 from .....core.time.utc import coerce_utc_aware
-from ._site_health import (
+from .site_health_records import (
     SiteHealthEvidence,
     SiteHealthStatus,
     parse_site_health_url,

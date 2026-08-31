@@ -8,8 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from .. import PdfModeloImportError, _utils
-from .._utils import sha256_file, source_pdf_reference_path
+from .. import PdfModeloImportError, utils
+from ..utils import sha256_file, source_pdf_reference_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -33,7 +33,7 @@ class TestSha256File:
     ) -> None:
         missing_pdf = tmp_path / _SENSITIVE_BASENAME
 
-        caplog.set_level(logging.DEBUG, logger=_utils.__name__)
+        caplog.set_level(logging.DEBUG, logger=utils.__name__)
         with pytest.raises(PdfModeloImportError) as exc_info:
             sha256_file(missing_pdf)
 

@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING, Literal
 from ...core.hashing import content_hash_hex
 
 if TYPE_CHECKING:
-    from ..invoices._linking import InvoiceTransactionLinkResult
+    from ..invoices.transaction_linking import InvoiceTransactionLinkResult
 
 from ...core.aggregation import BindingSourceKind
 from ...core.decimal.formatting import format_decimal
@@ -368,7 +368,7 @@ def link_manual_transaction_invoice(
     Returns an
     :class:`~cadrumo.application.invoices.InvoiceTransactionLinkResult`.
     """
-    from ..invoices._linking import link_invoice_transaction_repositories
+    from ..invoices.transaction_linking import link_invoice_transaction_repositories
 
     trimmed_actor = require_actor(actor, operation="ledger invoice linkage")
     trimmed_source_command = require_source_command(source_command, operation="ledger invoice linkage")

@@ -57,8 +57,8 @@ from .....domain.calculations.registry.renta_web_open_oracle import (
     parse_renta_web_open_live_payload,
 )
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
-from ..browser._factory import DefaultBrowserSession, default_browser_session_factory
 from ..browser.errors import BrowserError
+from ..browser.factory import DefaultBrowserSession, default_browser_session_factory
 from ..browser.session import BrowserSession
 from ._adapter_utils import (
     assert_read_landing,

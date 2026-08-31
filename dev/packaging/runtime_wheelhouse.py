@@ -50,9 +50,33 @@ class TargetPlatform:
     floor: str
 
 
+#: The Linux floors are 2.28, NOT the manylinux2014 baseline of 2.17.
+#
+# 2.17 was unsatisfiable, and had been since the ecosystem moved off it. The
+# cohort build failed with
+#
+#     runtime lock has no linux-aarch64 wheel for argon2-cffi-bindings==26.1.0
+#
+# which reads as a missing wheel and is not one: the lock carries
+# `argon2_cffi_bindings-26.1.0-cp310-abi3-manylinux_2_26_aarch64`, and 2.26 is
+# above a 2.17 floor, so nothing selectable existed. There is no 2.17 Linux
+# wheel for this package at any version in the lock, so the floor could not be
+# met by choosing differently - only by moving it. x86-64 sits behind the same
+# wall and merely failed second, aarch64 being first in this tuple.
+#
+# 2.28 is chosen rather than 2.26 because it is what the rest of this fleet
+# already promises: vaultspec-core, vaultspec-rag and vaultspec-dashboard all
+# pin their Linux builds to a digest-pinned manylinux_2_28 image and measure
+# 2.28 out of the published artifact. It covers RHEL 8, Rocky 8, Alma 8,
+# Debian 10+, Ubuntu 20.04+ and Amazon Linux 2023, and it satisfies the 2.26
+# wheels above with headroom.
+#
+# What this drops is glibc 2.17-era platforms - RHEL 7 and CentOS 7, both long
+# past end of life. That is a real narrowing and is stated here rather than
+# left implicit.
 SUPPORTED_TARGETS: Final[tuple[TargetPlatform, ...]] = (
-    TargetPlatform("linux-aarch64", "linux", "Linux", "aarch64", "posix", "glibc-2.17"),
-    TargetPlatform("linux-x86-64", "linux", "Linux", "x86_64", "posix", "glibc-2.17"),
+    TargetPlatform("linux-aarch64", "linux", "Linux", "aarch64", "posix", "glibc-2.28"),
+    TargetPlatform("linux-x86-64", "linux", "Linux", "x86_64", "posix", "glibc-2.28"),
     TargetPlatform("macos-arm64", "darwin", "Darwin", "arm64", "posix", "macos-11.0"),
     TargetPlatform("windows-x86-64", "win32", "Windows", "AMD64", "nt", "windows-10"),
 )
@@ -125,6 +149,29 @@ def _manylinux_floor(platform: str, architecture: str) -> tuple[int, int] | None
     return (int(match.group(1)), int(match.group(2))) if match else None
 
 
+#: `glibc-2.28` -> (2, 28); `macos-11.0` -> (11, 0); `windows-10` -> (10, 0).
+_DECLARED_FLOOR = re.compile(r"^[a-z]+-(\d+)(?:\.(\d+))?$")
+
+
+def _declared_floor(target: TargetPlatform) -> tuple[int, int]:
+    """Return the floor this target DECLARES, as the version that gates wheels.
+
+    The declared floor used to be documentation only: `SUPPORTED_TARGETS` fed
+    `PLATFORM_FLOORS` into the cohort manifest, while :func:`_platform_rank`
+    enforced hard-coded literals of its own - `(2, 17)` for Linux and `(11, 0)`
+    for macOS. Two independent numbers describing one policy, free to disagree,
+    and they did: raising the declared Linux floor to 2.28 changed the published
+    manifest and not one wheel decision.
+
+    Reading it here collapses them. What the manifest promises is now what the
+    selector applies, and a floor change is a real change rather than a caption.
+    """
+    match = _DECLARED_FLOOR.fullmatch(target.floor)
+    if match is None:
+        raise SystemExit(f"target {target.name} declares an unparsable floor: {target.floor!r}")
+    return (int(match.group(1)), int(match.group(2) or 0))
+
+
 def _platform_rank(platform: str, target: TargetPlatform) -> int | None:
     if platform == "any":
         return 0
@@ -135,12 +182,12 @@ def _platform_rank(platform: str, target: TargetPlatform) -> int | None:
         if match is None:
             return None
         minimum = (int(match.group(1)), int(match.group(2)))
-        if minimum > (11, 0):
+        if minimum > _declared_floor(target):
             return None
         return 10_000 + minimum[0] * 100 + minimum[1]
     architecture = "x86_64" if target.name == "linux-x86-64" else "aarch64"
     minimum_glibc = _manylinux_floor(platform, architecture)
-    if minimum_glibc is None or minimum_glibc > (2, 17):
+    if minimum_glibc is None or minimum_glibc > _declared_floor(target):
         return None
     return 10_000 + minimum_glibc[0] * 100 + minimum_glibc[1]
 

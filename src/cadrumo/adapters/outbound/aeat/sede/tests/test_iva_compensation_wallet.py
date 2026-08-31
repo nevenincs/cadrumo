@@ -26,7 +26,7 @@ from ......tests.aeat_literal_fixtures import (
     configured_path,
 )
 from ...browser import Profile
-from ...browser._factory import opened_browser_page, shared_playwright_runtime
+from ...browser.factory import opened_browser_page, shared_playwright_runtime
 from .._adapter_utils import is_aeat_auth_gate_redirect
 from .._iva_compensation_wallet_parsing import (
     IVA_COMPENSATION_WALLET_READ_POLICY,

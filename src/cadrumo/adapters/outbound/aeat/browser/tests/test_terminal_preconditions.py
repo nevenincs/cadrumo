@@ -15,8 +15,8 @@ from playwright.async_api import async_playwright
 from ......core.config import Settings
 from ......core.errors.hierarchy import TerminalPreconditionErrorMixin
 from ......core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
-from .. import _factory as factory_module
 from .. import evasion as evasion_module
+from .. import factory as factory_module
 from .. import session as session_module
 from ..errors import (
     BrowserError,
@@ -49,22 +49,22 @@ def _contract(
 # scope.  Fact values remain AST expressions so dynamic checks and polarities
 # cannot silently drift while retaining the same mapping keys.
 _BROWSER_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
-    "_factory:_SharedPlaywrightRuntimeOwner.close:BrowserError:Playwright runtime stop failed": _contract(
+    "factory:_SharedPlaywrightRuntimeOwner.close:BrowserError:Playwright runtime stop failed": _contract(
         BrowserPreconditionCondition.RUNTIME_STOPPABLE,
         (("playwright_runtime_stoppable", "False"),),
         NoRecoveryOutcome.SAFETY,
     ),
-    "_factory:DefaultBrowserSession._stop_playwright_runtime:BrowserError:Playwright runtime stop failed": _contract(
+    "factory:DefaultBrowserSession._stop_playwright_runtime:BrowserError:Playwright runtime stop failed": _contract(
         BrowserPreconditionCondition.RUNTIME_STOPPABLE,
         (("playwright_runtime_stoppable", "False"),),
         NoRecoveryOutcome.SAFETY,
     ),
-    "_factory:_start_playwright:BrowserError:Browser optional extra is unavailable": _contract(
+    "factory:_start_playwright:BrowserError:Browser optional extra is unavailable": _contract(
         BrowserPreconditionCondition.OPTIONAL_EXTRA_AVAILABLE,
         (("browser_extra_available", "False"),),
         NoRecoveryOutcome.SAFETY,
     ),
-    "_factory:_start_playwright:BrowserError:Playwright runtime start failed": _contract(
+    "factory:_start_playwright:BrowserError:Playwright runtime start failed": _contract(
         BrowserPreconditionCondition.RUNTIME_STARTABLE,
         (("playwright_runtime_startable", "False"),),
         NoRecoveryOutcome.SAFETY,

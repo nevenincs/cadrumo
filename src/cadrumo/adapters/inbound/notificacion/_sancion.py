@@ -56,7 +56,7 @@ from ....core.i18n import tr
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.money.rounding import round_to_cents
 from ....domain.notifications.sancion import SancionLiquidacion
-from ..pdf._label_regex import parse_spanish_decimal
+from ..pdf.label_regex import parse_spanish_decimal
 from .errors import SancionArithmeticError, SancionParseError
 
 _CENT: Final = Decimal("0.01")

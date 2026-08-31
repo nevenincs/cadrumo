@@ -63,7 +63,7 @@ from .....domain.calculations.registry.remote_state_guard import (
 )
 from .._html import parse_html
 from .._playwright import Page, PlaywrightError
-from ..browser._factory import DefaultBrowserSession, default_browser_session_factory
+from ..browser.factory import DefaultBrowserSession, default_browser_session_factory
 from ..browser.session import BrowserSession
 from ._adapter_utils import assert_read_http_for
 from ._auth_state import storage_state_for_session

@@ -299,7 +299,7 @@ def test_render_browser_connectivity_text_resolves_row_label_keys() -> None:
     After fix: each key resolves to a real translated label.
     """
 
-    from ...adapters.outbound.aeat.browser._site_health import SiteHealthEvidence, SiteHealthStatus
+    from ...adapters.outbound.aeat.browser.site_health_records import SiteHealthEvidence, SiteHealthStatus
     from ...core.errors.hierarchy import SiteHealthState
     from ..diagnostics import render_browser_connectivity_text
 

@@ -244,7 +244,7 @@ def update_catalogue_invoice(
         InvoiceValidationError: The patch is empty, or the corrected record
             would violate an invoice invariant.
     """
-    from ._creation import emit_catalogue_invoice_event
+    from .catalogue_creation import emit_catalogue_invoice_event
 
     repo = repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
     written: list[Invoice] = []
