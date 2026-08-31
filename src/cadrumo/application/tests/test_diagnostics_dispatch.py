@@ -31,10 +31,9 @@ from ...core.operator_action_enums import (
     ActionConditionality,
     NoRecoveryOutcome,
 )
+from ..diagnostic_models import DiagnosticCheck, _diagnostic_no_recovery_verdict
 from ..diagnostics import (
-    DiagnosticCheck,
     _auth_check,
-    _diagnostic_no_recovery_verdict,
     _overall_status,
     _profile_check,
 )
