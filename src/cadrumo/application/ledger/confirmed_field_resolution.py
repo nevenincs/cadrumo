@@ -32,7 +32,7 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 
-from ...adapters.inbound.einvoice._parsers import FacturaeInvoiceClass
+from ...adapters.inbound.einvoice.parsers import FacturaeInvoiceClass
 from ...application.invoices.catalogue_creation import resolve_iva_rate_slot
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.parsing import parse_iso8601_date

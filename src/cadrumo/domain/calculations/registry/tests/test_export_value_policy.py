@@ -245,8 +245,14 @@ def test_runtime_policy_tokens_have_one_production_owner_and_consumers_import_th
     codec = src_root / "domain/calculations/registry/fixed_width_codec.py"
     assert "project_export_value" in codec.read_text(encoding="utf-8")
 
+    # The application-side consumer is no longer `_export.py`: that module now
+    # delegates field rendering, and the two modules below are what actually call
+    # the projector. Both are pinned rather than one, because the property is that
+    # EVERY consumer goes through it -- naming only one would let a second consumer
+    # reach the policy module directly and stay unseen.
     for consumer in (
-        src_root / "application/filing/_export.py",
+        src_root / "application/filing/_record_field_renderer.py",
+        src_root / "application/filing/export_verification.py",
         src_root / "adapters/outbound/aeat/export/_registry_record_renderer.py",
     ):
         source = consumer.read_text(encoding="utf-8")

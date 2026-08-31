@@ -176,7 +176,7 @@ recommends one and this deferral is the record of that.
 """
 
 [[decision]]
-path = "src/cadrumo/core/_modelo.py"
+path = "src/cadrumo/core/modelo.py"
 disposition = "deferred"
 reference = "2026-08-14-registry-temporal-coverage-drift-census-audit"
 rationale = """
@@ -188,7 +188,7 @@ enum is the sanctioned core home for the identifier; the prose beside it is not.
 """
 
 [[decision]]
-path = "src/cadrumo/core/_amendment_kind_regime.py"
+path = "src/cadrumo/core/amendment_kind_regime.py"
 disposition = "deferred"
 reference = "2026-08-14-registry-temporal-coverage-drift-census-audit"
 rationale = """
@@ -200,7 +200,7 @@ registry's typed legal references.
 """
 
 [[decision]]
-path = "src/cadrumo/core/_result_disposition.py"
+path = "src/cadrumo/core/result_disposition.py"
 disposition = "deferred"
 reference = "2026-08-14-registry-temporal-coverage-drift-census-audit"
 rationale = """
@@ -223,7 +223,7 @@ separates the two, so the file is deferred rather than half-excused.
 """
 
 [[decision]]
-path = "src/cadrumo/domain/modelos/_dt12_reduccion.py"
+path = "src/cadrumo/domain/modelos/dt12_reduccion.py"
 disposition = "deferred"
 reference = "2026-08-14-registry-temporal-coverage-drift-census-audit"
 rationale = """
@@ -234,7 +234,7 @@ the registry and the curated external-constants channel.
 """
 
 [[decision]]
-path = "src/cadrumo/domain/fincas/_tier_resolver.py"
+path = "src/cadrumo/domain/fincas/tier_resolver.py"
 disposition = "deferred"
 reference = "2026-08-14-registry-temporal-coverage-drift-census-audit"
 rationale = """
@@ -450,13 +450,13 @@ disposition = "not_regulatory"
 rationale = "A zero default on a retencion practicada field. The absence of a value, not a value."
 
 [[decision]]
-path = "src/cadrumo/domain/fincas/_aggregates.py"
+path = "src/cadrumo/domain/fincas/aggregates.py"
 enclosing_symbol = "_aggregate_finca"
 disposition = "not_regulatory"
 rationale = "A zero accumulator seeded before summing reductions. An initial value for an addition."
 
 [[decision]]
-path = "src/cadrumo/domain/fincas/_aggregates.py"
+path = "src/cadrumo/domain/fincas/aggregates.py"
 enclosing_symbol = "compute_finca_aggregates"
 disposition = "not_regulatory"
 rationale = """
@@ -507,11 +507,6 @@ kind = "dev_resident_regulatory_data"
 group = "dev-resident-epoch-data"
 
 [[decision]]
-path = "src/cadrumo/adapters/inbound/borrador/_extractors/__init__.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
 path = "src/cadrumo/adapters/inbound/borrador/_extractors/modelo_100_summary_v2025.py"
 kind = "design_prose_grammar"
 group = "production-aeat-text-parsers"
@@ -528,11 +523,6 @@ group = "python-resident-filing-years"
 
 [[decision]]
 path = "src/cadrumo/adapters/inbound/declaracion/_detect.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/adapters/inbound/declaracion/_schema.py"
 kind = "filing_year_literal"
 group = "python-resident-filing-years"
 
@@ -562,52 +552,42 @@ kind = "filing_year_literal"
 group = "python-resident-filing-years"
 
 [[decision]]
-path = "src/cadrumo/adapters/outbound/aeat/sede/_declarations.py"
+path = "src/cadrumo/adapters/outbound/aeat/sede/declarations.py"
 kind = "design_prose_grammar"
 group = "production-aeat-text-parsers"
 
 [[decision]]
-path = "src/cadrumo/adapters/outbound/aeat/sede/_declarations.py"
+path = "src/cadrumo/adapters/outbound/aeat/sede/declarations.py"
 kind = "filing_year_literal"
 group = "python-resident-filing-years"
 
 [[decision]]
-path = "src/cadrumo/adapters/outbound/aeat/sede/_declarations_observations.py"
+path = "src/cadrumo/adapters/outbound/aeat/sede/declarations_observations.py"
 kind = "modelo_conditional_branch"
 group = "modelo-conditional-behaviour"
 
 [[decision]]
-path = "src/cadrumo/adapters/outbound/aeat/sede/_declarations_schema.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/adapters/outbound/aeat/sede/_nif_iva_check.py"
+path = "src/cadrumo/adapters/outbound/aeat/sede/nif_iva_check.py"
 kind = "regulatory_named_constant"
 group = "named-regulatory-constants"
 
 [[decision]]
-path = "src/cadrumo/adapters/outbound/aeat/sede/_parse.py"
+path = "src/cadrumo/adapters/outbound/aeat/sede/parse.py"
 kind = "filing_year_literal"
 group = "python-resident-filing-years"
 
 [[decision]]
-path = "src/cadrumo/adapters/outbound/aeat/sede/_renta_web_open.py"
+path = "src/cadrumo/adapters/outbound/aeat/sede/renta_web_open.py"
 kind = "filing_year_literal"
 group = "python-resident-filing-years"
 
 [[decision]]
-path = "src/cadrumo/adapters/outbound/aeat/sede/_renta_web_open.py"
+path = "src/cadrumo/adapters/outbound/aeat/sede/renta_web_open.py"
 kind = "regulatory_named_constant"
 group = "named-regulatory-constants"
 
 [[decision]]
-path = "src/cadrumo/adapters/outbound/aeat/sede/_schema.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/adapters/outbound/google/calc_sheets_pull.py"
+path = "src/cadrumo/adapters/outbound/aeat/sede/schema.py"
 kind = "filing_year_literal"
 group = "python-resident-filing-years"
 
@@ -620,11 +600,6 @@ group = "named-regulatory-constants"
 path = "src/cadrumo/adapters/persistence/profile/modelos_calculation.py"
 kind = "modelo_conditional_branch"
 group = "modelo-conditional-behaviour"
-
-[[decision]]
-path = "src/cadrumo/adapters/persistence/profile/usage_ratios.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
 
 [[decision]]
 path = "src/cadrumo/adapters/persistence/storage/sql/records.py"
@@ -647,11 +622,6 @@ kind = "filing_year_literal"
 group = "python-resident-filing-years"
 
 [[decision]]
-path = "src/cadrumo/application/aggregation/_renta_ledger.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
 path = "src/cadrumo/application/aggregation/_retencion_observations_repository.py"
 kind = "filing_year_literal"
 group = "python-resident-filing-years"
@@ -660,11 +630,6 @@ group = "python-resident-filing-years"
 path = "src/cadrumo/application/aggregation/_service.py"
 kind = "modelo_conditional_branch"
 group = "modelo-conditional-behaviour"
-
-[[decision]]
-path = "src/cadrumo/application/aggregation/_source_mesh.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
 
 [[decision]]
 path = "src/cadrumo/application/calculations/_bienes_inversion_regularizacion.py"
@@ -680,11 +645,6 @@ group = "modelo-conditional-behaviour"
 path = "src/cadrumo/application/calculations/cross_period_clean_state.py"
 kind = "modelo_conditional_branch"
 group = "modelo-conditional-behaviour"
-
-[[decision]]
-path = "src/cadrumo/application/calculations/cross_period_models.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
 
 [[decision]]
 path = "src/cadrumo/application/calculations/_iva_compensation_annual_partition.py"
@@ -727,11 +687,6 @@ kind = "modelo_conditional_branch"
 group = "modelo-conditional-behaviour"
 
 [[decision]]
-path = "src/cadrumo/application/calculations/_multi_year.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
 path = "src/cadrumo/application/calculations/observations_repository.py"
 kind = "filing_year_literal"
 group = "python-resident-filing-years"
@@ -752,16 +707,6 @@ kind = "filing_year_literal"
 group = "python-resident-filing-years"
 
 [[decision]]
-path = "src/cadrumo/application/diagnostics.py"
-kind = "regulatory_named_constant"
-group = "named-regulatory-constants"
-
-[[decision]]
-path = "src/cadrumo/application/evidence/_models.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
 path = "src/cadrumo/application/filing/_export.py"
 kind = "modelo_conditional_branch"
 group = "modelo-conditional-behaviour"
@@ -777,22 +722,12 @@ kind = "modelo_conditional_branch"
 group = "modelo-conditional-behaviour"
 
 [[decision]]
-path = "src/cadrumo/application/filing/_producer_snapshot.py"
+path = "src/cadrumo/application/filing/producer_snapshot.py"
 kind = "modelo_conditional_branch"
 group = "modelo-conditional-behaviour"
 
 [[decision]]
-path = "src/cadrumo/application/filing/_profile_filing_retention.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/application/filing/_review.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/application/invoices/_source_resolver.py"
+path = "src/cadrumo/application/invoices/source_resolver.py"
 kind = "modelo_conditional_branch"
 group = "modelo-conditional-behaviour"
 
@@ -800,21 +735,6 @@ group = "modelo-conditional-behaviour"
 path = "src/cadrumo/application/ledger/llm_diagnostics.py"
 kind = "decimal_literal"
 group = "decimal-regulatory-literals"
-
-[[decision]]
-path = "src/cadrumo/application/ledger/models.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/application/ledger/ratios.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/application/live/filed_data_capture.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
 
 [[decision]]
 path = "src/cadrumo/application/live/filed_data_capture.py"
@@ -865,11 +785,6 @@ group = "modelo-conditional-behaviour"
 path = "src/cadrumo/application/modelo/_calculation_preparation.py"
 kind = "modelo_conditional_branch"
 group = "modelo-conditional-behaviour"
-
-[[decision]]
-path = "src/cadrumo/application/modelo/_export.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
 
 [[decision]]
 path = "src/cadrumo/application/modelo/_export.py"
@@ -1002,16 +917,6 @@ kind = "modelo_conditional_branch"
 group = "modelo-conditional-behaviour"
 
 [[decision]]
-path = "src/cadrumo/application/modelo/review_package.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/application/modelo/_review_package_counter_sign.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
 path = "src/cadrumo/application/modelo/_revision_persistence.py"
 kind = "modelo_conditional_branch"
 group = "modelo-conditional-behaviour"
@@ -1020,11 +925,6 @@ group = "modelo-conditional-behaviour"
 path = "src/cadrumo/application/modelo/_revision_replay_inputs.py"
 kind = "modelo_conditional_branch"
 group = "modelo-conditional-behaviour"
-
-[[decision]]
-path = "src/cadrumo/application/modelo/work_addressing.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
 
 [[decision]]
 path = "src/cadrumo/application/modelo/_verification_actions.py"
@@ -1042,24 +942,9 @@ kind = "modelo_conditional_branch"
 group = "modelo-conditional-behaviour"
 
 [[decision]]
-path = "src/cadrumo/application/overview/calendar_models.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/application/overview/explain.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
 path = "src/cadrumo/application/overview/next_actions.py"
 kind = "modelo_conditional_branch"
 group = "modelo-conditional-behaviour"
-
-[[decision]]
-path = "src/cadrumo/application/registry/conformance.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
 
 [[decision]]
 path = "src/cadrumo/application/registry/corpus.py"
@@ -1067,19 +952,9 @@ kind = "filing_year_literal"
 group = "python-resident-filing-years"
 
 [[decision]]
-path = "src/cadrumo/application/state_projection.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/application/storage/calc_sheets/_layout.py"
+path = "src/cadrumo/application/storage/calc_sheets/layout.py"
 kind = "regulatory_named_constant"
 group = "named-regulatory-constants"
-
-[[decision]]
-path = "src/cadrumo/application/storage/calc_sheets/_records.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
 
 [[decision]]
 path = "src/cadrumo/application/storage/calc_sheets/_styling.py"
@@ -1092,17 +967,12 @@ kind = "regulatory_named_constant"
 group = "named-regulatory-constants"
 
 [[decision]]
-path = "src/cadrumo/application/user_profile/commands.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/core/_aeat_csv.py"
+path = "src/cadrumo/core/aeat_csv.py"
 kind = "regulatory_named_constant"
 group = "named-regulatory-constants"
 
 [[decision]]
-path = "src/cadrumo/core/_period.py"
+path = "src/cadrumo/core/period.py"
 kind = "filing_year_literal"
 group = "python-resident-filing-years"
 
@@ -1117,24 +987,9 @@ kind = "regulatory_named_constant"
 group = "named-regulatory-constants"
 
 [[decision]]
-path = "src/cadrumo/domain/bienes_inversion/__init__.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/domain/calculations/registry/bindings.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
 path = "src/cadrumo/domain/calculations/registry/bindings_previous_filing.py"
 kind = "regulatory_named_constant"
 group = "named-regulatory-constants"
-
-[[decision]]
-path = "src/cadrumo/domain/calculations/registry/censo_modelos.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
 
 [[decision]]
 path = "src/cadrumo/domain/calculations/registry/censo_modelos.py"
@@ -1142,34 +997,9 @@ kind = "modelo_conditional_branch"
 group = "registry-modelo-specific"
 
 [[decision]]
-path = "src/cadrumo/domain/calculations/registry/counterpart_bindings.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
 path = "src/cadrumo/domain/calculations/registry/export_parse.py"
 kind = "design_prose_grammar"
 group = "production-aeat-text-parsers"
-
-[[decision]]
-path = "src/cadrumo/domain/calculations/registry/export_parse.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/domain/calculations/registry/export_parse.py"
-kind = "regulatory_named_constant"
-group = "named-regulatory-constants"
-
-[[decision]]
-path = "src/cadrumo/domain/calculations/registry/external_grounding.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/domain/calculations/registry/filed_state.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
 
 [[decision]]
 path = "src/cadrumo/domain/calculations/registry/fixed_width_codec.py"
@@ -1185,11 +1015,6 @@ group = "decimal-regulatory-literals"
 path = "src/cadrumo/domain/calculations/registry/_formula_runtime_m131.py"
 kind = "regulatory_named_constant"
 group = "named-regulatory-constants"
-
-[[decision]]
-path = "src/cadrumo/domain/calculations/registry/invoice_bindings.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
 
 [[decision]]
 path = "src/cadrumo/domain/calculations/registry/ledger_bindings.py"
@@ -1237,16 +1062,6 @@ kind = "modelo_conditional_branch"
 group = "registry-modelo-specific"
 
 [[decision]]
-path = "src/cadrumo/domain/calculations/registry/query_reports.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/domain/calculations/registry/relations.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
 path = "src/cadrumo/domain/calculations/registry/renta_web_open_oracle.py"
 kind = "filing_year_literal"
 group = "python-resident-filing-years"
@@ -1267,27 +1082,12 @@ kind = "filing_year_literal"
 group = "python-resident-filing-years"
 
 [[decision]]
-path = "src/cadrumo/domain/calculations/registry/schema_references.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/domain/calculations/registry/schema_scalars.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
 path = "src/cadrumo/domain/calculations/registry/schema_verification.py"
 kind = "regulatory_named_constant"
 group = "named-regulatory-constants"
 
 [[decision]]
 path = "src/cadrumo/domain/calculations/registry/_validate_application_links.py"
-kind = "modelo_conditional_branch"
-group = "registry-modelo-specific"
-
-[[decision]]
-path = "src/cadrumo/domain/calculations/registry/validate_cross_domain_snapshot.py"
 kind = "modelo_conditional_branch"
 group = "registry-modelo-specific"
 
@@ -1317,154 +1117,94 @@ kind = "decimal_literal"
 group = "decimal-regulatory-literals"
 
 [[decision]]
-path = "src/cadrumo/domain/contribuyente/assets/__init__.py"
-kind = "decimal_literal"
-group = "decimal-regulatory-literals"
-
-[[decision]]
-path = "src/cadrumo/domain/contribuyente/inventory/__init__.py"
-kind = "decimal_literal"
-group = "decimal-regulatory-literals"
-
-[[decision]]
-path = "src/cadrumo/domain/deadlines/_festivos.py"
+path = "src/cadrumo/domain/deadlines/festivos.py"
 kind = "filing_year_literal"
 group = "python-resident-filing-years"
 
 [[decision]]
-path = "src/cadrumo/domain/deadlines/_models.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/domain/filing/_validator.py"
+path = "src/cadrumo/domain/filing/validator.py"
 kind = "modelo_conditional_branch"
 group = "modelo-conditional-behaviour"
 
 [[decision]]
-path = "src/cadrumo/domain/fincas/_amortization_ledger.py"
+path = "src/cadrumo/domain/fincas/amortization_ledger.py"
 kind = "decimal_literal"
 group = "decimal-regulatory-literals"
 
 [[decision]]
-path = "src/cadrumo/domain/fincas/_models.py"
+path = "src/cadrumo/domain/fincas/models.py"
 kind = "filing_year_literal"
 group = "python-resident-filing-years"
 
 [[decision]]
-path = "src/cadrumo/domain/invoices/_service.py"
+path = "src/cadrumo/domain/invoices/service.py"
 kind = "decimal_literal"
 group = "decimal-regulatory-literals"
 
 [[decision]]
-path = "src/cadrumo/domain/iva/_prorrata.py"
+path = "src/cadrumo/domain/iva/prorrata.py"
 kind = "filing_year_literal"
 group = "python-resident-filing-years"
 
 [[decision]]
-path = "src/cadrumo/domain/iva/_regimen_simplificado_rows.py"
+path = "src/cadrumo/domain/iva/regimen_simplificado_rows.py"
 kind = "decimal_literal"
 group = "decimal-regulatory-literals"
 
 [[decision]]
-path = "src/cadrumo/domain/iva/_regimen_simplificado_rows.py"
+path = "src/cadrumo/domain/iva/regimen_simplificado_rows.py"
 kind = "filing_year_literal"
 group = "python-resident-filing-years"
 
 [[decision]]
-path = "src/cadrumo/domain/iva/_regimen_simplificado_rows.py"
+path = "src/cadrumo/domain/iva/regimen_simplificado_rows.py"
 kind = "regulatory_named_constant"
 group = "named-regulatory-constants"
 
 [[decision]]
-path = "src/cadrumo/domain/iva_compensation/_balance.py"
+path = "src/cadrumo/domain/iva_compensation/balance.py"
 kind = "filing_year_literal"
 group = "python-resident-filing-years"
 
 [[decision]]
-path = "src/cadrumo/domain/iva_compensation/_carry_forward.py"
+path = "src/cadrumo/domain/iva_compensation/carry_forward.py"
 kind = "filing_year_literal"
 group = "python-resident-filing-years"
 
 [[decision]]
-path = "src/cadrumo/domain/iva_compensation/_reconciliation.py"
+path = "src/cadrumo/domain/manuals/fetch.py"
 kind = "filing_year_literal"
 group = "python-resident-filing-years"
 
 [[decision]]
-path = "src/cadrumo/domain/manuals/_fetch.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/domain/manuals/_fetch.py"
+path = "src/cadrumo/domain/manuals/fetch.py"
 kind = "regulatory_named_constant"
 group = "named-regulatory-constants"
 
 [[decision]]
-path = "src/cadrumo/domain/manuals/_schema.py"
+path = "src/cadrumo/domain/manuals/schema.py"
 kind = "filing_year_literal"
 group = "python-resident-filing-years"
 
 [[decision]]
-path = "src/cadrumo/domain/modelos/_calculation_revision_aggregate.py"
+path = "src/cadrumo/domain/modelos/calculation_revision_aggregate.py"
 kind = "modelo_conditional_branch"
 group = "modelo-conditional-behaviour"
 
 [[decision]]
-path = "src/cadrumo/domain/modelos/_calculation_revision_m303_evidence.py"
+path = "src/cadrumo/domain/modelos/calculation_revision_m303_handoff.py"
 kind = "filing_year_literal"
 group = "python-resident-filing-years"
 
 [[decision]]
-path = "src/cadrumo/domain/modelos/_calculation_revision_m303_handoff.py"
+path = "src/cadrumo/domain/modelos/row_models.py"
 kind = "filing_year_literal"
 group = "python-resident-filing-years"
 
 [[decision]]
-path = "src/cadrumo/domain/modelos/_filing_record.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/domain/modelos/_iae_exemption.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/domain/modelos/_participation_index.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/domain/modelos/_row_models.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/domain/modelos/_work_unit.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/domain/prorrata_register/__init__.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/domain/prorrata_register/__init__.py"
-kind = "regulatory_named_constant"
-group = "named-regulatory-constants"
-
-[[decision]]
-path = "src/cadrumo/domain/renta/_first_slice_routing_integrity.py"
+path = "src/cadrumo/domain/renta/first_slice_routing_integrity.py"
 kind = "modelo_conditional_branch"
 group = "modelo-conditional-behaviour"
-
-[[decision]]
-path = "src/cadrumo/domain/renta/_ledger_expenses.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
 
 [[decision]]
 path = "src/cadrumo/domain/renta/_maritime_exemption.py"
@@ -1472,39 +1212,14 @@ kind = "decimal_literal"
 group = "decimal-regulatory-literals"
 
 [[decision]]
-path = "src/cadrumo/domain/renta/_retenciones_routing_integrity.py"
+path = "src/cadrumo/domain/renta/retenciones_routing_integrity.py"
 kind = "modelo_conditional_branch"
 group = "modelo-conditional-behaviour"
-
-[[decision]]
-path = "src/cadrumo/domain/retention/_floor.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/domain/transactions/llm.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/domain/usage_ratios/_model.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
 
 [[decision]]
 path = "src/cadrumo/entrypoints/cli/_app_live.py"
 kind = "regulatory_named_constant"
 group = "named-regulatory-constants"
-
-[[decision]]
-path = "src/cadrumo/entrypoints/cli/_common.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/entrypoints/cli/_config_payloads.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
 
 [[decision]]
 path = "src/cadrumo/entrypoints/cli/_m303_filing_evidence_input.py"
@@ -1517,54 +1232,14 @@ kind = "modelo_conditional_branch"
 group = "modelo-conditional-behaviour"
 
 [[decision]]
-path = "src/cadrumo/entrypoints/cli/_modelo_aux_payloads.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
 path = "src/cadrumo/entrypoints/cli/_modelo_cli_support.py"
 kind = "modelo_conditional_branch"
 group = "modelo-conditional-behaviour"
 
 [[decision]]
-path = "src/cadrumo/entrypoints/cli/_modelo_cli_support.py"
-kind = "regulatory_named_constant"
-group = "named-regulatory-constants"
-
-[[decision]]
-path = "src/cadrumo/entrypoints/cli/_modelo_iva_wallet_payloads.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/entrypoints/cli/_modelo_payloads.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/entrypoints/cli/_modelo_review_package_payloads.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/entrypoints/cli/_modelo_work_lifecycle_cli.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
 path = "src/cadrumo/entrypoints/cli/_modelo_work_lifecycle_cli.py"
 kind = "modelo_conditional_branch"
 group = "modelo-conditional-behaviour"
-
-[[decision]]
-path = "src/cadrumo/entrypoints/cli/_modelo_work_lifecycle_cli.py"
-kind = "regulatory_named_constant"
-group = "named-regulatory-constants"
-
-[[decision]]
-path = "src/cadrumo/entrypoints/cli/_payloads_modelo_reconcile.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
 
 [[decision]]
 path = "src/cadrumo/llm/pricing.py"
@@ -1644,36 +1319,6 @@ kind = "filing_year_literal"
 group = "python-resident-filing-years"
 
 [[decision]]
-path = "src/cadrumo/application/export/google_operation.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/application/filing/_export_proof.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/application/modelo/workspace_models.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/application/registry/temporal_coverage.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/application/registry/source_connectivity.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/domain/calculations/registry/coverage.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
 path = "src/cadrumo/domain/calculations/registry/inventory_bindings.py"
 kind = "filing_year_literal"
 group = "python-resident-filing-years"
@@ -1685,11 +1330,6 @@ group = "python-resident-filing-years"
 
 [[decision]]
 path = "src/cadrumo/domain/calculations/registry/withholding296_bindings.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/domain/contribuyente/inventory/__init__.py"
 kind = "filing_year_literal"
 group = "python-resident-filing-years"
 
@@ -1715,11 +1355,6 @@ group = "python-resident-filing-years"
 
 [[decision]]
 path = "src/cadrumo/entrypoints/cli/_app_live_justificante_command_specs.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/entrypoints/cli/_config/_google_command_specs.py"
 kind = "filing_year_literal"
 group = "python-resident-filing-years"
 
@@ -1776,11 +1411,6 @@ kind = "modelo_conditional_branch"
 group = "modelo-conditional-behaviour"
 
 [[decision]]
-path = "src/cadrumo/application/user_profile/preflight.py"
-kind = "modelo_conditional_branch"
-group = "modelo-conditional-behaviour"
-
-[[decision]]
 path = "src/cadrumo/domain/calculations/registry/deadline_coordinate.py"
 kind = "modelo_conditional_branch"
 group = "registry-modelo-specific"
@@ -1789,11 +1419,6 @@ group = "registry-modelo-specific"
 path = "src/cadrumo/domain/calculations/registry/gasto193_bindings.py"
 kind = "regulatory_named_constant"
 group = "named-regulatory-constants"
-
-[[decision]]
-path = "src/cadrumo/domain/calculations/registry/record_design.py"
-kind = "design_prose_grammar"
-group = "production-aeat-text-parsers"
 
 [[decision]]
 path = "src/cadrumo/domain/calculations/registry/record_design_schema.py"
@@ -1821,7 +1446,7 @@ kind = "regulatory_named_constant"
 group = "named-regulatory-constants"
 
 [[decision]]
-path = "src/cadrumo/domain/deadlines/_plazo.py"
+path = "src/cadrumo/domain/deadlines/plazo.py"
 kind = "modelo_conditional_branch"
 group = "modelo-conditional-behaviour"
 
@@ -1844,3 +1469,138 @@ group = "named-regulatory-constants"
 path = "src/cadrumo/entrypoints/tui/devtools/modelo_work_wizard.py"
 kind = "regulatory_named_constant"
 group = "named-regulatory-constants"
+
+[[decision]]
+path = "src/cadrumo/application/evidence/bundle_text.py"
+enclosing_symbol = "<module>"
+disposition = "not_regulatory"
+rationale = "`StringConstraints(max_length=2000)` on an evidence-bundle note. The literal is a character budget, not a filing year; the detector matches any bare 2000."
+
+[[decision]]
+path = "src/cadrumo/application/modelo/review_package_text.py"
+enclosing_symbol = "<module>"
+disposition = "not_regulatory"
+rationale = "`StringConstraints(max_length=2000)` on a review-package note. A character budget, not a filing year -- the module's own comment already records that it happens to share the 2000 bound while annotating prose."
+
+[[decision]]
+path = "src/cadrumo/application/modelo/_edit_models.py"
+enclosing_symbol = "<module>"
+disposition = "not_regulatory"
+rationale = "`_MAX_SURFACE_ENTRIES = 2000`, a cap on how many permitted-surface entries one edit admission may carry. A collection bound, not a filing year."
+
+[[decision]]
+path = "src/cadrumo/application/modelo/operation_definitions.py"
+enclosing_symbol = "<module>"
+disposition = "not_regulatory"
+rationale = "Two findings at this module scope, neither regulatory. `Field(max_length=2000)` bounds a permitted-surface tuple, and the decimal pair -999999999999.99 / 999999999999.99 bounds a monetary FIELD WIDTH so an operand cannot exceed what a fixed-width record can carry. A width is not a rate, threshold or bound the law fixes."
+
+[[decision]]
+path = "src/cadrumo/application/calculations/_relation_prefill_m202.py"
+enclosing_symbol = "relation_prefill_period_zero_default_binding_ids"
+disposition = "not_regulatory"
+rationale = """
+An applicability guard, `modelo != Modelo.M202.value`, returning an empty
+binding set inside a function whose module is named for the modelo it serves.
+The branch decides only whether this M202-specific code runs. The regulatory
+content it guards -- a same-model previous-payment carry resolving to zero
+before its first target period -- lives inside the function, and that content is
+adjudicated separately as a branch classification, not here.
+"""
+
+[[decision]]
+path = "src/cadrumo/application/aggregation/_modelo_bindings_retenciones.py"
+enclosing_symbol = "resolve"
+disposition = "deferred"
+reference = "2026-08-30-repo-gate-integrity-wrong-subject-gates-audit"
+rationale = """
+This branch DOES carry a regulatory fact: Modelo 111 alone has a prescribed
+remedy for a nil quarter, which is attested rather than filed blank, and the
+branch both selects the attestation locale key and adds `attestation_period` to
+the refusal payload. It is classified `regulatory_treatment` in the branch
+ledgers on that reading. Deferred rather than enrolled because no plan row moves
+it: the module's own comment records WHY it lives here -- "the typed action
+channel cannot express it, the wizard setup command projects no inputs to bind
+against" -- so relocating the fact needs a typed channel that does not yet
+exist. Recorded in the open rather than left unadjudicated.
+"""
+
+[[decision]]
+path = "src/cadrumo/entrypoints/cli/_period_parsing.py"
+enclosing_symbol = "<module>"
+disposition = "not_regulatory"
+rationale = """
+The years appear only in COMMENT PROSE, as usage examples of the CLI's
+year/period composition (`--period 1T --year 2024`) and of the calendar shapes
+the parser refuses (`2024Q1`, `2024-03`). Documentation naming a year is not
+regulatory data, and rewriting it to avoid the detector would make the examples
+worse.
+"""
+
+[[decision]]
+path = "src/cadrumo/entrypoints/cli/_app_live_iva_wallet_payloads.py"
+enclosing_symbol = "IvaWalletCaptureHistoryResult"
+disposition = "not_regulatory"
+rationale = "`casilla_count: NonNegativeInt = 0`, a count of casillas read during a capture so an operator can confirm what the counts are counting. A statistic about output, not a regulatory value -- the same reading this ledger already records for the documentation build's casilla row count."
+
+[[decision]]
+path = "src/cadrumo/application/modelo/operation_definitions.py"
+enclosing_symbol = "ModeloEditApplyBaselineV1"
+disposition = "not_regulatory"
+rationale = "The 2000 is not a literal in this module: the fields are `filing_year: FilingYear` and `period_filing_year: FilingYear`, and the annotated type carries `ge=FILING_YEAR_MIN`. It is the application-acceptance bound adjudicated at `core/filing_year.py`, surfacing at a use site."
+
+[[decision]]
+path = "src/cadrumo/core/filing_year.py"
+group = "python-resident-filing-years"
+
+[[decision]]
+path = "src/cadrumo/domain/prorrata_register/register.py"
+group = "python-resident-filing-years"
+
+[[decision]]
+path = "src/cadrumo/domain/bienes_inversion/register.py"
+group = "python-resident-filing-years"
+
+[[decision]]
+path = "src/cadrumo/adapters/inbound/borrador/_extractors/selection.py"
+kind = "filing_year_literal"
+group = "python-resident-filing-years"
+
+[[decision]]
+path = "src/cadrumo/domain/calculations/registry/record_design_pdf_state.py"
+kind = "design_prose_grammar"
+group = "production-aeat-text-parsers"
+
+[[decision]]
+path = "src/cadrumo/domain/calculations/registry/record_design_workbook.py"
+kind = "design_prose_grammar"
+group = "production-aeat-text-parsers"
+
+[[decision]]
+path = "src/cadrumo/domain/calculations/registry/validate_cross_domain_snapshot.py"
+kind = "modelo_keyed_mapping_entry"
+group = "registry-modelo-specific"
+
+[[decision]]
+path = "src/cadrumo/domain/contribuyente/assets/records.py"
+kind = "decimal_literal"
+group = "decimal-regulatory-literals"
+
+[[decision]]
+path = "src/cadrumo/domain/contribuyente/assets/records.py"
+kind = "regulatory_named_constant"
+group = "named-regulatory-constants"
+
+[[decision]]
+path = "src/cadrumo/domain/contribuyente/inventory/records.py"
+kind = "decimal_literal"
+group = "decimal-regulatory-literals"
+
+[[decision]]
+path = "src/cadrumo/domain/contribuyente/inventory/records.py"
+kind = "regulatory_named_constant"
+group = "named-regulatory-constants"
+
+[[decision]]
+path = "src/cadrumo/domain/contribuyente/inventory/records.py"
+kind = "filing_year_literal"
+group = "python-resident-filing-years"

@@ -40,7 +40,7 @@ from typing import Final
 
 import pytest
 
-from .._parsers import parse_einvoice_document
+from ..parsers import parse_einvoice_document
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 

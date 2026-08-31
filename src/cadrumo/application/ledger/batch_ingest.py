@@ -367,7 +367,7 @@ def _reads_without_a_model(data: bytes) -> bool:
     may then need one after all; that is the conservative direction, because the
     cost is a refusal the operator sees rather than a model load nobody admitted.
     """
-    from ...adapters.inbound.einvoice._shape import probe_document_shape
+    from ...adapters.inbound.einvoice.shape import probe_document_shape
     from ...core.document_shape import STRUCTURED_DOCUMENT_SHAPES
 
     return probe_document_shape(data) in STRUCTURED_DOCUMENT_SHAPES

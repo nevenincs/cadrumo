@@ -75,8 +75,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, NoReturn
 
-from ...adapters.inbound.einvoice._parsers import parse_einvoice_document
-from ...adapters.inbound.einvoice._xml import EInvoiceXmlParseError
+from ...adapters.inbound.einvoice.parsers import parse_einvoice_document
+from ...adapters.inbound.einvoice.xml import EInvoiceXmlParseError
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.storage.attachment import AttachmentStore
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket

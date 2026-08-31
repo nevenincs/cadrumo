@@ -194,12 +194,6 @@ group = "payload-scope-guard"
 selects = "censo event destination coordinates are reserved for canonical Modelo 036"
 
 [[branch]]
-path = "src/cadrumo/application/user_profile/preflight.py"
-enclosing_symbol = "report"
-modelo_codes = "M111"
-group = "obligation-condition"
-
-[[branch]]
 path = "src/cadrumo/application/aggregation/_inventory.py"
 enclosing_symbol = "resolve"
 modelo_codes = "M100"
@@ -207,7 +201,7 @@ group = "unbuilt-coordinate-refusal"
 selects = "unsupported_coordinate"
 
 [[branch]]
-path = "src/cadrumo/adapters/outbound/aeat/sede/_declarations_observations.py"
+path = "src/cadrumo/adapters/outbound/aeat/sede/declarations_observations.py"
 enclosing_symbol = "_with_derived_303_compensation_available_observation"
 modelo_codes = "M303"
 group = "modelo-scope-guard"
@@ -362,7 +356,7 @@ modelo_codes = "M303"
 group = "casilla-target-selection"
 
 [[branch]]
-path = "src/cadrumo/application/calculations/_relation_prefill.py"
+path = "src/cadrumo/application/calculations/_relation_prefill_m202.py"
 enclosing_symbol = "relation_prefill_period_zero_default_binding_ids"
 modelo_codes = "M202"
 group = "modelo-scope-guard"
@@ -423,84 +417,84 @@ group = "modelo-scope-guard"
 selects = "_validate_snapshot_selection"
 
 [[branch]]
-path = "src/cadrumo/application/filing/_producer_snapshot.py"
+path = "src/cadrumo/application/filing/producer_snapshot.py"
 enclosing_symbol = "_validate_snapshot_model_profile"
 modelo_codes = "M111"
 group = "modelo-path-routing"
 selects = "_validate_modelo_111_snapshot"
 
 [[branch]]
-path = "src/cadrumo/application/filing/_producer_snapshot.py"
+path = "src/cadrumo/application/filing/producer_snapshot.py"
 enclosing_symbol = "_validate_snapshot_model_profile"
 modelo_codes = "M202"
 group = "modelo-path-routing"
 selects = "_validate_modelo_202_snapshot"
 
 [[branch]]
-path = "src/cadrumo/application/filing/_producer_snapshot.py"
+path = "src/cadrumo/application/filing/producer_snapshot.py"
 enclosing_symbol = "_validate_snapshot_model_profile"
 modelo_codes = "M303"
 group = "modelo-path-routing"
 selects = "_validate_modelo_303_snapshot"
 
 [[branch]]
-path = "src/cadrumo/application/filing/_producer_snapshot.py"
+path = "src/cadrumo/application/filing/producer_snapshot.py"
 enclosing_symbol = "_validate_snapshot_model_profile"
 modelo_codes = "M222"
 group = "modelo-path-routing"
 selects = "_validate_modelo_222_snapshot"
 
 [[branch]]
-path = "src/cadrumo/application/filing/_producer_snapshot.py"
+path = "src/cadrumo/application/filing/producer_snapshot.py"
 enclosing_symbol = "_validate_snapshot_model_profile"
 modelo_codes = "M296"
 group = "modelo-path-routing"
 selects = "_validate_modelo_296_snapshot"
 
 [[branch]]
-path = "src/cadrumo/application/filing/_producer_snapshot.py"
+path = "src/cadrumo/application/filing/producer_snapshot.py"
 enclosing_symbol = "_validate_snapshot_model_profile"
 modelo_codes = "M353"
 group = "modelo-path-routing"
 selects = "_validate_modelo_353_snapshot"
 
 [[branch]]
-path = "src/cadrumo/application/invoices/_source_resolver.py"
+path = "src/cadrumo/application/invoices/source_resolver.py"
 enclosing_symbol = "_invoice_observation"
 modelo_codes = "M347"
 group = "modelo-path-routing"
 selects = "_m347_invoice_observation"
 
 [[branch]]
-path = "src/cadrumo/application/invoices/_source_resolver.py"
+path = "src/cadrumo/application/invoices/source_resolver.py"
 enclosing_symbol = "_invoice_observation"
 modelo_codes = "M349"
 group = "modelo-path-routing"
 selects = "_m347_invoice_observation"
 
 [[branch]]
-path = "src/cadrumo/application/invoices/_source_resolver.py"
+path = "src/cadrumo/application/invoices/source_resolver.py"
 enclosing_symbol = "_m349_declarante_summary_union"
 modelo_codes = "M349"
 group = "modelo-scope-guard"
 selects = "_m349_declarante_summary_union"
 
 [[branch]]
-path = "src/cadrumo/application/invoices/_source_resolver.py"
+path = "src/cadrumo/application/invoices/source_resolver.py"
 enclosing_symbol = "_m349_incoherent_verdict"
 modelo_codes = "M349"
 group = "modelo-scope-guard"
 selects = "_m349_incoherent_verdict"
 
 [[branch]]
-path = "src/cadrumo/application/invoices/_source_resolver.py"
+path = "src/cadrumo/application/invoices/source_resolver.py"
 enclosing_symbol = "_m349_operador_rows_from_observations"
 modelo_codes = "M349"
 group = "modelo-scope-guard"
 selects = "_m349_operador_rows_from_observations"
 
 [[branch]]
-path = "src/cadrumo/application/invoices/_source_resolver.py"
+path = "src/cadrumo/application/invoices/source_resolver.py"
 enclosing_symbol = "resolve"
 modelo_codes = "M349"
 group = "modelo-scope-guard"
@@ -1000,27 +994,27 @@ group = "modelo-path-routing"
 selects = "MODELO_210_SEDE_ONLY"
 
 [[branch]]
-path = "src/cadrumo/domain/filing/_validator.py"
+path = "src/cadrumo/domain/filing/validator.py"
 enclosing_symbol = "_required_casilla_satisfied_by_row_bindings"
 modelo_codes = "M349"
 group = "casilla-target-selection"
 
 [[branch]]
-path = "src/cadrumo/domain/modelos/_calculation_revision_aggregate.py"
+path = "src/cadrumo/domain/modelos/calculation_revision_aggregate.py"
 enclosing_symbol = "_require_registry_snapshot"
 modelo_codes = "M303"
 group = "modelo-scope-guard"
 selects = "_require_registry_snapshot"
 
 [[branch]]
-path = "src/cadrumo/domain/modelos/_calculation_revision_aggregate.py"
+path = "src/cadrumo/domain/modelos/calculation_revision_aggregate.py"
 enclosing_symbol = "validate_calculation_revision_aggregate"
 modelo_codes = "M303"
 group = "modelo-scope-guard"
 selects = "validate_calculation_revision_aggregate"
 
 [[branch]]
-path = "src/cadrumo/domain/deadlines/_plazo.py"
+path = "src/cadrumo/domain/deadlines/plazo.py"
 enclosing_symbol = "resolve_filing_window"
 modelo_codes = "M210"
 classification = "orchestration_routing"
@@ -1040,7 +1034,7 @@ is modelo-neutral. Borrowing it would assert something untrue of this site.
 """
 
 [[branch]]
-path = "src/cadrumo/domain/deadlines/_plazo.py"
+path = "src/cadrumo/domain/deadlines/plazo.py"
 enclosing_symbol = "_resolve_projected_filing_window"
 modelo_codes = "M210"
 classification = "regulatory_treatment"
@@ -1066,14 +1060,14 @@ branch is its implementation rather than an undeclared judgement.
 """
 
 [[branch]]
-path = "src/cadrumo/domain/renta/_first_slice_routing_integrity.py"
+path = "src/cadrumo/domain/renta/first_slice_routing_integrity.py"
 enclosing_symbol = "check_first_slice_routing"
 modelo_codes = "M100"
 group = "modelo-scope-guard"
 selects = "check_first_slice_routing"
 
 [[branch]]
-path = "src/cadrumo/domain/renta/_retenciones_routing_integrity.py"
+path = "src/cadrumo/domain/renta/retenciones_routing_integrity.py"
 enclosing_symbol = "check_m130_retenciones_output_casilla"
 modelo_codes = "M130"
 group = "modelo-scope-guard"
@@ -1149,7 +1143,7 @@ group = "modelo-path-routing"
 selects = "build_m296_filing_projection_plan"
 
 [[branch]]
-path = "src/cadrumo/application/filing/_producer_snapshot.py"
+path = "src/cadrumo/application/filing/producer_snapshot.py"
 enclosing_symbol = "_validate_snapshot_model_profile"
 modelo_codes = "M390"
 group = "payload-scope-guard"
@@ -1157,17 +1151,17 @@ selects = "ValueError"
 
 [[branch]]
 path = "src/cadrumo/application/modelo/_work_plazo.py"
-enclosing_symbol = "calculated_m210_plazo_notice"
+enclosing_symbol = "calculated_m210_plazo_resolution"
 modelo_codes = "M210"
 group = "modelo-scope-guard"
-selects = "calculated_m210_plazo_notice"
+selects = "calculated_m210_plazo_resolution"
 
 [[branch]]
 path = "src/cadrumo/application/modelo/_calculate_input.py"
 enclosing_symbol = "calculate_modelo_work_revision"
 modelo_codes = "M210"
 group = "modelo-path-routing"
-selects = "calculated_m210_plazo_notice"
+selects = "calculated_m210_plazo_resolution"
 
 [[branch]]
 path = "src/cadrumo/application/modelo/external_import_actions.py"
@@ -1215,3 +1209,16 @@ then asks is delegated: which revision governs the source coordinate is resolved
 by select_revision from (modelo, filing_year, period), the law-determined
 selector, not chosen here. The citation names that selector.
 """
+
+[[branch]]
+path = "src/cadrumo/application/invoices/source_resolver.py"
+enclosing_symbol = "_m347_role_fact_advisories"
+modelo_codes = "M347"
+group = "modelo-scope-guard"
+selects = "_m347_role_fact_advisories"
+
+[[branch]]
+path = "src/cadrumo/application/aggregation/_modelo_bindings_retenciones.py"
+enclosing_symbol = "resolve"
+modelo_codes = "M111"
+group = "obligation-condition"

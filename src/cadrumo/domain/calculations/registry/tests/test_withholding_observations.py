@@ -14,8 +14,9 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.aggregation import RetencionClave
+from .._withholding_rows import _build_withholding_rows
 from ..errors import RegistryValidationError
-from ..withholding_bindings import WithholdingObservation, _build_withholding_rows
+from ..withholding_bindings import WithholdingObservation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

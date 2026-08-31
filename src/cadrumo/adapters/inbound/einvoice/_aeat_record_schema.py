@@ -41,7 +41,7 @@ from functools import lru_cache
 from xml.etree.ElementTree import Element
 
 from ....core.resources.bundled_data import bundled_path
-from ._xml import parse_hardened_xml
+from .xml import parse_hardened_xml
 
 __all__ = [
     "AEAT_RECORD_SCHEMA_FAMILIES",

@@ -10,14 +10,14 @@ from pydantic import ValidationError
 
 from ...core.aggregation import BindingSourceKind
 from ...core.modelo import Modelo
-from ...domain.calculations._row_source_identity import RowSourceIdentity
 from ...domain.calculations.registry.inventory_bindings import InventorySelector
 from ...domain.calculations.registry.schema import DataBindingDefinition
+from ...domain.calculations.row_source_identity import RowSourceIdentity
 from ...domain.contribuyente.inventory.records import (
     InventoryLedgerDocument,
     InventoryLedgerError,
-    compute_inventory_anexo_d_projection,
 )
+from ...domain.contribuyente.inventory.valuation import compute_inventory_anexo_d_projection
 from ._source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,

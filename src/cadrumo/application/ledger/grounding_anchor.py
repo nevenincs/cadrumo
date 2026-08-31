@@ -95,7 +95,7 @@ from .document_transcription import DocumentTranscription
 from .invoice_draft_records import FieldAmbiguityCandidate, FieldProvenance
 
 if TYPE_CHECKING:
-    from ...adapters.inbound.einvoice._parsers import ParsedEInvoice
+    from ...adapters.inbound.einvoice.parsers import ParsedEInvoice
     from .evidence_input import EvidenceInput
 
 __all__ = [

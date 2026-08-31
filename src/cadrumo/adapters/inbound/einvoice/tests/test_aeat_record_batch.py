@@ -14,7 +14,7 @@ import pytest
 
 from .....core.document_shape import AEAT_RECORD_BATCH_SHAPES, STRUCTURED_DOCUMENT_SHAPES, DocumentShape
 from .._record_batch import AeatRecordFamily, parse_aeat_record_batch
-from .._xml import EInvoiceXmlParseError
+from ..xml import EInvoiceXmlParseError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
