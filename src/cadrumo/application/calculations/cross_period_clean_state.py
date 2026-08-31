@@ -1123,6 +1123,5 @@ __all__ = [
     "cross_period_dependency_inventory",
     "cross_period_dependency_requirements",
     "evaluate_cross_period_clean_state",
-    "filing_external_evidence_blockers",
     "partition_cross_period_requirements_by_activity_start",
 ]
