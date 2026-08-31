@@ -5,7 +5,7 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:085fb433a4dac84542f5d2f83b2f1880ef94189c846acf5eeb7eb6ed449bae55'
+body_hash: 'sha256:b34a3f8b56cae02c8ac88dc751b8d10db1375175b791f97540f1150acdfdaa88'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
 ---
@@ -25,6 +25,10 @@ S122 relocated `_condition_for_constraint` from `calc_sheets_apply.py` to `_calc
 ### non-reproducible-exec-evidence | high | The S122 record does not name the passing test selections
 
 The S122 execution record claims two passing pytest checks using `<five focused real Modelo-plan builder modules>` and `<apply/preview/clear-order consumer modules>` in place of concrete node IDs or paths. Those placeholders cannot reproduce or assess the asserted evidence, contrary to the plan's execution-evidence criterion. It also describes a 1,172-line source-specific measurement although the committed target is 1,028 physical lines, below the 1,250 default; the record must state the actual measured command and result.
+
+### repair-verification | low | Both S122 high findings are resolved by the repair commit
+
+Review of `15e6518f1c5abf568125954aaf445570a7b76c3d` confirms that the exemption now names only `(adapters/outbound/google/_calc_sheets_apply_formatting.py, _condition_for_constraint)`. The cap-term command still fails its two test IDs, but its output now contains exactly six non-S122 source/legacy-path relocation pairs and neither the new Google Sheets path nor the old path. The execution record now gives concrete pytest and ruff commands. Direct budget measurement reports 1,172 physical lines; the recorded PowerShell nonblank-line command reports 1,028, and both are under the 1,250 default. No baseline change was introduced.
 
 ## Recommendations
 
