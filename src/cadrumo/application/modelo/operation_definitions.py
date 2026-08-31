@@ -28,15 +28,6 @@ from typing import TYPE_CHECKING, Annotated, Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ...core import M210PayerMode, PaymentElection, RefundElection
-from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.period import Period
-from ...core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationInteractionKind,
-)
 from ...core.country_code import CountryCodeAlpha2
 from ...core.errors.hierarchy import CadrumoError
 from ...core.filing_year import FilingYear
@@ -47,7 +38,16 @@ from ...core.identity import (
     ModeloEditBaselineId,
     WorkUnitId,
 )
-from ...core.operations import EFFECTS_WITHOUT_PARTIAL_COMMIT
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.operations import (
+    EFFECTS_WITHOUT_PARTIAL_COMMIT,
+    OperationCancellation,
+    OperationClosePolicy,
+    OperationDeadline,
+    OperationDurability,
+    OperationInteractionKind,
+)
+from ...core.period import Period
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.modelos.calculation_revision import CalculationRevisionAmendmentKind
 from ...domain.modelos.calculation_revision_amendment import M303RectificativaMotive
@@ -1205,7 +1205,7 @@ class ModeloEditApply232VinculadaRowV1(BaseModel):
     row_type: Literal["vinculada"] = "vinculada"
     nif: Annotated[str, Field(min_length=1, max_length=20)]
     nombre: Annotated[str, Field(max_length=200)] = ""
-    pais: Annotated[str, Field(min_length=2, max_length=2)]
+    pais: CountryCodeAlpha2
     tipo_vinculacion: _WireCode = ""
     tipo_operacion: _WireCode = ""
     metodo: _WireCode = ""

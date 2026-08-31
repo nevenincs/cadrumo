@@ -31,9 +31,10 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
-from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
+from ....core.country_code import CountryCodeAlpha2
 from ....core.identity import TaxIdIdentityToken
+from ....core.models import STRICT_FROZEN_CONFIG
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import (
     BindingExportDataType,
@@ -104,7 +105,7 @@ class DonativoDonorObservation(BaseModel):
     source_id: str = Field(min_length=1, max_length=128)
     donor_tax_id: TaxIdIdentityToken
     donor_legal_name: str = Field(default="", max_length=200)
-    country_code: str = Field(default="ES", min_length=2, max_length=2)
+    country_code: CountryCodeAlpha2 = "ES"
     transaction_date: date
     amount_donated: Decimal
     deduction_percentage: Decimal
