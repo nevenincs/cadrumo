@@ -5,7 +5,7 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:58ad3bc98b978148d8e4ce51b10738bf85ed86555a179ce2258966008eba423e'
+body_hash: 'sha256:80bd0f7c1f396383a841a9ecfcd8f95d92a9b92383077f8977fb686b788eb179'
 related: []
 ---
 
@@ -97,3 +97,37 @@ When one component generates content for another, compare their VOCABULARIES, no
 just their behaviour. A term present downstream and absent upstream is a silent
 truncation waiting for someone to press regenerate, and no test of the generator
 against itself can see it -- only a comparison against the schema it targets.
+
+
+## Severity correction: this is already shipped, and it blocks its own repair
+
+The body above frames the gap as a REGENERATION hazard, true of modelo 347 whose
+committed tree is correct. Measured across the corpus, that understates it.
+
+**Modelo 184 is already wrong in committed content.** Its diseño prescribes *"1 y
+tantos registros del tipo 2 como claves y subclaves declaradas ... por cada socio,
+heredero, comunero o partícipe"*. Its shipped layout's `m184-socio` record carries
+`repeat=None`, `binding_record=None` and **0 binding fields of 32**, against 19
+declared `modelo-184-member-row-*` bindings. The tree as published can declare ONE
+socio. Nobody has to regenerate anything for that to be true.
+
+**And the schema gap blocks the fix.** Modelo 184's export IS a generated tree --
+it carries `_generation.provenance.json` and is enrolled in `_GENERATED_TREES` --
+so its layout may only change by regenerating from its semantic map. The map
+cannot express `binding_rows`. Hand-editing the committed fragment is not an
+escape either: the committed tree must equal a fresh render, so an edit reds the
+reproducibility gate immediately.
+
+So modelo 184 cannot be repaired at all until the generator can express the
+repeat. What reads as an optional capability in the fix ordering above is in fact
+the only route to correcting shipped content that under-declares.
+
+Modelo 360 `2010-y-siguientes` sits in the same category on the evidence available
+(5 refund-row bindings, 0 consumed across 235 fields), though its diseño extract
+does not settle whether the block repeats or uses fixed slots, so the SHAPE of its
+repair is open in a way modelo 184's is not.
+
+Enrolled with reasons in
+`registry/tests/test_row_bindings_are_consumed.py`, whose companion test reds if a
+revision is repaired without its entry being removed.
+
