@@ -21,7 +21,6 @@ from ._producer_snapshot import (
     M303FilingFacts,
     M303InsolvencyFilingSubtype,
     Modelo111ProfileFacts,
-    Modelo200ProfileFacts,
     Modelo202ProducerProfile,
     Modelo210ProfileFacts,
     Modelo222ProfileFacts,
@@ -29,6 +28,7 @@ from ._producer_snapshot import (
     Modelo353ProfileFacts,
     RefundAccountSelection,
 )
+from ._producer_snapshot_m200 import Modelo200ProfileFacts
 
 
 @dataclass(frozen=True)
