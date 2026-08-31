@@ -138,6 +138,32 @@ _SENSITIVE_DIRECT_WRITE_EXCEPTIONS: dict[tuple[str, str, str], str] = {
 }
 _REVIEWED_PRODUCTION_FILE_WRITES = {
     (
+        "src/cadrumo/adapters/persistence/operations/financial_operand_custody.py",
+        "open",
+        "path.write_text",
+    ): (
+        "custody journal position, not operand material: the checkpoint model's own contract is that it "
+        "carries no amount, digest or derivative, so a replay reconstructs what happened without "
+        "reconstructing what was supplied"
+    ),
+    (
+        "src/cadrumo/adapters/persistence/operations/financial_operand_custody.py",
+        "advance",
+        "path.write_text",
+    ): (
+        "same journal, successor position; fields are an operand kind, an opaque interaction id, a "
+        "sequence, a state, a timestamp and two optional enums"
+    ),
+    (
+        "src/cadrumo/entrypoints/cli/_config/_scripted_registration.py",
+        "_write_recovery_handoff",
+        "os.write",
+    ): (
+        "writes the recovery mnemonic to a CALLER-SUPPLIED descriptor rather than a path this code "
+        "chooses, bounds the document to 8192 bytes, zeroes the buffer in a finally and closes the "
+        "descriptor on every exit; the destination remains the caller's responsibility"
+    ),
+    (
         "src/cadrumo/core/atomic_write.py",
         "atomic_write_bytes",
         "tempfile.NamedTemporaryFile",
@@ -173,13 +199,13 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "os.open",
     ): "auth acquisition lock file; non-sensitive lock metadata only",
     (
-        "src/cadrumo/core/_fsync.py",
+        "src/cadrumo/core/fsync.py",
         "fsync_parent_dir",
         "os.open",
     ): "lock maintenance opens directories, not sensitive data files",
     (
         "src/cadrumo/core/locks.py",
-        "exclusive_file_lock",
+        "_open_lock_fd",
         "os.open",
     ): "lock maintenance creates lock files, not sensitive data records",
     (
@@ -272,13 +298,13 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
     # write is ciphertext, custody metadata, or nothing at all in the cases
     # that open a descriptor purely to hold an identity.
     (
-        "src/cadrumo/adapters/persistence/storage/custody/filesystem.py",
-        "_fsync_directory",
+        "src/cadrumo/adapters/persistence/storage/custody/_capsule_filesystem.py",
+        "fsync_directory",
         "os.open",
     ): "opens a directory descriptor to fsync it; writes no bytes",
     (
-        "src/cadrumo/adapters/persistence/storage/custody/filesystem.py",
-        "_fsync_windows_published_commit",
+        "src/cadrumo/adapters/persistence/storage/custody/_capsule_filesystem.py",
+        "fsync_windows_published_commit",
         "os.open",
     ): "opens the published commit file to fsync it; writes no bytes",
     (
