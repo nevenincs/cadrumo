@@ -70,7 +70,7 @@ from ...core.identity import BucketId, ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.percentage import Percentage
 from ...core.text_bounds import NonNegativeDecimal
-from ...core.time._clock import now as _utc_now
+from ...core.time import now as _utc_now
 from ...domain.attachments.enums import AttachmentKind, AttachmentSource
 from ...domain.attachments.service import AttachmentFileContent, AttachmentIngestionRequest, add_attachment
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
