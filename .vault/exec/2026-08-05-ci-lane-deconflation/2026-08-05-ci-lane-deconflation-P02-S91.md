@@ -27,6 +27,3 @@ related:
 - Historical corpus observation at the plan's 2026-08-28 snapshot: the newest bundled Modelo 390 diseño was `01-390-ejercicio-2025-actualizado-05-12-2025`, stamped 5 December 2025, and no exercise-2026 artefact was observed. No terminal transcript beyond the plan's historical corpus content was retained.
 - The expectation of a December 2026 artefact was an historical inference from that 2025 timing, not a current forecast or present-corpus assertion.
 - Lifecycle boundary: S90 owns the operator-facing accepted-set gap; S92 the sibling-error precedent; S94 the later implementation; S95 the later narrow verification. This docs-only record changes no corpus, registry, source, plan, or default index.
-
-
-
