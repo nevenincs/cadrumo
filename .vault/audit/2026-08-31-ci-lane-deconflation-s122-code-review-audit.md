@@ -34,4 +34,3 @@ Review of `15e6518f1c5abf568125954aaf445570a7b76c3d` confirms that the exemption
 
 - For `stale-cap-inventory`, update the one S122-owned exemption to the canonical sibling path and prove both named cap-term inventory tests pass; do not absorb the six unrelated inventory failures.
 - For `non-reproducible-exec-evidence`, amend the scaffolded S122 execution record through the owning vault verb with the exact pytest selections, exact size measurement command and actual result, then rerun and record those checks.
-

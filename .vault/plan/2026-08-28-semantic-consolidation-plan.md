@@ -9,7 +9,7 @@ related:
   - '[[2026-08-28-semantic-consolidation-cli-payload-projection-adr]]'
 modified: '2026-08-31'
 body_schema: body-v2
-body_hash: 'sha256:3d648f0bddac3d3517900107436beb441c75dde56649eac7d359c08cf387ae36'
+body_hash: 'sha256:036b89512395666f18d6ce9c911375f2841ad9a1fa313dc50d5b5b46ad1f3de2'
 ---
 
 # `semantic-consolidation` plan
@@ -76,11 +76,15 @@ Six package namespaces carry a PEP 562 __getattr__ resolver, four of them byte-i
 - [x] `P02.S133` - Declare the apoderamiento and review-package note bounds once each and adopt them at their six sites, retiring the review-package payload module from the outstanding list; `src/cadrumo/application/auth/apoderado_text.py, src/cadrumo/application/modelo/review_package_text.py, src/cadrumo/entrypoints/cli/`.
 - [x] `P02.S134` - Make the province-code alternation one declaration and route the postcode, province and INE municipality shapes through it, closing a registry boundary that accepted a nonexistent province; `src/cadrumo/core/spanish_postcode.py, src/cadrumo/domain/calculations/registry/schema_scalars.py, src/cadrumo/domain/calculations/registry/tests/test_long_tail_data_types.py`.
 - [x] `P02.S135` - Declare the ISO alpha-2 shape once and record at each site whether it folds or refuses a lowercase token, leaving that policy question open rather than settling it by consolidation; `src/cadrumo/core/country_code.py, src/cadrumo/domain/invoices/validators.py, src/cadrumo/domain/calculations/registry/schema_scalars.py`.
+- [x] `P02.S136` - Declare the calendar-month bound and its predicate once and adopt them at eight sites, two of which stated the same field's rule twice in one module; `src/cadrumo/core/text_bounds.py, src/cadrumo/domain/contribuyente/, src/cadrumo/application/wizard/, src/cadrumo/entrypoints/cli/`.
 
 ### Phase `P03` - Consolidate the repeated secure-repository configuration shape
 
 Eleven repository classes declare the identical namespace, payload_type, schema_version and sensitivity quartet. The question this phase answers is whether they are eleven restatements of one configuration shape or eleven legitimately distinct repositories that share four field names, and the answer decides whether a shared base is a consolidation or a false merge.
 
+- [x] `P03.S137` - Route Cl@ve Movil identity classification through the domain classifier, restoring the prefixed NIF its hand-rolled shape regexes silently excluded; `src/cadrumo/adapters/outbound/aeat/auth/clave_movil_support.py, src/cadrumo/adapters/outbound/aeat/auth/tests/test_clave_movil.py`.
+- [x] `P03.S138` - Promote the retention-floor erase decision to one domain function both destructive surfaces reach, as the CLI verb's own docstring asked; `src/cadrumo/domain/retention/, src/cadrumo/application/config_reset.py, src/cadrumo/entrypoints/cli/_config/_profile_delete.py`.
+- [x] `P03.S139` - Repoint the crash-recovery trace pin at the module that holds the delete effect, and teach the retirement sweep to read pins inside a subprocess source string; `src/cadrumo/application/tests/test_config_reset_recovery.py, dev/quality/namespace_retirement_sweep.py`.
 
 ### Phase `P04` - Close the confirmed single-function duplicates
 

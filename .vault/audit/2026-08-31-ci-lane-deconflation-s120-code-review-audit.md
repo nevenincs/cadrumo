@@ -23,4 +23,3 @@ No new HIGH, CRITICAL, MEDIUM, or LOW findings. The trace `NameError` in the exe
 ## Recommendations
 
 No follow-up is required from this review. Future package moves remain covered by the derived-universe and stale-rule gates rather than a fixed module count.
-
