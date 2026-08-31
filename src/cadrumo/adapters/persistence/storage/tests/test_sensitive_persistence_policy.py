@@ -20,12 +20,20 @@ write_inventory_is_reviewed``
 surfaces_do_not_bypass_...``  list
 ``test_every_sensitive_       fixed surface       n/a: it guards the list
 surface_resolves_...``        list                itself
-``test_llm_subpackage_        one named           no: single-package gate
-persists_nothing``            package
 per-repository roundtrips     test-side only      no: proves a repository
                                                   works, not that a module
                                                   uses it
 ============================  ==================  =========================
+
+The gated local-inference subpackage is a worked example of reading this
+table correctly. Nothing scans ``cadrumo/llm`` because it is an inference
+package; it is covered because somebody enumerated it in
+:data:`_SENSITIVE_SURFACES`, in the same change that created it. An earlier
+version of this table also listed a ``test_llm_subpackage_persists_nothing``
+row promising single-package coverage. No such test exists anywhere in the
+tree, and a reader checking the confidentiality story against this table was
+sent to a gate that was not there -- the precise failure the table warns about
+one paragraph above, committed by the table itself.
 
 Two consequences follow, and both have already bitten.
 
