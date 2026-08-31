@@ -33,7 +33,7 @@
       {
         "symbol": "save_envelope",
         "confidence": "name_collision",
-        "reason": "Two unrelated same-named functions (cadrumo.adapters.persistence.storage.envelope._envelope.save_envelope and cadrumo.core.observability._store.save_envelope). Investigated; no consolidation needed. A cosmetic rename is deferred, out of scope."
+        "reason": "Two unrelated same-named functions (cadrumo.adapters.persistence.storage.envelope.contract.save_envelope and cadrumo.core.observability.store.save_envelope). Investigated; no consolidation needed. A cosmetic rename is deferred, out of scope."
       },
       {
         "symbol": "DEFAULT_IVA_GENERAL_RATE_PCT",
