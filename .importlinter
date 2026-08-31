@@ -42,7 +42,7 @@ forbidden_modules =
 # domain-not-application contract.
 ignore_imports =
     # ── W09: re-sanctioned test-file roundtrip/fixture/oracle edges (prior ignores went stale on test rename) ──
-    cadrumo.domain.calculations.registry.tests.test_ledger_renta_gastos_estimacion_directa_binding -> cadrumo.domain.renta
+    cadrumo.domain.calculations.registry.tests.test_ledger_renta_gastos_estimacion_directa_binding -> cadrumo.domain.renta._ledger_expenses
     # W09.S90: parity-scenario test consumers trigger the renta first-slice
     # registration directly (relocated out of the production _scenarios harness)
 
@@ -188,7 +188,7 @@ ignore_imports =
     cadrumo.core.**.tests.** -> cadrumo.tests
     cadrumo.core.**.tests.** -> cadrumo.tests.**
     # ── core/resources/_repos deferred loader imports (ADR-sanctioned, see above) ──
-    cadrumo.core.resources._repos.apoderamientos -> cadrumo.domain.auth.apoderamientos
+    cadrumo.core.resources._repos.apoderamientos -> cadrumo.domain.auth.apoderamientos.catalogue
     cadrumo.core.resources._repos.category_profiles -> cadrumo.domain.categories.registry
     cadrumo.core.resources._repos.holiday_calendars -> cadrumo.domain.deadlines.festivos
     cadrumo.core.resources._repos.manuals -> cadrumo.domain.manuals.loader
@@ -233,7 +233,7 @@ ignore_imports =
     # assert the test's own bookkeeping rather than the boundary's. Direct
     # rather than via cadrumo.tests: it names the ledger namespace and the
     # session verb, not the shared file-walk helpers.
-    cadrumo.llm.tests.test_evidence_consent_gate -> cadrumo.adapters.persistence.storage
+    cadrumo.llm.tests.test_evidence_consent_gate -> cadrumo.adapters.persistence.storage.**
     # Same shape as test_provenance_stamp_singularity above: a package-wide
     # scan needing the shared file-walk helpers, whose package reaches storage
     # for its own roundtrip fixtures. Pinned at the chain origin.
@@ -256,7 +256,7 @@ ignore_imports =
     # a cadrumo.llm.client edge into this facade still breaks the contract
     # exactly as before. Two lines because grimp's ** matches one-or-more
     # segments: the facade itself, and its private submodules.
-    cadrumo.llm.tests.** -> cadrumo.adapters.outbound.llm
+    cadrumo.llm.tests.** -> cadrumo.adapters.outbound.llm.**
     cadrumo.llm.tests.** -> cadrumo.adapters.outbound.llm.**
     # ── The subpackage's own tests, into the ledger application services ───
     # These gates drive the REAL application entry points the readers hang off:
@@ -285,7 +285,7 @@ ignore_imports =
     # removes the edge entirely; the client already accepts them as optional
     # constructor parameters, so the change is mechanical but touches every
     # construction site and is deliberately not bundled into a relocation.
-    cadrumo.llm.client -> cadrumo.adapters.outbound.llm
+    cadrumo.llm.client -> cadrumo.adapters.outbound.llm.**
 
 [importlinter:contract:tui-backend-prohibition]
 name = Backend and sibling entrypoints must not depend on the dedicated TUI
@@ -415,6 +415,11 @@ ignore_imports =
     cadrumo.core.**.tests.** -> cadrumo.application.**
     cadrumo.core.tests.** -> cadrumo.adapters.**
     cadrumo.core.tests.** -> cadrumo.entrypoints.**
+    # cadrumo.llm is a declared sibling layer of adapters, and the family above
+    # enumerates one pattern per layer PAIR -- so a new pair needs a line even
+    # though the prose says a new test does not. The same pattern is already
+    # sanctioned in the local-inference contract above.
+    cadrumo.core.tests.** -> cadrumo.llm.**
     # conftest.py modules sitting directly in a layer subpackage (not nested
     # under a tests/ folder) are the same roundtrip-discipline fixture pattern.
     cadrumo.application.**.conftest -> cadrumo.adapters.**
@@ -422,7 +427,7 @@ ignore_imports =
     # The layer-root conftest reaches the shared fixture package the same way
     # the nested ones reach adapters; `**.conftest` does not match a conftest
     # sitting directly at the layer root.
-    cadrumo.application.conftest -> cadrumo.tests
+    cadrumo.application.conftest -> cadrumo.tests.**
     # test modules that route through the shared cadrumo.tests.* fixture helpers
     # (cadrumo.tests is a cross-cutting test-support package, not a declared
     # layer) which themselves transitively reach a forbidden outer layer.
@@ -443,7 +448,7 @@ ignore_imports =
     cadrumo.core.**.tests.** -> cadrumo.tests
     # ── D9 follow-up: local-import lifts made these concrete storage edges
     #    import-linter-visible; pin exact targets, not broad source modules. ──
-    cadrumo.application.modelo._m145_communication_records -> cadrumo.adapters.persistence.storage
+    cadrumo.application.modelo._m145_communication_records -> cadrumo.adapters.persistence.storage._secure_object_namespaces
     # The M145 communication records persist through the shared
     # SecureSnapshotRepository, which moved into the persistence adapter with
     # the live-snapshot relocation. Its sibling _m036_lifecycle needed no new
@@ -451,27 +456,27 @@ ignore_imports =
     # pinned at the narrower `persistence.storage`, so the new target is named
     # exactly rather than widening the existing pin.
     cadrumo.application.modelo._m145_communication_records -> cadrumo.adapters.persistence.profile.snapshots
-    cadrumo.application.modelo._review_package_recipient_encryption -> cadrumo.adapters.persistence.storage
+    cadrumo.application.modelo._review_package_recipient_encryption -> cadrumo.adapters.persistence.storage.**
     cadrumo.application.modelo._review_package_recipient_encryption -> cadrumo.adapters.persistence.storage.crypto.aead
-    cadrumo.application.modelo._review_package_recipient_registry -> cadrumo.adapters.persistence.storage
-    cadrumo.application.modelo._review_package_signing -> cadrumo.adapters.persistence.storage
+    cadrumo.application.modelo._review_package_recipient_registry -> cadrumo.adapters.persistence.storage.**
+    cadrumo.application.modelo._review_package_signing -> cadrumo.adapters.persistence.storage._secure_object_namespaces
     # The mint-or-load-winner keypair primitive was extracted from the signing and
     # recipient-encryption modules above; both are pinned, so the extraction inherits
     # their sanctioned reach rather than introducing a new one.
-    cadrumo.application.modelo._review_package_keypair -> cadrumo.adapters.persistence.storage
+    cadrumo.application.modelo._review_package_keypair -> cadrumo.adapters.persistence.storage.**
 
     # ── application → adapters (permitted by architecture ADR sec. 538) ──
     # application/ may import adapters/ for outbound wiring; full inversion
     # would require a major refactor and is deferred.
     cadrumo.application.aggregation._oss_ioss -> cadrumo.adapters.persistence.**
-    cadrumo.application.aggregation._percepciones_observations_repository -> cadrumo.adapters.persistence.storage
-    cadrumo.application.aggregation._retencion_observations_repository -> cadrumo.adapters.persistence.storage
+    cadrumo.application.aggregation._percepciones_observations_repository -> cadrumo.adapters.persistence.storage.**
+    cadrumo.application.aggregation._retencion_observations_repository -> cadrumo.adapters.persistence.storage.**
     # _observation_window carries the shared replace-observations helper extracted from
     # the two observation repos above (P02.S08); it holds the same safe_repository_id
     # path-safety utility import - a plain storage helper with no port to invert.
-    cadrumo.application.aggregation._observation_window -> cadrumo.adapters.persistence.storage
-    cadrumo.application.aggregation._withholding_source -> cadrumo.adapters.persistence.storage
-    cadrumo.application.auth.apoderado_service -> cadrumo.adapters.persistence.storage
+    cadrumo.application.aggregation._observation_window -> cadrumo.adapters.persistence.storage._path_safety
+    cadrumo.application.aggregation._withholding_source -> cadrumo.adapters.persistence.storage.errors
+    cadrumo.application.auth.apoderado_service -> cadrumo.adapters.persistence.storage.**
     cadrumo.application.auth.certificate_secret_backend -> cadrumo.adapters.persistence.**
     cadrumo.application.auth.diagnostics -> cadrumo.adapters.persistence.**
     # AEAT authentication is an outbound integration and these modules are its
@@ -480,18 +485,17 @@ ignore_imports =
     cadrumo.application.auth.operator_probes -> cadrumo.adapters.outbound.aeat.auth.certificate
     cadrumo.application.auth.operator_probes -> cadrumo.adapters.persistence.**
     cadrumo.application.auth.operator_scope -> cadrumo.adapters.persistence.**
-    cadrumo.application.auth.sessions -> cadrumo.adapters.outbound.aeat.browser
+    cadrumo.application.auth.sessions -> cadrumo.adapters.outbound.aeat.browser._factory
     cadrumo.application.auth.sessions -> cadrumo.adapters.persistence.**
-    cadrumo.application.bienes_inversion -> cadrumo.adapters.persistence.**
     cadrumo.application.bucket_maintenance._deletion_paths -> cadrumo.adapters.persistence.**
     cadrumo.application.calculations._iva_compensation_annual_partition -> cadrumo.adapters.persistence.**
     cadrumo.application.calculations.iva_compensation_history -> cadrumo.adapters.persistence.**
     cadrumo.application.calculations._multi_year -> cadrumo.adapters.persistence.**
     cadrumo.application.calculations.observations_repository -> cadrumo.adapters.persistence.**
     cadrumo.application.calculations._relation_prefill -> cadrumo.adapters.persistence.**
-    cadrumo.application.diagnostics -> cadrumo.adapters.outbound.aeat.browser
+    cadrumo.application.diagnostics -> cadrumo.adapters.outbound.aeat.browser.**
     cadrumo.application.diagnostics -> cadrumo.adapters.persistence.**
-    cadrumo.application.diagnostics_run_health -> cadrumo.adapters.outbound.llm
+    cadrumo.application.diagnostics_run_health -> cadrumo.adapters.outbound.llm._run_telemetry
     # The ledger draft path reaches the gated local-inference subpackage for a
     # scan-only document. Deferred inside the function, and pinned here for the
     # same reason the outbound.llm edges above are: cadrumo.llm sits at the
@@ -588,7 +592,7 @@ ignore_imports =
     # creation path constructs the default ECB rate provider (the concrete
     # ExchangeRateProvider) — the outbound-wiring edge sec. 538 permits, pinned
     # at the narrow fx target rather than a broad adapters wildcard.
-    cadrumo.application.invoices._creation -> cadrumo.adapters.outbound.fx
+    cadrumo.application.invoices._creation -> cadrumo.adapters.outbound.fx._ecb_provider
     cadrumo.application.invoices._source_resolver -> cadrumo.adapters.persistence.**
     # ── application/ledger narrowed from `adapters.**` to the layer each module
     #    actually reaches. A broad wildcard admits an INBOUND-adapter edge from
@@ -697,7 +701,6 @@ ignore_imports =
     # INBOUND adapter parses; this module consumes those parses and owns only
     # the comparison. Same class as the einvoice pins, previously admitted by
     # a broad wildcard without review.
-    cadrumo.application.prorrata_register -> cadrumo.adapters.persistence.**
     cadrumo.application.registry.filed_state -> cadrumo.adapters.outbound.aeat.sede.declarations_observations
     cadrumo.application.registry.filed_state -> cadrumo.adapters.outbound.aeat.sede.observation_store
     cadrumo.application.repair_integrity -> cadrumo.adapters.persistence.**
@@ -727,7 +730,7 @@ ignore_imports =
     # at module-import time, so core/resources/ stays an acyclic leaf. Each
     # edge is pinned individually so a new non-deferred core->outer import is
     # still caught. See the core-not-outer contract comment above for detail.
-    cadrumo.core.resources._repos.apoderamientos -> cadrumo.domain.auth.apoderamientos
+    cadrumo.core.resources._repos.apoderamientos -> cadrumo.domain.auth.apoderamientos.catalogue
     cadrumo.core.resources._repos.category_profiles -> cadrumo.domain.categories.registry
     cadrumo.core.resources._repos.holiday_calendars -> cadrumo.domain.deadlines.festivos
     cadrumo.core.resources._repos.manuals -> cadrumo.domain.manuals.loader
@@ -769,7 +772,7 @@ ignore_imports =
     cadrumo.application.invoices._bulk_import -> cadrumo.adapters.persistence.profile.invoices
     cadrumo.application.invoices._creation -> cadrumo.adapters.persistence.profile.invoices
     cadrumo.application.invoices._creation -> cadrumo.adapters.persistence.profile.buckets
-    cadrumo.application.invoices._creation -> cadrumo.adapters.persistence.storage
+    cadrumo.application.invoices._creation -> cadrumo.adapters.persistence.storage.runtime_repository
     cadrumo.application.invoices._lifecycle -> cadrumo.adapters.persistence.profile.invoices
     cadrumo.application.invoices._linking -> cadrumo.adapters.persistence.profile.invoices
     cadrumo.application.invoices._queries -> cadrumo.adapters.persistence.profile.invoices
@@ -841,5 +844,5 @@ ignore_imports =
     #    sec. 538). The storage edge is _prorrata_regularizacion's direct import
     #    of the ClassificationError/DecryptionError/EnvelopeVersionError boundary
     #    exception classes (plain exceptions, no port to invert). ──
-    cadrumo.application.calculations._prorrata_regularizacion -> cadrumo.adapters.persistence.storage
+    cadrumo.application.calculations._prorrata_regularizacion -> cadrumo.adapters.persistence.storage.errors
     cadrumo.application.modelo._revision_persistence -> cadrumo.adapters.persistence.profile.prorrata_register
