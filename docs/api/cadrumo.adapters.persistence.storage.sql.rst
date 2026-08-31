@@ -19,6 +19,7 @@ Submodules
    cadrumo.adapters.persistence.storage.sql._secure_object_records
    cadrumo.adapters.persistence.storage.sql._secure_object_row_codec
    cadrumo.adapters.persistence.storage.sql._secure_object_schema
+   cadrumo.adapters.persistence.storage.sql._secure_object_writes
    cadrumo.adapters.persistence.storage.sql.engine
    cadrumo.adapters.persistence.storage.sql.records
    cadrumo.adapters.persistence.storage.sql.repository

@@ -769,6 +769,10 @@ convention = "google"
 # in the session has already populated it. Same fixed `sys.executable -c
 # <script>` argv as the registration gate above.
 "src/cadrumo/domain/calculations/registry/tests/test_cross_domain_required_check_guard.py" = ["S603"]
+# Whether the M130 gate registers without aggregation imported is a property
+# of a cold start: a pytest session has already imported both. Same fixed
+# `sys.executable -c <script>` argv as the two gates above.
+"src/cadrumo/domain/calculations/registry/tests/test_m130_retenciones_gate_registration.py" = ["S603"]
 # Whether the application registry namespace is a registration seam is a
 # property of a cold start: this session has already imported the namespace
 # and the renta check module through sibling tests. Same fixed
@@ -822,7 +826,7 @@ convention = "google"
 # Per-line concatenation of AEAT casilla code groups documents each group inline; the
 # RUF005 iterable-unpacking refactor would erase those per-group comments.
 "src/cadrumo/application/calculations/tests/test_modelo_190_111_reconciliation_continuity.py" = ["RUF005"]
-"src/cadrumo/core/classification/__init__.py" = ["S105"]
+"src/cadrumo/core/classification/policies.py" = ["S105"]
 "src/cadrumo/core/file_permissions.py" = ["S603"]
 "src/cadrumo/domain/auth/apoderamientos/catalogue.py" = ["S105"]
 "dev/registry/_workbook_parity.py" = ["S603"]

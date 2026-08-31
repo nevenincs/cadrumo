@@ -14,3 +14,4 @@ Submodules
    :maxdepth: 4
 
    cadrumo.domain.prorrata_register._protocols
+   cadrumo.domain.prorrata_register.register

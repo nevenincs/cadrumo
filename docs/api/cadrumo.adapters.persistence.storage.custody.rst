@@ -14,6 +14,7 @@ Submodules
    :maxdepth: 4
 
    cadrumo.adapters.persistence.storage.custody._capsule_data
+   cadrumo.adapters.persistence.storage.custody._capsule_filesystem
    cadrumo.adapters.persistence.storage.custody._filesystem_primitives
    cadrumo.adapters.persistence.storage.custody._inventory
    cadrumo.adapters.persistence.storage.custody._kdf_attestation
@@ -25,9 +26,11 @@ Submodules
    cadrumo.adapters.persistence.storage.custody._kdf_worker_supervision
    cadrumo.adapters.persistence.storage.custody._recovery_secret_codec
    cadrumo.adapters.persistence.storage.custody.acceleration_receipt
+   cadrumo.adapters.persistence.storage.custody.acceleration_receipt_crypto
    cadrumo.adapters.persistence.storage.custody.capsule
    cadrumo.adapters.persistence.storage.custody.capsule_discovery
    cadrumo.adapters.persistence.storage.custody.capsule_records
+   cadrumo.adapters.persistence.storage.custody.digest_model
    cadrumo.adapters.persistence.storage.custody.envelope
    cadrumo.adapters.persistence.storage.custody.errors
    cadrumo.adapters.persistence.storage.custody.filesystem

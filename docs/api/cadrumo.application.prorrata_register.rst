@@ -15,3 +15,4 @@ Submodules
 
    cadrumo.application.prorrata_register._sector_lifecycle
    cadrumo.application.prorrata_register._seed
+   cadrumo.application.prorrata_register._service

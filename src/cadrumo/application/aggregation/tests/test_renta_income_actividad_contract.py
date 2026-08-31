@@ -76,7 +76,7 @@ def _m130_casilla(casilla_id: str) -> CasillaDefinition:
     Declaring both casillas 01 and 06 keeps the fixture realistic relative
     to the committed registry's revision, even though the T-05 cross-check
     that validates the output casilla runs at snapshot-build time
-    (`domain.renta._retenciones_routing_integrity`), not against this
+    (`domain.renta.retenciones_routing_integrity`), not against this
     hand-built revision -- see that module's own test file for that
     coverage.
     """

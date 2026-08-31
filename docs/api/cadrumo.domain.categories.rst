@@ -13,7 +13,6 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.domain.categories.corpus
    cadrumo.domain.categories.errors
    cadrumo.domain.categories.profile
    cadrumo.domain.categories.proportionality

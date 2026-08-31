@@ -14,3 +14,4 @@ Submodules
    :maxdepth: 4
 
    cadrumo.adapters.inbound.borrador._extractors.modelo_100_summary_v2025
+   cadrumo.adapters.inbound.borrador._extractors.selection

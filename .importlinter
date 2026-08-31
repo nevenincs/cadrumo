@@ -322,6 +322,15 @@ ignore_imports =
     cadrumo.entrypoints.tui.launcher -> cadrumo.adapters.**
     cadrumo.entrypoints.tui.launcher.** -> cadrumo.adapters
     cadrumo.entrypoints.tui.launcher.** -> cadrumo.adapters.**
+    # TUI test modules build the REAL repositories they exercise, because this
+    # project refuses mocked substitutes for the behaviour under test.  That is
+    # the same fixture pattern already pinned for `domain.**.tests.**` above,
+    # and it is not composition: no production TUI module outside the launcher
+    # imports adapters, which is the property this contract exists to hold.
+    cadrumo.entrypoints.tui.tests.** -> cadrumo.adapters
+    cadrumo.entrypoints.tui.tests.** -> cadrumo.adapters.**
+    cadrumo.entrypoints.tui.**.tests.** -> cadrumo.adapters
+    cadrumo.entrypoints.tui.**.tests.** -> cadrumo.adapters.**
 
 [importlinter:contract:tui-components-independent]
 name = TUI component implementations depend only on Textual and neutral core presentation
@@ -354,9 +363,18 @@ name = TUI feature implementations share components rather than each other
 #
 # The wildcards were written while these feature packages did not yet exist.
 # They exist now, so the pre-migration form is retired.
+#
+# `operations` is NOT among them, because it is not a feature. It is the shared
+# surface for running any registered operation -- controller, modal, projection,
+# logs -- parameterised by definition id and owning no domain of its own. Both
+# `modelo` and `profile` consume it, which is what "share components rather than
+# each other" describes. It cannot live under `components` either: that contract
+# holds components to Textual and neutral core presentation, and this surface
+# depends on `application.operations` by design. Listing it here made every
+# feature that runs an operation a contract violation for doing the sanctioned
+# thing.
 type = independence
 modules =
-    cadrumo.entrypoints.tui.operations
     cadrumo.entrypoints.tui.profile
     cadrumo.entrypoints.tui.secret
     cadrumo.entrypoints.tui.flows
@@ -535,6 +553,7 @@ ignore_imports =
     # application -> llm coupling stays individually pinned above and a NEW
     # production edge still fails loudly.
     cadrumo.application.**.tests.** -> cadrumo.llm
+    cadrumo.application.**.tests.** -> cadrumo.llm.**
     cadrumo.application.evidence._service -> cadrumo.adapters.persistence.**
     # Two ledger stores added by llm-package-split, same shape as the ledger
     # repositories pinned around them: derived financial data is STORAGE, so

@@ -13,4 +13,4 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.adapters.persistence.storage.secret_store._secret_store
+   cadrumo.adapters.persistence.storage.secret_store.store

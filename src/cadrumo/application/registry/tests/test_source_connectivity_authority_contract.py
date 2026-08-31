@@ -12,6 +12,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
+from ....core.identity import CalculationRevisionId
 from ....core.source_connectivity import (
     SourceConnectivityConnectionIdentity,
     SourceConnectivityExecutableEvidence,
@@ -20,7 +21,6 @@ from ....core.source_connectivity import (
     SourceConnectivityGroundingLocatorKind,
     SourceConnectivityOperatorReachabilityProof,
 )
-from ....core.identity import CalculationRevisionId
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -29,7 +29,12 @@ from ....domain.modelos.calculation_revision import (
 )
 from ...aggregation import BindingSourceDisposition
 from ...modelo.calculation_route import CALCULATION_ROUTE_SOURCE_DISPOSITIONS
-from ...operator_surface.calculation_workflows import ModeloCalculationRouteId, SupportedModeloCalculationWorkflow, SupportedModeloCalculationWorkflowCatalogue, build_supported_modelo_calculation_workflow_catalogue
+from ...operator_surface.calculation_workflows import (
+    ModeloCalculationRouteId,
+    SupportedModeloCalculationWorkflow,
+    SupportedModeloCalculationWorkflowCatalogue,
+    build_supported_modelo_calculation_workflow_catalogue,
+)
 from ...operator_surface.manifest import LiveLeafInventoryRow, OperatorSurfaceReconciliation, ReconciledOperatorLeaf
 from ..source_connectivity_authority import (
     CalculationRouteResolverSourceOwnership,
@@ -219,7 +224,7 @@ def test_canonical_module_exposes_authority_and_injected_verifier_port() -> None
     assert exported <= set(source_connectivity_authority.__all__)
     for name in exported:
         assert hasattr(source_connectivity_authority, name), name
-    assert registry_package.__all__ == []
+    assert not registry_package.__all__
     assert isinstance(RepositoryRootEvidenceDigestVerifier, type)
     assert isinstance(LiveSourceConnectivityProofAuthority, type)
     assert RepositoryEvidenceDigestVerifier.__name__ == "RepositoryEvidenceDigestVerifier"

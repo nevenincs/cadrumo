@@ -116,6 +116,7 @@ Submodules
    cadrumo.application.modelo.calculation_repository
    cadrumo.application.modelo.calculation_route
    cadrumo.application.modelo.edit_contract
+   cadrumo.application.modelo.edit_session
    cadrumo.application.modelo.external_import_actions
    cadrumo.application.modelo.filing_repository
    cadrumo.application.modelo.justificante_repository
@@ -127,6 +128,7 @@ Submodules
    cadrumo.application.modelo.reconciliation_records
    cadrumo.application.modelo.registry_discovery
    cadrumo.application.modelo.review_package
+   cadrumo.application.modelo.review_package_text
    cadrumo.application.modelo.verify_selector
    cadrumo.application.modelo.work_addressing
    cadrumo.application.modelo.work_lifecycle

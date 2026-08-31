@@ -6,3 +6,11 @@ cadrumo.adapters.outbound.aeat.verify package
    :show-inheritance:
    :ignore-module-all:
 
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   cadrumo.adapters.outbound.aeat.verify.contract

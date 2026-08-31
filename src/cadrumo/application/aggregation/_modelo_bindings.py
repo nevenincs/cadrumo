@@ -31,12 +31,12 @@ from collections.abc import Mapping, Sequence
 from decimal import Decimal
 from typing import ClassVar
 
-from ...core import M210GrossIncomeSourceMode
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId, validated_casilla_id
+from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.modelo import Modelo
 from ...core.period import Period, PeriodError, StandardPeriodCode
-from ...domain.bienes_inversion import BienesInversionIvaRegister
+from ...domain.bienes_inversion.register import BienesInversionIvaRegister
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.irnr_ledger_bindings import (
     resolve_ledger_irnr_income_aggregation_binding_values,
@@ -64,8 +64,8 @@ from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.iva.schema import IvaCategory
 from ...domain.modelos.row_models import Modelo210AgrupacionRentaRow
-from ...domain.prorrata_register import ProrrataRegisterRepositoryProtocol
-from ...domain.renta import (
+from ...domain.prorrata_register._protocols import ProrrataRegisterRepositoryProtocol
+from ...domain.renta.retenciones_routing_integrity import (
     RENTA_130_RETENCIONES_BINDING_ID,
     RENTA_130_RETENCIONES_OUTPUT_CASILLA,
 )
@@ -85,10 +85,10 @@ from ._modelo_bindings_invoice_iva import (
     _category_counterparty_mismatch_diagnostics,
     _missing_invoice_deduction_authority_diagnostics,
     _out_of_window_summary_diagnostics,
-    _raise_if_invoice_iva_would_be_silent,
     _recargo_rate_mismatch_diagnostics,
     _reverse_charge_underivable_diagnostics,
 )
+from ._modelo_bindings_invoice_iva_refusal import _raise_if_invoice_iva_would_be_silent
 from ._modelo_bindings_support import (
     _STORAGE_DEGRADATION_ERRORS,
     _empty_source_resolution,
@@ -115,20 +115,22 @@ from ._source_mesh import (
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,
     CalculationSourceResolution,
-    source_issue_diagnostics,
-    storage_degradation_resolution,
-)
-from ._source_mesh import (
-    sorted_source_ids as _sorted_ids,
-)
-from ._source_mesh import (
-    source_diagnostics_for as _diagnostics_for,
-)
-from ._source_mesh import (
-    source_provenance_for as _provenance_for,
 )
 from ._undeclared_activity_advisory import undeclared_activity_income_advisory_observations
 from .errors import AggregationValidationError, t
+from .source_resolution_operations import (
+    sorted_source_ids as _sorted_ids,
+)
+from .source_resolution_operations import (
+    source_diagnostics_for as _diagnostics_for,
+)
+from .source_resolution_operations import (
+    source_issue_diagnostics,
+    storage_degradation_resolution,
+)
+from .source_resolution_operations import (
+    source_provenance_for as _provenance_for,
+)
 
 _IVA_SOURCE_DIAGNOSTIC_SUPPRESSED_REASONS = frozenset(
     {
@@ -642,7 +644,7 @@ def _m130_retenciones_backend_inputs(
     instead: the hardcoded casilla constant lives in `domain.renta` and is
     validated against every
     M130 revision by a `CrossDomainSnapshotCheck` registered at snapshot-build
-    time (`domain.renta._retenciones_routing_integrity`), the same mechanism
+    time (`domain.renta.retenciones_routing_integrity`), the same mechanism
     that already validates the Modelo 100 first-slice routing table. A
     revision that dropped or renumbered the output casilla would fail loudly
     at snapshot build, before this function ever runs -- it does not

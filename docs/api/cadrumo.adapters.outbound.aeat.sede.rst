@@ -24,6 +24,7 @@ Submodules
    cadrumo.adapters.outbound.aeat.sede._renta_web_open_safety
    cadrumo.adapters.outbound.aeat.sede.censal_datos
    cadrumo.adapters.outbound.aeat.sede.declarations
+   cadrumo.adapters.outbound.aeat.sede.declarations_capture
    cadrumo.adapters.outbound.aeat.sede.declarations_observations
    cadrumo.adapters.outbound.aeat.sede.declarations_remote
    cadrumo.adapters.outbound.aeat.sede.declarations_schema

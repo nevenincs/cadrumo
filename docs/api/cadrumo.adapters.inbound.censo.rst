@@ -13,4 +13,4 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.adapters.inbound.censo._parser
+   cadrumo.adapters.inbound.censo.parser

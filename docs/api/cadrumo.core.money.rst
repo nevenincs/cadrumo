@@ -6,3 +6,11 @@ cadrumo.core.money package
    :show-inheritance:
    :ignore-module-all:
 
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   cadrumo.core.money.rounding

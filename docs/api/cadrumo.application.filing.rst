@@ -18,9 +18,11 @@ Submodules
    cadrumo.application.filing._draft_construction
    cadrumo.application.filing._envelope_modelo_policy
    cadrumo.application.filing._export
+   cadrumo.application.filing._export_envelope
    cadrumo.application.filing._export_parity
    cadrumo.application.filing._export_producer
    cadrumo.application.filing._export_proof
+   cadrumo.application.filing._export_verification
    cadrumo.application.filing._export_xml_dictionary
    cadrumo.application.filing._history_models
    cadrumo.application.filing._history_repository
@@ -29,7 +31,10 @@ Submodules
    cadrumo.application.filing._m296_projection
    cadrumo.application.filing._m303_exonerado_390
    cadrumo.application.filing._m303_export_applicability
+   cadrumo.application.filing._producer_ownership
    cadrumo.application.filing._producer_snapshot
+   cadrumo.application.filing._producer_snapshot_m200
+   cadrumo.application.filing._producer_snapshot_m390
    cadrumo.application.filing._profile_filing_retention
    cadrumo.application.filing._projection
    cadrumo.application.filing._record_field_renderer
@@ -39,3 +44,4 @@ Submodules
    cadrumo.application.filing._runtime_repository
    cadrumo.application.filing.errors
    cadrumo.application.filing.runtime
+   cadrumo.application.filing.validation

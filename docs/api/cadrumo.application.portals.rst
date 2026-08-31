@@ -13,4 +13,4 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.application.portals._service
+   cadrumo.application.portals.service
