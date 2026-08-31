@@ -13,12 +13,12 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core.filing_year import FilingYear
-from ...core.identity import CalculationRevisionId, ContentDigest
+from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period
-from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.product_identity import AeatProductSoftwareIdentity
+from ...core.filing_year import FilingYear
+from ...core.identity import CalculationRevisionId, ContentDigest
 from ...core.time import UtcInstant
 from ...domain.calculations.registry.ids import (
     ModeloId,
@@ -26,12 +26,12 @@ from ...domain.calculations.registry.ids import (
 )
 from ...domain.filing.schema import ModeloDraft
 from ...domain.submission import ModeloDraftStatus
-from ._export import export_draft
-from ._export_verification import (
+from ._export import (
     DeclaracionExportResult,
     FilingExportConsumedResult,
     FilingExportPayloadConsumer,
     FilingExportValidatedPayload,
+    export_draft,
 )
 from ._producer_snapshot import FilingProducerSnapshot
 from .runtime import RegistrySchemaAccessor
