@@ -10,7 +10,7 @@ related:
   - '[[2026-06-01-registry-period-code-union-cli-boundary-adr]]'
   - '[[2026-08-05-ci-lane-deconflation-step-check-attribution-audit]]'
 modified: '2026-08-31'
-body_hash: 'sha256:657975c08a80b7b83d154b37ad74f83a21a3607a0bf2f1d9daa5e2a5f8d6aa2e'
+body_hash: 'sha256:8abde5520914e6b6ca1ea09b44c7db03bc35d0ee17ece0801ac29efe3b26a612'
 ---
 
 <!-- RETIRED: S01, S10, S181, S184, S186, S189, S191, S193, S194, S197, S199, S201, S203, S205, S207, S209, S211, S213, S215, S217, S219, S221 -->
@@ -264,7 +264,7 @@ Decompose every live size-budget subject by its owning source file, then regener
 - [ ] `P05.S179` - Refactor the size-budget subjects in context.py into cohesive siblings without raising any threshold.; `src/cadrumo/core/observability/context.py`.
 - [x] `P05.S180` - Refactor the size-budget subjects in _validate_revision_sections.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/_validate_revision_sections.py`.
 - [ ] `P05.S182` - Refactor the size-budget subjects in authority.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/authority.py`.
-- [ ] `P05.S183` - Refactor the size-budget subjects in bindings.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/bindings.py`.
+- [x] `P05.S183` - Refactor the size-budget subjects in bindings.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/bindings.py`.
 - [ ] `P05.S185` - Refactor the size-budget subjects in formula_runtime.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/formula_runtime.py`.
 - [x] `P05.S187` - Refactor the size-budget subjects in invoice_bindings.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/invoice_bindings.py`.
 - [ ] `P05.S188` - Refactor the size-budget subjects in ledger_bindings.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/ledger_bindings.py`.
