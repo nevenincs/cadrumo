@@ -110,3 +110,34 @@ excluded, and the census that counts them is measuring the wrong population.
 
 - `verify:` `import every one of the 70 touched modules` -> `70 of 70`
 - `verify:` `tree-wide RootModel + strict-frozen config sweep` -> `1, pre-existing and correct`
+
+### A SECOND non-promotable class, and it reached HEAD before it was caught
+
+`llm/providers/local.py` parses THIRD-PARTY Ollama response envelopes. The
+canonical config forbids extra fields; the runtime sends `message.role`, which
+the model does not declare. Repointing it rejected valid responses and failed 27
+tests. A peer's 00:05 "land the in-flight state" commit swept the change into
+HEAD before the failure was found, so the regression was briefly live.
+
+This is a DIFFERENT class from the RootModel one, and neither is visible to the
+selector this sweep used:
+
+- RootModel: the canonical is structurally INVALID -- pydantic refuses `extra`.
+- Third-party payload boundary: the canonical is semantically WRONG -- forbidding
+  unknown keys rejects valid input from a system this codebase does not control.
+
+Both pass parse and lint. The first surfaces at class construction, the second
+only at parse time with a real payload, so only running the tests finds it.
+"Keys are a subset of the canonical" means the config is NARROWER; it does not
+mean the canonical is CORRECT for that model. Any continuation of this sweep
+must check the model's base class and whether it parses foreign input before
+repointing.
+
+Restored with the reason inline: tolerating unknown keys is the contract at a
+boundary we do not own, and strictness belongs on the fields we DO declare.
+
+- `verify:` `pytest src/cadrumo/llm` -> `2 failed, 497 passed` (57 before)
+- `verify:` the 2 remaining -> `modelo 390 declares no 2026 revision`, the
+  pre-existing registry-coverage failure, unrelated to configuration
+- `verify:` `pytest llm/tests/test_evidence_draft_vision.py` -> `47 passed`
+- `verify:` `pytest llm/tests/test_column_role_mapping.py` -> `23 passed`
