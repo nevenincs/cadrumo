@@ -10,7 +10,7 @@ related:
   - '[[2026-06-01-registry-period-code-union-cli-boundary-adr]]'
   - '[[2026-08-05-ci-lane-deconflation-step-check-attribution-audit]]'
 modified: '2026-08-31'
-body_hash: 'sha256:e5cd66c70025c85f6101cca7a0e6bec2a23b366026845bfaf6d7063ee369590e'
+body_hash: 'sha256:3a04b5d5fa3383676680e141ee2e3e8621ea5ea42cf4db9e79a7c3b2237175c2'
 ---
 
 <!-- RETIRED: S01, S10, S181, S184, S186, S189, S191, S193, S194, S197, S199, S201, S203, S205, S207, S209, S211, S213, S215, S217, S219, S221 -->
@@ -193,7 +193,7 @@ Decompose every live size-budget subject by its owning source file, then regener
 - [x] `P05.S130` - Refactor the size-budget subjects in _modelo_bindings.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/aggregation/_modelo_bindings.py`.
 - [x] `P05.S131` - Refactor the size-budget subjects in _renta_income_ledger.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/aggregation/_renta_income_ledger.py`.
 - [x] `P05.S132` - Refactor the size-budget subjects in _source_mesh.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/aggregation/_source_mesh.py`.
-- [ ] `P05.S133` - Refactor the size-budget subjects in test_iva_ledger.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/aggregation/tests/test_iva_ledger.py`.
+- [x] `P05.S133` - Refactor the size-budget subjects in test_iva_ledger.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/aggregation/tests/test_iva_ledger.py`.
 - [ ] `P05.S134` - Refactor the size-budget subjects in test_modelo_source_mesh_ledger.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/aggregation/tests/test_modelo_source_mesh_ledger.py`.
 - [ ] `P05.S135` - Refactor the size-budget subjects in test_renta_ledger.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/aggregation/tests/test_renta_ledger.py`.
 - [ ] `P05.S136` - Refactor the size-budget subjects in operator.py into cohesive siblings without raising any threshold.; `src/cadrumo/application/auth/operator.py`.
