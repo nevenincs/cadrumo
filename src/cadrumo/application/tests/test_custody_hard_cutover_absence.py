@@ -29,13 +29,15 @@ absence gate degrades into an inventory nobody reads.  The application layer is
 the composition boundary the assertion is actually about: it is where a caller
 *chooses* which custody lifecycle answers for a taxpayer's data.
 
-That choice is made in one other place this root does not cover, and the
-exclusion is a real cost rather than a clean line.  The one live reach outside
-this root today is the outbound Google OAuth flow's tax-id helper; the
-observation store, Clave Movil client and command-line readiness check reaches
-this narrative once named have all moved onto the capsule/session surface.  A
-future revision that moves the composition boundary should widen the root
-rather than let any new reach stay unnamed.
+That choice is made in places this root does not cover, and the exclusion is a
+real cost rather than a clean line.  Three live reaches sit outside it today:
+the outbound Google OAuth flow's tax-id helper, the Clave Movil client's
+session predicate, and the LLM consent ledger's active-session read.  The last
+two are named here as having moved onto the session surface, and they did --
+but moving onto the session surface did not move them out of the shared-master
+package, so they are reaches this root simply does not look at rather than
+reaches that went away.  A future revision that moves the composition boundary
+should widen the root rather than let any of them stay unnamed.
 
 Two nets catching disjoint sets
 ------------------------------
@@ -49,17 +51,18 @@ The MODULE net reports any import resolving into
 primary because a name list can only ever assert "not these particular names",
 which is a far weaker claim than "no route into the shared-master package
 remains", and it loses its teeth the moment the surface is renamed or re-wrapped.
-The application-owned custody module (``user_profile/_custody_ports.py``, the
-successor of the dissolved forwarding port) is the worked example: it forwards
-``current_active_bucket_session``, ``BucketSession.open``,
-``session_serves_bucket``, ``bind_active_bucket_session`` and
-``evaluate_login_throttle``, none of which a provider-family name list
-contains, so a name-only gate passes it at any scan width.
+``auth/operator_scope.py`` is the worked example: it reaches
+``current_active_bucket_session``, ``session_serves_bucket`` and
+``BucketSession``, none of which a provider-family name list contains, so a
+name-only gate passes it at any scan width.  The application-owned custody
+module held that role until its session forwards moved behind an
+application-owned port; it reaches nothing in the shared-master package now,
+which is why its declaration is gone rather than repointed.
 
 The NAME net catches what the module net structurally cannot see: a reach that
 imports the provider from the ``storage`` package facade, where no module path
 in the source mentions ``master_key`` and only the symbol identifies where the
-import resolves to.  ``auth/_sessions.py``, ``diagnostics.py`` and
+import resolves to.  ``auth/sessions.py``, ``diagnostics.py`` and
 ``repair_integrity.py`` were all built that way, and the module net reported
 every one of them clean.
 
@@ -99,13 +102,21 @@ the root is wrong rather than when the matcher is.
 
 Nothing passes here by omission
 -------------------------------
-``user_profile/_bundle_encryption.py`` imports ``KdfParams`` and
-``derive_kek_with_params`` -- raw Argon2id parameters and KEK derivation, not
-the provider seam, and arguably the least objectionable reach in the layer.  It
-is declared below rather than quietly excused: the per-profile capsule derives
-its own KEK, so the primitive is expected to move out of the shared-master
-package with the rest of the surviving substrate.  Judging it defensible is a
-decision to write down, not a reason to leave it invisible.
+The path net's live findings are not shared-master reaches at all, and they are
+declared below rather than quietly excused.  ``bucket/_layout``,
+``bucket/_lockfile`` and ``blob_store/_materialisation`` are reached from three
+application modules because each of those package namespaces was made an inert
+marker without first promoting the submodule its callers needed: the private
+path is the only route left, so the reach did not choose it and no change in
+this layer closes it.  Declaring them keeps the breach visible and makes it
+expire on its own -- promote the modules and these entries red until they are
+deleted.  Judging a reach defensible is a decision to write down, not a reason
+to leave it invisible, and that is as true of a reach somebody else's sweep
+created as of one this layer chose.
+
+Two of the declarations below therefore answer different questions, and the
+distinction is worth keeping: a shared-master entry is waiting on the custody
+replacement, a path entry is waiting on a promotion in the package it reaches.
 """
 
 from __future__ import annotations
@@ -156,7 +167,7 @@ _MASTER_KEY_SEGMENTS = (*_SUBSTRATE_SEGMENTS, "master_key")
 _DYNAMIC_IMPORT_CALLS = frozenset({"import_module", "__import__", "find_spec", "find_loader", "module_from_spec"})
 
 # The symbol the module-net proof reaches through the shared-master package, and
-# the facade that has to still export it.  It is pinned rather than written into
+# the module that has to still define it.  It is pinned rather than written into
 # each fixture string because the proof's whole claim is that this symbol is one
 # the NAME net does not hold: borrow a name the retired list contains and the
 # two nets stop being independently provable, while the failure reads as a
@@ -166,8 +177,26 @@ _DYNAMIC_IMPORT_CALLS = frozenset({"import_module", "__import__", "find_spec", "
 # source string, to ``get_master_key``, which the retired list does hold.
 # The anchor below asserts both halves of the property, so the next such sweep
 # fails naming the symbol instead of naming a set difference.
-_MASTER_KEY_FACADE = _STORAGE_ROOT / "master_key" / "__init__.py"
+#
+# The anchor reads the DEFINING MODULE, not the package facade's ``__all__``.
+# It once read the facade, and that premise is now unrestorable rather than
+# merely stale: the architecture rule makes a package namespace an inert marker,
+# so ``master_key/__init__.py`` declares an empty ``__all__`` on purpose and an
+# export list is no longer evidence that anything exists.  A definition read
+# from the module that owns it is the fact the export list was standing in for,
+# and it survives the namespace being emptied because it never depended on it.
+_SURVIVING_SUBSTRATE_MODULE = _STORAGE_ROOT / "master_key" / "active_session.py"
 _SURVIVING_SUBSTRATE_SYMBOL = "current_active_bucket_session"
+
+# Private substrate modules the path-net fixtures reach.  Pinned for the same
+# reason as the symbol above, against a sweep with the same shape: promoting a
+# module rewrites every textual occurrence of its name, including inside a
+# fixture string here, and the rewritten fixture then asserts that a PUBLIC path
+# is reported private -- which reads as a detector bug.  Both path fixtures
+# broke that way, on ``custody._capsule_discovery`` and
+# ``crypto._encrypted_columns``.  The anchor re-derives privateness from the
+# tree, so the next promotion fails naming the module it promoted.
+_PRIVATE_SUBSTRATE_MODULES = ("custody/_capsule_data.py", "blob_store/_blob_store.py", "_kdf_salt.py")
 
 
 @dataclass(frozen=True)
@@ -196,53 +225,98 @@ class _OpenViolation:
 _MASTER_KEY_PACKAGE = "master-key-module:adapters.persistence.storage.master_key"
 _MASTER_KEY_PACKAGE_ABSOLUTE = "master-key-module:cadrumo.adapters.persistence.storage.master_key"
 
+# Every declaration below names a DEFINING MODULE inside the shared-master
+# package rather than the package itself.  That is not a cosmetic respelling.
+# The package namespace became an inert marker, so a caller can no longer import
+# a session symbol from it at all; each of these reaches was rewritten onto the
+# module that owns the symbol, and the module net reports the new dotted path.
+# A declaration naming only the package therefore stops describing any reach in
+# the tree, which is the staleness check doing its job rather than a matcher
+# that needs loosening.
+_MASTER_KEY_ACTIVE_SESSION = "master-key-module:adapters.persistence.storage.master_key.active_session"
+_MASTER_KEY_BUCKET_SESSION = "master-key-module:adapters.persistence.storage.master_key.bucket_session"
+
+# The path net's live findings.  These are a different class from the reaches
+# above and are declared on different grounds: nothing about the shared-master
+# cutover put them here.  Each package namespace was made inert without first
+# promoting the submodule its callers needed, so the private path is the only
+# route left -- the reach did not choose it.  They are declared, not excused:
+# the boundary rule they breach is closed by promoting the module, and the
+# declaration expires the moment that lands.
+_BUCKET_LAYOUT = "private-path:adapters.persistence.storage.bucket._layout"
+_BUCKET_LOCKFILE = "private-path:adapters.persistence.storage.bucket._lockfile"
+_BLOB_STORE_MATERIALISATION = "private-path:adapters.persistence.storage.blob_store._materialisation"
+
 _DECLARED_OPEN_VIOLATIONS: dict[str, _OpenViolation] = {
-    "auth/_operator_scope.py": _OpenViolation(
+    "auth/certificate_secret_backend.py": _OpenViolation(
         reason=(
-            "Operator scoping reads the live bucket session from the shared-master "
-            "package; the surviving session substrate is being renamed out of that "
-            "package, and this import follows it."
+            "The per-source certificate passphrase persists through the secret store, which is "
+            "reachable only as a private blob-store submodule since that package namespace was made "
+            "inert without promoting it.  The store is already scoped by natural key to the active "
+            "bucket, so it answers per profile capsule; the import follows the module when it is "
+            "promoted to a public defining module."
         ),
-        reaches=frozenset({_MASTER_KEY_PACKAGE}),
+        reaches=frozenset({_BLOB_STORE_MATERIALISATION}),
+    ),
+    "auth/operator_probes.py": _OpenViolation(
+        reason=(
+            "The operator readiness probe asks the shared-master package whether a bucket session is "
+            "live; the predicate follows the surviving session substrate out of that package as the "
+            "per-profile capsule takes over composition."
+        ),
+        reaches=frozenset({_MASTER_KEY_ACTIVE_SESSION}),
+    ),
+    "auth/operator_scope.py": _OpenViolation(
+        reason=(
+            "Operator scoping reads the live bucket session from the shared-master package, and takes "
+            "the active bucket's paths and lock through private bucket submodules that its package "
+            "namespace no longer re-exports.  The session reaches follow the surviving substrate to "
+            "the per-profile capsule; the two path reaches follow those modules when they are "
+            "promoted to public defining modules."
+        ),
+        reaches=frozenset({_MASTER_KEY_ACTIVE_SESSION, _MASTER_KEY_BUCKET_SESSION, _BUCKET_LAYOUT, _BUCKET_LOCKFILE}),
+    ),
+    "auth/sessions.py": _OpenViolation(
+        reason=(
+            "Auth session handling asks the shared-master package whether the live bucket session "
+            "serves a given bucket; the predicate follows the surviving session substrate out of that "
+            "package as the per-profile capsule takes over composition."
+        ),
+        reaches=frozenset({_MASTER_KEY_ACTIVE_SESSION}),
+    ),
+    "bucket_maintenance/_deletion_paths.py": _OpenViolation(
+        reason=(
+            "Deletion-path validation resolves a bucket root's layout before any destructive "
+            "assessment, through a private bucket submodule its package namespace no longer "
+            "re-exports.  The bucket is the per-profile capsule's container; the import follows the "
+            "module when it is promoted to a public defining module."
+        ),
+        reaches=frozenset({_BUCKET_LAYOUT}),
     ),
     "diagnostics.py": _OpenViolation(
         reason=(
-            "The storage-health probe no longer resolves the process-wide provider "
-            "to read secure state; what remains is its session-error import, which "
-            "follows the surviving session substrate out of the shared-master "
-            "package as the per-profile capsule takes over composition."
+            "The storage-health probe no longer resolves the process-wide provider to read secure "
+            "state; what remains is its session-error import, which follows the surviving session "
+            "substrate out of the shared-master package as the per-profile capsule takes over "
+            "composition."
         ),
-        reaches=frozenset({_MASTER_KEY_PACKAGE}),
+        reaches=frozenset({_MASTER_KEY_ACTIVE_SESSION}),
     ),
-    "user_profile/_custody_ports.py": _OpenViolation(
+    "live/iva_remote_state.py": _OpenViolation(
         reason=(
-            "The forwarding port package was dissolved into this single "
-            "application-owned module; its session forwards still reach the "
-            "surviving master-key substrate (bucket session open, resume, "
-            "activation and binding, the session-serves-bucket predicate, the "
-            "unsecured-bucket refusal and the login throttle).  That substrate "
-            "follows the per-profile capsule as it takes over composition.  The "
-            "provider family and the dynamic string reach are both gone; what "
-            "remains is one static import of the master-key module."
+            "Remote IVA state reads the live bucket session before touching the encrypted store; the "
+            "session surface follows the surviving substrate out of the shared-master package as the "
+            "per-profile capsule takes over composition."
         ),
-        reaches=frozenset({_MASTER_KEY_PACKAGE}),
+        reaches=frozenset({_MASTER_KEY_ACTIVE_SESSION}),
     ),
-    "user_profile/_bundle_encryption.py": _OpenViolation(
+    "repair_integrity.py": _OpenViolation(
         reason=(
-            "Bundle export derives its KEK with the raw Argon2id parameters from the "
-            "shared-master package.  This is the primitive, not the provider seam, "
-            "but the per-profile capsule derives its own KEK and the primitive moves "
-            "with the surviving substrate; declared so the decision is visible."
+            "Integrity repair works from the session the operator already holds and refuses honestly "
+            "without one; the session surface it imports to do that follows the surviving substrate "
+            "out of the shared-master package as the per-profile capsule takes over composition."
         ),
-        reaches=frozenset({_MASTER_KEY_PACKAGE}),
-    ),
-    "user_profile/_language_resolver.py": _OpenViolation(
-        reason=(
-            "Language resolution asks the shared-master package whether a bucket "
-            "session is live; the predicate follows the surviving session substrate "
-            "out of that package."
-        ),
-        reaches=frozenset({_MASTER_KEY_PACKAGE}),
+        reaches=frozenset({_MASTER_KEY_ACTIVE_SESSION}),
     ),
 }
 
@@ -359,21 +433,23 @@ def _retired_references(source: str) -> set[str]:
     return found
 
 
-def _facade_exports(path: Path) -> frozenset[str]:
-    """Return the ``__all__`` a package facade declares, read from source.
+def _module_definitions(path: Path) -> frozenset[str]:
+    """Return the names a module defines at module level, read from source.
 
     Read rather than imported: every other assertion in this module works on
     text, and importing the persistence substrate from an application-layer
     unit test would pull a live storage package in to answer a question about a
     name.
+
+    Only the module's own top-level statements count.  A name bound inside a
+    function, a class body or an ``if TYPE_CHECKING`` block is not something the
+    module defines for a caller to import, and counting it would let the anchor
+    below pass on a symbol no reach could actually name.
     """
     tree = ast.parse(path.read_text(encoding="utf-8"))
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Assign) and any(
-            isinstance(target, ast.Name) and target.id == "__all__" for target in node.targets
-        ):
-            return frozenset(str(exported) for exported in ast.literal_eval(node.value))
-    return frozenset[str]()
+    return frozenset(
+        node.name for node in tree.body if isinstance(node, ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef)
+    )
 
 
 def _offenders() -> dict[str, set[str]]:
@@ -430,20 +506,29 @@ def test_the_package_net_fixture_symbol_names_nothing_the_name_net_holds() -> No
     tree-wide sweep rewrote the symbol into the retired list, the proof asserted
     strictly less than its name claims and reported it as a detector mismatch.
 
-    Both halves are asserted here: the symbol is one the shared-master package
-    still exports, so the fixture describes a reach that can really exist, and
-    it is one the name net does not hold, so the module net is the only thing
-    that can see it.
+    Both halves are asserted here: the symbol is one a defining module of the
+    shared-master package still defines, so the fixture describes a reach that
+    can really exist, and it is one the name net does not hold, so the module
+    net is the only thing that can see it.
+
+    The first half is read from the defining module rather than from the
+    package's ``__all__``.  An export list cannot carry this claim any more --
+    the architecture rule makes a package namespace inert, so the shared-master
+    facade declares an empty ``__all__`` by design and an empty one is
+    indistinguishable from a surface that has gone.  The definition is the fact
+    the export list was standing in for, and naming the owning module makes the
+    anchor fail on a relocation WITHIN the package too, which the export list
+    never did.
     """
-    assert _MASTER_KEY_FACADE.is_file(), (
-        f"the shared-master facade is missing at {_MASTER_KEY_FACADE}; the fixture "
-        "symbol below can no longer be anchored to a real exported surface"
+    assert _SURVIVING_SUBSTRATE_MODULE.is_file(), (
+        f"the shared-master defining module is missing at {_SURVIVING_SUBSTRATE_MODULE}; the fixture "
+        "symbol below can no longer be anchored to a module that owns it"
     )
-    exports = _facade_exports(_MASTER_KEY_FACADE)
-    assert exports, "the shared-master facade declares no __all__ to anchor the fixture symbol against"
-    assert _SURVIVING_SUBSTRATE_SYMBOL in exports, (
-        f"{_SURVIVING_SUBSTRATE_SYMBOL} is no longer exported by the shared-master package, so the "
-        "module-net proof reaches a symbol that cannot exist; pick a surviving substrate export"
+    definitions = _module_definitions(_SURVIVING_SUBSTRATE_MODULE)
+    assert definitions, f"{_SURVIVING_SUBSTRATE_MODULE.name} defines nothing to anchor the fixture symbol against"
+    assert _SURVIVING_SUBSTRATE_SYMBOL in definitions, (
+        f"{_SURVIVING_SUBSTRATE_SYMBOL} is no longer defined by {_SURVIVING_SUBSTRATE_MODULE.name}, so the "
+        "module-net proof reaches a symbol that cannot exist; re-point both at the module that now owns it"
     )
     assert _SURVIVING_SUBSTRATE_SYMBOL not in _RETIRED_CUSTODY_NAMES, (
         f"{_SURVIVING_SUBSTRATE_SYMBOL} is a retired custody name, so the module-net proof would also "
@@ -490,19 +575,35 @@ def test_detector_flags_a_master_key_reach_that_names_no_retired_symbol() -> Non
 
 
 def test_detector_flags_a_private_substrate_module_path() -> None:
-    """The path axis: a string-built target is bound by the same ownership rule."""
-    dynamic = 'import_module("cadrumo.adapters.persistence.storage.custody.capsule_discovery")\n'
-    assert _retired_references(dynamic) == {
-        "private-path:cadrumo.adapters.persistence.storage.custody.capsule_discovery"
-    }
+    """The path axis: a string-built target is bound by the same ownership rule.
 
-    relative = "from ...adapters.persistence.storage._rotation import rotate_dek\n"
-    assert _retired_references(relative) == {"private-path:adapters.persistence.storage._rotation"}
+    Every fixture below reaches a module that is private in the tree right now,
+    re-derived rather than asserted, because a fixture naming a module that has
+    since been promoted asserts that a PUBLIC path is reported private and fails
+    as though the detector were broken.  Both of these fixtures broke that way.
+    """
+    for relative_path in _PRIVATE_SUBSTRATE_MODULES:
+        module = _STORAGE_ROOT / relative_path
+        assert module.is_file(), (
+            f"the pinned private substrate module {relative_path} is gone; the path-net fixtures "
+            "below now describe a module that does not exist -- re-point them at a live private module"
+        )
+        assert module.stem.startswith("_"), (
+            f"{relative_path} was promoted and is no longer private, so the path-net fixture built on "
+            "it would assert that a public path is reported private; re-point it at a live private module"
+        )
 
-    plain = "import cadrumo.adapters.persistence.storage.crypto.encrypted_columns as _cols\n"
-    assert _retired_references(plain) == {"private-path:cadrumo.adapters.persistence.storage.crypto.encrypted_columns"}
+    dynamic = 'import_module("cadrumo.adapters.persistence.storage.custody._capsule_data")\n'
+    assert _retired_references(dynamic) == {"private-path:cadrumo.adapters.persistence.storage.custody._capsule_data"}
+
+    relative = "from ...adapters.persistence.storage._kdf_salt import bucket_kdf_salt\n"
+    assert _retired_references(relative) == {"private-path:adapters.persistence.storage._kdf_salt"}
+
+    plain = "import cadrumo.adapters.persistence.storage.blob_store._blob_store as _blobs\n"
+    assert _retired_references(plain) == {"private-path:cadrumo.adapters.persistence.storage.blob_store._blob_store"}
 
     assert _retired_references("from ...adapters.persistence.storage.crypto import encrypt_record\n") == set()
+    assert _retired_references("from ...adapters.persistence.storage.crypto.aead import encrypt_record\n") == set()
     assert _retired_references("from ._revision_persistence import build_event\n") == set()
 
 
