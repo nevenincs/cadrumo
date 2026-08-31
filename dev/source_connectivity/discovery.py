@@ -377,12 +377,49 @@ def _execution_policy(node: ast.FunctionDef | ast.AsyncFunctionDef) -> str | Non
     return None
 
 
+def _dict_display(node: ast.AST, bindings: dict[str, ast.AST]) -> ast.Dict | None:
+    """Resolve a name or expression to the ``dict`` display it is bound to.
+
+    Only a literal display is statically determinable. A display carrying a
+    ``**expansion`` is refused whole: the expansion can add or override keys the
+    walk cannot see, so a lookup that appears to hit could be shadowed at import
+    time.
+    """
+    if isinstance(node, ast.Name) and node.id in bindings:
+        return _dict_display(bindings[node.id], bindings)
+    if not isinstance(node, ast.Dict) or any(key is None for key in node.keys):
+        return None
+    return node
+
+
+def _subscript_value(node: ast.Subscript, bindings: dict[str, ast.AST]) -> str | None:
+    """Resolve ``TABLE["key"]`` against a bound dict display, or refuse.
+
+    A command-spec module routinely routes its handler module through a
+    module-level ``dict`` constant and indexes it from a wrapper, so the dotted
+    path reaches ``DeferredTarget`` as a subscript rather than a literal. The
+    lookup is resolved here the way the interpreter would - last matching key
+    wins - and only when both the table and the key are themselves resolvable.
+    """
+    display = _dict_display(node.value, bindings)
+    key = _string_value(node.slice, bindings)
+    if display is None or key is None:
+        return None
+    resolved: str | None = None
+    for candidate, value in zip(display.keys, display.values, strict=True):
+        if candidate is not None and _string_value(candidate, bindings) == key:
+            resolved = _string_value(value, bindings)
+    return resolved
+
+
 def _string_value(node: ast.AST, bindings: dict[str, ast.AST] | None = None) -> str | None:
     bindings = bindings or {}
     if isinstance(node, ast.Name) and node.id in bindings:
         return _string_value(bindings[node.id], bindings)
     if isinstance(node, ast.Constant) and isinstance(node.value, str):
         return node.value
+    if isinstance(node, ast.Subscript):
+        return _subscript_value(node, bindings)
     if isinstance(node, ast.BoolOp) and isinstance(node.op, ast.Or):
         for value in node.values:
             if (resolved := _string_value(value, bindings)) is not None:
@@ -455,6 +492,26 @@ def _call_argument(
     if isinstance(value, ast.Name) and value.id in bindings:
         return bindings[value.id]
     return value
+
+
+def _policy_name(call: ast.Call, bindings: dict[str, ast.AST], write_policies: frozenset[str]) -> str:
+    """Name the execution policy a command spec declares, preferring the declared name.
+
+    A policy is matched by the NAME of its module-level constant, so substituting
+    that name for the expression it is bound to destroys the only thing the match
+    reads: the value is an ``ExecutionPolicySpec(...)`` call, which has no dotted
+    name at all, and the write surface silently drops out of the analysis. The
+    declared name is therefore kept whenever it already is a known policy, and
+    substitution is reserved for the wrapper case where the declaration is a
+    parameter that only the call bindings can resolve.
+    """
+    declared = next((item.value for item in call.keywords if item.arg == "policy"), None)
+    if declared is None and len(call.args) > 8:
+        declared = call.args[8]
+    if isinstance(declared, ast.Name) and declared.id in write_policies:
+        return declared.id
+    node = _call_argument(call, "policy", 8, bindings)
+    return _dotted_name(node) if node is not None else ""
 
 
 def _deferred_handler_target(
@@ -547,8 +604,7 @@ def _command_spec_ingress(repo_root: Path, cli_root: Path) -> tuple[IngressCapab
             elif call_name != "CommandSpec":
                 continue
             kind = _string_value(_call_argument(command_call, "kind", 3, bindings), bindings)
-            policy_node = _call_argument(command_call, "policy", 8, bindings)
-            policy = _dotted_name(policy_node) if policy_node is not None else ""
+            policy = _policy_name(command_call, bindings, write_policies)
             if kind != "leaf" or policy.rsplit(".", maxsplit=1)[-1] not in write_policies:
                 continue
             target = _deferred_handler_target(_call_argument(command_call, "handler", 9, bindings), functions, bindings)
