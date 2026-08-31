@@ -5,29 +5,10 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:7d3e8d462cbdcbb1449ef239ba288dedb642a20191343a93d1ad4655e5727045'
+body_hash: 'sha256:a97e9608d323e9b09ef1f4de4491bb4ef42edf3040c1d3cf021881c6f71766c6'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace ci-lane-deconflation with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `ci-lane-deconflation` audit: `P05 S125 code review`
 
@@ -57,4 +38,3 @@ Source/test repair `37f1b786154ee6db12643e793af696d8d00c529f` restores `MODELO_E
 No additional P05.S125 corrective work is required.
 
 The relocation otherwise has the intended ownership shape: `_secure_object_namespaces.py` retains namespace contracts and declarations, `_namespace_registry.py` owns only the aggregate hierarchy and logical-path helpers, direct consumers import the aggregate from its canonical module, and no legacy aggregate/helper facade remains. The commit does not change `dev/audit/size_budget_baseline.json`.
-

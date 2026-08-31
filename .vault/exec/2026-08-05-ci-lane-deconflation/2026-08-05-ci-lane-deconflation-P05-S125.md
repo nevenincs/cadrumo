@@ -44,5 +44,3 @@ related:
 ## Notes
 
 - `uv run --no-sync python -m dev.audit.size_budget` remains red only for the 89 live subjects assigned to remaining P05 rows; neither S125 source is a finding.
-
-
