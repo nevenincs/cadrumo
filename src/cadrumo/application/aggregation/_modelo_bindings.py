@@ -85,10 +85,10 @@ from ._modelo_bindings_invoice_iva import (
     _category_counterparty_mismatch_diagnostics,
     _missing_invoice_deduction_authority_diagnostics,
     _out_of_window_summary_diagnostics,
+    _raise_if_invoice_iva_would_be_silent,
     _recargo_rate_mismatch_diagnostics,
     _reverse_charge_underivable_diagnostics,
 )
-from ._modelo_bindings_invoice_iva_refusal import _raise_if_invoice_iva_would_be_silent
 from ._modelo_bindings_support import (
     _STORAGE_DEGRADATION_ERRORS,
     _empty_source_resolution,

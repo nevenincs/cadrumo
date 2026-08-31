@@ -47,8 +47,8 @@ from .._modelo_bindings_invoice_iva import (
     _invoice_line_iva_observation,
     _reverse_charge_cuota_not_derivable,
     _screened_invoice_iva_result,
+    _uncovered_withheld_invoice_cuota,
 )
-from .._modelo_bindings_invoice_iva_refusal import _uncovered_withheld_invoice_cuota
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
