@@ -598,8 +598,8 @@ ignore_imports =
     # every recipient deliberately and names this refusal as the consumer's
     # obligation, so the constraint has to live where the projection does --
     # which means consuming the adapter's record type here.
-    cadrumo.application.filing._history_repository -> cadrumo.adapters.persistence.**
-    cadrumo.application.filing._runtime_repository -> cadrumo.adapters.persistence.**
+    cadrumo.application.filing.history_repository -> cadrumo.adapters.persistence.**
+    cadrumo.application.filing.persistence_wiring -> cadrumo.adapters.persistence.**
     cadrumo.application.inventory._service -> cadrumo.adapters.persistence.**
     # Reaches NO persistence: this pin sat between two repository modules and
     # was wholly an inbound-adapter allowance. A justificante PDF is an
@@ -787,7 +787,7 @@ ignore_imports =
     #    adapter behind InvoiceCatalogueRepositoryProtocol ──
     cadrumo.application.aggregation._renta_ledger -> cadrumo.adapters.persistence.profile.invoices
     cadrumo.application.aggregation._renta_income_ledger -> cadrumo.adapters.persistence.profile.invoices
-    cadrumo.application.filing._review -> cadrumo.adapters.persistence.profile.invoices
+    cadrumo.application.filing.draft_review -> cadrumo.adapters.persistence.profile.invoices
     cadrumo.application.invoices._bulk_import -> cadrumo.adapters.persistence.profile.invoices
     cadrumo.application.invoices._creation -> cadrumo.adapters.persistence.profile.invoices
     cadrumo.application.invoices._creation -> cadrumo.adapters.persistence.profile.buckets
@@ -845,7 +845,7 @@ ignore_imports =
     cadrumo.application.aggregation._renta_gasto_ledger -> cadrumo.adapters.persistence.profile.transactions
     cadrumo.application.aggregation._renta_income_ledger -> cadrumo.adapters.persistence.profile.transactions
     cadrumo.application.aggregation._renta_ledger -> cadrumo.adapters.persistence.profile.transactions
-    cadrumo.application.filing._review -> cadrumo.adapters.persistence.profile.transactions
+    cadrumo.application.filing.draft_review -> cadrumo.adapters.persistence.profile.transactions
     cadrumo.application.invoices._linking -> cadrumo.adapters.persistence.profile.transactions
     cadrumo.application.invoices._queries -> cadrumo.adapters.persistence.profile.transactions
     cadrumo.application.invoices._reconciliation -> cadrumo.adapters.persistence.profile.transactions

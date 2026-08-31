@@ -22,7 +22,6 @@ from ...domain.calculations.registry.schema_exports import (
 from ...domain.filing.errors import FilingExportValidationError
 from ...domain.filing.schema import ModeloDraft
 from ._export_parity import did_page_suppressed
-from ._producer_snapshot import FilingProducerSnapshot
 from ._projection import FilingProjectionPlan, FilingRecordRenderContext
 from ._record_field_renderer import (
     COMPUTED_VALUE_PRODUCERS,
@@ -35,6 +34,7 @@ from ._record_field_renderer import (
     render_record,
 )
 from ._record_types import ProjectionAddress, RecordRenderRow, RenderedRecordOccurrence
+from .producer_snapshot import FilingProducerSnapshot
 
 _COMPUTED_VALUE_PRODUCERS = COMPUTED_VALUE_PRODUCERS
 _DRAFT_VALUE_PRODUCERS = DRAFT_VALUE_PRODUCERS

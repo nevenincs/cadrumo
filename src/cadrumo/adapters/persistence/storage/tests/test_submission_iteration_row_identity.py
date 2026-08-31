@@ -26,7 +26,7 @@ from datetime import UTC, datetime
 import pytest
 
 from .....core.period import Period
-from .....domain.submission._models import ModeloPresentado, SubmissionAttempt, SubmissionStatus, make_submission_id
+from .....domain.submission.models import ModeloPresentado, SubmissionAttempt, SubmissionStatus, make_submission_id
 from ...profile.submission import SubmissionRepository
 from ...tests.runtime_profile_fixture import _runtime_profile
 from ..errors import SecureObjectRowIdentityError

@@ -31,7 +31,7 @@ from pydantic import BaseModel
 from ...core.auth_provider import AuthProviderDescription
 from ...core.errors.severity import BaseSeverity
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ._models import ModeloPresentado
+from .models import ModeloPresentado
 
 if TYPE_CHECKING:  # pragma: no cover — type-only import
     from ...core.identity import SubjectTaxId

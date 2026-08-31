@@ -15,7 +15,7 @@ See Also:
     :mod:`application.filing._calculate`
         Calculation summary that attaches a declared terminal condition for
         blocking findings rather than a local next-action carrier.
-    :mod:`application.filing._runtime_repository`
+    :mod:`application.filing.persistence_wiring`
         Runtime persistence helper that raises :class:`ModeloApplicationError`
         for filing-bucket resolution failures.
 """

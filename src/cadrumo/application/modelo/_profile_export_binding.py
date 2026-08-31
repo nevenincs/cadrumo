@@ -23,7 +23,7 @@ from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.loader import load_user_profile_schema
 from ...domain.user_profile.schema import ProfileSchemaDefinition
 from ...domain.user_profile.values import UserProfileFactValue
-from ..filing._producer_snapshot import DeclarationContactFacts, PresenterIdentity, TaxpayerIdentityFacts
+from ..filing.producer_snapshot import DeclarationContactFacts, PresenterIdentity, TaxpayerIdentityFacts
 
 # Reuse the public defining module's canonical fact-index and scalar resolver;
 # export shaping must not grow a second profile fact authority.

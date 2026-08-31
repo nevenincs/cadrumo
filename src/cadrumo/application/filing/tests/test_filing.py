@@ -28,14 +28,14 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, U
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from .._draft_construction import _binding_provenance, build_draft
-from .._review import (
+from ..conftest import _BUCKET_ID
+from ..draft_review import (
     approve_draft,
     compute_current_approval_basis,
     empty_prior_filing_observations_fingerprint,
     empty_profile_activity_fingerprint,
     refresh_review_status,
 )
-from ..conftest import _BUCKET_ID
 from ..errors import ModeloCalculateError
 from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider
 from ..validation import iter_findings, validate_draft

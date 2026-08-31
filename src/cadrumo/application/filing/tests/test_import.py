@@ -22,7 +22,7 @@ from ....core.errors.error_codes import resolve_error_message
 from ....core.period import Period
 from ....domain.filing.errors import ModeloImportError
 from ....domain.justificante import Justificante, JustificanteParseError
-from ....domain.submission._models import make_submission_id
+from ....domain.submission.models import make_submission_id
 from ....tests import FIXTURES_DIR
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from .._draft_construction import build_draft

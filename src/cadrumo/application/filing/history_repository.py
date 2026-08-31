@@ -14,7 +14,7 @@ plaintext filing-history JSON or envelope file lands on disk.
 See Also:
     :class:`application.filing.ModeloHistory`
         Strict payload persisted by this repository.
-    :mod:`application.filing._runtime_repository`
+    :mod:`application.filing.persistence_wiring`
         Active-profile bucket resolution and runtime secure-object creation.
     :class:`adapters.persistence.profile.modelos_filing.ModeloRecordCatalogueRepository`
         FINANCIAL-class repository for authoritative work-unit filing records.
@@ -35,8 +35,8 @@ from ...adapters.persistence.storage.errors import ClassificationError, Envelope
 from ...adapters.persistence.storage.secure_object_namespaces import APPLICATION_FILING_HISTORY_NAMESPACE
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...core.classification.policies import SensitivityClass
-from ._history_models import ModeloHistory
-from ._runtime_repository import (
+from .history_models import ModeloHistory
+from .persistence_wiring import (
     resolve_application_filing_bucket_id,
     secure_objects_for_application_filing_bucket,
 )
@@ -70,6 +70,15 @@ class ModeloHistoryRepository(SecureBoundRepository[ModeloHistory]):
     payload_type: ClassVar[type[BaseModel]] = ModeloHistory
 
     def __init__(self, *, bucket_id: str | None = None, objects: SecureObjectRepository | None = None) -> None:
+        """Bind the repository to a profile bucket or to supplied secure storage.
+
+        Args:
+            bucket_id: Explicit profile bucket to scope storage to; the active
+                profile bucket is resolved when omitted and ``objects`` is not
+                supplied.
+            objects: Already-constructed secure-object storage. When supplied,
+                no bucket resolution and no runtime storage construction occur.
+        """
         self._bucket_id = bucket_id.strip() if bucket_id is not None else None
         if objects is None:
             self._bucket_id = resolve_application_filing_bucket_id(bucket_id)

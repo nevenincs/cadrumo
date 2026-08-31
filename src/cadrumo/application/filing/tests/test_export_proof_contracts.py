@@ -14,7 +14,7 @@ from ....core.period import Period
 from ....core.time.clock import now
 from ....domain.filing.errors import FilingExportValidationError
 from .._export import export_draft
-from .._export_proof import (
+from ..export_proof import (
     FilingExportConformanceRequest,
     FilingExportConformanceVectorEvidence,
     FilingExportGeneratedOutput,
@@ -28,7 +28,7 @@ from .._export_proof import (
     FilingExportSecureReplayReceipt,
     FilingExportSecureReplayRequest,
 )
-from .._export_verification import DeclaracionExportResult, FilingExportConsumedResult, FilingExportValidatedPayload
+from ..export_verification import DeclaracionExportResult, FilingExportConsumedResult, FilingExportValidatedPayload
 from ._export_support import (
     _approved_modelo_111_registry_draft,
     _schema_provider,

@@ -67,7 +67,7 @@ from ...aggregation import M303ProrrataTransitionArrival, M303SupplierRegimeArri
 from ...calculations._m303_regimen_simplificado import calculate_m303_regimen_simplificado_result
 from .._export import _filing_producer_values, _render_layout, export_draft, render_filing_envelope
 from .._export_envelope import FilingEnvelopeRenderRequest
-from .._producer_snapshot import (
+from ..producer_snapshot import (
     FilingElectionFacts,
     FilingProducerSnapshot,
     FilingProducerSnapshotError,

@@ -51,7 +51,7 @@ def secure_objects_for_application_filing_bucket(bucket_id: str) -> SecureObject
     """Return runtime-created secure-object storage for ``bucket_id``.
 
     The concrete adapter is imported here (not at module scope) so that
-    application/filing/_runtime_repository does not carry a module-scope
+    application/filing/persistence_wiring does not carry a module-scope
     import from the adapters layer. The import-time edge is eliminated;
     the runtime dependency remains transparent.
 

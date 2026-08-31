@@ -18,7 +18,7 @@ from ....domain.calculations.registry.schema_exports import ExportLayoutDefiniti
 from ....domain.modelos.calculation_revision import CalculationRevisionAmendmentKind
 from ....domain.submission._protocols import ModeloDraftStatus
 from .._draft_construction import build_draft
-from .._producer_snapshot import (
+from ..producer_snapshot import (
     AmendmentEvidence,
     FilingElectionFacts,
     FilingProducerSnapshot,

@@ -494,7 +494,7 @@ def _provisioned_sandbox_profile() -> Iterator[None]:
         from uuid import UUID
 
         from cadrumo.application.evidence._profile_legal_hold import LegalHoldCaseAuthority
-        from cadrumo.application.filing._profile_filing_retention import try_record_filing_retention_snapshot
+        from cadrumo.application.filing.retention import try_record_filing_retention_snapshot
 
         record = upsert_test_profile_facts(SANDBOX_PROFILE_ID, _SANDBOX_PROFILE_FACTS)
         with bound_test_profile_record(SANDBOX_PROFILE_ID) as repository:

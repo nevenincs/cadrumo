@@ -21,7 +21,7 @@ from ....adapters.persistence.storage.sql.session import session_scope
 from ....core.classification.policies import SensitivityClass
 from ....core.period import Period
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from .._models import ModeloPresentado, SubmissionAttempt, SubmissionStatus, make_submission_id
+from ..models import ModeloPresentado, SubmissionAttempt, SubmissionStatus, make_submission_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

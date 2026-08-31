@@ -1,7 +1,7 @@
 """Unit coverage for prior-filing approval-basis fingerprints.
 
 See Also:
-    :func:`~application.filing._review._prior_filing_observations_fingerprint`
+    :func:`~application.filing.draft_review._prior_filing_observations_fingerprint`
         Order-independent digest helper under test for bucket-local prior filed
         observations.
     :func:`~application.filing.empty_prior_filing_observations_fingerprint`
@@ -25,7 +25,7 @@ import pytest
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ...calculations.observations_repository import ObservationEnvelopePayload
-from .._review import _prior_filing_observations_fingerprint, empty_prior_filing_observations_fingerprint
+from ..draft_review import _prior_filing_observations_fingerprint, empty_prior_filing_observations_fingerprint
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

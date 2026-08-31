@@ -15,7 +15,7 @@ from .....core.classification.policies import SensitivityClass
 from .....core.period import Period
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_path
-from .....domain.submission._models import ModeloPresentado, SubmissionAttempt, SubmissionStatus, make_submission_id
+from .....domain.submission.models import ModeloPresentado, SubmissionAttempt, SubmissionStatus, make_submission_id
 from .....tests.secure_sql import TestRuntimeProfile
 from ...profile.submission import (
     SubmissionRepository,

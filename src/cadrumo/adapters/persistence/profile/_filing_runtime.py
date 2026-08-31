@@ -17,7 +17,7 @@ See Also:
         Runtime storage factory used after the filing bucket id is resolved.
     :mod:`~adapters.persistence.profile.filing_drafts`
         Draft repository consumer of these filing runtime helpers.
-    :mod:`~application.filing._runtime_repository`
+    :mod:`~application.filing.persistence_wiring`
         Application-layer sibling helper that keeps application filing imports
         out of adapter module import time.
     :class:`~domain.filing.ModeloDraftRepositoryProtocol`

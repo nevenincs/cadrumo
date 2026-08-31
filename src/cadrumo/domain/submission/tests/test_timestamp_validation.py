@@ -8,7 +8,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.period import Period
-from .._models import ModeloPresentado, SubmissionAttempt, SubmissionStatus, make_submission_id
+from ..models import ModeloPresentado, SubmissionAttempt, SubmissionStatus, make_submission_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

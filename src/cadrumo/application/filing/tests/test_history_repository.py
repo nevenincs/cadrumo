@@ -21,9 +21,9 @@ from ....core.classification.policies import SensitivityClass
 from ....core.period import Period
 from ....domain.identifiers import ModeloIdentifier
 from ....tests.secure_sql import TestRuntimeProfile
-from .._history_models import ModeloHistory, ModeloHistoryEntry
-from .._history_repository import ModeloHistoryRepository
 from ..conftest import _BUCKET_ID
+from ..history_models import ModeloHistory, ModeloHistoryEntry
+from ..history_repository import ModeloHistoryRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

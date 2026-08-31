@@ -79,7 +79,7 @@ from ...domain.filing.schema import ModeloDraft as _ModeloDraft
 from ...domain.filing.schema import ModeloValidationFinding as _ModeloValidationFinding
 from ...domain.filing.validator import ModeloValidator as _ModeloValidator
 from ...domain.filing.validator import apply_validation as _apply_validation
-from ._review import (
+from .draft_review import (
     refresh_review_status,
 )
 from .errors import ModeloApplicationError as ModeloApplicationError

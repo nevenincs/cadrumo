@@ -34,7 +34,7 @@ from ....domain.filing.schema import APPROVAL_BASIS_VERSION, ModeloApprovalBasis
 from ....domain.submission._protocols import ModeloDraftStatus
 from ....tests.filing import build_registry_filing_draft_from_decimals
 from ....tests.secure_sql import isolated_runtime_profile
-from .._review import (
+from ..draft_review import (
     approve_draft,
     compute_review_checksum,
     empty_prior_filing_observations_fingerprint,

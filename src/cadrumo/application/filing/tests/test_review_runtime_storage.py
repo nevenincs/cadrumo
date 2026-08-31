@@ -22,7 +22,7 @@ from ....domain.transactions.raw_transaction import RawProvenance, RawTransactio
 from ....tests.filing import build_registry_filing_draft_from_decimals
 from ....tests.secure_sql import isolated_runtime_profile
 from ....tests.secure_sql import isolated_storage_root as _isolated_storage  # noqa: F401 - autouse fixture
-from .._review import (
+from ..draft_review import (
     ModeloApprovalStaleReason,
     _transaction_catalogue_fingerprint,
     approval_stale_reasons,

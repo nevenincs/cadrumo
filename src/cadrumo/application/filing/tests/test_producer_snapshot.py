@@ -72,7 +72,7 @@ from .._export import (
     _m303_no_activity_marker,
 )
 from .._export_producer import m303_profile_lexicals
-from .._producer_snapshot import (
+from ..producer_snapshot import (
     M202_UNSUPPORTED_PRODUCER_IDS,
     AmendmentEvidence,
     ChargeAccountSelection,

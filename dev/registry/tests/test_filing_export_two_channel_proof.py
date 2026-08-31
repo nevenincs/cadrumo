@@ -15,7 +15,7 @@ import pytest
 from pydantic import BaseModel
 
 from cadrumo.adapters.persistence.storage.errors import PersistenceError, SecretStoreError
-from cadrumo.application.filing._export_proof import FilingExportProofChannel, FilingExportProofCoordinate
+from cadrumo.application.filing.export_proof import FilingExportProofChannel, FilingExportProofCoordinate
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority

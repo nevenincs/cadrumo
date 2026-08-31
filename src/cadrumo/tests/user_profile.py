@@ -143,7 +143,7 @@ def register_minimal_profile(
     from uuid import UUID
 
     from ..application.evidence._profile_legal_hold import LegalHoldCaseAuthority
-    from ..application.filing._profile_filing_retention import try_record_filing_retention_snapshot
+    from ..application.filing.retention import try_record_filing_retention_snapshot
     from ..core.identity import canonical_profile_bucket_id
 
     # Normalise at the door: the record below constrains its identifier to the

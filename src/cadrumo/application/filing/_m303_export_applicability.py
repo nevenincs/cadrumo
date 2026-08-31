@@ -6,12 +6,12 @@ from ...core.modelo import Modelo
 from ...core.period import Period
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
-from ._producer_snapshot import (
+from .errors import ModeloApplicationError as FilingExportError
+from .producer_snapshot import (
     FilingProducerSnapshot,
     M303FilingFacts,
     assert_m303_regularisation_result_matches_bienes_register,
 )
-from .errors import ModeloApplicationError as FilingExportError
 
 
 def validate_m303_export_applicability(

@@ -13,13 +13,13 @@ from ....domain.calculations.export_field_kind import CasillaFieldKind
 from ....domain.calculations.registry.export_parse import parse_export_payload
 from ....domain.filing.errors import FilingExportError
 from .._export import export_draft
-from .._export_verification import (
+from ..export_verification import (
     DeclaracionExportResult,
     DeclaracionVerifyVerdict,
     verify_export,
     verify_written_export,
 )
-from .._producer_snapshot import FilingProducerSnapshot, GeneralFilingProfileFacts, build_filing_producer_snapshot
+from ..producer_snapshot import FilingProducerSnapshot, GeneralFilingProfileFacts, build_filing_producer_snapshot
 from ..runtime import RegistrySchemaAccessor
 from ._export_support import (
     _approved_modelo_131_historical_registry_draft,

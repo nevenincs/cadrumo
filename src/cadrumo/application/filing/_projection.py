@@ -34,7 +34,7 @@ from ...domain.calculations.registry.schema_exports import ExportLayoutDefinitio
 from ...domain.filing.errors import FilingExportValidationError
 from ...domain.iva.regimen_simplificado_rows import ActividadNoAgricolaSimplificado
 from ._m303_exonerado_390 import project_m303_exonerado_390_value_arrival
-from ._producer_snapshot import FilingProducerSnapshot, M303FilingFacts
+from .producer_snapshot import FilingProducerSnapshot, M303FilingFacts
 
 type _RegimenSimplificadoProjectionRef = (
     M303RegimenSimplificadoActivityProjectionRef

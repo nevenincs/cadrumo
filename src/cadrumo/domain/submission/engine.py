@@ -29,7 +29,6 @@ from datetime import date
 
 from ...core.config import Settings
 from ...core.logging import get_logger
-from ._models import ModeloPresentado, SubmissionStatus
 from ._preflight import Preflight
 from ._protocols import (
     AuthProviderProbe,
@@ -38,6 +37,7 @@ from ._protocols import (
     SubmissionRepositoryProtocol,
 )
 from .errors import SubmissionError
+from .models import ModeloPresentado, SubmissionStatus
 
 _logger = get_logger(__name__)
 

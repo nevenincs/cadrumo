@@ -14,7 +14,7 @@ from uuid import UUID
 import pytest
 from sqlalchemy import select
 
-from .....application.filing._export_proof import (
+from .....application.filing.export_proof import (
     FilingExportOfficialProbe,
     FilingExportProofCoordinate,
     FilingExportSecureCustodyRecord,

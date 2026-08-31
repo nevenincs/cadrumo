@@ -18,7 +18,7 @@ from ....application.calculations.observations_repository import (
     iva_wallet_decision_event_key,
 )
 from ....application.evidence._service import EvidenceBundleRepository
-from ....application.filing._history_repository import ModeloHistoryRepository
+from ....application.filing.history_repository import ModeloHistoryRepository
 from ....application.ledger.confirmation_record import (
     ConfirmationRecordDocument,
     confirmation_record_object_key,

@@ -14,7 +14,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....application.filing._export_producer import m303_rectificativa_motive_producer_values
-from ....application.filing._producer_snapshot import (
+from ....application.filing.producer_snapshot import (
     AmendmentEvidence,
     FilingElectionFacts,
     FilingProducerSnapshotError,
