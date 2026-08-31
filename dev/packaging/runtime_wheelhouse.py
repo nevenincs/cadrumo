@@ -149,6 +149,29 @@ def _manylinux_floor(platform: str, architecture: str) -> tuple[int, int] | None
     return (int(match.group(1)), int(match.group(2))) if match else None
 
 
+#: `glibc-2.28` -> (2, 28); `macos-11.0` -> (11, 0); `windows-10` -> (10, 0).
+_DECLARED_FLOOR = re.compile(r"^[a-z]+-(\d+)(?:\.(\d+))?$")
+
+
+def _declared_floor(target: TargetPlatform) -> tuple[int, int]:
+    """Return the floor this target DECLARES, as the version that gates wheels.
+
+    The declared floor used to be documentation only: `SUPPORTED_TARGETS` fed
+    `PLATFORM_FLOORS` into the cohort manifest, while :func:`_platform_rank`
+    enforced hard-coded literals of its own - `(2, 17)` for Linux and `(11, 0)`
+    for macOS. Two independent numbers describing one policy, free to disagree,
+    and they did: raising the declared Linux floor to 2.28 changed the published
+    manifest and not one wheel decision.
+
+    Reading it here collapses them. What the manifest promises is now what the
+    selector applies, and a floor change is a real change rather than a caption.
+    """
+    match = _DECLARED_FLOOR.fullmatch(target.floor)
+    if match is None:
+        raise SystemExit(f"target {target.name} declares an unparsable floor: {target.floor!r}")
+    return (int(match.group(1)), int(match.group(2) or 0))
+
+
 def _platform_rank(platform: str, target: TargetPlatform) -> int | None:
     if platform == "any":
         return 0
@@ -159,12 +182,12 @@ def _platform_rank(platform: str, target: TargetPlatform) -> int | None:
         if match is None:
             return None
         minimum = (int(match.group(1)), int(match.group(2)))
-        if minimum > (11, 0):
+        if minimum > _declared_floor(target):
             return None
         return 10_000 + minimum[0] * 100 + minimum[1]
     architecture = "x86_64" if target.name == "linux-x86-64" else "aarch64"
     minimum_glibc = _manylinux_floor(platform, architecture)
-    if minimum_glibc is None or minimum_glibc > (2, 17):
+    if minimum_glibc is None or minimum_glibc > _declared_floor(target):
         return None
     return 10_000 + minimum_glibc[0] * 100 + minimum_glibc[1]
 
