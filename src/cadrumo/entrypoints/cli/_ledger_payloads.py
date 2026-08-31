@@ -44,7 +44,7 @@ from ...application.ledger.models import (
     IsoDateText,
 )
 from ...core import LinkInconsistencyDirection
-from ...core.decimal import try_parse_canonical_decimal
+from ...core.decimal import is_non_negative_canonical_decimal, try_parse_canonical_decimal
 from ...core.identity import (
     BucketId,
     CalculationRevisionId,
@@ -59,6 +59,7 @@ from ...core.parsing import IsoCurrencyCode, parse_iso8601_date
 from ...core.period import Period
 from ...core.prose_elision import IssueDetail
 from ...core.text_bounds import NonEmptyStr
+from ...core.unit_proportion import is_unit_proportion
 from ._ledger_business_payloads import (
     AttachmentReviewPayload,
     AttachmentReviewQueueResult,
@@ -159,6 +160,35 @@ class M210IncomeClassificationPayload(OutputSchema):
     payer_mode: str
     payer_id: str | None = None
     asset_or_right_id: str | None = None
+
+    @field_validator("gross_income_amount")
+    @classmethod
+    def _is_a_non_negative_canonical_amount(cls, value: str) -> str:
+        """Gross income is a magnitude, bounded ``ge=0`` on the record.
+
+        The bound does not survive the projection to a string, so the wire
+        re-asserts it rather than publishing a schema looser than the fact.
+        """
+        if not is_non_negative_canonical_decimal(value):
+            raise ValueError(f"gross_income_amount must be a non-negative canonical decimal, got {value!r}")
+        return value
+
+    @field_validator("applicable_rate")
+    @classmethod
+    def _is_a_share_of_one(cls, value: str) -> str:
+        """The M210 rate is a share of one, not merely a non-negative number.
+
+        The record bounds it at ``ge=0, le=1``, which is
+        :obj:`~core.unit_proportion.UnitProportion`. Asserting only
+        non-negativity here would let a rate of ``5`` onto the wire -- five
+        hundred per cent, which reads as a plausible percentage typed into a
+        share field, so the upper bound is the half that catches the real
+        mistake.
+        """
+        parsed = try_parse_canonical_decimal(value, signed=False)
+        if parsed is None or not is_unit_proportion(parsed):
+            raise ValueError(f"applicable_rate must be a decimal share between 0 and 1, got {value!r}")
+        return value
 
 
 class TransactionPayload(OutputSchema):
@@ -860,7 +890,7 @@ class LedgerExportRowPayload(OutputSchema):
         """
         if not value:
             return value
-        if try_parse_canonical_decimal(value, signed=False) is None:
+        if not is_non_negative_canonical_decimal(value):
             raise ValueError("must be a non-negative canonical decimal")
         return value
 

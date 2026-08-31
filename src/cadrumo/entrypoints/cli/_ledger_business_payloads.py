@@ -28,8 +28,9 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import TYPE_CHECKING, Annotated
 
-from pydantic import AfterValidator, NonNegativeInt
+from pydantic import AfterValidator, NonNegativeInt, field_validator
 
+from ...core.decimal import is_non_negative_canonical_decimal
 from ...core.identity import BucketId, InvoiceId, TaxIdIdentityToken
 from ...core.json_contract import OutputSchema
 from ...core.text_bounds import NonEmptyStr, PositiveCount
@@ -192,6 +193,18 @@ class InventoryValuationPreviewPayload(OutputSchema):
     derived_closing_value: str
     cogs: str
     bucket_event_ids: list[str] = []
+
+    @field_validator("derived_closing_value", "cogs")
+    @classmethod
+    def _is_a_non_negative_canonical_amount(cls, value: str) -> str:
+        """A closing inventory value and a cost of goods sold are magnitudes.
+
+        Both are bounded ``ge=0`` on the record this payload flattens, and both
+        lost that bound in the projection to a string.
+        """
+        if not is_non_negative_canonical_decimal(value):
+            raise ValueError(f"amount must be a non-negative canonical decimal, got {value!r}")
+        return value
 
     @classmethod
     def from_result(cls, result: _AppInventoryValuationPreviewResult) -> InventoryValuationPreviewPayload:

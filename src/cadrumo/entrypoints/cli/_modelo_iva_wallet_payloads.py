@@ -30,10 +30,10 @@ from __future__ import annotations
 from pydantic import NonNegativeInt, field_validator
 
 from ...core import IvaCompensationStateProvenance
-from ...core.period import Period
-from ...core.decimal import try_parse_canonical_decimal
+from ...core.decimal import is_non_negative_canonical_decimal
 from ...core.filing_year import FilingYear
 from ...core.json_contract import OutputSchema
+from ...core.period import Period
 from ...domain.iva_compensation.balance import CompensationExpiryYear
 
 
@@ -71,7 +71,7 @@ class IvaWalletBalanceResult(OutputSchema):
         rejects ``NaN``, ``Infinity`` and free text, so the wire carries only
         amounts the domain report's ``ge=0`` Decimal fields admit.
         """
-        if try_parse_canonical_decimal(value, signed=False) is None:
+        if not is_non_negative_canonical_decimal(value):
             raise ValueError(f"amount must be a non-negative canonical decimal, got {value!r}")
         return value
 

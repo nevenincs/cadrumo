@@ -7,6 +7,7 @@ from typing import Any
 
 from pydantic import (
     NonNegativeInt,
+    field_validator,
     model_validator,
 )
 
@@ -17,8 +18,9 @@ from ...application.live.remote_state_models import (
     LiveIvaReadSurface,
 )
 from ...core import IvaCompensationStateProvenance
-from ...core.period import Period
+from ...core.decimal import is_non_negative_canonical_decimal
 from ...core.json_contract import OutputSchema
+from ...core.period import Period
 
 
 class IvaCompensationHistoryRowPayload(OutputSchema):
@@ -120,6 +122,21 @@ class IvaWalletHistoryResult(OutputSchema):
     rows: list[IvaCompensationHistoryRowPayload]
     carry_forward_lots: list[IvaCompensationCarryForwardLotPayload]
     authority_decisions: list[IvaWalletAuthorityDecisionPayload]
+
+    @field_validator("unallocated_applied_amount")
+    @classmethod
+    def _is_a_non_negative_canonical_amount(cls, value: str) -> str:
+        """Re-assert on the wire the bound the record carries in Decimal form.
+
+        The application record bounds this at ``ge=0``. Stringifying it for JSON
+        drops that, so without this the payload could publish a negative balance
+        the domain cannot hold -- the same assertion the sibling wallet balance
+        payload already made, absent here only because this module had no
+        validators at all.
+        """
+        if not is_non_negative_canonical_decimal(value):
+            raise ValueError(f"amount must be a non-negative canonical decimal, got {value!r}")
+        return value
 
 
 class IvaWalletCaptureHistoryResult(OutputSchema):

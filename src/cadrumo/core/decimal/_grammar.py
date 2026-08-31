@@ -179,3 +179,24 @@ def european_thousands_reading_is_ambiguous(text: str) -> bool:
     if "," in candidate:
         return False
     return _AMBIGUOUS_THOUSANDS_RE.fullmatch(candidate) is not None
+
+
+def is_non_negative_canonical_decimal(text: str) -> bool:
+    """Whether *text* is a canonical decimal carrying no sign.
+
+    The question a wire payload asks about a stringified money column. A record
+    that bounds a Decimal field at ``ge=0`` loses that bound the moment it is
+    projected to a string, and the projection has to re-assert it or the
+    published schema promises less than the record guarantees.
+
+    It is a predicate rather than a validator because the callers differ on what
+    an EMPTY value means, and that difference is real: an export column spells an
+    absent optional as ``""`` and must accept it, while a balance is always
+    present and an empty one is malformed. Each raises its own refusal for the
+    same reason -- what must not differ is the grammar they test against.
+
+    Written out twice before this existed, once for the ledger export columns and
+    once for the IVA wallet balances, with the second docstring noting it was the
+    "same shape" as the first.
+    """
+    return try_parse_canonical_decimal(text, signed=False) is not None

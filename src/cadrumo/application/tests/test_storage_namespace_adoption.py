@@ -1,7 +1,7 @@
 """Production-root adoption gate for secure-object namespace metadata.
 
 Every secure-object namespace declared in
-:data:`~adapters.persistence.storage._secure_object_namespaces.STORAGE_NAMESPACE_REGISTRY`
+:data:`~adapters.persistence.storage._namespace_registry.STORAGE_NAMESPACE_REGISTRY`
 carries a :class:`~adapters.persistence.storage.SecureObjectNamespaceDefinition`
 that is the single authority for its ``namespace`` string, ``sensitivity``
 :class:`~core.classification.SensitivityClass`, and envelope ``schema_version``.
