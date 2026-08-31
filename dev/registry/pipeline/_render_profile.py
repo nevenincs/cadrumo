@@ -872,12 +872,21 @@ def _compile_fragments(fragments: Iterable[RenderProfileFragment]) -> RenderProf
     )
 
 
+#: Width-17 AEAT types in the order their compiled rules are emitted. Declared
+#: explicitly rather than derived from ``Width17MembershipRule.aeat_type``,
+#: because this order reaches the rendered bytes and reordering a type annotation
+#: must not silently reorder generated output. It is held exhaustive against that
+#: annotation by the owning test, so widening the type without extending this
+#: tuple -- which would drop the new type's rules here in silence -- fails.
+_WIDTH_17_TYPE_ORDER: Final[tuple[str, ...]] = ("Num", "N")
+
+
 def _compile_width_17_rules(rules: Iterable[Width17MembershipRule]) -> tuple[Width17MembershipRule, ...]:
     by_type: dict[str, list[Width17MembershipRule]] = {}
     for rule in rules:
         by_type.setdefault(rule.aeat_type, []).append(rule)
     compiled: list[Width17MembershipRule] = []
-    for aeat_type in ("Num", "N"):
+    for aeat_type in _WIDTH_17_TYPE_ORDER:
         type_rules = by_type.get(aeat_type, [])
         if not type_rules:
             continue

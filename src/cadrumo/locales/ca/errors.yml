@@ -1182,8 +1182,8 @@ errors:
       amb el model %{modelo_id}: %{candidate_ids}. Indiqueu el període de declaració,
       o una data de referència, per seleccionar-ne una.'
     modelo_not_registered: El model no està registrat al registre.
-    no_revision_for_period: Cap revisió del registre cobreix el model %{modelo_id}
-      exercici %{filing_year} període %{period}.
+    no_revision_for_period: 'Cap revisió del registre cobreix el model %{modelo_id}
+      de l''exercici %{filing_year} i període %{period}; revisions disponibles: %{available_revision_ids}.'
   storage:
     engine:
       create_failed: No s'ha pogut crear el motor de base de dades d'emmagatzematge.

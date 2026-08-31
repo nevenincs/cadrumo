@@ -5,6 +5,7 @@ from __future__ import annotations
 import ast
 import inspect
 from pathlib import Path
+from typing import get_args
 
 import pytest
 import rtoml
@@ -1284,3 +1285,22 @@ def test_a_source_reserved_pdf_slot_stays_ineligible() -> None:
     eligible = _eligibility_for("aeat-dr-347-2025", "2025", "operaciones-terceros.toml")
 
     assert not [field for field in eligible if _is_source_reserved_field(field)]
+
+
+def test_width_17_type_order_covers_every_declared_aeat_type() -> None:
+    """The emit order must enumerate every width-17 type the model admits.
+
+    ``_compile_width_17_rules`` walks ``_WIDTH_17_TYPE_ORDER`` and reads
+    ``by_type`` through it, so a type present in the rules but absent from that
+    tuple is dropped without a refusal -- its declared width, sign policy and
+    evidence never reach the compiled profile, and the fields it governs render
+    as though the rule had never been authored. Nothing else fails when that
+    happens, which is why this is asserted rather than left to review.
+    """
+    declared = set(get_args(_render_profile.Width17MembershipRule.model_fields["aeat_type"].annotation))
+    ordered = set(_render_profile._WIDTH_17_TYPE_ORDER)
+    assert ordered == declared, (
+        f"width-17 emit order {sorted(ordered)} does not cover the declared aeat_type set "
+        f"{sorted(declared)}; a type admitted by the model but missing from the order is "
+        "silently discarded during compilation"
+    )
