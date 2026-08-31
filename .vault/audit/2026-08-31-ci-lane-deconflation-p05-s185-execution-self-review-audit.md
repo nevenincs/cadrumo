@@ -5,7 +5,7 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:bc51e703b1a71dc21189c3654a6c05be2819189ebf35c45a3ab16ec7eb590028'
+body_hash: 'sha256:6fa6ee70f55d78356ca61f1b9abb6d94522bd5a3eef425999d5950b69f1158e8'
 related:
   - "[[2026-08-05-ci-lane-deconflation-P05-S185]]"
 ---
@@ -36,7 +36,11 @@ Self-review of the P05.S185 execution record against source provenance `adbdcc88
 
 ## Findings
 
-No CRITICAL or HIGH finding was identified in the S185 attestation.
+No CRITICAL finding or unresolved HIGH finding remains in the S185 attestation.
+
+### s185-count-labeling | high | Immutable source counts corrected
+
+The initial execution record mixed a nonblank parent figure with a later live figure. The corrected record carries only source commit `adbdcc8875b9323b3ddc88a1984deea287380c6f`'s immutable physical comparison: 1373 parent `formula_runtime.py` lines, 1035 committed lines, and a new 363-line sibling.
 
 ### s185-size-audit-boundary | low | Global size audit is not green
 

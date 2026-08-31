@@ -5,7 +5,7 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:c24ecde4125d35f8fd2fce93bb2e0fac0fce591da76ecded017b3b32822b07cb'
+body_hash: 'sha256:77cb62957d4fc093384b8becf59736d4fd8d14534468a9394fa6e9fcd78988b5'
 step_id: 'S185'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
@@ -31,7 +31,7 @@ related:
 
 ## Notes
 
-Source provenance is `adbdcc8875b9323b3ddc88a1984deea287380c6f`. It reduces `formula_runtime.py` from 1257 to 1076 lines, adds the 363-line Modelo 100 sibling, deletes the legacy in-module wrapper implementation, and makes the dispatcher directly import the canonical evaluator module. No source plan, size-budget baseline, or threshold changed.
+Source provenance is `adbdcc8875b9323b3ddc88a1984deea287380c6f`. Its immutable physical source comparison reduces `formula_runtime.py` from 1373 to 1035 lines and adds the 363-line Modelo 100 sibling, deletes the legacy in-module wrapper implementation, and makes the dispatcher directly import the canonical evaluator module. No source plan, size-budget baseline, or threshold changed.
 
 Executor-reported focused receipts are: 8 EO tests in 28.96s; 18 Art. 85 plus arity tests in 45.16s; and 13 remediation-focused tests in 43.28s. The complete size audit exited 1 elsewhere but reported no `formula_runtime` offender; this is not a global green claim.
 
