@@ -852,9 +852,7 @@ class _PersistenceProfileCustody:
             export_profile_custody_recovery_artifact(
                 _substrate_handle(recovery_envelope, ProfileCustodyRecoveryEnvelope, "recovery envelope"),
                 current_password=current_password,
-                password_envelope=_substrate_handle(
-                    password_envelope, ProfileCustodyEnvelope, "password envelope"
-                ),
+                password_envelope=_substrate_handle(password_envelope, ProfileCustodyEnvelope, "password envelope"),
                 sentinel=_substrate_handle(sentinel, ProfileCustodySentinelRecord, "DEK sentinel"),
                 target=target,
             )

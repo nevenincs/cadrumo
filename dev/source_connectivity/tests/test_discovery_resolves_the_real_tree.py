@@ -97,6 +97,5 @@ def test_the_census_entry_points_resolve_against_the_real_tree() -> None:
     assert capability_ids, "the capability-id census resolved nothing against the real tree"
     assert evidence, "the capability-evidence census resolved nothing against the real tree"
     assert set(evidence) <= set(capability_ids), (
-        "evidence names capability ids the census does not carry: "
-        f"{sorted(set(evidence) - set(capability_ids))[:10]}"
+        f"evidence names capability ids the census does not carry: {sorted(set(evidence) - set(capability_ids))[:10]}"
     )

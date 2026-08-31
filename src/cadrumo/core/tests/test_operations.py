@@ -74,6 +74,8 @@ def test_operation_axis_refuses_an_unknown_token(axis: type[StrEnum]) -> None:
     """Unknown generic state meanings cannot enter through a free-form token."""
     with pytest.raises(ValueError, match="is not a valid"):
         axis("frontend_owned_state")
+
+
 def test_the_pre_entry_lifecycles_are_exactly_created_and_queued() -> None:
     """Pin the membership every consumer of this set relies on.
 

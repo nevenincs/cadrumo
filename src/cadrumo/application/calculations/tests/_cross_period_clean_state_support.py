@@ -500,8 +500,7 @@ def _seed_official_303_source_filings(
                 (
                     record
                     for record in ModeloRecordCatalogueRepository().load().records.values()
-                    if record.work_unit_id == work_unit.work_unit_id
-                    and record.status is ModeloRecordStatus.VIGENTE
+                    if record.work_unit_id == work_unit.work_unit_id and record.status is ModeloRecordStatus.VIGENTE
                 ),
                 None,
             )

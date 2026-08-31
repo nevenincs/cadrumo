@@ -1071,6 +1071,8 @@ def test_missing_active_bucket_session_classifier_terminates_on_a_cyclic_chain()
     second.__context__ = first
 
     assert _is_missing_active_bucket_session(first) is False
+
+
 _REGISTRY_SUMMARY_COUNT_FIELDS = ("modelo_count", "revision_count", "casilla_count", "formula_count")
 
 
