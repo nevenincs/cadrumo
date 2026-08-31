@@ -258,6 +258,20 @@ ignore_imports =
     # segments: the facade itself, and its private submodules.
     cadrumo.llm.tests.** -> cadrumo.adapters.outbound.llm
     cadrumo.llm.tests.** -> cadrumo.adapters.outbound.llm.**
+    # ── The subpackage's own tests, into the ledger application services ───
+    # These gates drive the REAL application entry points the readers hang off:
+    # the vision and text classifier wiring through ledger.llm_classification,
+    # the stamp-singularity scan through ledger.evidence_textlayer, and the
+    # role-evidence prompt-shape gate through ledger.party_attribution. Each of
+    # those services reaches storage for its own records, so every such test
+    # raises a chain into cadrumo.adapters.persistence.
+    #
+    # Same importer-tier wildcard as the facade pair above and for the same
+    # reason: anchored at cadrumo.llm.tests, so no production module can match
+    # it, and llm.suggestions' edge into ledger.models still breaks the
+    # contract exactly as before. Pinning these four per file would repeat the
+    # scaling failure recorded above.
+    cadrumo.llm.tests.** -> cadrumo.application.ledger.**
     # ── One PRODUCTION edge, sanctioned and worth stating precisely ────────
     # LLMClient default-constructs the three core-side stores, which do resolve
     # secure storage. So the subpackage reaches persistence TRANSITIVELY even
