@@ -73,6 +73,31 @@ def is_calendar_month(value: int) -> bool:
     """
     return CALENDAR_MONTH_MIN <= value <= CALENDAR_MONTH_MAX
 
+
+def is_canonical_month_set(months: tuple[int, ...]) -> bool:
+    """Whether ``months`` is a canonical set: real months, no repeat, ascending.
+
+    The three rules travel together and were written out twice -- once on the
+    descendant record and once on the wire payload that projects it. Only the
+    first of the three delegated; uniqueness and ordering were restated.
+
+    Ascending order is ENFORCED rather than applied, so a record has exactly one
+    representation of a given set and a save-then-reload cannot reorder it. A
+    repeat is refused rather than collapsed, because a month either qualified or
+    it did not and silently dropping the second mention would hide a
+    transcription slip while changing nothing the operator can see.
+
+    A predicate rather than a validator because the two callers raise different
+    errors on purpose -- the record a ``ProfileValidationError`` naming the
+    repeated months, the payload a plain ``ValueError`` pydantic wraps -- and the
+    detail each builds is a message, not a rule.
+    """
+    return (
+        all(is_calendar_month(month) for month in months)
+        and len(set(months)) == len(months)
+        and list(months) == sorted(months)
+    )
+
 type NonEmptyList[T] = Annotated[list[T], Field(min_length=1)]
 """A list that carries at least one element.
 
@@ -91,4 +116,5 @@ __all__ = [
     "PositiveCount",
     "PositiveDecimal",
     "is_calendar_month",
+    "is_canonical_month_set",
 ]

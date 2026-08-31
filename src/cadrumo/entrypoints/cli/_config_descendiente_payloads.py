@@ -39,8 +39,8 @@ from pydantic import NonNegativeInt, StringConstraints, field_validator, model_v
 
 from ...core.descendant_relacion import ART_58_2_ENTITLING_RELACIONES, DescendantRelacion
 from ...core.json_contract import OutputSchema
-from ...core.text_bounds import CalendarMonth, is_calendar_month
-from ...core.time import today_madrid
+from ...core.text_bounds import CalendarMonth, is_canonical_month_set
+from ...core.time._clock import today_madrid
 from ...domain.contribuyente.descendant_record import DescendantRecordFields
 
 DescendantNif = Annotated[
@@ -89,13 +89,10 @@ class ProfileDescendientePayload(DescendantRecordFields, OutputSchema):
         construct but the canonical record would refuse is a shape that exists
         only on the wire.
         """
-        for month in value:
-            if not is_calendar_month(month):
-                raise ValueError(f"meses_madre_trabajo names month {month}, outside 1-12")
-        if len(set(value)) != len(value):
-            raise ValueError("meses_madre_trabajo declares a month more than once")
-        if list(value) != sorted(value):
-            raise ValueError("meses_madre_trabajo must be ascending")
+        if not is_canonical_month_set(value):
+            raise ValueError(
+                "meses_madre_trabajo must name real months, once each, in ascending order",
+            )
         return value
 
     @model_validator(mode="after")

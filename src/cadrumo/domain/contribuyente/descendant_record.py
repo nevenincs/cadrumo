@@ -10,8 +10,8 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.descendant_relacion import ART_58_2_ENTITLING_RELACIONES, DescendantRelacion
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.text_bounds import CalendarMonth, is_calendar_month
-from ...core.time import today_madrid
+from ...core.text_bounds import CalendarMonth, is_calendar_month, is_canonical_month_set
+from ...core.time._clock import today_madrid
 from .errors import ProfileValidationError
 from .family_types import (
     MAX_AGE_MENOR_TRES,
@@ -374,6 +374,12 @@ class DescendantRecordBase(DescendantRecordFields):
         transcription slip, and silently collapsing it would hide the slip while
         changing nothing the operator could see.
         """
+        if is_canonical_month_set(value):
+            return value
+        # The rule is one question, asked above. What follows only builds the
+        # refusal, and it stays here rather than moving to the predicate because
+        # this surface names the offending months for an operator who typed them
+        # while the wire projection says only that the set is malformed.
         for month in value:
             if not is_calendar_month(month):
                 raise ProfileValidationError(
@@ -384,11 +390,9 @@ class DescendantRecordBase(DescendantRecordFields):
             raise ProfileValidationError(
                 f"meses_madre_trabajo declares month(s) {repeated} more than once.",
             )
-        if list(value) != sorted(value):
-            raise ProfileValidationError(
-                f"meses_madre_trabajo must be ascending; got {list(value)}.",
-            )
-        return value
+        raise ProfileValidationError(
+            f"meses_madre_trabajo must be ascending; got {list(value)}.",
+        )
 
     @model_validator(mode="after")
     def _validate_alta_posterior_coherence(self) -> DescendantRecordBase:
