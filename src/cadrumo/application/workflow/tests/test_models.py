@@ -28,7 +28,7 @@ from ....core.operator_action_enums import (
 from ....core.period import Period
 from ....domain.deadlines.models import ModeloDeadline, ObligationStatus, RecargoBand, Recovery
 from ....tests.aeat_literal_fixtures import aeat_url
-from ...operator_actions._models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
+from ...operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
 from ..abort import WorkflowAbortReason
 from ..engine_helpers import DeadlineRole
 from ..run_models import (

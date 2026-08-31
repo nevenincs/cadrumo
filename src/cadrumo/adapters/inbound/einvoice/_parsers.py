@@ -30,7 +30,7 @@ from decimal import Decimal
 from enum import StrEnum
 from xml.etree.ElementTree import Element
 
-from ....core.decimal._coerce import coerce_decimal
+from ....core.decimal.coercion import coerce_decimal
 from ....core.document_shape import DocumentShape
 from ._shape import iter_pdf_embedded_files, probe_document_shape
 from ._xml import EInvoiceXmlParseError, parse_hardened_xml

@@ -210,14 +210,6 @@
         "reason": "flat guard/dispatch chain, max nesting depth 2; long but linear, never regressed from baseline",
         "score": 16
       },
-      "src/cadrumo/application/operator_actions/_models.py::ActionArgumentBinding._validate_resolution": {
-        "reason": "flat guard/dispatch chain, max nesting depth 2; long but linear, never regressed from baseline",
-        "score": 13
-      },
-      "src/cadrumo/application/operator_actions/_models.py::PreconditionVerdict._reject_arguments_their_evidence_does_not_support": {
-        "reason": "flat guard/dispatch chain, max nesting depth 2; long but linear, never regressed from baseline",
-        "score": 11
-      },
       "src/cadrumo/application/operator_surface/manifest.py::_index_reconciled_leaves": {
         "reason": "flat guard/dispatch chain, max nesting depth 3; long but linear, never regressed from baseline",
         "score": 11

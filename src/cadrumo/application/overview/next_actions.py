@@ -36,7 +36,7 @@ from pydantic import BaseModel
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
-from ..operator_actions._models import ActionArgumentBinding, ActionReference, DeclaredNextAction
+from ..operator_actions.models import ActionArgumentBinding, ActionReference, DeclaredNextAction
 
 if TYPE_CHECKING:
     from .calendar_models import OverviewStatusReport

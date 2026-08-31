@@ -32,7 +32,7 @@ class _PortalRow(TypedDict):
 
 def _project_portal_refusal(error: PortalRegistryError) -> PortalRegistryError:
     """Attach the application-owned no-action projection to one domain refusal."""
-    from ...application.operator_actions._preconditions import no_action_precondition_verdict
+    from ...application.operator_actions.preconditions import no_action_precondition_verdict
     from ._common import attach_cli_policy_verdict
 
     failure = error.portal_failure

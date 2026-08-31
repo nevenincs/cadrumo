@@ -61,11 +61,11 @@ from ...adapters.inbound.notificacion import _sancion
 from ...adapters.inbound.pdf._label_regex import SPANISH_AMOUNT_GROUP
 from ...adapters.outbound.aeat.sede import _iva_compensation_wallet_parsing
 from ...tests import aeat_relative, production_python_files
-from ..decimal._printed import AEAT_THOUSANDS_SEPARATORS, is_aeat_printed_money
+from ..decimal.printed_money import AEAT_THOUSANDS_SEPARATORS, is_aeat_printed_money
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-CANONICAL_MODULE = "core/decimal/_printed.py"
+CANONICAL_MODULE = "core/decimal/printed_money.py"
 """The one production module permitted to declare the anchored grammar."""
 
 ANCHORED_TAIL_SIGNATURE = r",\d{2}$"

@@ -8,7 +8,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.operator_action_enums import ActionArgumentSource
-from .._catalogue import (
+from ..catalogue import (
     OPERATOR_ACTION_CATALOGUE,
     ActionArgumentBindingSpecification,
     ActionCatalogue,

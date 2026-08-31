@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from ....core.casilla_id import CasillaId
-from ....core.decimal._grammar import try_parse_canonical_decimal
+from ....core.decimal.grammar import try_parse_canonical_decimal
 from .schema_scalars import registry_scalar_value_type
 from .schema_surfaces import CasillaDefinition
 from .schema_verification import (

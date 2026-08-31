@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from ....application.operator_actions._models import (
+from ....application.operator_actions.models import (
     ActionArgumentBinding,
     ActionReference,
     ConditionEvidence,

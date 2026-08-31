@@ -22,7 +22,7 @@ from collections.abc import Callable, Iterable
 from datetime import date
 from decimal import Decimal
 
-from ...core.decimal._coerce import coerce_decimal_strict
+from ...core.decimal.coercion import coerce_decimal_strict
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.calculations.registry.applicability import derive_not_applicable_source_modelos

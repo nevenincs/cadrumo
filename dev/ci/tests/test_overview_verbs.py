@@ -27,10 +27,10 @@ import pytest
 from click.testing import CliRunner
 
 from cadrumo.adapters.persistence.profile.filing_drafts import ModeloDraftRepository
-from cadrumo.application.operator_actions._models import ActionReference
-from cadrumo.core.period import Period
+from cadrumo.application.operator_actions.models import ActionReference
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.json_contract import ResolvedNoticeAction
+from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.filing.schema import (
     ModeloDraft,

@@ -43,8 +43,8 @@ from pydantic import BaseModel, Field
 
 from ..application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
 from ..application.ledger.invoice_draft_records import DraftDiscrepancyFinding, FieldProvenance, InvoiceDraft
-from ..core.decimal._coerce import coerce_finite_european_decimal
-from ..core.decimal._grammar import european_thousands_reading_is_ambiguous
+from ..core.decimal.coercion import coerce_finite_european_decimal
+from ..core.decimal.grammar import european_thousands_reading_is_ambiguous
 from ..core.draft_discrepancy import DraftDiscrepancyKind
 from ..core.errors.hierarchy import CoreValidationError
 from ..core.field_grounding import FieldGroundingOutcome

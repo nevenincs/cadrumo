@@ -9,7 +9,7 @@ from typing import cast
 import pytest
 
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from ....application.operator_actions._catalogue import OPERATOR_ACTION_CATALOGUE
+from ....application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
 from ....application.workflow.profile_bucket_scan import read_profile_bucket
 from ....core.bucket_pointer import read_pointer
 from ....core.errors.error_codes import ErrorCategory, get_error_exit_code

@@ -6,7 +6,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ..operator_actions._catalogue import ActionCatalogue, ActionCatalogueEntry
+from ..operator_actions.catalogue import ActionCatalogue, ActionCatalogueEntry
 from .errors import OperatorSurfaceContractError
 from .models import ManifestActionProfile, MountedCommandFamily
 

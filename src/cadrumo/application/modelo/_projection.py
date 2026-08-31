@@ -24,7 +24,7 @@ from decimal import Decimal
 from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 
 from ...core.casilla_id import CasillaId, validated_casilla_id
-from ...core.decimal._grammar import try_parse_canonical_decimal
+from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.errors.hierarchy import CadrumoError
 from ...core.logging import get_logger
 from ...core.modelo import Modelo

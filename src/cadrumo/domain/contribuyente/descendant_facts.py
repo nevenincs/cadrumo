@@ -54,7 +54,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Literal, TypedDict
 
-from ...core.decimal._grammar import try_parse_canonical_decimal
+from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.descendant_relacion import DescendantRelacion
 from ...core.errors.hierarchy import ProfileAnswerTypeError
 from ...core.identity import tax_id_identity_token

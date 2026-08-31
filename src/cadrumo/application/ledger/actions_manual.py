@@ -23,7 +23,7 @@ if TYPE_CHECKING:
     from ..invoices._linking import InvoiceTransactionLinkResult
 
 from ...core.aggregation import BindingSourceKind
-from ...core.decimal._format import format_decimal
+from ...core.decimal.formatting import format_decimal
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...core.iva_deduction_fact import IvaDeductionEvidenceAuthority
 from ...core.period import Period

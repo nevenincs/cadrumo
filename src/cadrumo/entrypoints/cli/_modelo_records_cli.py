@@ -41,7 +41,7 @@ from ...application.modelo.external_import_actions import (
 )
 from ...application.modelo.work_lifecycle import get_work_unit
 from ...core.casilla_id import CasillaId, validated_casilla_id
-from ...core.decimal._grammar import try_parse_canonical_decimal
+from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.i18n._render import tr
 from ...core.period import Period, PeriodError
 from ...domain.modelos.codes import ModeloCode

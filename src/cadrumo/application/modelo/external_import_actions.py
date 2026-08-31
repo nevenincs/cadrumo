@@ -45,7 +45,7 @@ from datetime import datetime
 from decimal import Decimal, InvalidOperation
 
 from ...core.casilla_id import CasillaId, validated_casilla_id
-from ...core.decimal._coerce import normalize_decimal_separators
+from ...core.decimal.coercion import normalize_decimal_separators
 from ...core.identity import CalculationRevisionId
 from ...core.modelo import Modelo
 from ...core.period import Period

@@ -33,7 +33,7 @@ from ...domain.calculations.registry.applicability_payer_facts import PayerFact 
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.deadlines.models import IrpfEstimationRegime as _IrpfEstimationRegime
 from ...domain.deadlines.models import IVARegime as _IVARegime
-from ..operator_actions._models import DeclaredNextAction
+from ..operator_actions.models import DeclaredNextAction
 from .calendar_models import (
     CalendarCompleteness,
     CalendarWarning,

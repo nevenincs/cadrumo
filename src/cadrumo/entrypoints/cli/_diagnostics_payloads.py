@@ -27,7 +27,7 @@ from datetime import datetime
 
 from pydantic import NonNegativeInt, field_validator, model_validator
 
-from ...core.decimal._grammar import try_parse_canonical_decimal
+from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.json_contract import OutputSchema
 from ...core.telemetry._schema import TelemetryEventPayload
 from ...core.telemetry._tier import TelemetryTier

@@ -30,7 +30,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from decimal import Decimal
 
-from ...core.decimal._coerce import coerce_finite_european_decimal
+from ...core.decimal.coercion import coerce_finite_european_decimal
 from ...domain.calculations.registry.ids import BindingId
 
 

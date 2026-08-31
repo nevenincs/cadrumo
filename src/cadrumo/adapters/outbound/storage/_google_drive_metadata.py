@@ -7,7 +7,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import TYPE_CHECKING, Any
 
-from ....application.operator_actions._preconditions import no_action_precondition_verdict
+from ....application.operator_actions.preconditions import no_action_precondition_verdict
 from ....core.errors.hierarchy import CoreValidationError
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.time.utc import parse_iso_datetime, validate_utc_aware

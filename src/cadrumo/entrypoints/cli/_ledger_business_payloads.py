@@ -30,7 +30,7 @@ from typing import TYPE_CHECKING, Annotated
 
 from pydantic import AfterValidator, NonNegativeInt, field_validator
 
-from ...core.decimal._grammar import is_non_negative_canonical_decimal
+from ...core.decimal.grammar import is_non_negative_canonical_decimal
 from ...core.identity import BucketId, InvoiceId, TaxIdIdentityToken
 from ...core.json_contract import OutputSchema
 from ...core.parsing import IsoCurrencyCode

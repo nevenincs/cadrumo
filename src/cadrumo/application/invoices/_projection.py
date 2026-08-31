@@ -13,7 +13,7 @@ from decimal import Decimal, InvalidOperation
 
 from pydantic import BaseModel
 
-from ...core.decimal._format import format_decimal
+from ...core.decimal.formatting import format_decimal
 from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money.rounding import round_to_cents as _round_to_cents

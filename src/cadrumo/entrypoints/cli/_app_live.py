@@ -57,7 +57,7 @@ from ...application.live.remote_state_models import (
     IvaWalletCaptureReport,
     SourceFiledDataCaptureReport,
 )
-from ...application.operator_actions._models import ActionReference
+from ...application.operator_actions.models import ActionReference
 from ...core.errors.hierarchy import CadrumoError
 from ...core.i18n._render import tr
 from ...core.json_contract import Notice, NoticeSeverity

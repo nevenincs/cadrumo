@@ -16,8 +16,8 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from ...core.decimal._coerce import normalize_decimal_separators
-from ...core.decimal._grammar import european_thousands_reading_is_ambiguous, try_parse_canonical_decimal
+from ...core.decimal.coercion import normalize_decimal_separators
+from ...core.decimal.grammar import european_thousands_reading_is_ambiguous, try_parse_canonical_decimal
 from ...core.hashing import content_hash_hex
 from ...core.parsing import parse_bool, parse_iso8601_date
 from ...core.time.clock import now as clock_now

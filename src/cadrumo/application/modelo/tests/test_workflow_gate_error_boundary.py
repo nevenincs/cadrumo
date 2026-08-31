@@ -24,7 +24,7 @@ import pytest
 from ....core.config import override_settings
 from ....core.errors.error_codes import render_error_json, render_error_text
 from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
-from ...operator_actions._models import ConditionEvidence, PreconditionVerdict
+from ...operator_actions.models import ConditionEvidence, PreconditionVerdict
 from ...workflow.abort import WorkflowAbortReason
 from ...workflow.run_models import WorkflowResult, WorkflowStage, WorkflowStep
 from .._action_errors import ModeloWorkflowGateError

@@ -24,7 +24,7 @@ from collections.abc import Callable, Mapping
 from typing import Final
 
 from ....core.casilla_id import CasillaId
-from ....core.decimal._format import format_decimal
+from ....core.decimal.formatting import format_decimal
 from ....core.errors.hierarchy import CadrumoError
 from ....domain.calculations.registry.ids import (
     BindingId,

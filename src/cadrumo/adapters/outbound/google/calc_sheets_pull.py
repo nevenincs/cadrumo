@@ -63,7 +63,7 @@ from ....application.storage.calc_sheets._engine import CALC_SHEETS_ENGINE_VERSI
 from ....application.storage.calc_sheets._layout import SheetLayout, plan_layout
 from ....application.storage.calc_sheets._records import column_index_to_letters
 from ....core.casilla_id import CasillaId
-from ....core.decimal._coerce import coerce_decimal, coerce_finite_european_decimal
+from ....core.decimal.coercion import coerce_decimal, coerce_finite_european_decimal
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.period import Period
 from ....domain.calculations.registry.casilla_membership import (

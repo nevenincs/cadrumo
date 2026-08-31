@@ -46,7 +46,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from google.auth.credentials import Credentials
 
-from ....application.operator_actions._preconditions import no_action_precondition_verdict
+from ....application.operator_actions.preconditions import no_action_precondition_verdict
 from ....core.config import Settings, load_settings
 from ....core.google_credential_source import GoogleCredentialSourceKind
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome

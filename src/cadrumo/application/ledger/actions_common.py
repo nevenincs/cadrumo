@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import TypeAdapter
 
-from ...core.decimal._format import format_decimal
+from ...core.decimal.formatting import format_decimal
 from ...core.external_constants import CLASSIFIED_BY_AUTO, CLASSIFIED_BY_MANUAL
 from ...core.time.clock import now
 

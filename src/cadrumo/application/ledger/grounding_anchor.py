@@ -84,7 +84,7 @@ from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel
 
-from ...core.decimal._coerce import coerce_finite_european_decimal
+from ...core.decimal.coercion import coerce_finite_european_decimal
 from ...core.document_shape import DocumentShape
 from ...core.field_grounding import FieldGroundingOutcome
 from ...core.field_origin import FieldOrigin

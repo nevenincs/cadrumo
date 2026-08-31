@@ -14,7 +14,7 @@ from enum import StrEnum
 from pydantic import ValidationError
 
 from ..core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
-from .operator_actions._models import PreconditionVerdict
+from .operator_actions.models import PreconditionVerdict
 
 
 def _registered_terminal_precondition_verdict(current: BaseException) -> PreconditionVerdict | None:
@@ -179,7 +179,7 @@ def cli_exception_no_recovery_verdict(
     The facts name what was observed, while the closed outcome prevents a CLI
     adapter from smuggling an unbound command template into a recovery field.
     """
-    from .operator_actions._preconditions import no_action_precondition_verdict
+    from .operator_actions.preconditions import no_action_precondition_verdict
 
     return no_action_precondition_verdict(
         condition_id=condition.value,

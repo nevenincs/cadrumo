@@ -38,8 +38,8 @@ from ...core.pid_liveness import pid_is_alive
 from ...core.time.clock import now as _utc_now
 from ...core.time.clock import now as clock_now
 from ...core.time.utc import coerce_utc_aware
-from ..operator_actions._models import PreconditionVerdict
-from ..operator_actions._preconditions import no_action_precondition_verdict
+from ..operator_actions.models import PreconditionVerdict
+from ..operator_actions.preconditions import no_action_precondition_verdict
 
 if TYPE_CHECKING:
     from ...core.config import Settings

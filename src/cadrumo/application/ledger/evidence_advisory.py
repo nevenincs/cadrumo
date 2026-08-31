@@ -20,7 +20,7 @@ from __future__ import annotations
 import re
 from decimal import Decimal
 
-from ...core.decimal._coerce import coerce_finite_european_decimal
+from ...core.decimal.coercion import coerce_finite_european_decimal
 
 __all__ = ["printed_iva_advisory"]
 

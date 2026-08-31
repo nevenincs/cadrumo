@@ -1,7 +1,7 @@
-cadrumo.core.decimal._grammar module
+cadrumo.core.decimal.coercion module
 ====================================
 
-.. automodule:: cadrumo.core.decimal._grammar
+.. automodule:: cadrumo.core.decimal.coercion
    :members:
    :show-inheritance:
    :ignore-module-all:

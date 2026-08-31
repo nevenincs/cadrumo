@@ -22,7 +22,7 @@ from pydantic import BaseModel, Field, field_serializer, field_validator, model_
 
 from ...core.aggregation import IntracomOperationType, TravelAgencyMediationType
 from ...core.country_code import CountryCodeAlpha2
-from ...core.decimal._coerce import coerce_decimal
+from ...core.decimal.coercion import coerce_decimal
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import content_hash_hex

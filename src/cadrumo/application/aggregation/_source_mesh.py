@@ -30,7 +30,7 @@ from pydantic import BaseModel, Field, TypeAdapter, field_serializer, field_vali
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId
-from ...core.decimal._coerce import coerce_decimal
+from ...core.decimal.coercion import coerce_decimal
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.filing_year import FilingYear
 from ...core.identity import BucketId, SnapshotId, WorkUnitId

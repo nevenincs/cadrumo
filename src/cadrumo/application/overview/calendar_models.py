@@ -37,7 +37,7 @@ from ...domain.calculations.registry.ids import RevisionId
 from ...domain.deadlines.festivos import HolidayJurisdiction as _HolidayJurisdiction
 from ...domain.deadlines.models import ObligationStatus as _ObligationStatus
 from ...domain.deadlines.models import Recovery as _Recovery
-from ..operator_actions._models import DeclaredNextAction
+from ..operator_actions.models import DeclaredNextAction
 from .coverage import ObligationCoverageReport
 
 

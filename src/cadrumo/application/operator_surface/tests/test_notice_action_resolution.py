@@ -9,8 +9,8 @@ import pytest
 
 from ....core.json_contract import ResolvedActionArgument
 from ....core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
-from ...operator_actions._catalogue import OPERATOR_ACTION_CATALOGUE, ActionCatalogue, ActionCatalogueEntry
-from ...operator_actions._models import ActionReference
+from ...operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, ActionCatalogue, ActionCatalogueEntry
+from ...operator_actions.models import ActionReference
 from .. import action_resolution as _action_resolution
 from ..action_resolution import ResolvedCatalogueAction, resolve_catalogue_action, resolve_notice_action
 from ..manifest import (

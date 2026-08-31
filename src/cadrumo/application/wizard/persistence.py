@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     from ...domain.contribuyente.family_types import GuarderiaMonthSpend
     from ...domain.user_profile.values import UserProfileRecord
 
-from ...core.decimal._grammar import try_parse_canonical_decimal
+from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.descendant_relacion import DescendantRelacion
 from ...core.flows import REPEATING_INSTANCE_SEPARATOR
 from ...core.parsing import parse_bool, parse_iso8601_date

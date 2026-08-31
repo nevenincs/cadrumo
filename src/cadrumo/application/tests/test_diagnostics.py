@@ -44,7 +44,7 @@ from ..diagnostics import (
     render_config_repair_text,
     secure_object_unreadable_total,
 )
-from ..operator_actions._models import ConditionEvidence, PreconditionVerdict
+from ..operator_actions.models import ConditionEvidence, PreconditionVerdict
 from ..overview.next_actions import declare_next_action
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

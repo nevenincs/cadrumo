@@ -39,8 +39,8 @@ from ...domain.filing.errors import ModeloBuilderError
 from ...domain.submission._protocols import ModeloDraftStatus
 from ...domain.submission.errors import SubmissionPreflightError
 from ..filing.runtime import build_runtime_schema_provider
-from ..operator_actions._models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
-from ..operator_actions._preconditions import no_action_precondition_verdict
+from ..operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
+from ..operator_actions.preconditions import no_action_precondition_verdict
 from ._deadline_stage import abort_missing_deadline_obligation, resolve_deadline_stage_obligation
 from .engine_helpers import (
     DeadlineRole,

@@ -115,7 +115,7 @@ from ._state_projection_readiness import (
 from .auth.credentials import ActiveAuthProjectionSnapshot, active_auth_projection_span
 from .auth_credentials import ActiveCertificateCredentials
 from .ledger.preflight import LedgerPreflightIssue, LedgerPreflightIssueReason, preflight_ledger_tax_readiness
-from .operator_actions._models import PreconditionVerdict
+from .operator_actions.models import PreconditionVerdict
 from .user_profile.commands import ProfilePreflightRequirement
 from .workflow.profile_health import ActiveProfileHealth, assess_active_profile_health
 from .workflow.state_models import WorkflowState

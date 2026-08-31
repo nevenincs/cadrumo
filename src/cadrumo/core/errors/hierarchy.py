@@ -209,7 +209,7 @@ class CoreError(CadrumoError):
 
 
 class DecimalFormatError(CoreError):
-    """Raised when :func:`core.decimal._format.format_decimal` receives an invalid argument.
+    """Raised when :func:`core.decimal.formatting.format_decimal` receives an invalid argument.
 
     Replaces the bare :class:`TypeError` previously raised when ``value``
     is ``None`` but ``none_value`` was not provided.

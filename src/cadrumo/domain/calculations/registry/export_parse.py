@@ -13,7 +13,7 @@ from xml.etree.ElementTree import Element
 from defusedxml import ElementTree
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....core.decimal._coerce import normalize_decimal_separators
+from ....core.decimal.coercion import normalize_decimal_separators
 from ....core.export_layout_format import ExportLayoutFormat
 from ....core.external_constants import LATIN_1_ENCODING as _LATIN_1_ENCODING
 from ....core.paths import path_stat_fingerprint

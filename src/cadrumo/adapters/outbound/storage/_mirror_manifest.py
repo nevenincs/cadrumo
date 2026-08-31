@@ -17,7 +17,7 @@ from datetime import datetime
 
 from pydantic import ValidationError
 
-from ....application.operator_actions._preconditions import no_action_precondition_verdict
+from ....application.operator_actions.preconditions import no_action_precondition_verdict
 from ....core.hashing import sha256_hex
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...persistence.storage.sql.secure_objects import SecureObjectRawRow

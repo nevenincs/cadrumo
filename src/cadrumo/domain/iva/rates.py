@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
 
-from ...core.decimal._coerce import coerce_decimal
+from ...core.decimal.coercion import coerce_decimal
 from ...core.paths import path_stat_fingerprint
 from ...core.resources._boundary import bundled_path
 from ...core.toml import read_toml
