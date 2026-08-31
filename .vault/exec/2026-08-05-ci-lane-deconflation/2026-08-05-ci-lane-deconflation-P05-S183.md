@@ -43,4 +43,3 @@ related:
 - The supplied focused receipt is executor-reported only: `48 passed in 51.93s`. Its literal command was not retained, so this record deliberately does not invent a `verify:` command.
 - Independently reviewed targeted Ruff/check, import, and compile probes were clean. The non-mutating full size audit stalled and yielded no result; this record makes no global size-audit pass claim.
 - `src/cadrumo/application/modelo/_calculation_actions.py` carries concurrent relocation work. The source commit stages the reviewed bindings extraction with an isolated index and excludes that peer relocation.
-
