@@ -10,7 +10,7 @@ related:
   - '[[2026-06-01-registry-period-code-union-cli-boundary-adr]]'
   - '[[2026-08-05-ci-lane-deconflation-step-check-attribution-audit]]'
 modified: '2026-08-31'
-body_hash: 'sha256:d46ceb869fb4304bf8c14727044c99d92b848ba4891ff0b9cfc80e8204a5defa'
+body_hash: 'sha256:657975c08a80b7b83d154b37ad74f83a21a3607a0bf2f1d9daa5e2a5f8d6aa2e'
 ---
 
 <!-- RETIRED: S01, S10, S181, S184, S186, S189, S191, S193, S194, S197, S199, S201, S203, S205, S207, S209, S211, S213, S215, S217, S219, S221 -->
@@ -268,7 +268,7 @@ Decompose every live size-budget subject by its owning source file, then regener
 - [ ] `P05.S185` - Refactor the size-budget subjects in formula_runtime.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/formula_runtime.py`.
 - [x] `P05.S187` - Refactor the size-budget subjects in invoice_bindings.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/invoice_bindings.py`.
 - [ ] `P05.S188` - Refactor the size-budget subjects in ledger_bindings.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/ledger_bindings.py`.
-- [ ] `P05.S190` - Refactor the size-budget subjects in record_design.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/record_design.py`.
+- [x] `P05.S190` - Refactor the size-budget subjects in record_design.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/record_design.py`.
 - [ ] `P05.S192` - Refactor the size-budget subjects in schema.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/schema.py`.
 - [ ] `P05.S195` - Refactor the size-budget subjects in test_catalogue_verification.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/tests/test_catalogue_verification.py`.
 - [ ] `P05.S196` - Refactor the size-budget subjects in test_detail_record_observations.py into cohesive siblings without raising any threshold.; `src/cadrumo/domain/calculations/registry/tests/test_detail_record_observations.py`.
