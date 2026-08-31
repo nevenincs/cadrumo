@@ -17,16 +17,12 @@ from pydantic import ValidationError
 
 from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core.document_shape import DocumentShape, PDF_CONTAINER_SHAPES
 from ....core.config import Settings
+from ....core.document_shape import PDF_CONTAINER_SHAPES, DocumentShape
 from ....domain.attachments.enums import AttachmentKind, AttachmentSource
 from ....domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
-from ..evidence import (
-    MediaKind,
-    PurchaseInvoiceEvidence,
-    PurchaseInvoiceEvidenceDocument,
-    PurchaseInvoiceEvidenceInputError,
-)
+from ..evidence import MediaKind, PurchaseInvoiceEvidence, PurchaseInvoiceEvidenceDocument
+from ..evidence_errors import PurchaseInvoiceEvidenceInputError
 from ..evidence_input import (
     EvidenceInput,
     resolve_attachment_evidence_input,

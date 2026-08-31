@@ -20,8 +20,8 @@ from __future__ import annotations
 
 import pytest
 
-from ..evidence import PurchaseInvoiceEvidenceInputError
 from ..evidence_draft import _agreed_counterparty_tax_id
+from ..evidence_errors import PurchaseInvoiceEvidenceInputError
 from ..preconditions import LedgerPreconditionCondition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

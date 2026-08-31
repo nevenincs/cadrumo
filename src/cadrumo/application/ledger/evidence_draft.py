@@ -114,20 +114,20 @@ from ...adapters.inbound.einvoice import (
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.storage import AttachmentStore, secure_object_repository_for_bucket
 from ...application.invoices import build_catalogue_invoice, create_catalogue_invoice, resolve_iva_rate_slot
-from ...core.image_media_type import ImageMediaType, detect_image_media_type
-from ...core.document_shape import PDF_CONTAINER_SHAPES, STRUCTURED_DOCUMENT_SHAPES
-from ...core.capabilities import ServiceCapability
-from ...core.draft_discrepancy import DraftDiscrepancyKind
-from ...core.field_grounding import FieldGroundingOutcome
-from ...core.optional_extras import MissingOptionalExtraError
-from ...core.field_origin import FieldOrigin
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.aggregation import IntracomOperationType
+from ...core.capabilities import ServiceCapability
 from ...core.config import Settings
 from ...core.config import load_settings as _load_settings
+from ...core.document_shape import PDF_CONTAINER_SHAPES, STRUCTURED_DOCUMENT_SHAPES
+from ...core.draft_discrepancy import DraftDiscrepancyKind
 from ...core.external_constants import DEFAULT_CURRENCY, XML_MIME_TYPE
+from ...core.field_grounding import FieldGroundingOutcome
+from ...core.field_origin import FieldOrigin
 from ...core.identity import ContentDigest, TaxIdIdentityToken, same_tax_identifier
+from ...core.image_media_type import ImageMediaType, detect_image_media_type
 from ...core.logging import get_logger
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.optional_extras import MissingOptionalExtraError
 from ...core.parsing import parse_iso8601_date
 from ...domain.attachments.errors import AttachmentNotFoundError
 from ...domain.attachments.models import normalize_media_type
@@ -147,7 +147,8 @@ from ...llm.providers.local import rasterise_pdf_pages_to_base64_png
 from ..provisioning import probe_ollama_vision
 from ..user_profile.capabilities import resolve_active_capability
 from .document_transcription import DocumentTranscription
-from .evidence import PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceService
+from .evidence import PurchaseInvoiceEvidenceService
+from .evidence_errors import PurchaseInvoiceEvidenceInputError
 from .evidence_input import (
     EvidenceInput,
     resolve_attachment_evidence_input,

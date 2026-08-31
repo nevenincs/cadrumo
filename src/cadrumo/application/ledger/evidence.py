@@ -62,11 +62,10 @@ from ...adapters.persistence.storage import (
     SecureBoundRepository,
     secure_object_repository_for_bucket,
 )
-from ...core.hex import Hex64Str
 from ...core.config import Settings
-from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import PDF_EXTENSION, PDF_MIME_TYPE, XML_MIME_TYPE
 from ...core.hashing import content_hash_hex
+from ...core.hex import Hex64Str
 from ...core.identity import BucketId, ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.percentage import Percentage
@@ -78,7 +77,8 @@ from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import emit_bucket_event
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.identifiers import canonical_decimal_string
-from .preconditions import LedgerPreconditionCondition, LedgerPreconditionErrorMixin, ledger_no_recovery_verdict
+from .evidence_errors import PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceNotFoundError
+from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 
 _PDF_EXTENSIONS = frozenset({PDF_EXTENSION})
 _IMAGE_EXTENSIONS = frozenset({".png", ".jpg", ".jpeg", ".tif", ".tiff", ".webp", ".heic", ".heif"})
@@ -123,14 +123,6 @@ class MediaKind(StrEnum):
 
     PDF = "pdf"
     IMAGE = "image"
-
-
-class PurchaseInvoiceEvidenceInputError(LedgerPreconditionErrorMixin, CadrumoError):
-    """Raised when a CLI-supplied evidence input violates the typed contract."""
-
-
-class PurchaseInvoiceEvidenceNotFoundError(LedgerPreconditionErrorMixin, CadrumoError):
-    """Raised when a CLI lookup targets a missing evidence record."""
 
 
 class PurchaseInvoiceEvidence(BaseModel):

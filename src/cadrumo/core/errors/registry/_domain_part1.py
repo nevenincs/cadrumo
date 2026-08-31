@@ -528,7 +528,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.ledger.evidence.PurchaseInvoiceEvidenceInputError",
+        "cadrumo.application.ledger.evidence_errors.PurchaseInvoiceEvidenceInputError",
         ErrorCode(
             code="REFUSED_LEDGER_EVIDENCE_INPUT",
             category=ErrorCategory.REFUSED,
@@ -548,7 +548,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.ledger.evidence.PurchaseInvoiceEvidenceNotFoundError",
+        "cadrumo.application.ledger.evidence_errors.PurchaseInvoiceEvidenceNotFoundError",
         ErrorCode(
             code="REFUSED_LEDGER_EVIDENCE_NOT_FOUND",
             category=ErrorCategory.REFUSED,

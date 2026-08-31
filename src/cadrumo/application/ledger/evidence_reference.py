@@ -40,11 +40,8 @@ from pydantic import BaseModel, model_validator
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.invoices.models import Invoice, InvoiceCatalogue
 from ...domain.iva.classification import InvoiceKind
-from .evidence import (
-    PurchaseInvoiceEvidence,
-    PurchaseInvoiceEvidenceInputError,
-    PurchaseInvoiceEvidenceNotFoundError,
-)
+from .evidence import PurchaseInvoiceEvidence
+from .evidence_errors import PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceNotFoundError
 from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 
 __all__ = [

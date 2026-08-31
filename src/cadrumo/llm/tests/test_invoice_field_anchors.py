@@ -41,8 +41,8 @@ from decimal import Decimal
 
 import pytest
 
-from ...application.ledger.evidence import PurchaseInvoiceEvidenceInputError
 from ...application.ledger.evidence_draft import FieldProvenance, InvoiceDraft
+from ...application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
 from ...core.field_grounding import FieldGroundingOutcome
 from ...core.field_origin import FieldOrigin
 from ...core.period import Period

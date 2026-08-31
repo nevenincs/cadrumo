@@ -48,11 +48,11 @@ from uuid import uuid4
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.storage import AttachmentStore, secure_object_repository_for_bucket
-from ...core.image_media_type import ImageMediaType, detect_image_media_type
-from ...core.document_shape import PDF_CONTAINER_SHAPES
-from ...core.provenance_stamp import provenance_stamp_transport
 from ...core.config import Settings, load_settings
+from ...core.document_shape import PDF_CONTAINER_SHAPES
+from ...core.image_media_type import ImageMediaType, detect_image_media_type
 from ...core.logging import get_logger
+from ...core.provenance_stamp import provenance_stamp_transport
 from ...core.time import coerce_utc_aware, now
 from ...domain.buckets.event import BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH, BucketEventObjectType, BucketEventType
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
@@ -94,8 +94,9 @@ from .actions_common import (
 )
 from .actions_manual import update_manual_transaction_fields
 from .actions_split_merge import split_transaction_with_classified_children
-from .evidence import PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceService
+from .evidence import PurchaseInvoiceEvidenceService
 from .evidence_advisory import printed_iva_advisory
+from .evidence_errors import PurchaseInvoiceEvidenceInputError
 from .evidence_input import (
     EvidenceInput,
     resolve_attachment_evidence_input,

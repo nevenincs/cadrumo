@@ -17,8 +17,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core.image_media_type import ImageMediaType
 from ....core.config import Settings
+from ....core.image_media_type import ImageMediaType
 from ....domain.transactions.llm import prompt_spec_with_saturation_fields
 from ....domain.user_profile.values import ProfileSetupState
 from ....llm.models import MultimodalImageInput
@@ -33,7 +33,7 @@ from ....tests.persistence_vision_evidence_support import (
 )
 from ....tests.secure_sql import TestRuntimeProfile
 from ...provisioning import ProvisioningPreconditionCondition
-from ..evidence import PurchaseInvoiceEvidenceInputError
+from ..evidence_errors import PurchaseInvoiceEvidenceInputError
 from ..llm_classification import ResolvedEvidence, _resolve_evidence, classify_with_evidence
 from ..preconditions import LedgerPreconditionCondition
 

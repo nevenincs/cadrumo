@@ -37,9 +37,9 @@ from pydantic import ValidationError
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage import AttachmentStore
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....core.config import Settings
 from ....core.directory_scan import scan_directory
+from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....domain.attachments.service import load_attachment
 from ....domain.invoices.errors import InvoiceValidationError
 from ....domain.iva.classification import InvoiceKind
@@ -47,12 +47,13 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, U
 from ....tests.llm_vision_evidence_support import _json_array, _run_against_loopback_ollama
 from ....tests.pdf_fixtures import text_pdf_bytes
 from ....tests.profile_capsule import seed_test_profile_record
-from ..evidence import MediaKind, PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceNotFoundError
+from ..evidence import MediaKind
 from ..evidence_draft import (
     InvoiceDraft,
     confirm_invoice_draft_from_evidence,
     extract_invoice_draft_from_evidence,
 )
+from ..evidence_errors import PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceNotFoundError
 from ..evidence_input import EvidenceInput
 from ..evidence_textlayer import transcribe_text_layer
 from ..preconditions import LedgerPreconditionCondition

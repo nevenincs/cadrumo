@@ -23,9 +23,9 @@ from PIL import Image
 
 from ....adapters.inbound.einvoice import EInvoiceXmlParseError, parse_einvoice_document
 from ....adapters.inbound.pdf import extract_pages_text_from_bytes
-from ....core.document_shape import DocumentShape, STRUCTURED_DOCUMENT_SHAPES
-from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....core.directory_scan import scan_directory
+from ....core.document_shape import STRUCTURED_DOCUMENT_SHAPES, DocumentShape
+from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....llm.errors import LLMPdfRasterisationError
 from ....llm.providers.local import rasterise_pdf_pages_to_base64_png
 from ....tests.fixtures import (
@@ -567,8 +567,8 @@ def test_an_unrecognised_xml_refuses_rather_than_reaching_the_vision_model() -> 
     """
     from hashlib import sha256
 
-    from ..evidence import PurchaseInvoiceEvidenceInputError
     from ..evidence_draft import _refuse_an_unrecognised_xml_document
+    from ..evidence_errors import PurchaseInvoiceEvidenceInputError
     from ..evidence_input import EvidenceInput
 
     sii_record = (

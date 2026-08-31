@@ -7,7 +7,7 @@ import json
 
 import pytest
 
-from ...application.ledger.evidence import PurchaseInvoiceEvidenceInputError
+from ...application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
 from ...application.ledger.llm_classification import ResolvedEvidence, classify_with_evidence
 from ...application.provisioning import (
     AcceleratorReading,
@@ -16,10 +16,10 @@ from ...application.provisioning import (
     SystemMemoryReading,
     probe_hardware_profile,
 )
-from ...core.image_media_type import ImageMediaType
-from ...core.hardware import AcceleratorKind
-from ...core.model_catalogue import model_candidate
 from ...core.config import load_settings
+from ...core.hardware import AcceleratorKind
+from ...core.image_media_type import ImageMediaType
+from ...core.model_catalogue import model_candidate
 from ...domain.categories.spending_category import SpendingCategory
 from ...domain.iva.schema import IvaCategory
 from ...domain.transactions.enums import BusinessClassification

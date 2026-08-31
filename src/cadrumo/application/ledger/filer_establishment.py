@@ -46,7 +46,7 @@ from typing import TYPE_CHECKING, Final
 
 from ...domain.iva.classification import IvaTerritorialScope
 from ...domain.iva.establishment import territorial_scope_for_spanish_postal_code
-from .evidence_draft import PurchaseInvoiceEvidenceInputError
+from .evidence_errors import PurchaseInvoiceEvidenceInputError
 from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 
 if TYPE_CHECKING:

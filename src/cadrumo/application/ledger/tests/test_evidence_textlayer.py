@@ -39,7 +39,7 @@ def test_extracts_text_layer_from_pdf_bytes_on_host() -> None:
 
 def test_image_evidence_has_no_text_layer() -> None:
     ev = _evidence_input(b"\x89PNG\r\n\x1a\nfake-png-bytes", "image/png")
-    from ..evidence import PurchaseInvoiceEvidenceInputError
+    from ..evidence_errors import PurchaseInvoiceEvidenceInputError
 
     with pytest.raises(PurchaseInvoiceEvidenceInputError):
         extract_evidence_text(ev)

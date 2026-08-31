@@ -35,7 +35,7 @@ from ....core.operator_action_enums import NoRecoveryOutcome
 from ....domain.iva.classification import IvaTerritorialScope
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ..confirm_establishment import _filer_scope
-from ..evidence_draft import PurchaseInvoiceEvidenceInputError
+from ..evidence_errors import PurchaseInvoiceEvidenceInputError
 from ..filer_establishment import FILER_POSTCODE_FACT_PATH, resolve_filer_territorial_scope
 from ..preconditions import LedgerPreconditionCondition
 
