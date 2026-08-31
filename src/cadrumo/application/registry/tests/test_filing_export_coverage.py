@@ -13,7 +13,7 @@ from pydantic import ValidationError
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.modelo import Modelo
 from ....core.revision_review import RevisionReviewStatus
-from ...filing._export_proof import (
+from ...filing.export_proof import (
     FilingExportConformanceReceipt,
     FilingExportGeneratedOutput,
     FilingExportOfficialProbe,

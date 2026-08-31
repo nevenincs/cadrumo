@@ -33,7 +33,7 @@ from ...domain.calculations.registry.temporal import (
     coverage_assessment_horizon,
     revision_selection_coordinates,
 )
-from ..filing._export_proof import (
+from ..filing.export_proof import (
     FilingExportProof,
     FilingExportProofAuthority,
     FilingExportProofChannel,

@@ -23,7 +23,7 @@ from ...core.filing_year import FilingYear
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
-from ...core.resources._boundary import bundled_path
+from ...core.resources.bundled_data import bundled_path
 from ...core.source_connectivity import (
     SourceConnectivityCensusRow,
     SourceConnectivityDisposition,
@@ -32,7 +32,7 @@ from ...core.source_connectivity import (
     SourceConnectivityProofAuthority,
 )
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
-from ...domain.calculations.registry.bindings import casillas_by_binding
+from ...domain.calculations.registry.binding_targets import casillas_by_binding
 from ...domain.calculations.registry.censo_modelos import CensoModeloEventKind
 from ...domain.calculations.registry.handoffs import (
     RelationConsumptionChannel,

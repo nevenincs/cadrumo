@@ -34,7 +34,7 @@ from typing import Final
 
 import pytest
 
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from ..record_design_coverage import _CASILLA_TAG_RE, DisenoCoverageReport, derive_diseno_coverage_casillas
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

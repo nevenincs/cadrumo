@@ -9,7 +9,7 @@ from typing import Protocol, get_args
 import pytest
 
 from .....core.aggregation import RelationAggregationOp
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from .._relation_aggregation import relation_aggregation_op
 from .._validate import RegistryValidator
 from .._validate_relation_periods import select_relation_source_revisions

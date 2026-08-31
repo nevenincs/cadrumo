@@ -28,7 +28,7 @@ import pytest
 
 from ....core.concepto_ingreso import ConceptoIngreso
 from ....core.period import Period
-from ....core.resources._boundary import bundled_path
+from ....core.resources.bundled_data import bundled_path
 from ....core.tipos_actividad import TipoActividad
 from ....domain.calculations.registry.loader import load_legal_parameters_only
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState

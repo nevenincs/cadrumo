@@ -20,7 +20,7 @@ See Also:
     :func:`~application.filing.empty_prior_filing_observations_fingerprint`
         Supplies the explicit empty-source fingerprint used by tests and
         overrides.
-    :func:`~application.filing._review._prior_filing_observations_fingerprint`
+    :func:`~application.filing.draft_review._prior_filing_observations_fingerprint`
         Stable, order-independent digest over stored prior-observation payloads.
     :mod:`~application.filing.tests.test_review_profile_activity_staleness`
         Sister approval-basis coverage for another self-loaded source surface.
@@ -41,7 +41,7 @@ from ....domain.submission._protocols import ModeloDraftStatus
 from ....tests.secure_sql import TestRuntimeProfile
 from ...calculations.observations_repository import CalculationObservationRepository
 from .._draft_construction import build_draft
-from .._review import ModeloApprovalStaleReason, approval_stale_reasons, approve_draft
+from ..draft_review import ModeloApprovalStaleReason, approval_stale_reasons, approve_draft
 from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]

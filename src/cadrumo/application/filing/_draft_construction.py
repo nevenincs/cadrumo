@@ -25,7 +25,9 @@ from ...core.period import Period as _Period
 from ...core.time.clock import now as _utc_now
 from ...core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ...domain.calculations.registry.authority import bundled_authority
-from ...domain.calculations.registry.bindings import bound_casilla_binding_ids as _registry_bound_casilla_binding_ids
+from ...domain.calculations.registry.binding_targets import (
+    bound_casilla_binding_ids as _registry_bound_casilla_binding_ids,
+)
 from ...domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_tokens as _casilla_noncanonical_reference_tokens,
 )
@@ -88,7 +90,7 @@ def _refuse_unsupported_filing_year(period: _Period) -> None:
             that declaration, because a refusal an operator cannot act on is an
             outage rather than a guard.
     """
-    from ...core.resources._boundary import bundled_path
+    from ...core.resources.bundled_data import bundled_path
     from ...domain.calculations.registry.loader import load_registry_tree
 
     _modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))

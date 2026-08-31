@@ -13,7 +13,7 @@ from datetime import date
 import pytest
 
 from .....core.authority_grade import RegistryAuthorityGrade
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from .._validate import RegistryValidator
 from .._validate_export_exemption import validate_export_exemption_declarations
 from .._validate_export_layout_coverage import validate_export_layout_record_coverage

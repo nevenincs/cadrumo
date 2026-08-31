@@ -15,7 +15,7 @@ from ...aggregation import (
     resolve_m303_prorrata_transition_arrival,
     resolve_m303_supplier_regime_arrival,
 )
-from ...filing._producer_snapshot import FilingProducerSnapshotError, resolve_m303_filing_facts
+from ...filing.producer_snapshot import FilingProducerSnapshotError, resolve_m303_filing_facts
 from .._export import _require_m303_regimen_simplificado_scope_matches_profile
 from ._export_test_support import _general_m303_filing_evidence, _profile
 

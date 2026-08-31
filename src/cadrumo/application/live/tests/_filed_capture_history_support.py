@@ -26,7 +26,7 @@ from ....core.casilla_value_kind import CasillaValueKind
 from ....core.external_constants import load_external_constants
 from ....core.observed_header_fact import ObservedHeaderFact
 from ....core.period import Period
-from ....core.resources._boundary import bundled_path
+from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.snapshot import build_snapshot
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.filing_record import ExternalEvidence, ModeloRecord, ModeloRecordStatus, derive_filing_record_id

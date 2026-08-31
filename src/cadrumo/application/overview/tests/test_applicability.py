@@ -33,7 +33,7 @@ from collections.abc import Callable
 import pytest
 
 from ....core.modelo import Modelo
-from ....core.resources._boundary import bundled_path
+from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
     derive_modelo_applicability,

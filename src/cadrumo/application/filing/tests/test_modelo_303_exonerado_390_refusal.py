@@ -38,7 +38,7 @@ from ....tests.filing_evidence import regimen_simplificado_filing_evidence
 from ...aggregation import M303ProrrataTransitionArrival, M303SupplierRegimeArrival
 from .._draft_construction import build_draft
 from .._export import FilingExportError, export_draft
-from .._producer_snapshot import (
+from ..producer_snapshot import (
     FilingElectionFacts,
     FilingProducerSnapshotError,
     M303FilingFacts,

@@ -37,7 +37,7 @@ from ....core.directory_scan import (
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
-from ....core.resources._boundary import bundled_path
+from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry

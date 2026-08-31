@@ -115,8 +115,9 @@ from ..calculations.observations_repository import (
 )
 from ..filing._draft_construction import build_draft
 from ..filing._export import export_draft, export_layout_renderability_reason
-from ..filing._export_verification import DeclaracionExportResult, assert_export_artifact_matches_receipt
-from ..filing._producer_snapshot import (
+from ..filing.draft_review import approve_draft
+from ..filing.export_verification import DeclaracionExportResult, assert_export_artifact_matches_receipt
+from ..filing.producer_snapshot import (
     AmendmentEvidence,
     FilingElectionFacts,
     FilingModelProfileFacts,
@@ -131,7 +132,6 @@ from ..filing._producer_snapshot import (
     build_filing_producer_snapshot,
     resolve_m303_filing_facts,
 )
-from ..filing._review import approve_draft
 from ..filing.runtime import RegistrySchemaAccessor, build_runtime_schema_provider, filing_profile_from_taxpayer
 from ._action_errors import (
     CalculationRevisionNotFoundError,

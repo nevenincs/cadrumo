@@ -28,7 +28,7 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.envelope._envelope import Envelope
+from ....adapters.persistence.storage.envelope.contract import Envelope
 from ....adapters.persistence.storage.errors import SecureObjectRowIdentityError
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.period import Period

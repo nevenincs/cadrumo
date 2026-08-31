@@ -1,7 +1,7 @@
 """Unit coverage for invoice-source approval-basis fingerprints.
 
 See Also:
-    :func:`~application.filing._review._invoice_catalogue_fingerprint`
+    :func:`~application.filing.draft_review._invoice_catalogue_fingerprint`
         Order-independent digest helper under test for invoice source changes.
     :class:`~domain.invoices.InvoiceCatalogue`
         Typed invoice collection whose normalized records feed the approval
@@ -24,7 +24,7 @@ from ....core.hashing import content_hash_hex
 from ....domain.invoices.models import Invoice, InvoiceCatalogue
 from ....domain.iva.classification import InvoiceKind
 from ...invoices._creation import build_catalogue_invoice
-from .._review import _invoice_catalogue_fingerprint
+from ..draft_review import _invoice_catalogue_fingerprint
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

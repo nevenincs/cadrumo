@@ -90,7 +90,7 @@ class _ProfileCustodyHoldEvidenceOwner:
                 from ..evidence._profile_legal_hold import LegalHoldCaseAuthority
 
                 return LegalHoldCaseAuthority(root=self._storage_root).project(profile_id, now=now)
-            from ..filing._profile_filing_retention import FilingRetentionAuthority
+            from ..filing.retention import FilingRetentionAuthority
 
             return FilingRetentionAuthority(root=self._storage_root).project(profile_id, now=now)
         except FileNotFoundError as exc:

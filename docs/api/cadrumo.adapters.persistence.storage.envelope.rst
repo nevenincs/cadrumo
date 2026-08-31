@@ -13,5 +13,5 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.adapters.persistence.storage.envelope._envelope
-   cadrumo.adapters.persistence.storage.envelope._secure_repository
+   cadrumo.adapters.persistence.storage.envelope.contract
+   cadrumo.adapters.persistence.storage.envelope.secure_bound_repository

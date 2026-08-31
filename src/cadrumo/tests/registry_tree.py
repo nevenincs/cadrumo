@@ -5,7 +5,7 @@ from __future__ import annotations
 from functools import cache
 from typing import TYPE_CHECKING
 
-from ..core.resources._boundary import bundled_path
+from ..core.resources.bundled_data import bundled_path
 from ..domain.calculations.registry.loader import load_registry_tree
 
 if TYPE_CHECKING:

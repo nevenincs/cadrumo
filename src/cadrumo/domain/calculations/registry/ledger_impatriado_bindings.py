@@ -59,7 +59,7 @@ __all__ = [
 ]
 
 
-from .ledger_bindings import casilla_id_set
+from .ledger_binding_selector_support import casilla_id_set
 
 # Ledger Modelo 151 impatriado (Ley Beckham, art. 93 LIRPF) Spanish-source
 # base aggregation source bindings.
@@ -94,7 +94,7 @@ class _ImpatriadoLedgerIncomeSelector(BaseModel):
     is the base casilla that receives the annual Spanish-source total.
 
     ``fact`` is REQUIRED and carries no default, matching its
-    :class:`~._ledger_bindings._RentaLedgerIncomeSelector` sibling. The two
+    :class:`~.ledger_renta_income_bindings.RentaLedgerIncomeSelector` sibling. The two
     accepted values name different legal measures of the same rows, so a
     default silently picks a legal claim on the taxpayer's behalf — and a
     default on one sibling but not the other re-creates exactly the divergence

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from .._validate import RegistryValidator
 from ..errors import RegistryValidationError
 from ._registry_schema_support import _committed_registry, _revision, _with_revision

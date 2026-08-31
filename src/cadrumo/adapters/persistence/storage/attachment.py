@@ -42,7 +42,7 @@ from ....domain.attachments.errors import AttachmentNotFoundError, AttachmentPer
 from ....domain.attachments.models import Attachment, is_link_only_mime_type
 from ....domain.attachments.protocols import AttachmentStoreProtocol
 from .crypto.encrypted_columns import HashedLookup
-from .envelope._envelope import Envelope
+from .envelope.contract import Envelope
 from .namespace_registry import secure_object_namespace_logical_path
 from .runtime_repository import secure_object_repository_for_active_bucket
 from .schema_lineage import inner_envelope_classification_is_expected, inner_envelope_version_is_current

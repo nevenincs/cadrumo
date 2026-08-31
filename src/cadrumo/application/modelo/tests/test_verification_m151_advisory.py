@@ -7,7 +7,7 @@ from decimal import Decimal
 import pytest
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....core.resources._boundary import bundled_path
+from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.loader import load_registry_tree
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition

@@ -23,7 +23,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from .....core.tabular import coerce_cell_text
 from ..record_design import extract_record_design
 

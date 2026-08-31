@@ -22,7 +22,7 @@ from ....adapters.persistence.profile.submission import SubmissionRepository
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....tests.secure_sql import isolated_runtime_profile
-from .._models import (
+from ..models import (
     ModeloPresentado,
     SubmissionAttempt,
     SubmissionStatus,

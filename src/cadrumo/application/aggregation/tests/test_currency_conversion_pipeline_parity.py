@@ -95,7 +95,7 @@ from pathlib import Path
 import pytest
 
 from ....core.period import Period
-from ....core.resources._registry import resources
+from ....core.resources.registry import resources
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine

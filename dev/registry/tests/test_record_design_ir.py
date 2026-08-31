@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 from openpyxl import load_workbook
 
-from cadrumo.core.resources._boundary import bundled_path
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.corpus_catalogue import resolve_record_design_binary
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.loader import load_catalogue_file

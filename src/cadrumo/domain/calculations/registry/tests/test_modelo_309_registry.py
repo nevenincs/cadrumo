@@ -8,7 +8,7 @@ from functools import cache
 import pytest
 
 from .....core.iva_deduction_fact import IvaDeductionFactKind
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from ....iva.schema import IvaLedgerObservationRole
 from .._validate import RegistryValidator
 from ..loader import _load_shared_catalogue_files, load_modelo_directory
@@ -113,7 +113,10 @@ def test_modelo_309_autorepercutido_binding_resolves_against_substrate() -> None
 
     from ....iva.flow import IvaFlowDirection
     from ....iva.schema import IvaCategory, IvaRateKind
-    from ..ledger_bindings import IvaLedgerObservation, resolve_ledger_iva_aggregation_binding_values
+    from ..ledger_iva_bindings import (
+        IvaLedgerObservation,
+        resolve_ledger_iva_aggregation_binding_values,
+    )
 
     modelo, _ = _load_modelo_309()
     revision = modelo.revisions["2023-y-siguientes"]

@@ -56,13 +56,15 @@ import pytest
 from .....application.aggregation import aggregate_renta_ledger_expenses
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from ....categories.spending_category import SpendingCategory
 from ....invoices.models import InvoiceCatalogue
 from ....transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....transactions.models import Transaction, TransactionCatalogue
 from ....transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ..ledger_bindings import resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values
+from ..ledger_renta_gastos_estimacion_directa_bindings import (
+    resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values,
+)
 from ..schema import ModeloRevision
 from ..snapshot import build_snapshot
 from ._registry_schema_support import _committed_modelo

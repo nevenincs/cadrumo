@@ -7,7 +7,7 @@ from datetime import date
 import pytest
 
 from .....core.hashing import hash_file
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from .._validate_export_layout_coverage import validate_export_layout_record_coverage
 from ..errors import AmbiguousRevisionSelectionError, NoRevisionForPeriodError
 from ..record_design import extract_record_design

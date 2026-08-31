@@ -314,6 +314,16 @@ def verify_written_export(draft: ModeloDraft, *, file_path: Path, schema_provide
 def exported_casilla_provenance(
     layout: ExportLayoutDefinition, *, draft: ModeloDraft, schema_provider: RegistrySchemaAccessor
 ) -> tuple[ModeloCasillaProvenance, ...]:
+    """Return the provenance rows for the casillas the layout actually exports.
+
+    Args:
+        layout: Export layout deciding which casillas reach the artefact.
+        draft: Approved :class:`ModeloDraft` supplying the casilla values.
+        schema_provider: Registry accessor resolving the casilla definitions.
+
+    Returns:
+        One :class:`ModeloCasillaProvenance` per exported casilla.
+    """
     if layout.format is ExportLayoutFormat.XML_DICTIONARY:
         entries = xml_dictionary_entries(
             layout, source_root=schema_provider.source_root, sources=schema_provider.sources

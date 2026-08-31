@@ -30,10 +30,10 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field, ValidationError
 
-from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from cadrumo.core.toml import freeze_toml, read_toml, to_str_keyed_dict
 from cadrumo.core.directory_scan import scan_directory
-from cadrumo.core.resources._boundary import bundled_path
+from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.toml import freeze_toml, read_toml, to_str_keyed_dict
 
 from ._schema import ConceptRecord
 from .errors import TerminologyLoadError, TerminologyValidationError

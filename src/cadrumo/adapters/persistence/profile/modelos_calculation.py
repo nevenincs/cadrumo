@@ -167,7 +167,7 @@ class CalculationRevisionCatalogueRepository:
                 supports, or an integrity error surfaces while decrypting and
                 decoding the record.
         """
-        from ..storage.envelope._envelope import Envelope
+        from ..storage.envelope.contract import Envelope
         from ..storage.errors import ClassificationError, EnvelopeVersionError
         from ..storage.schema_lineage import (
             inner_envelope_classification_is_expected,

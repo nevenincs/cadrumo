@@ -52,7 +52,7 @@ _COVERED_BY_REFUSAL_TABLE: dict[str, str] = {
     "src/cadrumo/adapters/persistence/profile/buckets.py": "bucket_events",
     "src/cadrumo/adapters/persistence/profile/_secure_model_document.py": "profile_assets",
     "src/cadrumo/adapters/persistence/storage/attachment.py": "attachment",
-    "src/cadrumo/adapters/persistence/storage/envelope/_secure_repository.py": "justificante",
+    "src/cadrumo/adapters/persistence/storage/envelope/secure_bound_repository.py": "justificante",
     "src/cadrumo/adapters/outbound/aeat/auth/session_store.py": "auth_session",
     "src/cadrumo/adapters/outbound/aeat/sede/observation_store.py": "observation",
     "src/cadrumo/adapters/outbound/google/session_store.py": "google_oauth_token",

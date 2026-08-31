@@ -99,10 +99,12 @@ class FilingRetentionSnapshot(BaseModel):
 
     @property
     def canonical_payload(self) -> dict[str, object]:
+        """Return the ordered field mapping the self-digest is computed over."""
         return canonical_snapshot_payload(self)
 
     @property
     def computed_self_digest(self) -> str:
+        """Return the digest recomputed from the live fields, for tamper comparison."""
         return canonical_snapshot_digest(
             self,
             maximum_bytes=_MAX_BYTES,
@@ -110,6 +112,7 @@ class FilingRetentionSnapshot(BaseModel):
         )
 
     def canonical_json_bytes(self) -> bytes:
+        """Return the canonical on-disk encoding of this snapshot."""
         return canonical_snapshot_bytes(
             self,
             maximum_bytes=_MAX_BYTES,
@@ -124,6 +127,18 @@ class FilingRetentionSnapshot(BaseModel):
         records: Iterable[ModeloRecord],
         observed_at: datetime,
     ) -> FilingRetentionSnapshot:
+        """Build a digest-sealed snapshot from the profile's filing records.
+
+        Args:
+            profile_id: Profile whose retention position is being recorded.
+            records: :class:`ModeloRecord` entries contributing one retention
+                fact each.
+            observed_at: UTC instant the retention position was observed.
+
+        Returns:
+            A :class:`FilingRetentionSnapshot` whose facts are ordered by
+            filing record id and whose self-digest is already sealed.
+        """
         facts = tuple(
             sorted(
                 (
@@ -162,6 +177,14 @@ class FilingRetentionAuthority:
         root: Path | None = None,
         local_record_store: ProfileCustodyLocalRecordStore | None = None,
     ) -> None:
+        """Bind the authority to a custody owner root and local record store.
+
+        Args:
+            root: Custody root to resolve the filing-retention owner directory
+                under; the default profile custody root when omitted.
+            local_record_store: Store used to materialise the owner directory;
+                the default profile custody local record store when omitted.
+        """
         self._local_record_store = local_record_store or default_profile_custody_local_record_store()
         self._root = profile_custody_owner_root(root, FILING_RETENTION_OWNER_DIRNAME)
 
@@ -247,6 +270,7 @@ class FilingRetentionAuthority:
         return snapshot
 
     def path(self, profile_id: UUID) -> Path:
+        """Return the canonical snapshot path for ``profile_id``."""
         return self._root / f"{profile_id}.json"
 
     def _ensure_root(self) -> None:

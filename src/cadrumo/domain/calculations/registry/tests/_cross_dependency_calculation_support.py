@@ -6,7 +6,7 @@ from functools import cache
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
 from ..bindings import CasillaObservation, RegistryModeloObservation
 from ..errors import NoRevisionForPeriodError

@@ -22,7 +22,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.resources._boundary import bundled_path
+from ....core.resources.bundled_data import bundled_path
 from ...calculations.registry.authority import bundled_authority
 from ...calculations.registry.errors import RegistryValidationError
 from ...calculations.registry.formula_runtime_ops import read_parameter

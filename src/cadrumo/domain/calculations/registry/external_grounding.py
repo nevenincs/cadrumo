@@ -81,7 +81,7 @@ from ....core.filing_year import FilingYear
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import RegistrySelectorPeriodCode
 from ....core.prose_elision import ElidedProse
-from ....core.resources._boundary import bundled_path
+from ....core.resources.bundled_data import bundled_path
 from .errors import RegistryValidationError
 from .ids import ModeloId, RevisionId
 from .loader import load_registry_tree

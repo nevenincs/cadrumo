@@ -19,7 +19,7 @@ from uuid import UUID
 
 import pytest
 
-from .._profile_filing_retention import (
+from ..retention import (
     FilingRetentionAuthority,
     try_record_filing_retention_snapshot,
 )

@@ -8,7 +8,7 @@ from typing import Any
 import pytest
 
 from .....core.corpus_text import normalise_corpus_text
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from .._validate import RegistryValidator
 from ..authority import bundled_authority
 from ..ids import LegalRefId

@@ -25,7 +25,7 @@ from ...domain.filing.errors import FilingExportValidationError
 from ...domain.filing.schema import ModeloDraft, registry_schema_version
 from ...domain.submission._protocols import ModeloDraftStatus
 from ._envelope_modelo_policy import filing_envelope_modelo_policy
-from ._producer_snapshot import FilingProducerSnapshot
+from .producer_snapshot import FilingProducerSnapshot
 
 _ENVELOPE_GRAMMAR_LITERALS: Mapping[FilingEnvelopePrefixRole, str] = {
     FilingEnvelopePrefixRole.OPENING_TAG: "<T",

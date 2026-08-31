@@ -27,7 +27,7 @@ from shutil import copyfile
 
 import pytest
 
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
 from .. import m303_orden_manifest
 from .._m303_orden_raw_models import M303AnnualOrdenSourceCensus

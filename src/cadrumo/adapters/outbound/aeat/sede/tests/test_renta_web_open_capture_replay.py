@@ -25,7 +25,7 @@ from decimal import Decimal
 import pytest
 
 from ......core.casilla_id import CasillaId, validated_casilla_id
-from ......core.resources._boundary import bundled_path
+from ......core.resources.bundled_data import bundled_path
 from ......domain.calculations.registry.renta_web_open_oracle import (
     RentaWebOpenLivePayload,
     RentaWebOpenSyntheticProfile,

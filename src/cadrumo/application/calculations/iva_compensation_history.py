@@ -37,7 +37,7 @@ from typing import ClassVar, override
 
 from pydantic import BaseModel, Field
 
-from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
+from ...adapters.persistence.storage.envelope.secure_bound_repository import SecureBoundRepository
 from ...adapters.persistence.storage.path_safety import safe_repository_id
 from ...adapters.persistence.storage.secure_object_namespaces import IVA_COMPENSATION_HISTORY_NAMESPACE
 from ...core.casilla_id import CasillaId
@@ -49,7 +49,7 @@ from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
-from ...core.resources._boundary import bundled_path
+from ...core.resources.bundled_data import bundled_path
 from ...core.time.clock import now
 from ...domain.calculations.registry.casilla_membership import undeclared_casilla_ids
 from ...domain.calculations.registry.loader import load_registry_tree

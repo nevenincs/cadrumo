@@ -25,7 +25,7 @@ from ...domain.modelos.protocols import (
     VerificationReportCatalogueRepositoryProtocol,
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from ..filing._export_proof import FilingExportProofAuthority
+from ..filing.export_proof import FilingExportProofAuthority
 from ..registry.closure import RegistryClosureLimb
 from ..registry.source_connectivity import SourceConnectivityCensusManifest
 from ..state_projection import ModeloReadinessRequest, ProjectionModeloReadiness

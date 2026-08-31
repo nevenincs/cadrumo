@@ -33,7 +33,7 @@ from ......core.classification.policies import SensitivityClass
 from ......core.external_constants import UTF_8_ENCODING
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ...errors import ClassificationError, DecryptionError, StorageValidationError
-from .._envelope import CipherEnvelope, Envelope, load_encrypted_envelope, save_encrypted_envelope
+from ..contract import CipherEnvelope, Envelope, load_encrypted_envelope, save_encrypted_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

@@ -10,7 +10,7 @@ import pytest
 
 from .....core.corpus_text import normalise_corpus_text
 from .....core.export_layout_format import ExportLayoutFormat
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from .....tests import REPO_ROOT
 from .....tests.aeat_literal_fixtures import AEAT_HOST_SUFFIX_EXPECTED
 from ...export_field_kind import CasillaFieldKind

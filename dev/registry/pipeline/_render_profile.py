@@ -31,7 +31,7 @@ from cadrumo.domain.calculations.registry.ids import (
     ModeloId,
     SourceRefId,
 )
-from cadrumo.domain.calculations.registry.record_design import ABSENT_NATURALEZA_TYPE_CODE
+from cadrumo.domain.calculations.registry.record_design_pdf_rows import ABSENT_NATURALEZA_TYPE_CODE
 
 from ._record_design_ir import RecordDesignIntermediateField
 from ._semantic_map_join import JoinedRecordDesign

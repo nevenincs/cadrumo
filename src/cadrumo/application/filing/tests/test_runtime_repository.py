@@ -7,9 +7,9 @@ module load time, while runtime repository construction still validates the
 active bucket session before returning storage.
 
 See Also:
-    :func:`~application.filing._runtime_repository.resolve_application_filing_bucket_id`
+    :func:`~application.filing.persistence_wiring.resolve_application_filing_bucket_id`
         Helper under test for explicit bucket ids and active-profile fallback.
-    :func:`~application.filing._runtime_repository.secure_objects_for_application_filing_bucket`
+    :func:`~application.filing.persistence_wiring.secure_objects_for_application_filing_bucket`
         Runtime storage factory wrapper whose unready-bucket refusal is covered.
     :func:`~core.bucket_pointer.resolve_repository_bucket_id`
         Shared resolver that normalizes explicit-or-active repository bucket ids.
@@ -28,11 +28,11 @@ import pytest
 from ....adapters.persistence.storage.errors import StorageValidationError
 from ....core.config import override_settings
 from ....tests.secure_sql import isolated_storage_root as _isolated_storage  # noqa: F401 - autouse fixture
-from .._runtime_repository import (
+from ..errors import ModeloApplicationError
+from ..persistence_wiring import (
     resolve_application_filing_bucket_id,
     secure_objects_for_application_filing_bucket,
 )
-from ..errors import ModeloApplicationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

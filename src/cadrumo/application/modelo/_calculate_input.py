@@ -47,7 +47,7 @@ from ...core.irnr import (
 )
 from ...core.modelo import Modelo
 from ...core.rescate_type import RescateType
-from ...core.resources._boundary import bundled_path
+from ...core.resources.bundled_data import bundled_path
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.binding_selector_utils import boolean_binding_encoded_values
 from ...domain.calculations.registry.casilla_membership import (

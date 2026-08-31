@@ -26,7 +26,7 @@ from typing import override
 
 import pytest
 
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
 from .._validate_evidence import EvidenceValidator
 from .._validate_official_source_guidance_content import (

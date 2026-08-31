@@ -84,7 +84,7 @@ def _delete_profile_through_custody(profile_id: str, *, root: Path) -> None:
     noise.
     """
     from ..evidence._profile_legal_hold import LegalHoldCaseAuthority
-    from ..filing._profile_filing_retention import FilingRetentionAuthority
+    from ..filing.retention import FilingRetentionAuthority
     from ..user_profile.lifecycle import ProfileCapsuleLifecycle
 
     observed_at = datetime.now(UTC)
@@ -161,7 +161,7 @@ def _persist_filing(
     from ...core.period import Period
     from ...domain.modelos.codes import ModeloCode
     from ...domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue, derive_filing_record_id
-    from ..filing._profile_filing_retention import try_record_filing_retention_snapshot
+    from ..filing.retention import try_record_filing_retention_snapshot
 
     work_unit_id = (seed * 64)[:64]
     revision_id = ((chr(ord(seed) + 1)) * 64)[:64]
@@ -428,7 +428,7 @@ def test_a_profile_from_the_seeding_door_alone_is_deletion_assessable(
     from ...domain.buckets.errors import BucketDeleteRefusedError
     from ..bucket_maintenance._contracts import AssessBucketDeletionCommand
     from ..bucket_maintenance._service import BucketMaintenanceService
-    from ..filing._profile_filing_retention import FilingRetentionAuthority
+    from ..filing.retention import FilingRetentionAuthority
 
     with _isolated_reset_root(tmp_path) as root:
         from ...tests.user_profile import register_minimal_profile

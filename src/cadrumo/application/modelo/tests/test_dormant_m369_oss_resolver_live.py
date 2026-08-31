@@ -21,7 +21,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.export_parse import parse_export_payload
-from ....domain.calculations.registry.ledger_bindings import OssIossLedgerObservation
+from ....domain.calculations.registry.ledger_oss_bindings import OssIossLedgerObservation
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.invoices.enums import InvoiceOperationDateRole, IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id

@@ -51,7 +51,7 @@ from ....iva.prorrata import ProrrataInputs, ProrrataKind, compute_prorrata_gene
 from ..authority import bundled_authority
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..formula_runtime import calculate_registry_snapshot
-from ..ledger_bindings import resolve_ledger_iva_aggregation_binding_values
+from ..ledger_iva_bindings import resolve_ledger_iva_aggregation_binding_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

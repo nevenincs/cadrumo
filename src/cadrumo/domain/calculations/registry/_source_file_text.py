@@ -20,7 +20,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ....core.external_constants import UTF_8_ENCODING
-from ....core.resources._boundary import resolve_companion_binary
+from ....core.resources.bundled_data import resolve_companion_binary
 
 if TYPE_CHECKING:
     from .schema_references import SourceReference

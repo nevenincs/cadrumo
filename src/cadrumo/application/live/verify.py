@@ -33,7 +33,7 @@ from typing import Literal
 from pydantic import BaseModel, Field, field_validator
 
 from ...adapters.persistence.storage.crypto.encrypted_columns import HashedLookup
-from ...adapters.persistence.storage.envelope._envelope import Envelope
+from ...adapters.persistence.storage.envelope.contract import Envelope
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...adapters.persistence.storage.schema_lineage import (

@@ -44,7 +44,7 @@ from ...core.decimal.coercion import coerce_decimal_strict
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.paths import path_stat_fingerprint
-from ...core.resources._boundary import bundled_path
+from ...core.resources.bundled_data import bundled_path
 from ...core.unit_proportion import UnitProportion
 from ._grounding import verify_table_legal_refs
 from .errors import IvaCatalogueError, IvaValidationError

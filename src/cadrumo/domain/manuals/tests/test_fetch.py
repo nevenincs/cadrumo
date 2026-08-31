@@ -11,7 +11,7 @@ from pydantic import AnyHttpUrl
 
 from ....core.directory_scan import scan_directory
 from ....core.external_constants import load_external_constants
-from ....core.resources._boundary import bundled_path
+from ....core.resources.bundled_data import bundled_path
 from ..errors import ManifestError
 from ..fetch import PART_SPECS, load_manifest, lookup_spec, verify_fetched_pdf, write_manifest
 from ..schema import FetchedManualPart, ManualId, ManualPart

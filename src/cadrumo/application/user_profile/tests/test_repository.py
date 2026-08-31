@@ -17,7 +17,7 @@ import pytest
 
 from ....adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from ....adapters.persistence.storage.custody.kdf_supervision import unlock_profile_custody
-from ....adapters.persistence.storage.envelope._envelope import Envelope
+from ....adapters.persistence.storage.envelope.contract import Envelope
 from ....adapters.persistence.storage.secure_object_namespaces import (
     USER_PROFILE_SNAPSHOT_NAMESPACE as USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE,
 )

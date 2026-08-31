@@ -134,7 +134,7 @@ from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepo
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
-from ....core.resources._boundary import bundled_path
+from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.tests._manual_oracle_support import oracle_declared_figures

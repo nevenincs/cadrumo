@@ -52,7 +52,9 @@ from ...adapters.outbound.aeat.sede.observation_store import (
 )
 from ...adapters.outbound.aeat.sede.schema import FiledDeclaracionObservation as _FiledDeclaracionObservation
 from ...adapters.outbound.aeat.sede.schema import IvaCompensationWalletObservation as _IvaCompensationWalletObservation
-from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository as _SecureBoundRepository
+from ...adapters.persistence.storage.envelope.secure_bound_repository import (
+    SecureBoundRepository as _SecureBoundRepository,
+)
 from ...adapters.persistence.storage.runtime_repository import (
     secure_object_repository_for_active_bucket as _secure_object_repository_for_active_bucket,
 )

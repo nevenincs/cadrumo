@@ -27,13 +27,13 @@ from ...domain.calculations.registry.ids import (
 from ...domain.filing.schema import ModeloDraft
 from ...domain.submission._protocols import ModeloDraftStatus
 from ._export import export_draft
-from ._export_verification import (
+from .export_verification import (
     DeclaracionExportResult,
     FilingExportConsumedResult,
     FilingExportPayloadConsumer,
     FilingExportValidatedPayload,
 )
-from ._producer_snapshot import FilingProducerSnapshot
+from .producer_snapshot import FilingProducerSnapshot
 from .runtime import RegistrySchemaAccessor
 
 _Token = Annotated[str, Field(min_length=1, max_length=200, pattern=r"^[a-z0-9][a-z0-9._:/-]*$")]

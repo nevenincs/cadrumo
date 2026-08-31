@@ -7,7 +7,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from .....domain.deadlines.festivos import shift_deadline
 from ..authority import bundled_authority
 from ..corpus_catalogue import verify_source_catalogue

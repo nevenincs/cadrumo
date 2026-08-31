@@ -28,7 +28,7 @@ from .....domain.modelos.participation_index import (
     TransactionRevisionParticipation,
     TransactionRevisionParticipationIndex,
 )
-from ...storage.envelope._envelope import Envelope
+from ...storage.envelope.contract import Envelope
 from ...storage.errors import SecureObjectRowIdentityError
 from ...storage.secure_object_namespaces import TRANSACTION_PARTICIPATION_INDEX_NAMESPACE
 from ...storage.sql.secure_objects import SecureObjectRepository

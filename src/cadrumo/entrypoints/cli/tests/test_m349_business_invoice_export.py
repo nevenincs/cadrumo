@@ -14,7 +14,7 @@ from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....application.aggregation import CalculationSourceContext
 from ....application.invoices._source_resolver import InvoiceCatalogueSourceResolver
 from ....core.period import Period
-from ....core.resources._boundary import bundled_path
+from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.loader import load_modelo_path
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session

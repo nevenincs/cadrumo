@@ -39,7 +39,7 @@ import tomllib
 
 import pytest
 
-from ....core.resources._boundary import bundled_path
+from ....core.resources.bundled_data import bundled_path
 from ..classification import IvaTerritorialScope
 from ..errors import IvaCatalogueError
 from ..establishment import (

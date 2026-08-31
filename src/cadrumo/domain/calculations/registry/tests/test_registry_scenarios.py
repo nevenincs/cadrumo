@@ -8,7 +8,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from ..errors import RegistrySnapshotError, RegistryValidationError
 from ._registry_scenarios_support import (
     _REGISTRY_ROOT,

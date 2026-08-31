@@ -48,7 +48,7 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import TYPE_CHECKING, Final
 
-from ...core.resources._boundary import bundled_path
+from ...core.resources.bundled_data import bundled_path
 from ...core.tipos_actividad import TipoActividad
 from ..deadlines.models import IrpfActivityKind
 from .errors import TransactionValidationError

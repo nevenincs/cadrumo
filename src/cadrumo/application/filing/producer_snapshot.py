@@ -930,14 +930,17 @@ class AmendmentEvidence(BaseModel):
 
     @property
     def is_complementaria(self) -> bool:
+        """True when this evidence records a complementaria amendment."""
         return self.kind is CalculationRevisionAmendmentKind.COMPLEMENTARIA
 
     @property
     def is_sustitutiva(self) -> bool:
+        """True when this evidence records a sustitutiva amendment."""
         return self.kind is CalculationRevisionAmendmentKind.SUSTITUTIVA
 
     @property
     def is_rectificativa(self) -> bool:
+        """True when this evidence records a rectificativa amendment."""
         return self.kind is CalculationRevisionAmendmentKind.RECTIFICATIVA
 
 

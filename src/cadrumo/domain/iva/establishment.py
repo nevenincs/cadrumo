@@ -91,7 +91,7 @@ from ...core.identity import (
     normalise_nif_iva,
 )
 from ...core.parsing import normalise_iso_3166_alpha2_jurisdiction
-from ...core.resources._boundary import bundled_path
+from ...core.resources.bundled_data import bundled_path
 from ...core.text_fold import fold_printed_phrase
 from .classification import IvaTerritorialScope
 from .schema import EUMemberState

@@ -18,7 +18,7 @@ from ....core.modelo import Modelo
 from ....core.observed_header_fact import ObservedHeaderFact
 from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.period import Period
-from ....core.resources._boundary import bundled_path
+from ....core.resources.bundled_data import bundled_path
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ....domain.calculations.registry.loader import load_registry_tree

@@ -83,14 +83,14 @@ from .....application.aggregation import aggregate_renta_m100_income_ledger
 from .....core.aggregation import LedgerIncomeGrounding
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from ....iva.classification import InvoiceKind
 from ....iva.components import category_cuota_is_zero_by_law
 from ....iva.schema import IvaCategory
 from ....transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....transactions.models import Transaction, TransactionCatalogue
 from ....transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ..ledger_bindings import (
+from ..ledger_renta_income_bindings import (
     resolve_ledger_renta_income_aggregation_binding_values,
     ungrounded_ledger_renta_income_observations,
 )

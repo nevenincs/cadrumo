@@ -57,7 +57,7 @@ from .errors import ModeloApplicationError as ModeloImportError
 from .runtime import ModeloOperatorProfile
 
 if TYPE_CHECKING:
-    from ...domain.submission._models import ModeloPresentado
+    from ...domain.submission.models import ModeloPresentado
 
 _logger = get_logger(__name__)
 
@@ -268,7 +268,7 @@ def _build_submission_record(
     coordinate. Naive receipt times retain the importer contract of Madrid
     civil time; aware receipt times retain their supplied instant.
     """
-    from ...domain.submission._models import ModeloPresentado, SubmissionAttempt, SubmissionStatus, make_submission_id
+    from ...domain.submission.models import ModeloPresentado, SubmissionAttempt, SubmissionStatus, make_submission_id
 
     presented_at = justificante.presented_at
     if presented_at.utcoffset() is None:

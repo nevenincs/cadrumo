@@ -10,7 +10,7 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from ....categories.registry import resolve_category_profiles
 from ....categories.spending_category import SpendingCategory
 from ....renta._ledger_expenses import (
@@ -23,7 +23,7 @@ from ....renta._ledger_expenses import (
 from ..binding_selector_utils import selector_as_dict
 from ..errors import RegistryValidationError
 from ..formula_runtime import calculate_registry_snapshot
-from ..ledger_bindings import (
+from ..ledger_renta_gastos_estimacion_directa_bindings import (
     resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values,
     unsupported_ledger_renta_gastos_estimacion_directa_observations,
     validate_ledger_renta_gastos_estimacion_directa_aggregation_binding_definition,

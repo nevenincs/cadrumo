@@ -18,7 +18,7 @@ from cadrumo.core.filing_projection_ref import (
     M303ProrrataActivityProjectionField,
     M303ProrrataActivityProjectionRef,
 )
-from cadrumo.core.resources._boundary import bundled_path
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.errors import (
     RegistryError,

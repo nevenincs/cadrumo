@@ -39,7 +39,7 @@ def test_the_typed_grade_is_still_declared_across_the_corpus() -> None:
     A corpus that declared no grade at all would satisfy the assertion above
     while having lost the fact the markers were duplicating.
     """
-    from cadrumo.core.resources._boundary import bundled_path
+    from cadrumo.core.resources.bundled_data import bundled_path
     from cadrumo.domain.calculations.registry.loader import load_registry_tree
 
     modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))

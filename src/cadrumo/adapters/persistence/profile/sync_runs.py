@@ -14,7 +14,7 @@ from ....application.storage.sync_runs._records import (
 from ....core.classification.policies import SensitivityClass
 from ....domain.buckets.event import BucketEvent
 from ....domain.buckets.event_repository import bucket_event_history_write
-from ..storage.envelope._secure_repository import SecureBoundRepository
+from ..storage.envelope.secure_bound_repository import SecureBoundRepository
 from ..storage.secure_object_namespaces import SYNC_RUN_RECORDS_NAMESPACE
 from .buckets import BucketEventHistoryRepository
 

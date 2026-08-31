@@ -48,7 +48,7 @@ from ..runtime_repository import (
 )
 from ..schema_lineage import inner_envelope_classification_is_expected
 from ..sql import SecureObjectDeletion, SecureObjectRecord, SecureObjectRepository
-from ._envelope import Envelope, _parameterized_envelope_type
+from .contract import Envelope, _parameterized_envelope_type
 
 _log = get_logger(__name__)
 
@@ -104,6 +104,17 @@ class SecureBoundRepository[T: BaseModel]:
         objects: SecureObjectRepository | None = None,
         settings: Settings | None = None,
     ) -> None:
+        """Bind the repository to one secure-object store.
+
+        Args:
+            bucket_id: Bucket whose secure-object store backs this repository.
+                Ignored when ``objects`` is supplied.
+            objects: An already-resolved secure-object repository. Takes
+                precedence over ``bucket_id``.
+            settings: Deployment settings used to resolve the store when
+                neither ``objects`` nor ``bucket_id`` is given; the active
+                profile bucket is used in that case.
+        """
         if objects is not None:
             self._objects = objects
         elif bucket_id is not None:

@@ -56,13 +56,13 @@ from ...core.prorrata_register import (
     ProrrataRegisterRegime,
     regime_apportions_deduction,
 )
-from ...core.resources._boundary import bundled_path
+from ...core.resources.bundled_data import bundled_path
 from ...domain.calculations.registry.ids import (
     BindingId,
     LegalRefId,
     SourceRefId,
 )
-from ...domain.calculations.registry.ledger_bindings import IvaLedgerObservation
+from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ...domain.calculations.registry.loader import load_registry_tree
 from ...domain.calculations.registry.schema import (
     ModeloRevision,

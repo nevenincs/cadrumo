@@ -13,7 +13,7 @@ from decimal import Decimal
 
 from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.period import Period
-from ...domain.calculations.registry.ledger_bindings import IvaLedgerObservation
+from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ...domain.iva.classification import InvoiceKind, domestic_categories_by_rate_kind
 from ...domain.iva.components import IvaKindApplicability, category_components, category_cuota_is_zero_by_law
 from ...domain.iva.deduction_facts import IvaDeductionClassificationProvenance

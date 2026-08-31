@@ -98,7 +98,7 @@ from ..calculations.observations_repository import (
     CalculationObservationRepository,
     PriorDomiciliationElectionProjection,
 )
-from ..filing._profile_filing_retention import try_record_filing_retention_snapshot
+from ..filing.retention import try_record_filing_retention_snapshot
 from ._action_errors import M303FilingEvidenceError
 from ._filed_revision_observation import persist_filed_revision_observation, require_filing_result_disposition
 from ._m303_filing_evidence import m303_filing_evidence_failure

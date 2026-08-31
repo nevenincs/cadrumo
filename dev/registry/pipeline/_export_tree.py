@@ -589,6 +589,10 @@ def _render_records(
                     "record_type": joined_record.semantic_record.record_type,
                     "required": joined_record.semantic_record.required,
                     "repeat": joined_record.semantic_record.repeat,
+                    "binding_record": joined_record.semantic_record.binding_record,
+                    # The map carries these as sorted pairs to stay hashable; the
+                    # registry record takes the mapping they stand for.
+                    "row_field_casilla_ids": dict(joined_record.semantic_record.row_field_casilla_ids),
                     "discriminator": joined_record.semantic_record.discriminator,
                     "order": order,
                     "encoding": transport_profile.encoding,

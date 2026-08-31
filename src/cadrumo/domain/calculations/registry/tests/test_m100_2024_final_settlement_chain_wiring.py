@@ -50,7 +50,7 @@ from decimal import Decimal
 import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from ._modelo_100_registry_support import _m100_2024_deduccion_maternidad_bindings
 from ._scenarios import (
     RegistryCalculationScenario,

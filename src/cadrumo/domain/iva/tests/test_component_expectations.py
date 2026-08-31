@@ -38,7 +38,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.directory_scan import scan_directory
-from ....core.resources._boundary import bundled_path
+from ....core.resources.bundled_data import bundled_path
 from ..classification import InvoiceKind
 from ..components import (
     IVA_CATEGORY_COMPONENTS,

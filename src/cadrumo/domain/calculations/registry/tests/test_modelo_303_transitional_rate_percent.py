@@ -53,14 +53,14 @@ from pathlib import Path
 import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
 from ....period import Period, calculation_filing_date
 from ..authority import bundled_authority
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..errors import RegistryValidationError
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
-from ..ledger_bindings import resolve_ledger_iva_aggregation_binding_values
+from ..ledger_iva_bindings import resolve_ledger_iva_aggregation_binding_values
 from ..loader import load_registry_tree
 from ..snapshot import build_snapshot
 

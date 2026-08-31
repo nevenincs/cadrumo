@@ -38,7 +38,7 @@ from ....domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_targets,
     declared_casilla_ids,
 )
-from ....domain.calculations.registry.ledger_bindings import IvaLedgerObservation
+from ....domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.flow import IvaFlowDirection
 from ....domain.iva.prorrata import RegularizacionProrrataDireccion

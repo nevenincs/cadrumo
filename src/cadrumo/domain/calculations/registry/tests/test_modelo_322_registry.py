@@ -7,7 +7,7 @@ from datetime import date
 import pytest
 
 from .....core.iva_deduction_fact import IvaDeductionFactKind
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from ....iva.schema import IvaLedgerObservationRole
 from .._validate import RegistryValidator
 from ..authority import bundled_authority
@@ -313,7 +313,7 @@ def test_modelo_322_iva_bindings_resolve_against_ledger_observations() -> None:
 
     from ....iva.flow import IvaFlowDirection
     from ....iva.schema import IvaCategory, IvaRateKind
-    from ..ledger_bindings import (
+    from ..ledger_iva_bindings import (
         IvaLedgerObservation,
         resolve_ledger_iva_aggregation_binding_values,
     )

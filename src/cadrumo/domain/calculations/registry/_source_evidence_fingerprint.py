@@ -94,7 +94,7 @@ def _walk_source_evidence(roots: tuple[Path, ...]) -> SourceEvidenceFingerprint:
 @lru_cache(maxsize=1)
 def _bundled_data_root() -> Path:
     """Return the resolved package-bundled data root, computed once per process."""
-    from ....core.resources._boundary import bundled_path
+    from ....core.resources.bundled_data import bundled_path
 
     return bundled_path().resolve()
 

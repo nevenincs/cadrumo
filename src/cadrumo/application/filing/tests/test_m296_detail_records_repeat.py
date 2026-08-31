@@ -38,7 +38,7 @@ from ....core.refund_election import RefundElection
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import bundled_authority
 from .._m296_projection import build_m296_filing_projection_plan
-from .._producer_snapshot import (
+from ..producer_snapshot import (
     FilingElectionFacts,
     FilingProducerSnapshot,
     Modelo296AnexoCertificadoRow,

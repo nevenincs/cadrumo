@@ -47,7 +47,7 @@ CORE_STRUCTS: dict[str, str] = {
     "SecureObjectRepository": "cadrumo.adapters.persistence.storage.sql.secure_objects",
     # Security + classification
     "SensitivityClass": "cadrumo.core.classification",
-    "Envelope": "cadrumo.adapters.persistence.storage.envelope._envelope",
+    "Envelope": "cadrumo.adapters.persistence.storage.envelope.contract",
     "MasterKeyProvider": "cadrumo.adapters.persistence.storage.master_key._master_key",
     # Portal registry
     "Portal": "cadrumo.domain.portals.codes",

@@ -18,7 +18,7 @@ from .....core.storage_taxonomy_locations import storage_path
 from .....domain.justificante import Justificante, JustificanteRepositoryProtocol
 from .....tests.aeat_literal_fixtures import JUSTIFICANTE_VERIFY_PATH_FIXTURE, aeat_url
 from .....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from ...storage.envelope._envelope import Envelope
+from ...storage.envelope.contract import Envelope
 from ...storage.errors import ClassificationError
 from ..justificante import JustificanteRepository
 

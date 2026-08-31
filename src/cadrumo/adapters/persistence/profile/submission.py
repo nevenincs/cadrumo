@@ -31,8 +31,8 @@ from pydantic import ValidationError
 
 from ....core.classification.policies import SensitivityClass
 from ....core.logging import get_logger
-from ....domain.submission._models import ModeloPresentado
-from ..storage.envelope._secure_repository import SecureBoundRepository
+from ....domain.submission.models import ModeloPresentado
+from ..storage.envelope.secure_bound_repository import SecureBoundRepository
 from ..storage.secure_object_namespaces import SUBMISSION_RECORDS_NAMESPACE
 
 _log = get_logger(__name__)

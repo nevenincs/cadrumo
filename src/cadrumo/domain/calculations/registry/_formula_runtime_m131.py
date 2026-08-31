@@ -559,7 +559,7 @@ def evaluate_m131_resolve_modulos_indices_generales(expression: FormulaExpressio
     multiplicative factor over the RUNNING rendimiento, not a single-índice
     pick nor a simultaneous product (mirrors the M100 EO-agraria índices
     correctores cascade,
-    :func:`_evaluate_m100_resolve_eo_agraria_indices_correctores`). The four
+    :func:`formula_runtime_m100.evaluate_m100_resolve_eo_agraria_indices_correctores`). The four
     steps are applied STRICTLY SEQUENTIALLY in that literal enumeration order
     — b.1, then b.2, then b.3, then b.4 — each on the running rendimiento left
     by the previous step; b.3's exceso threshold is non-linear

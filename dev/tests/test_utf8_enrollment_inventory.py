@@ -91,7 +91,7 @@ _KNOWN_VIOLATING_FILES: frozenset[str] = frozenset(
         "adapters/outbound/storage/_mirror_manifest.py",
         "adapters/persistence/profile/filing_amendments.py",
         "adapters/persistence/storage/crypto/_encrypted_columns.py",
-        "adapters/persistence/storage/envelope/_secure_repository.py",
+        "adapters/persistence/storage/envelope/secure_bound_repository.py",
         "application/live/verify.py",
         "application/modelo/_revision_persistence.py",
         "application/repair_integrity.py",

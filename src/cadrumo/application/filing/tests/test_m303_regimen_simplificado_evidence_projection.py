@@ -7,8 +7,8 @@ from decimal import Decimal
 import pytest
 
 from ....application.calculations._m303_regimen_simplificado import calculate_m303_regimen_simplificado_result
-from ....application.filing._producer_snapshot import build_filing_producer_snapshot
 from ....application.filing._projection import build_m303_filing_projection_plan
+from ....application.filing.producer_snapshot import build_filing_producer_snapshot
 from ....core.filing_projection_ref import (
     M303RegimenSimplificadoActivityField,
     M303RegimenSimplificadoActivityProjectionRef,

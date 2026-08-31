@@ -19,7 +19,7 @@ from ....iva.oss import OssIossRegime
 from ....iva.schema import EUMemberState, IvaRateKind
 from ..binding_selector_utils import selector_as_dict
 from ..errors import RegistryValidationError
-from ..ledger_bindings import (
+from ..ledger_oss_bindings import (
     OssIossLedgerObservation,
     resolve_ledger_oss_aggregation_binding_values,
     unsupported_ledger_oss_observations,

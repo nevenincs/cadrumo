@@ -40,7 +40,7 @@ from __future__ import annotations
 from functools import lru_cache
 from xml.etree.ElementTree import Element
 
-from ....core.resources._boundary import bundled_path
+from ....core.resources.bundled_data import bundled_path
 from ._xml import parse_hardened_xml
 
 __all__ = [

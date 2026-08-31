@@ -42,22 +42,26 @@ from ...domain.calculations.registry.irnr_ledger_bindings import (
     resolve_ledger_irnr_income_aggregation_binding_values,
     unsupported_ledger_irnr_income_observations,
 )
-from ...domain.calculations.registry.ledger_bindings import (
-    IvaLedgerObservation,
-    UngroundedRentaIncome,
-    resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values,
-    resolve_ledger_renta_income_aggregation_binding_values,
-    structurally_unroutable_iva_base_categories,
-    ungrounded_ledger_renta_income_observations,
-    unrouted_ledger_iva_quantities,
-    unrouted_ledger_renta_income_quantities,
-    unsupported_ledger_iva_observations,
-    unsupported_ledger_renta_gastos_pago_fraccionado_observations,
-    unsupported_ledger_renta_income_observations,
-)
 from ...domain.calculations.registry.ledger_impatriado_bindings import (
     resolve_ledger_impatriado_income_aggregation_binding_values,
     unsupported_ledger_impatriado_income_observations,
+)
+from ...domain.calculations.registry.ledger_iva_bindings import (
+    IvaLedgerObservation,
+    structurally_unroutable_iva_base_categories,
+    unrouted_ledger_iva_quantities,
+    unsupported_ledger_iva_observations,
+)
+from ...domain.calculations.registry.ledger_renta_gastos_pago_fraccionado_bindings import (
+    resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values,
+    unsupported_ledger_renta_gastos_pago_fraccionado_observations,
+)
+from ...domain.calculations.registry.ledger_renta_income_bindings import (
+    UngroundedRentaIncome,
+    resolve_ledger_renta_income_aggregation_binding_values,
+    ungrounded_ledger_renta_income_observations,
+    unrouted_ledger_renta_income_quantities,
+    unsupported_ledger_renta_income_observations,
 )
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition

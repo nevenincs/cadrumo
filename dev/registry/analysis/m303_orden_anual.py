@@ -12,7 +12,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from cadrumo.core.resources._boundary import bundled_path
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.loader import load_registry_tree
 from cadrumo.domain.calculations.registry.m303_orden_census_artefact import m303_orden_census_artefact_path
 from cadrumo.domain.calculations.registry.m303_orden_manifest import (

@@ -50,7 +50,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from ...core.resources._boundary import bundled_path
+from ...core.resources.bundled_data import bundled_path
 from .errors import IvaCatalogueError
 
 if TYPE_CHECKING:

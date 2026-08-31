@@ -13,7 +13,7 @@ from pydantic import ValidationError
 from ....core.directory_scan import scan_directory
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ...calculations.registry.authority import bundled_authority
-from ...calculations.registry.ledger_bindings import IvaLedgerObservation
+from ...calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ...invoices.enums import IvaRate
 from ..classification import InvoiceKind
 from ..deduction_facts import IvaDeductionClassificationProvenance
@@ -221,7 +221,7 @@ def test_invoice_sourced_rows_reach_their_own_rate_specific_box() -> None:
     from datetime import date
 
     from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
-    from ...calculations.registry.ledger_bindings import resolve_ledger_iva_aggregation_binding_values
+    from ...calculations.registry.ledger_iva_bindings import resolve_ledger_iva_aggregation_binding_values
     from ...calculations.registry.schema import DataBindingDefinition, ModeloRevision
     from ...calculations.registry.schema_references import PeriodSelector
     from ..invoice_classification import invoice_line_to_iva_observation
@@ -373,7 +373,7 @@ def test_invoice_line_observation_feeds_modelo_303_binding_resolver_end_to_end()
     from datetime import date
     from decimal import Decimal
 
-    from ...calculations.registry.ledger_bindings import resolve_ledger_iva_aggregation_binding_values
+    from ...calculations.registry.ledger_iva_bindings import resolve_ledger_iva_aggregation_binding_values
     from ..invoice_classification import invoice_line_to_iva_observation
 
     m303 = bundled_authority().modelo("303")

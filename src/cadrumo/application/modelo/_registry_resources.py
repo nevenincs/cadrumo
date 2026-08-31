@@ -35,7 +35,7 @@ def registry_root() -> Path:
     errors when the packaged registry cannot be loaded. It intentionally mirrors
     the root resolved by the canonical bundled registry authority.
     """
-    from ...core.resources._boundary import bundled_path
+    from ...core.resources.bundled_data import bundled_path
 
     return bundled_path("registry", "aeat")
 

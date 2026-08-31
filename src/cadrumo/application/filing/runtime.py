@@ -55,7 +55,7 @@ from ...core.casilla_id import CasillaId
 from ...core.identity import SubjectTaxId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
-from ...core.resources._boundary import bundled_path
+from ...core.resources.bundled_data import bundled_path
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ...domain.calculations.registry.errors import (
     RegistryFailureCondition,

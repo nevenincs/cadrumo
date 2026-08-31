@@ -13,7 +13,7 @@ import pypdfium2 as pdfium
 import pytest
 
 from ....core.corpus_text import normalise_corpus_text
-from ....core.resources._boundary import bundled_path
+from ....core.resources.bundled_data import bundled_path
 from ....tests.registry_tree import bundled_registry_tree
 from ..errors import IvaRateNotFoundError
 from ..lookup import lookup_rate

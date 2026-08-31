@@ -20,7 +20,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.persistence.storage.envelope._envelope import Envelope
+from ....adapters.persistence.storage.envelope.contract import Envelope
 from ....adapters.persistence.storage.errors import EnvelopeVersionError
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period

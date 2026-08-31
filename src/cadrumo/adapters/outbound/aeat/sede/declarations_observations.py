@@ -35,7 +35,7 @@ from .....core.i18n import tr
 from .....core.modelo import Modelo
 from .....core.observed_header_fact import ObservedHeaderFact
 from .....core.period import Period
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from .....core.time.clock import now
 from .....domain.calculations.export_field_kind import CasillaFieldKind
 from .....domain.calculations.registry.authority import bundled_authority

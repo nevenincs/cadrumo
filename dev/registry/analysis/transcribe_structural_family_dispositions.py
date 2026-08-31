@@ -87,7 +87,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 
 from cadrumo.core.modelo import Modelo
-from cadrumo.core.resources._boundary import bundled_path
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.loader import load_registry_tree
 from cadrumo.domain.calculations.registry.schema import (
     ModeloDefinition,

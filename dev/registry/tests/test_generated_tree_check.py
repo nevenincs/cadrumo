@@ -9,9 +9,17 @@ from shutil import rmtree
 
 import pytest
 
+from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.hashing import hash_file
+from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
+from cadrumo.domain.calculations.registry.schema_exports import (
+    ExportFieldDefinition,
+    ExportLayoutDefinition,
+    ExportRecordDefinition,
+)
 
 from ..pipeline import _tree_check
 from ..pipeline._export_tree import ExportTreeTransportProfile
@@ -313,3 +321,76 @@ def test_check_module_has_no_migration_reader_or_publisher_surface() -> None:
     assert not forbidden.intersection(attribute_names)
     assert "dev.registry._generated_tree_publication" not in imported_modules
     assert "legacy" not in inspect.getsource(_tree_check).casefold()
+
+
+def _layout_with_repeat(repeat: str | None) -> ExportLayoutDefinition:
+    """One real layout carrying ``repeat``, with the field shape that repeat admits.
+
+    The record model enforces the pairing both ways -- a binding-rows record must
+    carry binding fields, and a projection-rows record must not -- so the two
+    layouts differ in field kind as well as in repeat. That is the real shape of
+    the drift this guard exists to catch: a regeneration DROPS the repeat and
+    renders a single-valued casilla where the published tree renders a row
+    sequence, which is why the candidate here carries no repeat at all.
+    """
+    common = {
+        "id": "declarado.importe",
+        "offset": 1,
+        "length": 10,
+        "data_type": "money",
+        "required": False,
+        "padding": "left_zero",
+        "justification": "right",
+        "signed": False,
+        "legal_refs": ("ley-35-2006:art-test",),
+        "source_refs": ("aeat-test-source-001",),
+    }
+    if repeat == "binding_rows":
+        field = ExportFieldDefinition(kind=CasillaFieldKind.BINDING, binding="binding.rows", **common)
+    else:
+        field = ExportFieldDefinition(
+            kind=CasillaFieldKind.CASILLA,
+            casilla_id=validated_casilla_id("01", surface="repeat-guard fixture"),
+            **common,
+        )
+    return ExportLayoutDefinition(
+        id="layout",
+        legal_refs=("ley-35-2006:art-test",),
+        source_refs=("aeat-test-source-001",),
+        records=(
+            ExportRecordDefinition(
+                id="declarado",
+                record_type="declarado",
+                order=1,
+                encoding=ExportEncoding.ASCII,
+                line_ending="none",
+                repeat=repeat,
+                fields=(field,),
+            ),
+        ),
+    )
+
+
+def test_repeat_guard_refuses_a_published_binding_rows_record_the_candidate_drops() -> None:
+    """A published row sequence must not regenerate into single-valued fields.
+
+    The guard runs before the loader-semantics and byte comparisons, so this is
+    the only place the operator is told the candidate LOST a repeat rather than
+    merely differing from what is committed. Byte drift invites regenerate-and-
+    commit, which is exactly the action that ships the truncation.
+    """
+    published = _layout_with_repeat("binding_rows")
+    candidate = _layout_with_repeat(None)
+
+    with pytest.raises(RegistryValidationError, match="repeat='binding_rows'") as refusal:
+        _tree_check._refuse_repeat_the_candidate_would_drop(published, candidate)
+
+    assert "declarado" in str(refusal.value)
+
+
+def test_repeat_guard_admits_a_candidate_that_keeps_the_published_repeat() -> None:
+    """The guard fires on a LOST repeat, not on the repeat's presence."""
+    published = _layout_with_repeat("binding_rows")
+    candidate = _layout_with_repeat("binding_rows")
+
+    _tree_check._refuse_repeat_the_candidate_would_drop(published, candidate)

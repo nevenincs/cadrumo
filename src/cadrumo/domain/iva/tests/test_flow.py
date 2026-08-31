@@ -25,7 +25,7 @@ import tomllib
 
 import pytest
 
-from ....core.resources._boundary import bundled_path
+from ....core.resources.bundled_data import bundled_path
 from ...calculations.registry.authority import bundled_authority
 from ...calculations.registry.binding_selector_utils import selector_as_dict
 from ..classification import InvoiceKind

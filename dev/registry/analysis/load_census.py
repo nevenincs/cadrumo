@@ -534,7 +534,7 @@ def module_for(filename):
 
 
 def main():
-    from cadrumo.core.resources._boundary import bundled_path
+    from cadrumo.core.resources.bundled_data import bundled_path
     from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 
     root = bundled_path("registry", "aeat")

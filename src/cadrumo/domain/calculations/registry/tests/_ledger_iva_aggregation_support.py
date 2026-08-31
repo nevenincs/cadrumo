@@ -19,7 +19,7 @@ from .....core.aggregation import BindingAggregation, BindingAggregationOp, Bind
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from .....core.result_disposition import (
     ResultDisposition,
     derive_result_disposition,
@@ -37,7 +37,7 @@ from ..bindings import (
 )
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ..ids import BindingId
-from ..ledger_bindings import (
+from ..ledger_iva_bindings import (
     IvaLedgerObservation,
     resolve_ledger_iva_aggregation_binding_values,
 )

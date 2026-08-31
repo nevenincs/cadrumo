@@ -17,7 +17,7 @@ from .....core.filing_projection_ref import (
     compile_filing_projection_ref,
     filing_projection_ref_casilla_id,
 )
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from .._validate import RegistryValidator
 from ..errors import RegistryValidationError
 from ..formula_runtime import calculate_registry_snapshot

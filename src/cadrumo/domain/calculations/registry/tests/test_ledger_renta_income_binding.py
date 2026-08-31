@@ -32,9 +32,9 @@ from .....core.aggregation import (
     LedgerIncomeGrounding,
 )
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from ..binding_selector_utils import selector_as_dict
-from ..ledger_bindings import (
+from ..ledger_renta_income_bindings import (
     resolve_ledger_renta_income_aggregation_binding_values,
     ungrounded_ledger_renta_income_observations,
     unsupported_ledger_renta_income_observations,

@@ -8,7 +8,8 @@ import pytest
 
 from .....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ..authority import bundled_authority
-from ..bindings import bound_casilla_binding_ids, casillas_by_binding, resolve_bound_casilla_binding_value
+from ..binding_targets import bound_casilla_binding_ids, casillas_by_binding
+from ..bindings import resolve_bound_casilla_binding_value
 from ..inventory_bindings import InventorySelector
 from ..schema_input_kind import InputKind
 

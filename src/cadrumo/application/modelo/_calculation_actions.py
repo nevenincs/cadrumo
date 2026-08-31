@@ -62,10 +62,8 @@ from ...core.time.clock import now as _utc_now
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations._row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
 from ...domain.calculations._row_source_identity import RowBindingKey, RowSourceIdentity
-from ...domain.calculations.registry.bindings import (
-    bound_casilla_binding_ids,
-    resolve_available_bound_inputs_by_casilla_id,
-)
+from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
+from ...domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ...domain.calculations.registry.casilla_membership import casillas_by_id
 from ...domain.calculations.registry.formula_runtime import (
     RegistryCalculationResult,

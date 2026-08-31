@@ -147,7 +147,7 @@ def check_generated_export_tree(
         render_profile=render_profile,
         render_profile_source_evidence=render_profile_source_evidence,
     )
-    _refuse_repeat_the_semantic_map_cannot_express(published_layout, candidate.layout)
+    _refuse_repeat_the_candidate_would_drop(published_layout, candidate.layout)
     if normalised_loader_semantics(published_layout) != normalised_loader_semantics(candidate.layout):
         raise RegistryValidationError("published export loader semantics do not match fresh generated semantics")
     _require_exact_tree_bytes(
@@ -382,18 +382,21 @@ def _contains(parent: Path, child: Path) -> bool:
     return True
 
 
-def _refuse_repeat_the_semantic_map_cannot_express(
+def _refuse_repeat_the_candidate_would_drop(
     published_layout: ExportLayoutDefinition,
     candidate_layout: ExportLayoutDefinition,
 ) -> None:
-    """Refuse when a published repeat exists that the semantic map cannot declare.
+    """Refuse when a regeneration would drop a repeat the published tree declares.
 
-    ``ExportRecordDefinition.repeat`` admits ``binding_rows`` and
-    ``projection_rows``; the semantic map's record model admits only
-    ``projection_rows``. The generator's input vocabulary is therefore a strict
-    subset of the schema it generates into, and a ``binding_rows`` record cannot
-    survive a regeneration: the fresh candidate silently drops the repeat and
-    renders single-valued fields instead of a row sequence.
+    A ``binding_rows`` record that the fresh candidate does not reproduce means
+    the row sequence has become single-valued fields: the published tree emits
+    one record per bound row, the candidate emits one record.
+
+    The semantic map CAN now express the repeat -- its record model admits
+    ``binding_rows`` and the renderer carries ``binding_record`` and
+    ``row_field_casilla_ids`` through -- so reaching this refusal no longer means
+    the vocabulary is missing. It means this modelo's map has not been authored
+    with the repeat, or something else prevents it from being.
 
     That difference would otherwise surface as ordinary byte drift, and the
     obvious response to byte drift -- regenerate and commit -- is precisely the
@@ -406,18 +409,17 @@ def _refuse_repeat_the_semantic_map_cannot_express(
     told the vocabulary is missing a term, not that two trees differ.
     """
     candidate_repeats = {record.id: record.repeat for record in candidate_layout.records}
-    inexpressible = sorted(
+    dropped = sorted(
         str(record.id)
         for record in published_layout.records
         if record.repeat == "binding_rows" and candidate_repeats.get(record.id) != "binding_rows"
     )
-    if inexpressible:
+    if dropped:
         raise RegistryValidationError(
             "published export declares repeat='binding_rows' on record(s) "
-            f"{inexpressible}, and the fresh candidate does not, because the semantic "
-            "map cannot express that repeat: its record model admits only "
-            "'projection_rows'. Regenerating this tree would replace a row sequence "
-            "with single-valued fields and silently under-declare. Widen the semantic "
-            "map vocabulary AND teach the renderer to materialise binding rows before "
-            "regenerating; do not publish the candidate.",
+            f"{dropped}, and the fresh candidate does not. Regenerating this tree "
+            "would replace a row sequence with single-valued fields and silently "
+            "under-declare. The semantic map can express this repeat, so author it "
+            "on this modelo's map -- record `repeat`, `binding_record` and "
+            "`row_field_casilla_ids` -- and re-render; do not publish the candidate.",
         )

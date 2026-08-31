@@ -105,7 +105,7 @@ def _filing_record(*, filed_at: datetime, seed: str) -> ModeloRecord:
 
 
 def _record_snapshot(root: Path, *records: ModeloRecord) -> None:
-    from ...filing._profile_filing_retention import FilingRetentionAuthority
+    from ...filing.retention import FilingRetentionAuthority
 
     FilingRetentionAuthority(root=root).record_filing_catalogue(
         profile_id=UUID(_PROFILE_ID),
@@ -136,7 +136,7 @@ def _refusal_verdict(error: BucketDeleteRefusedError):
 
 def _remove_snapshot(root: Path) -> None:
     """Make the filing owner's otherwise-normal empty snapshot truly absent."""
-    from ...filing._profile_filing_retention import FilingRetentionAuthority
+    from ...filing.retention import FilingRetentionAuthority
 
     snapshot_path = FilingRetentionAuthority(root=root).path(UUID(_PROFILE_ID))
     assert snapshot_path.exists()
@@ -206,7 +206,7 @@ def test_a_snapshot_that_cannot_be_authenticated_refuses_distinctly(tmp_path: Pa
     restored. An operator told only "retention assessment required" can act on
     neither.
     """
-    from ...filing._profile_filing_retention import FilingRetentionAuthority
+    from ...filing.retention import FilingRetentionAuthority
 
     with _published_profile(tmp_path) as root:
         _record_snapshot(root)

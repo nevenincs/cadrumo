@@ -84,7 +84,7 @@ def _render(modelo: str, revision: str, *, negative: str | None, zero: str | Non
 def plan_fragments(root: Path | None = None) -> tuple[GeneratedFragment, ...]:
     """Render a declaration for every filing-grade revision outside owned trees."""
     from cadrumo.core.authority_grade import RegistryAuthorityGrade
-    from cadrumo.core.resources._boundary import bundled_path
+    from cadrumo.core.resources.bundled_data import bundled_path
     from cadrumo.domain.calculations.registry.loader import load_registry_tree
 
     modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))

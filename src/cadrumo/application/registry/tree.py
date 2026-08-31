@@ -22,7 +22,7 @@ from typing import NamedTuple
 from pydantic import BaseModel, NonNegativeInt
 
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.resources._boundary import bundled_path as _bundled_path
+from ...core.resources.bundled_data import bundled_path as _bundled_path
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority as _ValidatedRegistryAuthority
 from ...domain.calculations.registry.ids import ExportLayoutId as _ExportLayoutId
 from ...domain.calculations.registry.ids import LegalRefId as _LegalRefId

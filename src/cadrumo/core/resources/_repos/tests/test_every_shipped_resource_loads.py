@@ -29,7 +29,7 @@ from pathlib import Path
 
 import pytest
 
-from ....resources._boundary import bundled_path
+from ....resources.bundled_data import bundled_path
 from ..holiday_calendars import HolidayCalendarRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

@@ -27,7 +27,7 @@ from xml.etree.ElementTree import Element
 import pytest
 from defusedxml import ElementTree as DefusedElementTree
 
-from ....core.resources._boundary import bundled_path
+from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.export_parse import XmlDictionaryEntry, xml_dictionary_entries
 from ....tests.registry_tree import bundled_registry_tree
 from .._export_xml_dictionary import _modelo_100_sign_branch_value

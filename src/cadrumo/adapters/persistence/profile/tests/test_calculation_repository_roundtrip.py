@@ -398,7 +398,7 @@ def test_calculation_revision_catalogue_wrong_inner_classification_is_localized(
 ) -> None:
     """A corrupted envelope classification raises a translated persistence error."""
 
-    from ...storage.envelope._envelope import Envelope
+    from ...storage.envelope.contract import Envelope
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         envelope = Envelope[CalculationRevisionCatalogue](
@@ -432,7 +432,7 @@ def test_calculation_revision_catalogue_unsupported_storage_version_is_localized
 ) -> None:
     """A future inner envelope schema version raises a translated persistence error."""
 
-    from ...storage.envelope._envelope import Envelope
+    from ...storage.envelope.contract import Envelope
 
     stored_schema_version = _CALCULATION_CATALOGUE_VERSION + 1
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
@@ -467,7 +467,7 @@ def test_pre_s58_evidence_less_catalogue_is_rejected_at_encrypted_load(
 ) -> None:
     """The V2 cutover admits no evidence-less legacy calculation catalogue."""
 
-    from ...storage.envelope._envelope import Envelope
+    from ...storage.envelope.contract import Envelope
 
     original = next(iter(_populated_catalogue().values()))
     legacy_revision_id = derive_calculation_revision_id(

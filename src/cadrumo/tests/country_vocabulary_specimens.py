@@ -47,7 +47,7 @@ from pathlib import Path
 
 from pydantic import TypeAdapter
 
-from ..core.resources._boundary import bundled_path
+from ..core.resources.bundled_data import bundled_path
 
 __all__ = [
     "an_uncatalogued_alpha2",

@@ -1,7 +1,7 @@
 """Unit coverage for profile-activity approval-basis fingerprints.
 
 See Also:
-    :func:`~application.filing._review._profile_activity_fingerprint`
+    :func:`~application.filing.draft_review._profile_activity_fingerprint`
         Order-independent digest helper under test for relation-scoping profile
         facts.
     :func:`~application.filing.empty_profile_activity_fingerprint`
@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import pytest
 
-from .._review import _profile_activity_fingerprint, empty_profile_activity_fingerprint
+from ..draft_review import _profile_activity_fingerprint, empty_profile_activity_fingerprint
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

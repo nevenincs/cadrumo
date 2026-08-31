@@ -7,7 +7,7 @@ from datetime import date
 import pytest
 
 from .....core.authority_grade import RegistryAuthorityGrade
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from .._validate import RegistryValidator
 from ..schema import ModeloDefinition, RegistryCatalogues
 from ._registry_schema_support import _committed_modelo, _committed_snapshot

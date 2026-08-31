@@ -19,7 +19,7 @@ from pydantic import ValidationError
 
 from ...core.decimal.coercion import coerce_decimal
 from ...core.paths import path_stat_fingerprint
-from ...core.resources._boundary import bundled_path
+from ...core.resources.bundled_data import bundled_path
 from ...core.toml import read_toml
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from ._grounding import legal_ref_failures, registry_catalogues

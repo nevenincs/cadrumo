@@ -22,7 +22,7 @@ from pathlib import Path
 from pydantic import ValidationError
 
 from ...core.citation_grounding import CitationGrounding
-from ...core.resources._boundary import bundled_path
+from ...core.resources.bundled_data import bundled_path
 from ...core.toml import read_toml
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from ...core.validity_window import years_covered_by_every_group

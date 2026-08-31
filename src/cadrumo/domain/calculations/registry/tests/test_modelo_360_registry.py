@@ -6,7 +6,7 @@ from datetime import date
 
 import pytest
 
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from .._validate import RegistryValidator
 from ..schema import ModeloDefinition, RegistryCatalogues
 from ..snapshot import build_snapshot

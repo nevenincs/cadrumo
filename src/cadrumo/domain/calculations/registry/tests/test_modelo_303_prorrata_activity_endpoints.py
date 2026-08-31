@@ -16,7 +16,7 @@ from .....core.filing_projection_ref import (
 from .....core.i18n import tr
 from .....core.modelo import Modelo
 from .....core.prorrata_register import ProrrataActivityRowType, ProrrataRegisterRegime
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from .....domain.prorrata_register.register import ProrrataActivityRow, ProrrataRegister, ProrrataRegisterEntry
 from .._validate import RegistryValidator
 from ..corpus_catalogue import resolve_record_design_binary

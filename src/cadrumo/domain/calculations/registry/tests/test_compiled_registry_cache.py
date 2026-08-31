@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 
 from .....core.config import override_settings
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from .._compiled_cache import (
     CompiledRegistryPayload,
     _encode_frame,

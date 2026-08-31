@@ -28,7 +28,7 @@ from typing import Final
 import pytest
 
 from .....core.corpus_text import CorpusAnchorResolutionError, resolve_anchored_extracted_unit
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

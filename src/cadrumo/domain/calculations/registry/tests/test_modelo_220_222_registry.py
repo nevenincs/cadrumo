@@ -24,7 +24,7 @@ from typing import NamedTuple
 import pytest
 
 from .....core.authority_grade import RegistryAuthorityGrade
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from .._validate import RegistryValidator
 from ..authority import bundled_authority
 from ._registry_schema_support import _committed_modelo

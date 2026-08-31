@@ -11,13 +11,13 @@ import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
 from .._validate import RegistryValidator
 from ..authority import bundled_authority
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..ids import LegalRefId
-from ..ledger_bindings import (
+from ..ledger_oss_bindings import (
     OssIossLedgerObservation,
     resolve_ledger_oss_aggregation_binding_values,
 )

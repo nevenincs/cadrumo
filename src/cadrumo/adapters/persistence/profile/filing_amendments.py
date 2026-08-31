@@ -125,7 +125,7 @@ class ModeloAmendmentRepository:
                 amendment id than the key it is filed under.
         """
         from ..storage.crypto.encrypted_columns import secure_object_key_digest
-        from ..storage.envelope._envelope import Envelope
+        from ..storage.envelope.contract import Envelope
         from ..storage.errors import ClassificationError, EnvelopeVersionError, SecureObjectRowIdentityError
         from ..storage.schema_lineage import (
             inner_envelope_classification_is_expected,
@@ -172,7 +172,7 @@ class ModeloAmendmentRepository:
         The row is stored under
         :data:`adapters.persistence.storage.FILING_AMENDMENTS_NAMESPACE`.
         """
-        from ..storage.envelope._envelope import Envelope
+        from ..storage.envelope.contract import Envelope
         from ..storage.path_safety import safe_repository_id
 
         safe_repository_id(amendment.amendment_id, context="amendment_id")

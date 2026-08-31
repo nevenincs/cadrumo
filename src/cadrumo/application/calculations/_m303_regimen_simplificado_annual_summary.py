@@ -17,11 +17,13 @@ from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.modelo import Modelo
 from ...core.period import Period
-from ...core.resources._boundary import bundled_path
+from ...core.resources.bundled_data import bundled_path
 from ...domain.calculations.registry.authority import bundled_authority
-from ...domain.calculations.registry.bindings import m303_regimen_simplificado_annual_summary_requirement
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.loader import load_registry_tree
+from ...domain.calculations.registry.m303_regimen_simplificado_annual_summary_bindings import (
+    m303_regimen_simplificado_annual_summary_requirement,
+)
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.temporal import select_revision
 from ...domain.filing_evidence import FilingEvidenceReference

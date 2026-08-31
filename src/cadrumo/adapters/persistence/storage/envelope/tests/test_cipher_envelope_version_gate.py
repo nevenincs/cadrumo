@@ -47,7 +47,7 @@ from ......core.external_constants import UTF_8_ENCODING
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ...errors import ClassificationError, EnvelopeVersionError, StorageValidationError
 from ...master_key.bucket_session import BucketSession
-from .._envelope import (
+from ..contract import (
     CIPHER_ENVELOPE_SCHEMA_VERSION,
     AeadAlgorithm,
     CipherEnvelope,

@@ -942,7 +942,7 @@ def test_config_repair_report_marks_registry_integrity_internal() -> None:
     problem rather than a profile gap.
     """
 
-    from ...core.resources._boundary import bundled_path
+    from ...core.resources.bundled_data import bundled_path
 
     check = _registry_cross_domain_integrity_check(bundled_path("registry", "aeat"))
     # Healthy registry → ok + operator audience. A failing registry would

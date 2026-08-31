@@ -46,7 +46,7 @@ from ....tests.profile_capsule import open_test_profile_session, set_active_test
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from .._draft_construction import build_draft
-from .._review import (
+from ..draft_review import (
     ModeloApprovalStaleReason,
     approval_stale_reasons,
     approve_draft,

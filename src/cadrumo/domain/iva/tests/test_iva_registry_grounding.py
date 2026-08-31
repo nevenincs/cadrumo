@@ -45,7 +45,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core.resources._boundary import bundled_path
+from ....core.resources.bundled_data import bundled_path
 from ...calculations.registry.schema_references import LegalReference
 from .._grounding import registry_catalogues, verify_table_legal_refs
 from ..errors import IvaCatalogueError

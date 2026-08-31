@@ -58,7 +58,7 @@ from ....domain.calculations.registry.bindings import (
     resolve_available_bound_inputs_by_casilla_id,
 )
 from ....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
-from ....domain.calculations.registry.ledger_bindings import (
+from ....domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
     resolve_ledger_iva_aggregation_binding_values,
 )

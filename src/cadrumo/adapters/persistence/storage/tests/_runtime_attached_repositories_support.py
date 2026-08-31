@@ -34,8 +34,8 @@ from .....application.diagnostics import (
     preview_quarantine_unreadable_secure_objects,
     secure_object_unreadable_total,
 )
-from .....application.filing._history_models import ModeloHistory, ModeloHistoryEntry
-from .....application.filing._history_repository import ModeloHistoryRepository
+from .....application.filing.history_models import ModeloHistory, ModeloHistoryEntry
+from .....application.filing.history_repository import ModeloHistoryRepository
 from .....application.live.borrador_100 import (
     Borrador100Snapshot,
     Borrador100SnapshotRepository,
@@ -105,8 +105,8 @@ from .....domain.modelos.verification_report import (
     derive_verification_report_id,
 )
 from .....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
-from .....domain.submission._models import ModeloPresentado, SubmissionAttempt, SubmissionStatus, make_submission_id
 from .....domain.submission._protocols import ModeloDraftStatus
+from .....domain.submission.models import ModeloPresentado, SubmissionAttempt, SubmissionStatus, make_submission_id
 from .....domain.transactions.enums import TransactionDirection
 from .....domain.transactions.models import Transaction, TransactionCatalogue
 from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

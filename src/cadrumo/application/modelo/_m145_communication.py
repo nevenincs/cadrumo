@@ -30,7 +30,7 @@ from pydantic import BaseModel, Field
 
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.resources._boundary import bundled_path
+from ...core.resources.bundled_data import bundled_path
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.loader import load_registry_tree
 from ...domain.calculations.registry.temporal import select_revision

@@ -485,6 +485,10 @@ def test_public_loader_has_one_toml_parser_owner() -> None:
         _resolved_call_target(node.func, imported_aliases) for node in ast.walk(tree) if isinstance(node, ast.Call)
     }
 
+    # Defining modules, not package names: consumers import from the module that
+    # defines the symbol, and the core and registry package initialisers are inert
+    # namespace markers. Pinning the packages here would assert the facade shape
+    # the architecture forbids, and would stop naming which module owns the parser.
     assert imported_modules == {
         "__future__",
         "re",
@@ -492,8 +496,14 @@ def test_public_loader_has_one_toml_parser_owner() -> None:
         "pathlib",
         "typing",
         "pydantic",
-        "cadrumo.core",
-        "cadrumo.domain.calculations.registry",
+        "cadrumo.core.link_safety",
+        "cadrumo.core.filing_producer_key",
+        "cadrumo.core.toml",
+        "cadrumo.core.filing_projection_ref",
+        "cadrumo.core.directory_scan",
+        "cadrumo.domain.calculations.registry.errors",
+        "cadrumo.domain.calculations.registry.export_semantics",
+        "cadrumo.domain.calculations.registry.ids",
         "_semantic_map",
     }
     imported_names_by_module = {
@@ -501,26 +511,29 @@ def test_public_loader_has_one_toml_parser_owner() -> None:
         for node in import_from_nodes
         if node.module
         in {
-            "cadrumo.core",
-            "cadrumo.domain.calculations.registry",
+            "cadrumo.core.link_safety",
+            "cadrumo.core.filing_producer_key",
+            "cadrumo.core.toml",
+            "cadrumo.core.filing_projection_ref",
+            "cadrumo.core.directory_scan",
+            "cadrumo.domain.calculations.registry.errors",
+            "cadrumo.domain.calculations.registry.export_semantics",
+            "cadrumo.domain.calculations.registry.ids",
             "_semantic_map",
         }
     }
     assert imported_names_by_module == {
-        "cadrumo.core": {
-            "FilingProducerKey",
-            "compile_filing_projection_ref",
-            "freeze_toml",
-            "read_toml",
-            "iter_directory",
-        },
-        "cadrumo.domain.calculations.registry": {
+        "cadrumo.core.link_safety": {"is_link_like"},
+        "cadrumo.core.filing_producer_key": {"FilingProducerKey"},
+        "cadrumo.core.toml": {"freeze_toml", "read_toml"},
+        "cadrumo.core.filing_projection_ref": {"compile_filing_projection_ref"},
+        "cadrumo.core.directory_scan": {"iter_directory"},
+        "cadrumo.domain.calculations.registry.errors": {"RegistryValidationError"},
+        "cadrumo.domain.calculations.registry.export_semantics": {
             "ExportComputedKey",
             "ExportDraftAttribute",
-            "ModeloId",
-            "RegistryValidationError",
-            "SourceRefId",
         },
+        "cadrumo.domain.calculations.registry.ids": {"ModeloId", "SourceRefId"},
         "_semantic_map": {"VariableEnvelopeSemantic", "SemanticMap", "SemanticMapEntry", "SemanticMapRecord"},
     }
     assert direct_imports == {("re", None)}
@@ -529,21 +542,30 @@ def test_public_loader_has_one_toml_parser_owner() -> None:
         for target in called_targets
     )
     assert registry_facade.__all__ == [
+        "CANONICAL_FILING_EXPORT_CONFORMANCE_VECTORS",
         "SEMANTIC_MAP_FRAGMENT_SCHEMA_VERSION",
+        "CanonicalTwoChannelFilingExportProofAuthority",
         "EnvelopePrefixField",
         "EnvelopeTotalAnchor",
         "FilingEnvelopePrefixRole",
+        "FilingExportConformanceVector",
+        "FilingExportConformanceVectorBuilder",
+        "FilingExportLiveProofEntry",
+        "FilingExportOfficialOffsetProbe",
+        "LiveFilingExportProofAuthority",
         "SemanticMap",
         "SemanticMapAnchor",
         "SemanticMapEntry",
         "SemanticMapFragment",
         "SemanticMapRecord",
         "VariableEnvelopeSemantic",
+        "canonical_two_channel_filing_export_proof_authority",
         "load_semantic_map",
+        "verify_filing_export_payload_acceptance",
     ]
     assert registry_facade.load_semantic_map is load_semantic_map
-    assert called_targets & {"cadrumo.core.compile_filing_projection_ref"} == {
-        "cadrumo.core.compile_filing_projection_ref",
+    assert called_targets & {"cadrumo.core.filing_projection_ref.compile_filing_projection_ref"} == {
+        "cadrumo.core.filing_projection_ref.compile_filing_projection_ref",
     }
 
 

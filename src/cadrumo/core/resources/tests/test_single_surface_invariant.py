@@ -127,9 +127,10 @@ _FILE_WALK_RE = re.compile(
 _SANCTIONED_CHECKOUT_ROOT_OWNERS: frozenset[str] = frozenset[str]()
 """Deliberately empty: NO production module may reconstruct a repository root.
 
-This once exempted ``core/_config_state_root.py``, which classified the run as
-a checkout or an installed distribution by probing for ``pyproject.toml`` and
-``.git`` and anchored the taxpayer's encrypted store accordingly. That is gone:
+This once exempted the module now at ``core/config_state_root.py``, which then
+classified the run as a checkout or an installed distribution by probing for
+``pyproject.toml`` and ``.git`` and anchored the taxpayer's encrypted store
+accordingly. The behaviour is gone, though the module remains:
 the storage root is unconditionally the platform user-data directory, and a
 developer redirects it with ``CADRUMO_LOCAL_STORAGE_ROOT`` like any other
 operator override. A tax-filing product does not inspect the filesystem to work
@@ -184,8 +185,8 @@ def test_no_production_module_walks_out_of_the_package() -> None:
 def test_resources_package_re_exports_boundary() -> None:
     """The boundary functions stay accessible through the package init."""
 
-    from .._boundary import as_path, bundled_path, packaged_data
-    from .._registry import resources
+    from ..bundled_data import as_path, bundled_path, packaged_data
+    from ..registry import resources
 
     assert packaged_data is not None
     assert bundled_path is not None

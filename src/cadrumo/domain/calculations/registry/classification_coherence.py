@@ -71,7 +71,7 @@ from pydantic import BaseModel, Field, NonNegativeInt
 from ....core.modelo import NON_REGISTRY_MODELOS, Modelo
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.prose_elision import PROSE_ELISION_MARKER, elide_to_cap
-from ....core.resources._boundary import bundled_path
+from ....core.resources.bundled_data import bundled_path
 from ....core.tax_domain import TaxDomain
 from ._validate_revision_rules import validate_informative_class_invariant
 from .ids import ModeloId

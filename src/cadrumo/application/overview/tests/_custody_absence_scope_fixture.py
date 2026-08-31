@@ -10,8 +10,11 @@ tracked fixture does not expire.
 
 It carries one reach of each shape the gate distinguishes -- a module path into
 the shared-master package naming no retired symbol, and a retired provider name
-imported from the storage facade naming no module path -- so a scan that reaches
-this file also demonstrates both nets firing on real tracked source.
+reached as an attribute on the storage namespace, naming no module path -- so a
+scan that reaches this file also demonstrates both nets firing on real tracked
+source.  The provider reach is an attribute rather than an import on purpose:
+the name no longer exists, so an import of it would be a false claim about the
+tree and a genuine dangling edge for the import-edge integrity gate to report.
 
 Nothing imports this module and nothing calls what it defines.  The reaches are
 placed where they cannot execute, so the file is inert if it is ever imported.
@@ -26,9 +29,22 @@ if TYPE_CHECKING:
 
 
 def _never_called() -> object:
-    from ....adapters.persistence.storage import get_master_key_provider
+    """A retired provider name reached in the one form that stays true.
 
-    return get_master_key_provider
+    The name is gone from the tree, so importing it states something false
+    about the codebase: the statement could never execute, and the import-edge
+    integrity gate reads it -- correctly -- as a consumer left pointing at
+    nothing after a deletion landed without its sweep.  This file is not a
+    consumer; nothing imports it and nothing calls this.  It is evidence.
+
+    An attribute reach on the storage namespace says exactly what is meant, is
+    one of the shapes the custody detector distinguishes in its own right, and
+    remains an accurate reach after the symbol's removal rather than a broken
+    one.  Both gates then read this file as what it is.
+    """
+    from ....adapters.persistence import storage
+
+    return storage.get_master_key_provider
 
 
 def _annotated(session: BucketSession | None) -> object:

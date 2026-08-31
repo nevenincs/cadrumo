@@ -28,7 +28,7 @@ from __future__ import annotations
 import pytest
 
 from ....core.citation_grounding import CitationGrounding
-from ....core.resources._boundary import bundled_path
+from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.legal import legal_reference_quotes_corpus
 from ....domain.calculations.registry.loader import load_catalogue_file
 from ..proportionality import CategoryCitation

@@ -23,23 +23,23 @@ from cadrumo.application.filing._export_envelope import FilingEnvelopeRenderRequ
 from cadrumo.application.filing._projection import _project_record
 from cadrumo.application.filing.tests import test_m303_did_account_wire_isolated_authority as m303_did
 from cadrumo.application.filing.tests.test_producer_snapshot import _m303_exonerado_evidence
-from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
-from cadrumo.core.result_disposition import ResultDisposition
-from cadrumo.core.iva_deduction_fact import IvaDeductionFactKind
-from cadrumo.core.prorrata_register import (
-    ProrrataActivityRowType,
-    ProrrataProvisionalProvenance,
-    ProrrataRegisterRegime,
-    SectorDiferenciadoLetra,
-)
 from cadrumo.core.filing_projection_ref import (
     M303DifferentiatedDeductionProjectionRef,
     M303Exonerado390ActivityProjectionRef,
     M303ProrrataActivityProjectionRef,
     M303RegimenSimplificadoFact,
 )
+from cadrumo.core.iva_deduction_fact import IvaDeductionFactKind
 from cadrumo.core.period import Period
-from cadrumo.core.resources._boundary import bundled_path
+from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
+from cadrumo.core.prorrata_register import (
+    ProrrataActivityRowType,
+    ProrrataProvisionalProvenance,
+    ProrrataRegisterRegime,
+    SectorDiferenciadoLetra,
+)
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry._supplementary_orden import compile_supplementary_ordenes
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
@@ -57,7 +57,12 @@ from cadrumo.domain.iva.regimen_simplificado_rows import (
     RegimenSimplificadoFilingRows,
 )
 from cadrumo.domain.modelos.calculation_revision_m303_handoff import M303RegimenSimplificadoFilingEvidence
-from cadrumo.domain.prorrata_register.register import ProrrataActivityRow, ProrrataRegister, ProrrataRegisterEntry, SectorDefinition
+from cadrumo.domain.prorrata_register.register import (
+    ProrrataActivityRow,
+    ProrrataRegister,
+    ProrrataRegisterEntry,
+    SectorDefinition,
+)
 
 from ..pipeline._export_tree import render_complete_export_tree
 from ..pipeline._provenance_manifest import (

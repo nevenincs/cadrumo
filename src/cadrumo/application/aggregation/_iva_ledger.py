@@ -61,7 +61,7 @@ from ...core.prorrata_register import (
 from ...core.prose_elision import ElidedProse
 from ...domain.bienes_inversion.register import BienesInversionIvaRegister, validate_investment_asset_reciprocity
 from ...domain.calculations.registry.ids import BindingId
-from ...domain.calculations.registry.ledger_bindings import (
+from ...domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
     resolve_ledger_iva_aggregation_binding_values,
     unsupported_ledger_iva_observations,

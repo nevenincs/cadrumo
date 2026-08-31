@@ -42,8 +42,8 @@ from typing import ClassVar, Literal, override
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...adapters.persistence.storage.envelope._envelope import Envelope
-from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
+from ...adapters.persistence.storage.envelope.contract import Envelope
+from ...adapters.persistence.storage.envelope.secure_bound_repository import SecureBoundRepository
 from ...adapters.persistence.storage.path_safety import safe_repository_id
 from ...adapters.persistence.storage.secure_object_namespaces import (
     CALCULATION_OBSERVATIONS_NAMESPACE,
@@ -58,7 +58,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.observed_header_fact import ObservedHeaderFact
 from ...core.period import Period
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
-from ...core.resources._boundary import bundled_path
+from ...core.resources.bundled_data import bundled_path
 from ...core.result_disposition import ResultDisposition
 from ...core.secure_object_write import SecureObjectWrite
 from ...core.time.clock import now

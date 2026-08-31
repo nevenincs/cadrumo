@@ -43,7 +43,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now as _utc_now
 from ...domain.user_profile.values import ProfileSetupState, UserProfileRecord, new_profile_id
 from ..evidence._profile_legal_hold import try_record_legal_hold_snapshot
-from ..filing._profile_filing_retention import try_record_filing_retention_snapshot
+from ..filing.retention import try_record_filing_retention_snapshot
 from .capsule_record import ProfileRecordSession
 from .custody_ports import create_profile_custody_registration_material
 from .custody_service import ProfileCustodyDisplacedSessionRetirementError

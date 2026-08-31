@@ -20,7 +20,8 @@ from __future__ import annotations
 
 import pytest
 
-from ..record_design import _parse_pdf_row, extract_record_design
+from ..record_design import extract_record_design
+from ..record_design_pdf_rows import _parse_pdf_row
 from .test_every_bundled_design_is_read_or_reported import _bundled_designs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

@@ -12,7 +12,7 @@ from shutil import copyfile
 import pytest
 from pydantic import ValidationError
 
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from .....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from .._m303_orden_source import extract_m303_annual_orden_source
 from ..authority import bundled_authority

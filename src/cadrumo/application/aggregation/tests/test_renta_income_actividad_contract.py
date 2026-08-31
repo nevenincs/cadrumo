@@ -15,7 +15,9 @@ from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
-from ....domain.calculations.registry.ledger_bindings import resolve_ledger_renta_income_aggregation_binding_values
+from ....domain.calculations.registry.ledger_renta_income_bindings import (
+    resolve_ledger_renta_income_aggregation_binding_values,
+)
 from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition

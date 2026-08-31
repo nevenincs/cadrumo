@@ -21,7 +21,7 @@ from ....core.period import Period
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.product_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
 from ....core.refund_election import RefundElection
-from ....core.resources._boundary import bundled_path
+from ....core.resources.bundled_data import bundled_path
 from ....core.result_disposition import ResultDisposition
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister, RegistroRegularizacionResult
 from ....domain.calculations.export_field_kind import CasillaFieldKind
@@ -67,7 +67,7 @@ from ...aggregation import M303ProrrataTransitionArrival, M303SupplierRegimeArri
 from ...calculations._m303_regimen_simplificado import calculate_m303_regimen_simplificado_result
 from .._export import _filing_producer_values, _render_layout, export_draft, render_filing_envelope
 from .._export_envelope import FilingEnvelopeRenderRequest
-from .._producer_snapshot import (
+from ..producer_snapshot import (
     FilingElectionFacts,
     FilingProducerSnapshot,
     FilingProducerSnapshotError,

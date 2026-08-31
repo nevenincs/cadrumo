@@ -13,7 +13,7 @@ from ..core.foreign_asset_obligation import (
     obligation_groups_established_by_legal_refs,
 )
 from ..core.modelo import Modelo
-from ..core.resources._boundary import bundled_path
+from ..core.resources.bundled_data import bundled_path
 from ..core.revision_review import RevisionReviewStatus
 from ..domain.calculations.registry.errors import RegistryValidationError
 from ..domain.calculations.registry.formula_runtime_ops import resolve_parameter

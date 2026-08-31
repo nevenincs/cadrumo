@@ -195,7 +195,7 @@ class ModeloRecordCatalogueRepository:
                 its on-disk classification is not FINANCIAL, or if it was
                 written at a schema version newer than this consumer supports.
         """
-        from ..storage.envelope._envelope import Envelope
+        from ..storage.envelope.contract import Envelope
         from ..storage.errors import ClassificationError, EnvelopeVersionError
         from ..storage.schema_lineage import (
             inner_envelope_classification_is_expected,

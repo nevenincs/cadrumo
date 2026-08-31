@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from .....domain.contribuyente.deduccion_maternidad import compute_deduccion_maternidad_0611
 from .....tests.aeat_literal_fixtures import aeat_url, configured_path
 from .._validate import RegistryValidator

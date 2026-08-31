@@ -815,7 +815,7 @@ def build_diseno_coverage_report(
     # copied: a second literal would silently stop matching if the extractor
     # changed it, and `recovered_from_chart_geometry` would quietly go false for
     # every design instead of failing.
-    from .record_design import _VISUAL_CHART_TYPE_CODE
+    from .record_design_pdf_visual import _VISUAL_CHART_TYPE_CODE
 
     extracted_fields = sum(len(sheet.fields) for sheet in sheets)
     described_fields = sum(

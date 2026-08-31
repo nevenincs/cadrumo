@@ -26,7 +26,7 @@ from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.filing_record import ModeloRecord, derive_filing_record_id
 from ....domain.retention._floor import TAX_RECORD_RETENTION_FLOOR_YEARS
-from .._profile_filing_retention import FilingRetentionAuthority
+from ..retention import FilingRetentionAuthority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

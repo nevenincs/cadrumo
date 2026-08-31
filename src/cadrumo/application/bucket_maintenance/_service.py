@@ -14,7 +14,7 @@ from enum import StrEnum
 from pathlib import Path
 from uuid import UUID
 
-from ...application.filing._profile_filing_retention import FilingRetentionAuthority
+from ...application.filing.retention import FilingRetentionAuthority
 from ...core.hashing import CONTENT_DIGEST_PREFIX
 from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.time.clock import now

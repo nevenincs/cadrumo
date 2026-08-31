@@ -36,7 +36,7 @@ from ..errors.hierarchy import CadrumoError as _CadrumoError
 from ..external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ..models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..paths import file_stat_fingerprint as _file_stat_fingerprint
-from ..resources._boundary import bundled_path as _bundled_path
+from ..resources.bundled_data import bundled_path as _bundled_path
 
 _TOPIC_REGISTRY_ROOT = _bundled_path("registry", "aeat", "topics")
 

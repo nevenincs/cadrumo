@@ -472,7 +472,7 @@ def read_parameter(
     an unchanged tree resolve to the same compiled authority while an edited tree
     resolves to a new one.
     """
-    from ....core.resources._boundary import bundled_path
+    from ....core.resources.bundled_data import bundled_path
     from .authority import ValidatedRegistryAuthority
 
     source_root = bundled_path()

@@ -24,7 +24,7 @@ from ...domain.buckets.event import BucketEvent
 from ...domain.buckets.event_repository import append_bucket_event
 from .profile.buckets import BucketEventHistoryRepository
 from .storage.crypto.encrypted_columns import secure_object_key_digest
-from .storage.envelope._envelope import Envelope
+from .storage.envelope.contract import Envelope
 from .storage.errors import (
     ClassificationError,
     EnvelopeVersionError,

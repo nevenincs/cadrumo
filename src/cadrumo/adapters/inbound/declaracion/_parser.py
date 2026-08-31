@@ -35,7 +35,7 @@ from ....core.hashing import sha256_hex
 from ....core.identity import IdentityError, validate_spanish_tax_id
 from ....core.logging import get_logger
 from ....core.period import Period, is_administrative_period_token
-from ....core.resources._boundary import bundled_path
+from ....core.resources.bundled_data import bundled_path
 from ....core.text_fold import fold_diacritics
 from ....core.time.clock import now
 from ....domain.calculations.registry.authority import ValidatedRegistryAuthority

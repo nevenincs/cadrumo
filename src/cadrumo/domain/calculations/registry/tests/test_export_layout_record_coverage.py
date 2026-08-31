@@ -455,7 +455,7 @@ def test_an_unreachable_design_refuses_instead_of_passing(
 
 
 def _bundled_design_path(source: SourceReference):
-    from .....core.resources._boundary import resolve_corpus_binary
+    from .....core.resources.bundled_data import resolve_corpus_binary
 
     path = resolve_corpus_binary(*source.corpus_path.split("/"))
     assert path is not None, f"bundled design {source.id!r} is not resolvable"
@@ -700,7 +700,7 @@ def _every_declared_design_sheet(
     finish, so the fallback assertion passed its own emptiness check and then
     proved nothing.
     """
-    from .....core.resources._boundary import resolve_corpus_binary
+    from .....core.resources.bundled_data import resolve_corpus_binary
 
     sheets: list[RecordDesignSheet] = []
     for source in (

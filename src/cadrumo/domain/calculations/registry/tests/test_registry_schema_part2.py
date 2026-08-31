@@ -18,7 +18,7 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.period import Period
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from .._validate import RegistryValidator
 from ..errors import RegistryValidationError
 from ..schema import DeadlineWindowDefinition, ModeloRevision

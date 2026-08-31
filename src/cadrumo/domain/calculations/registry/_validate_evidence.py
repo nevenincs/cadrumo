@@ -18,7 +18,7 @@ from ....core.manual_corpus_sidecar import (
     MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX,
     ManualCorpusTextSidecar,
 )
-from ....core.resources._boundary import packaged_data, resolve_companion_binary
+from ....core.resources.bundled_data import packaged_data, resolve_companion_binary
 from ....core.storage_taxonomy import StorageCategory
 from ....core.storage_taxonomy_locations import storage_location, storage_path
 from .schema_base import SourceCitation

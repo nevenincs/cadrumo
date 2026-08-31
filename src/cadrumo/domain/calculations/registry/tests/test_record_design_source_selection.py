@@ -8,7 +8,7 @@ import inspect
 import pytest
 
 from .....core.hashing import hash_file
-from .....core.resources._boundary import bundled_path
+from .....core.resources.bundled_data import bundled_path
 from .. import corpus_catalogue as _corpus_catalogue
 from ..corpus_catalogue import resolve_record_design_binary
 from ..errors import RegistryValidationError

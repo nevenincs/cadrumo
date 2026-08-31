@@ -22,7 +22,7 @@ from ....core.period import FilingPeriodCode, RegistrySelectorPeriodCode
 from ._relation_aggregation import relation_aggregation_op
 from ._validate import RegistryValidator
 from .authority import ValidatedRegistryAuthority
-from .bindings import bound_casilla_binding_ids
+from .binding_targets import bound_casilla_binding_ids
 from .errors import RegistryValidationError
 from .ids import BindingId, LegalRefId, ModeloId, RelationId, RevisionId, SourceRefId
 from .iva_wallet_relation_targets import is_iva_wallet_owned_relation_target
