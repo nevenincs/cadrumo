@@ -15,10 +15,10 @@ from typing import Final, Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
-from cadrumo.core.link_safety import is_link_like
 from cadrumo.core.atomic_write import atomic_write_publish_once_bytes
 from cadrumo.core.directory_scan import iter_directory
 from cadrumo.core.hashing import canonical_json_bytes, content_hash_hex, hash_file
+from cadrumo.core.link_safety import is_link_like
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import (
     ModeloId,
@@ -85,7 +85,17 @@ _SEMANTIC_MAP_KEYS: Final[frozenset[str]] = frozenset(
     {"modelo", "design_epoch", "source_ref", "source_sha256", "records", "entries", "variable_envelopes"},
 )
 _SEMANTIC_MAP_RECORD_KEYS: Final[frozenset[str]] = frozenset(
-    {"sheet", "record_identity", "export_record_id", "record_type", "required", "repeat", "discriminator"},
+    {
+        "sheet",
+        "record_identity",
+        "export_record_id",
+        "record_type",
+        "required",
+        "repeat",
+        "binding_record",
+        "row_field_casilla_ids",
+        "discriminator",
+    },
 )
 _SEMANTIC_MAP_ENTRY_KEYS: Final[frozenset[str]] = frozenset(
     {
@@ -998,6 +1008,15 @@ def _normalise_semantic_map_record(payload: Mapping[str, object]) -> dict[str, o
     # attested; absence retains the previous canonical representation.
     if normalised_discriminator is not None:
         normalised["discriminator"] = normalised_discriminator
+    binding_record = payload["binding_record"]
+    if binding_record is not None:
+        normalised["binding_record"] = _as_string(binding_record, subject="semantic-map record binding_record")
+    row_field_casilla_ids = _as_sorted_string_pairs(
+        payload["row_field_casilla_ids"],
+        subject="semantic-map record row_field_casilla_ids",
+    )
+    if row_field_casilla_ids:
+        normalised["row_field_casilla_ids"] = row_field_casilla_ids
     return normalised
 
 
@@ -1117,6 +1136,21 @@ def _as_object(value: object, *, subject: str) -> Mapping[str, object]:
             raise RegistryValidationError(f"{subject} schema drift: expected string object keys")
         result[raw_key] = raw_value
     return result
+
+
+def _as_sorted_string_pairs(value: object, *, subject: str) -> list[list[str]]:
+    """Project a carried mapping (dumped as two-element pairs) in a stable order."""
+    if not isinstance(value, list):
+        raise RegistryValidationError(f"{subject} schema drift: expected pair array")
+    pairs: list[list[str]] = []
+    for item in cast(list[object], value):
+        if not isinstance(item, list):
+            raise RegistryValidationError(f"{subject} schema drift: expected two-element pairs")
+        members = cast(list[object], item)
+        if len(members) != 2:
+            raise RegistryValidationError(f"{subject} schema drift: expected two-element pairs")
+        pairs.append([_as_string(members[0], subject=subject), _as_string(members[1], subject=subject)])
+    return sorted(pairs)
 
 
 def _as_object_list(value: object, *, subject: str) -> list[Mapping[str, object]]:

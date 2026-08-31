@@ -8,13 +8,14 @@ references nor matches a semantic entry to parser output.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator, model_validator
 
+from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.filing_producer_key import FilingProducerKey
 from cadrumo.core.filing_projection_ref import FilingProjectionRef, hydrate_filing_projection_ref
-from cadrumo.core.casilla_id import CasillaId
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKindValue
 from cadrumo.domain.calculations.registry.export_semantics import (
     ExportComputedKey,
@@ -284,6 +285,19 @@ class SemanticMapEntry(_StrictModel):
         return self
 
 
+def _coerce_row_field_casilla_ids(value: object) -> object:
+    """Carry an authored casilla mapping as sorted pairs.
+
+    The record is frozen and hashed -- ``_export_tree`` proves the join is total
+    by comparing a ``frozenset`` of records -- so a ``Mapping`` member would make
+    it unhashable. Sorted pairs are hashable and make equality and hash
+    independent of the order the mapping was authored in.
+    """
+    if isinstance(value, Mapping):
+        return tuple(sorted((str(key), item) for key, item in value.items()))
+    return value
+
+
 class SemanticMapRecord(_StrictModel):
     """Reviewed semantic identity for one exact parser record.
 
@@ -297,7 +311,17 @@ class SemanticMapRecord(_StrictModel):
     export_record_id: RecordId
     record_type: str = Field(min_length=1)
     required: bool = True
-    repeat: Literal["projection_rows"] | None = None
+    repeat: Literal["binding_rows", "projection_rows"] | None = None
+    binding_record: str | None = None
+    """The record whose binding rows this record repeats over, when ``repeat`` is
+    ``binding_rows``. Carried unchanged into generated output; the generator does
+    not derive or interpret it."""
+    row_field_casilla_ids: Annotated[
+        tuple[tuple[str, CasillaId], ...],
+        BeforeValidator(_coerce_row_field_casilla_ids),
+    ] = ()
+    """Reviewed per-row casilla identities for a ``binding_rows`` record, authored
+    as a mapping and carried as sorted pairs so the frozen record stays hashable."""
     discriminator: RecordDiscriminator | None = None
     """Reviewed runtime record-shape fact, carried unchanged into generated output.
 
