@@ -6,11 +6,7 @@ from collections.abc import Mapping
 
 import pytest
 
-from cadrumo.application.operator_actions import (
-    OPERATOR_ACTION_CATALOGUE,
-    ActionCatalogueEntry,
-    build_action_catalogue,
-)
+from cadrumo.application.operator_actions._catalogue import ActionCatalogueEntry, OPERATOR_ACTION_CATALOGUE, build_action_catalogue
 from cadrumo.application.operator_surface.errors import OperatorSurfaceContractError
 from cadrumo.core.json_contract import Notice
 from cadrumo.entrypoints.cli.command_api import (

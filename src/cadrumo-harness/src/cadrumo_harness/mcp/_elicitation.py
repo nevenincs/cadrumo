@@ -30,7 +30,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from cadrumo.core.i18n import tr
+from cadrumo.core.i18n._render import tr
 
 from ._command_policy import CommandPolicyProjection
 from ._command_policy import command_policy as descriptor_command_policy

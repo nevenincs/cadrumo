@@ -20,11 +20,7 @@ from typing import Any, override
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from cadrumo.application.operator_actions import (
-    OPERATOR_ACTION_CATALOGUE,
-    ActionArgumentBindingSpecification,
-    ActionCatalogue,
-)
+from cadrumo.application.operator_actions._catalogue import ActionArgumentBindingSpecification, ActionCatalogue, OPERATOR_ACTION_CATALOGUE
 from cadrumo.application.operator_surface.manifest import (
     CommandSchemaRef,
     InputSchemaInventoryRow,

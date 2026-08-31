@@ -50,11 +50,11 @@ from pathlib import Path
 import pytest
 from mcp.server import Server
 
-from cadrumo.adapters.persistence.storage import master_key
+from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.user_profile.login_session import close_profile_session_artefacts
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.core.config import DEV_TEST_DATABASE_PASSWORD
-from cadrumo.tests import temporary_env
+from cadrumo.tests._env import temporary_env
 from cadrumo.tests.profile_persistence import composed_profile_persistence_ports
 
 from .._call_runtime import tier_for
@@ -227,7 +227,7 @@ def _provisioned_profile_env(tmp_path: Path) -> Iterator[None]:
         try:
             yield
         finally:
-            master_key.close_active_bucket_session()
+            close_active_bucket_session()
             clear_profile_secret()
 
 
