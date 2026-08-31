@@ -33,4 +33,3 @@ Commit `da44af7946219213037317cd92afcfa003561cca` changes only the S126 executio
 No additional P05.S126 corrective work is required.
 
 The source extraction is otherwise sound: all 38 resolver namespace keys remain present, `_natural_key_resolvers` retains its private aggregation role, the four split helpers are private implementation details rather than a new facade, and the public custody port continues to call only `collect_profile_custody_carry` and `restore_profile_custody_carry`. The referenced tests use real encrypted SQLite adapters and cover bound-resolver/rekey behaviour. The target measures 545 lines, below the 1,250 ceiling; neither source commit changes `dev/audit/size_budget_baseline.json`. The companion changes only the generated CI-lane feature index, adding current S120 through S126 records and their audits.
-

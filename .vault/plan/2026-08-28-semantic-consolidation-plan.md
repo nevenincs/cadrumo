@@ -9,7 +9,7 @@ related:
   - '[[2026-08-28-semantic-consolidation-cli-payload-projection-adr]]'
 modified: '2026-08-31'
 body_schema: body-v2
-body_hash: 'sha256:6789aaff0d0473d8f874c118f0bd5ebb783e56216ed4a96b9e508011819333ea'
+body_hash: 'sha256:c460290307ddf0489ee411fceea74ab4095ad7117c31fddd2d81ae7d4979ce6d'
 ---
 
 # `semantic-consolidation` plan
@@ -83,6 +83,8 @@ Six package namespaces carry a PEP 562 __getattr__ resolver, four of them byte-i
 - [x] `P02.S147` - Type the constraint comparison so it stops reporting stringified decimals as disagreements, then consolidate the currency policies it exposes and gate the field class so the fifth one cannot land; `src/cadrumo/domain/invoices/models.py, src/cadrumo/domain/modelos/ledger_filing_snapshot.py, src/cadrumo/application/, src/cadrumo/core/tests/test_currency_fields_use_one_annotation.py`.
 - [x] `P02.S148` - Adopt the UTC instant annotation at the three payloads that dropped an aware-timestamp guarantee their record makes; `src/cadrumo/entrypoints/cli/_config_bucket_history_payloads.py, src/cadrumo/entrypoints/cli/_ledger_rule_payloads.py, src/cadrumo/entrypoints/cli/_modelo_payloads.py`.
 - [x] `P02.S149` - Census the rate scales, clear the unbounded evidence-draft rate as taxonomy-bounded rather than unguarded, and make the inventory wire bounds read the scale constants instead of respelling them; `src/cadrumo/entrypoints/cli/_ledger_business_payloads.py`.
+- [x] `P02.S150` - Gate the country-code field class, and fix the key collision that made both class gates blind to every field name a module declares more than once; `src/cadrumo/core/tests/test_country_code_fields_use_one_annotation.py, src/cadrumo/core/tests/test_currency_fields_use_one_annotation.py, src/cadrumo/domain/calculations/registry/donativo_bindings.py, src/cadrumo/application/modelo/operation_definitions.py`.
+- [x] `P02.S151` - Close the three currency sites the collision had been hiding, including a patch command that accepted a currency its own create command refuses; `src/cadrumo/application/ledger/models.py, src/cadrumo/entrypoints/cli/_ledger_payloads.py`.
 
 ### Phase `P03` - Consolidate the repeated secure-repository configuration shape
 
