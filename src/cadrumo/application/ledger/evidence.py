@@ -63,12 +63,14 @@ from ...adapters.persistence.storage import (
     secure_object_repository_for_bucket,
 )
 from ...core import Hex64Str
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.config import Settings
 from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import PDF_EXTENSION, PDF_MIME_TYPE, XML_MIME_TYPE
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId, ContentDigest
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.percentage import Percentage
+from ...core.text_bounds import NonNegativeDecimal
 from ...core.time import now as _utc_now
 from ...domain.attachments.enums import AttachmentKind, AttachmentSource
 from ...domain.attachments.service import AttachmentFileContent, AttachmentIngestionRequest, add_attachment
@@ -150,9 +152,15 @@ class PurchaseInvoiceEvidence(BaseModel):
     supplier: str | None = None
     invoice_number: str | None = None
     invoice_date: str | None = None
-    taxable_base: Decimal | None = None
-    iva_rate: Decimal | None = None
-    iva_amount: Decimal | None = None
+    # Bounded, because these three are not display-only. The reconciliation
+    # projection in application/aggregation/_renta_ledger.py copies
+    # ``taxable_base`` and ``iva_amount`` off this record into a renta
+    # deductible-expense observation, so a negative figure persisted here
+    # reaches a deduction. Both this record and its patch took ANY Decimal:
+    # -5 and 210 were accepted and echoed back to the operator as meaningful.
+    taxable_base: NonNegativeDecimal | None = None
+    iva_rate: Percentage | None = None
+    iva_amount: NonNegativeDecimal | None = None
     notes: str = ""
     created_at: datetime
     updated_at: datetime
@@ -344,9 +352,9 @@ class PurchaseInvoiceEvidencePatch(BaseModel):
     supplier: str | None = None
     invoice_number: str | None = None
     invoice_date: str | None = None
-    taxable_base: Decimal | None = None
-    iva_rate: Decimal | None = None
-    iva_amount: Decimal | None = None
+    taxable_base: NonNegativeDecimal | None = None
+    iva_rate: Percentage | None = None
+    iva_amount: NonNegativeDecimal | None = None
     notes: str | None = None
 
 
