@@ -5,7 +5,7 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:400144672d3e4fc1a228e8e98a61ec58014e1d9af0e334ba9da4b17a9f89c4c4'
+body_hash: 'sha256:06df6ff3b3bd476480d3f63daaf1f0b262056162d45eb34f8bdfdf3e8beb10c4'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
   - '[[2026-08-10-aeat-export-fragment-generator-authority-s08-authority-gap-research]]'

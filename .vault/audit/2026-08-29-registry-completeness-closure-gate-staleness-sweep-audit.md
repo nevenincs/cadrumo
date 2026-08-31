@@ -5,7 +5,7 @@ tags:
 date: '2026-08-29'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:a1517ce79ad9a71f5c28ffb50b27a5fe608e8e9cf5b9ed3cdaa843e0f1efa987'
+body_hash: 'sha256:9700928d6190a48f370b0d18c223f55d78e1f7a37ae7f0f767dacf09dbd1142b'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
@@ -1023,3 +1023,37 @@ a module by path fragment can remove its test file, its variants, and anything
 whose name embeds it -- and the loss is silent, because a filter that removes
 too much looks exactly like a search that found little. Anchor the exclusion
 (`^dev/registry/pipeline/_tree_publication.py:`) or exclude by an exact path.
+
+## Phase 1: grounding the AD-HOC adjudication against the bundled orden
+
+The modelo 308 ADR rested on a quotation. Checked against the corpus rather than
+recollection: the clause is verbatim in
+`corpus/normatives/html/orden-eha-1033-2011.html` under `Disposición final
+única. Entrada en vigor`, and the orden is registered at provision granularity
+(`orden-eha-1033-2011:disposicion-final-unica`, `:articulo-unico`), so the
+citation is a real authority rather than a reference to one.
+
+The stronger evidence is a NEGATIVE. Across the whole 1,971-word orden the word
+*ejercicio* occurs **zero** times, while *anexo II* occurs four times and *308*
+twelve. The document extracted properly and is unmistakably the right one; it
+simply carries no ejercicio-keyed applicability formula anywhere. So the claim
+is not merely "this clause states a date rather than an ejercicio" but "the
+governing instrument contains no ejercicio at all to key a revision on".
+
+The same orden then supplies affirmative support for the axis the ADR adds: its
+refund provision runs the deadline from the operation -- "en el plazo de tres
+meses desde que se haya realizado la entrega de bienes que origina el derecho a
+la devolución". The law already keys this modelo's obligations to the event
+date, so an AD-HOC work target carrying its operation date restates something
+the orden relies on rather than inventing an axis.
+
+### Lesson
+
+A positive citation proves a clause exists; it does not prove the alternative
+reading is absent. Where a decision turns on which axis the law keys to, the
+decisive measurement is the ABSENCE of the rival key across the whole
+instrument, and that is only credible with the extraction sanity-checked --
+word count, plus a control term you expect to find. Zero occurrences of
+*ejercicio* means little on its own; zero *ejercicio* beside twelve *308* and
+four *anexo II*, in 1,971 extracted words, means the search worked and the term
+is genuinely not there.

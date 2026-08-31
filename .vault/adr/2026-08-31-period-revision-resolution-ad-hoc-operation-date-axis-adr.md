@@ -5,7 +5,7 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:fbae7524ecd0f722714a23c3944439783a594844734a0dc79e8685df2270ede2'
+body_hash: 'sha256:96cd58218a39b7a05e2dd00ad8ca5bb7b8436c73cd8b2ebfff3eae8d1a6c1942'
 related:
   - "[[2026-06-10-period-revision-resolution-adr]]"
   - '[[2026-06-10-period-revision-resolution-research]]'
@@ -41,6 +41,27 @@ which substitutes anexo II of Orden EHA/3786/2008, says only:
 That is materially different from the `"aplicable, por primera vez, a las
 declaraciones correspondientes al ejercicio YYYY"` formula that governs the annual
 informativas. There is no ejercicio in this clause to key a revision on.
+
+Checked against the bundled corpus rather than recollection. The clause is verbatim
+in `corpus/normatives/html/orden-eha-1033-2011.html`, under `Disposición final única.
+Entrada en vigor`, and the stronger fact is a negative: across the whole
+1,971-word orden the word *ejercicio* occurs **zero** times, while *anexo II*
+occurs four times and *308* twelve. The governing instrument carries no
+ejercicio-keyed applicability formula anywhere, so there is nothing in it a
+revision could be keyed on except the date.
+
+The same orden supplies affirmative support for the axis this ADR adds. Its
+refund provision runs the deadline from the operation itself -- "en el plazo de
+tres meses desde que se haya realizado la entrega de bienes que origina el
+derecho a la devolución" -- so the law already keys this modelo's obligations to
+the event date. An AD-HOC work target carrying its operation date restates a
+fact the governing orden relies on; it does not invent an axis.
+
+On the call-site count: 30 production call sites reach `select_revision`, and the
+4 passing `on=` are all registry-internal pass-throughs (`authority.py`,
+`_snapshot_internals.py`). Every application-layer site -- prefill, calculate
+input, work review, projection, data inventory -- resolves without a date, so no
+application path could supply one today even if the registry asked.
 
 Modelo 308 is filed AD-HOC — one declaration per settlement event, as the operation
 occurs — and `AD-HOC` is its only period token. A period token carries no month, so
