@@ -157,11 +157,7 @@ def _producer_sites() -> list[tuple[str, set[str], str]]:
             continue
         module = ast.parse(path.read_text(encoding="utf-8"))
         for node in ast.walk(module):
-            if not (
-                isinstance(node, ast.Call)
-                and isinstance(node.func, ast.Name)
-                and node.func.id == _FINDING_CLASS
-            ):
+            if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == _FINDING_CLASS):
                 continue
             locale_key: str | None = None
             facts: ast.expr | None = None
