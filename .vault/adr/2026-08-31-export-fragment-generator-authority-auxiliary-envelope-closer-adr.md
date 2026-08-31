@@ -5,7 +5,7 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:6e6ca6cba398a87d4c2c70493b601e991c2870446081df2357cdc0fd5c572077'
+body_hash: 'sha256:2bc6048fe414795338f8907bce1bb6e39b753f977abd24b878fe22927c2d4513'
 related:
   - "[[2026-08-31-export-fragment-generator-authority-auxiliary-envelope-classification-research]]"
   - "[[2026-08-28-registry-narrow-mechanism-widening-adr]]"
@@ -35,10 +35,16 @@ troubling than a missing feature.
   structure. Read directly from the two bundled workbooks, the only differences are
   capitalisation (`Variable` against `variable`, `Total` against `TOTAL`) and the year
   placeholder (`AAAA` against `EEEE`). Modelo 303 emits the closer today.
-- `record_design.py:1894` tests `raw_length == "Variable"` exactly, and `:1853` tests the
-  same for the total. Neither folds case. When the body marker fails to register, the
-  variable-envelope branch returns immediately and the sheet falls through to the
-  auxiliary-envelope-header branch, which is closer-less and total-less by construction.
+- `record_design_workbook.py:258` tests `raw_length == "Variable"` exactly, and `:217`
+  tests the same token for the total. Neither folds case. When the body marker fails to
+  register, the variable-envelope branch returns immediately and the sheet falls through
+  to the auxiliary-envelope-header branch, which is closer-less and total-less by
+  construction.
+- Those two comparisons were cited as `record_design.py:1894` and `:1853` when this
+  record was drafted. The module was split on 2026-08-31 and they now live in
+  `record_design_workbook.py`, re-verified there by reading both call sites. The
+  behaviour is unchanged; only the locations moved. Confirm against the live file rather
+  than the line numbers, which this campaign has already moved twice.
 - So the auxiliary-envelope-header shape is not a second AEAT record shape. It is the
   same envelope reached by a different branch because AEAT typed one cell in lower case.
   The branch's docstring calls the shape total-less, yet Modelo 390 does declare a total
@@ -83,7 +89,7 @@ troubling than a missing feature.
 
 ## Implementation
 
-Correct the case comparison at `record_design.py:1853` and `:1894` so the design
+Correct the case comparison at `record_design_workbook.py:217` and `:258` so the design
 vocabulary is recognised as AEAT spells it. This admits no new shape: the same token is
 recognised under a different capitalisation. A regression must prove exactly that, by
 asserting Modelo 390 and Modelo 232 classify as variable envelopes with their closers
@@ -98,6 +104,15 @@ covers `EEEE`, and the pattern simply predates the evidence.
 Republish the affected trees through `check_generated_export_tree` and
 `publish_validated_generated_export_tree`, never by hand. Both Modelo 232 revisions emit
 the closer after this change, so both published trees are regenerated.
+
+Modelo 390's 2022 tree is a special case discovered on 2026-08-31 and it changes the
+sequencing. That revision is enrolled in the generated-tree gate but has never been
+published, so its gate is red today with the message that the fresh render succeeds and
+only publication is missing. Publishing it before this record is accepted would mint a
+third published tree carrying the very omission this record exists to correct, and would
+then require immediate republication. Accept or reject the closer question first, then
+publish 390 once, with whatever bytes the ruling produces. The red gate is telling the
+truth in the meantime and must not be silenced by publishing.
 
 Keep `_m390_auxiliary_envelope.py` until that republication is verified. It is superseded
 and byte-identical to the live pair, but it is the one module that renders page zero from
