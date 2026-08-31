@@ -14,13 +14,13 @@ monkeypatch.
 See Also:
     :func:`~entrypoints.cli._ledger_evidence_cli._register_evidence_extract_command`
         CLI command registration exercised by these Typer regressions.
-    :func:`~application.ledger.evidence_draft.extract_invoice_draft_from_evidence`
+    :func:`~application.ledger.invoice_draft_extraction.extract_invoice_draft_from_evidence`
         CLI-facing resolver that loads stored bytes and returns the draft.
     :func:`~application.ledger.evidence_textlayer.transcribe_text_layer`
         Acquisition-stage primitive reached by the text-native happy path.
     :class:`~application.ledger.invoice_draft_records.InvoiceDraft`
         Reviewable, non-persisted payload asserted by the command output.
-    :func:`~application.ledger.evidence_draft.confirm_invoice_draft_from_evidence`
+    :func:`~application.ledger.invoice_confirmation.confirm_invoice_draft_from_evidence`
         Follow-on review step that turns a draft into a catalogue invoice.
 
 Evidence reading stays local-first and secure-storage-only: nothing decrypted

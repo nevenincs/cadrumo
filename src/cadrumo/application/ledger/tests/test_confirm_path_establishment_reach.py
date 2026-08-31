@@ -11,7 +11,7 @@ that is the property this module exists to hold.
 **So every case here drives the real confirm.** Bytes are written through the
 real encrypted evidence service, read back by the real extraction the CLI
 invokes, and handed to
-:func:`~application.ledger.evidence_draft.confirm_invoice_draft_from_evidence` --- the function
+:func:`~application.ledger.invoice_confirmation.confirm_invoice_draft_from_evidence` --- the function
 the ``aeat app ledger evidence confirm`` verb calls. Nothing constructs a draft,
 calls the ladder, or assembles criteria directly. A case that did would be
 green in exactly the state this module was written to detect.
@@ -49,7 +49,7 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.config import Settings
 from ....domain.iva.classification import InvoiceKind, IvaTerritorialScope
 from ..establishment_ladder import EstablishmentRung
-from ..evidence_draft import confirm_invoice_draft_from_evidence
+from ..invoice_confirmation import confirm_invoice_draft_from_evidence
 from ._evidence_test_support import _BUCKET_ID, _make_svc
 from ._evidence_test_support import runtime_profile as runtime_profile
 from ._evidence_test_support import seeded_filer_profile as seeded_filer_profile

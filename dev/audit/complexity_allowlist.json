@@ -150,11 +150,11 @@
         "reason": "flat guard/dispatch chain, max nesting depth 2; long but linear, never regressed from baseline",
         "score": 12
       },
-      "src/cadrumo/application/ledger/evidence_draft.py::_confirmed_lines_from_the_document": {
+      "src/cadrumo/application/ledger/confirmed_field_resolution.py::_confirmed_lines_from_the_document": {
         "reason": "flat guard/dispatch chain, max nesting depth 2; long but linear, never regressed from baseline",
         "score": 11
       },
-      "src/cadrumo/application/ledger/evidence_draft.py::extract_invoice_draft_from_evidence": {
+      "src/cadrumo/application/ledger/invoice_draft_extraction.py::extract_invoice_draft_from_evidence": {
         "reason": "flat guard/dispatch chain, max nesting depth 2; long but linear, never regressed from baseline",
         "score": 12
       },

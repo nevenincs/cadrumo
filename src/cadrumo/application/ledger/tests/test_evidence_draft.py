@@ -10,10 +10,10 @@ See Also:
         Public reviewed-draft record returned before any invoice is persisted.
     :func:`~application.ledger.evidence_textlayer.transcribe_text_layer`
         Acquisition-stage primitive that refuses a document with no text layer.
-    :func:`~application.ledger.evidence_draft.extract_invoice_draft_from_evidence`
+    :func:`~application.ledger.invoice_draft_extraction.extract_invoice_draft_from_evidence`
         CLI-facing resolver that reads stored evidence bytes from secure storage
         and chooses text-layer or on-host vision extraction.
-    :func:`~application.ledger.evidence_draft.confirm_invoice_draft_from_evidence`
+    :func:`~application.ledger.invoice_confirmation.confirm_invoice_draft_from_evidence`
         Confirmation step that re-extracts, applies overrides, and delegates the
         catalogue write.
     :func:`~application.invoices.create_catalogue_invoice`
@@ -35,7 +35,7 @@ from PIL import Image
 from pydantic import ValidationError
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ....adapters.persistence.storage import AttachmentStore
+from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.config import Settings
 from ....core.directory_scan import scan_directory
@@ -48,10 +48,11 @@ from ....tests.llm_vision_evidence_support import _json_array, _run_against_loop
 from ....tests.pdf_fixtures import text_pdf_bytes
 from ....tests.profile_capsule import seed_test_profile_record
 from ..evidence import MediaKind
-from ..evidence_draft import confirm_invoice_draft_from_evidence, extract_invoice_draft_from_evidence
 from ..evidence_errors import PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceNotFoundError
 from ..evidence_input import EvidenceInput
 from ..evidence_textlayer import transcribe_text_layer
+from ..invoice_confirmation import confirm_invoice_draft_from_evidence
+from ..invoice_draft_extraction import extract_invoice_draft_from_evidence
 from ..invoice_draft_records import InvoiceDraft
 from ..preconditions import LedgerPreconditionCondition
 from ._evidence_test_support import _BUCKET_ID, _make_svc

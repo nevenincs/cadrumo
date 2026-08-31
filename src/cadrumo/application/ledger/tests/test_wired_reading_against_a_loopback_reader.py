@@ -33,9 +33,9 @@ from typing import ClassVar, override
 
 import pytest
 
+from ....core.config import load_settings, override_settings
 from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.field_grounding import FieldGroundingOutcome
-from ....core.config import load_settings, override_settings
 from ....tests.loopback_llm import (
     SilentLoopbackHandler,
     ollama_chat_reply,
@@ -43,9 +43,9 @@ from ....tests.loopback_llm import (
     serving_loopback,
     write_json_response,
 )
-from ..evidence_draft import _read_transcription_semantically
 from ..evidence_input import EvidenceInput
 from ..evidence_textlayer import transcribe_text_layer
+from ..invoice_draft_extraction import _read_transcription_semantically
 from ._loopback_reader import READING_RUNTIME_MODEL
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

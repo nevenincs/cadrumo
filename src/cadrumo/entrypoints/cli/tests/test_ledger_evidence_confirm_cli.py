@@ -41,11 +41,11 @@ nor a document, and that is tracked as its own row rather than absorbed here.
 See Also:
     :func:`~entrypoints.cli._ledger_evidence_cli._run_evidence_confirm`
         CLI command runner exercised by these real Typer tests.
-    :func:`~application.ledger.evidence_draft.confirm_invoice_draft_from_evidence`
+    :func:`~application.ledger.invoice_confirmation.confirm_invoice_draft_from_evidence`
         Application service that re-extracts, applies overrides, and writes.
-    :class:`~application.ledger.evidence_draft.InvoiceConfirmationResult`
+    :class:`~application.ledger.invoice_confirmation.InvoiceConfirmationResult`
         Result payload whose created/idempotent branches are asserted here.
-    :func:`~application.ledger.evidence_draft.extract_invoice_draft_from_evidence`
+    :func:`~application.ledger.invoice_draft_extraction.extract_invoice_draft_from_evidence`
         On-host evidence reader reused by the confirm path.
     :func:`~application.invoices.create_catalogue_invoice`
         Sole sanctioned catalogue writer reached by confirmed drafts.

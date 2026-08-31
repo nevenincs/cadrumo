@@ -15,15 +15,12 @@ from ...application.ledger.evidence import (
     PurchaseInvoiceEvidencePatch,
     PurchaseInvoiceEvidenceService,
 )
-from ...application.ledger.evidence_draft import (
-    InvoiceConfirmationResult,
-    confirm_invoice_draft_from_evidence,
-    extract_invoice_draft_from_evidence,
-)
+from ...application.ledger.invoice_confirmation import InvoiceConfirmationResult, confirm_invoice_draft_from_evidence
+from ...application.ledger.invoice_draft_extraction import extract_invoice_draft_from_evidence
 from ...application.user_profile.capabilities import cloud_evidence_upload_eligible_for_active_profile
 from ...core.aggregation import IntracomOperationType
 from ...core.config import load_settings
-from ...core.i18n import tr
+from ...core.i18n._render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.invoices.enums import InvoiceClass
 from ...domain.invoices.errors import InvoiceValidationError
@@ -60,7 +57,8 @@ class _InvoiceClassKwarg(TypedDict, total=False):
 
 def _attachment_store(bucket_id: str):
     """Build the active bucket's encrypted attachment repository."""
-    from ...adapters.persistence.storage import AttachmentStore, secure_object_repository_for_bucket
+    from ...adapters.persistence.storage.attachment import AttachmentStore
+    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 
     return AttachmentStore(objects=secure_object_repository_for_bucket(bucket_id, load_settings()))
 

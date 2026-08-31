@@ -48,7 +48,7 @@ from ...core.identity import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from ...domain.iva.classification import InvoiceKind
-from ..operator_actions import PreconditionVerdict
+from ..operator_actions._models import PreconditionVerdict
 from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 
 if TYPE_CHECKING:
@@ -367,7 +367,7 @@ def _reads_without_a_model(data: bytes) -> bool:
     may then need one after all; that is the conservative direction, because the
     cost is a refusal the operator sees rather than a model load nobody admitted.
     """
-    from ...adapters.inbound.einvoice import probe_document_shape
+    from ...adapters.inbound.einvoice._shape import probe_document_shape
     from ...core.document_shape import STRUCTURED_DOCUMENT_SHAPES
 
     return probe_document_shape(data) in STRUCTURED_DOCUMENT_SHAPES
@@ -587,8 +587,8 @@ def run_evidence_batch(
     from ...core.config import load_settings as _load_settings
     from ...core.hashing import sha256_hex
     from .evidence import PurchaseInvoiceEvidenceService
-    from .evidence_draft import extract_invoice_draft_from_evidence
     from .extraction_draft_store import read_extraction_draft, write_extraction_draft
+    from .invoice_draft_extraction import extract_invoice_draft_from_evidence
 
     resolved_settings = settings or _load_settings()
     service = PurchaseInvoiceEvidenceService(

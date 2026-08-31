@@ -41,9 +41,9 @@ from typing import ClassVar, override
 
 import pytest
 
+from ....core.config import load_settings, override_settings
 from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.field_origin import FieldOrigin
-from ....core.config import load_settings, override_settings
 from ....domain.iva.legend_derivation import LegendDerivationOutcome, derive_category_from_regime_legend
 from ....domain.iva.schema import IvaCategory
 from ....tests.loopback_llm import (
@@ -54,9 +54,9 @@ from ....tests.loopback_llm import (
     write_json_response,
 )
 from ..classification_assembly import _RELIEF_ON_AN_ESTABLISHMENT_PREMISE
-from ..evidence_draft import _read_transcription_semantically
 from ..evidence_input import EvidenceInput
 from ..evidence_textlayer import transcribe_text_layer
+from ..invoice_draft_extraction import _read_transcription_semantically
 from ..regime_contradiction import draft_prints_a_repercutido_line, regime_contradiction_finding
 from ._loopback_reader import READING_RUNTIME_MODEL
 

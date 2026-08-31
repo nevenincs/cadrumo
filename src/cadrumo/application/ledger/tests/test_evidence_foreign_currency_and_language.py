@@ -28,14 +28,14 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.inbound.einvoice import parse_einvoice_document
+from ....adapters.inbound.einvoice._parsers import parse_einvoice_document
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.aggregation import IntracomOperationType
 from ....core.config import Settings
 from ....core.external_constants import DEFAULT_CURRENCY
 from ....domain.iva.classification import InvoiceKind
-from ..evidence_draft import confirm_invoice_draft_from_evidence
+from ..invoice_confirmation import confirm_invoice_draft_from_evidence
 from ._evidence_test_support import _BUCKET_ID, _make_svc
 from ._evidence_test_support import runtime_profile as runtime_profile
 from ._evidence_test_support import seeded_filer_profile as seeded_filer_profile

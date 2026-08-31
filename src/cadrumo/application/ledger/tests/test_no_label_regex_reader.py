@@ -9,7 +9,7 @@ it, and a deletion is only real if re-introduction reddens.
 
 Two properties, and the second is what makes the first trustworthy:
 
-**Scoped.** The check binds to ``evidence_draft.py`` alone. Two working AEAT
+**Scoped.** The check binds to ``invoice_draft_extraction.py`` alone. Two working AEAT
 parsers legitimately carry their own compiled label patterns -- the justificante
 extractor and the declaracion parser read fixed AEAT-published layouts, where a
 pattern is the correct instrument and no model belongs. A tree-wide sweep for
@@ -29,7 +29,7 @@ a windowed slice silently stops detecting once the region it measures outgrows
 the window.
 
 See Also:
-    :func:`~application.ledger.evidence_draft.extract_invoice_draft_from_evidence`
+    :func:`~application.ledger.invoice_draft_extraction.extract_invoice_draft_from_evidence`
         The router this gate binds to.
     :func:`~application.ledger.evidence_textlayer.transcribe_text_layer`
         Acquisition stage that replaced the text-layer regex primitive.
@@ -46,12 +46,12 @@ import pytest
 # Imported absolutely, not as `from .. import <module>`: the test needs
 # the MODULE object, and the package-facade gate reads any `from ..
 # import` edge as reaching through the inert namespace.
-import cadrumo.application.ledger.evidence_draft as evidence_draft_module
+import cadrumo.application.ledger.invoice_draft_extraction as invoice_draft_extraction_module
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _SRC_ROOT = Path(__file__).resolve().parents[3]
-_ROUTER = _SRC_ROOT / "application" / "ledger" / "evidence_draft.py"
+_ROUTER = _SRC_ROOT / "application" / "ledger" / "invoice_draft_extraction.py"
 
 # Working AEAT parsers, aimed at fixed published layouts. Deliberately NOT swept
 # by this gate; they serve as its positive control.
@@ -130,10 +130,10 @@ def test_the_router_does_not_import_re() -> None:
 
 def test_the_deleted_primitive_is_gone_from_its_defining_module() -> None:
     """A deleted reader has no residual defining-module attribute."""
-    assert "extract_invoice_fields" not in vars(evidence_draft_module)
+    assert "extract_invoice_fields" not in vars(invoice_draft_extraction_module)
 
     with pytest.raises(AttributeError):
-        _ = getattr(evidence_draft_module, "extract_invoice_fields")  # noqa: B009 -- probing for absence, not access
+        _ = getattr(invoice_draft_extraction_module, "extract_invoice_fields")  # noqa: B009 -- probing for absence, not access
 
 
 @pytest.mark.parametrize("parser_path", _AEAT_LAYOUT_PARSERS, ids=lambda path: path.parent.name)

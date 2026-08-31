@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import pytest
 
-from ..evidence_draft import _agreed_counterparty_tax_id
+from ..confirm_party_identity import agreed_counterparty_tax_id
 from ..evidence_errors import PurchaseInvoiceEvidenceInputError
 from ..preconditions import LedgerPreconditionCondition
 
@@ -39,7 +39,7 @@ _OTHER_VALID = "87654321X"
 def test_agreement_confirms_the_value() -> None:
     """The ordinary path: the operator read what the extractor read."""
     assert (
-        _agreed_counterparty_tax_id(supplied=_EXTRACTED, extracted=_EXTRACTED, counterparty_country=_COUNTRY)
+        agreed_counterparty_tax_id(supplied=_EXTRACTED, extracted=_EXTRACTED, counterparty_country=_COUNTRY)
         == _EXTRACTED
     )
 
@@ -51,7 +51,7 @@ def test_a_disagreement_refuses() -> None:
     reason to question either. Only the comparison can tell them apart.
     """
     with pytest.raises(PurchaseInvoiceEvidenceInputError):
-        _agreed_counterparty_tax_id(supplied=_OTHER_VALID, extracted=_EXTRACTED, counterparty_country=_COUNTRY)
+        agreed_counterparty_tax_id(supplied=_OTHER_VALID, extracted=_EXTRACTED, counterparty_country=_COUNTRY)
 
 
 def test_the_refusal_carries_the_tax_id_fact_without_printing_either_value() -> None:
@@ -62,7 +62,7 @@ def test_the_refusal_carries_the_tax_id_fact_without_printing_either_value() -> 
     issue or a log.
     """
     with pytest.raises(PurchaseInvoiceEvidenceInputError) as refusal:
-        _agreed_counterparty_tax_id(supplied=_OTHER_VALID, extracted=_EXTRACTED, counterparty_country=_COUNTRY)
+        agreed_counterparty_tax_id(supplied=_OTHER_VALID, extracted=_EXTRACTED, counterparty_country=_COUNTRY)
 
     verdict = refusal.value.terminal_precondition_verdict
     assert verdict is not None
@@ -94,7 +94,7 @@ def test_case_and_padding_are_not_a_disagreement(supplied: str) -> None:
     covered with the prefix cases at the end of this module.
     """
     assert (
-        _agreed_counterparty_tax_id(supplied=supplied, extracted=_EXTRACTED, counterparty_country=_COUNTRY) == supplied
+        agreed_counterparty_tax_id(supplied=supplied, extracted=_EXTRACTED, counterparty_country=_COUNTRY) == supplied
     )
 
 
@@ -104,17 +104,17 @@ def test_extraction_finding_nothing_leaves_the_operator_authoritative() -> None:
     There is nothing to disagree with, so refusing here would break the
     workflow the flag exists for -- a document the extractor could not read.
     """
-    assert _agreed_counterparty_tax_id(supplied=_EXTRACTED, extracted=None, counterparty_country=_COUNTRY) == _EXTRACTED
+    assert agreed_counterparty_tax_id(supplied=_EXTRACTED, extracted=None, counterparty_country=_COUNTRY) == _EXTRACTED
 
 
 def test_an_operator_who_supplies_nothing_gets_the_extracted_value() -> None:
     """Asserting is optional; not asserting must not change the outcome."""
-    assert _agreed_counterparty_tax_id(supplied=None, extracted=_EXTRACTED, counterparty_country=_COUNTRY) == _EXTRACTED
+    assert agreed_counterparty_tax_id(supplied=None, extracted=_EXTRACTED, counterparty_country=_COUNTRY) == _EXTRACTED
 
 
 def test_neither_side_carrying_a_value_is_left_to_the_required_check() -> None:
     """Absence is the confirmed-field check's finding, not this one's."""
-    assert _agreed_counterparty_tax_id(supplied=None, extracted=None, counterparty_country=_COUNTRY) is None
+    assert agreed_counterparty_tax_id(supplied=None, extracted=None, counterparty_country=_COUNTRY) is None
 
 
 def test_the_comparison_is_what_causes_the_refusal() -> None:
@@ -132,7 +132,7 @@ def test_the_comparison_is_what_causes_the_refusal() -> None:
 
     assert _without_comparison(supplied=_OTHER_VALID, extracted=_EXTRACTED) == _OTHER_VALID
     with pytest.raises(PurchaseInvoiceEvidenceInputError):
-        _agreed_counterparty_tax_id(supplied=_OTHER_VALID, extracted=_EXTRACTED, counterparty_country=_COUNTRY)
+        agreed_counterparty_tax_id(supplied=_OTHER_VALID, extracted=_EXTRACTED, counterparty_country=_COUNTRY)
 
 
 # ── the country-prefix axis ────────────────────────────────────────────────
@@ -166,7 +166,7 @@ def test_the_iva_form_and_the_national_form_are_one_bearer(supplied: str, extrac
     was written for.
     """
     assert (
-        _agreed_counterparty_tax_id(
+        agreed_counterparty_tax_id(
             supplied=supplied,
             extracted=extracted,
             counterparty_country=_COUNTRY,
@@ -178,7 +178,7 @@ def test_the_iva_form_and_the_national_form_are_one_bearer(supplied: str, extrac
 def test_the_separator_and_prefix_axes_hold_together() -> None:
     """Both at once, which is the shape a printed document actually produces."""
     assert (
-        _agreed_counterparty_tax_id(
+        agreed_counterparty_tax_id(
             supplied="B-1234567-4",
             extracted="ES B12345674",
             counterparty_country=_COUNTRY,
@@ -194,7 +194,7 @@ def test_a_foreign_prefix_against_a_spanish_counterparty_still_refuses() -> None
     different bearer and must keep disagreeing.
     """
     with pytest.raises(PurchaseInvoiceEvidenceInputError):
-        _agreed_counterparty_tax_id(
+        agreed_counterparty_tax_id(
             supplied=_NATIONAL,
             extracted="DE12345674",
             counterparty_country=_COUNTRY,
@@ -209,7 +209,7 @@ def test_the_discount_follows_the_counterpartys_own_country_never_a_hardcoded_sp
     default and the reason the country is an input rather than a constant.
     """
     assert (
-        _agreed_counterparty_tax_id(
+        agreed_counterparty_tax_id(
             supplied="12345678901",
             extracted="FR12345678901",
             counterparty_country="FR",
@@ -217,7 +217,7 @@ def test_the_discount_follows_the_counterpartys_own_country_never_a_hardcoded_sp
         is not None
     )
     with pytest.raises(PurchaseInvoiceEvidenceInputError):
-        _agreed_counterparty_tax_id(
+        agreed_counterparty_tax_id(
             supplied="12345678901",
             extracted="ES12345678901",
             counterparty_country="FR",

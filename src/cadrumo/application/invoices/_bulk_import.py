@@ -27,7 +27,7 @@ See Also:
         Single catalogue writer invoked for every accepted row.
     :func:`~application.invoices.create_invoice_via_wizard`
         Manual single-invoice path with the same writer and idempotent identity.
-    :func:`~application.ledger.evidence_draft.confirm_invoice_draft_from_evidence`
+    :func:`~application.ledger.invoice_confirmation.confirm_invoice_draft_from_evidence`
         Evidence-confirm path that also delegates the final invoice write to
         the catalogue writer.
 """
@@ -44,7 +44,8 @@ from pydantic import BaseModel, Field, ValidationError
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core.country_code import CountryCodeAlpha2
-from ...core.decimal import coerce_decimal, normalize_decimal_separators, try_parse_canonical_decimal
+from ...core.decimal._coerce import coerce_decimal, normalize_decimal_separators
+from ...core.decimal._grammar import try_parse_canonical_decimal
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing import IsoCurrencyCode, parse_iso8601_date

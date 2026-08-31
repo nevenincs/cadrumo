@@ -26,7 +26,7 @@ import pytest
 # Imported absolutely, not as `from .. import <module>`: the test needs
 # the MODULE object, and the package-facade gate reads any `from ..
 # import` edge as reaching through the inert namespace.
-import cadrumo.application.ledger.evidence_draft as evidence_draft_module
+import cadrumo.application.ledger.invoice_draft_extraction as invoice_draft_extraction_module
 
 from ....core.config import load_settings
 from ....core.draft_discrepancy import DraftDiscrepancyKind
@@ -311,7 +311,7 @@ def test_the_router_text_path_runs_the_whole_chain() -> None:
     perform. What is proven here is that the chain is WIRED -- the behavioural
     halves are proven above and in the stage suites.
     """
-    router = Path(__file__).parents[1] / "evidence_draft.py"
+    router = Path(__file__).parents[1] / "invoice_draft_extraction.py"
     source = router.read_text(encoding="utf-8")
 
     assert "transcribe_text_layer(evidence_input)" in source
@@ -338,7 +338,7 @@ def test_the_router_text_path_runs_the_whole_chain() -> None:
 
 def test_an_absent_reader_refuses_with_a_typed_environment_condition() -> None:
     """A missing reader is a typed refusal, not an inferred recovery command."""
-    from ..evidence_draft import _refuse_a_text_read_with_no_reader
+    from ..invoice_draft_extraction import _refuse_a_text_read_with_no_reader
 
     with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
         _refuse_a_text_read_with_no_reader(LLMProviderError("no provider reachable"))
@@ -357,7 +357,7 @@ def test_an_absent_reader_refuses_with_a_typed_environment_condition() -> None:
 
 def test_a_missing_optional_extra_preserves_registry_facts_without_install_prose() -> None:
     """The dependency registry identity crosses the ledger boundary unchanged."""
-    from ..evidence_draft import _refuse_a_text_read_with_no_reader
+    from ..invoice_draft_extraction import _refuse_a_text_read_with_no_reader
 
     dependency_error = MissingOptionalExtraError(LLM_EXTRA)
     with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
@@ -398,7 +398,7 @@ def test_a_missing_reader_does_not_fall_through_to_the_vision_engine() -> None:
     the condition being reproduced. Nothing about the router is stubbed.
     """
     from .... import llm as llm_module
-    from ..evidence_draft import _read_transcription_semantically
+    from ..invoice_draft_extraction import _read_transcription_semantically
 
     def unavailable(*args: object, **kwargs: object) -> object:
         raise LLMProviderError("Ollama is not reachable")
@@ -437,7 +437,7 @@ def test_the_routers_fallback_try_wraps_only_the_transcription() -> None:
     """
     import ast
 
-    module = ast.parse(Path(inspect.getfile(evidence_draft_module)).read_text(encoding="utf-8"))
+    module = ast.parse(Path(inspect.getfile(invoice_draft_extraction_module)).read_text(encoding="utf-8"))
     router = next(
         node
         for node in ast.walk(module)
@@ -464,7 +464,7 @@ def test_the_no_text_layer_case_still_escalates_to_vision() -> None:
     Without this, "refuse on reader failure" could be implemented as "refuse
     always", silently removing the fallback that scan-only PDFs depend on.
     """
-    from ..evidence_draft import extract_invoice_draft_from_evidence
+    from ..invoice_draft_extraction import extract_invoice_draft_from_evidence
 
     source = inspect.getsource(extract_invoice_draft_from_evidence)
 
@@ -488,7 +488,7 @@ def test_the_reader_refusal_preserves_its_typed_no_recovery_outcome() -> None:
     non-blocking notice channel is for a draft that exists but degraded.
     """
     from ....core.errors.error_codes import build_error_envelope
-    from ..evidence_draft import _refuse_a_text_read_with_no_reader
+    from ..invoice_draft_extraction import _refuse_a_text_read_with_no_reader
 
     with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
         _refuse_a_text_read_with_no_reader(LLMProviderError("Ollama is not reachable"))

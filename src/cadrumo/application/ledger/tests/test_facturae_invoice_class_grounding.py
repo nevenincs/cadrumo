@@ -9,13 +9,14 @@ from pydantic import ValidationError
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....core.config import Settings
 from ....core.confirmation_gate import FindingResolutionAction
 from ....core.draft_discrepancy import DraftDiscrepancyKind
-from ....core.config import Settings
 from ....domain.invoices.enums import InvoiceClass
 from ....domain.iva.classification import InvoiceKind
 from ..confirmation_gate import FindingResolution, confirmation_blockers
-from ..evidence_draft import confirm_invoice_draft_from_evidence, extract_invoice_draft_from_evidence
+from ..invoice_confirmation import confirm_invoice_draft_from_evidence
+from ..invoice_draft_extraction import extract_invoice_draft_from_evidence
 from ._evidence_test_support import _BUCKET_ID, _make_svc
 from ._evidence_test_support import runtime_profile as runtime_profile
 from ._evidence_test_support import seeded_filer_profile as seeded_filer_profile

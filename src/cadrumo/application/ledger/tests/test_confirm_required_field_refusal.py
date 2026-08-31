@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import pytest
 
-from ..evidence_draft import _confirmed_counterparty_name
+from ..confirmed_field_resolution import _confirmed_counterparty_name
 from ..evidence_errors import PurchaseInvoiceEvidenceInputError
 from ..preconditions import LedgerPreconditionCondition
 

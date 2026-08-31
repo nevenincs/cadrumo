@@ -41,7 +41,8 @@ from ....core.config import Settings
 from ....domain.invoices.decomposition import decompose_invoice
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.schema import IvaCategory, IvaRateKind
-from ..evidence_draft import confirm_invoice_draft_from_evidence, domestic_rate_tier_from_the_document
+from ..confirmed_field_resolution import domestic_rate_tier_from_the_document
+from ..invoice_confirmation import confirm_invoice_draft_from_evidence
 from ..invoice_draft_records import InvoiceDraft, InvoiceDraftRateBreakdown
 from ._evidence_test_support import _BUCKET_ID, _make_svc
 from ._evidence_test_support import runtime_profile as runtime_profile
