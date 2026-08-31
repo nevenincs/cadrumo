@@ -26,6 +26,14 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
+if __package__:
+    from .stable_tree_generation import refuse_if_tree_moves
+else:  # Direct execution has no parent package, and this directory is not a usable
+    # search root: the local types.py would shadow the stdlib module. Reach the
+    # sibling through the repository root, which carries no such shadowing file.
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+    from dev.quality.stable_tree_generation import refuse_if_tree_moves
+
 RELOCATION_COMMIT: Final = "c94133f29516b12e3529f3d154c31592562f6198"
 REGISTRY_PATH: Final = "src/cadrumo/domain/calculations/registry"
 MATRIX_VERSION: Final = 2
@@ -64,6 +72,7 @@ CONSUMER_CATEGORIES: Final = (
 )
 REVIEW_STATUS: Final = "independent_architecture_review_approved"
 TRANSITIVE_CONSUMER_CATEGORY: Final = "transitive"
+
 ROOT = Path(__file__).resolve().parents[2]
 MATRIX_PATH = ROOT / "dev/quality/registry_facade_family_census.v1.json"
 GENERATED_CENSUS_DIR = ROOT / "dev/quality"
@@ -1458,12 +1467,22 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--refresh-reviewed", action="store_true")
     parser.add_argument("--check", action="store_true")
     args = parser.parse_args(argv)
+    # Both writing paths walk the source tree, so both are bracketed by the
+    # tree fingerprint. A peer landing a relocation mid-walk produces a matrix
+    # naming modules that no longer exist -- measured on 2026-08-31, when a
+    # sibling census captured seventeen references to a module deleted during
+    # its own two-minute run. `--check` reads the committed matrix rather than
+    # the tree, so it needs no bracket.
     if args.write_template:
         _refuse_template_over_reviewed_matrix()
-        _write_matrix_text(json.dumps(matrix_document(), indent=2, sort_keys=True) + "\n")
+        with refuse_if_tree_moves(ROOT):
+            document = matrix_document()
+        _write_matrix_text(json.dumps(document, indent=2, sort_keys=True) + "\n")
     if args.refresh_reviewed:
         reviewed = json.loads(MATRIX_PATH.read_text(encoding="utf-8"))
-        _write_matrix_text(json.dumps(refresh_reviewed_matrix_document(reviewed), indent=2, sort_keys=True) + "\n")
+        with refuse_if_tree_moves(ROOT):
+            refreshed = refresh_reviewed_matrix_document(reviewed)
+        _write_matrix_text(json.dumps(refreshed, indent=2, sort_keys=True) + "\n")
     if args.check:
         check_matrix_document(json.loads(MATRIX_PATH.read_text(encoding="utf-8")))
     if not args.write_template and not args.refresh_reviewed and not args.check:

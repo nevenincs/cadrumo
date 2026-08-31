@@ -6,9 +6,18 @@ import argparse
 import ast
 import json
 import subprocess
+import sys
 from collections import defaultdict
 from pathlib import Path
 from typing import Final
+
+if __package__:
+    from .stable_tree_generation import refuse_if_tree_moves
+else:  # Direct execution has no parent package, and this directory is not a usable
+    # search root: the local types.py would shadow the stdlib module. Reach the
+    # sibling through the repository root, which carries no such shadowing file.
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+    from dev.quality.stable_tree_generation import refuse_if_tree_moves
 
 ROOT: Final = Path(__file__).resolve().parents[2]
 TARGET_PATH: Final = "src/cadrumo/domain/calculations/registry/authority.py"
@@ -235,7 +244,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--write", action="store_true")
     parser.add_argument("--check", action="store_true")
     args = parser.parse_args(argv)
-    document = census_document()
+    # Bracketed by the tree fingerprint: this census walks the source tree, and
+    # a peer landing a relocation mid-walk yields an artefact naming a module
+    # that no longer exists. That happened on 2026-08-31 -- seventeen references
+    # to a deleted module, and the next `--check` failed on the missing file
+    # rather than on the race that produced it. Refusing costs a re-run;
+    # absorbing the race writes it into the artefact as fact.
+    with refuse_if_tree_moves(ROOT):
+        document = census_document()
     if args.write:
         OUTPUT_PATH.write_text(json.dumps(document, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     if args.check:

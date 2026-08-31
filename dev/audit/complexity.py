@@ -57,11 +57,13 @@ import re
 import subprocess
 import sys
 from collections.abc import Callable
+from contextlib import nullcontext
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Final
 
 from cadrumo.core.directory_scan import scan_directory
+from dev.quality.stable_tree_generation import refuse_if_tree_moves
 
 from .._paths import UTF_8
 from .complexity_allowlist import load_allowlist
@@ -89,6 +91,7 @@ _CC_LINE = re.compile(r"^\s+\w \d+:\d+ (?P<name>\S+) - (?P<grade>[A-F]) \((?P<sc
 _MI_LINE = re.compile(r"^(?P<path>\S+) - (?P<grade>[A-F]) \((?P<score>[\d.]+)\)")
 
 _BASELINE_PATH = Path(__file__).with_name("complexity_baseline.json")
+_REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 @dataclass(frozen=True)
@@ -443,9 +446,17 @@ def main() -> int:
     exclude = _TEST_EXCLUDE if args.tests else _PROD_EXCLUDE
     scope = "test files" if args.tests else "production code"
 
-    cc = collect_cc(exclude)
-    mi = collect_mi(exclude)
-    cog = collect_cog(Path(_TARGET), args.tests, args.threshold)
+    # Bracketed ONLY when writing. A peer landing a relocation mid-walk yields a
+    # BASELINE naming modules that no longer exist, and that persists; the same
+    # race during a comparison run costs at most one noisy verdict the next run
+    # corrects. Guarding the comparison too would refuse the CI gate every time
+    # any lane touched the tree -- which is how a guard gets removed rather than
+    # fixed.
+    guard = refuse_if_tree_moves(_REPO_ROOT) if args.write_baseline else nullcontext()
+    with guard:
+        cc = collect_cc(exclude)
+        mi = collect_mi(exclude)
+        cog = collect_cog(Path(_TARGET), args.tests, args.threshold)
 
     if args.write_baseline:
         baseline = build_baseline(cc, mi, cog)
