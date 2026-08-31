@@ -15,3 +15,4 @@ Submodules
 
    cadrumo.core.access_gate._authorization
    cadrumo.core.access_gate.errors
+   cadrumo.core.access_gate.gate

@@ -38,148 +38,150 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.core._action_argument_resolution
-   cadrumo.core._address_components
-   cadrumo.core._aeat_csv
-   cadrumo.core._amendment_kind_regime
-   cadrumo.core._auth_provider
-   cadrumo.core._authority_grade
-   cadrumo.core._calculation_route
-   cadrumo.core._capabilities
-   cadrumo.core._casilla_id
-   cadrumo.core._casilla_value_kind
-   cadrumo.core._classifier_input_source
-   cadrumo.core._concept_lifecycle
-   cadrumo.core._concepto_ingreso
-   cadrumo.core._config_integration_fields
-   cadrumo.core._config_live_tests
-   cadrumo.core._config_llm_fields
-   cadrumo.core._config_runtime_fields
-   cadrumo.core._config_state_root
-   cadrumo.core._config_storage_route
-   cadrumo.core._config_support
-   cadrumo.core._config_timeouts
-   cadrumo.core._confirmation_gate
-   cadrumo.core._corpus_sidecar
-   cadrumo.core._declaracion_idioma
-   cadrumo.core._descendant_relacion
-   cadrumo.core._deuda_direccion
-   cadrumo.core._document_shape
-   cadrumo.core._draft_discrepancy
-   cadrumo.core._estado_casilla_oficial
-   cadrumo.core._export_exemption_reason
-   cadrumo.core._export_layout_format
-   cadrumo.core._external_oracle_corpus
-   cadrumo.core._field_grounding
-   cadrumo.core._field_origin
-   cadrumo.core._field_role
-   cadrumo.core._filed_history_discovery_signal
-   cadrumo.core._filing_producer_key
-   cadrumo.core._filing_projection_ref
-   cadrumo.core._foreign_asset_obligation
-   cadrumo.core._fsync
-   cadrumo.core._fts_query
-   cadrumo.core._google_credential_source
-   cadrumo.core._hardware
-   cadrumo.core._hex
-   cadrumo.core._iban
-   cadrumo.core._image_media_type
-   cadrumo.core._invoice_link
-   cadrumo.core._irnr
-   cadrumo.core._iva_category_resolution
-   cadrumo.core._iva_compensation_provenance
-   cadrumo.core._iva_deduction_fact
-   cadrumo.core._ledger_sort
-   cadrumo.core._legal_review
-   cadrumo.core._link_safety
-   cadrumo.core._lockfile_unlink
-   cadrumo.core._model_catalogue
-   cadrumo.core._modelo
-   cadrumo.core._modelo_232_codigos
-   cadrumo.core._modelo_work_progress_state
-   cadrumo.core._models
-   cadrumo.core._notificacion_estado_servicio
-   cadrumo.core._objeto_tributario
-   cadrumo.core._observed_header_fact
-   cadrumo.core._operator_action_enums
-   cadrumo.core._operator_progress
-   cadrumo.core._optional_extras
-   cadrumo.core._orden_anual_html
-   cadrumo.core._orden_anual_sections
-   cadrumo.core._payment_election
-   cadrumo.core._period
-   cadrumo.core._pid_liveness
-   cadrumo.core._post_filing_event
-   cadrumo.core._precondition_action_invariants
-   cadrumo.core._prior_domiciliation_election
-   cadrumo.core._profile_session
-   cadrumo.core._prorrata_exclusions
-   cadrumo.core._prorrata_register
-   cadrumo.core._provenance_stamp
-   cadrumo.core._record_design_epoch
-   cadrumo.core._refund_election
-   cadrumo.core._register_scoping_signal
-   cadrumo.core._renta_declaracion_type
-   cadrumo.core._rescate_type
-   cadrumo.core._result_disposition
-   cadrumo.core._revision_review
-   cadrumo.core._schema_family_disposition
-   cadrumo.core._spanish_stemming
-   cadrumo.core._storage_taxonomy
-   cadrumo.core._storage_taxonomy_locations
-   cadrumo.core._sync_surface
-   cadrumo.core._tax_domain
-   cadrumo.core._tipos_actividad
-   cadrumo.core._toml
-   cadrumo.core._type_adapters
-   cadrumo.core._windows_contention
+   cadrumo.core.action_argument_resolution
+   cadrumo.core.address_components
+   cadrumo.core.aeat_csv
    cadrumo.core.aggregation
+   cadrumo.core.amendment_kind_regime
    cadrumo.core.async_cleanup
    cadrumo.core.atomic_write
+   cadrumo.core.auth_provider
    cadrumo.core.auth_session_keys
+   cadrumo.core.authority_grade
    cadrumo.core.base64_codec
    cadrumo.core.bucket_pointer
+   cadrumo.core.calculation_route
    cadrumo.core.calendar_shift
+   cadrumo.core.capabilities
+   cadrumo.core.casilla_id
+   cadrumo.core.casilla_value_kind
    cadrumo.core.citation_grounding
+   cadrumo.core.classifier_input_source
    cadrumo.core.cli_metadata
    cadrumo.core.click_context
    cadrumo.core.compatibility_lifecycle
+   cadrumo.core.concept_lifecycle
+   cadrumo.core.concepto_ingreso
    cadrumo.core.config
+   cadrumo.core.config_integration_fields
+   cadrumo.core.config_live_tests
+   cadrumo.core.config_llm_fields
+   cadrumo.core.config_runtime_fields
+   cadrumo.core.config_state_root
+   cadrumo.core.config_storage_route
+   cadrumo.core.config_support
+   cadrumo.core.config_timeouts
+   cadrumo.core.confirmation_gate
+   cadrumo.core.corpus_sidecar
    cadrumo.core.corpus_text
    cadrumo.core.country_code
    cadrumo.core.credentials
+   cadrumo.core.declaracion_idioma
+   cadrumo.core.descendant_relacion
+   cadrumo.core.deuda_direccion
    cadrumo.core.directory_scan
+   cadrumo.core.document_shape
+   cadrumo.core.draft_discrepancy
    cadrumo.core.ed25519_signing
+   cadrumo.core.estado_casilla_oficial
+   cadrumo.core.export_exemption_reason
+   cadrumo.core.export_layout_format
    cadrumo.core.external_constants
+   cadrumo.core.external_oracle_corpus
+   cadrumo.core.field_grounding
+   cadrumo.core.field_origin
+   cadrumo.core.field_role
    cadrumo.core.file_permissions
+   cadrumo.core.filed_history_discovery_signal
+   cadrumo.core.filing_producer_key
+   cadrumo.core.filing_projection_ref
    cadrumo.core.filing_year
    cadrumo.core.flows
+   cadrumo.core.foreign_asset_obligation
+   cadrumo.core.fsync
+   cadrumo.core.fts_query
+   cadrumo.core.google_credential_source
+   cadrumo.core.hardware
    cadrumo.core.hashing
+   cadrumo.core.hex
+   cadrumo.core.iban
    cadrumo.core.identifier_grammar
+   cadrumo.core.image_media_type
+   cadrumo.core.invoice_link
+   cadrumo.core.irnr
+   cadrumo.core.iva_category_resolution
+   cadrumo.core.iva_compensation_provenance
+   cadrumo.core.iva_deduction_fact
    cadrumo.core.json_contract
+   cadrumo.core.ledger_sort
+   cadrumo.core.legal_review
+   cadrumo.core.link_safety
+   cadrumo.core.lockfile_unlink
    cadrumo.core.locks
    cadrumo.core.locks_errors
    cadrumo.core.logging
    cadrumo.core.manual_corpus_sidecar
+   cadrumo.core.model_catalogue
+   cadrumo.core.modelo
+   cadrumo.core.modelo_232_codigos
+   cadrumo.core.modelo_work_progress_state
+   cadrumo.core.models
+   cadrumo.core.notificacion_estado_servicio
+   cadrumo.core.objeto_tributario
+   cadrumo.core.observed_header_fact
    cadrumo.core.operations
+   cadrumo.core.operator_action_enums
+   cadrumo.core.operator_progress
+   cadrumo.core.optional_extras
+   cadrumo.core.orden_anual_html
+   cadrumo.core.orden_anual_sections
    cadrumo.core.output_rendering
    cadrumo.core.paths
+   cadrumo.core.payment_election
    cadrumo.core.percentage
+   cadrumo.core.period
+   cadrumo.core.pid_liveness
+   cadrumo.core.post_filing_event
+   cadrumo.core.precondition_action_invariants
    cadrumo.core.presentation
+   cadrumo.core.prior_domiciliation_election
    cadrumo.core.product_identity
    cadrumo.core.profile_discovery
+   cadrumo.core.profile_session
+   cadrumo.core.prorrata_exclusions
+   cadrumo.core.prorrata_register
    cadrumo.core.prose_elision
+   cadrumo.core.provenance_stamp
+   cadrumo.core.record_design_epoch
+   cadrumo.core.refund_election
+   cadrumo.core.register_scoping_signal
    cadrumo.core.remote_authority
+   cadrumo.core.renta_declaracion_type
+   cadrumo.core.rescate_type
+   cadrumo.core.result_disposition
+   cadrumo.core.revision_review
+   cadrumo.core.schema_family_disposition
    cadrumo.core.secure_object_write
    cadrumo.core.setup_answers
    cadrumo.core.source_connectivity
+   cadrumo.core.source_locator
+   cadrumo.core.spanish_postcode
+   cadrumo.core.spanish_stemming
    cadrumo.core.storage_materialization
+   cadrumo.core.storage_taxonomy
+   cadrumo.core.storage_taxonomy_locations
+   cadrumo.core.sync_surface
    cadrumo.core.tabular
+   cadrumo.core.tax_domain
    cadrumo.core.text_bounds
    cadrumo.core.text_fold
+   cadrumo.core.tipos_actividad
+   cadrumo.core.toml
    cadrumo.core.transport_locus
    cadrumo.core.tty
+   cadrumo.core.type_adapters
    cadrumo.core.unit_proportion
    cadrumo.core.validity_window
+   cadrumo.core.windows_contention
    cadrumo.core.wizard_catalogue
    cadrumo.core.workbook

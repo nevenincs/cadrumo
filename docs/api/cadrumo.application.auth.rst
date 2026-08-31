@@ -18,6 +18,7 @@ Submodules
    cadrumo.application.auth.actions
    cadrumo.application.auth.apoderado_flow
    cadrumo.application.auth.apoderado_service
+   cadrumo.application.auth.apoderado_text
    cadrumo.application.auth.catalogue
    cadrumo.application.auth.certificate_secret_backend
    cadrumo.application.auth.certificate_source_operations
@@ -30,6 +31,7 @@ Submodules
    cadrumo.application.auth.operator
    cadrumo.application.auth.operator_cleanup
    cadrumo.application.auth.operator_probes
+   cadrumo.application.auth.operator_result_projections
    cadrumo.application.auth.operator_results
    cadrumo.application.auth.operator_scope
    cadrumo.application.auth.probes

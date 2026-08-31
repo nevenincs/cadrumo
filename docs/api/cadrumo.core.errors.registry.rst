@@ -19,6 +19,7 @@ Submodules
    cadrumo.core.errors.registry._application
    cadrumo.core.errors.registry._application_part1
    cadrumo.core.errors.registry._application_part2
+   cadrumo.core.errors.registry._application_profile_bundle
    cadrumo.core.errors.registry._core
    cadrumo.core.errors.registry._domain
    cadrumo.core.errors.registry._domain_part1

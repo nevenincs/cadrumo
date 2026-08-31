@@ -20,6 +20,7 @@ Submodules
    cadrumo.domain.calculations.registry._formula_operator_contracts
    cadrumo.domain.calculations.registry._formula_runtime_irnr
    cadrumo.domain.calculations.registry._formula_runtime_m131
+   cadrumo.domain.calculations.registry._invoice_row_materialization
    cadrumo.domain.calculations.registry._ledger_binding_resolution
    cadrumo.domain.calculations.registry._loader_internals
    cadrumo.domain.calculations.registry._m303_orden_constants

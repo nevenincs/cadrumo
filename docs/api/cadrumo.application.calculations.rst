@@ -15,6 +15,7 @@ Submodules
 
    cadrumo.application.calculations._bienes_inversion_regularizacion
    cadrumo.application.calculations._binding_prefill
+   cadrumo.application.calculations._cross_period_external_evidence
    cadrumo.application.calculations._foreign_asset_redeclaration
    cadrumo.application.calculations._iva_compensation_annual_partition
    cadrumo.application.calculations._iva_compensation_casillas
@@ -28,6 +29,7 @@ Submodules
    cadrumo.application.calculations._ports
    cadrumo.application.calculations._prorrata_regularizacion
    cadrumo.application.calculations._relation_prefill
+   cadrumo.application.calculations._relation_prefill_m202
    cadrumo.application.calculations._revision_carry_gate
    cadrumo.application.calculations.cross_period_clean_state
    cadrumo.application.calculations.cross_period_models

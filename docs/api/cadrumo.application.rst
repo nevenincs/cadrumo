@@ -63,6 +63,7 @@ Submodules
    cadrumo.application.bucket_event_repository
    cadrumo.application.cli_exception_preconditions
    cadrumo.application.config_reset
+   cadrumo.application.diagnostic_models
    cadrumo.application.diagnostics
    cadrumo.application.diagnostics_run_health
    cadrumo.application.diagnostics_telemetry

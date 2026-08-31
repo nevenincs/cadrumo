@@ -14,3 +14,4 @@ Submodules
    :maxdepth: 4
 
    cadrumo.adapters.inbound.justificante._parsers._pdfplumber_backend
+   cadrumo.adapters.inbound.justificante._parsers.text_extraction

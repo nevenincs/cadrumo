@@ -21,6 +21,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.core.errors._not_found
-   cadrumo.core.errors._registry
-   cadrumo.core.errors._severity
+   cadrumo.core.errors.error_codes
+   cadrumo.core.errors.hierarchy
+   cadrumo.core.errors.not_found
+   cadrumo.core.errors.severity

@@ -13,4 +13,4 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.application.command_search._index
+   cadrumo.application.command_search.index

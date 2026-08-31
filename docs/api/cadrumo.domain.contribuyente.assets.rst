@@ -6,3 +6,11 @@ cadrumo.domain.contribuyente.assets package
    :show-inheritance:
    :ignore-module-all:
 
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   cadrumo.domain.contribuyente.assets.records

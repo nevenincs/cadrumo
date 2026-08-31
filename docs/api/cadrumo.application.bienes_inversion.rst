@@ -6,3 +6,11 @@ cadrumo.application.bienes_inversion package
    :show-inheritance:
    :ignore-module-all:
 
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   cadrumo.application.bienes_inversion._service

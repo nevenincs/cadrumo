@@ -22,4 +22,4 @@ Submodules
    :maxdepth: 4
 
    cadrumo.adapters.inbound.justificante._extract
-   cadrumo.adapters.inbound.justificante._parser
+   cadrumo.adapters.inbound.justificante.parser

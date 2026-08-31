@@ -6,3 +6,11 @@ cadrumo.domain.notifications package
    :show-inheritance:
    :ignore-module-all:
 
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   cadrumo.domain.notifications.sancion

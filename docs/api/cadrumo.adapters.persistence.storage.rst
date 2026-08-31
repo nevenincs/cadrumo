@@ -38,6 +38,7 @@ Submodules
    cadrumo.adapters.persistence.storage._recovery_key
    cadrumo.adapters.persistence.storage._runtime_readiness
    cadrumo.adapters.persistence.storage._schema_lineage
+   cadrumo.adapters.persistence.storage._secure_object_namespaces
    cadrumo.adapters.persistence.storage._storage_path_definitions
    cadrumo.adapters.persistence.storage.attachment
    cadrumo.adapters.persistence.storage.errors

@@ -16,6 +16,7 @@ Submodules
    cadrumo.adapters.outbound.storage._drive_pagination
    cadrumo.adapters.outbound.storage._factory
    cadrumo.adapters.outbound.storage._google_drive
+   cadrumo.adapters.outbound.storage._google_drive_metadata
    cadrumo.adapters.outbound.storage._integrity
    cadrumo.adapters.outbound.storage._key_validation
    cadrumo.adapters.outbound.storage._local

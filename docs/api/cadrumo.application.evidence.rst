@@ -16,3 +16,4 @@ Submodules
    cadrumo.application.evidence._models
    cadrumo.application.evidence._profile_legal_hold
    cadrumo.application.evidence._service
+   cadrumo.application.evidence.bundle_text
