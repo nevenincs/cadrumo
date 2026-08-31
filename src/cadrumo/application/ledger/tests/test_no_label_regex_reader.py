@@ -43,10 +43,9 @@ from typing import TypeIs
 
 import pytest
 
-# Imported absolutely, not as `from .. import <module>`: the test needs
-# the MODULE object, and the package-facade gate reads any `from ..
-# import` edge as reaching through the inert namespace.
-import cadrumo.application.ledger.evidence_draft as evidence_draft_module
+# The MODULE object, not names from it: the tests below scope an attribute
+# on it. `from .. import <module>` is the relative form that yields one.
+from .. import evidence_draft as evidence_draft_module
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
