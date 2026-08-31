@@ -10,7 +10,7 @@ related:
   - '[[2026-06-01-registry-period-code-union-cli-boundary-adr]]'
   - '[[2026-08-05-ci-lane-deconflation-step-check-attribution-audit]]'
 modified: '2026-08-31'
-body_hash: 'sha256:55d7d4b2fd2c2798c9148dd05c5ef4844a8ea01073bdf021a0c98646a49a5cb5'
+body_hash: 'sha256:33f2edd02a0193e40fd38195899ba2d7d40e3a954f354377788a2d7ea2cf8dbb'
 ---
 
 <!-- RETIRED: S01, S10, S181, S184, S186, S189, S191, S193, S194, S197, S199, S201, S203, S205, S207, S209, S211, S213, S215, S217, S219, S221 -->
@@ -184,7 +184,7 @@ Decompose every live size-budget subject by its owning source file, then regener
 - [x] `P05.S123` - Refactor the size-budget subjects in calc_sheets_pull.py into cohesive siblings without raising any threshold.; `src/cadrumo/adapters/outbound/google/calc_sheets_pull.py`.
 - [x] `P05.S124` - Refactor the size-budget subjects in _google_drive.py into cohesive siblings without raising any threshold.; `src/cadrumo/adapters/outbound/storage/_google_drive.py`.
 - [x] `P05.S125` - Refactor the size-budget subjects in _namespace_registry.py into cohesive siblings without raising any threshold.; `src/cadrumo/adapters/persistence/storage/_namespace_registry.py`.
-- [ ] `P05.S126` - Refactor the size-budget subjects in _profile_custody_carry.py into cohesive siblings without raising any threshold.; `src/cadrumo/adapters/persistence/storage/_profile_custody_carry.py`.
+- [x] `P05.S126` - Refactor the size-budget subjects in _profile_custody_carry.py into cohesive siblings without raising any threshold.; `src/cadrumo/adapters/persistence/storage/_profile_custody_carry.py`.
 - [ ] `P05.S127` - Refactor the size-budget subjects in acceleration_receipt.py into cohesive siblings without raising any threshold.; `src/cadrumo/adapters/persistence/storage/custody/acceleration_receipt.py`.
 - [ ] `P05.S128` - Refactor the size-budget subjects in filesystem.py into cohesive siblings without raising any threshold.; `src/cadrumo/adapters/persistence/storage/custody/filesystem.py`.
 - [ ] `P05.S129` - Refactor the size-budget subjects in secure_objects.py into cohesive siblings without raising any threshold.; `src/cadrumo/adapters/persistence/storage/sql/secure_objects.py`.
