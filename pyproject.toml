@@ -764,6 +764,11 @@ convention = "google"
 "src/cadrumo/adapters/persistence/storage/custody/tests/test_custody_root_lock_exclusion.py" = ["S603"]
 "src/cadrumo/adapters/persistence/storage/tests/test_substrate_smoke.py" = ["S603"]
 "src/cadrumo/domain/calculations/registry/tests/test_cross_domain_snapshot_registration.py" = ["S603"]
+# Whether a snapshot build refuses a missing cross-domain gate is a property
+# of a cold start: the registration list is module-level, so any sibling test
+# in the session has already populated it. Same fixed `sys.executable -c
+# <script>` argv as the registration gate above.
+"src/cadrumo/domain/calculations/registry/tests/test_cross_domain_required_check_guard.py" = ["S603"]
 # Whether the application registry namespace is a registration seam is a
 # property of a cold start: this session has already imported the namespace
 # and the renta check module through sibling tests. Same fixed
