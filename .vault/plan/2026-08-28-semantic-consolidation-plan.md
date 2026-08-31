@@ -9,7 +9,7 @@ related:
   - '[[2026-08-28-semantic-consolidation-cli-payload-projection-adr]]'
 modified: '2026-08-31'
 body_schema: body-v2
-body_hash: 'sha256:6d60e2a5152997e32dbfaa87f288e01016909d483ec52b8d72a33748e16ac0c0'
+body_hash: 'sha256:6903cbb37a3d7b799c24a4ad2dc2a4abacbe3a1ffdf89a7b892d53ea9ede391e'
 ---
 
 # `semantic-consolidation` plan
@@ -177,7 +177,7 @@ An AST census of every pydantic Field constraint in production code found the sa
 - [x] `P08.S27` - Record that grouping by constraint shape conflates concepts: the two-character group mixed country codes with tipo-renta, subclave and provincia codes, and only about two thirds were countries; `src/cadrumo/`.
 - [x] `P08.S28` - Adopt the content-digest aliases at the twenty sites that pin only a length, tightening a pattern onto fields that had none, and retire the two independent SHA-256 length constants; `src/cadrumo/`.
 - [ ] `P08.S29` - Adjudicate the coefficient field declared with contradictory zero-inclusion rules in one file, and the gross-amount and taxable-base fields that disagree across sites; `src/cadrumo/domain/`.
-- [ ] `P08.S30` - Rule on the six tax-id fields that pin a length while matching neither the checksum-validating nor the normalising canonical alias; `src/cadrumo/domain/calculations/registry/`.
+- [x] `P08.S30` - Rule on the six tax-id fields that pin a length while matching neither the checksum-validating nor the normalising canonical alias; `src/cadrumo/domain/calculations/registry/`.
 - [x] `P08.S31` - Split the bare datetime fields in the domain into instants that owe UTC-awareness and calendar dates that must not be forced into it; `src/cadrumo/domain/`.
 - [x] `P08.S32` - Record that the three coefficient declarations are two concepts, not one: the seasonal-day index is distinct from the modulo coefficient, so only the raw module and the calculation result actually disagree, and settling them is a tax review against the orden text rather than a code judgement; `src/cadrumo/domain/calculations/registry/_m303_orden_raw_models.py`.
 - [x] `P08.S33` - Adopt the UTC instant alias on the domain timestamp fields whose own documentation promises timezone-aware UTC while enforcing nothing, closing a validation hole rather than a style gap; `src/cadrumo/domain/`.
