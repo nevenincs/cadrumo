@@ -9,7 +9,7 @@ related:
   - '[[2026-08-28-semantic-consolidation-cli-payload-projection-adr]]'
 modified: '2026-08-31'
 body_schema: body-v2
-body_hash: 'sha256:0e182bb7152a5115cf04a0d8feb4bf49163a31425eb152a02a6fde49b33b39f6'
+body_hash: 'sha256:c876f7398398500536de2f699a40f64536d112faa0f32e2fa22818e2996e5c57'
 ---
 
 # `semantic-consolidation` plan
@@ -43,7 +43,7 @@ Six package namespaces carry a PEP 562 __getattr__ resolver, four of them byte-i
 - [x] `P02.S43` - Judge a payload validator by its body rather than its presence, so the two sanctioned shapes stop reading as violations, and teach the detector that a threshold literal is usually wrapped in a constructor call; `src/cadrumo/entrypoints/cli/tests/test_cli_payload_constraint_authority.py`.
 - [x] `P02.S44` - Type the counterparty key as the canonical content digest on both sides: the key is a SHA-256 hex value, and the CLI had dropped its bound to a single character; `src/cadrumo/application/ledger/counterparty_establishment.py`.
 - [ ] `P02.S45` - Tax-review whether an invoice total may be negative before pushing a non-negative bound onto the canonical invoice, since a factura rectificativa under LIVA art. 89 may correct downward; `src/cadrumo/domain/invoices/_models.py`.
-- [ ] `P02.S46` - Rule on the currency pattern once for both the invoice and export-row payloads, given the canonical already normalises to uppercase at the parse boundary; `src/cadrumo/`.
+- [x] `P02.S46` - Rule on the currency pattern once for both the invoice and export-row payloads, given the canonical already normalises to uppercase at the parse boundary; `src/cadrumo/`.
 - [x] `P02.S47` - Reject the advice to delete the two reconstruction validators: both are the sanctioned shape, one calling three canonical identity validators and encoding the simplificada carve-out with its legal citation, the other rebuilding the rule so its regex-compilability check reruns; `src/cadrumo/entrypoints/cli/`.
 - [ ] `P02.S48` - Migrate the export-row date and non-negative-amount checks the CLI enforces onto the canonical export row, which declares no validators at all; `src/cadrumo/application/ledger/models.py`.
 - [x] `P02.S52` - Hard-move the classification rule contract to a public defining module and give it named aliases, so the CLI can project the rule's bounds instead of respelling them; `src/cadrumo/domain/transactions/classification_rule.py`.
@@ -53,15 +53,15 @@ Six package namespaces carry a PEP 562 __getattr__ resolver, four of them byte-i
 - [x] `P02.S56` - Name the ledger wire shapes and settle the canonical currency length, which disagreed with itself between the transaction payload and the manual command; `src/cadrumo/application/ledger/models.py`.
 - [x] `P02.S57` - Repair the payload-bounding gate whose allowlist named a formatter an earlier consolidation had already renamed away; `src/cadrumo/domain/buckets/tests/test_payload_value_bounding.py`.
 - [x] `P02.S58` - Hard-move the review package, apoderamiento catalogue, borrador and notification contracts to public homes and project their named shapes, taking the CLI from three hundred and forty-six declarations to thirty; `src/cadrumo/`.
-- [ ] `P02.S59` - Rule on the four free-text note bounds, which carry five hundred, two thousand and four thousand characters for the same operator commentary with no canonical among them; `src/cadrumo/entrypoints/cli/`.
+- [x] `P02.S59` - Rule on the four free-text note bounds, which carry five hundred, two thousand and four thousand characters for the same operator commentary with no canonical among them; `src/cadrumo/entrypoints/cli/`.
 - [ ] `P02.S60` - Reconcile the actor concept, declared at sixty-four on the filing label and a hundred and twenty-eight on the review package while both are fed by the same operator resolver; `src/cadrumo/`.
-- [ ] `P02.S61` - Publicise the preflight issue detail, whose canonical alias elides at five hundred and twelve where the payload rejects, so the two disagree about what an over-long detail should do; `src/cadrumo/application/ledger/preflight.py`.
+- [x] `P02.S61` - Publicise the preflight issue detail, whose canonical alias elides at five hundred and twelve where the payload rejects, so the two disagree about what an over-long detail should do; `src/cadrumo/application/ledger/preflight.py`.
 - [x] `P02.S102` - Declare the evidence-bundle notes bound once and adopt the canonical unit fraction on the manifest model, which restated both by hand beside the CLI payload that projects it; `src/cadrumo/application/evidence/`.
 - [x] `P02.S103` - Declare the compensation expiry year once beside the balance model, and adopt the canonical bucket event id where the M036 payload had invented a looser one; `src/cadrumo/domain/iva_compensation/, src/cadrumo/entrypoints/cli/`.
 - [x] `P02.S105` - Keep ModeloCode on the review-package manifest and its CLI projection, both of which discarded the validated three-digit type for a hand-rolled one-to-eight string bound; `src/cadrumo/application/modelo/review_package.py, src/cadrumo/entrypoints/cli/`.
 - [x] `P02.S109` - Collapse the confidence bound onto the canonical unit-proportion predicate at both the transaction validator and the CLI gate, which restated the same zero-to-one range a third and fourth time; `src/cadrumo/domain/transactions/model_validation.py, src/cadrumo/entrypoints/cli/_review.py`.
 - [x] `P02.S111` - Give the Spanish postcode format a domain-level home, since it is enforced only by the setup wizard and no other write path to address_postcode refuses a malformed value; `src/cadrumo/core/setup_answers.py`.
-- [ ] `P02.S112` - Rehome the ledger folder-import aggregation and the Drive remote-object label derivation, both of which the CLI computes with no application or adapter counterpart; `src/cadrumo/entrypoints/cli/`.
+- [x] `P02.S112` - Rehome the ledger folder-import aggregation and the Drive remote-object label derivation, both of which the CLI computes with no application or adapter counterpart; `src/cadrumo/entrypoints/cli/`.
 - [x] `P02.S113` - Rehome the ledger folder-import fold beside the function that produces the per-file results, asserting the invocation-wide fields agree rather than silently taking the first file's; `src/cadrumo/application/ledger/actions_import.py`.
 - [ ] `P02.S115` - Widen the folder-import fold so a directory import reports every file's validation and verification report, not only the first; `src/cadrumo/application/ledger/models.py`.
 - [x] `P02.S117` - Rehome the Drive object-label derivation beside the hmac half of the same naming scheme, keeping it distinct from the manifest label whose policy differs; `src/cadrumo/adapters/outbound/storage/, src/cadrumo/entrypoints/cli/_config/`.
@@ -159,7 +159,7 @@ The lazy-export ADR assembled its population by searching for one identifier, _L
 - [x] `P07.S104` - Sequence the core errors hierarchy split with whoever owns git rather than applying it incrementally, since a commit landing on a half-applied state produced a HEAD that could not import; `src/cadrumo/core/errors/`.
 - [x] `P07.S106` - Finish the errors hierarchy split the concurrent session left half-landed, repointing the five stragglers still reaching the namespace; `src/cadrumo/core/errors/`.
 - [x] `P07.S107` - Publicise the censo parser and repoint the portals service tests, the last names reached through namespaces already made inert; `src/cadrumo/adapters/inbound/censo/, src/cadrumo/application/portals/`.
-- [ ] `P07.S110` - Rule on which CIF leader-class policy is authoritative, after grounding it against the official norm, and collapse the two identity validators that currently answer the same input differently; `src/cadrumo/core/identity/`.
+- [x] `P07.S110` - Rule on which CIF leader-class policy is authoritative, after grounding it against the official norm, and collapse the two identity validators that currently answer the same input differently; `src/cadrumo/core/identity/`.
 - [x] `P07.S114` - Publicise the secret store's defining module, which the inert namespace left unreachable for its blob-store and storage consumers; `src/cadrumo/adapters/persistence/storage/secret_store/`.
 - [ ] `P07.S118` - Publicise the mirror-manifest module so its remote-naming contracts are reachable without going through the storage namespace; `src/cadrumo/adapters/outbound/storage/`.
 
@@ -207,7 +207,7 @@ An AST census of every pydantic Field constraint in production code found the sa
 - [x] `P08.S98` - Repoint the setup-answers lazy module accessor at deadlines.models, and move the FiscalResidency reads to the renta-code module that actually defines them; `src/cadrumo/core/setup_answers.py`.
 - [x] `P08.S100` - Promote the post-retirement checks into a single reusable sweep covering all five stale-reference classes, so each retirement runs a written-down pass rather than ad-hoc checks; `dev/quality/namespace_retirement_sweep.py`.
 - [x] `P08.S101` - Repoint the two application/modelo files reading filing contracts off the package object, which the reachability gate caught as an AttributeError that only fires when the path runs; `src/cadrumo/application/modelo/`.
-- [ ] `P08.S108` - Detect a name imported from a genuinely inert namespace, distinguishing it from one reached through a live lazy export map; `src/cadrumo/tests/`.
+- [x] `P08.S108` - Detect a name imported from a genuinely inert namespace, distinguishing it from one reached through a live lazy export map; `src/cadrumo/tests/`.
 - [x] `P08.S116` - Refuse a name imported from a namespace that exports nothing, the failure that has landed three times and takes a package down at collection rather than at use; `src/cadrumo/tests/test_inert_namespace_imports_resolve.py`.
 - [x] `P08.S120` - Stop the payload gate reading an empty-string presence check as a declared rule, which was flagging a validator that only delegates; `src/cadrumo/entrypoints/cli/tests/test_cli_payload_constraint_authority.py`.
 - [x] `P08.S121` - Repoint the dotted module paths written inside string literals, a class every AST sweep is blind to and which had been failing four custody lock tests in a way that read as flakiness; `src/cadrumo/, dev/quality/namespace_retirement_sweep.py`.

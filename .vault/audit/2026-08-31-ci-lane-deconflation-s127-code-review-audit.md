@@ -38,4 +38,3 @@ Commit `5476e5e1d0f948d8cedfd0f604c2f5d97ca25988` changes only the S127 executio
 No additional P05.S127 corrective work is required.
 
 The extraction itself is canonical: `acceleration_receipt_crypto.py` owns the public persisted-record, AAD, AEAD wrap/unwrap and wipeable rewrap contract; the lifecycle module imports it privately and no longer re-exports that contract. Direct consumers import the crypto owner. Session-key and unwrapped-DEK buffers remain zeroised in lifecycle and crypto finally blocks, and persisted-session refusal/deletion routes remain in the lifecycle owner. The selected focused run passes 42 tests; the target measures `1065 <= 1250`, the crypto sibling is 229 physical lines, and no size baseline changes. `git diff --check` reports only a new blank line at end of the Markdown execution record, a cosmetic documentation whitespace notice rather than a source or evidence integrity finding.
-
