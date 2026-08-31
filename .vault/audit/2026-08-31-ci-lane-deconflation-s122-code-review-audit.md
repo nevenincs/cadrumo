@@ -5,49 +5,29 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:d05c3c9fc553058a0f2edc0d5833727aa4560dec9017ea0297780483d45c658c'
+body_hash: 'sha256:085fb433a4dac84542f5d2f83b2f1880ef94189c846acf5eeb7eb6ed449bae55'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace ci-lane-deconflation with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `ci-lane-deconflation` audit: `P05 S122 code review`
 
 ## Scope
 
-<!-- What was audited and why -->
+Independent review of P05.S122 at `fdac6d837897909c03888b75131b515a39a4965f`: the extraction of the Sheets presentation and validation request builders from `calc_sheets_apply.py` into `_calc_sheets_apply_formatting.py`, every changed consumer and test, the S122 execution record, the size baseline, and the current descendant HEAD `e2017090f05189f01ae30e1d29d9562690cfa09b`.
 
 ## Findings
 
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
+### stale-cap-inventory | high | Relocation leaves the strict canonical-definition inventory red
 
-       ### P05 S122 code review | {level} | {summary}
+S122 relocated `_condition_for_constraint` from `calc_sheets_apply.py` to `_calc_sheets_apply_formatting.py`, but omitted the matching move in the cap-term inventory. The current `test_every_discovered_cap_site_is_enrolled` reports the new `(adapters/outbound/google/_calc_sheets_apply_formatting.py, _condition_for_constraint)` site as unenrolled, and `test_no_enrolment_outlives_its_site` reports the old `(adapters/outbound/google/_calc_sheets_apply.py, _condition_for_constraint)` exemption as stale. `uv run --no-sync pytest -n0 -q src/cadrumo/tests/test_regulatory_cap_term_dominance.py` failed both test IDs. The output also contains six pairs from unrelated relocations; this finding is only the S122 pair. The source extraction is otherwise a direct private-sibling import with no facade or re-export, and the size baseline was not changed.
 
-     followed by a paragraph carrying the detail. P05 S122 code review is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
+### non-reproducible-exec-evidence | high | The S122 record does not name the passing test selections
+
+The S122 execution record claims two passing pytest checks using `<five focused real Modelo-plan builder modules>` and `<apply/preview/clear-order consumer modules>` in place of concrete node IDs or paths. Those placeholders cannot reproduce or assess the asserted evidence, contrary to the plan's execution-evidence criterion. It also describes a 1,172-line source-specific measurement although the committed target is 1,028 physical lines, below the 1,250 default; the record must state the actual measured command and result.
 
 ## Recommendations
 
-<!-- Actionable recommendations, each tied to a finding above. An
-     architecturally significant recommendation names the decision a
-     follow-on ADR must make; the decision itself is never recorded here. -->
+- For `stale-cap-inventory`, update the one S122-owned exemption to the canonical sibling path and prove both named cap-term inventory tests pass; do not absorb the six unrelated inventory failures.
+- For `non-reproducible-exec-evidence`, amend the scaffolded S122 execution record through the owning vault verb with the exact pytest selections, exact size measurement command and actual result, then rerun and record those checks.
+
