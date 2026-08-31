@@ -106,6 +106,46 @@ def run_gate(name: str, command: tuple[str, ...]) -> GateResult:
     )
 
 
+#: The line ``lint-imports`` prints once it has evaluated the contract set. Its
+#: ABSENCE from a failing run is the signal this module annotates.
+_CONTRACT_TALLY_MARKER: Final[str] = "Contracts:"
+
+#: What ``lint-imports`` prints instead when an ignore_imports pin matches nothing.
+_UNMATCHED_IGNORE_MARKER: Final[str] = "No matches for ignored import"
+
+
+def annotate_unevaluated_contracts(output: str) -> str:
+    """Say so when a layering run ended before evaluating any contract.
+
+    ``unmatched_ignore_imports_alerting = error`` is deliberate: it fails a pin
+    that overshoots, which is what keeps the narrow per-module exemptions
+    honest. The cost is blast radius. One pin matching nothing stops the run
+    before a single contract is checked, and the output is then one line about
+    an ignore -- which reads like a small complaint rather than "none of the
+    ten contracts was evaluated". A dead gate has twice been mistaken for a
+    quiet one here.
+
+    A pin goes unmatched precisely when somebody FIXES the violation it
+    excused, so whoever caused this has no reason to suspect the layering
+    config at all. Naming the situation is the whole point.
+    """
+    if _CONTRACT_TALLY_MARKER in output or _UNMATCHED_IGNORE_MARKER not in output:
+        return output
+    stale = [line.strip() for line in output.splitlines() if _UNMATCHED_IGNORE_MARKER in line]
+    return "\n".join(
+        (
+            output,
+            "",
+            "NO CONTRACTS WERE EVALUATED. The run stopped on an ignore_imports pin that",
+            "matches nothing, so every layering contract is unchecked -- this is not one",
+            "narrow failure. A pin stops matching when its violation is FIXED, so look for",
+            "a repaired import rather than a new one, confirm the edge is gone, then",
+            "delete the pin from .importlinter:",
+            *(f"    {line}" for line in stale),
+        )
+    )
+
+
 def main() -> int:
     """Run all gates and emit the consolidated dashboard."""
     results = [run_gate(name, command) for name, command in GATES]
@@ -119,7 +159,7 @@ def main() -> int:
     for result in failed:
         _emit(f"FAIL  {result.name}")
         if result.output:
-            _emit(result.output)
+            _emit(annotate_unevaluated_contracts(result.output))
         _emit("")
     if passed:
         _emit("passed: " + ", ".join(r.name for r in passed))
