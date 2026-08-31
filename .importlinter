@@ -466,7 +466,7 @@ ignore_imports =
     cadrumo.core.**.tests.** -> cadrumo.tests
     # ── D9 follow-up: local-import lifts made these concrete storage edges
     #    import-linter-visible; pin exact targets, not broad source modules. ──
-    cadrumo.application.modelo._m145_communication_records -> cadrumo.adapters.persistence.storage._secure_object_namespaces
+    cadrumo.application.modelo._m145_communication_records -> cadrumo.adapters.persistence.storage.secure_object_namespaces
     # The M145 communication records persist through the shared
     # SecureSnapshotRepository, which moved into the persistence adapter with
     # the live-snapshot relocation. Its sibling _m036_lifecycle needed no new
@@ -477,7 +477,7 @@ ignore_imports =
     cadrumo.application.modelo._review_package_recipient_encryption -> cadrumo.adapters.persistence.storage.**
     cadrumo.application.modelo._review_package_recipient_encryption -> cadrumo.adapters.persistence.storage.crypto.aead
     cadrumo.application.modelo._review_package_recipient_registry -> cadrumo.adapters.persistence.storage.**
-    cadrumo.application.modelo._review_package_signing -> cadrumo.adapters.persistence.storage._secure_object_namespaces
+    cadrumo.application.modelo._review_package_signing -> cadrumo.adapters.persistence.storage.secure_object_namespaces
     # The mint-or-load-winner keypair primitive was extracted from the signing and
     # recipient-encryption modules above; both are pinned, so the extraction inherits
     # their sanctioned reach rather than introducing a new one.
@@ -492,7 +492,7 @@ ignore_imports =
     # _observation_window carries the shared replace-observations helper extracted from
     # the two observation repos above (P02.S08); it holds the same safe_repository_id
     # path-safety utility import - a plain storage helper with no port to invert.
-    cadrumo.application.aggregation._observation_window -> cadrumo.adapters.persistence.storage._path_safety
+    cadrumo.application.aggregation._observation_window -> cadrumo.adapters.persistence.storage.path_safety
     cadrumo.application.aggregation._withholding_source -> cadrumo.adapters.persistence.storage.errors
     cadrumo.application.auth.apoderado_service -> cadrumo.adapters.persistence.storage.**
     cadrumo.application.auth.certificate_secret_backend -> cadrumo.adapters.persistence.**
