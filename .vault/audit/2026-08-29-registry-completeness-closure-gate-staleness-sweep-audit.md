@@ -846,3 +846,35 @@ evidence and closed the gate green on the WRONG side, keeping the casilla
 binding and losing the only signal that anything was wrong. Before republishing
 a drifted tree, establish WHICH side is right. The refusal that fires during
 the fresh render is the cheapest way to find out.
+
+### Bounding the defect class: how far does the blank-run binding go?
+
+One instance is a bug; the question is whether it is a pattern. The sound test
+is EXACT EXTENT: extract every `NNN-NNN ... BLANCOS` row from each PDF design,
+then look for a committed `kind = 'casilla'` field whose `[offset, offset+length-1]`
+equals one of those ranges exactly. Across all six PDF-sourced designs:
+
+```
+aeat-dr-184-2023-2024   (221,487) (230,500)
+aeat-dr-184-2025        (230,487) (230,500)
+aeat-dr-185-2026        (104,500) (147,500)
+aeat-dr-296-2024        (150,499) (190,390) (310,499) (400,487) (430,432)
+aeat-dr-347-2011        (77,99) (185,390) (264,500) (334,500) (400,487)
+aeat-dr-347-2025        (77,98) (186,390) (306,500) (334,500) (400,487)
+
+exact hits: 1
+   m347 2011-2024  m347-declarado  264-500  contraparte.nif-operador-comunitario
+```
+
+The single hit is the defect already corrected. The class is bounded at one
+instance in the PDF-sourced corpus.
+
+The looser OVERLAP variant of the same test reports 362 rows and is UNSOUND as
+run: a record design carries several record types, each with its own position
+space starting at 1, and pooling their BLANCOS ranges per modelo compares a
+tipo-2 field against a tipo-1 blank run. The 362 is an artifact of that pooling,
+not 362 defects, and must not be quoted as a finding. Exact-extent equality is
+what makes the test sound without record alignment: a coincidence across two
+different record types is vanishingly unlikely, and the generator's own geometry
+validation (contiguity plus `declared_total`) already refuses a field straddling
+a blank run inside its OWN record.
