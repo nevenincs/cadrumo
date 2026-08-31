@@ -46,8 +46,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _SHA: Final = "7c6554f3182df51daaec37284dd891eb925e1f92df7e69bc01b8ccfb8e4f26fe"
 _OTHER_SHA: Final = "58f731b0c72eff7fd23484000c74e73e0ac803a5167065176d78cac8712f5fe7"
 
-#: The published defect: eleven characters where the same cell declares twelve.
-_PUBLISHED: Final = "</T3900700>"
+#: The cell content EXACTLY as the production parser hands it to the renderer.
+#: Read from the hash-pinned workbook rather than composed here. The wrapper is
+#: load-bearing: ``_literal_derivation`` passes ``parser_field.content`` raw,
+#: before the note split and the quote fold, so a declaration carrying only the
+#: inner tag would silently never match and the generator would refuse as though
+#: no declaration existed. Every sibling page reads ``Constante "</T3900N000>"``
+#: at 24 characters; this cell reads 23 into a slot it declares as 12.
+_PUBLISHED: Final = 'Constante "</T3900700>"'
 #: The reading the siblings, the tag grammar and the declared width all support.
 _ADJUDICATED: Final = "</T39007000>"
 
@@ -56,7 +62,7 @@ def _declaration(**overrides: object) -> SourceDefectDeclaration:
     fields: dict[str, object] = {
         "source_ref": "aeat-dr-390-2022",
         "source_sha256": _SHA,
-        "sheet": "Pag. 7",
+        "sheet": "Pág. 7",
         "source_cell": "A53",
         "published_content": _PUBLISHED,
         "adjudicated_literal": _ADJUDICATED,
@@ -80,12 +86,12 @@ def _intermediate(*, source_ref: str = "aeat-dr-390-2022", sha: str = _SHA) -> R
             },
             "sheets": (
                 {
-                    "sheet": "Pag. 7",
+                    "sheet": "Pág. 7",
                     "record_identity": "modelo-390-page-07",
                     "declared_total": 12,
                     "fields": (
                         {
-                            "sheet": "Pag. 7",
+                            "sheet": "Pág. 7",
                             "record_identity": "modelo-390-page-07",
                             "source_row": 53,
                             "source_cell": "A53",
@@ -143,7 +149,7 @@ def _profile() -> ExportTreeTransportProfile:
 class TestTheDeclarationAppliesOnlyToWhatItAdjudicated:
     def test_the_exact_published_content_resolves_to_the_adjudicated_literal(self) -> None:
         resolved = adjudicated_literal_for(
-            (_declaration(),), sheet="Pag. 7", source_cell="A53", published_content=_PUBLISHED
+            (_declaration(),), sheet="Pág. 7", source_cell="A53", published_content=_PUBLISHED
         )
 
         assert resolved == _ADJUDICATED
@@ -151,20 +157,20 @@ class TestTheDeclarationAppliesOnlyToWhatItAdjudicated:
     def test_different_published_content_falls_back_to_refusal(self) -> None:
         """A reissued or re-parsed file is not the file that was adjudicated."""
         resolved = adjudicated_literal_for(
-            (_declaration(),), sheet="Pag. 7", source_cell="A53", published_content="</T3900701>"
+            (_declaration(),), sheet="Pág. 7", source_cell="A53", published_content='Constante "</T3900701>"'
         )
 
         assert resolved is None
 
     def test_another_cell_is_untouched(self) -> None:
         resolved = adjudicated_literal_for(
-            (_declaration(),), sheet="Pag. 7", source_cell="A54", published_content=_PUBLISHED
+            (_declaration(),), sheet="Pág. 7", source_cell="A54", published_content=_PUBLISHED
         )
 
         assert resolved is None
 
     def test_an_empty_declaration_set_changes_nothing(self) -> None:
-        assert adjudicated_literal_for((), sheet="Pag. 7", source_cell="A53", published_content=_PUBLISHED) is None
+        assert adjudicated_literal_for((), sheet="Pág. 7", source_cell="A53", published_content=_PUBLISHED) is None
 
 
 class TestTheDeclarationMustBePinnedToTheParsedSource:
