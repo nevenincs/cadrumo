@@ -9,7 +9,7 @@ related:
   - '[[2026-08-28-semantic-consolidation-cli-payload-projection-adr]]'
 modified: '2026-08-31'
 body_schema: body-v2
-body_hash: 'sha256:036b89512395666f18d6ce9c911375f2841ad9a1fa313dc50d5b5b46ad1f3de2'
+body_hash: 'sha256:e8bb9ee191758340c51319792c078cc640d319acf84e76df50a52db0f482e4a2'
 ---
 
 # `semantic-consolidation` plan
@@ -85,6 +85,9 @@ Eleven repository classes declare the identical namespace, payload_type, schema_
 - [x] `P03.S137` - Route Cl@ve Movil identity classification through the domain classifier, restoring the prefixed NIF its hand-rolled shape regexes silently excluded; `src/cadrumo/adapters/outbound/aeat/auth/clave_movil_support.py, src/cadrumo/adapters/outbound/aeat/auth/tests/test_clave_movil.py`.
 - [x] `P03.S138` - Promote the retention-floor erase decision to one domain function both destructive surfaces reach, as the CLI verb's own docstring asked; `src/cadrumo/domain/retention/, src/cadrumo/application/config_reset.py, src/cadrumo/entrypoints/cli/_config/_profile_delete.py`.
 - [x] `P03.S139` - Repoint the crash-recovery trace pin at the module that holds the delete effect, and teach the retirement sweep to read pins inside a subprocess source string; `src/cadrumo/application/tests/test_config_reset_recovery.py, dev/quality/namespace_retirement_sweep.py`.
+- [x] `P03.S140` - State the minimo-descendientes relacion ambiguity once, and correct the reasoning both copies had let go stale when the relacion axis gained a member; `src/cadrumo/domain/contribuyente/descendant_maternity.py, src/cadrumo/application/modelo/_calculate_input.py, src/cadrumo/entrypoints/cli/_config/_descendiente.py`.
+- [x] `P03.S141` - Give the RETMAR mandatory-filing determination its own function and answer it from the original facts, so the renderer stops repairing a value the incomplete-profile rerun clears; `src/cadrumo/application/calculations/_maritime_exemption_service.py, src/cadrumo/application/modelo/_maritime_preview.py, src/cadrumo/entrypoints/cli/_modelo_maritime_cli.py`.
+- [x] `P03.S142` - Restore the festivos TOML hydration boundary so the AEAT business-day deadline shift can load a calendar at all, and record the engine's unshifted close date for an operator ruling; `src/cadrumo/domain/deadlines/festivos.py`.
 
 ### Phase `P04` - Close the confirmed single-function duplicates
 
