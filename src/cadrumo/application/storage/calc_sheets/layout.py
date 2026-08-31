@@ -60,13 +60,13 @@ from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.schema_formula import BracketEntry, ParameterDefinition
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
-from ._records import (
+from .errors import CalcSheetsEngineError
+from .records import (
     ParameterCell,
     SheetCellAddress,
     TabName,
     column_index_to_letters,
 )
-from .errors import CalcSheetsEngineError
 
 
 class _CasillaRow(BaseModel):
@@ -147,16 +147,33 @@ class SheetLayout(BaseModel):
         raise _unknown_layout_reference("casilla")
 
     def address_for_binding(self, binding: BindingId) -> SheetCellAddress:
+        """Resolve a numeric binding to the ``Entradas`` cell holding its value.
+
+        Refuses a binding the layout never emitted rather than inventing an
+        address, so a formula can never compile against an absent input.
+        """
         if binding not in self.binding_cells:
             raise _unknown_layout_reference("binding")
         return self.binding_cells[binding]
 
     def address_for_date_binding(self, binding: BindingId) -> SheetCellAddress:
+        """Resolve a date-valued binding to the ``Entradas`` cell holding its value.
+
+        Date bindings occupy their own tracker because they carry a date
+        number format rather than the numeric one; an unemitted binding is
+        refused rather than resolved.
+        """
         if binding not in self.date_binding_cells:
             raise _unknown_layout_reference("date_binding")
         return self.date_binding_cells[binding]
 
     def address_for_relation(self, relation: RelationId) -> SheetCellAddress:
+        """Resolve a registry relation to the ``Entradas`` cell holding its value.
+
+        Refuses a relation the layout never emitted rather than inventing an
+        address, so a prefilled relation cannot be read from a cell that does
+        not exist.
+        """
         if relation not in self.relation_cells:
             raise _unknown_layout_reference("relation")
         return self.relation_cells[relation]

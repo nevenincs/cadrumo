@@ -24,8 +24,8 @@ from .....core.sync_surface import SyncSurface
 from .....domain.buckets.event import BucketEventType
 from .....domain.calculations.registry.authority import bundled_authority
 from .....tests.secure_sql import isolated_runtime_profile
-from .._engine import build_export_plan
-from .._export_service import _export_scope_description, _SingleExportCoverage, export_modelo_to_sheets
+from ..engine import build_export_plan
+from ..export_service import _export_scope_description, _SingleExportCoverage, export_modelo_to_sheets
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

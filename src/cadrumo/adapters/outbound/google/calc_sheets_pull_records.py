@@ -9,7 +9,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, NonNegativeInt
 
-from ....application.storage.calc_sheets._records import OperatorInput, SheetExportMetadata
+from ....application.storage.calc_sheets.records import OperatorInput, SheetExportMetadata
 from ....core.casilla_id import CasillaId
 from ....core.filing_year import FilingYear
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN

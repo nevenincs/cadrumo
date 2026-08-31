@@ -44,8 +44,11 @@ from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.schema_rounding import RegistryRoundingCode
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ....domain.period import calculation_filing_date
-from ._layout import SheetLayout, plan_layout
-from ._records import (
+from ._styling import compute_styling
+from ._translator import is_translatable, translate_formula
+from .errors import CalcSheetsEngineError
+from .layout import SheetLayout, plan_layout
+from .records import (
     OperatorInputs,
     RelationValue,
     RelationValues,
@@ -68,9 +71,6 @@ from ._records import (
     TabName,
     _utc_now,
 )
-from ._styling import compute_styling
-from ._translator import is_translatable, translate_formula
-from .errors import CalcSheetsEngineError
 
 # This stamp binds a rendered workbook to the layout compiler as well as the
 # registry snapshot. Increment it whenever a change can move an operator

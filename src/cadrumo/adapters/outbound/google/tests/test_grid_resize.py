@@ -16,7 +16,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....application.storage.calc_sheets._records import (
+from .....application.storage.calc_sheets.records import (
     SheetCellAddress,
     SheetExportMetadata,
     SheetExportPlan,

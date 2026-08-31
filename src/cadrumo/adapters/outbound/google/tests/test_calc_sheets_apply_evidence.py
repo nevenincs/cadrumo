@@ -16,7 +16,7 @@ from io import BytesIO
 import pytest
 from openpyxl import load_workbook
 
-from .....application.storage.calc_sheets._records import (
+from .....application.storage.calc_sheets.records import (
     SheetCellAddress,
     SheetEvidenceContributorRow,
     SheetEvidenceFacet,
@@ -27,7 +27,7 @@ from .....application.storage.calc_sheets._records import (
     SheetValueCell,
     TabName,
 )
-from .....application.storage.calc_sheets._workbook_export import serialize_offline_workbook
+from .....application.storage.calc_sheets.workbook_export import serialize_offline_workbook
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
 from ..calc_sheets_apply import _build_evidence_value_data

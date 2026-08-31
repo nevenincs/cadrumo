@@ -23,7 +23,7 @@ from pydantic import ValidationError
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.hashing import sha256_hex
 from .....core.period import Period
-from .._records import (
+from ..records import (
     SheetCellAddress,
     SheetEvidenceContributorRow,
     SheetEvidenceFacet,
@@ -35,7 +35,7 @@ from .._records import (
     SheetValueCell,
     TabName,
 )
-from .._workbook_export import (
+from ..workbook_export import (
     OfflineWorkbookEvidenceSidecar,
     build_evidence_sidecar,
     serialize_offline_export,

@@ -42,8 +42,8 @@ from ..application.operations.registry import (
     OperationDefinition,
     OperationRegistry,
 )
-from ..application.storage.calc_sheets._export_service import export_modelo_to_sheets
-from ..application.storage.calc_sheets._records import SheetExportPlan, TabName
+from ..application.storage.calc_sheets.export_service import export_modelo_to_sheets
+from ..application.storage.calc_sheets.records import SheetExportPlan, TabName
 from ..application.user_profile.censal_operation import CENSAL_OPERATION_DEFINITION, build_censal_operation_registration
 from ..application.user_profile.operations import (
     build_user_profile_operation_definitions,

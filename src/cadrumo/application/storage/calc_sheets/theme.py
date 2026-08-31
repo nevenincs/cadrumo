@@ -2,7 +2,7 @@
 
 This module is the single source of truth for the export look — the font
 family and the role→style palette — consumed identically by both transports
-(the offline openpyxl materializer in ``_workbook_export`` and the online
+(the offline openpyxl materializer in ``workbook_export`` and the online
 Google-Sheets apply adapter in ``_calc_sheets_apply``). Centralising the design
 here is what makes "uniform application across all exports" structural rather
 than coincidental: neither transport hard-codes a colour or a font; both import

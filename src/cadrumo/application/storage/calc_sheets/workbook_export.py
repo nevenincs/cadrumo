@@ -33,7 +33,7 @@ from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import sha256_hex
 from ....core.identity import ContentDigest
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ._records import (
+from .records import (
     SheetAutoFilter,
     SheetColumnWidth,
     SheetEvidenceContributorRow,
@@ -49,7 +49,7 @@ from ._records import (
     SheetValueCell,
     TabName,
 )
-from ._theme import ROLE_STYLES, STYLED_RANGE_VERTICAL_ALIGN, WORKBOOK_FONT_FAMILY, openpyxl_argb
+from .theme import ROLE_STYLES, STYLED_RANGE_VERTICAL_ALIGN, WORKBOOK_FONT_FAMILY, openpyxl_argb
 
 if TYPE_CHECKING:
     from openpyxl.worksheet.worksheet import Worksheet
@@ -184,7 +184,7 @@ def _apply_styling(workbook: Workbook, plan: SheetExportPlan) -> None:
     """Apply the design system — font, role fills, widths, freezes, filters.
 
     The single offline materialisation of the shared
-    :mod:`~application.storage.calc_sheets._theme` palette: it sets the
+    :mod:`~application.storage.calc_sheets.theme` palette: it sets the
     monospace family on every populated cell, tints each styled range by its role
     (header band, section banner, pale-yellow inputs, grey computed, green
     result), wraps the body columns, sizes the columns, freezes the header rows,

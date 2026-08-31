@@ -68,10 +68,11 @@ from ....domain.calculations.registry.relations import relation_source_requireme
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.period import calculation_filing_date
-from ._engine import build_export_plan
-from ._layout import plan_layout
 from ._parity_comparison import CasillaParity, collect_parity_rows, resolve_parity_verdict
-from ._records import (
+from .engine import build_export_plan
+from .errors import CalcSheetsParityError
+from .layout import plan_layout
+from .records import (
     OperatorInput,
     OperatorInputs,
     RelationValue,
@@ -79,7 +80,6 @@ from ._records import (
     SheetCellAddress,
     SheetExportPlan,
 )
-from .errors import CalcSheetsParityError
 
 
 class _SheetsDiscoveryBuilder(Protocol):

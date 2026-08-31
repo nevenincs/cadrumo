@@ -10,7 +10,7 @@ import pytest
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.config import override_settings
 from .....domain.calculations.registry.authority import bundled_authority
-from .._engine import build_export_plan
+from ..engine import build_export_plan
 from ..errors import CalcSheetsParityError
 from ..parity_harness import (
     OperatorInputScenario,

@@ -35,7 +35,7 @@ from ..sync_runs._records import SyncRunRecordRepositoryProtocol, bounded_scope_
 
 if TYPE_CHECKING:
     from ....adapters.outbound.google.calc_sheets_apply import CalcSheetsApplyResult
-    from ._records import SheetExportPlan
+    from .records import SheetExportPlan
 
 __all__ = ["export_modelo_to_sheets"]
 

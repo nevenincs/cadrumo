@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING, NoReturn, Protocol
 
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ._engine import collect_row_sets
+from .engine import collect_row_sets
 
 __all__ = ["assemble_row_sets_for_snapshot"]
 

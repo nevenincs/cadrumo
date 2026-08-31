@@ -151,7 +151,7 @@
       {
         "importer_path": "src/cadrumo/core/time/tests/test_clock.py",
         "occurrence": 1,
-        "target_mod": "cadrumo.application.storage.calc_sheets._records",
+        "target_mod": "cadrumo.application.storage.calc_sheets.records",
         "imported_names": [
           "_utc_now"
         ],

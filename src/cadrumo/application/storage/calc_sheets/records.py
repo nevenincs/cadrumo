@@ -56,8 +56,8 @@ from ....domain.calculations.registry.ids import (
     SourceRefId,
 )
 from ....domain.calculations.registry.schema import DecimalValue as _RegistryDecimalValue
-from ._theme import WORKBOOK_FONT_FAMILY, StyleRole
 from .errors import CalcSheetsRecordError
+from .theme import WORKBOOK_FONT_FAMILY, StyleRole
 
 # `DecimalValue` is the registry's annotated `Decimal` with a
 # BeforeValidator that coerces int / str inputs through `Decimal(...)`.
@@ -382,7 +382,7 @@ class SheetStyledRange(BaseModel):
     The engine emits one styled range per role-region (the header band, each
     section banner, the operator-input column, the computed column, the result
     cell, wrapped body columns). Both transports resolve ``role`` to a concrete
-    fill / font / alignment through the shared ``_theme`` palette, so the offline
+    fill / font / alignment through the shared ``theme`` palette, so the offline
     xls and online Sheets render the same look from the same declaration. Later
     ranges win on overlap, so a narrow accent range (e.g. ``result``) may be
     emitted after the broad column range it refines.

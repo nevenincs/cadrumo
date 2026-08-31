@@ -35,7 +35,7 @@ from .....domain.calculations.export_field_kind import CasillaFieldKind
 from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.schema import RegistrySnapshot
 from .....domain.calculations.registry.schema_exports import ExportLayoutDefinition
-from .._engine import build_export_plan
+from ..engine import build_export_plan
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

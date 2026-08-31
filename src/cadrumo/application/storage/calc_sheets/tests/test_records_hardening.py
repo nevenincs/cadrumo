@@ -10,7 +10,8 @@ from pydantic import ValidationError
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
 from .....domain.calculations.registry.ids import LegalRefId
-from .._records import (
+from ..errors import CalcSheetsRecordError
+from ..records import (
     OperatorInput,
     OperatorInputs,
     SheetCellAddress,
@@ -25,7 +26,6 @@ from .._records import (
     TabName,
     column_letters_to_index,
 )
-from ..errors import CalcSheetsRecordError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
