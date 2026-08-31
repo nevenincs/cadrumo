@@ -9,7 +9,7 @@ related:
   - '[[2026-08-28-semantic-consolidation-cli-payload-projection-adr]]'
 modified: '2026-08-31'
 body_schema: body-v2
-body_hash: 'sha256:acdcd82fa5e4ec5bc1e42c25146d80dc17217ea6dbf180e0246098421d38bb74'
+body_hash: 'sha256:5bd677cfdad5d094fe1a8ee7ccc13a7d30406feef348e3319bb21456ffc97fc2'
 ---
 
 # `semantic-consolidation` plan
@@ -77,6 +77,8 @@ Six package namespaces carry a PEP 562 __getattr__ resolver, four of them byte-i
 - [x] `P02.S134` - Make the province-code alternation one declaration and route the postcode, province and INE municipality shapes through it, closing a registry boundary that accepted a nonexistent province; `src/cadrumo/core/spanish_postcode.py, src/cadrumo/domain/calculations/registry/schema_scalars.py, src/cadrumo/domain/calculations/registry/tests/test_long_tail_data_types.py`.
 - [x] `P02.S135` - Declare the ISO alpha-2 shape once and record at each site whether it folds or refuses a lowercase token, leaving that policy question open rather than settling it by consolidation; `src/cadrumo/core/country_code.py, src/cadrumo/domain/invoices/validators.py, src/cadrumo/domain/calculations/registry/schema_scalars.py`.
 - [x] `P02.S136` - Declare the calendar-month bound and its predicate once and adopt them at eight sites, two of which stated the same field's rule twice in one module; `src/cadrumo/core/text_bounds.py, src/cadrumo/domain/contribuyente/, src/cadrumo/application/wizard/, src/cadrumo/entrypoints/cli/`.
+- [x] `P02.S144` - Measure CLI model redefinition by field-set containment rather than searching for it, and retire the third currency declaration the earlier consolidation missed; `src/cadrumo/application/ledger/models.py, src/cadrumo/entrypoints/cli/_ledger_payloads.py`.
+- [x] `P02.S145` - Align the ledger export payload with the row it claims to mirror on all thirty-one fields, and repoint the currency case that my own earlier consolidation had turned into a non-wall; `src/cadrumo/entrypoints/cli/_ledger_payloads.py, src/cadrumo/application/ledger/models.py, src/cadrumo/entrypoints/cli/tests/test_ledger_interface_contract_payloads.py`.
 
 ### Phase `P03` - Consolidate the repeated secure-repository configuration shape
 
@@ -94,9 +96,11 @@ Eleven repository classes declare the identical namespace, payload_type, schema_
 
 Behaviour-fingerprint matches that are small, self-contained and mechanically rehomable once a canonical home is ruled: the uppercase-alphanumeric code validator across domain auth and the CLI payloads, the passphrase strength renderer across two TUI screens, the projection row selector across M200 and M296, the snapshot lister across borrador and justificante, and three identical secure-persistence constructors.
 
+
 ### Phase `P05` - Adjudicate the enum-subset rebuilt groupings
 
 Fifty-two enum-subset clusters at two to six sites, each a candidate partition of a closed axis stated more than once. Every one needs the substitutability pre-filter before collapse, because two modules naming the same members for genuinely different rules must stay apart. The home-office family grouping closed earlier is the worked precedent for both the fix and the gate.
+
 
 ### Phase `P06` - Collapse the filing-year axis onto one declared bound
 

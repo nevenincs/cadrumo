@@ -23,4 +23,3 @@ No HIGH, CRITICAL, MEDIUM, or LOW findings.
 ## Recommendations
 
 No follow-up is required from this review.
-
