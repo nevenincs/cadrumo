@@ -29,10 +29,7 @@ from pathlib import Path
 import pytest
 
 from ._registry_schema_support import _committed_registry_tree
-from .test_revision_span_matches_published_designs import (
-    _design_coverage_years,
-    _design_sources,
-)
+from ._revision_span_design_support import _design_coverage_years, _design_sources
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
