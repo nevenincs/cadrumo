@@ -120,7 +120,7 @@ def _read_pointer_bytes(target: Path) -> bytes | None:
     """Read one complete record, waiting out a Windows replacement race."""
 
     def read_once() -> bytes:
-        from ._link_safety import is_link_like
+        from .link_safety import is_link_like
 
         if is_link_like(target):
             raise OSError("active-profile pointer must not be link-like")
@@ -141,7 +141,7 @@ def _read_pointer_bytes(target: Path) -> bytes | None:
             return read_once()
         except FileNotFoundError:
             return None
-    from ._windows_contention import is_windows_contention
+    from .windows_contention import is_windows_contention
 
     started = time.monotonic()
     deadline = started + _POINTER_READ_RETRY_SECONDS
@@ -176,7 +176,7 @@ def read_pointer(root: Path) -> BucketPointer:
 
 def _await_uncontended(operation: Callable[[], None]) -> None:
     """Retry a bounded Windows sharing refusal without masking permanent failures."""
-    from ._windows_contention import is_windows_contention
+    from .windows_contention import is_windows_contention
 
     deadline = time.monotonic() + _POINTER_WRITE_RETRY_SECONDS
     while True:
@@ -200,7 +200,7 @@ def _await_uncontended(operation: Callable[[], None]) -> None:
 
 def write_pointer(root: Path, pointer: BucketPointer) -> None:
     """Atomically replace the one strict pointer record under its owner lock."""
-    from ._fsync import fsync_parent_dir
+    from .fsync import fsync_parent_dir
     from .atomic_write import atomic_write_hardened_bytes
 
     target = pointer_path(root)

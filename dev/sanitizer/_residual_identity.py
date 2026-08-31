@@ -52,7 +52,7 @@ from typing import Any
 
 import pikepdf
 
-from cadrumo.core import IBAN_SHAPE_RE, iban_mod_97
+from cadrumo.core.iban import IBAN_SHAPE_RE, iban_mod_97
 from cadrumo.core.identity import IdentityDocument, IdentityError, validate_identity
 
 

@@ -71,7 +71,7 @@ from typing import Annotated, Final, Literal
 
 from pydantic import BaseModel, BeforeValidator, Field, ValidationError, model_validator
 
-from ....core import ExternalOracleCorpus
+from ....core.external_oracle_corpus import ExternalOracleCorpus
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import RegistrySelectorPeriodCode
 from ....core.casilla_id import CasillaId

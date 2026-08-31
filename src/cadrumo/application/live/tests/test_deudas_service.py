@@ -31,7 +31,7 @@ from sqlalchemy import select
 
 from ....adapters.outbound.aeat.sede.deudas import Deuda
 from ....adapters.persistence.storage.sql import SecureObjectRow
-from ....core import ObjetoTributario
+from ....core.objeto_tributario import ObjetoTributario
 from ....core.deuda_direccion import DeudaDireccion
 from ....core.period import Period
 from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json

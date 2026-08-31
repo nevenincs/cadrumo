@@ -31,7 +31,7 @@ from typing import Literal
 from pydantic import BaseModel, PrivateAttr, ValidationError
 
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import ProfileRecordUnavailability, ProfileSessionRefusalReason
+from ...core.profile_session import ProfileRecordUnavailability, ProfileSessionRefusalReason
 from ...core.operator_action_enums import (
     ActionArgumentSource,
     ActionArgumentStatus,

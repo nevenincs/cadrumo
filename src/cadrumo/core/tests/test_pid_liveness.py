@@ -22,8 +22,8 @@ import sys
 
 import pytest
 
-from .. import pid_is_alive
-from .._pid_liveness import pid_is_alive as _canonical_pid_is_alive
+from ..pid_liveness import pid_is_alive
+from ..pid_liveness import pid_is_alive as _canonical_pid_is_alive
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

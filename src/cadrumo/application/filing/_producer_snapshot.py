@@ -14,7 +14,7 @@ from typing import Annotated, ClassVar, Final, Literal
 
 from pydantic import BaseModel, StringConstraints, model_validator
 
-from ...core import RefundElection
+from ...core.refund_election import RefundElection
 from ...core.payment_election import PaymentElection
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.result_disposition import ResultDisposition, result_disposition_is_refund

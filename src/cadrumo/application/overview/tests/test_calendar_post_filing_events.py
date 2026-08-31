@@ -17,7 +17,7 @@ from pydantic import AnyHttpUrl
 
 from ....adapters.outbound.aeat.sede.declarations_schema import Declaracion
 from ....adapters.outbound.aeat.sede.notifications import RemoteNotification
-from ....core import PostFilingEventKind
+from ....core.post_filing_event import PostFilingEventKind
 from ....core.period import Period
 from ...live.expedientes import PersistedExpedientesSnapshot
 from ...live.notifications import PersistedNotificationsSnapshot

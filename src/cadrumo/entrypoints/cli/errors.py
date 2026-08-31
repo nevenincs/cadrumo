@@ -1102,7 +1102,7 @@ def _storage_session_failure_verdict(error: CadrumoError) -> PreconditionVerdict
         profile_name = active_profile_label_for_error()
         if profile_name is not None:
             from ...application.profile_preconditions import profile_session_failure_verdict
-            from ...core import ProfileSessionRefusalReason
+            from ...core.profile_session import ProfileSessionRefusalReason
 
             reason = (
                 ProfileSessionRefusalReason.ABSENT

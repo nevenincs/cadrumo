@@ -24,7 +24,7 @@ from pathlib import Path
 import pytest
 from sqlalchemy import select
 
-from .....core import GoogleCredentialSourceKind
+from .....core.google_credential_source import GoogleCredentialSourceKind
 from .....tests.secure_sql import isolated_runtime_profile
 from ....persistence.storage import (
     GOOGLE_CREDENTIAL_SOURCE_NAMESPACE,

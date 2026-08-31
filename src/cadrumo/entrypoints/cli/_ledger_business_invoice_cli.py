@@ -31,7 +31,7 @@ from ...application.invoices import (
     resolve_catalogue_invoice_from_repository,
     update_catalogue_invoice,
 )
-from ...core import FieldRole
+from ...core.field_role import FieldRole
 from ...core.aggregation import IntracomOperationType
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n import tr

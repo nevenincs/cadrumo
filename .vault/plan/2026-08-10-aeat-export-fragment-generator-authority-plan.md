@@ -10,7 +10,7 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-adr]]'
   - '[[2026-08-31-aeat-export-fragment-generator-authority-source-defect-adjudication-adr]]'
 modified: '2026-08-31'
-body_hash: 'sha256:97071ddf9d7dd41326c67843c6ca0593d88e8e69a2540dbe33f4feee7c1416db'
+body_hash: 'sha256:a6f9b3be14b0079329e933ab1c9f0439b4e32e08ce5726330557ddc83110f753'
 ---
 
 <!-- RETIRED: S19, S26, S65, S93 -->
@@ -88,7 +88,6 @@ Cover every authority boundary with positive and negative real-behavior tests.
 ### Phase `W03.P06` - repository and byte gates
 
 Verify generated layouts as loadable complete structures and as real emitted filing bytes.
-
 
 ## Wave `W04` - regenerate and release relayout waves
 

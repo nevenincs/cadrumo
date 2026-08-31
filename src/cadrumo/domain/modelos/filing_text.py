@@ -24,9 +24,22 @@ from typing import Annotated
 
 from pydantic import StringConstraints
 
+#: Longest an actor label may be, wherever one is recorded.
+#:
+#: One number because one operator resolver feeds every actor field. It was 64
+#: here and 128 on the review package, and the review package's own docstring
+#: recorded the difference as "unexplained rather than principled" and declined
+#: to narrow it -- correctly, since tightening a persisted bound is a decision
+#: about stored data rather than a de-duplication.
+#:
+#: Reconciled the other way instead. Widening refuses nothing that was accepted
+#: before, and the 64 turned out to be arbitrary: no fixed-width export slot
+#: binds an actor, so nothing downstream was relying on it.
+ACTOR_LABEL_MAX_LENGTH = 128
+
 ModeloActorLabel = Annotated[
     str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=64),
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=ACTOR_LABEL_MAX_LENGTH),
 ]
 """Who performed a modelo lifecycle action -- verified, filed, or discarded by."""
 

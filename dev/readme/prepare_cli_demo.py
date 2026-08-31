@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 from typing import Final
 
-from cadrumo.core import is_link_like
+from cadrumo.core.link_safety import is_link_like
 
 from .._paths import REPO_ROOT, UTF_8
 

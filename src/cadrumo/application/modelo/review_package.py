@@ -62,6 +62,7 @@ from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...core.time import now as _utc_now
 from ...domain.modelos.calculation_revision import CURRENT_SEALED_REVISION_STATES, CalculationRevision
+from ...domain.modelos.filing_text import ACTOR_LABEL_MAX_LENGTH
 from ...domain.modelos.work_unit import WorkUnit
 from .review_package_text import ReviewPackageNote
 
@@ -84,14 +85,17 @@ _DRAFT_MEMBER = "draft.fichero-boe"
 
 
 
-ReviewPackageActor = Annotated[str, StringConstraints(min_length=1, max_length=128)]
+ReviewPackageActor = Annotated[
+    str,
+    StringConstraints(min_length=1, max_length=ACTOR_LABEL_MAX_LENGTH),
+]
 """Who built, counter-signed or submitted a review package.
 
-Bounded more generously than :obj:`ModeloActorLabel`, which caps a filing's
-actor at sixty-four. The two are fed from the same operator resolver, so the
-difference is unexplained rather than principled; it is recorded here instead
-of being silently narrowed, because tightening a persisted bound is a decision
-about stored data and not a de-duplication.
+Reads the same :data:`~domain.modelos.filing_text.ACTOR_LABEL_MAX_LENGTH` as
+:obj:`ModeloActorLabel`, because one operator resolver feeds both. It kept its
+own 128 while the filing label capped at 64, and this docstring used to record
+that as unexplained; the reconciliation widened the filing label rather than
+narrowing this one, so nothing previously accepted is now refused.
 """
 
 

@@ -49,7 +49,8 @@ from typing import Protocol, TypedDict
 
 from pydantic import ValidationError
 
-from ...core import M720AssetClassCode, MetodoValoracion, TipoOperacionVinculada
+from ...core.modelo_232_codigos import MetodoValoracion, TipoOperacionVinculada
+from ...core.foreign_asset_obligation import M720AssetClassCode
 from ...core.aggregation import BindingAggregationOp, RetencionClave, RowSetGroupingKind
 from ...core.decimal import coerce_decimal
 from ...core.external_constants import DEFAULT_CURRENCY

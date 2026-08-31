@@ -16,7 +16,8 @@ from ...application.provisioning import (
     SystemMemoryReading,
     probe_hardware_profile,
 )
-from ...core import AcceleratorKind, ImageMediaType
+from ...core.image_media_type import ImageMediaType
+from ...core.hardware import AcceleratorKind
 from ...core.model_catalogue import model_candidate
 from ...core.config import load_settings
 from ...domain.categories.spending_category import SpendingCategory

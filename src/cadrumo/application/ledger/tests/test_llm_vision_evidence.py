@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import ImageMediaType
+from ....core.image_media_type import ImageMediaType
 from ....core.config import Settings
 from ....domain.transactions.llm import prompt_spec_with_saturation_fields
 from ....domain.user_profile.values import ProfileSetupState

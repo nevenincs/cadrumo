@@ -52,7 +52,7 @@ from functools import cache
 
 from pydantic import BaseModel, Field
 
-from ..core import FieldRole
+from ..core.field_role import FieldRole
 from ..core.model_catalogue import ModelRole
 from ..core.provenance_stamp import build_provenance_stamp
 from ..core.optional_extras import LLM_EXTRA, require_optional_extra

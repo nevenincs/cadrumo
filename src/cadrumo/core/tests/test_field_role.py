@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import pytest
 
-from ...core import FieldRole
+from ..field_role import FieldRole
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

@@ -27,7 +27,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
-from ....core import SyncSurface
+from ....core.sync_surface import SyncSurface
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.time import now
 from ..sync_runs import (

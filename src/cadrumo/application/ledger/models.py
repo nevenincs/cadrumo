@@ -9,7 +9,7 @@ from typing import Annotated, Self
 
 from pydantic import AfterValidator, BaseModel, Field, StringConstraints, field_validator, model_validator
 
-from ...core import Art104TresExclusion
+from ...core.prorrata_exclusions import Art104TresExclusion
 from ...core.hex import Hex64Str
 from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.decimal import is_non_negative_canonical_decimal

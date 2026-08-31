@@ -48,7 +48,7 @@ from uuid import uuid4
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.storage import AttachmentStore, secure_object_repository_for_bucket
-from ...core import ImageMediaType, detect_image_media_type
+from ...core.image_media_type import ImageMediaType, detect_image_media_type
 from ...core.document_shape import PDF_CONTAINER_SHAPES
 from ...core.provenance_stamp import provenance_stamp_transport
 from ...core.config import Settings, load_settings

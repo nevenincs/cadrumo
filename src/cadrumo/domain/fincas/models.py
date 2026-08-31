@@ -17,6 +17,7 @@ from decimal import Decimal
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.text_bounds import PositiveCount
 from .enums import ExpenseCategory, UseType
 from .errors import FincaValidationError
 
@@ -203,7 +204,7 @@ class Arrendamiento(_FincaRecord):
     finca_id: int = Field(ge=1)
     contract_celebration_date: date
     contract_termination_date: date | None = None
-    tenant_count: int = Field(ge=1)
+    tenant_count: PositiveCount
     qualifying_co_tenant_count: int = Field(default=0, ge=0)
     tenant_min_age: int | None = Field(default=None, ge=0, le=150)
     tenant_max_age: int | None = Field(default=None, ge=0, le=150)

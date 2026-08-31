@@ -39,7 +39,7 @@ from ...application.modelo.work_review import (
     ModeloWorkProgress,
     ModeloWorkReview,
 )
-from ...core import RefundElection
+from ...core.refund_election import RefundElection
 from ...core.payment_election import PaymentElection
 from ...core.result_disposition import ResultDisposition
 from ...core.aggregation import BindingSourceKind

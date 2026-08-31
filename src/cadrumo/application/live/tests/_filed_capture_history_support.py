@@ -16,7 +16,7 @@ from ....adapters.outbound.aeat.sede.observation_store import FiledDeclaracionOb
 from ....adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core import ObservedHeaderFact
+from ....core.observed_header_fact import ObservedHeaderFact
 from ....core.casilla_value_kind import CasillaValueKind
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.period import Period

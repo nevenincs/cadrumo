@@ -36,7 +36,7 @@ from ...application.modelo.work_addressing import (
     ModeloWorkVisibleTargetAmbiguousError,
 )
 from ...application.modelo.work_lifecycle import get_work_unit
-from ...core import RescateType
+from ...core.rescate_type import RescateType
 from ...core.hex import HEX_PATTERN_64
 from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.modelo import Modelo

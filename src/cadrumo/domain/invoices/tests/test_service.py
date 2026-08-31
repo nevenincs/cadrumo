@@ -25,7 +25,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....core import LinkInconsistencyDirection
+from ....core.invoice_link import LinkInconsistencyDirection
 from ..service import (
     LinkInconsistency,
     ReconciliationSuggestion,

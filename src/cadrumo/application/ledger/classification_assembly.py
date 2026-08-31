@@ -84,7 +84,7 @@ from typing import TYPE_CHECKING, NamedTuple
 
 from pydantic import BaseModel, Field
 
-from ...core import IvaCategoryOutcome
+from ...core.iva_category_resolution import IvaCategoryOutcome
 from ...core.classifier_input_source import ClassifierInputSource, CounterpartyTaxablePersonStatus
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.iva.classification import CustomerTaxStatus, InvoiceKind, IvaInvoiceClassificationCriteria, IvaTerritorialScope, PartyFact, TransactionKind, classify_iva, domestic_categories_by_rate_kind, domestic_rate_tier_is_required, rate_kind_for_domestic_category

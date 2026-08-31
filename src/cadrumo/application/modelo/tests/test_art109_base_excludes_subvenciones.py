@@ -26,7 +26,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import TipoActividad
+from ....core.tipos_actividad import TipoActividad
 from ....core.concepto_ingreso import ConceptoIngreso
 from ....core.period import Period
 from ....core.resources import bundled_path

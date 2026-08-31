@@ -7,7 +7,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Literal
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ....core.aggregation import INVOICE_BINDING_SOURCE_KINDS, BindingAggregationOp, BindingSourceKind
 from ....core.country_code import CountryCodeAlpha2
@@ -1110,10 +1110,35 @@ def _m347_quarter_of(value: date) -> Literal["1T", "2T", "3T", "4T"]:
     raise RegistryValidationError(msg)
 
 
+#: Config for the private grouping buckets below.
+#:
+#: Strict and closed like every model here, but NOT frozen. These three exist to
+#: be mutated -- the aggregation loops do ``bucket.base_total += ...`` and fill a
+#: missing legal name in place -- and they carried STRICT_FROZEN_CONFIG, so every
+#: aggregation over a non-empty observation set raised ``frozen_instance``.
+#:
+#: The docstrings said "mutable accumulator" the whole time. The config and the
+#: prose disagreed and the prose was right: these are local buckets inside one
+#: function, never persisted, never returned (the rows are built as plain
+#: mappings afterwards), so the frozen discipline that protects a domain record
+#: has nothing to protect here.
+#:
+#: ``validate_assignment`` is load-bearing rather than decorative. Dropping
+#: ``frozen`` alone makes every assignment bypass validation, so the class would
+#: have gone from refusing a Decimal sum to accepting an int in a country-code
+#: field -- trading one wrong answer for a quieter one. A probe caught that.
+_ACCUMULATOR_CONFIG: ConfigDict = ConfigDict(
+    strict=True,
+    extra="forbid",
+    validate_default=True,
+    validate_assignment=True,
+)
+
+
 class _ContraparteClaveAccumulator(BaseModel):
     """Mutable accumulator for contraparte_clave row aggregation (modelo 347)."""
 
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = _ACCUMULATOR_CONFIG
 
     country_code: str
     party_tax_id: TaxIdIdentityToken
@@ -1288,7 +1313,7 @@ def _m349_export_nif_number(party_tax_id: str, country_code: str) -> str:
 class _OperatorClaveAccumulator(BaseModel):
     """Mutable accumulator for operator_clave row aggregation."""
 
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = _ACCUMULATOR_CONFIG
 
     country_code: str
     party_tax_id: TaxIdIdentityToken
@@ -1300,7 +1325,7 @@ class _OperatorClaveAccumulator(BaseModel):
 class _OperatorClavePeriodAccumulator(BaseModel):
     """Mutable accumulator for operator_clave_period row aggregation."""
 
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = _ACCUMULATOR_CONFIG
 
     country_code: str
     party_tax_id: TaxIdIdentityToken

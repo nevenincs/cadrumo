@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from .. import spanish_stemmer, spanish_word_tokens, stem_spanish_terms, stem_spanish_text
+from ..spanish_stemming import spanish_stemmer, spanish_word_tokens, stem_spanish_terms, stem_spanish_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from .....core import ObservedHeaderFact
+from .....core.observed_header_fact import ObservedHeaderFact
 from .....core.casilla_id import CasillaId
 from .....core.config import Settings
 from .....core.i18n import tr

@@ -24,7 +24,8 @@ import inspect
 import pytest
 from pydantic import ValidationError
 
-from .....core import ExportExemptionReason, ExportLayoutFormat
+from .....core.export_layout_format import ExportLayoutFormat
+from .....core.export_exemption_reason import ExportExemptionReason
 from .....core.authority_grade import RegistryAuthorityGrade
 from .._snapshot_internals import _check_snapshot_filing_capability
 from .._validate_export_exemption import (

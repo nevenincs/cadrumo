@@ -30,7 +30,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 #: The module that DEFINES the compiler. Its own ``hydrate_filing_projection_ref``
 #: delegates to it in the same file, which is not a loader reaching for it.
-_COMPILER_HOME = Path("src/cadrumo/core/_filing_projection_ref.py")
+_COMPILER_HOME = Path("src/cadrumo/core/filing_projection_ref.py")
 
 
 def test_projection_ref_compiler_has_only_the_two_canonical_loader_callers() -> None:
@@ -62,6 +62,16 @@ def test_projection_ref_compiler_has_only_the_two_canonical_loader_callers() -> 
                 caller_paths.add(module_path.relative_to(root))
 
     assert caller_paths - {_COMPILER_HOME} == {
-        Path("src/cadrumo/domain/calculations/registry/loader.py"),
+        # The registry loader's half of this expectation now names
+        # ``_loader_internals``. The loader was split and the projection-ref
+        # compilation went with the internals; the CONTRACT is unchanged, since
+        # that module is still the registry loader, only a different file of it.
+        #
+        # This is the second time this expectation has gone stale by a move, and
+        # the docstring above records the first. Both times the gate went quiet
+        # rather than red: this one because ``_COMPILER_HOME`` pointed at
+        # ``_filing_projection_ref.py`` after that module was made public, so the
+        # exclusion no longer matched anything it was meant to exclude.
+        Path("src/cadrumo/domain/calculations/registry/_loader_internals.py"),
         Path("dev/registry/pipeline/_semantic_map_loader.py"),
     }

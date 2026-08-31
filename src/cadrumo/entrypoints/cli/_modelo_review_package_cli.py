@@ -137,7 +137,7 @@ from ...application.modelo.work_addressing import (
     ModeloWorkPeriodTokenError,
 )
 from ...application.workflow.persistence import workflow_state_repository
-from ...core import RefundElection
+from ...core.refund_election import RefundElection
 from ...core.payment_election import PaymentElection
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.period import Period

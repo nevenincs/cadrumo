@@ -6,7 +6,7 @@ from datetime import date
 
 import pytest
 
-from .....core import LegalReviewStatus
+from .....core.legal_review import LegalReviewStatus
 from .....core.revision_review import RevisionReviewStatus
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.resources import bundled_path

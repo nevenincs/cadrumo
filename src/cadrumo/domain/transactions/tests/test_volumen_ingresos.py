@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import TipoActividad
+from ....core.tipos_actividad import TipoActividad
 from ....core.concepto_ingreso import ConceptoIngreso, INGRESO_CONCEPTS_OUTSIDE_THE_VOLUME_BASE
 from ....core.resources import bundled_path
 from ...calculations.registry.loader import load_legal_parameters_only

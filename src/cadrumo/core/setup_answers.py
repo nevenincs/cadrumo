@@ -833,7 +833,7 @@ class SetupAnswers(BaseModel):
     def _parse_taxation_type(cls, value: object) -> Any:  # ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR
         if value == "":
             return ""
-        from ._renta_declaracion_type import RentaDeclaracionType
+        from .renta_declaracion_type import RentaDeclaracionType
 
         renta_declaracion_type_cls = RentaDeclaracionType
         if isinstance(value, renta_declaracion_type_cls):
@@ -1010,7 +1010,7 @@ class SetupAnswers(BaseModel):
 
     @model_validator(mode="after")
     def _validate_spouse_fields_when_joint(self) -> SetupAnswers:
-        from ._renta_declaracion_type import RentaDeclaracionType
+        from .renta_declaracion_type import RentaDeclaracionType
 
         renta_declaracion_type_cls = RentaDeclaracionType
         if self.taxation_type == renta_declaracion_type_cls.JOINT and not self.spouse_tax_id:

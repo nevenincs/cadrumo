@@ -35,7 +35,7 @@ from collections.abc import Callable
 
 import pytest
 
-from .._iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
+from ..iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
 from ..classification import RedactionRule, SensitivityClass
 from ..hashing import sha256_hex
 from ..identity import IdentityError, nif_iva_format_for_country, normalise_nif_iva, validate_identity

@@ -27,7 +27,8 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, ValidationError
 
-from ...core import LOCKFILE_UNLINK_RETRY_SECONDS, pid_is_alive, unlink_lockfile
+from ...core.pid_liveness import pid_is_alive
+from ...core.lockfile_unlink import LOCKFILE_UNLINK_RETRY_SECONDS, unlink_lockfile
 from ...core.auth_provider import AuthProviderKind
 from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.models import STRICT_FROZEN_CONFIG

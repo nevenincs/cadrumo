@@ -42,7 +42,8 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 
-from cadrumo.core import LOCKFILE_UNLINK_RETRY_SECONDS, pid_is_alive, unlink_lockfile
+from cadrumo.core.pid_liveness import pid_is_alive
+from cadrumo.core.lockfile_unlink import LOCKFILE_UNLINK_RETRY_SECONDS, unlink_lockfile
 from cadrumo.core.atomic_write import atomic_write_text
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.logging import get_logger

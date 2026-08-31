@@ -20,7 +20,10 @@ from typing import Annotated
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from .....core import UNRESOLVED_SCHEMA_FAMILY_DISPOSITIONS, RegistrySchemaFamilyDisposition
+from .....core.schema_family_disposition import (
+    RegistrySchemaFamilyDisposition,
+    UNRESOLVED_SCHEMA_FAMILY_DISPOSITIONS,
+)
 from .....tests.registry_tree import bundled_registry_tree
 from .._schema_family_coverage import (
     RevisionCoverageManifest,

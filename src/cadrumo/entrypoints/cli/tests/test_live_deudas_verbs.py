@@ -22,7 +22,7 @@ from ....application.live.deudas import (
     DeudasCapture,
     DeudasService,
 )
-from ....core import ObjetoTributario
+from ....core.objeto_tributario import ObjetoTributario
 from ....core.deuda_direccion import DeudaDireccion
 from ....core.period import Period
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture

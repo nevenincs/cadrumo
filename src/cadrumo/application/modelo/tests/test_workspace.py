@@ -10,7 +10,7 @@ import pytest
 
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import RegistrySchemaFamilyDisposition
+from ....core.schema_family_disposition import RegistrySchemaFamilyDisposition
 from ....core.period import Period
 from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry.authority import bundled_authority
@@ -2139,7 +2139,7 @@ def test_resolve_graded_snapshot_result_assembles_a_complete_projection_over_a_r
     """The full assembly over a real work unit, calculation, and verification report."""
     from decimal import Decimal
 
-    from ....core import ModeloWorkProgressState
+    from ....core.modelo_work_progress_state import ModeloWorkProgressState
     from ....core.authority_grade import RegistryAuthorityGrade
     from ....core.external_constants import OutputLanguage
     from ....domain.calculations.registry.authority import bundled_authority

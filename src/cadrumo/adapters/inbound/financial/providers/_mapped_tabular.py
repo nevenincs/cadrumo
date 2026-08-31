@@ -33,7 +33,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import override
 
-from .....core import FieldRole
+from .....core.field_role import FieldRole
 from .....core.optional_extras import MissingOptionalExtraError
 from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import CadrumoError, CoreValidationError

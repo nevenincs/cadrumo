@@ -13,7 +13,7 @@ from datetime import date
 from pathlib import Path
 from typing import Protocol
 
-from ....core import LegalReviewStatus
+from ....core.legal_review import LegalReviewStatus
 from ....core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
 from ....core.authority_grade import RegistryAuthorityGrade
 from ._validate import RegistryValidator

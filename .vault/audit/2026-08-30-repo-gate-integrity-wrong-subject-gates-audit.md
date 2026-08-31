@@ -5,7 +5,7 @@ tags:
 date: '2026-08-30'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:c0a94e644cb5896aedec57abedacfcfb785632ed7a82d654e57736788a288595'
+body_hash: 'sha256:2255adde284b6fb1d1f4aa2ced53e92d6eadf84e9ef2cd7d7e9499705f74d046'
 related: []
 ---
 
@@ -2217,6 +2217,31 @@ confidence in a refutation that had not actually been made. The two failures nee
 different responses: a wrong example is replaced, a weak one is strengthened, and
 only the first justifies overturning the claim it supported.
 
+### Gate allowlists carry zero stale exclusions, and the stale-looking rest is a live campaign
+
+**Pathway:** every gate allowlist in the tree, swept 2026-08-31.
+
+608 path-like entries across 3,730 gate modules under `dev/tests`, `dev/quality` and every `src/**/tests` package. Classified by what the owning constant DOES rather than by whether the path resolves, because those are different questions:
+
+- **Stale EXCLUSIONS: 0.** This is the load-bearing number. An exclusion naming a vanished path is the shape that silently weakens a gate -- the gate keeps passing, and nobody learns the exemption stopped applying to anything. There are none.
+- **Stale-looking inventory entries: 176**, and the count is not the finding. Two corrections to the measurement itself: the largest single cluster (26 rows in `entrypoints/cli/tests/test_backend_boundary.py`) belongs to a constant named `removed` -- paths that must NOT exist, so absence is the assertion PASSING; and `tests/test_deferred_cross_layer_imports.py` already carries its own `test_no_stale_declaration`, so its rows cannot go stale unnoticed. A detector keyed on "does this path resolve" cannot separate a must-exist inventory from a must-not-exist one, and reporting 176 as though it were a defect count would have been a third instance of the count-without-members error this audit already records.
+
+**The gates fail loudly, which is the correct design.** Run against the tree, the modules holding stale-looking rows are RED, not green-while-skipping. Their entries are visible.
+
+**Why they are red is a peer campaign, not a defect.** Two consecutive runs of `test_deferred_cross_layer_imports.py` died with `FileNotFoundError` on two DIFFERENT modules -- `core/_notificacion_estado_servicio.py`, then `core/_observed_header_fact.py` -- neither present in HEAD under either spelling, both live underscore-strippings by the in-flight `relocation:core` work against 289 uncommitted files. Different casualty each run is the signature of a MOVING target; one run would have looked like a broken gate.
+
+**The real robustness gap, worth recording rather than fixing mid-campaign.** `deferred_cross_layer_edges()` globs the corpus and then reads each path, so a rename landing between the two raises rather than reporting. The casualty is `test_the_scanner_sees_a_real_corpus`, which is the module's ANTI-VACUITY control -- so in a shared worktree the one test whose job is to prove the scanner still sees a corpus is the test a concurrent rename takes out. It errors rather than passing vacuously, so nothing is silently granted; but a gate that cannot be run to completion while a relocation campaign is live cannot gate that campaign, which is exactly when it is most needed. Reading each file defensively and reporting unreadable paths as a scan result, rather than raising, would preserve the control.
+
+### Amendment: the moving-target diagnosis, confirmed at three casualties
+
+The full eight-module run completed at 25 failed / 166 passed. **None is attributable to the C3 editor work**, and the evidence is a third distinct casualty rather than a repeated one.
+
+Across three runs the crash landed on three DIFFERENT modules -- `core/_notificacion_estado_servicio.py`, then `core/_observed_header_fact.py`, then `cadrumo.core.windows_contention`. A fixed defect reproduces on the same module; a moving campaign reproduces on a new one each time. `core/refund_election.py`, which took out all 53 TUI modules in the eight-module run, **exists on disk now and is still absent from HEAD** -- the peer created it after that run began, so the gate photographed a moment that no longer exists. Re-running is not a retry here, it is a fresh measurement of a different tree.
+
+**One positive result worth pinning, because it is easy to lose among the noise.** `test_no_test_file_sits_outside_every_lane_path` and `test_every_test_is_selected_by_some_declared_lane` name only `dev/` paths -- `dev/benchmarks/cli`, `dev/registry/conformance`, `dev/tui`, `dev/packaging`. The new C3 test packages under `entrypoints/tui/modelo/edit/tests/` and the accessibility suite appear in NEITHER list, so they are lane-reachable: some declared lane selects them and CI will actually run them. A new test directory that no lane reaches is the failure mode where a suite is green because nothing executes it, and these are clear of it.
+
+**Operational consequence.** While a relocation campaign is live against this tree, an import-graph gate measures the campaign, not the code. Its verdict is only meaningful once the churn settles, and a red run taken at face value mid-campaign would send someone chasing a defect that does not exist.
+
 ## Recommendations
 
 Append a new row citing `W05.P23.S307`, scoped to the local-configuration sweep,
@@ -2600,3 +2625,19 @@ The cost was not a wasted search. Both wrong claims were written into plan rows
 that were correct, and a row reading "premise corrected" or "blocked" presents
 as settled, so a confident wrong correction is worse than the uncertainty it
 replaced.
+
+### Two baselines with OPPOSITE comparison semantics, and one name
+
+**Pathway:** `ModeloWorkspaceBaselineV1` in `application/modelo/workspace_models.py` and `ModeloEditBaselineV1` in `application/modelo/_edit_models.py`.
+
+Both are called a baseline. They are compared in opposite ways, and nothing at either site says so.
+
+The WORKSPACE baseline is deterministic. Every field is a content digest or a resolved coordinate -- token, contributor stamp and epoch digests, target, selected revision, schema identity, locale catalogue digest -- and it carries NO timestamp and NO minted id. Whole-record equality is therefore meaningful, and the codebase relies on it: `workspace.py:1482` compares `cursor.baseline != baseline`, and `workspace_models.py` does the same at four further sites to keep a facet, a cursor and a projection pinned to one read. Those comparisons are correct.
+
+The EDIT baseline is not. It carries `issued_at`, `expires_at` and `baseline_id`, because it is a time-bounded admission authority rather than a content identity. Two admissions of an UNCHANGED tree are never equal, so whole-record equality can only ever report "different".
+
+**Measured cost of the collision, on 2026-08-31.** The editor session answered staleness by comparing two edit baselines, carrying the workspace's pattern across to a record that cannot support it. The stale signal was permanently on, which is worse than absent: an operator warned of a conflict on every refresh learns to dismiss the one warning that protects a concurrent edit. Corrected to ask `reconfirm_modelo_edit_baseline`, the contract's own compare-and-swap, which judges the coordinate axes rather than the record.
+
+This is the `section_path` collision class again -- one word, two meanings, prose as the only thing keeping them apart -- but sharper, because here the two meanings imply CONTRADICTORY handling and the wrong one fails silently rather than loudly.
+
+**Remediation.** Neither type needs renaming for correctness, but each should state its comparison contract where a reader meets it: the workspace baseline that it is content-derived and comparable, the edit baseline that it is admission-scoped and must be compared through the compare-and-swap. A sweep confirmed no OTHER production site compares an edit baseline by record equality; the one that did was mine.

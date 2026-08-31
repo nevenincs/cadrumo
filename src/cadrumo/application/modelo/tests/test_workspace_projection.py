@@ -35,7 +35,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import ModeloWorkProgressState
+from ....core.modelo_work_progress_state import ModeloWorkProgressState
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.period import Period
 from ....core.external_constants import OutputLanguage

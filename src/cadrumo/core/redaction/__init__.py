@@ -64,9 +64,9 @@ from types import MappingProxyType
 from typing import overload
 from urllib.parse import urlparse
 
-from .._iban import IBAN_SHAPE_RE as _IBAN_SHAPE_RE
-from .._iban import iban_mod_97 as _iban_mod_97
-from .._iban import normalise_iban as _normalise_iban
+from ..iban import IBAN_SHAPE_RE as _IBAN_SHAPE_RE
+from ..iban import iban_mod_97 as _iban_mod_97
+from ..iban import normalise_iban as _normalise_iban
 from ..classification import (
     ClassificationPolicy as _ClassificationPolicy,
 )
@@ -262,7 +262,7 @@ _NIF_IVA_PATTERN = (
 # extension, not an inference from that list. Do not narrow it back on the
 # grounds that the stated list omits it.
 #
-# Scanning form of the anchored :data:`IBAN_SHAPE_RE` in ``core._iban``, which
+# Scanning form of the anchored :data:`IBAN_SHAPE_RE` in ``core.iban``, which
 # stays the authority on what an IBAN looks like. Two country letters, two
 # check digits, then an 11-30 character BBAN.
 #

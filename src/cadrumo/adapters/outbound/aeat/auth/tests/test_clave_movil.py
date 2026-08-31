@@ -231,7 +231,7 @@ def test_probe_without_persisted_session_refuses_without_fresh_login(tmp_path: P
 
 
 def test_render_progress_banner_routes_only_to_armed_operator_sink() -> None:
-    from ......core import OperatorProgress
+    from ......core.operator_progress import OperatorProgress
 
     captured: list[OperatorProgress] = []
     _render_progress_banner(verification_code="YLL", timeout_seconds=120, used_non_qr_fallback=True)

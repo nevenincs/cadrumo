@@ -28,7 +28,7 @@ from collections import defaultdict
 from collections.abc import Mapping
 from typing import Final
 
-from ....core import record_design_epoch_year
+from ....core.record_design_epoch import record_design_epoch_year
 from .schema_references import SourceReference
 
 #: The modelo a design belongs to, read from where the file LIVES rather than from

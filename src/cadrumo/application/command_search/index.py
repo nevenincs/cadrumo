@@ -26,7 +26,8 @@ from collections.abc import Iterable, Sequence
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...core import SpanishStemmer, fts_or_group, spanish_stemmer, spanish_word_tokens, stem_spanish_terms
+from ...core.spanish_stemming import SpanishStemmer, spanish_stemmer, spanish_word_tokens, stem_spanish_terms
+from ...core.fts_query import fts_or_group
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 

@@ -57,7 +57,7 @@ from uuid import UUID
 from pydantic import BaseModel, ValidationError, model_validator
 
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import ProfileSessionRefusalReason
+from ...core.profile_session import ProfileSessionRefusalReason
 from ...core.storage_taxonomy_locations import storage_location
 from ...core.storage_taxonomy import StorageCategory
 from ...core.bucket_pointer import BucketPointer, resolve_active_bucket_id

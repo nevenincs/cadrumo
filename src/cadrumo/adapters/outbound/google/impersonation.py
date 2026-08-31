@@ -76,7 +76,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ....core import GoogleCredentialSourceKind
+from ....core.google_credential_source import GoogleCredentialSourceKind
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.models import STRICT_FROZEN_CONFIG
 from .errors import GoogleAuthError, GoogleAuthPreconditionCondition, google_auth_no_action_verdict

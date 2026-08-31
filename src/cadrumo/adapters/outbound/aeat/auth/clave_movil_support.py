@@ -17,7 +17,7 @@ from uuid import uuid4
 
 from pydantic import SecretStr
 
-from .....core import OperatorProgress
+from .....core.operator_progress import OperatorProgress
 from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import AuthError
 from .....core.hashing import sha256_hex

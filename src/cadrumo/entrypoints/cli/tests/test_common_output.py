@@ -62,7 +62,7 @@ def test_operator_progress_banner_goes_to_stderr_not_stdout(capsys: pytest.Captu
     envelope stays pure. Exercises the exact sink the ``cadrumo`` entry point
     installs via ``operator_progress_sink``."""
 
-    from ....core import OperatorProgress
+    from ....core.operator_progress import OperatorProgress
     from .. import _emit_operator_progress
 
     _emit_operator_progress(

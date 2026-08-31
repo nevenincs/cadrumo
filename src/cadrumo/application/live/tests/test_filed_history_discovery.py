@@ -25,7 +25,8 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.outbound.aeat.sede.schema import FiledDeclarationAvailability, FiledDeclarationAvailabilityReport
-from ....core import FiledHistoryDiscoverySignal, RegisterScopingSignal
+from ....core.register_scoping_signal import RegisterScopingSignal
+from ....core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ....core.period import Period
 from ....core.casilla_id import validated_casilla_id
 from ....domain.deadlines.models import TaxpayerProfile

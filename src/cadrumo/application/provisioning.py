@@ -31,7 +31,7 @@ from typing import TypedDict, cast
 import httpx
 from pydantic import BaseModel, Field, model_validator
 
-from ..core import AcceleratorKind, ContentionCause, HardwareTier, hardware_tier_for_free_bytes
+from ..core.hardware import AcceleratorKind, ContentionCause, HardwareTier, hardware_tier_for_free_bytes
 from ..core.model_catalogue import (
     DeploymentLicencePosture,
     ModelCandidate,

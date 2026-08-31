@@ -24,7 +24,7 @@ from typing import Any, cast
 import pytest
 from pydantic import ValidationError
 
-from ....core import RegisterScopingSignal
+from ....core.register_scoping_signal import RegisterScopingSignal
 from ....core.json_contract import SchemaEnvelope
 from .._app_live_filed_payloads import FiledHistoryOnboardingResult, FiledHistoryPairOutcomePayload
 from .._command_schema import command_schema_types

@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import RentaDeclaracionType
+from ....core.renta_declaracion_type import RentaDeclaracionType
 from ....domain import contribuyente
 from ....domain.contribuyente.renta_codes import RentaMaritalStatus, RentaSexCode
 from ..errors import UserProfileNotFoundError

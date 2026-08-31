@@ -13,7 +13,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from .....core import ExportLayoutFormat
+from .....core.export_layout_format import ExportLayoutFormat
 from ...export_field_kind import CasillaFieldKind
 from ..authority import bundled_authority
 from ..schema_exports import ExportFieldDefinition, ExportLayoutDefinition, ExportRecordDefinition

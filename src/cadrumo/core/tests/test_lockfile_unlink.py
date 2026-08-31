@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from .._lockfile_unlink import LOCKFILE_UNLINK_RETRY_SECONDS, unlink_lockfile
+from ..lockfile_unlink import LOCKFILE_UNLINK_RETRY_SECONDS, unlink_lockfile
 from ..external_constants import UTF_8_ENCODING
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

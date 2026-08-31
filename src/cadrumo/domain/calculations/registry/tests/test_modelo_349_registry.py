@@ -8,7 +8,7 @@ from functools import cache
 
 import pytest
 
-from .....core import ExportLayoutFormat
+from .....core.export_layout_format import ExportLayoutFormat
 from .....core.corpus_text import normalise_corpus_text
 from .....core.resources import bundled_path
 from .....tests import REPO_ROOT

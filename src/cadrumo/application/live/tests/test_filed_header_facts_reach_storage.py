@@ -24,7 +24,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import ObservedHeaderFact
+from ....core.observed_header_fact import ObservedHeaderFact
 from ....core.result_disposition import ResultDisposition
 from ....core.period import Period
 from ...calculations import CalculationObservationRepository, IvaCompensationHistoryRepository

@@ -9,7 +9,7 @@ from typing import TypedDict
 import pytest
 from pydantic import ValidationError
 
-from ....core import ModeloWorkProgressState
+from ....core.modelo_work_progress_state import ModeloWorkProgressState
 from ....core.period import Period
 from ....core.aggregation import BindingSourceKind
 from ....domain.calculations import RowSourceIdentity

@@ -16,7 +16,7 @@ from __future__ import annotations
 from io import BytesIO
 from xml.etree.ElementTree import Element
 
-from ....core import detect_image_media_type
+from ....core.image_media_type import detect_image_media_type
 from ....core.document_shape import DocumentShape
 from ....core.errors.hierarchy import CoreValidationError
 from ._xml import EInvoiceXmlParseError, parse_hardened_xml

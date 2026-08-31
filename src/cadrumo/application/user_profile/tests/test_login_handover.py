@@ -38,7 +38,7 @@ from ....adapters.persistence.storage.custody.filesystem import (
     compare_and_replace_same_or_predecessor_profile_custody_local_record,
 )
 from ....adapters.persistence.storage.custody.sentinel import PROFILE_CUSTODY_SENTINEL_FILENAME
-from ....core import ProfileSessionRefusalReason
+from ....core.profile_session import ProfileSessionRefusalReason
 from ....core import config as config_module
 from ....core.bucket_pointer import BucketPointer, read_pointer, write_pointer
 from ....core.config import Settings

@@ -6,7 +6,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import ForeignAssetObligationGroup
+from ....core.foreign_asset_obligation import ForeignAssetObligationGroup
 from ..._foreign_asset_thresholds import foreign_asset_declaration_thresholds
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -61,13 +61,13 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, ClassVar, Final, NamedTuple, TypedDict
 
 from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
-from ...core.modelo import Modelo
-from ...core.period import Period
-from ...core.casilla_id import CasillaId
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
+from ...core.casilla_id import CasillaId
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.logging import get_logger
+from ...core.modelo import Modelo
 from ...core.parsing import parse_iso8601_date
+from ...core.period import Period
 from ...core.time import now
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings import RegistryModeloObservation
@@ -100,8 +100,8 @@ from ..aggregation import (
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,
     CalculationSourceResolution,
-    storage_degradation_resolution,
 )
+from ..aggregation.source_resolution_operations import storage_degradation_resolution
 from ..storage.calc_sheets import (
     RelationValue,
     RelationValues,

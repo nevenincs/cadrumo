@@ -67,7 +67,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import ForeignAssetObligationGroup
+from ....core.foreign_asset_obligation import ForeignAssetObligationGroup
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation

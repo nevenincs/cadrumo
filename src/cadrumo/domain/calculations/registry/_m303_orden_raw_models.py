@@ -32,7 +32,12 @@ class M303AnnualOrdenRawModule(RegistryModel):
     order: int = Field(ge=1, le=7)
     definition: str = Field(min_length=1)
     unit: str = Field(min_length=1)
-    coefficient: Decimal = Field(ge=Decimal("0"))
+    # Positive, matching the seasonal-index coefficient below and the
+    # ModuloOrdenAnual this compiles into. It admitted zero, so a BOE extraction
+    # that read one wrong got through the EXTRACTION boundary and failed later at
+    # compile -- past the point where the error can still name the source line it
+    # came from. This is the boundary whose whole job is refusing a bad read.
+    coefficient: Decimal = Field(gt=Decimal("0"))
     required_text: str = Field(min_length=1)
 
 

@@ -32,7 +32,7 @@ import re
 
 import pytest
 
-from .....core import ExportLayoutFormat
+from .....core.export_layout_format import ExportLayoutFormat
 from .._validate_export_layout_coverage import (
     _administration_reserved,
     _belongs_to_layout,

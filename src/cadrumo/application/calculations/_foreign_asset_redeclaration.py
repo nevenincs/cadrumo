@@ -27,9 +27,9 @@ from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from urllib.parse import quote
 
-from ...core import (
-    MODELO_720_FOREIGN_ASSET_CLASS_CODES,
+from ...core.foreign_asset_obligation import (
     ForeignAssetObligationGroup,
+    MODELO_720_FOREIGN_ASSET_CLASS_CODES,
     foreign_asset_obligation_group,
 )
 from ...core.modelo import Modelo
@@ -110,7 +110,7 @@ def modelo_721_redeclaration_advisory_findings(
     """Return non-blocking M721 re-declaration advisories for omitted grown tokens.
 
     See Also:
-        :class:`~core._foreign_asset_obligation.ForeignAssetObligationGroup`
+        :class:`~core.foreign_asset_obligation.ForeignAssetObligationGroup`
             Provides the ``MONEDAS_VIRTUALES`` group used for the Modelo 721
             re-declaration threshold.
     """

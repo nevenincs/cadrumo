@@ -31,7 +31,7 @@ from ....application.provisioning import (
     SystemMemoryReading,
     probe_hardware_profile,
 )
-from ....core import AcceleratorKind
+from ....core.hardware import AcceleratorKind
 from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from ....core.config import load_settings, override_settings
 from ....core.directory_scan import scan_directory

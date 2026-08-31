@@ -17,7 +17,7 @@ import pytest
 
 from ...application.invoices import BULK_INVOICE_IMPORT_ALLOWED_COLUMNS
 from ...application.ledger.models import BULK_CLASSIFY_ALLOWED_COLUMNS
-from ...core import FieldRole
+from ...core.field_role import FieldRole
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

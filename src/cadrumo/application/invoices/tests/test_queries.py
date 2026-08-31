@@ -10,7 +10,7 @@ import pytest
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....core import LinkInconsistencyDirection
+from ....core.invoice_link import LinkInconsistencyDirection
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ....domain.invoices.service import verify_link_consistency

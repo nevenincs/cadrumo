@@ -36,13 +36,14 @@ from ...adapters.persistence.storage import (
     SecureBoundRepository,
     secure_object_repository_for_bucket,
 )
-from ...core.hex import Hex64Str
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.config import Settings
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
+from ...core.hex import Hex64Str
 from ...core.identity import CalculationRevisionId
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time import now
+from ...core.unit_proportion import UnitFraction
 from ._models import (
     BundleVerificationState,
     EvidenceBundle,
@@ -102,7 +103,7 @@ class EvidenceBundleVerificationReport(BaseModel):
     bundle_id: Hex64Str
     verification_state: BundleVerificationState
     findings: tuple[EvidenceBundleCheckResult, ...] = Field(default_factory=tuple)
-    completeness_ratio: float = Field(ge=0.0, le=1.0)
+    completeness_ratio: UnitFraction
 
 
 class _PayloadScan(NamedTuple):

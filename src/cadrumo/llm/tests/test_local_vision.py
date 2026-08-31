@@ -20,7 +20,7 @@ from typing import ClassVar, override
 import pytest
 from PIL import Image
 
-from ...core import ImageMediaType
+from ...core.image_media_type import ImageMediaType
 from ...core.config import override_settings
 from ...tests.loopback_llm import (
     SilentLoopbackHandler,

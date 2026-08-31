@@ -18,7 +18,7 @@ from ....application.calculations import (
     ObservationSourceKind,
     ResultDispositionProjection,
 )
-from ....core import ObservedHeaderFact
+from ....core.observed_header_fact import ObservedHeaderFact
 from ....core.payment_election import PaymentElection
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.result_disposition import ResultDisposition

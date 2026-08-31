@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import pytest
 
-from ...core import AcceleratorKind, HardwareTier
+from ...core.hardware import AcceleratorKind, HardwareTier
 from ...core.model_catalogue import (
     DeploymentLicencePosture,
     ModelRole,

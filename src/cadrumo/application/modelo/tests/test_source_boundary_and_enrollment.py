@@ -34,8 +34,8 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core.period import Period
 from ....core.aggregation import BindingSourceKind
+from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.modelos.row_models import Modelo184MemberRow
@@ -384,6 +384,8 @@ def test_s09_ledger_renta_income_resolver_enrolled_fires_on_m130(
     from ...aggregation import (
         CalculationSourceContext,
         LedgerRentaIncomeAggregationSourceResolver,
+    )
+    from ...aggregation.source_resolution_operations import (
         collect_unhandled_source_diagnostics,
         merge_source_resolutions,
     )
@@ -619,7 +621,7 @@ def test_s16_foreign_asset_source_kind_is_enrolled_not_deferred(tmp_path: Path) 
 
 def test_s27_withholding_source_kind_is_enrolled_not_deferred() -> None:
     """M190 'withholding' bindings are handled by the enrolled withholding resolver."""
-    from ...aggregation import collect_unhandled_source_diagnostics
+    from ...aggregation.source_resolution_operations import collect_unhandled_source_diagnostics
 
     revision = _revision("190", "2025-y-siguientes")
     assert any(str(b.source) == "withholding" for b in revision.bindings), (

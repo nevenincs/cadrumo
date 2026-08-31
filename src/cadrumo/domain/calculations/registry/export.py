@@ -10,7 +10,9 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 
-from ....core import EstadoCasillaOficial, ExportExemptionReason, ExportLayoutFormat
+from ....core.export_layout_format import ExportLayoutFormat
+from ....core.export_exemption_reason import ExportExemptionReason
+from ....core.estado_casilla_oficial import EstadoCasillaOficial
 from ....core.filing_projection_ref import filing_projection_ref_casilla_id
 from ....core.casilla_id import CasillaId
 from ....core.aggregation import BindingAggregationOp

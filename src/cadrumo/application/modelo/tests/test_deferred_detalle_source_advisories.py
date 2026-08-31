@@ -48,7 +48,8 @@ def test_deferred_detalle_kinds_emit_unhandled_advisory_not_silent_blank(
     under test. Withholding, foreign_asset, and atribucion_member are enrolled
     or pinned separately.
     """
-    from ...aggregation import DEFERRED_SOURCE_KINDS, collect_unhandled_source_diagnostics
+    from ...aggregation import DEFERRED_SOURCE_KINDS
+    from ...aggregation.source_resolution_operations import collect_unhandled_source_diagnostics
 
     revision = _revision(modelo, revision_id)
     assert any(str(b.source) == deferred_kind for b in revision.bindings), (

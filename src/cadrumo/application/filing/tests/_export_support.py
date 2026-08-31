@@ -7,7 +7,7 @@ from decimal import Decimal
 from functools import cache
 from pathlib import Path
 
-from ....core import RefundElection
+from ....core.refund_election import RefundElection
 from ....core.payment_election import PaymentElection
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.result_disposition import ResultDisposition

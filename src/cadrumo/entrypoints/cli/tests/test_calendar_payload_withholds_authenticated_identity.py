@@ -26,7 +26,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....application.overview.calendar_models import OverviewCalendarEvent, OverviewCalendarEventType
-from ....core import NotificacionEstadoServicio
+from ....core.notificacion_estado_servicio import NotificacionEstadoServicio
 from ....core.json_contract import strict_round_trip
 from .._overview_payloads import OverviewCalendarEventPayload
 

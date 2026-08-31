@@ -164,6 +164,12 @@ class RentaDeductibleExpenseFact(_RentaStrictFrozenModel):
     invoice_issue_date: date | None = None
     posting_date: date | None = None
     payment_date: date | None = None
+    # Strictly positive, where the INCOME observations that mirror this shape
+    # allow zero. Not a divergence: a zero-value income observation is a
+    # modelled case -- an unrouted one still has to surface, and a test asserts
+    # exactly that -- while a zero-amount deductible expense is not an expense.
+    # The import parse boundary agrees with this side and says why: a
+    # zero-amount row "carries no flow".
     gross_amount: Decimal = Field(gt=Decimal("0"))
     taxable_base: Decimal | None = None
     iva_amount: Decimal | None = None

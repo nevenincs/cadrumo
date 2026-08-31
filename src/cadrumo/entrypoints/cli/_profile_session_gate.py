@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, Protocol
 
 import typer
 
-from ...core import ProfileSessionRefusalReason
+from ...core.profile_session import ProfileSessionRefusalReason
 from ._command_spec import CommandSpec, ProfileAuthenticationPosture
 
 if TYPE_CHECKING:

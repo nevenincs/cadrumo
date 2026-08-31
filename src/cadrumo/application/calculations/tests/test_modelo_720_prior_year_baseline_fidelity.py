@@ -55,7 +55,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import ForeignAssetObligationGroup
+from ....core.foreign_asset_obligation import ForeignAssetObligationGroup
 from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority

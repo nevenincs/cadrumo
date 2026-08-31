@@ -98,6 +98,8 @@ RECONCILED_MODULES: frozenset[str] = frozenset(
         "_modelo_iva_wallet_payloads.py",
         "_modelo_payloads_m036.py",
         "_ledger_payloads.py",
+    "_config_payloads.py",
+    "_modelo_payloads.py",
     "_ledger_catalogue_invoice_payloads.py",
     "_modelo_review_package_payloads.py",
     }
@@ -123,8 +125,6 @@ EXEMPT_MODULES: dict[str, str] = {
 # something, so a reconciled module cannot be left behind here.
 OUTSTANDING_MODULES: dict[str, str] = {
     "_config_descendiente_payloads.py": "descendiente invariants belong on the contribuyente model",
-    "_config_payloads.py": "the largest config surface; reconciled after its canonical profile models are public",
-    "_modelo_payloads.py": "filing-record payloads restate evidence reference bounds and the evidence-match invariant",
     "_overview_payloads.py": "overview payloads restate agenda and backlog invariants",
 }
 

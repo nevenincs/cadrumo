@@ -7,7 +7,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core import RegistrySchemaFamilyDisposition
+from ...core.schema_family_disposition import RegistrySchemaFamilyDisposition
 from ...core.revision_review import RevisionReviewStatus
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -702,7 +702,21 @@ type ModeloWorkspaceEvidenceReferenceV1 = Annotated[
 
 
 class ModeloWorkspaceBaselineV1(_WorkspaceModel):
-    """Opaque read consistency identity; this is not mutation authority or approval."""
+    """Opaque read consistency identity; this is not mutation authority or approval.
+
+    COMPARABLE BY EQUALITY, deliberately. Every field is a content digest or a
+    resolved coordinate: there is no timestamp and no minted id, so two
+    baselines computed over the same state ARE equal, and the codebase relies
+    on that to keep a cursor, a facet and a projection pinned to one read.
+
+    Do not carry this property to :class:`ModeloEditBaselineV1`. That one is a
+    time-bounded admission authority carrying ``issued_at``, ``expires_at`` and
+    ``baseline_id``, so two admissions of an unchanged tree are never equal and
+    record equality there can only ever report "different". The two are
+    compared in OPPOSITE ways and share a name; an editor session once answered
+    staleness by comparing edit baselines as if they were these, and its stale
+    signal was permanently on.
+    """
 
     contract_version: Literal[1] = 1
     token: ContentDigest

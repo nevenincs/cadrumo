@@ -12,7 +12,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from cadrumo.core import is_link_like
+from cadrumo.core.link_safety import is_link_like
 from cadrumo.core.directory_scan import iter_directory
 from cadrumo.domain.calculations.registry.errors import (
     RegistryError,

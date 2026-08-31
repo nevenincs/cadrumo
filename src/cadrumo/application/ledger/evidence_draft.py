@@ -114,7 +114,7 @@ from ...adapters.inbound.einvoice import (
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.storage import AttachmentStore, secure_object_repository_for_bucket
 from ...application.invoices import build_catalogue_invoice, create_catalogue_invoice, resolve_iva_rate_slot
-from ...core import ImageMediaType, detect_image_media_type
+from ...core.image_media_type import ImageMediaType, detect_image_media_type
 from ...core.document_shape import PDF_CONTAINER_SHAPES, STRUCTURED_DOCUMENT_SHAPES
 from ...core.capabilities import ServiceCapability
 from ...core.draft_discrepancy import DraftDiscrepancyKind

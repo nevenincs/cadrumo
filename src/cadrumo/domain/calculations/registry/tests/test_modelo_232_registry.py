@@ -6,7 +6,7 @@ from datetime import date
 
 import pytest
 
-from .....core import ExportLayoutFormat
+from .....core.export_layout_format import ExportLayoutFormat
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
 from .._validate import RegistryValidator

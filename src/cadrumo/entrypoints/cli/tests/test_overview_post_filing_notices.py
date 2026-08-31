@@ -13,7 +13,7 @@ from datetime import date
 import pytest
 
 from ....application.overview.calendar_models import OverviewCalendarEvent, OverviewCalendarEventType
-from ....core import PostFilingEventKind
+from ....core.post_filing_event import PostFilingEventKind
 from ....core.json_contract import NoticeSeverity, ResolvedNoticeAction
 from .._overview_rendering import overview_post_filing_event_notices
 

@@ -18,7 +18,8 @@ from pydantic import (
 )
 from pydantic_core import core_schema
 
-from ...core import ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS, Art104TresExclusion, TipoActividad
+from ...core.tipos_actividad import TipoActividad
+from ...core.prorrata_exclusions import ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS, Art104TresExclusion
 from ...core.concepto_ingreso import ConceptoIngreso
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ...core.iva_deduction_fact import IvaDeductionFactKind

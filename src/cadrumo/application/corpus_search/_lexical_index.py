@@ -30,7 +30,13 @@ import sqlite3
 from collections.abc import Iterable, Iterator
 from pathlib import Path
 
-from ...core import fts_or_group, spanish_stemmer, spanish_word_tokens, stem_spanish_terms, stem_spanish_text
+from ...core.spanish_stemming import (
+    spanish_stemmer,
+    spanish_word_tokens,
+    stem_spanish_terms,
+    stem_spanish_text,
+)
+from ...core.fts_query import fts_or_group
 from ...core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ...core.directory_scan import (
     scan_directory,

@@ -38,11 +38,13 @@ from datetime import date
 from typing import TYPE_CHECKING
 
 from ...core.modelo import Modelo as _Modelo
-from ...core import NotificacionEstadoServicio as _NotificacionEstadoServicio
-from ...core import PostFilingEventKind as _PostFilingEventKind
-from ...core import classify_post_filing_event_kind as _classify_post_filing_event_kind
-from ...core import post_filing_event_is_actionable as _post_filing_event_is_actionable
-from ...core import resolve_notificacion_estado_servicio as _resolve_notificacion_estado_servicio
+from ...core.notificacion_estado_servicio import NotificacionEstadoServicio as _NotificacionEstadoServicio
+from ...core.post_filing_event import PostFilingEventKind as _PostFilingEventKind
+from ...core.post_filing_event import classify_post_filing_event_kind as _classify_post_filing_event_kind
+from ...core.post_filing_event import post_filing_event_is_actionable as _post_filing_event_is_actionable
+from ...core.notificacion_estado_servicio import (
+    resolve_notificacion_estado_servicio as _resolve_notificacion_estado_servicio,
+)
 from ...core.external_constants import IVA_REGIME_MODELOS
 from ...core.i18n import tr as _tr
 from ...core.identity import same_tax_identifier

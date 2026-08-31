@@ -28,7 +28,7 @@ from datetime import date
 
 import pytest
 
-from .....core import TaxDomain
+from .....core.tax_domain import TaxDomain
 from .....core.revision_review import RevisionReviewStatus
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.resources import bundled_path

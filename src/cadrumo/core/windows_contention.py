@@ -13,7 +13,7 @@ permanent one outlasts it. Each caller owns that budget, because the right
 answer depends on what losing the race costs it.
 
 Declared here rather than in either consumer because the two that need it
-cannot share a module: :mod:`core._lockfile_unlink` imports
+cannot share a module: :mod:`core.lockfile_unlink` imports
 :mod:`core.logging`, and :mod:`core.bucket_pointer` is read during
 ``Settings()`` bootstrap and must not (its own comments record the circular
 bootstrap that import recreates). This module imports nothing, so it is safe

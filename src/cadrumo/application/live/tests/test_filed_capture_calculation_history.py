@@ -1665,7 +1665,7 @@ def test_no_discovery_signal_token_reaches_the_observation_provenance(tmp_path: 
     ``source_metadata`` would make the stored provenance vary with WHICH signal
     nominated the pair, which is exactly the distinction the domain does not have.
     """
-    from ....core import FiledHistoryDiscoverySignal
+    from ....core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 
     with _secure_backend(tmp_path):
         finalize_filed_capture((_filed_130_observation(),), policy=FiledCaptureFailurePolicy.BEST_EFFORT)

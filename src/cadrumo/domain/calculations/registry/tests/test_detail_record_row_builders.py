@@ -17,7 +17,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import M720AssetClassCode
+from .....core.foreign_asset_obligation import M720AssetClassCode
 from ..detail_record_bindings import (
     AtributionMemberObservation,
     Modelo720RowObservation,

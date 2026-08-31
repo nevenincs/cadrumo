@@ -35,7 +35,7 @@ from pydantic import ValidationError
 from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from .....adapters.persistence.profile.sync_runs import SyncRunRecordRepository
 from .....adapters.persistence.storage import SYNC_RUN_RECORDS_NAMESPACE
-from .....core import SyncSurface
+from .....core.sync_surface import SyncSurface
 from .....core.directory_scan import scan_directory
 from .....domain.buckets.event import BucketEventType
 from .....tests.profile_capsule import open_test_profile_session

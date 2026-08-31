@@ -22,7 +22,7 @@ from pydantic import (
     model_validator,
 )
 
-from ....core import TaxDomain
+from ....core.tax_domain import TaxDomain
 from ....core.revision_review import RevisionReviewStatus
 from ....core.irnr import M210_TIPO_RENTA_CODE_PROJECTION
 from ....core.result_disposition import ResultDisposition

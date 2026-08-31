@@ -109,7 +109,7 @@ from ...core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES as _REVIEW
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.casilla_id import CasillaId as _CasillaId
-from ...core import ExportLayoutFormat as _ExportLayoutFormat
+from ...core.export_layout_format import ExportLayoutFormat as _ExportLayoutFormat
 from ...core.modelo import Modelo as _Modelo
 from ...core.revision_review import RevisionReviewStatus as _RevisionReviewStatus
 from ...core.access_gate import ModeloAuthorization as _ModeloAuthorization

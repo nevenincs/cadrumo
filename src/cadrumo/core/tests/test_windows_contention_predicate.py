@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import pytest
 
-from .._windows_contention import WINDOWS_CONTENDED_ACCESS_ERRORS, is_windows_contention
+from ..windows_contention import WINDOWS_CONTENDED_ACCESS_ERRORS, is_windows_contention
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

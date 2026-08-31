@@ -35,7 +35,7 @@ from collections import defaultdict
 
 import pytest
 
-from .....core import RECORD_DESIGN_EPOCH_PATTERN
+from .....core.record_design_epoch import RECORD_DESIGN_EPOCH_PATTERN
 from .....tests.registry_tree import bundled_registry_tree
 from .._validate_record_design_epochs import (
     validate_record_design_epoch_uniqueness,

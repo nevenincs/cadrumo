@@ -39,7 +39,7 @@ import time
 
 import pytest
 
-from .....core import pid_is_alive
+from .....core.pid_liveness import pid_is_alive
 
 #: Bound shared by every caller. Generous: these tests race a real Playwright
 #: driver teardown, so the wait must survive a slow machine without flaking,

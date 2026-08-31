@@ -43,7 +43,7 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core import RefundElection
+from ....core.refund_election import RefundElection
 from ....core.result_disposition import ResultDisposition
 from ....core.auth_provider import AuthProviderKind
 from ....core.period import Period

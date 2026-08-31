@@ -9,7 +9,8 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, BeforeValidator, Field, field_validator
 
-from ....core import M720AssetClassCode, MetodoValoracion, TipoOperacionVinculada
+from ....core.modelo_232_codigos import MetodoValoracion, TipoOperacionVinculada
+from ....core.foreign_asset_obligation import M720AssetClassCode
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.country_code import CountryCodeAlpha2
 from ....core.external_constants import DEFAULT_CURRENCY

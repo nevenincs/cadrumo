@@ -17,7 +17,10 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field, TypeAdapter, computed_field, model_validator
 
-from ....core import UNRESOLVED_SCHEMA_FAMILY_DISPOSITIONS, RegistrySchemaFamilyDisposition
+from ....core.schema_family_disposition import (
+    RegistrySchemaFamilyDisposition,
+    UNRESOLVED_SCHEMA_FAMILY_DISPOSITIONS,
+)
 from ....core.models import STRICT_FROZEN_CONFIG
 from .errors import RegistryValidationError
 from .ids import LegalRefId, SourceRefId

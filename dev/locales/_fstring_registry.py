@@ -281,7 +281,7 @@ def _modelo_work_help_registrations() -> tuple[FStringKeyRegistration, ...]:
 def _modelo_review_filter_registrations() -> tuple[FStringKeyRegistration, ...]:
     """Register every closed value used by the modelo-review facet labels."""
     from cadrumo.application.modelo.work_review import ModeloWorkOriginAnomaly
-    from cadrumo.core import EstadoCasillaOficial
+    from cadrumo.core.estado_casilla_oficial import EstadoCasillaOficial
     from cadrumo.core.operator_action_enums import OperatorActionAxis
     from cadrumo.core.aggregation import BindingSourceKind
     from cadrumo.domain.calculations.registry.handoffs import RelationConsumptionChannel

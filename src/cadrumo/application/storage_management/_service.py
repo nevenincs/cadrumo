@@ -25,7 +25,7 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
-from ...core import is_link_like
+from ...core.link_safety import is_link_like
 from ...core.storage_taxonomy_locations import (
     STORAGE_TAXONOMY,
     bucket_scoped_storage_path,

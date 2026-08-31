@@ -207,6 +207,12 @@ from .row_set_assembly import (
 
 # Resolve forward reference: BindingPrefillReport is TYPE_CHECKING-only inside
 # _iva_wallet_reconciliation due to a circular import; rebuild after both modules load.
+#
+# RULED SOUND AND FORCED. This is the one module-scope side effect in a namespace
+# that cannot move to a defining module: it needs BOTH modules already loaded, so
+# the package namespace is the only place that observes that condition. It
+# registers nothing and reaches nothing -- it completes a type this package's own
+# exports already name.
 IvaCompensationReconciliationReport.model_rebuild()
 
 __all__ = [

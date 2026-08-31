@@ -25,7 +25,7 @@ from pathlib import Path
 from typing import Final, cast
 from urllib.parse import urlsplit
 
-from cadrumo.core import is_link_like
+from cadrumo.core.link_safety import is_link_like
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry.schema_references import LegalReference

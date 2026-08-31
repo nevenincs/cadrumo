@@ -17,7 +17,7 @@ from typing import Annotated, Self
 
 from pydantic import BaseModel, BeforeValidator, Field, field_validator, model_validator
 
-from ...core import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
+from ...core.iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ...core.modelo import Modelo
 from ...core.period import Period

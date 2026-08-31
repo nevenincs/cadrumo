@@ -247,7 +247,7 @@ selected_contracts = {
         "compute",
         {
             "cadrumo.core.irnr",
-            "cadrumo.core._rescate_type",
+            "cadrumo.core.rescate_type",
             "cadrumo.entrypoints.cli._terminal_errors",
         },
     ),

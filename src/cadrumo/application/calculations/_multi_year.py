@@ -25,10 +25,10 @@ from typing import TYPE_CHECKING, ClassVar, override
 
 from pydantic import BaseModel, Field
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.filing_year import FilingYear
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...domain.calculations.registry.authority import bundled_authority
 
 if TYPE_CHECKING:
@@ -42,8 +42,8 @@ from ..aggregation import (
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,
     CalculationSourceResolution,
-    storage_degradation_resolution,
 )
+from ..aggregation.source_resolution_operations import storage_degradation_resolution
 from .observations_repository import CalculationObservationRepository
 
 _STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)

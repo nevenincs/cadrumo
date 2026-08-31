@@ -17,7 +17,7 @@ from ...adapters.persistence.storage.bucket import (
     BucketPaths,
     bucket_paths,
 )
-from ...core import is_link_like
+from ...core.link_safety import is_link_like
 
 
 def validated_bucket_deletion_paths(*, root: Path, bucket_id: str) -> BucketPaths:

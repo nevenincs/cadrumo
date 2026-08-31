@@ -24,7 +24,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from ....core import SyncSurface
+from ....core.sync_surface import SyncSurface
 from ....core.time import validate_utc_aware
 from ....domain.buckets.event import BucketEventObjectType, BucketEventType
 from ....domain.buckets.event_repository import build_bucket_event

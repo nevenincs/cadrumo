@@ -40,7 +40,7 @@ import pytest
 
 from ...application.ledger.document_transcription import DocumentTranscription
 from ...application.ledger.evidence import PurchaseInvoiceEvidenceInputError
-from ...core import ImageMediaType
+from ...core.image_media_type import ImageMediaType
 from ...core.field_origin import FieldOrigin
 from ...core.config import load_settings
 from ...core.decimal import coerce_finite_european_decimal

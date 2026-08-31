@@ -63,7 +63,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from decimal import Decimal
 
-from ...core import ExportLayoutFormat
+from ...core.export_layout_format import ExportLayoutFormat
 from ...core.filing_producer_key import FilingProducerKey
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.result_disposition import ResultDisposition, result_disposition_requires_bank_account

@@ -39,7 +39,7 @@ from pydantic import BaseModel, Field, TypeAdapter, field_validator, model_valid
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.storage import M145_COMMUNICATION_RECORD_NAMESPACE
-from ...core import ExportLayoutFormat
+from ...core.export_layout_format import ExportLayoutFormat
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.casilla_id import CasillaId, validated_casilla_id_map

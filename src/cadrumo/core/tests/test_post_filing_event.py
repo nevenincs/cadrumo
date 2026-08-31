@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from .. import (
+from ..post_filing_event import (
     ACTIONABLE_POST_FILING_EVENT_KINDS,
     PostFilingEventKind,
     classify_post_filing_event_kind,

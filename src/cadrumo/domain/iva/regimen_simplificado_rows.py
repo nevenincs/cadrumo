@@ -13,9 +13,9 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
-from ...core.filing_projection_ref import M303RegimenSimplificadoFact, M303_MESA_FACTS, M303_REPEATING_FACTS
-from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.filing_projection_ref import M303_MESA_FACTS, M303_REPEATING_FACTS, M303RegimenSimplificadoFact
 from ...core.filing_year import FilingYear
+from ...core.models import STRICT_FROZEN_CONFIG
 from ..filing_evidence import FilingEvidenceReference
 from .errors import IvaValidationError
 from .schema import validate_orden_module_identities
@@ -37,6 +37,24 @@ IaeEpigrafe = Annotated[str, StringConstraints(strip_whitespace=True, min_length
 IndicadorAuxiliarActividad = Literal["1", "2"]
 _NonNegative = Annotated[Decimal, Field(ge=Decimal("0"))]
 
+#: An Orden coefficient, which cannot be zero.
+#:
+#: Separate from :data:`_NonNegative` because for both fields that use it the
+#: reachable rule always was stricter and the type did not say so. That is the
+#: inverse of a bound hiding outside the annotation: here the annotation claimed
+#: a permission nothing could grant.
+#:
+#: The evidence differs by field and both were checked. A module coefficient is
+#: refused by ``validate_orden_module_identities``, and every ``ModuloOrdenAnual``
+#: is built straight into an ``ActividadOrdenAnual`` that runs it, so a zero was
+#: never constructible. A seasonal index coefficient is compiled from
+#: ``M303AnnualOrdenRawSeasonalIndex``, whose own field is ``gt=0``, so a zero
+#: could never arrive from the only source there is.
+#:
+#: The downstream module check stays. It guards a Protocol, so it governs any
+#: future implementer rather than only this class.
+_PositiveCoefficient = Annotated[Decimal, Field(gt=Decimal("0"))]
+
 
 def _require_unique_identities(identities: tuple[str, ...], message: str) -> None:
     if len(set(identities)) != len(identities):
@@ -50,7 +68,7 @@ class ModuloOrdenAnual(BaseModel):
 
     identity: _Token
     order: int = Field(ge=1, le=7)
-    coefficient: _NonNegative
+    coefficient: _PositiveCoefficient
     legal_refs: tuple[_Token, ...] = Field(min_length=1)
     source_refs: tuple[_Token, ...] = Field(min_length=1)
 
@@ -127,7 +145,7 @@ class IndiceTemporadaOrdenAnual(BaseModel):
 
     minimum_days: int = Field(ge=1, le=180)
     maximum_days: int = Field(ge=1, le=180)
-    coefficient: _NonNegative
+    coefficient: _PositiveCoefficient
     legal_refs: tuple[_Token, ...] = Field(min_length=1)
     source_refs: tuple[_Token, ...] = Field(min_length=1)
 

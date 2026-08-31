@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import cast
 from urllib.parse import urlsplit
 
-from ....core import (
+from ....core.orden_anual_html import (
     OrdenAnualIvaActivityTable,
     OrdenAnualIvaAgriculturalIndex,
     OrdenAnualIvaAgriculturalIngresoACuenta,

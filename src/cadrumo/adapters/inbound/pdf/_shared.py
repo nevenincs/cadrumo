@@ -17,8 +17,9 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field
 
-from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.casilla_id import CasillaId
+from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core.unit_proportion import UnitFraction
 
 
 class ExtractedCasilla(BaseModel):
@@ -49,4 +50,4 @@ class ExtractedCasilla(BaseModel):
     printed_value: Decimal | int | str | bool | date | None
     source_page: int = Field(ge=1)
     source_bbox: tuple[float, float, float, float] | None = None
-    extraction_confidence: float = Field(ge=0.0, le=1.0)
+    extraction_confidence: UnitFraction

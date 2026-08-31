@@ -42,11 +42,10 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....core.aggregation import AggregationCaptureKind, BindingSourceKind
 from ....core.authority_grade import RegistryAuthorityGrade
-from ....core.period import Period
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....core.aggregation import AggregationCaptureKind
-from ....core.aggregation import BindingSourceKind
+from ....core.period import Period
 from ....core.resources import bundled_path
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import (
@@ -67,8 +66,8 @@ from ...aggregation import (
     RetencionObservation,
     RetencionObservationRepository,
     RetencionScheme,
-    merge_source_resolutions,
 )
+from ...aggregation.source_resolution_operations import merge_source_resolutions
 from ...calculations import CalculationObservationRepository, RelationPrefillSourceResolver
 from .._calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from ..work_lifecycle import create_work_unit

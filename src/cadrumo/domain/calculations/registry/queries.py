@@ -17,7 +17,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, TypeAdapter, ValidationError
 
-from ....core import TaxDomain
+from ....core.tax_domain import TaxDomain
 from ....core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.aggregation import BindingSourceKind

@@ -41,7 +41,7 @@ from ...application.modelo.work_lifecycle import get_work_unit
 from ...application.modelo._work_plazo import calculated_m210_plazo_resolution
 from ...application.modelo.verify_selector import ModeloVerifySelector
 from ...application.workflow.persistence import workflow_state_repository
-from ...core import RefundElection
+from ...core.refund_election import RefundElection
 from ...core.payment_election import PaymentElection
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.external_constants import OutputLanguage

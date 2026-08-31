@@ -62,7 +62,7 @@ from ....adapters.outbound.google.active_profile import resolve_active_profile
 from ....adapters.outbound.google.errors import GoogleAuthError
 from ....adapters.outbound.google.impersonation import GoogleCredentialSourceSelection, GoogleImpersonationConfig
 from ....adapters.outbound.google.session_store import load_credential_source_selection, save_credential_source_selection
-from ....core import GoogleCredentialSourceKind
+from ....core.google_credential_source import GoogleCredentialSourceKind
 from .._common import emit_envelope
 from ._google_credential_source_payloads import (
     GoogleCredentialSourceSetResult,

@@ -23,7 +23,7 @@ from typing import ClassVar, override
 
 import pytest
 
-from ...core import AcceleratorKind, ContentionCause
+from ...core.hardware import AcceleratorKind, ContentionCause
 from ...core.model_catalogue import ModelRole
 from ...core.config import override_settings
 from ...tests.loopback_llm import (

@@ -33,14 +33,15 @@ from typing import Annotated, Literal
 
 from pydantic import AwareDatetime, BaseModel, BeforeValidator, Field, field_validator, model_validator
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.auth_provider import AuthProviderKind
-from ...core.modelo import Modelo
-from ...core.period import Period
 from ...core.errors.hierarchy import SiteHealthState, SiteHealthStatusLike
 from ...core.hashing import sha256_hex
 from ...core.identifier_grammar import NamespacedId
 from ...core.logging import get_logger
+from ...core.modelo import Modelo
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.period import Period
+from ...core.text_bounds import PositiveCount
 from ...domain.deadlines.models import ModeloDeadline, ObligationStatus
 from ...domain.submission import ModeloDraftStatus
 from ..operator_actions import ConditionEvidence, PreconditionVerdict
@@ -360,7 +361,7 @@ class WorkflowInboxBlockedDetails(_WorkflowStepDetail):
     """A workflow inbox failure with a bounded, machine-readable first item."""
 
     kind: Literal["inbox_blocked"]
-    blocker_count: int = Field(ge=1)
+    blocker_count: PositiveCount
     first_notificacion_id: str = Field(min_length=1, max_length=256)
 
 
@@ -377,7 +378,7 @@ class WorkflowAlreadyFiledDetails(_WorkflowStepDetail):
     kind: Literal["already_filed"]
     modelo: Modelo
     period: Period
-    expediente_count: int = Field(ge=1)
+    expediente_count: PositiveCount
 
 
 class WorkflowDraftNotReadyDetails(_WorkflowStepDetail):
@@ -414,7 +415,7 @@ class WorkflowValidationFailedDetails(_WorkflowStepDetail):
     """The number of blocking validation findings on one draft."""
 
     kind: Literal["validation_failed"]
-    error_count: int = Field(ge=1)
+    error_count: PositiveCount
 
 
 class WorkflowAuthCheckDetails(_WorkflowStepDetail):

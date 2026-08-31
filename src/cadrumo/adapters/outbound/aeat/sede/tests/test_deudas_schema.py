@@ -13,7 +13,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ......core import ObjetoTributario
+from ......core.objeto_tributario import ObjetoTributario
 from ......core.deuda_direccion import DeudaDireccion
 from ......core.period import Period
 from ..deudas import Deuda

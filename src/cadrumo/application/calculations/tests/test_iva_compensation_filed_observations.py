@@ -9,7 +9,7 @@ import pytest
 
 from ....adapters.outbound.aeat.sede.errors import SedeError
 from ....adapters.outbound.aeat.sede.schema import ObservedCasillaValue
-from ....core import ObservedHeaderFact
+from ....core.observed_header_fact import ObservedHeaderFact
 from ....core.casilla_value_kind import CasillaValueKind
 from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ....core.period import Period

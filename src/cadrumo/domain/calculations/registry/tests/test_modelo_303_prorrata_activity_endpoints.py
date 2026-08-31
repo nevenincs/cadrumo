@@ -8,7 +8,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import EstadoCasillaOficial
+from .....core.estado_casilla_oficial import EstadoCasillaOficial
 from .....core.prorrata_register import ProrrataActivityRowType, ProrrataRegisterRegime
 from .....core.filing_projection_ref import (
     M303ProrrataActivityProjectionField,

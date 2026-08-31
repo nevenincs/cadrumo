@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
-from ....core import RegistrySchemaFamilyDisposition
+from ....core.schema_family_disposition import RegistrySchemaFamilyDisposition
 from ....core.revision_review import RevisionReviewStatus
 from ....core.period import Period
 from ....core.aggregation import BindingSourceKind, CalculationSourceLineageRole

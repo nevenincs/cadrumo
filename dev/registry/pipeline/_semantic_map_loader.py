@@ -15,7 +15,7 @@ from typing import Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError, model_validator
 
-from cadrumo.core import is_link_like
+from cadrumo.core.link_safety import is_link_like
 from cadrumo.core.filing_producer_key import FilingProducerKey
 from cadrumo.core.toml import freeze_toml, read_toml
 from cadrumo.core.filing_projection_ref import compile_filing_projection_ref
