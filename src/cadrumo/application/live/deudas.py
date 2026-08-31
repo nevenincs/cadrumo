@@ -37,10 +37,11 @@ from pydantic import BaseModel, Field
 from ...adapters.outbound.aeat.sede.deudas import Deuda
 from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
 from ...adapters.persistence.storage import LIVE_DEUDAS_SNAPSHOT_NAMESPACE, secure_object_repository_for_bucket
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.config import Settings, load_settings
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId, SnapshotId
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.source_locator import SourceUrl
 from ...core.time import now
 from .errors import LiveApplicationInputError
 from .snapshot_base import (
@@ -65,7 +66,7 @@ class DeudasCapture(BaseModel):
 
     deudas: tuple[Deuda, ...]
     captured_at: datetime
-    source_url: str = Field(min_length=1)
+    source_url: SourceUrl
     authenticated_identity: str | None = Field(default=None, max_length=32)
     mode: str = Field(default="read", pattern=r"^read$")
 
@@ -78,7 +79,7 @@ class PersistedDeudasSnapshot(BaseModel):
     snapshot_id: SnapshotId
     bucket_id: BucketId
     captured_at: datetime
-    source_url: str = Field(min_length=1)
+    source_url: SourceUrl
     authenticated_identity: str | None = Field(default=None, max_length=32)
     deudas: tuple[Deuda, ...]
     persisted_at: datetime

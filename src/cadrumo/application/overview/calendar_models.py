@@ -23,13 +23,14 @@ from typing import Annotated, Protocol, Self, cast
 
 from pydantic import BaseModel, BeforeValidator, Field, PlainSerializer, model_validator
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.prose_elision import ElidedProse
 from ...core import NotificacionEstadoServicio as _NotificacionEstadoServicio
-from ...core.period import Period as _Period
 from ...core import PostFilingEventKind as _PostFilingEventKind
 from ...core.filing_year import FilingYear
 from ...core.identity import AeatCsv, CalculationRevisionId, FilingRecordId, SnapshotId, WorkUnitId
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.period import Period as _Period
+from ...core.prose_elision import ElidedProse
+from ...core.source_locator import SourceUrl
 from ...core.time import validate_inclusive_date_range as _validate_inclusive_date_range
 from ...domain.calculations.registry.applicability import ApplicabilityVerdict
 from ...domain.calculations.registry.ids import RevisionId
@@ -349,7 +350,7 @@ class OverviewCalendarEvent(_CalendarJustificanteStateInvariant):
     filing_year: FilingYear | None = None
     period: _CalendarPeriod | None = None
     status: str | None = Field(default=None, max_length=64)
-    source_url: str | None = Field(default=None, max_length=512)
+    source_url: SourceUrl | None = None
     authenticated_identity: str | None = Field(default=None, max_length=32, exclude=True)
     aeat_submission_state: OverviewAeatSubmissionState | None = None
     aeat_submitted_at: datetime | None = None

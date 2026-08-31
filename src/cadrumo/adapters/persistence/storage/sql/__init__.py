@@ -34,6 +34,7 @@ from __future__ import annotations
 
 from ._orm import Base, FincaRow, SecureObjectRow, TransactionDateIndexRow
 from ._secure_object_crypto import verify_revision_self_consistency
+from ._secure_object_records import SecureObjectDeletion
 from ._secure_object_schema import ensure_quarantine_table
 from .engine import (
     create_engine_from_settings,
@@ -51,7 +52,6 @@ from .repository import (
 )
 from .secure_objects import (
     SecureObjectDecryptabilityRow,
-    SecureObjectDeletion,
     SecureObjectMetadata,
     SecureObjectMigrationTarget,
     SecureObjectNamespaceIntegrity,
