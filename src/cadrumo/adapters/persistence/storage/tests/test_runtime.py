@@ -14,7 +14,8 @@ from .....core.config import Settings, StorageRouteKind, override_settings
 from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import CadrumoError
 from .....core.external_constants import OutputLanguage
-from .._secure_object_namespaces import STORAGE_NAMESPACE_REGISTRY, WORKFLOW_STATE_NAMESPACE
+from .._namespace_registry import STORAGE_NAMESPACE_REGISTRY
+from .._secure_object_namespaces import WORKFLOW_STATE_NAMESPACE
 from ..bucket import bucket_paths
 from ..errors import StorageValidationError
 from ..master_key import BucketSession, activate_session

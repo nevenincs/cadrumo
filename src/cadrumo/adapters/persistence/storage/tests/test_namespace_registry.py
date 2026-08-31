@@ -57,7 +57,6 @@ from .. import (
     SECURE_OBJECT_CATALOGUE_KEY,
     SECURE_OBJECT_DEFAULT_KEY,
     SECURE_OBJECT_WORKFLOW_STATE_KEY,
-    STORAGE_NAMESPACE_REGISTRY,
     TEST_SECURE_BOUND_CONTRACT_NAMESPACE,
     TEST_SESSION_LIFECYCLE_NAMESPACE,
     TEST_SNAPSHOT_BASE_PROBE_NAMESPACE,
@@ -69,13 +68,13 @@ from .. import (
     StorageNamespaceScope,
     StorageRemoteMirrorPolicy,
 )
-from .._secure_object_namespaces import (
-    StoragePathAnchor,
-    StoragePathDefinition,
-    StoragePathKind,
+from .._namespace_registry import (
+    STORAGE_NAMESPACE_REGISTRY,
     secure_object_logical_path,
     secure_object_namespace_logical_path,
 )
+from .._namespace_taxonomy import StoragePathAnchor, StoragePathKind
+from .._storage_path_definitions import StoragePathDefinition
 from ..errors import NamespaceRegistryError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

@@ -40,12 +40,12 @@ from .....core.errors.error_codes import resolve_error_message
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.logging import get_logger
 from .....core.time import coerce_utc_aware
-from .._secure_object_namespaces import SecureObjectNamespaceDefinition
 from .._schema_lineage import (
     ensure_schema_version_readable,
     inner_envelope_classification_is_expected,
     upgrade_secure_object_payload,
 )
+from .._secure_object_namespaces import SecureObjectNamespaceDefinition
 from ..crypto.encrypted_columns import decrypt_secure_object_payload, secure_object_payload_aad
 from ..errors import ClassificationError, DecryptionError, EnvelopeVersionError, SecureObjectUnreadableError
 from . import _orm

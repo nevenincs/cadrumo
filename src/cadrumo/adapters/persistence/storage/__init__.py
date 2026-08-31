@@ -92,6 +92,27 @@ if TYPE_CHECKING:
         redact_structured,
     )
     from ._kdf_salt import KDF_SALT_BYTES
+    from ._namespace_registry import (
+        STORAGE_NAMESPACE_REGISTRY,
+        secure_object_logical_path,
+        secure_object_namespace_logical_path,
+    )
+    from ._path_safety import safe_repository_id
+    from ._profile_custody import build_profile_custody_port
+    from ._profile_login_session import build_profile_login_session_port
+    from ._recovery_key import (
+        RecoveryKey,
+        decode_mnemonic,
+        encode_mnemonic,
+        generate_recovery_key,
+    )
+    from ._runtime_readiness import (
+        StorageRuntimeReadiness,
+        StorageRuntimeReadinessCode,
+        StorageRuntimeReadinessIssue,
+        StorageRuntimeSession,
+    )
+    from ._schema_lineage import inner_envelope_classification_is_expected, inner_envelope_version_is_current
     from ._secure_object_namespaces import (
         AEAT_BROWSER_SESSION_NAMESPACE,
         AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
@@ -163,7 +184,6 @@ if TYPE_CHECKING:
         SECURE_OBJECT_SCHEMA_VERSION_V2,
         SECURE_OBJECT_SCHEMA_VERSION_V4,
         SECURE_OBJECT_WORKFLOW_STATE_KEY,
-        STORAGE_NAMESPACE_REGISTRY,
         SUBMISSION_RECORDS_NAMESPACE,
         SYNC_RUN_RECORDS_NAMESPACE,
         TEST_SECURE_BOUND_CONTRACT_NAMESPACE,
@@ -184,25 +204,7 @@ if TYPE_CHECKING:
         StoragePathAnchor,
         StoragePathKind,
         StorageRemoteMirrorPolicy,
-        secure_object_logical_path,
-        secure_object_namespace_logical_path,
     )
-    from ._path_safety import safe_repository_id
-    from ._profile_custody import build_profile_custody_port
-    from ._profile_login_session import build_profile_login_session_port
-    from ._recovery_key import (
-        RecoveryKey,
-        decode_mnemonic,
-        encode_mnemonic,
-        generate_recovery_key,
-    )
-    from ._runtime_readiness import (
-        StorageRuntimeReadiness,
-        StorageRuntimeReadinessCode,
-        StorageRuntimeReadinessIssue,
-        StorageRuntimeSession,
-    )
-    from ._schema_lineage import inner_envelope_classification_is_expected, inner_envelope_version_is_current
     from ._storage_path_definitions import (
         BLOB_MANIFEST_SCHEMA_VERSION,
         BUCKET_BLOBS_DIRNAME,
@@ -505,7 +507,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "SECURE_OBJECT_SCHEMA_VERSION_V2": "._secure_object_namespaces",
     "SECURE_OBJECT_SCHEMA_VERSION_V4": "._secure_object_namespaces",
     "SECURE_OBJECT_WORKFLOW_STATE_KEY": "._secure_object_namespaces",
-    "STORAGE_NAMESPACE_REGISTRY": "._secure_object_namespaces",
+    "STORAGE_NAMESPACE_REGISTRY": "._namespace_registry",
     "STORAGE_PATH_DEFINITIONS": "._storage_path_definitions",
     "SUBMISSION_RECORDS_NAMESPACE": "._secure_object_namespaces",
     "SYNC_RUN_RECORDS_NAMESPACE": "._secure_object_namespaces",
@@ -605,8 +607,8 @@ _LAZY_EXPORTS: dict[str, str] = {
     "save_corpus_manifest": "....core.corpus_manifest",
     "save_encrypted_envelope": ".envelope",
     "save_envelope": ".envelope",
-    "secure_object_logical_path": "._secure_object_namespaces",
-    "secure_object_namespace_logical_path": "._secure_object_namespaces",
+    "secure_object_logical_path": "._namespace_registry",
+    "secure_object_namespace_logical_path": "._namespace_registry",
     "secure_object_repository_for_active_bucket": ".runtime_repository",
     "secure_object_repository_for_active_bucket_or_default_route": ".runtime_repository",
     "secure_object_repository_for_bucket": ".runtime_repository",

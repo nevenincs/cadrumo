@@ -20,7 +20,7 @@ from .....application.calculations import member_observation_key, observation_ke
 from .....core.period import Period
 from .....domain.transactions.repository import transaction_index_object_key, transaction_object_key
 from .. import CALCULATION_OBSERVATIONS_NAMESPACE, TRANSACTION_CATALOGUE_NAMESPACE
-from .._secure_object_namespaces import STORAGE_NAMESPACE_REGISTRY
+from .._namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from ..errors import NamespaceRegistryError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

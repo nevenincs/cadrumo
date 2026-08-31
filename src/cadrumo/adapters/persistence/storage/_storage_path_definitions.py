@@ -11,10 +11,10 @@ prefix, an outbound namespace, a per-run id) that cannot be enumerable
 :class:`~cadrumo.core.StorageCategory` members.
 
 :data:`STORAGE_PATH_DEFINITIONS` is consumed by
-``_secure_object_namespaces.STORAGE_NAMESPACE_REGISTRY``, which combines it with
+``_namespace_registry.STORAGE_NAMESPACE_REGISTRY``, which combines it with
 the SQL namespace definitions into one
 :class:`~adapters.persistence.storage.StorageHierarchyRegistry`. Nothing
-here reaches back into ``_secure_object_namespaces.py``, so there is no cycle.
+here reaches back into ``_namespace_registry.py``, so there is no cycle.
 """
 
 from __future__ import annotations
@@ -23,8 +23,8 @@ from typing import Final
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core import StorageCategory, storage_location
+from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.observability.store import ENVELOPE_FILENAME, EVENTS_FILENAME, TRACE_FILENAME
 from ._namespace_taxonomy import StoragePathAnchor, StoragePathKind
 from .errors import NamespaceRegistryError

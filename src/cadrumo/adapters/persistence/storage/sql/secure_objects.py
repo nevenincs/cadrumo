@@ -12,25 +12,25 @@ from sqlalchemy import Engine, Table, bindparam, delete, insert, inspect, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from .....core.secure_object_write import (
-    ABSENT_SECURE_OBJECT_REVISION_ID,
-    DEFAULT_WRITE_PROVENANCE,
-    SecureObjectWrite,
-)
 from .....core.classification import SensitivityClass
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.hashing import sha256_hex
 from .....core.i18n import tr
 from .....core.logging import get_logger
+from .....core.secure_object_write import (
+    ABSENT_SECURE_OBJECT_REVISION_ID,
+    DEFAULT_WRITE_PROVENANCE,
+    SecureObjectWrite,
+)
 from .....core.time import coerce_utc_aware, validate_utc_aware
 from .....core.time import now as _utc_now
+from .._runtime_readiness import StorageRuntimeReadinessCode, runtime_not_ready_error
+from .._schema_lineage import ensure_schema_version_readable, inner_envelope_classification_is_expected
 from .._secure_object_namespaces import (
     SecureObjectNamespaceDefinition,
     StorageHierarchyRegistry,
     is_former_product_namespace,
 )
-from .._runtime_readiness import StorageRuntimeReadinessCode, runtime_not_ready_error
-from .._schema_lineage import ensure_schema_version_readable, inner_envelope_classification_is_expected
 from ..crypto.encrypted_columns import (
     encrypt_secure_object_payload,
     secure_object_key_digest,

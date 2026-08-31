@@ -40,7 +40,6 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field, ValidationError
 
-from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.atomic_write import atomic_write_bytes
 from .....core.classification import AtRestTreatment, SensitivityClass, default_policy_for
 from .....core.directory_scan import scan_directory
@@ -49,8 +48,9 @@ from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.hashing import sha256_hex as _sha256_hex
 from .....core.identity import ContentDigest
 from .....core.logging import get_logger
+from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.time import now
-from .._secure_object_namespaces import STORAGE_NAMESPACE_REGISTRY
+from .._namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from .._storage_path_definitions import BLOB_MANIFEST_SCHEMA_VERSION
 from ..crypto.aead import KEY_SIZE, EncryptedBlob, decrypt_record, encrypt_record
 from ..envelope import (

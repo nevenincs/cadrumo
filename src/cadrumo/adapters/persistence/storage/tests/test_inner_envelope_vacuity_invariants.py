@@ -45,7 +45,7 @@ import pytest
 from pydantic import BaseModel, Field
 
 from .....tests import production_python_files, repo_relative
-from .._secure_object_namespaces import STORAGE_NAMESPACE_REGISTRY
+from .._namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from .._schema_lineage import SECURE_OBJECT_DURABILITY_FLOOR
 from ..envelope import Envelope
 

@@ -23,7 +23,7 @@ from ....core.config import (
     settings_for_active_profile_bucket,
 )
 from ....core.time import now as _utc_now
-from ._secure_object_namespaces import STORAGE_NAMESPACE_REGISTRY
+from ._namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from ._runtime_readiness import (
     StorageRuntimeReadiness,
     StorageRuntimeReadinessCode,
@@ -41,8 +41,8 @@ from .master_key import current_active_bucket_session, session_serves_bucket
 if TYPE_CHECKING:
     from .sql.secure_objects import SecureObjectRepository
 
-from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.identity import BucketId
+from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 _SYNTHETIC_SESSION_BUCKET_IDS = frozenset({"ephemeral"})
 
