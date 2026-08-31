@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from ..resources import as_path, packaged_data
+from ..resources._boundary import as_path, packaged_data
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

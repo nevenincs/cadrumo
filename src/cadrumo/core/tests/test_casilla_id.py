@@ -7,8 +7,8 @@ from decimal import Decimal
 import pytest
 
 from ...domain.calculations import registry
-from ..casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
 from .. import __all__ as core_exports
+from ..casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

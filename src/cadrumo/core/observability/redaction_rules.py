@@ -13,7 +13,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ..classification import RedactionRule
+    from ..classification.policies import RedactionRule
 
 
 # Cached at module scope after first resolution so repeated emits do not
@@ -33,8 +33,8 @@ def diagnostic_rules() -> tuple[RedactionRule, ...]:
     """
     global _DIAGNOSTIC_RULES
     if _DIAGNOSTIC_RULES is None:
-        from ..classification import SensitivityClass
-        from ..redaction import default_rules_for_class
+        from ..classification.policies import SensitivityClass
+        from ..redaction.rules import default_rules_for_class
 
         _DIAGNOSTIC_RULES = default_rules_for_class(SensitivityClass.DIAGNOSTIC)
     return _DIAGNOSTIC_RULES

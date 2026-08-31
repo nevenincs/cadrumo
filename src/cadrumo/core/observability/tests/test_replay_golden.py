@@ -17,9 +17,9 @@ from typing import Any, cast
 import pytest
 
 from ....tests.storage_scope import storage_overrides
-from ...storage_taxonomy import StorageCategory
 from ...config import Settings, override_settings
 from ...json_contract import OutputSchema, emit_json_success
+from ...storage_taxonomy import StorageCategory
 from ..capture import capture_envelopes
 from ..context import run_context
 from ..errors import CadrumoObservabilityError, GoldenReplayMismatchError, RunTraceValidationError

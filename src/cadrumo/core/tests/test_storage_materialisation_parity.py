@@ -38,6 +38,9 @@ from typing import Final
 
 import pytest
 
+from ..config import Settings, load_settings, override_settings
+from ..directory_scan import DirectoryEntryKind, scan_directory
+from ..storage_materialization import ensure_storage_tree
 from ..storage_taxonomy import (
     STORAGE_TAXONOMY,
     StorageCategory,
@@ -45,9 +48,6 @@ from ..storage_taxonomy import (
     StorageNodeKind,
     StorageScope,
 )
-from ..config import Settings, load_settings, override_settings
-from ..directory_scan import DirectoryEntryKind, scan_directory
-from ..storage_materialization import ensure_storage_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

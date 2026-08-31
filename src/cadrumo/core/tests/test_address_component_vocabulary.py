@@ -13,13 +13,13 @@ from __future__ import annotations
 
 import pytest
 
-from ..filing_producer_key import FilingProducerKey
 from ..address_components import (
     FOREIGN_ADDRESS_COMPONENTS,
     FOREIGN_ADDRESS_INFIX,
     SPANISH_ADDRESS_COMPONENTS,
     SPANISH_ADDRESS_INFIXES,
 )
+from ..filing_producer_key import FilingProducerKey
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, override
 from .._repository import ResourceCacheRepository
 
 if TYPE_CHECKING:
-    from ...topics import TopicCatalogue
+    from ...topics.catalogue import TopicCatalogue
 
 
 class TopicCatalogueRepository(ResourceCacheRepository["TopicCatalogue", None]):
@@ -19,7 +19,7 @@ class TopicCatalogueRepository(ResourceCacheRepository["TopicCatalogue", None]):
 
     @override
     def _load(self, key: None) -> TopicCatalogue:
-        from ...topics import load_topic_catalogue
+        from ...topics.catalogue import load_topic_catalogue
 
         return load_topic_catalogue()
 

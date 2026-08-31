@@ -33,9 +33,9 @@ from pathlib import Path
 import pytest
 
 from ....tests.storage_scope import storage_overrides
-from ...storage_taxonomy import StorageCategory
 from ...config import override_settings
 from ...directory_scan import scan_directory
+from ...storage_taxonomy import StorageCategory
 from ..errors import RunTracePersistenceError
 from ..models import RunOutcome, RunTrace
 from ..store import ENVELOPE_FILENAME, TRACE_FILENAME, runs_dir, save_envelope, save_trace

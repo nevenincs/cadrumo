@@ -18,8 +18,8 @@ from datetime import date, timedelta
 import pytest
 
 from ... import core as core_facade
-from ..notificacion_estado_servicio import NotificacionEstadoServicio, resolve_notificacion_estado_servicio
 from ..external_constants import DEHU_RECHAZO_TACITO_DIAS_NATURALES
+from ..notificacion_estado_servicio import NotificacionEstadoServicio, resolve_notificacion_estado_servicio
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

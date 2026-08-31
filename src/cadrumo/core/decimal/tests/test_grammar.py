@@ -14,7 +14,7 @@ from decimal import Decimal, InvalidOperation
 
 import pytest
 
-from .. import european_thousands_reading_is_ambiguous, try_parse_canonical_decimal
+from .._grammar import european_thousands_reading_is_ambiguous, try_parse_canonical_decimal
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

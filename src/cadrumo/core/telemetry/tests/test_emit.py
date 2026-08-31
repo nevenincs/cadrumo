@@ -17,13 +17,9 @@ from __future__ import annotations
 import pytest
 
 from ...config import Settings
-from .. import (
-    LocalNoopTelemetrySink,
-    TelemetryEventPayload,
-    TelemetryTier,
-    build_telemetry_payload,
-    emit_telemetry_event,
-)
+from .._emit import LocalNoopTelemetrySink, emit_telemetry_event
+from .._schema import TelemetryEventPayload, build_telemetry_payload
+from .._tier import TelemetryTier
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

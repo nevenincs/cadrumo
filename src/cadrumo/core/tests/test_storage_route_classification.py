@@ -40,7 +40,6 @@ from typing import Final
 
 import pytest
 
-from ..config_state_root import FormerProductStateError
 from ..bucket_pointer import BucketPointer, write_pointer
 from ..config import (
     Settings,
@@ -48,6 +47,7 @@ from ..config import (
     classify_storage_route,
     settings_for_active_profile_bucket,
 )
+from ..config_state_root import FormerProductStateError
 from ..errors.hierarchy import ActiveProfilePointerError, CoreValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

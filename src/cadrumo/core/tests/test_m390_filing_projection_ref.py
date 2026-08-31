@@ -8,23 +8,21 @@ from pydantic import TypeAdapter, ValidationError
 from ..filing_projection_ref import (
     FilingProjectionRef,
     M390ActivityField,
+    M390ActivityProjectionRef,
     M390DifferentiatedDeductionProjectionField,
+    M390DifferentiatedDeductionProjectionRef,
     M390ProrrataActivityProjectionField,
+    M390ProrrataActivityProjectionRef,
     M390RegimenSimplificadoActivityField,
+    M390RegimenSimplificadoActivityProjectionRef,
     M390RegimenSimplificadoCohort,
+    M390RegimenSimplificadoModuleProjectionRef,
     M390RegimenSimplificadoModuleValue,
     M390RepresentativeField,
     M390RepresentativeKind,
+    M390RepresentativeProjectionRef,
     compile_filing_projection_ref,
     filing_projection_ref_casilla_id,
-)
-from ..filing_projection_ref import (
-    M390ActivityProjectionRef,
-    M390DifferentiatedDeductionProjectionRef,
-    M390ProrrataActivityProjectionRef,
-    M390RegimenSimplificadoActivityProjectionRef,
-    M390RegimenSimplificadoModuleProjectionRef,
-    M390RepresentativeProjectionRef,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

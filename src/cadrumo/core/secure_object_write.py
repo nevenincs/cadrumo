@@ -32,9 +32,9 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
+from .classification.policies import SensitivityClass
 from .hex import Hex64Str
 from .models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from .classification import SensitivityClass
 
 DEFAULT_WRITE_PROVENANCE = "secure-object-repository"
 ABSENT_SECURE_OBJECT_REVISION_ID = "0" * 64

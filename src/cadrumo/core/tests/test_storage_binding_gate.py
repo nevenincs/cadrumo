@@ -34,13 +34,13 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel
 
+from ..config import Settings
 from ..storage_taxonomy import (
     EXTERNAL_PATH_SETTINGS_FIELDS,
     STORAGE_FIELD_CATEGORIES,
     STORAGE_ROOT_SETTINGS_FIELD,
     STORAGE_TAXONOMY,
 )
-from ..config import Settings
 from ._settings_path_fields import annotation_mentions_path, path_typed_settings_fields
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

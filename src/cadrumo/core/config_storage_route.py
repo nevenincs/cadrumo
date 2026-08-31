@@ -19,8 +19,8 @@ from typing import TYPE_CHECKING
 from urllib.parse import unquote
 
 from .config_state_root import PRODUCT_DATABASE_FILENAME
-from .storage_taxonomy import StorageCategory, storage_location, storage_path
 from .errors.hierarchy import CoreValidationError
+from .storage_taxonomy import StorageCategory, storage_location, storage_path
 
 if TYPE_CHECKING:
     from .config import Settings, StorageRouteClassification

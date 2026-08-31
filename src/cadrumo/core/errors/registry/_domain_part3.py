@@ -58,7 +58,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.contribuyente.assets.AssetRecordError",
+        "cadrumo.domain.contribuyente.assets.records.AssetRecordError",
         ErrorCode(
             code="ERROR_PROFILE_ASSET_RECORD",
             category=ErrorCategory.ERROR,
@@ -68,7 +68,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.contribuyente.assets.AssetValidationError",
+        "cadrumo.domain.contribuyente.assets.records.AssetValidationError",
         ErrorCode(
             code="REFUSED_PROFILE_ASSET_VALIDATION",
             category=ErrorCategory.REFUSED,
@@ -78,7 +78,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.bienes_inversion.BienInversionRecordError",
+        "cadrumo.domain.bienes_inversion.register.BienInversionRecordError",
         ErrorCode(
             code="ERROR_PROFILE_BIENES_INVERSION_RECORD",
             category=ErrorCategory.ERROR,
@@ -88,7 +88,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.bienes_inversion.BienInversionValidationError",
+        "cadrumo.domain.bienes_inversion.register.BienInversionValidationError",
         ErrorCode(
             code="REFUSED_PROFILE_BIENES_INVERSION_VALIDATION",
             category=ErrorCategory.REFUSED,
@@ -98,7 +98,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.prorrata_register.ProrrataRegisterError",
+        "cadrumo.domain.prorrata_register.register.ProrrataRegisterError",
         ErrorCode(
             code="ERROR_PROFILE_PRORRATA_REGISTER_RECORD",
             category=ErrorCategory.ERROR,
@@ -108,7 +108,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.prorrata_register.ProrrataRegisterValidationError",
+        "cadrumo.domain.prorrata_register.register.ProrrataRegisterValidationError",
         ErrorCode(
             code="REFUSED_PROFILE_PRORRATA_REGISTER_VALIDATION",
             category=ErrorCategory.REFUSED,
@@ -118,7 +118,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.contribuyente.inventory.AmortizacionLedgerError",
+        "cadrumo.domain.contribuyente.inventory.records.AmortizacionLedgerError",
         ErrorCode(
             code="ERROR_PROFILE_AMORTIZATION_LEDGER",
             category=ErrorCategory.ERROR,
@@ -128,7 +128,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.contribuyente.inventory.InventoryLedgerError",
+        "cadrumo.domain.contribuyente.inventory.records.InventoryLedgerError",
         ErrorCode(
             code="ERROR_PROFILE_INVENTORY_LEDGER",
             category=ErrorCategory.ERROR,
@@ -138,7 +138,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.contribuyente.inventory.InventoryValidationError",
+        "cadrumo.domain.contribuyente.inventory.records.InventoryValidationError",
         ErrorCode(
             code="REFUSED_PROFILE_INVENTORY_VALIDATION",
             category=ErrorCategory.REFUSED,
@@ -148,7 +148,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.contribuyente.inventory.LIFOForbiddenError",
+        "cadrumo.domain.contribuyente.inventory.records.LIFOForbiddenError",
         ErrorCode(
             code="REFUSED_PROFILE_LIFO_FORBIDDEN",
             category=ErrorCategory.REFUSED,
@@ -158,7 +158,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.contribuyente.inventory.BasisCapExceededError",
+        "cadrumo.domain.contribuyente.inventory.records.BasisCapExceededError",
         ErrorCode(
             code="REFUSED_PROFILE_BASIS_CAP_EXCEEDED",
             category=ErrorCategory.REFUSED,

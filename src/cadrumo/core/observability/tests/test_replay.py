@@ -25,9 +25,9 @@ from pathlib import Path
 import pytest
 
 from ....tests.storage_scope import storage_overrides
-from ...storage_taxonomy import StorageCategory
 from ...config import Settings, override_settings
 from ...directory_scan import scan_directory
+from ...storage_taxonomy import StorageCategory
 from ..errors import AeatCorpusDriftError, CadrumoObservabilityError
 from ..fingerprint import compute_corpus_sha256
 from ..models import ArgumentRecord, ArgumentSource, RunOutcome, RunTrace

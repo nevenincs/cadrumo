@@ -45,7 +45,6 @@ from typing import Annotated, override
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, TypeAdapter, ValidationError
 
 from ..core.models import STRICT_FROZEN_CONFIG
-
 from .errors.hierarchy import CadrumoError
 
 

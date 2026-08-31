@@ -31,7 +31,7 @@ from typing import TYPE_CHECKING, cast
 
 from pydantic import BaseModel, ConfigDict
 
-from ..redaction import redact_for_log
+from ..redaction.rules import redact_for_log
 
 if TYPE_CHECKING:
     from ..json_contract import Notice, ResolvedPreconditionAction

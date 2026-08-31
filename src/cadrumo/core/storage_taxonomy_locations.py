@@ -17,6 +17,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
+from .errors.hierarchy import CoreValidationError
+from .product_identity import PRODUCT_IDENTITY
 from .storage_taxonomy import (
     FingerprintParticipation,
     StorageCategory,
@@ -28,8 +30,6 @@ from .storage_taxonomy import (
     StorageScope,
     _location,
 )
-from .errors.hierarchy import CoreValidationError
-from .product_identity import PRODUCT_IDENTITY
 
 if TYPE_CHECKING:
     from .config import Settings

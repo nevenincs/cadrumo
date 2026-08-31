@@ -498,7 +498,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.persistence.storage.master_key._active_session.NoActiveBucketSessionError",
+        "cadrumo.adapters.persistence.storage.master_key.active_session.NoActiveBucketSessionError",
         ErrorCode(
             code="REFUSED_STORAGE_MASTER_KEY_NO_ACTIVE_SESSION",
             category=ErrorCategory.REFUSED,

@@ -7,20 +7,11 @@ from typing import override
 import pytest
 from pydantic import ValidationError
 
-from .. import (
-    ResourceBackendError,
-    ResourceCacheRepository,
-    ResourceLoadError,
-    ResourceNotFoundError,
-    ResourceRegistry,
-    ResourceRepository,
-    ResourceValidationError,
-    TypedResourceKey,
-    as_path,
-    bundled_path,
-    packaged_data,
-    resources,
-)
+from .._boundary import as_path, bundled_path, packaged_data
+from .._keys import TypedResourceKey
+from .._registry import ResourceRegistry, resources
+from .._repository import ResourceCacheRepository, ResourceRepository
+from ..errors import ResourceBackendError, ResourceLoadError, ResourceNotFoundError, ResourceValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

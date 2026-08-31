@@ -14,8 +14,8 @@ from enum import StrEnum
 
 import pytest
 
-from ..post_filing_event import PostFilingEventKind
 from ..objeto_tributario import ObjetoTributario
+from ..post_filing_event import PostFilingEventKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

@@ -25,13 +25,6 @@ from types import MappingProxyType
 import pytest
 from pydantic import ValidationError
 
-from ..operator_action_enums import (
-    ActionArgumentSource,
-    ActionArgumentStatus,
-    ActionConditionality,
-    ActionEvidenceProvenance,
-    NoRecoveryOutcome,
-)
 from ..casilla_id import CasillaId, validated_casilla_id
 from ..json_contract import (
     ENVELOPE_SCHEMA_VERSION,
@@ -48,7 +41,14 @@ from ..json_contract import (
     emit_json_document,
     emit_json_success,
 )
-from ..redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_OBJECT_KEY_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
+from ..operator_action_enums import (
+    ActionArgumentSource,
+    ActionArgumentStatus,
+    ActionConditionality,
+    ActionEvidenceProvenance,
+    NoRecoveryOutcome,
+)
+from ..redaction.rules import CLI_BUCKET_ID_PLACEHOLDER, CLI_OBJECT_KEY_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

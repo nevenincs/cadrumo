@@ -50,17 +50,17 @@ from pydantic import (
 )
 
 from .action_argument_resolution import ActionArgumentResolution
+from .errors.hierarchy import CadrumoError
+from .identifier_grammar import FIELD_KEY_PATTERN
+from .logging import get_logger
 from .operator_action_enums import ActionArgumentStatus
+from .output_rendering import jsonable_output_payload
 from .precondition_action_invariants import (
     PreconditionActionIdentity,
     PreconditionEvidence,
     PreconditionOutcomeInvariant,
 )
-from .errors.hierarchy import CadrumoError
-from .identifier_grammar import FIELD_KEY_PATTERN
-from .logging import get_logger
-from .output_rendering import jsonable_output_payload
-from .redaction import redact_structured_for_cli_output
+from .redaction.rules import redact_structured_for_cli_output
 
 _log = get_logger(__name__)
 

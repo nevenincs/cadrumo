@@ -42,11 +42,9 @@ import pytest
 from ..compatibility_lifecycle import (
     COMPATIBILITY_REGIME,
     PERSISTED_FORMATS,
-    PersistedFormatClass,
     RELEASED_FORMAT_FLOORS,
-)
-from ..compatibility_lifecycle import (
     CompatibilityRegime,
+    PersistedFormatClass,
     misclassified_floor_keys,
     unfloored_durable_formats,
     unknown_floor_keys,

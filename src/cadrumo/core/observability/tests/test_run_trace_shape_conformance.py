@@ -18,8 +18,8 @@ import pytest
 
 from ....tests import assert_path_matches_grammar
 from ....tests.storage_scope import storage_overrides
-from ...storage_taxonomy import StorageCategory
 from ...config import override_settings
+from ...storage_taxonomy import StorageCategory
 from ..models import NavigationPayload, RunEvent, RunEventKind, RunEventPayload, RunOutcome, RunTrace
 from ..store import save_envelope, save_events_append, save_trace
 

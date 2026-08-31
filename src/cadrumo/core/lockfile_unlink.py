@@ -39,8 +39,8 @@ from __future__ import annotations
 import time
 from typing import TYPE_CHECKING
 
-from .windows_contention import is_windows_contention
 from .logging import get_logger
+from .windows_contention import is_windows_contention
 
 if TYPE_CHECKING:
     from pathlib import Path

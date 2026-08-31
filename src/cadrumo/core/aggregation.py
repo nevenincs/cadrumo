@@ -28,8 +28,8 @@ from typing import Final, Literal
 
 from pydantic import BaseModel, field_validator
 
-from .models import STRICT_FROZEN_CONFIG
 from .logging import get_logger
+from .models import STRICT_FROZEN_CONFIG
 
 _log = get_logger(__name__)
 

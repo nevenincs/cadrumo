@@ -49,7 +49,7 @@ from pydantic import ConfigDict, RootModel
 if TYPE_CHECKING:
     from .observability.context import RunContextInfo
 from .cli_metadata import is_metadata_invocation
-from .redaction import ALWAYS_REDACT_KEY_TERMS, redact_for_log
+from .redaction.rules import ALWAYS_REDACT_KEY_TERMS, redact_for_log
 
 _CONFIGURED = False
 _FACTORY_INSTALLED = False
@@ -626,8 +626,8 @@ def configure_logging() -> None:
     if _CONFIGURED or _is_cli_metadata_invocation():
         return
 
-    from .config_state_root import FormerProductStateError
     from .config import load_settings
+    from .config_state_root import FormerProductStateError
 
     try:
         log_file = default_log_file_path()

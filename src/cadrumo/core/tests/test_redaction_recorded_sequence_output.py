@@ -31,7 +31,7 @@ from pathlib import Path
 import pytest
 
 from ..directory_scan import DirectoryEntryKind, scan_directory
-from ..redaction import redact_for_cli_output, redact_for_log
+from ..redaction.rules import redact_for_cli_output, redact_for_log
 from .test_redaction_population_coverage import (
     _DIGEST_RE,
     _admitting_authority,

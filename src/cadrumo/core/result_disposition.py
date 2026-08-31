@@ -46,8 +46,8 @@ from enum import StrEnum
 from typing import Final
 
 from .casilla_id import CasillaId, validated_casilla_id
-from .modelo import Modelo
 from .errors.hierarchy import CoreValidationError
+from .modelo import Modelo
 
 
 class ResultDisposition(StrEnum):

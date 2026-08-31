@@ -17,6 +17,9 @@ from typing import Final
 import pytest
 from pydantic import ValidationError
 
+from ..bucket_pointer import pointer_path
+from ..config import Settings, override_settings
+from ..errors.hierarchy import CoreValidationError
 from ..storage_taxonomy import (
     FINGERPRINT_EXCLUDED_STORAGE_FIELDS,
     ROOT_DERIVED_STORAGE_FIELDS,
@@ -36,9 +39,6 @@ from ..storage_taxonomy import (
     storage_path,
     storage_tree_targets,
 )
-from ..bucket_pointer import pointer_path
-from ..config import Settings, override_settings
-from ..errors.hierarchy import CoreValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -356,7 +356,7 @@ def test_the_keystore_anchor_passes_the_production_separation_check(tmp_path: Pa
     under the bucket tree, so a regression that renests the keystore under
     ``buckets/`` reds here structurally rather than by restating a coordinate.
     """
-    from ...adapters.persistence.storage.bucket import validate_keystore_separation
+    from ...adapters.persistence.storage.bucket._keystore_paths import validate_keystore_separation
 
     root = tmp_path / "state"
     with override_settings(cadrumo_local_storage_root=root):
@@ -374,7 +374,8 @@ def test_the_production_separation_check_still_refuses_a_nested_keystore(tmp_pat
     validator that had degraded to a no-op, which is the exact failure mode a
     security check silently disabled looks like.
     """
-    from ...adapters.persistence.storage.bucket import BucketValidationError, validate_keystore_separation
+    from ...adapters.persistence.storage.bucket._keystore_paths import validate_keystore_separation
+    from ...adapters.persistence.storage.bucket.errors import BucketValidationError
 
     root = tmp_path / "state"
     # Deliberately the WRONG shape -- this is the composition

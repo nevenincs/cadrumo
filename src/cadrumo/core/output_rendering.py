@@ -30,9 +30,9 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
-from .models import STRICT_FROZEN_CONFIG
 from .errors.hierarchy import CadrumoError
-from .redaction import redact_for_cli_output, redact_structured_for_cli_output
+from .models import STRICT_FROZEN_CONFIG
+from .redaction.rules import redact_for_cli_output, redact_structured_for_cli_output
 
 
 class OutputRenderingError(CadrumoError):
@@ -134,8 +134,8 @@ def reveal_cli_identifiers_opt_in() -> bool:
     identities, URLs, tokens, and secure-object keys remain redacted by the
     CLI redaction profile.
     """
-    from .config_state_root import FormerProductStateError
     from .config import load_settings
+    from .config_state_root import FormerProductStateError
 
     try:
         return load_settings().cadrumo_cli_reveal_identifiers

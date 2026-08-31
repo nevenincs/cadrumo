@@ -21,7 +21,7 @@ from decimal import Decimal
 
 import pytest
 
-from .. import CENT, round_to_cents
+from ..rounding import CENT, round_to_cents
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

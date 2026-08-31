@@ -24,8 +24,7 @@ from pathlib import Path
 
 import pytest
 
-from ..toml import read_toml
-from ..toml import parse_toml_text
+from ..toml import parse_toml_text, read_toml
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

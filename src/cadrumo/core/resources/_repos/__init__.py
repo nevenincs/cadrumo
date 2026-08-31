@@ -8,23 +8,4 @@ where needed. The :class:`ResourceRegistry` aggregates them in
 
 from __future__ import annotations
 
-from .apoderamientos import ApoderamientosRepository
-from .category_profiles import CategoryProfileRepository
-from .holiday_calendars import HolidayCalendarRepository
-from .iva_catalogues import IvaCatalogueRepository
-from .iva_rate_tables import IvaRateTableRepository
-from .manuals import ManualKey, ManualRepository
-from .recargo_bands import RecargoBandsRepository
-from .topics import TopicCatalogueRepository
-
-__all__ = [
-    "ApoderamientosRepository",
-    "CategoryProfileRepository",
-    "HolidayCalendarRepository",
-    "IvaCatalogueRepository",
-    "IvaRateTableRepository",
-    "ManualKey",
-    "ManualRepository",
-    "RecargoBandsRepository",
-    "TopicCatalogueRepository",
-]
+__all__: tuple[str, ...] = ()
