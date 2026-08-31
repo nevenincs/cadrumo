@@ -18,7 +18,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, TypeAdapter, ValidationError, field_validator, model_validator
 
-from ...core.models import STRICT_FROZEN_CONFIG
+from ...core._hex import Hex64Str
 from ...core.bucket_pointer import BucketPointer
 from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import (
@@ -27,6 +27,7 @@ from ...core.hashing import (
     validate_prefixed_digest,
 )
 from ...core.identity import PrefixedContentDigest, ProfileLabel
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time import validate_utc_aware
 from .custody_hold_models import (
     ProfileCustodyHoldAssessment,
@@ -241,7 +242,7 @@ class ProfileCustodyDeleteConfirmation(BaseModel):
     transaction_id: UUID
     profile_id: UUID
     inventory_digest: PrefixedContentDigest
-    challenge: str = Field(min_length=64, max_length=64)
+    challenge: Hex64Str
 
 
 class ProfileCustodyTransactionJournal(CustodyDigestModel):
@@ -277,7 +278,7 @@ class ProfileCustodyTransactionJournal(CustodyDigestModel):
     #: target to remain inactive across preparation, confirmation, crash
     #: recovery, and every destructive owner effect.
     requires_inactive_target: bool = False
-    confirmation_challenge: str | None = Field(default=None, min_length=64, max_length=64)
+    confirmation_challenge: Hex64Str | None = None
     tombstone_relative_path: str | None = Field(default=None, min_length=1, max_length=256)
     self_digest: PrefixedContentDigest
 

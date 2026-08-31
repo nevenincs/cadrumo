@@ -36,13 +36,13 @@ from urllib.parse import urlencode, urlsplit, urlunsplit
 from bs4 import Tag
 from pydantic import AnyHttpUrl, BaseModel, Field
 
-from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.async_cleanup import close_async_resources
 from .....core.config import Settings
 from .....core.hashing import sha256_hex
 from .....core.i18n import tr
-from .....core.identity import AeatCertificadoId
+from .....core.identity import AeatCertificadoId, ContentDigest
 from .....core.logging import get_logger
+from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.parsing import parse_date
 from .....core.time import now
 from .....domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy
@@ -551,7 +551,7 @@ class NotificationDocument(BaseModel):
 
     certificado_id: AeatCertificadoId
     pdf_bytes: bytes
-    pdf_sha256: str = Field(min_length=64, max_length=64)
+    pdf_sha256: ContentDigest
     source_url: AnyHttpUrl
     mode: Literal["read"] = "read"
 

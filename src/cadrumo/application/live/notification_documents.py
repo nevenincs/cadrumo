@@ -43,10 +43,11 @@ from typing import Annotated, Final, Literal
 
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
-from ...core.models import STRICT_FROZEN_CONFIG
+from ...core._hex import Hex64Str
 from ...core.config import Settings
-from ...core.identity import AeatCertificadoId, BucketId
+from ...core.identity import AeatCertificadoId, BucketId, ContentDigest
 from ...core.logging import get_logger
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time import now
 from ...domain.attachments.enums import AttachmentKind, AttachmentSource
 from ...domain.attachments.protocols import AttachmentStoreProtocol
@@ -137,8 +138,8 @@ class NotificationDocumentRecord(BaseModel):
 
     certificado_id: AeatCertificadoId
     bucket_id: BucketId
-    attachment_id: str = Field(min_length=64, max_length=64)
-    document_sha256: str = Field(min_length=64, max_length=64)
+    attachment_id: Hex64Str
+    document_sha256: ContentDigest
     byte_size: int = Field(ge=1)
     source_url: str = Field(min_length=1)
     fetched_at: datetime

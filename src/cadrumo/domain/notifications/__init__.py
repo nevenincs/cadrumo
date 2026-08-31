@@ -12,8 +12,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from ...core.identity import AeatCertificadoId, AeatClaveLiquidacion, ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.identity import AeatCertificadoId, AeatClaveLiquidacion
 
 _ZERO = Decimal("0.00")
 
@@ -41,7 +41,7 @@ class SancionLiquidacion(BaseModel):
     reduccion_pronto_pago: Decimal | None = None
     diferencia: Decimal | None = None
     importe_a_ingresar: Decimal
-    document_sha256: str = Field(min_length=64, max_length=64)
+    document_sha256: ContentDigest
     mode: Literal["read"] = "read"
 
     @property
