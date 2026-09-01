@@ -39,4 +39,3 @@ The accepted design-authority ADR permits raw BOE material as provenance-only an
 - `https://www.boe.es/diario_boe/txt.php?id=BOE-A-2013-13798`
 - `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_165/files/01-165-diseno-de-registro-actualizado-en-2023.pdf.extracted.md`
 - `src/cadrumo/domain/calculations/registry/tests/test_modelo_165_historical_layout_authority.py`
-
