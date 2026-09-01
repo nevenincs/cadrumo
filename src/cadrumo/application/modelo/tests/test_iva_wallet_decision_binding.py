@@ -13,12 +13,8 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
-from .._iva_wallet_gate import (
-    ModeloIvaWalletReconciliationBlocked,
-)
-from .._iva_wallet_gate import (
-    apply_iva_compensation_decision_binding as _apply_iva_compensation_decision_binding,
-)
+from ..iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
+from ..iva_wallet_gate import apply_iva_compensation_decision_binding as _apply_iva_compensation_decision_binding
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

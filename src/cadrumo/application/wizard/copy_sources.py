@@ -33,8 +33,8 @@ from ...core.flows import CopyRefKind
 from ...core.i18n import output_language
 from ...domain.user_profile.errors import UserProfileError
 from ...domain.user_profile.loader import load_user_profile_schema
-from ..corpus_search._terminology import lookup_terminology
 from ..corpus_search.errors import CorpusSearchInputError
+from ..corpus_search.terminology import lookup_terminology
 from ..flows.copy import register_copy_source
 
 _SCHEMA_NAMESPACE = "profile-schema:"

@@ -1,7 +1,7 @@
 """Active-bucket session resolution for the column-level encrypt path.
 
 The column-level :class:`TypeDecorator` set in
-``adapters/persistence/storage/crypto/_encrypted_columns.py`` cannot
+``adapters/persistence/storage/crypto/encrypted_columns.py`` cannot
 thread an explicit session reference through SQLAlchemy's
 :meth:`process_bind_param` signature (the method is invoked by
 SQLAlchemy's column machinery with a fixed ``(self, value, dialect)``

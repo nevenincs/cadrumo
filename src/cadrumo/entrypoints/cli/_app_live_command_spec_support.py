@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ._command_spec import TranslationKey
+from .command_spec import TranslationKey
 
 
 def _key(value: str) -> TranslationKey:

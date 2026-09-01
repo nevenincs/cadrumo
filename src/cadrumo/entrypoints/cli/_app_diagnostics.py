@@ -46,7 +46,7 @@ from datetime import date as _date
 
 import typer
 
-from ...core.i18n._render import tr
+from ...core.i18n.render import tr
 from ._common import emit_envelope
 from ._decimal_parsing import optional_decimal_text
 from ._diagnostics_payloads import (

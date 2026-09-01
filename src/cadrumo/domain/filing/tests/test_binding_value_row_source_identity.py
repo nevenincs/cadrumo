@@ -15,8 +15,8 @@ from ....adapters.persistence.storage.secure_object_namespaces import FILING_DRA
 from ....core.aggregation import BindingSourceKind
 from ....core.period import Period
 from ....tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
-from ...calculations._row_source_identity import RowSourceIdentity
 from ...calculations.registry.schema_references import RegistrySnapshotRef
+from ...calculations.row_source_identity import RowSourceIdentity
 from ..errors import FilingValidationError
 from ..schema import (
     ModeloBindingValue,

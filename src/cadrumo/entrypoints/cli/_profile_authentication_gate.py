@@ -7,8 +7,7 @@ from typing import TYPE_CHECKING, cast
 
 import typer
 
-from ._command_spec import CommandSpec, MachineSecretVariantSpec, ProfileAuthenticationPosture
-from ._config._secure_input import (
+from ._config.secure_input import (
     MachineSecretChannel,
     MachineSecretPayload,
     MachineSecretSelection,
@@ -26,6 +25,7 @@ from ._profile_authentication_contract import (
     profile_authentication_posture,
     root_profile_secret_model,
 )
+from .command_spec import CommandSpec, MachineSecretVariantSpec, ProfileAuthenticationPosture
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -161,8 +161,8 @@ def preflight_parsed_leaf(
     arguments: Mapping[str, object],
 ) -> None:
     """Preflight parsed root/leaf sources, then run the ordinary root gate."""
-    from ._command_specs import COMMAND_GRAPH
     from ._profile_session_gate import activate_profile_session, bind_profile_target, normalize_ambient_profile
+    from .command_specs import COMMAND_GRAPH
 
     node = next(node for node in COMMAND_GRAPH.nodes() if node.spec.key == spec.key)
     posture = profile_authentication_posture(node)

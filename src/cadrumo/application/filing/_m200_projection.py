@@ -22,8 +22,8 @@ from ...core.filing_projection_ref import FilingProjectionRef
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ._producer_snapshot_m200 import Modelo200ProfileFacts
-from ._projection import FilingProjectionPlan, FilingProjectionValue, FilingRecordRenderContext
 from .producer_snapshot import FilingProducerSnapshot
+from .projection import FilingProjectionPlan, FilingProjectionValue, FilingRecordRenderContext
 
 __all__ = ["build_m200_filing_projection_plan"]
 

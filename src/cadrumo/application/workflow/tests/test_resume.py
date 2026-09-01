@@ -35,10 +35,10 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, U
 from ....tests.aeat_literal_fixtures import aeat_url
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
-from ...modelo._workflow_gate import workflow_period_for_work_unit
 from ...modelo.selectors import ModeloCalculationRevisionSelector
 from ...modelo.work_addressing import ModeloExactWorkUnitTarget, ModeloVisibleFilingTarget
 from ...modelo.work_lifecycle import create_work_unit
+from ...modelo.workflow_gate import workflow_period_for_work_unit
 from ...operator_actions.models import ConditionEvidence, PreconditionVerdict
 from ..abort import WorkflowAbortReason
 from ..engine_recording import record_site_unavailable, record_unhandled

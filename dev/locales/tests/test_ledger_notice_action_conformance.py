@@ -23,7 +23,6 @@ from cadrumo.entrypoints.cli import (
     _ledger_evidence_consent_cli,
     _ledger_evidence_review_cli,
     _ledger_import_cli,
-    _ledger_lifecycle_cli,
     _ledger_llm_cli,
     _ledger_payloads,
     _ledger_ratios_cli,
@@ -32,6 +31,7 @@ from cadrumo.entrypoints.cli import (
     _ledger_rules_cli,
     _ledger_support,
 )
+from cadrumo.entrypoints.cli import ledger_lifecycle_cli as _ledger_lifecycle_cli
 
 from .. import LocaleManager, LocaleNode
 

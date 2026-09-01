@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ._command_spec import (
+from .command_spec import (
     CommandSpec,
     DeferredTarget,
     ExecutionPolicySpec,

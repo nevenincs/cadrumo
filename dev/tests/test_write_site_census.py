@@ -15,8 +15,8 @@ import ast
 
 import pytest
 
-from cadrumo.core.storage_taxonomy_locations import STORAGE_TAXONOMY
 from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.core.storage_taxonomy_locations import STORAGE_TAXONOMY
 
 from ..audit.write_site_census import (
     VocabularySite,

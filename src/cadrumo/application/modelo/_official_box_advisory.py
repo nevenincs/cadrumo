@@ -23,7 +23,7 @@ See Also:
     :mod:`~cadrumo.application.modelo._calculation_diagnostics`
         Post-calculation coordinator that calls this collector with the engine
         casilla values.
-    :mod:`~cadrumo.application.modelo._verification_actions`
+    :mod:`~cadrumo.application.modelo.verification_actions`
         Verification predicate parser/evaluator whose ``implies_any_nonzero``
         shape this collector mirrors.
 """
@@ -64,7 +64,7 @@ def collect_official_box_unpopulated_diagnostics(
             (e.g. ``09``) resolve.
 
     See Also:
-        :func:`~cadrumo.application.modelo._verification_actions._evaluate_predicate_expression`:
+        :func:`~cadrumo.application.modelo.verification_actions._evaluate_predicate_expression`:
             Verification-side evaluator for the same predicate DSL.
     """
     # Lazy imports avoid the calculate/verification action cycle. The domain

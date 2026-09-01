@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from ....domain.calculations.registry.authority import bundled_authority
-from ...tests._wizard_catalogue_fixtures import register_wizard_catalogue
+from ...tests.wizard_catalogue_fixtures import register_wizard_catalogue
 
 __all__ = ["register_wizard_catalogue"]
 
@@ -60,19 +60,16 @@ from ...calculations.observations_repository import (
     ObservationSourceKind,
     is_official_aeat_observation_source,
 )
-from .._action_errors import ModeloCrossPeriodCleanStateError
-from .._calculation_actions import (
+from ..action_errors import ModeloCrossPeriodCleanStateError
+from ..calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
     mark_revision_verificado_completo,
 )
-from .._export import (
-    ModeloExportCommand,
-    export_modelo_revision,
-)
-from .._filed_revision_observation import APP_FILING_SOURCE_KIND
-from .._filing_actions import file_modelo_revision
-from .._verification_actions import verify_modelo_revision
+from ..export import ModeloExportCommand, export_modelo_revision
 from ..external_import_actions import import_external_filing_evidence
+from ..filed_revision_observation import APP_FILING_SOURCE_KIND
+from ..filing_actions import file_modelo_revision
+from ..verification_actions import verify_modelo_revision
 from ..work_lifecycle import create_work_unit
 from .justificante_metadata import persist_justificante_metadata
 

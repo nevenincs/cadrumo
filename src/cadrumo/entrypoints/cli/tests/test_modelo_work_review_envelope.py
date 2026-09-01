@@ -18,7 +18,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.secure_object_namespaces import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
-from ....adapters.persistence.storage.sql._orm import SecureObjectRow
+from ....adapters.persistence.storage.sql.orm import SecureObjectRow
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....application.modelo.work_review import ModeloWorkReview, build_modelo_work_review
 from ....core.aggregation import BindingSourceKind
@@ -29,8 +29,8 @@ from ....core.json_contract import (
 )
 from ....core.operator_action_enums import OperatorActionAxis
 from ....core.period import Period
-from ....domain.calculations._row_source_identity import RowSourceIdentity
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.row_source_identity import RowSourceIdentity
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,

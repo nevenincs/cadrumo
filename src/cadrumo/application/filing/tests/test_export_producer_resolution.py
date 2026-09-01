@@ -32,9 +32,9 @@ from pathlib import Path
 
 import pytest
 
-from .. import _export_producer as export_producer_module
-from .._export_producer import _SHARED_SNAPSHOT_PRODUCER_KEYS
+from .. import export_producer as export_producer_module
 from .._producer_ownership import filing_producer_ownership
+from ..export_producer import _SHARED_SNAPSHOT_PRODUCER_KEYS
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

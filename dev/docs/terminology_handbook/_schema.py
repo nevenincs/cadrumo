@@ -35,10 +35,14 @@ from typing import Annotated, Self
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
-from cadrumo.application.corpus_search._terminology import CONCEPT_ID_MAX_LENGTH, CONCEPT_ID_MIN_LENGTH, CONCEPT_ID_PATTERN
-from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from cadrumo.application.corpus_search.terminology import (
+    CONCEPT_ID_MAX_LENGTH,
+    CONCEPT_ID_MIN_LENGTH,
+    CONCEPT_ID_PATTERN,
+)
 from cadrumo.core.concept_lifecycle import ConceptLifecycle
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 from ._enums import ConceptDomain, TermStatus
 from .errors import TerminologyValidationError

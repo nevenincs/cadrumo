@@ -23,7 +23,8 @@ from ....adapters.persistence.storage.secure_object_namespaces import M145_COMMU
 from ....domain.calculations.registry.casilla_membership import undeclared_casilla_ids
 from ....tests.registry_tree import bundled_registry_tree
 from ....tests.secure_sql import isolated_runtime_profile
-from .._m145_communication_records import (
+from ..m145_communication_period import M145CommunicationPeriod
+from ..m145_communication_records import (
     M145CommunicationCreateCommand,
     M145CommunicationRecord,
     create_m145_communication_record,
@@ -32,7 +33,6 @@ from .._m145_communication_records import (
     m145_communication_record_object_key,
     read_m145_communication_record,
 )
-from ..m145_communication_period import M145CommunicationPeriod
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

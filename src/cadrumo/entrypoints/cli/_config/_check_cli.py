@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 from ....core.i18n import tr
 from .._common import emit_envelope, resolve_cli_precondition_action
 from ._check_payloads import CheckDependencyPayload, CheckPreflightPayload, ConfigCheckResult
-from ._status_rendering import precondition_action_lines
+from .status_rendering import precondition_action_lines
 
 
 def _dependency_payload(status: DependencyStatus) -> CheckDependencyPayload:
@@ -77,7 +77,7 @@ def _assess_selected_model_load(profile: HardwareProfile) -> ContentionSnapshot 
 
 def config_check(ctx: typer.Context) -> None:
     """Report external-dependency availability + the active profile's capability posture."""
-    from ....adapters.outbound.storage._path_budget import windows_worst_case_object_path_suffix_length
+    from ....adapters.outbound.storage.path_budget import windows_worst_case_object_path_suffix_length
     from ....application.preflight import run_preflight_checks
     from ....application.provisioning import (
         probe_hardware_profile,

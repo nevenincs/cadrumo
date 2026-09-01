@@ -1,7 +1,7 @@
 """Static size guard for CLI modules.
 
 See Also:
-    :func:`~cadrumo.tests._inventory.package_python_files`
+    :func:`~cadrumo.tests.inventory.package_python_files`
         Shared source inventory used to enumerate production CLI modules
         without bespoke filesystem walking.
     :mod:`~dev.audit.tests.test_codebase_size_budgets`

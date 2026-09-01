@@ -31,7 +31,7 @@ from pathlib import Path
 
 import pytest
 
-from ._inventory import module_name, production_ast_items
+from .inventory import module_name, production_ast_items
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

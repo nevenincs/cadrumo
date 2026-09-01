@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-from ._selectors import ModeloCalculationRevisionSelector
+from .selectors import ModeloCalculationRevisionSelector
 
 
 class ModeloVerifySelector(StrEnum):

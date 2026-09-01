@@ -15,7 +15,7 @@ from typing import IO, override
 import yaml
 
 from ..external_constants import UTF_8_ENCODING
-from ._routing import route_key_to_shard
+from .routing import route_key_to_shard
 
 _LOGGER = logging.getLogger(__name__)
 

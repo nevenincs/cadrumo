@@ -13,7 +13,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....domain.calculations.registry.censo_modelos import CensoModeloEventKind
-from .._m036_lifecycle import M036DeclarationCommand, M036DeclarationResult, derive_m036_declaration_id
+from ..m036_lifecycle import M036DeclarationCommand, M036DeclarationResult, derive_m036_declaration_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PROFILE_ID = "31313131-3131-4131-8131-313131313131"

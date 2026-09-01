@@ -23,13 +23,13 @@ from ...domain.modelos.calculation_revision import CalculationRevision, Calculat
 from ...domain.modelos.filing_record import ExternalEvidence, ModeloRecord
 from ...domain.modelos.protocols import ModeloRecordCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit import WorkUnit
-from ..calculations._m303_carry_ingress import M303_DECLARATION_TYPE_HEADER_KEY
+from ..calculations.m303_carry_ingress import M303_DECLARATION_TYPE_HEADER_KEY
 from ..calculations.observations_repository import (
     CalculationObservationRepository,
     ObservationEnvelopePayload,
     PriorDomiciliationElectionProjection,
 )
-from ._action_errors import ModeloPriorDomiciliationElectionRefusedError
+from .action_errors import ModeloPriorDomiciliationElectionRefusedError
 
 
 def _require_rectificativa_baseline_link(

@@ -71,7 +71,7 @@ from .._export import (
     _m303_complementaria_marker,
     _m303_no_activity_marker,
 )
-from .._export_producer import m303_profile_lexicals
+from ..export_producer import m303_profile_lexicals
 from ..producer_snapshot import (
     M202_UNSUPPORTED_PRODUCER_IDS,
     AmendmentEvidence,

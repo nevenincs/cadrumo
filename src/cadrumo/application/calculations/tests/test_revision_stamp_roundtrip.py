@@ -29,7 +29,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
-from .._binding_prefill import BindingPrefillReport, resolve_bindings_from_local_store
+from ..binding_prefill import BindingPrefillReport, resolve_bindings_from_local_store
 from ..observations_repository import (
     CalculationObservationRepository,
     observation_key,

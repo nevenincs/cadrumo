@@ -14,7 +14,7 @@ import pytest
 from pydantic import BaseModel, SecretStr, ValidationError
 
 from ...errors import CliRefusedBoundaryError
-from .._secure_input import (
+from ..secure_input import (
     _MAX_SECRETS_BYTES,
     MachineSecretChannel,
     MachineSecretPayload,

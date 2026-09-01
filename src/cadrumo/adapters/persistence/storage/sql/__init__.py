@@ -32,8 +32,6 @@ this package facade only re-exports the SQL storage API.
 
 from __future__ import annotations
 
-from ._orm import Base, FincaRow, SecureObjectRow, TransactionDateIndexRow
-from ._secure_object_crypto import verify_revision_self_consistency
 from ._secure_object_records import SecureObjectDeletion
 from ._secure_object_schema import ensure_quarantine_table
 from .engine import (
@@ -43,6 +41,7 @@ from .engine import (
     dispose_engines_for_bucket,
     get_engine,
 )
+from .orm import Base, FincaRow, SecureObjectRow, TransactionDateIndexRow
 from .records import CorpusArtifactRecord, ModeloCatalogueRecord, PortalAuthMethod, PortalRecord
 from .repository import (
     CorpusArtifactRepository,
@@ -50,6 +49,7 @@ from .repository import (
     PortalRepository,
     SqlRecordRepository,
 )
+from .secure_object_crypto import verify_revision_self_consistency
 from .secure_objects import (
     SecureObjectDecryptabilityRow,
     SecureObjectMetadata,

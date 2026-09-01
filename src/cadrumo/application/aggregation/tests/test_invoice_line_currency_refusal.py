@@ -221,7 +221,7 @@ def test_oss_ioss_refuses_on_an_unclassifiable_rate_kind() -> None:
     ``NOT_SUBJECT`` is the one :class:`IvaRate` slot ``iva_rate_kind`` maps to
     ``None`` -- ``EXEMPT`` has its own real :class:`IvaRateKind.EXEMPT` tier
     and would not trip this guard, confirmed by reading
-    ``_IVA_RATE_TO_IVA_KIND`` in ``domain/invoices/_enums.py`` rather than
+    ``_IVA_RATE_TO_IVA_KIND`` in ``domain/invoices/enums.py`` rather than
     assumed.
 
     Same "real declarable operation, one required fact missing" shape as the

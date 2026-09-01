@@ -38,8 +38,8 @@ from typing import Any
 
 import pytest
 
-from ..adapters.inbound.financial.providers._csv import CsvProvider
-from ..adapters.outbound.fx._ecb_provider import EcbReferenceRateProvider
+from ..adapters.inbound.financial.providers.csv import CsvProvider
+from ..adapters.outbound.fx.ecb_provider import EcbReferenceRateProvider
 from ..application.aggregation import (
     IvaLedgerAggregationIssueReason,
     aggregate_iva_ledger_observations,

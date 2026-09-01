@@ -21,7 +21,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field, SecretStr
 
 from .external_constants import OutputLanguage, load_external_constants
-from .identity._bucket import BucketId
+from .identity.bucket import BucketId
 from .models import STRICT_FROZEN_CONFIG
 
 _EXTERNAL_CONSTANTS = load_external_constants()

@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from ....application.modelo._calculation_actions import get_calculation_revision
+from ....application.modelo.calculation_actions import get_calculation_revision
 from ....tests.cli_envelope import unwrap_schema_envelope
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session

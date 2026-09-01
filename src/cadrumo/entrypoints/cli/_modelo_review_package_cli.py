@@ -67,7 +67,15 @@ from ...adapters.persistence.profile.recipient_replay_guard import (
     RecipientPackageReplayedError,
     RecipientReplayGuardRepository,
 )
-from ...application.modelo._action_errors import (
+from ...application.modelo._review_package_collab_audit import emit_collab_feedback_countersign_attached_event
+from ...application.modelo._review_package_feedback import (
+    FeedbackCounterSignatureInvalidError,
+    ReviewPackageFeedbackError,
+    build_feedback_package,
+    encrypt_feedback_package_for_originator,
+    import_feedback_package,
+)
+from ...application.modelo.action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
     ModeloPaymentElectionCapabilityRefusedError,
@@ -76,29 +84,28 @@ from ...application.modelo._action_errors import (
     ModeloRefundElectionNotEligibleError,
     WorkUnitNotFoundError,
 )
-from ...application.modelo._export import (
+from ...application.modelo.export import (
     ModeloExportCommand,
     ModeloExportCrossBucketRefusedError,
     ModeloExportNoActiveBucketError,
     ModeloExportOutputPathError,
     export_modelo_revision,
 )
-from ...application.modelo._iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
-from ...application.modelo._review_package_collab_audit import emit_collab_feedback_countersign_attached_event
-from ...application.modelo._review_package_counter_sign import (
+from ...application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
+from ...application.modelo.review_package import (
+    ReviewPackageError,
+    ReviewPackageIntegrityError,
+    ReviewPackageRevisionStateError,
+    build_review_package,
+    verify_review_package,
+)
+from ...application.modelo.review_package_counter_sign import (
     CounterSignedReceipt,
     ReviewPackageCounterSigningError,
     counter_sign_review_package,
     verify_counter_signed_receipt,
 )
-from ...application.modelo._review_package_feedback import (
-    FeedbackCounterSignatureInvalidError,
-    ReviewPackageFeedbackError,
-    build_feedback_package,
-    encrypt_feedback_package_for_originator,
-    import_feedback_package,
-)
-from ...application.modelo._review_package_recipient_encryption import (
+from ...application.modelo.review_package_recipient_encryption import (
     RecipientDecryptionError,
     RecipientEncryptedPackage,
     RecipientEncryptionError,
@@ -106,11 +113,11 @@ from ...application.modelo._review_package_recipient_encryption import (
     encrypt_review_package_for_recipient,
     ensure_recipient_encryption_keypair,
 )
-from ...application.modelo._review_package_recipient_registry import (
+from ...application.modelo.review_package_recipient_registry import (
     RecipientFingerprintRegistryRepository,
     RecipientNotRegisteredError,
 )
-from ...application.modelo._review_package_signing import (
+from ...application.modelo.review_package_signing import (
     ReviewPackageSigningError,
     SignedReviewPackage,
     ensure_review_package_signing_keypair,
@@ -118,18 +125,11 @@ from ...application.modelo._review_package_signing import (
     sign_review_package,
     verify_review_package_signature,
 )
-from ...application.modelo._selectors import (
+from ...application.modelo.selectors import (
     ModeloCalculationRevisionSelector,
     ModeloCalculationRevisionSelectorAmbiguousError,
     ModeloCalculationRevisionSelectorNotFoundError,
     ModeloCalculationRevisionSelectorStateError,
-)
-from ...application.modelo.review_package import (
-    ReviewPackageError,
-    ReviewPackageIntegrityError,
-    ReviewPackageRevisionStateError,
-    build_review_package,
-    verify_review_package,
 )
 from ...application.modelo.work_addressing import (
     ModeloWorkAddressNotFoundError,
@@ -138,7 +138,7 @@ from ...application.modelo.work_addressing import (
 from ...application.modelo.work_lifecycle import get_work_unit
 from ...application.workflow.persistence import workflow_state_repository
 from ...core.external_constants import UTF_8_ENCODING
-from ...core.i18n._render import tr
+from ...core.i18n.render import tr
 from ...core.payment_election import PaymentElection
 from ...core.period import Period
 from ...core.prior_domiciliation_election import PriorDomiciliationElection

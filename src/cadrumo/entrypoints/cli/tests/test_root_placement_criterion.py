@@ -37,8 +37,8 @@ from __future__ import annotations
 
 import pytest
 
-from .._command_spec import CommandSpecNode, ExecutionPolicySpec
-from .._command_specs import COMMAND_GRAPH
+from ..command_spec import CommandSpecNode, ExecutionPolicySpec
+from ..command_specs import COMMAND_GRAPH
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

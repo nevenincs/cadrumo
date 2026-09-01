@@ -26,7 +26,7 @@ from ._consent import telemetry_emit_permitted
 
 if TYPE_CHECKING:
     from ..config import Settings
-    from ._schema import TelemetryEventPayload
+    from .schema import TelemetryEventPayload
 
 __all__ = ["LocalNoopTelemetrySink", "TelemetrySink", "emit_telemetry_event"]
 

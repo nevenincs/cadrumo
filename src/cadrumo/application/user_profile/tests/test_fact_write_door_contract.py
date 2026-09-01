@@ -47,7 +47,7 @@ _ENROLLED_DOOR_MODULES: frozenset[str] = frozenset(
         "application/user_profile/fact_write.py",
         "application/user_profile/section_rows.py",
         "entrypoints/cli/_config/_capabilities_cli.py",
-        "entrypoints/cli/_config/_descendiente.py",
+        "entrypoints/cli/_config/descendiente.py",
     }
 )
 """Modules permitted to open a profile-fact write door, by repository path.

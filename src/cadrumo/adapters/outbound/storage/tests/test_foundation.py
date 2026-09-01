@@ -17,7 +17,6 @@ from pydantic import ValidationError
 
 from .....core.errors.hierarchy import CadrumoError, CoreError
 from .._protocol import StorageProvider
-from .._records import ProviderKind, ProviderObjectMetadata, ProviderProbeReport, RemoteMirrorObjectManifest
 from ..errors import (
     OutboundStorageConflictError,
     OutboundStorageError,
@@ -30,6 +29,7 @@ from ..errors import (
     OutboundStorageValidationError,
     StorageCorruptionError,
 )
+from ..records import ProviderKind, ProviderObjectMetadata, ProviderProbeReport, RemoteMirrorObjectManifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

@@ -11,7 +11,7 @@ from .....domain.currency.errors import ExchangeRateProviderError
 from .....domain.currency.models import CurrencyNormalizationStatus, MonetaryAmount
 from .....domain.currency.service import CurrencyNormalizationService
 from .....tests.ecb_stub import ecb_csv_fetch
-from .._ecb_provider import EcbReferenceRateProvider, _observation_url, default_ecb_rate_provider
+from ..ecb_provider import EcbReferenceRateProvider, _observation_url, default_ecb_rate_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

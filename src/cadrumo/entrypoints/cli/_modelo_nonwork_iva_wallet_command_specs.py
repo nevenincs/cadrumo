@@ -4,7 +4,11 @@
 
 from __future__ import annotations
 
-from ._command_spec import (
+from ._modelo_nonwork_command_spec_policies import (
+    _MODEL_READ,
+    _MODEL_WRITE,
+)
+from .command_spec import (
     CommandSpec,
     DeferredTarget,
     InvocationSpec,
@@ -16,10 +20,6 @@ from ._command_spec import (
     SchemaState,
     TranslationKey,
     ValueContract,
-)
-from ._modelo_nonwork_command_spec_policies import (
-    _MODEL_READ,
-    _MODEL_WRITE,
 )
 
 MODELO_NONWORK_IVA_WALLET_COMMAND_SPECS: tuple[CommandSpec, ...] = (

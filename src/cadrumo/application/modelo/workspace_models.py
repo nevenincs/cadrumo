@@ -51,13 +51,23 @@ _MAX_SAFE_FACT_TEXT_LENGTH = 256
 
 type _BoundedText = Annotated[str, Field(min_length=1, max_length=256)]
 type _BoundedCode = Annotated[str, Field(min_length=1, max_length=128, pattern=r"^[a-z][a-z0-9_.-]*$")]
-type _BoundedLocaleKey = Annotated[str, Field(min_length=1, max_length=256, pattern=r"^[a-z][a-z0-9_.-]*$")]
+type _BoundedLocaleKey = Annotated[str, Field(min_length=1, max_length=256, pattern=r"^[a-z][A-Za-z0-9_.-]*$")]
 """Locale keys embed a base32hex-encoded arbitrary identity segment
 (:func:`~cadrumo.domain.calculations.registry.modelo_localization.encode_modelo_locale_segment`)
 for any casilla/binding/relation/etc id containing characters outside the
 plain-segment pattern, so a real key can exceed ``_BoundedCode``'s 128-char
 bound; 256 covers the longest real casilla id observed in the bundled
-registry (143 chars) with headroom."""
+registry (143 chars) with headroom.
+
+An interior segment may be UPPERCASE, and that is not a laxity: the encoder's
+plain-segment pattern is ``[A-Za-z0-9_-]``, so an id like the Modelo 100
+casilla ``A`` is passed through as itself rather than encoded, and the packaged
+catalogues carry it in that spelling. A lowercase-only bound here disagreed
+with both the producer and the shipped data, and the disagreement was not
+cosmetic -- it made every Workspace destination unopenable for any modelo
+declaring an uppercase casilla id, which includes Modelo 100. The leading
+character stays lowercase because the first segment is always a namespace
+(``modelo.``, ``flows.``, ``wizard.``) and no producer emits any other shape."""
 type _BoundedLocalizedText = Annotated[str, Field(min_length=1, max_length=512)]
 type _BoundedRefList[T] = Annotated[tuple[T, ...], Field(max_length=_MAX_SCHEMA_EVIDENCE_REFERENCES)]
 
@@ -229,7 +239,6 @@ class ModeloWorkspaceRefreshTargetV1(_WorkspaceModel):
 
     contract_version: Literal[1] = 1
     work_unit_id: WorkUnitId
-    bucket_id: BucketId | None = None
 
 
 class ModeloWorkspaceRequestV1(_WorkspaceModel):

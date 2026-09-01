@@ -113,7 +113,7 @@ _ALLOWED_DIRECT_OUTPUTS: dict[tuple[str, str, str], str] = {
         "render-and-echo pair -- which is how one of them came to bypass the "
         "boundary while its sibling did not."
     ),
-    ("entrypoints/cli/_config/_secure_input.py", "write_to_controlling_terminal", "write"): (
+    ("entrypoints/cli/_config/secure_input.py", "write_to_controlling_terminal", "write"): (
         "Recovery-code display writes directly to the controlling terminal "
         "device (CONOUT$ / /dev/tty), deliberately BYPASSING stdout so the "
         "candidate mnemonic can never land in a redirected stream, JSON "

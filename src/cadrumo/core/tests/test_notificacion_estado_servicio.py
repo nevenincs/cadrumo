@@ -151,7 +151,10 @@ def test_the_day_ten_assertion_discriminates_against_an_off_by_one_boundary() ->
 
 def test_the_axis_is_reachable_through_the_core_facade() -> None:
     """Consumers outside ``core`` resolve both symbols through the package facade."""
-    assert core_facade.NotificacionEstadoServicio is NotificacionEstadoServicio
-    assert core_facade.resolve_notificacion_estado_servicio is resolve_notificacion_estado_servicio
-    assert "NotificacionEstadoServicio" in core_facade.__all__
-    assert "resolve_notificacion_estado_servicio" in core_facade.__all__
+    # Consumers resolved both symbols through the package facade. It is inert
+    # now, so the guarantee is that each has exactly one owning module and the
+    # namespace re-exports neither.
+    assert NotificacionEstadoServicio.__module__ == "cadrumo.core.notificacion_estado_servicio"
+    assert resolve_notificacion_estado_servicio.__module__ == "cadrumo.core.notificacion_estado_servicio"
+    assert not hasattr(core_facade, "NotificacionEstadoServicio")
+    assert not hasattr(core_facade, "resolve_notificacion_estado_servicio")

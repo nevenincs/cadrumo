@@ -768,7 +768,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._taxation_comparison.TaxationComparisonError",
+        "cadrumo.application.modelo.taxation_comparison.TaxationComparisonError",
         ErrorCode(
             code="REFUSED_TAXATION_COMPARISON",
             category=ErrorCategory.REFUSED,
@@ -798,7 +798,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._projection.ModeloProjectionError",
+        "cadrumo.application.modelo.projection.ModeloProjectionError",
         ErrorCode(
             code="ERROR_MODELO_PROJECTION",
             category=ErrorCategory.ERROR,
@@ -808,7 +808,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._projection.ModeloProjectNoM130UnitsError",
+        "cadrumo.application.modelo.projection.ModeloProjectNoM130UnitsError",
         ErrorCode(
             code="ERROR_MODELO_PROJECT_NO_M130_UNITS",
             category=ErrorCategory.ERROR,
@@ -818,7 +818,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._projection.ModeloProjectNoM130RevisionsError",
+        "cadrumo.application.modelo.projection.ModeloProjectNoM130RevisionsError",
         ErrorCode(
             code="ERROR_MODELO_PROJECT_NO_M130_REVISIONS",
             category=ErrorCategory.ERROR,
@@ -828,7 +828,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._projection.ModeloProjectInvalidDecimalOverrideError",
+        "cadrumo.application.modelo.projection.ModeloProjectInvalidDecimalOverrideError",
         ErrorCode(
             code="REFUSED_MODELO_PROJECT_INVALID_DECIMAL_OVERRIDE",
             category=ErrorCategory.REFUSED,
@@ -838,7 +838,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._projection.ModeloCompareNeedTwoYearsError",
+        "cadrumo.application.modelo.projection.ModeloCompareNeedTwoYearsError",
         ErrorCode(
             code="REFUSED_MODELO_COMPARE_NEED_TWO_YEARS",
             category=ErrorCategory.REFUSED,
@@ -848,7 +848,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._projection.ModeloCompareNoWorkUnitsError",
+        "cadrumo.application.modelo.projection.ModeloCompareNoWorkUnitsError",
         ErrorCode(
             code="ERROR_MODELO_COMPARE_NO_WORK_UNITS",
             category=ErrorCategory.ERROR,
@@ -858,7 +858,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._projection.ModeloCompareNoRevisionsError",
+        "cadrumo.application.modelo.projection.ModeloCompareNoRevisionsError",
         ErrorCode(
             code="ERROR_MODELO_COMPARE_NO_REVISIONS",
             category=ErrorCategory.ERROR,
@@ -868,7 +868,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._projection.ModeloCompareNoUsableRevisionsError",
+        "cadrumo.application.modelo.projection.ModeloCompareNoUsableRevisionsError",
         ErrorCode(
             code="ERROR_MODELO_COMPARE_NO_USABLE_REVISIONS",
             category=ErrorCategory.ERROR,
@@ -878,7 +878,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._semantic_role_resolution.AmbiguousSemanticRoleCasillaError",
+        "cadrumo.application.modelo.semantic_role_resolution.AmbiguousSemanticRoleCasillaError",
         ErrorCode(
             code="REFUSED_MODELO_AMBIGUOUS_SEMANTIC_ROLE_CASILLA",
             category=ErrorCategory.REFUSED,

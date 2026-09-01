@@ -49,7 +49,7 @@ from ....core.i18n import OutputLanguage, tr
 from ....core.json_contract import Notice, NoticeSeverity
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._common import emit_envelope
-from ._secure_input import MachineSecretPayload, MachineSecretSelection
+from .secure_input import MachineSecretPayload, MachineSecretSelection
 
 if TYPE_CHECKING:
     from ....application.user_profile.capsule_restore import ProfileCapsuleSource, ProfileRestoreOutcome
@@ -71,7 +71,7 @@ class RestoreRecoverySecrets(MachineSecretPayload):
 
 def _collect_passphrase(*, selection: MachineSecretSelection | None) -> str:
     """Resolve the profile passphrase from one explicit channel or a verified prompt."""
-    from ._secure_input import prompt_secret_no_echo, read_machine_secret_payload
+    from .secure_input import prompt_secret_no_echo, read_machine_secret_payload
 
     if selection is not None:
         return read_machine_secret_payload(
@@ -83,7 +83,7 @@ def _collect_passphrase(*, selection: MachineSecretSelection | None) -> str:
 
 def _collect_recovery_secret(*, selection: MachineSecretSelection | None) -> str:
     """Resolve the 24-word recovery phrase from one explicit channel or a verified prompt."""
-    from ._secure_input import prompt_secret_no_echo, read_machine_secret_payload
+    from .secure_input import prompt_secret_no_echo, read_machine_secret_payload
 
     if selection is not None:
         return read_machine_secret_payload(
@@ -145,7 +145,7 @@ def profile_archive_import(
         restore_profile_capsule_with_recovery_artifact,
     )
     from .._config_payloads import ConfigProfileArchiveImportResult
-    from ._secure_input import select_machine_secret_channel
+    from .secure_input import select_machine_secret_channel
 
     # Refuse an ambiguous source before reading the capsule, prompting, proving
     # custody, opening a publication transaction, or mutating storage.

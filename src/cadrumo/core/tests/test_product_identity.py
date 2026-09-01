@@ -158,8 +158,11 @@ def test_identity_referent_vocabulary_is_closed() -> None:
 def test_core_facade_reexports_the_exact_identity_objects() -> None:
     """The defining module and core facade expose one closed identity API."""
     assert set(identity_module.__all__) == _IDENTITY_EXPORTS
-    for export_name in set(core_all) & _IDENTITY_EXPORTS:
-        assert getattr(core_package, export_name) is getattr(identity_module, export_name)
+    # The core facade is inert, so the identity API must NOT be reachable
+    # through it. Iterating the intersection would have passed vacuously.
+    assert not set(core_all)
+    for export_name in _IDENTITY_EXPORTS:
+        assert not hasattr(core_package, export_name), export_name
 
 
 def test_identity_api_exposes_no_former_product_aliases() -> None:
@@ -181,5 +184,32 @@ def test_identity_api_exposes_no_former_product_aliases() -> None:
         "AeatProductSoftwareEvidence",
         "AeatProductSoftwareIdentity",
     }
-    assert {name for name in core_all if name.casefold().startswith("aeat")} == allowed_aeat_names
+    # This enumerated the AEAT-prefixed names the core FACADE exposed -- a set
+    # spanning several owning modules, because the facade re-exported them all.
+    # The facade is inert now, so the question is asked of the DEFINING module,
+    # whose legitimate AEAT referents are its own:
+    #   AEAT_AUTHORITY_SHORT_NAME  the external authority's short name
+    #   AeatProductSoftware*       the AEAT-format software identity contract
+    #   AeatProgramIdentifier      AEAT's identifier for submitting software
+    # and the stronger half is added: no AEAT-prefixed name is reachable
+    # through the package at all.
+    identity_aeat_names = {
+        "AEAT_AUTHORITY_SHORT_NAME",
+        "AeatProductSoftwareEvidence",
+        "AeatProductSoftwareIdentity",
+        "AeatProgramIdentifier",
+    }
+    assert {name for name in identity_module.__all__ if name.casefold().startswith("aeat")} == identity_aeat_names
+    assert allowed_aeat_names  # the wider cross-module set stays documented above
+    # Submodules count as attributes of a package, and `core/aeat_csv.py` is a
+    # legitimately named module -- so this asks about re-exported SYMBOLS only.
+    import types
+
+    leaked = [
+        name
+        for name in dir(core_package)
+        if name.casefold().startswith("aeat")
+        and not isinstance(getattr(core_package, name), types.ModuleType)
+    ]
+    assert not leaked, leaked
     assert "__getattr__" not in vars(identity_module)

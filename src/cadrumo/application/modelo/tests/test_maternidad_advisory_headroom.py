@@ -95,7 +95,7 @@ class TestTaxpayerScaledMessagesKeepAuthoringHeadroom:
         expressible rather than at fifty -- and, per ``_WORST_FIRST_ID``, at a
         qualifying run that starts partway into it rather than at zero.
         """
-        from .._calculate_input import _maternidad_meses_withheld_advisory
+        from ..calculate_input import _maternidad_meses_withheld_advisory
 
         advisory = _maternidad_meses_withheld_advisory(self._ids(), validated_casilla_id("0611"))
 
@@ -107,7 +107,7 @@ class TestTaxpayerScaledMessagesKeepAuthoringHeadroom:
         )
 
     def test_the_ambiguous_relacion_advisory_keeps_headroom_at_its_worst_case(self) -> None:
-        from .._calculate_input import _maternidad_ambiguous_relacion_advisory
+        from ..calculate_input import _maternidad_ambiguous_relacion_advisory
 
         advisory = _maternidad_ambiguous_relacion_advisory(
             frozenset(self._ids()),
@@ -128,10 +128,7 @@ class TestTaxpayerScaledMessagesKeepAuthoringHeadroom:
         filing and the operator still lost words — which is the state the
         headroom assertions above exist to prevent reaching.
         """
-        from .._calculate_input import (
-            _maternidad_ambiguous_relacion_advisory,
-            _maternidad_meses_withheld_advisory,
-        )
+        from ..calculate_input import _maternidad_ambiguous_relacion_advisory, _maternidad_meses_withheld_advisory
 
         casilla = validated_casilla_id("0611")
         withheld = _maternidad_meses_withheld_advisory(self._ids(), casilla)

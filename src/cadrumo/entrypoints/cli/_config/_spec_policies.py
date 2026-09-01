@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .._command_spec import Capability, ExecutionPolicySpec, PerformanceClass, SideEffect, WriteRoute
+from ..command_spec import Capability, ExecutionPolicySpec, PerformanceClass, SideEffect, WriteRoute
 
 
 def _policy(

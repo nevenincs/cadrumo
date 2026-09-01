@@ -21,10 +21,10 @@ from ....core.config import Settings
 from ....core.period import Period
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ...calculations.observations_repository import IvaWalletDecisionRepository
-from .._export import ModeloExportCommand, export_modelo_revision
-from .._filing_actions import file_modelo_revision
-from .._iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
-from .._verification_actions import verify_modelo_revision
+from ..export import ModeloExportCommand, export_modelo_revision
+from ..filing_actions import file_modelo_revision
+from ..iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
+from ..verification_actions import verify_modelo_revision
 from ._export_modelo_303_support import (
     _blocked_wallet_decision,
     _filed_history_only_wallet_decision,

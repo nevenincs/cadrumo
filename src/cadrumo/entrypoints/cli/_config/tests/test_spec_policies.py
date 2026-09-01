@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from ..._command_spec import ExecutionPolicySpec
+from ...command_spec import ExecutionPolicySpec
 from .. import _spec_policies
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

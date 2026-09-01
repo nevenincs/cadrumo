@@ -10,9 +10,9 @@ import pytest
 
 from ....core.config import override_settings
 from .._command_schema import command_registration_metadata, command_schema_refs
-from .._command_spec import OptionSpec
-from .._command_specs import COMMAND_GRAPH
 from .._verb_input_schema import build_verb_input_schemas, cli_path_for_command_key, is_exposable_command
+from ..command_spec import OptionSpec
+from ..command_specs import COMMAND_GRAPH
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -44,7 +44,7 @@ def test_schema_and_operator_help_discovery_loads_no_behavior_target() -> None:
     source = """
 import json
 import sys
-from cadrumo.entrypoints.cli._command_specs import COMMAND_GRAPH
+from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 handler_modules = {
     spec.handler.target.module
     for spec in COMMAND_GRAPH.specs
@@ -75,7 +75,7 @@ print(json.dumps({
 
 
 def test_operator_help_is_resolved_from_each_owning_spec_translation_key() -> None:
-    from ....core.i18n._render import tr
+    from ....core.i18n.render import tr
 
     expected = COMMAND_GRAPH.by_schema_identity()
     schemas = build_verb_input_schemas(tuple(sorted(expected)))

@@ -13,7 +13,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.modelos.codes import ModeloCode
 from ...operations.registry import OperationSchemaIdentityV1
-from .._edit_models import (
+from ..edit_models import (
     ModeloBindingEditIntentV1,
     ModeloEditAdmittedV1,
     ModeloEditBaselineV1,

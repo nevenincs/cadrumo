@@ -32,7 +32,7 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
-from ....domain.calculations.registry.ledger_bindings import (
+from ....domain.calculations.registry.ledger_renta_gastos_pago_fraccionado_bindings import (
     resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values,
 )
 from ....domain.calculations.registry.schema_input_kind import InputKind
@@ -53,7 +53,7 @@ from .._renta_ledger import (
     aggregate_renta_ledger_expenses,
     aggregate_renta_ledger_expenses_from_repositories,
 )
-from ._renta_income_aggregation_support import _period
+from .renta_income_aggregation_support import _period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

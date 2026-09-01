@@ -40,7 +40,7 @@ from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
-from ._ledger_ux_support import _invoke, open_ledger_ux_session
+from .ledger_ux_support import _invoke, open_ledger_ux_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

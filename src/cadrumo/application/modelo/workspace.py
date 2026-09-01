@@ -72,12 +72,14 @@ from .workspace_models import (
     ModeloWorkspaceCapabilityV1,
     ModeloWorkspaceCasillaReferenceV1,
     ModeloWorkspaceConstraintReferenceV1,
+    ModeloWorkspaceContinuityReferenceV1,
     ModeloWorkspaceContributorIdentityV1,
     ModeloWorkspaceCursorV1,
     ModeloWorkspaceDomainRefusalV1,
     ModeloWorkspaceEvidenceFactV1,
     ModeloWorkspaceEvidenceHorizonV1,
     ModeloWorkspaceExactWorkUnitTargetV1,
+    ModeloWorkspaceExportExposureReferenceV1,
     ModeloWorkspaceFacetName,
     ModeloWorkspaceFamilyDispositionV1,
     ModeloWorkspaceFormulaBindingOperandReferenceV1,
@@ -1198,6 +1200,27 @@ def graded_snapshot_casilla_schema_records(
                     (ModeloWorkspaceConstraintReferenceV1(casilla_id=casilla_id),)
                     if casilla.constraints is not None
                     else ()
+                ),
+                # Read from the same CasillaDefinition this path already holds.
+                # The API-gate ADR requires a schema record to preserve the
+                # canonical continuity, export-exposure and source-reference
+                # identities a reader needs; these three were declared and never
+                # filled, so the record advertised grounding it did not carry.
+                # A static inspection has no CasillaDefinition and therefore
+                # cannot honestly populate them -- which is why they are filled
+                # HERE, on the graded path, and left at their empty defaults
+                # there.
+                source_refs=tuple(casilla.source_refs),
+                continuity=(
+                    (ModeloWorkspaceContinuityReferenceV1(continuidad_id=casilla.continuidad_id),)
+                    if casilla.continuidad_id is not None
+                    else ()
+                ),
+                export_exposure=tuple(
+                    ModeloWorkspaceExportExposureReferenceV1(
+                        casilla_id=casilla_id, export_field_id=export_field_id
+                    )
+                    for export_field_id in casilla.export_refs
                 ),
                 formula_operands=formula_operand_references_for_casilla(formulas, casilla_id),
                 relation_endpoints=relation_source_endpoints_for_casilla(relations, casilla_id),

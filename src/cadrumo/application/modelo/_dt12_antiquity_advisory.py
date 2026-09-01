@@ -44,10 +44,7 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
-from ._semantic_role_resolution import (
-    AmbiguousSemanticRoleCasillaError,
-    casilla_id_for_unique_revision_semantic_role,
-)
+from .semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla_id_for_unique_revision_semantic_role
 
 _DT12_TRABAJO_REDUCCION_ROLE = "irpf_rendimiento_trabajo_reduccion"
 

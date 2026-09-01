@@ -31,7 +31,7 @@ from pathlib import Path
 from statistics import median
 from typing import Any, Literal, Self, cast
 
-from ._inventory import SRC_CADRUMO
+from .inventory import SRC_CADRUMO
 from .subprocess_cli import subprocess_cli_env
 
 __all__ = [

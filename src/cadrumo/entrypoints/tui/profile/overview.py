@@ -46,7 +46,7 @@ from ....application.user_profile.acquisition_sources import (
     known_profile_acquisition_sources,
 )
 from ....application.user_profile.presentation import notice_presentation, profile_field_shape_hint
-from ....core.i18n._render import tr
+from ....core.i18n.render import tr
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....entrypoints.tui.components.host import ScreenHostApp
 from ....entrypoints.tui.components.status import PinnedStatusBar

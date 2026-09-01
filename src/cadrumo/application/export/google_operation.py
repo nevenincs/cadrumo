@@ -37,7 +37,7 @@ from ...domain.calculations.registry.ids import (
     RevisionId,
 )
 from ...domain.calculations.registry.schema import RegistrySnapshot
-from ..calculations._relation_prefill import resolve_relations_from_local_store
+from ..calculations.relation_prefill import resolve_relations_from_local_store
 from ..operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,

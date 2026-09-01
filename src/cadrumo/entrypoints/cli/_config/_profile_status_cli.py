@@ -38,11 +38,7 @@ def config_status(
     from ....core.logging import get_logger
     from ....core.wizard_catalogue import get_setup_flow
     from .._config_payloads import ConfigStatusResult
-    from ._status_rendering import (
-        blocked_readiness_status,
-        precondition_action_lines,
-        unavailable_profile_record_status,
-    )
+    from .status_rendering import blocked_readiness_status, precondition_action_lines, unavailable_profile_record_status
 
     profile_health = assess_active_profile_health()
     active_uuid = profile_health.active_profile
@@ -116,7 +112,7 @@ def config_status(
         )
         emit_envelope(ctx, command="config.profile.status", result=result, lines=lines)
         return
-    from ....application.modelo._profile_readiness_gate import modelo_work_profile_baseline_missing_paths
+    from ....application.modelo.profile_readiness_gate import modelo_work_profile_baseline_missing_paths
 
     if modelo_work_profile_baseline_missing_paths(record):
         result, blocked_lines = blocked_readiness_status(

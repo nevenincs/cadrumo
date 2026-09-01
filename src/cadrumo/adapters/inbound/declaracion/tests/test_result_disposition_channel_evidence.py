@@ -38,7 +38,7 @@ from pathlib import Path
 import pytest
 
 from .....tests import FIXTURES_DIR
-from .._parsers._pdfplumber_backend import extract_pages_text
+from .._parsers.pdfplumber_backend import extract_pages_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 

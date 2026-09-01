@@ -11,13 +11,13 @@ from __future__ import annotations
 from typing import ClassVar
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
-from ...domain.calculations.registry.ledger_bindings import (
+from ...domain.calculations.registry.ledger_renta_gastos_estimacion_directa_bindings import (
     resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values,
     unsupported_ledger_renta_gastos_estimacion_directa_observations,
 )
 from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
-from ...domain.prorrata_register._protocols import ProrrataRegisterRepositoryProtocol
-from ...domain.renta._ledger_expenses import RentaDeductibleExpenseObservation
+from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
+from ...domain.renta.ledger_expenses import RentaDeductibleExpenseObservation
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..user_profile.usage_ratio_resolution import resolve_effective_usage_ratios
 from ._modelo_bindings import (

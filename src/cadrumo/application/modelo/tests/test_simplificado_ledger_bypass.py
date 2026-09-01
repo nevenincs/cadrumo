@@ -34,8 +34,8 @@ from ....domain.transactions.raw_transaction import RawProvenance, RawTransactio
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
-from .._action_errors import ModeloAggregationBindingError
 from .._calculation_preparation import _raise_if_ledger_preflight_blocks_calculation
+from ..action_errors import ModeloAggregationBindingError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

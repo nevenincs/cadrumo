@@ -25,7 +25,7 @@ from typing import TYPE_CHECKING, Final
 import typer
 
 from ....application.operator_actions.models import ActionReference
-from ....application.storage_management._models import StorageCheckIssueKind, StorageTreeIssueKind
+from ....application.storage_management.models import StorageCheckIssueKind, StorageTreeIssueKind
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
 from ....core.storage_taxonomy import StorageArea
@@ -42,7 +42,7 @@ from ._storage_payloads import (
 )
 
 if TYPE_CHECKING:
-    from ....application.storage_management._models import StorageAreaInventoryReport, StorageAreaInventoryRow
+    from ....application.storage_management.models import StorageAreaInventoryReport, StorageAreaInventoryRow
 
 from ....core.external_constants import OutputLanguage as _OutputLanguage
 
@@ -60,7 +60,7 @@ def config_storage_list(
 ) -> None:
     """Report every declared location, its resolved path, and what it holds."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.storage_management._service import collect_storage_area_inventory
+    from ....application.storage_management.service import collect_storage_area_inventory
 
     report = collect_storage_area_inventory()
     result = ConfigStorageListResult(
@@ -86,7 +86,7 @@ def config_storage_view(
 ) -> None:
     """Report one declared location in full."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.storage_management._service import collect_storage_area_inventory
+    from ....application.storage_management.service import collect_storage_area_inventory
 
     report = collect_storage_area_inventory()
     row = _row_for(report, area)
@@ -114,7 +114,7 @@ def config_storage_check(
 ) -> None:
     """Verify the tree on disk against its declaration, repairing nothing."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.storage_management._service import inspect_storage_tree
+    from ....application.storage_management.service import inspect_storage_tree
 
     report = inspect_storage_tree()
     result = ConfigStorageCheckResult(
@@ -189,7 +189,7 @@ def config_storage_init(
 ) -> None:
     """Materialise the declared tree, preserving everything already in it."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.storage_management._service import materialise_storage_tree
+    from ....application.storage_management.service import materialise_storage_tree
 
     report = materialise_storage_tree()
     result = ConfigStorageInitResult(
@@ -234,7 +234,7 @@ def config_storage_reclaim(
     declared lifecycle that forbade the delete.
     """
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.storage_management._service import reclaim_storage_area
+    from ....application.storage_management.service import reclaim_storage_area
 
     report = reclaim_storage_area(area, confirmed=confirmed)
     result = ConfigStorageReclaimResult(

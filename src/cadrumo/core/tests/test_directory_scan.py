@@ -356,7 +356,7 @@ def test_the_root_is_always_an_argument_and_never_a_repo_anchor() -> None:
     The development tooling tree imports this primitive and scans the repo root,
     ``docs/``, build outputs and temp directories. A convenience default
     pointing at the package tree -- the shape
-    ``cadrumo/tests/_inventory.py`` legitimately uses, because it is test
+    ``cadrumo/tests/inventory.py`` legitimately uses, because it is test
     scaffolding that may know the repo layout -- would make this production
     module know a layout it has no business knowing.
     """

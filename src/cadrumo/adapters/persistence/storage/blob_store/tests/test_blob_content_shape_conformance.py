@@ -15,7 +15,7 @@ import pytest
 
 from ......core.classification.policies import SensitivityClass
 from ......tests import assert_path_matches_grammar
-from .._blob_store import EncryptedBlobStore
+from ..blob_store import EncryptedBlobStore
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

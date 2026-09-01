@@ -6,7 +6,7 @@ M714 same-year M100 relations through the local relation resolver, then runs
 the M714 formula engine through casilla 40.
 
 See Also:
-    :func:`~application.calculations._relation_prefill.resolve_relations_from_local_store`
+    :func:`~application.calculations.relation_prefill.resolve_relations_from_local_store`
         Resolves the same-year Modelo 100 relation values this enrollment feeds
         into the Patrimonio art.31 formula chain.
     :func:`~domain.calculations.registry.calculate_registry_snapshot`
@@ -35,9 +35,9 @@ from ....domain.calculations.registry.formula_runtime import RegistryCalculation
 from ....domain.calculations.registry.ids import RelationId
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
-from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
-from .._relation_prefill import resolve_relations_from_local_store
+from ..multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from ..observations_repository import CalculationObservationRepository
+from ..relation_prefill import resolve_relations_from_local_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

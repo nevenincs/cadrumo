@@ -86,7 +86,7 @@ from ...domain.calculations.registry.verification_tolerance import verification_
 from ..operations.events import OperationLogSeverity
 from ..operations.owner import OperationEventEmitter
 from ..storage.sync_runs._persist import record_sync_run
-from ..storage.sync_runs._records import (
+from ..storage.sync_runs.records import (
     SyncRunRecordReference,
     SyncRunRecordRepositoryProtocol,
     bounded_scope_description,
@@ -1611,7 +1611,7 @@ def casillas_a_recapture_would_change(
     intersection rule above is why. ``detect_casilla_divergences`` and
     ``compare_calculation_to_filed_observation`` both REPORT absence, as
     missing-on-one-side rows, and the revision-vs-revision delta in
-    ``application/modelo/_projection.py`` treats an absent casilla as zero.
+    ``application/modelo/projection.py`` treats an absent casilla as zero.
     All three of those contracts would fire this advisory on an extraction
     improvement, which is the one thing it must never do. The absence contract
     is the discriminator, not the tolerance.

@@ -6,7 +6,6 @@ from pathlib import Path
 
 import pytest
 
-from ... import core
 from ...tests import modules_declaring_class
 from .. import estado_casilla_oficial as owner
 from ..directory_scan import DirectoryEntryKind, scan_directory
@@ -93,7 +92,7 @@ def _retired_family_occurrences(*roots: Path) -> set[tuple[str, str]]:
 
 
 def test_estado_casilla_oficial_is_the_single_public_core_identity() -> None:
-    assert core.EstadoCasillaOficial is owner.EstadoCasillaOficial
+    assert owner.EstadoCasillaOficial.__module__ == owner.__name__
     assert tuple(EstadoCasillaOficial) == (
         EstadoCasillaOficial.ADDRESSED,
         EstadoCasillaOficial.REPRESENTED_VIA_BINDING,

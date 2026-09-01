@@ -12,7 +12,7 @@ import pytest
 
 from ....tests.cli_runner import invoke_cached_cli
 from .. import app
-from .._command_suggestions import walk_live_command_tree
+from ..command_suggestions import walk_live_command_tree
 from ._runtime_profile_cli_fixture import _isolated_cli_state
 
 __all__ = ["_isolated_cli_state"]

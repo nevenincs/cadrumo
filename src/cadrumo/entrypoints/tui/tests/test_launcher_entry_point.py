@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from ....core.i18n._render import tr
+from ....core.i18n.render import tr
 from ..app import CadrumoTuiApp
 from ..launcher import main
 

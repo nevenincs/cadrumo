@@ -35,8 +35,8 @@ from typing import override
 import pytest
 from pydantic import SecretStr
 
-from ....adapters.outbound.llm._cache import LLMCache
-from ....adapters.outbound.llm._usage import UsageRecorder
+from ....adapters.outbound.llm.cache import LLMCache
+from ....adapters.outbound.llm.usage import UsageRecorder
 from ....application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
 from ....core.config import override_settings
 from ....core.field_origin import FieldOrigin

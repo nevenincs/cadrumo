@@ -21,13 +21,10 @@ from pathlib import Path
 
 import typer
 
-from ...application.modelo._quickfile import (
-    QuickfileCommand,
-    run_modelo_quickfile,
-)
+from ...application.modelo.quickfile import QuickfileCommand, run_modelo_quickfile
 from ...application.workflow.persistence import workflow_state_repository
 from ...core.external_constants import OutputLanguage
-from ...core.i18n._render import tr
+from ...core.i18n.render import tr
 from ...core.json_contract import Notice
 from ...core.payment_election import PaymentElection
 from ...core.period import Period, PeriodError
@@ -184,10 +181,7 @@ def _quickfile_notices(result) -> list[Notice]:
     notices so the operator sees the exact blocking findings and their next
     actions, identical to what ``aeat app modelo work verify`` would surface.
     """
-    from ...application.modelo._quickfile import (
-        QuickfileStage,
-        QuickfileStageStatus,
-    )
+    from ...application.modelo.quickfile import QuickfileStage, QuickfileStageStatus
 
     notices: list[Notice] = []
     for outcome in result.stages:

@@ -558,7 +558,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.evidence._models.EvidenceBundleNotFoundError",
+        "cadrumo.application.evidence.models.EvidenceBundleNotFoundError",
         ErrorCode(
             code="REFUSED_EVIDENCE_BUNDLE_NOT_FOUND",
             category=ErrorCategory.REFUSED,
@@ -568,7 +568,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.evidence._models.EvidenceBundleVerificationError",
+        "cadrumo.application.evidence.models.EvidenceBundleVerificationError",
         ErrorCode(
             code="REFUSED_EVIDENCE_BUNDLE_VERIFICATION",
             category=ErrorCategory.REFUSED,

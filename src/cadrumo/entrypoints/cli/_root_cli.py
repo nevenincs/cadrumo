@@ -62,8 +62,8 @@ def root_command(
     preserve_requested_cli_leaf(ctx)
     state["profile_override"] = profile
     if ctx.invoked_subcommand is None:
-        from ._command_specs import COMMAND_GRAPH
         from ._tui_policy import enforce_tui_request
+        from .command_specs import COMMAND_GRAPH
 
         enforce_tui_request(ctx, spec=COMMAND_GRAPH.by_key()["root"])
         if profile is not None:
@@ -82,8 +82,8 @@ def root_command(
 def app_root(ctx: typer.Context, help_: bool = False) -> None:
     """Render app-level workflow help when requested."""
     if help_ or ctx.invoked_subcommand is None:
-        from ._command_specs import COMMAND_GRAPH
         from ._tui_policy import enforce_tui_request
+        from .command_specs import COMMAND_GRAPH
 
         enforce_tui_request(ctx, spec=COMMAND_GRAPH.by_key()["app"])
         from ...application.operator_surface.help import build_help_document, render_help_text

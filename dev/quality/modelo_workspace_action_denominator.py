@@ -53,8 +53,8 @@ from typing import Final
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from cadrumo.application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
-from cadrumo.entrypoints.cli._command_spec import SchemaState
 from cadrumo.entrypoints.cli.command_api import command_spec_nodes
+from cadrumo.entrypoints.cli.command_spec import SchemaState
 
 SCHEMA_VERSION: Final[int] = 1
 _MODELO_IDENTITY_PREFIX: Final[str] = "modelo."

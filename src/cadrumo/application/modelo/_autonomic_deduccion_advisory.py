@@ -58,16 +58,13 @@ from ...domain.user_profile.loader import load_user_profile_schema
 from ...domain.user_profile.values import UserProfileFactValue
 from ..user_profile.profile_record_repository import ProfileRecordRepository
 from ..user_profile.projections import profile_fact_index
-from ._semantic_role_resolution import (
-    AmbiguousSemanticRoleCasillaError,
-    casilla_id_for_unique_semantic_role,
-)
 from .profile_binding import (
     MADRID_AUTONOMIC_DEDUCCION_FILING_YEAR,
     is_indeterminate_unidad_familiar,
     is_madrid_resident,
     madrid_nacimiento_adopcion_candidate_weighted_count,
 )
+from .semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla_id_for_unique_semantic_role
 
 _MADRID_NACIMIENTO_ADOPCION_SEMANTIC_ROLE = "irpf_deduccion_madrid_nacimiento_adopcion"
 _ADVISORY_LEGAL_REFS = (

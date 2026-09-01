@@ -31,7 +31,7 @@ files, with nothing behind it). Two copies of this subtraction is how the two
 gates would come to disagree about the same return, so there is one.
 
 See Also:
-    :mod:`domain.calculations.registry._ledger_bindings`
+    :mod:`domain.calculations.registry.ledger_iva_bindings`
         Owns the ``applied_rates`` selector axis and the deliberate
         no-match-on-unknown-rate rule this module measures the consequence of.
 """
@@ -47,9 +47,9 @@ from pydantic import Field
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
-from .bindings import casillas_by_binding
+from .binding_targets import casillas_by_binding
 from .ids import BindingId
-from .ledger_bindings import iva_ledger_selector
+from .ledger_iva_bindings import iva_ledger_selector
 from .schema import DataBindingDefinition, ModeloRevision
 from .schema_base import RegistryModel
 

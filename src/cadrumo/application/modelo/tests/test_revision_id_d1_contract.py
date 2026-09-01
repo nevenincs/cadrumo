@@ -41,7 +41,7 @@ from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
-from .._action_errors import WorkUnitRevisionDivergenceError
+from ..action_errors import WorkUnitRevisionDivergenceError
 from ..work_addressing import (
     ModeloWorkRegistryYearMismatchError,
     law_selected_revision_for_work_target,
@@ -354,7 +354,7 @@ class TestS02RevisionForWorkUnitAssertion:
         Uses M303 2026 1T: the law-determined revision is ``2026-y-siguientes``;
         the seeded unit pins the stale ``2022``.
         """
-        from .._calculate_input import _revision_for_work_unit
+        from ..calculate_input import _revision_for_work_unit
 
         bucket_id, _ = work_unit_repo
         stale_revision_id = "2022"
@@ -397,7 +397,7 @@ class TestS02RevisionForWorkUnitAssertion:
         work_unit_repo: tuple[str, WorkUnitCatalogueRepository],
     ) -> None:
         """``_revision_for_work_unit`` returns the revision when the unit is correctly pinned."""
-        from .._calculate_input import _revision_for_work_unit
+        from ..calculate_input import _revision_for_work_unit
 
         bucket_id, _ = work_unit_repo
         correct_revision_id = "2026-y-siguientes"

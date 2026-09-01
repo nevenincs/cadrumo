@@ -20,7 +20,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from .._multi_year import EnrollmentEvidence, EnrollmentYearObservation
+from ..multi_year import EnrollmentEvidence, EnrollmentYearObservation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

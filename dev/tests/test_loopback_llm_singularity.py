@@ -48,7 +48,7 @@ baseline and NO per-violation allowlist:
    handler can still hand-copy the twelve lines of plumbing beneath it.
 
 Both rules resolve import aliases through
-:func:`~cadrumo.tests._inventory.import_binding_map`, so ``from http.server
+:func:`~cadrumo.tests.inventory.import_binding_map`, so ``from http.server
 import BaseHTTPRequestHandler as _H`` and a dotted ``http.server.ThreadingHTTPServer``
 are caught alongside the bare spellings.
 

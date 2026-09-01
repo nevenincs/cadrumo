@@ -16,9 +16,9 @@ import pytest
 from ....core.auth_provider import AuthProviderDescription
 from ....core.errors.severity import BaseSeverity
 from ....core.period import Period
-from .._preflight import Preflight
 from ..errors import SubmissionPreflightError
 from ..models import ModeloDraftStatus, ModeloFinding
+from ..preflight import Preflight
 from ..protocols import ModeloFindingLike
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

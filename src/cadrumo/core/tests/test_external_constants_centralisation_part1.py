@@ -54,7 +54,7 @@ _STRING_CONSTANT_IDS = tuple(name.lower() for name, _ in _STRING_CONSTANT_CASES)
 
 _M347_PUBLIC_FACADE_CONSUMERS = (
     ("src/cadrumo/application/aggregation/_counterpart.py", 3),
-    ("src/cadrumo/application/modelo/_calculate_input.py", 3),
+    ("src/cadrumo/application/modelo/calculate_input.py", 3),
     ("src/cadrumo/domain/modelos/row_models.py", 3),
     # The two binding families used to read the constant directly and compare it
     # themselves, byte-identically. 5c6873b64c collapsed that onto the leaf
@@ -152,7 +152,7 @@ def test_binary_mime_consumers_alias_core_constant() -> None:
 
     import inspect
 
-    from ...adapters.persistence.storage.blob_store._blob_store import EncryptedBlobStore
+    from ...adapters.persistence.storage.blob_store.blob_store import EncryptedBlobStore
     from ..external_constants import BINARY_MIME_TYPE
 
     _assert_module_constant_identity(
@@ -166,7 +166,7 @@ def test_binary_mime_consumers_alias_core_constant() -> None:
     # 0c21a98804; the constant travelled with the code that uses it, so this
     # names the module that reads it today rather than the one it left.
     _assert_module_constant_identity(
-        module_name="cadrumo.adapters.outbound.aeat.sede.declarations_fetch",
+        module_name="cadrumo.adapters.outbound.aeat.sede._declarations_fetch",
         attr_name="_BINARY_MIME_TYPE",
         expected=BINARY_MIME_TYPE,
         import_message="_declarations_fetch must import BINARY_MIME_TYPE under the alias _BINARY_MIME_TYPE",
@@ -174,7 +174,7 @@ def test_binary_mime_consumers_alias_core_constant() -> None:
 
     sig = inspect.signature(EncryptedBlobStore.put)
     assert sig.parameters["content_type"].default == BINARY_MIME_TYPE
-    declarations_fetch = importlib.import_module("cadrumo.adapters.outbound.aeat.sede.declarations_fetch")
+    declarations_fetch = importlib.import_module("cadrumo.adapters.outbound.aeat.sede._declarations_fetch")
     assert declarations_fetch._BINARY_MIME_TYPE == "application/octet-stream"
 
 
@@ -394,7 +394,7 @@ def test_threshold_consumers_alias_core_constants() -> None:
             "_counterpart must import M347_THRESHOLD_EUR from cadrumo.core",
         ),
         (
-            "cadrumo.application.modelo._calculate_input",
+            "cadrumo.application.modelo.calculate_input",
             "M347_THRESHOLD_EUR",
             "M347_THRESHOLD_EUR",
             "_calculate_input must import M347_THRESHOLD_EUR from cadrumo.core",
@@ -412,16 +412,19 @@ def test_threshold_consumers_alias_core_constants() -> None:
             "_m347_threshold must import M347_THRESHOLD_EUR from cadrumo.core",
         ),
         (
-            "cadrumo.domain.renta._maritime_exemption",
+            "cadrumo.domain.renta.maritime_exemption",
             "ART_7P_EXEMPTION_CAP_EUR",
             "ART_7P_EXEMPTION_CAP_EUR",
             "_maritime_exemption must import ART_7P_EXEMPTION_CAP_EUR from cadrumo.core.external_constants",
         ),
         (
-            "cadrumo.domain.renta",
+            # Named the domain.renta namespace, which re-exported this. That
+            # namespace is inert, so the claim moves to the module that
+            # actually imports and uses the constant.
+            "cadrumo.domain.renta.maritime_exemption",
             "ART_7P_EXEMPTION_CAP_EUR",
             "ART_7P_EXEMPTION_CAP_EUR",
-            "cadrumo.domain.renta must re-export ART_7P_EXEMPTION_CAP_EUR",
+            "maritime_exemption must alias ART_7P_EXEMPTION_CAP_EUR from core.external_constants",
         ),
         (
             "cadrumo.domain.deadlines.models",
@@ -459,8 +462,14 @@ def test_m347_consumers_use_public_core_facade_in_source(source_tree_ast: Mappin
             and any(alias.name == "M347_THRESHOLD_EUR" for alias in node.names)
         ]
 
-        assert len(facade_imports) == 1, relative_path
-        assert private_leaf_imports == [], relative_path
+        # The polarity here is now inverted, deliberately. This required the
+        # constant to come from the `core` FACADE and forbade the module that
+        # defines it, calling that module a "private leaf" -- but
+        # `core/external_constants.py` is public, and the facade is inert. So
+        # the defining module is the required source and the facade is the one
+        # that must not be used.
+        assert facade_imports == [], relative_path
+        assert len(private_leaf_imports) == 1, relative_path
 
     row_models_tree = _read_ast(repo_path("src/cadrumo/domain/modelos/row_models.py"), source_tree_ast)
     assert isinstance(row_models_tree, ast.Module)
@@ -487,7 +496,7 @@ def test_no_bare_threshold_decimal_literals_in_consumers(source_tree_ast: Mappin
     offenders: list[str] = []
     for relative_path, literal, replacement in (
         ("src/cadrumo/application/aggregation/_counterpart.py", "3005.06", "M347_THRESHOLD_EUR"),
-        ("src/cadrumo/domain/renta/_maritime_exemption.py", "60100", "ART_7P_EXEMPTION_CAP_EUR"),
+        ("src/cadrumo/domain/renta/maritime_exemption.py", "60100", "ART_7P_EXEMPTION_CAP_EUR"),
         (
             "src/cadrumo/domain/deadlines/models.py",
             "1500",

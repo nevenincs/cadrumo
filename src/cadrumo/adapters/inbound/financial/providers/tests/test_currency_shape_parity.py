@@ -25,9 +25,9 @@ from pydantic import ValidationError
 from ......core.config import override_settings
 from ......core.parsing import normalise_iso_4217_currency
 from ......domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from .._base import FinancialValidationError, default_currency
-from .._csv import _currency_from_aliases
 from .._ofx import _resolve_statement_context
+from ..base import FinancialValidationError, default_currency
+from ..csv import _currency_from_aliases
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 

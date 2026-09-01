@@ -40,10 +40,6 @@ import pytest
 
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....application.prorrata_register._sector_lifecycle import (
-    seed_sector_carried_definitive_from_register,
-    settle_sector_definitive,
-)
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
 from ....core.prorrata_register import (
@@ -61,6 +57,7 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.secure_sql import isolated_runtime_profile
+from ...prorrata_register.sector_lifecycle import seed_sector_carried_definitive_from_register, settle_sector_definitive
 from .. import aggregate_iva_ledger_observations_from_repositories
 from .._iva_ledger import resolve_iva_ledger_binding_values
 

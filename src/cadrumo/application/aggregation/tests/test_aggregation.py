@@ -8,7 +8,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.period import Period, PeriodError, PeriodKind
-from ._renta_income_aggregation_support import _period
+from .renta_income_aggregation_support import _period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

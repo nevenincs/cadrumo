@@ -21,7 +21,7 @@ from ....domain.iva.regimen_simplificado_rows import (
     RegimenSimplificadoFilingRows,
 )
 from ....domain.modelos.calculation_revision_m303_evidence import M303DANA2024EligibilityEvidence
-from .._m303_regimen_simplificado import (
+from ..m303_regimen_simplificado import (
     M303RegimenSimplificadoCalculationError,
     calculate_m303_regimen_simplificado_result,
 )

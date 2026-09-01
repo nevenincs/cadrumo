@@ -12,7 +12,7 @@ from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeduct
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.flow import IvaFlowDirection
 from ....domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
-from ...calculations.registry.ledger_bindings import IvaLedgerObservation
+from ...calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ..register import (
     BienesInversionIvaRegister,
     BienesInversionSectorContribution,

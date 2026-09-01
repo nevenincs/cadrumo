@@ -24,7 +24,7 @@ The four behaviours under test:
 * D3 (303 exclusion): the carry resolver never emits the M303 IVA-compensation
   binding (the iva-wallet decision owns it).
 * D4 (grupo fan-in non-goal): documented as out of scope in
-  :mod:`cadrumo.application.modelo._filed_revision_observation`; no test asserts member
+  :mod:`cadrumo.application.modelo.filed_revision_observation`; no test asserts member
   fan-in for the local-filing flow.
 """
 
@@ -59,14 +59,14 @@ from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceProvenance, CalculationSourceResolution
 from ...aggregation.source_resolution_operations import merge_source_resolutions
 from ...calculations.observations_repository import CalculationObservationRepository
-from .._calculation_actions import (
+from ..calculation_actions import (
     _resolve_bucket_source_mesh,
     _source_resolution_excluding_iva_compensation,
     calculate_modelo_revision,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from .._filed_revision_observation import APP_FILING_SOURCE_KIND
-from .._iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
+from ..filed_revision_observation import APP_FILING_SOURCE_KIND
+from ..iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from ..work_lifecycle import create_work_unit
 from ._file_flow_support import (
     _DEFAULT_130_BINDING_VALUES,
@@ -394,7 +394,7 @@ def test_same_year_locally_filed_upstream_admitted_with_advisory(repos: _Repos) 
     from ....domain.modelos.calculation_repository import upsert_calculation_revision
     from ....domain.modelos.calculation_revision import CalculationRevisionState
     from ...calculations.cross_period_clean_state import CrossPeriodCleanStateBlocker
-    from .._verification_actions import _cross_period_clean_state_verdict_for_work_unit
+    from ..verification_actions import _cross_period_clean_state_verdict_for_work_unit
 
     wu_repo, cr_repo, fr_repo, _vr_repo, bv_repo = repos
     _seed_first_year_activity_profile(repos)
@@ -511,7 +511,7 @@ def test_carry_resolver_excludes_303_iva_compensation_binding(repos: _Repos) -> 
     """
     from ....core.period import Period
     from ...aggregation import CalculationSourceContext
-    from ...calculations._multi_year import PreviousFilingSourceResolver
+    from ...calculations.multi_year import PreviousFilingSourceResolver
 
     wu_repo = repos[0]
     _seed_existing_303_activity_profile(repos)
@@ -820,7 +820,7 @@ def test_first_filer_same_year_chain_is_fully_reachable(repos: _Repos) -> None:
     """
     from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
-    from .._verification_actions import _cross_period_clean_state_verdict_for_work_unit
+    from ..verification_actions import _cross_period_clean_state_verdict_for_work_unit
 
     wu_repo, cr_repo, _fr_repo, _vr_repo, bv_repo = repos
     _seed_first_year_activity_profile(repos)

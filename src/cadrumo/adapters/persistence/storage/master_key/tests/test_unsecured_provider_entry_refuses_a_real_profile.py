@@ -35,9 +35,9 @@ from ......core.storage_taxonomy_locations import bucket_scoped_storage_path
 from ...crypto.encrypted_columns import EncryptedBytes
 from ...errors import UnsecuredModeRefusedError
 from ...secure_object_namespaces import USER_PROFILE_VALUE_NAMESPACE
-from .._master_key import UnsecuredMasterKeyProvider
 from ..active_session import activate_session, current_active_bucket_session
 from ..bucket_session import BucketSession
+from ..master_key import UnsecuredMasterKeyProvider
 
 if TYPE_CHECKING:
     from pathlib import Path

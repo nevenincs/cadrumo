@@ -17,10 +17,10 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.application.aggregation import IvaDifferentiatedDeductionContribution
-from cadrumo.application.calculations._m303_regimen_simplificado import calculate_m303_regimen_simplificado_result
+from cadrumo.application.calculations.m303_regimen_simplificado import calculate_m303_regimen_simplificado_result
 from cadrumo.application.filing._export import render_filing_envelope
-from cadrumo.application.filing._export_envelope import FilingEnvelopeRenderRequest, FilingEnvelopeRenderResult
-from cadrumo.application.filing._projection import _project_record
+from cadrumo.application.filing.export_envelope import FilingEnvelopeRenderRequest, FilingEnvelopeRenderResult
+from cadrumo.application.filing.projection import _project_record
 from cadrumo.application.filing.tests import test_m303_did_account_wire_isolated_authority as m303_did
 from cadrumo.application.filing.tests.test_producer_snapshot import _m303_exonerado_evidence
 from cadrumo.core.filing_projection_ref import (

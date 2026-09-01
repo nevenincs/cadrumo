@@ -107,7 +107,7 @@ _DEFAULT_IVA_IMPORT_IDS: tuple[str, ...] = ()
 
 _IVA_DECIMAL_LITERAL_CASES: tuple[tuple[str, str, str], ...] = (
     (
-        "src/cadrumo/application/inventory/_service.py",
+        "src/cadrumo/application/inventory/service.py",
         "_service.py",
         "DEFAULT_IVA_GENERAL_RATE_PCT",
     ),
@@ -272,7 +272,7 @@ _DECIMAL_ALIAS_CASES: tuple[tuple[str, str, str, str], ...] = (
         "_amortization_ledger must expose ART_23_1_F_RATE alias",
     ),
     (
-        "cadrumo.domain.renta._maritime_exemption",
+        "cadrumo.domain.renta.maritime_exemption",
         "REBECA_MARITIME_EXEMPTION_FRACTION",
         "REBECA_MARITIME_EXEMPTION_FRACTION",
         "_maritime_exemption must import REBECA_MARITIME_EXEMPTION_FRACTION from cadrumo.core.external_constants",
@@ -289,7 +289,7 @@ _DECIMAL_LITERAL_CASES: tuple[tuple[str, str, str, str, str], ...] = (
         "Bare Decimal('0.03') amortization literals found",
     ),
     (
-        "src/cadrumo/domain/renta/_maritime_exemption.py",
+        "src/cadrumo/domain/renta/maritime_exemption.py",
         "_maritime_exemption.py",
         "0.50",
         "REBECA_MARITIME_EXEMPTION_FRACTION",

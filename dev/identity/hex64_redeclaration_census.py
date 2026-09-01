@@ -1,6 +1,6 @@
 """Census of hex-64 shape declarations made anywhere other than the canonical home.
 
-WHY THIS EXISTS. ``core/_hex.py`` states the mandate in the primitive's own
+WHY THIS EXISTS. ``core/hex.py`` states the mandate in the primitive's own
 docstring -- every hex-64 concept is "declared as its OWN semantic alias
 assigned FROM this one primitive, never by re-declaring the
 ``StringConstraints(...)`` call". A gate for it already existed
@@ -54,7 +54,7 @@ from typing import Final
 from ..quality.cli_action_census import production_sources
 
 #: The canonical home. A declaration here is the definition, not a bypass.
-CANONICAL_HOME: Final[str] = "src/cadrumo/core/_hex.py"
+CANONICAL_HOME: Final[str] = "src/cadrumo/core/hex.py"
 
 #: The exact hex-64 character-class shapes this codebase writes, in every
 #: ordering and casing seen. Ordering matters to nobody but a regex: a sweep
@@ -117,7 +117,7 @@ class Exemption:
 #: to handle.
 ALLOWLIST: Final[tuple[Exemption, ...]] = (
     Exemption(
-        path="src/cadrumo/application/modelo/_selectors.py",
+        path="src/cadrumo/application/modelo/selectors.py",
         symbol="_WorkUnitLookupId",
         reason=(
             "A CLI lookup accepts an abbreviated 12-character prefix as well as the full "
@@ -127,7 +127,7 @@ ALLOWLIST: Final[tuple[Exemption, ...]] = (
         ),
     ),
     Exemption(
-        path="src/cadrumo/application/modelo/_export.py",
+        path="src/cadrumo/application/modelo/export.py",
         symbol="_Sha256Ref",
         reason=(
             "A 'sha256:'-prefixed reference, 71 characters including the prefix. A "

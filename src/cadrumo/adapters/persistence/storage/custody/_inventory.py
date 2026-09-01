@@ -15,17 +15,12 @@ from .....core.directory_scan import iter_directory
 from .....core.hashing import CONTENT_DIGEST_PREFIX, canonical_json_bytes, prefixed_digest
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_location
-from ._filesystem_primitives import (
-    anchor_directory,
-    is_reparse_metadata,
-    posix_directory_fd,
-    posix_open_child_directory,
-)
 from .errors import ProfileCustodyRecordError
 from .filesystem import (
     PROFILE_CUSTODY_DATA_FILE_MAX_BYTES,
     windows_regular_file_anchor,
 )
+from .filesystem_primitives import anchor_directory, is_reparse_metadata, posix_directory_fd, posix_open_child_directory
 
 PROFILE_CUSTODY_INVENTORY_MAX_ENTRIES = 2048
 PROFILE_CUSTODY_INVENTORY_MAX_TOTAL_BYTES = 512 * 1024 * 1024

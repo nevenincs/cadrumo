@@ -56,13 +56,13 @@ _COVERED_BY_REFUSAL_TABLE: dict[str, str] = {
     "src/cadrumo/adapters/outbound/aeat/auth/session_store.py": "auth_session",
     "src/cadrumo/adapters/outbound/aeat/sede/observation_store.py": "observation",
     "src/cadrumo/adapters/outbound/google/session_store.py": "google_oauth_token",
-    "src/cadrumo/adapters/outbound/llm/_cache.py": "llm_cache_stats",
-    "src/cadrumo/adapters/outbound/llm/_usage.py": "llm_usage_load",
-    "src/cadrumo/adapters/outbound/llm/_consent_ledger.py": "llm_consent_ledger",
-    "src/cadrumo/adapters/outbound/llm/_run_telemetry.py": "llm_run_telemetry",
+    "src/cadrumo/adapters/outbound/llm/cache.py": "llm_cache_stats",
+    "src/cadrumo/adapters/outbound/llm/usage.py": "llm_usage_load",
+    "src/cadrumo/adapters/outbound/llm/consent_ledger.py": "llm_consent_ledger",
+    "src/cadrumo/adapters/outbound/llm/run_telemetry.py": "llm_run_telemetry",
     "src/cadrumo/application/auth/diagnostics.py": "auth_diagnostics",
     "src/cadrumo/application/workflow/persistence.py": "workflow_state",
-    "src/cadrumo/application/modelo/_review_package_recipient_registry.py": "review_recipient_registry",
+    "src/cadrumo/application/modelo/review_package_recipient_registry.py": "review_recipient_registry",
     "src/cadrumo/adapters/persistence/profile/recipient_replay_guard.py": "review_recipient_replay_guard",
 }
 

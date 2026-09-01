@@ -69,7 +69,7 @@ def _activate_locale(locale: str | None) -> None:
     import os
 
     from ....core.config import reset_settings_cache
-    from ....core.i18n._render import OUTPUT_LANGUAGE_ENV_VAR, clear_output_language_cache
+    from ....core.i18n.render import OUTPUT_LANGUAGE_ENV_VAR, clear_output_language_cache
 
     os.environ[OUTPUT_LANGUAGE_ENV_VAR] = locale
     reset_settings_cache()

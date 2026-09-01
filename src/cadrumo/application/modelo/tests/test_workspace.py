@@ -1315,9 +1315,9 @@ def _real_calculation_revision_with_row_materialization():
 
     from ....core.aggregation import BindingSourceKind
     from ....core.casilla_id import validated_casilla_id
-    from ....domain.calculations._row_casilla import DirectRowMaterializationProvenance
-    from ....domain.calculations._row_source_identity import RowSourceIdentity
     from ....domain.calculations.registry.bindings import CasillaObservation
+    from ....domain.calculations.row_casilla import DirectRowMaterializationProvenance
+    from ....domain.calculations.row_source_identity import RowSourceIdentity
     from ....domain.modelos.calculation_revision import (
         CalculationRevision,
         CalculationRevisionState,

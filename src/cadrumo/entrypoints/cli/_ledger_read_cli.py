@@ -37,7 +37,7 @@ from ...application.review.errors import FilterParseError
 from ...application.review.filter import LedgerReviewFilterSpec
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.decimal.coercion import coerce_decimal_strict
-from ...core.i18n._render import tr
+from ...core.i18n.render import tr
 from ...core.json_contract import (
     Notice,
     NoticeSeverity,
@@ -60,7 +60,7 @@ from ._ledger_list import (
     project_ledger_list,
 )
 from ._ledger_support import _ledger_cli_no_recovery
-from ._period_parsing import _canonical_period, _optional_canonical_period
+from .period_parsing import _canonical_period, _optional_canonical_period
 
 if TYPE_CHECKING:
     from ...application.ledger.llm_diagnostics import (

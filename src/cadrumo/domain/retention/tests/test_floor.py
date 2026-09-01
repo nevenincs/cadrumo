@@ -13,7 +13,7 @@ from datetime import UTC, date, datetime
 import pytest
 
 from ....core.calendar_shift import shift_by_calendar_years
-from ...retention._floor import RetainableFilingRecord, RetentionFloorAssessment, assess_retention_floor
+from ..floor import RetainableFilingRecord, RetentionFloorAssessment, assess_retention_floor
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

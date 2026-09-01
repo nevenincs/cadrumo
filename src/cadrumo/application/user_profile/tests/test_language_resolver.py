@@ -2,7 +2,7 @@
 
 Tests exercise the full application stack: language preference is stored
 in the active profile via the workflow state repository and read back
-through core.i18n._render.output_language. Requires an isolated storage
+through core.i18n.render.output_language. Requires an isolated storage
 runtime for each test (no shared global state).
 """
 

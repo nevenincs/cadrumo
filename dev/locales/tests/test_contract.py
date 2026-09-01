@@ -36,7 +36,7 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from cadrumo.application.operator_surface.tests._contract_locale_fixture import pin_english_locale
+from cadrumo.application.operator_surface.tests.contract_locale_fixture import pin_english_locale
 
 from .. import LocaleManager
 from ..manager import locale_catalogue_source
@@ -44,6 +44,7 @@ from ..manager import locale_catalogue_source
 __all__ = ["pin_english_locale"]
 
 from cadrumo.application import operator_surface
+from cadrumo.application.operator_surface import help as _help_module
 from cadrumo.application.operator_surface.contract import (
     get_operator_surface_contract,
     require_accepted_root,
@@ -72,9 +73,7 @@ from cadrumo.application.operator_surface.models import (
     RootSurface,
     RootSurfaceName,
 )
-from cadrumo.application.operator_surface import help as _help_module
-from cadrumo.core.aggregation import BindingSourceKind
-from cadrumo.core.aggregation import COUNTERPART_SOURCE_KINDS
+from cadrumo.core.aggregation import COUNTERPART_SOURCE_KINDS, BindingSourceKind
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.error_codes import get_registered_error_code
 from cadrumo.core.external_constants import OutputLanguage

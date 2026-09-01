@@ -63,8 +63,8 @@ from ...core.identity import BucketId, CalculationRevisionId, WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.clock import now as _utc_now
 from ...core.time.utc import UtcInstant
-from ._review_package_counter_sign import CounterSignedReceipt, verify_counter_signed_receipt
-from ._review_package_recipient_encryption import (
+from .review_package_counter_sign import CounterSignedReceipt, verify_counter_signed_receipt
+from .review_package_recipient_encryption import (
     RecipientDecryptedPackage,
     RecipientEncryptedPackage,
     decrypt_review_package_for_recipient,

@@ -58,7 +58,7 @@ from ...domain.bienes_inversion.register import BienInversionRecordError
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.iva.m303_settlement import is_m303_annual_settlement_period
 from ..aggregation import CalculationSourceDiagnostic
-from ..calculations._bienes_inversion_regularizacion import (
+from ..calculations.bienes_inversion_regularizacion import (
     build_bienes_inversion_regularizacion_advisory,
     build_bienes_inversion_transmision_advisory,
 )

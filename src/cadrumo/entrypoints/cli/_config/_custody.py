@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from ....application.user_profile.login_session import ProfileLoginOutcome
 
 
-from ._secure_input import MachineSecretPayload, MachineSecretSelection
+from .secure_input import MachineSecretPayload, MachineSecretSelection
 
 #: Actor reference the logout command submits its supervised operation under.
 _LOGOUT_ACTOR_REF = "cli:config-logout"
@@ -176,11 +176,7 @@ def _login_through_the_prompt(
     from ....application.user_profile.authentication import ProfileAuthenticationRefusedError
     from ....application.user_profile.login_session import login_profile
     from ..errors import CliRefusedBoundaryError
-    from ._secure_input import (
-        prompt_secret_no_echo,
-        read_machine_secret_payload,
-        terminal_can_prompt_for_secrets,
-    )
+    from .secure_input import prompt_secret_no_echo, read_machine_secret_payload, terminal_can_prompt_for_secrets
 
     if machine_secret is not None:
         secrets = read_machine_secret_payload(LoginSecrets, selection=machine_secret)
@@ -226,7 +222,7 @@ def config_login(
 ) -> None:
     """Authenticate one profile and mint its resumable session."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ._secure_input import select_machine_secret_channel
+    from .secure_input import select_machine_secret_channel
 
     machine_secret = select_machine_secret_channel(
         secrets_stdin=secrets_stdin,

@@ -20,8 +20,8 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.core.modelo import Modelo
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.modelo import Modelo
 
 from .._resolution import (
     ChunkHit,

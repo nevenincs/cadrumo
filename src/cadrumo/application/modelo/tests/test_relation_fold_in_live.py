@@ -68,9 +68,9 @@ from ...aggregation import (
     RetencionScheme,
 )
 from ...aggregation.source_resolution_operations import merge_source_resolutions
-from ...calculations._relation_prefill import RelationPrefillSourceResolver
 from ...calculations.observations_repository import CalculationObservationRepository
-from .._calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
+from ...calculations.relation_prefill import RelationPrefillSourceResolver
+from ..calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from ..work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

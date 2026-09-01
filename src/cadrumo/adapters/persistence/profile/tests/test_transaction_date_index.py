@@ -37,7 +37,7 @@ from .....domain.transactions.enums import BusinessClassification, TransactionDi
 from .....domain.transactions.models import Transaction, TransactionCatalogue
 from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .....tests.secure_sql import isolated_runtime_profile
-from ...storage.sql import _orm
+from ...storage.sql import orm as _orm
 from ...storage.sql.session import session_scope
 from ..transactions import TransactionCatalogueRepository
 

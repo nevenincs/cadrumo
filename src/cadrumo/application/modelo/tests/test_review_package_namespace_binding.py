@@ -23,10 +23,10 @@ import pytest
 from sqlalchemy import select
 
 from ....adapters.persistence.storage.secure_object_namespaces import MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE
-from ....adapters.persistence.storage.sql._orm import SecureObjectRow
+from ....adapters.persistence.storage.sql.orm import SecureObjectRow
 from ....adapters.persistence.storage.sql.session import session_scope
 from ....tests.secure_sql import isolated_runtime_profile
-from .._review_package_signing import ensure_review_package_signing_keypair
+from ..review_package_signing import ensure_review_package_signing_keypair
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

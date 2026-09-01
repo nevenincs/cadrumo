@@ -47,10 +47,10 @@ from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....tests import general_m303_filing_evidence
 from ....tests.registry_tree import bundled_registry_tree
 from ....tests.secure_sql import isolated_runtime_profile
-from ...modelo._filed_revision_observation import persist_filed_revision_observation
-from .._relation_prefill import resolve_relations_from_local_store
+from ...modelo.filed_revision_observation import persist_filed_revision_observation
 from ..iva_compensation_history import IvaCompensationHistoryRepository
 from ..observations_repository import CalculationObservationRepository
+from ..relation_prefill import resolve_relations_from_local_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

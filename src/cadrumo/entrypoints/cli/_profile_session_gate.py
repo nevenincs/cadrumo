@@ -9,11 +9,11 @@ from typing import TYPE_CHECKING, Any, Protocol
 import typer
 
 from ...core.profile_session import ProfileSessionRefusalReason
-from ._command_spec import CommandSpec, ProfileAuthenticationPosture
+from .command_spec import CommandSpec, ProfileAuthenticationPosture
 
 if TYPE_CHECKING:
     from ._common import RequestedCliLeaf
-    from ._config._secure_input import MachineSecretSelection, ProfileSecretSelection
+    from ._config.secure_input import MachineSecretSelection, ProfileSecretSelection
 
 
 class RootAuthenticator(Protocol):
@@ -159,7 +159,7 @@ def activate_profile_session(
         target_profile_label=target_profile_label,
         requested_leaf=leaf,
     )
-    from ...core.i18n._render import clear_output_language_cache
+    from ...core.i18n.render import clear_output_language_cache
 
     clear_output_language_cache()
 

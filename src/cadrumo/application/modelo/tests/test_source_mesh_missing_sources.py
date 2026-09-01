@@ -53,12 +53,9 @@ from ...aggregation import (
     BindingSourceDisposition,
     build_binding_source_dispositions,
 )
-from .._action_errors import ModeloAggregationBindingError
-from .._calculation_actions import assert_no_novel_source_kinds
-from .._calculation_source_policy import (
-    ACCEPTED_BUCKET_AGGREGATION_SOURCE_KINDS,
-    BUCKET_AGGREGATION_OWNED_SOURCES,
-)
+from ..action_errors import ModeloAggregationBindingError
+from ..calculation_actions import assert_no_novel_source_kinds
+from ..calculation_source_policy import ACCEPTED_BUCKET_AGGREGATION_SOURCE_KINDS, BUCKET_AGGREGATION_OWNED_SOURCES
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

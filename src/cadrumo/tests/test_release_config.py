@@ -41,7 +41,7 @@ import pytest
 import yaml
 from pydantic import BaseModel, ConfigDict, Field
 
-from ._inventory import repo_path
+from .inventory import repo_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

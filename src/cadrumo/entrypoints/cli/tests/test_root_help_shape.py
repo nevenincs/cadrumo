@@ -34,7 +34,7 @@ from ....application.operator_surface.help import build_help_document
 from ....core.bucket_pointer import BucketPointer, write_pointer
 from ....core.config import SecretStoreBackend, Settings, load_settings
 from ....core.external_constants import OutputLanguage
-from ....core.i18n._render import tr
+from ....core.i18n.render import tr
 from ....core.product_identity import PRODUCT_IDENTITY
 from ....core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.cli_runner import invoke_cached_cli

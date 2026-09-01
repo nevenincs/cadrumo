@@ -12,12 +12,12 @@ from pydantic import ValidationError
 from ....core.aggregation import BindingSourceKind
 from ....core.modelo_work_progress_state import ModeloWorkProgressState
 from ....core.period import Period
-from ....domain.calculations._row_source_identity import RowSourceIdentity
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.calculations.registry.runtime_graph import revision_date_binding_ids
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.temporal import select_revision
+from ....domain.calculations.row_source_identity import RowSourceIdentity
 from ....domain.filing.schema import ModeloValueKind
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
@@ -45,7 +45,7 @@ from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.profile_capsule import load_test_profile_record, replace_test_profile_record
-from .._calculation_actions import calculate_modelo_revision
+from ..calculation_actions import calculate_modelo_revision
 from ..work_review import (
     ModeloWorkOriginAnomaly,
     ModeloWorkProgress,

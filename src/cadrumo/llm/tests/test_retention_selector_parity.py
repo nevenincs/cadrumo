@@ -28,7 +28,7 @@ from decimal import Decimal
 
 import pytest
 
-from ...adapters.outbound.llm._run_telemetry import LLMRunRecord
+from ...adapters.outbound.llm.run_telemetry import LLMRunRecord
 from ..models import CachedEntry, LLMProvider, LLMResponse, UsageRecord
 from ..retention import select_retention_removal_keys
 
@@ -241,14 +241,16 @@ def test_each_store_prune_reaches_the_canonical_selector() -> None:
     """
     import inspect
 
-    from ...adapters.outbound.llm import _cache, _run_telemetry, _usage
+    from ...adapters.outbound.llm import cache as _cache
+    from ...adapters.outbound.llm import run_telemetry as _run_telemetry
+    from ...adapters.outbound.llm import usage
 
     for module in (_cache, _usage, _run_telemetry):
         assert module.select_retention_removal_keys is select_retention_removal_keys, module.__name__
 
     for source_owner, prune in (
         (_cache.LLMCache, _cache.LLMCache.prune),
-        (_usage.UsageRecorder, _usage.UsageRecorder.prune),
+        (usage.UsageRecorder, usage.UsageRecorder.prune),
         (_run_telemetry.LLMRunTelemetryRecorder, _run_telemetry.LLMRunTelemetryRecorder.prune),
     ):
         source = inspect.getsource(prune)

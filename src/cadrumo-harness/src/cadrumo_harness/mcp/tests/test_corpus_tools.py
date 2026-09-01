@@ -9,9 +9,9 @@ from typing import Any, cast
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.application.corpus_search._lexical_index import build_lexical_index, bundled_corpus_html_root, iter_corpus_chunks
-from cadrumo.application.corpus_search._models import CitationResolution, RetrievalHit, RetrievalMode, RetrievalResponse
-from cadrumo.application.corpus_search._runtime import corpus_index_path
+from cadrumo.application.corpus_search.lexical_index import build_lexical_index, bundled_corpus_html_root, iter_corpus_chunks
+from cadrumo.application.corpus_search.models import CitationResolution, RetrievalHit, RetrievalMode, RetrievalResponse
+from cadrumo.application.corpus_search.runtime import corpus_index_path
 from cadrumo.core.config import override_settings
 
 from .._corpus_tools import (

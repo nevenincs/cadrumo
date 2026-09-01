@@ -87,7 +87,7 @@ class _ProfileCustodyHoldEvidenceOwner:
             # custody, not to reach past their facades: each names its owning
             # package's public surface exactly as a module-level import would.
             if self._owner == "legal":
-                from ..evidence._profile_legal_hold import LegalHoldCaseAuthority
+                from ..evidence.profile_legal_hold import LegalHoldCaseAuthority
 
                 return LegalHoldCaseAuthority(root=self._storage_root).project(profile_id, now=now)
             from ..filing.retention import FilingRetentionAuthority

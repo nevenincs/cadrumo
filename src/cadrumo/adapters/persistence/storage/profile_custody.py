@@ -73,7 +73,6 @@ from .bucket.output_language_hint import read_bucket_output_language_hint
 from .bucket.sealed_archive_reader import read_sealed_archive
 from .bucket.sealed_archive_writer import write_sealed_archive
 from .crypto.aead import EncryptedBlob, decrypt_record, encrypt_record
-from .custody._filesystem_primitives import ensure_profile_custody_local_directory
 from .custody.capsule import (
     inventory_committed_profile_custody_capsule,
     inventory_staged_profile_custody_capsule,
@@ -114,6 +113,7 @@ from .custody.filesystem import (
     read_profile_custody_local_record,
     write_profile_custody_local_record,
 )
+from .custody.filesystem_primitives import ensure_profile_custody_local_directory
 from .custody.kdf_supervision import calibrate_profile_kdf, unlock_profile_custody
 from .custody.label_head_repository import ProfileLabelHeadRepository
 from .custody.records import PROFILE_CUSTODY_ENVELOPE_MAX_BYTES, ProfileCustodyEnvelope, parse_profile_custody_envelope

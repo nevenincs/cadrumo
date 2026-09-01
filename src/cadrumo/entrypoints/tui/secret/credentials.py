@@ -31,7 +31,7 @@ from textual.screen import Screen
 from textual.worker import Worker, WorkerState
 
 from ....core.credentials import PassphraseStrength, ProfilePasswordAssessment
-from ....core.i18n._render import tr
+from ....core.i18n.render import tr
 from ....entrypoints.tui.components.host import ScreenHostApp
 from ....entrypoints.tui.components.status import PinnedStatusBar
 from ....entrypoints.tui.components.theme import toggle_appearance, tokenised

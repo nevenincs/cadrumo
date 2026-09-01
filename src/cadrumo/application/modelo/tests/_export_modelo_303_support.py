@@ -42,9 +42,9 @@ from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.registry_observations import registry_grounded_observations
 from ...calculations.cross_period_clean_state import cross_period_dependency_requirements
 from ...calculations.observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository
-from .._calculation_actions import calculate_modelo_revision
 from .._calculation_helpers import external_filing_observations
-from .._verification_actions import verify_modelo_revision
+from ..calculation_actions import calculate_modelo_revision
+from ..verification_actions import verify_modelo_revision
 from ..work_lifecycle import create_work_unit
 from ._export_test_support import _seed_profile, _synthetic_valid_nif
 from .justificante_metadata import persist_justificante_metadata

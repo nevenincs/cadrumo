@@ -45,8 +45,8 @@ from typing import Annotated, Final
 
 from pydantic import BaseModel, Field, StringConstraints, ValidationError
 
-from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 from ..._paths import REPO_ROOT, UTF_8
 from ._compare import check_transcript, evaluate_expectations

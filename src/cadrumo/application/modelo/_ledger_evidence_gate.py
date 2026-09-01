@@ -29,7 +29,7 @@ from ...domain.transactions.enums import (
     TransactionLifecycleState,
 )
 from ..aggregation import invoice_kind_for_direction
-from ._preconditions import build_modelo_precondition_failure
+from .preconditions import build_modelo_precondition_failure
 
 
 def _enum_or_none[EnumT: StrEnum](enum_type: type[EnumT], value: str | None) -> EnumT | None:

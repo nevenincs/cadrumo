@@ -295,6 +295,12 @@ MODELO_READY_PROFILE_FACTS: Final[tuple[UserProfileFact, ...]] = (
     # cannot name an anonymous taxpayer. A tax id alone makes a profile ready to
     # CALCULATE and not ready to EXPORT, which is why seeding only the id looks
     # sufficient right up to the moment a fichero is produced.
+    # Without an entity type the export binding takes its ENTITY branch, which
+    # sets `surnames=None` and leaves the fichero's TAXPAYER_SURNAMES producer
+    # unsatisfied. Declaring the natural person is what makes the two name facts
+    # above reach the producer at all -- absent it they are read, composed into a
+    # legal name, and then discarded.
+    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
     UserProfileFact(path="identity.name", value="Ana"),
     UserProfileFact(path="identity.surnames", value="Garcia Lopez"),
     UserProfileFact(path="activities.description", value="Spanish rental income"),

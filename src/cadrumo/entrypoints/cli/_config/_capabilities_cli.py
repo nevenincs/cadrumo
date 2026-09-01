@@ -18,7 +18,7 @@ from ....core.i18n import tr
 from .._common import bad, emit_envelope
 
 # on the CLI build path, keeping every capability leaf in the JSON-contract registry.
-from ._capabilities_payloads import CapabilitiesViewResult, CapabilitySetResult
+from .capabilities_payloads import CapabilitiesViewResult, CapabilitySetResult
 
 
 def capabilities_view(ctx: typer.Context) -> None:

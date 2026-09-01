@@ -26,9 +26,9 @@ from typing import Any
 
 import pytest
 
-from cadrumo.core.modelo import Modelo
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.modelo import Modelo
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaConstraints
 

@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import pytest
 
-from .._import_classification import ImportRowVerdict, classify_import_row
+from ..import_classification import ImportRowVerdict, classify_import_row
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

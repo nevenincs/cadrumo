@@ -5,14 +5,14 @@ from __future__ import annotations
 
 import typer
 
-from ...application.modelo._m036_lifecycle import (
+from ...application.modelo.m036_lifecycle import (
     M036DeclarationCommand,
     M036DeclarationResult,
     list_m036_declarations,
     read_m036_declaration,
     record_m036_declaration,
 )
-from ...core.i18n._render import tr
+from ...core.i18n.render import tr
 from ...core.parsing import parse_iso8601_date
 from ...domain.calculations.registry.censo_modelos import CensoModeloEventKind
 from ._common import active_bucket_id_or_refuse, emit_envelope

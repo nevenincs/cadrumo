@@ -35,8 +35,8 @@ from pathlib import Path
 import pdfplumber
 import pytest
 
-from .....adapters.inbound.declaracion._parser import _extract_tax_id
 from .....adapters.inbound.declaracion.errors import DeclaracionParseError
+from .....adapters.inbound.declaracion.parser import _extract_tax_id
 from .....core.directory_scan import scan_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]

@@ -96,7 +96,7 @@ from ..core.bucket_pointer import resolve_active_bucket_id
 from ..core.errors.hierarchy import CadrumoError
 from ..core.filing_year import FilingYear
 from ..core.hashing import content_hash_hex
-from ..core.identity._profile import ProfileId
+from ..core.identity.profile import ProfileId
 from ..core.logging import get_logger
 from ..core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..core.operator_action_enums import OperatorActionAxis
@@ -682,9 +682,9 @@ def _build_modelo_readiness(
     if not requests or active_profile_id is None:
         return ()
 
-    from ..core.i18n._render import tr
+    from ..core.i18n.render import tr
     from ..domain.user_profile.values import ProfileSetupState
-    from .modelo._profile_readiness_gate import (
+    from .modelo.profile_readiness_gate import (
         modelo_applicability_refusal,
         modelo_work_profile_preflight_report,
         pre_activity_period_refusal,
@@ -920,7 +920,7 @@ def _missing_calculation_bindings_for_readiness(
     construction (``aeat-calculation-aggregation``).
     """
     from ..domain.calculations.registry.runtime_graph import enum_consumed_binding_ids, revision_date_binding_ids
-    from .calculations._relation_prefill_m202 import relation_prefill_period_zero_default_binding_ids
+    from .calculations.relation_prefill_m202 import relation_prefill_period_zero_default_binding_ids
     from .modelo.profile_binding import (
         ProfileBindingResolutionError,
         profile_resolved_binding_ids,

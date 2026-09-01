@@ -7,8 +7,8 @@ from dataclasses import dataclass
 from pydantic import SecretStr
 
 from ._bootstrap_exempt import is_bootstrap_exempt
-from ._command_spec import CommandSpecNode, ProfileAuthenticationPosture, ProfileSecretSpec
-from ._config._secure_input import MachineSecretPayload
+from ._config.secure_input import MachineSecretPayload
+from .command_spec import CommandSpecNode, ProfileAuthenticationPosture, ProfileSecretSpec
 
 
 class ProfileAuthenticationSecrets(MachineSecretPayload):
@@ -43,7 +43,7 @@ def resolve_profile_secret_model(spec: ProfileSecretSpec) -> type[MachineSecretP
 
 def root_profile_secret_model() -> type[MachineSecretPayload]:
     """Return the conformance-checked graph-owned root payload model."""
-    from ._command_specs import COMMAND_GRAPH
+    from .command_specs import COMMAND_GRAPH
 
     spec = COMMAND_GRAPH.by_key()["root"].profile_secret
     if spec is None:

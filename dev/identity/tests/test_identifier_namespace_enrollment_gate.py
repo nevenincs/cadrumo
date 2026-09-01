@@ -371,7 +371,7 @@ _ADJUDICATED: Final[tuple[_Adjudication, ...]] = (
         ),
     ),
     _Adjudication(
-        path="src/cadrumo/adapters/inbound/declaracion/_schema.py",
+        path="src/cadrumo/adapters/inbound/declaracion/schema.py",
         model="InboundDeclaracionObservation",
         field="tax_id",
         group="verbatim external evidence",
@@ -381,7 +381,7 @@ _ADJUDICATED: Final[tuple[_Adjudication, ...]] = (
         ),
     ),
     _Adjudication(
-        path="src/cadrumo/adapters/inbound/declaracion/_schema.py",
+        path="src/cadrumo/adapters/inbound/declaracion/schema.py",
         model="InboundDeclaracionObservation",
         field="extraction_profile_id",
         group="semantic tail collisions",
@@ -501,14 +501,14 @@ _ADJUDICATED: Final[tuple[_Adjudication, ...]] = (
         ),
     ),
     _Adjudication(
-        path="src/cadrumo/domain/renta/_ledger_expenses.py",
+        path="src/cadrumo/domain/renta/ledger_expenses.py",
         model="RentaDeductibleExpenseFact",
         field="invoice_id",
         group="open ledger-source references",
         reason="The Renta fact carries the 1-128-character ledger invoice reference, not a validated core InvoiceId.",
     ),
     _Adjudication(
-        path="src/cadrumo/domain/renta/_ledger_expenses.py",
+        path="src/cadrumo/domain/renta/ledger_expenses.py",
         model="RentaDeductibilityResult",
         field="invoice_id",
         group="open ledger-source references",
@@ -518,7 +518,7 @@ _ADJUDICATED: Final[tuple[_Adjudication, ...]] = (
         ),
     ),
     _Adjudication(
-        path="src/cadrumo/domain/renta/_ledger_expenses.py",
+        path="src/cadrumo/domain/renta/ledger_expenses.py",
         model="RentaDeductibleExpenseObservation",
         field="invoice_id",
         group="open ledger-source references",

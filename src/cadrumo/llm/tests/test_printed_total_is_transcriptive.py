@@ -102,7 +102,7 @@ def test_a_printed_total_that_contradicts_the_lines_is_recorded_as_printed() -> 
     assert recorded != _SUM_THE_LINES_IMPLY, (
         f"the draft recorded {_SUM_THE_LINES_IMPLY}, which is the sum of the base and the tax rather "
         "than what the page states. The reading stage has acquired a second arithmetic authority, "
-        "duplicating the identity owned by domain/invoices/_decomposition.py."
+        "duplicating the identity owned by domain/invoices/decomposition.py."
     )
 
 

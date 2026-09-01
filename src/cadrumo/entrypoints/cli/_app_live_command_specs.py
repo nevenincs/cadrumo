@@ -11,7 +11,7 @@ from ._app_live_justificante_command_specs import LIVE_JUSTIFICANTE_COMMAND_SPEC
 from ._app_live_notifications_command_specs import LIVE_NOTIFICATIONS_COMMAND_SPECS
 from ._app_live_portals_command_specs import LIVE_PORTALS_COMMAND_SPECS
 from ._app_live_verify_command_specs import LIVE_VERIFY_COMMAND_SPECS
-from ._command_spec import CommandSpec
+from .command_spec import CommandSpec
 
 LIVE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     *LIVE_FOUNDATION_COMMAND_SPECS,

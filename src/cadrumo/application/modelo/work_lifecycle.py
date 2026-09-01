@@ -11,7 +11,7 @@ timeline from creation through discard.
 The lifecycle layer mutates the work-unit catalogue only. It does not choose
 visible filing targets (see :mod:`cadrumo.application.modelo.work_addressing`),
 does not decide unsupported-modelo or applicability policy (see
-:mod:`cadrumo.application.modelo._work_create_policy`), and does not persist
+:mod:`cadrumo.application.modelo.work_create_policy`), and does not persist
 calculation revisions or filing records. Creation still performs the profile
 readiness and registry revision/period gates before inserting the work unit, so
 programmatic callers observe the same safety boundary as the CLI.
@@ -58,15 +58,15 @@ from ...domain.modelos.repository import upsert_work_unit
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence
-from ._action_errors import (
+from ._registry_resources import reject_unknown_period_for_revision, reject_unknown_revision
+from ._revision_persistence import build_modelo_bucket_event as _build_bucket_event
+from .action_errors import (
     CalculationRevisionNotFoundError,
     WorkUnitAlreadyDiscardedError,
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
 )
-from ._preconditions import build_modelo_precondition_failure_for_scenario
-from ._registry_resources import reject_unknown_period_for_revision, reject_unknown_revision
-from ._revision_persistence import build_modelo_bucket_event as _build_bucket_event
+from .preconditions import build_modelo_precondition_failure_for_scenario
 
 
 class ActiveWorkUnitUse(StrEnum):
@@ -378,7 +378,7 @@ def create_work_unit(
                 provenance=ActionEvidenceProvenance.APPLICATION_STATE,
             ),
         )
-    from ._profile_readiness_gate import (
+    from .profile_readiness_gate import (
         require_existing_profile_baseline_ready_for_modelo_work,
         require_profile_ready_for_modelo_work,
     )

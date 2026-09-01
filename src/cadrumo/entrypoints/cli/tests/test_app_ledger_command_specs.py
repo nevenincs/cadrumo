@@ -113,7 +113,7 @@ _OWNED_HANDLER_MODULES = (
     "cadrumo.entrypoints.cli._ledger_evidence_review_cli",
     "cadrumo.entrypoints.cli._ledger_import_cli",
     "cadrumo.entrypoints.cli._ledger_inventory_cli",
-    "cadrumo.entrypoints.cli._ledger_lifecycle_cli",
+    "cadrumo.entrypoints.cli.ledger_lifecycle_cli",
     "cadrumo.entrypoints.cli._ledger_ratios_cli",
     "cadrumo.entrypoints.cli._ledger_read_cli",
     "cadrumo.entrypoints.cli._ledger_review_cli",

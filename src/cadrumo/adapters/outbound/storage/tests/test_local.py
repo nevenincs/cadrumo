@@ -31,7 +31,6 @@ from .....core.operator_action_enums import ActionConditionality, ActionEvidence
 from .....tests.path_obstruction import obstructed_path
 from .._local import LocalFileSystemProvider, _local_failure_verdict
 from .._protocol import StorageProvider
-from .._records import ProviderKind
 from ..errors import (
     OutboundStorageIntegrityError,
     OutboundStorageNotFoundError,
@@ -40,6 +39,7 @@ from ..errors import (
     OutboundStorageValidationError,
     StorageCorruptionError,
 )
+from ..records import ProviderKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

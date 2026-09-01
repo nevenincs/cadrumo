@@ -30,7 +30,7 @@ from typing import Final
 
 import pytest
 
-from ._inventory import REPO_ROOT
+from .inventory import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

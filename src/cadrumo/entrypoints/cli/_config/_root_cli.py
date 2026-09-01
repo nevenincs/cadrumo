@@ -14,8 +14,8 @@ def config_root(
     """Render config-level workflow help when requested."""
     if not help_ and ctx.invoked_subcommand is not None:
         return
-    from .._command_specs import COMMAND_GRAPH
     from .._tui_policy import enforce_tui_request
+    from ..command_specs import COMMAND_GRAPH
 
     enforce_tui_request(ctx, spec=COMMAND_GRAPH.by_key()["config"])
     from ....application.operator_surface.help import build_help_document, render_help_text

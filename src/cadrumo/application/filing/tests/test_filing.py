@@ -27,8 +27,8 @@ from ....domain.transactions.raw_transaction import RawProvenance, RawTransactio
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
-from .._draft_construction import _binding_provenance, build_draft
 from ..conftest import _BUCKET_ID
+from ..draft_construction import _binding_provenance, build_draft
 from ..draft_review import (
     approve_draft,
     compute_current_approval_basis,

@@ -26,11 +26,11 @@ from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_injected_secure_object_repository, isolated_runtime_profile
 from ...ledger.actions_manual import create_manual_transaction, update_manual_transaction_fields
 from ...ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
-from ...modelo._action_errors import ModeloAggregationBindingError
-from ...modelo._calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
-from ...modelo._verification_actions import verify_modelo_revision
+from ...modelo.action_errors import ModeloAggregationBindingError
+from ...modelo.calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
+from ...modelo.verification_actions import verify_modelo_revision
 from ...modelo.work_lifecycle import create_work_unit
-from ...tests._wizard_catalogue_fixtures import register_wizard_catalogue
+from ...tests.wizard_catalogue_fixtures import register_wizard_catalogue
 from .. import (
     compute_ledger_filing_evidence,
     compute_ledger_filing_snapshot,

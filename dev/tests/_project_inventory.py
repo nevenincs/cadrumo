@@ -1,6 +1,6 @@
 """Project-level test inventory shared by repo-wide ratchets on the dev side.
 
-The counterpart of ``cadrumo.tests._inventory`` for the parts of the test
+The counterpart of ``cadrumo.tests.inventory`` for the parts of the test
 inventory that live outside the shipped package. Moved here from the src-side
 inventory so no module under ``src/`` holds a path into the dev tree: a ratchet
 that must walk the repository's development test roots lives on the dev side,

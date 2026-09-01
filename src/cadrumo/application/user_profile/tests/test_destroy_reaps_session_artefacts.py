@@ -43,7 +43,7 @@ from ....adapters.persistence.storage.master_key.login_throttle import login_thr
 from ....core.bucket_pointer import read_pointer
 from ....core.time.clock import now as _now
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...evidence._profile_legal_hold import LegalHoldCaseAuthority
+from ...evidence.profile_legal_hold import LegalHoldCaseAuthority
 from ...filing.retention import FilingRetentionAuthority
 from ..custody_service import (
     _ProfileCustodyTransactionCapability as ProfileCustodyTransactionService,

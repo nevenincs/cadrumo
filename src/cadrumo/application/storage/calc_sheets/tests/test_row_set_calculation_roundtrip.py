@@ -24,7 +24,7 @@ from .....domain.calculations.registry.detail_record_bindings import Modelo720Ro
 from .....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from .....tests.profile_capsule import seed_test_profile_record
 from .....tests.secure_sql import isolated_runtime_profile
-from ....modelo._calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
+from ....modelo.calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from ....modelo.work_lifecycle import create_work_unit
 from .._row_set_assembly import assemble_row_sets_for_snapshot
 from .._styling import StyleRole, _data_tab_ranges

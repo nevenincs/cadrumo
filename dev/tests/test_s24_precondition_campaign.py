@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.modelo._preconditions import MODELO_PRECONDITION_PROFILES
+from cadrumo.application.modelo.preconditions import MODELO_PRECONDITION_PROFILES
 from cadrumo.application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
 from cadrumo.application.operator_surface.manifest import (
     InputSchemaInventoryRow,
@@ -31,7 +31,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _ROOT = REPO_ROOT
 _MODELO_PATH_PREFIX = "src/cadrumo/application/modelo/"
 _REQUIRED_PRODUCTION_FINDING_MODULES = {
-    "src/cadrumo/application/calculations/_foreign_asset_redeclaration.py",
+    "src/cadrumo/application/calculations/foreign_asset_redeclaration.py",
     "src/cadrumo/application/modelo/_art20_advisory.py",
     "src/cadrumo/application/modelo/_art52_advisory.py",
     "src/cadrumo/application/modelo/_attribution_received_advisory.py",
@@ -45,7 +45,7 @@ _REQUIRED_PRODUCTION_FINDING_MODULES = {
     "src/cadrumo/application/modelo/_m303_m349_reconcile.py",
     "src/cadrumo/application/modelo/_objective_estimation_advisory.py",
     "src/cadrumo/application/modelo/_pulled_filing_reconcile.py",
-    "src/cadrumo/application/modelo/_verification_actions.py",
+    "src/cadrumo/application/modelo/verification_actions.py",
     "src/cadrumo/application/modelo/_verification_cross_period.py",
     "src/cadrumo/application/modelo/_verification_predicates.py",
 }
@@ -60,7 +60,7 @@ _INTENTIONAL_RECORD_LEVEL_FINDING_OWNERS = {
         "m210_agrupacion_renta_verification_findings",
     ): "annual grouped-renta integrity belongs to the detail-row set",
     (
-        "src/cadrumo/application/modelo/_verification_actions.py",
+        "src/cadrumo/application/modelo/verification_actions.py",
         "_resolve_verification_snapshot",
     ): "an unresolved registry snapshot blocks the whole revision, so no single casilla owns it",
     (
@@ -72,19 +72,19 @@ _INTENTIONAL_RECORD_LEVEL_FINDING_OWNERS = {
         "_objective_estimation_exclusion_advisory_findings",
     ): "the advisory compares profile facts with legal thresholds",
     (
-        "src/cadrumo/application/modelo/_verification_actions.py",
+        "src/cadrumo/application/modelo/verification_actions.py",
         "_cuota_less_without_base_findings",
     ): "the finding identifies a contributing transaction row without one canonical target casilla",
     (
-        "src/cadrumo/application/modelo/_verification_actions.py",
+        "src/cadrumo/application/modelo/verification_actions.py",
         "_missing_evidence_findings",
     ): "the evidence gap is transaction-grain and its diagnostic has no target casilla identity",
     (
-        "src/cadrumo/application/modelo/_verification_actions.py",
+        "src/cadrumo/application/modelo/verification_actions.py",
         "_unrouted_oss_source_finding",
     ): "an unrouted OSS source reaches no binding or target casilla",
     (
-        "src/cadrumo/application/modelo/_verification_actions.py",
+        "src/cadrumo/application/modelo/verification_actions.py",
         "_missing_oss_evidence_finding",
     ): "missing OSS evidence spans the revision's OSS bindings rather than one target",
     (

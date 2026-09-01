@@ -43,12 +43,7 @@ from .....tests.secure_sql import isolated_profile_storage_root
 from .....tests.user_profile import register_minimal_profile
 from ....workflow.persistence import workflow_state_repository
 from .._persist import record_sync_run
-from .._records import (
-    SyncRunCoverage,
-    SyncRunRecord,
-    bounded_scope_description,
-    coverage_of,
-)
+from ..records import SyncRunCoverage, SyncRunRecord, bounded_scope_description, coverage_of
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

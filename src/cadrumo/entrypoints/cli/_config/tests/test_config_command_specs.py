@@ -9,9 +9,9 @@ from pathlib import Path
 
 import pytest
 
-from ..._command_spec import CommandSpecGraph, DefaultKind, SchemaState
 from ..._root_command_specs import ROOT_COMMAND_SPECS
-from .._command_specs import CONFIG_COMMAND_SPECS
+from ...command_spec import CommandSpecGraph, DefaultKind, SchemaState
+from ..command_specs import CONFIG_COMMAND_SPECS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

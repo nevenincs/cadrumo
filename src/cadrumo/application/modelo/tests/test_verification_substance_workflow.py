@@ -25,9 +25,9 @@ from ....domain.modelos.calculation_revision import CalculationRevision, derive_
 from ....domain.modelos.errors import ModeloValidationError
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind
 from ....tests.secure_sql import isolated_runtime_profile
-from .._action_errors import StoredCalculationDriftError
-from .._calculation_actions import calculate_modelo_revision
-from .._verification_actions import verify_modelo_revision
+from ..action_errors import StoredCalculationDriftError
+from ..calculation_actions import calculate_modelo_revision
+from ..verification_actions import verify_modelo_revision
 from ..work_lifecycle import create_work_unit
 from ._verification_substance_support import (
     _ABSENT_REGISTRY_CASILLA,
@@ -519,7 +519,7 @@ def test_missing_required_casilla_finding_carries_registry_provenance() -> None:
     hand-copied list. The companion refusal test proves a missing registry
     definition is a hard error, not an empty-provenance finding.
     """
-    from .._verification_actions import missing_required_casilla_finding
+    from ..verification_actions import missing_required_casilla_finding
 
     snapshot = bundled_authority().snapshot("130", filing_year=2026, period="1T")
     casilla_02 = next(c for c in snapshot.revision.casillas if c.id == _CASILLA_02)
@@ -543,7 +543,7 @@ def test_missing_required_casilla_finding_carries_registry_provenance() -> None:
 
 def test_missing_casilla_finding_refuses_absent_registry_definition() -> None:
     """Missing-required findings must not be emitted without registry provenance."""
-    from .._verification_actions import missing_required_casilla_finding
+    from ..verification_actions import missing_required_casilla_finding
 
     with pytest.raises(ModeloValidationError, match="requires registry casilla definition provenance"):
         missing_required_casilla_finding(_ABSENT_REGISTRY_CASILLA, casilla_def=None)

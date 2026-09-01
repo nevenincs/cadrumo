@@ -57,8 +57,8 @@ from ....domain.calculations.registry.bindings import (
 from ....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
-from .._binding_prefill import resolve_bindings_from_local_store
-from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
+from ..binding_prefill import resolve_bindings_from_local_store
+from ..multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from ..observations_repository import CalculationObservationRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -19,8 +19,8 @@ from ...domain.modelos.row_models import Modelo349OperadorRow, ModeloDetailRow
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.transactions.enums import TransactionLifecycleState
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
-from ._action_errors import ModeloAggregationBindingError
-from ._preconditions import build_modelo_precondition_failure
+from .action_errors import ModeloAggregationBindingError
+from .preconditions import build_modelo_precondition_failure
 
 _M349_INTRACOM_LEDGER_CATEGORIES = frozenset(
     {

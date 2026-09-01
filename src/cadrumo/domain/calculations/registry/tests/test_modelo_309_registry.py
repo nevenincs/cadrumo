@@ -113,7 +113,10 @@ def test_modelo_309_autorepercutido_binding_resolves_against_substrate() -> None
 
     from ....iva.flow import IvaFlowDirection
     from ....iva.schema import IvaCategory, IvaRateKind
-    from ..ledger_bindings import IvaLedgerObservation, resolve_ledger_iva_aggregation_binding_values
+    from ..ledger_iva_bindings import (
+        IvaLedgerObservation,
+        resolve_ledger_iva_aggregation_binding_values,
+    )
 
     modelo, _ = _load_modelo_309()
     revision = modelo.revisions["2023-y-siguientes"]

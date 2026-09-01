@@ -7,7 +7,7 @@ import inspect
 
 import pytest
 
-from ..._command_spec import DefaultKind, SchemaState
+from ...command_spec import DefaultKind, SchemaState
 from .._repair_command_specs import CONFIG_REPAIR_COMMAND_SPECS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

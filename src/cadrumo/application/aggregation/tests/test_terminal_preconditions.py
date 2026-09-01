@@ -18,7 +18,7 @@ from ....core.errors.hierarchy import TerminalPreconditionErrorMixin
 from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.calculations.registry.ledger_bindings import IvaLedgerObservation
+from ....domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
 from ....domain.invoices.enums import IvaRate, PaymentStatus

@@ -10,13 +10,13 @@ import pytest
 
 from ....persistence.storage.sql.secure_objects import SecureObjectRawRow
 from .._local import LocalFileSystemProvider
-from .._mirror_manifest import (
+from ..mirror_manifest import (
     build_remote_mirror_namespace_manifest,
     inspect_remote_mirror_download,
     inspect_remote_mirror_upload,
     put_remote_mirror_namespace_manifest,
 )
-from .._records import RemoteMirrorIssueKind, RemoteMirrorObjectManifest
+from ..records import RemoteMirrorIssueKind, RemoteMirrorObjectManifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

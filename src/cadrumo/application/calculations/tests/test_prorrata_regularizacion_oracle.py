@@ -58,7 +58,7 @@ from ....domain.iva.prorrata import (
     classify_input_deduction,
     compute_prorrata_general,
 )
-from .._prorrata_regularizacion import project_prorrata_regularizacion_feed
+from ..prorrata_regularizacion import project_prorrata_regularizacion_feed
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

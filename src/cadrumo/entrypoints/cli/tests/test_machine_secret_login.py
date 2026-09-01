@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import pytest
 
-from .._config import _secure_input
+from .._config import secure_input
 from .._config._custody import LoginSecrets
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 def test_login_exposes_one_canonical_strict_payload_model() -> None:
-    assert issubclass(LoginSecrets, _secure_input.MachineSecretPayload)
+    assert issubclass(LoginSecrets, secure_input.MachineSecretPayload)
     assert tuple(LoginSecrets.model_fields) == ("passphrase",)

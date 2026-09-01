@@ -60,7 +60,7 @@ from ...domain.modelos.protocols import (
     VerificationReportCatalogueRepositoryProtocol,
 )
 from ...domain.modelos.work_unit import WorkUnitCatalogue
-from ._action_errors import WorkUnitNotFoundError
+from .action_errors import WorkUnitNotFoundError
 from .work_addressing import (
     ModeloWorkResolution,
     ModeloWorkSelectorRequest,

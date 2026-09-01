@@ -11,7 +11,7 @@ from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ..calculations.registry.schema import RegistrySnapshot
 from ..calculations.registry.schema_references import SourceReference
-from ..justificante._schema import Justificante
+from ..justificante.schema import Justificante
 from .calculation_revision import CalculationRevision
 from .calculation_revision_amendment import (
     CalculationRevisionAmendmentIdentity,

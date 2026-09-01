@@ -11,7 +11,7 @@ from ....core.period import Period
 from ....domain.filing.errors import ModeloBuilderError
 from ....domain.filing.schema import ModeloValueKind
 from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
-from .._draft_construction import build_draft
+from ..draft_construction import build_draft
 from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

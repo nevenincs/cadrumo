@@ -60,8 +60,8 @@ from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.clock import now
 from ...domain.filing.reconciliation.errors import ReconciliationDeclaracionParseError
 from ...domain.justificante import JustificanteParseError
-from ._action_errors import WorkUnitNotFoundError
 from ._reconcile_casilla import CasillaDivergence, CasillaDivergenceKind, detect_casilla_divergences
+from .action_errors import WorkUnitNotFoundError
 from .calculation_repository import calculation_revision_catalogue_repository
 from .reconciliation_parsing import (
     ReconciliationDeclaracionObservation,

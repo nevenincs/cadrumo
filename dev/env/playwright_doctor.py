@@ -27,8 +27,8 @@ from __future__ import annotations
 import asyncio
 import sys
 
-from cadrumo.core.optional_extras import BROWSER_EXTRA, MissingOptionalExtraError, require_optional_extra
 from cadrumo.core.config import load_settings
+from cadrumo.core.optional_extras import BROWSER_EXTRA, MissingOptionalExtraError, require_optional_extra
 
 
 def remediation_for_channel(channel: str) -> str:

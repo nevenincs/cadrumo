@@ -13,7 +13,7 @@ and immutable
 namespaces.
 The records are the substrate read by
 :class:`~._multi_year.PreviousFilingSourceResolver` and
-:class:`~._relation_prefill.RelationPrefillSourceResolver` so annual modelos
+:class:`~.relation_prefill.RelationPrefillSourceResolver` so annual modelos
 can roll up prior quarterlies, IVA prorrata can compute its four-year backward
 mean, IS BIN carryforward can replay prior-year bases imponibles negativas, and
 IVA regularización inversiones can apply its 5/10 year straight-line schedule.
@@ -479,7 +479,7 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
 
     Stores :class:`RegistryModeloObservation` rows for
     :func:`~._binding_prefill.resolve_bindings_from_local_store`,
-    :func:`~._relation_prefill.resolve_relations_from_local_store`, and
+    :func:`~.relation_prefill.resolve_relations_from_local_store`, and
     :func:`~.cross_period_clean_state.evaluate_cross_period_clean_state`.
     It owns encrypted value history only; filing-grade source proof is assembled
     by the clean-state service from this repository plus filing, verification,
@@ -599,7 +599,7 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
         if normalize_m303_carry:
             # Keep the serialisable envelope model independent from the
             # application policy that normalizes it.
-            from ._m303_carry_ingress import normalize_m303_carry_observation_envelope
+            from .m303_carry_ingress import normalize_m303_carry_observation_envelope
 
             payload = normalize_m303_carry_observation_envelope(payload)
         # Checked HERE, and here only, because every writer prepares its
@@ -707,7 +707,7 @@ class IvaWalletDecisionRepository(SecureBoundRepository[IvaWalletDecisionEnvelop
     an immutable audit-event namespace. Decisions are AUDIT-class — they record
     the resolved gap between a taxpayer's local IVA compensation recurrence and
     the live AEAT wallet, which downstream calculation chains consult through
-    :class:`~._iva_wallet_reconciliation.IvaWalletDecisionSourceResolver`.
+    :class:`~.iva_wallet_reconciliation.IvaWalletDecisionSourceResolver`.
 
     Latest-state rows use
     :data:`~adapters.persistence.storage.IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE`;

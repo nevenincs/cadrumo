@@ -16,8 +16,8 @@ from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
 from ..core.bucket_pointer import BucketPointer
 from ..core.hex import Hex64Str
-from ..core.identity._bucket import BucketId
-from ..core.identity._digest import ContentDigest
+from ..core.identity.bucket import BucketId
+from ..core.identity.digest import ContentDigest
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.time.utc import validate_utc_aware
 from ..domain.user_profile.values import ProfileSetupState

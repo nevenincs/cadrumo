@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import select
 
-from ....adapters.inbound.notificacion._document_reader import NotificationDocumentReader
+from ....adapters.inbound.notificacion.document_reader import NotificationDocumentReader
 from ....adapters.outbound.aeat.sede.notifications import (
     NotificationDocument,
     RemoteNotification,

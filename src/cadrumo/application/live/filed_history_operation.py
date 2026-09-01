@@ -42,7 +42,7 @@ from ..operations.registry import (
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
 )
-from ..storage.sync_runs._records import SyncRunRecordReference, SyncRunRecordRepositoryProtocol
+from ..storage.sync_runs.records import SyncRunRecordReference, SyncRunRecordRepositoryProtocol
 from .filed_data_capture import (
     FILED_HISTORY_DECLARATION_PROGRESS_UNIT,
     FILED_HISTORY_DECLARATION_REFUSAL_CODE,

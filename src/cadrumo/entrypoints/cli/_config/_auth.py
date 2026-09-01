@@ -15,7 +15,7 @@ from ....core.json_contract import strict_round_trip
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._common import emit_envelope, resolve_cli_precondition_action
 from ..errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
-from ._status_rendering import precondition_action_lines
+from .status_rendering import precondition_action_lines
 
 if TYPE_CHECKING:
     from ....application.auth.operator_results import AuthConfigureResult

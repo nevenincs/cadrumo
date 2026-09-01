@@ -19,7 +19,7 @@ from decimal import Decimal
 
 import typer
 
-from ...application.modelo._projection import (
+from ...application.modelo.projection import (
     ModeloCompareDeltaRow,
     ModeloCompareNeedTwoYearsError,
     ModeloCompareNoRevisionsError,

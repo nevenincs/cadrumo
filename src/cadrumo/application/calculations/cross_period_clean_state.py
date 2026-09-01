@@ -48,9 +48,9 @@ from ...domain.modelos.protocols import (
     VerificationReportCatalogueRepositoryProtocol,
 )
 from ...domain.modelos.verification_report import VerificationCompletenessStatus, VerificationReportCatalogue
-from ._cross_period_external_evidence import filing_external_evidence_blockers as _filing_external_evidence_blockers
 from ._per_grupo_member_keys import per_grupo_member_requirement_keys
 from ._revision_carry_gate import revision_carry_outcome
+from .cross_period_external_evidence import filing_external_evidence_blockers as _filing_external_evidence_blockers
 from .cross_period_models import (
     CrossPeriodCleanStateBlocker,
     CrossPeriodCleanStateVerdict,

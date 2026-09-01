@@ -25,8 +25,8 @@ import pytest
 
 from .....llm.errors import LLMCacheError
 from .....llm.models import LLMProvider, UsageRecord
-from .._run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
-from .._usage import UsageRecorder
+from ..run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
+from ..usage import UsageRecorder
 from ._engine_binding_fixtures import _ENGINE_HOLDER, _bind_engine  # noqa: F401
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -95,7 +95,7 @@ def _substitute(namespace: str, *, victim_marker: str, donor_marker: str) -> Non
 
 def test_a_substituted_usage_row_is_refused_on_read(tmp_path: Path) -> None:
     """The read refuses instead of reporting the foreign record."""
-    from .._usage import _USAGE_NAMESPACE
+    from ..usage import _USAGE_NAMESPACE
 
     recorder = UsageRecorder(root_dir=tmp_path / "usage")
     recorder.record(_usage("recent-request", _RECENT))
@@ -113,7 +113,7 @@ def test_a_substituted_usage_row_is_refused_on_prune(tmp_path: Path) -> None:
     key it reconstructed from the foreign payload, reports a removal count that
     looks plausible, and leaves the actual row in place forever.
     """
-    from .._usage import _USAGE_NAMESPACE
+    from ..usage import _USAGE_NAMESPACE
 
     recorder = UsageRecorder(root_dir=tmp_path / "usage")
     recorder.record(_usage("recent-request", _RECENT))
@@ -126,7 +126,7 @@ def test_a_substituted_usage_row_is_refused_on_prune(tmp_path: Path) -> None:
 
 def test_a_substituted_run_telemetry_row_is_refused(tmp_path: Path) -> None:
     """The run-telemetry recorder carries the same binding on both paths."""
-    from .._run_telemetry import _RUN_TELEMETRY_NAMESPACE
+    from ..run_telemetry import _RUN_TELEMETRY_NAMESPACE
 
     recorder = LLMRunTelemetryRecorder(root_dir=tmp_path / "run-telemetry")
     recorder.record(_run("recent-run", _RECENT))
@@ -155,7 +155,7 @@ def test_the_substitution_lands_a_valid_foreign_payload(tmp_path: Path) -> None:
     )
     from ....persistence.storage.sql import SecureObjectRow
     from ....persistence.storage.sql.session import session_scope
-    from .._usage import _USAGE_NAMESPACE
+    from ..usage import _USAGE_NAMESPACE
 
     recorder = UsageRecorder(root_dir=tmp_path / "usage")
     recorder.record(_usage("recent-request", _RECENT))

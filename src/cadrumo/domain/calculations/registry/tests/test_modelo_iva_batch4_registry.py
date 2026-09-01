@@ -101,6 +101,6 @@ def test_modelo_341_reagp_quarterly_windows_20_days_with_january_30_day_q4() -> 
 
 def test_341_is_registry_backed() -> None:
     """380 relocated out of the registry (web-form-only, no AEAT machine format)."""
-    from .....core.access_gate._authorization import CANONICAL_MODELO_FLEET
+    from .....core.access_gate.authorization import CANONICAL_MODELO_FLEET
 
     assert "341" in CANONICAL_MODELO_FLEET

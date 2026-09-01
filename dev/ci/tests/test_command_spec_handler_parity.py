@@ -23,7 +23,7 @@ from typing import Final
 
 import pytest
 
-from cadrumo.entrypoints.cli._command_specs import COMMAND_SPECS
+from cadrumo.entrypoints.cli.command_specs import COMMAND_SPECS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

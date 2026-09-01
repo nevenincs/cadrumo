@@ -42,10 +42,7 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
-from ._semantic_role_resolution import (
-    AmbiguousSemanticRoleCasillaError,
-    casilla_id_for_unique_revision_semantic_role,
-)
+from .semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla_id_for_unique_revision_semantic_role
 
 _ART52_REDUCCION_TOTAL_ROLE = "irpf_reduccion_prevision_social_total"
 _ART52_APORTACIONES_TRABAJADOR_CON_CONTRIBUCION_EMPRESARIAL_ROLE = (

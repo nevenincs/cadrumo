@@ -167,7 +167,7 @@ def test_crash_funnel_replaces_traceback_with_error_document(tmp_path: Path) -> 
         textwrap.dedent(
             """
             import typer
-            from cadrumo.entrypoints.cli._command_suggestions import CadrumoTyperGroup
+            from cadrumo.entrypoints.cli.command_suggestions import CadrumoTyperGroup
 
             app = typer.Typer(cls=CadrumoTyperGroup)
 

@@ -30,12 +30,12 @@ from __future__ import annotations
 from datetime import datetime
 from typing import NoReturn
 
-from ....adapters.persistence.storage.master_key._master_key import looks_like_real_tax_id
 from ....core.config import SecretStoreBackend, load_settings
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.time.clock import now
 from ....core.tty import stdin_is_tty
 from ....domain.user_profile.errors import ProfileNotFoundError
+from ...persistence.storage.master_key.master_key import looks_like_real_tax_id
 from .errors import (
     GoogleAuthBrowserOpenError,
     GoogleAuthLoopbackBindError,

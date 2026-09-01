@@ -22,7 +22,7 @@ from ....core.access_gate.errors import LiveSubmitForbiddenError
 from ....core.config import override_settings
 from ....core.errors.error_codes import ERROR_REGISTRY, ErrorCategory, ErrorEnvelope, render_error_text
 from ....core.errors.hierarchy import DecimalFormatError
-from ....core.i18n._render import tr
+from ....core.i18n.render import tr
 from ....core.json_contract import ENVELOPE_SCHEMA_VERSION, EnvelopeStatus, ResolvedPreconditionAction
 from ....core.observability.errors import RunContextMissingError
 from ....core.operator_action_enums import ActionArgumentStatus

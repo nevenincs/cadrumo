@@ -24,8 +24,8 @@ from ...core.json_contract import OutputSchema
 from ...core.text_bounds import NonEmptyStr
 from ...domain.categories.proportionality import ProportionalityKind
 from ...domain.categories.spending_category import SpendingCategory
-from ...domain.usage_ratios._model import validate_usage_ratio_bound
 from ...domain.usage_ratios.errors import UsageRatioValidationError
+from ...domain.usage_ratios.model import validate_usage_ratio_bound
 
 
 def _validated_ratio_text(value: str, *, field: str) -> str:

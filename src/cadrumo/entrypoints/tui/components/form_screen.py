@@ -27,7 +27,7 @@ from contextvars import ContextVar
 from typing import TYPE_CHECKING, ClassVar, override
 
 from rich.cells import cell_len
-from textual.app import App, ComposeResult
+from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
 from textual.events import DescendantFocus
@@ -41,9 +41,9 @@ from ....core.presentation import (
     multi_choice_tokens,
 )
 from .dialogs import ChoiceEditScreen, OneChoiceEditScreen, TextEditScreen
+from .host import ScreenHostApp
 from .theme import (
     BASE_CSS,
-    install_cadrumo_themes,
     toggle_appearance,
     tokenised,
 )
@@ -285,7 +285,7 @@ class FormScreen(Screen["Mapping[str, str] | None"]):
         self.dismiss(None)
 
 
-class FormApp(App["Mapping[str, str] | None"]):
+class FormApp(ScreenHostApp["Mapping[str, str]"]):
     """Standalone host for :class:`FormScreen`.
 
     Everything that makes the page a page lives on the screen; this exists
@@ -306,32 +306,7 @@ class FormApp(App["Mapping[str, str] | None"]):
         rebuild: Callable[[Mapping[str, str]], FormPage] | None = None,
     ) -> None:
         """Initialize the standalone host for one immutable form page."""
-        super().__init__()
-        self._page = page
-        self._translate = translate
-        self._rebuild = rebuild
-        self.collected: Mapping[str, str] | None = None
-        """The committed values, or ``None`` when the operator left without
-        committing. Callers read this rather than catching an exception,
-        because abandoning is an ordinary choice."""
-
-    def on_mount(self) -> None:
-        """Install themes and push the only form screen."""
-        install_cadrumo_themes(self)
-        self.push_screen(
-            FormScreen(self._page, translate=self._translate, rebuild=self._rebuild),
-            self._finish,
-        )
-
-    def _finish(self, collected: Mapping[str, str] | None) -> None:
-        """Carry the screen's answer out to the caller and close.
-
-        The application exists only for the one screen, so its dismissal
-        is the application's result: there is nothing left to show once
-        the page is done with.
-        """
-        self.collected = collected
-        self.exit(collected)
+        super().__init__(FormScreen(page, translate=translate, rebuild=rebuild))
 
     def action_toggle_appearance(self) -> None:
         """Toggle between the registered light and dark themes."""
@@ -351,9 +326,7 @@ def run_form_tui(
     application from inside a running event loop is what this function
     cannot do.
     """
-    app = FormApp(page, translate=translate, rebuild=rebuild)
-    app.run()
-    return app.collected
+    return FormApp(page, translate=translate, rebuild=rebuild).run()
 
 
 _ACTIVE_FORM_PRESENTER: ContextVar[FormPresenter | None] = ContextVar(

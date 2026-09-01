@@ -13,7 +13,7 @@ from ..deadline_coordinate import (
     deadline_semantic_coordinate,
     deadline_window_semantic_coordinates,
 )
-from ..schema import DeadlineWindowDefinition
+from ..schema_deadlines import DeadlineWindowDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

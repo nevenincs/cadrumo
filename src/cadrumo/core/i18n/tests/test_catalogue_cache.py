@@ -160,7 +160,7 @@ def test_end_to_end_tr_self_heals_across_all_three_corruption_modes(tmp_path: Pa
     correct rendered value rather than raising or serving a wrong string.
     """
     from ...i18n import tr
-    from .. import _render
+    from .. import render as _render
 
     # _packaged_locale_map is lru_cache'd per process, so a second in-process
     # tr() call would return the memoised dict without ever touching disk
@@ -243,7 +243,7 @@ def test_tr_survives_a_storage_root_settings_cannot_construct_over(
     from ...config import Settings, _constructed_settings
     from ...config_state_root import FormerProductStateError
     from ...i18n import tr
-    from .. import _render
+    from .. import render as _render
 
     former_root = tmp_path / "former-product-state"
     former_root.mkdir()

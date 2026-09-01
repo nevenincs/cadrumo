@@ -28,7 +28,7 @@ from ....core.sync_surface import SyncSurface
 from ....core.time.utc import validate_utc_aware
 from ....domain.buckets.event import BucketEventObjectType, BucketEventType
 from ....domain.buckets.event_repository import build_bucket_event
-from ._records import SyncRunCoverage, SyncRunRecord, SyncRunRecordRepositoryProtocol
+from .records import SyncRunCoverage, SyncRunRecord, SyncRunRecordRepositoryProtocol
 
 __all__ = [
     "record_sync_run",

@@ -22,7 +22,7 @@ from ....domain.calculations.registry.bindings import (
     resolve_available_bound_inputs_by_casilla_id,
 )
 from ....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
-from ....domain.calculations.registry.ledger_bindings import (
+from ....domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
     resolve_ledger_iva_aggregation_binding_values,
 )
@@ -35,8 +35,9 @@ from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ....domain.iva_compensation.errors import IvaCompensationCasillaReferenceError
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext
-from .._bienes_inversion_regularizacion import BienesInversionRegularizacionSourceResolver
-from .._binding_prefill import (
+from .._iva_compensation_annual_partition import IvaCompensationAnnualPartitionSourceResolver
+from ..bienes_inversion_regularizacion import BienesInversionRegularizacionSourceResolver
+from ..binding_prefill import (
     _iva_compensation_history_observation,
     _observation_from_iva_compensation_history,
     _selector_periods,
@@ -44,11 +45,10 @@ from .._binding_prefill import (
     extract_modelo_303_local_iva_compensation_recurrence,
     resolve_bindings_from_local_store,
 )
-from .._iva_compensation_annual_partition import IvaCompensationAnnualPartitionSourceResolver
-from .._relation_prefill import resolve_relations_from_local_store
 from ..errors import BindingPrefillTypeError
 from ..iva_compensation_history import IvaCompensationHistoryRepository
 from ..observations_repository import CalculationObservationRepository, ResultDispositionProjection
+from ..relation_prefill import resolve_relations_from_local_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

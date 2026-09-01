@@ -46,13 +46,13 @@ from ....domain.contribuyente.inventory.records import (
     StockLayer,
     ValuationMethod,
 )
-from .._ledger_business_payloads import (
+from .._ledger_inventory_cli import _safe_inventory_ledger_payload
+from ..ledger_business_payloads import (
     InventoryCreateResult,
     InventoryLedgerPayload,
     InventoryMovementPayload,
     InventoryStockLayerPayload,
 )
-from .._ledger_inventory_cli import _safe_inventory_ledger_payload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

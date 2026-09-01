@@ -77,14 +77,14 @@ from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...live.filed_observation_persistence import persist_filed_calculation_observation
-from ...modelo._filed_revision_observation import persist_filed_revision_observation
-from .._binding_prefill import (
-    _observation_from_iva_compensation_history,
-    extract_modelo_303_local_iva_compensation_recurrence,
-)
+from ...modelo.filed_revision_observation import persist_filed_revision_observation
 from .._iva_compensation_annual_partition import (
     _period_state_from_303_envelope,
     resolve_iva_compensation_annual_partition_binding_values,
+)
+from ..binding_prefill import (
+    _observation_from_iva_compensation_history,
+    extract_modelo_303_local_iva_compensation_recurrence,
 )
 from ..iva_compensation_history import (
     IvaCompensationHistoryRepository,
@@ -417,7 +417,7 @@ def _binding_prefill_census() -> _PathCensus:
         )
     return _PathCensus(
         path="binding-prefill resolver",
-        entry_point="src/cadrumo/application/calculations/_binding_prefill.py:873",
+        entry_point="src/cadrumo/application/calculations/binding_prefill.py:873",
         rows=tuple(rows),
         live_evidence=tuple(evidence),
     )

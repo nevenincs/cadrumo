@@ -31,7 +31,7 @@ from pathlib import Path
 
 import pytest
 
-from ._inventory import SRC_CADRUMO, non_test_package_python_files, regex_line_hits
+from .inventory import SRC_CADRUMO, non_test_package_python_files, regex_line_hits
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -14,7 +14,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.queries import RegistryQueryService
-from .._binding_readiness import _annual_period_for_year, profile_resolvable_binding_ids
+from ..binding_readiness import _annual_period_for_year, profile_resolvable_binding_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -204,7 +204,7 @@ def _write_year_ambiguous_registry(
 
 def test_unresolvable_registry_scope_is_logged_as_conservative_unresolved(caplog: pytest.LogCaptureFixture) -> None:
     """Invalid registry scopes return no resolved bindings and emit debug diagnostics."""
-    caplog.set_level(logging.DEBUG, logger="cadrumo.application.modelo._binding_readiness")
+    caplog.set_level(logging.DEBUG, logger="cadrumo.application.modelo.binding_readiness")
 
     resolved = profile_resolvable_binding_ids(
         modelo="not-a-modelo",
@@ -225,7 +225,7 @@ def test_unresolvable_typed_period_scope_is_logged_as_conservative_unresolved(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Explicit Period scopes use the typed registry token at the snapshot boundary."""
-    caplog.set_level(logging.DEBUG, logger="cadrumo.application.modelo._binding_readiness")
+    caplog.set_level(logging.DEBUG, logger="cadrumo.application.modelo.binding_readiness")
 
     resolved = profile_resolvable_binding_ids(
         modelo="not-a-modelo",
@@ -265,7 +265,7 @@ def test_year_only_binding_readiness_refuses_multiple_covering_revisions(
     mid-year AEAT design boundary degrades to unresolved bindings instead of
     turning a readiness query into an operator-facing error.
     """
-    caplog.set_level(logging.DEBUG, logger="cadrumo.application.modelo._binding_readiness")
+    caplog.set_level(logging.DEBUG, logger="cadrumo.application.modelo.binding_readiness")
 
     registry_root = _write_year_ambiguous_registry(tmp_path)
     authority = ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path)

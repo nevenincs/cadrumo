@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from typing import Protocol, runtime_checkable
 
-from ._schema import Justificante
+from .schema import Justificante
 
 
 @runtime_checkable

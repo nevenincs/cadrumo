@@ -36,7 +36,7 @@ from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....tests.secure_sql import isolated_runtime_profile
 from .._revision_persistence import persist_filed_revision
-from .._verification_actions import _persist_verified_revision_evidence
+from ..verification_actions import _persist_verified_revision_evidence
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -7,9 +7,9 @@ from decimal import Decimal
 import pytest
 
 from ....core.period import Period
-from .._action_errors import ExternalModeloImportError
+from ..action_errors import ExternalModeloImportError
 from ..work_lifecycle import create_work_unit
-from ._import_flow_support import (
+from .import_flow_support import (
     _IMPORT_INCOME_CASILLA,
     _M303_PRINTED_RESULT_TOKEN,
     _PROFILE_ID,

@@ -53,7 +53,7 @@ from pathlib import Path
 import pytest
 
 from ....domain.calculations.registry.authority import bundled_authority
-from ...tests._wizard_catalogue_fixtures import register_wizard_catalogue
+from ...tests.wizard_catalogue_fixtures import register_wizard_catalogue
 
 __all__ = ["register_wizard_catalogue"]
 
@@ -74,10 +74,10 @@ from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import ForeignAssetIngestObservation
-from ...modelo._calculation_actions import calculate_modelo_revision_from_bucket_aggregation
-from ...modelo._verification_actions import verify_modelo_revision
+from ...modelo.calculation_actions import calculate_modelo_revision_from_bucket_aggregation
+from ...modelo.verification_actions import verify_modelo_revision
 from ...modelo.work_lifecycle import create_work_unit
-from .._foreign_asset_redeclaration import modelo_720_evidence_observation
+from ..foreign_asset_redeclaration import modelo_720_evidence_observation
 from ..observations_repository import CalculationObservationRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

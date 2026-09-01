@@ -50,7 +50,7 @@ def _identity() -> OperationSchemaIdentityV1:
 
 
 def _admitted(locale: OutputLanguage = OutputLanguage.ES) -> ModeloEditController:
-    from .....application.modelo._edit_services import (
+    from .....application.modelo.edit_services import (
         modelo_edit_request_schema_identity,
         modelo_edit_result_schema_identity,
     )

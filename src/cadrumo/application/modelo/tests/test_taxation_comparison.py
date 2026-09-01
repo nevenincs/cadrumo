@@ -36,7 +36,7 @@ import pytest
 from ....core.casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from .._taxation_comparison import (
+from ..taxation_comparison import (
     INDIVIDUAL_BRANCH_SINGLE_EARNER_CAVEAT,
     TaxationComparisonError,
     TaxationRecommendation,
@@ -244,7 +244,7 @@ def test_comparison_result_structure_is_typed(snapshot_2025: RegistrySnapshot) -
     filing_year, modelo, and revision, and that the recommendation
     reason string is non-empty.
     """
-    from .._taxation_comparison import TaxationComparisonResult
+    from ..taxation_comparison import TaxationComparisonResult
 
     inputs = {**_BASE_INPUTS, _M100_TRABAJO_INGRESO_CASILLA: Decimal("52000")}
     result = compare_taxation_modes(
@@ -345,7 +345,7 @@ def test_taxation_comparison_error_is_registered_and_envelopes() -> None:
     hand-computed.
     """
     from ....core.errors.error_codes import ERROR_REGISTRY, build_error_envelope, get_registered_error_code
-    from .._taxation_comparison import TaxationComparisonError
+    from ..taxation_comparison import TaxationComparisonError
 
     # Registry membership: the declared code must be present in ERROR_REGISTRY.
     code_obj = get_registered_error_code(TaxationComparisonError)
@@ -368,14 +368,14 @@ def test_taxation_comparison_error_is_registered_and_envelopes() -> None:
 
 
 def test_taxation_comparison_module_imports_cleanly() -> None:
-    """cadrumo.application.modelo._taxation_comparison must import without error.
+    """cadrumo.application.modelo.taxation_comparison must import without error.
 
     Exercises that the module's top-level imports and TYPE_CHECKING block
     clean-up (contract) did not break the production import path.
     """
     import importlib
 
-    mod = importlib.import_module("cadrumo.application.modelo._taxation_comparison")
+    mod = importlib.import_module("cadrumo.application.modelo.taxation_comparison")
     assert hasattr(mod, "compare_taxation_modes")
     assert hasattr(mod, "TaxationComparisonResult")
     assert hasattr(mod, "TaxationComparisonError")

@@ -68,7 +68,7 @@ from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.iva.schema import IvaCategory
 from ...domain.modelos.row_models import Modelo210AgrupacionRentaRow
-from ...domain.prorrata_register._protocols import ProrrataRegisterRepositoryProtocol
+from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.renta.retenciones_routing_integrity import (
     RENTA_130_RETENCIONES_BINDING_ID,
     RENTA_130_RETENCIONES_OUTPUT_CASILLA,

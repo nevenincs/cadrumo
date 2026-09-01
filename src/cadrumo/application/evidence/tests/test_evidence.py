@@ -16,7 +16,8 @@ from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from .._models import (
+from .._service import EvidenceBundleRepository, EvidenceBundleService
+from ..models import (
     BundleVerificationState,
     EvidenceBundle,
     EvidenceBundleNotFoundError,
@@ -25,7 +26,6 @@ from .._models import (
     VerificationCheck,
     derive_bundle_id,
 )
-from .._service import EvidenceBundleRepository, EvidenceBundleService
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -483,7 +483,7 @@ class TestBucketIsolation:
 class TestDeriveBundleId:
     def test_derive_changes_when_record_digest_changes(self) -> None:
         from ....domain.buckets.event import BucketEventObjectType
-        from .._models import EvidenceRecordRef
+        from ..models import EvidenceRecordRef
 
         rec_a = EvidenceRecordRef(
             object_type=BucketEventObjectType.CALCULATION_REVISION,

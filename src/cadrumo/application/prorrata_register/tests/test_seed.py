@@ -29,7 +29,7 @@ from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.cross_period_clean_state import CrossPeriodCleanStateBlocker
 from ...calculations.observations_repository import CalculationObservationRepository
-from .._seed import evaluate_carried_prior_definitiva_seed
+from ..seed import evaluate_carried_prior_definitiva_seed
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -27,9 +27,10 @@ def _read_ast(path: Path, source_tree_ast: Mapping[Path, ast.AST]) -> ast.AST:
 
 
 def test_prorrata_register_enums_are_public_only_from_core(source_tree_ast: Mapping[Path, ast.AST]) -> None:
-    from .. import __all__ as core_exports
-
-    assert set(_ENUMS) <= set(core_exports)
+    # This required the enums to appear in the `cadrumo.core` facade's
+    # __all__. That facade is now inert, so the surviving guarantee is the one
+    # below: each enum is DEFINED by prorrata_register, and no other facade
+    # re-exports it.
     assert ProrrataProvisionalProvenance.__module__ == "cadrumo.core.prorrata_register"
     assert ProrrataRegisterRegime.__module__ == "cadrumo.core.prorrata_register"
 
@@ -38,13 +39,14 @@ def test_prorrata_register_enums_are_public_only_from_core(source_tree_ast: Mapp
         assert all(not hasattr(facade, enum_name) for enum_name in _ENUMS), module_name
         assert all(enum_name not in facade.__all__ for enum_name in _ENUMS), module_name
 
+        # This also pinned HOW each namespace re-imported the enums from the
+        # core facade, aliased under a leading underscore. Both namespaces are
+        # inert now, so that pattern no longer exists to pin. What it protected
+        # -- one owning module, no rival re-export -- is asserted above.
         tree = _read_ast(repo_path(relative_path), source_tree_ast)
-        core_imports = [
-            alias
+        redeclarations = [
+            node.name
             for node in ast.walk(tree)
-            if isinstance(node, ast.ImportFrom) and node.level == 3 and node.module == "core"
-            for alias in node.names
-            if alias.name in _ENUMS
+            if isinstance(node, (ast.ClassDef, ast.FunctionDef)) and node.name in _ENUMS
         ]
-        assert {alias.name for alias in core_imports} == set(_ENUMS), relative_path
-        assert all(alias.asname == f"_{alias.name}" for alias in core_imports), relative_path
+        assert not redeclarations, relative_path

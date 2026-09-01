@@ -30,10 +30,10 @@ from ...google.impersonation import (
 )
 from ...google.records import DriveConfig, OAuthClient
 from ...google.session_store import save_client, save_credential_source_selection, save_drive_config
-from .._factory import build_google_credentials, get_storage_provider, resolve_drive_root_folder_id
 from .._protocol import StorageProvider
-from .._records import ProviderKind
 from ..errors import OutboundStorageValidationError
+from ..factory import build_google_credentials, get_storage_provider, resolve_drive_root_folder_id
+from ..records import ProviderKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -73,7 +73,7 @@ def test_factory_import_does_not_import_concrete_backends() -> None:
                 import json
                 import sys
 
-                import cadrumo.adapters.outbound.storage._factory
+                import cadrumo.adapters.outbound.storage.factory
 
                 watched = (
                     "cadrumo.adapters.outbound.storage._google_drive",
@@ -126,7 +126,7 @@ def test_factory_rejects_blank_provider_kind_with_localized_context() -> None:
         get_storage_provider(settings=settings)
 
     exc = raised.value
-    assert exc.translated_message == "adapters.outbound.storage.factory.errors.kind_empty"
+    assert exc.translated_message == "adapters.outbound.storage._factory.errors.kind_empty"
     assert exc.context == {"value": "   "}
     _assert_factory_verdict(
         exc,
@@ -144,7 +144,7 @@ def test_factory_rejects_unknown_provider_kind_with_localized_context() -> None:
         get_storage_provider(settings=settings)
 
     exc = raised.value
-    assert exc.translated_message == "adapters.outbound.storage.factory.errors.kind_unknown"
+    assert exc.translated_message == "adapters.outbound.storage._factory.errors.kind_unknown"
     assert exc.context == {
         "value": "not-a-provider",
         "expected": "google_drive, local_filesystem",
@@ -169,7 +169,7 @@ def test_factory_rejects_google_drive_without_root_before_loading_credentials(tm
         get_storage_provider(settings=settings)
 
     exc = raised.value
-    assert exc.translated_message == "adapters.outbound.storage.factory.errors.drive_root_missing"
+    assert exc.translated_message == "adapters.outbound.storage._factory.errors.drive_root_missing"
     assert exc.context == {"profile": "a5106137-0c0d-4f8f-9c58-606f5bd06dc8"}
     _assert_factory_verdict(
         exc,
@@ -200,7 +200,7 @@ def test_factory_rejects_google_drive_without_registered_client(tmp_path: Path) 
         get_storage_provider(settings=settings)
 
     exc = raised.value
-    assert exc.translated_message == "adapters.outbound.storage.factory.errors.google_client_missing"
+    assert exc.translated_message == "adapters.outbound.storage._factory.errors.google_client_missing"
     assert exc.context == {"profile": "2e31b7b3-12da-4ae7-abf1-d1fe71bd81d4"}
     _assert_factory_verdict(
         exc,
@@ -233,7 +233,7 @@ def test_factory_rejects_google_drive_without_persisted_token(tmp_path: Path) ->
         get_storage_provider(settings=settings)
 
     exc = raised.value
-    assert exc.translated_message == "adapters.outbound.storage.factory.errors.google_token_missing"
+    assert exc.translated_message == "adapters.outbound.storage._factory.errors.google_token_missing"
     assert exc.context == {"profile": "893af7b9-9656-466c-9d8a-5d638b189a20"}
     _assert_factory_verdict(
         exc,
@@ -266,7 +266,7 @@ def test_build_google_credentials_with_no_persisted_selection_defaults_to_oauth(
         build_google_credentials(profile=profile)
 
     exc = raised.value
-    assert exc.translated_message == "adapters.outbound.storage.factory.errors.google_client_missing"
+    assert exc.translated_message == "adapters.outbound.storage._factory.errors.google_client_missing"
     assert exc.context == {"profile": profile}
 
 
@@ -281,7 +281,7 @@ def test_build_google_credentials_with_oauth_desktop_selection_uses_oauth_path(t
         build_google_credentials(profile=profile)
 
     exc = raised.value
-    assert exc.translated_message == "adapters.outbound.storage.factory.errors.google_client_missing"
+    assert exc.translated_message == "adapters.outbound.storage._factory.errors.google_client_missing"
 
 
 def test_build_google_credentials_with_impersonation_selection_dispatches_to_impersonation_path(

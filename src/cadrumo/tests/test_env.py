@@ -7,7 +7,7 @@ from uuid import uuid4
 
 import pytest
 
-from ._env import temporary_env
+from .env import temporary_env
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

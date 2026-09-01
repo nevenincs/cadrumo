@@ -49,7 +49,6 @@ from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ...calculations.iva_compensation_history import IvaCompensationHistoryRepository
-from .._iva_wallet_gate import taxpayer_nif_for_bucket
 from .._iva_wallet_seed import (
     ModeloIvaWalletCorrectionNoRecordError,
     ModeloIvaWalletCorrectionSealedError,
@@ -58,6 +57,7 @@ from .._iva_wallet_seed import (
     record_iva_compensation_override_for_bucket,
     seed_iva_compensation_period_for_bucket,
 )
+from ..iva_wallet_gate import taxpayer_nif_for_bucket
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

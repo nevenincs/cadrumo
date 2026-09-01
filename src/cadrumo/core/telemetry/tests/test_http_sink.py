@@ -43,8 +43,8 @@ from ....tests.loopback_recording_server import run_loopback_server, stop_loopba
 from ...config import Settings
 from .._emit import emit_telemetry_event
 from .._http_sink import HttpTelemetrySink
-from .._schema import TelemetryEventPayload, build_telemetry_payload
-from .._tier import TelemetryTier
+from ..schema import TelemetryEventPayload, build_telemetry_payload
+from ..tier import TelemetryTier
 from ._telemetry_endpoint_support import RecordingTelemetryEndpoint
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

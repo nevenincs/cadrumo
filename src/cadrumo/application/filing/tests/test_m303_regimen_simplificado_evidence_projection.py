@@ -6,8 +6,6 @@ from decimal import Decimal
 
 import pytest
 
-from ....application.calculations._m303_regimen_simplificado import calculate_m303_regimen_simplificado_result
-from ....application.filing._projection import build_m303_filing_projection_plan
 from ....application.filing.producer_snapshot import build_filing_producer_snapshot
 from ....core.filing_projection_ref import (
     M303RegimenSimplificadoActivityField,
@@ -41,6 +39,8 @@ from ....domain.iva.regimen_simplificado_rows import (
     RegimenSimplificadoFilingRows,
 )
 from ....domain.modelos.calculation_revision_m303_handoff import M303RegimenSimplificadoFilingEvidence
+from ...calculations.m303_regimen_simplificado import calculate_m303_regimen_simplificado_result
+from ..projection import build_m303_filing_projection_plan
 from .test_producer_snapshot import _elections, _m303_filing_facts, _m303_profile, _presenter, _taxpayer_identity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

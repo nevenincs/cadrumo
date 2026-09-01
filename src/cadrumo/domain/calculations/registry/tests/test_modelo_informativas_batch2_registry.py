@@ -121,7 +121,7 @@ def test_monthly_windows_resolve_following_month() -> None:
 
 
 def test_all_six_are_registry_backed() -> None:
-    from .....core.access_gate._authorization import CANONICAL_MODELO_FLEET
+    from .....core.access_gate.authorization import CANONICAL_MODELO_FLEET
 
     for mid in ("165", "156", "038", "185"):
         assert mid in CANONICAL_MODELO_FLEET

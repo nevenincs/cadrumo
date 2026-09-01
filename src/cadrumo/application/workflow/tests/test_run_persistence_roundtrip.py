@@ -335,7 +335,7 @@ def test_workflow_run_persists_only_to_the_secure_database_object(
     """A saved run never reaches the plaintext ``workflow-runs`` directory.
 
     :data:`StorageCategory.WORKFLOW_RUNS` names
-    ``application/workflow/_persistence.py`` as its consumer, not
+    ``application/workflow/persistence.py`` as its consumer, not
     the deleted rotation sweep -- but that module's own ``save_run`` docstring states
     why: "``runs_dir`` remains part of the API as a logical marker path for
     callers and tests, but no plaintext run file is written there." The

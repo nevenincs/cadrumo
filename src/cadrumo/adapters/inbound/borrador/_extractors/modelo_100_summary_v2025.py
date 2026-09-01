@@ -32,14 +32,10 @@ from .....core.aeat_csv import normalise_aeat_csv
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.modelo import Modelo
 from .....core.time.clock import now
-from ...pdf import (
-    SPANISH_AMOUNT_GROUP,
-    ExtractedCasilla,
-    parse_spanish_decimal,
-    sha256_file,
-    source_pdf_reference_path,
-)
-from .._parsers._pdfplumber_backend import extract_pages_text
+from ...pdf.extracted_casilla import ExtractedCasilla
+from ...pdf.label_regex import SPANISH_AMOUNT_GROUP, parse_spanish_decimal
+from ...pdf.source_provenance import sha256_file, source_pdf_reference_path
+from .._parsers.pdfplumber_backend import extract_pages_text
 from .._schema import ArtefactKind, BorradorExtractionProfile, InboundBorradorObservation
 from ..errors import BorradorParseError
 

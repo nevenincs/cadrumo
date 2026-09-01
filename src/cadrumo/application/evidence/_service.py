@@ -42,7 +42,7 @@ from ...core.identity import CalculationRevisionId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
 from ...core.unit_proportion import UnitFraction
-from ._models import (
+from .models import (
     BundleVerificationState,
     EvidenceBundle,
     EvidenceBundleCheckResult,

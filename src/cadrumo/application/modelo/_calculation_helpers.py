@@ -11,9 +11,9 @@ not overridden, and rebuild overridden rows from the selected snapshot so
 legal/source grounding is never silently erased.
 
 See Also:
-    :mod:`cadrumo.application.modelo._calculation_actions`:
+    :mod:`cadrumo.application.modelo.calculation_actions`:
         Uses these helpers before registry-engine execution and persistence.
-    :mod:`cadrumo.application.modelo._amendment_actions`:
+    :mod:`cadrumo.application.modelo.amendment_actions`:
         Reuses amendment observation projection for corrected filing records.
     :func:`cadrumo.domain.calculations.registry.authority.bundled_authority`:
         Supplies the packaged registry authority used for snapshot resolution.
@@ -41,13 +41,13 @@ from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
-from ._action_errors import (
+from ._registry_resources import (
+    registry_root as _registry_root,
+)
+from .action_errors import (
     CalculationRegistryUnavailableError,
     CasillaProvenanceMissingError,
     WorkUnitRevisionDivergenceError,
-)
-from ._registry_resources import (
-    registry_root as _registry_root,
 )
 from .work_lifecycle import ActiveWorkUnitUse, require_active_work_unit
 
@@ -88,7 +88,7 @@ def assert_snapshot_matches_work_unit_revision(
     most callers resolve ``snapshot`` from ``work_unit.period`` and can omit
     it. A caller that resolves ``snapshot`` from a different, caller-supplied
     period (see
-    :func:`cadrumo.application.modelo._result_disposition_resolution._result_disposition_values_for_revision`,
+    :func:`cadrumo.application.modelo.result_disposition_resolution._result_disposition_values_for_revision`,
     which threads the export path's period through for the Modelo 303
     refund-election decision) passes that period so the message names the
     coordinates the snapshot was actually resolved against.
@@ -97,7 +97,7 @@ def assert_snapshot_matches_work_unit_revision(
         :func:`cadrumo.application.modelo.work_addressing.law_selected_revision_for_work_target`:
             Performs the create-time counterpart of this revision identity
             assertion.
-        :class:`cadrumo.application.modelo._action_errors.WorkUnitRevisionDivergenceError`:
+        :class:`cadrumo.application.modelo.action_errors.WorkUnitRevisionDivergenceError`:
             Refusal raised when the pinned revision no longer matches the
             law-determined snapshot.
     """
@@ -141,7 +141,7 @@ def resolve_registry_snapshot_for_work_unit(
         :func:`cadrumo.application.modelo.work_addressing.law_selected_revision_for_work_target`:
             Performs the create-time counterpart of this revision identity
             assertion.
-        :class:`cadrumo.application.modelo._action_errors.WorkUnitRevisionDivergenceError`:
+        :class:`cadrumo.application.modelo.action_errors.WorkUnitRevisionDivergenceError`:
             Refusal raised when the pinned revision no longer matches the
             law-determined snapshot.
     """

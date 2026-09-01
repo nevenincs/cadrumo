@@ -113,7 +113,7 @@ def test_verification_report_payload_resolves_the_exact_registry_recovery_verdic
     """A live verification exposes only the typed action paired by the application."""
     from datetime import UTC, datetime
 
-    from ....application.modelo._verification_preconditions import (
+    from ....application.modelo.verification_preconditions import (
         VerificationFindingPreconditionProjection,
         build_verification_precondition_failure,
     )

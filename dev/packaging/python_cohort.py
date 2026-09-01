@@ -135,7 +135,7 @@ from typer.main import get_command
 from cadrumo.core.i18n import SUPPORTED_OUTPUT_LANGUAGES, lookup_translation_entry
 from cadrumo.core.json_contract import OutputRootSchema, OutputSchema
 from cadrumo.entrypoints import cli
-from cadrumo.entrypoints.cli._command_spec import DeferredTarget, TranslationKey
+from cadrumo.entrypoints.cli.command_spec import DeferredTarget, TranslationKey
 from cadrumo.entrypoints.cli.command_api import command_spec_for_path, command_spec_nodes
 
 def walk(value, kind):

@@ -17,7 +17,7 @@ from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ....domain.modelos.calculation_revision import CalculationRevisionAmendmentKind
 from ....domain.submission.models import ModeloDraftStatus
-from .._draft_construction import build_draft
+from ..draft_construction import build_draft
 from ..producer_snapshot import (
     AmendmentEvidence,
     FilingElectionFacts,

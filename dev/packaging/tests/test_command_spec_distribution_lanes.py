@@ -40,12 +40,12 @@ import cadrumo
 from cadrumo.core.i18n import SUPPORTED_OUTPUT_LANGUAGES, lookup_translation_entry
 from cadrumo.core.json_contract import OutputRootSchema, OutputSchema
 from cadrumo.entrypoints import cli
-from cadrumo.entrypoints.cli._command_spec import DeferredTarget
-from cadrumo.entrypoints.cli._command_suggestions import walk_live_command_tree
+from cadrumo.entrypoints.cli.command_spec import DeferredTarget
+from cadrumo.entrypoints.cli.command_suggestions import walk_live_command_tree
 from cadrumo.entrypoints.cli.command_api import command_spec_nodes
 
 def translation_keys(value):
-    from cadrumo.entrypoints.cli._command_spec import TranslationKey
+    from cadrumo.entrypoints.cli.command_spec import TranslationKey
     if isinstance(value, TranslationKey):
         return (value,)
     if dataclasses.is_dataclass(value) and not isinstance(value, type):
@@ -155,7 +155,7 @@ def _is_spec_export_name(name: str) -> bool:
 
 def _authored_spec_modules(checkout: Path) -> set[str]:
     cli_root = checkout / "src/cadrumo/entrypoints/cli"
-    modules = {"cadrumo/entrypoints/cli/_command_spec.py", "cadrumo/entrypoints/cli/_command_specs.py"}
+    modules = {"cadrumo/entrypoints/cli/command_spec.py", "cadrumo/entrypoints/cli/command_specs.py"}
     for path in cli_root.rglob("*.py"):
         tree = ast.parse(path.read_text(encoding="utf-8"))
         if any(

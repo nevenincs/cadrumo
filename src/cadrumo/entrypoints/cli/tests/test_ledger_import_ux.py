@@ -10,13 +10,7 @@ import pytest
 from ....application.ledger.actions_import import LedgerProviderID
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ._cli_json_support import _json_object
-from ._ledger_ux_support import (
-    _FOUR_ROW_CSV,
-    _FOUR_ROW_OFX,
-    _N26_HEADER,
-    _invoke,
-    _open_bucket_session,
-)
+from .ledger_ux_support import _FOUR_ROW_CSV, _FOUR_ROW_OFX, _N26_HEADER, _invoke, _open_bucket_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["_open_bucket_session"]

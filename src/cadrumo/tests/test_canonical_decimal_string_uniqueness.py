@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from ._inventory import SRC_CADRUMO
+from .inventory import SRC_CADRUMO
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

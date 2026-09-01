@@ -7,7 +7,7 @@ from __future__ import annotations
 from ._app_ledger_command_spec_policies import (
     _POLICY_3,
 )
-from ._command_spec import (
+from .command_spec import (
     CommandSpec,
     DeferredTarget,
     InvocationSpec,

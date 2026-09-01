@@ -13,9 +13,9 @@ from pathlib import Path
 import typer
 from pydantic import TypeAdapter, ValidationError
 
-from ...application.inventory._service import InventoryMovementCommand, InventoryService
+from ...application.inventory.service import InventoryMovementCommand, InventoryService
 from ...core.external_constants import UTF_8_ENCODING
-from ...core.i18n._render import tr
+from ...core.i18n.render import tr
 from ...domain.contribuyente.inventory.records import (
     InventoryAcquisitionCost,
     InventoryClosingAuthorityRecord,

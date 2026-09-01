@@ -8,7 +8,7 @@ import typer
 from pydantic import ValidationError
 
 from ...core.external_constants import UTF_8_ENCODING
-from ...core.i18n._render import tr
+from ...core.i18n.render import tr
 from ...core.modelo import Modelo
 from ...core.period import Period
 from ...domain.modelos.calculation_revision import FilingInstanceEvidence

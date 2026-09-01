@@ -475,7 +475,7 @@ def generate_cli_reference(docs_root: Path) -> dict[str, str]:
 
 def _generate_cli_reference_loaded(docs_root: Path) -> dict[str, str]:
     """Render the CLI reference directly from the immutable command graph."""
-    from cadrumo.core.i18n._render import clear_output_language_cache
+    from cadrumo.core.i18n.render import clear_output_language_cache
     from cadrumo.entrypoints.cli.command_api import command_schema_types
 
     from .build import docs_build_language

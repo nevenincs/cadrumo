@@ -54,8 +54,8 @@ from typing import Protocol, TypeGuard
 
 import pytest
 
-from ....application.modelo._selectors import ModeloCalculationRevisionSelector
-from ....core.i18n._render import _locale_map
+from ....application.modelo.selectors import ModeloCalculationRevisionSelector
+from ....core.i18n.render import _locale_map
 from ....domain.attachments.enums import AttachmentSource
 from ....tests.cli_runner import cadrumo_click_command
 from .test_documented_command_conformance import (

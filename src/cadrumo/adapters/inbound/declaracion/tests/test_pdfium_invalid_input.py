@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from .._parsers._pdfplumber_backend import _extract_pages_text_with_pdfium_cached
+from .._parsers.pdfplumber_backend import _extract_pages_text_with_pdfium_cached
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 

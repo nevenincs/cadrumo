@@ -44,8 +44,8 @@ from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegi
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
 from ...aggregation import CalculationSourceContext
-from .._prorrata_regularizacion import ProrrataRegularizacionSourceResolver
 from ..observations_repository import CalculationObservationRepository
+from ..prorrata_regularizacion import ProrrataRegularizacionSourceResolver
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

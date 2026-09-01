@@ -34,7 +34,7 @@ from ...domain.calculations.registry.errors import (
 )
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.user_profile.errors import ProfileNotFoundError
-from ._binding_readiness import profile_resolvable_binding_ids
+from .binding_readiness import profile_resolvable_binding_ids
 from .registry_discovery import registry_bindings_for_scope, registry_casillas_for_registry_scope
 
 if TYPE_CHECKING:

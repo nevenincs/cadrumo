@@ -27,7 +27,7 @@ from pathlib import Path
 from threading import Lock
 from typing import TYPE_CHECKING
 
-from ._blob_store import EncryptedBlobStore
+from .blob_store import EncryptedBlobStore
 
 if TYPE_CHECKING:
     from .....core.config import Settings

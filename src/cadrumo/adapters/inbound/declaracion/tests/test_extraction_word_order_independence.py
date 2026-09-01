@@ -54,7 +54,7 @@ import pytest
 
 from .....domain.calculations.registry.authority import bundled_authority
 from .....tests import FIXTURES_DIR
-from .._parser import (
+from ..parser import (
     _classify_target,
     _extract_pages_words,
     _numeric_casilla_anchors,

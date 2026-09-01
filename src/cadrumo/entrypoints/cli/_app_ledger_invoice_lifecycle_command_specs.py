@@ -10,7 +10,7 @@ from ._app_ledger_command_spec_policies import (
     _POLICY_5,
     _POLICY_9,
 )
-from ._command_spec import (
+from .command_spec import (
     ArgumentSpec,
     CommandSpec,
     DeferredTarget,

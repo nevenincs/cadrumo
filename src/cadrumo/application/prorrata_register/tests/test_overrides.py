@@ -33,8 +33,8 @@ from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.cross_period_clean_state import CrossPeriodCleanStateBlocker
 from ...calculations.observations_repository import CalculationObservationRepository
-from .._seed import cross_check_prorrata_entry_against_prior_observation
-from .._service import ProrrataRegisterService
+from ..seed import cross_check_prorrata_entry_against_prior_observation
+from ..service import ProrrataRegisterService
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

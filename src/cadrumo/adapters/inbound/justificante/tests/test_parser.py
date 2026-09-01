@@ -38,7 +38,7 @@ from .....tests.aeat_literal_fixtures import (
     aeat_url,
 )
 from .....tests.pdf_fixtures import text_pdf_bytes
-from ...pdf import source_pdf_reference_path
+from ...pdf.source_provenance import source_pdf_reference_path
 from .._parsers.text_extraction import _TEXT_CACHE, extract_text
 from ..parser import parse_justificante, parse_justificante_bytes
 
@@ -283,7 +283,7 @@ class TestJustificanteErrorRehome:
     """#305 — JustificanteError inherits the shared PDF-import root."""
 
     def test_justificante_error_is_pdf_filing_import_error(self) -> None:
-        from ...pdf import PdfModeloImportError
+        from .....domain.justificante.errors import PdfModeloImportError
 
         assert issubclass(JustificanteError, PdfModeloImportError)
 

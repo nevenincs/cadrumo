@@ -23,7 +23,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from cadrumo.application.corpus_search._terminology import TerminologyHit, search_terminology
+from cadrumo.application.corpus_search.terminology import TerminologyHit, search_terminology
 
 if TYPE_CHECKING:
     # Typing-only: the MCP SDK is supplied by the sibling harness distribution;

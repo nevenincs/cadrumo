@@ -17,7 +17,7 @@ from ._command_schema import (
 )
 
 if TYPE_CHECKING:
-    from ._command_spec import CommandSpec
+    from .command_spec import CommandSpec
 
 _FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -156,8 +156,8 @@ def cli_path_for_command_key(command_key: str) -> tuple[str, ...]:
 
 
 def is_exposable_command(command_key: str) -> bool:
-    from ._command_spec import BindingState
-    from ._command_specs import COMMAND_GRAPH
+    from .command_spec import BindingState
+    from .command_specs import COMMAND_GRAPH
 
     spec = COMMAND_GRAPH.by_schema_identity().get(command_key)
     return (
@@ -176,7 +176,7 @@ def assert_schema_coverage(resolution_errors: tuple[VerbLeafResolutionFailure, .
 
 def project_recovery_handoff_contract(spec: CommandSpec) -> RecoveryHandoffContract | None:
     """Project one command's validated recovery protocol into discovery metadata."""
-    from ._command_spec import OptionSpec
+    from .command_spec import OptionSpec
 
     recovery = spec.recovery_handoff
     if recovery is None:
@@ -201,7 +201,7 @@ def project_recovery_handoff_contract(spec: CommandSpec) -> RecoveryHandoffContr
 
 
 def build_verb_input_schemas(command_keys: tuple[str, ...]) -> dict[str, VerbInputSchema]:
-    from ._command_specs import COMMAND_GRAPH
+    from .command_specs import COMMAND_GRAPH
 
     rows = _rows()
     specs = COMMAND_GRAPH.by_schema_identity()

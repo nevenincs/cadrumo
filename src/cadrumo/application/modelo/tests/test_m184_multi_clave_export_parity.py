@@ -28,10 +28,10 @@ from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.loader import load_registry_tree
 from ....domain.calculations.registry.schema_exports import ExportRecordDefinition
 from ....domain.modelos.row_models import Modelo184MemberRow
-from ...filing._record_renderer import _record_render_rows
-from ...filing._record_types import RecordRenderRow
-from .._action_errors import ModeloAggregationBindingError
+from ...filing.record_renderer import _record_render_rows
+from ...filing.record_types import RecordRenderRow
 from .._calculation_modelo_adjustments import union_detail_rows_by_identity
+from ..action_errors import ModeloAggregationBindingError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

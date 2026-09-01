@@ -6,8 +6,8 @@ import typer.main
 
 from ....core.json_contract import OutputSchema
 from ....core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
-from .._command_suggestions import INVOCATION_REMAINDER_META_KEY
 from .._common import _is_metadata_invocation, emit_envelope
+from ..command_suggestions import INVOCATION_REMAINDER_META_KEY
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

@@ -29,7 +29,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ._emit import emit_telemetry_event
-from ._schema import build_telemetry_payload
+from .schema import build_telemetry_payload
 
 if TYPE_CHECKING:
     from ..config import Settings

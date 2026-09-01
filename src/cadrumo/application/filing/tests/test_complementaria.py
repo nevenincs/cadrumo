@@ -30,7 +30,7 @@ from ....domain.submission.models import (
     make_submission_id,
 )
 from .._complementaria import build_complementaria, load_amendment
-from .._draft_construction import build_draft
+from ..draft_construction import build_draft
 from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

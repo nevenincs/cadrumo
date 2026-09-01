@@ -36,21 +36,15 @@ from ....domain.modelos.calculation_revision import (
 )
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ...calculations._iva_compensation_casillas import M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA
+from ...calculations.iva_compensation_casillas import M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA
 from ...workflow.errors import WorkflowInputMismatchError
-from .._action_errors import ModeloAggregationBindingError
-from .._calculation_actions import (
-    _reject_caller_overrides_of_source_bindings,
-)
 from .._calculation_preparation import _IVA_LEDGER_EXEMPT_REGIMES
-from .._iva_wallet_gate import (
-    ModeloIvaWalletReconciliationBlocked,
-)
-from .._iva_wallet_gate import (
-    apply_iva_compensation_decision_binding as _apply_iva_compensation_decision_binding,
-)
 from .._revision_replay_inputs import _informational_casilla_replay_inputs
-from .._verification_actions import (
+from ..action_errors import ModeloAggregationBindingError
+from ..calculation_actions import _reject_caller_overrides_of_source_bindings
+from ..iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
+from ..iva_wallet_gate import apply_iva_compensation_decision_binding as _apply_iva_compensation_decision_binding
+from ..verification_actions import (
     _art20_reduccion_advisory_finding,
     _art52_reduccion_advisory_finding,
     _collect_revision_verification_findings,
@@ -60,10 +54,7 @@ from .._verification_actions import (
     _iva_wallet_error_verification_finding,
     _missing_required_casilla_finding,
 )
-from .._workflow_gate import (
-    _RevisionInputsProvider,
-    workflow_period_for_work_unit,
-)
+from ..workflow_gate import _RevisionInputsProvider, workflow_period_for_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -793,7 +784,7 @@ class TestWorkflowInputMismatchError:
 
     def test_matching_request_does_not_raise(self) -> None:
         """load_inputs with the correct modelo and workflow period returns inputs."""
-        from .._workflow_gate import workflow_period_for_work_unit
+        from ..workflow_gate import workflow_period_for_work_unit
 
         work_unit = _minimal_work_unit(modelo="100", period="0A")
         revision = _minimal_calculation_revision(work_unit)
@@ -808,7 +799,7 @@ class TestWorkflowInputMismatchError:
 
     def test_mismatched_modelo_raises_workflow_input_mismatch_error(self) -> None:
         """load_inputs with a wrong modelo raises WorkflowInputMismatchError."""
-        from .._workflow_gate import workflow_period_for_work_unit
+        from ..workflow_gate import workflow_period_for_work_unit
 
         work_unit = _minimal_work_unit(modelo="100", period="0A")
         revision = _minimal_calculation_revision(work_unit)

@@ -16,7 +16,7 @@ from ....domain.modelos.verification_report import (
     VerificationReport,
     derive_verification_report_id,
 )
-from .._verification_preconditions import (
+from ..verification_preconditions import (
     ModeloVerificationResult,
     VerificationFindingPreconditionProjection,
     build_verification_precondition_failure,

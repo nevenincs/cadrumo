@@ -19,7 +19,7 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....domain.calculations.registry.censo_modelos import CensoModeloEventKind
 from ....domain.modelos.errors import Modelo036PriorAltaRequiredError, Modelo036TerminalStateError
 from ....tests.secure_sql import isolated_runtime_profile
-from .._m036_lifecycle import M036DeclarationCommand, list_m036_declarations, record_m036_declaration
+from ..m036_lifecycle import M036DeclarationCommand, list_m036_declarations, record_m036_declaration
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -121,7 +121,7 @@ def test_a_refused_sequence_persists_nothing_and_emits_no_event(tmp_path: Path) 
     anti-tautology proof — a guard placed after any write would leave a
     partial trace even though the call raised.
     """
-    from .._m036_lifecycle import derive_m036_declaration_id
+    from ..m036_lifecycle import derive_m036_declaration_id
 
     refused_command = _command(event_kind=CensoModeloEventKind.BAJA, declared_on=date(2026, 6, 30))
     would_be_id = derive_m036_declaration_id(

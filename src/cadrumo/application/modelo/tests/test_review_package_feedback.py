@@ -64,7 +64,6 @@ from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
 from ....tests.secure_sql import isolated_two_bucket_runtime
 from .._review_package_collab_audit import emit_collab_feedback_countersign_attached_event
-from .._review_package_counter_sign import counter_sign_review_package
 from .._review_package_feedback import (
     FeedbackCounterSignatureInvalidError,
     ReviewPackageFeedbackError,
@@ -73,16 +72,14 @@ from .._review_package_feedback import (
     encrypt_feedback_package_for_originator,
     import_feedback_package,
 )
-from .._review_package_recipient_encryption import (
+from ..review_package_counter_sign import counter_sign_review_package
+from ..review_package_recipient_encryption import (
     RecipientDecryptionError,
     RecipientPackageExpiredError,
     ensure_recipient_encryption_keypair,
     recipient_encryption_public_key,
 )
-from .._review_package_signing import (
-    ensure_review_package_signing_keypair,
-    sign_review_package,
-)
+from ..review_package_signing import ensure_review_package_signing_keypair, sign_review_package
 from ._review_package_bytes_support import build_package_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

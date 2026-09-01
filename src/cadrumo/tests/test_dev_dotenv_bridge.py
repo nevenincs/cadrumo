@@ -3,7 +3,7 @@
 Production ``Settings`` carries no dotenv source of its own; ``env/.env``
 is development/test-only configuration (a local operator's live-test
 credentials) that reaches a test process only through the repo-root
-``conftest.py`` bridge (:func:`cadrumo.tests._env_loader.bridge_env_file_into_environ`,
+``conftest.py`` bridge (:func:`cadrumo.tests.env_loader.bridge_env_file_into_environ`,
 run before any Cadrumo import can resolve ``Settings``).
 
 If that bridge silently breaks -- a future edit reorders the import so a
@@ -24,8 +24,8 @@ import os
 
 import pytest
 
-from ._env_loader import load_env_file
-from ._inventory import REPO_ROOT
+from .env_loader import load_env_file
+from .inventory import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -58,7 +58,7 @@ def test_operator_dotenv_keys_are_bridged_into_the_environment() -> None:
         f"env/.env declares {missing} but "
         f"{'this key is' if len(missing) == 1 else 'these keys are'} absent from "
         "os.environ at test time. The repo-root conftest.py dotenv bridge "
-        "(cadrumo.tests._env_loader.bridge_env_file_into_environ) appears "
+        "(cadrumo.tests.env_loader.bridge_env_file_into_environ) appears "
         "broken, bypassed, or ordered after a Cadrumo import already "
         "resolved Settings -- a live test whose credential comes only from "
         "env/.env would silently fail its prerequisite gate instead of "

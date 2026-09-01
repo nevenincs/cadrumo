@@ -72,16 +72,16 @@ from typing import TYPE_CHECKING
 
 from ...core.time.clock import now as _utc_now
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
-from ._review_package_recipient_registry import RecipientFingerprintRecord
 from ._review_package_review_only_workspace import ReviewOnlyWorkspace
 from ._revision_persistence import emit_modelo_bucket_event
+from .review_package_recipient_registry import RecipientFingerprintRecord
 
 if TYPE_CHECKING:
     from ...domain.buckets.event import BucketEvent
     from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
-    from ._review_package_counter_sign import CounterSignedReceipt
     from ._review_package_feedback import ImportedFeedback
-    from ._review_package_recipient_encryption import RecipientEncryptedPackage
+    from .review_package_counter_sign import CounterSignedReceipt
+    from .review_package_recipient_encryption import RecipientEncryptedPackage
 
 
 def emit_collab_recipient_registered_event(

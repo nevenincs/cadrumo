@@ -236,7 +236,7 @@ def is_m347_declarante_summary_invoice_binding(binding: DataBindingDefinition) -
     The canonical, single-defined predicate over ``_M347_DECLARANTE_SUMMARY_RECORD``,
     read through the typed :func:`_invoice_selector` rather than a raw
     ``selector_as_dict(binding).get("record")``: a caller outside this module
-    (``application/invoices/_source_resolver.py``) once carried its own copy of
+    (``application/invoices/source_resolver.py``) once carried its own copy of
     both the literal and a ``.get()`` read, so a rename of the ``record`` field
     would have silently, permanently misclassified the M347 declarante-summary
     binding as absent rather than raising.

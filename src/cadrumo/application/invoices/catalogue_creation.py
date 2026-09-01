@@ -31,7 +31,7 @@ from typing import Final
 
 from pydantic import BaseModel
 
-from ...adapters.outbound.fx._ecb_provider import default_ecb_rate_provider
+from ...adapters.outbound.fx.ecb_provider import default_ecb_rate_provider
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core.aggregation import IntracomOperationType
 from ...core.models import STRICT_FROZEN_CONFIG

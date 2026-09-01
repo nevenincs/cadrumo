@@ -85,14 +85,14 @@ from cadrumo.application.aggregation import (
     aggregate_iva_ledger_observations_from_repositories,
     aggregate_renta_ledger_expenses_from_repositories,
 )
-from cadrumo.application.aggregation.tests._iva_authority_support import aggregate_iva_ledger_observations
+from cadrumo.application.aggregation.tests.iva_authority_support import aggregate_iva_ledger_observations
 from cadrumo.application.calculations.observations_repository import CalculationObservationRepository
-from cadrumo.application.modelo._calculation_actions import calculate_modelo_revision_from_bucket_aggregation
-from cadrumo.application.modelo._filed_revision_observation import persist_filed_revision_observation
+from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision_from_bucket_aggregation
+from cadrumo.application.modelo.filed_revision_observation import persist_filed_revision_observation
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
-from cadrumo.core.period import Period
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.hashing import sha256_hex
+from cadrumo.core.period import Period
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.invoices.models import InvoiceCatalogue

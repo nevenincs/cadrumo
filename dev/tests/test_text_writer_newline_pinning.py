@@ -51,7 +51,7 @@ MIN_SCANNED_MODULES = 700
 #: Keying by function is load-bearing -- see the module docstring.
 EXEMPTIONS: dict[tuple[str, str], str] = {
     (
-        "src/cadrumo/adapters/persistence/storage/bucket/_sealed_archive_writer.py",
+        "src/cadrumo/adapters/persistence/storage/bucket/sealed_archive_writer.py",
         "write_sealed_archive",
     ): ("tarfile.open(mode='w:gz') is a BINARY archive handle, not a text stream. It takes no newline argument."),
     ("dev/locales/manager.py", "LocaleManager.allow_identical"): (

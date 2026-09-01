@@ -18,10 +18,10 @@ from typing import Protocol
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.logging import get_logger
-from ...domain.calculations._row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
-from ...domain.calculations._row_source_identity import RowBindingKey, RowSourceIdentity
 from ...domain.calculations.registry.ids import BindingId, RelationId
 from ...domain.calculations.registry.schema import ModeloRevision
+from ...domain.calculations.row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
+from ...domain.calculations.row_source_identity import RowBindingKey, RowSourceIdentity
 from ...domain.modelos.calculation_revision import M303RegimenSimplificadoAnnualSummaryHandoff
 from ...domain.modelos.row_models import ModeloDetailRow
 from ._source_mesh import (

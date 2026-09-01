@@ -25,7 +25,7 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, U
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from .._projection import ModeloCompareDeltaRow, ModeloProjectionCasillaObservation, compare_modelo_years
+from ..projection import ModeloCompareDeltaRow, ModeloProjectionCasillaObservation, compare_modelo_years
 from ..work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

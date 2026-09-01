@@ -11,8 +11,8 @@ from ....application.operator_actions.preconditions import no_action_preconditio
 from ....core.errors.hierarchy import CoreValidationError
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.time.utc import parse_iso_datetime, validate_utc_aware
-from ._records import ProviderObjectMetadata
 from .errors import OutboundStorageIntegrityError
+from .records import ProviderObjectMetadata
 
 if TYPE_CHECKING:
     from ..google.records import DriveAppProperties

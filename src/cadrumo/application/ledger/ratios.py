@@ -25,9 +25,9 @@ from ...core.unit_proportion import UnitProportion, is_unit_proportion
 from ...domain.categories.proportionality import ProportionalityKind, ProportionalityRule, effective_usage_ratio
 from ...domain.categories.registry import resolve_category_profiles
 from ...domain.categories.spending_category import HOME_OFFICE_FAMILIES, SpendingCategory, family_for
-from ...domain.usage_ratios._model import ELIGIBLE_USAGE_RATIO_CATEGORIES, UsageRatioProfile
-from ...domain.usage_ratios._service import usage_ratio_bucket_lock
 from ...domain.usage_ratios.errors import UsageRatioValidationError
+from ...domain.usage_ratios.model import ELIGIBLE_USAGE_RATIO_CATEGORIES, UsageRatioProfile
+from ...domain.usage_ratios.service import usage_ratio_bucket_lock
 from .usage_ratio_repository import load_usage_ratio_profile, save_usage_ratio_profile
 
 

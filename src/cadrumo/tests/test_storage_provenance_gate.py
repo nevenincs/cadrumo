@@ -79,7 +79,7 @@ from typing import TYPE_CHECKING, Final, NamedTuple
 import pytest
 
 from ..core.storage_taxonomy import STORAGE_ROOT_SETTINGS_FIELD
-from ._inventory import aeat_relative, ast_for_path, package_python_files
+from .inventory import aeat_relative, ast_for_path, package_python_files
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -136,8 +136,8 @@ PERMITTED_PRODUCERS: Final[frozenset[tuple[str, str]]] = frozenset(
         # The two accessors the enrollment contract names. Every enrolled site
         # resolves through one of them, so these are where the root becomes a
         # path on purpose.
-        ("core/_storage_taxonomy_locations.py", "storage_path"),
-        ("core/_storage_taxonomy_locations.py", "bucket_scoped_storage_path"),
+        ("core/storage_taxonomy_locations.py", "storage_path"),
+        ("core/storage_taxonomy_locations.py", "bucket_scoped_storage_path"),
         # Settings derivation: turns each root-derived member's declared
         # subpath into that field's default. It iterates the declaration
         # directly rather than carrying a table of its own.

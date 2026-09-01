@@ -16,7 +16,6 @@ from ....tests.cli_runner import cadrumo_click_command
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_cli_profile
 from ...cli import app
-from .._command_suggestions import INVOCATION_REMAINDER_META_KEY
 from .._common import (
     RequestedCliLeaf,
     attach_cli_policy_refusal_projection,
@@ -26,6 +25,7 @@ from .._common import (
     preserve_requested_cli_leaf,
     project_cli_policy_refusal,
 )
+from ..command_suggestions import INVOCATION_REMAINDER_META_KEY
 from ..errors import CliRefusedBoundaryError, error_boundary_under_test
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

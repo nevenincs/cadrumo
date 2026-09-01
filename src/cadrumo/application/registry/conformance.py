@@ -104,7 +104,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, NonNegativeInt
 
-from ...core.access_gate._authorization import ModeloAuthorization as _ModeloAuthorization
+from ...core.access_gate.authorization import ModeloAuthorization as _ModeloAuthorization
 from ...core.casilla_id import CasillaId as _CasillaId
 from ...core.export_layout_format import ExportLayoutFormat as _ExportLayoutFormat
 from ...core.filing_year import FilingYear

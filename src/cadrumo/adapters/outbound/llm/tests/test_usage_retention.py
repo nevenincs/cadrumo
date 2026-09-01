@@ -23,7 +23,7 @@ from .....core.redaction.rules import default_rules_for_class, redact_structured
 from .....llm.errors import LLMCacheError
 from .....llm.models import LLMProvider, UsageRecord
 from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from .._usage import _USAGE_NAMESPACE, _USAGE_VERSION, UsageRecorder
+from ..usage import _USAGE_NAMESPACE, _USAGE_VERSION, UsageRecorder
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

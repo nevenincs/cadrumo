@@ -72,13 +72,31 @@ def tree_fingerprint(root: Path, *, roots: Sequence[str] = _SOURCE_ROOTS) -> str
 def refuse_if_tree_moves(root: Path, *, roots: Sequence[str] = _SOURCE_ROOTS) -> Iterator[None]:
     """Run a generation and refuse its output if the tree moved underneath it.
 
+    A file that DISAPPEARS mid-body is reported as the same refusal, not as an
+    unhandled read error. A generator typically enumerates the tree and then
+    reads what it enumerated, so a concurrent relocation between those two
+    steps surfaces as ``FileNotFoundError`` naming one path -- which reads like
+    a defect in the generator and tells the operator nothing about what to do.
+    It is the tree moving, which is precisely what this guard exists to say.
+    Observed repeatedly on 2026-08-31, when a relocation campaign made this the
+    dominant failure and the fingerprint comparison never got the chance to
+    fire.
+
     Raises:
         TreeMovedDuringGenerationError: When the fingerprint taken before the
-            body differs from the one taken after, meaning the artefact may
-            describe a tree that no longer exists.
+            body differs from the one taken after, or when the body could not
+            read a file it had already found, meaning the artefact may describe
+            a tree that no longer exists.
     """
     before = tree_fingerprint(root, roots=roots)
-    yield
+    try:
+        yield
+    except FileNotFoundError as vanished:
+        raise TreeMovedDuringGenerationError(
+            f"a source file disappeared while this artefact was being generated ({vanished.filename}), "
+            "so the generator was reading a tree that no longer exists. Nothing was written. "
+            "Re-run when no other lane is editing the tree."
+        ) from vanished
     after = tree_fingerprint(root, roots=roots)
     if before != after:
         raise TreeMovedDuringGenerationError(

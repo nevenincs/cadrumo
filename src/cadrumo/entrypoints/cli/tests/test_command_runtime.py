@@ -11,7 +11,7 @@ from .._command_runtime import (
     command_schema_targets,
     resolve_deferred_target,
 )
-from .._command_spec import (
+from ..command_spec import (
     CommandSpec,
     CommandSpecGraph,
     DeferredTarget,

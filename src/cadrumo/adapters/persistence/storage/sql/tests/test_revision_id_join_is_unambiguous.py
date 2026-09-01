@@ -24,7 +24,7 @@ from datetime import UTC, datetime
 import pytest
 
 from ... import secure_object_namespaces as namespaces_module
-from .._secure_object_crypto import derive_revision_id
+from ..secure_object_crypto import derive_revision_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

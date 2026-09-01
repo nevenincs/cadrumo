@@ -16,7 +16,7 @@ from collections.abc import Iterator
 import pytest
 
 from .....adapters.outbound.storage._protocol import StorageProvider
-from .....adapters.outbound.storage._records import ProviderObjectMetadata, ProviderProbeReport
+from .....adapters.outbound.storage.records import ProviderObjectMetadata, ProviderProbeReport
 from .....adapters.persistence.storage.namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from .....adapters.persistence.storage.namespace_taxonomy import (
     StorageCustodyDisposition,

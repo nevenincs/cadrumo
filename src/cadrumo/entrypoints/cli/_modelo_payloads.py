@@ -33,7 +33,7 @@ from ...application.calculations.observations_repository import (
     ObservationSourceKind,
     PriorDomiciliationElectionProjection,
 )
-from ...application.modelo._work_plazo import validate_modelo_work_deadline_posture
+from ...application.modelo.work_plazo import validate_modelo_work_deadline_posture
 from ...application.modelo.work_review import (
     BlockerRef,
     ModeloWorkProgress,
@@ -142,7 +142,7 @@ from ._payloads_modelo_reconcile import (
 )
 
 if TYPE_CHECKING:
-    from ...application.modelo._export import ModeloExportResult as _AppModeloExportResult
+    from ...application.modelo.export import ModeloExportResult as _AppModeloExportResult
 
 
 class WorkUnitPayload(OutputSchema):

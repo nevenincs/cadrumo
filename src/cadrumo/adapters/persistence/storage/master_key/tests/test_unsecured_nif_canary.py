@@ -30,8 +30,8 @@ import pytest
 
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ...errors import UnsecuredModeRefusedError
-from .._master_key import UnsecuredMasterKeyProvider, refuse_unsecured_with_real_nif
 from .._master_key_tax_id import looks_like_real_tax_id
+from ..master_key import UnsecuredMasterKeyProvider, refuse_unsecured_with_real_nif
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

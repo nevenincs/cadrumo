@@ -27,12 +27,12 @@ from ....domain.modelos.calculation_revision import (
 )
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from .._action_errors import (
+from ..action_errors import (
     ModeloPaymentElectionCapabilityRefusedError,
     ModeloPaymentElectionIncompatibleError,
     ModeloRefundElectionNotEligibleError,
 )
-from .._result_disposition_resolution import resolve_modelo_result_disposition
+from ..result_disposition_resolution import resolve_modelo_result_disposition
 from ._export_test_support import (
     _M130_RESULT_CASILLA,
     _M200_REFUND_RESULT_CASILLA,

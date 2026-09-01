@@ -11,7 +11,7 @@ import pytest
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.i18n import tr
-from cadrumo.entrypoints.cli._config.tests._isolated_storage_fixture import config_check_backend
+from cadrumo.entrypoints.cli._config.tests.isolated_storage_fixture import config_check_backend
 from cadrumo.tests.cli_runner import invoke_cached_cli, semantic_cli_text
 
 from ..._paths import REPO_ROOT
@@ -90,7 +90,7 @@ _CONFIG_MODULE_NAMES = frozenset(
         "_restore_cli.py",
         "_root_cli.py",
         "_scripted_registration.py",
-        "_secure_input.py",
+        "secure_input.py",
         "_spec_policies.py",
         "_status_rendering.py",
         "_storage_cli.py",

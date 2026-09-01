@@ -1,6 +1,6 @@
 """``foreign_asset_binding_row_field`` reads the typed selector, and refuses drift.
 
-``application/calculations/_foreign_asset_redeclaration.py`` (M720 row-field
+``application/calculations/foreign_asset_redeclaration.py`` (M720 row-field
 lookup) used to read a ``foreign_asset`` binding's ``row_field`` via
 ``selector_as_dict(binding).get("row_field") == row_field``. Every
 ``foreign_asset`` binding's selector is validated against

@@ -41,8 +41,6 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period
 from ...core.prose_elision import ElidedProse
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
-from ...domain.calculations._row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
-from ...domain.calculations._row_source_identity import RowBindingKey, RowSourceIdentity
 from ...domain.calculations.registry.ids import (
     BindingId,
     LegalRefId,
@@ -51,6 +49,8 @@ from ...domain.calculations.registry.ids import (
     SourceRefId,
 )
 from ...domain.calculations.registry.schema import ModeloRevision
+from ...domain.calculations.row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
+from ...domain.calculations.row_source_identity import RowBindingKey, RowSourceIdentity
 from ...domain.modelos.calculation_revision import M303RegimenSimplificadoAnnualSummaryHandoff
 from ...domain.modelos.row_models import ModeloDetailRow
 from .errors import AggregationValidationError, t

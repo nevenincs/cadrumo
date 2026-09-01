@@ -32,13 +32,10 @@ from ...application.ledger.consent_withdrawal import (
 from ...application.ledger.document_transcription import DocumentTranscription
 from ...application.ledger.invoice_draft_records import InvoiceDraft
 from ...core.config import load_settings
-from ...core.i18n._render import tr
+from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ._common import _state, _tx_repo, emit_envelope
-from ._ledger_business_payloads import (
-    EvidenceConsentListResult,
-    EvidenceConsentRederiveResult,
-)
+from .ledger_business_payloads import EvidenceConsentListResult, EvidenceConsentRederiveResult
 
 _UNRECALLABLE_LOCALE_KEY = "cli.app.ledger.evidence.consent.bytes_unrecallable"
 _NO_HISTORY_LOCALE_KEY = "cli.app.ledger.evidence.consent.no_history"
@@ -144,7 +141,7 @@ def _recorded_dispatches(bucket_id: str) -> tuple[ConsentedDispatch, ...]:
     Deferred import, matching the on-host reader below: this module must stay
     loadable on an install without the inference extra.
     """
-    from ...adapters.outbound.llm._consent_ledger import EvidenceConsentLedger
+    from ...adapters.outbound.llm.consent_ledger import EvidenceConsentLedger
 
     return tuple(
         ConsentedDispatch(

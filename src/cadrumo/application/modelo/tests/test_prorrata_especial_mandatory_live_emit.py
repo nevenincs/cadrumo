@@ -58,7 +58,7 @@ from ....domain.transactions.raw_transaction import RawProvenance, RawTransactio
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...aggregation import CalculationSourceDiagnostic
 from ...calculations.observations_repository import CalculationObservationRepository
-from ...prorrata_register._service import ProrrataRegisterService
+from ...prorrata_register.service import ProrrataRegisterService
 from .._calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
 from .._prorrata_regularizacion_advisory import collect_prorrata_regularizacion_diagnostics
 

@@ -41,7 +41,9 @@ from .....core.optional_extras import MissingOptionalExtraError
 from .....core.parsing import normalise_iso_4217_currency
 from .....core.tabular import NormalizedTable, TabularSourceError, normalize_tabular_bytes
 from .....domain.transactions.raw_transaction import SourceFormat
-from ._base import (
+from ._constants import CSV_EXTENSIONS
+from ._tabular_projection import ColumnRoleMapping, ProjectedRow, project_table
+from .base import (
     FinancialProvider,
     FinancialProviderError,
     FinancialValidationError,
@@ -54,8 +56,6 @@ from ._base import (
     parse_date_value,
     synthesize_transaction_id,
 )
-from ._constants import CSV_EXTENSIONS
-from ._tabular_projection import ColumnRoleMapping, ProjectedRow, project_table
 
 _logger = get_logger(__name__)
 

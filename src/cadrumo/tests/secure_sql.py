@@ -28,8 +28,8 @@ from ..adapters.persistence.storage.master_key.bucket_session import BucketSessi
 from ..adapters.persistence.storage.namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from ..adapters.persistence.storage.runtime import StorageRuntime, inspect_storage_runtime
 from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from ..adapters.persistence.storage.sql._orm import Base, SecureObjectRow
 from ..adapters.persistence.storage.sql.engine import create_engine_from_settings, dispose_engine
+from ..adapters.persistence.storage.sql.orm import Base, SecureObjectRow
 from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ..adapters.persistence.storage.sql.session import session_scope
 from ..adapters.persistence.storage.storage_path_definitions import BUCKETS_DIRNAME, KEYSTORE_DIRNAME

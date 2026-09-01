@@ -66,13 +66,9 @@ from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
 from ..._foreign_asset_thresholds import foreign_asset_declaration_thresholds
 from ...aggregation import CalculationSourceContext
-from .._binding_prefill import resolve_bindings_from_local_store
-from .._foreign_asset_redeclaration import modelo_720_redeclaration_advisory_findings
-from .._multi_year import (
-    EnrollmentRecorder,
-    PreviousFilingSourceResolver,
-    assert_enrollment_matches_manifest,
-)
+from ..binding_prefill import resolve_bindings_from_local_store
+from ..foreign_asset_redeclaration import modelo_720_redeclaration_advisory_findings
+from ..multi_year import EnrollmentRecorder, PreviousFilingSourceResolver, assert_enrollment_matches_manifest
 from ..observations_repository import CalculationObservationRepository
 from ._multi_year_roundtrip_support import assert_two_ejercicio_round_trip
 from ._observation_lookup_support import find_observation

@@ -35,7 +35,7 @@ from .....application.modelo.workspace_models import (
     ModeloWorkspaceCapabilityDisposition,
     ModeloWorkspaceCapabilityName,
 )
-from .....core.i18n._render import tr
+from .....core.i18n.render import tr
 from ...components.theme import toggle_appearance
 from ...components.widgets import ContentDataTable, ContentScroll, DisclosureGroup
 from .controller import ModeloWorkspaceReadSession

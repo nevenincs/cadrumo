@@ -10,13 +10,13 @@ from pathlib import Path
 import pytest
 
 from ....core.directory_scan import scan_directory
-from ...modelo._export import ModeloExportCommand
 from ...modelo._m303_regimen_simplificado_scope import m303_regimen_simplificado_scope_for_profile
+from ...modelo.export import ModeloExportCommand
 from .._export import export_draft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-modelo_export = import_module("cadrumo.application.modelo._export")
+modelo_export = import_module("cadrumo.application.modelo.export")
 m303_filing_evidence = import_module("cadrumo.application.modelo._m303_filing_evidence")
 
 #: The three Exonerado-390 evidence classes are defined here, not in

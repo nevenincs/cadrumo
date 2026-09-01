@@ -1,6 +1,6 @@
 """``is_m347_declarante_summary_invoice_binding`` reads the typed selector, and refuses drift.
 
-``application/invoices/_source_resolver.py`` used to carry its own copy of the
+``application/invoices/source_resolver.py`` used to carry its own copy of the
 ``"m347_declarante_summary"`` literal and read it via
 ``selector_as_dict(binding).get("record") == _M347_DECLARANTE_SUMMARY_RECORD``.
 :class:`_InvoiceSelector` already validates every invoice-source binding's
@@ -15,11 +15,11 @@ set even when the summary construct needs the wider set -- with no error at
 all.
 
 The canonical predicate is defined once in
-``domain/calculations/registry/_invoice_bindings.py`` (the family module that
+``domain/calculations/registry/invoice_bindings.py`` (the family module that
 already owns ``_M347_DECLARANTE_SUMMARY_RECORD`` and the typed
 ``_InvoiceSelector``), reads through the typed selector, and is now the
 single call site both the registry's own internal invariant checks and
-``application/invoices/_source_resolver.py`` use -- no duplicate literal, no
+``application/invoices/source_resolver.py`` use -- no duplicate literal, no
 duplicate raw read.
 """
 

@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from ....application.calculations._binding_prefill import resolve_bindings_from_local_store
+from ....application.calculations.binding_prefill import resolve_bindings_from_local_store
 from ....application.calculations.observations_repository import CalculationObservationRepository
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period

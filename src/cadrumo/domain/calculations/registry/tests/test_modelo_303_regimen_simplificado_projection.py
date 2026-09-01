@@ -6,7 +6,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....application.calculations._m303_regimen_simplificado import calculate_m303_regimen_simplificado_result
+from .....application.calculations.m303_regimen_simplificado import calculate_m303_regimen_simplificado_result
 from .....core.filing_projection_ref import (
     M303RegimenSimplificadoActivityField,
     M303RegimenSimplificadoActivityProjectionRef,

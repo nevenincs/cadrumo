@@ -40,7 +40,7 @@ from .errors.hierarchy import CoreError, ProfileAnswerTypeError
 from .external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from .logging import get_logger
 from .models import STRICT_FROZEN_CONFIG
-from .parsing._utils import parse_bool
+from .parsing.utils import parse_bool
 from .spanish_postcode import OptionalSpanishPostcode
 
 _log = get_logger(__name__)

@@ -50,8 +50,8 @@ from .._app_live import (
 from .._app_live_auth_preflight import _live_auth_preflight_lines
 from .._app_live_command_specs import LIVE_COMMAND_SPECS
 from .._command_runtime import build_command_subtree
-from .._command_spec import CommandSpecGraph
 from .._root_command_specs import ROOT_COMMAND_SPECS
+from ..command_spec import CommandSpecGraph
 from ._live_read_profile_fixture import _ACTIVE_TEST_BUCKET_ID, _isolated_backend
 
 __all__ = ["_isolated_backend"]

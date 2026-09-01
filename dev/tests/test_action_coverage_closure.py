@@ -13,7 +13,7 @@ from dataclasses import dataclass, replace
 
 import pytest
 
-from cadrumo.application.modelo._preconditions import (
+from cadrumo.application.modelo.preconditions import (
     MODELO_PRECONDITION_PROFILES,
     build_modelo_precondition_failure_for_scenario,
 )

@@ -19,10 +19,10 @@ from dataclasses import dataclass
 
 import typer
 
-from ...application.modelo._action_errors import CalculationRevisionNotFoundError
-from ...application.modelo._calculate_input import modelo_202_modality_for_work_unit
-from ...application.modelo._calculation_actions import list_calculation_revisions
-from ...application.modelo._selectors import ModeloCalculationRevisionSelector
+from ...application.modelo.action_errors import CalculationRevisionNotFoundError
+from ...application.modelo.calculate_input import modelo_202_modality_for_work_unit
+from ...application.modelo.calculation_actions import list_calculation_revisions
+from ...application.modelo.selectors import ModeloCalculationRevisionSelector
 from ...core.external_constants import OutputLanguage
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit import WorkUnit

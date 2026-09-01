@@ -42,8 +42,8 @@ from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.row_models import ModeloDetailRow
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from ._calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
-from ._edit_models import (
+from .calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
+from .edit_models import (
     ModeloDetailRowEditIntentV1,
     ModeloEditAddressV1,
     ModeloEditApplyRequestV1,
@@ -62,7 +62,7 @@ from ._edit_models import (
     ModeloEditUnsupportedIntentReason,
     ModeloEditUnsupportedIntentRefusalV1,
 )
-from ._edit_services import (
+from .edit_services import (
     detail_row_natural_key,
     reconfirm_modelo_edit_baseline,
     validate_scalar_intent,

@@ -41,7 +41,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 #: An entry RECORDS a violation; it does not bless one. Each states why it has
 #: not been moved, so the exemption cannot quietly become the convention.
 _IMPORTS_TEST_SUPPORT: dict[str, str] = {
-    "src/cadrumo/application/calculations/_multi_year.py": (
+    "src/cadrumo/application/calculations/multi_year.py": (
         "Holds a multi-year observation TEST SCAFFOLD -- it takes a tmp_path, provisions a "
         "throwaway profile through isolated_runtime_profile, and asserts with bare asserts. It is "
         "a test helper that came to rest in a production package, so the fix is a relocation into "

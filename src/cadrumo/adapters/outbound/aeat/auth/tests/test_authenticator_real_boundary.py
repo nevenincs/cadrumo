@@ -18,7 +18,7 @@ from ......core.errors.hierarchy import AeatLoginAssertionError
 from ......tests.secure_sql import isolated_runtime_profile
 from ...browser.factory import DefaultBrowserSession
 from ...browser.tests.real_http_boundary import opened_http_boundary, real_browser_factory
-from ...tests._process_support import wait_for_process_exit
+from ...tests.process_support import wait_for_process_exit
 from .. import session_store as session_store
 from ..authenticator import AEAT_SESSION_IDLE_TTL, AeatAuthenticator
 from ..authenticator_persistence import PersistedSessionMetadata

@@ -38,8 +38,8 @@ from ....application.live.iva_remote_state import IvaRemoteStateAcquisitionManif
 from ....application.live.justificante import JustificanteCaptureSnapshot, justificante_capture_snapshot_object_key
 from ....application.live.notifications import PersistedNotificationsSnapshot, notifications_snapshot_object_key
 from ....application.live.verify import VerifyObservation, verify_observation_object_key
-from ....application.modelo._m036_lifecycle import M036DeclarationResult, m036_declaration_object_key
-from ....application.modelo._m145_communication_records import (
+from ....application.modelo.m036_lifecycle import M036DeclarationResult, m036_declaration_object_key
+from ....application.modelo.m145_communication_records import (
     M145CommunicationRecord,
     m145_communication_record_object_key,
 )
@@ -49,7 +49,7 @@ from ....core.external_constants import UTF_8_ENCODING as _UTF_8
 from ....core.hashing import canonical_json_bytes, sha256_hex
 from ....core.secure_object_write import SecureObjectWrite
 from ....core.storage_taxonomy import StorageCustodyProfile
-from ....domain.evidence_consent._record import EvidenceConsentLedgerEntry, evidence_consent_ledger_entry_object_key
+from ....domain.evidence_consent.record import EvidenceConsentLedgerEntry, evidence_consent_ledger_entry_object_key
 from ....domain.transactions.classification_rule import LedgerClassificationRule
 from ....domain.user_profile.errors import ProfileExportError
 from ....domain.user_profile.portable_export import CarriedSecureObject

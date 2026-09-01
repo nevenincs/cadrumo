@@ -395,6 +395,63 @@ def test_workspace_schema_reference_refuses_an_unclassified_formula_operand() ->
         )
 
 
+def test_a_locale_key_accepts_the_uppercase_segment_its_own_producer_emits() -> None:
+    """An uppercase casilla id is a real key shape, not a malformed one.
+
+    The encoder's plain-segment pattern is ``[A-Za-z0-9_-]``, so an id like the
+    Modelo 100 casilla ``A`` is passed through as ITSELF rather than base32hex
+    encoded, and the packaged catalogues ship it in that spelling. This bound
+    was lowercase-only and therefore disagreed with both its producer and the
+    shipped data.
+
+    The disagreement was not cosmetic. Because the label is built while a
+    Workspace record is assembled, the refusal happened during admission, so
+    EVERY Workspace destination was unopenable for any modelo declaring an
+    uppercase casilla id -- Modelo 100 among them. Nothing caught it because
+    every fixture and every enrolled surface used a numeric casilla id, where
+    the two patterns agree.
+    """
+    key = "modelo.schema.100.revision.2024.casilla.A.label"
+    record = ModeloWorkspaceLocalizedTextV1.model_validate(
+        {
+            "kind": "localized",
+            "locale_key": key,
+            "value": "Rendimientos del trabajo",
+            "locale": {
+                "requested_language": OutputLanguage.ES,
+                "resolved_language": OutputLanguage.ES,
+                "disposition": ModeloWorkspaceLocaleDisposition.EXACT,
+                "catalogue_digest": _DIGEST,
+            },
+        }
+    )
+    assert record.locale_key == key, "the key must survive validation unchanged, not be normalised"
+
+
+def test_a_locale_key_still_refuses_a_shape_no_producer_emits() -> None:
+    """Widening for uppercase must not turn the bound into no bound at all.
+
+    The leading character stays lowercase because the first segment is always a
+    namespace, and a key carrying whitespace or a path separator is malformed
+    whatever its case.
+    """
+    for malformed in ("Modelo.schema.100", "modelo schema 100", "modelo/schema/100", "", "1modelo.schema"):
+        with pytest.raises(ValidationError):
+            ModeloWorkspaceLocalizedTextV1.model_validate(
+                {
+                    "kind": "localized",
+                    "locale_key": malformed,
+                    "value": "x",
+                    "locale": {
+                        "requested_language": OutputLanguage.ES,
+                        "resolved_language": OutputLanguage.ES,
+                        "disposition": ModeloWorkspaceLocaleDisposition.EXACT,
+                        "catalogue_digest": _DIGEST,
+                    },
+                }
+            )
+
+
 def test_workspace_schema_record_has_typed_destinations_for_every_explanatory_relationship() -> None:
     record = ModeloWorkspaceSchemaRecordV1.model_validate(
         {

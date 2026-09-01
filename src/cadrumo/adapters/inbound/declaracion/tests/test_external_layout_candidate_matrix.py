@@ -24,8 +24,8 @@ from .....tests.fixtures.external_layout_candidates.models import (
     ExternalLayoutRegistryApplicabilityVerdict,
     load_external_layout_candidate,
 )
-from ...pdf import ExtractedCasilla
-from .._parser import (
+from ...pdf.extracted_casilla import ExtractedCasilla
+from ..parser import (
     _classify_target,
     _load_pages_words,
     _numeric_casilla_anchors,

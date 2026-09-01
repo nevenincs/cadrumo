@@ -172,7 +172,7 @@ def _as_decimal(value: object, surface: str) -> Decimal:
         # parameter, which is committed data in canonical dot-decimal form. The
         # profile-field caller reads a fact the profile write boundary already
         # promoted, the same posture the rule-3 exemption for
-        # ``domain/deadlines/_profiles.py`` records -- and it is the same
+        # ``domain/deadlines/profiles.py`` records -- and it is the same
         # residual: the grammar has to be enforced where the string is still a
         # string, which is that boundary and not this comparison.
         return coerce_decimal_strict(value if isinstance(value, Decimal) else str(value).strip())

@@ -44,10 +44,8 @@ from ....domain.transactions.models import (
     derive_transaction_id,
 )
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from .._diagnostics import (
-    LedgerImportDiagnosticKind,
-)
 from .._import import LedgerImportResult, import_ledger_with_diagnostics
+from ..diagnostics import LedgerImportDiagnosticKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

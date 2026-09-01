@@ -29,8 +29,8 @@ import pytest
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.runtime_graph import enum_consumed_binding_ids, revision_date_binding_ids
 from ....domain.calculations.registry.schema import ModeloRevision
-from .._calculate_input import ModeloCalculateBindingInputError, ModeloCalculateDecimalInputError
-from .._projection import _parse_projection_binding_overrides
+from ..calculate_input import ModeloCalculateBindingInputError, ModeloCalculateDecimalInputError
+from ..projection import _parse_projection_binding_overrides
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -12,7 +12,7 @@ from ._app_ledger_command_spec_policies import (
     _POLICY_5,
     _POLICY_9,
 )
-from ._command_spec import (
+from .command_spec import (
     ArgumentSpec,
     CommandSpec,
     DeferredTarget,
@@ -167,7 +167,7 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._ledger_evidence_cli", "evidence_add")),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_business_payloads", "EvidenceAddResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli.ledger_business_payloads", "EvidenceAddResult"),
             identity="ledger.evidence.add",
         ),
     ),
@@ -186,7 +186,7 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_business_payloads", "AttachmentReviewQueueResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli.ledger_business_payloads", "AttachmentReviewQueueResult"),
             identity="ledger.evidence.attachment_queue",
         ),
     ),
@@ -216,7 +216,7 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_business_payloads", "AttachmentReviewViewResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli.ledger_business_payloads", "AttachmentReviewViewResult"),
             identity="ledger.evidence.attachment_view",
         ),
     ),
@@ -592,7 +592,7 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_business_payloads", "EvidenceConfirmResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli.ledger_business_payloads", "EvidenceConfirmResult"),
             identity="ledger.evidence.confirm",
         ),
     ),
@@ -689,7 +689,7 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_business_payloads", "EvidenceExtractResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli.ledger_business_payloads", "EvidenceExtractResult"),
             identity="ledger.evidence.extract",
         ),
     ),
@@ -706,7 +706,7 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._ledger_evidence_cli", "evidence_list")),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_business_payloads", "EvidenceListResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli.ledger_business_payloads", "EvidenceListResult"),
             identity="ledger.evidence.list",
         ),
     ),
@@ -752,7 +752,7 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_business_payloads", "EvidenceRemoveResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli.ledger_business_payloads", "EvidenceRemoveResult"),
             identity="ledger.evidence.remove",
         ),
     ),
@@ -907,7 +907,7 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_business_payloads", "EvidenceUpdateResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli.ledger_business_payloads", "EvidenceUpdateResult"),
             identity="ledger.evidence.update",
         ),
     ),
@@ -935,7 +935,7 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._ledger_evidence_cli", "evidence_view")),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli._ledger_business_payloads", "EvidenceViewResult"),
+            target=DeferredTarget("cadrumo.entrypoints.cli.ledger_business_payloads", "EvidenceViewResult"),
             identity="ledger.evidence.view",
         ),
     ),

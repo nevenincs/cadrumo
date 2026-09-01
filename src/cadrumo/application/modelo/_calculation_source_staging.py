@@ -48,18 +48,18 @@ from ...domain.calculations.registry.schema import (
 )
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.modelos.work_unit import WorkUnit
-from ...domain.prorrata_register._protocols import ProrrataRegisterRepositoryProtocol
+from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ..aggregation import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
     CalculationSourceResolution,
 )
 from ..aggregation.source_resolution_operations import collect_unhandled_source_diagnostics, merge_source_resolutions
-from ..calculations._bienes_inversion_regularizacion import BienesInversionRegularizacionSourceResolver
-from ..calculations._prorrata_regularizacion import ProrrataRegularizacionSourceResolver
+from ..calculations.bienes_inversion_regularizacion import BienesInversionRegularizacionSourceResolver
 from ..calculations.observations_repository import CalculationObservationRepository
+from ..calculations.prorrata_regularizacion import ProrrataRegularizacionSourceResolver
 from ._calculation_modelo_adjustments import m131_objective_estimation_data_base_inputs
-from ._calculation_resolution import resolve_calculation_inputs as _resolve_calculation_inputs
+from .calculation_resolution import resolve_calculation_inputs as _resolve_calculation_inputs
 from .calculation_route import CALCULATION_ROUTE_PRE_MESH_SOURCES, require_calculation_route_resolver
 
 

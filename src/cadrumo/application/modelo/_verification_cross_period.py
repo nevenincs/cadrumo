@@ -55,8 +55,8 @@ from ..calculations.cross_period_clean_state import (
 )
 from ..calculations.m111_no_retenciones import M111_NO_RETENCIONES_PROFILE_PATH, m111_no_retenciones_periods_for_bucket
 from ..calculations.observations_repository import CalculationObservationRepository
-from ._action_errors import ModeloCrossPeriodCleanStateError
-from ._preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure
+from .action_errors import ModeloCrossPeriodCleanStateError
+from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure
 
 
 def _cross_period_expected_member_sets_from_profile(

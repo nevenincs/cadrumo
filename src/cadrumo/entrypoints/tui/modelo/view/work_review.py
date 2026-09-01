@@ -17,9 +17,9 @@ from __future__ import annotations
 
 import json
 from enum import StrEnum
-from typing import ClassVar, cast, get_args, override
+from typing import ClassVar, Final, cast, get_args, override
 
-from textual.app import App, ComposeResult
+from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Vertical
 from textual.screen import Screen
@@ -34,7 +34,7 @@ from .....application.modelo.work_review import (
 )
 from .....core.aggregation import BindingSourceKind
 from .....core.estado_casilla_oficial import EstadoCasillaOficial
-from .....core.i18n._render import tr
+from .....core.i18n.render import tr
 from .....core.modelo_work_progress_state import ModeloWorkProgressState
 from .....core.operator_action_enums import OperatorActionAxis
 from .....domain.calculations.registry.handoffs import RelationConsumptionChannel
@@ -45,10 +45,10 @@ from .....domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
+from ...components.host import ScreenHostApp
 from ...components.keyboard import localize_key_descriptions
 from ...components.theme import (
     BASE_CSS,
-    install_cadrumo_themes,
     toggle_appearance,
 )
 from ...components.widgets import ContentDataTable, ContentScroll
@@ -403,7 +403,7 @@ class ModeloWorkReviewScreen(Screen[None]):
             )
             source_line = f"{tr('flows.modelo_review.summary.denominator_source')}\t{denominator.source_ref}"
         lines = (
-            f"{tr('flows.modelo_review.summary.work_unit')}\t{review.work_unit_id}",
+            f"{tr('flows.modelo_review.summary.work_unit')}\t{review.work_unit_id[:_WORK_UNIT_ID_PREFIX_LENGTH]}",
             f"{tr('flows.modelo_review.summary.registry_revision')}\t{review.registry_revision_id}",
             f"{tr('flows.modelo_review.summary.calculation_revision')}\t{review.calculation_revision_id or ''}",
             f"{tr('flows.modelo_review.summary.lifecycle_state')}\t"
@@ -550,8 +550,8 @@ class ModeloWorkReviewScreen(Screen[None]):
         self.query_one("#modelo-review-blockers-empty", Static).display = not blockers
 
     def action_quit_review(self) -> None:
-        """Exit the standalone review host without changing the work record."""
-        self.review_app.exit(None)
+        """Leave the review without changing the work record."""
+        self.dismiss(None)
 
     def action_toggle_appearance(self) -> None:
         """Toggle the shared presentation theme for the review host."""
@@ -625,6 +625,35 @@ def _casilla_blockers_text(row: ModeloWorkReviewCasilla) -> str:
     )
 
 
+_WORK_UNIT_ID_PREFIX_LENGTH: Final[int] = 12
+"""How much of a work-unit id the review summary shows.
+
+A PREFIX IS A FIRST-CLASS ADDRESS HERE, not an abbreviation of one: the
+work-unit resolver matches a supplied selector with ``startswith`` or
+``endswith``, so a shortened value is something the system accepts rather than
+something an operator must expand before using. That is what separates this
+from truncating an identifier, which would trade a layout problem for a
+correctness one.
+
+It also fails safe. A prefix matching several units raises the ambiguity
+refusal carrying the full candidate list, and one matching none raises the
+not-found refusal naming the selector. Neither silently resolves to the wrong
+unit, so a prefix that is too short costs one instructive refusal, never a
+wrong subject.
+
+Twelve rather than eight: at 48 bits it is far beyond any realistic per-profile
+catalogue, whose size is bounded by modelos times years times periods, while
+still clearing the width that governed the panel. The label places the value at
+column 24, so twelve characters render at 36 and fit the 73-column content area
+of an 80-column screen with room to spare -- the full 64 rendered 88 columns
+and was the binding constraint at every width below 95.
+
+The WHOLE value is not lost and needs no new affordance: the workspace overview
+renders it complete in its address table, which is the surface whose job is
+addressing. Copying belongs there rather than on a summary.
+"""
+
+
 def _require_review_app(app: object) -> ModeloWorkReviewApp:
     """Narrow a screen host without leaving an unknown generic App type."""
     if not isinstance(app, ModeloWorkReviewApp):
@@ -634,7 +663,7 @@ def _require_review_app(app: object) -> ModeloWorkReviewApp:
     return app
 
 
-class ModeloWorkReviewApp(App[None]):
+class ModeloWorkReviewApp(ScreenHostApp[None]):
     """Standalone host for a canonical modelo work review screen."""
 
     CSS = (
@@ -661,13 +690,8 @@ class ModeloWorkReviewApp(App[None]):
 
     def __init__(self, review: ModeloWorkReview) -> None:
         """Bind the one immutable application review rendered by this host."""
-        super().__init__()
+        super().__init__(ModeloWorkReviewScreen())
         self.review = review
-
-    def on_mount(self) -> None:
-        """Install shared themes and open the canonical review screen."""
-        install_cadrumo_themes(self)
-        self.push_screen(ModeloWorkReviewScreen())
 
 
 __all__ = ["ModeloWorkReviewApp", "ModeloWorkReviewScreen"]

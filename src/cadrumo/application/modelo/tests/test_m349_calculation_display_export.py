@@ -8,7 +8,6 @@ from typing import Any
 
 import pytest
 
-from ....application.filing._draft_construction import _filing_binding_values
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.modelo import Modelo
 from ....core.period import Period
@@ -39,9 +38,10 @@ from ....entrypoints.cli import (
     calculation_revision_lines,
     calculation_revision_payload,
 )
-from .._calculation_actions import _suppress_m349_row_field_template_outputs
+from ...filing.draft_construction import _filing_binding_values
 from .._calculation_helpers import build_typed_observations
 from .._revision_replay_inputs import _m349_detail_row_replay_inputs
+from ..calculation_actions import _suppress_m349_row_field_template_outputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

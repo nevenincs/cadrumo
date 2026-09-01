@@ -29,7 +29,7 @@ from pydantic import ValidationError
 from sqlalchemy import select
 
 from ....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
-from ....adapters.persistence.storage.sql._orm import SecureObjectRow
+from ....adapters.persistence.storage.sql.orm import SecureObjectRow
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period

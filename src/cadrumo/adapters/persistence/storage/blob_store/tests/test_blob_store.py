@@ -28,7 +28,7 @@ from ...errors import (
 from ...master_key.active_session import NoActiveBucketSessionError, activate_session
 from ...master_key.bucket_session import BucketSession
 from ...storage_path_definitions import BLOB_MANIFEST_SCHEMA_VERSION
-from .._blob_store import BlobManifest, BlobReference, EncryptedBlobStore
+from ..blob_store import BlobManifest, BlobReference, EncryptedBlobStore
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

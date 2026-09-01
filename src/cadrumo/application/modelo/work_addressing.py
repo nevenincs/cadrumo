@@ -58,17 +58,14 @@ from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.errors import ModeloError, ModeloValidationError
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from ._action_errors import (
-    CalculationRevisionNotFoundError,
-    CalculationRevisionStateError,
-    ModeloPreconditionErrorMixin,
-)
-from ._calculation_actions import get_calculation_revision
-from ._preconditions import (
+from .action_errors import CalculationRevisionNotFoundError, CalculationRevisionStateError, ModeloPreconditionErrorMixin
+from .calculation_actions import get_calculation_revision
+from .preconditions import (
     build_modelo_precondition_failure_for_scenario,
     build_modelo_work_file_unverified_revision_failure,
 )
-from ._selectors import (
+from .registry_discovery import declared_modelo_period_tokens
+from .selectors import (
     ModeloCalculationRevisionDefault,
     ModeloCalculationRevisionSelector,
     ModeloCalculationRevisionSelectorAmbiguousError,
@@ -76,7 +73,6 @@ from ._selectors import (
     ModeloCalculationRevisionSelectorStateError,
     resolve_modelo_calculation_revision_pick,
 )
-from .registry_discovery import declared_modelo_period_tokens
 from .work_lifecycle import RevisionParentOperation, create_work_unit, rename_work_unit, require_revision_parent_active
 
 _RevisionId = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=128)]
@@ -1439,7 +1435,7 @@ def ensure_modelo_work_unit_for_active_target(
     )
     if resolution.work_unit is not None:
         unit = resolution.work_unit
-        from ._profile_readiness_gate import require_profile_ready_for_work_unit
+        from .profile_readiness_gate import require_profile_ready_for_work_unit
 
         require_profile_ready_for_work_unit(unit, enforce_applicability=enforce_applicability)
         name_applied: str | None = None

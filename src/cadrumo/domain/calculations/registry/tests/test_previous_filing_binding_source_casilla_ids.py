@@ -1,6 +1,6 @@
 """``previous_filing_binding_source_casilla_ids`` reads the typed selector, and refuses drift.
 
-``application/calculations/_foreign_asset_redeclaration.py`` (M720 prior-year
+``application/calculations/foreign_asset_redeclaration.py`` (M720 prior-year
 baseline observation) used to read a ``previous_filing`` binding's target
 casilla via ``selector_as_dict(binding).get("source_casilla_id")`` -- the
 SINGULAR key only. :class:`PreviousModeloSelector` declares TWO mutually

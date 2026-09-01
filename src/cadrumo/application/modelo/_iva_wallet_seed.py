@@ -23,7 +23,7 @@ See Also:
     :mod:`cadrumo.application.calculations._iva_wallet_reconciliation`
     Reconciliation service that turns wallet/local/override evidence into a
     persisted Modelo 303 prior-compensation decision.
-    :mod:`cadrumo.application.modelo._iva_wallet_gate`
+    :mod:`cadrumo.application.modelo.iva_wallet_gate`
     Calculation/export gate that replays the persisted wallet decision before a
     Modelo 303 revision is allowed to use the binding.
 """
@@ -41,8 +41,8 @@ from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliat
 from ...domain.modelos.calculation_revision import SEALED_REVISION_STATES
 from ...domain.modelos.errors import ModeloError
 from ..calculations.iva_compensation_history import correct_iva_compensation_period, seed_iva_compensation_period
-from ._iva_wallet_gate import taxpayer_nif_for_bucket
-from ._preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
+from .iva_wallet_gate import taxpayer_nif_for_bucket
+from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
 
 
 class ModeloIvaWalletSeedError(ModeloError):
@@ -72,7 +72,7 @@ class ModeloIvaWalletSeedError(ModeloError):
 class ModeloIvaWalletSeedNoTaxpayerError(ModeloIvaWalletSeedError):
     """Raised when the selected bucket cannot provide a taxpayer NIF.
 
-    The seed facade uses :func:`cadrumo.application.modelo._iva_wallet_gate.taxpayer_nif_for_bucket`
+    The seed facade uses :func:`cadrumo.application.modelo.iva_wallet_gate.taxpayer_nif_for_bucket`
     so the same bucket/profile identity authority feeds seed, correction, override,
     and persisted-decision replay paths.
     """
@@ -170,7 +170,7 @@ def seed_iva_compensation_period_for_bucket(
     See Also:
         :func:`cadrumo.application.calculations.seed_iva_compensation_period`
         Pure single-writer primitive that stores the seeded period state.
-        :func:`cadrumo.application.modelo._iva_wallet_gate.resolve_iva_compensation_decision_for_calculation`
+        :func:`cadrumo.application.modelo.iva_wallet_gate.resolve_iva_compensation_decision_for_calculation`
         Gate-side resolver that requires a persisted decision before applying
         the prior-compensation binding.
     """
@@ -428,7 +428,7 @@ def record_iva_compensation_override_for_bucket(
         :class:`cadrumo.application.calculations.IvaWalletDecisionRepository`
         Repository used to detect an existing fresh AEAT-wallet decision before
         allowing an override.
-        :func:`cadrumo.application.modelo._iva_wallet_gate.require_persisted_iva_compensation_decision_matches_revision`
+        :func:`cadrumo.application.modelo.iva_wallet_gate.require_persisted_iva_compensation_decision_matches_revision`
         Replay gate that ensures exported/filed revisions still match the
         persisted decision.
     """
@@ -452,7 +452,7 @@ def record_iva_compensation_override_for_bucket(
             },
         )
 
-    from ..calculations._iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
+    from ..calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
     from ..calculations.observations_repository import IvaWalletDecisionRepository
 
     existing = IvaWalletDecisionRepository().load_decision(taxpayer_nif, period)

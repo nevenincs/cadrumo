@@ -50,7 +50,7 @@ from ...domain.transactions.models import (
 )
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ...domain.usage_ratios._model import UsageRatioProfile
+from ...domain.usage_ratios.model import UsageRatioProfile
 from ..review.filter import LedgerReviewStatus
 from .actions_common import (
     EventSpec,

@@ -9,33 +9,17 @@ rendered as a zero, a blank, or an absent column.
 from __future__ import annotations
 
 import pytest
-from textual.app import App, ComposeResult
 from textual.widgets import Button, Checkbox, Input, RadioSet, SelectionList, Static
 
 from ......adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ......core.external_constants import OutputLanguage
-from ......core.i18n._render import tr
-from ....components.theme import install_cadrumo_themes
+from ......core.i18n.render import tr
+from ....components.host import ScreenHostApp
 from ..controller import ModeloWorkspaceReadSession, admit_workspace_session
 from ..inputs import ModeloWorkspaceInputsScreen
 from .conftest import resolve_real_result
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-
-class _InputsHost(App[None]):
-    """Minimal host so the destination runs under a real Textual pilot."""
-
-    def __init__(self, session: ModeloWorkspaceReadSession) -> None:
-        super().__init__()
-        self._session = session
-
-    def on_mount(self) -> None:
-        install_cadrumo_themes(self)
-        self.push_screen(ModeloWorkspaceInputsScreen(self._session))
-
-    def compose(self) -> ComposeResult:
-        return iter(())
 
 
 def _session(bucket_id: str, repository: WorkUnitCatalogueRepository) -> ModeloWorkspaceReadSession:
@@ -56,7 +40,7 @@ async def test_the_inputs_destination_offers_no_editing_affordance_before_c3(
     screen, not what the module appears to import.
     """
     bucket_id, repository = bucket_and_repository
-    app = _InputsHost(_session(bucket_id, repository))
+    app = ScreenHostApp(ModeloWorkspaceInputsScreen(_session(bucket_id, repository)))
 
     async with app.run_test() as pilot:
         await pilot.pause()
@@ -75,7 +59,7 @@ async def test_a_static_inspection_discloses_that_no_values_were_measured(
     session = _session(bucket_id, repository)
     assert session.projection.materialization_facet is None
 
-    app = _InputsHost(session)
+    app = ScreenHostApp(ModeloWorkspaceInputsScreen(session))
     async with app.run_test() as pilot:
         await pilot.pause()
         banner = app.screen.query_one("#workspace-inputs-values-disposition", Static)
@@ -88,7 +72,7 @@ async def test_a_complete_page_shows_no_boundedness_notice_rather_than_an_empty_
 ) -> None:
     """An empty bordered notice reads as a rendering defect, so it is removed."""
     bucket_id, repository = bucket_and_repository
-    app = _InputsHost(_session(bucket_id, repository))
+    app = ScreenHostApp(ModeloWorkspaceInputsScreen(_session(bucket_id, repository)))
 
     async with app.run_test() as pilot:
         await pilot.pause()
@@ -101,7 +85,7 @@ async def test_the_destination_is_reachable_and_leaves_without_deciding_anything
 ) -> None:
     """A read destination returns no value: it renders and exits, deciding nothing."""
     bucket_id, repository = bucket_and_repository
-    app = _InputsHost(_session(bucket_id, repository))
+    app = ScreenHostApp(ModeloWorkspaceInputsScreen(_session(bucket_id, repository)))
 
     async with app.run_test() as pilot:
         await pilot.pause()

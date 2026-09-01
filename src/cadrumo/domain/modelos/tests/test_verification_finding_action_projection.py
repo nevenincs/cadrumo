@@ -71,7 +71,7 @@ def _production_finding_constructor_kinds() -> set[str]:
     consumed: set[str] = set()
     for path in scan_directory(_SRC_CADRUMO, pattern="*.py", recursive=True):
         relative = path.relative_to(_SRC_CADRUMO).as_posix()
-        if "/tests/" in f"/{relative}" or relative == "domain/modelos/_verification_report.py":
+        if "/tests/" in f"/{relative}" or relative == "domain/modelos/verification_report.py":
             continue
         consumed.update(_constructor_finding_kinds(path.read_text(encoding="utf-8"), filename=relative))
     return consumed

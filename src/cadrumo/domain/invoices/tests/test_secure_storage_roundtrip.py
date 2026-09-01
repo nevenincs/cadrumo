@@ -38,7 +38,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.outbound.fx._ecb_provider import ECB_RATE_SOURCE_ID
+from ....adapters.outbound.fx.ecb_provider import ECB_RATE_SOURCE_ID
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....core.aggregation import IntracomOperationType, TravelAgencyMediationType
 from ....core.classification.policies import SensitivityClass

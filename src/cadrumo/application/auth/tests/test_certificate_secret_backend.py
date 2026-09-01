@@ -38,7 +38,7 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr, ValidationError
 
-from ....adapters.persistence.storage.blob_store._blob_store import EncryptedBlobStore
+from ....adapters.persistence.storage.blob_store.blob_store import EncryptedBlobStore
 from ....adapters.persistence.storage.secret_store.store import SecretStore
 from ....tests.master_key import EphemeralMasterKeyProvider
 from ....tests.profile_storage_root_fixture import bucket_session_storage_fixture

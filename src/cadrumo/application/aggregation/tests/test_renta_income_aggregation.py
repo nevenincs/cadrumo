@@ -23,7 +23,7 @@ from .._renta_income_ledger import (
     aggregate_renta_income_ledger,
     aggregate_renta_income_ledger_from_repositories,
 )
-from ._renta_income_aggregation_support import (
+from .renta_income_aggregation_support import (
     _ANNUAL_2024,
     _M130_INGRESOS_CASILLA,
     _Q1_2024,

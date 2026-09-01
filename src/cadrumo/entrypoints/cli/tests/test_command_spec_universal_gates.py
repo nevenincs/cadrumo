@@ -12,9 +12,9 @@ from typing import Any, cast
 
 import pytest
 
-from ....core.i18n._render import SUPPORTED_OUTPUT_LANGUAGES, lookup_translation_entry
+from ....core.i18n.render import SUPPORTED_OUTPUT_LANGUAGES, lookup_translation_entry
 from ....core.json_contract import OutputRootSchema, OutputSchema
-from .._command_spec import (
+from ..command_spec import (
     CommandSpec,
     CommandSpecGraph,
     DeferredTarget,
@@ -24,7 +24,7 @@ from .._command_spec import (
     SchemaState,
     TranslationKey,
 )
-from .._command_specs import COMMAND_GRAPH, COMMAND_SPECS
+from ..command_specs import COMMAND_GRAPH, COMMAND_SPECS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -558,7 +558,7 @@ def test_every_distributed_spec_module_is_enrolled_by_the_aggregate() -> None:
         if path.name == "_command_specs.py" or _locally_authored_export_names(source) or _composed_export_names(source):
             module_name = "cadrumo.entrypoints.cli." + ".".join(path.relative_to(cli_root).with_suffix("").parts)
             sources[module_name] = source
-    root = "cadrumo.entrypoints.cli._command_specs"
+    root = "cadrumo.entrypoints.cli.command_specs"
     assert _reachable_modules(sources, root) == set(sources)
 
     authored: list[CommandSpec] = []
@@ -743,7 +743,7 @@ RESOURCE = 'command_registration_metadata.v1.json'
         "decorate = app.command\ndecorate()(handler)",
         "attach = app.add_command\nattach(handler)",
         "from x import CommandSpec\nCS2 = CommandSpec\nrogue = CS2(key='rogue')",
-        "import cadrumo.entrypoints.cli._command_spec as cs\nmaker = cs.CommandSpec\nrogue = maker(key='rogue')",
+        "import cadrumo.entrypoints.cli.command_spec as cs\nmaker = cs.CommandSpec\nrogue = maker(key='rogue')",
         "from cadrumo.entrypoints.cli import _command_spec as cs\nmaker = cs.CommandSpec\nrogue = maker(key='rogue')",
         "from x import register_commands as enroll\nenroll(app)",
         "from x import register as enroll\nenroll(app)",

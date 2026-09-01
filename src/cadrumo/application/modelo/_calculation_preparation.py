@@ -44,17 +44,8 @@ from ...domain.period import calculation_filing_date
 from ...domain.transactions.enums import BUSINESS_BEARING_STATES, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..calculations.observations_repository import IvaWalletDecisionRepository
-from ._action_errors import ModeloAggregationBindingError
 from ._calculation_helpers import load_work_unit_for_calculation as _load_work_unit_for_calculation
 from ._calculation_helpers import resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit
-from ._calculation_resolution import ResolvedCalculationChannels
-from ._calculation_resolution import resolve_calculation_binding_channels as _resolve_calculation_binding_channels
-from ._iva_wallet_gate import (
-    apply_iva_compensation_decision_binding,
-    resolve_iva_compensation_decision_for_calculation,
-    taxpayer_nif_for_bucket,
-)
-from ._preconditions import build_modelo_precondition_failure
 from ._registry_helpers import validate_casilla_input_ids as _validate_casilla_input_ids
 from ._required_binding_gate import (
     require_modelo_required_bindings_resolved as _require_modelo_required_bindings_resolved,
@@ -62,6 +53,15 @@ from ._required_binding_gate import (
 from ._required_binding_gate import (
     resolved_required_profile_binding_values as _resolved_required_profile_binding_values,
 )
+from .action_errors import ModeloAggregationBindingError
+from .calculation_resolution import ResolvedCalculationChannels
+from .calculation_resolution import resolve_calculation_binding_channels as _resolve_calculation_binding_channels
+from .iva_wallet_gate import (
+    apply_iva_compensation_decision_binding,
+    resolve_iva_compensation_decision_for_calculation,
+    taxpayer_nif_for_bucket,
+)
+from .preconditions import build_modelo_precondition_failure
 
 if TYPE_CHECKING:
     from ..live.borrador_100 import Borrador100SnapshotRepository
@@ -135,7 +135,7 @@ def prepare_calculation(
         work_unit_id=work_unit_id,
         repository_bucket_id=work_unit_repository.bucket_id,
     )
-    from ._profile_readiness_gate import require_profile_ready_for_work_unit
+    from .profile_readiness_gate import require_profile_ready_for_work_unit
 
     require_profile_ready_for_work_unit(work_unit)
     # Calculate needs the amount-computing rung, not the filing rung: this

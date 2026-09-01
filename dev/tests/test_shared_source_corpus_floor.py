@@ -39,7 +39,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _ANCHOR_RELATIVE_PATHS = (
     "core/config.py",
     "core/paths.py",
-    "domain/calculations/registry/_schema.py",
+    "domain/calculations/registry/schema.py",
     "application/preflight.py",
     "entrypoints/cli/__init__.py",
 )

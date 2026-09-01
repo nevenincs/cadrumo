@@ -21,7 +21,8 @@ from .....core.period import Period
 from .....core.resources.bundled_data import bundled_path
 from .._validate import RegistryValidator
 from ..errors import RegistryValidationError
-from ..schema import DeadlineWindowDefinition, ModeloRevision
+from ..schema import ModeloRevision
+from ..schema_deadlines import DeadlineWindowDefinition
 from ..schema_extraction import ExtractionProfileDefinition, ExtractionTargetDefinition
 from ..schema_formula import KeyedBracketEntry, ParameterDefinition
 from ..schema_surfaces import CalculationCompletenessCasilla, CalculationCompletenessManifest

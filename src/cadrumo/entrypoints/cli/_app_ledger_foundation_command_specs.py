@@ -11,7 +11,7 @@ from ._app_ledger_command_spec_policies import (
     _POLICY_4,
     _POLICY_6,
 )
-from ._command_spec import (
+from .command_spec import (
     ArgumentSpec,
     CommandSpec,
     DeferredTarget,
@@ -716,7 +716,7 @@ LEDGER_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         policy=_POLICY_4,
         handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._ledger_lifecycle_cli", "ledger_archive")
+            DeferredTarget("cadrumo.entrypoints.cli.ledger_lifecycle_cli", "ledger_archive")
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
@@ -793,7 +793,7 @@ LEDGER_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_POLICY_4,
-        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._ledger_lifecycle_cli", "ledger_attach")),
+        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli.ledger_lifecycle_cli", "ledger_attach")),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget("cadrumo.entrypoints.cli._ledger_payloads", "LedgerAttachResult"),

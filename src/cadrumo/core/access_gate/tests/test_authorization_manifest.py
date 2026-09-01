@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from .._authorization import (
+from ..authorization import (
     AUTHORIZATION_MANIFEST_DIRNAME,
     AuthorizationState,
     derive_modelo_authorization,

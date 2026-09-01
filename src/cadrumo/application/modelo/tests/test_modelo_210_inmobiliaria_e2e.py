@@ -73,9 +73,9 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, U
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.observations_repository import CalculationObservationRepository
-from ...tests._wizard_catalogue_fixtures import register_wizard_catalogue
-from .._calculation_actions import calculate_modelo_revision
-from .._verification_actions import verify_modelo_revision
+from ...tests.wizard_catalogue_fixtures import register_wizard_catalogue
+from ..calculation_actions import calculate_modelo_revision
+from ..verification_actions import verify_modelo_revision
 from ..work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

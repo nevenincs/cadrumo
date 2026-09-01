@@ -1675,7 +1675,7 @@ def _emit_wizard_success(
     """
     from ...core.click_context import json_output_requested
     from ...domain.contribuyente.ccaa import CCAA
-    from ..operator_output._emit import emit_operator_json_success
+    from ..operator_output.emit import emit_operator_json_success
     from .results import ConfigProfileCreateResult, ConfigProfileEditResult, ProfileWizardStatus
 
     # Two distinct values, deliberately: ``status_token`` is the closed
@@ -1759,7 +1759,7 @@ def _echo_wizard_text(lines: list[str], *, payload: object) -> None:
     import typer as _typer
 
     from ...core.output_rendering import render_command_output
-    from ..operator_output._sandbox_notice import sandbox_banner_line, sandbox_notice_for_active_bucket
+    from ..operator_output.sandbox_notice import sandbox_banner_line, sandbox_notice_for_active_bucket
 
     sandbox_notice = sandbox_notice_for_active_bucket()
     if sandbox_notice is not None:

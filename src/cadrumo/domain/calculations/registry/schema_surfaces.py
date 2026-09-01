@@ -694,7 +694,7 @@ class RelationDefinition(RegistryModel):
 # (_validate_surfaces.validate_verification_expectation_section)
 # uses this set to reject unknown operators at authoring time. The
 # runtime evaluator
-# (cadrumo.application.modelo._verification_actions._evaluate_predicate_expression)
+# (cadrumo.application.modelo.verification_actions._evaluate_predicate_expression)
 # carries its own regex per operator but MUST keep its set of operators
 # identical to this constant — drift between the two sets is a
 # silent-pass hazard at the predicate layer (a typo would silently pass

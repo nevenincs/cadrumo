@@ -37,7 +37,7 @@ from __future__ import annotations
 
 import typer
 
-from ....application.modelo._review_package_recipient_registry import (
+from ....application.modelo.review_package_recipient_registry import (
     RecipientFingerprintRegistryRepository,
     public_key_hex_from_raw_bytes,
 )

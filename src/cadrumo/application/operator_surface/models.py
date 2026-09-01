@@ -32,6 +32,23 @@ from ...core.logging import LogExtra
 from ...core.operator_action_enums import NoRecoveryOutcome
 from ..operator_actions.models import ActionReference
 
+OPERATOR_SURFACE_MODEL_CONFIG: ConfigDict = ConfigDict(
+    frozen=True,
+    strict=True,
+    extra="forbid",
+    validate_assignment=True,
+    validate_default=True,
+)
+"""The one config every operator-surface record uses.
+
+Diverges from `core.models.STRICT_FROZEN_CONFIG` only by adding
+`validate_assignment`, which these records need. It was previously written out
+as an identical literal at twelve declaration sites, and every one of them also
+omitted `validate_default` -- so a guarantee the canonical makes was dropped
+twelve times over without anyone choosing to drop it. Named once so the
+divergence is a decision with a reason rather than a repeated accident.
+"""
+
 
 class RootSurfaceName(StrEnum):
     """Accepted root command surfaces enforced by :class:`OperatorSurfaceContract`."""
@@ -93,7 +110,7 @@ class RootSurface(BaseModel):
     exhaustive command tree.
     """
 
-    model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
+    model_config = OPERATOR_SURFACE_MODEL_CONFIG
 
     name: RootSurfaceName
     purpose: str = Field(min_length=1)
@@ -117,7 +134,7 @@ class LifecycleContract(BaseModel):
     internally file/export without implying live AEAT submission.
     """
 
-    model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
+    model_config = OPERATOR_SURFACE_MODEL_CONFIG
 
     steps: tuple[ModeloLifecycleStep, ...]
     internal_filed_term: str = "internal filed"
@@ -152,7 +169,7 @@ class SourceKindAlias(BaseModel):
     operator-only source-kind enum is introduced here.
     """
 
-    model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
+    model_config = OPERATOR_SURFACE_MODEL_CONFIG
 
     alias: str = Field(min_length=1)
     canonical: BindingSourceKind
@@ -192,7 +209,7 @@ class MountedCommandFamily(BaseModel):
     is a thing that can disagree.
     """
 
-    model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
+    model_config = OPERATOR_SURFACE_MODEL_CONFIG
 
     domain: MountedCommandDomain
     root: RootSurfaceName
@@ -240,7 +257,7 @@ class ManifestActionProfile(BaseModel):
     value, localized prose, or CLI command string.
     """
 
-    model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
+    model_config = OPERATOR_SURFACE_MODEL_CONFIG
 
     subject_leaf_key: NamespacedId
     condition_id: NamespacedId
@@ -265,7 +282,7 @@ class ManifestActionProfile(BaseModel):
 class ServiceOwner(BaseModel):
     """Application/domain package that owns an operator-facing capability."""
 
-    model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
+    model_config = OPERATOR_SURFACE_MODEL_CONFIG
 
     capability: str = Field(min_length=1)
     owner: str = Field(pattern=r"^cadrumo\.(application|domain|adapters|core)(\.[a-z_][a-z0-9_]*)*$")
@@ -275,7 +292,7 @@ class ServiceOwner(BaseModel):
 class OperatorSurfaceLogFields(BaseModel):
     """Stable non-secret log fields emitted by operator-surface services."""
 
-    model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
+    model_config = OPERATOR_SURFACE_MODEL_CONFIG
 
     contract_name: str = "operator_surface"
     root_count: int
@@ -304,7 +321,7 @@ class OperatorSurfaceContract(BaseModel):
     codes.
     """
 
-    model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
+    model_config = OPERATOR_SURFACE_MODEL_CONFIG
 
     schema_version: str = "1"
     roots: tuple[RootSurface, ...]

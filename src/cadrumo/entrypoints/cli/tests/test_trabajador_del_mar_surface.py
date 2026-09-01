@@ -37,8 +37,8 @@ import pytest
 
 from ....application.calculations._maritime_exemption_service import resolve_maritime_exemption
 from ....core.errors.error_codes import get_registered_error_code
-from ....core.i18n._render import tr
-from ....domain.renta._maritime_exemption import (
+from ....core.i18n.render import tr
+from ....domain.renta.maritime_exemption import (
     MaritimeExemptionInactiveError,
     MaritimeWorkerFacts,
     ProfileCompletenessError,

@@ -24,7 +24,7 @@ import pytest
 from ....core.aggregation import BindingSourceKind
 from ....core.prorrata_register import ProrrataRegisterRegime
 from ....domain.prorrata_register.register import ProrrataProvisionalResolution, ProrrataRegisterEntry
-from .._prorrata_regularizacion import (
+from ..prorrata_regularizacion import (
     CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA,
     build_prorrata_missing_provisional_advisory,
     derive_prorrata_applicability,

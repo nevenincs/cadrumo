@@ -26,7 +26,8 @@ from __future__ import annotations
 
 import pytest
 
-from ..record_design import _EMPTY_CORRECTIONS, _PdfParseState
+from ..record_design_pdf_state import _PdfParseState
+from ..record_design_sources import _EMPTY_CORRECTIONS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -12,13 +12,13 @@ from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations._m303_carry_ingress import (
+from ...calculations.m303_carry_ingress import (
     M303CarryIngressError,
     validate_normalized_m303_carry_observation_envelope,
 )
-from ...calculations._relation_prefill import resolve_relations_from_local_store
 from ...calculations.observations_repository import CalculationObservationRepository
-from .._local_observation_actions import record_operator_local_observation
+from ...calculations.relation_prefill import resolve_relations_from_local_store
+from ..local_observation_actions import record_operator_local_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

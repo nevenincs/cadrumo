@@ -4,14 +4,8 @@
 
 from __future__ import annotations
 
-from ._command_spec import (
-    CommandSpec,
-    InvocationSpec,
-    ResultSchemaSpec,
-    SchemaState,
-    TranslationKey,
-)
 from ._modelo_nonwork_command_spec_policies import _METADATA
+from .command_spec import CommandSpec, InvocationSpec, ResultSchemaSpec, SchemaState, TranslationKey
 
 MODELO_NONWORK_GROUP_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(

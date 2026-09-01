@@ -14,7 +14,14 @@ _STRICT_FROZEN_CONFIG = ConfigDict(
     extra="forbid",
     frozen=True,
     strict=True,
+    # Diverges from `core.models.STRICT_FROZEN_CONFIG` only to add
+    # `validate_assignment`, which these models need and the canonical does not
+    # carry. `validate_default` is restored because omitting it dropped a
+    # guarantee nobody chose to drop: a local config that silently weakens the
+    # canonical is a defect, one that widens it for a stated reason is a
+    # decision.
     validate_assignment=True,
+    validate_default=True,
 )
 
 

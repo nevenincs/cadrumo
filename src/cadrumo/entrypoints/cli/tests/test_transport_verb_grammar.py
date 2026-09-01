@@ -35,8 +35,8 @@ from __future__ import annotations
 import pytest
 
 from ....core.transport_locus import TransportLocus
-from .._command_spec import CommandSpecNode
-from .._command_specs import COMMAND_GRAPH
+from ..command_spec import CommandSpecNode
+from ..command_specs import COMMAND_GRAPH
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

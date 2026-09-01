@@ -22,7 +22,7 @@ from pathlib import Path
 
 import pytest
 
-from ._inventory import production_ast_items, repo_relative
+from .inventory import production_ast_items, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

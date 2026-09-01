@@ -13,7 +13,7 @@ from __future__ import annotations
 from contextlib import contextmanager
 from typing import TYPE_CHECKING
 
-from ..core.i18n._render import _override_locales_root
+from ..core.i18n.render import _override_locales_root
 
 if TYPE_CHECKING:
     from collections.abc import Iterator

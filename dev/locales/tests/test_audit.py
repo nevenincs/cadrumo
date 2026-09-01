@@ -8,9 +8,12 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core.product_identity import normalise_product_identity_references
 from cadrumo.core.i18n import extract_placeholders
-from cadrumo.core.product_identity import AEAT_AUTHORITY_SHORT_NAME, PRODUCT_IDENTITY
+from cadrumo.core.product_identity import (
+    AEAT_AUTHORITY_SHORT_NAME,
+    PRODUCT_IDENTITY,
+    normalise_product_identity_references,
+)
 from cadrumo.tests.cli_runner import invoke_typer_app
 
 from .._paths import DOCS_SRC_DIR, HARNESS_SRC_DIR, LOCALES_DIR, SRC_DIR
@@ -55,6 +58,7 @@ _IDENTITY_HEADING_KEYS = {
 # under ``cli.config.passphrase`` is its help pair and one refusal.
 _PROSE_KEYS = {
     "ca": {
+        "tui.root.title",
         "errors.auth.auth_former_product_session_state",
         "errors.internal.cli_outbound_payload_boundary",
         "cli.operator_surface.help.root.paragraph_local_first",
@@ -73,6 +77,7 @@ _PROSE_KEYS = {
         "mcp.elicitation.refusal.no_channel",
     },
     "en": {
+        "tui.root.title",
         "errors.auth.auth_former_product_session_state",
         "errors.internal.cli_outbound_payload_boundary",
         "cli.operator_surface.help.root.paragraph_local_first",
@@ -89,6 +94,7 @@ _PROSE_KEYS = {
         "mcp.elicitation.refusal.no_channel",
     },
     "es": {
+        "tui.root.title",
         "errors.auth.auth_former_product_session_state",
         "errors.internal.cli_outbound_payload_boundary",
         "cli.operator_surface.help.root.paragraph_local_first",
@@ -103,6 +109,7 @@ _PROSE_KEYS = {
         "mcp.elicitation.refusal.no_channel",
     },
     "hu": {
+        "tui.root.title",
         "errors.auth.auth_former_product_session_state",
         "errors.internal.cli_outbound_payload_boundary",
         "cli.operator_surface.help.root.paragraph_local_first",

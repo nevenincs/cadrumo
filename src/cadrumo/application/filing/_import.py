@@ -140,7 +140,7 @@ def import_filing_from_justificante(
 
     # Deferred import: `cadrumo.application.filing` imports this module, so top-level
     # resolution of ``build_draft`` would form a cycle.
-    from ._draft_construction import build_draft
+    from .draft_construction import build_draft
 
     try:
         draft = build_draft(

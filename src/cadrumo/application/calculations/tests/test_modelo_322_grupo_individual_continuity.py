@@ -46,7 +46,7 @@ from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeduct
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
-from ....domain.calculations.registry.ledger_bindings import (
+from ....domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
     resolve_ledger_iva_aggregation_binding_values,
 )
@@ -54,7 +54,7 @@ from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.flow import IvaFlowDirection
 from ....domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from ....tests.secure_sql import isolated_runtime_profile
-from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
+from ..multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

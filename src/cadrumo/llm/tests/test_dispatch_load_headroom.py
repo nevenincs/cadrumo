@@ -27,9 +27,9 @@ from typing import override
 
 import pytest
 
-from ...adapters.outbound.llm._cache import LLMCache
-from ...adapters.outbound.llm._run_telemetry import LLMRunTelemetryRecorder
-from ...adapters.outbound.llm._usage import UsageRecorder
+from ...adapters.outbound.llm.cache import LLMCache
+from ...adapters.outbound.llm.run_telemetry import LLMRunTelemetryRecorder
+from ...adapters.outbound.llm.usage import UsageRecorder
 from ...application.provisioning import (
     AcceleratorDevice,
     AcceleratorReading,

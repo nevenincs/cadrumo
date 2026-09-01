@@ -149,7 +149,7 @@ def _draft_blocking_finding_codes(draft: RegistryModeloDraftProtocol) -> tuple[s
     fields required, so a rename fails loud here. Read defensively, a renamed
     field would silently drop every finding from this diagnostic detail --
     the same fail-open shape ``_stage_validating_draft`` and
-    ``domain/submission/_preflight.py`` carried, just feeding a reported
+    ``domain/submission/preflight.py`` carried, just feeding a reported
     detail on an already-decided abort rather than the abort decision itself.
     """
     codes: set[str] = set()
@@ -1107,7 +1107,7 @@ class WorkflowEngine:
         a renamed field would yield ``None`` for EVERY finding, this stage
         would find no errors on a draft that has them, and it would report
         success — the same fail-open this file's sibling gate carried in
-        ``domain/submission/_preflight.py``.
+        ``domain/submission/preflight.py``.
         """
         started = _utcnow()
         error_findings = tuple(f for f in draft.findings if f.severity == BaseSeverity.ERROR)

@@ -30,7 +30,7 @@ import re
 
 import pytest
 
-from ._inventory import production_ast_items
+from .inventory import production_ast_items
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

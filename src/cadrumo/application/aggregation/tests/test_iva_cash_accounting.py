@@ -15,7 +15,7 @@ from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeduct
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.calculations.registry.ledger_bindings import resolve_ledger_iva_aggregation_binding_values
+from ....domain.calculations.registry.ledger_iva_bindings import resolve_ledger_iva_aggregation_binding_values
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.schema import (
     IvaCashAccountingPaymentEvidence,
@@ -32,7 +32,7 @@ from .. import (
     aggregate_iva_ledger_observations_from_repositories,
     resolve_m303_supplier_regime_arrival,
 )
-from ._iva_authority_support import aggregate_iva_ledger_observations
+from .iva_authority_support import aggregate_iva_ledger_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

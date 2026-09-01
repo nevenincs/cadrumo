@@ -8,7 +8,7 @@ from ...core.transport_locus import TransportLocus, TransportRole, TransportShap
 from ._app_ledger_command_spec_policies import (
     _POLICY_7,
 )
-from ._command_spec import (
+from .command_spec import (
     ArgumentSpec,
     CommandSpec,
     DeferredTarget,

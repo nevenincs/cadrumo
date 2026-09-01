@@ -1,4 +1,4 @@
-"""Real-behaviour tests for :mod:`cadrumo.core.parsing._utils`.
+"""Real-behaviour tests for :mod:`cadrumo.core.parsing.utils`.
 
 Contract under test, :func:`_parse_bool`:
 * Recognised truthy tokens  → True
@@ -8,7 +8,7 @@ Contract under test, :func:`_parse_bool`:
 Contract under test, :func:`_enum_value`: this is the converged home of two
 formerly independent, byte-identical private functions
 (``application/workflow/engine_helpers.py::enum_value`` and
-``domain/submission/_preflight.py::_enum_value``), so its behaviour is now
+``domain/submission/preflight.py::_enum_value``), so its behaviour is now
 load-bearing for both a workflow-stage status/finding read and a submission
 preflight status/auth-provider-kind read.
 """
@@ -19,7 +19,7 @@ from enum import Enum, StrEnum
 
 import pytest
 
-from .._utils import _enum_value, _parse_bool
+from ..utils import _enum_value, _parse_bool
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

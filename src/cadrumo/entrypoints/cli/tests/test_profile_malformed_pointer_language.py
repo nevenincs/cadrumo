@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 
 from ....core.bucket_pointer import pointer_path
-from ....core.i18n._render import clear_output_language_cache, tr
+from ....core.i18n.render import clear_output_language_cache, tr
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....tests.secure_sql import dev_test_database_password, isolated_profile_storage_root
 from ....tests.user_profile import register_cli_profile

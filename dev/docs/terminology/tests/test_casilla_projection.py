@@ -23,8 +23,8 @@ import time
 
 import pytest
 
-from cadrumo.core.modelo import Modelo
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.modelo import Modelo
 from cadrumo.domain.calculations.registry.authority import (
     ValidatedRegistryAuthority,
     bundled_authority,

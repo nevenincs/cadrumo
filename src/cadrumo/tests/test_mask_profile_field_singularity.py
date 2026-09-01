@@ -48,7 +48,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from ._inventory import aeat_relative, leaf_name, production_ast_items, repo_relative
+from .inventory import aeat_relative, leaf_name, production_ast_items, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

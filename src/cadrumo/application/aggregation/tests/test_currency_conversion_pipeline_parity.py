@@ -20,7 +20,7 @@ production classification function for every pipeline that gates on
   the ``taxable_base``/``iva_amount`` fallback (``_taxable_base_for`` /
   ``_iva_amount_for``, reached whenever a row carries no linked invoice
   evidence) fell back to the raw native fields, and ``_deductible_basis_amount``
-  (domain/renta/_ledger_expenses.py) PREFERS that native ``taxable_base`` over
+  (domain/renta/ledger_expenses.py) PREFERS that native ``taxable_base`` over
   the correctly-converted ``gross_amount`` whenever it is set -- the common
   case. The first version of this test module only ever built a transaction
   with no ``taxable_base``, so it exercised only the one path that was already
@@ -102,7 +102,7 @@ from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ....domain.iva.classification import InvoiceKind, TransactionKind
 from ....domain.iva.oss import OssIossRegime
 from ....domain.iva.schema import IvaCashAccountingTreatment, IvaRateKind
-from ....domain.renta._ledger_expenses import RentaDeductibilityContext, RentaDeductibleExpenseObservation
+from ....domain.renta.ledger_expenses import RentaDeductibilityContext, RentaDeductibleExpenseObservation
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

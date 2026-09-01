@@ -45,8 +45,8 @@ from ...domain.transactions.enums import BusinessClassification
 from ...domain.transactions.errors import TransactionNotFoundError, TransactionValidationError
 from ...domain.transactions.models import BucketTransactionRef, Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
-from ...domain.usage_ratios._model import UsageRatioProfile, validate_usage_ratio_reference
 from ...domain.usage_ratios.errors import UsageRatioValidationError
+from ...domain.usage_ratios.model import UsageRatioProfile, validate_usage_ratio_reference
 from .evidence import PurchaseInvoiceEvidence
 from .evidence_reference import (
     EvidenceReferenceOutcome,

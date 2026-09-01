@@ -594,8 +594,8 @@ def test_detector_flags_a_private_substrate_module_path() -> None:
     relative = "from ...adapters.persistence.storage._kdf_salt import bucket_kdf_salt\n"
     assert _retired_references(relative) == {"private-path:adapters.persistence.storage._kdf_salt"}
 
-    plain = "import cadrumo.adapters.persistence.storage.blob_store._blob_store as _blobs\n"
-    assert _retired_references(plain) == {"private-path:cadrumo.adapters.persistence.storage.blob_store._blob_store"}
+    plain = "import cadrumo.adapters.persistence.storage.blob_store.blob_store as _blobs\n"
+    assert _retired_references(plain) == {"private-path:cadrumo.adapters.persistence.storage.blob_store.blob_store"}
 
     assert _retired_references("from ...adapters.persistence.storage.crypto import encrypt_record\n") == set()
     assert _retired_references("from ...adapters.persistence.storage.crypto.aead import encrypt_record\n") == set()

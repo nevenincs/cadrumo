@@ -33,7 +33,7 @@ Read-only unless ``--apply`` is passed. ``--only-file PATH`` restricts the
 rewrite to one file (useful for verifying a single batch before committing).
 
     python -m dev.quality.import_centralization_codemod --apply
-    python -m dev.quality.import_centralization_codemod --apply --only-file src/cadrumo/application/modelo/_calculation_actions.py
+    python -m dev.quality.import_centralization_codemod --apply --only-file src/cadrumo/application/modelo/calculation_actions.py
     python -m dev.quality.import_centralization_codemod --apply --tests-only --only-file src/cadrumo/domain/modelos/tests/test_foo.py
 """
 

@@ -30,7 +30,7 @@ from .....application.modelo.workspace_models import ModeloWorkspaceExactWorkUni
 from .....application.operations.registry import OperationSchemaIdentityV1
 from .....core.config import override_settings
 from .....core.external_constants import OutputLanguage
-from .....core.i18n._render import SUPPORTED_OUTPUT_LANGUAGES
+from .....core.i18n.render import SUPPORTED_OUTPUT_LANGUAGES, tr
 from .....core.period import Period
 from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.temporal import select_revision
@@ -87,7 +87,7 @@ def _hosted(locale: OutputLanguage = OutputLanguage.ES) -> tuple[ScreenHostApp[N
     would omit the tokenised base CSS and the awaited push the shared one
     carries.
     """
-    from .....application.modelo._edit_services import (
+    from .....application.modelo.edit_services import (
         modelo_edit_request_schema_identity,
         modelo_edit_result_schema_identity,
     )
@@ -151,8 +151,13 @@ async def test_a_refused_lexeme_returns_focus_to_the_field_that_carried_it() -> 
     async with app.run_test() as pilot:
         await pilot.pause()
         casilla_ids = controller.fields().casilla_ids()
-        if len(casilla_ids) < 2:
-            pytest.skip("this admission permits fewer than two scalars; the focus move cannot be staged")
+        assert len(casilla_ids) >= 2, (
+            "this test stages a focus move BETWEEN two fields, so an admission permitting fewer "
+            "than two scalars makes it meaningless. Asserted rather than skipped: the condition is "
+            "constant for a fixed fixture address, so a skip here never fires and would begin "
+            "firing silently the day the fixture changed -- turning a real proof into a green that "
+            "measures nothing, with no announcement."
+        )
         target = app.screen.query_one(f"#{casilla_input_id(casilla_ids[0])}", Input)
         other = app.screen.query_one(f"#{casilla_input_id(casilla_ids[1])}", Input)
         other.focus()
@@ -180,8 +185,13 @@ async def test_an_accepted_lexeme_leaves_focus_alone() -> None:
     async with app.run_test() as pilot:
         await pilot.pause()
         casilla_ids = controller.fields().casilla_ids()
-        if len(casilla_ids) < 2:
-            pytest.skip("this admission permits fewer than two scalars; the focus move cannot be staged")
+        assert len(casilla_ids) >= 2, (
+            "this test stages a focus move BETWEEN two fields, so an admission permitting fewer "
+            "than two scalars makes it meaningless. Asserted rather than skipped: the condition is "
+            "constant for a fixed fixture address, so a skip here never fires and would begin "
+            "firing silently the day the fixture changed -- turning a real proof into a green that "
+            "measures nothing, with no announcement."
+        )
         target = app.screen.query_one(f"#{casilla_input_id(casilla_ids[0])}", Input)
         other = app.screen.query_one(f"#{casilla_input_id(casilla_ids[1])}", Input)
         other.focus()
@@ -304,3 +314,54 @@ async def test_the_editor_refuses_to_display_one_language_and_parse_another() ->
     ):
         async with app.run_test(size=(100, 30)) as pilot:
             await pilot.pause()
+
+
+@pytest.mark.asyncio
+async def test_a_stale_conflict_reaches_the_operator_as_a_visible_notice() -> None:
+    """Drift the operator cannot see is drift they will submit over.
+
+    The controller's stale-conflict state is already proven where it is
+    decided, but that proof stops at a BOOLEAN. Between the flag and the
+    operator sits the notice, which can say only one thing at a time and
+    returns early on unresolved fields -- so the flag can be correct while
+    the screen says nothing, and every other editor gate here (geometry,
+    locale, theme, control count) passes either way because none of them
+    read this widget.
+
+    Driven entirely through the operator's own path: the drift is introduced
+    behind the screen, then a value is typed into a real input and submitted,
+    which is what refreshes the notice in production. Calling the refresh
+    directly would have proven the renderer while leaving the question of
+    whether anything ever CALLS it unanswered.
+
+    The typed value is deliberately one that RESOLVES. An unresolved field
+    wins the notice and would mask the conflict, which is the actual ordering
+    hazard, and it is why this asserts the conflict text specifically rather
+    than settling for a non-empty notice.
+    """
+    app, controller = _hosted()
+
+    async with app.run_test(size=(100, 30)) as pilot:
+        await pilot.pause()
+        casilla_id = controller.fields().casilla_ids()[0]
+
+        drifted = controller.refresh(
+            work_catalogue=WorkUnitCatalogue(),
+            calculation_catalogue=CalculationRevisionCatalogue(),
+        )
+        assert drifted, "an emptied work catalogue must be reported as drift"
+        assert controller.in_stale_conflict is True
+
+        field = app.screen.query_one(f"#{casilla_input_id(casilla_id)}", Input)
+        field.focus()
+        await pilot.pause()
+        field.value = "77.00"
+        await pilot.press("enter")
+        await pilot.pause()
+
+        painted = str(app.screen.query_one("#edit-notice", Static).content)
+        assert painted.strip(), "a stale conflict must not leave the notice blank"
+        assert painted == tr("flows.modelo_edit.stale_conflict"), (
+            f"the operator was shown {painted!r} instead of the stale-conflict notice"
+        )
+        app.exit(None)

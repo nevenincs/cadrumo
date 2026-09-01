@@ -148,7 +148,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.LLM_USAGE,
         "llm-usage",
-        consumer_module="adapters/outbound/llm/_usage.py",
+        consumer_module="adapters/outbound/llm/usage.py",
         settings_field="cadrumo_llm_usage_dir",
         lifecycle=StorageLifecycle.RETENTION,
         grouping=StorageGrouping.LOGS,
@@ -157,7 +157,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.LLM_RUN_TELEMETRY,
         "llm-run-telemetry",
-        consumer_module="adapters/outbound/llm/_run_telemetry.py",
+        consumer_module="adapters/outbound/llm/run_telemetry.py",
         settings_field="cadrumo_llm_run_telemetry_dir",
         lifecycle=StorageLifecycle.RETENTION,
         grouping=StorageGrouping.LOGS,
@@ -169,7 +169,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         # hermetic replay would refuse on essentially every attempt.
         StorageCategory.RUNS,
         "runs",
-        consumer_module="core/observability/_store.py",
+        consumer_module="core/observability/store.py",
         settings_field="cadrumo_runs_dir",
         lifecycle=StorageLifecycle.RETENTION,
         grouping=StorageGrouping.LOGS,
@@ -179,7 +179,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.LLM_CACHE,
         "cache/llm-cache",
-        consumer_module="adapters/outbound/llm/_cache.py",
+        consumer_module="adapters/outbound/llm/cache.py",
         settings_field="cadrumo_llm_cache_dir",
         lifecycle=StorageLifecycle.RETENTION,
         grouping=StorageGrouping.CACHE,
@@ -213,7 +213,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.CORPUS_SEARCH_CACHE,
         "cache/corpus-search",
-        consumer_module="application/corpus_search/_runtime.py",
+        consumer_module="application/corpus_search/runtime.py",
         settings_field="cadrumo_corpus_search_cache_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.CACHE,
@@ -224,7 +224,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         # ``corpus_search/_runtime.py``. Same override caveat as above.
         StorageCategory.CORPUS_SEARCH_INDEX,
         "cache/corpus-search/corpus.sqlite",
-        consumer_module="application/corpus_search/_runtime.py",
+        consumer_module="application/corpus_search/runtime.py",
         node_kind=StorageNodeKind.FILE,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.CACHE,
@@ -488,7 +488,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.BUCKETS,
         "buckets",
-        consumer_module="core/_config_state_root.py",
+        consumer_module="core/config_state_root.py",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
         override_policy=StorageOverridePolicy.FIXED,
@@ -570,7 +570,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.PROFILE_CUSTODY_HOLD_LEGAL_OWNER,
         "profile-custody-holds/legal-case-owner",
-        consumer_module="application/evidence/_profile_legal_hold.py",
+        consumer_module="application/evidence/profile_legal_hold.py",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
         override_policy=StorageOverridePolicy.FIXED,

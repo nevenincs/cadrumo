@@ -20,7 +20,7 @@ from pathlib import Path
 import pytest
 
 from ....tests.env_scope import scoped_cwd
-from ._ledger_ux_support import _invoke, _open_bucket_session
+from .ledger_ux_support import _invoke, _open_bucket_session
 
 __all__ = ["_open_bucket_session"]
 

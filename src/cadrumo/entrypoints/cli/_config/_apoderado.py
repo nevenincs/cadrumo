@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from ....application.workflow.profile_bucket_models import ProfileBucketPointer
 
 from ....core.external_constants import OutputLanguage
-from ....core.i18n._render import tr
+from ....core.i18n.render import tr
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._common import emit_envelope
 from ..errors import CliRefusedBoundaryError as _CliRefusedBoundaryError

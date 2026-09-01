@@ -26,12 +26,12 @@ from ....domain.iva_compensation.reconciliation import (
 )
 from ....tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
 from ...aggregation import CalculationSourceContext
-from .._iva_wallet_reconciliation import (
+from ..iva_compensation_history import IvaCompensationHistoryRepository
+from ..iva_wallet_reconciliation import (
     IvaWalletDecisionSourceResolver,
     reconcile_iva_compensation_wallet,
     reconcile_modelo_303_iva_compensation,
 )
-from ..iva_compensation_history import IvaCompensationHistoryRepository
 from ..observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

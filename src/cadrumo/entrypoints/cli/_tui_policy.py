@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import typer
 
-from ._command_spec import CommandSpec, TuiCapability
+from .command_spec import CommandSpec, TuiCapability
 
 
 def tui_was_requested(ctx: typer.Context) -> bool:

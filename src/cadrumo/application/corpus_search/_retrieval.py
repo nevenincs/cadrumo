@@ -21,10 +21,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ._citation_lookup import CitationLookup
-from ._lexical_index import search_lexical
-from ._models import RetrievalHit, RetrievalMode, RetrievalResponse
+from .citation_lookup import CitationLookup
 from .errors import CorpusSearchInputError
+from .lexical_index import search_lexical
+from .models import RetrievalHit, RetrievalMode, RetrievalResponse
 
 
 def run_retrieval(

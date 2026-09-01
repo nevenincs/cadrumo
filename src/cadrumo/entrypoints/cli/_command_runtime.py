@@ -17,8 +17,9 @@ from typing import Any, cast
 import typer
 from click import Choice
 
-from ...core.i18n._render import tr
-from ._command_spec import (
+from ...core.i18n.render import tr
+from ._command_target import resolve_deferred_target
+from .command_spec import (
     ArgumentSpec,
     BindingState,
     CommandSpec,
@@ -29,12 +30,7 @@ from ._command_spec import (
     ParameterDefault,
     SchemaState,
 )
-from ._command_suggestions import (
-    CadrumoTyperGroup,
-    LazyFactoryTarget,
-    LazySubcommand,
-)
-from ._command_target import resolve_deferred_target
+from .command_suggestions import CadrumoTyperGroup, LazyFactoryTarget, LazySubcommand
 
 
 class CommandSpecTyperGroup(CadrumoTyperGroup):
@@ -191,7 +187,7 @@ def _behavior_wrapper(spec: CommandSpec) -> Callable[..., object]:
         if context_parameter is not None and (
             spec.kind == "leaf" or (spec.kind == "group" and spec.invocation.terminal_behavior == "executable")
         ):
-            from ._config._secure_input import clear_staged_machine_secret_payloads
+            from ._config.secure_input import clear_staged_machine_secret_payloads
             from ._profile_authentication_gate import preflight_parsed_leaf
 
             context = bound.arguments.get(context_parameter)

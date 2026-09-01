@@ -32,11 +32,11 @@ from ...application.operator_actions.models import ActionReference
 from ...core.config import load_settings
 from ...core.confirmation_gate import ConfirmationBlockReason, FindingResolutionAction, ReviewAdvisoryKind
 from ...core.draft_discrepancy import DraftDiscrepancyKind
-from ...core.i18n._render import tr
+from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.iva.establishment import StatedCountryCodeStatus
 from ._common import _bad, _state, _tx_repo, emit_envelope, resolve_notice_action
-from ._ledger_business_payloads import (
+from .ledger_business_payloads import (
     EvidenceReviewBlockerPayload,
     EvidenceReviewFieldPayload,
     EvidenceReviewListResult,

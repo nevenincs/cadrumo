@@ -10,7 +10,7 @@ from pydantic import AnyHttpUrl, TypeAdapter
 
 from ....core.period import Period
 from ....tests.aeat_literal_fixtures import JUSTIFICANTE_FILING_TARGET_VERIFY_URL_FIXTURE
-from .._schema import Justificante
+from ..schema import Justificante
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

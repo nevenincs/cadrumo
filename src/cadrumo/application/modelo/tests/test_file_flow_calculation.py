@@ -162,7 +162,7 @@ def test_calculate_refused_on_discarded_work_unit(repos: Repos) -> None:
     """A discarded work unit refuses further calculation. The
     operator must create a fresh work unit to continue."""
 
-    from .._action_errors import WorkUnitMutationRefusedError
+    from ..action_errors import WorkUnitMutationRefusedError
     from ..work_lifecycle import discard_work_unit
 
     wu_repo, cr_repo, _, _, bv_repo = repos
@@ -314,7 +314,7 @@ def test_calculate_refuses_when_registry_snapshot_unresolvable(repos: Repos) -> 
     ``CalculationRegistryUnavailableError`` rather than persisting a
     revision that bypasses the engine."""
 
-    from .._action_errors import CalculationRegistryUnavailableError
+    from ..action_errors import CalculationRegistryUnavailableError
 
     wu_repo, cr_repo, _, _, bv_repo = repos
     # Modelo 130 at year 2010 predates the registry's earliest

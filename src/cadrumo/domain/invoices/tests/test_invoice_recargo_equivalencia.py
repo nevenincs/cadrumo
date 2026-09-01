@@ -25,7 +25,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.outbound.fx._ecb_provider import ECB_RATE_SOURCE_ID
+from ....adapters.outbound.fx.ecb_provider import ECB_RATE_SOURCE_ID
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.schema import IvaCategory
 from ..decomposition import decompose_invoice

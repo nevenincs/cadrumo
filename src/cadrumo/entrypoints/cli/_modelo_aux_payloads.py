@@ -19,8 +19,8 @@ from datetime import date, datetime
 
 from pydantic import Field, NonNegativeInt
 
-from ...application.evidence._models import BundleVerificationState
 from ...application.evidence.bundle_text import EvidenceBundleNotes
+from ...application.evidence.models import BundleVerificationState
 from ...application.workflow.run_models import (
     SiteHealthAlert,
     WorkflowObligationFacts,

@@ -15,7 +15,7 @@ from decimal import Decimal
 
 import typer
 
-from ...application.modelo._action_errors import (
+from ...application.modelo.action_errors import (
     AmendmentComplementariaLiabilityDecreaseError,
     AmendmentEvidenceMissingError,
     AmendmentKindNotPermittedError,
@@ -26,7 +26,7 @@ from ...application.modelo._action_errors import (
     ModeloRecordNotFoundError,
     WorkUnitNotFoundError,
 )
-from ...application.modelo._amendment_actions import amend_modelo_revision
+from ...application.modelo.amendment_actions import amend_modelo_revision
 from ...application.modelo.work_addressing import (
     ModeloWorkAddressNotFoundError,
     ModeloWorkRevisionConflictError,
@@ -38,7 +38,7 @@ from ...application.modelo.work_lifecycle import lifecycle_continuation_for_work
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.external_constants import OutputLanguage
-from ...core.i18n._render import tr
+from ...core.i18n.render import tr
 from ...core.logging import get_logger
 from ...core.modelo import Modelo
 from ...domain.modelos.calculation_revision import CalculationRevisionAmendmentKind
@@ -117,11 +117,8 @@ def work_compare_taxation(
 
     activate_subcommand_output_language(ctx, output_language)
 
-    from ...application.modelo._action_errors import WorkUnitNotFoundError
-    from ...application.modelo._taxation_comparison import (
-        TaxationComparisonError,
-        compare_taxation_for_work_address,
-    )
+    from ...application.modelo.action_errors import WorkUnitNotFoundError
+    from ...application.modelo.taxation_comparison import TaxationComparisonError, compare_taxation_for_work_address
 
     try:
         address = _work_address_for_cli(

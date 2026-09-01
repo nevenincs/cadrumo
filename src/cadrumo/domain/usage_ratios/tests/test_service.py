@@ -26,9 +26,9 @@ from ....core.storage_taxonomy import StorageCategory
 from ....core.storage_taxonomy_locations import storage_path
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...categories.spending_category import SpendingCategory
-from .._model import UsageRatioProfile
-from .._service import usage_ratio_bucket_lock, usage_ratios_object_key
 from ..errors import UsageRatioPersistenceError
+from ..model import UsageRatioProfile
+from ..service import usage_ratio_bucket_lock, usage_ratios_object_key
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

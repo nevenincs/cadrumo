@@ -19,8 +19,8 @@ from ....domain.iva_compensation.carry_forward import (
 )
 from ....domain.iva_compensation.errors import IvaCompensationCarryForwardPolicyError
 from ....tests.secure_sql import isolated_runtime_profile
-from .._iva_wallet_reconciliation import reconcile_iva_compensation_wallet
 from ..iva_compensation_history import IvaCompensationHistoryRepository, iva_compensation_period_key
+from ..iva_wallet_reconciliation import reconcile_iva_compensation_wallet
 from ._iva_compensation_history_support import _TAXPAYER_REF, _state, _wallet
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

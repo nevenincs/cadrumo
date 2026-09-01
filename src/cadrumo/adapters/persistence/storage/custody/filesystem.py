@@ -20,23 +20,12 @@ from ._capsule_filesystem import (
 from ._capsule_filesystem import (
     windows_mark_handle_for_deletion as _windows_mark_handle_for_deletion,
 )
-from ._filesystem_primitives import (
-    ProfileCustodyPasswordReadOperation,
-    ensure_profile_custody_local_directory,
-)
-from ._filesystem_primitives import (
-    anchor_directory as _anchor_directory,
-)
-from ._filesystem_primitives import (
-    posix_directory_fd as _posix_directory_fd,
-)
-from ._filesystem_primitives import (
-    windows_create_file_api as _windows_create_file_api,
-)
-from ._filesystem_primitives import (
-    windows_file_information_type as _windows_file_information_type,
-)
 from .errors import ProfileCustodyRecordError
+from .filesystem_primitives import ProfileCustodyPasswordReadOperation, ensure_profile_custody_local_directory
+from .filesystem_primitives import anchor_directory as _anchor_directory
+from .filesystem_primitives import posix_directory_fd as _posix_directory_fd
+from .filesystem_primitives import windows_create_file_api as _windows_create_file_api
+from .filesystem_primitives import windows_file_information_type as _windows_file_information_type
 
 PROFILE_CUSTODY_DATA_MAX_ENTRIES: Final = 1024
 PROFILE_CUSTODY_DATA_FILE_MAX_BYTES: Final = 64 * 1024 * 1024

@@ -46,14 +46,6 @@
     "_note": "Every package __init__.py under src/cadrumo that is NOT inert, with the ways it breaches recorded SEPARATELY per namespace. The boundary rule is that a package namespace may not import, bind, lazily resolve or re-export a project symbol, and that an empty __all__ is the one binding it may carry, to document the inert boundary on purpose. The gate asserts the live set equals this set EXACTLY -- so a newly non-inert namespace fails, AND a namespace that changes which breaches it carries fails, AND an entry left behind after its namespace was made inert fails. None of the entries below is an approval: they are inherited debt, named so that new debt is distinguishable from old. The breach kinds are kept apart because they cost different amounts to close -- a re-export facade closes with a consumer sweep, a namespace holding production definitions has nowhere to point consumers AT until those definitions hard-move to a defining module first, and a lazy map hides its consumers from a static census altogether. A commit that makes a namespace inert MUST drop its entry here in the SAME commit, and a commit that changes which breaches a namespace carries MUST update its 'breaches' list in the same commit; there is no count to bump instead.",
     "namespaces": [
       {
-        "package": "cadrumo.adapters.inbound.pdf",
-        "breaches": [
-          "import_binding",
-          "symbol_export"
-        ],
-        "reason": "Pure re-export facade over the sibling defining modules label_regex, page_text_extraction, extracted_casilla and utils, plus a domain.justificante pass-through. All four are public now, so repointing the remaining package-level consumers at them empties the namespace outright; nothing here needs relocating first."
-      },
-      {
         "package": "cadrumo.adapters.outbound.aeat.browser",
         "breaches": [
           "import_binding",

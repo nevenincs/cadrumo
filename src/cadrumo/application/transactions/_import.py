@@ -34,12 +34,8 @@ from ...domain.transactions.models import (
     existing_transaction_import_fingerprints,
 )
 from ...domain.transactions.raw_transaction import RawTransaction
-from ._diagnostics import (
-    LedgerImportDiagnostic,
-    LedgerImportDiagnosticKind,
-    build_ledger_import_diagnostic,
-)
-from ._import_classification import ImportRowVerdict, classify_import_row
+from .diagnostics import LedgerImportDiagnostic, LedgerImportDiagnosticKind, build_ledger_import_diagnostic
+from .import_classification import ImportRowVerdict, classify_import_row
 
 _logger = get_logger(__name__)
 

@@ -59,7 +59,7 @@ from ....domain.calculations.registry.bindings import (
     resolve_available_bound_inputs_by_casilla_id,
 )
 from ....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
-from ....domain.calculations.registry.ledger_bindings import (
+from ....domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
     resolve_ledger_iva_aggregation_binding_values,
 )
@@ -70,9 +70,9 @@ from ....domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRate
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext
 from .._iva_compensation_annual_partition import IvaCompensationAnnualPartitionSourceResolver
-from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
-from .._relation_prefill import resolve_relations_from_local_store
+from ..multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from ..observations_repository import CalculationObservationRepository, ResultDispositionProjection
+from ..relation_prefill import resolve_relations_from_local_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

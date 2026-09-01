@@ -11,10 +11,10 @@ import pytest
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ....tests import general_m303_filing_evidence
-from ...calculations._iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
+from ...calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
 from ...calculations.observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository
-from .._calculation_actions import calculate_modelo_revision
-from .._iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
+from ..calculation_actions import calculate_modelo_revision
+from ..iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from .test_iva_wallet_engine_integration import (
     _DECIDED_AT,
     _TARGET_PERIOD,

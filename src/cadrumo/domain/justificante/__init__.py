@@ -52,7 +52,6 @@ See Also:
 from __future__ import annotations
 
 from ._protocols import JustificanteRepositoryProtocol
-from ._schema import Justificante, JustificanteParserBackend
 from .errors import (
     JustificanteCsvNotFoundError,
     JustificanteError,
@@ -61,6 +60,7 @@ from .errors import (
     PdfExtractionCoverageMixin,
     PdfModeloImportError,
 )
+from .schema import Justificante, JustificanteParserBackend
 
 __all__ = [
     "Justificante",

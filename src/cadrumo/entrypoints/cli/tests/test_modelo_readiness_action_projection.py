@@ -12,7 +12,7 @@ from ....application.state_projection import (
 )
 from ....application.user_profile.commands import ProfilePreflightRequirement
 from ....core.aggregation import BindingSourceKind
-from ....core.i18n._render import tr
+from ....core.i18n.render import tr
 from ....core.period import Period
 from .._modelo_readiness_cli import _readiness_result
 

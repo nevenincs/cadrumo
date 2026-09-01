@@ -17,7 +17,7 @@ See Also:
         Persists terminal :class:`WorkflowResult` records in secure storage.
     :class:`~cadrumo.application.workflow.WorkflowStateRepository`
         Persists the encrypted :class:`WorkflowState` envelope.
-    :mod:`cadrumo.application.modelo._workflow_gate`
+    :mod:`cadrumo.application.modelo.workflow_gate`
         Drives calculation revisions through the workflow and persists the
         resulting run record before verification or local filing state changes.
 

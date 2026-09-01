@@ -34,7 +34,7 @@ from ._modelo_payloads_m145 import (
 )
 
 if TYPE_CHECKING:
-    from ...application.modelo._m145_communication_records import (
+    from ...application.modelo.m145_communication_records import (
         M145CommunicationExportResult,
         M145CommunicationRecord,
         M145CommunicationValidationResult,

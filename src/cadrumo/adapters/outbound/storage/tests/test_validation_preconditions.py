@@ -11,13 +11,13 @@ from typing import override
 import pytest
 
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
-from .. import _factory as factory_module
 from .. import _google_drive as drive_module
 from .. import _key_validation as key_module
 from .. import _local as local_module
+from .. import factory as factory_module
 from .._key_validation import assert_admissible_object_key_hmac
-from .._records import ProviderKind
 from ..errors import OutboundStorageValidationError
+from ..records import ProviderKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -45,37 +45,37 @@ _VALIDATION_CARRIER_TOTALITY: dict[str, _ValidationCarrier] = {
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         True,
     ),
-    "_factory:_parse_kind:adapters.outbound.storage.factory.errors.kind_empty": _ValidationCarrier(
+    "_factory:_parse_kind:adapters.outbound.storage._factory.errors.kind_empty": _ValidationCarrier(
         "storage.factory.provider_kind.valid",
         {"field": "cadrumo_storage_provider_kind", "valid": False},
         ActionEvidenceProvenance.APPLICATION_STATE,
         True,
     ),
-    "_factory:_parse_kind:adapters.outbound.storage.factory.errors.kind_unknown": _ValidationCarrier(
+    "_factory:_parse_kind:adapters.outbound.storage._factory.errors.kind_unknown": _ValidationCarrier(
         "storage.factory.provider_kind.valid",
         {"field": "cadrumo_storage_provider_kind", "valid": False},
         ActionEvidenceProvenance.APPLICATION_STATE,
         True,
     ),
-    "_factory:_build_oauth_desktop_credentials:adapters.outbound.storage.factory.errors.google_client_missing": _ValidationCarrier(
+    "_factory:_build_oauth_desktop_credentials:adapters.outbound.storage._factory.errors.google_client_missing": _ValidationCarrier(
         "storage.factory.google_oauth_client.present",
         {"backend": "google_drive", "field": "google_oauth_client", "valid": False},
         ActionEvidenceProvenance.APPLICATION_STATE,
         True,
     ),
-    "_factory:_build_oauth_desktop_credentials:adapters.outbound.storage.factory.errors.google_token_missing": _ValidationCarrier(
+    "_factory:_build_oauth_desktop_credentials:adapters.outbound.storage._factory.errors.google_token_missing": _ValidationCarrier(
         "storage.factory.google_oauth_token.present",
         {"backend": "google_drive", "field": "google_oauth_token", "valid": False},
         ActionEvidenceProvenance.APPLICATION_STATE,
         True,
     ),
-    "_factory:get_storage_provider:adapters.outbound.storage.factory.errors.drive_root_missing": _ValidationCarrier(
+    "_factory:get_storage_provider:adapters.outbound.storage._factory.errors.drive_root_missing": _ValidationCarrier(
         "storage.factory.google_drive_root_folder_id.present",
         {"backend": "google_drive", "field": "google_drive_root_folder_id", "valid": False},
         ActionEvidenceProvenance.APPLICATION_STATE,
         True,
     ),
-    "_factory:get_storage_provider:adapters.outbound.storage.factory.errors.kind_unhandled": _ValidationCarrier(
+    "_factory:get_storage_provider:adapters.outbound.storage._factory.errors.kind_unhandled": _ValidationCarrier(
         None,
         None,
         None,
@@ -269,7 +269,7 @@ def test_factory_unhandled_kind_exclusion_is_closed_over_the_provider_enum() -> 
     assert set(ProviderKind.__members__) == _provider_kind_branch_members()
     assert {factory_module._parse_kind(kind.value) for kind in ProviderKind} == set(ProviderKind)
     excluded = _VALIDATION_CARRIER_TOTALITY[
-        "_factory:get_storage_provider:adapters.outbound.storage.factory.errors.kind_unhandled"
+        "_factory:get_storage_provider:adapters.outbound.storage._factory.errors.kind_unhandled"
     ]
     assert not excluded.typed
 

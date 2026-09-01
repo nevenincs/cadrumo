@@ -56,7 +56,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from ..core.directory_scan import scan_directory
-from ._inventory import SRC_CADRUMO, production_python_files, repo_relative
+from .inventory import SRC_CADRUMO, production_python_files, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 

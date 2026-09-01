@@ -13,7 +13,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.modelos.errors import ModeloError
-from .._semantic_role_resolution import (
+from ..semantic_role_resolution import (
     AmbiguousSemanticRoleCasillaError,
     casilla_id_for_unique_revision_semantic_role,
     casilla_id_for_unique_semantic_role,
@@ -21,9 +21,9 @@ from .._semantic_role_resolution import (
 
 art20_advisory = import_module("cadrumo.application.modelo._art20_advisory")
 binding_resolution = import_module("cadrumo.application.modelo._binding_resolution")
-calculate_input = import_module("cadrumo.application.modelo._calculate_input")
+calculate_input = import_module("cadrumo.application.modelo.calculate_input")
 dt12_advisory = import_module("cadrumo.application.modelo._dt12_advisory")
-taxation_comparison = import_module("cadrumo.application.modelo._taxation_comparison")
+taxation_comparison = import_module("cadrumo.application.modelo.taxation_comparison")
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _M100_RESULTADO_CASILLA: CasillaId = validated_casilla_id("0610", surface="_M100_RESULTADO_CASILLA")

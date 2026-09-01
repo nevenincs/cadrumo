@@ -35,7 +35,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ...storage.sync_runs._records import SyncRunCoverage
+from ...storage.sync_runs.records import SyncRunCoverage
 from ..filed_capture_finalizer import FiledCaptureFailurePolicy, finalize_filed_capture
 from ..filed_data_capture import recapture_divergence_notices
 from ..filed_observation_persistence import persist_filed_calculation_observation

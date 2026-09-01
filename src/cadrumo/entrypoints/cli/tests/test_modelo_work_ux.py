@@ -1028,7 +1028,7 @@ def test_work_calculate_rejects_decimal_override_for_text_casilla(
     text slot, and be ignored by the formula chain — surfacing as a wrong base
     imponible. The input-validation guard
     (``_validated_declarante_selector`` in
-    ``cadrumo.application.modelo._calculate_input``) fires early with a typed
+    ``cadrumo.application.modelo.calculate_input``) fires early with a typed
     ``ModeloCalculateTextInputError`` naming the casilla, its label, its
     ``data_type``, and the numeric casilla channel the amount belongs on, so
     the engine is never reached.

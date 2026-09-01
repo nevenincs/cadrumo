@@ -11,8 +11,8 @@ from ...application.modelo.reconciliation_parsing import (
 )
 from ...domain.filing.reconciliation.errors import ReconciliationDeclaracionParseError
 from ...domain.justificante import Justificante
-from .declaracion._parser import parse_declaracion
 from .declaracion.errors import DeclaracionParseError
+from .declaracion.parser import parse_declaracion
 from .justificante.parser import parse_justificante, parse_justificante_bytes
 
 

@@ -23,12 +23,12 @@ from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import seed_modelo_ready_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
-from ...tests._wizard_catalogue_fixtures import register_wizard_catalogue
-from .._calculate_input import WorkCalculateInputBundle, calculate_modelo_work_revision
-from .._calculation_actions import calculate_modelo_revision
+from ...tests.wizard_catalogue_fixtures import register_wizard_catalogue
 from .._m303_regimen_simplificado_scope import active_taxpayer_profile
-from .._work_plazo import calculated_m210_plazo_resolution
+from ..calculate_input import WorkCalculateInputBundle, calculate_modelo_work_revision
+from ..calculation_actions import calculate_modelo_revision
 from ..work_lifecycle import create_work_unit
+from ..work_plazo import calculated_m210_plazo_resolution
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

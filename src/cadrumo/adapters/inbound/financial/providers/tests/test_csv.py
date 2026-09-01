@@ -3,7 +3,7 @@
 Covers per-bank layout detection and ingestion, synthetic
 transaction-id generation when the source row has no native id,
 header-rejection behaviour, and the configured-encoding fallback
-in :class:`cadrumo.adapters.inbound.financial.providers._csv.CsvProvider`.
+in :class:`cadrumo.adapters.inbound.financial.providers.csv.CsvProvider`.
 """
 
 from __future__ import annotations
@@ -17,8 +17,8 @@ from ......core.config import override_settings
 from ......core.external_constants import CSV_ENCODING_FALLBACK_CHAIN
 from ......domain.transactions.enums import TransactionDirection
 from ......tests import FIXTURES_DIR
-from .._base import InvalidFinancialSourceError
-from .._csv import CsvProvider
+from ..base import InvalidFinancialSourceError
+from ..csv import CsvProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 

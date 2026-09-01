@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.outbound.aeat.export._registry_record_renderer import RegistryFixedWidthRecordRenderer
+from ....adapters.outbound.aeat.export.registry_record_renderer import RegistryFixedWidthRecordRenderer
 from ....core.casilla_id import CasillaId
 from ....core.directory_scan import scan_directory
 from ....core.filing_producer_key import FilingProducerKey
@@ -399,7 +399,7 @@ def test_codec_has_one_owner_and_active_consumers_import_the_public_facade() -> 
     consumers = (
         root / "application/filing/_export.py",
         root / "domain/calculations/registry/export_parse.py",
-        root / "adapters/outbound/aeat/export/_registry_record_renderer.py",
+        root / "adapters/outbound/aeat/export/registry_record_renderer.py",
     )
 
     assert owner.is_file()

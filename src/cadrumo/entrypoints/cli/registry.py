@@ -9,7 +9,7 @@ import typer
 from ...application.registry.diff import RegistryRevisionDiffReport, diff_registry_revisions
 from ...application.registry.filed_state import verify_filed_state
 from ...application.registry.tree import RegistryTreeReport, inspect_registry_tree, verify_registry_tree
-from ...core.i18n._render import tr
+from ...core.i18n.render import tr
 from ...core.json_contract import strict_round_trip
 from ...core.resources.bundled_data import bundled_path
 from ._common import emit_envelope, resolve_optional_root

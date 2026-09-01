@@ -881,7 +881,7 @@ def _restamp_wallet_decision_row_as_v1(
         secure_object_payload_aad,
     )
     from ....adapters.persistence.storage.sql import SecureObjectRow
-    from ....adapters.persistence.storage.sql._secure_object_crypto import derive_revision_id
+    from ....adapters.persistence.storage.sql.secure_object_crypto import derive_revision_id
     from ....adapters.persistence.storage.sql.session import session_scope
     from ....core.hashing import sha256_hex
 

@@ -39,7 +39,7 @@ from ...categories.proportionality import (
 )
 from ...categories.spending_category import SpendingCategory
 from ...contribuyente.ccaa import CCAA
-from .._ledger_expenses import RentaDeductibilityContext, resolve_region_category_profiles, select_deductibility_profile
+from ..ledger_expenses import RentaDeductibilityContext, resolve_region_category_profiles, select_deductibility_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

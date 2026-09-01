@@ -34,7 +34,7 @@ from ....adapters.persistence.storage.master_key.active_session import (
 )
 from ....core.time.clock import now as _now
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...evidence._profile_legal_hold import LegalHoldCaseAuthority
+from ...evidence.profile_legal_hold import LegalHoldCaseAuthority
 from ...filing.retention import FilingRetentionAuthority
 from ..custody_service import (
     _ProfileCustodyTransactionCapability as ProfileCustodyTransactionService,

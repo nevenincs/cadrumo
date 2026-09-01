@@ -17,7 +17,7 @@ from typing import Any
 import pytest
 
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from cadrumo.application.modelo._preconditions import build_modelo_precondition_failure
+from cadrumo.application.modelo.preconditions import build_modelo_precondition_failure
 from cadrumo.application.operator_actions.preconditions import no_action_precondition_verdict
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.json_contract import EnvelopeStatus

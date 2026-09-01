@@ -5,7 +5,6 @@ from decimal import Decimal
 
 import pytest
 
-from ....application.filing._draft_construction import build_draft
 from ....application.filing.runtime import ModeloOperatorProfile, build_runtime_schema_provider
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
@@ -27,6 +26,7 @@ from ....domain.modelos.row_models import (
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.registry_tree import bundled_registry_tree
+from ...filing.draft_construction import build_draft
 from .._revision_replay_inputs import revision_filing_replay_inputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

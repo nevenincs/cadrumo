@@ -15,7 +15,7 @@ from collections.abc import Sequence
 import pytest
 from click.testing import Result
 
-from ....adapters.inbound.financial.providers._csv import CsvProvider
+from ....adapters.inbound.financial.providers.csv import CsvProvider
 from ....domain.transactions.models import derive_transaction_id
 from ....tests import FIXTURES_DIR
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture

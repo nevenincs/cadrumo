@@ -6,11 +6,11 @@ Validates cross-model relations declared on each
 coverage, source-casilla-id existence, and period alignment.
 
 See Also:
-    :mod:`cadrumo.domain.calculations.registry.validate_source_casilla_ids`
+    :mod:`cadrumo.domain.calculations.registry._validate_source_casilla_ids`
         Shared source-casilla membership and non-canonical token diagnostics.
-    :mod:`cadrumo.domain.calculations.registry.validate_relation_periods`
+    :mod:`cadrumo.domain.calculations.registry._validate_relation_periods`
         Source revision selection and period/year coverage gates.
-    :mod:`cadrumo.domain.calculations.registry.validate_previous_filing_sources`
+    :mod:`cadrumo.domain.calculations.registry._validate_previous_filing_sources`
         Sibling closure check for previous-filing binding selectors.
 """
 

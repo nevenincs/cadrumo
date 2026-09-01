@@ -17,7 +17,7 @@ from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from .._objective_estimation_advisory import _objective_estimation_exclusion_advisory_findings
-from .._verification_actions import _collect_revision_verification_findings
+from ..verification_actions import _collect_revision_verification_findings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -100,7 +100,7 @@ _WRITES_WITHOUT_A_REVISION: dict[tuple[str, str], str] = {
         "save",
     ): "a repository-shaped save over its own parameter; the guarded path beside it composes with load_revisioned",
     (
-        "src/cadrumo/application/modelo/_verification_actions.py",
+        "src/cadrumo/application/modelo/verification_actions.py",
         "_build_participation_writes",
     ): "per-TRANSACTION participation rows, not a singleton catalogue, so the exposure narrows to two writers "
     "touching the same transaction; unclassified beyond that",
@@ -121,7 +121,7 @@ _WRITES_WITHOUT_A_REVISION: dict[tuple[str, str], str] = {
         "import_external_filing_evidence",
     ): "the work-unit catalogue is read by _load_external_import_target; the two locally-read catalogues are guarded",
     (
-        "src/cadrumo/application/invoices/_linking.py",
+        "src/cadrumo/application/invoices/transaction_linking.py",
         "link_invoice_transaction_repositories",
     ): "the transaction store writes a row PER TRANSACTION rather than one singleton document, so its "
     "batch carries no whole-collection risk; the singleton invoice catalogue beside it IS guarded",
@@ -138,17 +138,17 @@ _WRITES_WITHOUT_A_REVISION: dict[tuple[str, str], str] = {
         "save_transaction_catalogue_invoices_and_events",
     ): "transaction and invoice catalogues arrive as parameters; the event side is guarded",
     (
-        "src/cadrumo/application/modelo/_amendment_actions.py",
+        "src/cadrumo/application/modelo/amendment_actions.py",
         "_persist_amendment_side_effects",
     ): "all three catalogues -- calculation, filing and work-unit -- arrive as parameters, read by "
     "amend_calculation_revision at the top of the same call; closing it means threading three revisions",
     (
-        "src/cadrumo/application/modelo/_m036_lifecycle.py",
+        "src/cadrumo/application/modelo/m036_lifecycle.py",
         "record_m036_declaration",
     ): "the declaration result is freshly constructed rather than derived from a read, so no revision "
     "exists to assert; its event side goes through the guarded composer",
     (
-        "src/cadrumo/application/modelo/_m145_communication_records.py",
+        "src/cadrumo/application/modelo/m145_communication_records.py",
         "_save_m145_record_with_event",
     ): "the communication record arrives as a parameter and is a per-record row rather than a catalogue; "
     "its event side goes through the guarded composer",

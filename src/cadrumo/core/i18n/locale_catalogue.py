@@ -3,7 +3,7 @@
 This module owns the capture contract for the shipped translation catalogues.
 It resolves nothing of its own: catalogue loading, the scaffold-null
 suppression convention and key membership all come from
-:mod:`cadrumo.core.i18n._render`, and the catalogue fingerprint comes from
+:mod:`cadrumo.core.i18n.render`, and the catalogue fingerprint comes from
 :func:`~cadrumo.core.i18n._catalogue_cache.compute_directory_source_digest`.
 There is no second catalogue reader, digest, cache or routing rule here, and
 none may be added.
@@ -29,7 +29,7 @@ from threading import RLock
 
 from ..errors.hierarchy import CoreError
 from ._catalogue_cache import compute_directory_source_digest
-from ._render import _locale_map, _normalise_supported_language, lookup_translation_entry
+from .render import _locale_map, _normalise_supported_language, lookup_translation_entry
 
 _LOCALE_CATALOGUE_CAPTURE_MAX_ATTEMPTS = 8
 _locale_catalogue_process_pid = os.getpid()

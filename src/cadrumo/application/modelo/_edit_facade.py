@@ -17,7 +17,7 @@ here, not fabricated ahead of it.
 from __future__ import annotations
 
 from ...domain.modelos.work_unit import WorkUnitCatalogue
-from ._edit_models import (
+from .edit_models import (
     ModeloMutationCapabilityProjectionV1,
     ModeloMutationCapabilityRequestV1,
     ModeloMutationCapabilityRowV1,

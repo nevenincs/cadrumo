@@ -17,7 +17,7 @@ from ....domain.contribuyente.descendant_facts import descendant_facts_from_list
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
-from .._calculate_input import (
+from ..calculate_input import (
     ModeloCalculateCasillaInputError,
     ModeloCalculateDecimalInputError,
     ModeloCalculateTextInputError,
@@ -366,7 +366,7 @@ class TestMaternidadAdvisoryLengthIsBoundedByHouseholdSize:
         return tuple(str(index) for index in range(count))
 
     def test_withheld_advisory_stays_within_the_cap_at_many_descendants(self) -> None:
-        from .._calculate_input import _maternidad_meses_withheld_advisory
+        from ..calculate_input import _maternidad_meses_withheld_advisory
 
         advisory = _maternidad_meses_withheld_advisory(self._ids(self.MANY), validated_casilla_id("0611"))
 
@@ -374,7 +374,7 @@ class TestMaternidadAdvisoryLengthIsBoundedByHouseholdSize:
         assert len(advisory.message) <= self.CAP
 
     def test_ambiguous_relacion_advisory_stays_within_the_cap_at_many_descendants(self) -> None:
-        from .._calculate_input import _maternidad_ambiguous_relacion_advisory
+        from ..calculate_input import _maternidad_ambiguous_relacion_advisory
 
         advisory = _maternidad_ambiguous_relacion_advisory(
             frozenset(self._ids(self.MANY)),
@@ -390,10 +390,7 @@ class TestMaternidadAdvisoryLengthIsBoundedByHouseholdSize:
         Kept alongside the larger case so a regression that merely RAISES the
         threshold rather than removing it is still caught here.
         """
-        from .._calculate_input import (
-            _maternidad_ambiguous_relacion_advisory,
-            _maternidad_meses_withheld_advisory,
-        )
+        from ..calculate_input import _maternidad_ambiguous_relacion_advisory, _maternidad_meses_withheld_advisory
 
         casilla = validated_casilla_id("0611")
         for count in (13, 25, 26):
@@ -412,7 +409,7 @@ class TestMaternidadAdvisoryLengthIsBoundedByHouseholdSize:
         well against a message that never approached the limit, and the tests
         would prove nothing about the defence.
         """
-        from .._calculate_input import _bounded_descendant_ids, _maternidad_meses_withheld_advisory
+        from ..calculate_input import _bounded_descendant_ids, _maternidad_meses_withheld_advisory
 
         ids = self._ids(self.MANY)
         advisory = _maternidad_meses_withheld_advisory(ids, validated_casilla_id("0611"))
@@ -431,7 +428,7 @@ class TestMaternidadAdvisoryLengthIsBoundedByHouseholdSize:
         list was truncated rather than complete -- otherwise a household of
         sixty reads as a household of three.
         """
-        from .._calculate_input import _bounded_descendant_ids
+        from ..calculate_input import _bounded_descendant_ids
 
         rendered = _bounded_descendant_ids(self._ids(self.MANY))
 
@@ -440,6 +437,6 @@ class TestMaternidadAdvisoryLengthIsBoundedByHouseholdSize:
 
     def test_a_small_household_is_named_in_full_with_no_remainder_clause(self) -> None:
         """The bound must not degrade the ordinary case it was added to protect."""
-        from .._calculate_input import _bounded_descendant_ids
+        from ..calculate_input import _bounded_descendant_ids
 
         assert _bounded_descendant_ids(("0", "1")) == "0, 1"

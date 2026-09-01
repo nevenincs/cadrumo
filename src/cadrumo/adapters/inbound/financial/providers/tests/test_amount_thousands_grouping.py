@@ -19,7 +19,7 @@ from typing import Literal
 
 import pytest
 
-from .._base import FinancialValidationError, parse_amount_value
+from ..base import FinancialValidationError, parse_amount_value
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 

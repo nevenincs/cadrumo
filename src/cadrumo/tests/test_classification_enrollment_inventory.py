@@ -33,7 +33,7 @@ string-vs-attribute discriminator.
 See Also:
     :func:`~adapters.persistence.storage.inner_envelope_classification_is_expected`
         Canonical non-raising equality predicate every call site must delegate to.
-    :mod:`~cadrumo.tests._inventory`
+    :mod:`~cadrumo.tests.inventory`
         Shared production AST inventory surface used by this ratchet.
 """
 
@@ -46,7 +46,7 @@ from typing import TypeGuard
 
 import pytest
 
-from ._inventory import SRC_CADRUMO, aeat_relative, production_ast_items
+from .inventory import SRC_CADRUMO, aeat_relative, production_ast_items
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -65,12 +65,12 @@ _CLASSIFICATION_COMPARE_EXEMPTIONS: Mapping[tuple[str, str], str] = {
         "with no single 'expected' operand -- not the stored-vs-expected shape this "
         "predicate covers. See the surrounding comment for the class-triad rationale."
     ),
-    ("adapters/persistence/storage/blob_store/_blob_store.py", "_coherent_blob_manifest"): (
+    ("adapters/persistence/storage/blob_store/blob_store.py", "_coherent_blob_manifest"): (
         "Envelope-vs-payload internal coherence check on one manifest (a manifest "
         "states its classification twice and this refuses the two disagreeing), not "
         "a stored-vs-caller-declared-expected_class comparison."
     ),
-    ("adapters/persistence/storage/blob_store/_blob_store.py", "get"): (
+    ("adapters/persistence/storage/blob_store/blob_store.py", "get"): (
         "Read-time layout DISPATCH (route to the plaintext or ciphertext read path), "
         "not a validation gate that raises on mismatch. SensitivityClass.CORPUS here "
         "is a branch key, not a caller-declared expectation to enforce."

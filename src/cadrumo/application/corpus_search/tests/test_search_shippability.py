@@ -18,7 +18,7 @@ import pytest
 
 from ....core.directory_scan import DirectoryEntryKind, iter_directory, scan_directory
 from ....core.resources.bundled_data import bundled_path
-from .._lexical_index import build_lexical_index, iter_corpus_chunks
+from ..lexical_index import build_lexical_index, iter_corpus_chunks
 from ._corpus_fixture import build_sample_corpus
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -65,10 +65,10 @@ def test_retrieval_surface_imports_on_a_bare_core_install() -> None:
     # The whole shipped retrieval surface must import with no optional stack;
     # a real import-machinery check, not a mock.
     for module in (
-        "cadrumo.application.corpus_search._lexical_index",
-        "cadrumo.application.corpus_search._citation_lookup",
+        "cadrumo.application.corpus_search.lexical_index",
+        "cadrumo.application.corpus_search.citation_lookup",
         "cadrumo.application.corpus_search._retrieval",
-        "cadrumo.application.corpus_search._runtime",
+        "cadrumo.application.corpus_search.runtime",
         "cadrumo.application.corpus_search",
         "cadrumo.application.command_search",
     ):
@@ -147,7 +147,7 @@ def test_bundled_data_ships_no_model_weights() -> None:
 
 def test_bundled_corpus_ships_extracted_triples() -> None:
     # The shippable LIGHT data the index builds from must be present.
-    from .._lexical_index import bundled_corpus_html_root
+    from ..lexical_index import bundled_corpus_html_root
 
     extracted = scan_directory(bundled_corpus_html_root(), pattern="*.html.extracted.json")
     assert len(extracted) > 100, f"expected the shipped extracted corpus triples, found {len(extracted)}"

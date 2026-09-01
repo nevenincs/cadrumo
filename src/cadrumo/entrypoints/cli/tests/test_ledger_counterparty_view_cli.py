@@ -36,7 +36,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from ....tests.cli_envelope import unwrap_schema_envelope
-from ._ledger_ux_support import _invoke, open_ledger_ux_session
+from .ledger_ux_support import _invoke, open_ledger_ux_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

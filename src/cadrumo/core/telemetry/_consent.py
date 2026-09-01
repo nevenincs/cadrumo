@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ._tier import TelemetryTier
+from .tier import TelemetryTier
 
 if TYPE_CHECKING:
     from ..config import Settings

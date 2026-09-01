@@ -21,7 +21,7 @@ from __future__ import annotations
 import re
 from typing import IO, Any, Protocol, cast
 
-from ...core.i18n._render import tr
+from ...core.i18n.render import tr
 
 
 class _TyperExceptionsState(Protocol):

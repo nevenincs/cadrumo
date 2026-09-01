@@ -1,6 +1,6 @@
 """Every declared command-spec target must resolve against the live tree.
 
-A :class:`~cadrumo.entrypoints.cli._command_spec.DeferredTarget` names a module
+A :class:`~cadrumo.entrypoints.cli.command_spec.DeferredTarget` names a module
 and a public qualname as strings, so nothing checks it until the owning command
 group is lazily built. A target that names an inert package namespace, or a
 symbol that a rename moved, therefore ships green and only fails when an
@@ -25,9 +25,9 @@ from typing import Final
 
 import pytest
 
-from .._command_spec import DeferredTarget
-from .._command_specs import COMMAND_GRAPH
 from .._command_target import resolve_deferred_target
+from ..command_spec import DeferredTarget
+from ..command_specs import COMMAND_GRAPH
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -84,7 +84,7 @@ def test_every_declared_command_target_resolves() -> None:
 @pytest.mark.parametrize(
     ("module", "qualname"),
     [
-        ("cadrumo.entrypoints.cli._command_specs", "definitely_not_a_real_symbol"),
+        ("cadrumo.entrypoints.cli.command_specs", "definitely_not_a_real_symbol"),
         ("cadrumo.definitely.not.a.real.module", "Anything"),
     ],
 )

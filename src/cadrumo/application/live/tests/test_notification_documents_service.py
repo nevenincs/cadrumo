@@ -38,7 +38,7 @@ from typing import Union, get_args, get_origin, override
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from ....adapters.inbound.notificacion._document_reader import NotificationDocumentReader
+from ....adapters.inbound.notificacion.document_reader import NotificationDocumentReader
 from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....adapters.persistence.storage.crypto.encrypted_columns import encrypt_secure_object_payload
 from ....core.i18n import tr

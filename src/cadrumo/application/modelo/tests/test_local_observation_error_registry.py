@@ -11,8 +11,8 @@ from ....core.errors.error_codes import ERROR_REGISTRY, ErrorCategory, build_err
 from ....core.errors.hierarchy import CadrumoError
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos.errors import ModeloError
-from .._action_errors import ModeloLocalObservationError
-from .._local_observation_actions import _canonical_casilla_values
+from ..action_errors import ModeloLocalObservationError
+from ..local_observation_actions import _canonical_casilla_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

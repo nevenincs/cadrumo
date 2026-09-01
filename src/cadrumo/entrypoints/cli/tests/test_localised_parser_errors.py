@@ -21,7 +21,7 @@ import typer
 
 from ....core.config import override_settings
 from ....core.external_constants import OutputLanguage
-from ....core.i18n._render import clear_output_language_cache
+from ....core.i18n.render import clear_output_language_cache
 from .._date_parsing import _parse_iso_date
 from .._decimal_parsing import parse_decimal_amount
 

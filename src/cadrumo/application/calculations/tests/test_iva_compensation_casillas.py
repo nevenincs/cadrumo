@@ -21,7 +21,7 @@ from .... import application, domain
 from ....core.casilla_id import validated_casilla_id
 from ....core.directory_scan import scan_directory
 from ....domain import iva_compensation as iva_compensation_policy
-from .. import _iva_compensation_casillas
+from .. import iva_compensation_casillas as _iva_compensation_casillas
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

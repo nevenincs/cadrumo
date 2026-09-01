@@ -30,13 +30,13 @@ _LITERAL_NORMALIZING_CONTROLS = {
 }
 _CONDITIONAL_NORMALIZING_CONTROLS = {
     _Caller(
-        "application/modelo/_filed_revision_observation.py",
+        "application/modelo/filed_revision_observation.py",
         "persist_filed_revision_observation",
     ): "work_unit.modelo == Modelo.M303.value",
 }
 _NON_NORMALIZING_CONTROLS = {
     _Caller(
-        "application/modelo/_local_observation_actions.py",
+        "application/modelo/local_observation_actions.py",
         "record_operator_local_observation",
     ),
 }

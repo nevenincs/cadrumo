@@ -38,8 +38,8 @@ from ....domain.contribuyente.inventory.records import (
 )
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from .._service import InventoryMovementCommand, InventoryService
 from ..errors import InventoryActividadConflictError, InventoryActividadNotFoundError, InventoryServiceInputError
+from ..service import InventoryMovementCommand, InventoryService
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

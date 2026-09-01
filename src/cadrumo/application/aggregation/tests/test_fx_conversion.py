@@ -38,8 +38,8 @@ from ._secure_objects_fixtures import SECURE_OBJECTS_BUCKET_ID, secure_objects
 
 __all__ = ["secure_objects"]
 
-from ....adapters.inbound.financial.providers._base import ParsedLedgerRow
-from ....adapters.outbound.fx._ecb_provider import EcbReferenceRateProvider
+from ....adapters.inbound.financial.providers.base import ParsedLedgerRow
+from ....adapters.outbound.fx.ecb_provider import EcbReferenceRateProvider
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository

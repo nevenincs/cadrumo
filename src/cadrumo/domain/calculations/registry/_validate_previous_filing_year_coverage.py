@@ -33,13 +33,13 @@ failure is itself a build failure — the allowlist must not silently outlive
 the gap it was written for.
 
 See Also:
-    :mod:`cadrumo.domain.calculations.registry.validate_previous_filing_sources`
+    :mod:`cadrumo.domain.calculations.registry._validate_previous_filing_sources`
         Sibling closure validation: does a period-shape-compatible source
         revision exist at all. This module answers a different question —
         does the source's revision set span every YEAR the binding could ask
         for — and is a genuine gap in that sibling's coverage rather than a
         duplicate of it.
-    :mod:`cadrumo.domain.calculations.registry.validate_relation_periods`
+    :mod:`cadrumo.domain.calculations.registry._validate_relation_periods`
         The relation-source sibling gate
         (:func:`validate_relation_source_coordinate_coverage`), which the
         registry build already runs for relations; this module is the

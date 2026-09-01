@@ -56,7 +56,7 @@ from .. import __version__
 from ..core.async_cleanup import close_async_resources
 from ..core.config import Settings
 from ..core.errors.hierarchy import SiteHealthError, SiteHealthState
-from ..core.i18n._render import tr
+from ..core.i18n.render import tr
 from ..core.logging import default_log_file_path, get_logger
 from ..core.modelo import Modelo
 from ..core.operator_action_enums import NoRecoveryOutcome

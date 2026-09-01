@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from .._command_spec import (
+from ..command_spec import (
     ArgumentSpec,
     CommandSpec,
     CommandSpecGraph,
@@ -240,7 +240,7 @@ def test_invocation_context_injection_is_explicit_and_validated() -> None:
 
 
 def test_every_terminal_group_explicitly_classifies_its_behavior() -> None:
-    from .._command_specs import COMMAND_GRAPH
+    from ..command_specs import COMMAND_GRAPH
 
     terminal_groups = tuple(
         node.spec

@@ -8,7 +8,7 @@ three things in order:
 1. the echo fallback is genuinely reachable in this interpreter (the
    vulnerability is real, not theoretical);
 2. the real production
-   :func:`~cadrumo.entrypoints.cli._config._secure_input.prompt_secret_no_echo`
+   :func:`~cadrumo.entrypoints.cli._config.secure_input.prompt_secret_no_echo`
    refuses under that same condition and never returns a value;
 3. the refusal carries a resolvable operator-facing locale key.
 
@@ -254,7 +254,7 @@ def test_real_console_with_rebound_stdin_refuses_the_echo_fallback(tmp_path: pat
     regardless; that branch asserts precisely that documented contract instead.
     """
     if sys.platform != "win32":
-        from .._secure_input import _stdin_is_a_real_console
+        from ..secure_input import _stdin_is_a_real_console
 
         assert _stdin_is_a_real_console() is True, (
             "on POSIX the console probe defers to isatty(), because unix_getpass "

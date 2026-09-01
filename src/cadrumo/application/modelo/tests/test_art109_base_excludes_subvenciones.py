@@ -39,7 +39,7 @@ from ....domain.transactions.volumen_ingresos import (
     counts_toward_art_109_activity_income,
     counts_toward_volumen_de_ingresos,
 )
-from ...aggregation.tests._renta_income_aggregation_support import _raw_transaction
+from ...aggregation.tests.renta_income_aggregation_support import _raw_transaction
 from .._art109_activity_income import (
     Art109ActivityIncomeCoverageStatus,
     derive_art109_activity_income_coverage,

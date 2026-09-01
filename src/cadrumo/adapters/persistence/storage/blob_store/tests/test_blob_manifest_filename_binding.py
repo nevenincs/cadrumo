@@ -37,7 +37,7 @@ from ......core.hashing import sha256_hex
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ...crypto.aead import KEY_SIZE
 from ...errors import BlobIntegrityError
-from .._blob_store import BlobReference, EncryptedBlobStore
+from ..blob_store import BlobReference, EncryptedBlobStore
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

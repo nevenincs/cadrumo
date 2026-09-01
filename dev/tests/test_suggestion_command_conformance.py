@@ -59,10 +59,10 @@ import pytest
 
 from cadrumo.application.operator_surface.help import build_help_document, build_root_landing_report
 from cadrumo.application.operator_surface.help_models import HelpSurface
-from cadrumo.core.operator_action_enums import ActionEvidenceProvenance
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from cadrumo.core.json_contract import EnvelopeStatus
+from cadrumo.core.operator_action_enums import ActionEvidenceProvenance
 from cadrumo.entrypoints.cli._verb_input_schema import DECLARED_UNIMPLEMENTED_SURFACES
 from cadrumo.tests.cli_runner import cadrumo_click_command
 
@@ -531,7 +531,7 @@ def _precondition_observed_from_live_profile(
     come from the resolved catalogue declaration, so this gate contains no
     scenario-owned action identifier, recovery command, or binding schema.
     """
-    from cadrumo.application.modelo._preconditions import build_modelo_precondition_failure_for_scenario
+    from cadrumo.application.modelo.preconditions import build_modelo_precondition_failure_for_scenario
 
     resolved_action = coverage.profile.resolved_action
     action_argument_values = (
@@ -604,7 +604,7 @@ def test_live_action_observation_join_rejects_missing_duplicate_and_undeclared_r
 
 def test_s44_runner_observes_every_live_no_recovery_outcome() -> None:
     """The runner observes every live no-recovery outcome through its declared contract."""
-    from cadrumo.application.modelo._preconditions import build_modelo_precondition_failure_for_scenario
+    from cadrumo.application.modelo.preconditions import build_modelo_precondition_failure_for_scenario
 
     no_recovery_rows = tuple(
         coverage

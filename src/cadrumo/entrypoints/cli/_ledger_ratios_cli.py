@@ -9,7 +9,7 @@ from __future__ import annotations
 import typer
 
 from ...core.external_constants import OutputLanguage
-from ...core.i18n._render import tr
+from ...core.i18n.render import tr
 from ...core.logging import get_logger
 from ...core.time.clock import now
 from ...domain.buckets.event import BucketEventType

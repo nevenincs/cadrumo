@@ -99,7 +99,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._selectors.ModeloCalculationRevisionSelectorError",
+        "cadrumo.application.modelo.selectors.ModeloCalculationRevisionSelectorError",
         ErrorCode(
             code="ERROR_MODELO_CALCULATION_REVISION_SELECTOR",
             category=ErrorCategory.ERROR,
@@ -109,7 +109,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._selectors.ModeloCalculationRevisionSelectorNotFoundError",
+        "cadrumo.application.modelo.selectors.ModeloCalculationRevisionSelectorNotFoundError",
         ErrorCode(
             code="ERROR_MODELO_CALCULATION_REVISION_SELECTOR_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -119,7 +119,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._selectors.ModeloCalculationRevisionSelectorStateError",
+        "cadrumo.application.modelo.selectors.ModeloCalculationRevisionSelectorStateError",
         ErrorCode(
             code="REFUSED_MODELO_CALCULATION_REVISION_SELECTOR_STATE",
             category=ErrorCategory.REFUSED,
@@ -129,7 +129,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._selectors.ModeloCalculationRevisionSelectorAmbiguousError",
+        "cadrumo.application.modelo.selectors.ModeloCalculationRevisionSelectorAmbiguousError",
         ErrorCode(
             code="REFUSED_MODELO_CALCULATION_REVISION_SELECTOR_AMBIGUOUS",
             category=ErrorCategory.REFUSED,
@@ -179,7 +179,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._calculate_input.ModeloCalculateInputError",
+        "cadrumo.application.modelo.calculate_input.ModeloCalculateInputError",
         ErrorCode(
             code="REFUSED_MODELO_CALCULATE_INPUT",
             category=ErrorCategory.REFUSED,
@@ -189,7 +189,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._calculate_input.ModeloCalculateDetailRowsError",
+        "cadrumo.application.modelo.calculate_input.ModeloCalculateDetailRowsError",
         ErrorCode(
             code="REFUSED_MODELO_CALCULATE_DETAIL_ROWS",
             category=ErrorCategory.REFUSED,
@@ -199,7 +199,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._calculate_input.ModeloCalculateDecimalInputError",
+        "cadrumo.application.modelo.calculate_input.ModeloCalculateDecimalInputError",
         ErrorCode(
             code="REFUSED_MODELO_CALCULATE_DECIMAL_INPUT",
             category=ErrorCategory.REFUSED,
@@ -209,7 +209,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._calculate_input.ModeloCalculateTextInputError",
+        "cadrumo.application.modelo.calculate_input.ModeloCalculateTextInputError",
         ErrorCode(
             code="REFUSED_MODELO_CALCULATE_TEXT_INPUT",
             category=ErrorCategory.REFUSED,
@@ -219,7 +219,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._calculate_input.ModeloCalculateCasillaInputError",
+        "cadrumo.application.modelo.calculate_input.ModeloCalculateCasillaInputError",
         ErrorCode(
             code="REFUSED_MODELO_CALCULATE_CASILLA_INPUT",
             category=ErrorCategory.REFUSED,
@@ -229,7 +229,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._calculate_input.ModeloCalculateBindingInputError",
+        "cadrumo.application.modelo.calculate_input.ModeloCalculateBindingInputError",
         ErrorCode(
             code="REFUSED_MODELO_CALCULATE_BINDING_INPUT",
             category=ErrorCategory.REFUSED,
@@ -239,7 +239,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._calculate_input.ModeloCalculateRelationInputError",
+        "cadrumo.application.modelo.calculate_input.ModeloCalculateRelationInputError",
         ErrorCode(
             code="REFUSED_MODELO_CALCULATE_RELATION_INPUT",
             category=ErrorCategory.REFUSED,
@@ -249,7 +249,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._calculate_input.ModeloCalculateShortcutInputError",
+        "cadrumo.application.modelo.calculate_input.ModeloCalculateShortcutInputError",
         ErrorCode(
             code="REFUSED_MODELO_CALCULATE_SHORTCUT_INPUT",
             category=ErrorCategory.REFUSED,
@@ -259,7 +259,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._calculate_input.ModeloCalculateSemanticRoleError",
+        "cadrumo.application.modelo.calculate_input.ModeloCalculateSemanticRoleError",
         ErrorCode(
             code="REFUSED_MODELO_CALCULATE_SEMANTIC_ROLE",
             category=ErrorCategory.REFUSED,
@@ -269,7 +269,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._export.ModeloExportCrossBucketRefusedError",
+        "cadrumo.application.modelo.export.ModeloExportCrossBucketRefusedError",
         ErrorCode(
             code="REFUSED_MODELO_EXPORT_CROSS_BUCKET",
             category=ErrorCategory.REFUSED,
@@ -279,7 +279,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._export.ModeloExportEvidenceMissingError",
+        "cadrumo.application.modelo.export.ModeloExportEvidenceMissingError",
         ErrorCode(
             code="REFUSED_MODELO_EXPORT_EVIDENCE_MISSING",
             category=ErrorCategory.REFUSED,
@@ -289,7 +289,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._filing_actions.ModeloFilingEvidenceMissingError",
+        "cadrumo.application.modelo.filing_actions.ModeloFilingEvidenceMissingError",
         ErrorCode(
             code="REFUSED_MODELO_FILING_EVIDENCE_MISSING",
             category=ErrorCategory.REFUSED,
@@ -299,7 +299,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._export.ModeloExportNoActiveBucketError",
+        "cadrumo.application.modelo.export.ModeloExportNoActiveBucketError",
         ErrorCode(
             code="REFUSED_MODELO_EXPORT_NO_ACTIVE_BUCKET",
             category=ErrorCategory.REFUSED,
@@ -309,7 +309,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._export.ModeloExportUnsupportedError",
+        "cadrumo.application.modelo.export.ModeloExportUnsupportedError",
         ErrorCode(
             code="REFUSED_MODELO_EXPORT_UNSUPPORTED",
             category=ErrorCategory.REFUSED,
@@ -319,7 +319,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._export.ModeloExportOutputPathError",
+        "cadrumo.application.modelo.export.ModeloExportOutputPathError",
         ErrorCode(
             code="REFUSED_MODELO_EXPORT_OUTPUT_PATH",
             category=ErrorCategory.REFUSED,
@@ -604,7 +604,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.calculations._m303_carry_ingress.M303CarryIngressError",
+        "cadrumo.application.calculations.m303_carry_ingress.M303CarryIngressError",
         ErrorCode(
             code="REFUSED_M303_CARRY_INGRESS",
             category=ErrorCategory.REFUSED,
@@ -614,7 +614,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.calculations._m303_regimen_simplificado.M303RegimenSimplificadoCalculationError",
+        "cadrumo.application.calculations.m303_regimen_simplificado.M303RegimenSimplificadoCalculationError",
         ErrorCode(
             code="ERROR_M303_REGIMEN_SIMPLIFICADO_CALCULATION",
             category=ErrorCategory.ERROR,
@@ -624,7 +624,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.calculations._m303_regimen_simplificado_annual_summary."
+        "cadrumo.application.calculations.m303_regimen_simplificado_annual_summary."
         "M303RegimenSimplificadoAnnualSummaryHandoffError",
         ErrorCode(
             code="FAIL_M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_HANDOFF",
@@ -765,7 +765,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.calculations._multi_year.EnrollmentEvidenceError",
+        "cadrumo.application.calculations.multi_year.EnrollmentEvidenceError",
         ErrorCode(
             code="ERROR_CALCULATIONS_ENROLLMENT_EVIDENCE",
             category=ErrorCategory.ERROR,
@@ -795,7 +795,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._m145_communication_records.M145CommunicationServiceError",
+        "cadrumo.application.modelo.m145_communication_records.M145CommunicationServiceError",
         ErrorCode(
             code="ERROR_M145_COMMUNICATION_SERVICE",
             category=ErrorCategory.ERROR,
@@ -805,7 +805,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._m145_communication_records.M145CommunicationRecordNotFoundError",
+        "cadrumo.application.modelo.m145_communication_records.M145CommunicationRecordNotFoundError",
         ErrorCode(
             code="ERROR_M145_COMMUNICATION_RECORD_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -815,7 +815,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._m145_communication_records.M145CommunicationRecordAmbiguousError",
+        "cadrumo.application.modelo.m145_communication_records.M145CommunicationRecordAmbiguousError",
         ErrorCode(
             code="REFUSED_M145_COMMUNICATION_RECORD_AMBIGUOUS",
             category=ErrorCategory.REFUSED,
@@ -825,7 +825,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._m145_communication_records.M145CommunicationRecordValidationError",
+        "cadrumo.application.modelo.m145_communication_records.M145CommunicationRecordValidationError",
         ErrorCode(
             code="REFUSED_M145_COMMUNICATION_RECORD_VALIDATION",
             category=ErrorCategory.REFUSED,
@@ -835,7 +835,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._m145_communication_records.M145CommunicationRecordExportError",
+        "cadrumo.application.modelo.m145_communication_records.M145CommunicationRecordExportError",
         ErrorCode(
             code="REFUSED_M145_COMMUNICATION_RECORD_EXPORT",
             category=ErrorCategory.REFUSED,
@@ -845,7 +845,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._m145_communication_records.M145CommunicationRecordTransitionError",
+        "cadrumo.application.modelo.m145_communication_records.M145CommunicationRecordTransitionError",
         ErrorCode(
             code="REFUSED_M145_COMMUNICATION_RECORD_TRANSITION",
             category=ErrorCategory.REFUSED,
@@ -855,7 +855,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._action_errors.StoredCalculationDriftError",
+        "cadrumo.application.modelo.action_errors.StoredCalculationDriftError",
         ErrorCode(
             code="INTEGRITY_STORED_CALCULATION_DRIFT",
             category=ErrorCategory.INTEGRITY,
@@ -865,7 +865,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._action_errors.ModeloApplicabilityFilterError",
+        "cadrumo.application.modelo.action_errors.ModeloApplicabilityFilterError",
         ErrorCode(
             code="REFUSED_MODELO_APPLICABILITY_FILTER",
             category=ErrorCategory.REFUSED,
@@ -875,7 +875,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._action_errors.M303FilingEvidenceError",
+        "cadrumo.application.modelo.action_errors.M303FilingEvidenceError",
         ErrorCode(
             code="REFUSED_MODELO_M303_FILING_EVIDENCE",
             category=ErrorCategory.REFUSED,
@@ -885,7 +885,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._action_errors.ModeloProfileReadinessError",
+        "cadrumo.application.modelo.action_errors.ModeloProfileReadinessError",
         ErrorCode(
             code="REFUSED_MODELO_PROFILE_READINESS",
             category=ErrorCategory.REFUSED,
@@ -895,7 +895,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._action_errors.ModeloRequiredBindingsMissingError",
+        "cadrumo.application.modelo.action_errors.ModeloRequiredBindingsMissingError",
         ErrorCode(
             code="REFUSED_MODELO_REQUIRED_BINDINGS_MISSING",
             category=ErrorCategory.REFUSED,
@@ -995,7 +995,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._review_package_signing.ReviewPackageSigningError",
+        "cadrumo.application.modelo.review_package_signing.ReviewPackageSigningError",
         ErrorCode(
             code="ERROR_MODELO_REVIEW_PACKAGE_SIGNING",
             category=ErrorCategory.ERROR,
@@ -1005,7 +1005,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._review_package_signing.ReviewPackageSigningKeyNotFoundError",
+        "cadrumo.application.modelo.review_package_signing.ReviewPackageSigningKeyNotFoundError",
         ErrorCode(
             code="REFUSED_MODELO_REVIEW_PACKAGE_SIGNING_KEY_NOT_FOUND",
             category=ErrorCategory.REFUSED,
@@ -1015,7 +1015,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._review_package_counter_sign.ReviewPackageCounterSigningError",
+        "cadrumo.application.modelo.review_package_counter_sign.ReviewPackageCounterSigningError",
         ErrorCode(
             code="ERROR_MODELO_REVIEW_PACKAGE_COUNTER_SIGNING",
             category=ErrorCategory.ERROR,
@@ -1025,7 +1025,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._review_package_recipient_registry.RecipientFingerprintRegistryError",
+        "cadrumo.application.modelo.review_package_recipient_registry.RecipientFingerprintRegistryError",
         ErrorCode(
             code="ERROR_MODELO_RECIPIENT_FINGERPRINT_REGISTRY",
             category=ErrorCategory.ERROR,
@@ -1035,7 +1035,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._review_package_recipient_registry.RecipientAlreadyRegisteredError",
+        "cadrumo.application.modelo.review_package_recipient_registry.RecipientAlreadyRegisteredError",
         ErrorCode(
             code="REFUSED_MODELO_RECIPIENT_ALREADY_REGISTERED",
             category=ErrorCategory.REFUSED,
@@ -1045,7 +1045,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._review_package_recipient_registry.RecipientNotRegisteredError",
+        "cadrumo.application.modelo.review_package_recipient_registry.RecipientNotRegisteredError",
         ErrorCode(
             code="REFUSED_MODELO_RECIPIENT_NOT_REGISTERED",
             category=ErrorCategory.REFUSED,
@@ -1055,7 +1055,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._review_package_recipient_encryption.RecipientEncryptionError",
+        "cadrumo.application.modelo.review_package_recipient_encryption.RecipientEncryptionError",
         ErrorCode(
             code="ERROR_MODELO_RECIPIENT_ENCRYPTION",
             category=ErrorCategory.ERROR,
@@ -1065,7 +1065,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._review_package_recipient_encryption.RecipientDecryptionError",
+        "cadrumo.application.modelo.review_package_recipient_encryption.RecipientDecryptionError",
         ErrorCode(
             code="REFUSED_MODELO_RECIPIENT_DECRYPTION",
             category=ErrorCategory.REFUSED,
@@ -1075,7 +1075,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._review_package_recipient_encryption.RecipientPackageExpiredError",
+        "cadrumo.application.modelo.review_package_recipient_encryption.RecipientPackageExpiredError",
         ErrorCode(
             code="REFUSED_MODELO_RECIPIENT_PACKAGE_EXPIRED",
             category=ErrorCategory.REFUSED,
@@ -1085,7 +1085,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._review_package_recipient_encryption.RecipientEncryptionKeyNotFoundError",
+        "cadrumo.application.modelo.review_package_recipient_encryption.RecipientEncryptionKeyNotFoundError",
         ErrorCode(
             code="REFUSED_MODELO_RECIPIENT_ENCRYPTION_KEY_NOT_FOUND",
             category=ErrorCategory.REFUSED,

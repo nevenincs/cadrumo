@@ -14,7 +14,7 @@ import pytest
 
 from ....core.aggregation import BindingSourceKind
 from ...aggregation import CalculationSourceDiagnostic, CalculationSourceDiagnosticReason
-from .._calculation_actions import _unrouted_source_issues
+from ..calculation_actions import _unrouted_source_issues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

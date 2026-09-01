@@ -45,7 +45,7 @@ from ....core.json_contract import ResolvedActionReference, ResolvedNoticeAction
 from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....domain.iva.classification import InvoiceKind
 from .._ledger_evidence_batch_cli import _batch_payload, _batch_text_lines, _run_notices
-from ._ledger_ux_support import _invoke, open_ledger_ux_session
+from .ledger_ux_support import _invoke, open_ledger_ux_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

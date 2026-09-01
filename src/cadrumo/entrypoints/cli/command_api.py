@@ -15,8 +15,6 @@ from ._command_schema import (
     command_schema_type,
     command_schema_types,
 )
-from ._command_spec import ArgumentSpec, CommandSpec, CommandSpecNode, DefaultKind, OptionSpec
-from ._command_specs import COMMAND_GRAPH
 from ._verb_input_schema import (
     DECLARED_UNIMPLEMENTED_SURFACES,
     JsonType,
@@ -33,6 +31,8 @@ from ._verb_input_schema import (
     cli_path_for_command_key,
     is_exposable_command,
 )
+from .command_spec import ArgumentSpec, CommandSpec, CommandSpecNode, DefaultKind, OptionSpec
+from .command_specs import COMMAND_GRAPH
 
 
 def command_spec_nodes() -> tuple[CommandSpecNode, ...]:

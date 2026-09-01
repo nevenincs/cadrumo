@@ -11,7 +11,7 @@ from collections.abc import Sequence
 import pytest
 from click.testing import Result
 
-from ....core.i18n._render import tr
+from ....core.i18n.render import tr
 from ....domain.portals.errors import PortalRegistryInvariant, portal_integrity_error
 from ....domain.portals.registry import PORTAL_REGISTRY
 from ....tests.cli_runner import invoke_cached_cli

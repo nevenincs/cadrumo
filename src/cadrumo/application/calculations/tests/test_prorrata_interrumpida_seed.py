@@ -30,7 +30,7 @@ import pytest
 
 from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
-from .._prorrata_regularizacion import build_interrumpida_tres_ultimos_seed
+from ..prorrata_regularizacion import build_interrumpida_tres_ultimos_seed
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

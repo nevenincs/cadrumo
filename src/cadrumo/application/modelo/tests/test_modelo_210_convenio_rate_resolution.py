@@ -39,9 +39,9 @@ from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from ....domain.deadlines.models import FiscalResidency, IVARegime, TaxpayerProfile
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind
-from .._action_errors import ModeloApplicabilityFilterError
 from .._m210_rate import resolve_m210_rate as _resolve_m210_rate
-from .._verification_actions import (
+from ..action_errors import ModeloApplicabilityFilterError
+from ..verification_actions import (
     _evaluate_applicability_filter,
     _evaluate_predicate_expression,
     _evaluate_verification_predicates,

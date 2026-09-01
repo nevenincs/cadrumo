@@ -61,12 +61,12 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, U
 from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations._iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
-from ...calculations._relation_prefill import resolve_relations_from_local_store
+from ...calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
 from ...calculations.observations_repository import CalculationObservationRepository
-from .._calculation_actions import calculate_modelo_revision
-from .._filing_actions import file_modelo_revision
-from .._verification_actions import verify_modelo_revision
+from ...calculations.relation_prefill import resolve_relations_from_local_store
+from ..calculation_actions import calculate_modelo_revision
+from ..filing_actions import file_modelo_revision
+from ..verification_actions import verify_modelo_revision
 from ..work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from importlib import import_module
 
-from ._command_spec import DeferredTarget
+from .command_spec import DeferredTarget
 
 
 def resolve_deferred_target(target: DeferredTarget) -> object:

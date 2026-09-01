@@ -37,10 +37,8 @@ from ...core.modelo import Modelo
 from ...core.money.rounding import round_to_cents
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.calculations.registry.binding_selector_utils import manual_input_record_field_selector
-from ...domain.calculations.registry.bindings import (
-    CasillaObservation,
-    casillas_by_binding,
-)
+from ...domain.calculations.registry.binding_targets import casillas_by_binding
+from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
@@ -61,8 +59,8 @@ from ...domain.modelos.row_models import (
     ModeloDetailRow,
 )
 from ...domain.modelos.work_unit import WorkUnit
-from ._action_errors import ModeloAggregationBindingError, ModeloCrossPeriodCleanStateError
-from ._preconditions import build_modelo_precondition_failure
+from .action_errors import ModeloAggregationBindingError, ModeloCrossPeriodCleanStateError
+from .preconditions import build_modelo_precondition_failure
 
 _M349_NUMERO_OPERADORES_BINDING: BindingId = "iva-349-declarante-numero-operadores"
 _M349_IMPORTE_OPERACIONES_BINDING: BindingId = "iva-349-declarante-importe-operaciones"

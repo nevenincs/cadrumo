@@ -40,7 +40,7 @@ from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.binding_selector_utils import selector_as_dict
-from ....domain.calculations.registry.ledger_bindings import IvaLedgerObservation
+from ....domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.iva.flow import IvaFlowDirection
 from ....domain.iva.lookup import rate_kinds_for_declared_rate
@@ -49,7 +49,7 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .._iva_ledger import resolve_iva_ledger_binding_values
-from ._iva_authority_support import aggregate_iva_ledger_observations
+from .iva_authority_support import aggregate_iva_ledger_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

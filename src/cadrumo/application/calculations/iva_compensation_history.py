@@ -66,35 +66,23 @@ from ...domain.iva_compensation.errors import (
     IvaCompensationSeedConflictError,
     IvaCompensationYearRangeError,
 )
-from ._iva_compensation_casillas import (
-    M303_COMPENSACION_APLICADA_CASILLA as _M303_COMPENSACION_APLICADA_CASILLA,
-)
-from ._iva_compensation_casillas import (
-    M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA as _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
-)
-from ._iva_compensation_casillas import (
-    M303_DISPONIBLE_CASILLA as _M303_DISPONIBLE_CASILLA,
-)
-from ._iva_compensation_casillas import (
-    M303_GENERADA_CASILLA as _M303_GENERADA_CASILLA,
-)
-from ._iva_compensation_casillas import (
-    M303_POSTERIOR_CASILLA as _M303_POSTERIOR_CASILLA,
-)
-from ._iva_compensation_casillas import (
-    M303_RESULTADO_CASILLA as _M303_RESULTADO_CASILLA,
-)
-from ._iva_compensation_casillas import (
-    M303_RESULTADO_FINAL_CASILLA as _M303_RESULTADO_FINAL_CASILLA,
-)
-from ._iva_compensation_casillas import (
-    M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA as _M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA,
-)
-from ._iva_compensation_casillas import (
-    M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA as _M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA,
-)
 from ._ports import FiledDeclaracionObservationProtocol
 from .errors import IvaCompensationModeloError
+from .iva_compensation_casillas import M303_COMPENSACION_APLICADA_CASILLA as _M303_COMPENSACION_APLICADA_CASILLA
+from .iva_compensation_casillas import (
+    M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA as _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
+)
+from .iva_compensation_casillas import M303_DISPONIBLE_CASILLA as _M303_DISPONIBLE_CASILLA
+from .iva_compensation_casillas import M303_GENERADA_CASILLA as _M303_GENERADA_CASILLA
+from .iva_compensation_casillas import M303_POSTERIOR_CASILLA as _M303_POSTERIOR_CASILLA
+from .iva_compensation_casillas import M303_RESULTADO_CASILLA as _M303_RESULTADO_CASILLA
+from .iva_compensation_casillas import M303_RESULTADO_FINAL_CASILLA as _M303_RESULTADO_FINAL_CASILLA
+from .iva_compensation_casillas import (
+    M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA as _M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA,
+)
+from .iva_compensation_casillas import (
+    M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA as _M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA,
+)
 from .observations_repository import CalculationObservationRepository, ObservationEnvelopePayload
 
 _ZERO = Decimal("0")
@@ -369,7 +357,7 @@ def iva_compensation_state_from_observation_envelope(
     default. The validator rejects legacy and mismatched envelopes before this
     constructor can select an amount.
     """
-    from ._m303_carry_ingress import validate_normalized_m303_carry_observation_envelope
+    from .m303_carry_ingress import validate_normalized_m303_carry_observation_envelope
 
     validated = validate_normalized_m303_carry_observation_envelope(envelope)
     observation = validated.observation
@@ -415,7 +403,7 @@ def persist_observation_envelope_and_iva_history(
     leave an observation that history did not receive, or vice versa.
     """
     if history_repository.secure_object_repository is not observation_repository.secure_object_repository:
-        from ._m303_carry_ingress import M303CarryIngressError
+        from .m303_carry_ingress import M303CarryIngressError
 
         raise M303CarryIngressError(
             translated_message="application.calculations.iva_compensation.errors.repository_backend_split",

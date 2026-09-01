@@ -13,14 +13,14 @@ from ....adapters.outbound.aeat.sede.schema import ObservedCasillaValue
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....application.modelo.tests._import_flow_support import _seed_ready_profile
 from ....core.casilla_id import validated_casilla_id
 from ....core.casilla_value_kind import CasillaValueKind
 from ....domain.modelos.calculation_revision import CalculationRevisionAmendmentKind
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from ...modelo._action_errors import ExternalModeloImportError
-from ...modelo._amendment_actions import amend_modelo_revision
-from ...modelo._calculation_actions import get_calculation_revision
+from ...modelo.action_errors import ExternalModeloImportError
+from ...modelo.amendment_actions import amend_modelo_revision
+from ...modelo.calculation_actions import get_calculation_revision
+from ...modelo.tests.import_flow_support import _seed_ready_profile
 from ..filed_data_capture import _CaptureAccumulator
 from ._filed_capture_history_support import (
     _CAPTURED_AT,

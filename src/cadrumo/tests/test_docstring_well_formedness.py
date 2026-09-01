@@ -58,7 +58,7 @@ from typing import TYPE_CHECKING
 import pytest
 from sphinx.ext.napoleon.docstring import GoogleDocstring
 
-from ._inventory import production_ast_items, repo_relative
+from .inventory import production_ast_items, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 

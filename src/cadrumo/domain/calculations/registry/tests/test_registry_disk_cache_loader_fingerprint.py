@@ -189,7 +189,7 @@ def test_loader_fingerprint_incorporates_embedded_foreign_module_source() -> Non
 
     Recompute the fingerprint's registry-only half and confirm it differs from
     the full fingerprint, proving the foreign-module bytes genuinely contribute
-    (so a change to ``core/aggregation.py``, ``domain/iva/_schema.py`` or any
+    (so a change to ``core/aggregation.py``, ``domain/iva/schema.py`` or any
     other derived definition invalidates the disk cache).
     """
     import hashlib

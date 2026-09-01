@@ -238,7 +238,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.renta._maritime_exemption.MaritimeExemptionInactiveError",
+        "cadrumo.domain.renta.maritime_exemption.MaritimeExemptionInactiveError",
         ErrorCode(
             code="REFUSED_RENTA_MARITIME_EXEMPTION_INACTIVE",
             category=ErrorCategory.REFUSED,
@@ -248,7 +248,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.renta._maritime_exemption.ProfileCompletenessError",
+        "cadrumo.domain.renta.maritime_exemption.ProfileCompletenessError",
         ErrorCode(
             code="ERROR_RENTA_PROFILE_COMPLETENESS_WARNING",
             category=ErrorCategory.ERROR,
@@ -288,7 +288,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._action_errors.ModeloWorkflowGateError",
+        "cadrumo.application.modelo.action_errors.ModeloWorkflowGateError",
         ErrorCode(
             code="REFUSED_MODELO_WORKFLOW_GATE",
             category=ErrorCategory.REFUSED,
@@ -298,7 +298,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._action_errors.ModeloRefundElectionNotEligibleError",
+        "cadrumo.application.modelo.action_errors.ModeloRefundElectionNotEligibleError",
         ErrorCode(
             code="REFUSED_MODELO_REFUND_ELECTION_NOT_ELIGIBLE",
             category=ErrorCategory.REFUSED,
@@ -308,7 +308,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._action_errors.ModeloPaymentElectionIncompatibleError",
+        "cadrumo.application.modelo.action_errors.ModeloPaymentElectionIncompatibleError",
         ErrorCode(
             code="REFUSED_MODELO_PAYMENT_ELECTION_INCOMPATIBLE",
             category=ErrorCategory.REFUSED,
@@ -318,7 +318,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._action_errors.ModeloPaymentElectionCapabilityRefusedError",
+        "cadrumo.application.modelo.action_errors.ModeloPaymentElectionCapabilityRefusedError",
         ErrorCode(
             code="REFUSED_MODELO_PAYMENT_ELECTION_CAPABILITY",
             category=ErrorCategory.REFUSED,
@@ -328,7 +328,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._action_errors.ModeloPriorDomiciliationElectionRefusedError",
+        "cadrumo.application.modelo.action_errors.ModeloPriorDomiciliationElectionRefusedError",
         ErrorCode(
             code="REFUSED_MODELO_PRIOR_DOMICILIATION_ELECTION",
             category=ErrorCategory.REFUSED,
@@ -338,7 +338,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._action_errors.ModeloRefundAccountMissingError",
+        "cadrumo.application.modelo.action_errors.ModeloRefundAccountMissingError",
         ErrorCode(
             code="REFUSED_MODELO_REFUND_ACCOUNT_MISSING",
             category=ErrorCategory.REFUSED,
@@ -348,7 +348,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._action_errors.ModeloChargeAccountMissingError",
+        "cadrumo.application.modelo.action_errors.ModeloChargeAccountMissingError",
         ErrorCode(
             code="REFUSED_MODELO_CHARGE_ACCOUNT_MISSING",
             category=ErrorCategory.REFUSED,
@@ -358,7 +358,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._action_errors.WorkUnitNotFoundError",
+        "cadrumo.application.modelo.action_errors.WorkUnitNotFoundError",
         ErrorCode(
             code="ERROR_MODELO_WORK_UNIT_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -368,7 +368,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._action_errors.WorkUnitAlreadyDiscardedError",
+        "cadrumo.application.modelo.action_errors.WorkUnitAlreadyDiscardedError",
         ErrorCode(
             code="REFUSED_MODELO_WORK_UNIT_ALREADY_DISCARDED",
             category=ErrorCategory.REFUSED,
@@ -378,7 +378,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._action_errors.WorkUnitMutationRefusedError",
+        "cadrumo.application.modelo.action_errors.WorkUnitMutationRefusedError",
         ErrorCode(
             code="REFUSED_MODELO_WORK_UNIT_MUTATION_REFUSED",
             category=ErrorCategory.REFUSED,
@@ -388,7 +388,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._action_errors.CalculationRevisionNotFoundError",
+        "cadrumo.application.modelo.action_errors.CalculationRevisionNotFoundError",
         ErrorCode(
             code="ERROR_MODELO_CALCULATION_REVISION_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -398,7 +398,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._action_errors.CalculationRevisionStateError",
+        "cadrumo.application.modelo.action_errors.CalculationRevisionStateError",
         ErrorCode(
             code="ERROR_MODELO_CALCULATION_REVISION_STATE",
             category=ErrorCategory.ERROR,
@@ -408,7 +408,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._action_errors.CalculationRegistryUnavailableError",
+        "cadrumo.application.modelo.action_errors.CalculationRegistryUnavailableError",
         ErrorCode(
             code="ERROR_MODELO_CALCULATION_REGISTRY_UNAVAILABLE",
             category=ErrorCategory.ERROR,
@@ -418,7 +418,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._action_errors.CasillaProvenanceMissingError",
+        "cadrumo.application.modelo.action_errors.CasillaProvenanceMissingError",
         ErrorCode(
             code="ERROR_MODELO_CASILLA_PROVENANCE_MISSING",
             category=ErrorCategory.ERROR,
@@ -428,7 +428,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._action_errors.ModeloAggregationBindingError",
+        "cadrumo.application.modelo.action_errors.ModeloAggregationBindingError",
         ErrorCode(
             code="ERROR_MODELO_AGGREGATION_BINDING",
             category=ErrorCategory.ERROR,
@@ -438,7 +438,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._iva_wallet_gate.ModeloIvaWalletReconciliationBlockedError",
+        "cadrumo.application.modelo.iva_wallet_gate.ModeloIvaWalletReconciliationBlockedError",
         ErrorCode(
             code="ERROR_MODELO_IVA_WALLET_RECONCILIATION_BLOCKED",
             category=ErrorCategory.ERROR,
@@ -448,7 +448,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._action_errors.ModeloCrossPeriodCleanStateError",
+        "cadrumo.application.modelo.action_errors.ModeloCrossPeriodCleanStateError",
         ErrorCode(
             code="REFUSED_MODELO_CROSS_PERIOD_CLEAN_STATE",
             category=ErrorCategory.REFUSED,
@@ -458,7 +458,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._action_errors.WorkUnitRevisionDivergenceError",
+        "cadrumo.application.modelo.action_errors.WorkUnitRevisionDivergenceError",
         ErrorCode(
             code="REFUSED_MODELO_WORK_UNIT_REVISION_DIVERGENCE",
             category=ErrorCategory.REFUSED,
@@ -538,7 +538,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._action_errors.ModeloRecordNotFoundError",
+        "cadrumo.application.modelo.action_errors.ModeloRecordNotFoundError",
         ErrorCode(
             code="ERROR_MODELO_FILING_RECORD_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -548,7 +548,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._action_errors.AmendmentEvidenceMissingError",
+        "cadrumo.application.modelo.action_errors.AmendmentEvidenceMissingError",
         ErrorCode(
             code="ERROR_MODELO_AMENDMENT_EVIDENCE_MISSING",
             category=ErrorCategory.ERROR,
@@ -558,7 +558,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._action_errors.AmendmentM303RectificativaMotiveError",
+        "cadrumo.application.modelo.action_errors.AmendmentM303RectificativaMotiveError",
         ErrorCode(
             code="REFUSED_MODELO_M303_RECTIFICATIVA_MOTIVE",
             category=ErrorCategory.REFUSED,
@@ -568,7 +568,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._action_errors.AmendmentTargetStateError",
+        "cadrumo.application.modelo.action_errors.AmendmentTargetStateError",
         ErrorCode(
             code="ERROR_MODELO_AMENDMENT_TARGET_STATE",
             category=ErrorCategory.ERROR,
@@ -578,7 +578,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._action_errors.AmendmentOverrideCasillaError",
+        "cadrumo.application.modelo.action_errors.AmendmentOverrideCasillaError",
         ErrorCode(
             code="REFUSED_MODELO_AMENDMENT_OVERRIDE_CASILLA",
             category=ErrorCategory.REFUSED,
@@ -588,7 +588,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._action_errors.AmendmentVerificationRefusedError",
+        "cadrumo.application.modelo.action_errors.AmendmentVerificationRefusedError",
         ErrorCode(
             code="REFUSED_MODELO_AMENDMENT_VERIFICATION",
             category=ErrorCategory.REFUSED,
@@ -598,7 +598,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._action_errors.AmendmentKindNotPermittedError",
+        "cadrumo.application.modelo.action_errors.AmendmentKindNotPermittedError",
         ErrorCode(
             code="REFUSED_MODELO_AMENDMENT_KIND_NOT_PERMITTED",
             category=ErrorCategory.REFUSED,
@@ -608,7 +608,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._action_errors.AmendmentComplementariaLiabilityDecreaseError",
+        "cadrumo.application.modelo.action_errors.AmendmentComplementariaLiabilityDecreaseError",
         ErrorCode(
             code="REFUSED_MODELO_AMENDMENT_COMPLEMENTARIA_LIABILITY_DECREASE",
             category=ErrorCategory.REFUSED,
@@ -618,7 +618,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._action_errors.ExternalModeloImportError",
+        "cadrumo.application.modelo.action_errors.ExternalModeloImportError",
         ErrorCode(
             code="ERROR_MODELO_EXTERNAL_FILING_IMPORT",
             category=ErrorCategory.ERROR,
@@ -628,7 +628,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._action_errors.ModeloLocalObservationError",
+        "cadrumo.application.modelo.action_errors.ModeloLocalObservationError",
         ErrorCode(
             code="REFUSED_MODELO_LOCAL_OBSERVATION",
             category=ErrorCategory.REFUSED,
@@ -678,7 +678,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._action_errors.VerificationReportNotFoundError",
+        "cadrumo.application.modelo.action_errors.VerificationReportNotFoundError",
         ErrorCode(
             code="ERROR_MODELO_VERIFICATION_REPORT_NOT_FOUND",
             category=ErrorCategory.ERROR,

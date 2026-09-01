@@ -72,7 +72,7 @@ from collections.abc import Sequence
 
 import pytest
 
-from ._inventory import aeat_relative, production_python_files
+from .inventory import aeat_relative, production_python_files
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

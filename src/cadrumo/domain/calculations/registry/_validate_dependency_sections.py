@@ -29,13 +29,12 @@ from ._validate_helpers import missing_refs
 from .bindings_previous_filing import previous_filing_source_reference
 from .ids import BindingId
 from .schema import (
-    ConstructDefinition,
     DataBindingDefinition,
-    DependencyClassificationDefinition,
     ModeloRevision,
-    filing_schedule_period_kind_mismatches,
 )
+from .schema_deadlines import filing_schedule_period_kind_mismatches
 from .schema_references import LegalReference, SourceReference
+from .schema_revision_members import ConstructDefinition, DependencyClassificationDefinition
 from .schema_surfaces import RelationDefinition
 from .validate_revision_identity import duplicates
 

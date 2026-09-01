@@ -74,9 +74,9 @@ from pydantic import BaseModel, Field, JsonValue
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.adapters.persistence.storage.sql.engine import dispose_engine
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import publish_test_profile_capsule
-from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core.atomic_write import atomic_write_best_effort_text
 from cadrumo.core.config import load_settings, override_settings
+from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core.time.clock import frozen_clock
 from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.tests.cli_runner import invoke_cached_cli, semantic_cli_text
@@ -493,7 +493,7 @@ def _provisioned_sandbox_profile() -> Iterator[None]:
     with open_test_profile_session(SANDBOX_PROFILE_ID):
         from uuid import UUID
 
-        from cadrumo.application.evidence._profile_legal_hold import LegalHoldCaseAuthority
+        from cadrumo.application.evidence.profile_legal_hold import LegalHoldCaseAuthority
         from cadrumo.application.filing.retention import try_record_filing_retention_snapshot
 
         record = upsert_test_profile_facts(SANDBOX_PROFILE_ID, _SANDBOX_PROFILE_FACTS)
@@ -548,7 +548,7 @@ def _neutralized_ambient_env() -> Iterator[None]:
     carries no dotenv source of its own (``settings_customise_sources`` never
     returns one), so the only remaining route for a development ``env/.env``
     value to reach a test process is the repo-root ``conftest.py`` bridge
-    (:func:`~cadrumo.tests._env_loader.bridge_env_file_into_environ`), which
+    (:func:`~cadrumo.tests.env_loader.bridge_env_file_into_environ`), which
     applies each pair to ``os.environ`` via ``setdefault`` at collection time.
     By the time this scope runs, a bridged value is byte-for-byte
     indistinguishable from a real ambient ``CADRUMO_*`` / ``AEAT_*`` variable —

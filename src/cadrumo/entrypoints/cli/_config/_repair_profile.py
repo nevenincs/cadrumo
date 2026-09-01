@@ -20,8 +20,8 @@ from ....core.redaction.rules import (
 )
 from .._common import emit_envelope, resolve_cli_precondition_action
 from ..errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
-from ._status_rendering import precondition_action_lines
 from .errors import ConfigBoundaryError as _ConfigBoundaryError
+from .status_rendering import precondition_action_lines
 
 if typing.TYPE_CHECKING:
     from ....application.workflow.profile_bucket_models import ProfileBucketPointer

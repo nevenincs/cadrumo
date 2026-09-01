@@ -19,7 +19,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 
 from ...application.operator_surface.help_models import RootLandingReport
-from ...core.i18n._render import tr
+from ...core.i18n.render import tr
 
 
 def render_cli_root_landing_lines(landing: RootLandingReport) -> tuple[str, ...]:

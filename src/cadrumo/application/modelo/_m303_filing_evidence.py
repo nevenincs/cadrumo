@@ -17,13 +17,13 @@ from ...domain.iva.regimen_simplificado_rows import validate_regimen_simplificad
 from ...domain.modelos.calculation_revision import FilingInstanceEvidence
 from ...domain.modelos.calculation_revision_m303_handoff import M303FilingInstanceEvidence
 from ...domain.modelos.work_unit import WorkUnit
-from ..calculations._m303_regimen_simplificado import calculate_m303_regimen_simplificado_result
-from ._action_errors import M303FilingEvidenceError
+from ..calculations.m303_regimen_simplificado import calculate_m303_regimen_simplificado_result
 from ._m303_regimen_simplificado_scope import (
     active_taxpayer_profile,
     m303_regimen_simplificado_scope_for_profile,
 )
-from ._preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
+from .action_errors import M303FilingEvidenceError
+from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
 
 _EVIDENCE_SUBJECT_LEAF_KEY = "modelo.work.calculate"
 _EVIDENCE_SCENARIO_PREFIX = "modelo.work.calculate.m303_filing_evidence"

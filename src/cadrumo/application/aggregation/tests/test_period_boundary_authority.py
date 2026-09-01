@@ -35,10 +35,7 @@ from datetime import date, timedelta
 import pytest
 
 from ....core.period import Period, StandardPeriodCode
-from ....entrypoints.cli._period_parsing import (
-    _canonical_period,
-    _filter_canonical_period,
-)
+from ....entrypoints.cli.period_parsing import _canonical_period, _filter_canonical_period
 from .. import aggregation_period_for_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

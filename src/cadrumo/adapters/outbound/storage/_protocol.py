@@ -18,7 +18,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from typing import Protocol, runtime_checkable
 
-from ._records import ProviderObjectMetadata, ProviderProbeReport
+from .records import ProviderObjectMetadata, ProviderProbeReport
 
 
 @runtime_checkable

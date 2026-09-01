@@ -10,16 +10,16 @@ import pytest
 
 from .._command_runtime import resolve_deferred_target
 from .._command_schema import command_registration_metadata
-from .._command_spec import (
+from .._config.secure_input import MachineSecretPayload
+from .._verb_input_schema import build_verb_input_schemas
+from ..command_spec import (
     DeferredTarget,
     MachineSecretChannelKind,
     MachineSecretFieldSpec,
     MachineSecretSpec,
     MachineSecretVariantSpec,
 )
-from .._command_specs import COMMAND_GRAPH
-from .._config._secure_input import MachineSecretPayload
-from .._verb_input_schema import build_verb_input_schemas
+from ..command_specs import COMMAND_GRAPH
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -147,7 +147,7 @@ def test_public_secret_apis_are_confined_to_five_leaves_and_the_root_gate() -> N
     cli_root = Path(__file__).parents[1]
     actual = {name: set() for name in _PUBLIC_SECRET_IMPORTERS}
     for path in cli_root.rglob("*.py"):
-        if "tests" in path.parts or path.name == "_secure_input.py":
+        if "tests" in path.parts or path.name == "secure_input.py":
             continue
         tree = ast.parse(path.read_text(encoding="utf-8"))
         for node in ast.walk(tree):

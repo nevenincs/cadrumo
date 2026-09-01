@@ -10,7 +10,7 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
-from .._verification_actions import evaluate_verification_predicates
+from ..verification_actions import evaluate_verification_predicates
 from ._verification_substance_support import _workflow_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

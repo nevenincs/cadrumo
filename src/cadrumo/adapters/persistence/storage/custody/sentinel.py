@@ -8,8 +8,8 @@ from pathlib import Path
 from typing import Final
 
 from ..crypto.aead import GCM_TAG_SIZE, encrypt_record
-from ._filesystem_primitives import is_real_directory
 from .errors import ProfileCustodyRecordError
+from .filesystem_primitives import is_real_directory
 from .records import ProfileCustodyEnvelope
 from .sentinel_contract import (
     ProfileCustodySentinelRecord,

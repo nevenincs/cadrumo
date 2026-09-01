@@ -46,14 +46,12 @@ from ...domain.deadlines.engine import DeadlineEngine
 from ...domain.deadlines.errors import DeadlineValidationError, NoDeadlineWindowsError
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.deadlines.recargo import twelve_month_anniversary
-from ...domain.retention._floor import TAX_RECORD_RETENTION_FLOOR_YEARS
+from ...domain.retention.floor import TAX_RECORD_RETENTION_FLOOR_YEARS
 from .errors import OverviewExplainError
 
 if TYPE_CHECKING:
-    from ...domain.calculations.registry.schema import (
-        DeadlineWindowDefinition,
-        ModeloRevision,
-    )
+    from ...domain.calculations.registry.schema import ModeloRevision
+    from ...domain.calculations.registry.schema_deadlines import DeadlineWindowDefinition
 
 _ProfileFactValue = str | bool | int
 """Closed value type for the explain payload's ``profile_facts`` map.

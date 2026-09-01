@@ -18,7 +18,7 @@ from __future__ import annotations
 import pytest
 
 from ...config import override_settings
-from .._render import tr
+from ..render import tr
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

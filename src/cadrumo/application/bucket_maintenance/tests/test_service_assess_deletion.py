@@ -51,8 +51,8 @@ from ....domain.modelos.filing_record import ModeloRecord
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
-from .._contracts import AssessBucketDeletionCommand, BucketDeletionAssessment
-from .._service import BucketMaintenanceService
+from ..contracts import AssessBucketDeletionCommand, BucketDeletionAssessment
+from ..service import BucketMaintenanceService
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

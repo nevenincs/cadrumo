@@ -43,7 +43,7 @@ _BENIGN_EXEMPTIONS: frozenset[str] = frozenset(
         # 1. Registry-derived enumeration: iterates revisions FROM the registry
         #    filtered by year/period coverage; the narrowing is
         #    consistent-by-construction with the resolver.
-        "application/calculations/_cross_period_clean_state.py",
+        "application/calculations/cross_period_clean_state.py",
         # 2. Contextless schema-browse fallback: synthesises a representative
         #    (year, period) from the latest open revision's own selector and
         #    narrows to that same revision; consistent-by-construction, and NOT

@@ -10,7 +10,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from .._work_plazo import modelo_work_deadline_posture
+from ..work_plazo import modelo_work_deadline_posture
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
