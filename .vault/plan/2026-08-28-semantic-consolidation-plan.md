@@ -9,7 +9,7 @@ related:
   - '[[2026-08-28-semantic-consolidation-cli-payload-projection-adr]]'
 modified: '2026-08-31'
 body_schema: body-v2
-body_hash: 'sha256:8434ee299db03f57f49004b805af418bdb0395ae111ae360fb78d384981c38de'
+body_hash: 'sha256:766e60db647d28a89fa39274049a8d3882b05db60584969334762f7ad3431264'
 ---
 
 # `semantic-consolidation` plan
@@ -165,7 +165,7 @@ The lazy-export ADR assembled its population by searching for one identifier, _L
 - [x] `P07.S107` - Publicise the censo parser and repoint the portals service tests, the last names reached through namespaces already made inert; `src/cadrumo/adapters/inbound/censo/, src/cadrumo/application/portals/`.
 - [x] `P07.S110` - Rule on which CIF leader-class policy is authoritative, after grounding it against the official norm, and collapse the two identity validators that currently answer the same input differently; `src/cadrumo/core/identity/`.
 - [x] `P07.S114` - Publicise the secret store's defining module, which the inert namespace left unreachable for its blob-store and storage consumers; `src/cadrumo/adapters/persistence/storage/secret_store/`.
-- [ ] `P07.S118` - Publicise the mirror-manifest module so its remote-naming contracts are reachable without going through the storage namespace; `src/cadrumo/adapters/outbound/storage/`.
+- [x] `P07.S118` - Publicise the mirror-manifest module so its remote-naming contracts are reachable without going through the storage namespace; `src/cadrumo/adapters/outbound/storage/`.
 - [x] `P07.S158` - Make the retirement sweep survive a peer's concurrent rename, then repoint the two stale gate pins it found and correct the expectation the vacuous one had been hiding; `dev/quality/namespace_retirement_sweep.py, dev/tests/test_projection_ref_compiler_callers.py, src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry_taxonomy_consumer.py`.
 - [x] `P07.S163` - Retire the light eager re-export facades on an import resolver that reads every relative form, after a regex census reported twelve namespaces unread that 386 tests were reading; `src/cadrumo/`.
 - [x] `P07.S164` - Relocate the production code out of the four namespaces that are modules in disguise, and repoint the forwarded names at the modules that define them; `src/cadrumo/`.
@@ -176,6 +176,7 @@ The lazy-export ADR assembled its population by searching for one identifier, _L
 - [x] `P07.S169` - Correct the restored packaging oracle that asserts the retired cadrumo.entrypoints.cli:main console script instead of the live _cli_main:main, once a built wheel is available to verify against; `dev/packaging/tests/test_installed_oracles.py`.
 - [x] `P07.S171` - Guard every rewrite with a parse of the rendered source before writing, and widen the post-write damage scan to the dev root the rewriter was already writing to; `dev/quality/`.
 - [x] `P07.S172` - Guard the retirement sweep against creating cross-package private imports, and encode the three verified-broken exclusions so the sweep stops re-proposing them; `dev/quality/`.
+- [x] `P07.S174` - Relocate the declared error-code tuple out of the errors registry namespace onto a named module, leaving both consumers inside the owning package; `src/cadrumo/core/errors/`.
 
 ### Phase `P08` - Consolidate the repeated constrained scalar shapes
 
@@ -229,7 +230,7 @@ An AST census of every pydantic Field constraint in production code found the sa
 - [x] `P08.S159` - Align the raw Orden module coefficient with the seasonal sibling beside it and the runtime it compiles into, so a bad extraction refuses at the boundary that can name its source; `src/cadrumo/domain/calculations/registry/_m303_orden_raw_models.py`.
 - [x] `P08.S160` - Adjudicate the gross-amount zero disagreement as deliberate and write its reason at the site, since the reason lived only in a test; `src/cadrumo/domain/renta/_ledger_expenses.py`.
 - [x] `P08.S161` - Adopt the positive-count alias at the twelve domain and application sites restating its bound, leaving the wider non-negative sweep to its own precondition; `src/cadrumo/core/tabular.py, src/cadrumo/domain/, src/cadrumo/application/workflow/run_models.py`.
-- [ ] `P08.S173` - Design one shared production-scan-surface definition and adopt it at the walkers that mean the whole surface, leaving the deliberately scoped ones scoped and saying so; `src/cadrumo/tests/_inventory.py`.
+- [x] `P08.S173` - Design one shared production-scan-surface definition and adopt it at the walkers that mean the whole surface, leaving the deliberately scoped ones scoped and saying so; `src/cadrumo/tests/_inventory.py`.
 
 ## Parallelization
 

@@ -5,16 +5,11 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:94836e03b0931e17c838fb3b37505407409b2e643bbb3967a74a85c1a0fdcc5f'
+body_hash: 'sha256:6c086ed743f16ac0f8ce5dfaf8aac9df32c9affaab9aff03b9b75e7c495aa51f'
 step_id: 'S168'
 related:
   - "[[2026-08-28-semantic-consolidation-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Relocate the verify contract, filing validation and fixture provenance onto public modules, repointing the module-object attribute access the AST scan cannot see
 

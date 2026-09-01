@@ -33,4 +33,3 @@ in the shared runtime fixture with `ModuleNotFoundError: No module named
 `src/cadrumo/adapters/persistence/storage/_profile_login_session.py`. The two
 S59 target files have concurrent import-only worktree edits, which were not
 modified here.
-

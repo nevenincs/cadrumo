@@ -5,7 +5,7 @@ tags:
 date: '2026-08-30'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:cd8d16fad1838cb943209622e5db61997870636024ff4e4ca446779351807289'
+body_hash: 'sha256:ef1ef4e00d1e83b86e6252683c23a7bb8d21906e39c7e8cfa5614441f0f20913'
 related:
   - "[[2026-07-01-import-centralization-adr]]"
 ---
@@ -180,7 +180,6 @@ The eight residual collection errors throughout belonged to concurrent uncommitt
 relocations under `adapters/persistence/storage` and `application/aggregation` and
 were excluded from every commit in this campaign.
 
-
 ### Postscript: parse the rendered source before writing it
 
 The sweep's worst defect was not a wrong rewrite, it was an UNPARSEABLE one, and
@@ -214,4 +213,3 @@ indentation only on lines whose content is otherwise byte-identical (so peer edi
 survive), then repair the remainder verified by COMPILATION rather than by pattern
 matching -- de-indent a candidate, compile, keep it only if it parses. Reverting
 whole files with `git checkout` would have discarded peer edits in the same files.
-

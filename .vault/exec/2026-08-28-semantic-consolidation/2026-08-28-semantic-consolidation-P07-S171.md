@@ -5,16 +5,11 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:198f92b4089d1a3f8f69966270c5a140296e7236b64a393927b1a9c1baf97099'
+body_hash: 'sha256:5502806f0b047917675ad2bef95e3743737c6055762cb22ea42b2b41b2bdf58a'
 step_id: 'S171'
 related:
   - "[[2026-08-28-semantic-consolidation-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Guard every rewrite with a parse of the rendered source before writing, and widen the post-write damage scan to the dev root the rewriter was already writing to
 

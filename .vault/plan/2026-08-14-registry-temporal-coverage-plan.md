@@ -8,8 +8,11 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]'
   - '[[2026-08-14-registry-temporal-coverage-load-topology-reference]]'
   - '[[2026-08-14-registry-temporal-coverage-research]]'
-modified: '2026-08-30'
-body_hash: 'sha256:a6515762021fc2d8cea28a237a867e3f94991f483ddd993d43e4142e9d3df128'
+  - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
+  - '[[2026-08-31-registry-temporal-coverage-modelo-165-2023-layout-composite-research]]'
+  - '[[2026-08-31-registry-temporal-coverage-reference]]'
+modified: '2026-08-31'
+body_hash: 'sha256:559a865b6323682cd57d8aac8fa260bd51576a7d723737ff2df5a6451ed5e40b'
 ---
 
 <!-- RETIRED: S31 -->
@@ -111,6 +114,7 @@ Refuse or advise at the authority and snapshot resolution boundary, which execut
 - [ ] `W02.P05.S51` - Acquire and hash-pin the missing historical design eras or constrain unsupported claimed years for Modelos 126, 128, 165, 181, 184, 270, 308, 309, 341, 353, and 576, and adjudicate Modelo 180 ejercicio 2022 on the presentation axis, until the whole-tree claimed-year layout-design gate passes without backdating a newer design or inventing temporal coverage; `src/cadrumo/_data/corpus/aeat_official/disenos_registro, src/cadrumo/_data/registry/aeat/modelos, src/cadrumo/domain/calculations/registry/tests/test_layout_design_applies_to_claimed_years.py`.
 - [ ] `W02.P05.S53` - Execute the accepted Modelo 200 exercise-2024 versus 2025-design ruling by atomically partitioning layout-correct 2024 and 2025 successors, or withdraw the premature filing layout and application link until that split is complete, without backdating the 2025 design, weakening the claimed-year gate, or promoting unsupported authority.; `src/cadrumo/_data/registry/aeat/modelos/200/; src/cadrumo/_data/registry/aeat/legal/is.toml; src/cadrumo/domain/calculations/registry/tests/test_layout_design_applies_to_claimed_years.py; .vault/plan/2026-08-10-aeat-export-fragment-generator-authority-plan.md`.
 - [x] `W02.P05.S55` - Enrol every corpus whose resolver does exact-year-key lookup and raises on miss, being the category profiles, the IVA catalogues and the IVA place-of-supply tables, in one gate asserting each resolves for every year the master supported-filing-years declaration carries, gating on the property rather than any file tally, excluding span-resolved modelo revision directories by construction, and proven to bite by withholding one year file through a runtime monkeypatch from outside the repository; `src/cadrumo/application/registry/tests/, src/cadrumo/domain/categories/_registry.py, src/cadrumo/domain/iva/_catalogue.py, src/cadrumo/domain/iva/_place_of_supply.py`.
+- [ ] `W02.P05.S56` - Declare and validate the approved Modelo 165 2023--2025 composite layout authority, binding its 2016 AEAT base and provenance-only BOE amendment by immutable identity, digest, interval and exact byte-184 delta, refusing every other source, model, revision, interval or direct BOE selection before filing authority is admitted.; `src/cadrumo/domain/calculations/registry/`.
 
 ### Phase `W02.P06` - coverage ledger reconciliation
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-30'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:abfb3bebbbc89eed11dc57df88b64980b459793959d38d379d530e24712ba4b5'
+body_hash: 'sha256:e8aa6433b4cfe6a174e23eb4a845a7036a21baf44923b19ea61a9a752772a23e'
 related: []
 ---
 
@@ -2493,7 +2493,6 @@ specific ask, and it is the same boundary question this campaign has now met
 three times -- the edit contract, the operator action catalogue, and now
 semantic-role resolution.
 
-
 ### A failed operation's reason is not visible in its own projection
 
 **Pathway:** `modelo.export` through the registered-executor conformance matrix, 2026-08-31.
@@ -2528,7 +2527,6 @@ completeness-gate hypothesis is UNCONFIRMED. It remains plausible -- the export
 authority takes a `verification_repository` and the modelo-export rule does
 refuse thin ficheros -- but a signature and a rule are not a measurement.
 Resolving `diagnostic_ref` through whatever stores it would settle it.
-
 
 ### `modelo.export` raised NameError on every run: a runtime name imported TYPE_CHECKING-only
 
@@ -2574,7 +2572,6 @@ construction. But when a failing run is in hand, three of those four inputs are
 known, so enumerating candidate exception classes and matching the digest
 recovers the TYPE without weakening the design. 770 classes, one hit.
 
-
 ### A gate now covers the guard-only-name defect class tree-wide
 
 **Added:** `dev/quality/type_checking_runtime_use_scan.py` and
@@ -2604,7 +2601,6 @@ a future widening of the scanner cannot silently re-acquire them.
 **Scope note.** This finds the name that is never bound. It cannot find the
 name bound to the WRONG module, which is the sibling defect and needs
 execution.
-
 
 ### The tree is currently broken by two torn relocations, and no gate sees it
 
@@ -2650,7 +2646,6 @@ arrival for reasons this lane must not fix, and a red-on-arrival gate trains
 people to ignore it. It should land with, or just behind, the sweep that closes
 the 63.
 
-
 ### `modelo.work.file` is blocked one step earlier than recorded, and not on a boundary
 
 **Settled by reading, 2026-08-31**, with no test run -- the tree was
@@ -2689,7 +2684,6 @@ question. Both claims came from reading a dependency in a signature and
 inferring a domain requirement. The inference has now been wrong twice in the
 same direction: toward nominating an owner ruling for something the code
 answers on its own.
-
 
 ### CORRECTION: the "two torn relocations" finding above misread a tree-wide codemod
 
@@ -2731,7 +2725,6 @@ The standing gap also survives: nothing here detects a first-party import whose
 target no longer defines the name, and that remains worth a gate once there is
 a quiet tree to green it against.
 
-
 ### An inert namespace broke two production call sites, measured on a settled tree
 
 **Pathway:** `adapters/persistence/storage/_profile_custody.py:979` and
@@ -2766,7 +2759,6 @@ The executor-side work is unaffected -- the modelo definitions, the export fix
 and the guard-only-name gate are all independently verified -- but the matrix
 cannot report a modelo conformance count until the storage namespace lands its
 consumers.
-
 
 ### The layering gate went 6/4 to 8/2, and `file`'s blocker finally has a name
 
@@ -2820,7 +2812,6 @@ registry-authority rule alone, the value is unchanged at 0.70 (RD 439/2007 art.
 claim would have shipped in a code comment where the next reader would inherit
 it as fact.
 
-
 ### The file case's cost is not the cross-period seeding
 
 **Measured 2026-08-31.** `modelo.work.file` in the conformance matrix exceeded a
@@ -2855,7 +2846,6 @@ incidental fixture choice. The conformance fixture files 2025 1T against a
 2026-08-31 clock, so it satisfies that -- but any future fixture that moves the
 period forward will lose the grant for a reason that has nothing to do with
 seeding.
-
 
 ### A timeout stack is not a profile
 
@@ -2901,7 +2891,6 @@ During a session whose work is deliberately uncommitted, this gate cannot
 distinguish "the author has not committed" from "the import is broken", and it
 reports the second when the first is true.
 
-
 ### What `modelo.work.file` actually costs, measured rather than guessed
 
 **2026-08-31**, after two wrong culprits taken from timeout stacks.
@@ -2937,7 +2926,6 @@ canonical helper. It is not runnable in this environment inside a sane test
 budget, which is a different statement from blocked, and a different statement
 from failing. `modelo.work.amend` sits behind it and inherits the same
 condition.
-
 
 ### The file case's multiplier, identified: M100 carries 2,103 casillas
 
@@ -2978,7 +2966,6 @@ the matrix's owner -- accept a long-running case, or seed the M100 source
 through a cheaper door that still satisfies the clean-state gate honestly -- and
 not a defect in the file path.
 
-
 ### QUALIFICATION to the entry above: 2,103 casillas are declared, but only 4 are written
 
 **Same session, minutes later**, before the claim could be relied on.
@@ -3006,7 +2993,6 @@ the matrix's ordinary budget. Both are directly measured.
 per-record encrypted storage cost is the mechanism. A matching ratio is
 suggestive and is not a mechanism, which is the same error as reading a
 kill-stack as a profile -- one level up.
-
 
 ### RETRACTION: the file case is not expensive. It runs in 88 seconds.
 
@@ -3046,7 +3032,6 @@ verifies with. The conformance fixture constructs fresh repositories and lets
 `verify_modelo_revision` resolve its own. The fixture's assertion now reports
 the finding's `message_facts` -- source modelo and blockers -- which separates
 "seeded nothing" from "seeded something the gate rejects".
-
 
 ### `modelo.work.file`: the domain path is sound, the platform wrapper is not
 
@@ -3096,7 +3081,6 @@ exception classes and then writing a control test to bisect platform from
 domain. That is the concrete cost of the design W07.P16.S340 flags for the
 spreadsheet export.
 
-
 ### Filing can never succeed from any async caller: `asyncio.run` inside the workflow gate
 
 **Root cause, 2026-08-31.** `_workflow_gate.py:347` calls
@@ -3142,6 +3126,491 @@ It broke collection of every suite importing that package. Repaired to
 `from ...pdf._utils import sha256_file`; a tree-wide scan for the same shape
 found no others.
 
+### All seven modelo executors conform; the last one needed a taxpayer, not a fix
+
+**2026-08-31.** `modelo.export` closed the family. Its `ModeloExportError` was
+recovered from the digest, then localised with the same control technique that
+settled `file`: call the authority directly, outside the supervisor, and read
+the real exception. It said
+`export producer FilingProducerKey.TAXPAYER_SURNAMES is required`.
+
+The cause is a branch, not a missing value. `_taxpayer_identity_facts` populates
+`surnames` only when `taxpayer_type.entity_type == "natural_person"`; every
+other value takes the ENTITY branch, which returns `surnames=None`. The profile
+capsule declared no entity type, so it was treated as an entity -- and the
+`identity.name` / `identity.surnames` facts added minutes earlier were read,
+composed into a legal name, and then discarded. Adding them without the entity
+type looked like a fix and changed nothing observable.
+
+**What the export cases teach about profile readiness.** Three distinct
+thresholds exist and the fixture met them in order: a tax id alone makes a
+profile ready to CALCULATE; a name and surnames make it ready to be NAMED; only
+the entity type makes those names reach a fichero. "Modelo ready" was a single
+flat fact tuple that quietly meant the first of the three.
+
+**Final state of the family:** rename, discard, verify, edit.apply, work.file,
+work.amend and export all conform end to end -- from three at the start of the
+day, and from zero before this row was opened.
+
+**The four exception types recovered by digest brute-force this session**
+(`RuntimeError`, `AmendmentEvidenceMissingError`, `CalculationRevisionStateError`,
+`ModeloExportError`) each named a different real cause, and NONE was visible in
+any projection, log or test output. That technique plus a direct-call control is
+now the documented route for anyone facing a `FAILED` operation with only a
+digest -- and it is worth weighing against simply giving executors a typed
+refusal path.
+
+### The taxpayer readiness baseline exists in 51 distinct shapes
+
+**Swept 2026-08-31**, prompted by having just added three facts to the canonical
+capsule and asking what else claims to be the same baseline.
+
+155 files construct a modelo-ready profile inline. Across them there are **51
+distinct fact-path sets**, and **no path appears in every variant**. The two
+largest are the instructive pair: 24 files and 11 files, both with exactly 16
+paths, differing by one -- variant A carries `censo.activity_start_date`,
+variant B carries `provenance.source`. Same size, same purpose, different
+content, and nothing anywhere reconciles them.
+
+**Why a count is not the measure here.** An earlier note in this campaign
+recorded this as "105 files with the identical fact tuple", which made it read
+as mechanical duplication -- annoying, safe, sweepable. It is not identical. A
+sweep that replaced all of them with one canonical tuple would silently change
+behaviour in every file whose variant carried a path the canonical one lacks,
+and the tests would keep passing because each variant is exactly what its own
+test needs.
+
+**Demonstrated cost, today.** The canonical capsule
+(`src/cadrumo/tests/profile_capsule.py`) omitted
+`taxpayer_type.entity_type`, which 92 of the inline copies DO declare -- the
+canonical version was the deviant. That omission silently routed the export
+binding down its ENTITY branch, discarded the taxpayer's surnames, and refused
+the fichero. The `identity.name` and `identity.surnames` facts added just before
+it were read, composed, and thrown away; adding them looked like a fix and
+changed nothing observable.
+
+**Recorded, not swept.** Consolidating 155 files touches other lanes' fixtures
+while they are active, and the divergence is real rather than accidental, so the
+unit of work is a decision about which paths the baseline OWNS -- not a
+find-and-replace. What the capsule now proves is narrower and true: the three
+readiness thresholds (calculate / be named / reach a fichero) are distinct, and
+a flat tuple cannot express which one a caller needs.
+
+### S353 moved from adjudication to population: 25 items to 21
+
+**2026-08-31.** The sixth measurement of this row reproduced the fifth exactly
+-- the first time it did not grow -- and all 25 items were then ruled against
+the decisions that introduced them. Four are now closed by IMPLEMENTATION
+rather than by ruling.
+
+The graded-snapshot assembler already held the `CasillaDefinition` and was
+reading `legal_refs`, `constraints` and `section` off it while leaving three
+ADR-mandated fields at their defaults. They now populate from that same object:
+`source_refs` from `casilla.source_refs`, `continuity` from
+`casilla.continuidad_id`, `export_exposure` from `casilla.export_refs`. That
+also brings `ContinuityReferenceV1` and `ExportExposureReferenceV1` to life.
+Re-measured by the row's own mandated walk: fields 12 -> 9, types 13 -> 11.
+
+**A distinction encoded in the code, not just the comment.** These fill on the
+GRADED path only. A static inspection has no `CasillaDefinition`, and the
+model's own docstrings already establish that an empty tuple means "declared
+nothing" while `None` means "not measured" -- so populating both paths would
+make the static projection claim grounding it never read. `applicability` stays
+empty because `ApplicabilityRuleId` is not on the casilla at all; it needs a
+different source, and inventing one would put fabricated grounding into a
+filing-adjacent record.
+
+**The two genuinely open items are now held in a gate, not a plan row.**
+`test_workspace_refusal_union_reachability.py` was extended from a single union
+to a `_GOVERNED_UNIONS` tuple so it also governs
+`ModeloWorkspaceEvidenceFactValueV1`, and CountFactValue and FlagFactValue carry
+written rulings there stating what was searched and not found: no ADR mandate,
+no consumer dispatching on fact kind, and arrival in a broad commit rather than
+a decision. That is a thorough NEGATIVE, which points to deletion without
+establishing it. Teeth re-proved after the extension -- planting a stale ruling
+for the produced TextFactValue fails the gate in both directions.
+
+**Why this row resisted five measurements.** `RefreshTarget.bucket_id`, the one
+item ruled DELETE because the ADR forbids physical coordinates from entering a
+Workspace payload, measures identically to the twenty-two mandated ones: zero
+population, zero readers, same shape. No walk can separate them. The
+measurement was never the missing part -- the decisions were.
+
+### The remaining S353 population is not fill-in work, and three fields prove it
+
+**2026-08-31**, after closing four items by implementation (25 -> 21).
+
+The three schema-record fields that closed were genuinely fill-in: the
+assembler already held the `CasillaDefinition` and was reading other fields off
+it. Every remaining field examined since needs either a decision or real
+plumbing, and filling any of them would have been worse than the empty it
+replaced.
+
+**`SchemaRecord.applicability`** -- `ApplicabilityRuleId` is not on the
+`CasillaDefinition` at all. It needs a different source; inventing one puts
+fabricated grounding into a filing-adjacent record.
+
+**`Capability.recovery_action`** -- D7 requires refused AND UNMEASURED actions
+to carry a canonical recovery action. The four UNMEASURED rows are unmeasured
+because the CALLER chose `static_inspection` admission, and the canonical
+`ActionReference` vocabulary is a closed set of OPERATOR actions
+(`work.calculate`, `.create`, `.file`, `.list`, `.describe`, `.bindings.list`,
+`.filing_record.list`, `.verification_report.list`, `profile.edit`).
+Re-requesting with graded admission is a REQUEST PARAMETER, not an operator
+action, so nothing in the vocabulary names the recovery. Writing
+`operator.modelo.workspace.request_graded_snapshot` would make the field
+non-empty and put an action no operator can take into the record whose job is
+telling them what to do next.
+
+**`Capability.source_disposition`** -- this is the sharpest of the three.
+`RegistrySchemaFamilyDisposition` is a FAIL-CLOSED vocabulary whose stated
+purpose is separating "the family does not apply, and here is the citation"
+from "nobody has built it yet", because "read as a bare count, the two are
+indistinguishable, and the second silently reads as the first". Its default,
+`BLOCKED_PENDING_EVIDENCE`, is deliberately never allowlistable. The capability
+assembly site holds only the resolved target and the producer contract -- not
+the revision's family dispositions -- so any value written there would be
+asserted rather than read. Writing `POPULATED` to clear the measurement is
+precisely the silent under-declaration this enum exists to prevent, in the enum
+that exists to prevent it.
+
+**The pattern.** A populate-or-delete row makes filling look like the safe
+default: population is additive, deletion is destructive. It is not. Three of
+these four fields cannot be populated honestly from what the call site knows,
+and a value written to clear a measurement is indistinguishable, in the record,
+from a value that was read. The empty is the honest state until the plumbing or
+the decision exists.
+
+### Stale allowlist keys were suppressing eight real complexity regressions
+
+**2026-08-31**, adjudicating S349's `dev/audit/complexity_allowlist.json`.
+
+All 13 stale paths (19 entries) resolve to a current home: twelve are
+private-to-public or stem renames, and one -- `contribuyente/family.py` -- was
+SPLIT into `family_profile.py` and `family_types.py`, which is the
+"resolves to the WRONG thing" case S348 records as unanswered, present in the
+corpus rather than hypothetical. Its entry resolves cleanly because
+`RentaFamilyProfile` went to `family_profile.py`, but nothing in the PATH could
+have told you that.
+
+**Every entry repoints; none is obsolete.** Verified by AST: each named function
+or method still exists in its successor.
+
+**The measurement that mattered.** Repointing changes the gate's output in a way
+the path fix alone does not explain. With the allowlist AT HEAD: 1 hotspot in
+those modules, 64 total. Repointed: 9 hotspots, 64 total. The total is
+identical, so the entries are not SUPPRESSING anything -- they assert a
+REVIEWED SCORE, and eight functions have since grown past theirs. Keyed to dead
+paths, that assertion matched nothing and the growth went unreported.
+
+So the staleness was not cosmetic. It disabled eight named acceptances, and the
+repoint that fixes the paths also reveals eight functions that outgrew their
+reviewed ceiling. Reverted to HEAD pending that review, because landing a
+repoint that turns eight silent items into gate failures is the owner's call,
+not a path cleanup.
+
+**Three measurement errors of mine on the way here, each caught by a control.**
+A first pass matched allowlist keys `Class.method` against bare function names
+and reported six entries as deletable -- all false. A second read `0 matches in
+the new-or-regressed report` as "the debt is paid", when that report shows only
+NEW or REGRESSED items and a module already in the baseline never appears
+however complex it is; that would have deleted ten exemptions. A third
+attributed a 60 -> 64 drift to my own edit, until reverting showed 64 both with
+and without it -- the drift was peer churn. In each case the control was
+cheap and the wrong answer was fluent.
+
+### CORRECTION: the stale allowlist keys were not hiding regressions, they were misnaming them
+
+**2026-08-31**, after landing the repoint and diffing the hotspot sets.
+
+An earlier entry states that stale keys in `dev/audit/complexity_allowlist.json`
+were SUPPRESSING eight complexity regressions, on the evidence that repointing
+raised hotspots in the successor modules from 1 to 9. That reading was wrong,
+and the total gives it away: **64 before and 64 after**. Nothing was suppressed,
+because nothing appeared or disappeared.
+
+The set diff shows what actually happens. Before the repoint the report listed
+entries like
+`adapters/outbound/google/_records.py::_validate_google_oauth_endpoint` and
+`core/_model_catalogue.py::_validate_catalogue` -- at paths that DO NOT EXIST.
+The tool reports a violated acceptance under its ALLOWLIST KEY, so a stale key
+produced a finding naming a file nobody can open. After the repoint the same
+eight findings appear under their real paths.
+
+**So the defect was legibility, not suppression.** The gate was already failing
+and already counting these eight; it was naming them at addresses that had not
+existed since the private-to-public relocations. A reader chasing
+`_model_catalogue.py` finds nothing and reasonably concludes the finding is
+stale -- when the finding is live and only its address is dead.
+
+**Landed:** all 19 entries repointed to their adjudicated successors, allowlist
+stale paths 13 -> 0, gate unchanged at FAIL/64. Safe to land despite surfacing
+nothing new precisely BECAUSE it surfaces nothing new: the gate was already red,
+so this could not turn a passing gate failing, and every finding it renames
+becomes actionable for the first time.
+
+**The reasoning error worth keeping.** "Successor hotspots went 1 to 9" was a
+real measurement of the wrong quantity. Nine appearing in one place while the
+total held constant means movement, not creation -- and the check that
+distinguishes them, diffing the two SETS rather than comparing two COUNTS, cost
+one command. This is the fourth time in this session a count moved and the
+narrative I attached to it was wrong until I looked at the members.
+
+### Semantic sweep: `modelo_branch_classification` exists twice, whole
+
+**Found 2026-08-31** while resolving S349's stale ledger paths, which is how a
+duplicate hides: the row counted stale PATHS in two files and never asked why
+there were two files.
+
+One concept -- classify every modelo-conditional branch outside the registry --
+has two complete implementations:
+
+| | `dev/quality/` | `dev/registry/analysis/` |
+|---|---|---|
+| module | 463 lines | 221 lines |
+| ledger | `modelo_branch_classification.toml`, 73 paths | same name, 68 paths |
+| tests | `dev/tests/test_modelo_branch_classification.py` | `dev/registry/tests/test_modelo_branch_classification.py` |
+
+Both declare their own `BranchClassification` StrEnum, their own `BranchSite`
+dataclass, their own error type (`BranchClassificationError` /
+`BranchLedgerError`) and their own ledger loader. The docstrings state the same
+purpose in different words: "Classify every modelo-conditional branch outside
+the registry package" against "Derive every modelo-conditional branch outside
+the registry and force one classification". 622 of 684 lines differ, so these
+are not copies that drifted -- they are two independent answers to one question,
+each with its own adjudication ledger.
+
+**Why it matters beyond tidiness.** Each ledger records human judgements about
+whether a branch is routing or regulation. Two ledgers means one branch can be
+adjudicated twice, differently, with no mechanism noticing -- and the two
+corpora already disagree in size, 73 paths against 68. The identical six stale
+paths in both is the tell that they scan overlapping trees.
+
+**Not remediated here.** Choosing which implementation survives is a decision
+about which ledger's judgements are authoritative, and merging two adjudication
+corpora is exactly the kind of work that must not be done by whoever happens to
+notice. Recorded for its owner. The six stale paths in each are separately
+mechanical and resolve unambiguously to public twins.
+
+
+### Branch adjudication: two closed on the ledger's own vocabulary, one that fits no group
+
+**2026-08-31.** Both `modelo_branch_classification` ledgers repointed to zero
+stale paths, then the unadjudicated branches worked through. Gate went 3 failing
+to 2, unadjudicated branches 4 -> 2.
+
+**Closed, both under the ledger's existing `modelo-scope-guard` group:**
+`_relation_prefill_m202.py::relation_prefill_period_zero_default_binding_ids`
+and `_source_resolver.py::_m347_role_fact_advisories`. Each is
+`if modelo != Modelo.MXXX.value: return <empty>` inside a function named for the
+modelo it serves -- the group's definition exactly, citing the guarded function.
+
+**A first reading I corrected before writing it down.** The M202 branch looked
+like `regulatory_treatment`, because the function it guards resolves carries to
+`Decimal("0")` and that is a filing-grade outcome grounded in a legal fact. But
+the classification is of the BRANCH, not the function: the guard decides whether
+this M202-specific code runs at all, and the zero-value policy lives inside.
+The ledger draws that line explicitly and I had blurred it.
+
+**Not classified, and the reason is the finding.**
+`_modelo_bindings_retenciones.py::resolve::M111` computes
+`is_m111 = str(context.modelo) == Modelo.M111.value` and uses it to select a
+locale key. The refusal fires either way; only its WORDING differs. None of the
+seven declared groups fits: it guards no modelo-specific function
+(`modelo-scope-guard`), routes to no implementation -- the group enumerates
+"an aggregation, a projection plan, an observation shape, a producer profile, a
+repository write" and a message is none of them (`modelo-path-routing`), and it
+decides no obligation (`obligation-condition`). Its own comment says the flag is
+carried in the message "because the typed action channel cannot express it",
+which is the ambiguity stated by its author: a regulatory distinction riding in
+presentation because no typed channel carries it. Forcing it into an ill-fitting
+group would record a judgement nobody made; the honest options are a new group
+or an owner's ruling.
+
+
+### The branch-classification gate is green, and it took four different dispositions
+
+**2026-08-31.** `dev/tests/test_modelo_branch_classification.py` went from 3
+failing to **7 passed**. Baseline was captured before any edit, so every step
+is attributable.
+
+Five ledger rows needed five decisions, and NO TWO WERE THE SAME KIND:
+
+1. **Carry across a rename** -- `_work_plazo.py::calculated_m210_plazo_notice`
+   and `_relation_prefill.py::relation_prefill_period_zero_default_binding_ids`.
+   Both branches already HAD adjudications, recorded at the paths and symbol
+   names those functions carried before they were relocated and renamed.
+2. **Add new** -- `_source_resolver.py::_m347_role_fact_advisories`, a scope
+   guard genuinely never adjudicated.
+3. **Reclassify on a fuller reading** --
+   `_modelo_bindings_retenciones.py::resolve::M111`.
+4. **Delete** -- `user_profile/preflight.py::report::M111`, whose branch no
+   longer exists in the module OR at HEAD. Its subject is gone.
+5. **Repoint a stale citation** -- an entry cited
+   `calculated_m210_plazo_notice`, a token present nowhere in the tree. That is
+   the `modelo-scope-guard` group's stated design working exactly as intended:
+   "a rename breaks the claim instead of silently outliving it".
+
+**ALL FIVE MEASURE IDENTICALLY FROM OUTSIDE.** "Unadjudicated" and "adjudicated
+at a stale address" are the same signal; so are "obsolete entry" and "entry
+whose subject moved". Only reading the code separates them, which is why the
+row said adjudicated rather than repointed.
+
+**I got it wrong the same way twice, and the failure is instructive.** Told a
+branch was unadjudicated, I wrote a fresh entry -- twice -- when an adjudication
+already existed at the old path. That produced TWO adjudications for one branch
+in a ledger whose primary gate is
+`test_every_branch_carries_exactly_one_adjudication`: satisfying one test by
+violating the one beside it. The correct move both times was to carry the
+original across the rename, so the judgement keeps whoever actually made it.
+Writing a new record where one exists destroys provenance while making the
+measurement go quiet.
+
+**And on the reclassification.** The M111 retenciones branch first read as
+presentation-only: `is_m111` selects a locale key, the refusal fires either way.
+On that reading it fit none of the seven groups and I said so. Reading further,
+it ALSO adds `attestation_period` to the refusal payload, and its comment states
+a tax-law fact -- "Modelo 111 is the one retenciones modelo with a prescribed
+remedy: a quarter with no retenciones is ATTESTED, never filed blank". That is
+`obligation-condition` under the ledger's own test. Stopping at a branch's first
+effect and treating it as the whole effect is the same error as reading a
+capability declaration as an observed event.
+
+
+### The drift census walks the filesystem; its staleness scan reads git. An untracked file cannot be adjudicated.
+
+**Found 2026-08-31**, after clearing the census to `unadjudicated: 0,
+stale: 0, ambiguous: 0` (exit 0) from 196 unadjudicated and 112 stale.
+
+`dev/quality/regulatory_drift_census.py` DERIVES findings by walking the source
+tree, so it sees untracked files and demands an adjudication for each. The
+campaign's staleness scan resolves ledger paths against `git ls-files` --
+deliberately, and this row records why: "a walk would absorb untracked and
+mid-relocation files and report a peer's in-flight work as drift".
+
+Those two rules collide. Adjudicating a finding the census derives from an
+untracked file writes a ledger path the staleness scan then reports as stale.
+The author cannot satisfy both, and neither tool is wrong on its own terms.
+
+**Observed concretely.** Two files were adjudicated under
+`production-aeat-text-parsers` because the census listed them unadjudicated:
+`record_design_pdf_state.py` and `record_design_workbook.py`. Both are
+simultaneously STAGED-DELETED and PRESENT-UNTRACKED (`D ` and `??` in one
+`git status`) -- a peer's relocation caught mid-move. Two more,
+`filing/draft_review.py` and `filing/producer_snapshot.py`, are plain untracked.
+So the six "new stale paths" that appeared in the five ledgers are not defects
+in the sweep; they are a peer's in-flight work, which is precisely the
+population the git-backed scan exists to exclude.
+
+**Consequence to carry.** A ledger sweep measured against `git ls-files` and a
+census measured against the filesystem will disagree by exactly the set of files
+any peer currently has uncommitted -- so the two numbers are not comparable
+without saying which tree each read. The authoritative gate here is the census
+(exit 0); the path scan's six are informational until the relocation lands.
+When it does, the two adjudications above may need repointing, and that is a
+normal consequence of adjudicating a moving file rather than an error in either.
+
+
+### A third staleness case: a ledger correct about a tree that does not exist YET
+
+**2026-08-31**, found by chasing a peer's warning about pinned modules in two
+ledgers this session had just swept to zero stale paths.
+
+Four pins read STALE against `git ls-files`:
+`application/filing/producer_snapshot.py` in
+`dev/quality/modelo_branch_classification.toml`, and `draft_review.py`,
+`export_proof.py`, `producer_snapshot.py` in `dev/audit/complexity_baseline.json`.
+All three files exist ON DISK, untracked. The pins already name the PROMOTED
+PUBLIC paths: the ledgers were updated for an in-flight private-to-public
+relocation AHEAD of its commit.
+
+**The sweep would have repaired them backwards.** The disposition applied all
+session -- a stale path resolves to its public twin, repoint it -- is exactly
+wrong here. Repointing `producer_snapshot.py` to `_producer_snapshot.py`
+satisfies the scan today and breaks the moment the promotion lands. The same
+ledgers are MIXED: eight other pins in that promotion name private modules that
+are present in both disk and HEAD and genuinely do need moving.
+
+**A pin ahead of a commit and a pin left behind by one are the same
+measurement.** Only the direction of the in-flight work separates them, and no
+staleness scan can express "correct, pending a commit". This is distinct from
+the two-tools-two-trees case recorded above: there, a tool read the wrong tree.
+Here the file is CORRECT about a tree nobody can observe, and the repair for one
+case is the defect for the other.
+
+**Independently confirmed by an artefact of the churn itself.** The peer
+extracted the same ledger twice, minutes apart, and got `_producer_snapshot.py`
+in the first reading and `producer_snapshot.py` in the second -- one file, both
+spellings, because the relocating agent was editing between the two reads. They
+report having been about to treat the first reading as the state of the world.
+
+**Rule to carry:** never decide a ledger pin from a staleness scan while a
+relocation is in flight. Decide it from what is actually being moved. The scan
+is unreliable in exactly that window, and confidently so -- which is the
+session's recurring shape, a check that answers an adjacent question and reports
+success.
+
+### a-remediations-confirmation-can-be-scoped-to-the-list-it-just-fixed | high | a sweeper fixes a hand-listed set, re-runs a scan scoped to that same list, and reads the green as covering the population
+
+The sub-species this family was missing, produced by the Workspace field finding. It
+is distinct from `an-enumerated-subject-list-is-a-hardcoded-tally-in-disguise`, and
+the difference is worth holding: that finding is about a GATE whose subject list is
+hand-written, where the list is visible in the gate and can be read. This one is
+about the CONFIRMATION STEP OF A REMEDIATION, where no list is written down at all.
+
+The shape. A sweeper is given a set of sites to fix. It fixes them. It then re-runs
+the detecting scan to confirm, and scopes that run to the sites it just touched --
+naturally, because those are the paths in hand and the run is faster. The scan
+returns clean. The clean is real: those sites ARE fixed. What it does not say, and
+what nothing in the output distinguishes, is whether the population outside the
+hand-listed set was ever in scope. The confirmation measures the list, and the list
+was the input to the fix, so the answer was determined before the scan ran.
+
+Why it survives review. Every artefact looks right. The remediation names its sites,
+the confirmation names its command, the command really was run, and its output really
+was clean. A reader checking the work re-runs the same scoped command and gets the
+same green. The defect is not in any step; it is in the scope being inherited from
+the fix rather than derived from the property, and inheritance leaves no trace.
+
+What separates a sound confirmation from this one is a single question: was the
+scan's subject DERIVED from the property, or CARRIED OVER from the work? A sound
+confirmation re-derives the population -- walks the tree, queries the registry,
+enumerates from the definition -- and would therefore report sites the sweeper never
+knew about. If a confirmation cannot fail on a site outside the fix, it is not a
+confirmation of the property; it is a receipt for the diff.
+
+The cheap discriminator, since re-deriving is not always practical: check whether
+the confirmed count and the fixed count are the same number. They usually are in
+this shape, and usually are not when a scan genuinely re-derived its subject.
+Equality is not proof of the defect -- a sweep really can be complete -- but it is
+the prompt to ask where the scan got its paths.
+
+### the-tautology-scan-is-the-only-mechanisable-member-of-this-family | medium | one shape here is decidable by a linter and the rest structurally are not, which is worth stating so the gate is not over-read
+
+A scan now refuses assertions whose verdict is fixed before any operand is
+understood -- constant tests, an `or` against an always-true literal, a value
+compared with itself, `isinstance(x, object)` -- at
+`dev/quality/tautological_assertion_scan.py`, gated by
+`dev/tests/test_tautological_assertion_gate.py`. It is stated as a PROPERTY rather
+than as a list of forms, deliberately, so that constructions nobody has written yet
+fall inside it; a list only ever catches what its author thought of.
+
+The scan reports zero across 6,540 modules today, which is precisely the condition
+under which a gate is worth least and appears worth most: a scan that matched
+nothing and a scan that CANNOT match anything emit identical output. The gate is
+therefore built teeth-first -- every advertised shape is driven through a fixture
+that must be reported, every shape it must not catch through a fixture that must
+come back clean, and the repository sweep is the last assertion in the module rather
+than the first.
+
+The reason to record this as a finding rather than as a closed action is the limit,
+not the capability. Every other instance in this audit required a person to ask what
+an assertion was ABOUT. An assertion that is well-formed, passes, and is simply
+irrelevant to its subject is indistinguishable to any scan from one that is on
+point; that is not a decidable property, and no extension of this scan reaches it.
+A green here says no assertion is trivially true. It does not say any assertion is
+meaningful, and reading it as the family's general answer would reproduce the exact
+error the family exists to record.
 
 ## Recommendations
 
@@ -3590,7 +4059,6 @@ which may or may not earn the same treatment.
 stay local, the namespace violation stays recorded, and no row is closed by
 reaching through a boundary to make a gate green.
 
-
 ### Sequencing note for the four remaining modelo conformance scenarios
 
 Measured 2026-08-31, after three of seven were brought to conformance. The four
@@ -3626,4 +4094,3 @@ which only the request and result schema identities are actually checked by
 `_incompatible_axis`. The guarded apply then re-resolves the baseline at the
 commit point, so the fixture must not let the tree move between admission and
 submission.
-

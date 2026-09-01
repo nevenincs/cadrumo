@@ -26,4 +26,3 @@ related:
 ## Notes
 
 - Historical roll-up: `004898c8fa1dee0aaabdcf099ee4255770a0339f` introduces the declared M165 range-start correction and the auxiliary-header cadence admission; `ce7ed9c74ef76a656170e5c8060e4b68fa510779` introduces the design-constant source kind and its binding-aware coverage join. Their historical command output is not preserved. The fresh verification above is contemporary whole-rollup evidence and is not a restatement of the dedicated M720 or later ratchet-reconciliation execution records.
-

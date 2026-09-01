@@ -5,16 +5,11 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:173e8607a4a200a82abf4002408aa282fa7a77fcd3e2f646497dd56f676a395e'
+body_hash: 'sha256:2e4ab3f991b87632c86f75a8fd950f60673b47026411189e1e12057c8591b03d'
 step_id: 'S17'
 related:
   - "[[2026-08-28-semantic-consolidation-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Relocate the production code out of the four namespaces that are modules in disguise before their namespaces can be made inert
 

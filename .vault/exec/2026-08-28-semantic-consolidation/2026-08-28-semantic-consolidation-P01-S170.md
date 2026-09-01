@@ -5,16 +5,11 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:f8028a065c025a0e5a7c60dca4d6086cba87defc91c3216aa3244ec22843cbb6'
+body_hash: 'sha256:4ad79c61b7c54459d04f93d7d47903f13f65e627ba79af6704d01d10854603c9'
 step_id: 'S170'
 related:
   - "[[2026-08-28-semantic-consolidation-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Retire the four storage child namespaces the parent map was blocking, and re-confirm that three previously-reverted namespaces still fail on their own merits
 

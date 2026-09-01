@@ -5,28 +5,9 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:a52f15366acb102c331ed3cf98ee0d70c6cebe54e7511910f60237a997e7bd36'
+body_hash: 'sha256:8da6020d1645b375f895ccbdbd09109595ad63a0df3192db88ab7ffdae93666d'
 related: []
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace semantic-consolidation with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `semantic-consolidation` audit: `private module cross package debt`
 
@@ -148,3 +129,74 @@ measurement rather than by its own list: `domain/iva` at 179 names, the heaviest
 it named, is inert. `application.aggregation` at 156 is the heaviest survivor
 and is rename-blocked.
 
+## Two measurement hazards this shared worktree produces
+
+Both bit within ten minutes of each other and neither is a defect in the tool
+that reported them.
+
+**A scan taken during another lane's write reports garbage that looks like a
+finding.** The import scan reported 243 unresolvable relative imports; re-run
+unchanged, it reported zero. Both runs were correct about the tree they saw. The
+only defence found is to re-run before believing a number that moved a lot,
+which is the same discipline a flaky test deserves and for the same reason.
+
+**A transient failure reads as evidence about committed content.** Restoring a
+file from `HEAD` produced 145 collection errors, and those were reported to
+another session as proof that the committed version carried a defect. It did
+not: the restored file imports correctly in a fresh interpreter, and a re-run
+with nothing changed collects clean. The 145 were the file mid-write, or a stale
+`__pycache__` from the inert version imported moments earlier. The claim was
+retracted.
+
+## Restoring from HEAD is not the undo it looks like
+
+`HEAD` is the state before EVERY lane's work, not before yours. Restoring a file
+this campaign has touched more than once silently undoes valid repointing
+layered in the same file by earlier steps -- it turned a 19-import break into 35
+collection errors here and cost a second repair pass.
+
+The reporting session generalised it further and it is worth carrying: they have
+restored no file at all today, even where another lane's sweep corrupted theirs,
+and let the owners repair forward instead. In a tree with several concurrent
+lanes that is the safer default, and the exception is narrow -- a file whose
+only difference from `HEAD` is the change being undone, verified by reading the
+diff first.
+
+## A worked example of what the ruling decides: `core.parsing`
+
+This one shows the shape better than the aggregate numbers, because the whole
+problem fits on a page.
+
+`core/parsing/__init__.py` defines five functions. Every one is a pure
+pass-through:
+
+    def parse_iso8601_date(raw: str | None) -> date | None:
+        return _parse_iso8601_date_impl(raw)
+
+The implementations live in `_dates.py` and `_utils.py`, both private. The
+namespace exists to give them public names. **31 consumers outside
+`core.parsing`** import those wrappers.
+
+So the campaign has exactly three moves available, and the ruling picks one:
+
+1. **Leave it.** The namespace stays, and five functions remain re-declared as
+   wrappers around the functions they call -- the precise defect this campaign
+   was created to remove.
+2. **Relocate the wrappers to a public `dates.py`.** The namespace goes inert
+   and the 31 consumers reach a public module, so no boundary is violated. But
+   the wrappers survive, so the duplication survives; only its address changes.
+3. **Promote `_dates.py` to `dates.py`, delete the wrappers.** The 31 consumers
+   import the implementation directly, under its own name. One definition, one
+   address, no wrapper. This is what `aeat-architecture-boundaries` prescribes:
+   a contract required outside its package hard-moves from an underscore-private
+   module to a public defining module.
+
+Option 3 is the only one that removes the duplication, and it requires deleting
+`_dates.py` in the same change as creating `dates.py` -- which the standing
+prohibition on destructive commands forbids.
+
+Option 2 is available today and was NOT taken, because moving a re-declaration
+to a new address while recording it as consolidation would misstate what was
+done. The step stays open and honest rather than closed and hollow.
+
+This is the choice, multiplied by 270 private modules and 1,586 consumer files.

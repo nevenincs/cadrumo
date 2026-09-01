@@ -5,16 +5,11 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:1832f78255dfd03cb9388a32f61a2f360a57cfbf06919d7c2dfe05ba1af1789f'
+body_hash: 'sha256:344b92092dc4e915940ddab7c1eb1d1137a873e537323de6c4c7b43651d01360'
 step_id: 'S51'
 related:
   - "[[2026-08-28-semantic-consolidation-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Extend the non-negative count adoption to the remaining domain, application and adapter sites once the shared tree is quieter
 

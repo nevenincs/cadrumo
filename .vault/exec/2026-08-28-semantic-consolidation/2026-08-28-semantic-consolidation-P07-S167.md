@@ -5,16 +5,11 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:95e1f7432bf4c61a8d73bc4f69d121409065fe035f7fb308d334eaa4f0c9e0f9'
+body_hash: 'sha256:943348842e70de6aae06f7b75b5e30cd51541daaf9c01ebab82270fb0d19422a'
 step_id: 'S167'
 related:
   - "[[2026-08-28-semantic-consolidation-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Relocate the six remaining clean disguised-module namespaces onto public modules and move their error-registry entries with them
 

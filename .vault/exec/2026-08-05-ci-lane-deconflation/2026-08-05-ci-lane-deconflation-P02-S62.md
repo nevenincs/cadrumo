@@ -36,4 +36,3 @@ related:
 ## Notes
 
 - Historical reconstruction: immutable commit `ce7ed9c74ef76a656170e5c8060e4b68fa510779` is the content-based landing evidence. It changes the nine implementation paths above and its message names the design-constant binding source and narrow mechanism gate. No literal historical command output or pre-existing ci-lane P02.S62 execution record is available, so the contemporary verification above is distinct evidence rather than a reconstruction of historical output.
-

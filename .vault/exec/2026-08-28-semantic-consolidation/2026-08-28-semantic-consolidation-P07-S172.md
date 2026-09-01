@@ -5,16 +5,11 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:c44e6a585f7b6963a52418bdf4aef9e7d8377dd13768956d95f803547ddb680e'
+body_hash: 'sha256:b1c7df13f8faee63f1a4e97e82f2f8314c2a5518770d00e178ebfca551b2b6eb'
 step_id: 'S172'
 related:
   - "[[2026-08-28-semantic-consolidation-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Guard the retirement sweep against creating cross-package private imports, and encode the three verified-broken exclusions so the sweep stops re-proposing them
 

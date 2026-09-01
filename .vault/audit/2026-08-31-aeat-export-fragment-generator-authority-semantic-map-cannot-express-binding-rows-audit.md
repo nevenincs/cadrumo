@@ -5,7 +5,7 @@ tags:
 date: '2026-08-31'
 modified: '2026-08-31'
 body_schema: 'body-v2'
-body_hash: 'sha256:1e5b22bd1883d3d2187f744a158128375e9a23f34b9e64bfa7d3eb702484f881'
+body_hash: 'sha256:4ac1a35a1a71ed7e165b29ae894cbf9036ec19dc9753dc84aa186595684fd95d'
 related: []
 ---
 
@@ -98,7 +98,6 @@ just their behaviour. A term present downstream and absent upstream is a silent
 truncation waiting for someone to press regenerate, and no test of the generator
 against itself can see it -- only a comparison against the schema it targets.
 
-
 ## Severity correction: this is already shipped, and it blocks its own repair
 
 The body above frames the gap as a REGENERATION hazard, true of modelo 347 whose
@@ -130,7 +129,6 @@ repair is open in a way modelo 184's is not.
 Enrolled with reasons in
 `registry/tests/test_row_bindings_are_consumed.py`, whose companion test reds if a
 revision is repaired without its entry being removed.
-
 
 ### Closing the gap is a coordinated migration, not an incremental change
 
@@ -177,3 +175,103 @@ That is one transaction across the generator, three authored maps and every
 enrolled tree. Attempting it piecewise leaves the tree in a state where the
 obvious next action ships a silent under-declaration.
 
+### Correction: the schema blocker reported against Option B does not apply
+
+This audit twice recorded that widening the semantic map to carry `binding_rows`
+was blocked because `_require_exact_keys` refuses an unknown key, so adding
+`binding_record` and `row_field_casilla_ids` would force a bump of the render
+normalization version and invalidate every committed provenance manifest. That
+costing is wrong, and the work was reverted twice on it.
+
+Two facts settle it. The registry side already carries the shape: `_RECORD_KEYS`
+in `_provenance_manifest.py` projects `repeat`, `binding_record` AND
+`row_field_casilla_ids` today, so the loader/target schema needs no change at all
+-- the gap is only in `_SEMANTIC_MAP_RECORD_KEYS`, the generator's INPUT schema,
+which carries `sheet`, `record_identity`, `export_record_id`, `record_type`,
+`required`, `repeat` and `discriminator`.
+
+And the convention for adding to that input schema is documented inside
+`_normalise_semantic_map_record` itself: "Adding an optional semantic-map field
+must not invalidate every existing generated tree whose authored meaning did not
+use it. A present rule is attested; absence retains the previous canonical
+representation." `discriminator` is already implemented that way -- projected only
+when non-None -- and `normalised_loader_semantics` does the same for
+`auxiliary_envelope_header`. `semantic_map_digest` hashes no version field, so a
+conditionally-projected optional key changes the digest of exactly those maps that
+declare it and no others.
+
+So the migration adds optional keys to `_SEMANTIC_MAP_RECORD_KEYS`, projects them
+only when declared, and leaves every existing manifest byte-identical. What
+remains is real but ordinary: widen the semantic-map model, pass the values
+through the renderer, re-author the m347, m184 and m360 maps, and verify m347
+renders byte-equal to its committed tree.
+
+The mis-costing came from stopping at the `_require_exact_keys` refusal without
+reading how the same function already admits optional additions a few lines below.
+A refusal encountered mid-change is a question about the convention, not proof
+that no convention exists.
+
+### m347 needs more than row bindings: its tree subdivides a design slot
+
+Option B's row-binding work is necessary for m347 but not sufficient, and the
+extra requirement is a different capability.
+
+The committed m347 2011-2024 declarado record carries 28 fields against 27
+semantic-map entries. The surplus is a subdivision: AEAT's design ordinal 9 is a
+single slot at offset 77 of length 4, and its own prose reads "Campo numérico de
+dos posiciones. En el caso de residentes o de no residentes...". The committed
+tree renders that one slot as two 2-byte fields -- `f009a` at 77 carrying casilla
+`contraparte.provincia-codigo`, and `f009b` at 79 carrying binding
+`modelo-347-contraparte-row-pais-codigo` -- which exactly tile the four bytes. The
+map holds one entry for ordinal 9, carrying `contraparte.pais-codigo`, so it can
+name one of the two halves and not both.
+
+A first reading of the corpus suggested the capability already existed: 101
+entry pairs across the mappings share a non-null `(record_identity, ordinal)`, m232
+2016 DR23202 ordinals 36-45 among them, and m232 is an enrolled byte-equal tree.
+That reading is wrong. Those m232 pairs carry DIFFERENT `source_row` and
+`source_cell` values -- 41/A41 against 83/A83 for ordinal 36 -- so they are two
+distinct design rows whose printed ordinals repeat across sections, not one slot
+divided. No map in the corpus subdivides a single design field.
+
+So the sequence for m347 is: convert the eight ordinal-anchored casilla entries to
+bindings (mechanical, the ids are in the committed tree), and then either give the
+map a way to express a grounded subdivision of one design slot, or accept that
+this committed tree is not reproducible from its own authored map. The second is
+the more serious possibility and should be settled before more of the tree is
+re-authored: m347 was enrolled late, after publication, precisely so that nothing
+compared its committed bytes against a fresh render -- a subdivision no map can
+express is what that gap would look like from here.
+
+Do not hand-author an `f009a`/`f009b` pair to close the byte diff. The halves'
+widths come from prose about residents and non-residents, not from a declared
+geometry, so authoring them into a map would be inventing a slot division the
+generator has no evidence for.
+
+### The export-tree lifecycle has no operator surface at all, not just no publish
+
+An earlier note here recorded that `publish_validated_generated_export_tree` has no
+caller outside its own module, the pipeline re-export, and
+`test_generated_tree_publication.py`. The same is true of the other entry point.
+`check_generated_export_tree` is referenced only by the pipeline re-export and two
+test modules, `test_generated_export_trees.py` and
+`test_m303_generated_envelope_proof.py`. No CLI verb, `__main__`, script or
+console entry point drives either one.
+
+So the generated export-tree pipeline -- record designs, semantic maps, render
+profiles, provenance manifests, check mode and publish mode -- is reachable only
+from pytest. An operator cannot check a committed tree against a fresh render, and
+cannot publish a rendered one, without writing Python against the private pipeline
+modules. This is not a general property of `dev/`: `dev/registry/aeip/` ships both
+`cli.py` and `__main__.py`, and `dev/locales`, `dev/identity` and `dev/docs` each
+have their own entry points, so the convention exists and the export pipeline is
+the exception.
+
+That reframes the standing publication question. It is not "add a publish verb to
+an otherwise complete tool"; it is that the authority which the project relies on
+to keep generated registry content honest is exercised only as a test fixture. The
+authority itself is sound -- check mode validates a candidate through the real
+loader and refuses on unreviewed schema keys at every projection level -- but
+nothing outside the test suite can invoke it, which is why two enrolled trees have
+sat owed with no way to satisfy them and why a map change that alters output
+currently has no path into a committed tree.
