@@ -220,6 +220,30 @@ class SheetValueCell(BaseModel):
     role: Literal["operator_input", "parameter_value", "label", "metadata"]
 
 
+class SheetRoundingRule(StrEnum):
+    """How a computed sheet value is rounded before it is written.
+
+    Distinct from the casilla data-type vocabulary, which also carries ``money`` and
+    ``integer``: that one says what a value IS, this one says how it is rounded. A
+    ratio is a data type and never a rounding rule, and ``integer-ceiling`` is a
+    rounding rule and never a data type.
+    """
+
+    MONEY = "money"
+    INTEGER = "integer"
+    INTEGER_CEILING = "integer-ceiling"
+    NONE = "none"
+
+
+SheetRoundingRuleValue = Literal[
+    SheetRoundingRule.MONEY,
+    SheetRoundingRule.INTEGER,
+    SheetRoundingRule.INTEGER_CEILING,
+    SheetRoundingRule.NONE,
+]
+"""The same rule for a strict record field."""
+
+
 class SheetFormulaCell(BaseModel):
     """A computed cell whose value comes from a Sheets formula.
 
@@ -234,7 +258,7 @@ class SheetFormulaCell(BaseModel):
     formula: str = Field(min_length=1)
     casilla_id: CasillaId
     rounding_scale: int | None = Field(default=None, ge=0, le=12)
-    rounding_rule: Literal["money", "integer", "integer-ceiling", "none"]
+    rounding_rule: SheetRoundingRuleValue
     note: str | None = None
 
 
@@ -505,7 +529,7 @@ class SheetProvenanceRow(BaseModel):
     display_number: str
     casilla_label: str
     formula_id: FormulaId | None = None
-    rounding_rule: Literal["money", "integer", "integer-ceiling", "none"]
+    rounding_rule: SheetRoundingRuleValue
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
     source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
     target_address: SheetCellAddress

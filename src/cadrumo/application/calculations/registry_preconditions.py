@@ -27,9 +27,6 @@ def calculation_registry_failure_verdict(
     failure: RegistryFailureClassification,
 ) -> PreconditionVerdict:
     """Resolve one domain calculation-registry fact record into typed policy."""
-    assert isinstance(failure.condition, RegistryFailureCondition), (
-        f"unclassified calculation-registry failure condition: {failure.condition}"
-    )
     condition_id = failure.condition.value
     facts = failure.facts
     if failure.condition in {
@@ -86,12 +83,13 @@ def calculation_registry_failure_verdict(
             argument_bindings=(binding,),
             conditionality=ActionConditionality.IMMEDIATE,
         )
-    assert failure.condition in {
+    if failure.condition not in {
         RegistryFailureCondition.QUERY_CASILLA_DECLARED,
         RegistryFailureCondition.SNAPSHOT_AUTHORITY_GRADE_SUFFICIENT,
         RegistryFailureCondition.SNAPSHOT_EXPORT_LAYOUT_DECLARED,
         RegistryFailureCondition.TREE_QUIESCENT,
-    }, f"unclassified calculation-registry failure condition: {failure.condition}"
+    }:
+        raise ValueError(f"unclassified calculation-registry failure condition: {failure.condition}")
     return no_action_precondition_verdict(
         condition_id=condition_id,
         facts=facts,

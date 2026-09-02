@@ -347,13 +347,9 @@ def _walk_annotation(
             return
         visited.add(pair)
         annotations = _model_annotations(model_type)
-        raw_fields = model_type.model_fields
-        assert isinstance(raw_fields, dict)
-        fields: dict[str, FieldInfo] = {}
-        for field_name_raw, field_info_raw in raw_fields.items():
-            assert isinstance(field_name_raw, str)
-            assert isinstance(field_info_raw, FieldInfo)
-            fields[field_name_raw] = field_info_raw
+        # ``model_fields`` is already ``dict[str, FieldInfo]`` on a pydantic model,
+        # so the three narrowing asserts this replaced could never fire.
+        fields: dict[str, FieldInfo] = dict(model_type.model_fields)
         for field_name, field in fields.items():
             field_annotation = annotations.get(field_name, field.annotation)
             _walk_annotation(

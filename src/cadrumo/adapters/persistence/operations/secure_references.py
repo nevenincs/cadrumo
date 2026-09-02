@@ -53,7 +53,8 @@ class OperationSecureReferenceRepository:
     def _repository(self) -> SecureObjectRepository:
         if self._objects is not None:
             return self._objects
-        assert self._objects_factory is not None
+        if self._objects_factory is None:
+            raise ValueError("operation secure references require one repository source")
         return self._objects_factory()
 
     @staticmethod

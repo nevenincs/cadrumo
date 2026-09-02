@@ -180,12 +180,12 @@ class CommandIndex:
 
     def _lexical_ranked_keys(self, folded_terms: Sequence[str]) -> list[str]:
         """Return the lexically-matched command keys, best first (the candidate set)."""
-        if self._connection is not None:
-            return self._search_fts_keys(folded_terms)
+        connection = self._connection
+        if connection is not None:
+            return self._search_fts_keys(folded_terms, connection=connection)
         return self._search_degraded_keys(folded_terms)
 
-    def _search_fts_keys(self, folded_terms: Sequence[str]) -> list[str]:
-        assert self._connection is not None
+    def _search_fts_keys(self, folded_terms: Sequence[str], *, connection: sqlite3.Connection) -> list[str]:
         stemmed_terms = stem_spanish_terms(self._stemmer, folded_terms)
         match = fts_or_group([*folded_terms, *stemmed_terms])
         if not match:
@@ -193,7 +193,7 @@ class CommandIndex:
         # The per-column BM25 weights ride as bind parameters (the column order is
         # key_and_name, description, aliases, help), so no value is interpolated
         # into the SQL text.
-        rows = self._connection.execute(
+        rows = connection.execute(
             "SELECT c.command_key, bm25(commands_fts, ?, ?, ?, ?) AS score"
             " FROM commands_fts JOIN commands c ON c.rowid = commands_fts.rowid"
             " WHERE commands_fts MATCH ? ORDER BY score, c.rowid",

@@ -473,7 +473,6 @@ def _observed_casillas_from_declaration_pdf(
     declaration: Declaracion,
     body: bytes,
 ) -> tuple[ObservedCasillaValue, ...]:
-    parse_failed = False
     try:
         declaration_period = declaration.period.registry_token
         # The decrypted declaration bytes are parsed entirely in memory, including
@@ -488,9 +487,8 @@ def _observed_casillas_from_declaration_pdf(
             registry_snapshot=snapshot,
         )
     except DeclaracionParseError:
-        parse_failed = True
-        filing = None
-    if parse_failed:
+        # `from None`: the refusal carries the coordinates the operator needs and
+        # the parse cause would only add PDF internals to the traceback.
         raise SedeParseError(
             "declaration PDF did not yield registry casilla observations",
             context={
@@ -500,9 +498,8 @@ def _observed_casillas_from_declaration_pdf(
                 "period": declaration.period.registry_token,
             },
             translated_message=tr("adapters.sede.errors.parse_failed"),
-        )
+        ) from None
 
-    assert filing is not None  # parse_failed branch raises; filing is set in the try block
     observations: list[ObservedCasillaValue] = []
     for casilla in filing.values:
         if casilla.printed_value is None:
@@ -568,9 +565,8 @@ def non_numeric_observed_casillas(
     A non-empty tuple enumerates the casillas that are not: a declared kind that
     is not numeric, or a numeric casilla whose token will not parse.
 
-    Caller-opt-in, in the shape of
-    :func:`~adapters.outbound.google.calc_sheets_pull_coverage.verify_pull_coverage`: this is a query, not
-    a step in enrolment. It performs no side effects and can be called before or
+    Caller-opt-in: this is a query, not a step in enrolment. It performs no
+    side effects and can be called before or
     after
     :func:`registry_observation_from_filed_declaration`, so a caller with an
     operator surface can report the gap while a caller without one is unaffected

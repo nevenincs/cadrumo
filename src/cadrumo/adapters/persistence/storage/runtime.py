@@ -39,6 +39,7 @@ from .runtime_readiness import (
 )
 
 if TYPE_CHECKING:
+    from .master_key.bucket_session import BucketSession
     from .sql.secure_objects import SecureObjectRepository
 
 from ....core.identity import BucketId
@@ -75,13 +76,9 @@ class StorageRuntime(BaseModel):
     def secure_object_repository(self) -> SecureObjectRepository:
         """Create a :class:`SecureObjectRepository` attached to this runtime's bucket."""
         self.require_ready()
-        self._require_current_active_session()
+        active, bucket_id = self._require_current_active_session()
         from .sql.secure_objects import SecureObjectRepository
 
-        active = current_active_bucket_session()
-        assert active is not None
-        bucket_id = self.bucket_id
-        assert bucket_id is not None
         # The active bucket session owns the engine lifecycle: acquire the
         # engine through it so the handle is registered on the session and
         # disposed on session close/switch, rather than left to a caller.
@@ -105,8 +102,8 @@ class StorageRuntime(BaseModel):
             require_secure_active_session=True,
         )
 
-    def _require_current_active_session(self) -> None:
-        """Refuse repository construction when the live session drifted."""
+    def _require_current_active_session(self) -> tuple[BucketSession, BucketId]:
+        """Return the live session and its bucket id, refusing when either drifted."""
         active = current_active_bucket_session()
         if active is None:
             raise runtime_not_ready_error(StorageRuntimeReadinessCode.NO_ACTIVE_SESSION)
@@ -122,6 +119,7 @@ class StorageRuntime(BaseModel):
             raise runtime_not_ready_error(StorageRuntimeReadinessCode.ROUTE_NOT_ACTIVE_BUCKET)
         if active.bucket_id not in _SYNTHETIC_SESSION_BUCKET_IDS and not session_serves_bucket(active, bucket_id):
             raise runtime_not_ready_error(StorageRuntimeReadinessCode.SESSION_CHANGED)
+        return active, bucket_id
 
 
 def inspect_storage_runtime(

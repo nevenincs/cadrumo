@@ -52,11 +52,10 @@ def _secure_objects_table() -> Table:
 
     ``__table__`` is a ``Table`` at runtime, but the SQLAlchemy stubs widen
     its declared type to ``FromClause``, which the ``insert``/``update``
-    constructors do not accept. The assertion narrows it for the checker.
+    constructors do not accept. The cast states that runtime type for the
+    checker without a guard that would vanish under ``python -O``.
     """
-    table = SecureObjectRow.__table__
-    assert isinstance(table, Table)
-    return table
+    return cast("Table", SecureObjectRow.__table__)
 
 
 class _PreviousRowMetadata(NamedTuple):

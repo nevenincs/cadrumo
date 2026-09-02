@@ -325,7 +325,8 @@ def _anchored_current_capsule_commits_posix(
                 if commit.profile_id == profile_id:
                     label_payload = None
                     if label_filename is not None:
-                        assert label_maximum_bytes is not None
+                        if label_maximum_bytes is None:
+                            raise ValueError("summary discovery requires both label filename and byte ceiling")
                         label_payload = _posix_label_payload(
                             candidate_fd,
                             display_root=capsules_root / candidate_name,
@@ -476,7 +477,8 @@ def _windows_candidate_commit(
             raise ProfileCustodyRecordError("profile capsule commit UUID does not match its directory")
         label_payload = None
         if label_path is not None and label_anchored and lexists(label_path, trace=None):
-            assert label_maximum_bytes is not None
+            if label_maximum_bytes is None:
+                raise ValueError("summary discovery requires both label filename and byte ceiling")
             label_payload = read_regular_file(label_path, maximum_bytes=label_maximum_bytes, trace=None)
         return AnchoredCurrentCapsuleCommit(
             capsule_path=candidate,

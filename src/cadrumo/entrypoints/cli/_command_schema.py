@@ -13,11 +13,16 @@ from ...core.i18n.render import output_language, tr
 from ...core.type_guards import is_object_list_or_tuple
 from .command_spec import (
     Capability,
+    CommandNodeKind,
     CommandWriteRouteValue,
     DefaultKind,
+    JsonType,
+    MachineSecretPresenceValue,
     OptionSpec,
     ParameterKind,
     PerformanceClass,
+    ProfileAuthenticationPosture,
+    ProfileAuthenticationPostureValue,
     SchemaState,
     SideEffect,
 )
@@ -28,7 +33,6 @@ if TYPE_CHECKING:
     from ._command_policy import CommandExecutionPolicy
     from .command_spec import CommandSpec, ParameterSpec
 
-CommandJsonType = Literal["string", "integer", "number", "boolean"]
 CommandParameterDefault = bool | int | float | str | tuple[bool | int | float | str | None, ...] | None
 
 
@@ -69,7 +73,7 @@ class CommandParameterMetadata:
     kind: ParameterKind
     cli_flag: str
     off_flag: str
-    json_type: CommandJsonType
+    json_type: JsonType
     required: bool
     is_flag: bool
     multiple: bool
@@ -87,7 +91,7 @@ class MachineSecretFieldMetadata:
 @dataclass(frozen=True, slots=True)
 class MachineSecretVariantConditionMetadata:
     option_name: str
-    presence: Literal["absent", "present"]
+    presence: MachineSecretPresenceValue
 
 
 @dataclass(frozen=True, slots=True)
@@ -162,7 +166,7 @@ class CommandRegistrationMetadata:
     handler_owner: str | None
     source_sha256: str | None
     machine_secret_payloads: tuple[MachineSecretPayloadMetadata, ...] = ()
-    profile_authentication: Literal["not-applicable", "resume-fallback", "self-authenticating"] = "not-applicable"
+    profile_authentication: ProfileAuthenticationPostureValue = ProfileAuthenticationPosture.NOT_APPLICABLE
 
     @property
     def help(self) -> dict[str, str]:
@@ -176,7 +180,7 @@ class CommandRegistrationMetadata:
 @dataclass(frozen=True, slots=True)
 class LiveNodeRegistrationMetadata:
     path: tuple[str, ...]
-    kind: Literal["root", "group", "leaf"]
+    kind: CommandNodeKind
     loader_owner: str | None
     handler_owner: str
     source_sha256: str | None
@@ -203,7 +207,7 @@ def _policy(spec: CommandSpec) -> CommandPolicyMetadata:
     )
 
 
-def _json_type(parameter: ParameterSpec) -> CommandJsonType:
+def _json_type(parameter: ParameterSpec) -> JsonType:
     qualname = parameter.value.annotation.qualname
     return (
         "integer"

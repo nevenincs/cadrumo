@@ -98,6 +98,19 @@ class OverviewLocalFilingState(StrEnum):
     EXTERNAL_BASELINE_IMPORTED = "external_baseline_imported"
 
 
+OverviewLocalFilingStateValue = Literal[
+    OverviewLocalFilingState.NOT_READY_TO_FILE,
+    OverviewLocalFilingState.READY_TO_FILE,
+    OverviewLocalFilingState.EXTERNAL_BASELINE_IMPORTED,
+]
+"""The local filing lifecycle where a CLI payload must accept the plain token.
+
+Rooted in the enum above rather than respelled; the separation from
+:class:`OverviewAeatSubmissionState` that the enum's own docstring insists on is
+preserved exactly, because this literal admits only these three members.
+"""
+
+
 class OverviewAeatSubmissionState(StrEnum):
     """Observed AEAT-side submission evidence for one calendar obligation.
 
@@ -317,6 +330,13 @@ class OverviewCalendarEventType(StrEnum):
 
     FILING = "filing"
     MESSAGE = "message"
+
+
+OverviewCalendarEventTypeValue = Literal[
+    OverviewCalendarEventType.FILING,
+    OverviewCalendarEventType.MESSAGE,
+]
+"""The same event categories for a CLI payload field."""
 
 
 #: The calendar-event ``summary`` annotation: elides rather than refusing.

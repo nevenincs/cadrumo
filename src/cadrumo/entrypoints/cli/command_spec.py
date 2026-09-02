@@ -16,7 +16,25 @@ from typing import Literal
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 
 type CommandNodeKind = Literal["root", "group", "leaf"]
-type ParameterKind = Literal["argument", "option"]
+class ParameterKind(StrEnum):
+    """Whether a CLI parameter is positional or a flag."""
+
+    ARGUMENT = "argument"
+    OPTION = "option"
+
+
+class JsonType(StrEnum):
+    """The JSON scalar a CLI parameter serialises as.
+
+    Lives here rather than beside its first consumer because both the command schema
+    and the verb input schema need it, and the verb schema imports the command schema,
+    so only the kernel can hold it without a cycle.
+    """
+
+    STRING = "string"
+    INTEGER = "integer"
+    NUMBER = "number"
+    BOOLEAN = "boolean"
 type LiteralValue = str | int | float | bool | bytes | None
 type Capability = Literal[
     "state-free",
@@ -275,12 +293,40 @@ class ProfileSecretChannelKind(Enum):
     FILE_DESCRIPTOR = "file-descriptor"
 
 
-class ProfileAuthenticationPosture(Enum):
+class ProfileAuthenticationPosture(StrEnum):
     """How the root profile-session gate applies to one parsed command."""
 
     NOT_APPLICABLE = "not-applicable"
     RESUME_FALLBACK = "resume-fallback"
     SELF_AUTHENTICATING = "self-authenticating"
+
+
+ProfileAuthenticationPostureValue = Literal[
+    ProfileAuthenticationPosture.NOT_APPLICABLE,
+    ProfileAuthenticationPosture.RESUME_FALLBACK,
+    ProfileAuthenticationPosture.SELF_AUTHENTICATING,
+]
+"""The posture where a strict payload field must accept the plain token.
+
+The enum above was a bare ``Enum``, whose members are not strings, so no payload
+surface could root a literal on it and two of them wrote the three tokens out instead.
+It is a ``StrEnum`` now; every existing comparison uses ``is`` against a member, so
+widening member-to-token equality changes nothing that was relied on.
+"""
+
+
+class MachineSecretPresence(StrEnum):
+    """Whether an option must be present or absent to select a payload variant."""
+
+    ABSENT = "absent"
+    PRESENT = "present"
+
+
+MachineSecretPresenceValue = Literal[
+    MachineSecretPresence.ABSENT,
+    MachineSecretPresence.PRESENT,
+]
+"""The same condition for a strict metadata payload field."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -379,7 +425,7 @@ class MachineSecretConditionSpec:
     """Public option-presence condition selecting a payload variant."""
 
     option_name: str
-    presence: Literal["absent", "present"]
+    presence: MachineSecretPresenceValue
 
     def __post_init__(self) -> None:
         _require_identifier(self.option_name, field="machine-secret condition option")
@@ -531,7 +577,7 @@ class ArgumentSpec:
     transport_shape: TransportShape = TransportShape.NOT_APPLICABLE
     transport_role: TransportRole = TransportRole.NOT_APPLICABLE
 
-    kind: ParameterKind = "argument"
+    kind: ParameterKind = ParameterKind.ARGUMENT
 
     def __post_init__(self) -> None:
         """Validate the argument's name, metavar, and transport coherence, or raise."""
@@ -573,7 +619,7 @@ class OptionSpec:
     transport_shape: TransportShape = TransportShape.NOT_APPLICABLE
     transport_role: TransportRole = TransportRole.NOT_APPLICABLE
 
-    kind: ParameterKind = "option"
+    kind: ParameterKind = ParameterKind.OPTION
 
     def __post_init__(self) -> None:
         """Validate the option's declarations, flags, secret channels, and transport coherence, or raise."""
@@ -925,14 +971,18 @@ __all__ = [
     "DeferredTarget",
     "ExecutionPolicySpec",
     "InvocationSpec",
+    "JsonType",
     "LazyBinding",
     "LiteralValue",
+    "MachineSecretPresence",
+    "MachineSecretPresenceValue",
     "OptionSpec",
     "ParameterConstraint",
     "ParameterDefault",
     "ParameterKind",
     "ParameterSpec",
     "ProfileAuthenticationPosture",
+    "ProfileAuthenticationPostureValue",
     "ProfileSecretChannelKind",
     "ProfileSecretSpec",
     "RecoveryHandoffSpec",

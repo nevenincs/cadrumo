@@ -162,7 +162,8 @@ def render_xml_dictionary_layout(
     if draft.modelo == Modelo.M100:
         _stamp_toma_datos_nif(root, draft)
     rendered = ElementTree.tostring(root, encoding=_UTF_8, xml_declaration=True)
-    assert isinstance(rendered, bytes)
+    if not isinstance(rendered, bytes):
+        raise FilingExportError(f"the XML dictionary serialiser returned {type(rendered).__name__}, not bytes")
     return rendered
 
 

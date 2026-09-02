@@ -191,7 +191,11 @@ class Settings(CadrumoLlmSettings):
         through.
         """
         del dotenv_settings
-        assert isinstance(env_settings, EnvSettingsSource)
+        if not isinstance(env_settings, EnvSettingsSource):
+            raise TypeError(
+                "the environment settings source must be an EnvSettingsSource for the severed-name "
+                f"filter to replace it; got {type(env_settings).__name__}",
+            )
         filtered_env_settings = _CadrumoEnvSettingsSource(
             settings_cls,
             case_sensitive=env_settings.case_sensitive,

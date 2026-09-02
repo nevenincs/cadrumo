@@ -133,10 +133,14 @@ def build_google_credentials(*, profile: str) -> Credentials:
         # The selection validator (`GoogleCredentialSourceSelection`)
         # guarantees `impersonation` is populated whenever `kind` is
         # `SERVICE_ACCOUNT_IMPERSONATION`.
-        assert selection is not None and selection.impersonation is not None
+        impersonation = selection.impersonation if selection is not None else None
+        if impersonation is None:
+            raise OutboundStorageValidationError(
+                "the stored credential source selects service-account impersonation without its impersonation facts",
+            )
         from ..google.impersonation import resolve_impersonated_credentials
 
-        return resolve_impersonated_credentials(selection.impersonation)
+        return resolve_impersonated_credentials(impersonation)
 
     return _build_oauth_desktop_credentials(profile=profile)
 

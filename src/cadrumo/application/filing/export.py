@@ -266,8 +266,11 @@ def _render_prepared_export(
     product_software_identity: AeatProductSoftwareIdentity | None,
 ) -> bytes:
     if prepared.renders_filing_envelope:
-        assert prior_domiciliation_election is not None
-        assert product_software_identity is not None
+        if prior_domiciliation_election is None or product_software_identity is None:
+            raise FilingExportError(
+                "a filing envelope renders only with both the prior domiciliation election and the "
+                "product software identity the record design stamps",
+            )
         return render_filing_envelope(
             _FilingEnvelopeRenderRequest(
                 registry_snapshot=prepared.registry_snapshot,
@@ -565,7 +568,10 @@ def _export_layout_not_renderable_error(
 ) -> FilingExportError:
     """Return the typed refusal for a layout that cannot render declaration bytes."""
     code = export_layout_renderability_reason_code(layout)
-    assert code is not None
+    if code is None:
+        raise FilingExportError(
+            f"modelo {modelo} export layout is not renderable and no reason code classifies why",
+        )
     context: dict[str, object] = {"modelo": modelo, "reason_code": code.value}
     if layout is not None:
         context["layout_id"] = layout.id

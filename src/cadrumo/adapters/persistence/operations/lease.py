@@ -265,7 +265,7 @@ class OperationLeaseFilesystemRepository(OperationLeaseRepository):
         self._storage.ensure_root()
         with exclusive_file_lock(self._storage.lock_target):
             current = self._storage.current_unlocked(predecessor.scope_ref)
-            if current != predecessor:
+            if current is None or current != predecessor:
                 return OperationLeaseResult(
                     scope_ref=predecessor.scope_ref,
                     operation_id=predecessor.operation_id,
@@ -274,7 +274,6 @@ class OperationLeaseFilesystemRepository(OperationLeaseRepository):
                     predecessor=predecessor,
                     current=current,
                 )
-            assert current is not None
             disposition = (
                 OperationLeaseDisposition.RENEWED
                 if current.expires_at > observed_at
@@ -302,7 +301,7 @@ class OperationLeaseFilesystemRepository(OperationLeaseRepository):
         self._storage.ensure_root()
         with exclusive_file_lock(self._storage.lock_target):
             current = self._storage.current_unlocked(predecessor.scope_ref)
-            if current != predecessor:
+            if current is None or current != predecessor:
                 return OperationLeaseResult(
                     scope_ref=predecessor.scope_ref,
                     operation_id=predecessor.operation_id,

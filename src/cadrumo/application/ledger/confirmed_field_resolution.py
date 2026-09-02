@@ -58,7 +58,7 @@ def operator_value_or_reading[T](supplied: T | None, read: T) -> T:
     return supplied if supplied is not None else read
 
 
-def require_confirmed_field(value: Decimal | str | None, *, field: str) -> Decimal | str:
+def require_confirmed_field[ConfirmedT: Decimal | str](value: ConfirmedT | None, *, field: str) -> ConfirmedT:
     if value is None:
         raise PurchaseInvoiceEvidenceInputError(
             translated_message="errors.refused.refused_ledger_evidence_input",

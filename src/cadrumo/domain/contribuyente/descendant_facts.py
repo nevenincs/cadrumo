@@ -357,7 +357,10 @@ def _descendant_from_stored_row(index: int, row: dict[str, str]) -> DescendantIn
     birth_date = parse_iso8601_date(birth_raw)
     # The row filter rejects absent/empty values; the parser raises on a
     # malformed non-empty value, so a surviving row always has a date.
-    assert birth_date is not None
+    if birth_date is None:
+        raise ProfileAnswerTypeError(
+            f"renta_family.descendiente.{index}.birth_date carries no readable date; got {birth_raw!r}.",
+        )
     relacion = _stored_relacion(row.get("relacion"), index=index)
     return DescendantInfo(
         birth_date=birth_date,
@@ -674,7 +677,8 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
     # parse_iso8601_date returns None only for absent/empty input (it raises on a
     # malformed non-empty string); nacimiento_raw is non-empty here.
     birth_date = parse_iso8601_date(nacimiento_raw)
-    assert birth_date is not None
+    if birth_date is None:
+        raise ProfileAnswerTypeError(f"--descendiente NACIMIENTO carries no readable date; got: {raw!r}")
 
     # RELACION is read through the same stored-token authority the fact-index
     # path uses, so the flag door and the profile-read door refuse an unknown

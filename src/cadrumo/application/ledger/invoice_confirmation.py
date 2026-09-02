@@ -361,7 +361,12 @@ def _resolve_evidence_attachment_id(
     """
     if attachment_id is not None:
         return attachment_id
-    assert evidence_id is not None  # narrowed by the caller's exactly-one guard
+    if evidence_id is None:
+        # The caller admits exactly one of attachment_id / evidence_id; reaching
+        # here with neither means that guard and this resolver disagree.
+        raise InvoiceValidationError(
+            "evidence reference resolution requires either an attachment id or an evidence id",
+        )
     record = find_bytes_bearing_evidence_record(
         evidence_id,
         evidence_records=PurchaseInvoiceEvidenceService(settings=settings).list_all(bucket_id=bucket_id),
@@ -593,7 +598,6 @@ def _build_confirmed_invoice_candidate(
         ),
         field="counterparty_tax_id",
     )
-    assert isinstance(resolved_counterparty_tax_id, str)
     refuse_an_issued_document_the_filer_did_not_issue(
         kind=kind,
         extracted_supplier_tax_id=draft.supplier_tax_id,
@@ -603,13 +607,11 @@ def _build_confirmed_invoice_candidate(
         operator_value_or_reading(invoice_number, draft.invoice_number),
         field="invoice_number",
     )
-    assert isinstance(resolved_invoice_number, str)
     resolved_invoice_date = resolve_confirmed_invoice_date(invoice_date, draft)
     resolved_taxable_base = require_confirmed_field(
         operator_value_or_reading(taxable_base, draft.taxable_base),
         field="taxable_base",
     )
-    assert isinstance(resolved_taxable_base, Decimal)
     resolved_iva_rate = operator_value_or_reading(iva_rate, draft.iva_rate)
     resolved_currency = confirmed_currency(currency, draft.currency)
     resolved_counterparty_name = confirmed_counterparty_name(counterparty_name, counterparty_side.name)

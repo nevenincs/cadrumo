@@ -97,13 +97,15 @@ def _require_argument_matches_its_evidence(
     The value comparison is type-exact on purpose: a ``1`` that reads as an ``int``
     where the evidence recorded ``True`` is a different fact, not a match.
     """
-    assert argument.source_evidence_id is not None
-    evidence = evidence_by_id.get(argument.source_evidence_id)
+    source_evidence_id = argument.source_evidence_id
+    source_key = argument.source_key
+    if source_evidence_id is None or source_key is None:
+        raise ValueError("condition-evidence action argument must name both its evidence id and its evidence key")
+    evidence = evidence_by_id.get(source_evidence_id)
     if evidence is None:
         raise ValueError("condition-evidence action argument must reference declared evidence")
-    assert argument.source_key is not None
-    evidence_value = evidence.values.get(argument.source_key)
-    if evidence_value is None and argument.source_key not in evidence.values:
+    evidence_value = evidence.values.get(source_key)
+    if evidence_value is None and source_key not in evidence.values:
         raise ValueError("condition-evidence action argument must reference a declared evidence fact")
     if type(argument.value) is not type(evidence_value) or argument.value != evidence_value:
         raise ValueError("condition-evidence action argument value must exactly match its evidence fact")

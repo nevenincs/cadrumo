@@ -656,7 +656,8 @@ def pull_runtime_model(
     snapshot = assess_model_load_contention(model, requirement_bytes, profile=profile, settings=resolved)
     if not snapshot.admitted:
         contention_verdict = snapshot.precondition_verdict
-        assert contention_verdict is not None
+        if contention_verdict is None:
+            raise ValueError("a refused model-load contention snapshot must carry its precondition verdict")
         return PullOutcome(
             model=model,
             pulled=False,

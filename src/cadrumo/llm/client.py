@@ -618,7 +618,8 @@ class LLMClient:
         if snapshot.admitted:
             return
         verdict = snapshot.precondition_verdict
-        assert verdict is not None
+        if verdict is None:
+            raise ValueError("a refused model-load contention snapshot must carry its precondition verdict")
         raise LLMContentionError(
             context={
                 "model": model,

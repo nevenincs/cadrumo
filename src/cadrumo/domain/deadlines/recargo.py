@@ -84,14 +84,16 @@ def _load_recargo_bands_cached(path: str, byte_count: int, modified_ns: int) -> 
     raw_band = raw.get("band")
     if not raw_band:
         raise DeadlineValidationError(f"recargo bracket TOML at {target} declares no bands")
-    assert isinstance(raw_band, list)
     try:
         built: list[RecargoBand] = []
         for raw_row in OBJECT_TUPLE_ADAPTER.validate_python(raw_band):
             row = STR_KEYED_MAPPING_ADAPTER.validate_python(raw_row)
             row_min = row.get("min_completed_months")
             row_max = row.get("max_completed_months")
-            assert isinstance(row_min, int)
+            if not isinstance(row_min, int):
+                raise DeadlineValidationError(
+                    f"recargo band {row.get('id')!r} declares no integer min_completed_months",
+                )
             built.append(
                 RecargoBand(
                     id=str(row.get("id")),

@@ -452,7 +452,10 @@ def _resume_target_outcome(
     if not assessment.exists:
         return _vanished_target_outcome(target)
     current_fingerprint = assessment.fingerprint
-    assert current_fingerprint is not None
+    if current_fingerprint is None:
+        raise ConfigResetError(
+            f"reset target {target.bucket_id!r} exists on disk but yielded no fingerprint to compare",
+        )
     fingerprint_changed = (
         not target.exists_at_snapshot
         or target.fingerprint is None
@@ -881,7 +884,10 @@ def _delete_targets(
             repository.save(operation)
             continue
         fingerprint = target.fingerprint
-        assert fingerprint is not None
+        if fingerprint is None:
+            raise ConfigResetError(
+                f"reset target {target.bucket_id!r} reached the deleting phase with no recorded fingerprint",
+            )
         # Re-derive retention against the LIVE assessment before anything reads
         # it. A target reaching DELETING is skipped by the auth-clearing sweep
         # (it is already past AUTH_CLEARED), so without this its recorded

@@ -99,8 +99,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         # `.create`). Cast through `Table` so pyrefly resolves the method.
         from sqlalchemy import Table as _Table
 
-        local_table = inspect(SecureObjectRow).local_table
-        assert isinstance(local_table, _Table)
+        local_table = cast("_Table", inspect(SecureObjectRow).local_table)
         local_table.create(self._engine, checkfirst=True)
 
     _coerce_raw_bytes = staticmethod(coerce_raw_bytes)

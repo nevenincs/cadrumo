@@ -33,11 +33,7 @@ See Also:
     workbook,
     :func:`~adapters.outbound.google.compute_from_pull` maps a matching
     pull into
-    :class:`~domain.calculations.registry.RegistryCalculationResult`, and
-    :func:`~adapters.outbound.google.calc_sheets_pull_coverage.verify_pull_coverage`
-    compares a pull against its source
-    :class:`~application.storage.calc_sheets.SheetExportPlan` when the
-    caller still has that plan.
+    :class:`~domain.calculations.registry.RegistryCalculationResult`.
 """
 
 from __future__ import annotations

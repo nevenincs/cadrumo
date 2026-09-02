@@ -899,7 +899,11 @@ def _resolve_merge_split_group(
             context={"bucket_id": bucket_id, "child_transaction_ids": tuple(child_transaction_ids)},
         )
     split_group_id = next(iter(split_group_ids))
-    assert split_group_id is not None  # narrowed: None excluded by the guard above
+    if split_group_id is None:
+        raise TransactionValidationError(
+            "ledger merge children must all share one split_group_id",
+            context={"bucket_id": bucket_id, "child_transaction_ids": tuple(child_transaction_ids)},
+        )
     for child in children:
         _require_child_active_and_role(child)
     return split_group_id

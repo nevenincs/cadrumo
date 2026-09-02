@@ -34,6 +34,8 @@ from ...application.operator_actions.models import ActionReference
 from ...application.overview.calendar_models import (
     OverviewAeatSubmissionState,
     OverviewAeatSubmissionStateValue,
+    OverviewCalendarEventTypeValue,
+    OverviewLocalFilingStateValue,
 )
 from ...application.overview.data_prep import DataPrepStepId, DataPrepStepState
 from ...application.overview.pipeline_health import ModeloReadinessState
@@ -74,7 +76,7 @@ class OverviewCalendarFilingEvidencePayload(OutputSchema):
     modelo: str | None = None
     filing_year: int | None = None
     period: str | None = None
-    local_filing_state: Literal["not_ready_to_file", "ready_to_file", "external_baseline_imported"]
+    local_filing_state: OverviewLocalFilingStateValue
     local_filing_record_id: FilingRecordId | None = None
     local_calculation_revision_id: CalculationRevisionId | None = None
     local_filed_at: str | None = None
@@ -108,7 +110,7 @@ class OverviewCalendarEventPayload(OutputSchema):
     calendar entry's own evidence row by themselves.
     """
 
-    event_type: Literal["filing", "message"]
+    event_type: OverviewCalendarEventTypeValue
     post_filing_kind: str | None = None
     #: The Ley 39/2015 art. 43.2 service state of a notification — still inside
     #: its access window, accessed, or lapsed into deemed-served. Operator-facing
@@ -158,7 +160,7 @@ class OverviewCalendarEntrySummaryPayload(OutputSchema):
     adjusted_closes_on: str
     user_state: Literal["due", "late", "filed", "unknown"]
     censo_enrolment_state: Literal["not_checked", "not_required", "unverified", "verified"]
-    local_filing_state: Literal["not_ready_to_file", "ready_to_file", "external_baseline_imported"]
+    local_filing_state: OverviewLocalFilingStateValue
     aeat_submission_state: OverviewAeatSubmissionStateValue
     justificante_verified: bool
     detail_action: ResolvedNoticeAction
@@ -172,7 +174,7 @@ class OverviewCalendarEventSummaryPayload(OutputSchema):
     every calendar result schema.
     """
 
-    event_type: Literal["filing", "message"]
+    event_type: OverviewCalendarEventTypeValue
     event_date: str
     source: str
     summary: str

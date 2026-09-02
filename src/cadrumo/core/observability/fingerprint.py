@@ -37,17 +37,14 @@ _log = get_logger(__name__)
 
 def _file_sha256(path: Path) -> str:
     """Return the SHA-256 hex digest of a file's contents."""
-    last_error: PermissionError | None = None
-    for attempt in range(5):
+    # Four retries, then one final attempt whose PermissionError propagates on
+    # its own: the fifth call IS the raise, so no branch has to carry the error.
+    for _attempt in range(4):
         try:
             return sha256_file(path)
-        except PermissionError as exc:
-            last_error = exc
-            if attempt == 4:
-                break
+        except PermissionError:
             time.sleep(0.05)
-    assert last_error is not None
-    raise last_error
+    return sha256_file(path)
 
 
 def _hash_tree(

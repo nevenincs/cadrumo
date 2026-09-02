@@ -339,7 +339,8 @@ def _serialize_xlsx(rows: tuple[dict[str, str], ...], *, fieldnames: tuple[str, 
 
     workbook = Workbook()
     worksheet = workbook.active
-    assert worksheet is not None, "Workbook.active must not be None on a fresh Workbook"
+    if worksheet is None:
+        raise ExportFormatError("a fresh workbook carries no active worksheet to write the ledger into")
     worksheet.title = "ledger"
     worksheet.append(list(fieldnames))
     for row in rows:

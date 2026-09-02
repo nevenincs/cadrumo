@@ -410,11 +410,13 @@ def _decision(
 
 
 def _override_reconciliation_decision(ctx: _ReconciliationContext) -> IvaCompensationReconciliationDecision:
-    assert ctx.override is not None
+    override = ctx.override
+    if override is None:
+        raise ValueError("an override reconciliation decision requires the taxpayer override it selects")
     return _decision(
         ctx,
         selected_authority="taxpayer_override",
-        selected_amount=ctx.override.amount,
+        selected_amount=override.amount,
         wallet_amount=ctx.wallet_amount,
         local_recurrence_amount=ctx.local_recurrence_amount,
         override_amount=ctx.override.amount,
@@ -544,7 +546,8 @@ def _missing_wallet_decision(
 
 
 def _stale_wallet_decision(ctx: _ReconciliationContext) -> IvaCompensationReconciliationDecision:
-    assert ctx.wallet_amount is not None
+    if ctx.wallet_amount is None:
+        raise ValueError("a stale-wallet decision requires the wallet amount whose capture went stale")
     if ctx.local_recurrence_amount is None:
         return _decision(
             ctx,
@@ -575,7 +578,8 @@ def _stale_wallet_decision(ctx: _ReconciliationContext) -> IvaCompensationReconc
 
 
 def _fresh_wallet_decision(ctx: _ReconciliationContext) -> IvaCompensationReconciliationDecision:
-    assert ctx.wallet_amount is not None
+    if ctx.wallet_amount is None:
+        raise ValueError("a fresh-wallet decision requires the wallet amount it reconciles against")
     if ctx.local_recurrence_amount is not None and ctx.wallet_amount != ctx.local_recurrence_amount:
         divergence: IvaCompensationDivergence = (
             "wallet_higher" if ctx.wallet_amount > ctx.local_recurrence_amount else "wallet_lower"
