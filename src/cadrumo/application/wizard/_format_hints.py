@@ -19,7 +19,10 @@ legal-zone projection, so the substrate's bridge stays domain-blind:
 The key constants carry the ``_LOCALE_KEYS`` suffix so the locale
 scaffold's AST scanner treats them as live usage (these keys are
 referenced only through this mapping, never at a literal ``tr()`` call
-site). The widget override adds no copy, so it needs no locale key.
+site). The widget override adds no copy, so it needs no locale key. The
+keys a sibling flow module also authors pages against are public names
+here -- this module is their single home, so a sibling references the
+declaration rather than restating the string.
 """
 
 from __future__ import annotations
@@ -32,19 +35,19 @@ from ..flows.definition import CopyRef, FlowDefinition, FlowPage, FlowSection
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-_FORMAT_TAX_ID_LOCALE_KEY = "wizard.setup.format.tax-id"
-_FORMAT_DATE_LOCALE_KEY = "wizard.setup.format.date-iso"
-_FORMAT_AMOUNT_LOCALE_KEY = "wizard.setup.format.amount-eur"
+FORMAT_TAX_ID_LOCALE_KEY = "wizard.setup.format.tax-id"
+FORMAT_DATE_LOCALE_KEY = "wizard.setup.format.date-iso"
+FORMAT_AMOUNT_LOCALE_KEY = "wizard.setup.format.amount-eur"
 _FORMAT_POSTCODE_LOCALE_KEY = "wizard.setup.format.postcode"
-_FORMAT_UNITS_LOCALE_KEY = "wizard.setup.format.units-count"
-_NIF_INVALID_LOCALE_KEY = "wizard.errors.invalid_tax_id"
+FORMAT_UNITS_LOCALE_KEY = "wizard.setup.format.units-count"
+NIF_INVALID_LOCALE_KEY = "wizard.errors.invalid_tax_id"
 
 FORMAT_HINT_LOCALE_KEYS: tuple[str, ...] = (
-    _FORMAT_TAX_ID_LOCALE_KEY,
-    _FORMAT_DATE_LOCALE_KEY,
-    _FORMAT_AMOUNT_LOCALE_KEY,
+    FORMAT_TAX_ID_LOCALE_KEY,
+    FORMAT_DATE_LOCALE_KEY,
+    FORMAT_AMOUNT_LOCALE_KEY,
     _FORMAT_POSTCODE_LOCALE_KEY,
-    _FORMAT_UNITS_LOCALE_KEY,
+    FORMAT_UNITS_LOCALE_KEY,
 )
 
 #: Registered-value provenance suffix (consumed by the registered-values
@@ -52,27 +55,27 @@ FORMAT_HINT_LOCALE_KEYS: tuple[str, ...] = (
 REGISTERED_NON_OFFICIAL_SUFFIX_LOCALE_KEY = "wizard.setup.review.registered-non-official-suffix"
 
 PAGE_FORMAT_HINTS: Mapping[str, str] = {
-    "tax-id": _FORMAT_TAX_ID_LOCALE_KEY,
-    "spouse-tax-id": _FORMAT_TAX_ID_LOCALE_KEY,
-    "representante-fiscal-nif": _FORMAT_TAX_ID_LOCALE_KEY,
-    "activity-start-date": _FORMAT_DATE_LOCALE_KEY,
-    "taxpayer-marriage-date": _FORMAT_DATE_LOCALE_KEY,
-    "taxpayer-birth-date": _FORMAT_DATE_LOCALE_KEY,
-    "taxpayer-death-date": _FORMAT_DATE_LOCALE_KEY,
-    "spouse-birth-date": _FORMAT_DATE_LOCALE_KEY,
-    "ley-49-2002-option-date": _FORMAT_DATE_LOCALE_KEY,
-    "ley-49-2002-renunciation-date": _FORMAT_DATE_LOCALE_KEY,
-    "irpf-special-regime-start-date": _FORMAT_DATE_LOCALE_KEY,
-    "incn-prior-12-months": _FORMAT_AMOUNT_LOCALE_KEY,
+    "tax-id": FORMAT_TAX_ID_LOCALE_KEY,
+    "spouse-tax-id": FORMAT_TAX_ID_LOCALE_KEY,
+    "representante-fiscal-nif": FORMAT_TAX_ID_LOCALE_KEY,
+    "activity-start-date": FORMAT_DATE_LOCALE_KEY,
+    "taxpayer-marriage-date": FORMAT_DATE_LOCALE_KEY,
+    "taxpayer-birth-date": FORMAT_DATE_LOCALE_KEY,
+    "taxpayer-death-date": FORMAT_DATE_LOCALE_KEY,
+    "spouse-birth-date": FORMAT_DATE_LOCALE_KEY,
+    "ley-49-2002-option-date": FORMAT_DATE_LOCALE_KEY,
+    "ley-49-2002-renunciation-date": FORMAT_DATE_LOCALE_KEY,
+    "irpf-special-regime-start-date": FORMAT_DATE_LOCALE_KEY,
+    "incn-prior-12-months": FORMAT_AMOUNT_LOCALE_KEY,
     "address-postcode": _FORMAT_POSTCODE_LOCALE_KEY,
-    "modelo-111-no-retenciones-periods": _FORMAT_UNITS_LOCALE_KEY,
-    "objective-estimation-modulos-module-1-units": _FORMAT_UNITS_LOCALE_KEY,
-    "objective-estimation-modulos-module-2-units": _FORMAT_UNITS_LOCALE_KEY,
-    "objective-estimation-modulos-module-3-units": _FORMAT_UNITS_LOCALE_KEY,
-    "objective-estimation-modulos-module-4-units": _FORMAT_UNITS_LOCALE_KEY,
-    "objective-estimation-modulos-module-5-units": _FORMAT_UNITS_LOCALE_KEY,
-    "objective-estimation-modulos-module-6-units": _FORMAT_UNITS_LOCALE_KEY,
-    "objective-estimation-modulos-module-7-units": _FORMAT_UNITS_LOCALE_KEY,
+    "modelo-111-no-retenciones-periods": FORMAT_UNITS_LOCALE_KEY,
+    "objective-estimation-modulos-module-1-units": FORMAT_UNITS_LOCALE_KEY,
+    "objective-estimation-modulos-module-2-units": FORMAT_UNITS_LOCALE_KEY,
+    "objective-estimation-modulos-module-3-units": FORMAT_UNITS_LOCALE_KEY,
+    "objective-estimation-modulos-module-4-units": FORMAT_UNITS_LOCALE_KEY,
+    "objective-estimation-modulos-module-5-units": FORMAT_UNITS_LOCALE_KEY,
+    "objective-estimation-modulos-module-6-units": FORMAT_UNITS_LOCALE_KEY,
+    "objective-estimation-modulos-module-7-units": FORMAT_UNITS_LOCALE_KEY,
 }
 
 #: Shape-bearing free-text pages upgraded from the projected ``TEXT``
@@ -145,7 +148,12 @@ def _page_overrides(item: object) -> dict[str, object]:
 
 
 __all__ = [
+    "FORMAT_AMOUNT_LOCALE_KEY",
+    "FORMAT_DATE_LOCALE_KEY",
     "FORMAT_HINT_LOCALE_KEYS",
+    "FORMAT_TAX_ID_LOCALE_KEY",
+    "FORMAT_UNITS_LOCALE_KEY",
+    "NIF_INVALID_LOCALE_KEY",
     "PAGE_FORMAT_HINTS",
     "PAGE_WIDGET_KINDS",
     "REGISTERED_NON_OFFICIAL_SUFFIX_LOCALE_KEY",

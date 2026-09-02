@@ -47,18 +47,24 @@ from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdi
 __all__ = ["domestic_rate_tier_from_the_document"]
 
 
-def operator_value_or_reading[T](supplied: T | None, read: T) -> T:
+def operator_value_or_reading[SuppliedT, ReadT](supplied: SuppliedT | None, read: ReadT) -> SuppliedT | ReadT:
     """Return the operator's value when they supplied one, else the document's.
 
     The layering rule every confirmable field follows, named once rather than
     restated per field. Extraction is best-effort, so an explicit operator value
     always outranks the reading; a field that quietly inverted the order would
     prefer a misread document over the person confirming it.
+
+    The reading carries its own type, so a field the document may not have
+    recovered layers to a result that is still absent rather than one this
+    function has quietly declared present. Refusing that absence belongs to
+    :func:`require_confirmed_field` at the field that requires it; a reading
+    the draft does carry outright keeps its narrowed type through the layering.
     """
     return supplied if supplied is not None else read
 
 
-def require_confirmed_field[ConfirmedT: Decimal | str](value: ConfirmedT | None, *, field: str) -> ConfirmedT:
+def require_confirmed_field[ConfirmedT](value: ConfirmedT | None, *, field: str) -> ConfirmedT:
     if value is None:
         raise PurchaseInvoiceEvidenceInputError(
             translated_message="errors.refused.refused_ledger_evidence_input",

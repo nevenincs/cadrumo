@@ -37,6 +37,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _CALCULATION_REVISION_ID = "c" * 64
 _FILING_RECORD_ID = "f" * 64
+_PRIVATE_IDENTITY_BASIS = "synthetic-private-record-basis"
 _ADDRESS_UNSET = object()
 
 _SOURCE_BY_KIND = {
@@ -124,6 +125,7 @@ def _document(
     address: object = _ADDRESS_UNSET,
     admission: WorkbenchDestinationAdmission | None = None,
     action_candidate_id: str | None = None,
+    identity_basis: str | None = None,
 ) -> WorkbenchSearchDocument:
     natural_address = (
         _address(kind)
@@ -141,6 +143,20 @@ def _document(
         address=natural_address,
         admission=admission or _admission(),
         action_candidate_id=action_candidate_id,
+        identity_basis=(
+            identity_basis
+            if identity_basis is not None
+            else _PRIVATE_IDENTITY_BASIS
+            if kind
+            in {
+                WorkbenchSearchKind.LEDGER_ENTRY,
+                WorkbenchSearchKind.LEDGER_EVIDENCE,
+                WorkbenchSearchKind.HISTORY,
+                WorkbenchSearchKind.RECONCILIATION,
+                WorkbenchSearchKind.NOTIFICATION,
+            }
+            else None
+        ),
     )
 
 
@@ -176,13 +192,14 @@ def test_nif_iban_label_raw_hex_identity_and_search_terms_fail_closed() -> None:
 
 
 def test_serialized_document_and_response_contain_no_plaintext_or_dictionary_token_hash() -> None:
-    sensitive_tokens = ("x2482300w", "es9121000418450200051332")
+    sensitive_tokens = ("x2482300w", "es9121000418450200051332", _PRIVATE_IDENTITY_BASIS)
     dictionary_hashes = tuple(hashlib.sha256(token.encode()).hexdigest() for token in sensitive_tokens)
-    request = WorkbenchSearchRequest(query="declaración 303")
-    response = WorkbenchSearchService([_document()]).search(request)
+    document = _document(WorkbenchSearchKind.LEDGER_ENTRY)
+    request = WorkbenchSearchRequest(query="ledger entry")
+    response = WorkbenchSearchService([document]).search(request)
 
     serialized = " ".join(
-        (_document().model_dump_json(), request.model_dump_json(), response.model_dump_json())
+        (document.model_dump_json(), request.model_dump_json(), response.model_dump_json(), repr(document))
     ).casefold()
     assert all(token not in serialized for token in sensitive_tokens)
     assert all(token_hash not in serialized for token_hash in dictionary_hashes)
@@ -292,6 +309,64 @@ def test_stable_identity_is_derived_and_duplicate_safe_projections_are_refused()
     assert len(response.results[0].stable_id) == 64
     with pytest.raises(ValueError, match="unique derived identities"):
         WorkbenchSearchService([_document(), _document()])
+
+
+def test_distinct_same_state_unaddressed_records_coexist_with_opaque_ids() -> None:
+    documents = (
+        _document(WorkbenchSearchKind.LEDGER_ENTRY, identity_basis="synthetic-ledger-record-a"),
+        _document(WorkbenchSearchKind.LEDGER_ENTRY, identity_basis="synthetic-ledger-record-b"),
+    )
+    response = WorkbenchSearchService(documents).search(WorkbenchSearchRequest(query="ledger entry"))
+    identities = tuple(result.stable_id for result in response.results)
+
+    assert response.total_matches == 2
+    assert len(set(identities)) == 2
+    assert all(
+        identity
+        not in {
+            hashlib.sha256(basis.encode()).hexdigest()
+            for basis in (
+                "synthetic-ledger-record-a",
+                "synthetic-ledger-record-b",
+            )
+        }
+        for identity in identities
+    )
+
+
+def test_opaque_identity_is_stable_across_mutable_projection_state() -> None:
+    identity_basis = "synthetic-stable-ledger-record"
+    documents = (
+        _document(WorkbenchSearchKind.LEDGER_ENTRY, identity_basis=identity_basis),
+        _document(
+            WorkbenchSearchKind.LEDGER_ENTRY,
+            status=WorkbenchSearchStatus.LEDGER_ENTRY_CLASSIFIED,
+            identity_basis=identity_basis,
+        ),
+        _document(
+            WorkbenchSearchKind.LEDGER_ENTRY,
+            admission=_admission(WorkbenchDestinationAdmissionState.LOCKED),
+            identity_basis=identity_basis,
+        ),
+        _document(
+            WorkbenchSearchKind.LEDGER_ENTRY,
+            action_candidate_id="operator.ledger.open",
+            identity_basis=identity_basis,
+        ),
+    )
+    identities = {
+        WorkbenchSearchService([document]).search(WorkbenchSearchRequest(query="ledger entry")).results[0].stable_id
+        for document in documents
+    }
+
+    assert len(identities) == 1
+
+
+def test_opaque_identity_basis_is_required_only_for_multi_record_families() -> None:
+    with pytest.raises(ValidationError, match="requires a private opaque identity basis"):
+        WorkbenchSearchDocument.model_validate(_document(WorkbenchSearchKind.NOTIFICATION).model_dump())
+    with pytest.raises(ValidationError, match="derives identity from its natural address"):
+        _document(WorkbenchSearchKind.REVISION, identity_basis="synthetic-unexpected-basis")
 
 
 def test_unicode_case_accent_and_address_search_are_normalized() -> None:

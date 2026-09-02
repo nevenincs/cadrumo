@@ -10,13 +10,15 @@ no repository, persistence, network, localization, or frontend dependency.
 from __future__ import annotations
 
 import hashlib
+import hmac
 import re
+import secrets
 import unicodedata
 from collections.abc import Sequence
 from enum import StrEnum
 from typing import Annotated, Literal, Self
 
-from pydantic import BaseModel, Field, NonNegativeInt, StringConstraints, field_validator, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, SecretStr, StringConstraints, field_validator, model_validator
 
 from ...core.filing_year import FilingYear
 from ...core.hex import Hex64Str
@@ -30,6 +32,7 @@ from ...domain.modelos.codes import ModeloCode
 _MAX_QUERY_LENGTH = 200
 _MAX_SEARCH_RESULTS = 100
 _WORD_PATTERN = re.compile(r"\w+", re.UNICODE)
+_OPAQUE_IDENTITY_KEY = secrets.token_bytes(32)
 
 _TransientQuery = Annotated[
     str,
@@ -186,6 +189,15 @@ _STATUSES_BY_SOURCE: dict[WorkbenchSearchSource, frozenset[WorkbenchSearchStatus
         {WorkbenchSearchStatus.NOTIFICATION_UNREAD, WorkbenchSearchStatus.NOTIFICATION_READ}
     ),
 }
+_OPAQUE_IDENTITY_KINDS = frozenset(
+    {
+        WorkbenchSearchKind.LEDGER_ENTRY,
+        WorkbenchSearchKind.LEDGER_EVIDENCE,
+        WorkbenchSearchKind.HISTORY,
+        WorkbenchSearchKind.RECONCILIATION,
+        WorkbenchSearchKind.NOTIFICATION,
+    }
+)
 
 
 class WorkbenchDestinationAdmissionState(StrEnum):
@@ -284,6 +296,7 @@ def _validate_projection(
     address: WorkbenchNaturalAddress | None,
     admission: WorkbenchDestinationAdmission,
     action_candidate_id: str | None,
+    identity_basis: SecretStr | None = None,
 ) -> None:
     if source is not _SOURCE_BY_KIND[kind]:
         raise ValueError(f"{kind.value} requires source {_SOURCE_BY_KIND[kind].value!r}")
@@ -304,14 +317,21 @@ def _validate_projection(
         raise ValueError(f"{kind.value} requires exact {expected_address_type.__name__}")
     if admission.state is not WorkbenchDestinationAdmissionState.AVAILABLE and action_candidate_id is not None:
         raise ValueError("a non-available destination cannot carry an action candidate")
+    if kind in _OPAQUE_IDENTITY_KINDS and identity_basis is None:
+        raise ValueError(f"{kind.value} requires a private opaque identity basis")
+    if kind not in _OPAQUE_IDENTITY_KINDS and identity_basis is not None:
+        raise ValueError(f"{kind.value} derives identity from its natural address")
 
 
 class WorkbenchSearchDocument(BaseModel):
     """Intrinsically safe source projection accepted by the query service.
 
     Every serializable field is a closed enum, canonical natural address, or
-    technical namespaced action/admission token. There is no provider-authored
-    label, raw search term, token index, source identifier, or stable identity.
+    technical namespaced action/admission token. Multi-record families carry a
+    private source identity basis that is retained only in memory, excluded from
+    serialization and representation, and converted to a process-keyed opaque
+    result identity. There is no provider-authored label, raw search term, token
+    index, caller-visible source identifier, or asserted stable identity.
     ``action_candidate_id`` remains unresolved until S369's catalogue admits it.
     """
 
@@ -324,6 +344,14 @@ class WorkbenchSearchDocument(BaseModel):
     address: WorkbenchNaturalAddress | None = None
     admission: WorkbenchDestinationAdmission
     action_candidate_id: NamespacedId | None = None
+    identity_basis: SecretStr | None = Field(default=None, exclude=True, repr=False, min_length=1, max_length=512)
+
+    @field_validator("identity_basis")
+    @classmethod
+    def _identity_basis_has_no_control_characters(cls, value: SecretStr | None) -> SecretStr | None:
+        if value is not None:
+            _reject_control_characters(value.get_secret_value())
+        return value
 
     @model_validator(mode="after")
     def _projection_is_consistent(self) -> Self:
@@ -335,6 +363,7 @@ class WorkbenchSearchDocument(BaseModel):
             address=self.address,
             admission=self.admission,
             action_candidate_id=self.action_candidate_id,
+            identity_basis=self.identity_basis,
         )
         return self
 
@@ -422,21 +451,29 @@ def _safe_search_terms(document: WorkbenchSearchDocument) -> tuple[str, ...]:
     return tuple(terms)
 
 
+def _immutable_identity_coordinate(document: WorkbenchSearchDocument) -> tuple[str, ...]:
+    if document.identity_basis is not None:
+        return ("opaque", document.identity_basis.get_secret_value())
+    if document.address is None:  # pragma: no cover - guarded by projection validation
+        raise ValueError("a search projection requires an immutable identity coordinate")
+    coordinate = (
+        document.address.address_kind,
+        str(document.address.modelo),
+        str(document.address.filing_year),
+        document.address.period.registry_token,
+    )
+    if isinstance(document.address, WorkbenchRevisionAddress):
+        return (*coordinate, document.address.calculation_revision_id)
+    if isinstance(document.address, WorkbenchFilingAddress):
+        return (*coordinate, document.address.filing_record_id)
+    return coordinate
+
+
 def _derived_stable_id(document: WorkbenchSearchDocument) -> Hex64Str:
     canonical = "\x1f".join(
-        (
-            document.kind.value,
-            document.source.value,
-            document.status.value,
-            document.label_key.value,
-            *(_safe_search_terms(document)[3:]),
-            document.admission.destination,
-            document.admission.state.value,
-            document.admission.reason_code or "",
-            document.action_candidate_id or "",
-        )
-    )
-    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+        (document.kind.value, document.source.value, *_immutable_identity_coordinate(document))
+    ).encode("utf-8")
+    return hmac.digest(_OPAQUE_IDENTITY_KEY, canonical, hashlib.sha256).hex()
 
 
 def _score_document(document: WorkbenchSearchDocument, query: str) -> float | None:
