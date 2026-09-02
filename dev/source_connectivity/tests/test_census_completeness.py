@@ -78,15 +78,17 @@ def test_inventory_census_tracks_only_the_live_connection_gap() -> None:
     manifest = load_source_connectivity_census()
     inventory = next(entry for entry in manifest.entries if entry.candidate_id == "inventory.stock-valuation")
 
-    assert inventory.disposition.value == "registry_blocked"
+    assert inventory.disposition.value == "connect_candidate"
     assert inventory.expires_on == date(2026, 12, 31)
-    assert "canonical inventory resolver" in inventory.review_condition
-    assert "source-mesh enrollment" in inventory.review_condition
-    assert "registry row bindings" in inventory.review_condition
-    assert "registry-blocked" in inventory.review_condition
-    assert "repeated activity-row casillas" in inventory.review_condition
+    assert "canonical InventorySourceResolver enrollment" in inventory.review_condition
+    assert "supported inventory ingress" in inventory.review_condition
+    assert "Registry bindings" in inventory.review_condition
+    assert "connection candidate" in inventory.review_condition
+    assert "grounded repeated activity-row values" in inventory.review_condition
+    assert "rendered through the supported official filing structure" in inventory.review_condition
     assert "verified end to end" in inventory.review_condition
     assert "fabricated activity-envelope facts" in inventory.review_condition
+    assert "registry-blocked" not in inventory.review_condition
     assert "complete acquisition cost" not in inventory.review_condition
     assert "explicit-closing authority remain blocking" not in inventory.review_condition
     summaries = " ".join(item.summary for item in inventory.grounding)
