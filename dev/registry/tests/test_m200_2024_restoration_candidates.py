@@ -148,3 +148,32 @@ def test_bootstrap_fragment_gets_reciprocal_ref_only_after_render_staging(tmp_pa
 
     assert written == (fragment,)
     assert 'export_refs = ["m200-2024.dp200012.f0013"]' in fragment.read_text(encoding="utf-8")
+
+
+def test_f0014_restoration_uses_current_02971_not_sibling_00355(monkeypatch) -> None:
+    gap = SimpleNamespace(
+        disposition=M200CasillaDisposition.REVISION_MISSING_DECLARATION,
+        export_field_id="m200-2024.dp200012.f0014",
+        authored_token="2971",  # noqa: S106 - official casilla token
+        label="Importe [02971]",
+        source_ref="aeat-dr-200-2024",
+        source_sha256="a" * 64,
+        aeat_type="Num",
+        length=17,
+    )
+    entry = SimpleNamespace(
+        export_field_id=gap.export_field_id,
+        source_refs=(gap.source_ref,),
+        legal_refs=("ley-27-2014:art-41",),
+    )
+    historic = {**_historic(), "id": "2971", "number": "2971", "export_refs": [gap.export_field_id]}
+    monkeypatch.setattr(subject, "_load_bundled_candidates", lambda: (gap,))
+    monkeypatch.setattr(subject, "load_semantic_map", lambda _path: SimpleNamespace(entries=(entry,)))
+    monkeypatch.setattr(subject, "_historic_index", lambda: {gap.export_field_id: (("historic.toml", historic),)})
+
+    accepted, refused = subject.build_bundled_restoration_candidates()
+
+    assert not refused
+    assert accepted[0].id == "02971"
+    assert accepted[0].number == "02971"
+    assert "00355" not in subject._render_registry_fragment(accepted[0])

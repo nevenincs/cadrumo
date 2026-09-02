@@ -564,3 +564,60 @@ def test_entry_point_parse_rejects_malformed_specs() -> None:
     """A console script without ``module:attribute`` shape cannot seed the walk."""
     with pytest.raises(ValueError, match="module:attribute"):
         EntryPoint.parse("cadrumo.entrypoints.main")
+
+
+def _spawn_tree(root: Path, *, flag: str) -> ShippedTreeSpec:
+    """A console script that starts ``pkg.session`` as a child interpreter.
+
+    ``flag`` is the interpreter flag the launcher passes. The real launcher
+    passes ``-m``; a test may pass something else to prove the edge is drawn on
+    evidence rather than on the package name appearing anywhere in the file.
+    """
+    _write(root, "src/pkg/__init__.py")
+    _write(
+        root,
+        "src/pkg/cli.py",
+        "import subprocess\nimport sys\n\nTARGET = 'pkg.session'\n\n\n"
+        f"def main() -> None:\n    subprocess.run([sys.executable, {flag!r}, TARGET], check=False)\n",
+    )
+    _write(root, "src/pkg/session/__init__.py")
+    _write(root, "src/pkg/session/__main__.py", "from .screen import show\n\nshow()\n")
+    _write(root, "src/pkg/session/screen.py", "def show() -> None: ...\n")
+    return ShippedTreeSpec(
+        repo_root=root,
+        src_root=root / "src",
+        package="pkg",
+        entry_points=(EntryPoint("pkg.cli", "main"),),
+        module_roots=("pkg.session.__main__",),
+        exclude_globs=_EXCLUDES,
+    )
+
+
+def test_a_console_script_spawning_a_module_reaches_what_it_starts(tmp_path: Path) -> None:
+    """``python -m`` started BY a product command is a product path, not an exec-only one.
+
+    The launcher never imports the session package, so only the spawn edge can
+    carry reachability here. Without it the whole subtree reports as reachable
+    by ``python -m`` alone, which inverts the finding: the operator does have a
+    command that leads there.
+    """
+    outcome = scan_unreachable_code(_spawn_tree(tmp_path, flag="-m"))
+
+    exec_only = {f.module for f in outcome.modules if f.reach is ModuleReach.MODULE_EXEC_ONLY}
+    unreachable = {f.module for f in outcome.modules if f.reach is ModuleReach.UNREACHABLE}
+    assert exec_only == set()
+    assert unreachable == set()
+
+
+def test_naming_a_package_without_the_module_flag_draws_no_edge(tmp_path: Path) -> None:
+    """The detector's teeth: the same tree, minus the ``-m`` evidence.
+
+    A module that merely mentions a package name starts nothing. If this passed
+    identically to the case above, the edge would be a name match rather than
+    proof of a spawn, and any string equal to a package name would silently
+    clear its subtree.
+    """
+    outcome = scan_unreachable_code(_spawn_tree(tmp_path, flag="-c"))
+
+    exec_only = {f.module for f in outcome.modules if f.reach is ModuleReach.MODULE_EXEC_ONLY}
+    assert "pkg.session.screen" in exec_only

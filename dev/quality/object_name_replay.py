@@ -314,15 +314,15 @@ def replay_object_name_component(
         exact.changed_paths,
         exact.finding_delta,
         exact.tool_versions,
-        tuple((item.argv, item.return_code) for item in exact.generator_outcomes),
-        tuple((item.argv, item.return_code) for item in exact.gate_outcomes),
+        exact.generator_outcomes,
+        exact.gate_outcomes,
     ) != (
         receipt.proposed_file_digests,
         receipt.changed_paths,
         receipt.finding_delta,
         receipt.tool_versions,
-        tuple((item.argv, item.return_code) for item in receipt.generator_outcomes),
-        tuple((item.argv, item.return_code) for item in receipt.gate_outcomes),
+        receipt.generator_outcomes,
+        receipt.gate_outcomes,
     ):
         raise ObjectNameReplayError("regenerated transformation or verification differs from the receipt")
     if tuple(sorted(receipt.changed_paths)) != tuple(sorted(component.affected_paths)):

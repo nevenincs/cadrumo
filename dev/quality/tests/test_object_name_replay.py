@@ -148,7 +148,7 @@ def test_occupied_transaction_is_refused_without_deleting_foreign_evidence(tmp_p
     sentinel = transaction / "foreign-evidence"
     sentinel.write_bytes(b"keep\n")
 
-    with pytest.raises(ObjectNameReplayError, match="unfinished or occupied replay transaction"):
+    with pytest.raises(ObjectNameReplayError, match="unfinished replay transaction requires explicit operator inspection"):
         replay_object_name_component(
             manifest, inventory=inventory, component=component, receipt=receipt, repo_root=repo
         )
@@ -187,9 +187,46 @@ def test_apply_and_postcondition_failures_restore_exact_live_bytes(
     elif failure == "finding":
         monkeypatch.setattr(replay_module, "_finding_delta", lambda *_args: object())
     elif failure == "changed-path":
-        monkeypatch.setattr(replay_module, "_temporary_paths", lambda _root: (*receipt.changed_paths, "dev/extra.py"))
+        original_paths = replay_module._git_snapshot_paths
+        original_gates = replay_module._run_gates_in_verified_copy
+        post_gate = False
+
+        def gates_finished_paths(**kwargs: Any) -> Any:
+            nonlocal post_gate
+            result = original_gates(**kwargs)
+            post_gate = True
+            return result
+
+        def omit_live_path(root: Path) -> tuple[str, ...]:
+            paths = original_paths(root)
+            if post_gate and root.resolve() == repo.resolve():
+                return tuple(path for path in paths if path != "dev/tracked.txt")
+            return paths
+
+        monkeypatch.setattr(replay_module, "_run_gates_in_verified_copy", gates_finished_paths)
+        monkeypatch.setattr(replay_module, "_git_snapshot_paths", omit_live_path)
     else:
-        monkeypatch.setattr(replay_module, "_snapshot", lambda *_args: ((receipt.changed_paths[0], _digest(b"wrong")),))
+        original_snapshot = replay_module._snapshot
+        original_gates = replay_module._run_gates_in_verified_copy
+        post_gate = False
+
+        def gates_finished_content(**kwargs: Any) -> Any:
+            nonlocal post_gate
+            result = original_gates(**kwargs)
+            post_gate = True
+            return result
+
+        def corrupt_post_snapshot(root: Path, paths: Any) -> Any:
+            result = original_snapshot(root, paths)
+            if post_gate and root.resolve() == repo.resolve():
+                return tuple(
+                    (path, _digest(b"wrong")) if path == receipt.changed_paths[0] else (path, digest)
+                    for path, digest in result
+                )
+            return result
+
+        monkeypatch.setattr(replay_module, "_run_gates_in_verified_copy", gates_finished_content)
+        monkeypatch.setattr(replay_module, "_snapshot", corrupt_post_snapshot)
 
     with pytest.raises(ObjectNameReplayError):
         replay_object_name_component(

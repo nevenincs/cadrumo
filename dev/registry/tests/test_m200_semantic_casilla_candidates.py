@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
+
+from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 
 from ..analysis import m200_2024_sibling_remediation as remediation
 from ..analysis import m200_semantic_casilla_candidates as subject
@@ -59,15 +62,36 @@ def test_cli_check_refuses_stale_review_without_writing(monkeypatch, tmp_path: P
     assert output.read_text(encoding="utf-8") == "stale"
 
 
-def test_m200_2024_sibling_remediation_evaluates_only_known_candidate_classes() -> None:
-    """The direct bundled loader is proposal-only: it must not publish registry data."""
+def test_current_printed_identity_beats_sibling_casilla_identity() -> None:
+    target_field = SimpleNamespace(
+        normalized_description="Importe [02971]",
+        aeat_type="Num",
+    )
+    sibling_field = SimpleNamespace()
+    sibling_entry = SimpleNamespace(kind=CasillaFieldKind.CASILLA, casilla_id="00355")
+
+    disposition, reason, proposed_id, _kind = subject._classify_sibling(
+        target_field,
+        sibling_field,
+        sibling_entry,
+        authored_token="2971",  # noqa: S106 - official casilla token
+        target_ids_by_number={"00355": ("00355",)},
+    )
+
+    assert disposition is subject.M200CasillaDisposition.REVISION_MISSING_DECLARATION
+    assert reason == "current official printed identity is absent from the target revision"
+    assert proposed_id == "02971"
+
+
+def test_m200_2024_sibling_remediation_refuses_target_first_restoration_gaps() -> None:
+    """Sibling payload cannot replace the current design's printed identity."""
     proposals = remediation.load_bundled_m200_2024_sibling_remediation()
     counts = {
         disposition: sum(item.disposition is disposition for item in proposals)
         for disposition in remediation.M200RemediationDisposition
     }
 
-    assert len(proposals) == 68
-    assert counts[remediation.M200RemediationDisposition.DERIVE_DECLARATION] == 50
-    assert counts[remediation.M200RemediationDisposition.CORRECT_SEMANTIC_MAP] == 3
-    assert counts[remediation.M200RemediationDisposition.UNRESOLVED] == 15
+    assert len(proposals) == 92
+    assert counts[remediation.M200RemediationDisposition.DERIVE_DECLARATION] == 0
+    assert counts[remediation.M200RemediationDisposition.CORRECT_SEMANTIC_MAP] == 0
+    assert counts[remediation.M200RemediationDisposition.UNRESOLVED] == 92
