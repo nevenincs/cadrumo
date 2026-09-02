@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from copy import deepcopy
 from typing import Final
 
 import pytest
@@ -95,10 +96,28 @@ def _run_command_lines(job: dict[str, object]) -> set[str]:
     }
 
 
+def _assert_single_release_cohort_builder(document: dict[str, object]) -> None:
+    """Require exactly one protected release-cohort construction job."""
+    jobs = document["jobs"]
+    assert isinstance(jobs, dict)
+    builders = [
+        (name, job)
+        for name, job in jobs.items()
+        if isinstance(job, dict)
+        and "uv run --no-sync python -m dev.packaging.release_cohort build --output var/release-cohort"
+        in _run_command_lines(job)
+    ]
+    assert len(builders) == 1, f"expected exactly one release-cohort builder, found {len(builders)}"
+    name, builder = builders[0]
+    assert name == "build-release-cohort"
+    assert "strategy" not in builder
+
+
 def test_immutable_cohort_is_built_once_and_every_python_row_binds_it() -> None:
     """One build-release-cohort job; three per-OS oracle+emit legs bind that cohort."""
     document = yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
     jobs = document["jobs"]
+    _assert_single_release_cohort_builder(document)
 
     # One dedicated cohort build that publishes the single immutable archive to
     # the run's own Actions artifacts.
@@ -136,6 +155,14 @@ def test_immutable_cohort_is_built_once_and_every_python_row_binds_it() -> None:
         leg_uses = "\n".join(str(step.get("uses", "")) for step in leg["steps"])
         assert "actions/download-artifact@" in leg_uses
         assert "actions/upload-artifact@" in leg_uses
+
+
+def test_protected_cohort_builder_gate_has_detector_teeth() -> None:
+    """A second release-cohort builder cannot hide behind the protected lane."""
+    document = deepcopy(yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8")))
+    document["jobs"]["duplicate-builder"] = deepcopy(document["jobs"]["build-release-cohort"])
+    with pytest.raises(AssertionError, match="exactly one"):
+        _assert_single_release_cohort_builder(document)
 
 
 def test_workflow_runs_canonical_cadrumo_packaging_gates() -> None:
