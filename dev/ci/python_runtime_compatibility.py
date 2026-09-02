@@ -53,6 +53,9 @@ _UTF_8: Final[str] = UTF_8
 _SCHEMA: Final[str] = "cadrumo.python-runtime-compatibility.v1"
 _SHA256_RE: Final[re.Pattern[str]] = re.compile(r"^[0-9a-f]{64}$")
 _RUNTIME_VERSION_RE: Final[re.Pattern[str]] = re.compile(r"^3\.(?P<minor>[0-9]+)")
+_OBSERVED_RUNTIME_VERSION_RE: Final[re.Pattern[str]] = re.compile(
+    r"^3\.(?P<minor>[0-9]+)(?:\.[0-9]+)?(?:[._-]?(?:a|b|rc|dev)[0-9]+)?$"
+)
 _DEFAULT_BUILDER_PIN: Final[Path] = REPO_ROOT / ".python-version"
 _MISSING_WHEEL_PATTERNS: Final[tuple[re.Pattern[str], ...]] = (
     re.compile(r"\bno solution found\b"),
@@ -414,7 +417,7 @@ def _wheelhouse_platform(runtime: Mapping[str, str]) -> str:
 def _runtime_minor(runtime: Mapping[str, str]) -> str:
     """Return the observed interpreter's canonical ``3.N`` wheelhouse key."""
     observed = runtime.get("python", "")
-    match = re.fullmatch(r"3\.(?P<minor>[0-9]+)(?:\.[0-9]+)?", observed)
+    match = _OBSERVED_RUNTIME_VERSION_RE.fullmatch(observed)
     if match is None:
         raise CompatibilityProbeError(
             f"selected interpreter reported an invalid Python version: {observed!r}",
