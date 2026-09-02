@@ -14,6 +14,7 @@ Submodules
    :maxdepth: 4
 
    cadrumo.application.live.borrador_100
+   cadrumo.application.live.capture_mode
    cadrumo.application.live.censo
    cadrumo.application.live.deudas
    cadrumo.application.live.errors
