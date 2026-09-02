@@ -54,13 +54,19 @@ import rtoml
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
-from cadrumo.domain.calculations.registry.ids import SourceRefId
+from cadrumo.domain.calculations.registry.ids import RevisionId, SourceRefId
 from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactSource, RegistryRevisionInspection
 
 from ._export_tree import ExportTreeTransportProfile, render_complete_export_tree
 from ._record_design_ir import load_record_design_intermediate
-from ._render_profile import load_render_profile, load_render_profile_source_evidence
-from ._semantic_map_join import join_record_design_semantics
+from ._render_profile import (
+    RenderProfile,
+    RenderProfileSourceEvidence,
+    load_render_profile,
+    load_render_profile_source_evidence,
+)
+from ._semantic_map import SemanticMap
+from ._semantic_map_join import JoinedRecordDesign, join_record_design_semantics
 from ._semantic_map_loader import load_semantic_map
 
 __all__ = [
@@ -198,12 +204,12 @@ class RevisionRenderInputs:
     possible without a second derivation that could disagree with this one.
     """
 
-    revision_id: object
+    revision_id: RevisionId
     layout_id: str
-    joined: object
-    semantic_map: object
-    render_profile: object
-    render_profile_source_evidence: object
+    joined: JoinedRecordDesign
+    semantic_map: SemanticMap
+    render_profile: RenderProfile
+    render_profile_source_evidence: RenderProfileSourceEvidence
     transport_profile: ExportTreeTransportProfile
 
 

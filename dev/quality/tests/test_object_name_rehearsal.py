@@ -402,7 +402,7 @@ def test_empty_snapshot_and_link_input_are_refused(tmp_path: Path) -> None:
     ("reference_class", "message"),
     [
         ("dynamic-target", r"cannot reconstruct.*reference classes differ"),
-        ("generated-artifact", r"bounded transformation refused.*unsupported reference classes"),
+        ("generated-artifact", r"cannot reconstruct.*reference classes differ"),
     ],
 )
 def test_generated_or_dynamic_reference_manifest_is_refused_before_rehearsal(
