@@ -73,4 +73,3 @@ The manifest, not directory proximity or a third-party refactorer's reach, must 
 - Contextually defensible repeated names still require a truthful distinct rename; no disposition may suppress an enforced finding.
 - Semantic consolidation remains separately governed.
 - Old paths disappear atomically; consumers move in the same component without a compatibility window.
-
