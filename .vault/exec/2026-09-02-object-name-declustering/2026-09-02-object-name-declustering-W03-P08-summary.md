@@ -5,16 +5,10 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:0add81ac93cf01548f6bc1ccde8cf6e3ec80815d0b2074696ad0c67d3af7ca82'
+body_hash: 'sha256:a2abc762f71d907b0a41a1717ddb1dee82699ec5030b222536d0564cd8416168'
 related:
   - "[[2026-09-02-object-name-declustering-plan]]"
 ---
-
-<!-- Machine-owned: filename and frontmatter, scaffolded by
-     `vaultspec-core vault add exec`; never hand-edit. Add no frontmatter
-     fields. Wiki-links belong in `related:` only, never in the body.
-
-     Rolls up every Step Record (S##) of one Phase. -->
 
 # `object-name-declustering` `W03.P08` summary
 

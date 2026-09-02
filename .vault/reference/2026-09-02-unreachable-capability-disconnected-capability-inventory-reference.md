@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:b9189e599d6c359ce2ab2c9d86ca485e40dbe7b5861b0d877dedd0226fcd1947'
+body_hash: 'sha256:da0b4be5062d5abdd343139732d507afe1ab4536e7afad48665bba63114165e8'
 related:
   - "[[2026-09-02-unreachable-capability-research]]"
 ---
@@ -785,7 +785,6 @@ acting on the unreachable set alone will eventually delete something the rest
 of the tree still needs. The defect class worth a gate is narrower and
 checkable: a reachable command whose backing store no production path can
 populate.
-
 
 ## The independent oracle, and the registry row that names it
 
