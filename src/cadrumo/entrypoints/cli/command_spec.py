@@ -87,6 +87,7 @@ class ExecutionPolicySpec:
     live_write: bool = False
 
     def __post_init__(self) -> None:
+        """Validate the policy's capability, effect, budget, and risk-flag invariants, or raise."""
         if not isinstance(self.capabilities, frozenset):
             raise TypeError("execution policy capabilities must be a frozenset")
         if not isinstance(self.side_effects, frozenset):
@@ -147,6 +148,7 @@ class DeferredTarget:
     qualname: str
 
     def __post_init__(self) -> None:
+        """Validate that ``module`` and ``qualname`` are dotted Python identifiers, or raise."""
         if not self.module or any(not part.isidentifier() for part in self.module.split(".")):
             raise ValueError("deferred target module must be a dotted Python module name")
         if not self.qualname or any(not part.isidentifier() for part in self.qualname.split(".")):
@@ -154,6 +156,7 @@ class DeferredTarget:
 
     @property
     def identity(self) -> str:
+        """Return the ``module:qualname`` identity string this target resolves to."""
         return f"{self.module}:{self.qualname}"
 
 

@@ -420,7 +420,12 @@ class _CompatibilityAnalyzer(ast.NodeVisitor):
     def _resolved(self, node: ast.AST) -> str | None:
         """Resolve a local name/attribute through the imports seen in the module."""
         if isinstance(node, ast.Name):
-            return self.symbol_bindings.get(node.id) or self.module_bindings.get(node.id) or node.id
+            # An unbound local called ``chunk`` or ``datetime`` is not evidence
+            # that the standard-library module was imported.  Returning the raw
+            # spelling here made ordinary variables look like removed modules
+            # (for example, a local ``chunk.write_bytes`` helper).  Only an
+            # import-established identity is safe to carry across a module.
+            return self.symbol_bindings.get(node.id) or self.module_bindings.get(node.id)
         if isinstance(node, ast.Attribute):
             parent = self._resolved(node.value)
             return f"{parent}.{node.attr}" if parent else None
@@ -469,7 +474,7 @@ class _CompatibilityAnalyzer(ast.NodeVisitor):
                 self._add(node, resolved)
 
     def visit_Call(self, node: ast.Call) -> None:
-        function = self._resolved(node.func)
+        function = self._resolved(node.func) or _dotted_name(node.func)
         if function in {"importlib.import_module", "__import__"} and node.args:
             imported = _constant_string(node.args[0])
             if imported is not None:
