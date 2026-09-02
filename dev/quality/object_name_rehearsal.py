@@ -14,7 +14,8 @@ import shutil
 import subprocess
 import sys
 import tempfile
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
+from contextlib import contextmanager
 from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path, PurePosixPath
 from typing import Final, cast
@@ -58,10 +59,30 @@ _COMMAND_TIMEOUT_SECONDS: Final[int] = 1_800
 _EXCLUDED_DIRECTORY_NAMES: Final[frozenset[str]] = frozenset(
     {".git", ".mypy_cache", ".pytest_cache", ".ruff_cache", ".tox", ".venv", "__pycache__", "node_modules"}
 )
+_FIRST_PARTY_IMPORT_ROOTS: Final[tuple[str, ...]] = ("cadrumo", "cadrumo_harness", "dev")
 
 
 class ObjectNameRehearsalError(RuntimeError):
     """The current tree cannot produce a safe successful rehearsal receipt."""
+
+
+@contextmanager
+def _isolated_first_party_import_state() -> Iterator[None]:
+    """Keep live-tree imports from contaminating graph inspection in the copy."""
+    owned = {
+        name: module
+        for name, module in tuple(sys.modules.items())
+        if any(name == root or name.startswith(f"{root}.") for root in _FIRST_PARTY_IMPORT_ROOTS)
+    }
+    for name in owned:
+        sys.modules.pop(name, None)
+    try:
+        yield
+    finally:
+        for name in tuple(sys.modules):
+            if any(name == root or name.startswith(f"{root}.") for root in _FIRST_PARTY_IMPORT_ROOTS):
+                sys.modules.pop(name, None)
+        sys.modules.update(owned)
 
 
 @dataclass(frozen=True, slots=True)
@@ -514,11 +535,12 @@ def rehearse_object_name_component(
         if _snapshot(temporary_root, guarded_paths) != receipt_baseline_files:
             raise ObjectNameRehearsalError("selected component bytes changed during the temporary copy")
         copied_inventory = scan((temporary_root / "src", temporary_root / "dev"), temporary_root)
-        copied_components = canonical_object_name_component_set(
-            manifest,
-            inventory=copied_inventory,
-            repo_root=temporary_root,
-        )
+        with _isolated_first_party_import_state():
+            copied_components = canonical_object_name_component_set(
+                manifest,
+                inventory=copied_inventory,
+                repo_root=temporary_root,
+            )
         copied_component = next(
             (item for item in copied_components if item.component_id == component.component_id),
             None,
