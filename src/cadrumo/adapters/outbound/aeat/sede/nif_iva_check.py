@@ -539,6 +539,7 @@ _POSITIVE_MARKERS: tuple[str, ...] = (
     "valid",
 )
 
+
 async def _select_country_code(page: Page, country_code: str, *, timeout_ms: int) -> None:
     locator = await _locate(
         page,

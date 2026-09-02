@@ -28,12 +28,12 @@ from ......tests.aeat_literal_fixtures import (
 from .._adapter_utils import extract_marker_verdict, is_aeat_auth_gate_redirect
 from ..errors import SedeNavigationError
 from ..nif_iva_check import (
+    _POSITIVE_MARKERS,
     DEFAULT_NIF_IVA_TIMEOUT_MS,
     READ_GUARD_POLICY,
     NifIvaCheckResult,
     NifIvaCheckSedeDriver,
     SedeNifIvaCheckObservation,
-    _POSITIVE_MARKERS,
     _assert_query_browser_action,
     assert_nif_iva_read_landing,
 )
@@ -128,7 +128,10 @@ def test_result_model_defaults_to_empty_observations() -> None:
 
 
 def test_marker_verdict_parses_valid_response_text() -> None:
-    assert extract_marker_verdict("Sí. Operador intracomunitario identificado", positive_markers=_POSITIVE_MARKERS) == "valid"
+    assert (
+        extract_marker_verdict("Sí. Operador intracomunitario identificado", positive_markers=_POSITIVE_MARKERS)
+        == "valid"
+    )
     assert extract_marker_verdict("NIF-IVA válido", positive_markers=_POSITIVE_MARKERS) == "valid"
 
 
