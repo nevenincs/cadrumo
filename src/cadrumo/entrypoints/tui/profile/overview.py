@@ -66,6 +66,7 @@ from ....entrypoints.tui.components.widgets import (
     SourceActionCard,
     SourceActionDescriptor,
 )
+from ..components.app_access import TypedAppAccess
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -287,7 +288,7 @@ _SOURCE_ACTION_LOCALE_KEYS: dict[ProfileAcquisitionSourceKey, str] = {
 }
 
 
-class ProfileManagerScreen(Screen[None]):
+class ProfileManagerScreen(TypedAppAccess, Screen[None]):
     """Full-screen profile overview with in-place editing."""
 
     SCOPED_CSS = False
@@ -489,7 +490,7 @@ class ProfileManagerScreen(Screen[None]):
             panel = self.query_one(f"#section-{section.key}", Static)
             panel.border_title = self._section_title(section)
             await panel.remove_children()
-            table: DataTable[str] = ContentDataTable(cursor_type="row", zebra_stripes=True)
+            table: DataTable[str] = ContentDataTable[str](cursor_type="row", zebra_stripes=True)
             await panel.mount(table)
             self._table_by_section[section.key] = table
             self._columns_by_section[section.key] = [

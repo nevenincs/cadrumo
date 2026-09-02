@@ -36,6 +36,7 @@ from .....application.modelo.workspace_models import (
     ModeloWorkspaceCapabilityName,
 )
 from .....core.i18n.render import tr
+from ...components.app_access import TypedAppAccess
 from ...components.theme import toggle_appearance
 from ...components.widgets import ContentDataTable, ContentScroll, DisclosureGroup
 from .controller import ModeloWorkspaceReadSession
@@ -71,7 +72,7 @@ def _readiness_values(session: ModeloWorkspaceReadSession) -> dict[str, str] | N
     }
 
 
-class ModeloWorkspaceVerificationScreen(Screen[None]):
+class ModeloWorkspaceVerificationScreen(TypedAppAccess, Screen[None]):
     """Findings, readiness axes, and this screen's own capability disposition."""
 
     BINDINGS: ClassVar = [
@@ -141,7 +142,7 @@ class ModeloWorkspaceVerificationScreen(Screen[None]):
             return
         disposition.remove()
         body = self.query_one("#workspace-verification-body", ContentScroll)
-        table = ContentDataTable(id="workspace-verification-findings-table", cursor_type="row", zebra_stripes=True)
+        table = ContentDataTable[str](id="workspace-verification-findings-table", cursor_type="row", zebra_stripes=True)
         body.mount(
             DisclosureGroup(table, title=tr("flows.modelo_workspace_verification.section.findings"), collapsed=False)
         )
@@ -164,7 +165,9 @@ class ModeloWorkspaceVerificationScreen(Screen[None]):
             return
         disposition.remove()
         body = self.query_one("#workspace-verification-body", ContentScroll)
-        table = ContentDataTable(id="workspace-verification-readiness-table", cursor_type="row", zebra_stripes=True)
+        table = ContentDataTable[str](
+            id="workspace-verification-readiness-table", cursor_type="row", zebra_stripes=True
+        )
         body.mount(
             DisclosureGroup(table, title=tr("flows.modelo_workspace_verification.section.readiness"), collapsed=False)
         )

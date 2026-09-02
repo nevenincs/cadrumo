@@ -40,6 +40,7 @@ from textual.widgets import Static
 
 from .....application.modelo.workspace_models import ModeloWorkspaceFacetName
 from .....core.i18n.render import tr
+from ...components.app_access import TypedAppAccess
 from ...components.theme import toggle_appearance
 from ...components.widgets import ContentDataTable, ContentScroll
 from .controller import ModeloWorkspaceReadSession
@@ -48,7 +49,7 @@ from .models import ModeloWorkspaceBoundedPageV1
 _COLUMN_KEYS: tuple[str, ...] = ("subject", "resolver", "source_ref")
 
 
-class ModeloWorkspaceProvenanceScreen(Screen[None]):
+class ModeloWorkspaceProvenanceScreen(TypedAppAccess, Screen[None]):
     """Flat attribution rows for the current session, or an explicit not-applicable."""
 
     BINDINGS: ClassVar = [
@@ -112,7 +113,7 @@ class ModeloWorkspaceProvenanceScreen(Screen[None]):
         facet = self._session.projection.provenance_facet
         assert facet is not None
         body = self.query_one("#workspace-provenance-body", ContentScroll)
-        table = ContentDataTable(id="workspace-provenance-table", cursor_type="row", zebra_stripes=True)
+        table = ContentDataTable[str](id="workspace-provenance-table", cursor_type="row", zebra_stripes=True)
         body.mount(table)
         for column_key in _COLUMN_KEYS:
             table.add_column(tr(f"flows.modelo_workspace_provenance.column.{column_key}"), key=column_key)

@@ -28,6 +28,7 @@ from textual.widgets import Button, Footer, Static
 
 from ....application.user_profile.presentation import ProfilePresentationV1
 from ....core.i18n.render import tr
+from ..components.app_access import TypedAppAccess
 from ..components.theme import BASE_CSS, install_cadrumo_themes, toggle_appearance, tokenised
 from ..components.widgets import ContentScroll, StageNavigationStrip
 from .journey_status import ReadyStageBody, compose_required_stage, overview_readiness_summary
@@ -54,7 +55,7 @@ _STAGE_LABEL_LOCALE_KEYS: dict[ProfileJourneyStage, str] = {
 _LAST_STAGE = max(ProfileJourneyStage)
 
 
-class ProfileJourneyScreen(Screen[None]):
+class ProfileJourneyScreen(TypedAppAccess, Screen[None]):
     """Compose the guided five-stage journey with only the active body mounted."""
 
     SCOPED_CSS = False

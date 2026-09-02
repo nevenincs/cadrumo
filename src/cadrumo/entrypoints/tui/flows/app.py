@@ -25,7 +25,7 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
 from textual.screen import Screen
-from textual.widget import AwaitMount
+from textual.widget import AwaitMount, Widget
 from textual.widgets import (
     Button,
     DataTable,
@@ -71,6 +71,7 @@ from ....core.flows import (
 )
 from ....core.i18n.render import tr
 from ....core.parsing import parse_bool
+from ..components.app_access import TypedAppAccess
 from ..components.dialogs import ConfirmScreen
 from ..components.host import ScreenHostApp
 from ..components.keyboard import localize_key_descriptions
@@ -186,7 +187,7 @@ import-time language into the footer the pages deliberately defer.
 """
 
 
-class FlowScreen(Screen[None]):
+class FlowScreen(TypedAppAccess, Screen[None]):
     """Full-screen projection of one flow run, mountable by any host.
 
     ``DEFAULT_CSS`` rather than ``CSS``: Textual applies a screen
@@ -369,7 +370,7 @@ class FlowScreen(Screen[None]):
         region.remove_children()
         return region.mount(pane)
 
-    def _pane(self, kind: type) -> object | None:
+    def _pane[PaneT: Widget](self, kind: type[PaneT]) -> PaneT | None:
         """The mounted page when it is of `kind`, else None."""
         found = self.query(kind)
         return found.first() if found else None
@@ -729,7 +730,7 @@ def _confirm_restart_dialog() -> ConfirmScreen:
     )
 
 
-class _FlowPane(Vertical):
+class _FlowPane(TypedAppAccess, Vertical):
     """What both flow pages share: their owner, and the intents that leave them.
 
     The question and review pages are two projections of one flow run, so the

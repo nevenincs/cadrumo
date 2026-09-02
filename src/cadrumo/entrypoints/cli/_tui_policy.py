@@ -9,7 +9,8 @@ from .command_spec import CommandSpec, TuiCapability
 
 def tui_was_requested(ctx: typer.Context) -> bool:
     """Return the root-level frontend request without duplicating CLI options."""
-    return bool(ctx.find_root().ensure_object(dict).get("tui_requested"))
+    root_object: dict[str, object] = ctx.find_root().ensure_object(dict)
+    return bool(root_object.get("tui_requested"))
 
 
 def enforce_tui_request(ctx: typer.Context, *, spec: CommandSpec) -> bool:

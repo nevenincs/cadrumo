@@ -14,6 +14,7 @@ from ..command_spec import (
     TranslationKey,
     ValueContract,
 )
+from ._command_spec_schema import config_payload_schema as _schema
 from ._spec_policies import BOOTSTRAP_DESTRUCTIVE, PROFILE_READ, STATE_FREE
 
 _BOOL = ValueContract(DeferredTarget("builtins", "bool"))
@@ -54,14 +55,6 @@ _OPERATION_ID = OptionSpec(
 
 def _handler(name: str) -> LazyBinding:
     return LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli.config._reset_cli", name))
-
-
-def _schema(name: str, identity: str) -> ResultSchemaSpec:
-    return ResultSchemaSpec(
-        SchemaState.TARGET,
-        target=DeferredTarget("cadrumo.entrypoints.cli.config_payloads", name),
-        identity=identity,
-    )
 
 
 CONFIG_RESET_COMMAND_SPECS = (

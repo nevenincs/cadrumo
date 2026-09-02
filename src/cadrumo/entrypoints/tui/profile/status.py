@@ -42,6 +42,7 @@ from ....entrypoints.tui.components.theme import (
     tokenised,
 )
 from ....entrypoints.tui.components.widgets import ContentDataTable, ContentScroll, NoticeBand
+from ..components.app_access import TypedAppAccess
 
 if TYPE_CHECKING:
     from ....application.user_profile.status_projection import StatusPageData
@@ -55,7 +56,7 @@ _ACTIVE_MARKER = "●"
 """Glyph marking the active profile row — a marker, not prose."""
 
 
-class StatusScreen(Screen[None]):
+class StatusScreen(TypedAppAccess, Screen[None]):
     """Full-screen read-only projection of the operator's configuration state."""
 
     SCOPED_CSS = False
@@ -135,7 +136,7 @@ class StatusScreen(Screen[None]):
         if not self._data.facts:
             panel.mount(Static(tr("flows.status.profile.none"), classes="status-empty"))
             return
-        table: ContentDataTable[str] = ContentDataTable(
+        table: ContentDataTable[str] = ContentDataTable[str](
             id="profile-facts",
             cursor_type="none",
             zebra_stripes=True,
@@ -157,7 +158,7 @@ class StatusScreen(Screen[None]):
         if not self._data.profiles:
             panel.mount(Static(tr("flows.status.profiles.none"), classes="status-empty"))
             return
-        table: ContentDataTable[str] = ContentDataTable(
+        table: ContentDataTable[str] = ContentDataTable[str](
             id="profiles-table",
             cursor_type="none",
             zebra_stripes=True,

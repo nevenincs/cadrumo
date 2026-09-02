@@ -11,7 +11,7 @@ without consulting the application layer itself.
 
 from __future__ import annotations
 
-from typing import ClassVar, override
+from typing import ClassVar, cast, override
 
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -20,6 +20,7 @@ from textual.widgets import DataTable, Static
 
 from .....core.i18n.render import tr
 from .....domain.modelos.work_unit import WorkUnit
+from ...components.app_access import TypedAppAccess
 from ...components.host import ScreenHostApp
 from ...components.theme import BASE_CSS, toggle_appearance, tokenised
 from ...components.widgets import ContentDataTable, ContentScroll
@@ -38,7 +39,7 @@ def _row_values(unit: WorkUnit) -> tuple[str, ...]:
     )
 
 
-class ModeloWorkSelectScreen(Screen["str | None"]):
+class ModeloWorkSelectScreen(TypedAppAccess, Screen["str | None"]):
     """Keyboard-navigable picker over the resolved work-unit catalogue."""
 
     BINDINGS: ClassVar = [
@@ -51,13 +52,16 @@ class ModeloWorkSelectScreen(Screen["str | None"]):
     def compose(self) -> ComposeResult:
         yield Static(id="modelo-select-header", classes="cadrumo-banner")
         with ContentScroll(id="modelo-select-body", classes="cadrumo-scroll"):
-            yield ContentDataTable(id="modelo-select-table", cursor_type="row", zebra_stripes=True)
+            yield ContentDataTable[str](id="modelo-select-table", cursor_type="row", zebra_stripes=True)
             yield Static(id="modelo-select-empty", classes="modelo-select-empty")
 
     def on_mount(self) -> None:
         """Populate the picker table from the already-resolved work units."""
         self.query_one("#modelo-select-header", Static).update(tr("flows.modelo_select.title"))
-        table = self.query_one("#modelo-select-table", ContentDataTable)
+        # CAST-RATIONALE-thirdparty: Textual's ``query_one`` isinstance-checks the
+        # type it is handed, so a subscripted generic cannot be passed; the widget's
+        # cell/option type is fixed where it is constructed and asserted here.
+        table = cast("ContentDataTable[str]", self.query_one("#modelo-select-table", ContentDataTable))
         for column_key in _COLUMN_KEYS:
             table.add_column(tr(f"flows.modelo_select.column.{column_key}"), key=column_key)
         units = self.select_app.units

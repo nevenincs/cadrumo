@@ -35,6 +35,7 @@ from ....core.i18n.render import tr
 from ....entrypoints.tui.components.host import ScreenHostApp
 from ....entrypoints.tui.components.status import PinnedStatusBar
 from ....entrypoints.tui.components.theme import toggle_appearance, tokenised
+from ..components.app_access import TypedAppAccess
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -88,7 +89,7 @@ class CredentialAttempt[OutcomeT](Protocol):
         ...  # pragma: no cover
 
 
-class CredentialScreen[OutcomeT](Screen[OutcomeT | None]):
+class CredentialScreen[OutcomeT](TypedAppAccess, Screen[OutcomeT | None]):
     """Host one bounded, thread-backed credential attempt at a time."""
 
     BINDINGS: ClassVar = [

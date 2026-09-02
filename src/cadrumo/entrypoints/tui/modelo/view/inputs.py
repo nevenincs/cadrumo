@@ -48,6 +48,7 @@ from .....application.modelo.workspace_models import (
     ModeloWorkspaceScalarMaterializationRecordV1,
 )
 from .....core.i18n.render import tr
+from ...components.app_access import TypedAppAccess
 from ...components.theme import toggle_appearance
 from ...components.widgets import ContentDataTable, ContentScroll, DisclosureGroup
 from .controller import ModeloWorkspaceReadSession
@@ -113,7 +114,7 @@ def _repeated_rows(record: ModeloWorkspaceRepeatedRowMaterializationRecordV1) ->
     )
 
 
-class ModeloWorkspaceInputsScreen(Screen[None]):
+class ModeloWorkspaceInputsScreen(TypedAppAccess, Screen[None]):
     """Read-only section, scalar, and repeated-row rendering for one session."""
 
     BINDINGS: ClassVar = [
@@ -185,7 +186,7 @@ class ModeloWorkspaceInputsScreen(Screen[None]):
             body.mount(Static(tr("flows.modelo_workspace_inputs.empty"), id="workspace-inputs-empty"))
             return
         for index, (record_family, rows) in enumerate(sorted(rows_by_family.items())):
-            table = ContentDataTable(id=f"workspace-inputs-table-{index}", cursor_type="row", zebra_stripes=True)
+            table = ContentDataTable[str](id=f"workspace-inputs-table-{index}", cursor_type="row", zebra_stripes=True)
             body.mount(DisclosureGroup(table, title=_family_title(record_family), collapsed=False))
             for column_key in _COLUMN_KEYS:
                 table.add_column(tr(f"flows.modelo_workspace_inputs.column.{column_key}"), key=column_key)

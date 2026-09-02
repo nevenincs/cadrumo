@@ -46,6 +46,7 @@ from .....application.modelo.workspace_models import (
     ModeloWorkspaceCapabilityV1,
 )
 from .....core.i18n.render import tr
+from ...components.app_access import TypedAppAccess
 from ...components.theme import toggle_appearance
 from ...components.widgets import ContentDataTable, ContentScroll
 from .controller import ModeloWorkspaceReadSession
@@ -69,7 +70,7 @@ def _filing_capabilities(session: ModeloWorkspaceReadSession) -> tuple[ModeloWor
     return tuple(capability for capability in session.projection.capabilities if capability.capability in wanted)
 
 
-class ModeloWorkspaceFilingScreen(Screen[None]):
+class ModeloWorkspaceFilingScreen(TypedAppAccess, Screen[None]):
     """The two filing capabilities, each with why it reads as it does."""
 
     BINDINGS: ClassVar = [
@@ -110,7 +111,7 @@ class ModeloWorkspaceFilingScreen(Screen[None]):
         the wrong explanation the moment export becomes available.
         """
         body = self.query_one("#workspace-filing-body", ContentScroll)
-        table = ContentDataTable(id="workspace-filing-table", cursor_type="row", zebra_stripes=True)
+        table = ContentDataTable[str](id="workspace-filing-table", cursor_type="row", zebra_stripes=True)
         body.mount(table)
         for column_key in _COLUMN_KEYS:
             table.add_column(tr(f"flows.modelo_workspace_filing.column.{column_key}"), key=column_key)

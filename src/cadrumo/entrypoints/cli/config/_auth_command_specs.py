@@ -24,6 +24,7 @@ from ..command_spec import (
     TuiCapability,
     ValueContract,
 )
+from ._command_spec_schema import config_payload_schema as _schema
 from ._spec_policies import ENCRYPTED_DESTRUCTIVE, ENCRYPTED_READ, ENCRYPTED_WRITE, STATE_FREE
 
 _BOOL = ValueContract(DeferredTarget("builtins", "bool"))
@@ -91,14 +92,6 @@ _HANDLER_MODULES: Final[dict[str, str]] = {
 
 def _handler(module: str, name: str) -> LazyBinding:
     return LazyBinding.available(DeferredTarget(_HANDLER_MODULES[module], name))
-
-
-def _schema(name: str, identity: str) -> ResultSchemaSpec:
-    return ResultSchemaSpec(
-        SchemaState.TARGET,
-        target=DeferredTarget("cadrumo.entrypoints.cli.config_payloads", name),
-        identity=identity,
-    )
 
 
 def _group(key: str, parent: str, token: str, help_key: str) -> CommandSpec:

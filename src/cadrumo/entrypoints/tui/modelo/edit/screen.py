@@ -33,6 +33,7 @@ from textual.widgets import Input, Label, Static
 
 from .....core.config import load_settings
 from .....core.i18n.render import tr
+from ...components.app_access import TypedAppAccess
 from ...components.theme import toggle_appearance
 from ...components.widgets import ContentScroll
 from .controller import ModeloEditController
@@ -64,7 +65,7 @@ def casilla_input_id(casilla_id: str) -> str:
     return f"edit-casilla-{casilla_id}"
 
 
-class ModeloEditScreen(Screen[None]):
+class ModeloEditScreen(TypedAppAccess, Screen[None]):
     """One admitted edit, rendered as editable controls over its permitted surface."""
 
     BINDINGS: ClassVar = [

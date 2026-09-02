@@ -21,6 +21,7 @@ from ..command_spec import (
     TuiCapability,
     ValueContract,
 )
+from ._command_spec_schema import config_payload_schema as _schema
 from ._spec_policies import BOOTSTRAP_DESTRUCTIVE, BOOTSTRAP_WRITE, ENCRYPTED_DESTRUCTIVE, STATE_FREE
 
 _OUTPUT_LANGUAGE = OptionSpec(
@@ -30,14 +31,6 @@ _OUTPUT_LANGUAGE = OptionSpec(
     default=ParameterDefault.value(None),
     help_key=TranslationKey("cli.config.auth.output_language_help"),
 )
-
-
-def _schema(name: str, identity: str) -> ResultSchemaSpec:
-    return ResultSchemaSpec(
-        SchemaState.TARGET,
-        target=DeferredTarget("cadrumo.entrypoints.cli.config_payloads", name),
-        identity=identity,
-    )
 
 
 CONFIG_CUSTODY_COMMAND_SPECS = (
