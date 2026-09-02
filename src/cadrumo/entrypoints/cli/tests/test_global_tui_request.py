@@ -77,6 +77,7 @@ def test_only_implemented_cli_tui_routes_are_enrolled() -> None:
     expected = {
         "config_login",
         "config_profile_status",
+        "root",
     }
     available = {key for key, spec in specs.items() if spec.tui_capability is TuiCapability.AVAILABLE}
     assert available == expected
@@ -92,9 +93,22 @@ def test_available_tui_route_never_falls_back_on_a_consoleless_host() -> None:
     assert result.stdout == ""
 
 
-@pytest.mark.parametrize("command", ((), ("app",), ("config",)))
-def test_terminal_root_and_group_paths_do_not_ignore_tui(command: tuple[str, ...]) -> None:
+@pytest.mark.parametrize("command", (("app",), ("config",)))
+def test_unenrolled_group_paths_do_not_ignore_tui(command: tuple[str, ...]) -> None:
     result = invoke_cached_cli(("--language", "en", "--format", "json", "--tui", *command))
 
     assert result.exit_code != 0
     assert json.loads(result.stderr)["error"]["code"] == "TUI_NOT_IMPLEMENTED"
+
+
+def test_the_bare_root_path_reaches_the_session_rather_than_refusing_it() -> None:
+    """A bare `--tui` is a request for the session, so it fails on the console.
+
+    The refusal that matters here is the console one: reaching it proves the
+    request was routed rather than rejected as unimplemented, which is what the
+    root enrolment changed.
+    """
+    result = invoke_cached_cli(("--language", "en", "--format", "json", "--tui"))
+
+    assert result.exit_code != 0
+    assert json.loads(result.stderr)["error"]["code"] == "REFUSED_FLOW_UNSUPPORTED_CONSOLE"

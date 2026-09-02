@@ -37,6 +37,7 @@ def root_command(
     help_: bool = False,
     format_: OutputFormat = OutputFormat.TEXT,
     tui: bool = False,
+    self_test: bool = False,
     quiet: bool = False,
     verbose: bool = False,
     debug: bool = False,
@@ -65,13 +66,13 @@ def root_command(
         from ._tui_policy import enforce_tui_request
         from .command_specs import COMMAND_GRAPH
 
-        if enforce_tui_request(ctx, spec=COMMAND_GRAPH.by_key()["root"]):
+        if enforce_tui_request(ctx, spec=COMMAND_GRAPH.by_key()["root"], require_console=not self_test):
             # A bare `aeat --tui` asks for the full-screen session itself, not a
             # routed command, so the request ends here in a child interpreter
             # rather than falling through to the scripted landing surface.
             from ._tui_session import run_tui_session
 
-            raise typer.Exit(run_tui_session())
+            raise typer.Exit(run_tui_session(self_test=self_test))
         if profile is not None:
             activate_profile_override(ctx, profile)
         else:

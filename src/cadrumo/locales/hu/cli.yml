@@ -3829,6 +3829,7 @@ cli:
     language_help: A kimenet és a súgószöveg nyelve (en, es, ca, hu).
     profile_help: Az aktív profil neve.
     quiet_help: Csak a hibák megjelenítése.
+    self_test_help: Elindítja a teljes képernyős felületet terminál nélkül, majd kilép, hogy igazolja az indulást.
     tui_help: A teljes képernyős felület kérése a kiválasztott parancshoz.
     verbose_help: Részletes kimenet engedélyezése.
     version_help: A verziószám megjelenítése és kilépés.

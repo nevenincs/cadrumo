@@ -15,8 +15,14 @@ def tui_was_requested(ctx: typer.Context) -> bool:
     return bool(root_object.get("tui_requested"))
 
 
-def enforce_tui_request(ctx: typer.Context, *, spec: CommandSpec) -> bool:
-    """Refuse an unenrolled request and report whether TUI was requested."""
+def enforce_tui_request(ctx: typer.Context, *, spec: CommandSpec, require_console: bool = True) -> bool:
+    """Refuse an unenrolled request and report whether TUI was requested.
+
+    ``require_console`` is lowered only for the headless self-test: the
+    full-screen refusal below exists to protect an interactive operator from
+    a console that cannot render, and a runner proving an installed artifact
+    starts has no terminal by construction.
+    """
     if not tui_was_requested(ctx):
         return False
     if spec.tui_capability is TuiCapability.NOT_IMPLEMENTED:
@@ -28,7 +34,7 @@ def enforce_tui_request(ctx: typer.Context, *, spec: CommandSpec) -> bool:
     from ...application.flows.errors import FlowUnsupportedConsoleError
     from ...core.flows import FrontendCapability
 
-    if detect_frontend_capability() is not FrontendCapability.FULL_SCREEN:
+    if require_console and detect_frontend_capability() is not FrontendCapability.FULL_SCREEN:
         raise FlowUnsupportedConsoleError(
             translated_message="flows.errors.unsupported_console",
         )
