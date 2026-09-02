@@ -11,7 +11,11 @@ from ...core.paths import effective_storage_root
 from ...core.storage_taxonomy import StorageCategory
 from ...core.storage_taxonomy_locations import storage_location
 from ...core.time.utc import validate_utc_aware
-from ..profile_deletion_hold_contract import ProfileDeletionHoldOwnerProjection, ProfileDeletionHoldOwnerValue
+from ..profile_deletion_hold_contract import (
+    ProfileDeletionHoldOwner,
+    ProfileDeletionHoldOwnerProjection,
+    ProfileDeletionHoldOwnerValue,
+)
 from .custody_hold_models import (
     ProfileCustodyHoldAssessment,
     ProfileCustodyHoldEvidence,
@@ -111,8 +115,8 @@ class ProfileCustodyHoldAuthority:
 
     def __init__(self, *, root: Path | None = None) -> None:
         """Bind the independently-owned legal and filing evidence owners."""
-        self._legal = _ProfileCustodyHoldEvidenceOwner(root=root, owner="legal")
-        self._filing = _ProfileCustodyHoldEvidenceOwner(root=root, owner="filing")
+        self._legal = _ProfileCustodyHoldEvidenceOwner(root=root, owner=ProfileDeletionHoldOwner.LEGAL)
+        self._filing = _ProfileCustodyHoldEvidenceOwner(root=root, owner=ProfileDeletionHoldOwner.FILING)
 
     def assess(self, profile_id: UUID, *, now: datetime) -> ProfileCustodyHoldAssessment:
         """Return the joined deletion-preflight assessment for a profile at ``now``."""
