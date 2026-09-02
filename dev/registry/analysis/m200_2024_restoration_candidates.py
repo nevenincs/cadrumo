@@ -13,9 +13,9 @@ import json
 import re
 import shutil
 import subprocess
+import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
-import sys
 from typing import Any
 
 import rtoml
@@ -230,11 +230,17 @@ def _canonical_relative_path(candidate: RestorationCandidate) -> Path:
 
 def _render_registry_fragment(candidate: RestorationCandidate) -> str:
     """Render only registry-schema fields; review provenance stays outside."""
-    quote = lambda value: json.dumps(value, ensure_ascii=False)
-    array = lambda values: "[" + ", ".join(quote(value) for value in values) + "]"
+
+    def quote(value: str) -> str:
+        return json.dumps(value, ensure_ascii=False)
+
+    def array(values: tuple[str, ...]) -> str:
+        return "[" + ", ".join(quote(value) for value in values) + "]"
+
     return "\n".join(
         (
             "# Generated from the current M200/2024 semantic map and official aeat-dr-200-2024 design.",
+            f"# Physical export placement is current field {candidate.export_refs[0]}; its reciprocal ref is CLI-owned.",
             f"# Semantic payload reviewed from pinned repository commit {HISTORIC_COMMIT}.",
             "",
             '[[revisions."2024".casillas]]',
@@ -247,7 +253,6 @@ def _render_registry_fragment(candidate: RestorationCandidate) -> str:
             f"input_kind = {quote(candidate.input_kind)}",
             f"legal_refs = {array(candidate.legal_refs)}",
             f"source_refs = {array(candidate.source_refs)}",
-            f"export_refs = {array(candidate.export_refs)}",
             "",
         ),
     )

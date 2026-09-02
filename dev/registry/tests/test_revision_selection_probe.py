@@ -10,7 +10,8 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
-from dev.registry.analysis.revision_selection_probe import declared_period_codes, probe_modelo
+
+from ..analysis.revision_selection_probe import declared_period_codes, probe_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -46,20 +47,30 @@ def test_each_scheme_declares_its_own_period_family(authority: ValidatedRegistry
     assert len(declared_period_codes(revisions["esquema-importacion"])) == 12
 
 
-def test_a_revision_declaring_no_codes_yields_no_probe_rather_than_a_guessed_one(
-    authority: ValidatedRegistryAuthority,
-) -> None:
+def test_a_revision_declaring_no_codes_reports_none_rather_than_a_default() -> None:
     """A default code is how the wrong question gets asked, so none is supplied.
 
-    Modelo 100's revisions declare no period codes. The probe reports nothing for
-    them, which is honest: it has not been told what to ask.
-    """
-    revisions = authority.modelo("100").revisions
-    without_codes = [rid for rid, rev in revisions.items() if not declared_period_codes(rev)]
+    Constructed rather than pinned. The first version of this test asserted the
+    corpus contains revisions declaring no period codes, and it does not: modelo
+    100 declares ``0A`` on every revision. What modelo 100 lacks is
+    ``year_from`` and ``year_to``, a different field on the same selector, and
+    the two were conflated while writing the test.
 
-    assert without_codes, "the corpus is expected to contain revisions declaring no period codes"
-    probes = probe_modelo(authority, "100")
-    assert [probe.revision for probe in probes if probe.revision in without_codes] == []
+    The contract is what matters and it holds regardless of the corpus: a
+    revision whose selector declares nothing yields no codes, and a missing
+    selector yields none either, so no probe can be built from a guess.
+    """
+
+    class _NoSelector:
+        period_selector = None
+
+    class _EmptySelector:
+        class period_selector:  # noqa: N801 - a stand-in shape, not a public type
+            periods: tuple[str, ...] = ()
+
+    assert declared_period_codes(_NoSelector()) == ()
+    assert declared_period_codes(_EmptySelector()) == ()
+    assert declared_period_codes(object()) == ()
 
 
 def test_a_year_outside_the_declared_window_is_reported_as_a_named_refusal(

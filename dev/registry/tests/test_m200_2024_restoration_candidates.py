@@ -7,6 +7,7 @@ import pytest
 
 from ..analysis import m200_2024_restoration_candidates as subject
 from ..analysis.m200_semantic_casilla_candidates import M200CasillaDisposition
+from ..pipeline._casilla_export_refs import write_generated_casilla_export_refs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -110,7 +111,8 @@ def test_apply_patch_has_deterministic_canonical_path_and_registry_only_content(
     assert patch == subject.render_apply_patch((_restoration(),), (), workspace_root=tmp_path)
     assert "*** Add File: src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024/casillas/c00093.toml" in patch
     assert 'id = "00093"' in patch
-    assert 'export_refs = ["m200-2024.dp200012.f0013"]' in patch
+    assert "Physical export placement is current field m200-2024.dp200012.f0013" in patch
+    assert "export_refs =" not in patch
     assert subject.HISTORIC_COMMIT in patch
     assert "historic_path" not in patch
     assert "current_source_sha256" not in patch
@@ -130,3 +132,19 @@ def test_apply_patch_refuses_any_dry_run_refusal(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError, match="1 restoration refusals"):
         subject.render_apply_patch((_restoration(),), refusals, workspace_root=tmp_path)
+
+
+def test_bootstrap_fragment_gets_reciprocal_ref_only_after_render_staging(tmp_path: Path) -> None:
+    casillas_root = tmp_path / "casillas"
+    casillas_root.mkdir()
+    fragment = casillas_root / "c00093.toml"
+    fragment.write_text(subject._render_registry_fragment(_restoration()), encoding="utf-8")
+    assert "export_refs =" not in fragment.read_text(encoding="utf-8")
+
+    written = write_generated_casilla_export_refs(
+        tmp_path,
+        export_refs_by_casilla={"00093": ("m200-2024.dp200012.f0013",)},
+    )
+
+    assert written == (fragment,)
+    assert 'export_refs = ["m200-2024.dp200012.f0013"]' in fragment.read_text(encoding="utf-8")

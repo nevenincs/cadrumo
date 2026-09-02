@@ -206,6 +206,58 @@ def test_receipt_is_deterministic_after_normalizing_root_and_output_evidence(tmp
     assert first.rehearsal_root != second.rehearsal_root
 
 
+def test_receipt_identity_binds_stable_fields_but_only_evidence_binds_command_output(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    inventory, manifest, component = _fixture(repo)
+    receipt = rehearse_object_name_component(manifest, inventory=inventory, component=component, repo_root=repo)
+
+    def recompute(candidate: Any) -> tuple[str, str]:
+        provisional = replace(candidate, receipt_id="", evidence_digest="")
+        receipt_id = _digest(
+            canonical_json_bytes(rehearsal_module._receipt_payload(provisional, include_output_evidence=False))
+        )
+        stable = replace(provisional, receipt_id=receipt_id)
+        evidence_digest = _digest(
+            canonical_json_bytes(rehearsal_module._receipt_payload(stable, include_output_evidence=True))
+        )
+        return receipt_id, evidence_digest
+
+    assert recompute(receipt) == (receipt.receipt_id, receipt.evidence_digest)
+    stable_mutations = (
+        replace(receipt, manifest_digest=_digest(b"other manifest")),
+        replace(receipt, inventory_digest=_digest(b"other inventory")),
+        replace(receipt, component_id=_digest(b"other component")),
+        replace(receipt, operation_ids=("other-operation",)),
+        replace(receipt, baseline_tree_digest=_digest(b"other tree")),
+        replace(receipt, input_file_digests=(("src/example/contracts.py", _digest(b"other input")),)),
+        replace(receipt, proposed_file_digests=(("src/example/contracts.py", _digest(b"other output")),)),
+        replace(receipt, changed_paths=("src/example/other.py",)),
+        replace(receipt, changed_path_digest=_digest(b"other allowlist")),
+        replace(receipt, finding_delta=replace(receipt.finding_delta, after_count=99)),
+        replace(receipt, tool_versions=(*receipt.tool_versions, ("probe", "1"))),
+        replace(
+            receipt,
+            gate_outcomes=(replace(receipt.gate_outcomes[0], argv=(sys.executable, "--version")),),
+        ),
+        replace(receipt, source_tree_unchanged=False),
+    )
+    assert all(recompute(candidate)[0] != receipt.receipt_id for candidate in stable_mutations)
+
+    volatile = replace(
+        receipt,
+        gate_outcomes=(
+            replace(
+                receipt.gate_outcomes[0],
+                stdout_sha256=_digest(b"volatile output"),
+                stdout_bytes=len(b"volatile output"),
+            ),
+        ),
+    )
+    volatile_receipt_id, volatile_evidence_digest = recompute(volatile)
+    assert volatile_receipt_id == receipt.receipt_id
+    assert volatile_evidence_digest != receipt.evidence_digest
+
+
 def test_failed_gate_reports_exit_and_output_digests_and_retains_root(tmp_path: Path) -> None:
     repo = tmp_path / "repo"
     gate = (sys.executable, "-c", "import sys; print('out'); print('err', file=sys.stderr); raise SystemExit(7)")
@@ -243,6 +295,25 @@ def test_gate_runs_in_isolated_copy_with_bound_runtime_environment(tmp_path: Pat
 
     assert receipt.gate_outcomes[0].argv == gate
     assert receipt.gate_outcomes[0].return_code == 0
+
+
+def test_gate_argv_metacharacters_are_passed_literally_without_shell_interpretation(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    sentinel = repo / "shell-interpreted.txt"
+    metacharacter_argument = f"literal & echo shell > {sentinel}"
+    gate = (
+        sys.executable,
+        "-c",
+        "import sys; assert sys.argv[1] == sys.argv[2]",
+        metacharacter_argument,
+        metacharacter_argument,
+    )
+    inventory, manifest, component = _fixture(repo, gate=gate)
+
+    receipt = rehearse_object_name_component(manifest, inventory=inventory, component=component, repo_root=repo)
+
+    assert receipt.gate_outcomes[0].argv == gate
+    assert not sentinel.exists()
 
 
 def test_timed_out_gate_fails_closed_and_retains_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -289,6 +360,29 @@ def test_post_allocation_failures_retain_root_and_live_tree(
 
     assert Path(str(raised.value).rsplit("retained rehearsal root: ", 1)[1]).is_dir()
     assert _live_bytes(repo) == before
+
+
+def test_post_copy_byte_corruption_is_detected_by_snapshot_hash_verification(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repo = tmp_path / "repo"
+    inventory, manifest, component = _fixture(repo)
+    original_copyfile = shutil.copyfile
+
+    def corrupting_copyfile(source: Any, target: Any, **kwargs: Any) -> Any:
+        result = original_copyfile(source, target, **kwargs)
+        if Path(target).as_posix().endswith("src/example/contracts.py"):
+            Path(target).write_bytes(b"corrupted after copy\n")
+        return result
+
+    monkeypatch.setattr(shutil, "copyfile", corrupting_copyfile)
+
+    with pytest.raises(
+        ObjectNameRehearsalError, match=r"temporary copy hash differs.*retained rehearsal root"
+    ) as raised:
+        rehearse_object_name_component(manifest, inventory=inventory, component=component, repo_root=repo)
+
+    assert Path(str(raised.value).rsplit("retained rehearsal root: ", 1)[1]).is_dir()
 
 
 def test_transformation_changed_paths_must_exactly_equal_component_allowlist(
@@ -357,6 +451,63 @@ def test_selected_component_cannot_be_replaced_by_an_otherwise_valid_component(t
     assert receipt.operation_ids == ("rename-widgets",)
     assert receipt.changed_paths == ("src/example/contracts.py",)
     assert (Path(receipt.rehearsal_root) / "src/example/reports.py").read_bytes() == b"class Reports:\n    pass\n"
+
+
+def test_shared_hard_edge_makes_two_operations_indivisible(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    inventory, manifest, _component = _fixture(repo)
+    _write(repo, "src/example/reports.py", b"class Reports:\n    pass\n")
+    consumer_path = "src/example/consumer.py"
+    _write(
+        repo,
+        consumer_path,
+        b"from example.contracts import Widgets\nfrom example.reports import Reports\n",
+    )
+    inventory = scan((repo / "src", repo / "dev"), repo)
+    widget_declaration = next(item for item in inventory.declarations if item.name == "Widgets")
+    report_declaration = next(item for item in inventory.declarations if item.name == "Reports")
+    report_finding = next(item for item in inventory.findings if item.name == "Reports")
+    widget_operation = manifest.operations[0].model_copy(
+        update={
+            "expected_reference_classes": ("definition", "shared-consumer", "static-import"),
+            "changed_paths": (widget_declaration.path, consumer_path),
+        }
+    )
+    report_operation = widget_operation.model_copy(
+        update={
+            "operation_id": "rename-reports",
+            "finding_id": report_finding.id,
+            "old_locator": report_declaration.qualified_locator,
+            "old_path": report_declaration.path,
+            "new_locator": replace(report_declaration, name="Report").qualified_locator,
+            "new_path": report_declaration.path,
+            "preconditions": (
+                widget_operation.preconditions[0].model_copy(
+                    update={"path": report_declaration.path, "sha256": report_declaration.source_hash}
+                ),
+            ),
+            "changed_paths": (report_declaration.path, consumer_path),
+        }
+    )
+    manifest = manifest.model_copy(
+        update={
+            "inventory_digest": to_json(inventory)["inventory_digest"],
+            "operations": (widget_operation, report_operation),
+        }
+    )
+    shared_edges = (
+        HardEdge("rename-widgets", consumer_path, ReferenceKind.SYMBOL_IMPORT),
+        HardEdge("rename-reports", consumer_path, ReferenceKind.SYMBOL_IMPORT),
+    )
+    component = build_manifest_components(manifest, inventory=inventory, hard_edges=shared_edges)[0]  # ty: ignore[invalid-argument-type]
+    assert component.operation_ids == ("rename-reports", "rename-widgets")
+    assert component.affected_paths.count(consumer_path) == 1
+
+    partial = replace(component, operation_ids=("rename-widgets",))
+    with pytest.raises(
+        ObjectNameRehearsalError, match="supplied component differs from the canonical repository graph"
+    ):
+        rehearse_object_name_component(manifest, inventory=inventory, component=partial, repo_root=repo)
 
 
 def test_post_gate_filesystem_side_effect_must_equal_allowlist(tmp_path: Path) -> None:
