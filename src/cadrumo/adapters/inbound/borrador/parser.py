@@ -21,13 +21,13 @@ from pathlib import Path
 from ....core.logging import get_logger
 from ._detect import detect_artefact_kind
 from ._extractors.selection import get_extractor
+from .errors import BorradorParseError
 from .schema import (
     ArtefactKind,
     BorradorExtractionProfile,
     BorradorParseMode,
     InboundBorradorObservation,
 )
-from .errors import BorradorParseError
 
 _logger = get_logger(__name__)
 

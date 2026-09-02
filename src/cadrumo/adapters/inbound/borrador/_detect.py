@@ -16,8 +16,8 @@ from pathlib import Path
 
 from ..pdf.redaction import INPUT_PDF_SOURCE_LABEL as _INPUT_PDF_SOURCE_LABEL
 from ._parsers.pdfplumber_backend import extract_pages_text
-from .schema import ArtefactKind
 from .errors import ArtefactNotRecognisedError
+from .schema import ArtefactKind
 
 _VISTA_PREVIA_RE = re.compile(r"\bVISTA\s+PREVIA\b", re.IGNORECASE)
 _BORRADOR_RE = re.compile(r"\bBORRADOR\b", re.IGNORECASE)

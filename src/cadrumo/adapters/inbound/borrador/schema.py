@@ -71,7 +71,9 @@ class BorradorExtractionTarget(Protocol):
     """
 
     @property
-    def casilla_id(self) -> CasillaId: ...
+    def casilla_id(self) -> CasillaId:
+        """Stable identifier of the casilla this target extracts."""
+        ...
 
 
 class BorradorExtractionProfile(Protocol):
@@ -84,13 +86,19 @@ class BorradorExtractionProfile(Protocol):
     """
 
     @property
-    def id(self) -> str: ...
+    def id(self) -> str:
+        """Registry extraction-profile identifier, stamped onto the observation."""
+        ...
 
     @property
-    def target_casillas(self) -> tuple[BorradorExtractionTarget, ...]: ...
+    def target_casillas(self) -> tuple[BorradorExtractionTarget, ...]:
+        """Casillas the profile requires the parser to filter to and account for."""
+        ...
 
     @property
-    def min_coverage(self) -> Decimal: ...
+    def min_coverage(self) -> Decimal:
+        """Fraction of ``target_casillas`` below which the parse fails hard."""
+        ...
 
 
 class InboundBorradorObservation(BaseModel):

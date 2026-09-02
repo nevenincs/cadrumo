@@ -56,7 +56,19 @@ _NEW_TRANSLATION_KEYS = (
 
 def _import(pdf: Path, *, filing_year: int = _FIXTURE_YEAR):
     return _invoke(
-        ["--format", "json", "app", "live", "borrador", "100", "import", "--file", str(pdf), "--filing-year", str(filing_year)]
+        [
+            "--format",
+            "json",
+            "app",
+            "live",
+            "borrador",
+            "100",
+            "import",
+            "--file",
+            str(pdf),
+            "--filing-year",
+            str(filing_year),
+        ]
     )
 
 
@@ -113,7 +125,9 @@ def test_import_stores_a_digest_reference_and_never_the_operator_path(tmp_path: 
         assert "mi-borrador" not in source_url
         assert str(tmp_path) not in source_url
 
-        viewed = _json(_invoke(["--format", "json", "app", "live", "borrador", "100", "view", str(payload["snapshot_id"])]))
+        viewed = _json(
+            _invoke(["--format", "json", "app", "live", "borrador", "100", "view", str(payload["snapshot_id"])])
+        )
         assert str(tmp_path) not in str(viewed)
         assert viewed["source_url"] == source_url
 

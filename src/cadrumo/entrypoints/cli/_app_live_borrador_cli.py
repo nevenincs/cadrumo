@@ -100,9 +100,7 @@ def borrador_100_import(ctx: typer.Context, file: Path, filing_year: int, period
             blank_casillas.append(casilla.casilla_id)
             continue
         value = casilla.printed_value
-        binding_values[f"casilla.{casilla.casilla_id}"] = (
-            value if isinstance(value, Decimal) else str(value)
-        )
+        binding_values[f"casilla.{casilla.casilla_id}"] = value if isinstance(value, Decimal) else str(value)
 
     coverage = observation.extraction_coverage
     if coverage is None:
