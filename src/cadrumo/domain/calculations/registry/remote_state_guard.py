@@ -22,6 +22,7 @@ from ....core.remote_authority import (
     is_sanctioned_gov_idp_host,
 )
 from .errors import RegistryValidationError
+from .schema_base import EvidenceTier
 from .schema_verification import LiveCrossReferenceDecision
 
 CrossReferenceClassification = Literal[
@@ -34,7 +35,11 @@ CrossReferenceClassification = Literal[
 ]
 RemoteOperationKind = Literal["http", "browser_action", "local_workbook"]
 RemoteGuardDecision = Literal["allowed", "blocked"]
-RemoteEvidenceTier = Literal["official_source_guidance", "executable_parity_evidence", "layout_authority"]
+RemoteEvidenceTier = Literal[
+    EvidenceTier.OFFICIAL_SOURCE_GUIDANCE,
+    EvidenceTier.EXECUTABLE_PARITY_EVIDENCE,
+    EvidenceTier.LAYOUT_AUTHORITY,
+]
 
 _READ_ONLY_HTTP_METHODS = {"GET", "HEAD", "OPTIONS"}
 # Canonical AEAT write-class action labels that EVERY guard policy
@@ -337,7 +342,7 @@ def remote_state_policy_from_cross_reference(decision: LiveCrossReferenceDecisio
     Returns:
         The :class:`RemoteStateGuardPolicy` derived from the cross-reference decision.
     """
-    if decision.evidence_tier == "legal_authority":
+    if decision.evidence_tier is EvidenceTier.LEGAL_AUTHORITY:
         raise RegistryValidationError("remote-state policy cannot be built from legal-authority evidence")
     evidence_tier: RemoteEvidenceTier = decision.evidence_tier
     classification: CrossReferenceClassification
@@ -479,15 +484,16 @@ def _evaluate_http(policy: RemoteStateGuardPolicy, operation: RemoteOperation) -
     # of the same helper (the Cl@ve landing predicates) never see pydantic
     # normalisation and so refuse an explicit ``:443`` outright; the two
     # populations agree on every authority that differs in origin.
-    raw_url = str(operation.url)
+    url = operation.url
+    raw_url = str(url)
     host = canonical_remote_hostname(raw_url)
-    if host is None:
+    if url is None or host is None:
         return _blocked(
             policy,
             f"AEAT remote authority {raw_url!r} is not a bare {REMOTE_READ_SCHEME} host "
             "(scheme, user-info or port refused)",
         )
-    if reason := _http_policy_block_reason(policy, operation.url, operation.action, host):
+    if reason := _http_policy_block_reason(policy, url, operation.action, host):
         return _blocked(policy, reason)
     return RemoteStateGuardResult(decision="allowed", reason="read-only AEAT operation allowed", policy_id=policy.id)
 
