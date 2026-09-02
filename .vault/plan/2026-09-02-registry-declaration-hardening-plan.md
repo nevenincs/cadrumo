@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:7fadbb0784b2321bd4510e143b8f4a73a8fbd4bb657b4545a3b1d5275e661cff'
+body_hash: 'sha256:2a9251fe3ac6c7f47c18f5350d4f2ec94c151b77f63d42198759341c129f4a16'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -444,6 +444,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S212` - Retry only an ambiguity refusal with a date, halving the probe suite runtime that was driving worker crashes; `dev/registry/analysis/revision_selection_probe.py`.
 - [x] `W06.P13.S213` - Add the category membership criterion the three withdrawn and narrowed conditions make due; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S214` - Measure the plan's duplicated top-level sections against the template and establish that they predate this campaign; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W06.P13.S215` - Merge the plan's triplicated Description and Verification and duplicated Parallelization into one of each, proving no paragraph was lost; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 

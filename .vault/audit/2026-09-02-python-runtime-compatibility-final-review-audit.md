@@ -55,3 +55,97 @@ Resolve the three HIGH findings before marking the feature complete: install bin
 After the final compatibility implementation and lock changes settle, perform one clean-commit matrix run for source, binary, and sealed-artifact smoke. Ensure the declared canary selector is the one provisioned and recorded, promote only evidence tied to that commit, and keep the advisory 3.15 binary wheel gap visible.
 
 Move the future-directive and MCP probes into the blocking compatibility surface, then narrow the failure classifier. The existing `from __future__ import annotations` policy itself is correct for the supported runtimes; it is the reachability of its gate that needs hardening.
+
+## Re-review (2026-09-02)
+
+The implementation was re-reviewed after the P06 corrections. The authoritative
+evidence is a clean detached run at commit
+`ea2f347ba22a5d566f18f8c97a995c22348eb3d9`, using sealed cohort
+`d57b1de3…`. Source probes pass on CPython 3.13.14, 3.14.6, and 3.15.0b4;
+each row records the installed-package behavior and `cadrumo-mcp --help`
+probes. Hash-bound binary probes pass on CPython 3.13.14 and 3.14.6 using
+runtime-specific wheelhouses with `--offline`, `--no-index`,
+`--only-binary :all:`, and `--require-hashes`. The advisory CPython 3.15.0b4
+binary row is a failed, attributable `missing-wheel` verdict for `pydantic-core`
+and PyYAML across the supported platform targets, not a skip. The cohort,
+source, lock, and wheelhouse identities are carried into the evidence records.
+
+The checked-in contract is coherent: package and lock metadata declare
+`>=3.13` with no upper bound; the explicit inventory blocks 3.13 and 3.14,
+keeps 3.15 as a non-classified prerelease canary, and uses the provisionable
+rolling selector `3.15`; `.python-version` remains the exact 3.13.11 cohort
+builder. The AST future-directive policy permits only
+`from __future__ import annotations` and now runs as a fail-closed step in the
+blocking inventory job. The compatibility census, oldest-grammar parser,
+inventory projection, lock check, and Ruff gates pass. The current shared
+worktree's one facade-discovery failure is unrelated concurrent drift in
+`src/cadrumo/core/__init__.py` (`__all__` is empty) and is not a compatibility
+finding.
+
+### sealed-dependency-closure-resolution | low | RESOLVED — prior HIGH finding
+
+Binary setup now validates the cohort wheelhouse against the source archive's
+lock digest, selects the observed runtime minor and platform, extracts only that
+closure, rehashes every selected wheel, and installs with the sealed offline
+and hash-enforcement flags. Ambient UV/PIP resolver inputs are scrubbed. The
+binary evidence requires the runtime-wheelhouse digest and sealed dependency
+source, so a package-index fallback cannot produce a passing row.
+
+### target-runtime-tests-resolution | low | RESOLVED — prior HIGH finding
+
+Both source and binary paths invoke the selected venv interpreter with isolated
+import/deprecation settings and record the package-behavior and MCP-console
+tests. `ProbeEvidence` rejects a passing record without exactly that complete,
+passing focused set. The stable rows therefore carry target-interpreter
+behavior evidence rather than only host-tooling tests.
+
+### final-evidence-provenance-resolution | low | RESOLVED — prior HIGH finding
+
+The replacement matrix is same-commit and clean-state evidence at
+`ea2f347ba22a5d566f18f8c97a995c22348eb3d9`, with one sealed cohort identity
+and lock/artifact digests carried through every row. The source and binary
+records remain separate, while binary rows additionally bind the cohort
+manifest and runtime wheelhouse bytes.
+
+### canary-selector-identity-resolution | low | RESOLVED — prior MEDIUM finding
+
+The inventory and validator now declare the rolling `3.15` selector, and the
+observed canary is CPython 3.15.0b4. The row remains prerelease, advisory, and
+classifier-ineligible, as required; a fixed unavailable RC selector is no
+longer claimed.
+
+### future-directive-reachability-resolution | low | RESOLVED — prior MEDIUM finding
+
+The runtime-inventory job runs the AST future-directive test under
+`set -euo pipefail` with no `continue-on-error`; downstream compatibility jobs
+depend on that job. A forbidden future feature therefore blocks the dedicated
+compatibility workflow.
+
+### mcp-surface-unprobed-resolution | low | RESOLVED — prior MEDIUM finding
+
+The shared focused target-runtime set imports the installed MCP module and
+executes the installed `cadrumo-mcp --help` console script in both source and
+binary modes. The result is required for a passing evidence record.
+
+### failure-taxonomy-resolution | low | RESOLVED — prior LOW finding
+
+Binary missing-wheel classification is limited to resolver-specific
+diagnostics (`no solution found`, matching-distribution/wheel availability, and
+equivalent phrases). Detector tests confirm that arbitrary wheel metadata,
+hash, or verification prose remains a normal failed-install category.
+
+### final-severity-disposition | low | No remaining critical or high findings
+
+No critical or high-severity findings remain after this re-review. The sealed
+wheelhouse audit and the same-commit source/binary evidence support the accepted
+`>=3.13` policy, with 3.15 binary support correctly left advisory until its
+native dependency wheels are available and promoted through the inventory.
+
+## Re-review recommendations
+
+Keep the exact-commit evidence refresh and runtime-specific wheelhouse build as
+release gates. When CPython 3.15 becomes stable, rerun both source and binary
+evidence, resolve the currently named native-wheel gaps, then promote the row
+and its classifiers together; enroll the next prerelease as the new rolling
+canary. Track the unrelated facade-discovery failure under its concurrent
+feature owner rather than folding it into this compatibility claim.

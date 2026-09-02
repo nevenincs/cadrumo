@@ -5106,3 +5106,34 @@ No merge is attempted in this iteration. Reconciling roughly four hundred lines 
 sections, on a document the concurrent campaign commits, is focused work rather than a
 tidy-up at the end of an iteration - and a hasty merge that drops a paragraph would be
 strictly worse than the duplication, which at least keeps everything.
+
+### The plan now declares each section once, and the merge proved it lost nothing
+
+The three Descriptions, two Parallelizations and three Verifications are one of each. The
+document went from 126 prose paragraphs to 107, the nineteen removed being near-duplicates,
+and the Steps were untouched at 212 rows with 151 closed before and after.
+
+The first merge attempt was refused by its own check, which is the part worth recording. It
+grouped paragraphs by similarity and kept the longest of each group, and the no-loss check
+then found two Verification paragraphs matching no survivor - a transitive chain where the
+first and last members resemble the middle one but not each other. Had the check been written
+as a formality it would have passed on the counts and quietly dropped two paragraphs.
+
+The second attempt makes no-loss structural rather than checked. Paragraphs are considered
+longest-first and one is kept only when nothing already kept resembles it, so every dropped
+paragraph is by construction similar to one that survives. Order is then restored to first
+appearance. The check still runs, and now it cannot fail, which is the right relationship
+between a guarantee and its test.
+
+Verified against a copy of the document taken before the edit: zero paragraphs lost, Step
+count and closed count identical, and seventeen vault checks clean. The one remaining warning
+is the stale feature index, caused by the untracked audit scaffold the concurrent campaign
+created under this feature tag - not linked here, because linking another writer's unwritten
+document is not this campaign's call.
+
+Two path translations bit during the work and neither reached the document. A backup written
+through the shell's `/tmp` was invisible to the interpreter, which resolves that path
+differently on this platform, so the verification could not read its own baseline until the
+real location was resolved. It is the same class as the sweep script that needed the
+repository root on its import path, and the same remedy: resolve the path rather than assume
+the two tools mean the same thing by it.

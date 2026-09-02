@@ -6,7 +6,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:ac2dd6f3d032b1211d832fc15061b2f9f9b5d237d551664a3727de08fe102382'
+body_hash: 'sha256:8cec7d4e1cbe017065fc5a9c111b6e54fc381891be38ce7d74946932945ad948'
 related:
   - '[[2026-09-02-python-runtime-compatibility-P01-S01]]'
   - '[[2026-09-02-python-runtime-compatibility-P01-S02]]'
@@ -53,13 +53,22 @@ related:
   - '[[2026-09-02-python-runtime-compatibility-P05-S40]]'
   - '[[2026-09-02-python-runtime-compatibility-P05-S42]]'
   - '[[2026-09-02-python-runtime-compatibility-P05-S64]]'
+  - '[[2026-09-02-python-runtime-compatibility-P06-S65]]'
+  - '[[2026-09-02-python-runtime-compatibility-P06-S66]]'
+  - '[[2026-09-02-python-runtime-compatibility-P06-S67]]'
+  - '[[2026-09-02-python-runtime-compatibility-P06-S68]]'
+  - '[[2026-09-02-python-runtime-compatibility-P06-S69]]'
+  - '[[2026-09-02-python-runtime-compatibility-P06-S70]]'
+  - '[[2026-09-02-python-runtime-compatibility-P06-S71]]'
   - '[[2026-09-02-python-runtime-compatibility-adr]]'
+  - '[[2026-09-02-python-runtime-compatibility-canary-selector-identity-audit]]'
   - '[[2026-09-02-python-runtime-compatibility-final-review-audit]]'
   - '[[2026-09-02-python-runtime-compatibility-p01-code-review-audit]]'
   - '[[2026-09-02-python-runtime-compatibility-p02-code-review-audit]]'
   - '[[2026-09-02-python-runtime-compatibility-p03-code-review-audit]]'
   - '[[2026-09-02-python-runtime-compatibility-plan]]'
   - '[[2026-09-02-python-runtime-compatibility-research]]'
+  - '[[2026-09-02-python-runtime-compatibility-sealed-wheelhouse-audit]]'
 ---
 
 # `python-runtime-compatibility` feature index
@@ -74,10 +83,12 @@ Auto-generated index of all documents tagged with `#python-runtime-compatibility
 
 ### audit
 
+- `2026-09-02-python-runtime-compatibility-canary-selector-identity-audit` - `python-runtime-compatibility` audit: `Canary selector identity correction`
 - `2026-09-02-python-runtime-compatibility-final-review-audit` - `python-runtime-compatibility` audit: `Final implementation review`
 - `2026-09-02-python-runtime-compatibility-p01-code-review-audit` - `python-runtime-compatibility` audit: `p01 code review`
 - `2026-09-02-python-runtime-compatibility-p02-code-review-audit` - `python-runtime-compatibility` audit: `P02 code review`
 - `2026-09-02-python-runtime-compatibility-p03-code-review-audit` - `python-runtime-compatibility` audit: `P03 code review`
+- `2026-09-02-python-runtime-compatibility-sealed-wheelhouse-audit` - `python-runtime-compatibility` audit: `Sealed runtime wheelhouse review`
 
 ### exec
 
@@ -126,6 +137,13 @@ Auto-generated index of all documents tagged with `#python-runtime-compatibility
 - `2026-09-02-python-runtime-compatibility-P05-S40` - Document final-runtime promotion and classifier evidence
 - `2026-09-02-python-runtime-compatibility-P05-S42` - Add an inventory-driven local compatibility command
 - `2026-09-02-python-runtime-compatibility-P05-S64` - Promote 3.14 classifier eligibility after source binary and artifact evidence
+- `2026-09-02-python-runtime-compatibility-P06-S65` - Run a focused behavioral test set under the selected target interpreter and bind its results to the compatibility verdict
+- `2026-09-02-python-runtime-compatibility-P06-S66` - Smoke the installed cadrumo-mcp entry point and import contract in every compatibility mode
+- `2026-09-02-python-runtime-compatibility-P06-S67` - Wire the future-directive AST policy into the blocking compatibility workflow
+- `2026-09-02-python-runtime-compatibility-P06-S68` - Classify binary missing-wheel failures only from resolver-specific diagnostics
+- `2026-09-02-python-runtime-compatibility-P06-S69` - Align the prerelease selector with the provisionable rolling minor
+- `2026-09-02-python-runtime-compatibility-P06-S70` - Close binary compatibility dependency resolution to the sealed runtime wheelhouse
+- `2026-09-02-python-runtime-compatibility-P06-S71` - Build and validate runtime-specific sealed wheelhouses for every blocking CPython minor
 
 ### plan
 
