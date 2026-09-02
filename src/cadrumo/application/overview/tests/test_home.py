@@ -17,7 +17,7 @@ from cadrumo.application.overview.calendar_models import (
 )
 from cadrumo.core.period import Period
 from cadrumo.domain.deadlines.models import ObligationStatus
-from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
+from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 
 from ..agenda import OverviewAgenda
 from ..home import HomeProjectionInput, compose_home_projection
@@ -176,10 +176,7 @@ def test_agenda_uses_legal_due_date_top_three_and_masks_unobservable_aeat_eviden
         (date(2026, 10, 20), "303"),
         (date(2026, 10, 21), "111"),
     ]
-    assert all(
-        item.aeat_submission_state is OverviewAeatSubmissionState.NOT_OBSERVED
-        for item in projection.agenda
-    )
+    assert all(item.aeat_submission_state is OverviewAeatSubmissionState.NOT_OBSERVED for item in projection.agenda)
 
 
 def test_non_available_reader_result_is_refused_instead_of_becoming_a_false_empty_state() -> None:

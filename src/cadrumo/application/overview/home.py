@@ -171,9 +171,7 @@ def _project_agenda_entry(entry: OverviewCalendarEntry, *, evidence_observable: 
         period_state=entry.user_state,
         local_filing_state=evidence.local_filing_state,
         aeat_submission_state=(
-            evidence.aeat_submission_state
-            if evidence_observable
-            else OverviewAeatSubmissionState.NOT_OBSERVED
+            evidence.aeat_submission_state if evidence_observable else OverviewAeatSubmissionState.NOT_OBSERVED
         ),
     )
 
