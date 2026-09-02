@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:4ed6c2b426bd693e5e3bf9d072b4854281745eca0024ed514babf24f78a082f7'
+body_hash: 'sha256:445b9f4b05111a60aef1c6ced331cb3df8be974fdace0cafaead382c0d79bacc'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -4185,3 +4185,181 @@ Verified after: the module imports and declares 23 public symbols, lint and form
 clean, and the conformance suite runs 18 tests with 17 passing. The single failure is the
 pre-existing one in `test_real_closure_outcomes.py` that no CI lane executes, unchanged by
 this deletion.
+
+### The development closure module restated the application's entire refusal vocabulary
+
+The development closure module already imports from the application's closure module, and
+then declared its own refusal-reason alias listing twelve values. Compared against the
+application's seven: all seven appear in the development list verbatim, and five are
+genuinely new - the temporal-coverage reasons that exist only on this side of the boundary.
+Nothing was production-only. The development vocabulary was a strict superset built by
+copying.
+
+The failure mode is quiet and one-directional. An eighth reason added to the application
+would simply not reach this alias, and nothing would report it: the copy stays valid, keeps
+validating, and silently means less than the thing it shadows. That is the same shape as
+the load classification that survived neither side of a rename, and it is why this campaign
+treats a second declaration as the defect rather than the disagreement it eventually causes.
+
+The alias is now composed rather than restated - the application's alias unioned with the
+five reasons that are actually local. The seven shared values have one declaration, and an
+addition on the application side arrives here automatically.
+
+Verified behaviourally rather than by introspection, and the first attempt to check it was
+wrong in an instructive way. Reading the union's arguments reported two reasons rather than
+twelve, because a union of an alias and a literal does not flatten. The type was correct
+and the measurement was not. Constructing the model with each of the twelve reasons in turn
+accepts all twelve, and an invented reason is still refused, which is the property that
+actually matters.
+
+The Step asking for this module to carry no predicate at all stays open. What moved here is
+the vocabulary, not the four predicate functions, and those belong on the application side -
+work this iteration's scope does not reach. Recording the difference matters more than the
+tidier claim: the duplication is gone, the relocation is not done.
+
+### Constants orphaned by the previous deletion
+
+Removing the retired audit command's models left `_BASELINE_FILENAME`,
+`_DEFAULT_REVIEW_CADENCE` and `_RECORD_COMMAND` referenced by nothing, each with a comment
+describing an artefact the module no longer produces. They are gone, with their comments,
+bringing the module to 1,489 lines from the 1,781 it started at.
+
+They should have gone in the same change. A deletion that leaves its own residue is the
+thing this campaign keeps finding in other people's work, and the check that caught it - a
+sweep for module-private names with zero remaining references - took one command and should
+have run before the first edit was reported rather than after. No committed baseline
+artefact exists on disk and nothing else references one, so there is no data residue behind
+the constants.
+
+### A gate for the composed vocabulary, and a claim in it that had to be withdrawn
+
+Composing the development refusal vocabulary from the application's removes today's
+duplication; it does not stop someone re-listing the values tomorrow. Three tests now hold
+the composition: that the application vocabulary is contained entirely, that what the
+development side adds is exactly the five temporal-coverage reasons, and that every locally
+owned reason carries a work item so a refusal names the work that would resolve it.
+
+The first version of that gate's docstring claimed re-listing the shared values as literals
+would be caught by the containment check. It would not, and the error was mine, written
+while describing my own change. Re-listing today leaves all seven values present, so
+containment passes. What the gate actually detects is staleness: the moment the application
+adds an eighth reason, a copied list stops containing the vocabulary it claims to extend.
+
+The docstring now says that, because the weaker true claim is more useful than the stronger
+false one. A copy that is currently identical is harmless; a copy that has fallen behind is
+the one that silently means less than the thing it shadows, and that is the condition worth
+gating. The containment logic was exercised against a vocabulary with one application reason
+removed, which fails and names the missing value, so the check discriminates rather than
+being satisfiable by anything.
+
+A helper flattens the composed alias, and it exists because of the mistake recorded in the
+previous finding: a union of an alias and a literal reports two members rather than twelve
+under a naive read. Putting the flattening in one place means the next reader inherits the
+correction instead of repeating it.
+
+The tests sit in the conformance test directory, which is the narrowest directory owning the
+module under test and also the directory no CI lane names. Placing them where they would run
+was available and was not taken: distorting test location to route around a wiring omission
+would hide the omission, and the open Step that fixes the lane is the honest remedy.
+
+Separately, the closure suite was re-run after the vocabulary change and reports 15 passing
+with the single pre-existing failure, unchanged.
+
+### The private-import Step named the wrong side of the boundary
+
+The Step asking for promotion of privately-reached modules described a handful under
+`dev/registry/pipeline` reached by fourteen non-test consumers. Remeasured, the direction is
+the other way round and the surface is different.
+
+There are eleven non-test cross-package private imports reachable from `dev/`, and every one
+of them is a development module reaching into `src/`: six into `cadrumo_harness.mcp` from a
+single benchmark, two into `cadrumo.domain.calculations.registry`, one into
+`cadrumo.entrypoints.cli`, and two into `cadrumo.application.modelo`. Nothing reaches into
+`dev/registry/pipeline` at all. The eleven test-side imports are left alone, as the Step
+always intended.
+
+Two forms, and the second is the quieter one. Most violations import a module whose name
+begins with an underscore. But `live_proof.py` imports `_require_calculation_route_resolver`,
+`_source_bound_casilla_inputs` and `_source_provenance_refs` from `calculation_actions`,
+which is a perfectly public module. A private name reached through a public module is the
+same breach with nothing in the import path to signal it, and it survives a reader skimming
+for leading underscores in module names.
+
+The Step has been corrected to name `src/cadrumo` and `src/cadrumo_harness` and left open,
+because the remedy is a promotion on the application side. Editing the Step rather than
+closing it matters: a Step whose description no longer matches the tree is worse than an
+open one, since the next person to pick it up would look under `dev/registry/pipeline` and
+find nothing wrong there.
+
+No gate was added, and deliberately. The existing production gate holds this invariant at
+zero over `src/cadrumo` with detector teeth and no exemption list, and its own text explains
+why it carries no baseline: a hand-maintained list of accepted violations is how 114 became
+270. Extending the same gate over `dev/` today would land red at eleven, and the only ways to
+make it green are to fix the eleven, which is out of this iteration's reach, or to baseline
+them, which is the practice that gate exists to refuse. Measuring and recording is the honest
+middle, and the Step carries the work.
+
+Worth noting in that gate's favour: it asserts its scan reaches more than ten thousand import
+sites, so a scan that silently found nothing cannot report zero violations. That is the same
+defence this campaign built after twice recording a green result over an empty selection, and
+it was already there.
+
+### The campaign authored a duplicate Step, which is the defect it exists to remove
+
+A `step add` in the previous iteration exceeded its timeout and was reported as incomplete.
+It had in fact succeeded in the background, and the retry created a second Step with
+identical action text and identical scope. S187 and S188 were one Step declared twice.
+
+It surfaced by accident. The next `step add` returned S189 rather than the S188 expected, and
+that one-off discrepancy was the only signal; the plan rendered perfectly well with both
+rows, and a reader would have seen two gates where one exists. The closure I then applied
+went to S188, the duplicate, leaving the real new Step open - so the duplicate had already
+begun absorbing work intended for something else, within minutes of being created.
+
+S188 is retired through the owning verb, which retires the identifier permanently rather than
+reusing it, and the one surviving row is S187. The count is 126 closed of 187.
+
+The lesson is the one this campaign has been applying to other people's declarations all
+along, and it cost nothing to learn here only because the identifier sequence happened to
+expose it. A tool reporting a timeout is not reporting a failure: it is reporting that it
+stopped waiting. Every retry of a mutating command needs the same question asked first that
+this campaign asks of every measurement - did the thing already happen - and the answer is
+one read of the document, which is cheaper than the duplicate.
+
+### The publication limb had no caller because its inputs had no name
+
+`publish_validated_generated_export_tree` takes seven assembled values and is reached by
+nothing but its own tests - confirmed again here, with the only other mention being a test
+asserting a different module does not reference it. The plan recorded this as a limb that
+exists and cannot be reached, and asked for an invocable entry point.
+
+The reason it had no caller is more specific than "nobody wrote one". Those same seven values
+were assembled inside `compare_revision_against_committed`, seventy-four lines deep in a
+function whose declared purpose is to compare. Anything else needing them had two options:
+call the comparison and throw the comparison away, or derive them again. The second is how a
+second derivation gets written, and this audit has spent a campaign on what happens when two
+derivations of one fact drift.
+
+The assembly is now `revision_render_inputs` returning a named `RevisionRenderInputs`, and
+the comparison consumes it like any other caller. That does not by itself publish anything;
+it removes the reason a publication entry point could not be written without duplicating the
+derivation.
+
+Behaviour was checked to be identical rather than assumed. Both screened revisions report
+byte-identical summaries to before the extraction - modelo 303 at zero record drift with nine
+serialization-only differences, modelo 347 at one record drift - and the two owning suites
+run 22 tests with 21 passing, the single failure being the disposition gate that is failing
+deliberately.
+
+The Step stays open. It asks for an entry point and for two enrolled trees to be published,
+and publishing writes filing data into the registry. Building the capability is development
+work; exercising it against shipped filing data is the decision of whoever owns those trees,
+and this campaign has already recorded that the twenty-five stale attestations are theirs to
+resolve. The missing half is now available to them rather than blocked behind a derivation
+that lived inside a comparison.
+
+A note on attribution. While the extraction was being verified, the harness reported two
+continuity modules as modified by the command that ran the screen. They were not: both carry
+pending diffs from the concurrent writer, neither contains any reference to the screen, and
+the command has no write path to them. A timing coincidence read as causation would have put
+another writer's edits into this campaign's record.

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:6d4235532385e14b64846fe96e4625f47b0629724d257b93134830e2bed57919'
+body_hash: 'sha256:64e54a00c5619f049c402be9378ab4d3fc9f037782b728fb64abf2e4a4ca47e3'
 related:
   - "[[2026-09-02-object-name-declustering-research]]"
   - "[[2026-09-02-object-name-declustering-reference]]"
@@ -14,7 +14,7 @@ related:
 
 ## Problem Statement
 
-The object-name audit identifies lexical collisions and plural names, but its findings are not safe rename units. Renames can cross directories, layers, dynamic targets, generated artifacts, tests, and shared consumers. The repository needs a fail-closed contract that turns findings into reviewable operations, rehearses the exact current working bytes outside the live tree, and permits live mutation only while reviewed scope and rehearsal evidence remain current. Grounding is in `2026-09-02-object-name-declustering-research` and `2026-09-02-object-name-declustering-reference`.
+The object-name audit identifies lexical collisions and plural names, but its findings are not safe rename units. The approved completion condition is zero enforced findings across the live repository, not a contextual waiver ledger. Renames can cross directories, layers, dynamic targets, generated artifacts, tests, and shared consumers. The repository needs a fail-closed contract that turns findings into reviewable operations, rehearses the exact current working bytes outside the live tree, and permits live mutation only while reviewed scope and rehearsal evidence remain current. Grounding is in `2026-09-02-object-name-declustering-research` and `2026-09-02-object-name-declustering-reference`.
 
 ## Considerations
 
@@ -47,7 +47,7 @@ The object-name audit identifies lexical collisions and plural names, but its fi
 
 A repository-owned development tool will implement `inventory` -> `plan` -> `rehearse` -> `apply` -> `verify`. It will extend or consume the canonical object-name inventory and compose the existing import graph, import-hygiene surfaces, semantic candidates, clone evidence, and generator authorities.
 
-The reviewed manifest is the sole authority between discovery and mutation. Each operation records its schema and operation ID, stable finding ID, operation kind, old and proposed qualified locators and paths, disposition, owner, rationale, byte preconditions, expected reference classes, exact moves, changed-path allowlist, generator commands, focused gates, and lifecycle state. Its dispositions are `lexical-singular`, `rename-distinct`, `keep-distinct`, and non-executable-in-this-lane `merge-authority`. Bidirectional completeness is mandatory: every selected finding has one disposition, and stale or unmatched rows fail.
+The reviewed manifest is the sole authority between discovery and mutation. Each operation records its schema and operation ID, stable finding ID, operation kind, old and proposed qualified locators and paths, disposition, owner, rationale, byte preconditions, expected reference classes, exact moves, changed-path allowlist, generator commands, focused gates, and lifecycle state. Its executable dispositions are `lexical-singular` and `rename-distinct`; `merge-authority` is non-executable in this lane. `keep-distinct` is prohibited because completion requires every enforced finding to disappear. Bidirectional completeness is mandatory: every selected finding has one disposition, and stale or unmatched rows fail.
 
 The planner constructs a bipartite graph of rename-operation nodes and affected file or generated-surface nodes. Definitions, collision membership, static and type-only imports, exact dynamic targets, exports, shared consumers, and generated artifacts create hard edges. Connected components are indivisible review units. Directory, layer, owner, fan-in, semantic similarity, and clone evidence annotate risk and ordering without establishing authority.
 
@@ -55,7 +55,7 @@ Two SHA-256 families are mandatory. A stable finding ID hashes a canonical schem
 
 `rehearse` creates and verifies a system-temporary copy of the current working bytes, applies exactly one reviewed component, compares actual changed paths with the allowlist, and runs applicable residue, parsing/import, architecture, generator, focused-test, type, lint, object-name delta, semantic-duplication, and clone non-regression gates. It emits a receipt binding the manifest digest, baseline and file digests, tool versions, actual changed-path digest, finding delta, and every gate outcome.
 
-`apply` accepts only a successful matching receipt, rechecks all byte and inventory preconditions, and replays the identical operation sequence in the live worktree. Any drift causes refusal. The same verification then runs against the live result.
+`apply` accepts only a successful matching receipt, rechecks all byte and inventory preconditions, and replays the identical operation sequence in the live worktree. Any drift causes refusal. The same verification then runs against the live result. Campaign completion requires `just audit-object-names` to exit zero with zero enforced findings; no baseline, ceiling, or disposition suppresses that final measurement.
 
 LibCST is the controlled formatting-preserving engine for repository-owned symbol transforms. Filesystem moves and non-Python surfaces remain explicit typed operations. Rope may run only as a no-authority probe in disposable rehearsal until detector-teeth fixtures prove Python 3.13 compatibility and exact changed-path containment; it cannot authorize or perform live mutation.
 
@@ -70,6 +70,7 @@ The manifest, not directory proximity or a third-party refactorer's reach, must 
 - Highly connected components can be deferred instead of partially renamed.
 - The planner and receipt schema introduce repository-owned tooling and detector-teeth maintenance.
 - LibCST transforms require operation-specific fixtures; Rope remains unavailable as live authority unless its compatibility gap is closed and proven locally.
-- Findings may resolve to `keep-distinct`, preserving adjudication without pretending a rename or merge occurred.
+- Contextually defensible repeated names still require a truthful distinct rename; no disposition may suppress an enforced finding.
 - Semantic consolidation remains separately governed.
 - Old paths disappear atomically; consumers move in the same component without a compatibility window.
+

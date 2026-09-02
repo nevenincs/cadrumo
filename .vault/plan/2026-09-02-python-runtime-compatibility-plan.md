@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-python-runtime-compatibility-research]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:3c9df84fdb78c9242ed2df7442a3216748e3427572552d48e89e84865768f2d4'
+body_hash: 'sha256:515ab580ee60486477752993d4b6c125d050ee0ab84cd2f0e7332bcb8b5cddab'
 ---
 
 <!-- RETIRED: S33, S35, S37, S39, S41, S43, S44, S45, S46, S47, S48, S49, S50, S51, S52, S53, S54, S55, S56, S57 -->
@@ -49,8 +49,8 @@ Keep one annotation model and detect APIs removed or deprecated across the suppo
 - [x] `P02.S14` - Test dynamic signatures type hints metadata and CLI discovery; `src/cadrumo/application/wizard/tests/test_commands_helpers.py`.
 - [x] `P02.S15` - Compile every dev and src module against the oldest supported grammar; `dev/tests/test_every_source_file_parses.py`.
 - [x] `P02.S16` - Enforce annotations as the sole project future directive; `dev/tests/test_import_hygiene_scan.py`.
-- [ ] `P02.S60` - Replace production TOML reading with the Python standard library; `src/cadrumo/core/toml.py`.
-- [ ] `P02.S61` - Prove standard-library TOML parsing preserves the public error contract; `src/cadrumo/core/tests/test_toml.py`.
+- [x] `P02.S60` - Replace production TOML reading with the Python standard library; `src/cadrumo/core/toml.py`.
+- [x] `P02.S61` - Prove standard-library TOML parsing preserves the public error contract; `src/cadrumo/core/tests/test_toml.py`.
 
 ### Phase `P03` - produce attributable source and binary evidence
 
@@ -75,7 +75,9 @@ Add a separately verdictable workflow without expanding protected CI or release-
 - [x] `P04.S28` - Preserve protected packaging-smoke single-build behavior; `dev/packaging/tests/test_packaging_smoke_workflow.py`.
 - [x] `P04.S29` - Preserve protected quick-packaging single-runtime behavior; `dev/packaging/tests/test_packaging_quick_workflow.py`.
 - [x] `P04.S58` - Invoke clean release-cohort construction through its package module; `dev/packaging/release_cohort.py`.
-- [ ] `P04.S59` - Prove clean release-cohort subprocess imports remain package-correct; `dev/packaging/tests/test_release_cohort.py`.
+- [x] `P04.S59` - Prove clean release-cohort subprocess imports remain package-correct; `dev/packaging/tests/test_release_cohort.py`.
+- [x] `P04.S62` - Scope hash enforcement without rejecting locally built cohort artifacts; `dev/packaging/release_cohort.py`.
+- [ ] `P04.S63` - Prove clean cohort construction accepts digest-bound local wheels; `dev/packaging/tests/test_release_cohort.py`.
 
 ### Phase `P05` - align stable metadata release gates and documentation
 
@@ -85,10 +87,10 @@ Make stable support claims only after their blocking evidence passes.
 - [x] `P05.S31` - Align manuals companion classifiers with stable runtime evidence; `packaging/cadrumo_data_manuals/pyproject.toml`.
 - [x] `P05.S32` - Align official-data companion classifiers with stable runtime evidence; `packaging/cadrumo_data_official/pyproject.toml`.
 - [x] `P05.S34` - Enforce root and companion classifier parity and prerelease exclusion; `dev/packaging/tests/test_classifier_parity.py`.
-- [ ] `P05.S36` - Test sealed release artifacts across supported stable runtimes; `.github/workflows/publish.yml`.
-- [ ] `P05.S38` - Document local runtime selection and source versus binary evidence; `CONTRIBUTING.md`.
-- [ ] `P05.S40` - Document final-runtime promotion and classifier evidence; `RELEASING.md`.
-- [ ] `P05.S42` - Add an inventory-driven local compatibility command; `justfile`.
+- [x] `P05.S36` - Test sealed release artifacts across supported stable runtimes; `.github/workflows/publish.yml`.
+- [x] `P05.S38` - Document local runtime selection and source versus binary evidence; `CONTRIBUTING.md`.
+- [x] `P05.S40` - Document final-runtime promotion and classifier evidence; `RELEASING.md`.
+- [x] `P05.S42` - Add an inventory-driven local compatibility command; `justfile`.
 
 ## Parallelization
 

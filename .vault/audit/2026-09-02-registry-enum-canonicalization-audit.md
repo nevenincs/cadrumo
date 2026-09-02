@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:534a3b3ce913084cc664c59bdf5a75e4b8c01444fa15a6eedb7d30359881b818'
+body_hash: 'sha256:3fd70b4e9f8c6b8e8b482eccf14f9a70c2c119d7d2ca7d4ad1752ba0077693ce'
 related: []
 ---
 
@@ -1115,3 +1115,42 @@ Package-wide after fifteen targets: 9 duplicated, 0 crossing the registry bounda
 `_command_schema.py` / `command_spec.py` pair alone accounted for eight of the
 vocabularies cleared in the last two ticks: one module restating its neighbour's
 vocabulary is a far larger source of duplication than any single scattered field.
+
+## Finding 51 — three within-file and near-file duplications
+
+`OverviewLocalFilingState` and `OverviewCalendarEventType` both already existed in
+`calendar_models.py`; the CLI payload module spelled both out twice each. Neither needed
+a new enum, only the both-members literal -- the same missing form as
+`OperationResponseIntent`, now the fifth instance of that specific cause.
+
+The local filing literal is worth naming precisely: its enum's docstring insists it is
+"intentionally separate from `OverviewAeatSubmissionState` so a ready or imported local
+record cannot imply official AEAT submission". Rooting the payload field on that enum
+preserves the separation the docstring asserts; the inline spelling did not enforce it at
+all, it merely happened to list the same three tokens.
+
+`SheetRoundingRule` was hosted for the first time. Its two fields sit in one file and a
+third site -- the producer's return type in `engine.py`, plus four returned tuples and a
+comparison -- was invisible to the scan.
+
+Not unified, and the distinction matters: `engine.py:423` declares
+`Literal["decimal", "money", "integer", "ratio"]`, sharing `money` and `integer` with the
+rounding rule. That is the casilla data type, which says what a value IS; the rounding
+rule says how it is rounded. A ratio is a data type and never a rounding rule;
+`integer-ceiling` is a rounding rule and never a data type.
+
+## Finding 52 — a second test asserting against the inert-package rule
+
+`test_calendar_model_ownership.py` asserts `set(overview.__all__) >= {...}` for a dozen
+calendar model names. `application/overview/__init__.py` declares `__all__ = ()` and
+documents itself as an inert namespace, which is what `aeat-architecture-boundaries`
+requires of every package initialiser.
+
+This is the second such test found in this campaign -- the first expected
+`build_profile_custody_port` from the persistence storage package initialiser. Both
+assert the behaviour the inert-package rule removed, so both fail on every run and
+neither can pass while the rule stands. Reported rather than repaired: deciding whether
+these tests should be rewritten against the defining modules or deleted belongs with
+whoever owns that migration, and two independent instances suggest there may be more.
+
+Package-wide after eighteen targets: 6 duplicated, 0 crossing the registry boundary.

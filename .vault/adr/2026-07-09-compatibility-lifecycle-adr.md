@@ -7,8 +7,8 @@ modified: '2026-07-10'
 body_hash: 'sha256:bafea829e45f1be5cfcd046832cad8fa0ffbbb7afe8f2e77297c03ca34f2d37f'
 related:
   - "[[2026-07-09-compatibility-lifecycle-research]]"
+  - '[[2026-09-02-compatibility-lifecycle-ci-policy-rehome-research]]'
 ---
-
 # `compatibility-lifecycle` adr: `compatibility-lifecycle checkpoint: regime-switched dormant durability governance` | (**status:** `accepted`)
 
 ## Problem Statement

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:bb55aa6f1189474862f9b712d83e7d7b3760bf3f3ec4feb96380ec460cfd6903'
+body_hash: 'sha256:76252cbc89220914e41467e64b19c27a9e03d1e205cafcdd65ca66543fa06f01'
 related:
   - "[[2026-07-25-account-distribution-standard-adr]]"
   - "[[2026-07-27-canonical-release-pipeline-adr]]"
@@ -470,6 +470,37 @@ which is the shape that survives a deletion in either direction.
 Ten of these failures predate this phase and remain open: eight in the
 distribution-readiness suite and two in the external-client boundary, all traceable to
 the harness fold and the channel retirement.
+
+### The absent-inference smoke lane cannot import what it drives
+
+Retiring the inference package's namespace left its initialiser inert, which is what the
+architecture requires of every package initialiser. The absent-inference smoke lane did
+not follow: its child-interpreter script still reaches eight surfaces through
+`from cadrumo.llm import ...` at two places, and that package root now exports nothing.
+The lane fails on its import line, which is precisely the failure its own non-vacuity
+gate was written to prevent - and that gate is red for the same reason, asserting
+membership in an `__all__` that policy requires to be empty.
+
+This is an application defect wearing a gate defect's clothes. The check is correct to
+fail; the lane is what is broken. Every one of the eight names resolves at a defining
+module - the rasteriser at `llm/providers/local.py`, the transcriber at
+`llm/evidence_draft_vision.py`, the field extractor at `llm/evidence_draft_text.py`, the
+classifiers and the column mapper at their own modules - so the repair is to import each
+from where it is defined and to assert resolution there rather than at a namespace that
+no longer has one.
+
+Both are repaired. The inventory now carries the defining module beside each surface, so
+the driver's import block is rendered from the same declaration the lane drives rather
+than restated beside it, and the non-vacuity gate resolves each name at that module.
+
+The second gate had the same root cause with a worse consequence. It split guarded
+surfaces into reachable and internal by reading the package's `__all__`, so once that
+was inert every surface classified as internal, the reachable set emptied, and the
+coverage claim it feeds became vacuously true. Reachability is now read from the module
+a surface is defined in, which is the rule consumers import by. Repairing it immediately
+surfaced a real hole the old rule had been hiding: `SupplyNatureProposer` carries the
+guard and is public, and the lane had never driven it, so the claim that every guarded
+surface returns to the refusal was never true of it. It is enrolled now.
 
 ### Not investigated
 

@@ -11,10 +11,10 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:e6f98a42912530992ed7817664dc12f99695f13a6b9f2b2ceecf404973b023e3'
+body_hash: 'sha256:15405102b5eb7c0a2e9b15292ca08ab28a9783503dda3f4b8864ec0078bc993c'
 ---
 
-<!-- RETIRED: S73 -->
+<!-- RETIRED: S73, S188 -->
 
 # `registry-declaration-hardening` plan
 
@@ -213,7 +213,7 @@ Delete the retired baseline and ratchet remnants and repoint every document and 
 - [x] `W02.P02.S96` - Retire the eight tests driving the disabled single-channel proof authority, and re-site the three payload-acceptance tests whose modelo 200 fixture lost both its export layouts and its filing grade; `dev/registry/tests/test_filing_export_live_proof.py`.
 - [x] `W02.P02.S97` - Sweep the registry suites for gates that cannot pass and record each as owned, dispositioned or retired; `dev/registry/tests`.
 - [x] `W02.P02.S107` - Retire the developer registry package re-export facade and its enforcing inventory assertion, repointing the one symbol consumer at the defining module; `dev/registry/__init__.py`.
-- [ ] `W02.P02.S108` - Promote the handful of pipeline and shared modules that fourteen non-test consumers reach across a package boundary, leaving the ninety-seven test imports alone; `dev/registry/pipeline`.
+- [ ] `W02.P02.S108` - Promote the eleven src-side private modules that non-test dev consumers reach across the package boundary, leaving the eleven test imports alone; `src/cadrumo,src/cadrumo_harness`.
 - [ ] `W02.P02.S109` - Rewrite the modelo 151 live-filing closure test onto the two-channel authority, then delete the single-channel proof authority whose only proof-producing path refuses; `dev/registry/conformance/tests/test_real_closure_outcomes.py`.
 - [ ] `W02.P02.S110` - Resolve the twenty-four filing tests demanding filing grade from modelos 200, 038 and 036, which now declare calculation or applicability grade; `src/cadrumo/application/filing/tests`.
 - [x] `W02.P02.S111` - Retire the generation pipeline package re-export facade so the initialiser is an inert namespace marker; `dev/registry/pipeline/__init__.py`.
@@ -445,6 +445,11 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S182` - Establish the red the conformance lane will inherit and separate it from a concurrent writer's transient import breakage; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S183` - Record in the plan Description how the declaration question extended from the registry to the codebase and which screens were declined; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S184` - Report the operator path leaked into a sibling campaign's committed audit and confirm this feature's documents carry none; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W06.P13.S185` - Compose the development closure refusal vocabulary from the application's instead of restating its seven values; `dev/registry/conformance/closure.py`.
+- [x] `W06.P13.S186` - Remove the constants orphaned by deleting the retired audit command's models; `dev/registry/conformance/manager.py`.
+- [x] `W06.P13.S187` - Gate that the development refusal vocabulary keeps containing the application's and adds only the locally owned reasons; `dev/registry/conformance/tests/test_closure.py`.
+- [x] `W06.P13.S189` - Remeasure the cross-package private imports reachable from dev and correct the promotion Step to name the surface that actually carries them; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
+- [x] `W06.P13.S190` - Name the revision render input assembly so the publication path can obtain the same seven values the comparison derives; `dev/registry/pipeline/render_check.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 

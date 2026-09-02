@@ -10,7 +10,7 @@ related:
   - '[[2026-09-02-object-name-declustering-reference]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:0fcd9b38bb3302f3bef98e9561f76c9c24c8b7a4ead03d61ef492447f7dac564'
+body_hash: 'sha256:b8643b9dba8f9c1ff8d3ea05fd85ff9294b398f49867de9b57c0920544a54c9d'
 ---
 
 <!-- RETIRED: S21, S22 -->
@@ -33,7 +33,7 @@ Establish the canonical inventory, reviewed manifest, and hard dependency compon
 
 Extend the existing object-name authority with complete stable machine identity and drift guards.
 
-- [ ] `W01.P01.S01` - Emit complete declaration records with qualified locators, stable finding identifiers, source-byte hashes, and an inventory digest; `dev/audit/object_names.py`.
+- [x] `W01.P01.S01` - Emit complete declaration records with qualified locators, stable finding identifiers, source-byte hashes, and an inventory digest; `dev/audit/object_names.py`.
 - [ ] `W01.P01.S02` - Cover deterministic identities, digest stability, and source drift reporting with focused regression tests; `dev/audit/tests/test_object_names.py`.
 
 ### Phase `W01.P02` - reviewed manifest authority
