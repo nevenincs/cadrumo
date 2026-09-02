@@ -82,12 +82,40 @@ def _prepared_absent_target(candidate_base: Path, target_root: Path) -> _Prepare
     )
 
 
+def _remove_candidate_export_refs(prepared: _PreparedInvocation) -> None:
+    """Inject the missing-derived-ref defect bootstrap must repair before validation."""
+    for path in (
+        prepared.candidate_root / "modelos" / _ISOLATED_TREE.modelo / "revisions" / _ISOLATED_TREE.revision / "casillas"
+    ).glob("*.toml"):
+        path.write_text(
+            "".join(
+                line
+                for line in path.read_text(encoding="utf-8").splitlines(keepends=True)
+                if not line.startswith("export_refs = ")
+            ),
+            encoding="utf-8",
+        )
+
+
 def test_absent_tree_is_validated_then_published_through_the_canonical_authorities(tmp_path: Path) -> None:
     """An owed tree is bootstrap-publishable only after its fresh candidate validates."""
     first = _prepared_absent_target(tmp_path / "check", tmp_path / "target" / "registry" / "aeat")
     shutil.copytree(first.candidate_root, first.target_root)
+    _remove_candidate_export_refs(first)
 
-    assert _check(first) == "publishable_absence"
+    result, _rendered = _check(first)
+    assert result == "publishable_absence"
+    assert any(
+        "export_refs = [" in path.read_text(encoding="utf-8")
+        for path in (
+            first.candidate_root
+            / "modelos"
+            / _ISOLATED_TREE.modelo
+            / "revisions"
+            / _ISOLATED_TREE.revision
+            / "casillas"
+        ).glob("*.toml")
+    )
     assert first.candidate_root.joinpath(
         "modelos",
         _ISOLATED_TREE.modelo,
@@ -98,7 +126,8 @@ def test_absent_tree_is_validated_then_published_through_the_canonical_authoriti
     assert not first.target_export_root.exists()
 
     publication = _prepared_absent_target(tmp_path / "publish", first.target_root)
-    _publish(publication)
+    _publication_result, publication_rendered = _check(publication)
+    _publish(publication, publication_rendered)
 
     assert first.target_export_root.is_dir()
 
@@ -128,14 +157,18 @@ def test_modelo_200_calculation_grade_does_not_widen_its_runtime_filing_authorit
 
 def test_modelo_200_bootstrap_assembly_reaches_the_real_join_and_renderer(tmp_path: Path) -> None:
     """An unpublished revision is assembled from its selected official design, not a missing layout."""
+    authority = bundled_authority()
+    source = next(item for ref, item in authority.catalogues.sources.items() if str(ref) == "aeat-dr-200-2025")
     inputs = revision_render_inputs(
-        bundled_authority(),
+        authority,
         modelo="200",
         revision="2025-y-siguientes",
         source_ref="aeat-dr-200-2025",
         bootstrap_transport=GeneratedExportBootstrapTransport(
             layout_id="generated-modelo-200-2025-y-siguientes-fichero",
             line_ending="crlf",
+            source_ref="aeat-dr-200-2025",
+            source_sha256=source.sha256,
         ),
     )
 

@@ -219,6 +219,8 @@ class GeneratedExportBootstrapTransport:
 
     layout_id: str
     line_ending: Literal["crlf", "lf", "none"]
+    source_ref: str
+    source_sha256: str
 
 
 def revision_render_inputs(
@@ -277,6 +279,15 @@ def revision_render_inputs(
                 f"{modelo}/{revision} bootstrap layout id must be {expected_layout_id!r}, "
                 f"got {bootstrap_transport.layout_id!r}",
             )
+        if bootstrap_transport.source_ref != str(selected_source_ref):
+            raise ValueError(
+                f"{modelo}/{revision} bootstrap source must be {str(selected_source_ref)!r}, "
+                f"got {bootstrap_transport.source_ref!r}",
+            )
+        if bootstrap_transport.source_sha256 != sources[selected_source_ref].sha256:
+            raise ValueError(
+                f"{modelo}/{revision} bootstrap source digest does not match selected source {selected_source_ref!r}",
+            )
         layout_id = bootstrap_transport.layout_id
         line_ending = bootstrap_transport.line_ending
 
@@ -299,6 +310,12 @@ def revision_render_inputs(
         filing_year=selected.valid_from.year,
         design_epoch=epoch,
     )
+    if (
+        bootstrap_transport is not None
+        and not selected.export_layouts
+        and bootstrap_transport.source_sha256 != intermediate.source.source_sha256
+    ):
+        raise ValueError(f"{modelo}/{revision} bootstrap source changed while assembling render inputs")
     inspection = RegistryRevisionInspection.from_revision(
         modelo=definition,
         revision=selected,

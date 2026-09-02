@@ -21,7 +21,7 @@ from cadrumo.domain.calculations.registry.errors import (
 from cadrumo.domain.calculations.registry.loader import load_modelo_directory
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
 
-from ._export_tree import ExportTreeTransportProfile, render_complete_export_tree
+from ._export_tree import ExportTreeTransportProfile, RenderedExportTree, render_complete_export_tree
 from ._provenance_manifest import (
     EXPORT_FRAGMENT_PROVENANCE_FILENAME,
     ExportFragmentProvenanceManifest,
@@ -76,6 +76,7 @@ class CheckedGeneratedExportTree:
     """The independently validated candidate and the matching target evidence."""
 
     candidate: ValidatedGeneratedExportTree
+    rendered: RenderedExportTree
     published_layout: ExportLayoutDefinition
     published_manifest: ExportFragmentProvenanceManifest
 
@@ -156,6 +157,7 @@ def check_generated_export_tree(
     )
     return CheckedGeneratedExportTree(
         candidate=candidate,
+        rendered=rendered,
         published_layout=published_layout,
         published_manifest=published_manifest,
     )

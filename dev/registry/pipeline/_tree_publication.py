@@ -100,6 +100,8 @@ class GeneratedExportTreePublicationContext:
     temporary_root: Path
     target_root: Path
     target_export_root: Path
+    expected_target_absent: bool | None = None
+    expected_target_manifest_sha256: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -133,6 +135,7 @@ def publish_validated_generated_export_tree(
     lock_identity = _lock_identity(context)
 
     with exclusive_file_lock(lock_identity):
+        _require_expected_target_state(context, target_export_root)
         recovery_completed = _recover_interrupted_publication(
             context=context,
             candidate_export_root=candidate_export_root,
@@ -264,6 +267,21 @@ def _prepare_publication_paths(context: GeneratedExportTreePublicationContext) -
     if target_export_root.exists():
         _require_complete_regular_tree(target_export_root, subject="generated target export root")
     return candidate_export_root, target_export_root
+
+
+def _require_expected_target_state(context: GeneratedExportTreePublicationContext, target_export_root: Path) -> None:
+    """Refuse a target that changed after the read-only preflight and before lock entry."""
+    if context.expected_target_absent is None:
+        return
+    if context.expected_target_absent:
+        if target_export_root.exists():
+            raise RegistryValidationError("generated export target appeared after check and before publication lock")
+        return
+    expected = context.expected_target_manifest_sha256
+    if expected is None:
+        raise RegistryValidationError("generated export publication lacks the checked target manifest digest")
+    if not target_export_root.exists() or _sha256(target_export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME) != expected:
+        raise RegistryValidationError("generated export target changed after check and before publication lock")
 
 
 def _require_narrow_root(path: Path, *, subject: str) -> Path:

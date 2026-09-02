@@ -11,6 +11,7 @@ from __future__ import annotations
 import re
 import shutil
 import tempfile
+import tomllib
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 from pathlib import Path
@@ -19,13 +20,15 @@ from typing import Annotated, Literal
 import typer
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.core.hashing import hash_file
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.errors import RegistryError
 
-from ._export_tree import render_complete_export_tree
-from ._provenance_manifest import ExportFragmentTarget
-from ._tree_check import GeneratedExportTreeCheckContext, check_generated_export_tree
+from ._casilla_export_refs import export_refs_by_casilla, write_generated_casilla_export_refs
+from ._export_tree import RenderedExportTree, render_complete_export_tree
+from ._provenance_manifest import EXPORT_FRAGMENT_PROVENANCE_FILENAME, ExportFragmentTarget
+from ._tree_check import CheckedGeneratedExportTree, GeneratedExportTreeCheckContext, check_generated_export_tree
 from ._tree_publication import GeneratedExportTreePublicationContext, publish_validated_generated_export_tree
 from ._tree_validation import GeneratedExportTreeValidationContext, validate_generated_export_tree
 from .render_check import GeneratedExportBootstrapTransport, RevisionRenderInputs, revision_render_inputs
@@ -59,25 +62,73 @@ class _PreparedInvocation:
     published_modelo_root: Path | None
 
 
+@dataclass(frozen=True, slots=True)
+class _BootstrapTarget:
+    modelo: str
+    revision: str
+    source_ref: str
+    source_sha256: str
+    layout_id: str
+    line_ending: Literal["crlf", "lf", "none"]
+
+
+def _bootstrap_target(invocation: _Invocation, *, source_sha256: str) -> _BootstrapTarget:
+    """Load the reviewed bootstrap authority for one explicitly owed tree."""
+    payload = tomllib.loads((Path(__file__).with_name("generated_export_bootstrap_targets.toml")).read_text("utf-8"))
+    matches = [
+        row
+        for row in payload.get("targets", [])
+        if row.get("modelo") == invocation.modelo
+        and row.get("revision") == invocation.revision
+        and row.get("source_ref") == invocation.source_ref
+        and row.get("source_sha256") == source_sha256
+    ]
+    if len(matches) != 1:
+        raise ValueError(
+            "no reviewed generated-export bootstrap target matches "
+            f"{invocation.modelo}/{invocation.revision}/{invocation.source_ref}; publication is refused",
+        )
+    row = matches[0]
+    line_ending = row.get("line_ending")
+    if line_ending not in {"crlf", "lf", "none"}:
+        raise ValueError("reviewed generated-export bootstrap target has invalid line ending")
+    return _BootstrapTarget(
+        modelo=str(row["modelo"]),
+        revision=str(row["revision"]),
+        source_ref=str(row["source_ref"]),
+        source_sha256=str(row["source_sha256"]),
+        layout_id=str(row["layout_id"]),
+        line_ending=line_ending,
+    )
+
+
 def _prepare(invocation: _Invocation, root: Path) -> _PreparedInvocation:
     """Stage one narrow candidate and derive its render inputs from authority."""
     authority = bundled_authority()
     target_root = bundled_path("registry", "aeat")
     target_export_root = target_root / "modelos" / invocation.modelo / "revisions" / invocation.revision / "export"
+    source = next(
+        (item for ref, item in authority.catalogues.sources.items() if str(ref) == invocation.source_ref),
+        None,
+    )
+    bootstrap = None
+    if not target_export_root.exists():
+        if source is None:
+            raise ValueError(f"no source {invocation.source_ref!r} exists for bootstrap target selection")
+        target = _bootstrap_target(invocation, source_sha256=source.sha256)
+        bootstrap = GeneratedExportBootstrapTransport(
+            layout_id=target.layout_id,
+            line_ending=target.line_ending,
+            source_ref=target.source_ref,
+            source_sha256=target.source_sha256,
+        )
     try:
         inputs = revision_render_inputs(
             authority,
             modelo=invocation.modelo,
             revision=invocation.revision,
             source_ref=invocation.source_ref,
-            bootstrap_transport=(
-                None
-                if target_export_root.exists()
-                else GeneratedExportBootstrapTransport(
-                    layout_id=f"generated-modelo-{invocation.modelo}-{invocation.revision}-fichero",
-                    line_ending="crlf",
-                )
-            ),
+            bootstrap_transport=bootstrap,
         )
     except (RegistryError, ValueError) as error:
         raise ValueError(str(error)) from error
@@ -182,66 +233,8 @@ def _stage_published_modelo(root: Path, *, modelo: str, revision: str) -> Path |
     return staged_root
 
 
-def _check(prepared: _PreparedInvocation) -> Literal["matched", "publishable_absence"]:
-    """Drive the canonical checker, or validate a fresh candidate for an owed tree.
-
-    An absent tree has no bytes to compare and therefore cannot be called a
-    match.  It is nevertheless publishable when the real generator can render
-    it and the real validator accepts that candidate.  This narrow bootstrap
-    case keeps an owed tree from deadlocking the publisher while preserving the
-    same pre-cutover validation boundary publication uses.
-    """
-    if not prepared.target_export_root.exists():
-        candidate_export_root = (
-            prepared.candidate_root
-            / "modelos"
-            / prepared.invocation.modelo
-            / "revisions"
-            / prepared.invocation.revision
-            / "export"
-        )
-        rendered = render_complete_export_tree(
-            candidate_export_root,
-            revision_id=prepared.inputs.revision_id,
-            joined=prepared.inputs.joined,
-            semantic_map=prepared.inputs.semantic_map,
-            transport_profile=prepared.inputs.transport_profile,
-            render_profile=prepared.inputs.render_profile,
-            render_profile_source_evidence=prepared.inputs.render_profile_source_evidence,
-        )
-        validate_generated_export_tree(
-            context=_bootstrap_validation(prepared.validation),
-            joined=prepared.inputs.joined,
-            semantic_map=prepared.inputs.semantic_map,
-            rendered=rendered,
-            render_profile=prepared.inputs.render_profile,
-            render_profile_source_evidence=prepared.inputs.render_profile_source_evidence,
-        )
-        return "publishable_absence"
-    check_generated_export_tree(
-        context=GeneratedExportTreeCheckContext(
-            validation=prepared.validation,
-            temporary_root=prepared.candidate_root.parents[2],
-            target_registry_root=prepared.target_root,
-            target_export_root=prepared.target_export_root,
-            published_modelo_root=prepared.published_modelo_root,
-        ),
-        joined=prepared.inputs.joined,
-        semantic_map=prepared.inputs.semantic_map,
-        transport_profile=prepared.inputs.transport_profile,
-        render_profile=prepared.inputs.render_profile,
-        render_profile_source_evidence=prepared.inputs.render_profile_source_evidence,
-    )
-    return "matched"
-
-
-def _bootstrap_validation(context: GeneratedExportTreeValidationContext) -> GeneratedExportTreeValidationContext:
-    """Lower only the static-publication proof to its honest authority grade."""
-    return replace(context, required_grade=RegistryAuthorityGrade.CALCULATION)
-
-
-def _publish(prepared: _PreparedInvocation) -> None:
-    """Render the fresh candidate then drive the canonical transactional publisher."""
+def _render_candidate(prepared: _PreparedInvocation) -> RenderedExportTree:
+    """Render one candidate and materialize its generator-owned casilla back-references."""
     candidate_export_root = (
         prepared.candidate_root
         / "modelos"
@@ -259,12 +252,73 @@ def _publish(prepared: _PreparedInvocation) -> None:
         render_profile=prepared.inputs.render_profile,
         render_profile_source_evidence=prepared.inputs.render_profile_source_evidence,
     )
+    write_generated_casilla_export_refs(
+        candidate_export_root.parent,
+        export_refs_by_casilla=export_refs_by_casilla(rendered),
+    )
+    return rendered
+
+
+def _check(prepared: _PreparedInvocation) -> tuple[Literal["matched", "publishable_absence"], RenderedExportTree]:
+    """Drive the canonical checker, or validate a fresh candidate for an owed tree.
+
+    An absent tree has no bytes to compare and therefore cannot be called a
+    match.  It is nevertheless publishable when the real generator can render
+    it and the real validator accepts that candidate.  This narrow bootstrap
+    case keeps an owed tree from deadlocking the publisher while preserving the
+    same pre-cutover validation boundary publication uses.
+    """
+    if not prepared.target_export_root.exists():
+        rendered = _render_candidate(prepared)
+        validate_generated_export_tree(
+            context=_bootstrap_validation(prepared.validation),
+            joined=prepared.inputs.joined,
+            semantic_map=prepared.inputs.semantic_map,
+            rendered=rendered,
+            render_profile=prepared.inputs.render_profile,
+            render_profile_source_evidence=prepared.inputs.render_profile_source_evidence,
+        )
+        return "publishable_absence", rendered
+    checked: CheckedGeneratedExportTree = check_generated_export_tree(
+        context=GeneratedExportTreeCheckContext(
+            validation=prepared.validation,
+            temporary_root=prepared.candidate_root.parents[2],
+            target_registry_root=prepared.target_root,
+            target_export_root=prepared.target_export_root,
+            published_modelo_root=prepared.published_modelo_root,
+        ),
+        joined=prepared.inputs.joined,
+        semantic_map=prepared.inputs.semantic_map,
+        transport_profile=prepared.inputs.transport_profile,
+        render_profile=prepared.inputs.render_profile,
+        render_profile_source_evidence=prepared.inputs.render_profile_source_evidence,
+    )
+    return "matched", checked.rendered
+
+
+def _bootstrap_validation(context: GeneratedExportTreeValidationContext) -> GeneratedExportTreeValidationContext:
+    """Lower only the static-publication proof to its honest authority grade."""
+    return replace(context, required_grade=RegistryAuthorityGrade.CALCULATION)
+
+
+def _publish(prepared: _PreparedInvocation, rendered: RenderedExportTree) -> None:
+    """Publish the exact prepared candidate the read-only check just validated."""
+    write_generated_casilla_export_refs(
+        prepared.candidate_root / "modelos" / prepared.invocation.modelo / "revisions" / prepared.invocation.revision,
+        export_refs_by_casilla=export_refs_by_casilla(rendered),
+    )
+    target_absent = not prepared.target_export_root.exists()
+    target_digest = None
+    if not target_absent:
+        target_digest, _size = hash_file(prepared.target_export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME)
     publish_validated_generated_export_tree(
         context=GeneratedExportTreePublicationContext(
             validation=_bootstrap_validation(prepared.validation),
             temporary_root=prepared.candidate_root.parents[2],
             target_root=prepared.target_root,
             target_export_root=prepared.target_export_root,
+            expected_target_absent=target_absent,
+            expected_target_manifest_sha256=target_digest,
         ),
         joined=prepared.inputs.joined,
         semantic_map=prepared.inputs.semantic_map,
@@ -286,7 +340,7 @@ def _run(
             root = Path(temporary_name)
             prepared = _prepare(invocation, root)
             if action == "check":
-                result = _check(prepared)
+                result, _rendered = _check(prepared)
                 typer.echo(
                     "checked "
                     f"modelo={invocation.modelo} revision={invocation.revision} source={invocation.source_ref} "
@@ -295,10 +349,8 @@ def _run(
             else:
                 # Publishing is never the first question: a candidate must first
                 # pass the independent read-only proof against its live target.
-                _check(prepared)
-                publish_root = root / "publish"
-                prepared = _prepare(invocation, publish_root)
-                _publish(prepared)
+                _result, rendered = _check(prepared)
+                _publish(prepared, rendered)
     except (RegistryError, ValueError) as error:
         typer.echo(f"refused: {error}", err=True)
         raise typer.Exit(code=1) from error
