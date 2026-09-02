@@ -216,15 +216,6 @@ Spanish authority, and schema-local Spanish TOML is deliberately absent. An
 that is fully covered.
 """
 
-#: Committed ratchet baseline, read only by this dev-side package.
-_BASELINE_FILENAME: Final[str] = "conformance-baseline.json"
-
-#: Command recorded on a captured baseline, so the artefact names its producer.
-_RECORD_COMMAND: Final[str] = "python -m dev.registry.conformance audit --record"
-
-#: Default cadence stamped on a captured baseline.
-_DEFAULT_REVIEW_CADENCE: Final[str] = "revisit whenever a stamping or grounding campaign lands"
-
 
 class ConformanceModel(BaseModel):
     """Strict frozen base for rendered conformance payloads."""
@@ -657,16 +648,6 @@ class CoverageReport(ConformanceModel):
     registry_validated: bool
     revision_count: int = Field(ge=0)
     modelo_count: int = Field(ge=0)
-
-
-
-
-
-
-
-
-
-
 
 
 @lru_cache(maxsize=2)
@@ -1281,14 +1262,6 @@ def vacuity_warning(report: ConformanceReport) -> str | None:
         'warning rows=0 detail="composed no revision rows at all; every count above is vacuous '
         'and describes the read, not the registry"'
     )
-
-
-
-
-
-
-
-
 
 
 def reviewer_attribution(review_status: str, reviewed_by: str | None) -> str | None:

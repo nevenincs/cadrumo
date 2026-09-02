@@ -25,6 +25,7 @@ from cadrumo.application.registry.closure import (
     RegistryClosureLimb,
     RegistryClosureLimbName,
     RegistryClosureOwnerDisposition,
+    RegistryClosureRefusalReason,
 )
 from cadrumo.application.registry.filing_export_coverage import (
     FilingExportCoverageReport,
@@ -63,20 +64,21 @@ __all__ = [
 
 type RegistryClosurePredicateOutcome = Literal["satisfied", "refused"]
 type RegistryClosureJoinDisagreementKind = Literal["missing_from_limb", "unexpected_limb_coordinate"]
-type RegistryClosurePredicateRefusalReason = Literal[
-    "conflicting_evidence",
-    "cross_limb_disagreement",
-    "missing_evidence",
-    "scope_inadequate_evidence",
-    "stale_evidence",
-    "unreviewed_evidence",
-    "unmeasured",
-    "law_selection_refused",
-    "selected_revision_mismatch",
-    "undeclared_authority_grade",
-    "declared_grade_snapshot_refused",
-    "snapshot_revision_mismatch",
-]
+#: The development predicate vocabulary is the application's refusal vocabulary plus
+#: the temporal-coverage reasons that exist only on this side of the boundary. It is
+#: composed rather than restated: the seven shared reasons previously appeared here as
+#: literal copies, so an eighth reason added to the application would not have reached
+#: this alias and nothing would have reported the divergence.
+type RegistryClosurePredicateRefusalReason = (
+    RegistryClosureRefusalReason
+    | Literal[
+        "law_selection_refused",
+        "selected_revision_mismatch",
+        "undeclared_authority_grade",
+        "declared_grade_snapshot_refused",
+        "snapshot_revision_mismatch",
+    ]
+)
 
 _TEMPORAL_WORK_ITEMS: Final[dict[str, str]] = {
     "law_selection_refused": "registry-temporal-coverage:law-selection",
