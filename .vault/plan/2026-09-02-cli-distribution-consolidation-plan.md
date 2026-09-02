@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-cli-distribution-consolidation-research]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:c82a008bfbb69207d86a926c3978173ba0fae9a6755b488f405638b7809b40f3'
+body_hash: 'sha256:79b6fa8926576a1ae2ee2cfb6599d68844b2368fc2ce31201960128e62958069'
 ---
 
 # `cli-distribution-consolidation` plan
@@ -108,7 +108,7 @@ Align runner names and the Python floor with the account, and delete workflows a
 Build every declared distribution and channel artifact from one command and prove the result runs, so the adopted pipeline is demonstrated capable rather than asserted.
 
 - [ ] `P09.S33` - Bind the two corpus distributions to project-level Trusted Publishers; `RELEASING.md`.
-- [ ] `P09.S34` - Build every declared distribution from one command and refuse any file over the index cap; `justfile`.
+- [x] `P09.S34` - Build every declared distribution from one command and refuse any file over the index cap; `justfile`.
 - [ ] `P09.S35` - Prove both console scripts from the built wheel in an isolated interpreter; `dev/smoke/smoke_check.py`.
 - [ ] `P09.S36` - Render the Homebrew formula and the Scoop manifest from the built cohort; `dev/packaging/cohort_manifest.py`.
 - [ ] `P09.S37` - Produce the distribution evidence rows the three channels declare; `dev/release/readiness.py`.

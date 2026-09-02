@@ -9,7 +9,7 @@ related:
   - '[[2026-09-02-python-runtime-compatibility-research]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:9a0bc8b0ba3030d0d0d75d057d42e872c0af7c4632337067ecd09b721ab25023'
+body_hash: 'sha256:2729f847b52b3f9de3608007988b24ab5e5f2ae568deb909f0e5e24925d63099'
 ---
 
 <!-- RETIRED: S33, S35, S37, S39, S41, S43, S44, S45, S46, S47, S48, S49, S50, S51, S52, S53, S54, S55, S56, S57 -->
@@ -42,7 +42,7 @@ Make metadata, inventory, and release-cohort boundaries authoritative.
 Keep one annotation model and detect APIs removed or deprecated across the supported CPython range.
 
 - [x] `P02.S09` - Add an AST compatibility census for removed and deprecated Python APIs; `dev/quality/python_compatibility_scan.py`.
-- [ ] `P02.S10` - Add representative-defect tests for the compatibility census; `dev/quality/tests/test_python_compatibility_scan.py`.
+- [x] `P02.S10` - Add representative-defect tests for the compatibility census; `dev/quality/tests/test_python_compatibility_scan.py`.
 - [ ] `P02.S11` - Harden public annotation resolution and forward-reference behavior; `src/cadrumo/application/modelo/workspace_manifest.py`.
 - [ ] `P02.S12` - Exercise annotation contracts through the workspace-manifest path; `src/cadrumo/application/modelo/tests/test_workspace_manifest.py`.
 - [ ] `P02.S13` - Harden dynamic wizard signatures against annotation representation changes; `src/cadrumo/application/wizard/commands.py`.
