@@ -37,3 +37,4 @@ related:
 - `verify:` `uv run --no-sync ruff check dev/ci/python_runtime_compatibility.py dev/packaging/runtime_wheelhouse.py dev/packaging/python_cohort.py dev/packaging/tests/test_runtime_wheelhouse.py` -> `pass`
 - `verify:` `uv run --no-sync python -m dev.packaging.release_cohort verify --cohort-dir var/python-runtime-wheelhouse-snapshot-0c9e915444e8/var/release-cohort-python-313-314-sealed` -> `pass`
 - `verify:` `binary probes CPython 3.13.14 and 3.14.6, offline/no-index/find-links/require-hashes` -> `pass`
+- `verify:` `same-commit matrix at ea2f347ba22a5d566f18f8c97a995c22348eb3d9 with cohort d57b1de3c709...: source CPython 3.13.14, 3.14.6, 3.15.0b4; sealed offline binary CPython 3.13.14 and 3.14.6; advisory 3.15 missing-wheel pydantic-core/PyYAML` -> `pass`
