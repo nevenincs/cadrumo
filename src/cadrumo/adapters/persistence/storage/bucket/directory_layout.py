@@ -22,6 +22,7 @@ from __future__ import annotations
 import gc
 import secrets
 import shutil
+from enum import StrEnum
 from pathlib import Path, PureWindowsPath
 from typing import Literal
 
@@ -35,6 +36,22 @@ from .....core.storage_taxonomy_locations import storage_location
 from .errors import BucketValidationError
 
 _log = get_logger(__name__)
+
+
+class TreeRemovalErrorPolicy(StrEnum):
+    """What a recursive removal does when the filesystem refuses.
+
+    ``RAISE`` surfaces the error to the caller; ``IGNORE`` proceeds and leaves whatever
+    could not be removed. The choice is a deletion-safety decision, so it is named
+    rather than passed as one of two bare strings through two signatures.
+    """
+
+    RAISE = "raise"
+    IGNORE = "ignore"
+
+
+TreeRemovalErrorPolicyValue = Literal[TreeRemovalErrorPolicy.RAISE, TreeRemovalErrorPolicy.IGNORE]
+"""The same policy where a boundary parameter must accept the plain token."""
 
 
 class BucketPaths(BaseModel):
@@ -142,7 +159,7 @@ def bucket_paths(root: Path, bucket_id: str) -> BucketPaths:
 def trash_rename_and_remove(
     target: Path,
     *,
-    on_trash_cleanup_error: Literal["raise", "ignore"] = "raise",
+    on_trash_cleanup_error: TreeRemovalErrorPolicyValue = "raise",
 ) -> None:
     """Trash-rename ``target`` then recursively remove it.
 
@@ -186,9 +203,9 @@ def trash_rename_and_remove(
     _remove_tree(trash, on_error=on_trash_cleanup_error)
 
 
-def _remove_tree(path: Path, *, on_error: Literal["raise", "ignore"]) -> None:
+def _remove_tree(path: Path, *, on_error: TreeRemovalErrorPolicyValue) -> None:
     """``rmtree`` under the given error policy; see :func:`trash_rename_and_remove`."""
-    if on_error == "ignore":
+    if on_error == TreeRemovalErrorPolicy.IGNORE:
         shutil.rmtree(path, ignore_errors=True)
         return
     try:

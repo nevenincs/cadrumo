@@ -76,6 +76,7 @@ __all__ = [
     "resolve_cross_reference_oracle",
 ]
 
+
 class ParityVerdictKind(StrEnum):
     """How a live-parity comparison came out."""
 

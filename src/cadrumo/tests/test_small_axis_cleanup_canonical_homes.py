@@ -12,9 +12,10 @@ def test_auth_provider_contract_has_one_public_home() -> None:
     from ..adapters.outbound.aeat import auth as adapter_auth
     from ..application.auth.providers import AuthProvider
     from ..core import config
+    from ..core.auth_provider import AuthProviderDescription, AuthProviderKind
 
-    assert core.AuthProviderKind.__module__ == "cadrumo.core.auth_provider"
-    assert core.AuthProviderDescription.__module__ == "cadrumo.core.auth_provider"
+    assert AuthProviderKind.__module__ == "cadrumo.core.auth_provider"
+    assert AuthProviderDescription.__module__ == "cadrumo.core.auth_provider"
     assert not hasattr(core, "AuthProviderKindSetting")
     assert not hasattr(config, "AuthProviderKind")
     assert not hasattr(config, "AuthProviderKindSetting")

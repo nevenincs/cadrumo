@@ -31,6 +31,7 @@ from ..edit_models import (
     ModeloDetailRowEditIntentV1,
     ModeloEditAdmissionRequestV1,
     ModeloEditAdmittedV1,
+    ModeloEditBaselineV1,
     ModeloEditDetailRowAddressV1,
     ModeloEditDetailRowIntentKind,
     ModeloEditScalarAddressV1,
@@ -60,7 +61,7 @@ def _identity() -> OperationSchemaIdentityV1:
     return OperationSchemaIdentityV1(schema_id="modelo.edit.contract", schema_version=1, schema_fingerprint=_DIGEST)
 
 
-def _baseline():
+def _baseline() -> ModeloEditBaselineV1:
     period = Period.from_year_and_code(_FILING_YEAR, "1T")
     modelo = ModeloCode(_MODELO)
     revision_id = select_revision(bundled_authority().validate_modelo(modelo), filing_year=_FILING_YEAR, period="1T").id
@@ -104,7 +105,7 @@ def _baseline():
     return result.baseline
 
 
-def _writable_casilla_id(baseline: object) -> str:
+def _writable_casilla_id(baseline: ModeloEditBaselineV1) -> str:
     """Return one casilla the admission actually permits writing, and that is numeric.
 
     Both filters matter and neither is incidental. The permitted surface
