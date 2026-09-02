@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:e53c8305109cb13a881037d826cb4a43ab3edac3373f41b91a47c69d639b6061'
+body_hash: 'sha256:971f3a0f9a7d570aa47820e7043f18f50316e9bffd706ced49bbf64be92036fe'
 related:
   - "[[2026-07-25-account-distribution-standard-adr]]"
   - "[[2026-07-27-canonical-release-pipeline-adr]]"
@@ -653,6 +653,24 @@ after the fix landed carries all six surfaces at `0.3.0`: the root project and b
 companion projects, the initialiser, the manifest, and both exact pins rewritten in place
 on their annotated lines. The branch written before it carried four, and the two it
 omitted are exactly the two the readiness gate would have refused the release for.
+
+### The release branch's content passes the gate, and its lockfile does not - yet
+
+Run against the branch release-please actually wrote, the blocking version check reports
+that every release authority and both exact companion pins agree on `0.3.0`, and the
+changelog check passes beside it. That is the gate itself reading the real files rather
+than the configuration being read as implying them.
+
+Its `uv.lock` does not match, because bumping two exact pins invalidates a resolution
+nothing has redone. That is a symptom of the same permission refusal rather than a
+second defect: the workflow regenerates and pushes the lock onto the release branch, and
+that step is conditioned on the release pull request existing. No pull request, no lock
+regeneration - and the two failures therefore clear together.
+
+Worth stating because the order looks alarming from outside. The first job of the publish
+path runs `uv sync --frozen`, so a merge of the branch as it stands today would fail
+before any distribution was built. Nothing about that is a reason to fix the lock by
+hand: doing so would repair a symptom on a branch the tool rewrites on every push.
 
 ### Not investigated
 

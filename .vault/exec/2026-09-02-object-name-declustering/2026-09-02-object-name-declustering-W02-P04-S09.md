@@ -5,16 +5,11 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:73a2d849a43a108845a1ffb538b9d769830c178610c647d0f3cd9f35dc93538d'
+body_hash: 'sha256:2e736fb2dd0c49b11def97594290503b4a6e553ed011aaa7c7ad68bc6fb86225'
 step_id: 'S09'
 related:
   - "[[2026-09-02-object-name-declustering-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Implement bounded syntax-aware rename transformations with byte-precondition and allowlist enforcement
 

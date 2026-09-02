@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:804c28f04bbc925aee6b2bc5cf832e3f93d28455275269bbda6b51dae97e7c02'
+body_hash: 'sha256:7f99d8afced525eaba898e8f14982c382b914989d40c8a845491edc297f885e3'
 ---
 
 <!-- RETIRED: S73, S188 -->
@@ -458,6 +458,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S196` - Sweep every recorded run in this campaign for lost-worker markers and establish that its headline numbers are from clean runs; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S197` - Add the measurement integrity criterion that the four failed measurements make due; `.vault/plan/2026-09-02-registry-declaration-hardening-plan.md`.
 - [x] `W06.P13.S198` - Settle the crashed-worker test serially and attribute the feature health warnings to the untracked scaffold that carries them; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
+- [x] `W06.P13.S199` - Attempt to size the footnote-pointer correction and establish that the first measurement read an attribute the object does not carry; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 
 ### Phase `W06.P14` - declaration contract migration
 

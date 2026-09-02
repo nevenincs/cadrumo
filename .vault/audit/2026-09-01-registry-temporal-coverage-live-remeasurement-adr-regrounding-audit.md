@@ -5,7 +5,7 @@ tags:
 date: '2026-09-01'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:9ae0e9aca6dd2f8a0db5b90a1e2c655980e6cb2efa702b8a319b5605a95d850a'
+body_hash: 'sha256:3a5fd096d081ec225940763efab9bfb5e74056ad2d7962c499ef5a4b8a9831b4'
 related:
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -4607,3 +4607,34 @@ empty, and they should be, until whoever created it writes them.
 
 Worth stating because the alternative is tempting when a shared feature tag makes another
 writer's incomplete document look like this campaign's failing check.
+
+### A sizing attempt that measured nothing, caught before it became a number
+
+The footnote-pointer correction is blocked behind authoring reviewed rules for whatever
+fields it newly makes eligible, so the useful question is how many that is. The predicate
+that decides eligibility admits three shapes today - a PDF anchor, a blank content cell, and
+the single filing-instruction phrase - and the correction would add a fourth: a Contenido cell
+holding only a footnote pointer.
+
+The pointer shape was characterised first and discriminates correctly, matching `(1)`,
+`(1)(2)`, `(*)` and a trailing-period variant while rejecting a real description and the
+filing instruction. Run across three loaded designs it reported zero footnote-only cells in
+all three, which would have been a clean and quotable finding.
+
+It was wrong, and the check that caught it is the one this campaign now applies by habit:
+before believing a zero, confirm the population is real. Of the 416 fields in the first
+design, the number carrying any non-empty content at all is also zero. The `content`
+attribute belongs to the record-design intermediate, and what was being read was the joined
+result, where it does not exist. The pattern never had anything to match, so "zero
+footnote-only cells" measured the absence of the attribute rather than the absence of the
+condition.
+
+No sizing figure is recorded, because none was obtained. The correct source is the
+intermediate the design loader produces, and the measurement has to be taken again from
+there.
+
+This is the fifth time in this campaign a measurement has failed by looking like success, and
+the first one caught before it reached a finding rather than after. That is the whole value of
+the criterion added in the previous iteration: the habit cost one extra command and saved a
+number that would have been quoted, believed, and used to argue that a correction had no
+work behind it.
