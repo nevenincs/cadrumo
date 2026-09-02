@@ -49,7 +49,7 @@ the missing Cadrumo semantic owners nor authorizes an incomplete export.
 
 The loaded snapshot selects revision `2021` only for `2021/0A`, retains
 `authority_grade = "applicability"`, and gives its sole application link to
-`cadrumo.adapters.inbound.declaracion.parse_declaracion`. Its extractor profile
+`cadrumo.adapters.inbound.declaracion.parser.parse_declaracion`. Its extractor profile
 reads the ten observation targets numbered 02, 04, 06, 26, 49, 47, 64, 65, 97,
 and the unnumbered compensation target. Every declared casilla is
 `input_kind = "informational"`; the tree has no revision bindings, formulas,

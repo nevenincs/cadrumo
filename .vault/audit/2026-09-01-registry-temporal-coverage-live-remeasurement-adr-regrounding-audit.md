@@ -4924,3 +4924,39 @@ Five rows moved from a category where they were wrong to one where they are righ
 categories that previously mixed accurate and inaccurate members now each contain only
 members wanting the same thing done. A count that did not move records none of that, which is
 why this campaign stopped treating finding totals as the measure some findings ago.
+
+### Modelo 369's three schemes are correctly disambiguated, and the probe was wrong twice
+
+The last unexamined category is `no_temporal_claim`, whose three members are all modelo 369:
+`esquema-exterior`, `esquema-importacion` and `esquema-union`. These are the one-stop-shop
+regimes, a non-temporal axis sitting in the revision slot, which is the condition an existing
+plan Step exists to move.
+
+Chasing the consequence produced two wrong conclusions in succession, and both were the
+probe's fault rather than the registry's.
+
+The first: all three declare identical temporal windows - `valid_from` 2021-07-01, no
+`valid_to`, selector opening in 2021 - and asking for filing year 2024 with period `1T`
+returned `esquema-union` every time. That reads as temporal selection unable to tell three
+revisions apart and silently answering with one of them, which would be a serious violation of
+the rule against silent under-declaration.
+
+The second: asking for each scheme explicitly, two of the three refused. That reads as two
+declared regimes the registry ships and no consumer can reach.
+
+Both are artefacts of asking with the wrong period code. The schemes are disambiguated by
+period family, and each declares its own: `esquema-union` takes `1T` through `4T`,
+`esquema-importacion` takes the twelve monthly codes, and `esquema-exterior` takes `EXT-1T`
+through `EXT-4T`. Asked with `EXT-2T`, `03` and `2T` respectively, each of the three resolves
+to itself. There is no ambiguity and nothing is unreachable.
+
+So the axis is not undeclared, it is declared somewhere the name does not show, and the
+screen's finding is accurate and benign as written: the name carries no year because the axis
+is not temporal. The plan Step that would move the scheme out of the revision slot remains
+worth doing for legibility, and its justification is now weaker than it looked an hour ago -
+it is a naming and modelling improvement, not the repair of a selection defect.
+
+Three probes, two false alarms, and the same root cause as the `Period` object and the `0A`
+code earlier in this campaign: an argument shaped wrongly returns a refusal indistinguishable
+from a registry that cannot answer. The check that resolved it was reading what the selector
+declares before asking it anything, which took one command and should have been the first.
