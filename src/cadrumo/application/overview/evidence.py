@@ -25,14 +25,20 @@ if TYPE_CHECKING:
 
 
 @dataclass(frozen=True, slots=True)
-class CalendarEvidenceSources:
-    """Already-loaded sources consumed by the calendar evidence reconciler.
+class LocalCalendarEvidenceSources:
+    """Already-loaded sources capable of establishing the local filing axis."""
+
+    filing_records: tuple[ModeloRecord, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class AeatCalendarEvidenceSources:
+    """Already-loaded sources capable of establishing the observed-AEAT axis.
 
     Verified artefact CSVs use a sorted tuple rather than a mutable mapping so
     the source bundle stays immutable and has a deterministic representation.
     """
 
-    filing_records: tuple[ModeloRecord, ...] = ()
     observed_events: tuple[OverviewCalendarEvent, ...] = ()
     filed_declaration_observations: tuple[FiledDeclaracionObservation, ...] = ()
     verified_filed_declaration_artefact_refs: tuple[str, ...] = ()
@@ -51,11 +57,11 @@ class CalendarEvidenceSources:
 
 
 @dataclass(frozen=True, slots=True)
-class CalendarEvidenceReadOutcome:
+class CalendarEvidenceReadOutcome[SourcesT]:
     """One already-completed source read with explicit authority and freshness."""
 
     state: HomeZoneState
-    value: CalendarEvidenceSources | None = None
+    value: SourcesT | None = None
 
     def __post_init__(self) -> None:
         """Keep source values consistent with their declared availability."""
@@ -80,8 +86,8 @@ class CalendarEvidenceProjection:
 
 def build_calendar_evidence_projection(
     *,
-    local: CalendarEvidenceReadOutcome,
-    aeat: CalendarEvidenceReadOutcome,
+    local: CalendarEvidenceReadOutcome[LocalCalendarEvidenceSources],
+    aeat: CalendarEvidenceReadOutcome[AeatCalendarEvidenceSources],
     expected_tax_id: str | None = None,
 ) -> CalendarEvidenceProjection:
     """Reconcile already-loaded sources without performing implicit I/O.
@@ -91,8 +97,12 @@ def build_calendar_evidence_projection(
     false submission claim.  The underlying reconciler owns all strength,
     identity, and natural ``(modelo, filing year, period)`` joins.
     """
-    local_sources = local.value or CalendarEvidenceSources()
-    aeat_sources = aeat.value or CalendarEvidenceSources()
+    if local.value is not None and not isinstance(local.value, LocalCalendarEvidenceSources):
+        raise TypeError("the local evidence outcome requires LocalCalendarEvidenceSources")
+    if aeat.value is not None and not isinstance(aeat.value, AeatCalendarEvidenceSources):
+        raise TypeError("the AEAT evidence outcome requires AeatCalendarEvidenceSources")
+    local_sources = local.value or LocalCalendarEvidenceSources()
+    aeat_sources = aeat.value or AeatCalendarEvidenceSources()
     evidence = calendar_filing_evidence_from_sources(
         filing_records=local_sources.filing_records,
         observed_events=aeat_sources.observed_events,
@@ -143,8 +153,9 @@ def _mask_unobservable_axes(
 
 
 __all__ = [
+    "AeatCalendarEvidenceSources",
     "CalendarEvidenceProjection",
     "CalendarEvidenceReadOutcome",
-    "CalendarEvidenceSources",
+    "LocalCalendarEvidenceSources",
     "build_calendar_evidence_projection",
 ]

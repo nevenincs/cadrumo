@@ -9,10 +9,12 @@ from datetime import UTC, date, datetime
 import pytest
 
 from ....core.period import Period
+from ....domain.modelos.filing_record import ModeloRecord
 from ..calendar_models import OverviewAeatSubmissionState, OverviewCalendarEvent, OverviewCalendarEventType
 from ..evidence import (
+    AeatCalendarEvidenceSources,
     CalendarEvidenceReadOutcome,
-    CalendarEvidenceSources,
+    LocalCalendarEvidenceSources,
     build_calendar_evidence_projection,
 )
 from ..home import HomeAvailability, HomeZoneState
@@ -39,13 +41,13 @@ def _state(
 def _local(
     availability: HomeAvailability = HomeAvailability.AVAILABLE,
     *,
-    records: tuple = (),
+    records: tuple[ModeloRecord, ...] = (),
     observed_at: datetime | None = None,
-) -> CalendarEvidenceReadOutcome:
+) -> CalendarEvidenceReadOutcome[LocalCalendarEvidenceSources]:
     return CalendarEvidenceReadOutcome(
         state=_state(availability, observed_at=observed_at),
         value=(
-            CalendarEvidenceSources(filing_records=records)
+            LocalCalendarEvidenceSources(filing_records=records)
             if availability in {HomeAvailability.AVAILABLE, HomeAvailability.STALE}
             else None
         ),
@@ -57,11 +59,11 @@ def _aeat(
     *,
     events: tuple[OverviewCalendarEvent, ...] = (),
     observed_at: datetime | None = None,
-) -> CalendarEvidenceReadOutcome:
+) -> CalendarEvidenceReadOutcome[AeatCalendarEvidenceSources]:
     return CalendarEvidenceReadOutcome(
         state=_state(availability, observed_at=observed_at),
         value=(
-            CalendarEvidenceSources(observed_events=events)
+            AeatCalendarEvidenceSources(observed_events=events)
             if availability in {HomeAvailability.AVAILABLE, HomeAvailability.STALE}
             else None
         ),
@@ -92,14 +94,14 @@ def _observed_event(*, modelo: str = "303", period: Period = _PERIOD) -> Overvie
         (_state(HomeAvailability.AVAILABLE), None, "requires its loaded source bundle"),
         (
             _state(HomeAvailability.LOCKED),
-            CalendarEvidenceSources(),
+            LocalCalendarEvidenceSources(),
             "cannot carry source values",
         ),
     ],
 )
 def test_read_outcome_refuses_state_value_mismatches(
     state: HomeZoneState,
-    value: CalendarEvidenceSources | None,
+    value: LocalCalendarEvidenceSources | None,
     message: str,
 ) -> None:
     with pytest.raises(ValueError, match=message):

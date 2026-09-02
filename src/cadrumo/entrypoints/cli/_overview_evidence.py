@@ -27,8 +27,9 @@ from ...application.overview.calendar_models import (
     OverviewCalendarRange,
 )
 from ...application.overview.evidence import (
+    AeatCalendarEvidenceSources,
     CalendarEvidenceReadOutcome,
-    CalendarEvidenceSources,
+    LocalCalendarEvidenceSources,
     build_calendar_evidence_projection,
 )
 from ...application.overview.home import HomeAvailability, HomeZoneState
@@ -316,11 +317,11 @@ def local_calendar_filing_evidence(
     projection = build_calendar_evidence_projection(
         local=CalendarEvidenceReadOutcome(
             state=available,
-            value=CalendarEvidenceSources(filing_records=filing_records),
+            value=LocalCalendarEvidenceSources(filing_records=filing_records),
         ),
         aeat=CalendarEvidenceReadOutcome(
             state=available,
-            value=CalendarEvidenceSources(
+            value=AeatCalendarEvidenceSources(
                 observed_events=events,
                 filed_declaration_observations=tuple(filed_declaration_observations),
                 verified_filed_declaration_artefact_refs=tuple(verified_filed_artefact_csvs),
