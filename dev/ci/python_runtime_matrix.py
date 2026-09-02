@@ -137,8 +137,10 @@ def _parse_record(value: object, *, context: str, phase: RuntimePhase) -> Runtim
     selector = _require_string(row["selector"], context=f"{context}.selector")
     if _SELECTOR_RE.fullmatch(selector) is None:
         raise RuntimeMatrixError(f"{context}.selector is not a Python selector: {selector!r}")
-    if not selector.startswith(f"{minor}.") and selector != minor and not selector.startswith(f"{minor}-"):
-        raise RuntimeMatrixError(f"{context}.selector {selector!r} does not target {minor}")
+    if phase is RuntimePhase.STABLE and selector != minor:
+        raise RuntimeMatrixError(f"{context}.selector {selector!r} must select stable minor {minor}")
+    if phase is RuntimePhase.PRERELEASE and not selector.startswith(f"{minor}."):
+        raise RuntimeMatrixError(f"{context}.selector {selector!r} does not target prerelease minor {minor}")
     implementation = _require_string(row["implementation"], context=f"{context}.implementation")
     if implementation != "CPython":
         raise RuntimeMatrixError(f"{context}.implementation must be 'CPython', got {implementation!r}")
