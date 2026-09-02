@@ -215,10 +215,17 @@ re-fetch, requires the line number to be within the file, and cross-checks each
 `capability_id` against a discovery pass so an id and its locator cannot drift
 apart. It is a well-built gate.
 
-Its tests only ever hand it focused or synthetic manifests. Nothing runs it
-against the shipped census, so the promotion of private modules to public names
-broke pointers in shipped data with no gate objecting. Running it against the
-live manifest by hand reports five dead locators across three further rows:
+Correction to an earlier statement in this document: it is not true that
+nothing runs it against shipped data. Some rows have a bespoke test that loads
+the live census, narrows it to that one row, and runs the check with the
+expected locators written out, and `test_inventory_repository_ownership_uses_its_live_discovery_locator`
+is one such. That test is red at HEAD for exactly this reason.
+
+What is missing is coverage of the WHOLE census. A row gains live checking only
+when someone writes a test naming it, so the rows nobody singled out went
+unchecked while the promotion of private modules to public names broke their
+pointers. Running the check against the full live manifest by hand reported
+five dead locators across three rows:
 
 - `censo.modelo-036-profile-status` and `coverage.remaining-ingress-surfaces`
   both point at `application/modelo/_m036_lifecycle.py`, now `m036_lifecycle.py`.
@@ -228,7 +235,14 @@ live manifest by hand reports five dead locators across three further rows:
   and `valuation.py`. It also points at `application/inventory/_service.py`,
   now `service.py`.
 
-These were not repaired here, and the reason is worth stating. The row's
+Two of the five are now repaired. The `censo.modelo-036-profile-status` and
+`coverage.remaining-ingress-surfaces` rows both pointed at the pre-promotion
+`_m036_lifecycle.py`, in a capability locator and again in a grounding
+reference each. Neither row's `capability_ids` names that path, so repointing
+carried no correspondence risk, and the target lines hold identical content
+before and after the rename.
+
+The three inventory locators were not repaired, and the reason is worth stating. The row's
 `capability_ids` carry an exact correspondence to their locators, down to the
 line, so a hand repair can silently attribute a capability to the wrong symbol.
 The correct source of truth already exists: `discovered_source_capability_evidence`
