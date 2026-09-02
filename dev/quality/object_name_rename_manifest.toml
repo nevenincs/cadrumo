@@ -1,5 +1,5 @@
 schema_version = 1
-inventory_digest = "sha256:d30b815a0d3360087c3de7dac35603ba7b3517e32b18228a178d0d4a8bb4bc88"
+inventory_digest = "sha256:97770ca8ad91f5e6608434eadf0648539d35263ab987d37491aa6900d015f5f9"
 
 [[operations]]
 operation_id = "rename-result-disposition-fragment-generator"

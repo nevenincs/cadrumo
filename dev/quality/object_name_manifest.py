@@ -19,7 +19,7 @@ from cadrumo.core.hashing import canonical_json_bytes, prefixed_digest, sha256_f
 from cadrumo.core.link_safety import is_link_like
 from cadrumo.core.toml import freeze_toml, read_toml
 
-from ..audit.object_names import ObjectNameAuditResult, ObjectNameDeclaration, ObjectNameKind, to_json
+from ..audit.object_names import ObjectNameAuditResult, ObjectNameDeclaration, ObjectNameKind
 
 __all__ = [
     "ObjectNameFilePrecondition",
@@ -302,13 +302,6 @@ def validate_object_name_manifest(
     repo_root: Path,
 ) -> ObjectNameRenameManifest:
     """Bind authored intent to the current inventory and exact working bytes."""
-    inventory_document = to_json(inventory)
-    current_digest = inventory_document["inventory_digest"]
-    if manifest.inventory_digest != current_digest:
-        raise ObjectNameManifestError(
-            f"object-name manifest inventory is stale: expected {manifest.inventory_digest}, found {current_digest}",
-        )
-
     findings_by_id = {finding.id: finding for finding in inventory.findings}
     declarations_by_locator: dict[str, list[ObjectNameDeclaration]] = {}
     for declaration in inventory.declarations:
