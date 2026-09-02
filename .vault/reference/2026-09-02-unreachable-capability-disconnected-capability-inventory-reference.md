@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:4dec4f72f5fc730bd675dd213116cceb9d8a16b579f9299a26dbc72c4b3ab8bc'
+body_hash: 'sha256:b9189e599d6c359ce2ab2c9d86ca485e40dbe7b5861b0d877dedd0226fcd1947'
 related:
   - "[[2026-09-02-unreachable-capability-research]]"
 ---
@@ -737,47 +737,55 @@ walking the live tree, with a defect-injection proof.
 
 ### `adapters/inbound/borrador/`
 
-**What it is.** The Modelo 100 PDF reader for all three artefacts a taxpayer
+### `adapters/inbound/borrador/` — deleted, downstream left standing
+
+**Status as of 2026-09-03.** The parser was removed in `625954a109`, 1,952
+lines across 38 files, taking the year-keyed extractors, the artefact-kind
+detection and every fixture. The package directories remain on disk holding no
+Python at all. The deletion was defensible on the evidence this audit gives,
+because the reachability scan reports that nothing reached it; the audit
+reports reachability, not value, and the fact that its downstream was live and
+starved lived only in this document.
+
+**What it was.** The Modelo 100 PDF reader for all three artefacts a taxpayer
 meets: the AEAT pre-filing borrador, a Renta Web predeclaración or simulación,
-and the post-filing declaración with its CSV stamp. It extracts printed casilla
-and value rows into a typed observation. An operator today cannot load their
-AEAT draft into the product at all.
+and the post-filing declaración with its CSV stamp. It extracted printed
+casilla and value rows into a typed observation. An operator still cannot load
+their AEAT draft into the product at all.
 
-**How complete.** 745 implementation lines against 703 test lines. Artefact
-kind is auto-detected, extractors are year-keyed, a registry profile parse mode
-filters to a declared extraction profile's target casillas and fails below its
-coverage minimum, and source references derive from the PDF digest rather than
-the local path so no filesystem location is retained. One defect: the package
-initializer still documents a public API while exporting nothing, and every
-module inside is private, so the promotion campaign left it without a public
-defining module to import from.
+**What the deletion left behind.** Every consumer survived, so the product now
+ships a chain whose first link is missing rather than whose last link is
+unbuilt. `Borrador100SnapshotService.capture()` in
+`application/live/borrador_100.py` has zero production callers. The encrypted
+borrador namespace is still reserved. The borrador prefill tier is still
+declared in the calculation schema and still enrolled in the source mesh, and
+can never fire. At least three reachable CLI commands —
+`app.live.borrador.100.list`, `.view` and `.latest` — read a store that no
+code path can fill.
 
-**Why not connected.** BUG. It had a caller. A `--from-borrador` flag on the
-filing command called the parser directly, and it is absent from the tree from
-May 2026 onward with no replacement; searching the whole history of the
-entrypoints and application trees for the parser turns up nothing since. The
-ratchet names borrador ingestion as the first member of what it calls the
-orphaned-domain cluster, product capability whose caller is gone.
+**Why this is worse than before.** Prior to the deletion the capability was one
+wiring change from working: the parser existed, tested, and the whole
+downstream was waiting for it. Now the capability must be rebuilt before any of
+that downstream can do anything, and in the meantime the command surface makes
+a promise the product cannot keep.
 
-**What it adds.** This is the sharpest finding in the inventory, because
-everything downstream of it is already live and starved. The snapshot record,
-its encrypted namespace and its repository are reachable. The binding module is
-reachable and enrolled in the calculation source mesh, resolving prefilled
-bindings with typed provenance stamped onto the durable calculation revision.
-The CLI ships three borrador commands. And nothing in production ever
-constructs a snapshot: the repository appears only in tests.
+**The two coherent resolutions.** Either recover the parser from
+`625954a109^`, promote it to public defining modules, and add the import verb
+that calls the repository that already exists — which turns three inert
+commands and a dead prefill tier into working capability. Or accept the
+deletion and finish it, retiring the commands, `capture()`, the prefill tier
+and the namespace together. Leaving the halves as they are is the only option
+that is not coherent. The choice belongs to the operator, because reversing
+another contributor's deletion is not a call this audit may make.
 
-So the operator has three commands that read a store nothing can fill, and a
-prefill tier that can never fire. Connecting the parser turns "type every
-Modelo 100 casilla by hand" into "load the AEAT draft and let the engine check
-it", and it is the only path to the borrador-sourced provenance the revision
-record is already designed to carry.
+**The generalisable lesson.** A reachability audit cannot distinguish capability
+whose caller was never written from capability whose caller was deleted, and it
+cannot see that a starved module has a live downstream waiting on it. Anyone
+acting on the unreachable set alone will eventually delete something the rest
+of the tree still needs. The defect class worth a gate is narrower and
+checkable: a reachable command whose backing store no production path can
+populate.
 
-**Wiring needed.** Promote the package to public defining modules, since the
-initializer must stay inert and cannot re-export, then add a capture verb
-following the established import-file flow that parses and calls the existing
-repository. A local PDF is an import, not a pull, which is why the command set
-has pull on the remote lanes and nothing here.
 
 ## The independent oracle, and the registry row that names it
 
