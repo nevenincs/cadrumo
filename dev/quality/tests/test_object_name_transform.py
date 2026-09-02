@@ -560,13 +560,19 @@ def test_shared_consumer_reference_class_is_proven_for_each_operation(tmp_path: 
         _operation(
             _declaration(inventory, path="src/cadrumo/alpha.py", name="Widgets"),
             target_name="Widget",
-            sources={"dev/consumer.py": sources["dev/consumer.py"], "src/cadrumo/alpha.py": sources["src/cadrumo/alpha.py"]},
+            sources={
+                "dev/consumer.py": sources["dev/consumer.py"],
+                "src/cadrumo/alpha.py": sources["src/cadrumo/alpha.py"],
+            },
             expected_reference_classes=("definition", "shared-consumer", "static-import"),
         ),
         _operation(
             _declaration(inventory, path="src/cadrumo/beta.py", name="Gadgets"),
             target_name="Gadget",
-            sources={"dev/consumer.py": sources["dev/consumer.py"], "src/cadrumo/beta.py": sources["src/cadrumo/beta.py"]},
+            sources={
+                "dev/consumer.py": sources["dev/consumer.py"],
+                "src/cadrumo/beta.py": sources["src/cadrumo/beta.py"],
+            },
             expected_reference_classes=("definition", "shared-consumer", "static-import"),
         ),
     ]
