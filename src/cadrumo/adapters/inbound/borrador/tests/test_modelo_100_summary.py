@@ -12,8 +12,8 @@ import pytest
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....domain.calculations.registry.schema_extraction import ExtractionProfileDefinition, ExtractionTargetDefinition
 from ...pdf.source_provenance import source_pdf_reference_path
-from .._parser import parse_borrador
-from .._schema import ArtefactKind, BorradorParseMode, InboundBorradorObservation
+from ..parser import parse_borrador
+from ..schema import ArtefactKind, BorradorParseMode, InboundBorradorObservation
 from ..errors import BorradorParseError
 
 pytestmark = [
@@ -240,7 +240,7 @@ class TestObservedValues:
         sensitive_pdf = tmp_path / "12345678Z-renta-borrador.pdf"
         pdf.rename(sensitive_pdf)
 
-        with caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.inbound.borrador._parser"):
+        with caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.inbound.borrador.parser"):
             parse_borrador(sensitive_pdf)
 
         rendered_logs = "\n".join(record.getMessage() for record in caplog.records)

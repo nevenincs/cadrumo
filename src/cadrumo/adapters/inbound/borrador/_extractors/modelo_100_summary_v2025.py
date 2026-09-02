@@ -12,7 +12,7 @@ This is a read-only inbound adapter. It does not define Modelo 100
 completeness, resolve a
 :class:`~domain.calculations.registry.RegistrySnapshot`, or make
 filing-grade authority decisions. When callers pass a
-:class:`~adapters.inbound.borrador._schema.BorradorExtractionProfile`, the
+:class:`~adapters.inbound.borrador.schema.BorradorExtractionProfile`, the
 extractor filters to that profile and fails hard if observed coverage is
 insufficient.
 
@@ -36,7 +36,7 @@ from ...pdf.extracted_casilla import ExtractedCasilla
 from ...pdf.label_regex import SPANISH_AMOUNT_GROUP, parse_spanish_decimal
 from ...pdf.source_provenance import sha256_file, source_pdf_reference_path
 from .._parsers.pdfplumber_backend import extract_pages_text
-from .._schema import ArtefactKind, BorradorExtractionProfile, InboundBorradorObservation
+from ..schema import ArtefactKind, BorradorExtractionProfile, InboundBorradorObservation
 from ..errors import BorradorParseError
 
 _CASILLA_VALUE_RE = re.compile(
@@ -57,7 +57,7 @@ class Modelo100ObservedV2025Extractor:
 
     Reads the printed text via the backend facade's ``extract_pages_text``
     primitive, locates printed casilla rows, and returns a strict
-    :class:`~adapters.inbound.borrador._schema.InboundBorradorObservation`.
+    :class:`~adapters.inbound.borrador.schema.InboundBorradorObservation`.
 
     Attributes:
         año: The original implementation year. The extractor registry may map
@@ -73,7 +73,7 @@ class Modelo100ObservedV2025Extractor:
         artefact_kind: ArtefactKind,
         extraction_profile: BorradorExtractionProfile | None = None,
     ) -> InboundBorradorObservation:
-        """Parse ``pdf_path`` into a :class:`~adapters.inbound.borrador._schema.InboundBorradorObservation`.
+        """Parse ``pdf_path`` into a :class:`~adapters.inbound.borrador.schema.InboundBorradorObservation`.
 
         Args:
             pdf_path: Path to the Modelo 100 PDF.
@@ -85,7 +85,7 @@ class Modelo100ObservedV2025Extractor:
                 for this parse.
 
         Returns:
-            The strict :class:`~adapters.inbound.borrador._schema.InboundBorradorObservation`
+            The strict :class:`~adapters.inbound.borrador.schema.InboundBorradorObservation`
             with observed casillas extracted.
 
         Raises:

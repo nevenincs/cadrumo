@@ -10,7 +10,7 @@ the tax year from the PDF today; callers that need a non-default year must pass
 Unlike the declaración parser, this adapter does not resolve registry snapshots.
 The default parse mode returns observed PDF rows. Registry-profile validation is
 available only when the caller supplies a
-:class:`~adapters.inbound.borrador._schema.BorradorExtractionProfile`
+:class:`~adapters.inbound.borrador.schema.BorradorExtractionProfile`
 projection explicitly.
 """
 
@@ -21,7 +21,7 @@ from pathlib import Path
 from ....core.logging import get_logger
 from ._detect import detect_artefact_kind
 from ._extractors.selection import get_extractor
-from ._schema import (
+from .schema import (
     ArtefactKind,
     BorradorExtractionProfile,
     BorradorParseMode,
@@ -45,7 +45,7 @@ def parse_borrador(
     Args:
         pdf_path: Path to the borrador / predeclaración / declaración PDF.
         artefact_kind_override: Skip auto-detection and force the
-            :class:`~adapters.inbound.borrador._schema.ArtefactKind`.
+            :class:`~adapters.inbound.borrador.schema.ArtefactKind`.
         año_override: Select the year-keyed extractor explicitly. When omitted,
             the parser uses the current default extractor year (``2025``).
         extraction_profile: Optional caller-supplied registry extraction-profile
@@ -55,7 +55,7 @@ def parse_borrador(
             requires ``extraction_profile`` and validates coverage.
 
     Returns:
-        A strict :class:`~adapters.inbound.borrador._schema.InboundBorradorObservation`
+        A strict :class:`~adapters.inbound.borrador.schema.InboundBorradorObservation`
         with observed casilla rows extracted.
 
     Raises:
