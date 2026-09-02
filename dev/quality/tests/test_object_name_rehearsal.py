@@ -26,6 +26,21 @@ from ..object_name_rehearsal import ObjectNameRehearsalError, rehearse_object_na
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
+def test_snapshot_records_a_file_deleted_between_stat_and_hash_as_absent(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source = tmp_path / "dev/concurrent_helper.py"
+    source.parent.mkdir()
+    source.write_text("def concurrent_helper() -> None:\n    pass\n", encoding="utf-8")
+    monkeypatch.setattr(
+        rehearsal_module,
+        "sha256_file",
+        lambda _path: (_ for _ in ()).throw(FileNotFoundError(source)),
+    )
+
+    assert rehearsal_module._snapshot(tmp_path, ("dev/concurrent_helper.py",)) == (("dev/concurrent_helper.py", None),)
+
+
 @pytest.fixture(autouse=True)
 def _unbind_host_worktree_packages(monkeypatch: pytest.MonkeyPatch) -> None:
     """Let graph discovery bind imports to each disposable test repository."""

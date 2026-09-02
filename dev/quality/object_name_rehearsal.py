@@ -508,7 +508,7 @@ def rehearse_object_name_component(
         if _snapshot(temporary_root, tuple(path for path, _digest in baseline_files)) != baseline_files:
             raise ObjectNameRehearsalError("verified temporary snapshot differs from the current tree")
         copied_inventory = scan((temporary_root / "src", temporary_root / "dev"), temporary_root)
-        copied_inventory_digest = to_json(copied_inventory)["inventory_digest"]
+        copied_inventory_digest = cast("str", to_json(copied_inventory)["inventory_digest"])
         if not isinstance(copied_inventory_digest, str):
             raise ObjectNameRehearsalError("copied inventory did not emit a string digest")
         try:

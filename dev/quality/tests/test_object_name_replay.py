@@ -177,14 +177,12 @@ def test_successful_symbol_replay_applies_exact_receipt_and_preserves_unrelated_
 
 def test_successful_symbol_replay_tolerates_unrelated_post_receipt_bytes(tmp_path: Path) -> None:
     repo, inventory, manifest, component, receipt = _case(tmp_path)
-    unrelated = repo / "dev/untracked.txt"
-    unrelated.write_bytes(b"concurrent unrelated bytes\n")
+    unrelated = repo / "dev/concurrent_helper.py"
+    unrelated.write_bytes(b"def helper_runtime() -> None:\n    pass\n")
 
-    replay_object_name_component(
-        manifest, inventory=inventory, component=component, receipt=receipt, repo_root=repo
-    )
+    replay_object_name_component(manifest, inventory=inventory, component=component, receipt=receipt, repo_root=repo)
 
-    assert unrelated.read_bytes() == b"concurrent unrelated bytes\n"
+    assert unrelated.read_bytes() == b"def helper_runtime() -> None:\n    pass\n"
     assert (repo / "src/example/contracts.py").read_bytes() == b"class Widget:\n    pass\n"
 
 
