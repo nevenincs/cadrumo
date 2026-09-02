@@ -513,6 +513,78 @@ def test_declared_reference_class_must_have_actual_evidence(tmp_path: Path) -> N
         plan_object_name_transformation(_manifest(inventory, operation), repo_root=tmp_path)
 
 
+@pytest.mark.parametrize(
+    ("consumer_path", "consumer", "reference_class"),
+    [
+        (
+            "dev/consumer.py",
+            "from typing import TYPE_CHECKING\nif TYPE_CHECKING:\n    from cadrumo.contracts import Widgets\n",
+            "type-only-import",
+        ),
+        ("src/cadrumo/__init__.py", "from .contracts import Widgets\n", "export"),
+    ],
+)
+def test_declared_special_reference_class_is_proven(
+    tmp_path: Path, consumer_path: str, consumer: str, reference_class: str
+) -> None:
+    inventory = _inventory(
+        tmp_path,
+        {"src/cadrumo/contracts.py": "class Widgets:\n    pass\n", consumer_path: consumer},
+    )
+    declaration = _declaration(inventory, path="src/cadrumo/contracts.py", name="Widgets")
+    operation = _operation(
+        declaration,
+        target_name="Widget",
+        sources=_tree_bytes(tmp_path),
+        expected_reference_classes=("definition", reference_class),
+    )
+
+    result = plan_object_name_transformation(_manifest(inventory, operation), repo_root=tmp_path)
+
+    assert b"Widget" in (result.content_by_path()[consumer_path] or b"")
+
+
+def test_shared_consumer_reference_class_is_proven_for_each_operation(tmp_path: Path) -> None:
+    inventory = _inventory(
+        tmp_path,
+        {
+            "src/cadrumo/alpha.py": "class Widgets:\n    pass\n",
+            "src/cadrumo/beta.py": "class Gadgets:\n    pass\n",
+            "dev/consumer.py": (
+                "from cadrumo.alpha import Widgets\nfrom cadrumo.beta import Gadgets\nvalue = (Widgets(), Gadgets())\n"
+            ),
+        },
+    )
+    sources = _tree_bytes(tmp_path)
+    operations = [
+        _operation(
+            _declaration(inventory, path="src/cadrumo/alpha.py", name="Widgets"),
+            target_name="Widget",
+            sources={"dev/consumer.py": sources["dev/consumer.py"], "src/cadrumo/alpha.py": sources["src/cadrumo/alpha.py"]},
+            expected_reference_classes=("definition", "shared-consumer", "static-import"),
+        ),
+        _operation(
+            _declaration(inventory, path="src/cadrumo/beta.py", name="Gadgets"),
+            target_name="Gadget",
+            sources={"dev/consumer.py": sources["dev/consumer.py"], "src/cadrumo/beta.py": sources["src/cadrumo/beta.py"]},
+            expected_reference_classes=("definition", "shared-consumer", "static-import"),
+        ),
+    ]
+    manifest = ObjectNameRenameManifest.model_validate(
+        {
+            "schema_version": 1,
+            "inventory_digest": to_json(inventory)["inventory_digest"],
+            "operations": tuple(sorted(operations, key=lambda item: item["operation_id"])),
+        }
+    )
+
+    result = plan_object_name_transformation(manifest, repo_root=tmp_path)
+
+    assert result.content_by_path()["dev/consumer.py"] == (
+        b"from cadrumo.alpha import Widget\nfrom cadrumo.beta import Gadget\nvalue = (Widget(), Gadget())\n"
+    )
+
+
 def test_conflicting_byte_preconditions_are_refused(tmp_path: Path) -> None:
     inventory = _inventory(
         tmp_path,
