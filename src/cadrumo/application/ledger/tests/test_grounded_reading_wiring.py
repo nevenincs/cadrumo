@@ -48,11 +48,6 @@ from ..grounded_reading import (
 )
 from ..identity_roles import IdentityCandidate, resolve_counterparty_identity
 from ..invoice_draft_records import FieldProvenance, InvoiceDraft
-
-#: The defining module itself, for the attribute scoping below. Named through
-#: `import_module` rather than `from .. import`: the ledger package facade is
-#: inert and its tests may not import through it.
-invoice_draft_extraction_module = import_module("cadrumo.application.ledger.invoice_draft_extraction")
 from ..preconditions import LedgerPreconditionCondition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -65,6 +60,11 @@ _DOCUMENT_TEXT = (
     "Base imponible 100,00 EUR\n"
     "TOTAL 121,00 EUR\n"
 )
+
+#: The defining module itself, for the attribute scoping below. Named through
+#: `import_module` rather than `from .. import`: the ledger package facade is
+#: inert and its tests may not import through it.
+invoice_draft_extraction_module = import_module("cadrumo.application.ledger.invoice_draft_extraction")
 """A transcription printing BOTH party headings, so a heading claim can be true or false.
 
 A fixture printing no heading at all would make every dropped-evidence

@@ -42,10 +42,6 @@ from importlib import import_module
 from pathlib import Path
 from typing import TypeIs
 
-#: The defining module itself, for the attribute scoping below. Named through
-#: `import_module` rather than `from .. import`: the ledger package facade is
-#: inert and its tests may not import through it.
-invoice_draft_extraction_module = import_module("cadrumo.application.ledger.invoice_draft_extraction")
 import pytest
 
 # The MODULE object, not names from it: the tests below scope an attribute
@@ -62,6 +58,12 @@ _AEAT_LAYOUT_PARSERS = (
     _SRC_ROOT / "adapters" / "inbound" / "justificante" / "_extract.py",
     _SRC_ROOT / "adapters" / "inbound" / "declaracion" / "_parser.py",
 )
+
+
+#: The defining module itself, for the attribute scoping below. Named through
+#: `import_module` rather than `from .. import`: the ledger package facade is
+#: inert and its tests may not import through it.
+invoice_draft_extraction_module = import_module("cadrumo.application.ledger.invoice_draft_extraction")
 
 
 def _compiled_patterns(module_path: Path) -> tuple[str, ...]:
