@@ -174,6 +174,39 @@ aggregates map onto that envelope when a taxpayer holds a share rather than
 full title, and whether the reducción tier resolution we already ship agrees
 with the manual's tier conditions for the same year.
 
+### The reduction engine already agrees with the manual; the ownership model does not
+
+Checking our shipped parameters against the manual point by point closes one of
+the two residual unknowns and sharpens the other.
+
+Everything about the reduction agrees. All four tier rates match: 50 per cent
+as the general case for contracts from 26 May 2023, 90 for a new contract in a
+stressed-market zone where the initial rent was cut by more than 5 per cent
+against the previous contract, 70 where those conditions are not met but
+another circumstance applies, and 60 for the earlier regime. Both age bounds
+match the manual's "entre 18 y 35 años", and the rebaja threshold matches its
+"más de un 5 por 100".
+
+The proportional co-tenant rule is implemented too, which was the subtlest
+condition in that section. Where a dwelling has several tenants, the manual
+applies the reduction only to the share of net income corresponding to those
+who qualify, and `domain/fincas/tier_resolver.py` returns a qualifying share of
+qualifying co-tenants over tenant count for that tier alone, quoting the BOE
+sentence at the implementation site.
+
+The ownership model is where the gap is real. The manual requires the
+declaration to carry the owning contribuyente at `[0062]`, the ownership
+percentage at `[0063]` and the usufruct percentage at `[0064]`, and it treats
+those as per-property facts. The `Finca` model carries cadastral values,
+acquisition costs, dates, use type and the stressed-area flag, and no ownership
+or usufruct share at all. It assumes full title.
+
+So the attribution question the census names is not an open adjudication about
+which grain to choose. It is a concrete modelling gap with the two fields
+already specified by the manual. Adding them changes a shipped domain record,
+so it belongs to the decision step rather than to this campaign, but the
+question it must answer is now narrow and evidenced.
+
 ### The census locator gate exists, is thorough, and never sees the live census
 
 The six dead fincas pointers were not a fincas problem. `check_capability_locators`
