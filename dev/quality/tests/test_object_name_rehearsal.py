@@ -19,7 +19,7 @@ from cadrumo.core.hashing import canonical_json_bytes
 from ...audit.object_names import ObjectNameAuditResult, scan, to_json
 from .. import object_name_graph as graph_module
 from .. import object_name_rehearsal as rehearsal_module
-from ..object_name_graph import build_manifest_components
+from ..object_name_graph import HardEdge, ReferenceKind, build_manifest_components
 from ..object_name_manifest import ObjectNameRenameManifest, object_name_manifest_digest
 from ..object_name_rehearsal import ObjectNameRehearsalError, rehearse_object_name_component
 
@@ -69,15 +69,25 @@ def _fixture(
     _write(repo_root, "src/example/__init__.py", b"")
     _write(repo_root, "src/example/contracts.py", b"class Placeholder:\n    pass\n")
     _write(repo_root, "dev/tracked.txt", b"committed\n")
+    _write(repo_root, "dev/deleted.txt", b"tracked then deleted\n")
     _write(
         repo_root,
         ".gitignore",
         b".pytest_cache/\n__pycache__/\n.mypy_cache/\n.ruff_cache/\n.tox/\n.venv/\nnode_modules/\nignored.log\n",
     )
-    _git(repo_root, "add", ".gitignore", "src/example/__init__.py", "src/example/contracts.py", "dev/tracked.txt")
+    _git(
+        repo_root,
+        "add",
+        ".gitignore",
+        "src/example/__init__.py",
+        "src/example/contracts.py",
+        "dev/tracked.txt",
+        "dev/deleted.txt",
+    )
     _write(repo_root, "src/example/contracts.py", b"class Widgets:\n    pass\n")
     _write(repo_root, "dev/tracked.txt", b"dirty tracked bytes\n")
     _write(repo_root, "dev/untracked.txt", b"untracked bytes\n")
+    (repo_root / "dev/deleted.txt").unlink()
     _write(repo_root, ".pytest_cache/ignored.bin", b"cache\n")
     _write(repo_root, "dev/__pycache__/ignored.pyc", b"cache\n")
     for directory in (".mypy_cache", ".ruff_cache", ".tox", ".venv", "node_modules"):
@@ -133,6 +143,7 @@ def test_rehearsal_captures_dirty_and_untracked_bytes_but_excludes_git_and_cache
     baseline = dict(receipt.baseline_files)
     assert baseline["dev/tracked.txt"] == _digest(b"dirty tracked bytes\n")
     assert baseline["dev/untracked.txt"] == _digest(b"untracked bytes\n")
+    assert baseline["dev/deleted.txt"] is None
     assert not any(".git" in Path(path).parts or "__pycache__" in Path(path).parts for path in baseline)
     assert not any(".pytest_cache" in Path(path).parts or path.endswith(".pyc") for path in baseline)
     assert not any(
@@ -174,7 +185,12 @@ def test_rehearsal_captures_dirty_and_untracked_bytes_but_excludes_git_and_cache
     assert receipt.evidence_digest.startswith("sha256:") and receipt.evidence_digest != _digest(b"")
     assert receipt.source_tree_unchanged
     assert _live_bytes(repo) == before
-    assert Path(receipt.rehearsal_root).is_relative_to(Path(rehearsal_module.tempfile.gettempdir()).resolve())
+    retained_root = Path(receipt.rehearsal_root)
+    assert retained_root.is_relative_to(Path(rehearsal_module.tempfile.gettempdir()).resolve())
+    assert (retained_root / "dev/tracked.txt").read_bytes() == b"dirty tracked bytes\n"
+    assert (retained_root / "dev/untracked.txt").read_bytes() == b"untracked bytes\n"
+    assert not (retained_root / "dev/deleted.txt").exists()
+    assert (retained_root / "src/example/contracts.py").read_bytes() == b"class Widget:\n    pass\n"
 
 
 def test_receipt_is_deterministic_after_normalizing_root_and_output_evidence(tmp_path: Path) -> None:
@@ -206,6 +222,41 @@ def test_failed_gate_reports_exit_and_output_digests_and_retains_root(tmp_path: 
     retained = Path(message.rsplit("retained rehearsal root: ", 1)[1])
     assert retained.is_dir()
     assert _live_bytes(repo) == before
+
+
+def test_gate_runs_in_isolated_copy_with_bound_runtime_environment(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    gate = (
+        sys.executable,
+        "-c",
+        "import os, sys; from pathlib import Path; "
+        "assert Path.cwd() != Path(sys.argv[1]); "
+        "assert Path.cwd().name == 'repository'; "
+        "assert os.environ['VIRTUAL_ENV'] == sys.prefix; "
+        "assert os.environ['UV_PROJECT_ENVIRONMENT'] == sys.prefix; "
+        "assert str(Path.cwd() / 'src') in os.environ['PYTHONPATH'].split(os.pathsep)",
+        str(repo.resolve()),
+    )
+    inventory, manifest, component = _fixture(repo, gate=gate)
+
+    receipt = rehearse_object_name_component(manifest, inventory=inventory, component=component, repo_root=repo)
+
+    assert receipt.gate_outcomes[0].argv == gate
+    assert receipt.gate_outcomes[0].return_code == 0
+
+
+def test_timed_out_gate_fails_closed_and_retains_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    repo = tmp_path / "repo"
+    gate = (sys.executable, "-c", "import time; time.sleep(5)")
+    inventory, manifest, component = _fixture(repo, gate=gate)
+    monkeypatch.setattr(rehearsal_module, "_COMMAND_TIMEOUT_SECONDS", 0.01)
+
+    with pytest.raises(
+        ObjectNameRehearsalError, match=r"cannot execute declared command.*retained rehearsal root"
+    ) as raised:
+        rehearse_object_name_component(manifest, inventory=inventory, component=component, repo_root=repo)
+
+    assert Path(str(raised.value).rsplit("retained rehearsal root: ", 1)[1]).is_dir()
 
 
 @pytest.mark.parametrize(
@@ -257,6 +308,55 @@ def test_transformation_changed_paths_must_exactly_equal_component_allowlist(
 
     assert "retained rehearsal root:" in str(raised.value)
     assert _live_bytes(repo) == before
+
+
+def test_selected_component_cannot_be_replaced_by_an_otherwise_valid_component(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    inventory, manifest, _component = _fixture(repo)
+    _write(repo, "src/example/reports.py", b"class Reports:\n    pass\n")
+    inventory = scan((repo / "src", repo / "dev"), repo)
+    report_declaration = next(item for item in inventory.declarations if item.name == "Reports")
+    report_finding = next(item for item in inventory.findings if item.name == "Reports")
+    report_operation = manifest.operations[0].model_copy(
+        update={
+            "operation_id": "rename-reports",
+            "finding_id": report_finding.id,
+            "old_locator": report_declaration.qualified_locator,
+            "old_path": report_declaration.path,
+            "new_locator": replace(report_declaration, name="Report").qualified_locator,
+            "new_path": report_declaration.path,
+            "preconditions": (
+                manifest.operations[0]
+                .preconditions[0]
+                .model_copy(update={"path": report_declaration.path, "sha256": report_declaration.source_hash}),
+            ),
+            "changed_paths": (report_declaration.path,),
+        }
+    )
+    manifest = manifest.model_copy(
+        update={
+            "inventory_digest": to_json(inventory)["inventory_digest"],
+            "operations": (manifest.operations[0], report_operation),
+        }
+    )
+    components = build_manifest_components(manifest, inventory=inventory)  # ty: ignore[invalid-argument-type]
+    selected = next(item for item in components if item.operation_ids == ("rename-widgets",))
+    other = next(item for item in components if item.operation_ids == ("rename-reports",))
+
+    with pytest.raises(
+        ObjectNameRehearsalError, match="supplied component differs from the canonical repository graph"
+    ):
+        rehearse_object_name_component(
+            manifest,
+            inventory=inventory,
+            component=replace(selected, affected_paths=other.affected_paths),
+            repo_root=repo,
+        )
+
+    receipt = rehearse_object_name_component(manifest, inventory=inventory, component=selected, repo_root=repo)
+    assert receipt.operation_ids == ("rename-widgets",)
+    assert receipt.changed_paths == ("src/example/contracts.py",)
+    assert (Path(receipt.rehearsal_root) / "src/example/reports.py").read_bytes() == b"class Reports:\n    pass\n"
 
 
 def test_post_gate_filesystem_side_effect_must_equal_allowlist(tmp_path: Path) -> None:
@@ -398,26 +498,60 @@ def test_empty_snapshot_and_link_input_are_refused(tmp_path: Path) -> None:
         rehearse_object_name_component(manifest, inventory=inventory, component=component, repo_root=repo)
 
 
-@pytest.mark.parametrize(
-    ("reference_class", "message"),
-    [
-        ("dynamic-target", r"cannot reconstruct.*reference classes differ"),
-        ("generated-artifact", r"cannot reconstruct.*reference classes differ"),
-    ],
-)
-def test_generated_or_dynamic_reference_manifest_is_refused_before_rehearsal(
-    tmp_path: Path, reference_class: str, message: str
-) -> None:
+def test_dynamic_reference_manifest_is_refused_before_rehearsal(tmp_path: Path) -> None:
     repo = tmp_path / "repo"
-    command = ((sys.executable, "-c", "raise SystemExit(0)"),)
     inventory, manifest, component = _fixture(repo)
     operation = manifest.operations[0].model_copy(
-        update={
-            "expected_reference_classes": ("definition", reference_class),
-            "generator_commands": command if reference_class == "generated-artifact" else (),
-        }
+        update={"expected_reference_classes": ("definition", "dynamic-target")}
     )
     unsupported = manifest.model_copy(update={"operations": (operation,)})
 
-    with pytest.raises(ObjectNameRehearsalError, match=message):
+    with pytest.raises(ObjectNameRehearsalError, match=r"cannot reconstruct.*reference classes differ"):
         rehearse_object_name_component(unsupported, inventory=inventory, component=component, repo_root=repo)
+
+
+def test_generated_owner_runs_and_forged_generated_edge_is_refused(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    generated_path = "dev/generated.txt"
+    command = (
+        (
+            sys.executable,
+            "-c",
+            "from pathlib import Path; Path('dev/generated.txt').write_bytes(b'generated Widget\\n')",
+        ),
+    )
+    inventory, manifest, _component = _fixture(repo)
+    _write(repo, generated_path, b"generated Widgets\n")
+    inventory = scan((repo / "src", repo / "dev"), repo)
+    operation = manifest.operations[0].model_copy(
+        update={
+            "expected_reference_classes": ("definition", "generated-artifact"),
+            "changed_paths": ("src/example/contracts.py", generated_path),
+            "generator_commands": command,
+            "preconditions": (
+                *manifest.operations[0].preconditions,
+                manifest.operations[0]
+                .preconditions[0]
+                .model_copy(update={"path": generated_path, "sha256": _digest(b"generated Widgets\n")}),
+            ),
+        }
+    )
+    manifest = manifest.model_copy(
+        update={"inventory_digest": to_json(inventory)["inventory_digest"], "operations": (operation,)}
+    )
+    owner = canonical_json_bytes(command).decode("utf-8")
+    edge = HardEdge("rename-widgets", generated_path, ReferenceKind.GENERATED_ARTIFACT, generator_owner=owner)
+    component = build_manifest_components(manifest, inventory=inventory, hard_edges=(edge,))[0]  # ty: ignore[invalid-argument-type]
+    forged_edge = replace(edge, generator_owner='[["forged-generator"]]')
+    forged = build_manifest_components(manifest, inventory=inventory, hard_edges=(forged_edge,))[0]  # ty: ignore[invalid-argument-type]
+
+    with pytest.raises(
+        ObjectNameRehearsalError, match="supplied component differs from the canonical repository graph"
+    ):
+        rehearse_object_name_component(manifest, inventory=inventory, component=forged, repo_root=repo)
+
+    receipt = rehearse_object_name_component(manifest, inventory=inventory, component=component, repo_root=repo)
+    assert receipt.changed_paths == (generated_path, "src/example/contracts.py")
+    assert receipt.generator_outcomes[0].argv == command[0]
+    assert receipt.generator_outcomes[0].return_code == 0
+    assert (Path(receipt.rehearsal_root) / generated_path).read_bytes() == b"generated Widget\n"

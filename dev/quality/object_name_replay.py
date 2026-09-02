@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import shutil
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
@@ -13,19 +14,19 @@ from cadrumo.core.hashing import canonical_json_bytes, prefixed_digest, sha256_f
 from cadrumo.core.link_safety import is_link_like
 
 from ..audit.object_names import ObjectNameAuditResult, scan, to_json
-from .object_name_graph import OperationComponent
+from .object_name_graph import OperationComponent, ReferenceKind
 from .object_name_manifest import ObjectNameRenameManifest, object_name_manifest_digest
 from .object_name_rehearsal import (
     ObjectNameGateOutcome,
     ObjectNameRehearsalError,
     ObjectNameRehearsalReceipt,
-    _finding_delta,
-    _git_snapshot_paths,
-    _receipt_payload,
-    _run_command,
-    _snapshot,
-    _temporary_paths,
-    _tree_digest,
+    _finding_delta,  # pyright: ignore[reportPrivateUsage]
+    _git_snapshot_paths,  # pyright: ignore[reportPrivateUsage]
+    _receipt_payload,  # pyright: ignore[reportPrivateUsage]
+    _run_command,  # pyright: ignore[reportPrivateUsage]
+    _snapshot,  # pyright: ignore[reportPrivateUsage]
+    _temporary_paths,  # pyright: ignore[reportPrivateUsage]
+    _tree_digest,  # pyright: ignore[reportPrivateUsage]
     rehearse_object_name_component,
 )
 
@@ -155,18 +156,19 @@ def _restore(
     *,
     root: Path,
     baseline_payloads: dict[str, bytes | None],
-    baseline_paths: tuple[str, ...],
+    created_directories: tuple[Path, ...],
 ) -> None:
     failures: list[str] = []
-    current_paths = set(_temporary_paths(root))
-    baseline_members = {path for path, payload in baseline_payloads.items() if payload is not None}
-    for relative in sorted(current_paths - baseline_members, reverse=True):
+    for relative, payload in sorted(baseline_payloads.items()):
+        if payload is not None:
+            continue
         try:
-            path = _safe_path(root, relative)
-            if not path.is_file() or is_link_like(path):
-                raise ObjectNameReplayError(f"rollback member is not a regular file: {relative}")
-            path.unlink()
-            fsync_parent_dir(path)
+            target = _safe_path(root, relative, allow_missing_leaf=True)
+            if target.exists():
+                if not target.is_file() or is_link_like(target):
+                    raise ObjectNameReplayError(f"rollback member is not a regular file: {relative}")
+                target.unlink()
+                fsync_parent_dir(target)
         except Exception as exc:  # rollback must attempt every member
             failures.append(f"{relative}: {exc}")
     for relative, payload in sorted(baseline_payloads.items()):
@@ -180,13 +182,19 @@ def _restore(
             fsync_parent_dir(target)
         except Exception as exc:  # rollback must attempt every member
             failures.append(f"{relative}: {exc}")
-    try:
-        if _git_snapshot_paths(root) != baseline_paths or _snapshot(root, baseline_paths) != tuple(
-            (path, None if payload is None else _digest(payload)) for path, payload in baseline_payloads.items()
-        ):
-            failures.append("restored tree differs from the pre-transaction snapshot")
-    except Exception as exc:
-        failures.append(f"cannot verify restored tree: {exc}")
+    for directory in sorted(created_directories, key=lambda item: len(item.parts), reverse=True):
+        try:
+            directory.rmdir()
+        except OSError as exc:
+            failures.append(f"cannot remove created directory {directory}: {exc}")
+    for relative, payload in baseline_payloads.items():
+        try:
+            target = _safe_path(root, relative, allow_missing_leaf=True)
+            actual = None if not target.exists() else target.read_bytes()
+            if actual != payload:
+                failures.append(f"restored path differs from pre-transaction bytes: {relative}")
+        except Exception as exc:
+            failures.append(f"cannot verify restored path {relative}: {exc}")
     if failures:
         raise ObjectNameReplayError("rollback was incomplete: " + "; ".join(failures))
 
@@ -255,23 +263,56 @@ def replay_object_name_component(
             raise ObjectNameReplayError(f"regenerated output digest differs for {relative}")
         proposed_payloads[relative] = payload
 
-    # Preserve the complete eligible tree so a failed postcondition can undo gate side effects too.
+    generated_paths = frozenset(
+        edge.path for edge in component.hard_edges if edge.kind is ReferenceKind.GENERATED_ARTIFACT
+    )
+    direct_payloads = {
+        path: payload for path, payload in proposed_payloads.items() if path not in generated_paths
+    }
+    # Preserve only receipt-owned paths. Rollback must never overwrite unrelated concurrent work.
     baseline_payloads = {
-        relative: None if digest is None else _safe_path(root, relative).read_bytes()
-        for relative, digest in baseline_files
+        relative: (_safe_path(root, relative).read_bytes() if _safe_path(root, relative).is_file() else None)
+        for relative in receipt.changed_paths
     }
     if _snapshot(root, snapshot_paths) != baseline_files:
         raise ObjectNameReplayError("live tree drifted before replay staging")
     stages: dict[str, Path] = {}
+    created_directories: list[Path] = []
+    transaction_may_be_removed = False
+    transaction_name = f".{root.name}.object-name-transaction-{receipt.receipt_id.removeprefix('sha256:')}"
+    transaction_root = root.parent / transaction_name
     try:
-        for relative, payload in sorted(proposed_payloads.items()):
+        if transaction_root.exists() or is_link_like(transaction_root):
+            raise ObjectNameReplayError(f"unfinished or occupied replay transaction exists: {transaction_root}")
+        transaction_root.mkdir()
+        for relative, payload in sorted(baseline_payloads.items()):
+            marker = transaction_root.joinpath(*PurePosixPath(relative).parts)
+            marker.parent.mkdir(parents=True, exist_ok=True)
+            with marker.open("xb") as stream:
+                stream.write(b"" if payload is None else payload)
+                stream.flush()
+                os.fsync(stream.fileno())
+        absent_marker = transaction_root / ".absent-paths"
+        with absent_marker.open("xb") as stream:
+            absent_paths = sorted(path for path, payload in baseline_payloads.items() if payload is None)
+            stream.write(canonical_json_bytes(absent_paths))
+            stream.flush()
+            os.fsync(stream.fileno())
+        fsync_parent_dir(absent_marker)
+        for relative, payload in sorted(direct_payloads.items()):
             target = _safe_path(root, relative, allow_missing_leaf=True)
             if payload is not None:
+                missing: list[Path] = []
+                parent = target.parent
+                while parent != root and not parent.exists():
+                    missing.append(parent)
+                    parent = parent.parent
                 target.parent.mkdir(parents=True, exist_ok=True)
+                created_directories.extend(reversed(missing))
                 stages[relative] = _stage_bytes(target, payload, label="stage")
-        if _snapshot(root, snapshot_paths) != baseline_files:
+        if _git_snapshot_paths(root) != snapshot_paths or _snapshot(root, snapshot_paths) != baseline_files:
             raise ObjectNameReplayError("live tree drifted before the replay transaction")
-        for relative, payload in sorted(proposed_payloads.items()):
+        for relative, payload in sorted(direct_payloads.items()):
             target = _safe_path(root, relative, allow_missing_leaf=True)
             if payload is None:
                 if not target.is_file() or is_link_like(target):
@@ -299,22 +340,31 @@ def replay_object_name_component(
             raise ObjectNameReplayError("post-apply changed paths differ from the receipt allowlist")
         if tuple((path, dict(after_files).get(path)) for path in actual_changed) != receipt.proposed_file_digests:
             raise ObjectNameReplayError("post-apply content digests differ from the receipt")
-        return ObjectNameReplayResult(
+        result = ObjectNameReplayResult(
             receipt_id=receipt.receipt_id,
             changed_paths=actual_changed,
             post_tree_digest=_tree_digest(after_files),
             generator_outcomes=generator_outcomes,
             gate_outcomes=gate_outcomes,
         )
+        transaction_may_be_removed = True
+        return result
     except BaseException as apply_error:
         try:
-            _restore(root=root, baseline_payloads=baseline_payloads, baseline_paths=snapshot_paths)
+            _restore(
+                root=root,
+                baseline_payloads=baseline_payloads,
+                created_directories=tuple(created_directories),
+            )
         except BaseException as rollback_error:
             raise ObjectNameReplayError(
                 f"live replay failed and rollback failed; replay_error={apply_error}; rollback_error={rollback_error}"
             ) from rollback_error
+        transaction_may_be_removed = True
         if isinstance(apply_error, ObjectNameReplayError):
             raise
         raise ObjectNameReplayError(f"live replay failed and was rolled back: {apply_error}") from apply_error
     finally:
         _cleanup(tuple(stages.values()))
+        if transaction_may_be_removed and transaction_root.exists() and not is_link_like(transaction_root):
+            shutil.rmtree(transaction_root)
