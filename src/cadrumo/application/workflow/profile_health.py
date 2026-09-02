@@ -130,7 +130,7 @@ class ActiveProfileHealth(BaseModel):
 
     active_profile: str | None
     source: ProfileSource
-    status: ProfileHealthStatus
+    status: ProfileHealthStatusValue
     registered_bucket: bool = False
     profile_record_present: bool = False
     profile_record_error: str = ""
@@ -333,7 +333,7 @@ def _health_evidence(
     *,
     condition_id: str,
     evidence_id: str,
-    status: ProfileHealthStatus,
+    status: ProfileHealthStatusValue,
     source: ProfileSource,
     registered_bucket: bool,
     profile_record_present: bool,
@@ -407,7 +407,7 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
                 ActiveProfileHealth(
                     active_profile=None,
                     source=source,
-                    status="capsule_unreadable",
+                    status=ProfileHealthStatus.CAPSULE_UNREADABLE,
                     profile_record_error=_compact_error(exc),
                     profile_total_keys=total_keys,
                 ),
@@ -417,7 +417,7 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
             ActiveProfileHealth(
                 active_profile=None,
                 source=source,
-                status="none",
+                status=ProfileHealthStatus.NONE,
                 profile_total_keys=total_keys,
             ),
             label=None,
@@ -435,7 +435,7 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
             ActiveProfileHealth(
                 active_profile=active_profile,
                 source=source,
-                status="capsule_unreadable",
+                status=ProfileHealthStatus.CAPSULE_UNREADABLE,
                 registered_bucket=True,
                 profile_record_error=_compact_error(exc),
                 profile_total_keys=total_keys,
@@ -449,7 +449,7 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
             ActiveProfileHealth(
                 active_profile=active_profile,
                 source=source,
-                status="dangling_pointer",
+                status=ProfileHealthStatus.DANGLING_POINTER,
                 registered_bucket=False,
                 profile_total_keys=total_keys,
                 repairable_by_clearing_pointer=source == "pointer",
@@ -469,7 +469,7 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
             ActiveProfileHealth(
                 active_profile=active_profile,
                 source=source,
-                status="profile_locked",
+                status=ProfileHealthStatus.PROFILE_LOCKED,
                 registered_bucket=True,
                 profile_total_keys=total_keys,
             ),
@@ -487,7 +487,7 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
             ActiveProfileHealth(
                 active_profile=active_profile,
                 source=source,
-                status="profile_record_unreadable",
+                status=ProfileHealthStatus.PROFILE_RECORD_UNREADABLE,
                 registered_bucket=True,
                 profile_record_error=_compact_error(exc),
                 profile_total_keys=total_keys,
@@ -505,7 +505,7 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
             ActiveProfileHealth(
                 active_profile=active_profile,
                 source=source,
-                status="profile_record_unreadable",
+                status=ProfileHealthStatus.PROFILE_RECORD_UNREADABLE,
                 registered_bucket=True,
                 profile_record_error=_compact_error(exc),
                 profile_total_keys=total_keys,
@@ -537,7 +537,9 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
 
     values = record_to_path_values(record)
     validation = validate_profile_values(values)
-    status: ProfileHealthStatus = "ready" if validation.valid else "incomplete"
+    status: ProfileHealthStatusValue = (
+        ProfileHealthStatus.READY if validation.valid else ProfileHealthStatus.INCOMPLETE
+    )
     return _finalise_health(
         ActiveProfileHealth(
             active_profile=active_profile,
