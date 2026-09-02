@@ -77,8 +77,6 @@ allowed = [
   "cadrumo.application.portals",  # unreachable
   "cadrumo.application.prorrata_register.sector_lifecycle",  # unreachable
   "cadrumo.application.prorrata_register.seed",  # unreachable
-  "cadrumo.application.registry.conformance",  # unreachable
-  "cadrumo.application.registry.filing_export_authority",  # unreachable
   "cadrumo.application.review._edit",  # unreachable
   "cadrumo.application.review.actions",  # unreachable
   "cadrumo.application.storage.calc_sheets._row_set_assembly",  # unreachable
@@ -98,10 +96,6 @@ allowed = [
   "cadrumo.core.corpus_manifest._bundle_signing",  # unreachable
   "cadrumo.core.observability.replay",  # unreachable
   "cadrumo.core.telemetry._producers",  # unreachable
-  "cadrumo.domain.calculations.registry.aeat_nif_iva_oracle",  # unreachable
-  "cadrumo.domain.calculations.registry.classification_coherence",  # unreachable
-  "cadrumo.domain.calculations.registry.coverage",  # unreachable
-  "cadrumo.domain.calculations.registry.groi_oracle",  # unreachable
   "cadrumo.domain.calculations.registry.record_spec",  # unreachable
   "cadrumo.domain.calculations.registry.renta_web_open_oracle",  # unreachable
   "cadrumo.domain.filing.amendment",  # unreachable
