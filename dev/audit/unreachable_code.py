@@ -1042,7 +1042,9 @@ def _outside_use(spec: ShippedTreeSpec, known: frozenset[str]) -> _OutsideUse:
                 continue
             try:
                 tree = _parse(path)
-            except (SyntaxError, UnicodeDecodeError):
+            except (OSError, SyntaxError, UnicodeDecodeError):
+                # The tree can move under a long scan; a file that is gone or
+                # unreadable is skipped rather than crashing the audit.
                 continue
             for name in _references(tree):
                 use.names.setdefault(name, set()).add(corpus.label)
@@ -1207,7 +1209,7 @@ def _test_findings(
             continue
         try:
             tree = _parse(path)
-        except (SyntaxError, UnicodeDecodeError):
+        except (OSError, SyntaxError, UnicodeDecodeError):
             continue
         test = _ShippedModule(module_name_for(path, src_root=spec.src_root), path, False, tree)
         modules, symbols = _test_subjects(test, known)

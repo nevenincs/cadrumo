@@ -1,8 +1,22 @@
 # Baseline for the unreachable-module ratchet.
 #
-# Every entry names a module under src/cadrumo that no declared console script
-# can reach. The gate in dev/quality/unreachable_module_ratchet.py compares this
-# list against the live tree as a set, in both directions:
+# Every entry names a module under src/cadrumo that no declared CONSOLE SCRIPT
+# reaches. All three of the audit's reach categories are in scope, and the
+# trailing comment on each line records which one applies:
+#
+#   unreachable       nothing reaches it at all
+#   module-exec-only  only a `python -m` surface reaches it, so an installed
+#                     user can run it but no product command leads there
+#   type-only         only an `if TYPE_CHECKING:` import names it, which
+#                     never executes
+#
+# The category names the remedy, not an exemption. None of the three is a
+# product command reaching the module, so all three are findings; scoping the
+# gate to `unreachable` alone would let a module leave the backlog by gaining
+# a __main__.py sibling instead of by being resolved.
+#
+# The gate in dev/quality/unreachable_module_ratchet.py compares this list
+# against the live tree as a set, in both directions:
 #
 #   * a module the tree reports that is not listed here fails the gate --
 #     new unreachable code entered the shipped package;
@@ -28,67 +42,75 @@
 # cluster (a live browser driver and its oracle, which stand or fall together).
 
 frozen_prefixes = [
-  # The TUI is in-flight work owned elsewhere; its modules churn in both
-  # directions and this gate does not adjudicate them. The audit still reports
-  # everything under this prefix -- freezing it sets scope, not permission.
+  # The TUI is in-flight work owned elsewhere. Its modules churn in both
+  # directions and its reach categories move as its __main__ surfaces change,
+  # so this gate does not adjudicate them and must not depend on their
+  # classification holding still. The audit still reports everything under
+  # this prefix -- freezing it sets scope, not permission.
   "cadrumo.entrypoints.tui",
 ]
 
 allowed = [
-  "cadrumo.adapters.inbound.borrador",
-  "cadrumo.adapters.inbound.einvoice._aeat_record_schema",
-  "cadrumo.adapters.inbound.einvoice.record_batch",
-  "cadrumo.adapters.outbound.aeat.export._submitters",
-  "cadrumo.adapters.outbound.aeat.export.errors",
-  "cadrumo.adapters.outbound.aeat.sede._renta_web_open_safety",
-  "cadrumo.adapters.outbound.aeat.sede.renta_web_open",
-  "cadrumo.adapters.outbound.aeat.verify",
-  "cadrumo.adapters.outbound.google.calc_sheets_pull_coverage",
-  "cadrumo.adapters.persistence.profile.filing_amendments",
-  "cadrumo.adapters.persistence.profile.filing_export_replay",
-  "cadrumo.adapters.persistence.profile.fincas",
-  "cadrumo.application.filing._calculate",
-  "cadrumo.application.filing._complementaria",
-  "cadrumo.application.filing.validation",
-  "cadrumo.application.inventory._source_readiness",
-  "cadrumo.application.invoices._projection",
-  "cadrumo.application.invoices._reconciliation",
-  "cadrumo.application.ledger.aeat_record_projection",
-  "cadrumo.application.modelo._edit_facade",
-  "cadrumo.application.modelo.edit_session",
-  "cadrumo.application.operator_surface.calculation_workflows",
-  "cadrumo.application.operator_surface.crud_contract",
-  "cadrumo.application.operator_surface.crud_registry",
-  "cadrumo.application.portals",
-  "cadrumo.application.prorrata_register.sector_lifecycle",
-  "cadrumo.application.prorrata_register.seed",
-  "cadrumo.application.registry.conformance",
-  "cadrumo.application.registry.filing_export_authority",
-  "cadrumo.application.review._edit",
-  "cadrumo.application.review.actions",
-  "cadrumo.application.storage.calc_sheets._row_set_assembly",
-  "cadrumo.application.storage.calc_sheets.evidence",
-  "cadrumo.application.wizard._registered_values",
-  "cadrumo.application.wizard._translations",
-  "cadrumo.application.wizard.copy_sources",
-  "cadrumo.application.wizard.flow_validators",
-  "cadrumo.application.wizard.legal_zone",
-  "cadrumo.core.address_components",
-  "cadrumo.core.compatibility_lifecycle",
-  "cadrumo.core.corpus_manifest._bundle_signing",
-  "cadrumo.core.observability.replay",
-  "cadrumo.core.telemetry._producers",
-  "cadrumo.domain.calculations.registry.aeat_nif_iva_oracle",
-  "cadrumo.domain.calculations.registry.classification_coherence",
-  "cadrumo.domain.calculations.registry.coverage",
-  "cadrumo.domain.calculations.registry.groi_oracle",
-  "cadrumo.domain.calculations.registry.record_spec",
-  "cadrumo.domain.calculations.registry.renta_web_open_oracle",
-  "cadrumo.domain.filing.amendment",
-  "cadrumo.domain.fincas",
-  "cadrumo.domain.iva.place_of_supply",
-  "cadrumo.domain.iva.verify",
-  "cadrumo.domain.manuals.rule_id",
-  "cadrumo.domain.modelos.iae_exemption",
-  "cadrumo.domain.renta._substrate",
+  "cadrumo.adapters.inbound.borrador",  # unreachable
+  "cadrumo.adapters.inbound.einvoice._aeat_record_schema",  # unreachable
+  "cadrumo.adapters.inbound.einvoice.record_batch",  # unreachable
+  "cadrumo.adapters.outbound.aeat.export._submitters",  # unreachable
+  "cadrumo.adapters.outbound.aeat.export.errors",  # unreachable
+  "cadrumo.adapters.outbound.aeat.sede._renta_web_open_safety",  # unreachable
+  "cadrumo.adapters.outbound.aeat.sede.renta_web_open",  # unreachable
+  "cadrumo.adapters.outbound.aeat.verify",  # unreachable
+  "cadrumo.adapters.outbound.google.calc_sheets_pull_coverage",  # unreachable
+  "cadrumo.adapters.persistence.profile.filing_amendments",  # unreachable
+  "cadrumo.adapters.persistence.profile.filing_export_replay",  # unreachable
+  "cadrumo.adapters.persistence.profile.fincas",  # unreachable
+  "cadrumo.application.filing._calculate",  # unreachable
+  "cadrumo.application.filing._complementaria",  # unreachable
+  "cadrumo.application.filing.validation",  # unreachable
+  "cadrumo.application.inventory._source_readiness",  # unreachable
+  "cadrumo.application.invoices._projection",  # unreachable
+  "cadrumo.application.invoices._reconciliation",  # unreachable
+  "cadrumo.application.ledger.aeat_record_projection",  # unreachable
+  "cadrumo.application.modelo._edit_facade",  # unreachable
+  "cadrumo.application.modelo.edit_session",  # unreachable
+  "cadrumo.application.operator_surface.calculation_workflows",  # unreachable
+  "cadrumo.application.operator_surface.crud_contract",  # unreachable
+  "cadrumo.application.operator_surface.crud_registry",  # unreachable
+  "cadrumo.application.portals",  # unreachable
+  "cadrumo.application.prorrata_register.sector_lifecycle",  # unreachable
+  "cadrumo.application.prorrata_register.seed",  # unreachable
+  "cadrumo.application.registry.conformance",  # unreachable
+  "cadrumo.application.registry.filing_export_authority",  # unreachable
+  "cadrumo.application.review._edit",  # unreachable
+  "cadrumo.application.review.actions",  # unreachable
+  "cadrumo.application.storage.calc_sheets._row_set_assembly",  # unreachable
+  "cadrumo.application.storage.calc_sheets.evidence",  # unreachable
+  "cadrumo.application.user_profile.acquisition_sources",  # module-exec-only
+  "cadrumo.application.user_profile.login_interaction",  # module-exec-only
+  "cadrumo.application.user_profile.overview",  # module-exec-only
+  "cadrumo.application.user_profile.presentation",  # module-exec-only
+  "cadrumo.application.user_profile.status_projection",  # module-exec-only
+  "cadrumo.application.wizard._registered_values",  # unreachable
+  "cadrumo.application.wizard._translations",  # unreachable
+  "cadrumo.application.wizard.copy_sources",  # unreachable
+  "cadrumo.application.wizard.flow_validators",  # unreachable
+  "cadrumo.application.wizard.legal_zone",  # unreachable
+  "cadrumo.core.address_components",  # unreachable
+  "cadrumo.core.compatibility_lifecycle",  # unreachable
+  "cadrumo.core.corpus_manifest._bundle_signing",  # unreachable
+  "cadrumo.core.observability.replay",  # unreachable
+  "cadrumo.core.telemetry._producers",  # unreachable
+  "cadrumo.domain.calculations.registry.aeat_nif_iva_oracle",  # unreachable
+  "cadrumo.domain.calculations.registry.classification_coherence",  # unreachable
+  "cadrumo.domain.calculations.registry.coverage",  # unreachable
+  "cadrumo.domain.calculations.registry.groi_oracle",  # unreachable
+  "cadrumo.domain.calculations.registry.record_spec",  # unreachable
+  "cadrumo.domain.calculations.registry.renta_web_open_oracle",  # unreachable
+  "cadrumo.domain.filing.amendment",  # unreachable
+  "cadrumo.domain.fincas",  # unreachable
+  "cadrumo.domain.iva.place_of_supply",  # unreachable
+  "cadrumo.domain.iva.verify",  # unreachable
+  "cadrumo.domain.manuals.rule_id",  # unreachable
+  "cadrumo.domain.modelos.iae_exemption",  # unreachable
+  "cadrumo.domain.portals.drift",  # type-only
+  "cadrumo.domain.renta._substrate",  # unreachable
 ]

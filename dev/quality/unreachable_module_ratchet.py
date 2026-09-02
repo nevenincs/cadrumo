@@ -60,6 +60,12 @@ from ..audit.unreachable_code import (
 
 BASELINE_PATH: Final[Path] = Path(__file__).with_name("unreachable_module_ratchet.toml")
 
+#: Every reach category that is not "a console script leads here". A module in
+#: any of them is a finding; the category names the remedy, not an exemption.
+_NOT_SCRIPT_REACHED: Final[frozenset[ModuleReach]] = frozenset(
+    {ModuleReach.UNREACHABLE, ModuleReach.MODULE_EXEC_ONLY, ModuleReach.TYPE_ONLY},
+)
+
 
 @dataclass(frozen=True, slots=True)
 class UnreachableBaseline:
@@ -135,16 +141,26 @@ class RatchetVerdict:
 
 
 def unreachable_modules(result: UnreachableCodeResult) -> frozenset[str]:
-    """Every shipped module the runtime walk never reaches from a declared entrypoint.
+    """Every reported module no declared console script reaches.
 
-    Only :attr:`ModuleReach.UNREACHABLE` counts. A module reached solely
-    through ``python -m`` or solely under ``TYPE_CHECKING`` is classified
-    separately by the audit and is a weaker signal with its own remedy, so
-    folding it in here would blur two populations into one number.
+    All three reach categories count, because all three are findings and none
+    of them is a product command leading to the module:
+
+    * ``UNREACHABLE`` -- no root reaches it at all;
+    * ``MODULE_EXEC_ONLY`` -- only a ``python -m`` surface does, so an
+      installed user can run it but no product command leads there;
+    * ``TYPE_ONLY`` -- only an ``if TYPE_CHECKING:`` import names it, which
+      never executes.
+
+    Restricting the subject to ``UNREACHABLE`` would clear the other two
+    silently: they would be neither baselined nor gated, so a module could
+    leave the backlog by acquiring a ``__main__.py`` sibling or a
+    type-checking-only importer rather than by being resolved. The audit
+    categorises these separately because the remedies differ; the ratchet
+    takes the union because the question it asks -- can a product command
+    reach this? -- has the same answer for all three.
     """
-    return frozenset(
-        finding.module for finding in result.modules if finding.reach is ModuleReach.UNREACHABLE
-    )
+    return frozenset(finding.module for finding in result.modules if finding.reach in _NOT_SCRIPT_REACHED)
 
 
 def evaluate(result: UnreachableCodeResult, baseline: UnreachableBaseline) -> RatchetVerdict:
