@@ -94,7 +94,11 @@ def test_inventory_census_tracks_only_the_live_connection_gap() -> None:
     summaries = " ".join(item.summary for item in inventory.grounding)
     assert "schema-v3" in summaries
     assert "0181" in summaries
-    assert "missing repeated-row materialization" in summaries
+    assert inventory.review_condition.endswith(
+        "Promote this connection candidate only after grounded repeated activity-row values are rendered through the "
+        "supported official filing structure and the resulting filing is verified end to end without fabricated "
+        "activity-envelope facts."
+    )
 
 
 def test_asset_amortization_census_retains_the_unimplemented_ingress_boundary() -> None:

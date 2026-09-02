@@ -401,14 +401,17 @@ def test_a_missing_reader_does_not_fall_through_to_the_vision_engine() -> None:
     reader is the ENVIRONMENT this case is about, and making it unavailable is
     the condition being reproduced. Nothing about the router is stubbed.
     """
-    from .... import llm as llm_module
+    # The reader is imported inside the consumer from its defining module, so the
+    # substitution has to land there. Patching the `llm` package namespace reached
+    # nothing once that facade went inert.
+    reader_module = import_module("cadrumo.llm.evidence_draft_text")
     from ..invoice_draft_extraction import _read_transcription_semantically
 
     def unavailable(*args: object, **kwargs: object) -> object:
         raise LLMProviderError("Ollama is not reachable")
 
     with (
-        scoped_attribute(llm_module, "extract_invoice_fields_from_text", unavailable),
+        scoped_attribute(reader_module, "extract_invoice_fields_from_text", unavailable),
         pytest.raises(PurchaseInvoiceEvidenceInputError) as raised,
     ):
         _read_transcription_semantically(
