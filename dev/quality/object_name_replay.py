@@ -27,7 +27,6 @@ from .object_name_rehearsal import (
     _receipt_payload,  # pyright: ignore[reportPrivateUsage]
     _run_command,  # pyright: ignore[reportPrivateUsage]
     _snapshot,  # pyright: ignore[reportPrivateUsage]
-    _temporary_paths,  # pyright: ignore[reportPrivateUsage]
     _tree_digest,  # pyright: ignore[reportPrivateUsage]
     rehearse_object_name_component,
 )
@@ -222,9 +221,7 @@ def _cleanup(paths: tuple[Path, ...]) -> None:
 def _create_transaction_root(path: Path) -> None:
     """Create one owned marker; pre-existing markers are retained and refused."""
     if path.exists() or is_link_like(path):
-        raise ObjectNameReplayError(
-            f"unfinished replay transaction requires explicit operator inspection: {path}"
-        )
+        raise ObjectNameReplayError(f"unfinished replay transaction requires explicit operator inspection: {path}")
     path.mkdir()
     if is_link_like(path) or not path.is_dir():
         raise ObjectNameReplayError(f"created replay transaction root is unsafe: {path}")
@@ -385,7 +382,10 @@ def replay_object_name_component(
                 target.parent.mkdir(parents=True, exist_ok=True)
                 created_directories.extend(reversed(missing))
                 stages[relative] = _stage_bytes(target, payload, label="stage")
-        if _git_snapshot_paths(root) != snapshot_paths or _snapshot(root, snapshot_paths) != baseline_files:
+        current_paths = _git_snapshot_paths(root)
+        stage_paths = frozenset(path.relative_to(root).as_posix() for path in stages.values())
+        non_stage_paths = tuple(path for path in current_paths if path not in stage_paths)
+        if non_stage_paths != snapshot_paths or _snapshot(root, snapshot_paths) != baseline_files:
             raise ObjectNameReplayError("live tree drifted before the replay transaction")
         for relative, payload in sorted(direct_payloads.items()):
             target = _safe_path(root, relative, allow_missing_leaf=True)
@@ -429,7 +429,7 @@ def replay_object_name_component(
         after_inventory = scan((root / "src", root / "dev"), root)
         if _finding_delta(inventory, after_inventory) != receipt.finding_delta:
             raise ObjectNameReplayError("post-apply object-name finding delta differs from the receipt")
-        after_paths = _temporary_paths(root)
+        after_paths = _git_snapshot_paths(root)
         after_files = _snapshot(root, after_paths)
         actual_changed = tuple(
             sorted(

@@ -647,6 +647,36 @@ def _string_module_target(value: str, module: _ShippedModule, known: frozenset[s
     return target if target in known else None
 
 
+_MODULE_EXEC_FLAG: Final[str] = "-m"
+
+
+def _spawn_edges(module: _ShippedModule, known: frozenset[str]) -> frozenset[str]:
+    """Return the modules ``module`` starts as a ``python -m`` child interpreter.
+
+    A console script that spawns another shipped package as a child process
+    reaches it as surely as an import does; the operator types one product
+    command and the target runs. Modelling only import edges would report that
+    package as ``python -m``-only, which is exactly backwards: the ``python -m``
+    surface is the mechanism, and a product command is the caller.
+
+    The edge is only drawn on positive evidence of both halves in the same
+    module: the ``-m`` interpreter flag as a literal, and a literal naming a
+    shipped package that owns a ``__main__``. A module mentioning a package name
+    for any other reason draws nothing, because the flag will be absent.
+    """
+    literals = {
+        node.value for node in ast.walk(module.tree) if isinstance(node, ast.Constant) and isinstance(node.value, str)
+    }
+    if _MODULE_EXEC_FLAG not in literals:
+        return frozenset()
+    targets: set[str] = set()
+    for name in literals:
+        main = f"{name}.__main__"
+        if name in known and main in known:
+            targets.update((name, main))
+    return frozenset(targets)
+
+
 def _module_edges(module: _ShippedModule, known: frozenset[str]) -> tuple[frozenset[str], frozenset[str]]:
     """Return ``(runtime_edges, type_only_edges)`` from ``module`` to shipped modules."""
     guarded = type_checking_guarded_nodes(module.tree)
@@ -1224,8 +1254,9 @@ def scan_unreachable_code(spec: ShippedTreeSpec) -> UnreachableCodeResult:
 
     known = frozenset(modules)
     edges = {name: _module_edges(module, known) for name, module in modules.items()}
-    runtime_edges = {name: runtime for name, (runtime, _) in edges.items()}
-    full_edges = {name: runtime | type_only for name, (runtime, type_only) in edges.items()}
+    spawned = {name: _spawn_edges(module, known) for name, module in modules.items()}
+    runtime_edges = {name: runtime | spawned[name] for name, (runtime, _) in edges.items()}
+    full_edges = {name: runtime | type_only | spawned[name] for name, (runtime, type_only) in edges.items()}
     script_reach = _reachable(
         [entry.module for entry in spec.entry_points] + [entry.module for entry in companion_entries],
         modules,
