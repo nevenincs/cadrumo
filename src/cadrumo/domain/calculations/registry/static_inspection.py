@@ -29,7 +29,7 @@ from .schema import (
     ModeloRevision,
     SchemaFamilyDispositionDeclaration,
 )
-from .schema_base import CorpusTierField, RegistryModel
+from .schema_base import RegistrySourceKind, CorpusTierField, RegistryModel
 from .schema_exports import ProjectionEndpointDeclaration
 from .schema_formula import ParameterDefinition
 from .schema_references import SourceReference, source_window_applies_across
@@ -45,22 +45,13 @@ __all__ = [
 ]
 
 
-type _GeneratedArtifactSourceKind = Literal[
-    "record_design",
-    "manual_pdf",
-    "instructions",
-    "xsd",
-    "dictionary",
-    "form_spec",
-    "suppression_notice",
-]
 
 
 class GeneratedArtifactSource(Protocol):
     """The byte-authority fields a generated-artifact verifier consumes."""
 
     id: SourceRefId
-    kind: _GeneratedArtifactSourceKind
+    kind: RegistrySourceKind
     corpus_path: str
     sha256: str
     bytes: int
@@ -107,7 +98,7 @@ class StaticGeneratedArtifactSource:
     """Immutable byte-authority facts copied for diagnostic verification."""
 
     id: SourceRefId
-    kind: _GeneratedArtifactSourceKind
+    kind: RegistrySourceKind
     corpus_path: str
     sha256: str
     bytes: int

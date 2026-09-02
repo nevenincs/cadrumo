@@ -479,12 +479,6 @@ application:
           de emisión, así que la secuencia es ambigua.
         required_casillas_omitted: La exportación omitiría casillas obligatorias que
           el registro oficial declara.
-    import:
-      errors:
-        period_token_undeclared: El código de periodo no está declarado por la revisión
-          de registro activa.
-        period_token_unrepresentable: El código de periodo no puede representarse
-          como periodo de declaración.
     m303_exonerado_390:
       errors:
         record_design_snapshot_mismatch: El diseño de registro exonerado-390 no coincide

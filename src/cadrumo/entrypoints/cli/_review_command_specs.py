@@ -13,7 +13,6 @@ from .command_spec import (
     ParameterDefault,
     ResultSchemaSpec,
     SchemaState,
-    TranslationKey,
     ValueContract,
 )
 
@@ -27,10 +26,6 @@ _STATE = ValueContract(
     DeferredTarget("cadrumo.application.review.enums", "ReviewState"),
     parser=DeferredTarget("cadrumo.entrypoints.cli._review", "parse_review_state"),
 )
-
-
-def _key(value: str) -> TranslationKey:
-    return TranslationKey(value)
 
 
 def _option(
@@ -129,3 +124,8 @@ REVIEW_COMMAND_SPECS: tuple[CommandSpec, ...] = (
 )
 
 __all__ = ["REVIEW_COMMAND_SPECS"]
+
+
+def _key(value: str) -> TranslationKey:
+    """TEMPORARY A/B copy."""
+    return TranslationKey(value)

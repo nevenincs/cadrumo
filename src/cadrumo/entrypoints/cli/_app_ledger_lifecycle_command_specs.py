@@ -270,9 +270,7 @@ LEDGER_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_POLICY_4,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli.ledger_lifecycle_cli", "ledger_restore")
-        ),
+        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli.ledger_lifecycle_cli", "ledger_restore")),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget("cadrumo.entrypoints.cli._ledger_payloads", "LedgerRestoreResult"),

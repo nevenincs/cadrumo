@@ -107,7 +107,9 @@ QUICKFILE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _option(
                 "prior_domiciliation_election",
                 ("--prior-domiciliation-election",),
-                ValueContract(DeferredTarget("cadrumo.core.prior_domiciliation_election", "PriorDomiciliationElection")),
+                ValueContract(
+                    DeferredTarget("cadrumo.core.prior_domiciliation_election", "PriorDomiciliationElection")
+                ),
                 "cli.app.modelo.work.prior_domiciliation_election_help",
                 default="keep",
             ),

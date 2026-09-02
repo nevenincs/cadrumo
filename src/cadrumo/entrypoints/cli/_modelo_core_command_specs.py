@@ -13,7 +13,6 @@ from .command_spec import (
     ParameterDefault,
     ResultSchemaSpec,
     SchemaState,
-    TranslationKey,
     ValueContract,
 )
 
@@ -41,10 +40,6 @@ _AMENDMENT_KIND = ValueContract(
 _M303_MOTIVE = ValueContract(
     DeferredTarget("cadrumo.domain.modelos.calculation_revision_amendment", "M303RectificativaMotive")
 )
-
-
-def _key(value: str) -> TranslationKey:
-    return TranslationKey(value)
 
 
 def _option(
@@ -227,3 +222,8 @@ MODELO_CORE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
 )
 
 __all__ = ["MODELO_CORE_COMMAND_SPECS"]
+
+
+def _key(value: str) -> TranslationKey:
+    """TEMPORARY A/B copy."""
+    return TranslationKey(value)

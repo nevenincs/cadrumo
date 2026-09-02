@@ -77,10 +77,9 @@ from ._validate_revision_rules import validate_informative_class_invariant
 from .ids import ModeloId
 from .loader import load_registry_tree
 from .schema import ModeloDefinition
-from .schema_base import CalculationClass
+from .schema_base import CalculationClass, CalculationClassField
 
 #: The ``calculation_class`` value naming the informative enforcement posture.
-_INFORMATIVE_CLASS: Final[CalculationClass] = "informative"
 
 #: Appended to a clamped ``detail`` so a truncated sentence reads as truncated.
 #: The elision marker, taken from the one home the whole tree shares.
@@ -201,7 +200,7 @@ class ModeloClassificationRow(ClassificationModel):
     """
 
     modelo: ModeloId
-    calculation_class: CalculationClass
+    calculation_class: CalculationClassField
     tax_domain: TaxDomain
     informative_by_calculation_class: bool
     informative_by_tax_domain: bool
@@ -338,7 +337,7 @@ def _build_row(
     registry_validated: bool,
 ) -> ModeloClassificationRow:
     """Build one modelo's classification row and every finding it carries."""
-    by_class = modelo.calculation_class == _INFORMATIVE_CLASS
+    by_class = modelo.calculation_class == CalculationClass.INFORMATIVE
     by_domain = modelo.tax_domain is TaxDomain.INFORMATIVE
     blockers = _informative_class_blockers(modelo)
     declared_non_registry = modelo.id in non_registry_modelo_codes
@@ -464,7 +463,7 @@ def _informative_class_blockers(modelo: ModeloDefinition) -> tuple[str, ...]:
     from the rule the registry build actually enforces. Empty when the value
     would be accepted.
     """
-    candidate = modelo.model_copy(update={"calculation_class": _INFORMATIVE_CLASS})
+    candidate = modelo.model_copy(update={"calculation_class": CalculationClass.INFORMATIVE})
     return tuple(validate_informative_class_invariant(candidate))
 
 

@@ -24,7 +24,6 @@ from ..command_spec import (
     RecoveryHandoffSpec,
     ResultSchemaSpec,
     SchemaState,
-    TranslationKey,
     TuiCapability,
     ValueContract,
 )
@@ -52,10 +51,6 @@ _TOGGLE = ValueContract(
     DeferredTarget("builtins", "str"),
     choices=("on", "off"),
 )
-
-
-def _key(value: str) -> TranslationKey:
-    return TranslationKey(value)
 
 
 # Every dynamically resolved handler module is named here as a WHOLE dotted path.
@@ -777,3 +772,8 @@ PROFILE_COMMAND_SPECS = (
 )
 
 __all__ = ["PROFILE_COMMAND_SPECS"]
+
+
+def _key(value: str) -> TranslationKey:
+    """TEMPORARY A/B copy."""
+    return TranslationKey(value)

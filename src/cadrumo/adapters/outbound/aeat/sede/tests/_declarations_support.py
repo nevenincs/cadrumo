@@ -33,13 +33,13 @@ from ...browser.factory import opened_browser_page, shared_playwright_runtime
 from ..declarations import (
     Declaracion,
     SedeParseError,
-    _assert_read_browser_action,
-    _assert_read_http,
     _declarations_page_shape_context,
     _extract_csv_from_url,
     _parse_listbox,
     _parse_presented_at,
     _select_combobox_value,
+    assert_declarations_read_browser_action,
+    assert_declarations_read_http,
 )
 from ..declarations_capture import _select_authoritative_declaration as _select_authoritative_declaration_production
 from ..declarations_observations import (
@@ -75,8 +75,8 @@ __all__ = [
     "RegistryValidationError",
     "SedeParseError",
     "Settings",
-    "_assert_read_browser_action",
-    "_assert_read_http",
+    "assert_declarations_read_browser_action",
+    "assert_declarations_read_http",
     "_declaration_pdf_payload",
     "_declaration_row",
     "_declarations_page_shape_context",

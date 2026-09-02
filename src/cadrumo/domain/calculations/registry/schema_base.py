@@ -30,6 +30,7 @@ __all__ = [
     "REGISTRY_SOURCE_GROUNDING_TIERS",
     "SCHEMA_FAMILY",
     "CalculationClass",
+    "CalculationClassField",
     "DateAxis",
     "EvidenceTier",
     "FormulaOperator",
@@ -364,7 +365,27 @@ def governance_stamp_fields(model: type[BaseModel]) -> frozenset[str]:
     )
 
 
-CalculationClass = Literal["filing", "informative", "summary"]
+class CalculationClass(StrEnum):
+    """What kind of declaration a modelo is, as an enforcement posture."""
+
+    FILING = "filing"
+    """A self-assessment the taxpayer settles."""
+
+    INFORMATIVE = "informative"
+    """An informative declaration carrying no liquidacion."""
+
+    SUMMARY = "summary"
+    """A summary rolling up period filings without settling on its own."""
+
+
+CalculationClassField = Annotated[
+    CalculationClass, BeforeValidator(coerce_enum_member(CalculationClass))
+]
+"""Registry ``calculation_class`` token hydrated into a member.
+
+Registry schema models validate strictly, which refuses a bare TOML string for an
+enum-typed field, so the token is coerced at the boundary.
+"""
 ModeloFilingCapability = Literal["borrador", "renta_ledger_default"]
 """Discriminator for the calculation role of a ModeloDefinition.
 
@@ -467,6 +488,60 @@ PublishingAuthorityField = Annotated[
     PublishingAuthority, BeforeValidator(coerce_enum_member(PublishingAuthority))
 ]
 """Registry ``authority`` token hydrated into a member.
+
+Registry schema models validate strictly, which refuses a bare TOML string for an
+enum-typed field, so the token is coerced at the boundary.
+"""
+
+class SettlementDirection(StrEnum):
+    """Which way a declaration's result settles between taxpayer and AEAT."""
+
+    INGRESAR = "ingresar"
+    """The taxpayer owes: the result is paid in."""
+
+    DEVOLVER = "devolver"
+    """The AEAT owes: the result is refunded."""
+
+
+SettlementDirectionField = Annotated[
+    SettlementDirection, BeforeValidator(coerce_enum_member(SettlementDirection))
+]
+"""Registry settlement-direction token hydrated into a member.
+
+Used as a mapping KEY as well as a field. Registry schema models validate strictly,
+which refuses a bare TOML string, and a coercion hop on the key type hydrates each
+key the same way it hydrates a scalar field.
+"""
+
+class RegistrySourceKind(StrEnum):
+    """What kind of official artefact a source reference cites."""
+
+    RECORD_DESIGN = "record_design"
+    """A diseno de registro fixing field offsets, widths and order."""
+
+    MANUAL_PDF = "manual_pdf"
+    """An AEAT manual published as PDF."""
+
+    INSTRUCTIONS = "instructions"
+    """Filing instructions accompanying a modelo."""
+
+    FORM_SPEC = "form_spec"
+    """A published specification of the form's own fields."""
+
+    DICTIONARY = "dictionary"
+    """A data dictionary for an XML or structured submission."""
+
+    XSD = "xsd"
+    """An XML schema definition."""
+
+    SUPPRESSION_NOTICE = "suppression_notice"
+    """A notice withdrawing or superseding a previously published artefact."""
+
+
+RegistrySourceKindField = Annotated[
+    RegistrySourceKind, BeforeValidator(coerce_enum_member(RegistrySourceKind))
+]
+"""Registry source ``kind`` token hydrated into a member.
 
 Registry schema models validate strictly, which refuses a bare TOML string for an
 enum-typed field, so the token is coerced at the boundary.

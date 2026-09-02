@@ -852,9 +852,7 @@ def _compact_failure_context(context: dict[str, object] | None) -> str:
     for key in sorted(context):
         value = context[key]
         if is_str_keyed_dict(value):
-            nested = ",".join(
-                f"{nested_key}:{nested_value}" for nested_key, nested_value in sorted(value.items())
-            )
+            nested = ",".join(f"{nested_key}:{nested_value}" for nested_key, nested_value in sorted(value.items()))
             parts.append(f"{key}={{" + nested + "}")
             continue
         parts.append(f"{key}={value}")

@@ -10,6 +10,7 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING, Literal, cast
 
 from ...core.i18n.render import output_language, tr
+from ...core.type_guards import is_object_list_or_tuple
 from .command_spec import DefaultKind, OptionSpec, SchemaState
 
 if TYPE_CHECKING:
@@ -235,7 +236,14 @@ def _choices(parameter: ParameterSpec) -> tuple[str, ...]:
         return ()
     if isinstance(value, type) and issubclass(value, Enum):
         return tuple(str(member.value) for member in value)
-    declared = getattr(value, "choices", ())
+    # The Enum branch above leaves a partially-narrowed `type[Unknown]` in the
+    # negative arm; restate the plain object the remaining lookup runs against.
+    resolved = cast("object", value)
+    # A click type's ``choices`` is whatever the type declares; only a real
+    # sequence of tokens is a choice set.
+    declared: object = getattr(resolved, "choices", ())
+    if not is_object_list_or_tuple(declared):
+        return ()
     return tuple(str(choice) for choice in declared)
 
 
@@ -375,7 +383,7 @@ def command_schema_type(command: str) -> RegisteredSchema:
 
     if not issubclass(target, OutputSchema | OutputRootSchema):
         raise TypeError(f"command schema target is not an output schema: {command}")
-    return target
+    return cast("type[OutputSchema] | type[OutputRootSchema[object]]", target)
 
 
 @cache

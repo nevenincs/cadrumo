@@ -169,7 +169,9 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="prior_domiciliation_election",
                 declarations=("--prior-domiciliation-election",),
-                value=ValueContract(DeferredTarget("cadrumo.core.prior_domiciliation_election", "PriorDomiciliationElection")),
+                value=ValueContract(
+                    DeferredTarget("cadrumo.core.prior_domiciliation_election", "PriorDomiciliationElection")
+                ),
                 default=ParameterDefault.value("keep"),
                 help_key=TranslationKey("cli.app.modelo.work.prior_domiciliation_election_help"),
                 multiple=False,

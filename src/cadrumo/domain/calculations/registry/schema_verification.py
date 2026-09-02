@@ -70,7 +70,7 @@ from .ids import (
     WorkbookOutputId,
     WorkbookParityRefId,
 )
-from .schema_base import EvidenceTierField, LegalRefs, RegistryModel, SourceRefs
+from .schema_base import SettlementDirection, SettlementDirectionField, EvidenceTierField, LegalRefs, RegistryModel, SourceRefs
 from .schema_scalars import DecimalValue, WorkbookCellRefStr
 
 __all__ = [
@@ -423,8 +423,8 @@ class VerificationExpectationDefinition(RegistryModel):
     computed_casilla_ids: tuple[CasillaId, ...]
     reconcile_when_present_casilla_ids: tuple[CasillaId, ...] = ()
     externally_grounded_casilla_ids: tuple[CasillaId, ...] = ()
-    reconciliation_total_casilla_ids: Mapping[Literal["ingresar", "devolver"], CasillaId] = Field(
-        default_factory=lambda: dict[Literal["ingresar", "devolver"], CasillaId](),
+    reconciliation_total_casilla_ids: Mapping[SettlementDirectionField, CasillaId] = Field(
+        default_factory=lambda: dict[SettlementDirection, CasillaId](),
     )
     tolerance: DecimalValue = Field(ge=Decimal("0"))
     rounding: VerificationRoundingCodeValue
@@ -482,7 +482,7 @@ class VerificationExpectationDefinition(RegistryModel):
 
 def fold_reconciliation_total_casilla_ids(
     expectations: Iterable[VerificationExpectationDefinition],
-) -> Mapping[Literal["ingresar", "devolver"], CasillaId]:
+) -> Mapping[SettlementDirectionField, CasillaId]:
     """Fold every expectation's reconciliation-total casillas into one mapping.
 
     The canonical fold for this axis. Three surfaces need it — the verification
@@ -503,7 +503,7 @@ def fold_reconciliation_total_casilla_ids(
         RegistryValidationError: When two expectations declare different casilla
             ids for the same reconciliation kind.
     """
-    folded: dict[Literal["ingresar", "devolver"], CasillaId] = {}
+    folded: dict[SettlementDirection, CasillaId] = {}
     for expectation in expectations:
         for kind, casilla_id in expectation.reconciliation_total_casilla_ids.items():
             existing = folded.get(kind)
@@ -543,7 +543,7 @@ class RegistryVerificationPolicy:
     #: The folded reconciliation-total casillas, from
     #: :func:`fold_reconciliation_total_casilla_ids`. Carried on the policy so a
     #: consumer that already holds one does not re-derive the fold.
-    reconciliation_total_casilla_ids: Mapping[Literal["ingresar", "devolver"], CasillaId]
+    reconciliation_total_casilla_ids: Mapping[SettlementDirectionField, CasillaId]
     computed_casilla_ids: frozenset[CasillaId]
     reconcile_when_present_casilla_ids: frozenset[CasillaId]
     externally_grounded_casilla_ids: frozenset[CasillaId]

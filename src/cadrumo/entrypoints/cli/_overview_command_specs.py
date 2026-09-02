@@ -13,7 +13,6 @@ from .command_spec import (
     ParameterDefault,
     ResultSchemaSpec,
     SchemaState,
-    TranslationKey,
     ValueContract,
 )
 
@@ -25,10 +24,6 @@ _BOOL = ValueContract(DeferredTarget("builtins", "bool"))
 _LANG = ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage"))
 _MODULE = "cadrumo.entrypoints.cli._overview"
 _PAYLOADS = "cadrumo.entrypoints.cli._overview_payloads"
-
-
-def _key(value: str) -> TranslationKey:
-    return TranslationKey(value)
 
 
 def _option(
@@ -205,3 +200,8 @@ OVERVIEW_COMMAND_SPECS: tuple[CommandSpec, ...] = (
 )
 
 __all__ = ["OVERVIEW_COMMAND_SPECS"]
+
+
+def _key(value: str) -> TranslationKey:
+    """TEMPORARY A/B copy."""
+    return TranslationKey(value)

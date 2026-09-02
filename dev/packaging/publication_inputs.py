@@ -74,7 +74,6 @@ COHORT_INPUT: Final[str] = "packaging_run_id"
 #: it: the honesty guard in :mod:`dev.packaging.distribution_evidence_emit`
 #: refuses SDK-driven runs by design, and defeating it would make the evidence a
 #: lie about what was actually installed.
-EMIT_REAL_CLIENT_EVIDENCE_COMMAND: Final[str] = "uv run --no-sync python -m dev.packaging.emit_real_client_evidence"
 
 #: Claimed channel id -> the acquisition workflow the orchestrator dispatches
 #: to prove that channel. Kept SEPARATE from :data:`SOURCE_INPUT_BY_CHANNEL`:
@@ -226,44 +225,6 @@ def refusals(descriptor: DownloadDescriptor, provided: Mapping[str, str]) -> tup
     return tuple(lines)
 
 
-def host_extension_precondition_refusal(
-    descriptor: DownloadDescriptor,
-    *,
-    claude_evidence_release: str,
-) -> str | None:
-    """Refuse an orchestration when a claimed host-extension channel has no evidence release.
-
-    This is a fail-closed PRECONDITION meant to run at orchestration ENTRY -
-    before the bump or any other stage - so a claimed ``claude-plugin`` /
-    ``mcpb`` channel with no operator-minted evidence release stops the whole
-    chain before a version is burned, rather than after. It never attempts to
-    produce the four required ``claude-*`` rows itself: the honesty guard in
-    :mod:`dev.packaging.distribution_evidence_emit` refuses SDK-driven runs by
-    design, and defeating it would make the evidence a lie about what was
-    actually installed. Those rows stay a human act, captured with
-    :data:`EMIT_REAL_CLIENT_EVIDENCE_COMMAND` against a real Claude client.
-
-    Returns ``None`` when the precondition holds: no host-extension channel is
-    claimed, or one is claimed and ``claude_evidence_release`` was supplied.
-    Otherwise returns one instructive refusal line naming every claimed
-    host-extension channel and the exact capture command to run.
-    """
-    host_channels = sorted(
-        channel.id for channel in claimed_channels(descriptor) if channel.tier is ChannelTier.HOST_EXTENSION
-    )
-    if not host_channels:
-        return None
-    if claude_evidence_release.strip():
-        return None
-    return (
-        f"REFUSED: host-extension channel(s) {host_channels} are claimed, but no operator-minted claude "
-        "evidence release was supplied. These four claude-* rows cannot be produced by a workflow - "
-        f"capture them locally first with `{EMIT_REAL_CLIENT_EVIDENCE_COMMAND}` against a real Claude "
-        "client, publish the results as a GitHub release, then dispatch the orchestrator again naming "
-        "that release's tag."
-    )
-
-
 def _emit_outputs(descriptor: DownloadDescriptor, output_path: Path) -> None:
     """Append one ``need_<input>`` boolean per known input to ``GITHUB_OUTPUT``."""
     demanded = set(demanded_inputs(descriptor))
@@ -313,42 +274,3 @@ def main(argv: list[str] | None = None) -> int:
         # only at `available` (or the registry tier) - so this passes
         # trivially. The refusal exists so that flipping one to available
         # cannot silently publish it unevidenced.
-        refusal = host_extension_precondition_refusal(
-            descriptor,
-            claude_evidence_release=os.environ.get("CLAUDE_EVIDENCE_RELEASE", ""),
-        )
-        if refusal is not None:
-            print(refusal, file=sys.stderr)
-            return 1
-        # Emit the VERIFIED tag so the seal stage records exactly what this
-        # check passed on. It must never be sourced from an acquisition lane's
-        # run id: the lane proves the install mechanism works, this tag names
-        # the release holding the four real-client rows that prove a human
-        # actually ran it, and the publication authority consumes it with
-        # `gh release download <tag>`. Collapsing them makes the publication
-        # fail at its last leg after a full soak, and silently discards the
-        # operator-minted evidence this check just verified.
-        verified = os.environ.get("CLAUDE_EVIDENCE_RELEASE", "").strip()
-        if args.github_output is not None:
-            with args.github_output.open("a", encoding=_UTF_8, newline="\n") as handle:
-                handle.write(f"claude_evidence_release={verified}\n")
-        print("host-extension precondition satisfied")
-        return 0
-
-    provided = {name: os.environ.get(name.upper(), "") for name in SOURCE_INPUT_BY_CHANNEL.values()}
-    provided[COHORT_INPUT] = os.environ.get(COHORT_INPUT.upper(), "")
-
-    if lines := refusals(descriptor, provided):
-        for line in lines:
-            print(line, file=sys.stderr)
-        return 1
-
-    demanded = demanded_inputs(descriptor)
-    print(f"required by the claimed channels: {list(demanded)}")
-    if args.github_output is not None:
-        _emit_outputs(descriptor, args.github_output)
-    return 0
-
-
-if __name__ == "__main__":  # pragma: no cover - CLI entry
-    raise SystemExit(main())

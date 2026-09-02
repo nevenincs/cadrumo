@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-from .command_spec import TranslationKey
+__all__ = ["_key"]
 
 
 def _key(value: str) -> TranslationKey:
+    """TEMPORARY A/B copy."""
     return TranslationKey(value)
-
-
-__all__ = ["_key"]

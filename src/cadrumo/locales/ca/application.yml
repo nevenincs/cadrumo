@@ -479,12 +479,6 @@ application:
           ordre d'emissió, així que la seqüència és ambigua.
         required_casillas_omitted: L'exportació ometria casilles obligatòries que
           el registre oficial declara.
-    import:
-      errors:
-        period_token_undeclared: El codi de període no està declarat per la revisió
-          de registre activa.
-        period_token_unrepresentable: El codi de període no es pot representar com
-          a període de declaració.
     m303_exonerado_390:
       errors:
         record_design_snapshot_mismatch: El disseny de registre exonerado-390 no coincideix

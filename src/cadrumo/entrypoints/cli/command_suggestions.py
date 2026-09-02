@@ -49,13 +49,13 @@ from typer._click.core import Command as TyCommand
 
 # Use typer's internal click re-export to align with TyperGroup's type signatures
 from typer._click.core import Context as TyContext
-from typer._click.core import make_default_short_help
 
 # TyperGroup is built on typer's vendored click, so its resolve_command raises
 # the vendored UsageError rather than top-level click's distinct exception.
 from typer._click.exceptions import UsageError as TyUsageError
 from typer._click.formatting import HelpFormatter as TyHelpFormatter
 from typer._click.shell_completion import CompletionItem
+from typer._click.utils import make_default_short_help
 from typer.core import TyperGroup
 from typer.main import get_command as _typer_get_command
 

@@ -20,7 +20,6 @@ from .command_spec import (
     ResultSchemaSpec,
     SchemaState,
     SideEffect,
-    TranslationKey,
     TuiCapability,
     ValueContract,
     WriteRoute,
@@ -44,10 +43,6 @@ _PAYMENT = ValueContract(DeferredTarget("cadrumo.core.payment_election", "Paymen
 _DOMICILIATION = ValueContract(
     DeferredTarget("cadrumo.core.prior_domiciliation_election", "PriorDomiciliationElection")
 )
-
-
-def _key(value: str) -> TranslationKey:
-    return TranslationKey(value)
 
 
 def _policy(
@@ -436,3 +431,8 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
 )
 
 __all__ = ["MODELO_WORK_COMMAND_SPECS"]
+
+
+def _key(value: str) -> TranslationKey:
+    """TEMPORARY A/B copy."""
+    return TranslationKey(value)

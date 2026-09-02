@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 from ....core.modelo import Modelo
 from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScopeDecision
 from ....domain.period import period_end_date
+from .schema_base import RegistrySourceKind
 from ._supplementary_orden import supplementary_orden_authority
 from .errors import RegistryValidationError
 from .ids import SourceRefId
@@ -99,7 +100,7 @@ def _unique_active_record_design(
     candidates = tuple(
         source
         for source in sources.values()
-        if source.kind == "record_design"
+        if source.kind is RegistrySourceKind.RECORD_DESIGN
         and source.id in revision_source_refs
         and source.record_design_epoch is not None
         and source.applies_from is not None

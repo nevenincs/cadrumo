@@ -7,6 +7,8 @@ generated output envelopes.
 
 from __future__ import annotations
 
+from enum import StrEnum
+
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date
@@ -157,6 +159,8 @@ from .schema_base import (
     MANIFEST_ONLY,
     SCHEMA_FAMILY,
     CalculationClass,
+    coerce_enum_member,
+    CalculationClassField,
     LegalRefs,
     ModeloFilingCapability,
     RegistryAuthorityGradeField,
@@ -419,7 +423,32 @@ class FormulaDefinition(RegistryModel):
     source_citations: tuple[SourceCitation, ...] = Field(default_factory=tuple)
 
 
-type CasillaProducerKind = Literal["formula", "manual", "upstream", "relation", "informational", "projection_only"]
+class CasillaProducerKind(StrEnum):
+    """What produces a casilla's value in the compiled registry."""
+
+    FORMULA = "formula"
+    """A grounded formula computes it."""
+
+    MANUAL = "manual"
+    """The taxpayer supplies it directly."""
+
+    UPSTREAM = "upstream"
+    """It arrives from another modelo's output."""
+
+    RELATION = "relation"
+    """A declared relation prefills it."""
+
+    INFORMATIONAL = "informational"
+    """It is carried for information and settles nothing."""
+
+    PROJECTION_ONLY = "projection_only"
+    """It exists only in a projection, with no producer of its own."""
+
+
+CasillaProducerKindField = Annotated[
+    CasillaProducerKind, BeforeValidator(coerce_enum_member(CasillaProducerKind))
+]
+"""Registry ``producer_kind`` token hydrated into a member."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -434,7 +463,7 @@ class CasillaProducerProvenance:
     """
 
     casilla: CasillaDefinition
-    producer_kind: CasillaProducerKind
+    producer_kind: CasillaProducerKindField
     reason: str
     formula: FormulaDefinition | None = None
     binding: DataBindingDefinition | None = None
@@ -474,8 +503,12 @@ class CasillaProducerProvenance:
 #: runtime projection rather than a registry row with provenance. Omitting
 #: projection_only dropped the grounding of 366 Modelo 303 casillas -- every one
 #: of which declares legal_refs -- from their producer trace.
-_CASILLA_GROUNDED_PRODUCER_KINDS: Final[frozenset[str]] = frozenset(
-    {"manual", "informational", "projection_only"},
+_CASILLA_GROUNDED_PRODUCER_KINDS: Final[frozenset[CasillaProducerKind]] = frozenset(
+    {
+        CasillaProducerKind.MANUAL,
+        CasillaProducerKind.INFORMATIONAL,
+        CasillaProducerKind.PROJECTION_ONLY,
+    },
 )
 
 
@@ -496,7 +529,7 @@ class CasillaProducerInventory:
     formula_ids_by_id: Mapping[FormulaId, tuple[FormulaDefinition, ...]]
     formula_ids_by_casilla: Mapping[CasillaId, tuple[FormulaId, ...]]
     computed_casilla_ids: frozenset[CasillaId]
-    producer_kind_by_casilla: Mapping[CasillaId, CasillaProducerKind]
+    producer_kind_by_casilla: Mapping[CasillaId, CasillaProducerKindField]
     producer_reason_by_casilla: Mapping[CasillaId, str]
     producer_provenance_by_casilla: Mapping[CasillaId, tuple[CasillaProducerProvenance, ...]]
 
@@ -964,7 +997,7 @@ class ModeloDefinition(RegistryModel):
     tax_domain: Annotated[TaxDomain, BeforeValidator(lambda v: TaxDomain(v) if isinstance(v, str) else v)]
     cadence: Literal["monthly", "quarterly", "annual", "ad_hoc", "profile_based"]
     jurisdiction: Literal["ES-AEAT"]
-    calculation_class: CalculationClass = "filing"
+    calculation_class: CalculationClassField = CalculationClass.FILING
     output_sensitivity: SensitivityClassField = SensitivityClass.FINANCIAL
     capabilities: Annotated[frozenset[ModeloFilingCapability], BeforeValidator(frozenset)] = frozenset()
     legal_refs: LegalRefs

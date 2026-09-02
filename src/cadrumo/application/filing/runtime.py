@@ -56,6 +56,7 @@ from ...core.identity import SubjectTaxId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...core.resources.bundled_data import bundled_path
+from ...domain.calculations.registry.schema_base import SettlementDirection, SettlementDirectionField
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ...domain.calculations.registry.errors import (
     RegistryFailureCondition,
@@ -253,7 +254,7 @@ class RegistryModeloSubview:
     source_ref_ids: tuple[SourceRefId, ...]
     extraction_profile_ids: tuple[str, ...]
     verification_expectation_ids: tuple[str, ...]
-    reconciliation_total_casilla_ids: Mapping[Literal["ingresar", "devolver"], CasillaId]
+    reconciliation_total_casilla_ids: Mapping[SettlementDirectionField, CasillaId]
     export_layout_ids: tuple[str, ...]
     export_layouts: tuple[ExportLayoutDefinition, ...]
     application_link_ids: tuple[str, ...]

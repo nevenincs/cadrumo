@@ -38,7 +38,7 @@ from ._m303_orden_constants import (
 )
 from .errors import RegistryValidationError
 from .ids import LegalRefId, RevisionId, SourceRefId
-from .schema_base import RegistryModel
+from .schema_base import RegistrySourceKind, RegistryModel
 from .schema_references import LegalReference, SourceReference
 
 _M303_2022_RECORD_DESIGN_SOURCE_REF = "aeat-dr-303-2022"
@@ -373,7 +373,7 @@ class M303RegimenSimplificadoSnapshot(RegistryModel):
 
 def _validate_regimen_simplificado_record_design(snapshot: M303RegimenSimplificadoSnapshot) -> None:
     _require_invariant(
-        snapshot.record_design.kind == "record_design" and snapshot.record_design.record_design_epoch is not None,
+        snapshot.record_design.kind is RegistrySourceKind.RECORD_DESIGN and snapshot.record_design.record_design_epoch is not None,
         "M303 regimen simplificado snapshot requires an epoch-pinned record design",
     )
 

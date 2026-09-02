@@ -23,6 +23,7 @@ from typing import Final
 
 from ....core.hashing import hash_file
 from ....core.resources.bundled_data import resolve_companion_binary
+from .schema_base import RegistrySourceKind
 from .errors import RegistryValidationError
 from .legal import _PROVISION_SUFFIXED_FILENAME
 from .schema_references import SourceReference
@@ -158,7 +159,7 @@ def resolve_record_design_binary(
         raise RegistryValidationError(
             f"source catalogue key {source_ref!r} does not match source id {source.id!r}",
         )
-    if source.kind != "record_design":
+    if source.kind is not RegistrySourceKind.RECORD_DESIGN:
         raise RegistryValidationError(f"source {source_ref!r} is not a record-design binary")
     if source.record_design_epoch is None:
         raise RegistryValidationError(f"record-design source {source_ref!r} does not declare a design epoch")
@@ -184,7 +185,7 @@ def _verify_manual_structure(repo_root: Path, source: GeneratedArtifactSource) -
     full-checkout / dev path); a companion-resolved manual is proven by its
     byte-exact hash instead.
     """
-    if not (source.kind == "manual_pdf" and "corpus/manuals" in source.corpus_path):
+    if not (source.kind is RegistrySourceKind.MANUAL_PDF and "corpus/manuals" in source.corpus_path):
         return
     parts = source.corpus_path.split("/")
     try:

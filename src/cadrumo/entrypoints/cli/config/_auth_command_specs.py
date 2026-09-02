@@ -20,7 +20,6 @@ from ..command_spec import (
     ParameterDefault,
     ResultSchemaSpec,
     SchemaState,
-    TranslationKey,
     TuiCapability,
     ValueContract,
 )
@@ -33,10 +32,6 @@ _PATH = ValueContract(DeferredTarget("pathlib", "Path"))
 _STR = ValueContract(DeferredTarget("builtins", "str"))
 _OUTPUT_LANGUAGE = ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage"))
 _PHONE_STATE = ValueContract(DeferredTarget("cadrumo.application.auth.diagnostics", "AuthDiagnosticPhoneState"))
-
-
-def _key(value: str) -> TranslationKey:
-    return TranslationKey(value)
 
 
 def _option(
@@ -482,3 +477,8 @@ AUTH_COMMAND_SPECS = (
 
 
 __all__ = ["AUTH_COMMAND_SPECS"]
+
+
+def _key(value: str) -> TranslationKey:
+    """TEMPORARY A/B copy."""
+    return TranslationKey(value)

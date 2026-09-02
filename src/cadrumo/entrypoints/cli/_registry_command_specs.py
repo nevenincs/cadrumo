@@ -15,7 +15,6 @@ from .command_spec import (
     ParameterDefault,
     ResultSchemaSpec,
     SchemaState,
-    TranslationKey,
     ValueContract,
 )
 
@@ -26,10 +25,6 @@ _INT = ValueContract(DeferredTarget("builtins", "int"))
 _PATH = ValueContract(DeferredTarget("pathlib", "Path"))
 _MANUAL = ValueContract(DeferredTarget("cadrumo.application.registry.corpus", "RegistryManualId"))
 _PART = ValueContract(DeferredTarget("cadrumo.domain.manuals._ids", "ManualPart"))
-
-
-def _key(value: str) -> TranslationKey:
-    return TranslationKey(value)
 
 
 def _option(
@@ -310,3 +305,8 @@ REGISTRY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
 )
 
 __all__ = ["REGISTRY_COMMAND_SPECS"]
+
+
+def _key(value: str) -> TranslationKey:
+    """TEMPORARY A/B copy."""
+    return TranslationKey(value)

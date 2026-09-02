@@ -21,7 +21,7 @@ from ....core.manual_corpus_sidecar import (
 from ....core.resources.bundled_data import packaged_data, resolve_companion_binary
 from ....core.storage_taxonomy import StorageCategory
 from ....core.storage_taxonomy_locations import storage_location, storage_path
-from .schema_base import SourceCitation
+from .schema_base import RegistrySourceKind, SourceCitation
 from .schema_references import LegalReference, SourceReference
 
 _SourceTextCacheKey = tuple[str, str, int, int]
@@ -393,7 +393,7 @@ class EvidenceValidator:
             self._source_text_cache[source.id] = normalised
             return normalised
 
-        if source.kind == "manual_pdf":
+        if source.kind is RegistrySourceKind.MANUAL_PDF:
             # Try the shipped content-keyed sidecar first; verify sha256 before
             # using it so a modified source PDF never serves stale text.  The
             # sidecar is generated once at build time by

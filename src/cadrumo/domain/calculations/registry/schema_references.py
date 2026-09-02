@@ -28,6 +28,8 @@ from .schema_base import (
     EvidenceTierField,
     LegalRefs,
     PublishingAuthorityField,
+    RegistrySourceKind,
+    RegistrySourceKindField,
     RegistryModel,
     RevisionReviewStatusField,
     coerce_enum_member,
@@ -331,15 +333,7 @@ class SourceReference(RegistryModel):
     id: SourceRefId
     evidence_tier: EvidenceTierField
     authority: PublishingAuthorityField
-    kind: Literal[
-        "record_design",
-        "manual_pdf",
-        "instructions",
-        "xsd",
-        "dictionary",
-        "form_spec",
-        "suppression_notice",
-    ]
+    kind: RegistrySourceKindField
     corpus_path: str
     sha256: ContentDigest
     bytes: int = Field(gt=0)
@@ -422,7 +416,7 @@ class SourceReference(RegistryModel):
     def _validate_source_reference(self) -> SourceReference:
         if self.applies_to is not None and self.applies_from is not None and self.applies_to < self.applies_from:
             raise RegistryValidationError("source reference applies_to must be on or after applies_from")
-        if self.kind != "dictionary" and self.dictionary_casilla_id_grammar != "numeric":
+        if self.kind is not RegistrySourceKind.DICTIONARY and self.dictionary_casilla_id_grammar != "numeric":
             raise RegistryValidationError(
                 "dictionary_casilla_id_grammar other than 'numeric' is only valid for kind='dictionary'",
             )
@@ -439,7 +433,7 @@ class SourceReference(RegistryModel):
                 )
         if "\\" in self.corpus_path or self.corpus_path.startswith(("/", ".")):
             raise RegistryValidationError("source reference corpus_path must be repository-relative POSIX style")
-        if self.kind == "record_design":
+        if self.kind is RegistrySourceKind.RECORD_DESIGN:
             allowed_record_design_suffixes = (
                 PDF_EXTENSION,
                 XLS_EXTENSION,
