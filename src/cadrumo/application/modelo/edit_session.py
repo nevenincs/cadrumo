@@ -44,6 +44,7 @@ from .edit_models import (
     ModeloEditPreflightRequestV1,
     ModeloEditScalarAddressV1,
     ModeloEditScalarIntentKind,
+    ModeloEditStaleBaselineRefusalV1,
     ModeloEditSubmissionV1,
     ModeloEditWritableScalarSurfaceEntryV1,
     ModeloScalarEditIntentV1,
@@ -420,7 +421,11 @@ class ModeloEditSession:
         )
         if stale is None:
             return ()
-        return tuple(getattr(stale, "mismatching_coordinates", ()) or ("baseline",))
+        # Only the stale-baseline variant of the refusal union names coordinates;
+        # its field declares min_length=1, so a match always carries at least one.
+        if isinstance(stale, ModeloEditStaleBaselineRefusalV1):
+            return tuple(stale.mismatching_coordinates)
+        return ("baseline",)
 
     def abandon(self) -> None:
         """Discard every staged edit and close the session.
