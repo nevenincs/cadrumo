@@ -56,6 +56,7 @@ import ast
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
+from typing import override
 
 __all__ = [
     "UnfilledField",
@@ -70,6 +71,7 @@ class UnfilledField:
     model: str
     field: str
 
+    @override
     def __str__(self) -> str:
         """Render the finding as the address a reader would search for."""
         return f"{self.model}.{self.field}"

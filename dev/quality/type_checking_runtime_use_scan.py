@@ -27,6 +27,7 @@ from __future__ import annotations
 import ast
 from dataclasses import dataclass
 from pathlib import Path
+from typing import override
 
 from .import_hygiene_scan import type_checking_guarded_nodes
 
@@ -42,6 +43,7 @@ class TypeOnlyRuntimeUse:
     bound_lineno: int
     used_lineno: int
 
+    @override
     def __str__(self) -> str:
         """Render the finding as a locator a reader can open."""
         return (

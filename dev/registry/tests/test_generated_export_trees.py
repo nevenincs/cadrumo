@@ -23,7 +23,7 @@ import re
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final
+from typing import Final, override
 
 import pytest
 
@@ -76,6 +76,7 @@ class _GeneratedTree:
     def committed(self) -> Path:
         return bundled_path("registry", "aeat", "modelos", self.modelo, "revisions", self.revision, "export")
 
+    @override
     def __str__(self) -> str:
         return f"m{self.modelo}-{self.revision}"
 

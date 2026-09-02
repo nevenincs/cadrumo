@@ -29,6 +29,7 @@ from __future__ import annotations
 import ast
 from dataclasses import dataclass
 from pathlib import Path
+from typing import override
 
 __all__ = [
     "TautologicalAssertion",
@@ -48,6 +49,7 @@ class TautologicalAssertion:
     lineno: int
     reason: str
 
+    @override
     def __str__(self) -> str:
         """Render the finding as a locator a reader can open."""
         return f"{self.path}:{self.lineno} {self.reason}"

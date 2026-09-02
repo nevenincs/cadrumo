@@ -120,7 +120,7 @@ import json
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final
+from typing import Final, override
 
 from .._paths import REPO_ROOT, UTF_8
 from .fixture_census import (
@@ -329,14 +329,17 @@ class _HelperVisitor(ast.NodeVisitor):
         self.records: list[HelperRecord] = []
         self._qualname: list[str] = []
 
+    @override
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
         self._qualname.append(node.name)
         self.generic_visit(node)
         self._qualname.pop()
 
+    @override
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
         self._visit_function(node)
 
+    @override
     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
         self._visit_function(node)
 
