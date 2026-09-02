@@ -12,7 +12,6 @@ import argparse
 import re
 import shutil
 import subprocess
-import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
@@ -86,16 +85,13 @@ class RestorationRefusal:
     reason: str
 
 
-def build_bundled_restoration_proposals() -> tuple[
-    tuple[RestorationProposal, ...], tuple[RestorationRefusal, ...]
-]:
+def build_bundled_restoration_proposals() -> tuple[tuple[RestorationProposal, ...], tuple[RestorationRefusal, ...]]:
     """Join current 2024 gaps to pinned history for review-only diagnostics.
 
     The exact current design is loaded independently of the classifier so a
     mutated target description or source digest cannot silently become a
     proposal.  Historic payload is checked against its pinned Git blob as well.
     """
-
     classified = _load_bundled_candidates()
     current_map = load_semantic_map(Path(__file__).parents[1] / "mappings" / "modelo_200" / "2024")
     current_entries = {str(entry.export_field_id): entry for entry in current_map.entries}
@@ -162,11 +158,8 @@ def build_bundled_restoration_proposals() -> tuple[
     )
 
 
-def build_bundled_restoration_candidates() -> tuple[
-    tuple[RestorationProposal, ...], tuple[RestorationRefusal, ...]
-]:
+def build_bundled_restoration_candidates() -> tuple[tuple[RestorationProposal, ...], tuple[RestorationRefusal, ...]]:
     """Compatibility spelling for the proposal-only builder."""
-
     return build_bundled_restoration_proposals()
 
 
@@ -180,22 +173,20 @@ def render_review_toml(
     fragment path.  The marker is machine-readable so a future compiler can
     refuse this document before it reaches registry authority.
     """
-
-    return rtoml.dumps(
-        {
-            "schema_version": 2,
-            "authority_status": "proposal_only",
-            "historic_commit": HISTORIC_COMMIT,
-            "restoration_proposal": [asdict(proposal) for proposal in proposals],
-            "restoration_refusal": [asdict(refusal) for refusal in refusals],
-        },
-        pretty=True,
-    )
+    document: dict[str, object] = {
+        "schema_version": 2,
+        "authority_status": "proposal_only",
+        "historic_commit": HISTORIC_COMMIT,
+    }
+    if proposals:
+        document["restoration_proposal"] = [asdict(proposal) for proposal in proposals]
+    if refusals:
+        document["restoration_refusal"] = [asdict(refusal) for refusal in refusals]
+    return rtoml.dumps(document, pretty=True)
 
 
 def main(argv: list[str] | None = None) -> int:
     """Report proposal/refusal diagnostics and optionally write review TOML."""
-
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, help="write review-only TOML to this explicit path")
     parser.add_argument("--check", action="store_true", help="compare --output without writing")
@@ -238,7 +229,6 @@ def _historic_index() -> dict[str, tuple[tuple[str, dict[str, Any]], ...]]:
 
 def _historic_payload_is_pinned(path: str, export_field_id: str, payload: dict[str, Any]) -> bool:
     """Verify mocked or transformed historic payload cannot cross the boundary."""
-
     # Unit tests may use a synthetic path.  Real Git paths are always checked
     # against the immutable commit that seeded this diagnostic.
     if not path.startswith(f"{HISTORIC_ROOT}/"):
@@ -254,7 +244,6 @@ def _historic_payload_is_pinned(path: str, export_field_id: str, payload: dict[s
 
 def _load_target_field_index(current_map: SemanticMap) -> dict[str, RecordDesignIntermediateField]:
     """Load current official descriptions through the pinned design parser."""
-
     catalogue = load_catalogue_file(bundled_path("registry", "aeat", "legal", "is.toml"))
     design = load_record_design_intermediate(
         bundled_path(),
@@ -269,7 +258,8 @@ def _load_target_field_index(current_map: SemanticMap) -> dict[str, RecordDesign
         try:
             result[str(entry.export_field_id)] = fields[semantic_anchor_key(entry.anchor)]
         except KeyError as exc:
-            raise ValueError(f"current semantic map anchor is absent from target design: {entry.export_field_id}") from exc
+            message = f"current semantic map anchor is absent from target design: {entry.export_field_id}"
+            raise ValueError(message) from exc
     return result
 
 
@@ -296,7 +286,6 @@ def _refusal_reason(
     expected_source_sha256: str | None = None,
 ) -> str | None:
     """Refuse evidence mutations before a proposal is rendered."""
-
     printed = _printed_number(gap.label)
     if expected_target_description is not None and gap.label != expected_target_description:
         return "current target description differs from the pinned official design"
