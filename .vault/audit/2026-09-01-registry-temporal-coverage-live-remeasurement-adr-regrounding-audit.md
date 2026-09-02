@@ -4765,3 +4765,35 @@ described as a defect in the campaign's own document before the split was run.
 What the episode leaves is a narrower true statement. Nothing in the plan's scope clauses is
 known to be wrong, and a check that would detect a genuinely stale scope has to distinguish a
 path the work will create from one it once touched, which file existence alone cannot do.
+
+### One revision, two instruments, one disagreement - and a design nothing can read
+
+The corpus sweep reported one design refusing to load. Diagnosed, it is
+`720/2013-y-siguientes`, and the refusal is precise: the record-design source `aeat-dr-720`
+does not apply to filing year 2012.
+
+The numbers behind that are worth setting out. The revision declares `valid_from`
+2012-01-01 and a period selector opening in 2012. Its only record-design source declares
+epoch 2013 and applies from 2013-02-01. The revision's own name says 2013.
+
+The revision-name screen written earlier in this campaign already flags this exact revision,
+independently, as `name_misstates_opening` - "name claims 2013; valid_from declares 2012". So
+two instruments built for different purposes agree on one revision, and both point at the
+same field. That agreement is what raises this above a curiosity: a name screen and a design
+loader have no shared code path, and the second turns the first's finding into a consequence.
+
+The consequence is that one design in the corpus cannot be read at all. Every sweep this
+campaign has run is over 111 designs, not 112, and the fields in the missing one are invisible
+to all of them - including the footnote sweep whose result was recorded two findings ago.
+
+Whether the data is wrong is genuinely open, and this is the interesting part. Modelo 720 is
+the informativa on assets held abroad, first filed in 2013 for exercise 2012. Read as a tax
+year, `valid_from` 2012 is correct and the design's February 2013 date is a filing date on a
+different axis, in which case the loader is comparing two quantities that were never
+comparable. Read as a legal opening date, the revision is wrong and the name is right.
+
+That is the temporal-axis question this plan's migration Step exists to settle, and it now has
+a live instance with a measurable cost rather than a general argument. Nothing is corrected
+here: choosing an axis for modelo 720 is a filing-grade decision about what `valid_from`
+means across the registry, and this campaign has no authority to make it by guessing which
+reading keeps a loader quiet.

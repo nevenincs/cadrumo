@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:4fd72b2af90328d90492e6a63212d659b615b9b82562d56ff246019a05ab701b'
+body_hash: 'sha256:df4ff6202e07bb99ca5a0f01b57a7a7f3b8d9fd3410e0202bfeaa0d6b9d5f16e'
 related: []
 ---
 # `registry-declaration-hardening` audit: `modelo 200 publication review`
@@ -44,6 +44,9 @@ Final re-review finds that the under-lock assertion does not yet carry the state
 
 The reviewed bootstrap TOML and `_bootstrap_target` now close the transport-authority code defect: only the exact Modelo 200 2025 target, source reference, and source SHA-256 are enrolled, and the reviewed row supplies the layout identity and line ending. No focused test mutates the enrolment source digest, line ending, duplicate row, or target identity and proves refusal through the CLI boundary. The implementation refused an unenrolled target in a direct fast probe, but the quality gate still lacks durable detector teeth for this authority file.
 
+### check-time-receipt-closure | high | existing-target receipt is observed after the check completes
+
+The typed receipt now carries the manifest digest plus every regular generated output digest, and `_require_expected_target_state` compares that complete identity under the exclusive publication lock. The three focused mutation detectors pass. The existing-target branch still calls `GeneratedExportTreeTargetStateReceipt.observe` only after `check_generated_export_tree` has returned. A concurrent replacement between the successful target comparison and that observation is minted into the receipt as the expected state and then passes the under-lock check even though it was never checked against the candidate. The target-state HIGH remains open until the receipt is created from the exact bytes checked by `check_generated_export_tree`, or an observation made before check is proved unchanged both after check and under lock.
 ## Recommendations
 
 - For `bootstrap-transport-authority`, make absent-tree transport an explicit reviewed declaration bound to the exact official `source_ref` and SHA-256, and enroll only exact owed targets. Refuse missing or mismatched transport authority. Add negative tests for changed source hash, wrong line ending, wrong layout id, and an unenrolled absent tree.
@@ -59,3 +62,12 @@ The reviewed bootstrap TOML and `_bootstrap_target` now close the transport-auth
 - `bootstrap-transport-authority`: resolved in code by the exact, source-hash-bound reviewed target enrolment; the missing mutation gate is tracked separately at MEDIUM.
 - `check-publish-state-binding`: open at HIGH because the expected target is sampled after check and does not cover the complete target tree.
 - `filing-refusal-regression-proof`: remains open at MEDIUM.
+## Closure re-review status
+
+- `bootstrap-transport-authority`: resolved; the new unenrolled-source mutation detector passes.
+- `check-publish-state-binding`: remains open at HIGH because the existing-target receipt is observed after check rather than minted from the checked bytes.
+- Full-tree under-lock comparison and all three focused mutation detectors pass.
+## Receipt-order closure status
+
+- `check-publish-state-binding`: resolved. `_check` observes the complete target receipt before validation/comparison, returns that exact receipt, and `_publish` carries it unchanged to the under-lock full-tree assertion.
+- Scoped closure verdict: no HIGH or CRITICAL finding remains.

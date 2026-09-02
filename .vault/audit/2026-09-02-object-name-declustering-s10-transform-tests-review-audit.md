@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:4cbe9767cd7f3d1fd1ece828eb48e09b10f4f80df36c96954176d5843e289075'
+body_hash: 'sha256:af8b1a15bf1d16dabe00d455b1ec9a91525dc8749116b84afb0a452b19ce9cde'
 related:
   - "[[2026-09-02-object-name-declustering-plan]]"
 ---
@@ -98,3 +98,29 @@ ambiguous references, syntax errors, stale bytes, unsafe authored paths,
 occupied targets, allowlist mismatch, determinism, fresh content views, and live
 immutability. Two medium and one low finding remain open; no critical or high
 finding is recorded.
+
+## Resolution evidence
+
+The locator regression fixture now places distinct `Widgets` and `Other`
+classes in one module, giving both declarations binding occurrence one, and
+asserts that only the complete `Widgets` locator is renamed. This fails under
+the former kind-plus-occurrence selection and closes
+`distinct-name-locator-teeth`.
+
+The amended suite proves both supported sides of the module-package boundary: a
+same-package move preserves its relative import bytes, and a cross-package move
+containing only an absolute import succeeds with exact target bytes. Together
+with the existing cross-package-relative refusal, these cases prevent the guard
+from becoming overbroad and close `module-package-boundaries`.
+
+The transform link case now creates and traverses a real directory symlink in
+the isolated repository. It reached the production link detector and refused
+the affected path on this host without a skip, closing
+`linked-path-authority`.
+
+All fixtures use the singular `plan_object_name_transformation` entry point and
+declare only reference classes for which they provide transformation evidence,
+remaining compatible with the new fail-closed expected-evidence check. The
+focused suite completed with 18 passing tests and no skip. Ruff lint, Ruff
+formatting, and canonical `ty` checking passed. No critical, high, medium, or
+low finding remains open for `W02.P04.S10`.
