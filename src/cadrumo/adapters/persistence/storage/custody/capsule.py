@@ -9,11 +9,12 @@ from contextlib import ExitStack
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal, cast
+from typing import TYPE_CHECKING, cast
 from uuid import UUID
 
 from .....core.link_safety import is_link_like
 from .....core.paths import effective_storage_root
+from .....core.profile_publication import ProfilePublicationKindValue
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_location
 from ._capsule_data import (
@@ -437,7 +438,7 @@ def publish_profile_custody_capsule(
     *,
     profile_id: UUID,
     transaction_id: UUID,
-    publication_kind: Literal["enroll", "restore"],
+    publication_kind: ProfilePublicationKindValue,
     password_envelope: ProfileCustodyEnvelope,
     sentinel: ProfileCustodySentinelRecord,
     data_files: Mapping[str, bytes],
@@ -566,7 +567,7 @@ def _publish_profile_custody_capsule_posix(
     destination_name: str,
     profile_id: UUID,
     transaction_id: UUID,
-    publication_kind: Literal["enroll", "restore"],
+    publication_kind: ProfilePublicationKindValue,
     password_envelope: ProfileCustodyEnvelope,
     sentinel: ProfileCustodySentinelRecord,
     data_files: Mapping[str, bytes],

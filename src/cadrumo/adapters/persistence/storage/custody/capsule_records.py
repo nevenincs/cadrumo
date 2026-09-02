@@ -21,6 +21,7 @@ from .....core.hashing import (
 )
 from .....core.identity import PrefixedContentDigest, ProfileLabel, canonical_profile_bucket_id
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.profile_publication import ProfilePublicationKindValue
 from .....core.time.clock import now as _now
 from .digest_model import CustodyDigestModel
 from .errors import ProfileCustodyRecordError
@@ -212,7 +213,7 @@ class _ProfileCustodyCommitPayload(BaseModel):
     layout_version: Literal[1]
     profile_id: UUID
     transaction_id: UUID
-    publication_kind: Literal["enroll", "restore"]
+    publication_kind: ProfilePublicationKindValue
     published_at: str
 
     @field_validator("published_at")
@@ -251,7 +252,7 @@ class ProfileCustodyCommit(_ProfileCustodyCommitPayload, CustodyDigestModel):
         *,
         profile_id: UUID,
         transaction_id: UUID,
-        publication_kind: Literal["enroll", "restore"],
+        publication_kind: ProfilePublicationKindValue,
         published_at: datetime | None = None,
     ) -> ProfileCustodyCommit:
         """Build the one valid construction path, stamping the publication instant and digest together.

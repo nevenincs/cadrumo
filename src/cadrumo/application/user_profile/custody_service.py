@@ -14,6 +14,7 @@ from pydantic import ValidationError
 
 from ...core.bucket_pointer import BucketPointer
 from ...core.paths import effective_storage_root
+from ...core.profile_publication import ProfilePublicationKind, ProfilePublicationKindValue
 from ...core.time.clock import now as _utc_now
 from .custody_hold import ProfileCustodyHoldAuthority
 from .custody_hold_models import ProfileCustodyRetentionOverride, hold_permits_local_deletion
@@ -157,7 +158,7 @@ class _ProfileCustodyTransactionCapability:
         data_files: Mapping[str, bytes],
         recovery_envelope: ProfileCustodyRecoveryEnvelopePort | None = None,
         label: str,
-        publication_kind: Literal["enroll", "restore"] = "enroll",
+        publication_kind: ProfilePublicationKindValue = ProfilePublicationKind.ENROLL,
         stage_initializer: Callable[[Path], None] | None = None,
         transaction_id: UUID | None = None,
         now: datetime | None = None,
@@ -170,7 +171,7 @@ class _ProfileCustodyTransactionCapability:
         """
         if password_envelope.profile_id != profile_id or sentinel.profile_id != profile_id:
             raise ProfileCustodyTransactionRefusalError("create custody material does not bind its target profile")
-        if publication_kind == "enroll" and recovery_envelope is None:
+        if publication_kind == ProfilePublicationKind.ENROLL and recovery_envelope is None:
             raise ProfileCustodyTransactionRefusalError("profile enrollment publication requires a recovery envelope")
         try:
             label_record = self._adapters.create_capsule_label(

@@ -9,6 +9,7 @@ from uuid import UUID, uuid4
 
 from sqlalchemy.exc import SQLAlchemyError
 
+from ...core.profile_publication import ProfilePublicationKind
 from ...domain.user_profile.values import UserProfileRecord
 from .aggregate import CommittedProfileView, ProfileRestoreAuthority
 from .capsule_record import (
@@ -82,7 +83,7 @@ class ProfileCapsuleLifecycle:
             data_files=data_files,
             label=label,
             recovery_envelope=recovery_envelope,
-            publication_kind="enroll",
+            publication_kind=ProfilePublicationKind.ENROLL,
             stage_initializer=lambda stage_path: stage_initial_profile_record_database(
                 stage_path=stage_path,
                 root=self.root,
@@ -148,7 +149,7 @@ class ProfileCapsuleLifecycle:
             data_files=data_files,
             label=label,
             recovery_envelope=None,
-            publication_kind="restore",
+            publication_kind=ProfilePublicationKind.RESTORE,
             stage_initializer=lambda stage_path: self._stage_and_validate_restore_database(
                 stage_path=stage_path,
                 record_session=record_session,

@@ -13,6 +13,7 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, field_validator
 
 from ...core.identity import ContentDigest, PrefixedContentDigest, ProfileId, ProfileLabel
+from ...core.profile_publication import ProfilePublicationKindValue
 from ...core.time.utc import validate_utc_aware
 from ...domain.user_profile.values import ProfileSetupState
 
@@ -68,7 +69,7 @@ class CommittedProfileView(BaseModel):
     profile_id: ProfileId
     label: ProfileLabel
     committed_at: datetime
-    publication_kind: Literal["enroll", "restore"]
+    publication_kind: ProfilePublicationKindValue
     password_generation: int = Field(ge=1)
     custody_present: Literal[True] = True
     label_revision: int = Field(ge=1)

@@ -18,13 +18,13 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 
 from ...core.identity import ProfileId, ProfileLabel
 from ...core.paths import effective_storage_root
 from ...core.profile_discovery import ProfileSummaryOutcome
+from ...core.profile_publication import ProfilePublicationKindValue
 from .custody_ports import (
     ProfileCustodyCapsuleSummaryWitnessPort,
     ProfileCustodyConcurrentChangeError,
@@ -51,7 +51,7 @@ class ProfileSummary(BaseModel):
     label: ProfileLabel
     label_revision: int
     published_at: datetime
-    publication_kind: Literal["enroll", "restore"]
+    publication_kind: ProfilePublicationKindValue
 
 
 class ProfileSummaryInventory(BaseModel):

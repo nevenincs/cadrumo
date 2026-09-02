@@ -151,6 +151,7 @@ Submodules
    cadrumo.core.prior_domiciliation_election
    cadrumo.core.product_identity
    cadrumo.core.profile_discovery
+   cadrumo.core.profile_publication
    cadrumo.core.profile_session
    cadrumo.core.prorrata_exclusions
    cadrumo.core.prorrata_register
