@@ -1,11 +1,12 @@
 """Frontend-neutral search contracts for the operator workbench.
 
 The search service consumes safe records that an application composition root
-has already read and projected.  It does not know about repositories, network
-clients, persistence records, or a frontend.  Searchable text is deliberately
-separate from the result: callers provide only redacted labels and terms, so a
-result can preserve a useful identity without carrying a ledger payload or
-secret source value.
+has already read and projected.  Its snapshot is ephemeral and in-memory only:
+the service does not know about repositories, network clients, persistence
+records, or a frontend.  Searchable text is deliberately separate from the
+result: callers declare only redacted, operator-safe labels and terms, so a
+result can preserve a useful stable identity without carrying raw source
+identifiers, taxpayer data, a ledger payload, or secret source values.
 """
 
 from __future__ import annotations
@@ -43,20 +44,18 @@ def _reject_control_characters(value: str) -> str:
         raise ValueError("workbench search text cannot contain control characters")
     return value
 
+
 _SafeSearchId = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=_MAX_SEARCH_ID_LENGTH),
-    Field(validate_default=True),
 ]
 _SafeLabel = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=_MAX_LABEL_LENGTH),
-    Field(validate_default=True),
 ]
 _SafeSearchTerm = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=_MAX_TERM_LENGTH),
-    Field(validate_default=True),
 ]
 
 
@@ -94,6 +93,17 @@ class WorkbenchSearchStatus(StrEnum):
     NOT_OBSERVED = "not_observed"
     LOCKED = "locked"
     UNAVAILABLE = "unavailable"
+
+
+_ADDRESS_REQUIRED_KINDS = frozenset(
+    {
+        WorkbenchSearchKind.DECLARATION,
+        WorkbenchSearchKind.MODELO,
+        WorkbenchSearchKind.REVISION,
+        WorkbenchSearchKind.FILING,
+        WorkbenchSearchKind.HISTORY,
+    }
+)
 
 
 class WorkbenchDestinationAdmissionState(StrEnum):
@@ -143,7 +153,7 @@ class WorkbenchDestinationAdmission(BaseModel):
 class WorkbenchSearchDocument(BaseModel):
     """Safe, already-loaded projection accepted by the pure query service.
 
-    ``search_terms`` are caller-supplied, presentation-safe terms.  They are
+    ``search_terms`` are caller-declared, operator-safe terms.  They are
     not a request to load or inspect source data.  In particular, this record
     has no amount, account, raw description, secret, or arbitrary payload
     field; only stable identity and metadata cross into search results.
@@ -169,8 +179,8 @@ class WorkbenchSearchDocument(BaseModel):
     @field_validator("search_terms")
     @classmethod
     def _canonicalize_terms(cls, value: tuple[str, ...]) -> tuple[str, ...]:
-        if any(_reject_control_characters(term) != term for term in value):
-            raise AssertionError("control-character validation changed a search term")
+        for term in value:
+            _reject_control_characters(term)
         folded: dict[str, str] = {}
         for term in value:
             folded.setdefault(_normalize_text(term), term)
@@ -178,14 +188,7 @@ class WorkbenchSearchDocument(BaseModel):
 
     @model_validator(mode="after")
     def _search_document_is_addressable(self) -> Self:
-        addressed_kinds = {
-            WorkbenchSearchKind.DECLARATION,
-            WorkbenchSearchKind.MODELO,
-            WorkbenchSearchKind.REVISION,
-            WorkbenchSearchKind.FILING,
-            WorkbenchSearchKind.HISTORY,
-        }
-        if self.kind in addressed_kinds and self.address is None:
+        if self.kind in _ADDRESS_REQUIRED_KINDS and self.address is None:
             raise ValueError(f"{self.kind.value} search documents require a Modelo address")
         if self.admission.state is not WorkbenchDestinationAdmissionState.AVAILABLE and self.action is not None:
             raise ValueError("a non-available destination cannot carry an actionable reference")
@@ -233,6 +236,8 @@ class WorkbenchSearchResult(BaseModel):
 
     @model_validator(mode="after")
     def _action_matches_admission(self) -> Self:
+        if self.kind in _ADDRESS_REQUIRED_KINDS and self.address is None:
+            raise ValueError(f"{self.kind.value} search results require a Modelo address")
         if self.admission.state is not WorkbenchDestinationAdmissionState.AVAILABLE and self.action is not None:
             raise ValueError("a non-available destination cannot carry an actionable reference")
         return self
@@ -244,7 +249,7 @@ class WorkbenchSearchResponse(BaseModel):
     model_config = _STRICT_FROZEN
 
     query: _SafeSearchTerm
-    results: tuple[WorkbenchSearchResult, ...] = ()
+    results: tuple[WorkbenchSearchResult, ...] = Field(default=(), max_length=_MAX_SEARCH_RESULTS)
     total_matches: NonNegativeInt = 0
 
     @field_validator("query")
@@ -268,7 +273,7 @@ def _normalize_text(value: str) -> str:
 
 
 def _tokens(value: str) -> tuple[str, ...]:
-    return tuple(_WORD_PATTERN.findall(_normalize_text(value)))
+    return tuple(match.group(0) for match in _WORD_PATTERN.finditer(_normalize_text(value)))
 
 
 def _document_search_text(document: WorkbenchSearchDocument) -> tuple[str, str, tuple[str, ...]]:
@@ -315,7 +320,7 @@ def _score_document(document: WorkbenchSearchDocument, query: str) -> float | No
 
 
 class WorkbenchSearchService:
-    """Pure cross-domain search over injected safe projections."""
+    """Pure cross-domain search over one ephemeral in-memory projection snapshot."""
 
     def __init__(self, documents: Sequence[WorkbenchSearchDocument]) -> None:
         """Capture an immutable document snapshot and refuse duplicate identities."""
