@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-02'
 body_schema: body-v2
-body_hash: 'sha256:06194d485bf3420ee0c75bd04278e32e8656bd48835da14ce951ac2c2a4e01b1'
+body_hash: 'sha256:05ce81bb597d842f9326f4b1764b5426577017c06ba26d53ef284b03b666553e'
 ---
 
 <!-- RETIRED: S73 -->
@@ -405,6 +405,7 @@ Author the four architectural decision records the contract requires before any 
 - [x] `W06.P13.S166` - Report that the closed-vocabulary enum conversion reclassified 141 semantically unchanged export records as record drift; `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`.
 - [x] `W06.P13.S167` - Teach the render comparison to separate a changed serializer from a changed value, so record drift names a tree whose meaning moved; `dev/registry/pipeline/render_check.py,dev/registry/tests/test_render_check.py`.
 - [x] `W06.P13.S168` - Key the generated tree disposition gate on the explained state rather than on byte equality; `dev/registry/pipeline/render_check.py,dev/registry/tests/test_render_check.py`.
+- [x] `W06.P13.S169` - Route the generated tree byte comparison through the same parse helper the render comparison uses; `dev/registry/tests/test_generated_export_trees.py,dev/registry/pipeline/render_check.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 

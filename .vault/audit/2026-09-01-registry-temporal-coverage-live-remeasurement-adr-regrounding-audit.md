@@ -3646,3 +3646,29 @@ is reported with the remedy named and left for the owner of that commit.
 A note on what was not claimed: no type checker is installed in this environment, so the
 change carries lint and format verification and real-behaviour test evidence, and no
 type-check evidence. Saying so is cheaper than the reader discovering it.
+
+### One definition of what makes two records the same
+
+The generated-tree suite carried its own byte comparison, a `filecmp.cmp` over every
+fragment, entirely separate from the render comparison. Two surfaces were deciding what
+"the same record" means and they disagreed the moment a serializer changed. Rather than
+teach the second surface the same distinction a second time, the parse helper was
+promoted from private to `parsed_tree_file` on the module that owns the comparison, and
+both call it. This is the campaign's own rule applied to itself: where two declarations
+of one concept can be merged, merge them.
+
+The effect is measurable and was measured. Each of the twenty-seven tree tests
+previously listed up to sixteen differing files; each now lists exactly one,
+`_generation.provenance.json`. Across the three affected modules the failure count fell
+from 46 to 28, and every remaining failure has one cause and one remedy.
+
+The manifest is deliberately not excused. It differs because it attests the inputs and
+an input changed, which is a true and useful signal: it is the only staleness detector
+the committed trees have. Excusing it would have turned twenty-seven accurate failures
+into twenty-seven silences and removed the evidence that a republication is owed. The
+suite is not green and should not be until the trees are republished by the owner of the
+commit that staled them.
+
+What was fixed here is precision, not the underlying condition. A failure naming one
+file and one cause is actionable; a failure naming sixteen files, fourteen of which
+differ only in how a string is quoted, teaches the reader to skim it.
