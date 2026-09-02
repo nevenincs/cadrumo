@@ -427,6 +427,305 @@ verify call on the installer path, neither of which exists. That is a
 distribution decision before it is a wiring one, so it needs a decision record
 rather than a patch.
 
+## Gates that are absent at runtime
+
+Three entries below are not merely unreachable. A check the product intends to
+run does not run, and in each case something reaches an operator or a filing
+that the check exists to stop. They are listed first because they carry filing
+consequence rather than missing convenience.
+
+### `application/storage/calc_sheets/evidence.py`
+
+**What it is.** The projection turning a ledger-derived filing's evidence —
+contributing transactions with amount, currency, FX rate, taxable base, IVA
+rate and amount, counterparty, attachment ids, legal and source refs, plus
+manual entries — into the per-casilla facet the exported workbook renders as
+its Evidencia tab and its machine-readable evidence sidecar. It refuses rather
+than guesses: a contributor with no casilla attribution raises instead of being
+dropped.
+
+**How complete.** 97 lines and no tests at all, the only untested module in the
+application slice. It would work if called.
+
+**Why not connected.** OVERSIGHT, and the break is one field. The consumer half
+is fully built and reachable: the export plan carries an evidence field, the
+workbook writer renders it into the worksheet, and the sidecar serialiser
+emits it. The sole production constructor of the export plan never passes
+`evidence=`, so the field takes its empty default.
+
+**What it adds.** This is the sharpest operator-visible gap found. Every
+calc-sheets workbook the product exports today ships an empty Evidencia tab and
+an empty evidence sidecar. That workbook is the artefact an operator, their
+asesor, or AEAT in a comprobación opens to see why a casilla holds the number
+it holds. The value and tariff tabs are populated; the tab that would show the
+contributing invoices, their IVA rates, counterparties and legal references is
+blank. The export rule requires every exported field to carry the provenance
+the calculation used, and the sidecar is where that provenance was meant to
+land.
+
+**Wiring needed.** Pass the projection into the export plan where it is built
+from a ledger-derived revision, which means threading the filing evidence and
+the contributor-to-casilla attribution map into the plan builder, since the
+module deliberately refuses to infer that map. Tests must land with it.
+
+### `application/storage/calc_sheets/_row_set_assembly.py`
+
+**What it is.** The boundary check on operator-edited spreadsheet rows before
+they become typed observations. Three refusals: an undeclared grouping; a cell
+carrying a binding belonging to a different grouping, or none; and a second
+submitted block claiming a row coordinate a first block already owns.
+
+**How complete.** 204 lines against 161 test lines covering each refusal by
+name. The accepted coordinates derive from the same projection that produced
+the workbook, so the guard is registry-derived rather than hand-listed.
+
+**Why not connected.** BUG. A wiring existed and was broken. An open plan step
+records it precisely: the package initializer no longer imports the module.
+Initializers became inert namespace markers under the import-centralization
+rule and every other consumer was repointed at its owning module; this one had
+no consumer to repoint, so the re-export was deleted and the module fell off
+the graph.
+
+**What it adds.** A real gate absent from the live pull. The spreadsheet pull
+command imports the downstream assembler directly and calls it per row-set,
+skipping the wrapper. So a cell whose binding belongs to another grouping is
+not refused at ingress, and two blocks claiming the same row are not refused.
+The wrapper exists precisely because the downstream assembler drops rather than
+refuses. The failure is silent: an operator who copies a column between Detalle
+tabs, or a pull reading overlapping blocks, gets observations assembled from
+data the layout never declared, or one block's rows silently overwriting
+another's. Those observations feed casilla values.
+
+**Wiring needed.** Call the wrapper once over the whole tuple rather than per
+block, because the cross-block collision check only works when it sees every
+block together. The module needs promoting out of its private name first, since
+an entrypoint reaching a private module is the boundary violation another open
+step is trying to zero.
+
+### `application/wizard/flow_validators.py`
+
+**What it is.** The review-time gate on the taxpayer-profile legal invariants
+that decide IRPF and IRNR routing: the impatriado regime, fiscal residency,
+country of residence, and the fiscal representative. It runs the real taxpayer
+projection constructor over the staged answers before persistence and turns
+each failure into a localized, redacted verdict that blocks submit.
+
+**How complete.** 149 lines against 162 test lines that register it against a
+real definition and resolve it through the substrate. The three invariants are
+real model validators each citing its provision, and every verdict locale key
+is present in all four catalogues. Nothing is missing but the registration.
+
+**Why not connected.** OVERSIGHT, though a documented and load-bearing one. Two
+sibling modules register their validators and decorate the definition's
+validator ids; this one does neither, and its identifiers appear only in its own
+tests. The half that landed was the module; the half that did not was one call.
+A reference document records the wiring as fact, which is false at HEAD.
+
+**What it adds.** A real gate is absent at runtime, and I checked it is not
+caught elsewhere. The answers model carries these as plain strings with no
+validators, and persistence writes profile facts without constructing a
+taxpayer projection. So setup will persist an impatriado regime with no start
+date, or a non-resident outside the EEA with no fiscal representative. The
+invariant then fires later at every downstream projection call as raw library
+prose, with no jump back to the offending page. Beyond the experience, the
+residency and representative facts route Modelo 100 against Modelo 210 and gate
+the Beckham window, so the persisted-invalid state is a filing-routing state.
+
+**Wiring needed.** Two lines inside the setup flow definition: register the
+validator after the definition is projected, then append its id to the
+definition's validator ids, exactly the shape a sibling already uses. The
+review surface then runs it and blocks submit with no further change.
+
+## Built, grounded, and never given a verb
+
+### `application/prorrata_register/seed.py` and `sector_lifecycle.py`
+
+**What it is.** The LIVA article 105.Uno carry, which sets this year's
+provisional deduction percentage to last year's definitive one, sourced from
+the prior Modelo 303 settlement observation and re-confirmed against the
+law-selected revision for that period. Plus the per-sector equivalent for a
+taxpayer with differentiated sectors under article 101.Uno, which must derive
+each sector's provisional from that sector's own prior definitive and settle
+its year-end definitive from its own volumes.
+
+**How complete.** 410 and 129 lines against roughly 480 test lines, run against
+real filed observations and grounded through the validated registry authority.
+Both return nothing rather than defaulting when the prior year holds no settled
+definitive.
+
+**Why not connected.** OVERSIGHT, and the plan record makes that a strong
+verdict rather than an inference. Every step that built them is checked, no
+step anywhere names a consumer, and the read side is live: the IVA ledger loads
+the register and reads the in-force percentage. Only the writers are orphaned.
+
+**What it adds.** Modelo 303 and 390 for any taxpayer with prorrata. Today the
+register can only be filled by hand, so the default non-discretionary case
+under article 105.Uno, where the law leaves no choice at all, is manual data
+entry with a typo surface, while the two discretionary cases get identical
+treatment. The seed derives the percentage from the taxpayer's own prior
+filing, records which observation it came from, and blocks when the carried
+figure contradicts that observation or its revision stamp has diverged. A wrong
+provisional prorrata mis-states deductible input IVA in all four quarters and
+propagates into the year-end regularización. For the sectorized taxpayer the
+year-end per-sector regularización has no automated producer at all.
+
+**Wiring needed.** One sub-verb on the existing prorrata command family calling
+the evaluate-and-seed pair, surfacing findings through the notice channel with
+blocking findings refusing. Cheaper still, call the cross-check from the
+existing declare verb so a hand-typed percentage contradicting the prior filing
+refuses.
+
+### `application/invoices/_reconciliation.py` with the review lane
+
+**What it is.** Bulk invoice-to-transaction reconciliation: build every match
+suggestion across the two catalogues, optionally apply them, and commit both
+catalogues in one atomic write.
+
+**How complete.** 156 lines against 344 test lines including an atomicity
+suite. It is the more careful of the two writers, co-committing both sides
+because two independent saves would leave exactly the one-sided state the link
+consistency check reports. Skipped suggestions return with reasons.
+
+**Why not connected.** OVERSIGHT. Its own docstring calls the entry point the
+CLI-facing backend workflow, a claim about a CLI that does not exist. No locale
+keys for such a verb exist, so none was authored and later removed. Git history
+shows real maintenance while unreachable. The review lane beside it is
+read-only by declaration and surfaces exactly the invoice and transaction rows
+this would close.
+
+**What it adds.** Evidence quality for Modelo 303 and 390 and the Modelo 100
+expense side. An invoice with no linked payment has an incomplete evidence
+chain, and the ledger contract makes missing evidence a distinct state from a
+proven zero. Manual one-at-a-time linking is reachable today, so nothing is
+impossible; what is missing is throughput and atomicity. A taxpayer with a
+hundred invoices a quarter works the queue one row at a time.
+
+**Wiring needed.** One verb calling the reconciler, defaulting to dry run. The
+module must first be promoted out of its private name, since a private module
+is not a cross-package API for an entrypoint.
+
+### `adapters/persistence/profile/filing_export_replay.py`
+
+**What it is.** The custody half of the secure replay attestation: re-emit an
+approved revision's draft through the canonical writer, verify the bytes
+against source-pinned probe expectations at declared offsets, then seal a
+receipt in the encrypted store recording the coordinate, both authority ids,
+the payload digest, the byte extent and a bounded validity window.
+
+**How complete.** 122 lines against 128 test lines. Disciplined against the
+sensitive-data rule: the record persists only through the secure repository on
+its own namespace, and the public receipt carries no values, path, digest or
+extent. Every conjunct is a literal true, so a partially satisfied proof cannot
+be constructed.
+
+**Why not connected.** OVERSIGHT, and it is one of two missing halves. The port
+it satisfies is fully declared and so is its counterpart source authority, but
+no production implementation of the composing proof authority exists anywhere;
+every parameter that takes one is optional and never passed a real one.
+
+**What it adds.** This is the gate separating "the exporter produced bytes"
+from "the bytes this taxpayer will file are provably the ones the approved
+calculation produced". The coverage report will not mark a filing-export limb
+satisfied without it and refuses with a condition naming exactly this receipt.
+So no modelo can currently reach a satisfied filing-export coverage limb
+through the secure replay channel; the registry's own coverage report is
+permanently short by one leg. The probe check catches a canonical writer whose
+bytes drift from the source expectation at a declared offset, which is the
+difference between a valid fixed-width record and a silently misaligned one.
+
+**Wiring needed.** More than this file. The custody half is finished; the
+source authority half does not exist and must be implemented, then composed
+with this repository and passed into the coverage and closure paths.
+
+## Deferred by decision, or waiting on the other half
+
+### `application/modelo/edit_session.py`
+
+The operator-level handle for editing a modelo's casillas, 584 lines against
+222 test lines. SEQUENCED: its single consumer is the casilla editor covered in
+the TUI slice, which is itself unmounted. This is not an orphan but the
+application half of a two-half surface. It adds operator override of a computed
+casilla where the engine's derived value is right in general and wrong for this
+taxpayer, and it holds the in-memory baseline the contract requires so stale
+detection works without the frontend seeing a baseline. Nothing to wire on its
+own.
+
+### `application/modelo/_edit_facade.py`
+
+The capability row telling a frontend whether the calculate mutation is
+available for an edit target. SEQUENCED with a citation: its docstring states
+every row is unmeasured in this version because no financial-operand dependency
+receipt is green, and the governing decision record names the blocking
+artefact. It adds nothing today and that is correct — a facade that can only
+answer unmeasured tells an operator nothing actionable, and wiring it now would
+put a permanently negative row in front of them. What it needs is the upstream
+receipt, not wiring.
+
+### `application/wizard/_registered_values.py`
+
+The review screen's "what you already told us" display strings, with a
+localized non-official-evidence suffix when a fact came from the censo artefact
+rather than the operator. SEQUENCED behind the full-screen flow frontend, whose
+screen is never constructed in production. The provenance suffix is the
+load-bearing part: a fact auto-derived from the censo artefact is not an
+official AEAT value and the no-silent-under-declaration rule requires that
+distinction to reach the operator. In the line frontend that runs today, it
+does not.
+
+### `application/wizard/legal_zone.py`
+
+Derived per-page legal grounding: the union of a schema field's legal
+references with the registry reverse-grounding index for the same domain key,
+so an operator asking why a question is needed gets a cited answer. EXPLICIT
+DECISION on the render slot per its own docstring, which says the copy family
+exposes no legal-provenance slot and that wiring one is a substrate decision.
+That stated blocker is now stale: the page field exists, is assembled into the
+page copy, and both frontends render it. Nothing in production populates it.
+
+### `application/wizard/copy_sources.py`
+
+Two resolvers letting a setup page's prompt come from an authority rather than
+a hand-written locale string. OVERSIGHT: nothing imports the module so its
+import-time registration never runs. Honestly, wiring it alone changes no
+rendered pixel, because every setup copy slot is a locale key today. The
+capability it would unlock is prompts whose legal citation comes from the
+schema rather than being retyped into a catalogue that can drift from it.
+
+### `application/inventory/_source_readiness.py`
+
+A context-independent record answering whether the inventory ledger is a
+filing-grade source yet. UNFINISHED with an open step naming the exact path.
+Little value, and worth saying plainly: the same fact already has a reachable
+home in the connectivity census, whose review condition is a near-verbatim
+superset of this module's reason string, and which the source-connectivity
+authority actually reads. The census even cites this module as a locator, so
+the citation runs the wrong way. Two homes for one fact, and the one that
+drifts is the one nothing reads. What it needs is a disposition, not wiring.
+
+## Not capability at all
+
+Three modules in this slice are development artefacts that happen to sit in the
+shipped tree, and counting them as unreachable filing capability would
+overstate the backlog.
+
+`application/wizard/_translations.py` is a locale-coverage audit whose only two
+callers are its own tests. It works, it proves the locale rule, and it is
+misfiled rather than disconnected.
+
+`application/operator_surface/calculation_workflows.py` is consumed, by the dev
+source-connectivity tooling. Its effect reaches the operator as data one build
+step removed: it is what stops the connectivity census claiming a source is
+connected through a CLI path that does not exist.
+
+`application/operator_surface/crud_contract.py` with `crud_registry.py` is
+conformance scaffolding by its own docstring. This one carries a real problem
+though. The docstring promises drift detection between shipped command groups
+and the locked design, and that gate does not exist: the only tests assert the
+catalogue equals the constants it is built from, and nothing anywhere compares
+it against the live command tree. A group could drop a verb tomorrow and every
+test here would pass. What it needs is teeth, not wiring: one conformance test
+walking the live tree, with a defect-injection proof.
+
 ## A fifth disposition the ratchet does not offer
 
 The ratchet header names four remedies for an unreachable module: move harness
