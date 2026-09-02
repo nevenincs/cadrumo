@@ -5,7 +5,7 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:21a64fbeded0c35a04fee3991464c778e8151977c22d7a9a8566c07ffe0e749e'
+body_hash: 'sha256:42afdc70b6016becb161f5c9eb52e9185ad157994855c4aa59232f6677a7bceb'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-09-02-tui-architecture-w08-p25-s365-review-audit]]"
@@ -115,6 +115,21 @@ Accordingly, `declaration-authority` and `tie-determinism` are closed. No
 critical or high-severity finding remains. The relocation/test-proof mismatch
 above remains medium severity.
 
+### final-medium-closure | low | The live owner, plan scope and direct contract proof are reconciled
+
+Final remediation re-review confirms that the S365 plan row now names the live
+canonical `home.py` owner and is reclosed through the plan CLI. The restored
+`test_home_projection.py` imports every projection record directly from that
+owner and reinstates all 12 direct invariant cases cited by
+`s365-relocation-governance`, including stale freshness, session posture,
+Ledger subset bounds, declaration year agreement, unavailable Messages and
+contradictory AEAT evidence. The combined S365/S366 suite passes with 21 tests;
+Ruff passes and Basedpyright reports no errors, warnings or notes.
+
+This closes `s365-relocation-governance` and the residual
+`composition-test-teeth` concern. No critical, high, medium or low defect
+remains open in the reviewed S366 slice.
+
 ## Recommendations
 
 1. Remove the raw `work_units` input and `_project_declarations` lifecycle
@@ -132,3 +147,5 @@ above remains medium severity.
 6. Reconcile the S365 plan path with the intentional canonical-module fold and
    migrate the deleted direct S365 invariant tests into the live owning test
    module before treating the combined S365/S366 evidence as complete.
+7. Final remediation closes recommendation 6. S366 has no remaining review
+   finding at any severity.

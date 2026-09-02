@@ -3,163 +3,89 @@ tags:
   - '#adr'
   - '#aeat-design-relayout-boundary'
 date: '2026-08-08'
-modified: '2026-08-08'
+modified: '2026-09-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:09f8091338f40e66439e69edf6a8781ee3f863d468f2a08be6d70830317fd0fa'
+body_hash: 'sha256:e88c9e760815394334c156d9d85ab2822fccbfc1985d62f85aa7834133cf3ac9'
 related:
   - "[[2026-08-07-aeat-design-relayout-boundary-adr]]"
   - '[[2026-08-07-aeat-design-relayout-boundary-research]]'
+  - '[[2026-09-02-modelo-200-semantic-crosswalk-research]]'
 ---
-# `aeat-design-relayout-boundary` adr: `Modelo 200 partitions by inheritance, and 2024-y-siguientes narrows to 2024` | (**status:** `accepted`)
+# `aeat-design-relayout-boundary` adr: `Modelo 200 partitions by 2024 design authority and reviewed semantic crosswalk` | (**status:** `accepted`)
 
 ## Problem Statement
 
-The accepted boundary record authorises splitting revisions that span an AEAT
-design re-layout, and Modelo 200 is one of them: a single revision named
-`2024-y-siguientes` serves filing years 2024 onward while AEAT published
-materially different designs for 2024 and 2025. Its shipped content is the 2025
-design, evidenced by casilla fragments citing the 2025 record-design source, so
-a 2024 filing is currently computed against the wrong year's layout.
+The accepted revision split remains necessary: the pre-existing range covered a material 2024/2025 AEAT design re-layout, so 2024 must select a 2024-specific revision and 2025 onward must select its own applicable revision.
 
-The boundary record authorises the split but does not say how a partition of
-this size is authored. Modelo 200 is the largest form in the registry, and the
-naive reading of "split it" implies re-deriving several thousand casillas from
-the published design. That reading is what this record rejects.
+This amendment corrects the earlier premise that a physical sibling relationship authorizes wholesale semantic inheritance. `2026-09-02-modelo-200-semantic-crosswalk-research` establishes that the later revision is not semantic authority for the target year. The 2024 revision must be generated from its own exact official design, with every semantic association and legal reference independently admissible for 2024.
 
-A decision is needed now because the partition is otherwise unauthorable
-without either guessing the derivation rules or hand-authoring at a volume
-nobody would review.
+A decision is needed because the form's scale makes hand-authoring generated coordinates and fragments untenable, while automatic sibling copying or description matching would convert diagnostic evidence into filing authority.
 
 ## Considerations
 
-- The revision's own fragments cite the 2025 design as their source while the
-  revision covers 2024 onward; the mismatch is declared in the data, not inferred.
-- A round-trip that re-derives the shipped 2025 casillas from the 2025 design
-  reproduces most of the export mapping but leaves a stable residue of
-  exceptions with three unrelated causes; derivation is therefore not a
-  mechanism that can be trusted unattended at this scale.
-- Several design records carry no registry coverage at all. Those blocks are
-  deliberately unmodelled, and a derivation pass cannot distinguish "unmodelled
-  on purpose" from "missing".
-- The fields that carry meaning rather than structure - section, semantic role,
-  legal grounding - vary too widely across casillas to be inferred from the
-  published design, but are identical between the two years for any box present
-  in both.
-- The revision identifier appears many thousands of times inside the modelo's
-  own tree and the same identifier string is used by other modelos, so renaming
-  it is a large and easily over-matched sweep.
-- Blanket working-tree commits run continuously in this repository and have been
-  observed splitting an atomic registry change, so a partition that is invalid
-  when half-landed carries real risk rather than theoretical risk.
+- The accepted parent relayout boundary and existing period-selector partition remain stable.
+- `2026-09-02-modelo-200-semantic-crosswalk-research` falsifies the prior wholesale-inheritance premise and defines the evidence boundary for target-first repair.
+- `2026-08-10-aeat-export-fragment-generator-authority-adr` remains governing: the exact official design owns physical facts, a reviewed semantic map owns meaning, and the generator publishes only a complete validated target.
+- Registry authority is fail-closed: a candidate, partial map, ungrounded legal reference, or source mismatch cannot establish filing capability.
+- The workflow must remain practical at Modelo 200 scale without making automation an unreviewed semantic author.
 
 ## Considered options
 
-**Re-derive every casilla from the published design.** Rejected. The
-regeneration residue has three distinct causes and clearing it requires
-adjudicating a set of exceptions against page semantics - tax-domain work, not
-mechanism. It also cannot see which design blocks are deliberately unmodelled,
-so it would invent coverage the registry has consciously declined.
+**Continue wholesale sibling inheritance. Rejected.** Presence, position, or apparent similarity in a later revision does not prove 2024 meaning, section, semantic role, or legal grounding.
 
-**Hand-author the 2024 revision.** Rejected on volume. Thousands of casillas
-authored by hand is unreviewable, and most of the work would reproduce content
-that already exists correctly one revision away.
+**Hand-author the 2024 export tree and coordinates. Rejected.** It creates an unreviewable volume of duplicate physical-layout work and bypasses generated authority.
 
-**Inherit from the sibling year, author only the difference.** Chosen. A box
-present in both years copies its sibling casilla wholesale; only boxes unique to
-2024 are authored.
+**Automatically write normalized-description cross-revision matches. Rejected.** Description normalization, compatible type and length, and legal-window screening are diagnostics, not independent semantic proof.
 
-**Rename the revision so each identifier names its epoch.** Rejected as a
-separate, larger change. It touches every fragment in the modelo and risks
-over-matching other modelos that share the identifier string.
+**Generate from the 2024 design after a complete reviewed target-first semantic map. Chosen.** The exact design supplies physical facts; narrowly proven same-year templates may repair target semantics; cross-revision analysis creates review proposals only; and publication remains unavailable until every target anchor has reviewed semantic and legal authority.
 
 ## Constraints
 
-The parent boundary record is accepted and stable, and the companion sub-year
-epoch record supplies the period-token partition mechanism. Neither is in
-flux, so this record depends on settled parents.
+The revision named `2024` serves 2024 alone; the later revision serves its own law-selected period. This amendment does not reopen naming, epoch selection, or the parent relayout decision.
 
-The partition must land as ONE commit. A revision carrying a partial casilla
-set fails registry validation, and narrowing the existing revision before the
-new one exists leaves a filing year unresolvable. Half-landed is not a degraded
-state here; it is a tree-wide refusal to load.
+The exact pinned 2024 design owns record membership, ordering, offsets, lengths, field types, literals, validation metadata, and all other wire facts present in that source. Neither a later design nor an existing fragment tree may override them.
 
-That constraint collides with the observed blanket-commit behaviour, so the
-partition must be built outside the tree and validated against a temporary
-registry root before any file is written under the package. This is a
-sequencing constraint on the implementation, not a reason to reshape the
-decision.
+Every target semantic-map entry remains bound to the exact 2024 source reference and SHA-256 and must classify one exact source anchor to an admissible canonical owner, typed producer, literal, reserve, draft field, or revision-admitted typed projection. The map remains complete and bijective under `2026-08-10-aeat-export-fragment-generator-authority-adr`.
 
-The exception residue from the rejected derivation approach is NOT a blocker
-for this record, because inheritance never consults the design for a box that
-exists in both years. It remains an open question for whoever owns Modelo 200
-export completeness, and it should not be folded into the partition.
+A same-2024 template may support a narrow repair only where exact target-year evidence proves normalized meaning and compatible wire type. It cannot populate a class of anchors, infer a novel owner, reuse an incompatible legal reference, or weaken source proof.
+
+A cross-revision normalized-description match may be emitted solely as a review proposal. It cannot write target authority, select a role or section, establish continuity, or carry legal references into 2024 until a reviewed adjudication records target-year meaning and authority.
+
+A novel, conflicting, ambiguous, absent, duplicate, source-drifted, or otherwise unadjudicated target anchor remains refused. No sibling fallback, nearest-text ranking, implicit default, untyped value bag, or partial publication is permitted.
+
+Every legal reference used by a 2024 declaration or map entry must independently cover the 2024 target and legal window. A later-year citation, proximity match, or proposal is not 2024 legal authority.
 
 ## Implementation
 
-The existing revision keeps its identifier and narrows to filing year 2024
-alone, with its content corrected to the 2024 design: boxes absent from that
-design are dropped, boxes unique to it are authored, and the record-design
-source reference is re-pointed at the 2024 entry. A new sibling revision
-receives today's content unchanged and serves 2025 onward.
+Retain the revision partition and replace inheritance with a target-first workflow.
 
-Keeping the identifier is what avoids the rename sweep. It is also honest: the
-name already says 2024, so narrowing it to mean 2024 alone makes the name true
-rather than stale.
+The tooling parses the exact pinned 2024 design and constructs a semantic worklist keyed by exact 2024 anchors. It distinguishes:
 
-Inheritance copies the whole casilla, not a chosen subset of fields. Copying
-selectively would reintroduce the derivation problem one field at a time, and
-the fields most at risk - section, semantic role, legal grounding - are exactly
-the ones that cannot be inferred.
+- exact target-year template repairs satisfying the narrow proof;
+- cross-revision candidates retained as non-authoritative review proposals;
+- new target declarations requiring direct 2024 adjudication; and
+- conflicting, ambiguous, or unsupported anchors retained as refusals.
 
-Authoring is confined to boxes with no sibling in the later year, and to those
-only after excluding boxes that sit on design records the registry does not
-model. Both sets are enumerable mechanically before authoring starts, so the
-human volume is known in advance rather than discovered during the work.
+Reviewed adjudications are recorded in source-hash-bound 2024 semantic-map authority with target-year legal grounding and reviewer provenance. Candidate tooling may produce deterministic review material and proposal diffs, but never writes authority merely because a candidate is unique or similar.
 
-The split completes only when the progress control that pins the known
-spanning revisions is updated to drop this modelo. That control exists so a
-partition cannot silence the boundary detector instead of satisfying it, and
-its update is part of the same commit.
+The generator receives only the exact 2024 design, complete reviewed 2024 semantic map, applicable reviewed render profile, and selected 2024 revision. It derives coordinates, export fragments, and static provenance programmatically. It does not accept a sibling tree, proposal, or unreviewed worklist row as authority.
+
+Generation occurs in a fresh temporary target. Before publication, tooling validates source/SHA identity, parser-map bijection, revision source membership, complete semantic coverage, legal applicability, render-profile coverage, generated provenance, loader semantics, and export-tree consistency. Any unresolved anchor or validation failure refuses the whole target.
+
+Only a fully validated temporary target may be atomically published. Publication verifies staged and destination identity under the established locking and receipt discipline.
 
 ## Rationale
 
-Inheritance wins on a knockout criterion rather than a balance of merits: the
-two years agree on the overwhelming majority of boxes, and for every one of
-those the correct content already exists and has been reviewed. Derivation
-would recompute that content and, on a measured residue, recompute it wrongly.
-Choosing derivation means accepting a known error rate in exchange for nothing.
+This is the narrowest correction preserving safety and scale. The split remains correct, and generation remains the credible way to create the physical export surface. What changes is semantic proof: the grounding research shows sibling reuse and text similarity cannot bear it.
 
-The residue also decomposes into causes with different owners - deliberately
-unmodelled blocks, a genuine open question about repeated placements, and an
-extraction artefact. Only the second is a registry question at all. A mechanism
-that forces all three to be adjudicated before a partition can proceed has
-coupled the split to unrelated work.
-
-Keeping the identifier is chosen for blast radius, but it survives the honesty
-test independently, which is why it is not merely expedient.
+The official 2024 design determines where and how a field exists; the reviewed map determines what it means; legal grounding independently determines whether that meaning applies. Same-year templates retain limited value, cross-revision analysis remains a review aid, and explicit refusal protects every unadjudicated target.
 
 ## Consequences
 
-The partition becomes reviewable. The inherited majority is a mechanical copy
-that a reviewer can verify by sampling, and attention concentrates on the small
-authored set where judgement was actually exercised.
+Modelo 200 can reach a complete generated 2024 export surface without hand-authoring thousands of coordinate fragments. Output is reproducible from source-hash-bound target authority and validated before publication.
 
-The human cost is now known before the work starts rather than discovered
-during it, which is the difference between a schedulable task and an open-ended
-one.
+The partition remains intact, but 2024 semantics must be established against the 2024 source. Existing declarations or references relying on later-year authority require reconciliation through the target-first workflow.
 
-Two things get harder. The revision identifiers no longer read as a clean
-sequence, since one names a single year and its sibling names a range; anyone
-reading the tree must consult the period selector rather than trusting the
-name. And the inherited casillas carry their grounding forward unexamined - if
-a legal reference was wrong in the later year, inheritance propagates it into
-the earlier one rather than catching it. Inheritance preserves correctness and
-errors equally.
+Review effort concentrates on semantic adjudication rather than geometry. Entries that cannot be mechanically resolved remain unavailable rather than becoming filing-capable by similarity or fallback.
 
-The rejected export-mapping residue stays open and now has a home: it is a
-Modelo 200 completeness question, not a partition question, and folding it in
-here would have hidden it inside a large mechanical change.
-
-This record establishes a pattern the remaining partitions can follow. Where
-two adjacent revisions of one form largely agree, inherit and author the
-difference; reach for derivation only where no sibling exists.
+This amendment removes the general rule that adjacent revisions may inherit whole casillas merely because they appear in both designs. Future reuse requires exact source-anchor and reviewed-adjudication proof.
