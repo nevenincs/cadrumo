@@ -550,10 +550,28 @@ ignore_imports =
     # ADAPTER tier, so application -> llm is an outward edge. The inward half
     # (llm -> application.ledger, for the draft shape it produces) needs no pin,
     # being a legal inner reach, and resolves through the ledger's public facade.
+    # The pins are keyed at the promoted public module names and at the narrow
+    # llm target each one actually reaches, rather than at the bare package: the
+    # gated readers, the rasteriser and the proposer are separate decisions and a
+    # new reach into a different llm module should have to state itself.
+    cadrumo.application.ledger.invoice_draft_extraction -> cadrumo.llm.errors
+    cadrumo.application.ledger.invoice_draft_extraction -> cadrumo.llm.evidence_draft_text
+    cadrumo.application.ledger.invoice_draft_extraction -> cadrumo.llm.evidence_draft_vision
+    cadrumo.application.ledger.invoice_draft_extraction -> cadrumo.llm.providers.local
+    cadrumo.application.ledger.invoice_draft_extraction -> cadrumo.llm.supply_nature_proposal
+    cadrumo.application.ledger.llm_classification -> cadrumo.llm.errors
+    cadrumo.application.ledger.llm_classification -> cadrumo.llm.providers.local
+    cadrumo.application.ledger.llm_classification -> cadrumo.llm.text_classifier
+    cadrumo.application.ledger.llm_classification -> cadrumo.llm.vision_classifier
     # The interchange DTOs are canonically owned by cadrumo.llm, so every
     # ledger consumer of them is an application -> adapter-tier edge. Pinned
     # per origin rather than by widening the contract, so a NEW production
     # edge that is not a DTO consumer still fails loudly.
+    cadrumo.application.ledger.invoice_draft_extraction -> cadrumo.llm.models
+    cadrumo.application.ledger.llm_classification -> cadrumo.llm.models
+    cadrumo.application.ledger.llm_classification -> cadrumo.llm.suggestions
+    cadrumo.application.ledger.llm_diagnostics -> cadrumo.llm.models
+    cadrumo.application.ledger.llm_review_workflow -> cadrumo.llm.suggestions
     # The tabular fallback lane reaches the gated subpackage for the one
     # judgement it cannot make deterministically: what a file's own header
     # vocabulary means. Deferred inside the resolver, and pinned here because
@@ -585,10 +603,6 @@ ignore_imports =
     cadrumo.application.**.tests.** -> cadrumo.llm
     cadrumo.application.**.tests.** -> cadrumo.llm.**
     cadrumo.application.evidence.service -> cadrumo.adapters.persistence.**
-    # Two ledger stores added by llm-package-split, same shape as the ledger
-    # repositories pinned around them: derived financial data is STORAGE, so
-    # it routes through the core's encrypted repository rather than living
-    # behind the optional inference boundary.
     # The confirmation record is the third of that same family and is pinned for
     # the same reason, not as a convenience: it declares its own secure-object
     # namespace and subclasses SecureBoundRepository, so it IS a ledger store
@@ -603,6 +617,20 @@ ignore_imports =
     # adapters.persistence (rg -l over src/cadrumo/application, excluding tests
     # and conftest). The count is given with its measurement because an
     # unreproducible figure in a rationale rots into folklore.
+    #
+    # The family is now spelled at the modules that carry it. Confirmation moved
+    # into invoice_confirmation when evidence_draft was split along its seams,
+    # and the encrypted-store reach travelled with the behaviour, not with the
+    # filename: the namespace constant, the per-bucket store resolver and the
+    # attachment store are the same three imports the pre-split module made.
+    cadrumo.application.ledger.evidence -> cadrumo.adapters.persistence.profile.buckets
+    cadrumo.application.ledger.evidence -> cadrumo.adapters.persistence.storage.attachment
+    cadrumo.application.ledger.evidence -> cadrumo.adapters.persistence.storage.envelope.secure_bound_repository
+    cadrumo.application.ledger.evidence -> cadrumo.adapters.persistence.storage.runtime_repository
+    cadrumo.application.ledger.evidence -> cadrumo.adapters.persistence.storage.secure_object_namespaces
+    cadrumo.application.ledger.invoice_confirmation -> cadrumo.adapters.persistence.profile.invoices
+    cadrumo.application.ledger.invoice_confirmation -> cadrumo.adapters.persistence.storage.attachment
+    cadrumo.application.ledger.invoice_confirmation -> cadrumo.adapters.persistence.storage.runtime_repository
     # Same shape as _confirmation_record above and _rule_repository below: a
     # SecureBoundRepository-backed ledger store naming its namespace constant
     # and its sensitivity class. Pinned rather than inverted for the same
@@ -611,9 +639,12 @@ ignore_imports =
     # under an in-flight symbol rename when this pin landed, so the pin is
     # deliberately expressed at the module and target-package level, which no
     # symbol rename can invalidate.
+    cadrumo.application.ledger.counterparty_establishment -> cadrumo.adapters.persistence.storage.envelope.secure_bound_repository
+    cadrumo.application.ledger.counterparty_establishment -> cadrumo.adapters.persistence.storage.secure_object_namespaces
     # The read-time shape probe. DocumentShape is derived from a document's
     # own bytes by an INBOUND adapter, because reading an externally-authored
     # format is inbound-adapter work; the ledger consumes the answer.
+    cadrumo.application.ledger.evidence_input -> cadrumo.adapters.inbound.einvoice.shape
     # The batch runner asks that same probe ONE question -- is this document
     # structured, and therefore readable without loading a model -- and consumes
     # the answer. Same shape and same justification as the pin above; it is the
@@ -621,6 +652,7 @@ ignore_imports =
     # the contract sees it anyway (grimp walks function bodies), so the pin
     # records a reviewed decision rather than suppressing something that would
     # otherwise have gone unnoticed.
+    cadrumo.application.ledger.batch_ingest -> cadrumo.adapters.inbound.einvoice.shape
     # Same shape, same reason: the AEAT submission BATCH is read by the inbound
     # adapter (reading an externally-authored format is inbound-adapter work),
     # and this module is the projection that decides how many recipients a
@@ -628,6 +660,7 @@ ignore_imports =
     # every recipient deliberately and names this refusal as the consumer's
     # obligation, so the constraint has to live where the projection does --
     # which means consuming the adapter's record type here.
+    cadrumo.application.ledger.aeat_record_projection -> cadrumo.adapters.inbound.einvoice.record_batch
     cadrumo.application.filing.history_repository -> cadrumo.adapters.persistence.**
     cadrumo.application.filing.persistence_wiring -> cadrumo.adapters.persistence.**
     cadrumo.application.inventory.service -> cadrumo.adapters.persistence.**
@@ -645,28 +678,75 @@ ignore_imports =
     #    unexamined. Narrowing is to keep the inbound class loud, not tidiness.
     #    Each target below was read out of the module's runtime imports;
     #    unmatched_ignore_imports_alerting = error fails a pin that overshoots. ──
+    # The catalogue repositories this package constructs -- transactions,
+    # invoices, buckets, work units, calculation revisions -- and the encrypted
+    # storage substrate they resolve through are pinned at the exact module each
+    # import names. Every one is a concrete relocated into the persistence
+    # adapter by the ports-inversion campaign, so the residual edge is the
+    # construction edge sec. 538 permits, not an un-inverted reach: the
+    # application layer names the concrete because it is the composition site.
+    cadrumo.application.ledger.actions_common -> cadrumo.adapters.persistence.profile.buckets
+    cadrumo.application.ledger.actions_common -> cadrumo.adapters.persistence.profile.invoices
+    cadrumo.application.ledger.actions_common -> cadrumo.adapters.persistence.profile.modelos_calculation
+    cadrumo.application.ledger.actions_common -> cadrumo.adapters.persistence.profile.modelos_work_units
+    cadrumo.application.ledger.actions_common -> cadrumo.adapters.persistence.profile.transactions
+    cadrumo.application.ledger.actions_common -> cadrumo.adapters.persistence.storage.attachment
+    cadrumo.application.ledger.actions_common -> cadrumo.adapters.persistence.storage.errors
+    cadrumo.application.ledger.actions_common -> cadrumo.adapters.persistence.storage.runtime_repository
+    cadrumo.application.ledger.actions_common -> cadrumo.adapters.persistence.storage.secure_object_namespaces
+    cadrumo.application.ledger.actions_import -> cadrumo.adapters.persistence.storage.secure_object_namespaces
+    cadrumo.application.ledger.llm_diagnostics -> cadrumo.adapters.persistence.profile.transactions
+    # The two extraction lanes persist what they read the same way the ledger
+    # stores above do: the invoice catalogue they confirm into, the attachment
+    # store holding the evidence bytes, and the per-bucket secure-object store.
+    # These were the pre-split module's own persistence imports; splitting it
+    # into five responsibilities moved them, it did not add them.
+    cadrumo.application.ledger.invoice_draft_extraction -> cadrumo.adapters.persistence.profile.invoices
+    cadrumo.application.ledger.invoice_draft_extraction -> cadrumo.adapters.persistence.storage.attachment
+    cadrumo.application.ledger.invoice_draft_extraction -> cadrumo.adapters.persistence.storage.runtime_repository
+    cadrumo.application.ledger.llm_classification -> cadrumo.adapters.persistence.profile.buckets
+    cadrumo.application.ledger.llm_classification -> cadrumo.adapters.persistence.storage.attachment
+    cadrumo.application.ledger.llm_classification -> cadrumo.adapters.persistence.storage.runtime_repository
     # Bank-statement rows arrive as the provider's own ParsedLedgerRow records,
     # and this module classifies and imports them. Reading an externally-authored
     # statement format is inbound-adapter work; the ledger consumes the answer --
     # the same shape as the einvoice pins above. The type-only import is excluded
     # from the graph; the runtime edge is two function-local imports that grimp
     # sees and this pin therefore reviews.
+    cadrumo.application.ledger.actions_import -> cadrumo.adapters.inbound.financial.providers.base
+    cadrumo.application.ledger.actions_import -> cadrumo.adapters.inbound.financial.providers.csv
+    cadrumo.application.ledger.actions_import -> cadrumo.adapters.inbound.financial.providers.detection
+    cadrumo.application.ledger.actions_import -> cadrumo.adapters.inbound.financial.providers.ofx
+    cadrumo.application.ledger.actions_import -> cadrumo.adapters.inbound.financial.providers.pdf_n26
+    cadrumo.application.ledger.actions_import -> cadrumo.adapters.inbound.financial.providers.xlsx
     # A fourth einvoice consumer, previously hidden inside a broad wildcard while
     # its three siblings were individually reviewed. A structured e-invoice is
     # read exactly by parse_einvoice_document and its parse failure is caught
     # here; same justification as _evidence_input, _batch_ingest and
     # _aeat_record_projection, now stated rather than assumed.
+    # Splitting evidence_draft turned that one consumer into three, each holding
+    # the part of the read it owns: the extraction lane calls the parser and
+    # catches its XML failure, and the two record-shaping modules consume the
+    # invoice class the parser returns. Same justification, three spellings.
+    cadrumo.application.ledger.confirmed_field_resolution -> cadrumo.adapters.inbound.einvoice.parsers
+    cadrumo.application.ledger.invoice_draft_extraction -> cadrumo.adapters.inbound.einvoice.parsers
+    cadrumo.application.ledger.invoice_draft_extraction -> cadrumo.adapters.inbound.einvoice.xml
+    cadrumo.application.ledger.invoice_draft_records -> cadrumo.adapters.inbound.einvoice.parsers
     # Reaches NO persistence at all: its former `adapters.**` pin was wholly an
     # inbound-adapter allowance wearing a storage-shaped label. Lifting a PDF's
     # text layer out of bytes is inbound-adapter work; this module decides what
     # the extracted text means as evidence.
+    cadrumo.application.ledger.evidence_textlayer -> cadrumo.adapters.inbound.pdf.page_text_extraction
     # Outbound wiring, the sec. 538 edge, pinned at the narrow llm target rather
     # than a broad adapters wildcard -- the same treatment the fx rate provider
     # above already gets. Classification records run telemetry through the
     # outbound recorder; diagnostics folds that recorder's encrypted usage log.
+    cadrumo.application.ledger.llm_classification -> cadrumo.adapters.outbound.llm.run_telemetry
+    cadrumo.application.ledger.llm_diagnostics -> cadrumo.adapters.outbound.llm.usage
     # ── arch-remediation-ports-inversion: usage_ratios persistence relocated to
     #    adapters.persistence.profile.usage_ratios; the ledger callers now import
     #    the adapter directly (narrow target keeps the source-module set flat) ──
+    cadrumo.application.ledger.actions_common -> cadrumo.adapters.persistence.profile.usage_ratios
     # ── arch-remediation-ports-inversion: submission repository relocated to
     #    adapters.persistence.profile.submission; the workflow gate constructs the
     #    concrete and injects it into the SubmissionEngine, tests seed via it ──
