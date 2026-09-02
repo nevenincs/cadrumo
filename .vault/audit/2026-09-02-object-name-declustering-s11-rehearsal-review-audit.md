@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:d42214a171ebe057ce570fb3e4d2b4ab99ed70092ec7f2d27d28d39454a42257'
+body_hash: 'sha256:2d304560ea051ebff28b014ffb6e0837e638ef7f522f04802379a0b1e873f427'
 related:
   - "[[2026-09-02-object-name-declustering-plan]]"
 ---
@@ -141,3 +141,26 @@ The focused rehearsal suite passed 20 tests, but its generated-reference case st
 pre-rehearsal refusal and therefore does not exercise generated-owner success. Ruff,
 Ruff-format, ty, and byte-compilation checks passed. Final status remains two high findings
 and no critical, medium, or low findings.
+
+## Final re-review status
+
+Resolved: generated hard edges no longer originate from caller component evidence. The
+rehearsal derives repository edges from current operation locators, derives generated paths
+from the manifest allowlist after removing discovered and explicit transform paths, and
+derives generator ownership from the manifest command vectors. Canonical comparison binds
+component ID, operation membership, affected paths, and hard edges while correctly excluding
+caller advisory risk. A disposable counterexample with a forged generator owner was rejected
+with `supplied component differs from the canonical repository graph`.
+
+Resolved: pre-generator containment now compares the transform result with the projected
+transform allowlist, while the post-generator filesystem comparison continues to require the
+full original allowlist. A disposable generator-backed rehearsal successfully changed exactly
+`dev/generated.txt` and `src/example/contracts.py`, recorded one successful generator outcome,
+and left the live source unchanged. This closes `generator-phase-unreachable`.
+
+Ruff, Ruff-format, ty, and byte-compilation checks passed. The current focused suite produced
+19 passes and one stale expectation failure: its generated-artifact refusal case expects the
+old graph-reference-class error, while the hardened implementation now correctly refuses that
+fixture earlier because it declares no distinct generated output path. Updating comprehensive
+detector-teeth expectations belongs to S12 and does not expose an S11 implementation defect.
+Final S11 status is no open critical, high, medium, or low findings.
