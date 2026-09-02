@@ -29,7 +29,9 @@ from dev.registry.analysis.casilla_id_grammar import screen_authority as grammar
 from dev.registry.analysis.continuity_integrity import screen_authority as continuity_screen
 from dev.registry.analysis.export_ref_symmetry import screen_authority as export_ref_screen
 from dev.registry.analysis.grade_earned import screen_authority as grade_screen
+from dev.registry.analysis.modelo_capability import screen_authority as modelo_capability_screen
 from dev.registry.analysis.monetary_scale import screen_authority as monetary_scale_screen
+from dev.registry.analysis.provenance_consistency import outside_reference_index
 from dev.registry.analysis.provenance_consistency import screen_authority as provenance_screen
 from dev.registry.analysis.revision_name_window import screen_authority as revision_name_screen
 from dev.registry.analysis.temporal_site_agreement import screen_authority as temporal_site_screen
@@ -48,8 +50,47 @@ class ScreenEntry:
 
 
 def _divergent_transitions(authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]) -> Sequence[object]:
-    """Return only the divergent transitions; the identity ones are not findings."""
-    return [item for item in wire_type_screen(authority, modelo_ids) if item.divergent]
+    """Return the distinct divergent type transitions, not one row per casilla.
+
+    The screen measures per casilla, which is right, but the census a maintainer
+    reads first should count what they would act on. Across the corpus 3,349
+    divergent casillas resolve to 27 distinct declared-to-wire transitions, and
+    the step that settles them declares transitions rather than adjudicating
+    fields. Counting casillas here overstated that work by two orders of
+    magnitude.
+    """
+    return sorted(
+        {
+            (str(item.casilla_type), str(item.wire_type))
+            for item in wire_type_screen(authority, modelo_ids)
+            if item.divergent
+        }
+    )
+
+
+def _monetary_findings_needing_action(
+    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+) -> Sequence[object]:
+    """Return the monetary findings that need a decision, not the shapes reported for visibility.
+
+    The screen reports four conditions and one of them is not a defect: a
+    monetary casilla carried by several fields of one record is the official
+    integer-and-decimal part split, reported so the shape is countable. It is
+    132 of the 158 rows, so counting them here presented a six-fold overstatement
+    of the work as the first number a maintainer reads. The screen still reports
+    them; this census does not count them as findings.
+    """
+    return [item for item in monetary_scale_screen(authority, modelo_ids) if item.kind != "money_split_representation"]
+
+
+def _outside_references(authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]) -> Sequence[object]:
+    """Return the references that sit outside a manifest, not every child citing one.
+
+    One missing reference is cited by every casilla, formula and binding that
+    names it, so the raw row count exceeds the number of things to fix by roughly
+    nineteen to one.
+    """
+    return sorted(outside_reference_index(tuple(provenance_screen(authority, modelo_ids))))
 
 
 def _mixing_modelos(authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]) -> Sequence[object]:
@@ -68,21 +109,28 @@ SCREENS: tuple[ScreenEntry, ...] = (
     ScreenEntry(
         "temporal_site_agreement", temporal_site_screen, "revisions whose temporal sites fall silent or disagree"
     ),
-    ScreenEntry("wire_type_compatibility", _divergent_transitions, "casilla-to-wire type divergences"),
+    ScreenEntry(
+        "wire_type_compatibility", _divergent_transitions, "distinct casilla-to-wire type transitions that diverge"
+    ),
     ScreenEntry(
         "continuity_integrity", continuity_screen, "modelos with no continuity, and chains that do not hold together"
     ),
     ScreenEntry(
         "monetary_scale",
-        monetary_scale_screen,
-        "monetary fields whose scale is missing, unusual, split across two fields, or unlike their siblings",
+        _monetary_findings_needing_action,
+        "monetary fields whose scale is missing, unusual, or unlike their siblings",
     ),
     ScreenEntry(
         "grade_earned",
         grade_screen,
         "declared grades that do not match what their prerequisites support, in either direction",
     ),
-    ScreenEntry("provenance_consistency", provenance_screen, "citations outside their revision manifest"),
+    ScreenEntry("provenance_consistency", _outside_references, "references cited from outside their revision manifest"),
+    ScreenEntry(
+        "modelo_capability",
+        modelo_capability_screen,
+        "revisions whose declared filing rung and the machinery behind it disagree",
+    ),
 )
 
 

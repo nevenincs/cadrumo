@@ -124,7 +124,6 @@ dependencies = [
 
 [project.scripts]
 aeat = "cadrumo.entrypoints._cli_main:main"
-aeat-tui = "cadrumo.entrypoints.tui.launcher:main"
 
 [project.urls]
 Homepage = "https://github.com/nevenincs/cadrumo"
@@ -969,7 +968,7 @@ ignore_missing_imports = true
 [tool.pyrefly]
 python_version = "3.13"
 search_path = ["src", "stubs"]
-project_includes = ["src/cadrumo/domain", "src/cadrumo/application", "src/cadrumo/core"]
+project_includes = ["src/cadrumo/domain", "src/cadrumo/application", "src/cadrumo/core", "src/cadrumo/llm"]
 # Tests are excluded from this checker, not overlooked. pyright reported zero
 # diagnostics across the test tree, so excluding it loses no signal that was
 # previously enforced, while pyrefly's stricter inference finds ~24 fixture
@@ -986,7 +985,7 @@ project_excludes = ["**/.[!/.]*", "**/tests/**"]
 # is the only honest one available: burn a tree down, THEN admit it permanently.
 # aeat-quality-gates bans baselines and ratchets, so a tree is never admitted
 # with errors outstanding and never carries a per-tree exemption.
-include = ["src/cadrumo/domain", "src/cadrumo/application", "src/cadrumo/core"]
+include = ["src/cadrumo/domain", "src/cadrumo/application", "src/cadrumo/core", "src/cadrumo/llm"]
 exclude = ["**/tests"]
 extraPaths = ["src", "stubs"]
 pythonVersion = "3.13"

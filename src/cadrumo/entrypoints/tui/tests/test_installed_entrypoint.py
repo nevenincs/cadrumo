@@ -1,17 +1,20 @@
-"""Real proofs that the INSTALLED console script starts a full-screen session.
+"""Real proofs that the INSTALLED ``aeat --tui`` request starts a session.
 
 The sibling module-execution proofs cover ``python -m cadrumo.entrypoints.tui``.
-This file covers the other installed shape: the console script packaging
-declares, resolved and executed the way a shell resolves it. Running the
-launcher's ``main`` in-process cannot stand in for either — an entry point
-that resolves in a test process and fails from a console wrapper is exactly
-the defect these exist to catch.
+This file covers the other installed shape: the root console script resolved
+and executed the way a shell resolves it, carrying the full-screen request.
+Calling the root callback in-process cannot stand in for it — a request that
+works in a test process and fails from a console wrapper is exactly the defect
+these exist to catch.
 
-Nothing here asserts on rendered prose. The prose is locale data read from
-the same catalogue the app reads, so asserting it would prove only that one
-file was consulted twice. The assertions are against the terminal control
-sequence a started Textual session emits, against process behaviour, and
-against the child's own import graph.
+The dedicated ``aeat-tui`` console script this file once covered is retired.
+One surface reaches the session now, and the first test below is what keeps a
+second spelling from coming back.
+
+Nothing here asserts on rendered prose. The prose is locale data read from the
+same catalogue the app reads, so asserting it would prove only that one file
+was consulted twice. The assertions are against process behaviour, against the
+packaging declaration, and against the child's own import graph.
 """
 
 from __future__ import annotations
@@ -25,11 +28,9 @@ import pytest
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_SCRIPT_NAME = "aeat-tui"
-_ENTRY_POINT = "cadrumo.entrypoints.tui.launcher:main"
-_ALTERNATE_SCREEN = b"?1049h"
-"""The control sequence a Textual session emits when it takes the terminal."""
-
+_SCRIPT_NAME = "aeat"
+_RETIRED_SCRIPT_NAME = "aeat-tui"
+_SESSION_MODULE = "cadrumo.entrypoints.tui"
 _STARTUP_GRACE_SECONDS = 45.0
 
 _REPO_ROOT = Path(__file__).parents[5]
@@ -47,55 +48,74 @@ def _console_script() -> Path:
     )
 
 
-def test_the_packaging_declares_the_dedicated_console_entry_point() -> None:
-    """The declaration targets the launcher directly, never a CLI bootstrap."""
+def test_the_packaging_declares_one_console_entry_point_and_no_tui_alias() -> None:
+    """The root script is the only console entry; the TUI has no second spelling."""
     import tomllib
 
     spec = tomllib.loads((_REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     scripts = spec["project"]["scripts"]
 
-    assert scripts.get(_SCRIPT_NAME) == _ENTRY_POINT, (
-        f"{_SCRIPT_NAME} must target the launcher directly; found {scripts.get(_SCRIPT_NAME)!r}"
+    assert scripts.get(_SCRIPT_NAME) == "cadrumo.entrypoints._cli_main:main"
+    assert _RETIRED_SCRIPT_NAME not in scripts, (
+        f"{_RETIRED_SCRIPT_NAME} is retired; the full-screen session is reached through `aeat --tui`"
     )
 
 
-def test_the_installed_console_script_starts_a_session() -> None:
-    """The console wrapper runs a real full-screen session rather than raising."""
-    process = subprocess.Popen(  # noqa: S603 - fixed argv, no shell, installed console script
-        [str(_console_script())],
+def test_the_installed_script_routes_the_tui_flag_to_the_session_not_a_refusal() -> None:
+    """`aeat --tui` reaches the frontend-capability gate, which is as far as a pipe goes.
+
+    A piped stdout is not a terminal, so the honest outcome here is the
+    console-capability refusal, and the session itself is proven by the sibling
+    module-execution suite that starts it directly. What this asserts is the
+    ROUTING: the request must no longer die at the root node's TUI posture.
+    Before the root became a routing target it refused with the
+    not-implemented identity, so that string reappearing is the regression.
+    """
+    completed = subprocess.run(  # noqa: S603 - fixed argv, no shell, installed console script
+        [str(_console_script()), "--tui"],
         cwd=_REPO_ROOT,
         stdin=subprocess.DEVNULL,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
+        capture_output=True,
+        check=False,
+        timeout=_STARTUP_GRACE_SECONDS,
     )
-    try:
-        output, _ = process.communicate(timeout=_STARTUP_GRACE_SECONDS)
-        status: int | None = int(process.returncode)
-    except subprocess.TimeoutExpired:
-        process.kill()
-        output, _ = process.communicate()
-        status = None
 
-    rendered = output.decode("utf-8", errors="replace")
-    assert status is None, (
-        f"the session ended by itself with status {status}; a started TUI holds the terminal:\n{rendered[:2000]}"
+    rendered = (completed.stdout + completed.stderr).decode("utf-8", errors="replace")
+
+    assert completed.returncode != 0, f"a non-terminal cannot host a session, so this must refuse:\n{rendered[:2000]}"
+    assert "root.status" not in rendered, (
+        f"the root still refuses the request as unrouted rather than reaching the session:\n{rendered[:2000]}"
     )
-    assert _ALTERNATE_SCREEN in output, f"no session took the terminal:\n{rendered[:2000]}"
     assert "Traceback (most recent call last)" not in rendered, rendered[:2000]
 
 
-def test_starting_through_the_entry_point_imports_no_cli_internals() -> None:
-    """The TUI is an outermost entrypoint: it never reaches across to the CLI.
+def test_the_session_is_started_out_of_process_through_module_execution() -> None:
+    """The CLI reaches the TUI by executing it, never by importing it.
 
-    Resolved through :mod:`importlib.metadata` in a fresh process, which is
-    the mechanism the console wrapper itself uses, so this observes the real
-    import graph of the real entry point rather than a hand-built import.
+    The architecture forbids a CLI entrypoint from importing the TUI and names
+    out-of-process execution as the sanctioned alternative, so the command the
+    CLI builds is part of that contract rather than an implementation detail.
+    """
+    from cadrumo.entrypoints.cli._tui_session import TUI_SESSION_MODULE, tui_session_command
+
+    command = tui_session_command("/usr/bin/python3")
+
+    assert TUI_SESSION_MODULE == _SESSION_MODULE
+    assert command == ["/usr/bin/python3", "-m", _SESSION_MODULE]
+
+
+def test_the_session_child_imports_no_cli_internals() -> None:
+    """The TUI stays an outermost entrypoint even though the CLI now starts it.
+
+    The CLI reaches the session by executing this module in a child
+    interpreter, never by importing it, so the started session's import graph
+    must still contain no CLI module. Observed in a fresh process running the
+    same ``-m`` surface the CLI spawns.
     """
     probe = (
-        "import json, sys\n"
-        "from importlib.metadata import EntryPoint\n"
-        f"ep = EntryPoint(name={_SCRIPT_NAME!r}, value={_ENTRY_POINT!r}, group='console_scripts')\n"
-        "ep.load()\n"
+        "import json, sys, runpy\n"
+        f"sys.modules.pop({_SESSION_MODULE!r}, None)\n"
+        f"__import__({_SESSION_MODULE!r} + '.launcher')\n"
         "print(json.dumps(sorted(m for m in sys.modules if m.startswith('cadrumo.entrypoints.'))))\n"
     )
     completed = subprocess.run(  # noqa: S603 - fixed interpreter and literal probe
@@ -110,7 +130,5 @@ def test_starting_through_the_entry_point_imports_no_cli_internals() -> None:
     imported = json.loads(completed.stdout.splitlines()[-1])
     cli_modules = [name for name in imported if name.startswith("cadrumo.entrypoints.cli")]
 
-    assert "cadrumo.entrypoints.tui.launcher" in imported, (
-        f"the entry point did not import the launcher it names: {imported}"
-    )
+    assert f"{_SESSION_MODULE}.launcher" in imported, f"the session module did not import its launcher: {imported}"
     assert not cli_modules, f"starting the TUI pulled in CLI internals: {cli_modules}"

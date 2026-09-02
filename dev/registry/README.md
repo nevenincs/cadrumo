@@ -74,10 +74,11 @@ always exits 0. A screen reports; it never gates. What each one owns:
 | `continuity_integrity` | modelos with no continuity, and chains crossing a grammar or standing alone |
 | `revision_name_window` | revision names that misstate the window they declare, or claim none |
 | `temporal_site_agreement` | a revision's window, selector and deadline windows falling silent or disagreeing |
-| `wire_type_compatibility` | the transition from a casilla's declared type to its rendered wire type |
-| `monetary_scale` | monetary fields whose scale is missing, unusual, split across two fields, or unlike their siblings |
+| `wire_type_compatibility` | the distinct transitions from a casilla's declared type to its rendered wire type |
+| `monetary_scale` | monetary fields whose scale is missing, unusual, or unlike their siblings |
 | `grade_earned` | declared grades not matching what their prerequisites support, either way |
-| `provenance_consistency` | child citations falling outside their revision's own manifest |
+| `provenance_consistency` | references cited from outside their revision's own manifest |
+| `modelo_capability` | what each modelo declares it can do, and where the filing claim and its machinery disagree |
 
 Two rules keep the suite honest.
 
@@ -96,3 +97,33 @@ need a tolerance, and a tolerance is the baseline ratchet this project retired.
 Each becomes a gate when its data is corrected, not before. Detector teeth live
 in each screen's own test, where a representative defect is constructed and
 shown to be caught.
+
+## Authoring aids
+
+Not everything under `analysis/` is a screen. A screen measures a condition
+across the whole registry and is enrolled in the runner; an authoring aid answers
+a question about one design while someone is writing a declaration, and is not.
+The gates tell them apart by whether the module defines `screen_authority`, so an
+aid is never asked to enrol and a screen can never quietly fail to.
+
+`footnote_pointer_notes` resolves a Contenido cell that holds only a footnote
+pointer -- `Nota 4.` -- to the note the design defines for it:
+
+```bash
+uv run --no-sync python -m dev.registry.analysis.footnote_pointer_notes <design>.extracted.md
+```
+
+It exists because the render-profile eligibility predicate reads a non-blank
+Contenido cell as the design having stated the field's wire fact, and a bare
+pointer states nothing. Modelo 353's `Nota 4` reads "Solo para periodos 02 y
+siguientes" -- an applicability statement carrying no scale, sign or decimals --
+which is why the field beneath it renders unscaled beside siblings emitting
+cents.
+
+Two rules matter when using it. Take the design from the source reference's own
+corpus path rather than searching its directory: several modelos bundle many
+designs and one bundles fifteen, so a search resolves a note against an arbitrary
+year and still produces an answer. And check the transcription exists before
+trusting an empty result, because thirteen bundled designs ship without extracted
+text and "no pointers" and "no file" look identical from the outside.
+

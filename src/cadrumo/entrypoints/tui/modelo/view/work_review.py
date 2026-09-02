@@ -45,6 +45,7 @@ from .....domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
+from ...components.app_access import TypedAppAccess
 from ...components.host import ScreenHostApp
 from ...components.keyboard import localize_key_descriptions
 from ...components.theme import (
@@ -98,7 +99,7 @@ def _json(value: object) -> str:
     return json.dumps(value, ensure_ascii=False, sort_keys=True, default=str)
 
 
-class ModeloWorkReviewScreen(Screen[None]):
+class ModeloWorkReviewScreen(TypedAppAccess, Screen[None]):
     """Full review of one canonical modelo work record."""
 
     BINDINGS: ClassVar = [
@@ -417,7 +418,7 @@ class ModeloWorkReviewScreen(Screen[None]):
 
     def _mount_casillas(self, review: ModeloWorkReview) -> None:
         panel = self.query_one("#modelo-review-casillas", Static)
-        table: ContentDataTable[str] = ContentDataTable(
+        table: ContentDataTable[str] = ContentDataTable[str](
             id="modelo-review-casillas-table",
             cursor_type="row",
             zebra_stripes=True,
@@ -461,7 +462,7 @@ class ModeloWorkReviewScreen(Screen[None]):
         if not review.findings:
             panel.remove()
             return
-        table: ContentDataTable[str] = ContentDataTable(
+        table: ContentDataTable[str] = ContentDataTable[str](
             id="modelo-review-findings-table",
             cursor_type="none",
             zebra_stripes=True,
@@ -514,7 +515,7 @@ class ModeloWorkReviewScreen(Screen[None]):
         if not review.blockers:
             panel.remove()
             return
-        table: ContentDataTable[str] = ContentDataTable(
+        table: ContentDataTable[str] = ContentDataTable[str](
             id="modelo-review-blockers-table",
             cursor_type="none",
             zebra_stripes=True,

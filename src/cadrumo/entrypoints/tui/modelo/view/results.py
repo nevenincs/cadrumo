@@ -42,6 +42,7 @@ from .....application.modelo.workspace_models import (
     ModeloWorkspaceScalarMaterializationRecordV1,
 )
 from .....core.i18n.render import tr
+from ...components.app_access import TypedAppAccess
 from ...components.theme import toggle_appearance
 from ...components.widgets import ContentDataTable, ContentScroll
 from .controller import ModeloWorkspaceReadSession
@@ -68,7 +69,7 @@ def _computed_casillas(session: ModeloWorkspaceReadSession) -> dict[str, str] | 
     }
 
 
-class ModeloWorkspaceResultsScreen(Screen[None]):
+class ModeloWorkspaceResultsScreen(TypedAppAccess, Screen[None]):
     """Computed values for the current session, or an explicit not-applicable."""
 
     BINDINGS: ClassVar = [
@@ -132,7 +133,7 @@ class ModeloWorkspaceResultsScreen(Screen[None]):
     def _mount_results(self, computed: dict[str, str]) -> None:
         """Mount one row per materialized casilla the review marks as computed."""
         body = self.query_one("#workspace-results-body", ContentScroll)
-        table = ContentDataTable(id="workspace-results-table", cursor_type="row", zebra_stripes=True)
+        table = ContentDataTable[str](id="workspace-results-table", cursor_type="row", zebra_stripes=True)
         body.mount(table)
         for column_key in _COLUMN_KEYS:
             table.add_column(tr(f"flows.modelo_workspace_results.column.{column_key}"), key=column_key)

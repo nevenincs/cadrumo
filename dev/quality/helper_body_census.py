@@ -1,9 +1,9 @@
 """AST census of private, non-fixture test-helper functions, keyed on body.
 
 ``fixture_census.py`` walks the same source universe but only sees functions
-carrying a ``@pytest.fixture`` decorator.  The
-``2026-08-14-test-harness-sanity-semantic-test-corpus-drift-audit`` found that
-this left the larger population invisible: "the campaign's own census sees
+carrying a ``@pytest.fixture`` decorator.  A review of test-corpus drift
+across the test harness found that this left the larger population
+invisible: "the campaign's own census sees
 only decorated fixture definitions.  Plain helper functions, assertion
 helpers, builders and value constructors are outside its reach entirely, and
 that is where most of the drift turned out to live."  A name-keyed search for

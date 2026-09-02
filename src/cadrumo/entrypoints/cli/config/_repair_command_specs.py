@@ -17,6 +17,7 @@ from ..command_spec import (
     TranslationKey,
     ValueContract,
 )
+from ._command_spec_schema import config_payload_schema as _schema
 from ._spec_policies import (
     BOOTSTRAP_DESTRUCTIVE,
     BOOTSTRAP_WRITE,
@@ -45,14 +46,6 @@ _HANDLER_MODULES: Final[dict[str, str]] = {
 
 def _handler(module: str, name: str) -> LazyBinding:
     return LazyBinding.available(DeferredTarget(_HANDLER_MODULES[module], name))
-
-
-def _schema(name: str, identity: str) -> ResultSchemaSpec:
-    return ResultSchemaSpec(
-        SchemaState.TARGET,
-        target=DeferredTarget("cadrumo.entrypoints.cli.config_payloads", name),
-        identity=identity,
-    )
 
 
 def _flag(

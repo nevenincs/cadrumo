@@ -17,10 +17,12 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....core.tax_domain import TaxDomain
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.ids import FormulaId
 from ....domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistrySnapshot
 from ....domain.calculations.registry.validate_revision_identity import revision_reference_identity_failures
@@ -413,6 +415,25 @@ def _revision_validation_years(revision: ModeloRevision) -> tuple[int, ...]:
 
 
 def test_runtime_projection_rejects_ambiguous_casilla_refs_for_every_bundled_schema_coordinate() -> None:
+    """Reference identity and runtime projection must hold at EVERY bundled coordinate.
+
+    The subject here -- ambiguous revision references, casilla projection
+    fidelity, dangling formula inputs -- is a structural property of a compiled
+    revision. It applies at every rung of authority, not only at filing grade,
+    so the sweep must stay universal across all bundled modelo x revision
+    coordinates.
+
+    Each snapshot is therefore requested at the rung the revision itself
+    DECLARES, not at the snapshot boundary's strict default. Requesting the
+    default would make this sweep silently skip every revision that declares
+    ``calculation`` or ``applicability`` -- exactly the revisions whose
+    structure nothing else here would then check. ``expected == projected`` at
+    the end is what proves no coordinate was dropped.
+
+    The companion assertion below keeps the relaxation honest: a revision below
+    filing grade must still REFUSE a filing-grade request, so admitting it here
+    at its declared rung cannot be mistaken for a filing capability claim.
+    """
     authority = bundled_authority()
     expected: list[str] = []
     projected: list[str] = []
@@ -421,6 +442,10 @@ def test_runtime_projection_rejects_ambiguous_casilla_refs_for_every_bundled_sch
     for modelo in authority.modelos:
         for revision in modelo.revisions.values():
             revision_contexts: list[str] = []
+            declared_grade = revision.authority_grade
+            # An absent declaration is no claim at all and cannot satisfy even
+            # the applicability floor, so a bundled revision must declare one.
+            assert declared_grade is not None, f"bundled revision {modelo.id}/{revision.id} declares no authority grade"
             for filing_year in _revision_validation_years(revision):
                 for period in revision.period_selector.periods:
                     context = f"{modelo.id}/{revision.id}/{filing_year}/{period}"
@@ -431,7 +456,20 @@ def test_runtime_projection_rejects_ambiguous_casilla_refs_for_every_bundled_sch
                         filing_year=filing_year,
                         period=period,
                         revision_id=revision.id,
+                        grade=declared_grade,
                     )
+                    assert snapshot.revision.authority_grade == declared_grade
+                    if declared_grade is not RegistryAuthorityGrade.FILING:
+                        # Admitting the revision at its own rung above must not
+                        # have made it admissible at the filing rung.
+                        with pytest.raises(RegistryValidationError):
+                            authority.admitted_revision_id(
+                                modelo.id,
+                                filing_year=filing_year,
+                                period=period,
+                                revision_id=revision.id,
+                                grade=RegistryAuthorityGrade.FILING,
+                            )
                     identity_failures = revision_reference_identity_failures(
                         f"runtime projection {context}",
                         snapshot.revision,

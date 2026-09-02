@@ -543,10 +543,11 @@ def test_repository_spec_reads_the_console_scripts_from_pyproject() -> None:
     spec = ShippedTreeSpec.from_repository(REPO_ROOT)
 
     assert spec.package == "cadrumo"
-    assert {entry.spec for entry in spec.entry_points} >= {
-        "cadrumo.entrypoints._cli_main:main",
-        "cadrumo.entrypoints.tui.launcher:main",
-    }
+    # `aeat` is the only console script the product declares; the full-screen
+    # session is reached through `aeat --tui`, which starts the module-execution
+    # surface below rather than a second console entry.
+    assert "cadrumo.entrypoints._cli_main:main" in {entry.spec for entry in spec.entry_points}
+    assert "cadrumo.entrypoints.tui.__main__" in spec.module_roots
     assert any(glob.endswith("tests/**") for glob in spec.exclude_globs)
     assert {corpus.label for corpus in spec.outside} == {"tests", "dev"}
     assert spec.data_globs

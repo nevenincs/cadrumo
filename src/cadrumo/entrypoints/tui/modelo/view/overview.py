@@ -35,6 +35,7 @@ from textual.screen import Screen
 from textual.widgets import Static
 
 from .....core.i18n.render import tr
+from ...components.app_access import TypedAppAccess
 from ...components.theme import toggle_appearance
 from ...components.widgets import ContentDataTable, ContentScroll, DisclosureGroup
 from .controller import ModeloWorkspaceReadSession
@@ -45,7 +46,7 @@ _REVISION_ROW_KEYS: tuple[str, ...] = ("law_selected", "requested_assertion", "s
 _CAPABILITY_COLUMN_KEYS: tuple[str, ...] = ("capability", "disposition", "producer")
 
 
-class ModeloWorkspaceOverviewScreen(Screen[None]):
+class ModeloWorkspaceOverviewScreen(TypedAppAccess, Screen[None]):
     """Address, revision coordinates, status, and the capability denominator."""
 
     BINDINGS: ClassVar = [
@@ -114,7 +115,7 @@ class ModeloWorkspaceOverviewScreen(Screen[None]):
     def _mount_label_table(self, group: str, row_keys: tuple[str, ...], values: dict[str, str]) -> None:
         """Mount one two-column label/value table inside its own disclosure group."""
         body = self.query_one("#workspace-overview-body", ContentScroll)
-        table = ContentDataTable(id=f"workspace-overview-{group}-table", cursor_type="row", zebra_stripes=True)
+        table = ContentDataTable[str](id=f"workspace-overview-{group}-table", cursor_type="row", zebra_stripes=True)
         body.mount(
             DisclosureGroup(table, title=tr(f"flows.modelo_workspace_overview.section.{group}"), collapsed=False)
         )
@@ -132,7 +133,7 @@ class ModeloWorkspaceOverviewScreen(Screen[None]):
         one the producer never answered.
         """
         body = self.query_one("#workspace-overview-body", ContentScroll)
-        table = ContentDataTable(id="workspace-overview-capability-table", cursor_type="row", zebra_stripes=True)
+        table = ContentDataTable[str](id="workspace-overview-capability-table", cursor_type="row", zebra_stripes=True)
         body.mount(
             DisclosureGroup(table, title=tr("flows.modelo_workspace_overview.section.capabilities"), collapsed=False)
         )

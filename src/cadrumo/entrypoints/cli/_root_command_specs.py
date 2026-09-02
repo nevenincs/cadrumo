@@ -16,6 +16,7 @@ from .command_spec import (
     ResultSchemaSpec,
     SchemaState,
     TranslationKey,
+    TuiCapability,
     ValueContract,
 )
 
@@ -41,6 +42,7 @@ _ROOT_STATUS = ExecutionPolicySpec(
 ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
         key="root",
+        tui_capability=TuiCapability.AVAILABLE,
         parent_key=None,
         token="aeat",  # noqa: S106 - CLI operator token, not a credential
         kind="root",
