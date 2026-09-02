@@ -12,6 +12,7 @@ import textwrap
 import threading
 from collections.abc import Iterator
 from pathlib import Path
+from typing import override
 
 import pytest
 
@@ -418,6 +419,7 @@ class _StaticResponseHandler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(self.response_body)
 
+    @override
     def log_message(self, format: str, *args: object) -> None:
         return  # silence per-request access logging in test output
 

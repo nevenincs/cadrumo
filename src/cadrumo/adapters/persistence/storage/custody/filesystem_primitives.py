@@ -42,6 +42,7 @@ class ProfileCustodyPasswordReadOperation:
 
 
 def is_real_directory(path: Path) -> bool:
+    """Return whether ``path`` is a real directory, never a symlink or reparse point."""
     try:
         metadata = path.lstat()
     except OSError:
@@ -52,6 +53,7 @@ def is_real_directory(path: Path) -> bool:
 
 
 def ensure_real_directory(path: Path) -> None:
+    """Create ``path`` as a real directory, refusing an existing link or non-directory."""
     if os.path.lexists(path) and not is_real_directory(path):
         raise ProfileCustodyRecordError("profile capsule root must not be a link or non-directory")
     try:
@@ -209,6 +211,7 @@ def posix_directory_fd(path: Path) -> Generator[int]:
 
 
 def posix_open_child_directory(parent_fd: int, name: str) -> int:
+    """Open ``name`` below ``parent_fd`` without following links, or raise."""
     try:
         return os.open(
             name,
@@ -293,7 +296,4 @@ __all__ = [
     "posix_open_child_directory",
     "windows_create_file_api",
     "windows_directory_anchor",
-    "windows_file_information_type",
-    "write_exclusive_fsynced",
-    "write_exclusive_fsynced_fd",
-]
+    "windows_file_informatio

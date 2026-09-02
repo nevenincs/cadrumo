@@ -20,6 +20,7 @@ import socketserver
 import threading
 from collections.abc import Iterator
 from pathlib import Path
+from typing import override
 
 import pytest
 

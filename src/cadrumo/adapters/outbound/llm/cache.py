@@ -54,6 +54,11 @@ class LLMCache:
     """
 
     def __init__(self, root_dir: Path | None = None) -> None:
+        """Initialize the cache, defaulting the root directory from settings.
+
+        Args:
+            root_dir: Optional logical cache partition override.
+        """
         self.root_dir = root_dir or load_settings().cadrumo_llm_cache_dir
 
     def build_key(self, request: LLMRequest, provider: LLMProvider, model: str) -> CacheKey:

@@ -343,6 +343,7 @@ class FlowScreen(TypedAppAccess, Screen[None]):
         self.final_projection: ReviewProjection | None = None
         self.saved_and_exited = False
 
+    @override
     def compose(self) -> ComposeResult:
         """Yield the region the flow's pages are mounted into.
 
