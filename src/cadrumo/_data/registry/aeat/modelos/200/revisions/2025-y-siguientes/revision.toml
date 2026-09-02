@@ -17,10 +17,12 @@
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
-# This successor starts at ejercicio 2025. Its calculation authority remains
-# available, while filing refuses until the canonical generator publishes the
-# exact 2025 design.
-authority_grade = "calculation"
+# The exact 2025 design is now published through the canonical generated export
+# tree, with its source-hash-bound provenance and loader validation. This
+# revision can therefore support both calculation and filing for its declared
+# epoch; 2024 remains separately calculation-grade until its own layout earns
+# the same attestation.
+authority_grade = "filing"
 # valid_from tracks the ejercicio this revision computes (2025), matching the
 # registry-wide convention (holds for 44/52 annual-cadence revisions), not the
 # orden's own publication/effective year. The span is left open ('y siguientes')
