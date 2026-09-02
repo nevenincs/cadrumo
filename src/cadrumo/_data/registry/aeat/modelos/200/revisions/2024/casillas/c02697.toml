@@ -1,0 +1,14 @@
+# Generated from the current M200/2024 semantic map and official aeat-dr-200-2024 design.
+# Semantic payload reviewed from pinned repository commit 17eb283313.
+
+[[revisions."2024".casillas]]
+id = "02697"
+number = "02697"
+section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
+semantic_role = "is_deduccion_donativos_general"
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
+source_refs = ["aeat-dr-200-2024"]
+export_refs = ["m200-2024.dp200018c.f0144"]
