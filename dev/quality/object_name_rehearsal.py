@@ -26,6 +26,7 @@ from ..audit.object_names import ObjectNameAuditResult, ObjectNameFinding, scan,
 from .object_name_graph import (
     InventoryLike,
     ObjectNameGraphError,
+    HardEdge,
     OperationComponent,
     ReferenceKind,
     RenameManifestLike,
@@ -365,19 +366,52 @@ def rehearse_object_name_component(
         graph_manifest = cast("RenameManifestLike", manifest)
         graph_inventory = cast("InventoryLike", inventory)
         discovered_edges = collect_import_edges(operation_locators(graph_manifest), repo_root=root)
-        declared_generator_edges = tuple(
-            edge for edge in component.hard_edges if edge.kind is ReferenceKind.GENERATED_ARTIFACT
-        )
+        discovered_by_operation: dict[str, set[str]] = {}
+        for edge in discovered_edges:
+            discovered_by_operation.setdefault(edge.operation_id, set()).add(edge.path)
+        derived_generator_edges: list[HardEdge] = []
+        for operation in select_object_name_execution(manifest):
+            if "generated-artifact" not in operation.expected_reference_classes:
+                continue
+            explicit_transform_paths = {operation.old_path, *(move.target for move in operation.moves)}
+            generated_paths = (
+                set(operation.changed_paths)
+                - discovered_by_operation.get(operation.operation_id, set())
+                - explicit_transform_paths
+            )
+            if not generated_paths:
+                raise ObjectNameRehearsalError(
+                    f"operation {operation.operation_id!r} declares generated artifacts without an output path"
+                )
+            generator_owner = canonical_json_bytes(operation.generator_commands).decode("utf-8")
+            derived_generator_edges.extend(
+                HardEdge(
+                    operation.operation_id,
+                    path,
+                    ReferenceKind.GENERATED_ARTIFACT,
+                    generator_owner=generator_owner,
+                )
+                for path in sorted(generated_paths)
+            )
         canonical_components = build_manifest_components(
             graph_manifest,
             inventory=graph_inventory,
-            hard_edges=(*discovered_edges, *declared_generator_edges),
-            advisory_evidence=component.risk.advisory,
+            hard_edges=(*discovered_edges, *derived_generator_edges),
         )
     except ObjectNameGraphError as exc:
         raise ObjectNameRehearsalError(f"cannot reconstruct the reviewed component: {exc}") from exc
     canonical = next((item for item in canonical_components if item.component_id == component.component_id), None)
-    if canonical is None or canonical != component:
+    if canonical is None or (
+        canonical.component_id,
+        canonical.operation_ids,
+        canonical.affected_paths,
+        canonical.hard_edges,
+    ) != (
+        component.component_id,
+        component.operation_ids,
+        component.affected_paths,
+        component.hard_edges,
+    ):
         raise ObjectNameRehearsalError("supplied component differs from the canonical repository graph")
     try:
         selected = tuple(executable[operation_id] for operation_id in component.operation_ids)
@@ -409,6 +443,9 @@ def rehearse_object_name_component(
     )
     component_manifest = manifest.model_copy(update={"operations": transform_operations})
     allowed_paths = tuple(sorted({path for operation in selected for path in operation.changed_paths}))
+    transform_allowed_paths = tuple(
+        sorted({path for operation in transform_operations for path in operation.changed_paths})
+    )
     try:
         validate_object_name_manifest(manifest, inventory=inventory, repo_root=root)
     except ObjectNameManifestError as exc:
@@ -461,7 +498,7 @@ def rehearse_object_name_component(
             result = plan_object_name_transformation(component_manifest, repo_root=temporary_root)
         except ObjectNameTransformError as exc:
             raise ObjectNameRehearsalError(f"bounded transformation refused: {exc}") from exc
-        if result.changed_paths != allowed_paths:
+        if result.changed_paths != transform_allowed_paths:
             raise ObjectNameRehearsalError("transformation paths differ from the reviewed allowlist")
         _materialise(temporary_root, result)
 
