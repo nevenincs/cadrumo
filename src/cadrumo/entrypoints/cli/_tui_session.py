@@ -17,12 +17,24 @@ from __future__ import annotations
 
 import subprocess
 import sys
+import tempfile
+from pathlib import Path
 from typing import Final
+
+import typer
+
+from ..full_screen_session_protocol import (
+    SELF_TEST_FLAG,
+    FullScreenDestination,
+    FullScreenSessionOutcome,
+    FullScreenSessionRequest,
+    parse_outcome,
+    render_request_arguments,
+)
 
 TUI_SESSION_MODULE: Final[str] = "cadrumo.entrypoints.tui"
 
-
-SELF_TEST_FLAG: Final[str] = "--self-test"
+_OUTCOME_FILE_NAME: Final[str] = "session-outcome.json"
 
 
 def tui_session_command(executable: str = sys.executable, *, self_test: bool = False) -> list[str]:
@@ -46,4 +58,58 @@ def run_tui_session(*, self_test: bool = False) -> int:
     return completed.returncode
 
 
-__all__ = ["SELF_TEST_FLAG", "TUI_SESSION_MODULE", "run_tui_session", "tui_session_command"]
+def destination_session_command(request: FullScreenSessionRequest, executable: str = sys.executable) -> list[str]:
+    """Build the child-interpreter command line that opens one destination."""
+    return [executable, "-m", TUI_SESSION_MODULE, *render_request_arguments(request)]
+
+
+def run_destination_session(
+    *,
+    destination: FullScreenDestination,
+    work_unit_id: str | None = None,
+    bucket_id: str | None = None,
+    include_discarded: bool = False,
+    output_language: str | None = None,
+    self_test: bool = False,
+) -> FullScreenSessionOutcome:
+    """Open one full-screen destination out of process and read its outcome.
+
+    The child inherits this process's streams so the terminal belongs to the
+    session for its lifetime, which is also why the outcome cannot ride the
+    child's standard output. The parent names a file instead; it lives in a
+    directory removed when this call returns, and it carries only the
+    destination's own identity tokens and the guidance a refusal already shows
+    the operator.
+
+    A session that ends badly must not read as a successful invocation, so a
+    non-zero child status leaves through this process's exit status rather
+    than being converted into an outcome nobody observed.
+    """
+    with tempfile.TemporaryDirectory(prefix="cadrumo-session-") as scratch:
+        outcome_file = Path(scratch) / _OUTCOME_FILE_NAME
+        request = FullScreenSessionRequest(
+            destination=destination,
+            outcome_file=outcome_file,
+            work_unit_id=work_unit_id,
+            bucket_id=bucket_id,
+            include_discarded=include_discarded,
+            output_language=output_language,
+            self_test=self_test,
+        )
+        completed = subprocess.run(  # noqa: S603 - fixed argv, no shell
+            destination_session_command(request), check=False
+        )
+        if completed.returncode != 0:
+            raise typer.Exit(completed.returncode)
+        if not outcome_file.exists():
+            raise typer.Exit(1)
+        return parse_outcome(outcome_file.read_text(encoding="utf-8"))
+
+
+__all__ = [
+    "TUI_SESSION_MODULE",
+    "destination_session_command",
+    "run_destination_session",
+    "run_tui_session",
+    "tui_session_command",
+]
