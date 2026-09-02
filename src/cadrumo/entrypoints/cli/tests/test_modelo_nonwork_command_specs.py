@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 from .._command_runtime import _behavior_wrapper
+from .._modelo_nonwork_command_specs import MODELO_NONWORK_COMMAND_SPECS
 from .._modelo_nonwork_m036_command_specs import (
     M036_DECLARATION_PARAMETERS,
     MODELO_NONWORK_M036_COMMAND_SPECS,
@@ -20,16 +21,15 @@ from .._modelo_nonwork_m145_command_specs import (
     M145_RECORD_ACTION_PARAMETERS,
     MODELO_NONWORK_M145_COMMAND_SPECS,
 )
-from .._modelo_nonwork_command_specs import MODELO_NONWORK_COMMAND_SPECS
 from .._modelo_nonwork_reconcile_command_specs import (
     MODELO_NONWORK_RECONCILE_COMMAND_SPECS,
     RECONCILE_TARGET_PARAMETERS,
 )
 from .._modelo_nonwork_review_package_command_specs import (
-    MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS,
     _REVIEW_PACKAGE_BUCKET_ID_OPTION,
     _REVIEW_PACKAGE_INPUT,
     _SIGNATURE_INPUT,
+    MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS,
 )
 from ..command_specs import COMMAND_GRAPH
 
@@ -257,8 +257,7 @@ def test_review_package_shared_inputs_keep_exact_order_and_identity() -> None:
         ),
     }
     assert {
-        key: tuple(parameter.name for parameter in spec.parameters)
-        for key, spec in specs.items()
+        key: tuple(parameter.name for parameter in spec.parameters) for key, spec in specs.items()
     } == expected_orders
 
     for key in (
