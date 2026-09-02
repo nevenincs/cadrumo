@@ -507,6 +507,13 @@ cli:
       borrador:
         app_help: Snapshots de borrador del modelo 100
         filing_year_help: Ejercicio fiscal (p. ej. 2024)
+        import_coverage_absent: El analizador no devolvió cobertura de extracción para el perfil del registro; no se importó nada.
+        import_ejercicio_mismatch: El ejercicio impreso en el PDF no coincide con el ejercicio solicitado; no se importó nada.
+        import_file_help: Ruta al PDF del borrador del modelo 100 que se va a importar
+        import_help: Importar un PDF local del borrador del modelo 100 al almacén de snapshots
+        import_period_help: Código de periodo (por defecto 0A, el periodo anual del modelo 100)
+        import_period_invalid: El código de periodo no es válido para ese ejercicio fiscal.
+        import_profile_unresolved: El registro no declara un único perfil de extracción de borrador para ese ejercicio y periodo.
         latest_help: Mostrar el snapshot activo más reciente de un ejercicio fiscal
         list_help: Listar snapshots persistidos del borrador del modelo 100
         modelo_100_help: Comandos de snapshots del borrador del modelo 100

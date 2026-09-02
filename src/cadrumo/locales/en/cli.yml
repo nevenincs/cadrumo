@@ -464,6 +464,13 @@ cli:
       borrador:
         app_help: Modelo 100 borrador snapshots
         filing_year_help: Filing year (e.g. 2024)
+        import_coverage_absent: The parser returned no extraction coverage for the registry profile; nothing was imported.
+        import_ejercicio_mismatch: The tax year printed on the PDF does not match the requested filing year; nothing was imported.
+        import_file_help: Path to the Modelo 100 borrador PDF to import
+        import_help: Import a local Modelo 100 borrador PDF into the snapshot store
+        import_period_help: Filing period code (default 0A, the annual Modelo 100 period)
+        import_period_invalid: The filing period code is not valid for that filing year.
+        import_profile_unresolved: The registry declares no single borrador extraction profile for that filing year and period.
         latest_help: Show the most recent active snapshot for a filing year
         list_help: List persisted Modelo 100 borrador snapshots
         modelo_100_help: Modelo 100 borrador snapshot commands

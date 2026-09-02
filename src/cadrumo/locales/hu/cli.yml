@@ -499,6 +499,13 @@ cli:
       borrador:
         app_help: Modelo 100 borrador pillanatképek.
         filing_year_help: Benyújtási év (pl. 2024).
+        import_coverage_absent: Az elemző nem adott vissza kinyerési lefedettséget a nyilvántartási profilhoz; semmi sem lett importálva.
+        import_ejercicio_mismatch: A PDF-en szereplő adóév nem egyezik a kért benyújtási évvel; semmi sem lett importálva.
+        import_file_help: Az importálandó Modelo 100 borrador PDF elérési útja.
+        import_help: Helyi Modelo 100 borrador PDF importálása a pillanatkép-tárolóba.
+        import_period_help: Időszakkód (alapértelmezés 0A, a Modelo 100 éves időszaka).
+        import_period_invalid: Az időszakkód nem érvényes ehhez a benyújtási évhez.
+        import_profile_unresolved: A nyilvántartás nem deklarál egyetlen borrador kinyerési profilt sem ehhez a benyújtási évhez és időszakhoz.
         latest_help: A legfrissebb aktív pillanatkép megjelenítése egy benyújtási
           évre.
         list_help: Mentett Modelo 100 borrador pillanatképek listázása.
