@@ -27,9 +27,7 @@ from dev.quality.name_collision_census import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _DISPOSITIONS = pathlib.Path(__file__).resolve().parent.parent / "name_collision_dispositions.toml"
-_CLASSES = frozenset(
-    {"contract_conflict", "duplicate_owed_collapse", "distinct_rename_owed", "distinct_by_design"}
-)
+_CLASSES = frozenset({"contract_conflict", "duplicate_owed_collapse", "distinct_rename_owed", "distinct_by_design"})
 
 
 @pytest.fixture(scope="module")
