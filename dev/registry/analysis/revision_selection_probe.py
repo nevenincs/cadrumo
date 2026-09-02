@@ -20,6 +20,12 @@ refusal of a question the revision was designed to answer. It cannot prove a
 revision is unreachable by asking it the wrong thing, because it does not know
 how to ask the wrong thing.
 
+A year-only question is itself under-specified where two revisions split inside
+one year, so a refusal at that shape is retried with a date inside the
+revision's own window. The distinction matters: a registry refusing an ambiguous
+coordinate is behaving correctly, and reporting that as a finding would be this
+module committing the error it exists to prevent.
+
 Coverage of the declared year range is deliberately not assumed: the years
 probed come from the caller, and a revision declaring no year bounds is probed
 at the year its window opens. What the module reports is one row per revision
@@ -92,14 +98,23 @@ def probe_modelo(
         for code in declared_period_codes(revision):
             resolved: str | None = None
             refusal: str | None = None
-            for grade in _GRADES:
-                try:
-                    resolved = str(
-                        authority.admitted_revision_id(modelo_id, filing_year=year, period=code, grade=grade)
-                    )
+            # Two revisions may split inside one year - modelo 308 changes at the
+            # end of June 2011 - and then the year alone cannot choose between
+            # them. That refusal is the registry being right, so the probe asks
+            # again with a date inside the revision's own window rather than
+            # reporting its own under-specified question as a finding.
+            for on in (None, revision.valid_from):
+                for grade in _GRADES:
+                    try:
+                        resolved = str(
+                            authority.admitted_revision_id(modelo_id, filing_year=year, period=code, on=on, grade=grade)
+                        )
+                        break
+                    except Exception as error:
+                        refusal = type(error).__name__
+                if resolved is not None:
+                    refusal = None
                     break
-                except Exception as error:
-                    refusal = type(error).__name__
             probes.append(
                 SelectionProbe(
                     modelo=modelo_id,
